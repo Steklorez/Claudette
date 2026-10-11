@@ -396,6 +396,19 @@ items:
     usedIn: src/Claudette.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
+  - id: "mcp__claude_ai_"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.Core/Docs/ClaudeDocCall.cs
+    docs: https://code.claude.com/docs/en/mcp
+    test: ClaudeDocCallTests
+    fallback: Claude Code names a claude.ai connector's tools mcp__claude_ai_<connector>__<tool> (2.1.284 named the Claude Docs connector's mcp__claude_ai_Claude_Docs__batch, __update, __create and so on). Claudette takes a call with that prefix whose input names a container of kind project as a call to the Docs connector (DESIGN.md §5, "Claude Docs"), whatever the connector is called. If the prefix changes, docs go unlisted and their cards show the connector's reply, as before, and Claude's own reply still has the link once; match the new prefix.
+  - id: "artifactUrl"
+    kind: field
+    status: undocumented
+    usedIn: src/Claudette.Core/Docs/ClaudeDocCall.cs
+    test: ClaudeDocCallTests
+    fallback: "claude.ai's Docs connector writes it, not Claude Code (seen with 2.1.284): a reply's first line is JSON with verdict (allow), frame (slug, url, artifactUrl) and, for a doc it made, created (verdict, minted); instructions to the model follow. Read tolerantly: a verdict other than allow changes nothing, an address that isn't http(s) is dropped, and a reply that isn't JSON still names an edit's doc by the call's container.id. If frame goes, new docs go unlisted and their cards show the reply, as before. If Claude Code starts opening docs itself (an Artifact tool in -p), list them from that instead."
   - id: "CLAUDE_CODE_ENABLE_TASKS"
     kind: env
     status: documented

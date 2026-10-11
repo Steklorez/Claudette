@@ -446,6 +446,7 @@ The conversation is drawn from Claude Code's structured output stream, not from 
 | Bash | Shows the command; output is collapsed and uses a monospace font. What git did shows as chips under it, from the result's `gitOperation`: *"Committed 1a2b3c4 on main"*, *"Pushed main"*, *"Rebased onto origin/main"*, *"Opened PR #42"* (a link to the pull request). A command that reached its time limit says so and that it carries on in the background (`timedOutAfterMs`), and one in the background says *"Running in the background"* or *"Moved to the background"* (`backgroundTaskId`, `backgroundedByUser`). |
 | Subagent (Task) | Nested, collapsible group holding that agent's text and tool calls, with its result line (its report). A background subagent's group stays running until it finishes. The agent map shows every subagent as a tree ([§18](#agent-map)). |
 | To-do list | Pinned checklist at the top of the conversation while it exists. A slim row marks where each task starts, and a row at the end of a turn that changed the list says where it stands ([Tasks](#tasks)). |
+| Claude Doc | A doc Claude writes on claude.ai with the Docs connector: a link on the call's card, and a row with **Open** at the end of the turn ([Claude Docs](#claude-docs)). |
 | Permission prompt | Inline card with buttons. See [§7](#7-permission-prompts). |
 | Errors / API retries | Inline warning row. |
 | Turn summary | Small footer after each turn: duration, tokens, model, and *"· 3 files changed"* when it changed files, a link to each file's changes in that turn ([§8](#changes-per-turn)). |
@@ -492,7 +493,7 @@ A user message's **⋯** menu goes back to it. Claude Code does the work: a resu
 
 **Find in the conversation** (`Ctrl/Cmd+F`, or whatever Settings → Keyboard says) opens a bar over the conversation: a search box, *"3 of 12"*, previous and next, and close.
 
-- It looks through prompts, replies, thinking, tool calls with their input and output, notes, hook runs, permission cards' outcomes, the rows where tasks start and where a turn left them ([Tasks](#tasks)), and subagents' groups with everything in them, ignoring case.
+- It looks through prompts, replies, thinking, tool calls with their input and output, notes, hook runs, permission cards' outcomes, the rows where tasks start and where a turn left them ([Tasks](#tasks)), the links and rows naming Claude Docs ([Claude Docs](#claude-docs)), and subagents' groups with everything in them, ignoring case.
 - Typing goes to the newest match, as a conversation is read from the bottom. `Enter` goes to the next one and `Shift+Enter` to the one before, wrapping around; `Esc` closes the bar and puts the focus back in the composer.
 - The match is brought into view and marked with the selected-row color. A match only in what a collapsed card hides (a tool's output, a thought, a hook's output) opens the card; one in a subagent's work opens its group. A match in a card's header leaves it as it is.
 - New output while the bar is open joins the matches without moving the current one. Pressing the shortcut again goes back to the box with its text selected.
@@ -503,7 +504,7 @@ A user message's **⋯** menu goes back to it. Claude Code does the work: a resu
 **Export conversation…**, in the tab's menu and the command palette, saves the conversation as a file to read or share. The save dialog offers **Markdown** (`.md`, the default) and **Web page** (`.html`, one file with its style inline); the name chosen decides which.
 
 - Prompts and replies in full, with their times. A reply's Markdown is kept as written; in the web page it's shown as text, so nothing in it runs.
-- Tool calls as one line each with their result's summary, and a Bash command with its output (its first 4,000 characters). A subagent is one line with its report. Permission cards' outcomes, a plan's text, where each task started (*Started task #3: Run the migration*), failed hooks and errors are kept; Claudette's other notes, and thinking, are left out.
+- Tool calls as one line each with their result's summary, and a Bash command with its output (its first 4,000 characters). A call that made or changed a Claude Doc has the doc's link instead ([Claude Docs](#claude-docs)). A subagent is one line with its report. Permission cards' outcomes, a plan's text, where each task started (*Started task #3: Run the migration*), failed hooks and errors are kept; Claudette's other notes, and thinking, are left out.
 - The file is written to a temporary name and renamed. The tab says where it went.
 
 ### Composer
@@ -582,7 +583,7 @@ How it's built: `packaging/icon/build-icons.mjs` draws her poses, props and hats
 
 ### Tasks
 
-When Claude keeps a task list (`TodoWrite`, or `TaskCreate` and `TaskUpdate`), or the tab has a plan, the side panel gets a **Tasks** page, with *"2 of 5"* done on its tab. The pinned list at the top of the conversation stays as it was; the page has room for more. A plan shows from the moment Claude starts writing it, every version of it is kept, the conversation marks where each task starts, and the status line, the tab's row and the end of each turn say how far the work has got.
+When Claude keeps a task list (`TodoWrite`, or `TaskCreate` and `TaskUpdate`), the tab has a plan, or Claude wrote a doc on claude.ai ([Claude Docs](#claude-docs)), the side panel gets a **Tasks** page, with *"2 of 5"* done on its tab. The pinned list at the top of the conversation stays as it was; the page has room for more. A plan shows from the moment Claude starts writing it, every version of it is kept, the conversation marks where each task starts, and the status line, the tab's row and the end of each turn say how far the work has got.
 
 - **The plan**, as Markdown, above the tasks Claude makes from it. It's the newest of:
   - the plan Claude is writing in Plan mode, as it writes it (below), headed *"Drafting since 14:02"*;
@@ -604,6 +605,17 @@ When Claude keeps a task list (`TodoWrite`, or `TaskCreate` and `TaskUpdate`), o
 - Tasks are the session's, so a subagent's `TaskCreate` and `TaskUpdate` calls land here too; a subagent's own `TodoWrite` list stays a card in its group. The calls themselves show here rather than as cards, as do `TaskList` and `TaskGet`, whose results fill in what the calls didn't show. A restored tab's tasks are dated by their transcript entries.
 - The command palette's **Show tasks** opens the side panel on this page. `/clear` empties it, versions and all, as it does the pinned list.
 - **How it's built.** `Conversation/TodoList.cs` keeps the tasks, the plan's versions (`PlanVersion`), the draft and the suggestion; `ConversationBuilder` feeds it, adds the rows where tasks start (`TaskStartItem`) and the row at a turn's end (`TasksSummaryItem`), and decides which task each change and call counts toward; `TabViewModel.SidePanel.cs` and `TabViewModel.Tasks.cs` have the commands and the row's badge. `TasksPlanTests`, `TaskBoardTests` and `TaskProgressTests` (the view model), `PlanRealCliTests` (the draft, with the real `claude` in Plan mode against the mock), `TasksAndMcpPagesUiTests` and `TaskProgressUiTests` (the views).
+
+### Claude Docs
+
+Claude can write a doc on claude.ai with claude.ai's **Claude Docs** connector (an MCP connector from the user's claude.ai account, its tools `mcp__claude_ai_Claude_Docs__…`): a task list to work through, a report, notes to keep. The doc lives on claude.ai, where the user can read, edit and comment on it. The connector expects the app to open it beside the conversation with an Artifact tool. Claude Code run by Claudette has none, so the connector tells Claude to give the link once, in a line part-way through the turn, and Claude's last reply names the doc without it. Claudette keeps track of the docs instead:
+
+- **On the call's card.** A call that made a doc, edited it or commented on it has a link under its header, in place of the first line of the connector's reply (its JSON): *Created "Enemies: your task list"*, *Edited "…"*, *Commented on "…"*, or *Edited a Claude Doc* for a doc whose title the session hasn't seen. It opens the doc in the browser.
+- **As the turn ends.** A row for each doc the turn made or changed, once per doc, as the most it did (made it, else edited it, else commented on it): the doc's icon, *Created "Enemies: your task list"* and **Open**. It comes however the turn ended, since a stopped turn's doc is there to open too. Only live, as the footer is.
+- **On the Tasks page** ([Tasks](#tasks)), which a doc alone brings: a **Docs** section above the plan with each doc's title, which opens it, and *Created 14:02 · edited 14:30*. The page's tab says *A Claude Doc* (or *2 Claude Docs*) in its tip when that's all the page has. A restored tab lists them from its transcript, and `/clear` empties them with the rest of the page.
+- **How it's read.** Every call names its doc as a `container` of kind `project`: a call that makes one has `create.name`, the title, and the rest have its `id`. A reply's first line is JSON with a `verdict` (only `allow` counts) and `frame`, the doc's id (`slug`) and address (`artifactUrl`, else `url`; only an http(s) one is kept). An edit's reply has no address, so a doc Claude only edits isn't listed until a reply says where it is, as a comment's does. Other tools (`guide`, `read`) change nothing. The connector's calls are known by the prefix Claude Code gives claude.ai's connectors (`mcp__claude_ai_`) and the input's shape, not by the connector's name. None of this is documented: it's how the connector answered through 2.1.284.
+- Find looks through the links and rows ([Find](#find)), and an export keeps the link on the call's line ([Export](#export)).
+- **How it's built.** `Docs/ClaudeDocCall` in Core reads a call and its reply. `ConversationBuilder` puts the link on the card (`ToolUseItem.Doc`), the doc on the Tasks page (`TodoList.Docs.cs`: `DocRow`) and the rows at the turn's end (`DocSummaryItem`). `ClaudeDocCallTests`, `ConversationBuilderTests`, `ConversationExportTests` and `TasksAndMcpPagesUiTests`; `fake-claude`'s `DOC` prompt shows it without an account.
 
 ### Hook runs
 
@@ -2351,7 +2363,7 @@ A tab can do things for the project in its folder: launch the editor, generate p
   - the project's choice, such as Unreal's **Editor configuration** (Development or DebugGame), as radio items;
   - **Choose engine folder…** (or **Choose another engine folder…**);
   - the folder's custom actions, then its **Links**;
-  - **Show output…**, which opens the Project page (only with project tools: a project, custom actions or skipped entries; without them there's no Project page), **Add an action…**, **Add a link…** and **Refresh**.
+  - **Show in Explorer** (**Show in Finder** on macOS, **Show in File Manager** on Linux), which opens the project's folder in the OS's file manager (the tab's folder when no project was recognized; its path is the tip), **Show output…**, which opens the Project page (only with project tools: a project, custom actions or skipped entries; without them there's no Project page), **Add an action…**, **Add a link…** and **Refresh**.
   - Disabled items say why in their tooltip ("Generate project files first"). The menu looks at the project's files again each time it opens, so it's current.
   - (The tab's menu had the same entries in a submenu until the row showed for every tab, which made it redundant.)
 - **The Project page** of the side panel ([§3](#3-main-window)), beside Changed files, Agents and Processes. Its button shows a busy dot while a job runs. It shows:

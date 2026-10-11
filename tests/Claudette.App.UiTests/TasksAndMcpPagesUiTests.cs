@@ -138,5 +138,61 @@ public class TasksAndMcpPagesUiTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public async Task A_doc_Claude_makes_is_linked_on_its_card_named_as_the_turn_ends_and_listed_on_the_tasks_page()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 800);
+        const string url = "https://claude.ai/code/artifact/d0c-1";
+        // As claude.ai's Docs connector answered through Claude Code 2.1.284, cut down (DESIGN.md §5, "Claude Docs").
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "assistant",
+            ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject
+            {
+                ["type"] = "tool_use", ["id"] = "c1", ["name"] = "mcp__claude_ai_Claude_Docs__batch",
+                ["input"] = JsonNode.Parse("""{"container":{"kind":"project","create":{"name":"Enemies: your task list","doc":{"markdown":"# Enemies"}}},"batch":[]}"""),
+            }) },
+        });
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "user",
+            ["message"] = new JsonObject { ["role"] = "user", ["content"] = new JsonArray(new JsonObject
+            {
+                ["type"] = "tool_result", ["tool_use_id"] = "c1",
+                ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = $$$"""
+                    {"verdict":"allow","created":{"verdict":"allow","minted":"d0c-1"},"frame":{"slug":"d0c-1","url":"{{{url}}}","artifactUrl":"{{{url}}}"}}
+                    The doc's viewer is at {{{url}}}. Open it NOW.
+                    """ }),
+            }) },
+        });
+        h.Transport.EmitTurn("Your task list is done.");
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        await UiText.SettleUntilAsync(window, () => tab.Items.OfType<Claudette.App.Conversation.DocSummaryItem>().Any(), "the row at the turn's end");
+
+        // The card's link and the row at the turn's end, rather than the reply's JSON.
+        Assert.Equal(2, Texts(view).Count(t => t == "Created “Enemies: your task list”"));
+        Assert.DoesNotContain(Texts(view), t => t?.Contains("verdict", StringComparison.Ordinal) == true);
+
+        tab.IsSidePanelOpen = true;
+        tab.ShowTasksPageCommand.Execute(null);
+        UiText.Settle(window);
+        var tasksTab = view.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("pagetab") && Equals(b.Tag, SidePanelPage.Tasks));
+        Assert.True(tasksTab.IsVisible);
+        Assert.Equal("A Claude Doc", ToolTip.GetTip(tasksTab));
+        var texts = Texts(view);
+        Assert.Contains("Docs", texts);
+        Assert.Contains("Enemies: your task list", texts);
+        Assert.Contains(texts, t => t?.StartsWith("Created ", StringComparison.Ordinal) == true && !t.Contains('“'));
+
+        var open = view.GetVisualDescendants().OfType<Button>().Single(b => b.DataContext is Claudette.App.Conversation.DocRow && b.IsEffectivelyVisible);
+        Assert.Equal("Open Enemies: your task list", AutomationProperties.GetName(open));
+        open.Command!.Execute(open.CommandParameter);
+        await UiText.SettleUntilAsync(window, () => h.Platform.OpenedUrls.Count == 1, "the doc opening");
+        Assert.Equal([url], h.Platform.OpenedUrls);
+        window.Close();
+    }
+
     private static Color? Fill(Border border) => (border.Background as ISolidColorBrush)?.Color;
 }

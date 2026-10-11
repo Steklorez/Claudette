@@ -191,7 +191,10 @@ public static class ConversationExport
     };
 
     private static string Result(ToolUseItem tool) =>
-        tool.IsError ? " (failed)" : tool.HasResultSummary ? $" → {OneLine(tool.ResultSummary!)}" : "";
+        tool.IsError ? " (failed)"
+        : tool.Doc is { } doc ? $" → {OneLine(doc.Text)}: {doc.Url}"
+        : tool.HasResultSummary ? $" → {OneLine(tool.ResultSummary!)}"
+        : "";
 
     private static string Time(MessageItem message) =>
         message.SentAt is { } sent ? string.Create(CultureInfo.InvariantCulture, $" · {sent.ToLocalTime():yyyy-MM-dd HH:mm}") : "";

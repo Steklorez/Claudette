@@ -50,8 +50,10 @@ public static class UiText
         {
             text = text.Replace(from, to, StringComparison.Ordinal);
         }
-        // macOS shows Esc as ⎋ in shortcut hints; the rest of each hint reads the same everywhere.
-        return text.Replace('\\', '/').Replace("⎋", "Esc", StringComparison.Ordinal);
+        // macOS shows Esc as ⎋ in shortcut hints; the rest of each hint reads the same everywhere. The project's menu
+        // names each OS's file manager (Finder, the file manager), so snapshots read as on Windows.
+        return text.Replace('\\', '/').Replace("⎋", "Esc", StringComparison.Ordinal)
+            .Replace(ViewModels.ProjectMenu.ShowFolderLabel(Core.ProjectTools.ToolOSExtensions.Current), ViewModels.ProjectMenu.ShowFolderLabel(Core.ProjectTools.ToolOS.Windows), StringComparison.Ordinal);
     }
 
     private static void Walk(Visual visual, int depth, StringBuilder builder)

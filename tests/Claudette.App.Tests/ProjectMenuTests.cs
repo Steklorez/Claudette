@@ -13,7 +13,12 @@ public class ProjectMenuTests
     private static readonly ProjectMenuCommands Commands = new(
         new RelayCommand(() => { }), new RelayCommand(() => { }), new RelayCommand(() => { }), new RelayCommand(() => { }),
         new RelayCommand(() => { }), new RelayCommand(() => { }), new RelayCommand(() => { }), new RelayCommand(() => { }),
-        new RelayCommand(() => { }));
+        new RelayCommand(() => { }), new RelayCommand(() => { }));
+
+    /// <summary>Show in Explorer, Finder or the file manager, as the OS the tests run on names it.</summary>
+    private static readonly string ShowFolder = ProjectMenu.ShowFolderLabel(ToolOSExtensions.Current);
+
+    private const string Folder = "/work/NightOwl";
 
     private static readonly ProjectAction Build = new("build", "Build editor", ProjectActionKind.Run) { Description = "Builds the editor" };
 
@@ -41,7 +46,7 @@ public class ProjectMenuTests
     private static IReadOnlyList<ProjectMenuEntry> Menu(
         ProjectInfo? project = null, IReadOnlyList<ProjectCandidate>? candidates = null, IReadOnlyList<ProjectAction>? custom = null,
         IReadOnlyList<ResolvedLink>? links = null, bool hasTools = false, Func<ProjectAction, ProjectAction>? forJob = null) =>
-        ProjectMenu.Build(project, candidates ?? [], custom ?? [], links ?? [], hasTools, forJob ?? (a => a), Commands);
+        ProjectMenu.Build(project, candidates ?? [], custom ?? [], links ?? [], hasTools, forJob ?? (a => a), Folder, Commands);
 
     private static string[] Labels(IEnumerable<ProjectMenuEntry> menu) => menu.Select(e => e.IsSeparator ? "-" : e.Label).ToArray();
 
@@ -50,10 +55,10 @@ public class ProjectMenuTests
     {
         var menu = Menu();
 
-        Assert.Equal(["Add an action…", "Add a link…", "Refresh"], Labels(menu));
+        Assert.Equal([ShowFolder, "Add an action…", "Add a link…", "Refresh"], Labels(menu));
         Assert.All(menu, e => Assert.Equal(ProjectMenuKind.Command, e.Kind));
-        Assert.Equal([Commands.AddAction, Commands.AddLink, Commands.Refresh], menu.Select(e => e.Command));
-        Assert.Equal(["A command of your own for this folder", "A web page of your own for this folder", "Look for the project and its files again"], menu.Select(e => e.Tip));
+        Assert.Equal([Commands.ShowFolder, Commands.AddAction, Commands.AddLink, Commands.Refresh], menu.Select(e => e.Command));
+        Assert.Equal([Folder, "A command of your own for this folder", "A web page of your own for this folder", "Look for the project and its files again"], menu.Select(e => e.Tip));
     }
 
     [Fact]
@@ -71,7 +76,7 @@ public class ProjectMenuTests
             "-", "Choose engine folder…",
             "-", "Run tests",
             "-", "Links", "Docs", "Local file",
-            "-", "Show output…", "Add an action…", "Add a link…", "Refresh",
+            "-", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh",
         ], Labels(menu));
 
         var build = menu.Single(e => e.Label == "Build editor");
@@ -135,9 +140,17 @@ public class ProjectMenuTests
         var candidates = new[] { new ProjectCandidate("unreal", "/work/a/A.uproject", "A"), new ProjectCandidate("unreal", "/work/b/B.uproject", "B") };
 
         // None of the projects could be read: no actions, choice or fix between the choice of project and the menu's own.
-        Assert.Equal(["Projects in this folder", "A", "B", "-", "Add an action…", "Add a link…", "Refresh"], Labels(Menu(candidates: candidates)));
+        Assert.Equal(["Projects in this folder", "A", "B", "-", ShowFolder, "Add an action…", "Add a link…", "Refresh"], Labels(Menu(candidates: candidates)));
         // Only the folder's own actions: no separator before them.
-        Assert.Equal(["Run tests", "-", "Show output…", "Add an action…", "Add a link…", "Refresh"], Labels(Menu(custom: [Tests], hasTools: true)));
+        Assert.Equal(["Run tests", "-", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh"], Labels(Menu(custom: [Tests], hasTools: true)));
+    }
+
+    [Fact]
+    public void The_folder_shows_in_each_OSs_own_file_manager()
+    {
+        Assert.Equal("Show in Explorer", ProjectMenu.ShowFolderLabel(ToolOS.Windows));
+        Assert.Equal("Show in Finder", ProjectMenu.ShowFolderLabel(ToolOS.MacOS));
+        Assert.Equal("Show in File Manager", ProjectMenu.ShowFolderLabel(ToolOS.Linux));
     }
 
     [Fact]

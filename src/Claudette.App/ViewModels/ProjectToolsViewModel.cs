@@ -137,9 +137,16 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     /// <summary>The project row's menu.</summary>
     public IReadOnlyList<ProjectMenuEntry> Menu => ProjectMenu.Build(
-        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools, Runs.ForJob,
+        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools, Runs.ForJob, Folder,
         _menuCommands ??= new ProjectMenuCommands(RunActionCommand, ChooseProjectCommand, ChooseOptionCommand, FixCommand, OpenLinkCommand,
-            ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand));
+            ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand));
+
+    /// <summary>The folder the row stands for: the project's, else the tab's, which the row is named after.</summary>
+    public string Folder => Project?.Root ?? _host.Folder;
+
+    /// <summary><b>Show in Explorer</b> (Finder, the file manager) in the project's menu: its folder.</summary>
+    [RelayCommand]
+    private Task ShowFolderAsync() => _services.Platform.RevealFolderAsync(Folder);
 
     public ProjectAction? MainAction => Project?.MainAction ?? _customActions.Select(c => c.Action).FirstOrDefault();
 

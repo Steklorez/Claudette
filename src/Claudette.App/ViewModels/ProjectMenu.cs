@@ -70,9 +70,10 @@ public sealed class ProjectMenuEntry
 /// <param name="AddAction"><b>Add an action…</b>.</param>
 /// <param name="AddLink"><b>Add a link…</b>.</param>
 /// <param name="Refresh"><b>Refresh</b>: look for the project and its files again.</param>
+/// <param name="ShowFolder"><b>Show in Explorer</b> (Finder, the file manager): the project's folder.</param>
 internal sealed record ProjectMenuCommands(
     ICommand RunAction, ICommand ChooseProject, ICommand ChooseOption, ICommand Fix, ICommand OpenLink,
-    ICommand ShowOutput, ICommand AddAction, ICommand AddLink, ICommand Refresh);
+    ICommand ShowOutput, ICommand AddAction, ICommand AddLink, ICommand Refresh, ICommand ShowFolder);
 
 /// <summary>
 /// Builds the menu of the project's row at the sidebar's foot (DESIGN.md §18, "Project tools"): the projects to choose
@@ -87,9 +88,10 @@ internal static class ProjectMenu
     /// <param name="links">The links of the folder's project files, filled in for the tab.</param>
     /// <param name="hasTools">The tab has a Project page, so the menu offers <b>Show output…</b>.</param>
     /// <param name="forJob">How an action shows as things are: while a job runs, other jobs wait.</param>
+    /// <param name="folder">The folder <b>Show in Explorer</b> opens: the project's, else the tab's.</param>
     public static IReadOnlyList<ProjectMenuEntry> Build(
         ProjectInfo? project, IReadOnlyList<ProjectCandidate> candidates, IReadOnlyList<ProjectAction> customActions,
-        IReadOnlyList<ResolvedLink> links, bool hasTools, Func<ProjectAction, ProjectAction> forJob, ProjectMenuCommands commands)
+        IReadOnlyList<ResolvedLink> links, bool hasTools, Func<ProjectAction, ProjectAction> forJob, string folder, ProjectMenuCommands commands)
     {
         var entries = new List<ProjectMenuEntry>();
         void Separator()
@@ -171,6 +173,7 @@ internal static class ProjectMenu
             }));
         }
         Separator();
+        entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = ShowFolderLabel(ToolOSExtensions.Current), Tip = folder, Command = commands.ShowFolder });
         // Without project tools there's no Project page to show, and no job to have output.
         if (hasTools)
         {
@@ -181,4 +184,12 @@ internal static class ProjectMenu
         entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Refresh", Tip = "Look for the project and its files again", Command = commands.Refresh });
         return entries;
     }
+
+    /// <summary>The entry that opens the project's folder, in each OS's name for its file manager.</summary>
+    public static string ShowFolderLabel(ToolOS os) => os switch
+    {
+        ToolOS.Windows => "Show in Explorer",
+        ToolOS.MacOS => "Show in Finder",
+        _ => "Show in File Manager",
+    };
 }

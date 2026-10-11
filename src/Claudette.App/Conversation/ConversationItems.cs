@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Claudette.Core;
+using Claudette.Core.Docs;
 using Claudette.Core.Protocol;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -503,6 +504,22 @@ public partial class ToolUseItem : ConversationItem
 
     public bool HasGitChips => GitChips.Count > 0;
 
+    /// <summary>
+    /// The Claude Doc a call to claude.ai's Docs connector made or changed (DESIGN.md §5, "Claude Docs"): a link to it, in
+    /// place of the first line of the connector's reply.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDoc))]
+    public partial DocLink? Doc { get; private set; }
+
+    public bool HasDoc => Doc is not null;
+
+    internal void ShowDoc(DocLink link)
+    {
+        Doc = link;
+        ResultSummary = null;
+    }
+
     /// <summary>How a Bash command ended, when its result says more than its output's first line (DESIGN.md §5).</summary>
     private static string? BashSummary(JsonObject result)
     {
@@ -886,4 +903,18 @@ public sealed partial class TasksSummaryItem(string text, bool allDone) : Conver
     /// <summary><b>Continue</b> shows: this is the latest such row, tasks are left, and no turn has started since.</summary>
     [ObservableProperty]
     public partial bool IsContinueOffered { get; set; }
+}
+
+/// <summary>
+/// A Claude Doc a turn made or changed, as it ends (DESIGN.md §5, "Claude Docs"), with <b>Open</b>: Claude often names
+/// the doc without its address.
+/// </summary>
+public sealed class DocSummaryItem(DocRow doc, ClaudeDocChange change) : ConversationItem
+{
+    public DocRow Doc { get; } = doc;
+
+    public ClaudeDocChange Change { get; } = change;
+
+    /// <summary>"Created “Enemies: your task list”".</summary>
+    public string Text => Doc.LinkText(Change);
 }

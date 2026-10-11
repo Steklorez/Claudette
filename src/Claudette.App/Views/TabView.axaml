@@ -220,6 +220,12 @@
         </Grid>
         <TextBlock Classes="muted small mono" Text="{Binding ResultSummary}" Classes.error="{Binding IsError}" TextTrimming="CharacterEllipsis"
                    Margin="22,0,0,0" IsVisible="{Binding HasResultSummary}" />
+        <!-- The Claude Doc the call made or changed, which opens in the browser (DESIGN.md §5, "Claude Docs") -->
+        <Button Classes="flat" Padding="0" Margin="22,2,0,0" HorizontalAlignment="Left" IsVisible="{Binding HasDoc}" ToolTip.Tip="{Binding Doc.Url, FallbackValue={x:Null}}"
+                Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Doc.Url, FallbackValue={x:Null}}">
+          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Doc.Text, FallbackValue={x:Null}}" TextDecorations="Underline"
+                     TextTrimming="CharacterEllipsis" />
+        </Button>
         <!-- What git did in a Bash command: a commit, a push, a pull request (DESIGN.md §5) -->
         <ItemsControl ItemsSource="{Binding GitChips}" Margin="22,4,0,0" IsVisible="{Binding HasGitChips}">
           <ItemsControl.ItemsPanel>
@@ -569,6 +575,19 @@
                 Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ContinueTasksCommand}" CommandParameter="{Binding}"
                 ToolTip.Tip="Ask Claude to carry on with the tasks that are left">
           <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Continue" />
+        </Button>
+      </WrapPanel>
+    </DataTemplate>
+
+    <!-- A Claude Doc the turn made or changed, with Open, as it ends (DESIGN.md §5, "Claude Docs") -->
+    <DataTemplate DataType="conv:DocSummaryItem">
+      <WrapPanel ItemSpacing="8" Margin="0,2,0,2">
+        <Path Classes="toolicon" Data="{StaticResource IconToolRead}" VerticalAlignment="Center" />
+        <TextBlock Classes="small" Text="{Binding Text}" VerticalAlignment="Center" />
+        <Button Classes="flat" Padding="6,1" VerticalAlignment="Center" ToolTip.Tip="{Binding Doc.Url}"
+                AutomationProperties.Name="{Binding Doc.DisplayTitle, StringFormat='Open {0}'}"
+                Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Doc.Url}">
+          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Open" />
         </Button>
       </WrapPanel>
     </DataTemplate>

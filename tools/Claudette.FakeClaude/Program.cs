@@ -38,6 +38,8 @@
 //   AUTH_FAIL        answers like a signed-out Claude Code: an assistant message with error "authentication_failed"
 //   LIMIT [minutes]  a turn stopped at the session limit, which resets in that many minutes (default 2): a rejected
 //                    rate_limit_event, an assistant message with error "rate_limit" and a 429 result (DESIGN.md §6)
+//   DOC              Claude writing a doc with claude.ai's Docs connector: a call that makes it, an edit, and a reply
+//                    that names it without its link (DESIGN.md §5, "Claude Docs")
 //   anything else    replies "pong: <prompt>" (or, while signed out, as AUTH_FAIL does)
 // A message with images (content blocks) is read as its text plus "[images: image/png, …]", so the reply says what
 // arrived.
@@ -487,6 +489,10 @@ internal sealed class FakeSession(string version, string permissionMode)
                 {
                     await RunBashAsync(prompt["RUN_BASH ".Length..].Trim());
                 }
+                else if (prompt.StartsWith("DOC", StringComparison.Ordinal))
+                {
+                    await DocAsync();
+                }
                 else
                 {
                     var reply = $"pong: {prompt}";
@@ -639,6 +645,34 @@ internal sealed class FakeSession(string version, string permissionMode)
         ["terminal_reason"] = "completed",
         ["session_id"] = _sessionId,
     });
+
+    /// <summary>
+    /// DOC: Claude writing a doc on claude.ai with the Docs connector, its calls shaped as Claude Code 2.1.284 passed them
+    /// on (DESIGN.md §5, "Claude Docs"): a batch that makes the doc, an edit, and a reply that names it without its link.
+    /// </summary>
+    private async Task DocAsync()
+    {
+        const string id = "00000000-0000-4000-8000-00000000d0c1";
+        const string url = $"https://claude.ai/code/artifact/{id}";
+        await AssistantAsync(new JsonObject
+        {
+            ["type"] = "tool_use", ["id"] = "toolu_doc_1", ["name"] = "mcp__claude_ai_Claude_Docs__batch",
+            ["input"] = JsonNode.Parse("""{"container":{"kind":"project","create":{"name":"Fake doc: your task list","doc":{"markdown":"# Fake doc: your task list"}}},"batch":[]}"""),
+        });
+        await ToolResultAsync(null, "toolu_doc_1", $$$"""
+            {"verdict":"allow","created":{"verdict":"allow","minted":"{{{id}}}"},"frame":{"slug":"{{{id}}}","url":"{{{url}}}","artifactUrl":"{{{url}}}"}}
+            The doc's viewer is at {{{url}}}. Open it now, then fill it in one section per call.
+            """);
+        await AssistantAsync(new JsonObject
+        {
+            ["type"] = "tool_use", ["id"] = "toolu_doc_2", ["name"] = "mcp__claude_ai_Claude_Docs__update",
+            ["input"] = JsonNode.Parse($$$"""{"ref":{"object":"node","id":"n1"},"engine":"prose","container":{"kind":"project","id":"{{{id}}}"},"payload":{"ops":[]}}"""),
+        });
+        await ToolResultAsync(null, "toolu_doc_2", """{"verdict":"allow","rev":2}""");
+        const string reply = "Your task list is done: work through it in order.";
+        await AssistantAsync(new JsonObject { ["type"] = "text", ["text"] = reply });
+        await ResultAsync(reply);
+    }
 
     /// <summary>
     /// SUBAGENTS: a fan-out shaped like Claude Code 2.1.284's (the 12-subagents protocol fixture). Subagent traffic

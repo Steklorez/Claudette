@@ -43,7 +43,7 @@
           </Button>
           <!-- Tasks (DESIGN.md §5, "Tasks"): "2 of 5" done -->
           <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Tasks}" Classes.selected="{Binding IsTasksPage}" Command="{Binding ShowTasksPageCommand}" IsVisible="{Binding TodoList.HasAnything}"
-                  ToolTip.Tip="{Binding TodoList.Summary}">
+                  ToolTip.Tip="{Binding TodoList.PageTip}">
             <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Text="Tasks" Classes.muted="{Binding !IsTasksPage}" />
               <TextBlock Classes="muted small" Text="{Binding TodoList.Badge}" VerticalAlignment="Center" IsVisible="{Binding TodoList.HasItems}" />
@@ -189,13 +189,36 @@
         </ListBox>
       </DockPanel>
 
-      <!-- Tasks (DESIGN.md §5, "Tasks"): the plan (its draft, a version put up for review, or a reply shown as the plan),
-           then each task with its state, owner, what it waits on, times, files and tokens -->
+      <!-- Tasks (DESIGN.md §5, "Tasks"): the Claude Docs the session made, the plan (its draft, a version put up for
+           review, or a reply shown as the plan), then each task with its state, owner, what it waits on, times, files and tokens -->
       <DockPanel IsVisible="{Binding IsTasksPage}">
         <TextBlock DockPanel.Dock="Top" Classes="muted small" Margin="12,0,12,6" Text="{Binding TodoList.Summary}" TextWrapping="Wrap" IsVisible="{Binding TodoList.HasItems}" />
         <!-- The text wraps at the width shown; a plan's code blocks scroll sideways on their own -->
         <ScrollViewer x:Name="TasksScroller" HorizontalScrollBarVisibility="Disabled">
           <StackPanel Margin="12,0,16,12" Spacing="10">
+            <!-- Claude Docs (DESIGN.md §5, "Claude Docs"): each opens on claude.ai in the browser -->
+            <StackPanel Spacing="6" IsVisible="{Binding TodoList.HasDocs}">
+              <TextBlock Text="Docs" FontWeight="SemiBold" />
+              <ItemsControl ItemsSource="{Binding TodoList.Docs}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="6" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="conv:DocRow">
+                    <Button Classes="flat row" Padding="0" HorizontalContentAlignment="Stretch" ToolTip.Tip="{Binding Url}"
+                            AutomationProperties.Name="{Binding DisplayTitle, StringFormat='Open {0}'}"
+                            Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Url}">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding DisplayTitle}" Foreground="{DynamicResource AccentStatusBrush}" TextWrapping="Wrap" />
+                        <TextBlock Classes="muted small" Text="{Binding TimeText}" IsVisible="{Binding TimeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
             <Border Classes="codeblock" IsVisible="{Binding TodoList.HasPlan}">
               <StackPanel Spacing="4" DataContext="{Binding TodoList}" x:DataType="conv:TodoList">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">

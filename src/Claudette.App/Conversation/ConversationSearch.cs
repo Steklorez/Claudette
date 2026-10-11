@@ -162,7 +162,7 @@ public sealed partial class ConversationSearch : ObservableObject
         UserMessageItem user => [user.CopyText],
         AssistantTextItem reply => [reply.Text],
         ThinkingItem thinking => [thinking.Text],
-        ToolUseItem tool => [tool.Name, tool.FullSummary, tool.Detail, tool.Output, tool.ResultSummary],
+        ToolUseItem tool => [tool.Name, tool.FullSummary, tool.Detail, tool.Output, tool.ResultSummary, tool.Doc?.Text],
         NoteItem note => [note.Text],
         HookRunItem hook => [hook.Title, hook.Output],
         McpInputItem input => [input.Title, input.Message],
@@ -170,6 +170,7 @@ public sealed partial class ConversationSearch : ObservableObject
         TurnSummaryItem summary => [summary.Text],
         TaskStartItem start => [start.Todo.Title],
         TasksSummaryItem tasks => [tasks.Text],
+        DocSummaryItem doc => [doc.Text],
         _ => [],
     };
 

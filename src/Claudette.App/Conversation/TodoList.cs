@@ -482,6 +482,7 @@ public sealed partial class TodoList : ObservableObject
         OnPropertyChanged(nameof(PlanAt));
         OnPropertyChanged(nameof(HasPlan));
         OnPropertyChanged(nameof(HasAnything));
+        OnPropertyChanged(nameof(PageTip));
         OnPropertyChanged(nameof(HasManyPlans));
         OnPropertyChanged(nameof(ShownPlanPosition));
         OnPropertyChanged(nameof(IsDrafting));
@@ -521,7 +522,12 @@ public sealed partial class TodoList : ObservableObject
     // ---- Progress -------------------------------------------------------------------------------------------------
 
     /// <summary>The Tasks page has something to show.</summary>
-    public bool HasAnything => HasItems || HasPlan;
+    public bool HasAnything => HasItems || HasPlan || HasDocs;
+
+    /// <summary>The side panel's Tasks button's tip: how far the tasks have got, else what the page holds.</summary>
+    public string PageTip => HasItems ? Summary
+        : HasPlan ? "The plan"
+        : Docs.Count == 1 ? "A Claude Doc" : $"{Docs.Count} Claude Docs";
 
     /// <summary>"2 of 5", for the side panel's Tasks button; empty without tasks.</summary>
     public string Badge => Items.Count == 0 ? "" : $"{DoneCount} of {Items.Count}";
@@ -789,6 +795,7 @@ public sealed partial class TodoList : ObservableObject
         ShownPlan = null;
         ShowPlanChanges = false;
         SuggestedReply = null;
+        ClearDocs();
         PlanChanged();
         Changed();
     }
@@ -836,6 +843,7 @@ public sealed partial class TodoList : ObservableObject
         OnPropertyChanged(nameof(HasItems));
         OnPropertyChanged(nameof(HasAnything));
         OnPropertyChanged(nameof(Summary));
+        OnPropertyChanged(nameof(PageTip));
         OnPropertyChanged(nameof(Badge));
         OnPropertyChanged(nameof(Current));
         OnPropertyChanged(nameof(DoneCount));

@@ -517,6 +517,136 @@ public class ConversationBuilderTests
         Assert.Equal("TodoWrite", Assert.IsType<ToolUseItem>(Assert.Single(group.Items)).Name);
     }
 
+    // Calls to claude.ai's Docs connector as Claude Code 2.1.284 passed them on, cut down (DESIGN.md §5, "Claude Docs").
+    private const string DocUrl = "https://claude.ai/code/artifact/d0c-1";
+
+    private static string DocCall(string id, string tool, string input) =>
+        new JsonObject
+        {
+            ["type"] = "assistant",
+            ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_use", ["id"] = id, ["name"] = $"mcp__claude_ai_Claude_Docs__{tool}", ["input"] = JsonNode.Parse(input) }) },
+        }.ToJsonString();
+
+    private static string DocReply(string id, string reply) =>
+        new JsonObject
+        {
+            ["type"] = "user",
+            ["message"] = new JsonObject { ["role"] = "user", ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = id, ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = reply }) }) },
+        }.ToJsonString();
+
+    private const string MakeDoc = """{"container":{"kind":"project","create":{"name":"Enemies: your task list","doc":{"markdown":"# Enemies"}}},"batch":[]}""";
+
+    private const string DocMade = $$$"""
+        {"verdict":"allow","created":{"verdict":"allow","minted":"d0c-1"},"frame":{"slug":"d0c-1","url":"{{{DocUrl}}}","artifactUrl":"{{{DocUrl}}}"}}
+        The doc's viewer is at {{{DocUrl}}}. Open it NOW.
+        """;
+
+    private const string EditDoc = """{"ref":{"object":"node","id":"n1"},"container":{"kind":"project","id":"d0c-1"},"payload":{"ops":[]}}""";
+
+    [Fact]
+    public void A_doc_Claude_makes_is_linked_from_its_calls_listed_with_the_tasks_and_named_as_the_turn_ends()
+    {
+        var time = new Microsoft.Extensions.Time.Testing.FakeTimeProvider(new DateTimeOffset(2026, 10, 11, 14, 2, 0, TimeSpan.Zero));
+        var items = new ObservableCollection<ConversationItem>();
+        var tasks = new TodoList();
+        var builder = new ConversationBuilder(items, tasks) { Time = time };
+
+        Apply(builder, DocCall("c1", "batch", MakeDoc));
+        Apply(builder, DocReply("c1", DocMade));
+        time.Advance(TimeSpan.FromMinutes(5));
+        Apply(builder, DocCall("c2", "update", EditDoc));
+        Apply(builder, DocReply("c2", """{"verdict":"allow","rev":2}"""));
+        Apply(builder, """{"type":"assistant","message":{"content":[{"type":"text","text":"Your task list is done."}]}}""");
+        Apply(builder, """{"type":"result","subtype":"success","is_error":false,"result":"Your task list is done.","duration_ms":1000,"num_turns":3,"usage":{"input_tokens":10,"output_tokens":5}}""");
+
+        var cards = items.OfType<ToolUseItem>().ToList();
+        Assert.Equal(new DocLink("Created “Enemies: your task list”", DocUrl), cards[0].Doc);
+        Assert.Equal(new DocLink("Edited “Enemies: your task list”", DocUrl), cards[1].Doc);
+        // The link takes the place of the reply's JSON.
+        Assert.All(cards, card => Assert.Null(card.ResultSummary));
+
+        var doc = Assert.Single(tasks.Docs);
+        Assert.Equal(("Enemies: your task list", DocUrl), (doc.Title, doc.Url));
+        Assert.Equal($"Created {time.GetUtcNow().AddMinutes(-5).ToLocalTime():t} · edited {time.GetUtcNow().ToLocalTime():t}", doc.TimeText);
+        Assert.True(tasks.HasAnything);
+        Assert.Equal("A Claude Doc", tasks.PageTip);
+
+        // Once, as made, after Claude's reply and before the footer.
+        var row = Assert.Single(items.OfType<DocSummaryItem>());
+        Assert.Equal("Created “Enemies: your task list”", row.Text);
+        Assert.Same(doc, row.Doc);
+        Assert.IsType<TurnSummaryItem>(items[^1]);
+        Assert.Same(row, items[^2]);
+        Assert.Equal(["Created “Enemies: your task list”"], ConversationSearch.TextOf(row));
+    }
+
+    [Fact]
+    public void A_doc_Claude_only_edits_here_is_named_when_a_reply_says_where_it_is()
+    {
+        var items = new ObservableCollection<ConversationItem>();
+        var tasks = new TodoList();
+        var builder = new ConversationBuilder(items, tasks);
+
+        // An edit's reply has no address, so a doc first seen that way can't be opened.
+        Apply(builder, DocCall("c1", "update", EditDoc));
+        Apply(builder, DocReply("c1", """{"verdict":"allow","rev":7}"""));
+        Assert.Empty(tasks.Docs);
+        Assert.Null(items.OfType<ToolUseItem>().Single().Doc);
+
+        Apply(builder, DocCall("c2", "create", """{"object":"utterance","container":{"kind":"project","id":"d0c-1"},"payload":{"value":{"body":"A question"}}}"""));
+        Apply(builder, DocReply("c2", $$$"""{"verdict":"allow","minted":"u1","frame":{"slug":"d0c-1","url":"{{{DocUrl}}}"}}"""));
+
+        var doc = Assert.Single(tasks.Docs);
+        // Without a clock, no times.
+        Assert.Equal(("Claude Doc", "Commented on"), (doc.DisplayTitle, doc.TimeText));
+        Assert.Equal(new DocLink("Commented on a Claude Doc", DocUrl), items.OfType<ToolUseItem>().Last().Doc);
+    }
+
+    [Fact]
+    public void A_restored_conversation_lists_its_docs_without_rows_for_turns_and_clear_forgets_them()
+    {
+        var items = new ObservableCollection<ConversationItem>();
+        var tasks = new TodoList();
+        var builder = new ConversationBuilder(items, tasks);
+        Replay(builder, DocCall("c1", "batch", MakeDoc));
+        Replay(builder, DocReply("c1", DocMade));
+
+        Assert.Single(tasks.Docs);
+        Assert.NotNull(items.OfType<ToolUseItem>().Single().Doc);
+
+        // A turn after the restore names only the docs it changed itself.
+        Apply(builder, """{"type":"result","subtype":"success","is_error":false,"result":"ok","duration_ms":1000,"num_turns":1,"usage":{"input_tokens":10,"output_tokens":5}}""");
+        Assert.Empty(items.OfType<DocSummaryItem>());
+
+        builder.Clear();
+        Assert.Empty(tasks.Docs);
+        Assert.False(tasks.HasAnything);
+    }
+
+    [Fact]
+    public void A_stopped_turn_still_names_the_doc_it_was_writing()
+    {
+        var items = new ObservableCollection<ConversationItem>();
+        var builder = new ConversationBuilder(items, new TodoList());
+        Apply(builder, DocCall("c1", "batch", MakeDoc));
+        Apply(builder, DocReply("c1", DocMade));
+        Apply(builder, """{"type":"result","subtype":"error_during_execution","is_error":true,"terminal_reason":"aborted_streaming","duration_ms":1000,"num_turns":1}""");
+
+        Assert.Equal("Stopped.", Assert.IsType<NoteItem>(items[^2]).Text);
+        Assert.IsType<DocSummaryItem>(items[^1]);
+    }
+
+    private static void Replay(ConversationBuilder builder, string line)
+    {
+        Assert.True(MessageParser.TryParse(line, out var message, out var error), error);
+        builder.Replay(message switch
+        {
+            AssistantMessage a => new AssistantMessageReceived(a),
+            UserMessage u => new ToolResultsReceived(u),
+            _ => throw new InvalidOperationException($"No event for {message.GetType().Name}"),
+        }, null);
+    }
+
     private void Apply(string line) => Apply(_builder, line);
 
     private static void Apply(ConversationBuilder builder, string line)

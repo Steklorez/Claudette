@@ -42,6 +42,9 @@ public class ProjectToolsTests
 
     private static ProjectMenuEntry Entry(TabViewModel tab, string label) => InlineDispatcher.Read(() => tab.ProjectTools.Menu.Single(e => e.Label == label));
 
+    /// <summary>Show in Explorer, Finder or the file manager, as the OS the tests run on names it.</summary>
+    private static readonly string ShowFolder = ProjectMenu.ShowFolderLabel(ToolOSExtensions.Current);
+
     /// <summary>The newest run: the one the last job made.</summary>
     internal static ProjectRunViewModel? LastRun(TabViewModel tab) => InlineDispatcher.Read(() => tab.ProjectTools.Runs.Items.LastOrDefault());
 
@@ -79,7 +82,14 @@ public class ProjectToolsTests
         Assert.Equal(tab.FolderName, tab.ProjectTools.HeaderTitle);
         Assert.Equal([tab.Folder], tab.ProjectTools.HeaderLines);
         // No Show output…: without project tools there's no Project page.
-        Assert.Equal(["Add an action…", "Add a link…", "Refresh"], InlineDispatcher.Read(() => tab.ProjectTools.Menu.Select(e => e.Label).ToArray()));
+        Assert.Equal([ShowFolder, "Add an action…", "Add a link…", "Refresh"], InlineDispatcher.Read(() => tab.ProjectTools.Menu.Select(e => e.Label).ToArray()));
+
+        // Show in Explorer opens the folder the row is named after.
+        var show = Entry(tab, ShowFolder);
+        Assert.Equal(tab.Folder, show.Tip);
+        show.Command!.Execute(show.Parameter);
+        await TabTestHarness.Eventually(() => h.Platform.RevealedFolders.Count == 1, "the folder shown");
+        Assert.Equal([tab.Folder], h.Platform.RevealedFolders);
     }
 
     [Fact]
@@ -96,8 +106,10 @@ public class ProjectToolsTests
             "Launch editor", "Generate project files", "Build editor", "Build and launch", "Open solution", "Open latest log", "Clean intermediates…", "Kill all Unreal editors…",
             "-", "Editor configuration", "Development", "DebugGame",
             "-", "Choose another engine folder…",
-            "-", "Show output…", "Add an action…", "Add a link…", "Refresh",
+            "-", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh",
         ], menu);
+        // Show in Explorer opens the project's folder.
+        Assert.Equal(tab.ProjectTools.Project!.Root, Entry(tab, ShowFolder).Tip);
         Assert.True(Entry(tab, "Development").IsChecked);
         Assert.True(Entry(tab, "Development").IsOption);
         Assert.True(Entry(tab, "Editor configuration").IsHeader);
@@ -550,7 +562,7 @@ public class ProjectToolsTests
         Assert.Null(tab.ProjectTools.Project);
         Assert.Equal(tab.FolderName, tab.ProjectTools.ButtonText);
         Assert.Equal(tab.FolderName, tab.ProjectTools.HeaderTitle);
-        Assert.Equal(["Run tests", "-", "Show output…", "Add an action…", "Add a link…", "Refresh"], tab.ProjectTools.Menu.Select(e => e.IsSeparator ? "-" : e.Label));
+        Assert.Equal(["Run tests", "-", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh"], tab.ProjectTools.Menu.Select(e => e.IsSeparator ? "-" : e.Label));
         Assert.Equal("Run tests", tab.ProjectTools.MainAction!.Label);
 
         // The local file is the user's own: it runs without asking.
@@ -631,7 +643,7 @@ public class ProjectToolsTests
         Assert.False(tab.ProjectTools.HasTools);
         Assert.Equal(tab.FolderName, tab.ProjectTools.ButtonText);
         var menu = InlineDispatcher.Read(() => tab.ProjectTools.Menu.ToArray());
-        Assert.Equal(["Links", "Pull request", "Changelist", "Local file", "-", "Add an action…", "Add a link…", "Refresh"], menu.Select(e => e.IsSeparator ? "-" : e.Label));
+        Assert.Equal(["Links", "Pull request", "Changelist", "Local file", "-", ShowFolder, "Add an action…", "Add a link…", "Refresh"], menu.Select(e => e.IsSeparator ? "-" : e.Label));
         var links = menu.Where(e => e.IsLink).ToArray();
         Assert.Equal("https://github.com/org/repo/compare/owl%2Feyes?expand=1", Assert.IsType<ResolvedLink>(links[0].Parameter).Url);
         Assert.Equal(("↗", true), (links[0].Mark, links[0].IsEnabled));

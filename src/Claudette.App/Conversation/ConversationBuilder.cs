@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Claudette.Core.Diffs;
+using Claudette.Core.Docs;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
 using Claudette.Core.Threads;
@@ -31,6 +32,9 @@ public sealed class ConversationBuilder
 
     // The task list changed in the turn under way, so its end says where the list stands. The main agent's builder keeps it.
     private bool _tasksChangedThisTurn;
+
+    // The Claude Docs the turn under way made or changed, which its end names. The main agent's builder keeps them.
+    private readonly List<(DocRow Doc, ClaudeDocChange Change)> _turnDocs = [];
 
     // The last entry of the main conversation Claude Code gave an id: where a resume would stop to leave out what comes
     // next (DESIGN.md §5, "Rewind and branch").
@@ -295,6 +299,7 @@ public sealed class ConversationBuilder
         _draftCalls.Clear();
         _taskFiles.Clear();
         _tasksChangedThisTurn = false;
+        _turnDocs.Clear();
         TurnTasksSummary = null;
         // A cleared conversation is a new one: nothing before it to go back to.
         _lastEntryUuid = null;
@@ -467,6 +472,7 @@ public sealed class ConversationBuilder
                 _prompts.OnSessionExited();
                 _todoList?.EndWaitingPlans();
                 _tasksChangedThisTurn = false;
+                _turnDocs.Clear();
                 var code = exited.Exit.ExitCode?.ToString() ?? "unknown";
                 var detail = string.IsNullOrWhiteSpace(exited.Exit.StandardErrorTail) ? "" : $"\n{LastLines(exited.Exit.StandardErrorTail, 5)}";
                 AddNote($"Claude Code exited (code {code}).{detail}", exited.Exit.ExitCode == 0 ? NoteKind.Info : NoteKind.Error);
@@ -680,6 +686,10 @@ public sealed class ConversationBuilder
                 // (DESIGN.md §18, "Threads").
                 var failed = result.IsError && !(tool.Name == SendMessageCall.ToolName && ThreadMessages.IsDeliveryAnswer(result.Text));
                 tool.ApplyResult(result.Text, failed, message.ToolUseResult);
+                if (!failed && ClaudeDocCall.MayBe(tool.Name))
+                {
+                    ShowDoc(tool, result.Text);
+                }
                 if (tool is SubagentItem && _agents?.Find(result.ToolUseId) is { } node)
                 {
                     node.OnResult(result.Text, result.IsError, message.ToolUseResult, message.WasInterrupted(result.ToolUseId));
@@ -694,6 +704,33 @@ public sealed class ConversationBuilder
                         card?.SentBackFeedback,
                         interrupted: result.IsError && message.WasInterrupted(result.ToolUseId));
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// A call to claude.ai's Docs connector that made or changed a doc (DESIGN.md §5, "Claude Docs"): a link on its card,
+    /// the doc on the Tasks page, and a row at the turn's end.
+    /// </summary>
+    private void ShowDoc(ToolUseItem tool, string resultText)
+    {
+        if (ClaudeDocCall.From(tool.Name, tool.Input, resultText) is not { } call || _todoList?.OnDocCall(call) is not { } doc)
+        {
+            return;
+        }
+        tool.ShowDoc(new DocLink(doc.LinkText(call.Change), doc.Url));
+        if (!IsReplaying)
+        {
+            // Once per doc, as the most the turn did to it: made it, else edited it, else commented on it (the enum's order).
+            var turnDocs = Root._turnDocs;
+            var at = turnDocs.FindIndex(d => d.Doc == doc);
+            if (at < 0)
+            {
+                turnDocs.Add((doc, call.Change));
+            }
+            else if (call.Change < turnDocs[at].Change)
+            {
+                turnDocs[at] = (doc, call.Change);
             }
         }
     }
@@ -735,6 +772,7 @@ public sealed class ConversationBuilder
         if (result.TerminalReason == "aborted_streaming")
         {
             AddNote("Stopped.", NoteKind.Warning);
+            AddTurnDocs();
             return;
         }
         if (result.IsError && result.Result is { Length: > 0 } error)
@@ -746,6 +784,7 @@ public sealed class ConversationBuilder
                 Items.RemoveAt(Items.Count - 1);
             }
             AddNote(error, NoteKind.Error);
+            AddTurnDocs();
             return;
         }
         if (tasksChanged && _todoList?.TurnSummaryText(Now()) is { } tasks)
@@ -754,10 +793,24 @@ public sealed class ConversationBuilder
             TurnTasksSummary = new TasksSummaryItem(tasks, _todoList.AllDone);
             Items.Add(TurnTasksSummary);
         }
+        AddTurnDocs();
         if (TurnSummaryItem.For(result, _modelName) is { } summary)
         {
             Items.Add(summary);
         }
+    }
+
+    /// <summary>
+    /// The Claude Docs the turn made or changed, however it ended (DESIGN.md §5, "Claude Docs"): a doc is there to open
+    /// even when the turn stopped part-way through writing it.
+    /// </summary>
+    private void AddTurnDocs()
+    {
+        foreach (var (doc, change) in _turnDocs)
+        {
+            Items.Add(new DocSummaryItem(doc, change));
+        }
+        _turnDocs.Clear();
     }
 
     /// <summary>The card of a tool call, in this conversation or any subagent group in it.</summary>

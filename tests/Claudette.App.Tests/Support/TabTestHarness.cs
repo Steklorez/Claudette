@@ -388,7 +388,14 @@ internal sealed class NoPlatform : IPlatformServices
         return Task.CompletedTask;
     }
 
-    public Task RevealFolderAsync(string path) => Task.CompletedTask;
+    /// <summary>The folders shown in Explorer or Finder, in order.</summary>
+    public List<string> RevealedFolders { get; } = [];
+
+    public Task RevealFolderAsync(string path)
+    {
+        RevealedFolders.Add(path);
+        return Task.CompletedTask;
+    }
 
     public Task SetClipboardTextAsync(string text)
     {
