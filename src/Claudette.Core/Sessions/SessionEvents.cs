@@ -65,6 +65,12 @@ public sealed record ConversationReset(string? Trigger) : SessionEvent;
 /// <summary>Claude Code's auto-compaction settings for this session, sent with each turn (undocumented).</summary>
 public sealed record AutocompactStateChanged(AutocompactStateMessage State) : SessionEvent;
 
+/// <summary>
+/// What Claude Code predicts the user will send next, after the turn that just ended (DESIGN.md §5, "Prompt
+/// suggestions"). Never empty, and only while the session is idle: not once another message has gone.
+/// </summary>
+public sealed record PromptSuggested(string Suggestion) : SessionEvent;
+
 /// <summary>Any other <c>system</c> message (status, tasks, retries, …).</summary>
 public sealed record SystemNotice(SystemMessage Message) : SessionEvent;
 

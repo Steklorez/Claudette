@@ -197,6 +197,12 @@ public sealed record ConversationResetMessage(string? NewConversationId, string?
 /// </summary>
 public sealed record AutocompactStateMessage(bool Enabled, long? EffectiveWindow, long? Threshold, JsonObject Raw) : ClaudeMessage("autocompact_state", Raw);
 
+/// <summary>
+/// <c>prompt_suggestion</c>: what Claude Code predicts the user will send next, after a turn that produced one
+/// (<c>--prompt-suggestions</c>; DESIGN.md §5, "Prompt suggestions").
+/// </summary>
+public sealed record PromptSuggestionMessage(string Suggestion, JsonObject Raw) : ClaudeMessage("prompt_suggestion", Raw);
+
 /// <summary>A type Claudette knows about and deliberately skips, such as <c>active_goal</c>. Not counted as unknown.</summary>
 public sealed record IgnoredMessage(string MessageType, JsonObject Raw) : ClaudeMessage(MessageType, Raw);
 

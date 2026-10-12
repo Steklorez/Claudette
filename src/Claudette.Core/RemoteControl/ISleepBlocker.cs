@@ -1,8 +1,9 @@
 namespace Claudette.Core.RemoteControl;
 
 /// <summary>
-/// Keeps the computer from going to sleep while tabs are connected to the Claude app, so the phone can still reach them
-/// (DESIGN.md §18, "Remote Control"). Only system sleep: the display can still turn off. The implementations are in
+/// Keeps the computer from going to sleep (DESIGN.md §9, "Keeping the computer awake"): as Settings → General says, so
+/// a task can carry on after a usage limit resets, and while tabs are connected to the Claude app, so the phone can
+/// still reach them (DESIGN.md §18). Only system sleep: the display can still turn off. The implementations are in
 /// Claudette.Platform: <c>SetThreadExecutionState</c> on Windows, <c>caffeinate</c> on macOS, <c>systemd-inhibit</c>
 /// on Linux.
 /// </summary>

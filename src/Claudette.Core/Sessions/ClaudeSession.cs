@@ -548,6 +548,14 @@ public sealed class ClaudeSession : IAsyncDisposable
                 Publish(new AutocompactStateChanged(autocompact));
                 break;
 
+            case PromptSuggestionMessage suggestion:
+                // It comes after the turn's result: one that comes after another message went is for a turn that's over.
+                if (State == SessionState.Idle && !string.IsNullOrWhiteSpace(suggestion.Suggestion))
+                {
+                    Publish(new PromptSuggested(suggestion.Suggestion.Trim()));
+                }
+                break;
+
             case IgnoredMessage:
                 break;
 

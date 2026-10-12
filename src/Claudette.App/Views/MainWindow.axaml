@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Claudette.App.ViewModels"
         xmlns:controls="using:Claudette.App.Controls"
+        xmlns:settings="using:Claudette.Core.Settings"
         x:Class="Claudette.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Claudette"
@@ -26,15 +27,33 @@
     <Style Selector="ProgressBar.meter.critical">
       <Setter Property="Foreground" Value="{DynamicResource MeterCriticalBrush}" />
     </Style>
-    <Style Selector="Button.header">
+    <Style Selector=":is(Button).header">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Padding" Value="8,4" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
-    <Style Selector="Button.header:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector=":is(Button).header:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <!-- The header's cup (DESIGN.md §9, "Keeping the computer awake"): a switch that stays flat when it's on. The cup
+         takes the accent while the setting is on, and steams while the computer is kept awake. -->
+    <Style Selector="ToggleButton.header:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ToggleButton.header:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <!-- Disabled where the computer can't be kept awake: just the muted cup, not Fluent's grey pill -->
+    <Style Selector="ToggleButton.header:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ToggleButton.keepawake Path">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.keepawake:checked Path">
+      <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
     </Style>
     <!-- The detailed header's charts (DESIGN.md §6, "Detailed header") -->
     <Style Selector="controls|UsageDetailChart">
@@ -180,6 +199,25 @@
               <TextBlock Name="ProcessTotals" Classes="muted small" VerticalAlignment="Center" Margin="0,0,4,0"
                          Text="{Binding Shell.ProcessTotalsText, FallbackValue={x:Null}}" ToolTip.Tip="{Binding Shell.ProcessTotalsTip, FallbackValue={x:Null}}"
                          IsVisible="{Binding Shell.ProcessTotalsText, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+              <!-- Keeping the computer awake (DESIGN.md §9): the switch for Settings → General's Keep this computer awake,
+                   with when in its menu. The cup steams while sleep is held off, for whatever reason, which the tip says. -->
+              <ToggleButton Name="KeepAwakeToggle" Classes="header keepawake" Padding="8" VerticalAlignment="Center"
+                            IsChecked="{Binding KeepAwake.IsOn}" IsEnabled="{Binding KeepAwake.IsAvailable}"
+                            ToolTip.Tip="{Binding KeepAwake.Tooltip}" AutomationProperties.Name="{Binding KeepAwake.AccessibleName}">
+                <Panel Width="12" Height="12">
+                  <Path Data="{StaticResource IconCup}" StrokeThickness="1.3" StrokeJoin="Round" Stretch="None" />
+                  <Path Name="KeepAwakeSteam" Data="{StaticResource IconSteam}" StrokeThickness="1.1" StrokeLineCap="Round" Stretch="None"
+                        IsVisible="{Binding KeepAwake.IsKeepingAwake}" />
+                </Panel>
+                <ToggleButton.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="Only while Claude has work to finish" ToggleType="Radio" IsChecked="{Binding KeepAwake.WhileClaudeHasWork, Mode=OneWay}"
+                              Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.ClaudeHasWork}" />
+                    <MenuItem Header="Whenever Claudette is running" ToggleType="Radio" IsChecked="{Binding KeepAwake.WhileClaudetteRuns, Mode=OneWay}"
+                              Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.ClaudetteRuns}" />
+                  </ContextMenu>
+                </ToggleButton.ContextMenu>
+              </ToggleButton>
               <!-- Claude's service status (DESIGN.md §18, "Service status"): each watched service in the tooltip, and a
                    click opens status.claude.com -->
               <Button Name="ServiceStatusDot" Classes="header" Padding="8" VerticalAlignment="Center" IsVisible="{Binding ServiceStatus.IsVisible}"

@@ -13,14 +13,19 @@ public sealed record InactiveDaysChoice(int Days)
 
 /// <summary>
 /// Settings → General (DESIGN.md §14): starting at login, closing and renaming tabs, Claude's service status, messages
-/// sent while Claude works, cleaning up worktrees, and Claudette's own updates.
+/// sent while Claude works, keeping the computer awake, cleaning up worktrees, and Claudette's own updates. Dispose it
+/// with the window.
 /// </summary>
-public sealed partial class GeneralPage : SettingsPage
+public sealed partial class GeneralPage : SettingsPage, IDisposable
 {
     private LoginItemStatus? _loginItem;
     private bool _changingLoginItem;
 
-    public GeneralPage(SettingsContext context) : base(context, SettingsCategory.General) => _ = RefreshStartAtLoginAsync();
+    public GeneralPage(SettingsContext context) : base(context, SettingsCategory.General)
+    {
+        _ = RefreshStartAtLoginAsync();
+        Services.KeepAwake.PropertyChanged += OnKeepAwakeChanged;
+    }
 
     public override IEnumerable<SettingsSearchResult> SearchEntries =>
     [
@@ -29,6 +34,7 @@ public sealed partial class GeneralPage : SettingsPage
         Entry("Name each tab's session in Claude Code after the tab"),
         Entry("Show Claude's service status"),
         Entry("Messages sent while Claude works", pageText: "Messages sent while Claude works"),
+        Entry("Keep this computer awake"),
         Entry("Remove worktrees once their work is merged", pageText: "Remove worktrees once everything in them is merged"),
         Entry("Remove worktrees no tab has used", pageText: "Remove worktrees no tab has used for"),
         Entry("Claudette version", pageText: "Claudette updates"),
@@ -172,6 +178,66 @@ public sealed partial class GeneralPage : SettingsPage
         OnPropertyChanged(nameof(QueueWhileWorking));
         Save();
     }
+
+    // ---- Keeping the computer awake (DESIGN.md §9, "Keeping the computer awake") ----------------------------------
+
+    /// <summary><b>Keep this computer awake</b>: the same switch as the header's cup.</summary>
+    public bool KeepAwake
+    {
+        get => Settings.General.KeepAwake;
+        set => Set(value, v => Settings.General.KeepAwake = v);
+    }
+
+    /// <summary>Only while Claude has work to finish: a turn, background tasks, or a task waiting for a limit to reset.</summary>
+    public bool KeepAwakeWhileClaudeHasWork
+    {
+        get => Settings.General.KeepAwakeWhen == KeepAwakeWhen.ClaudeHasWork;
+        set
+        {
+            if (value)
+            {
+                SetKeepAwakeWhen(KeepAwakeWhen.ClaudeHasWork);
+            }
+        }
+    }
+
+    /// <summary>Whenever Claudette is running.</summary>
+    public bool KeepAwakeWhileClaudetteRuns
+    {
+        get => Settings.General.KeepAwakeWhen == KeepAwakeWhen.ClaudetteRuns;
+        set
+        {
+            if (value)
+            {
+                SetKeepAwakeWhen(KeepAwakeWhen.ClaudetteRuns);
+            }
+        }
+    }
+
+    private void SetKeepAwakeWhen(KeepAwakeWhen when)
+    {
+        if (Settings.General.KeepAwakeWhen == when)
+        {
+            return;
+        }
+        Settings.General.KeepAwakeWhen = when;
+        OnPropertyChanged(nameof(KeepAwakeWhileClaudeHasWork));
+        OnPropertyChanged(nameof(KeepAwakeWhileClaudetteRuns));
+        Save();
+    }
+
+    /// <summary>Why this computer can't be kept awake, or null when it can.</summary>
+    public string? KeepAwakeUnavailableText => Services.KeepAwake.IsAvailable ? null : Services.KeepAwake.Tooltip;
+
+    /// <summary>The header's cup changed the switch while the window is open: the page follows.</summary>
+    private void OnKeepAwakeChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(KeepAwake));
+        OnPropertyChanged(nameof(KeepAwakeWhileClaudeHasWork));
+        OnPropertyChanged(nameof(KeepAwakeWhileClaudetteRuns));
+    }
+
+    public void Dispose() => Services.KeepAwake.PropertyChanged -= OnKeepAwakeChanged;
 
     // ---- Cleaning up worktrees (DESIGN.md §4, "Cleaning up worktrees") ---------------------------------------------
 

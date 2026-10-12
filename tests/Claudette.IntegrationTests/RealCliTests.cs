@@ -80,6 +80,24 @@ public sealed class RealCliTests : IAsyncLifetime
         await Waiting.UntilAsync(() => File.ReadAllText(transcript).Contains("\"customTitle\":\"Renamed by Claudette\"", StringComparison.Ordinal), "the name in the transcript");
     }
 
+    [Fact]
+    public async Task With_prompt_suggestions_the_next_prompt_comes_after_the_turn()
+    {
+        await using var session = await StartAsync(promptSuggestions: true);
+
+        // DESIGN.md §5, "Prompt suggestions": 2.1.284 makes none after a conversation's first turn, and sends the
+        // second's after its result, with nonessential traffic off as here.
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        await session.ReadUntilAsync<TurnCompleted>();
+        await session.SendUserMessageAsync("hello again", TestContext.Current.CancellationToken);
+        await session.ReadUntilAsync<TurnCompleted>();
+        var (suggested, _) = await session.ReadUntilAsync<PromptSuggested>();
+
+        Assert.Equal(MockAnthropicApi.Suggestion, suggested.Suggestion);
+        Assert.Equal(SessionState.Idle, session.State);
+        Assert.Contains(_api.Requests, r => r.Reply == "suggestion");
+    }
+
     // ---- Rewind and branch, hook rows, MCP servers (DESIGN.md §5, §4) ------------------------------------------------
 
     [Fact]
@@ -931,7 +949,7 @@ public sealed class RealCliTests : IAsyncLifetime
     private async Task<ClaudeSession> StartAsync(string? permissionMode = null, string? resume = null, IReadOnlyList<HookRegistration>? hooks = null, string? appendSystemPrompt = null, Dictionary<string, string?>? environment = null,
         string model = "claude-haiku-4-5", bool replayUserMessages = false, bool includeHookEvents = false, bool forkSession = false, string? resumeSessionAt = null,
         string? fallbackModel = null, IReadOnlyList<string>? additionalArguments = null, bool agentProgressSummaries = false, string? worktree = null,
-        IReadOnlyList<string>? addDirectories = null)
+        IReadOnlyList<string>? addDirectories = null, bool promptSuggestions = false)
     {
         RealCli.SkipUnlessInstalled(_factory is not null);
         var overrides = new Dictionary<string, string?>
@@ -965,6 +983,7 @@ public sealed class RealCliTests : IAsyncLifetime
             AgentProgressSummaries = agentProgressSummaries,
             Worktree = worktree,
             AddDirectories = addDirectories ?? [],
+            PromptSuggestions = promptSuggestions,
         }, TestContext.Current.CancellationToken);
     }
 }

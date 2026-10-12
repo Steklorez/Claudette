@@ -22,6 +22,9 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>Claude's service status: the header's dot and the banner (DESIGN.md §18, "Service status").</summary>
     public ServiceStatusViewModel ServiceStatus { get; } = new(services);
 
+    /// <summary>The header's cup: whether the computer is kept awake, and the switch for it (DESIGN.md §9, "Keeping the computer awake").</summary>
+    public KeepAwakeService KeepAwake { get; } = services.KeepAwake;
+
     /// <summary>The signed-in email and plan, or null when signed out.</summary>
     public string? AccountText => Account.IsSignedIn ? Account.Summary : null;
 

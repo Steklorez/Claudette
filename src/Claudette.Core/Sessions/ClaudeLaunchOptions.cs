@@ -44,6 +44,12 @@ public sealed record ClaudeLaunchOptions
     /// <summary>Hook runs as <c>system/hook_*</c> messages (<c>--include-hook-events</c>), for the conversation's hook rows (DESIGN.md §5).</summary>
     public bool IncludeHookEvents { get; init; }
 
+    /// <summary>
+    /// A predicted next prompt after each turn that gets one, as a <c>prompt_suggestion</c> message
+    /// (<c>--prompt-suggestions</c>; DESIGN.md §5, "Prompt suggestions").
+    /// </summary>
+    public bool PromptSuggestions { get; init; }
+
     /// <summary>The model to fall back to when the chosen one is overloaded (<c>--fallback-model</c>). Null: none.</summary>
     public string? FallbackModel { get; init; }
 
@@ -158,6 +164,10 @@ public static class ClaudeArguments
         if (options.IncludeHookEvents)
         {
             args.Add("--include-hook-events");
+        }
+        if (options.PromptSuggestions)
+        {
+            args.Add("--prompt-suggestions");
         }
         if (!options.PersistSession)
         {

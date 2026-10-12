@@ -134,12 +134,23 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     {
         _services.Notifications.SetTabActivity(AllTabs.Count(t => t.NeedsInput), AllTabs.Count(t => t.IsWaitingForLimitReset),
             AllTabs.Count(t => t.Status == TabStatus.Working));
+        OnTabWorkChanged();
         // A closed tab's processes leave the header's total.
         OnTabProcessesSampled();
         // Claudette on the composer points out the other tabs waiting on the user (DESIGN.md §5).
         SelectedTab?.TellMascot();
         TabStatusChanged?.Invoke();
     }
+
+    /// <summary>
+    /// What Claude has on across the tabs, which <b>Keep this computer awake</b> can keep the computer awake for
+    /// (DESIGN.md §9, "Keeping the computer awake"): turns running, not waiting on the user, tasks and agents running in
+    /// the background, and tasks waiting for a usage limit to reset to carry on by themselves.
+    /// </summary>
+    internal void OnTabWorkChanged() => _services.KeepAwake.SetWork(new ClaudeWork(
+        AllTabs.Count(t => t.Status == TabStatus.Working),
+        AllTabs.Sum(t => t.RunningTaskCount),
+        AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit)));
 
     // ---- Every tab's processes, in the header (DESIGN.md §4, "Process monitor") -------------------------------------
 

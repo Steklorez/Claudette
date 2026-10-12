@@ -85,6 +85,43 @@ public class ClaudeSessionTests
     }
 
     [Fact]
+    public async Task A_prompt_suggestion_after_the_turn_is_published_and_an_empty_one_is_not()
+    {
+        await using var session = await StartAsync();
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        _transport.Emit("""{"type":"result","subtype":"success","is_error":false,"result":"pong","terminal_reason":"completed","session_id":"s1"}""");
+        await session.ReadUntilAsync<TurnCompleted>();
+
+        _transport.Emit("""{"type":"prompt_suggestion","suggestion":"  ","uuid":"u1","session_id":"s1"}""");
+        _transport.Emit("""{"type":"prompt_suggestion","suggestion":" run the tests\n","uuid":"u2","session_id":"s1"}""");
+        var (suggested, seen) = await session.ReadUntilAsync<PromptSuggested>();
+
+        Assert.Equal("run the tests", suggested.Suggestion);
+        // The empty one isn't published, nor taken for a message Claudette doesn't know.
+        Assert.Single(seen.OfType<PromptSuggested>());
+        Assert.DoesNotContain(seen, e => e is UnrecognizedMessage);
+        Assert.Equal(SessionState.Idle, session.State);
+    }
+
+    [Fact]
+    public async Task A_prompt_suggestion_that_comes_after_another_message_went_is_dropped()
+    {
+        await using var session = await StartAsync();
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        _transport.Emit("""{"type":"result","subtype":"success","is_error":false,"result":"pong","terminal_reason":"completed","session_id":"s1"}""");
+        await session.ReadUntilAsync<TurnCompleted>();
+
+        await session.SendUserMessageAsync("go on", TestContext.Current.CancellationToken);
+        _transport.Emit("""{"type":"prompt_suggestion","suggestion":"run the tests","uuid":"u1","session_id":"s1"}""");
+        _transport.Emit("""{"type":"result","subtype":"success","is_error":false,"result":"done","terminal_reason":"completed","session_id":"s1"}""");
+        _transport.Emit("""{"type":"prompt_suggestion","suggestion":"commit this","uuid":"u2","session_id":"s1"}""");
+        var (suggested, seen) = await session.ReadUntilAsync<PromptSuggested>();
+
+        Assert.Equal("commit this", suggested.Suggestion);
+        Assert.Single(seen.OfType<PromptSuggested>());
+    }
+
+    [Fact]
     public async Task Streams_text_and_completes_the_turn()
     {
         await using var session = await StartAsync();

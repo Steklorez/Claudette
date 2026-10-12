@@ -50,7 +50,7 @@ public class SleepBlockerTests
         var spec = Assert.Single(_launcher.Specs);
         Assert.Equal("/usr/bin/systemd-inhibit", spec.FileName);
         Assert.Equal(
-            ["--what=sleep", "--who=Claudette", "--why=Tabs are connected to the Claude app", "--mode=block",
+            ["--what=sleep", "--who=Claudette", "--why=Claudette is keeping this computer awake", "--mode=block",
              "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "claudette-awake", "4242"],
             spec.Arguments);
         // Claudette's own environment, like its other helpers.

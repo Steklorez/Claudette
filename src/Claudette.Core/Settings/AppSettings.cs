@@ -193,6 +193,15 @@ public sealed class GeneralSettings
     public WhileWorking MessagesWhileWorking { get; set; } = WhileWorking.Steer;
 
     /// <summary>
+    /// Keep this computer from sleeping, as <see cref="KeepAwakeWhen"/> says (DESIGN.md §9, "Keeping the computer
+    /// awake"). Only system sleep: the screen can still turn off. Off by default; the header's cup turns it on and off.
+    /// </summary>
+    public bool KeepAwake { get; set; }
+
+    /// <summary>When <see cref="KeepAwake"/> holds sleep off.</summary>
+    public KeepAwakeWhen KeepAwakeWhen { get; set; } = KeepAwakeWhen.ClaudeHasWork;
+
+    /// <summary>
     /// Remove the worktrees of worktree tabs once everything in them is on another branch, with no uncommitted changes
     /// (DESIGN.md §4, "Cleaning up worktrees"). Off by default.
     /// </summary>
@@ -213,6 +222,19 @@ public enum WhileWorking
 
     /// <summary>Held by Claudette until the turn ends, then sent as the next turn.</summary>
     Queue,
+}
+
+/// <summary>Settings → General → <b>Keep this computer awake</b>: when (DESIGN.md §9, "Keeping the computer awake").</summary>
+public enum KeepAwakeWhen
+{
+    /// <summary>
+    /// Only while Claude has work to finish: a turn running, tasks it keeps running in the background, or a task waiting
+    /// for a usage limit to reset so it can carry on by itself.
+    /// </summary>
+    ClaudeHasWork,
+
+    /// <summary>Whenever Claudette is running.</summary>
+    ClaudetteRuns,
 }
 
 public sealed class ClaudeCodeSettings
@@ -258,6 +280,12 @@ public sealed class ClaudeCodeSettings
     /// Each is a model call that counts toward usage, so it's off by default.
     /// </summary>
     public bool SubagentProgressSummaries { get; set; }
+
+    /// <summary>
+    /// After each turn, Claude Code predicts the user's next prompt, which the empty composer shows (DESIGN.md §5, "Prompt
+    /// suggestions"). Each is a model call that counts toward usage, so it's off by default.
+    /// </summary>
+    public bool PromptSuggestions { get; set; }
 
     /// <summary>
     /// Before Claude Code first starts in a folder that isn't trusted, ask about what the folder's own configuration

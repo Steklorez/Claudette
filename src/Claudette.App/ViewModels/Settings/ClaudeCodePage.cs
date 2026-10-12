@@ -37,6 +37,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         Entry("Keep copies of files Claude changes, so prompts can be rewound"),
         Entry("Show every hook run in the conversation"),
         Entry("Summarize subagents' progress"),
+        Entry("Suggest my next prompt"),
         Entry("Ask before using a new folder's own configuration (folder trust)", pageText: "Ask before using a new folder's own configuration"),
         .. ShowLoginShellSetting ? [Entry("Use my login shell's environment")] : Array.Empty<SettingsSearchResult>(),
         Entry("Connect new tabs to the Claude app (Remote Control)", pageText: "Connect new tabs to the Claude app"),
@@ -103,6 +104,13 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
     {
         get => Settings.ClaudeCode.SubagentProgressSummaries;
         set => Set(value, v => Settings.ClaudeCode.SubagentProgressSummaries = v);
+    }
+
+    /// <summary><b>Suggest my next prompt</b> (DESIGN.md §5, "Prompt suggestions").</summary>
+    public bool PromptSuggestions
+    {
+        get => Settings.ClaudeCode.PromptSuggestions;
+        set => Set(value, v => Settings.ClaudeCode.PromptSuggestions = v);
     }
 
     /// <summary><b>Ask before using a new folder's own configuration</b> (DESIGN.md §7, "Folder trust").</summary>

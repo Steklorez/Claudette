@@ -56,6 +56,10 @@ public sealed record RecordedImage(string MediaType, int Bytes, int? Width, int?
 /// message can script the recipient, such as <c>AGENT_REPLY The art page is done.</c>
 /// </item>
 /// <item>Requests with no tools that mention "title": <c>{"title": "Mock session title"}</c>.</item>
+/// <item>
+/// Claude Code's request for a prompt suggestion (<c>--prompt-suggestions</c>, its prompt starting
+/// <c>[SUGGESTION MODE</c>): <c>run the tests</c>.
+/// </item>
 /// <item>Anything else: <c>pong</c>.</item>
 /// </list>
 /// Ported from <c>spikes/mock-server.mjs</c>.
@@ -64,6 +68,12 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
 {
     /// <summary>The plan <c>EXIT_PLAN</c> writes.</summary>
     private const string PlanText = "1. Read the code\n2. Fix the bug";
+
+    /// <summary>How Claude Code's request for a prompt suggestion starts.</summary>
+    private const string SuggestionPrompt = "[SUGGESTION MODE";
+
+    /// <summary>The prompt suggestion the mock gives.</summary>
+    public const string Suggestion = "run the tests";
 
     private readonly WebApplication _app;
     private readonly ConcurrentQueue<RecordedRequest> _requests = new();
@@ -258,6 +268,11 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
         if (tools.Count == 0 && TitlePattern().IsMatch(system + text))
         {
             return new Plan("title", [TextBlock("""{"title": "Mock session title"}""")]);
+        }
+        // As Claude Code 2.1.284 asks for one; it drops a suggestion shorter than two words, such as "pong".
+        if (text.StartsWith(SuggestionPrompt, StringComparison.Ordinal))
+        {
+            return new Plan("suggestion", [TextBlock(Suggestion)]);
         }
 
         // EDIT_FILE needs two tool rounds (Claude Code requires a Read before an Edit), so count the tool rounds

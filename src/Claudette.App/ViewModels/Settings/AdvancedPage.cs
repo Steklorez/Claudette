@@ -62,7 +62,7 @@ public sealed partial class AdvancedPage(SettingsContext context, ClaudeCodePage
     public string LoginShellText => Services.UserEnvironment.Describe();
 
     /// <summary>Whether the computer is kept awake for tabs connected to the Claude app, or why not (DESIGN.md §18).</summary>
-    public string KeepAwakeText => Services.RemoteControl.DescribeKeepAwake();
+    public string KeepAwakeText => Services.KeepAwake.Describe();
 
     /// <summary>What Claude Code has sent this run that Claudette doesn't know, in words.</summary>
     public string DiagnosticsText => DiagnosticsReport(includeHeader: false);

@@ -126,6 +126,7 @@ public static class MessageParser
                 obj.GetObject("value")?.GetDouble("effective_window") is { } window ? (long)window : null,
                 obj.GetObject("value")?.GetDouble("threshold") is { } threshold ? (long)threshold : null,
                 obj),
+            "prompt_suggestion" => new PromptSuggestionMessage(obj.GetString("suggestion") ?? "", obj),
             _ when IgnoredTypes.Contains(type) => new IgnoredMessage(type, obj),
             _ => new UnknownMessage(type, obj),
         };

@@ -13,8 +13,9 @@ using Claudette.Core.Settings;
 namespace Claudette.App.Views;
 
 /// <summary>
-/// A tab's composer (DESIGN.md §5): Enter to send, Up and Down through earlier prompts, the suffix menu, the running
-/// tasks list and the tokens flyout. The autocomplete and attachments are in <c>ComposerView.Assist.cs</c>.
+/// A tab's composer (DESIGN.md §5): Enter to send, Up and Down through earlier prompts, Tab to take a suggested prompt,
+/// the suffix menu, the running tasks list and the tokens flyout. The autocomplete and attachments are in
+/// <c>ComposerView.Assist.cs</c>.
 /// </summary>
 public partial class ComposerView : UserControl
 {
@@ -88,6 +89,13 @@ public partial class ComposerView : UserControl
         }
         if (ViewModel is not { } tab)
         {
+            return;
+        }
+        if (e.Key is Key.Tab or Key.Right && e.KeyModifiers == KeyModifiers.None && tab.AcceptPromptSuggestion())
+        {
+            // The suggestion goes in the box, as in the terminal (DESIGN.md §5, "Prompt suggestions").
+            e.Handled = true;
+            Composer.CaretIndex = Composer.Text?.Length ?? 0;
             return;
         }
         if (e.Key == Key.V && Shortcuts.Matches(PasteAsTextChord, e.Key, e.KeyModifiers))

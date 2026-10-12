@@ -65,6 +65,16 @@ public class ClaudeEnvironmentTests
     }
 
     [Fact]
+    public void Prompt_suggestions_add_their_flag()
+    {
+        var args = ClaudeArguments.ForStreamingSession(new ClaudeLaunchOptions { WorkingDirectory = ".", PromptSuggestions = true });
+        var plain = ClaudeArguments.ForStreamingSession(new ClaudeLaunchOptions { WorkingDirectory = "." });
+
+        Assert.Contains("--prompt-suggestions", args);
+        Assert.DoesNotContain("--prompt-suggestions", plain);
+    }
+
+    [Fact]
     public void A_worktree_and_extra_folders_add_their_flags()
     {
         var args = ClaudeArguments.ForStreamingSession(new ClaudeLaunchOptions

@@ -98,6 +98,69 @@ public class MainWindowTests
         Assert.True(totals.TranslatePoint(default, window)!.Value.X < account.TranslatePoint(default, window)!.Value.X);
     }
 
+    /// <summary>
+    /// The header's cup after the processes' total turns Keep this computer awake on and off, and steams while the
+    /// computer is kept awake (DESIGN.md §9, "Keeping the computer awake").
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_cup_after_the_processes_keeps_the_computer_awake_and_steams_while_it_does()
+    {
+        await using var h = new TabTestHarness(s =>
+        {
+            s.Processes.ShowMonitor = true;
+            s.General.KeepAwakeWhen = KeepAwakeWhen.ClaudetteRuns;
+        }, dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        h.Trees.Trees[4242].Children.Add((5001, "node"));
+        h.Time.Advance(Claudette.Platform.Processes.ProcessSampler.SummaryInterval);
+        var main = new MainWindowViewModel(h.Services);
+        main.UseShell(h.Shell);
+        main.Account.Status = new AuthStatus(true, "claude.ai", null, "me@example.com", null, "max", null, null);
+
+        var window = new MainWindow { DataContext = main, Width = 1200, Height = 800 };
+        window.Show();
+        await UiText.SettleUntilAsync(window, () => window.GetVisualDescendants().OfType<TextBlock>().Any(t => t is { Name: "ProcessTotals", IsEffectivelyVisible: true }), "the total");
+        var totals = window.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "ProcessTotals");
+        var cup = window.GetVisualDescendants().OfType<ToggleButton>().Single(b => b.Name == "KeepAwakeToggle");
+        var steam = cup.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single(p => p.Name == "KeepAwakeSteam");
+
+        // Off, it's there to turn on, after the total.
+        Assert.True(cup.IsEffectivelyVisible);
+        Assert.True(cup.TranslatePoint(default, window)!.Value.X > totals.TranslatePoint(default, window)!.Value.X);
+        Assert.False(cup.IsChecked);
+        Assert.False(steam.IsEffectivelyVisible);
+        Assert.Equal("Keep this computer awake", AutomationProperties.GetName(cup));
+        Assert.Equal("This computer can sleep.\nClick to keep it awake while Claudette runs.\nRight-click to choose when.", ToolTip.GetTip(cup));
+
+        Click(window, cup);
+
+        Assert.True(h.Services.Settings.General.KeepAwake);
+        Assert.True(h.SleepBlocker.IsBlocking);
+        Assert.True(cup.IsChecked);
+        Assert.True(steam.IsEffectivelyVisible);
+        Assert.Equal("Keep this computer awake: keeping it awake", AutomationProperties.GetName(cup));
+        Assert.StartsWith("Keeping this computer awake.", ToolTip.GetTip(cup) as string, StringComparison.Ordinal);
+
+        // Its menu chooses when: only while Claude has work, which this tab has none of.
+        var menu = Assert.IsType<ContextMenu>(cup.ContextMenu);
+        menu.Open(cup);
+        UiText.Settle(window);
+        var items = menu.Items.OfType<MenuItem>().ToArray();
+        Assert.Equal(["Only while Claude has work to finish", "Whenever Claudette is running"], items.Select(i => i.Header as string));
+        Assert.Equal([false, true], items.Select(i => i.IsChecked));
+        ClickMenuItem(window, items[0]);
+        menu.Close();
+
+        Assert.Equal(KeepAwakeWhen.ClaudeHasWork, h.Services.Settings.General.KeepAwakeWhen);
+        Assert.True(cup.IsChecked);
+        Assert.False(h.SleepBlocker.IsBlocking);
+        Assert.False(steam.IsEffectivelyVisible);
+
+        Click(window, cup);
+        Assert.False(h.Services.Settings.General.KeepAwake);
+        Assert.False(cup.IsChecked);
+    }
+
     /// <summary>The header's button after the plan shows and hides the selected tab's side panel (DESIGN.md §3).</summary>
     [AvaloniaFact]
     public async Task The_button_after_the_plan_shows_and_hides_the_side_panel()

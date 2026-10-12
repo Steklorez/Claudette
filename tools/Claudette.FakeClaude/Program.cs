@@ -40,6 +40,8 @@
 //                    rate_limit_event, an assistant message with error "rate_limit" and a 429 result (DESIGN.md §6)
 //   DOC              Claude writing a doc with claude.ai's Docs connector: a call that makes it, an edit, and a reply
 //                    that names it without its link (DESIGN.md §5, "Claude Docs")
+//   SUGGEST <text>   replies "pong", then, when started with --prompt-suggestions, suggests <text> as the next prompt
+//                    with a prompt_suggestion message after the result (DESIGN.md §5, "Prompt suggestions")
 //   anything else    replies "pong: <prompt>" (or, while signed out, as AUTH_FAIL does)
 // A message with images (content blocks) is read as its text plus "[images: image/png, …]", so the reply says what
 // arrived.
@@ -205,9 +207,10 @@ if (Environment.GetEnvironmentVariable("FAKE_CLAUDE_START_AUTH_ERROR") == "1")
 }
 
 var modeFlag = Array.IndexOf(args, "--permission-mode");
-return await new FakeSession(version, modeFlag >= 0 && modeFlag + 1 < args.Length ? args[modeFlag + 1] : "default").RunAsync();
+return await new FakeSession(version, modeFlag >= 0 && modeFlag + 1 < args.Length ? args[modeFlag + 1] : "default",
+    args.Contains("--prompt-suggestions")).RunAsync();
 
-internal sealed class FakeSession(string version, string permissionMode)
+internal sealed class FakeSession(string version, string permissionMode, bool promptSuggestions)
 {
     private readonly string _sessionId = Guid.NewGuid().ToString();
     // Reported as Claude Code reports it: the --permission-mode it started with, then set_permission_mode's.
@@ -492,6 +495,20 @@ internal sealed class FakeSession(string version, string permissionMode)
                 else if (prompt.StartsWith("DOC", StringComparison.Ordinal))
                 {
                     await DocAsync();
+                }
+                else if (prompt.StartsWith("SUGGEST ", StringComparison.Ordinal))
+                {
+                    await AssistantAsync(new JsonObject { ["type"] = "text", ["text"] = "pong" });
+                    await ResultAsync("pong");
+                    if (promptSuggestions)
+                    {
+                        // After the result, as Claude Code 2.1.284 sends it.
+                        await WriteAsync(new JsonObject
+                        {
+                            ["type"] = "prompt_suggestion", ["suggestion"] = prompt["SUGGEST ".Length..].Trim(),
+                            ["uuid"] = Guid.NewGuid().ToString(), ["session_id"] = _sessionId,
+                        });
+                    }
                 }
                 else
                 {

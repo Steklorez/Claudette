@@ -131,6 +131,8 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(TaskBadgeTip));
         OnPropertyChanged(nameof(InfoRows));
         UpdateTaskTicker();
+        // Work going on in the background can keep the computer awake (DESIGN.md §9, "Keeping the computer awake").
+        _shell.OnTabWorkChanged();
     }
 
     private void UpdateTaskTicker() => TaskTicker.Run(IsTaskListOpen && HasRunningTasks);

@@ -807,6 +807,13 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(RowDetail));
         // Naming sessions after their tabs turned on: a running one takes its name now (DESIGN.md §13).
         SyncClaudeName();
+        if (!_services.Settings.ClaudeCode.PromptSuggestions)
+        {
+            // Turned off: none shows, though a running session makes them until it restarts (DESIGN.md §5).
+            PromptSuggestion = null;
+        }
+        // Send with may have changed what the placeholder says.
+        OnPropertyChanged(nameof(ComposerPlaceholder));
     }
 
     /// <summary>
@@ -888,10 +895,10 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         // What a thread's Claude should know about its sub-threads goes after the message, not after a command
         // (DESIGN.md §18, "Threads").
         var threadNote = OutgoingMessages.IsSlashCommand(text) ? null : TakeThreadNote();
-        // A mention of another session or agent reaches Claude as its name, with how to message it (DESIGN.md §5,
-        // "Autocomplete"); the card keeps what was typed.
+        // A mention of another session or agent reaches Claude as its name, and a session's ID as it is, with how to
+        // message it (DESIGN.md §5, "Autocomplete"); the card keeps what was typed.
         var mentions = OutgoingMessages.IsSlashCommand(text) ? null : ResolveMentions(text);
-        var mentionNote = mentions is null ? null : SessionMentions.Note(mentions.Mentioned);
+        var mentionNote = mentions is null ? null : SessionMentions.Note(mentions.Mentioned, mentions.ById);
         var card = _conversation.AddUserMessage(text, suffixText, images: images, threadNote: threadNote, mentionNote: mentionNote,
             mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray());
         foreach (var note in new[] { threadNote, mentionNote })
@@ -1296,6 +1303,8 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 SettingSources = State.WithoutProjectSettings ? "user" : null,
                 FallbackModel = settings.ClaudeCode.FallbackModel,
                 AgentProgressSummaries = settings.ClaudeCode.SubagentProgressSummaries,
+                // The next prompt Claude Code predicts, which the empty composer shows (DESIGN.md §5, "Prompt suggestions").
+                PromptSuggestions = settings.ClaudeCode.PromptSuggestions,
                 // A worktree tab's first start makes its worktree, or opens it again (DESIGN.md §4, "Worktree tabs").
                 Worktree = State.NewWorktree,
                 AddDirectories = [.. State.ExtraFolders.Where(Directory.Exists)],

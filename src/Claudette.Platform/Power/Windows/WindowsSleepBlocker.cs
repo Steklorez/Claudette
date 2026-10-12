@@ -6,7 +6,7 @@ namespace Claudette.Platform.Power.Windows;
 
 /// <summary>
 /// Holds off system sleep with <c>SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)</c>, and lets it happen
-/// again with <c>ES_CONTINUOUS</c> alone (DESIGN.md §18, "Remote Control"). The display can still turn off. The state
+/// again with <c>ES_CONTINUOUS</c> alone (DESIGN.md §9, "Keeping the computer awake"). The display can still turn off. The state
 /// belongs to the thread that set it and ends with it, so a thread of its own sets and clears it and lives until
 /// Claudette closes, rather than a pool thread that could be reused or retired.
 /// </summary>

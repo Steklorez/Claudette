@@ -683,7 +683,10 @@ public class RemoteControlTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.RemoteControl.Status.IsConnected, "the connection");
         Assert.True(h.SleepBlocker.IsBlocking);
-        Assert.StartsWith("1 tab is connected to the Claude app.", h.Services.RemoteControl.DescribeKeepAwake(), StringComparison.Ordinal);
+        Assert.Contains("1 tab is connected to the Claude app.", h.Services.KeepAwake.Describe(), StringComparison.Ordinal);
+        Assert.True(h.Services.KeepAwake.IsKeepingAwake);
+        Assert.Contains("1 tab is connected to the Claude app.", h.Services.KeepAwake.Tooltip, StringComparison.Ordinal);
+        Assert.False(h.Services.KeepAwake.IsOn);
 
         using var settings = new SettingsViewModel(h.Services, null);
         settings.ClaudeCode.KeepAwakeWhileConnected = false;
@@ -700,7 +703,7 @@ public class RemoteControlTests
         Assert.Equal([true, false, true, false], h.SleepBlocker.Changes);
 
         // Closing Claudette lets go of the OS's side too.
-        h.Services.RemoteControl.Dispose();
+        h.Services.KeepAwake.Dispose();
         Assert.True(h.SleepBlocker.IsDisposed);
     }
 
@@ -722,7 +725,7 @@ public class RemoteControlTests
         Assert.False(settings.ClaudeCode.ConnectNewTabsToClaudeApp);
         Assert.True(settings.ClaudeCode.KeepAwakeWhileConnected);
         Assert.Contains(settings.SearchResultsFor("claude app"), r => r is { Category: "Claude Code", Label: "Connect new tabs to the Claude app (Remote Control)" });
-        Assert.Single(settings.SearchResultsFor("keep awake"));
+        Assert.Single(settings.SearchResultsFor("keep awake"), r => r.Category == "Claude Code");
         Assert.Single(settings.SearchResultsFor("push notifications"));
 
         await settings.ClaudeCode.OpenPushNotificationsDocsCommand.ExecuteAsync(null);

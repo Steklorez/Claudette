@@ -8,6 +8,7 @@
   "38%"
   "Not enough data yet."
 [button] Expand the usage header
+[toggle] Keep this computer awake
 [button] Account: me@example.com
 [button] Plan usage: Max plan
 [button] New tab

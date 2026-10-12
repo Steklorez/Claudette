@@ -96,7 +96,7 @@ public partial class TabViewModel
             var names = SubThreadNames;
             for (var i = 0; i < subThreads.Length; i++)
             {
-                targets.Add(new MentionTarget(names[i], names[i], MentionKind.SubThread));
+                targets.Add(new MentionTarget(names[i], names[i], MentionKind.SubThread, SessionId: subThreads[i].State.SessionId));
                 if (subThreads[i].OwnLiveSession is { } entry)
                 {
                     claimed.Add(entry);
@@ -105,25 +105,29 @@ public partial class TabViewModel
         }
         foreach (var tab in _shell.AllTabs.Where(t => !ReferenceEquals(t, this) && !subThreads.Contains(t)))
         {
+            // With the ID its menu's Copy session ID gives, so the ID pasted into a message reaches it too.
             if (tab.OwnLiveSession is { } entry)
             {
                 claimed.Add(entry);
-                targets.Add(new MentionTarget(tab.DisplayName, entry.Name, MentionKind.Tab));
+                targets.Add(new MentionTarget(tab.DisplayName, entry.Name, MentionKind.Tab, SessionId: tab.State.SessionId));
             }
             else if (tab._session is not null && tab._claudeName is { } name)
             {
                 // Running under the tab's name, and Claude Code's entry for it can't be read.
-                targets.Add(new MentionTarget(tab.DisplayName, name, MentionKind.Tab));
+                targets.Add(new MentionTarget(tab.DisplayName, name, MentionKind.Tab, SessionId: tab.State.SessionId));
             }
         }
         targets.AddRange(_services.LiveSessions.Current.Where(s => !claimed.Contains(s))
-            .Select(s => new MentionTarget(s.Name, s.Name, MentionKind.Session, s.Cwd)));
+            .Select(s => new MentionTarget(s.Name, s.Name, MentionKind.Session, s.Cwd, s.SessionId)));
         targets.AddRange(Agents.Subagents.Reverse().Where(a => a.AgentId is not null)
             .Select(a => new MentionTarget(a.Title, a.AgentId!, MentionKind.Subagent, a.AgentType)));
         return SessionMentions.Unique(targets);
     }
 
-    /// <summary>A message's mentions of sessions and agents, resolved for Claude; null when it has none.</summary>
+    /// <summary>
+    /// A message's mentions of sessions and agents, by <c>@</c> or by a session's ID, resolved for Claude; null when it
+    /// has none.
+    /// </summary>
     private ResolvedMentions? ResolveMentions(string text) =>
-        text.Contains('@') && SessionMentions.Resolve(text, MentionTargets()) is { Mentioned.Count: > 0 } resolved ? resolved : null;
+        SessionMentions.Resolve(text, MentionTargets()) is { Mentioned.Count: > 0 } resolved ? resolved : null;
 }

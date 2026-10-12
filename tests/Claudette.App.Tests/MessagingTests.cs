@@ -192,7 +192,42 @@ public class MessagingTests
 
         var target = plan.MentionTargets().Single(t => t.Name == "Art page");
 
-        Assert.Equal(new MentionTarget("Art page", "Art page", MentionKind.SubThread), target);
+        Assert.Equal(new MentionTarget("Art page", "Art page", MentionKind.SubThread, SessionId: "s-art"), target);
+    }
+
+    [Fact]
+    public async Task A_tabs_copied_session_id_in_a_message_tells_Claude_how_to_message_it()
+    {
+        await using var h = new TabTestHarness();
+        var (plan, art) = await TwoTabsAsync(h);
+        await art.CopySessionIdCommand.ExecuteAsync(null);
+
+        plan.ComposerText = $"ask {h.Platform.Clipboard} what it's doing, and s-other too";
+        await plan.SendCommand.ExecuteAsync(null);
+
+        // The IDs stay as typed; the note says whose they are and what SendMessage takes instead.
+        var sent = h.Transport.SentUserTextsTo(0).Last();
+        Assert.Equal(
+            "ask s-art what it's doing, and s-other too\n\n"
+            + "[Claudette] Who this message names, each of whom you can message with SendMessage:\n"
+            + "- s-art is the session ID of \"Art page\", another Claude Code session on this machine, open in another of Claudette's tabs. Its to: \"Art page\".\n"
+            + "- s-other is the session ID of \"api-worker\", another Claude Code session on this machine, working in C:\\work\\api. Its to: \"api-worker\".",
+            sent);
+        var card = plan.Items.OfType<UserMessageItem>().Last();
+        Assert.Equal("ask s-art what it's doing, and s-other too", card.Text);
+        Assert.Equal("Told Claude how to reach Art page and api-worker", card.MentionNoteText);
+    }
+
+    [Fact]
+    public async Task A_tabs_own_session_id_or_one_inside_a_longer_word_names_nobody()
+    {
+        await using var h = new TabTestHarness();
+        var (plan, _) = await TwoTabsAsync(h);
+
+        plan.ComposerText = "resume s-plan, not s-artwork";
+        await plan.SendCommand.ExecuteAsync(null);
+
+        Assert.Equal("resume s-plan, not s-artwork", h.Transport.SentUserTextsTo(0).Last());
     }
 
     // ---- Helpers -------------------------------------------------------------------------------------------------

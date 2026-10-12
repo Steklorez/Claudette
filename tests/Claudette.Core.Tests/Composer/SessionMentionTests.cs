@@ -65,6 +65,43 @@ public sealed class SessionMentionTests
     }
 
     [Fact]
+    public void A_session_id_names_its_session_and_stays_in_the_text()
+    {
+        const string id = "66790aac-1d2e-4f3a-9b8c-7d6e5f4a3b2c";
+        var art = ArtPage with { Address = "Art page-joyful-stearns", SessionId = id };
+
+        var resolved = SessionMentions.Resolve($"tell {id.ToUpperInvariant()}: the build is green", [art, Worker]);
+
+        Assert.Equal($"tell {id.ToUpperInvariant()}: the build is green", resolved.Text);
+        Assert.Equal([art], resolved.Mentioned);
+        Assert.Equal([art], resolved.ById);
+        Assert.Equal(
+            $"[Claudette] {id} in this message is the session ID of \"Art page\", another Claude Code session on this machine, open in another of Claudette's tabs. "
+            + "To message it, call SendMessage with to: \"Art page-joyful-stearns\".",
+            SessionMentions.Note(resolved.Mentioned, resolved.ById));
+    }
+
+    [Theory]
+    [InlineData("see x66790aac-1d2e-4f3a-9b8c-7d6e5f4a3b2c")]
+    [InlineData("see 66790aac-1d2e-4f3a-9b8c-7d6e5f4a3b2c-2")]
+    [InlineData("see 66790aac-1d2e")]
+    public void Part_of_a_longer_word_is_not_a_session_id(string typed) =>
+        Assert.Empty(SessionMentions.Resolve(typed, [ArtPage with { SessionId = "66790aac-1d2e-4f3a-9b8c-7d6e5f4a3b2c" }]).Mentioned);
+
+    [Fact]
+    public void Named_both_ways_it_goes_by_its_name()
+    {
+        const string id = "66790aac-1d2e-4f3a-9b8c-7d6e5f4a3b2c";
+        var art = ArtPage with { SessionId = id };
+
+        var resolved = SessionMentions.Resolve($"{id} and @api-worker, then @\"Art page\"", [art, Worker]);
+
+        Assert.Equal($"{id} and api-worker, then \"Art page\"", resolved.Text);
+        Assert.Equal([Worker, art], resolved.Mentioned);
+        Assert.Empty(resolved.ById!);
+    }
+
+    [Fact]
     public void Several_are_a_list()
     {
         var note = SessionMentions.Note([Worker, new MentionTarget("Docs", "Docs", MentionKind.SubThread)]);

@@ -9,7 +9,7 @@ namespace Claudette.Platform.Power;
 public static class SleepBlockers
 {
     /// <summary>
-    /// What keeps this computer awake while tabs are connected to the Claude app (DESIGN.md §18, "Remote Control"):
+    /// What keeps this computer awake, as Settings say (DESIGN.md §9, "Keeping the computer awake"):
     /// <c>SetThreadExecutionState</c> on Windows, <c>caffeinate</c> on macOS, and <c>systemd-inhibit</c> on Linux when
     /// it's installed. Anything that fails to set up keeps nothing awake, and Diagnostics says why.
     /// </summary>

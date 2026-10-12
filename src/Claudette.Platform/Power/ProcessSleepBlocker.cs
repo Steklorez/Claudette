@@ -8,7 +8,7 @@ namespace Claudette.Platform.Power;
 
 /// <summary>
 /// Holds off system sleep with a helper that blocks it for as long as it runs, and ends the helper to let the computer
-/// sleep again (DESIGN.md §18, "Remote Control"): <c>caffeinate</c> on macOS, <c>systemd-inhibit</c> on Linux. The
+/// sleep again (DESIGN.md §9, "Keeping the computer awake"): <c>caffeinate</c> on macOS, <c>systemd-inhibit</c> on Linux. The
 /// helper starts through <see cref="IProcessLauncher"/> with Claudette's own environment, like <c>ps</c> and
 /// <c>notify-send</c>. If it stops by itself, why is kept for Diagnostics.
 /// </summary>
@@ -53,7 +53,7 @@ public sealed class ProcessSleepBlocker : ISleepBlocker
     /// </summary>
     public static IReadOnlyList<string> SystemdInhibitArguments(int claudetteProcessId) =>
     [
-        "--what=sleep", "--who=Claudette", "--why=Tabs are connected to the Claude app", "--mode=block",
+        "--what=sleep", "--who=Claudette", "--why=Claudette is keeping this computer awake", "--mode=block",
         "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "claudette-awake",
         claudetteProcessId.ToString(CultureInfo.InvariantCulture),
     ];

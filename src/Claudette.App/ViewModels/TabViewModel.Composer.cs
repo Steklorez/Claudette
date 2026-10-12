@@ -74,6 +74,11 @@ public sealed partial class TabViewModel
             // Typing, or sending: the next Up starts from the newest again.
             _recall.Reset();
         }
+        if (value.Length > 0)
+        {
+            // Typing dismisses the suggestion, as in the terminal (DESIGN.md §5, "Prompt suggestions").
+            PromptSuggestion = null;
+        }
         DraftChanged();
         // Typing wakes Claudette on the composer from a nap, and her name has her wave back (DESIGN.md §5).
         TellMascot(mascot => mascot.Nudge());
@@ -122,7 +127,46 @@ public sealed partial class TabViewModel
                 // The turn may have added or removed files.
                 _fileIndex?.Invalidate();
                 break;
+            case PromptSuggested suggested:
+                // Only for an empty composer, with nothing sent since the turn ended.
+                PromptSuggestion = _services.Settings.ClaudeCode.PromptSuggestions && ComposerText.Length == 0 && !IsReadOnly
+                    && _session?.State == SessionState.Idle
+                    ? suggested.Suggestion
+                    : null;
+                break;
+            case StateChanged { State: SessionState.Working or SessionState.Exited } or TurnStarted or ConversationReset or SessionExited:
+                // Whatever goes next, it's not the turn it was suggested after.
+                PromptSuggestion = null;
+                break;
         }
+    }
+
+    // ---- Prompt suggestions (DESIGN.md §5, "Prompt suggestions") ------------------------------------------------------
+
+    /// <summary>
+    /// The next prompt Claude Code predicts after a turn, which the empty composer shows until something is typed or
+    /// sent. Null when there's none.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ComposerPlaceholder))]
+    public partial string? PromptSuggestion { get; private set; }
+
+    /// <summary>The composer's placeholder: the suggestion, with the key that takes it, or which keys send.</summary>
+    public string ComposerPlaceholder => PromptSuggestion is { } suggestion ? $"{suggestion}  (Tab to use)" : Tips.ComposerPlaceholder;
+
+    /// <summary>
+    /// Tab or Right in the empty composer: the suggestion goes in the box, to send as it is or change first. False when
+    /// there's none.
+    /// </summary>
+    internal bool AcceptPromptSuggestion()
+    {
+        if (PromptSuggestion is not { } suggestion || ComposerText.Length > 0)
+        {
+            return false;
+        }
+        // Which dismisses it.
+        ComposerText = suggestion;
+        return true;
     }
 
     // ---- Attachments (DESIGN.md §5, "Attachments") ---------------------------------------------------------

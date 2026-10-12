@@ -96,6 +96,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
+        General.Dispose();
         ClaudeCode.Dispose();
         Project?.Dispose();
     }

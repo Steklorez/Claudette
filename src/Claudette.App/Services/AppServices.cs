@@ -68,8 +68,8 @@ public sealed class AppServices : IAsyncDisposable
     /// <param name="unrealRegistry">Unreal's Windows registry entries. Null has none.</param>
     /// <param name="projectToolPaths">Where other programs keep their files; by default the current user's folders.</param>
     /// <param name="sleepBlocker">
-    /// Keeps the computer awake while tabs are connected to the Claude app (DESIGN.md §18, "Remote Control"). Null
-    /// keeps nothing awake: tests.
+    /// Keeps the computer awake, as Settings → General says, and while tabs are connected to the Claude app (DESIGN.md
+    /// §9, "Keeping the computer awake"). Null keeps nothing awake: tests.
     /// </param>
     /// <param name="loginItems">The OS's login entry (DESIGN.md §9, "Starting at login"). Null has none: tests.</param>
     /// <param name="systemMotion">Whether the OS asks for less motion (DESIGN.md §3, "Accessibility"). Null never does: tests.</param>
@@ -121,7 +121,8 @@ public sealed class AppServices : IAsyncDisposable
         // The first launch that knows about folder trust trusts the folders already used here (DESIGN.md §7).
         State.TrustFoldersAlreadyUsed();
         UserEnvironment = new UserEnvironment(loginShell, () => Settings.ClaudeCode.UseLoginShellEnvironment, Loggers.CreateLogger("LoginShell"));
-        RemoteControl = new RemoteControlService(this, sleepBlocker ?? new NoSleepBlocker());
+        KeepAwake = new KeepAwakeService(this, sleepBlocker ?? new NoSleepBlocker());
+        RemoteControl = new RemoteControlService(this);
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, RemoteControl.ClaudeVariables);
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment);
         Library = new LibraryService(this);
@@ -149,7 +150,7 @@ public sealed class AppServices : IAsyncDisposable
             Mascot.OnSettingsChanged();
             ClaudeUpdates?.OnSettingsChanged();
             Notifications.OnSettingsChanged();
-            RemoteControl.OnSettingsChanged();
+            KeepAwake.OnSettingsChanged();
             ServiceStatus.OnSettingsChanged();
             Tips.Refresh();
         };
@@ -299,9 +300,15 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>
     /// Remote Control, the Claude app's connection to the tabs (DESIGN.md §18): whether the account can use it, the
-    /// presence file every <c>claude</c> is told about, and keeping the computer awake while tabs are connected.
+    /// presence file every <c>claude</c> is told about, and which tabs are connected.
     /// </summary>
     public RemoteControlService RemoteControl { get; }
+
+    /// <summary>
+    /// Keeping the computer from sleeping (DESIGN.md §9, "Keeping the computer awake"): Settings → General's <b>Keep
+    /// this computer awake</b>, which the header's cup turns on and off, and tabs connected to the Claude app.
+    /// </summary>
+    public KeepAwakeService KeepAwake { get; }
 
     /// <summary>
     /// Claude's service status from status.claude.com (DESIGN.md §18, "Service status"): the header's dot and the banner.
@@ -633,6 +640,7 @@ public sealed class AppServices : IAsyncDisposable
         Library.Dispose();
         Notifications.Dispose();
         RemoteControl.Dispose();
+        KeepAwake.Dispose();
         ServiceStatus.Dispose();
         LiveSessions.Dispose();
         if (ClaudeUpdates is not null)

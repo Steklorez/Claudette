@@ -29,6 +29,19 @@
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="A queued message has Send now, to send it into the turn after all, and Cancel. Stop takes queued messages back to the composer." />
 
+    <!-- Keeping the computer awake (DESIGN.md §9, "Keeping the computer awake"): the header's cup is the same switch -->
+    <CheckBox Content="Keep this computer awake" IsChecked="{Binding KeepAwake}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="So a task a usage limit stopped can carry on by itself when the limit resets, hours later. Only sleep is held off: the screen can still turn off, and the screensaver can still start. Closing a laptop's lid may still put it to sleep. The cup in the header turns this on and off, and steams while the computer is kept awake." />
+    <TextBlock Classes="small warning" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding KeepAwakeUnavailableText}"
+               IsVisible="{Binding KeepAwakeUnavailableText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <StackPanel Spacing="4" Margin="28,-4,0,0" IsEnabled="{Binding KeepAwake}">
+      <RadioButton GroupName="KeepAwakeWhen" Content="Only while Claude has work to finish" IsChecked="{Binding KeepAwakeWhileClaudeHasWork}" />
+      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-4,0,0"
+                 Text="A turn running, tasks Claude Code keeps running in the background, or a task waiting for a usage limit to reset so it can carry on. Once there's none, the computer can sleep again a couple of minutes later." />
+      <RadioButton GroupName="KeepAwakeWhen" Content="Whenever Claudette is running" IsChecked="{Binding KeepAwakeWhileClaudetteRuns}" />
+    </StackPanel>
+
     <!-- Cleaning up worktrees (DESIGN.md §4, "Cleaning up worktrees") -->
     <TextBlock Text="Worktrees" FontWeight="SemiBold" Margin="0,8,0,0" />
     <TextBlock Classes="muted small" TextWrapping="Wrap"

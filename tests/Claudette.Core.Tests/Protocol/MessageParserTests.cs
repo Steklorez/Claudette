@@ -67,6 +67,15 @@ public class MessageParserTests
     }
 
     [Fact]
+    public void Reads_a_prompt_suggestion()
+    {
+        // As Claude Code 2.1.284 sends it with --prompt-suggestions, after the turn's result.
+        Assert.True(MessageParser.TryParse("""{"type":"prompt_suggestion","suggestion":"run the tests","uuid":"f7970991-0ac8-4580-bf8e-d750c6b7e53f","session_id":"s1"}""", out var message, out _));
+
+        Assert.Equal("run the tests", Assert.IsType<PromptSuggestionMessage>(message).Suggestion);
+    }
+
+    [Fact]
     public void Reads_system_init()
     {
         var init = ParseFirst<SystemInitMessage>("01-mock-basic");

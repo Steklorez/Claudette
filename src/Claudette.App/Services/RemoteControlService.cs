@@ -6,19 +6,17 @@ namespace Claudette.App.Services;
 /// <summary>
 /// What the tabs share about Remote Control, the Claude app's connection to them (DESIGN.md §18, "Remote Control"):
 /// whether the account can use it, the presence file that keeps pushes off the phone while Claudette is in front, and
-/// keeping the computer awake while a tab is connected. Use on the UI thread.
+/// which tabs are connected, which <see cref="KeepAwakeService"/> keeps the computer awake for. Use on the UI thread.
 /// </summary>
 public sealed class RemoteControlService : IDisposable
 {
     private readonly AppServices _services;
-    private readonly ISleepBlocker _sleep;
     private readonly PresenceFile _presence;
     private readonly HashSet<string> _connectedTabs = new(StringComparer.Ordinal);
 
-    public RemoteControlService(AppServices services, ISleepBlocker sleep)
+    public RemoteControlService(AppServices services)
     {
         _services = services;
-        _sleep = sleep;
         _presence = new PresenceFile(services.Paths.PresenceFile, services.Loggers.CreateLogger("Presence"));
         EnvironmentVariable = name => _services.UserEnvironment.Current is { } environment
             ? environment.GetValueOrDefault(name)
@@ -92,40 +90,22 @@ public sealed class RemoteControlService : IDisposable
     /// <summary>How many tabs are connected to the Claude app now.</summary>
     public int ConnectedTabs => _connectedTabs.Count;
 
-    /// <summary>A tab connected or stopped being connected: sleep is held off while any tab is, if Settings allow.</summary>
+    /// <summary>
+    /// A tab connected or stopped being connected: sleep is held off while any tab is, if Settings → Claude Code allows
+    /// (<see cref="KeepAwakeService"/>).
+    /// </summary>
     public void SetTabConnected(string tabId, bool connected)
     {
         if (connected ? _connectedTabs.Add(tabId) : _connectedTabs.Remove(tabId))
         {
-            UpdateKeepAwake();
+            _services.KeepAwake.SetConnectedTabs(_connectedTabs.Count);
         }
     }
 
-    /// <summary>Settings → Claude Code → <b>Keep this computer awake while tabs are connected</b> may have changed.</summary>
-    public void OnSettingsChanged() => UpdateKeepAwake();
-
-    private void UpdateKeepAwake() =>
-        _sleep.SetBlocking(_connectedTabs.Count > 0 && _services.Settings.ClaudeCode.KeepAwakeWhileConnected);
-
-    /// <summary>For Settings → Advanced → Diagnostics.</summary>
-    public string DescribeKeepAwake()
-    {
-        var tabs = _connectedTabs.Count switch
-        {
-            0 => "No tab is connected to the Claude app.",
-            1 => "1 tab is connected to the Claude app.",
-            var n => $"{n} tabs are connected to the Claude app.",
-        };
-        var setting = _services.Settings.ClaudeCode.KeepAwakeWhileConnected ? "" : " Keeping the computer awake is turned off in Settings → Claude Code.";
-        return $"{tabs}{setting} {_sleep.Describe()}";
-    }
-
-    /// <summary>At exit: the computer can sleep again, and nobody is at Claudette.</summary>
+    /// <summary>At exit: nobody is at Claudette. <see cref="KeepAwakeService"/> lets the computer sleep again itself.</summary>
     public void Dispose()
     {
         _connectedTabs.Clear();
-        _sleep.SetBlocking(false);
-        _sleep.Dispose();
         _presence.Dispose();
     }
 }

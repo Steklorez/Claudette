@@ -215,8 +215,9 @@
           </ItemsControl>
           </StackPanel>
   
+          <!-- The placeholder says which keys send, or shows the next prompt Claude Code suggests (DESIGN.md §5, "Prompt suggestions") -->
           <TextBox x:Name="Composer" Grid.Row="1" Text="{Binding ComposerText}" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="240"
-                   PlaceholderText="{Binding Tips.ComposerPlaceholder}" />
+                   PlaceholderText="{Binding ComposerPlaceholder}" />
   
           <!-- / and @ autocomplete (DESIGN.md §5, "Composer"): keyboard first, the text box keeps focus -->
           <Popup x:Name="CompletionPopup" Grid.Row="1" PlacementTarget="{Binding #ComposerBox}" Placement="TopEdgeAlignedLeft" VerticalOffset="-4"
