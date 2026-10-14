@@ -183,6 +183,27 @@ public class WorktreeTabTests
     }
 
     [Fact]
+    public async Task A_tab_in_the_worktree_through_a_link_keeps_it_without_asking()
+    {
+        Assert.SkipWhen(!GitInstalled, "git isn't on PATH.");
+        await using var h = new TabTestHarness();
+        await InitRepositoryAsync(h);
+        var (tab, path) = await WorktreeTabAsync(h, realWorktree: true);
+        h.Factory.ProcessPerSession = true;
+        // Claude Code reports a worktree tab's folder by its real path, while a tab opened in it names it as the user
+        // reached it: on macOS a folder under /var is really under /private/var.
+        var link = Path.Combine(h.Root, "linked");
+        using var linked = FolderLinks.Create(link, h.WorkFolder);
+        await h.Shell.OpenFolderAsync(GitWorktrees.PathFor(link, Path.GetFileName(path)));
+        Assert.NotSame(tab, h.Shell.SelectedTab);
+
+        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+
+        await Waiting.NeverAsync(() => h.Shell.Confirmation is not null, "an offer");
+        Assert.True(Directory.Exists(path));
+    }
+
+    [Fact]
     public async Task Leaving_processes_running_keeps_the_worktree_without_asking()
     {
         Assert.SkipWhen(!GitInstalled, "git isn't on PATH.");

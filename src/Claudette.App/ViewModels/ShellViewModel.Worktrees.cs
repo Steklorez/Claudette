@@ -1,3 +1,4 @@
+using Claudette.Core.Files;
 using Claudette.Core.Git;
 using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.Input;
@@ -58,12 +59,13 @@ public sealed partial class ShellViewModel
 
     /// <summary>
     /// An open tab works in <paramref name="path"/>, or will: a copy made before the first turn starts Claude Code with
-    /// the same <c>--worktree</c> name, while its folder is still the main checkout.
+    /// the same <c>--worktree</c> name, while its folder is still the main checkout. Matched with symbolic links followed:
+    /// Claude Code reports a worktree tab's folder by its real path, and another tab names it as it was opened.
     /// </summary>
     private bool IsWorktreeInUse(string main, string root, string path) => AllTabs.Any(t =>
-        FolderHistory.SamePath(t.Folder, path)
-        || t.State is { NewWorktree: { } pending, WorktreeOf: { } of } && FolderHistory.SamePath(of, main)
-           && FolderHistory.SamePath(GitWorktrees.PathFor(root, pending), path));
+        RealPath.Same(t.Folder, path)
+        || t.State is { NewWorktree: { } pending, WorktreeOf: { } of } && RealPath.Same(of, main)
+           && RealPath.Same(GitWorktrees.PathFor(root, pending), path));
 
     /// <summary>The selected tab's group folder can have worktrees: the palette offers one.</summary>
     private bool CanOpenWorktreeTab(TabViewModel tab) => Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { CanMakeWorktrees: true };
@@ -83,7 +85,7 @@ public sealed partial class ShellViewModel
                 continue;
             }
             var path = state.NewWorktree is { } name ? GitWorktrees.PathFor(root, name) : state.Folder;
-            if (!Directory.Exists(path) || found.Any(f => FolderHistory.SamePath(f.Worktree.Path, path)) || IsWorktreeInUse(main, root, path))
+            if (!Directory.Exists(path) || found.Any(f => RealPath.Same(f.Worktree.Path, path)) || IsWorktreeInUse(main, root, path))
             {
                 continue;
             }
