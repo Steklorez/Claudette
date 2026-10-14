@@ -193,6 +193,10 @@
                           <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                           <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}" />
                           <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}" />
+                          <!-- A name of the user's own in place of the folder's (DESIGN.md §4, "Grouped by folder") -->
+                          <MenuItem Header="Rename…" Click="OnRenameGroup" />
+                          <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
+                                    IsVisible="{Binding HasName}" />
                           <MenuItem Header="Change color…" Click="OnChangeGroupColor" />
                           <Separator />
                           <MenuItem Header="Close group" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseGroupCommand}" CommandParameter="{Binding}" />
@@ -468,6 +472,9 @@
                         <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                         <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}" />
                         <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Rename…" Click="OnRenameGroup" />
+                        <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
+                                  IsVisible="{Binding HasName}" />
                         <MenuItem Header="Change color…" Click="OnChangeGroupColor" />
                         <Separator />
                         <MenuItem Header="Close group" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseGroupCommand}" CommandParameter="{Binding}" />

@@ -391,7 +391,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         {
             var state = _services.State;
             var color = GroupColors.ForNewGroup(state, folder, Groups.Select(g => g.Color).ToArray());
-            group = new TabGroupViewModel(folder, color, state.CollapsedGroups.Any(c => FolderHistory.SamePath(c, folder)));
+            group = new TabGroupViewModel(folder, color, state.CollapsedGroups.Any(c => FolderHistory.SamePath(c, folder)))
+            {
+                Name = GroupNames.Saved(state, folder),
+            };
             Groups.Add(group);
             UpdateGroupLabels();
             OnPropertyChanged(nameof(HasTabs));
@@ -633,6 +636,29 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     {
         group.Color = color;
         GroupColors.Remember(_services.State, group.Folder, color);
+        _services.SaveState();
+    }
+
+    /// <summary>
+    /// <b>Rename…</b> in a group's menu opens this beside the label (DESIGN.md §4, "Grouped by folder"). The name it saves
+    /// is remembered for the folder.
+    /// </summary>
+    public GroupNameEditorViewModel RenameGroup(TabGroupViewModel group) => new(group, name => SetGroupName(group, name));
+
+    [RelayCommand]
+    private void ResetGroupName(TabGroupViewModel? group)
+    {
+        if (group is not null)
+        {
+            SetGroupName(group, null);
+        }
+    }
+
+    private void SetGroupName(TabGroupViewModel group, string? name)
+    {
+        group.Name = name;
+        GroupNames.Remember(_services.State, group.Folder, name);
+        UpdateGroupLabels();
         _services.SaveState();
     }
 
@@ -924,14 +950,17 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.SaveState();
     }
 
-    /// <summary>Gives groups with the same folder name a distinguishing parent, such as <c>work/api</c>.</summary>
+    /// <summary>
+    /// Gives groups with the same folder name a distinguishing parent, such as <c>work/api</c>. A group the user named
+    /// shows its name, so it leaves the other its folder's name alone.
+    /// </summary>
     private void UpdateGroupLabels()
     {
         foreach (var group in Groups)
         {
-            var clash = Groups.Any(g => g != group && string.Equals(g.FolderName, group.FolderName, StringComparison.OrdinalIgnoreCase));
+            var clash = Groups.Any(g => g != group && !g.HasName && string.Equals(g.FolderName, group.FolderName, StringComparison.OrdinalIgnoreCase));
             var parent = Path.GetFileName(Path.GetDirectoryName(group.Folder) ?? "");
-            group.Label = clash && parent.Length > 0 ? $"{parent}/{group.FolderName}" : group.FolderName;
+            group.FolderLabel = clash && parent.Length > 0 ? $"{parent}/{group.FolderName}" : group.FolderName;
         }
     }
 

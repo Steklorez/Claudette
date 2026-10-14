@@ -32,6 +32,12 @@ public sealed class AppState
     /// </summary>
     public Dictionary<string, int> GroupColors { get; set; } = [];
 
+    /// <summary>
+    /// A name the user gave a folder group, shown in place of the folder's, by folder path (DESIGN.md §4, "Grouped by
+    /// folder").
+    /// </summary>
+    public Dictionary<string, string> FolderNames { get; set; } = [];
+
     /// <summary>Folder groups the user collapsed.</summary>
     public List<string> CollapsedGroups { get; set; } = [];
 

@@ -208,9 +208,28 @@ public partial class ShellView : UserControl
 
     /// <summary>
     /// <b>Change color…</b> in a group's menu opens its color picker beside the group's label, in the sidebar or the rail
-    /// (DESIGN.md §4, "Grouped by folder"). Posted, so the menu has closed before the picker opens.
+    /// (DESIGN.md §4, "Grouped by folder").
     /// </summary>
-    private void OnChangeGroupColor(object? sender, RoutedEventArgs e)
+    private void OnChangeGroupColor(object? sender, RoutedEventArgs e) => ShowBesideGroupLabel(sender, (shell, group, flyout) =>
+    {
+        var picker = shell.PickGroupColor(group);
+        picker.Done += flyout.Hide;
+        return new GroupColorPicker { DataContext = picker };
+    });
+
+    /// <summary><b>Rename…</b> in a group's menu opens its name beside the group's label, in the sidebar or the rail.</summary>
+    private void OnRenameGroup(object? sender, RoutedEventArgs e) => ShowBesideGroupLabel(sender, (shell, group, flyout) =>
+    {
+        var editor = shell.RenameGroup(group);
+        editor.Done += flyout.Hide;
+        return new GroupNameEditor { DataContext = editor };
+    });
+
+    /// <summary>
+    /// Opens what <paramref name="content"/> makes in a flyout beside the label of the group whose menu
+    /// <paramref name="sender"/> is in. Posted, so the menu has closed before it opens.
+    /// </summary>
+    private void ShowBesideGroupLabel(object? sender, Func<ShellViewModel, TabGroupViewModel, Flyout, Control> content)
     {
         if (ViewModel is not { } shell || (sender as MenuItem)?.DataContext is not TabGroupViewModel group)
         {
@@ -224,9 +243,8 @@ public partial class ShellView : UserControl
             {
                 return;
             }
-            var picker = shell.PickGroupColor(group);
-            var flyout = new Flyout { Placement = PlacementMode.RightEdgeAlignedTop, Content = new GroupColorPicker { DataContext = picker } };
-            picker.Done += flyout.Hide;
+            var flyout = new Flyout { Placement = PlacementMode.RightEdgeAlignedTop };
+            flyout.Content = content(shell, group, flyout);
             FlyoutBase.SetAttachedFlyout(label, flyout);
             flyout.ShowAt(label);
         });

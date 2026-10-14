@@ -1,0 +1,5 @@
+﻿"Group name"
+[field] "work"
+"{root}/work"
+[button] Cancel
+[button] Rename

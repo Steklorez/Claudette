@@ -8,7 +8,7 @@ using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
 
-/// <summary>The sidebar that lists the tabs: collapsing to its rail, resizing, its rows and its groups' colors (DESIGN.md §3, §4).</summary>
+/// <summary>The sidebar that lists the tabs: collapsing to its rail, resizing, its rows and its groups' colors and names (DESIGN.md §3, §4).</summary>
 public class SidebarTests
 {
     [Fact]
@@ -253,6 +253,79 @@ public class SidebarTests
             h.Shell.Groups.Select(g => (g.Folder, TabGroupViewModel.ToHex(g.Color))).Order(),
             state.FolderColors.Select(p => (p.Key, p.Value)).Order());
         Assert.Empty(state.GroupColors);
+    }
+
+    [Fact]
+    public async Task Rename_gives_a_group_a_name_of_its_own_and_remembers_it_for_the_folder()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var group = h.Shell.Groups.Single();
+        Assert.Equal("work", group.Label);
+
+        var editor = h.Shell.RenameGroup(group);
+        var done = 0;
+        editor.Done += () => done++;
+        Assert.Equal("work", editor.Name);
+        Assert.Equal("work", editor.Placeholder);
+        editor.Name = "  Orbit (main)  ";
+        editor.SaveCommand.Execute(null);
+
+        Assert.Equal(1, done);
+        Assert.Equal("Orbit (main)", group.Label);
+        Assert.True(group.HasName);
+        Assert.Equal("Orbit (main)", h.Services.State.FolderNames[group.Folder]);
+
+        // Cancel leaves it as it was.
+        editor = h.Shell.RenameGroup(group);
+        editor.Done += () => done++;
+        Assert.Equal("Orbit (main)", editor.Name);
+        editor.Name = "Something else";
+        editor.CancelCommand.Execute(null);
+        Assert.Equal(2, done);
+        Assert.Equal("Orbit (main)", group.Label);
+
+        // Closing the group and opening the folder again brings the name back.
+        await h.Shell.CloseGroupCommand.ExecuteAsync(group);
+        await h.OpenTabAsync();
+        group = h.Shell.Groups.Single();
+        Assert.Equal("Orbit (main)", group.Label);
+
+        // Reset name goes back to the folder's, as does saving an empty name or the folder's own.
+        h.Shell.ResetGroupNameCommand.Execute(group);
+        Assert.Equal("work", group.Label);
+        Assert.False(group.HasName);
+        Assert.Empty(h.Services.State.FolderNames);
+        foreach (var name in new[] { "   ", "work" })
+        {
+            editor = h.Shell.RenameGroup(group);
+            editor.Name = name;
+            editor.SaveCommand.Execute(null);
+            Assert.False(group.HasName);
+            Assert.Empty(h.Services.State.FolderNames);
+        }
+    }
+
+    [Fact]
+    public async Task A_named_group_leaves_another_folder_of_the_same_name_its_name_alone()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.Settings.Sessions.RestoreUnpinnedTabs = true;
+        var work = Path.Combine(h.Root, "work", "api");
+        var personal = Path.Combine(h.Root, "personal", "api");
+        Directory.CreateDirectory(work);
+        Directory.CreateDirectory(personal);
+        // Saved under another spelling of the folder's path.
+        h.Services.State.FolderNames[personal + Path.DirectorySeparatorChar] = "Side project";
+        h.Services.State.Tabs = [new TabState { Folder = work }, new TabState { Folder = personal }];
+
+        h.Shell.Restore(null);
+        Assert.Equal(["api", "Side project"], h.Shell.Groups.Select(g => g.Label));
+
+        var named = h.Shell.Groups[1];
+        h.Shell.ResetGroupNameCommand.Execute(named);
+        Assert.Equal(["work/api", "personal/api"], h.Shell.Groups.Select(g => g.Label));
+        Assert.Empty(h.Services.State.FolderNames);
     }
 
     [Theory]

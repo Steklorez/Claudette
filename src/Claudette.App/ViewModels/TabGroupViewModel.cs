@@ -23,7 +23,7 @@ public sealed partial class TabGroupViewModel : ObservableObject
         Folder = folder;
         Color = color;
         IsCollapsed = isCollapsed;
-        Label = FolderName;
+        FolderLabel = FolderName;
         Tabs.CollectionChanged += OnTabsChanged;
     }
 
@@ -38,7 +38,18 @@ public sealed partial class TabGroupViewModel : ObservableObject
 
     /// <summary>The folder name, or <c>parent/name</c> when two groups would otherwise look the same.</summary>
     [ObservableProperty]
-    public partial string Label { get; set; }
+    [NotifyPropertyChangedFor(nameof(Label))]
+    public partial string FolderLabel { get; set; }
+
+    /// <summary>A name the user gave the group, remembered for its folder; null for none.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Label), nameof(HasName))]
+    public partial string? Name { get; set; }
+
+    public bool HasName => Name is not null;
+
+    /// <summary>The user's name for the group, else <see cref="FolderLabel"/>.</summary>
+    public string Label => Name ?? FolderLabel;
 
     public ObservableCollection<TabViewModel> Tabs { get; } = [];
 

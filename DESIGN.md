@@ -257,12 +257,16 @@ In both styles, text in a different font or size beside other text sits on its b
     - The eight group colors as swatches, each named in its tip, with the group's own ringed. Clicking one applies it and closes the picker.
     - For any other color, a saturation and brightness square, a hue slider, and a hex field (`#12AB34`, or `#1A3`). The group changes color as you drag or type, and the hex field applies once it holds a whole color; Enter closes the picker.
     - The color is remembered for the folder on this machine (in `state.json`), so the group has it again after a restart, or when the folder is opened again after its group was closed, however its path was written.
+  - **The name.** **Rename…** in the group's menu, in the full sidebar or the rail, opens a small box beside the label, for folders with the same name in different places. It starts with the label selected, with the folder's path under it, and **Rename** or Enter saves it; **Cancel**, Escape or a click outside leaves the label as it was.
+    - The label shows the name in place of the folder's. A named group doesn't count as a clash, so another folder of the same name keeps its plain name (`api` beside *Side project*).
+    - Saving it empty, or as the folder's own label, goes back to the folder's name, as does **Reset name**, in the menu while the group has a name.
+    - The name is remembered for the folder on this machine (in `state.json`), as the color is.
   - Hovering the label shows the full path. The group's `+` opens a new tab in the same folder.
   - A group can be collapsed to just its label. A collapsed group still shows the most urgent status of its tabs, such as "needs input".
   - Tabs can be dragged to reorder them within their group, and groups can be dragged (by their label) to reorder them. A tab can't be dragged into another group, because its folder is fixed, and pinned tabs stay ahead of the others.
     - A dragged tab is selected, and the list rearranges as soon as the pointer passes the middle of a neighbor. **Move up** and **Move down** in the tab menu do the same from the keyboard or mouse.
   - A group with a single tab still gets a label, so the sidebar always looks the same.
-- Closing a tab that is working asks for confirmation, then stops the process. Right-clicking a group label gives **New tab here**, **New tab in a worktree** (for a folder in a git repository, [below](#worktree-tabs)), **History for this folder** (History listing only that folder's sessions, [§9](#history)), **Collapse group** (or **Expand group**), **Change color…** and **Close group**.
+- Closing a tab that is working asks for confirmation, then stops the process. Right-clicking a group label gives **New tab here**, **New tab in a worktree** (for a folder in a git repository, [below](#worktree-tabs)), **History for this folder** (History listing only that folder's sessions, [§9](#history)), **Collapse group** (or **Expand group**), **Rename…** (and **Reset name**), **Change color…** and **Close group**.
 - **Pinned tabs** come back every time Claudette launches, resuming their sessions.
   - Pin or unpin from the tab's right-click menu. A pinned tab shows a pin icon and sits at the start of its folder group.
   - **Close group** and **Close other tabs** skip pinned tabs.
@@ -354,7 +358,7 @@ The tabs are listed in a sidebar on the left of the window, rather than a strip 
 - **Resizing.** Drag the sidebar's edge to make it wider or narrower: at least 180 pixels (248 by default), and with no most of its own, only that it leaves the conversation 360 and, while the selected tab shows its side panel, the side panel 260. So dragging it wide can narrow the side panel, down to 260, but never the conversation. When the window narrows, the side panel gives way before the sidebar does ([§3](#3-main-window), "Side panel"), and the sidebar's width comes back as the window widens. Double-click the edge for the default width. The width is remembered.
 - **Collapsing.** The collapse button, or `Ctrl/Cmd+B`, shrinks the sidebar to a rail:
   - The rail shows each group's color, then a square per tab with the first letter of its name, a small status icon at its top right and the tab's mark (or the reviewed icon) at its bottom left. Hovering a square shows the tab info card. It doesn't list project runs.
-  - Right-clicking a group's color gives the group's menu, **Change color…** included.
+  - Right-clicking a group's color gives the group's menu, **Rename…** and **Change color…** included.
   - A collapsed group shows only its color and its most urgent status.
   - New tab, the project, History, the update badge and Settings stay as icons.
   - Whether the sidebar is collapsed is remembered.
