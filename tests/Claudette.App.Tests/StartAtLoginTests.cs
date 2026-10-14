@@ -13,7 +13,7 @@ namespace Claudette.App.Tests;
 public sealed class StartAtLoginTests
 {
     private static readonly ClaudetteCopy MacApp = new(AppInstallKind.MacApp, "/Applications/Claudette.app", "0.2.0");
-    private static readonly ClaudetteCopy Msix = new(AppInstallKind.Msix, "reapazor.Claudette_1a2b3c4d5e6f7", "0.2.0");
+    private static readonly ClaudetteCopy Msix = new(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.2.0");
 
     private static ClaudetteCopy SourceBuild(TabTestHarness h) => new(AppInstallKind.SourceBuild, Path.Combine(h.Root, "bin"), "0.3.0");
 

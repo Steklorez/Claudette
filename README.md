@@ -1,6 +1,6 @@
 # Claudette
 
-> This was made for my own usage, its not meant for everyone. Started as an experiment when Anthropic sent me some free cloud time.
+> This was made for our own usage, its not meant for everyone and is opinionated. The core pillar is to minimize token usage by default.
 
 **Your friendly neighborhood Claude Code wrapper.** Claudette puts [Claude Code](https://code.claude.com/docs) in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time, so you never have to run `/usage` again.
 
@@ -134,8 +134,8 @@ Native notifications and a taskbar or Dock badge when a tab needs you. A side pa
 
 You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds `claude` on your `PATH`, and can sign you in if you aren't already.
 
-- **Windows:** the MSIX from [Releases](https://github.com/reapazor/Claudette/releases).
-- **macOS:** the `.dmg` from [Releases](https://github.com/reapazor/Claudette/releases).
+- **Windows:** the MSIX from [Releases](https://github.com/dotBunny/Claudette/releases).
+- **macOS:** the `.dmg` from [Releases](https://github.com/dotBunny/Claudette/releases).
 - **From source** (Windows, macOS or Linux), with the .NET SDK that `global.json` names:
 
   ```sh

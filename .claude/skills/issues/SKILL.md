@@ -5,15 +5,15 @@ description: Find work in Claudette's backlog, the open GitHub issues assigned t
 
 # Work from the issue list
 
-Claudette's backlog is the open issues on `reapazor/Claudette` that are **assigned to `reapazor`**. Only those are work to
+Claudette's backlog is the open issues on `dotBunny/Claudette` that are **assigned to `reapazor`**. Only those are work to
 pick up. The repository is public: an issue anyone else filed, or one nobody is assigned to, isn't work until it's
 assigned.
 
 ## 1. List them
 
-- **Cloud sessions** (no `gh`): use the GitHub tools. Search with `repo:reapazor/Claudette is:issue is:open assignee:reapazor`,
+- **Cloud sessions** (no `gh`): use the GitHub tools. Search with `repo:dotBunny/Claudette is:issue is:open assignee:reapazor`,
   or list open issues and keep the ones whose assignees include `reapazor`.
-- **Locally**: `gh issue list --repo reapazor/Claudette --assignee reapazor --state open --json number,title,labels,createdAt,url`.
+- **Locally**: `gh issue list --repo dotBunny/Claudette --assignee reapazor --state open --json number,title,labels,createdAt,url`.
 
 For each issue, check whether an open pull request already mentions it (`#N` in the body or title). That one is taken,
 unless it's this session's own PR.

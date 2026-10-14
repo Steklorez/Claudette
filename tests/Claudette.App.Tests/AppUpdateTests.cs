@@ -15,7 +15,7 @@ namespace Claudette.App.Tests;
 /// </summary>
 public class AppUpdateTests
 {
-    private const string ReleasesUrl = "https://api.github.com/repos/reapazor/Claudette/releases?per_page=20";
+    private const string ReleasesUrl = "https://api.github.com/repos/dotBunny/Claudette/releases?per_page=20";
 
     private static readonly byte[] Package = [.. Enumerable.Range(0, 5000).Select(i => (byte)i)];
 
@@ -24,7 +24,7 @@ public class AppUpdateTests
     private static string Release(string version, bool prerelease = false, string arch = "x64", bool digest = true) => $$"""
         {
           "tag_name": "v{{version}}", "name": "Claudette {{version}}", "draft": false, "prerelease": {{(prerelease ? "true" : "false")}},
-          "html_url": "https://github.com/reapazor/Claudette/releases/tag/v{{version}}", "published_at": "2026-09-20T09:30:00Z",
+          "html_url": "https://github.com/dotBunny/Claudette/releases/tag/v{{version}}", "published_at": "2026-09-20T09:30:00Z",
           "body": "- Better things",
           "assets": [ {
             "name": "Claudette-{{version}}-{{arch}}.msix", "browser_download_url": "https://example.test/{{version}}.msix", "size": {{Package.Length}},
@@ -352,7 +352,7 @@ public class AppUpdateTests
         Assert.False(s.Badge.CanDownload);
         Assert.Equal("This copy of Claudette can't update itself. Download the new version from its release page.", s.Badge.ManualText);
         await s.Badge.OpenReleasePageCommand.ExecuteAsync(null);
-        Assert.Equal(["https://github.com/reapazor/Claudette/releases/tag/v1.3.0"], s.H.Platform.OpenedUrls);
+        Assert.Equal(["https://github.com/dotBunny/Claudette/releases/tag/v1.3.0"], s.H.Platform.OpenedUrls);
         Assert.DoesNotContain(s.GitHub.Requests, r => r.StartsWith("https://example.test/", StringComparison.Ordinal));
     }
 

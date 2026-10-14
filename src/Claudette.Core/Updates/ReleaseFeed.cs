@@ -32,7 +32,7 @@ public sealed class ReleaseFeedException(string message, Exception? inner = null
 /// </summary>
 public sealed class ReleaseFeed(HttpClient http, string userAgent, string repository = ReleaseFeed.DefaultRepository, string apiBase = "https://api.github.com")
 {
-    public const string DefaultRepository = "reapazor/Claudette";
+    public const string DefaultRepository = "dotBunny/Claudette";
 
     /// <summary>The releases page, for builds that can't install an update themselves.</summary>
     public string ReleasesPage => $"https://github.com/{repository}/releases";
