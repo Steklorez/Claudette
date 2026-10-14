@@ -49,9 +49,9 @@ public class AppBuildTests
     [Fact]
     public void A_new_issue_has_the_outline_and_the_details_in_its_body()
     {
-        var url = AppBuild.NewIssueUrl("reapazor/Claudette", ["Claudette: 0.1.0 (source build 842169b)", "Claude Code: 2.1.284"]);
+        var url = AppBuild.NewIssueUrl("dotBunny/Claudette", ["Claudette: 0.1.0 (source build 842169b)", "Claude Code: 2.1.284"]);
 
-        const string prefix = "https://github.com/reapazor/Claudette/issues/new?body=";
+        const string prefix = "https://github.com/dotBunny/Claudette/issues/new?body=";
         Assert.StartsWith(prefix, url, StringComparison.Ordinal);
         var body = Uri.UnescapeDataString(url[prefix.Length..]);
         Assert.StartsWith("**What happened**\n", body, StringComparison.Ordinal);

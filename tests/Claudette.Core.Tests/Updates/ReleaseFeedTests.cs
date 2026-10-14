@@ -8,7 +8,7 @@ namespace Claudette.Core.Tests.Updates;
 /// <summary>Reading Claudette's releases from GitHub and picking the one to offer (DESIGN.md §2, "Updating Claudette").</summary>
 public class ReleaseFeedTests
 {
-    private const string Url = "https://api.github.com/repos/reapazor/Claudette/releases?per_page=20";
+    private const string Url = "https://api.github.com/repos/dotBunny/Claudette/releases?per_page=20";
 
     private const string Digest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
@@ -17,13 +17,13 @@ public class ReleaseFeedTests
         [
           {
             "tag_name": "v1.4.0-beta.1", "name": "Claudette 1.4.0 beta 1", "draft": false, "prerelease": true,
-            "html_url": "https://github.com/reapazor/Claudette/releases/tag/v1.4.0-beta.1", "published_at": "2026-09-28T10:00:00Z",
+            "html_url": "https://github.com/dotBunny/Claudette/releases/tag/v1.4.0-beta.1", "published_at": "2026-09-28T10:00:00Z",
             "body": "Trying things.", "reactions": { "+1": 3 },
             "assets": [ { "name": "Claudette-1.4.0-beta.1-x64.msix", "browser_download_url": "https://example.test/beta.msix", "size": 10 } ]
           },
           {
             "tag_name": "v1.3.0", "name": "Claudette 1.3.0", "draft": false, "prerelease": false,
-            "html_url": "https://github.com/reapazor/Claudette/releases/tag/v1.3.0", "published_at": "2026-09-20T09:30:00Z",
+            "html_url": "https://github.com/dotBunny/Claudette/releases/tag/v1.3.0", "published_at": "2026-09-20T09:30:00Z",
             "body": "## What's new\n- Updates itself",
             "assets": [
               { "name": "Claudette-1.3.0-x64.msix", "browser_download_url": "https://example.test/x64.msix", "size": 1234, "digest": "sha256:{{Digest}}" },
@@ -49,7 +49,7 @@ public class ReleaseFeedTests
         var release = releases[1];
         Assert.Equal("Claudette 1.3.0", release.Name);
         Assert.Equal("## What's new\n- Updates itself", release.Notes);
-        Assert.Equal("https://github.com/reapazor/Claudette/releases/tag/v1.3.0", release.PageUrl);
+        Assert.Equal("https://github.com/dotBunny/Claudette/releases/tag/v1.3.0", release.PageUrl);
         Assert.Equal(new DateTimeOffset(2026, 9, 20, 9, 30, 0, TimeSpan.Zero), release.PublishedAt);
         Assert.False(release.IsPrerelease);
         Assert.True(releases[0].IsPrerelease);
@@ -75,7 +75,7 @@ public class ReleaseFeedTests
         Assert.Equal("Claudette/1.2.0", request.Headers.UserAgent.ToString());
         Assert.Contains("application/vnd.github+json", request.Headers.Accept.ToString());
         Assert.Equal("2022-11-28", request.Headers.GetValues("X-GitHub-Api-Version").Single());
-        Assert.Equal("https://github.com/reapazor/Claudette/releases", feed.ReleasesPage);
+        Assert.Equal("https://github.com/dotBunny/Claudette/releases", feed.ReleasesPage);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class ReleaseFeedTests
         Assert.Contains("limit", limited.Message);
 
         var missing = await Assert.ThrowsAsync<ReleaseFeedException>(() => new ReleaseFeed(new HttpClient(new FakeHttpHandler()), "Claudette/1.2.0").GetReleasesAsync(TestContext.Current.CancellationToken));
-        Assert.Equal("GitHub has no repository reapazor/Claudette.", missing.Message);
+        Assert.Equal("GitHub has no repository dotBunny/Claudette.", missing.Message);
 
         var broken = new FakeHttpHandler().On(Url, _ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<html>") });
         var unreadable = await Assert.ThrowsAsync<ReleaseFeedException>(() => new ReleaseFeed(new HttpClient(broken), "Claudette/1.2.0").GetReleasesAsync(TestContext.Current.CancellationToken));

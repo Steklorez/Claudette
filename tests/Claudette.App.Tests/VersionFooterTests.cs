@@ -89,7 +89,7 @@ public class VersionFooterTests
         await settings.ReportIssueCommand.ExecuteAsync(null);
 
         var url = Assert.Single(h.Platform.OpenedUrls);
-        const string prefix = "https://github.com/reapazor/Claudette/issues/new?body=";
+        const string prefix = "https://github.com/dotBunny/Claudette/issues/new?body=";
         Assert.StartsWith(prefix, url, StringComparison.Ordinal);
         var body = Uri.UnescapeDataString(url[prefix.Length..]);
         Assert.Contains("\nClaudette: 0.1.0 (MSIX)\n", body, StringComparison.Ordinal);

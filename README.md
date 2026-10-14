@@ -134,8 +134,8 @@ Native notifications and a taskbar or Dock badge when a tab needs you. A side pa
 
 You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds `claude` on your `PATH`, and can sign you in if you aren't already.
 
-- **Windows:** the MSIX from [Releases](https://github.com/reapazor/Claudette/releases).
-- **macOS:** the `.dmg` from [Releases](https://github.com/reapazor/Claudette/releases).
+- **Windows:** the MSIX from [Releases](https://github.com/dotBunny/Claudette/releases).
+- **macOS:** the `.dmg` from [Releases](https://github.com/dotBunny/Claudette/releases).
 - **From source** (Windows, macOS or Linux), with the .NET SDK that `global.json` names:
 
   ```sh
