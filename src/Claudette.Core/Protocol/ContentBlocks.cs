@@ -11,7 +11,14 @@ public sealed record ThinkingBlock(string Thinking, JsonObject Raw) : ContentBlo
 
 public sealed record ToolUseBlock(string Id, string Name, JsonObject Input, JsonObject Raw) : ContentBlock("tool_use", Raw);
 
-public sealed record ToolResultBlock(string ToolUseId, string Text, bool IsError, JsonObject Raw) : ContentBlock("tool_result", Raw);
+public sealed record ToolResultBlock(string ToolUseId, string Text, bool IsError, JsonObject Raw) : ContentBlock("tool_result", Raw)
+{
+    /// <summary>
+    /// The images in its content, in order (DESIGN.md §18, "Images from Claude's tools"): a Read of an image, a PDF's
+    /// pages or a notebook's figures, Bash output that's an image, an MCP tool's screenshot.
+    /// </summary>
+    public IReadOnlyList<MessageImage> Images { get; init; } = [];
+}
 
 /// <summary>A block type Claudette doesn't know yet.</summary>
 public sealed record UnknownBlock(string Type, JsonObject Raw) : ContentBlock(Type, Raw);
@@ -39,7 +46,10 @@ internal static class ContentBlockParser
                 "text" => new TextBlock(item.GetString("text") ?? "", item),
                 "thinking" => new ThinkingBlock(item.GetString("thinking") ?? "", item),
                 "tool_use" => new ToolUseBlock(item.GetString("id") ?? "", item.GetString("name") ?? "", item.GetObject("input") ?? [], item),
-                "tool_result" => new ToolResultBlock(item.GetString("tool_use_id") ?? "", ToolResultText(item["content"]), item.GetBool("is_error") ?? false, item),
+                "tool_result" => new ToolResultBlock(item.GetString("tool_use_id") ?? "", ToolResultText(item["content"]), item.GetBool("is_error") ?? false, item)
+                {
+                    Images = item["content"] is JsonArray resultContent ? MessageImage.FromBlocks(resultContent) : [],
+                },
                 _ => new UnknownBlock(type, item),
             });
         }

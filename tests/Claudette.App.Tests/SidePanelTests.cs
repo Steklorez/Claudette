@@ -447,9 +447,10 @@ public class SidePanelTests
         Assert.Equal("All changed files reviewed", tab.MarkTip);
         tab.SetMark(TabMark.Star);
 
-        // Claude changes a reviewed file again.
+        // Claude changes a reviewed file again. The icon goes at once; the rows follow once the files are read, and
+        // ticking a row before then would mark the change before.
         EmitEdit(h, "e3", b);
-        await TabTestHarness.Eventually(() => !tab.AllFilesReviewed, "Claude's change");
+        await TabTestHarness.Eventually(() => !tab.AllFilesReviewed && Row(b) is { LatestChange: "e3" }, "Claude's change");
         Assert.False(tab.State.AllFilesReviewed);
         Assert.Equal("Marked with a star", tab.MarkTip);
         Tick(b);
@@ -457,7 +458,7 @@ public class SidePanelTests
 
         // A file Claude hadn't changed before.
         EmitEdit(h, "e4", c);
-        await TabTestHarness.Eventually(() => !tab.AllFilesReviewed, "Claude's change to another file");
+        await TabTestHarness.Eventually(() => !tab.AllFilesReviewed && Row(c) is not null, "Claude's change to another file");
         Tick(c);
         Assert.True(tab.AllFilesReviewed);
 
@@ -466,8 +467,9 @@ public class SidePanelTests
         Assert.False(tab.AllFilesReviewed);
         Assert.Equal(TabMark.Star, tab.Mark);
 
-        void Tick(string path) =>
-            tab.ChangedFiles.ToggleFileReviewedCommand.Execute(tab.ChangedFiles.Files.Single(r => r.Path == path));
+        void Tick(string path) => tab.ChangedFiles.ToggleFileReviewedCommand.Execute(Row(path));
+
+        ChangedFileRow? Row(string path) => tab.ChangedFiles.Files.SingleOrDefault(r => r.Path == path);
     }
 
     [Fact]

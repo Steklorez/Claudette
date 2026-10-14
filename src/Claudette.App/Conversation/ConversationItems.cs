@@ -480,7 +480,8 @@ public partial class ToolUseItem : ConversationItem
             }
             if (Name == "Bash")
             {
-                var stdout = Str(result, "stdout") ?? "";
+                // Output that's an image (isImage) is a data URL, which shows as the image instead (Images).
+                var stdout = result.GetBool("isImage") == true ? "" : Str(result, "stdout") ?? "";
                 var stderr = Str(result, "stderr") ?? "";
                 Output = string.Join('\n', new[] { stdout, stderr }.Where(s => s.Length > 0));
                 ResultSummary = BashSummary(result) ?? FirstLine(Output) ?? FirstLine(text);
@@ -503,6 +504,16 @@ public partial class ToolUseItem : ConversationItem
     public partial IReadOnlyList<GitChip> GitChips { get; private set; } = [];
 
     public bool HasGitChips => GitChips.Count > 0;
+
+    /// <summary>
+    /// The images in the result, under the card (DESIGN.md §18, "Images from Claude's tools"): an image Read read, a
+    /// PDF's pages, a notebook's figures, an MCP tool's screenshot. A click opens one full size.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasImages))]
+    public partial IReadOnlyList<ToolImage> Images { get; internal set; } = [];
+
+    public bool HasImages => Images.Count > 0;
 
     /// <summary>
     /// The Claude Doc a call to claude.ai's Docs connector made or changed (DESIGN.md §5, "Claude Docs"): a link to it, in

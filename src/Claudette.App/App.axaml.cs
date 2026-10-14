@@ -25,6 +25,7 @@ using Claudette.Platform.ProjectTools;
 using Claudette.Platform.Shell;
 using Claudette.Platform.Shell.Windows;
 using Claudette.Platform.Updates;
+using LiveMarkdown.Avalonia;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -46,6 +47,8 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
         Colors = new AppColors(this);
+        // Images in Markdown load only what may, through Claudette's own client (DESIGN.md §18, "Images in Claude's replies").
+        MarkdownNode.Edit(pipeline => pipeline.Unregister<LinkInlineNode>().Register<ReplyLinkInlineNode>());
     }
 
     public override void OnFrameworkInitializationCompleted()

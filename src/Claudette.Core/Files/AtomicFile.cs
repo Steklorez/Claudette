@@ -19,7 +19,9 @@ public static class AtomicFile
 
     public static bool IsTemp(string path) => path.EndsWith(TempExtension, StringComparison.OrdinalIgnoreCase);
 
-    public static void WriteAllText(string path, string text)
+    public static void WriteAllText(string path, string text) => WriteAllBytes(path, Utf8.GetBytes(text));
+
+    public static void WriteAllBytes(string path, ReadOnlySpan<byte> bytes)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         var temp = TempPath(path);
@@ -27,7 +29,6 @@ public static class AtomicFile
         {
             using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
-                var bytes = Utf8.GetBytes(text);
                 stream.Write(bytes);
                 stream.Flush(flushToDisk: true);
             }

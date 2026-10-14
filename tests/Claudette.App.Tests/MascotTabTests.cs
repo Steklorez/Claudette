@@ -78,6 +78,8 @@ public class MascotTabTests
         var group = h.Shell.Groups.Single();
         var (a, b, c) = (group.Tabs[0], group.Tabs[1], group.Tabs[2]);
         var director = h.Services.Mascot.Director!;
+        // The selected tab starts; were its start to finish after its status is set below, it would set it back to Idle.
+        await TabTestHarness.Eventually(() => a.Status == TabStatus.Idle && a.IsSettled, "the selected tab to start");
 
         c.Status = TabStatus.NeedsInput;
         Assert.Equal(1, director.Situation.OthersWaiting);

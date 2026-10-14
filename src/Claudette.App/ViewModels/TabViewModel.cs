@@ -8,6 +8,7 @@ using Claudette.Core.Composer;
 using Claudette.Core.Development;
 using Claudette.Core.Git;
 using Claudette.Core.Library;
+using Claudette.Core.ProjectTools;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
 using Claudette.Core.Settings;
@@ -16,6 +17,7 @@ using Claudette.Core.Threads;
 using Claudette.Core.Transcripts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LiveMarkdown.Avalonia;
 using Microsoft.Extensions.Logging;
 
 namespace Claudette.App.ViewModels;
@@ -92,6 +94,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         ProcessMonitor = new ProcessMonitorViewModel(services, this);
         ChangedFiles = new ChangedFilesViewModel(services, this);
         McpServers = new McpServersViewModel(() => _session, url => _services.Platform.OpenUrlAsync(url));
+        ReplyImages = new ReplyImages(new ReplyImageLoader(services.Http, services.Time), () => Folder);
         ProjectTools = new ProjectToolsViewModel(services, this);
         RemoteControl = new RemoteControlViewModel(services, this);
         Perforce = new PerforceViewModel(services, this);
@@ -1068,10 +1071,33 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
-    /// <summary>Opens a link clicked in a reply.</summary>
+    /// <summary>
+    /// Opens a link clicked in a reply, a plan or a card. LiveMarkdown's renderers pass the click's
+    /// <see cref="LinkClickedEventArgs"/>, the cards the address. Only https, http and mailto links open, as the project's
+    /// links do (DESIGN.md §18, "Links"): a reply can't run a program through a <c>file:</c> or an app's own link.
+    /// </summary>
     [RelayCommand]
     private Task OpenLinkAsync(object? link) =>
-        link?.ToString() is { Length: > 0 } url ? _services.Platform.OpenUrlAsync(url) : Task.CompletedTask;
+        (link is LinkClickedEventArgs clicked ? clicked.HRef?.OriginalString : link?.ToString()) is { Length: > 0 } url
+        && Uri.TryCreate(url, UriKind.Absolute, out var uri) && ProjectLinks.AllowedSchemes.Contains(uri.Scheme)
+            ? _services.Platform.OpenUrlAsync(url)
+            : Task.CompletedTask;
+
+    /// <summary>An image from a tool's result, to show full size in a window of its own (DESIGN.md §18, "Images from Claude's tools").</summary>
+    public event Action<ImageViewerViewModel>? ImageRequested;
+
+    /// <summary>The images in the tab's replies: which load at once, which the user let load (DESIGN.md §18, "Images in Claude's replies").</summary>
+    public ReplyImages ReplyImages { get; }
+
+    /// <summary>A click on an image under a tool's card.</summary>
+    [RelayCommand]
+    private void OpenImage(ToolImage? image)
+    {
+        if (image is not null)
+        {
+            ImageRequested?.Invoke(new ImageViewerViewModel(image, _services));
+        }
+    }
 
     // ---- Copy and times (DESIGN.md §5, "Copy and times") ---------------------------------------------------
 

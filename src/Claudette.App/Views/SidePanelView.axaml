@@ -239,7 +239,8 @@
                               IsVisible="{Binding ShownPlan.HasPrevious, FallbackValue=False}" ToolTip.Tip="Show what changed from the version before, line by line">
                   <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding ShownPlan.ChangesLabel, FallbackValue={x:Null}}" />
                 </ToggleButton>
-                <md:MarkdownRenderer MarkdownBuilder="{Binding ShownPlan.Markdown, FallbackValue={x:Null}}" IsVisible="{Binding !ShowsPlanChanges}" />
+                <md:MarkdownRenderer MarkdownBuilder="{Binding ShownPlan.Markdown, FallbackValue={x:Null}}" IsVisible="{Binding !ShowsPlanChanges}"
+                                     LinkCommand="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" />
                 <ItemsControl ItemsSource="{Binding ShownPlan.Changes.Lines, FallbackValue={x:Null}}" IsVisible="{Binding ShowsPlanChanges}" />
               </StackPanel>
             </Border>

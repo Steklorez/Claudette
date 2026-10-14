@@ -360,6 +360,13 @@ internal sealed class NoPlatform : IPlatformServices
 
     public string? Clipboard { get; private set; }
 
+    /// <summary><b>Copy image</b>: the clipboard has the image, as a paste would read it back.</summary>
+    public Task SetClipboardImageAsync(byte[] data)
+    {
+        ClipboardImage = data;
+        return Task.CompletedTask;
+    }
+
     /// <summary>What the folder picker returns: null is Cancel.</summary>
     public string? FolderToPick { get; set; }
 

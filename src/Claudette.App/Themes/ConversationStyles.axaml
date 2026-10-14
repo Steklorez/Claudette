@@ -308,6 +308,13 @@
     <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
     <Setter Property="BorderThickness" Value="1" />
   </Style>
+  <!-- An image under a tool's card, which shows full size on a click (DESIGN.md §18, "Images from Claude's tools") -->
+  <Style Selector="Button.toolimage">
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.toolimage:pointerover Border.thumbnail">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
   <Style Selector="Border.composer.dropping">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
   </Style>

@@ -224,7 +224,9 @@ public class LineDiffTests
             best = stopwatch.Elapsed < best ? stopwatch.Elapsed : best;
         }
 
-        Assert.True(best < TimeSpan.FromMilliseconds(100), $"Took {best.TotalMilliseconds:0} ms.");
+        // About 10 ms on its own. CI runs every test project at once on a few cores, which has made it ten times slower,
+        // so the bound leaves room for that; a search that compared every line with every other would take seconds.
+        Assert.True(best < TimeSpan.FromMilliseconds(500), $"Took {best.TotalMilliseconds:0} ms.");
         Assert.Equal(5, hunks.Count);
         Assert.Equal((4, 4), LineDiff.Count(before, after));
     }

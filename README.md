@@ -59,7 +59,9 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 
 ### A conversation built for code
 
-- Replies render as Markdown with syntax-highlighted code blocks and one-click **Copy**. Tool calls are compact rows that expand when you want the detail.
+- Replies render as Markdown with syntax-highlighted code blocks, one-click **Copy**, and links that open in your browser. Tool calls are compact rows that expand when you want the detail.
+- **See what Claude sees:** a screenshot from Playwright or Chrome, an image Claude reads, a PDF's pages or a notebook's figures show right under the tool's row. Click one for the full size, with **Copy image** and **Save as…**.
+- **Images in replies can't phone home.** A chart Claude saves in your project shows inline, but a web image waits until you click **Load image**, so a reply that was prompt-injected through something Claude read can't leak your data in an image's address just by being shown.
 - **Permission prompts, questions and plans are cards**, not walls of text: Allow, Always allow, Deny, a plan to approve or send back, a question with its choices.
 - **Steer while Claude works:** messages you send mid-turn reach it at the next tool call, or wait for the turn to end if you'd rather, with **Send now** for one that can't wait. If a turn goes quiet for too long, Claudette checks in, and if nothing answers it flags the tab as possibly stuck so it doesn't burn your plan unnoticed.
 - **Rewind and branch** from any earlier message, putting the files back too, or edit a message and send it again. **Find**, **export** to Markdown or a web page, **quote** part of a reply in your answer.
