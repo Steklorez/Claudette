@@ -12,12 +12,21 @@ public static class RealPath
     /// <summary>Whether <paramref name="a"/> and <paramref name="b"/> name the same folder, through any links on the way.</summary>
     public static bool Same(string a, string b) => PathComparer.Equals(Resolve(a), Resolve(b));
 
+    /// <summary>At most this many links are followed for one path, as Linux allows, so links that loop come to an end.</summary>
+    private const int MaxLinks = 40;
+
     /// <summary>
     /// <paramref name="path"/> with every link on it followed: each folder from the root down is replaced by what it
     /// links to, so a link anywhere on the way counts, not only at the end. A part that isn't there, or can't be read,
     /// stays as spelled, so a folder that's gone still has one real path.
     /// </summary>
     public static string Resolve(string path)
+    {
+        var links = MaxLinks;
+        return Resolve(path, ref links);
+    }
+
+    private static string Resolve(string path, ref int links)
     {
         string full;
         try
@@ -35,9 +44,11 @@ public static class RealPath
             current = Path.Combine(current, part);
             try
             {
-                if (Directory.ResolveLinkTarget(current, returnFinalTarget: true) is { } target)
+                if (links > 0 && Directory.ResolveLinkTarget(current, returnFinalTarget: true) is { } target)
                 {
-                    current = Path.TrimEndingDirectorySeparator(target.FullName);
+                    // The target is spelled as the link holds it, which can run through links of its own (macOS's /var).
+                    links--;
+                    current = Resolve(target.FullName, ref links);
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

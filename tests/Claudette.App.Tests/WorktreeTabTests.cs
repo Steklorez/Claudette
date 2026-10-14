@@ -23,22 +23,6 @@ public class WorktreeTabTests
         Assert.True(result.ExitCode == 0, $"git {string.Join(' ', arguments)} failed: {result.StandardError}");
     }
 
-    /// <summary>
-    /// Makes <paramref name="link"/> a link to the folder <paramref name="target"/>: a symbolic link, or on Windows a
-    /// junction, which needs no Developer Mode.
-    /// </summary>
-    internal static async Task LinkFolderAsync(string link, string target)
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            Directory.CreateSymbolicLink(link, target);
-            return;
-        }
-        var result = await ProcessRunner.RunAsync(new ProcessLauncher(), new ProcessStartSpec("cmd.exe", ["/c", "mklink", "/J", link, target]),
-            TimeSpan.FromSeconds(30), TimeProvider.System, TestContext.Current.CancellationToken);
-        Assert.True(result.ExitCode == 0, $"mklink /J failed: {result.StandardOutput}{result.StandardError}");
-    }
-
     internal static async Task InitRepositoryAsync(TabTestHarness h)
     {
         await GitAsync(h.WorkFolder, "init", "-q");
@@ -209,7 +193,7 @@ public class WorktreeTabTests
         // Claude Code reports a worktree tab's folder by its real path, while a tab opened in it names it as the user
         // reached it: on macOS a folder under /var is really under /private/var.
         var link = Path.Combine(h.Root, "linked");
-        await LinkFolderAsync(link, h.WorkFolder);
+        using var linked = FolderLinks.Create(link, h.WorkFolder);
         await h.Shell.OpenFolderAsync(GitWorktrees.PathFor(link, Path.GetFileName(path)));
         Assert.NotSame(tab, h.Shell.SelectedTab);
 

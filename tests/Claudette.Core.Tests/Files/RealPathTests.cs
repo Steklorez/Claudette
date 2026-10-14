@@ -29,6 +29,30 @@ public sealed class RealPathTests : IDisposable
     }
 
     [Fact]
+    public void A_link_whose_target_runs_through_another_link_is_followed_all_the_way()
+    {
+        var real = _temp.CreateFolder("real/inner");
+        var outer = _temp.Combine("outer");
+        using var outerLink = FolderLinks.Create(outer, _temp.Combine("real"));
+        // Spelled through the first link, as a link to a folder under macOS's /var is.
+        var through = _temp.Combine("through");
+        using var throughLink = FolderLinks.Create(through, Path.Combine(outer, "inner"));
+
+        Assert.Equal(RealPath.Resolve(real), RealPath.Resolve(through));
+        Assert.True(RealPath.Same(Path.Combine(through, "later"), Path.Combine(real, "later")));
+    }
+
+    [Fact]
+    public void Links_that_lead_back_through_themselves_come_to_an_end()
+    {
+        var loop = _temp.Combine("loop");
+        using var link = FolderLinks.Create(loop, Path.Combine(loop, "inner"));
+
+        Assert.NotEmpty(RealPath.Resolve(loop));
+        Assert.False(RealPath.Same(loop, _temp.CreateFolder("other")));
+    }
+
+    [Fact]
     public void A_path_without_links_keeps_its_parts_as_spelled()
     {
         var plain = _temp.CreateFolder("plain");
