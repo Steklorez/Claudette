@@ -12,7 +12,7 @@ public sealed class MsixPackageTests : IDisposable
 
     private readonly string _folder = Directory.CreateTempSubdirectory("claudette-msix-").FullName;
 
-    private string MakePackage(string name = "reapazor.Claudette", string publisher = Publisher, string version = "1.3.0.0", string architecture = "x64")
+    private string MakePackage(string name = "dotBunny.Claudette", string publisher = Publisher, string version = "1.3.0.0", string architecture = "x64")
     {
         var path = Path.Combine(_folder, $"{Guid.NewGuid():N}.msix");
         using var zip = ZipFile.Open(path, ZipArchiveMode.Create);
@@ -30,7 +30,7 @@ public sealed class MsixPackageTests : IDisposable
         return path;
     }
 
-    private static string Family(string publisher = Publisher) => $"reapazor.Claudette_{MsixPackage.ComputePublisherId(publisher)}";
+    private static string Family(string publisher = Publisher) => $"dotBunny.Claudette_{MsixPackage.ComputePublisherId(publisher)}";
 
     [Fact]
     public void The_publisher_id_is_computed_as_Windows_does() =>
@@ -41,7 +41,7 @@ public sealed class MsixPackageTests : IDisposable
     {
         var package = MsixPackage.Read(MakePackage());
 
-        Assert.Equal(new MsixPackage("reapazor.Claudette", Publisher, "1.3.0.0", "x64"), package);
+        Assert.Equal(new MsixPackage("dotBunny.Claudette", Publisher, "1.3.0.0", "x64"), package);
         Assert.Equal(Family(), package.FamilyName);
     }
 

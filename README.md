@@ -1,6 +1,6 @@
 # Claudette
 
-> This was made for my own usage, its not meant for everyone. Started as an experiment when Anthropic sent me some free cloud time.
+> This was made for our own usage, its not meant for everyone and is opinionated. The core pillar is to minimize token usage by default.
 
 **Your friendly neighborhood Claude Code wrapper.** Claudette puts [Claude Code](https://code.claude.com/docs) in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time, so you never have to run `/usage` again.
 

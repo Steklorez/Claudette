@@ -83,7 +83,7 @@ public sealed class WindowsLoginItemsTests : IDisposable
     {
         Assert.SkipUnless(OperatingSystem.IsWindowsVersionAtLeast(10, 0, 16299), "Windows only.");
 
-        Assert.False(Items().Exists(new ClaudetteCopy(AppInstallKind.Msix, "reapazor.ClaudetteTests_0000000000000", "0.3.0")));
+        Assert.False(Items().Exists(new ClaudetteCopy(AppInstallKind.Msix, "dotBunny.ClaudetteTests_0000000000000", "0.3.0")));
     }
 
     [Fact]

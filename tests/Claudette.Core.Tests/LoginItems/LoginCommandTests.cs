@@ -41,7 +41,7 @@ public sealed class LoginCommandTests : IDisposable
     [Fact]
     public void The_MSIX_has_no_command_since_only_its_startup_task_starts_it()
     {
-        Assert.Null(LoginCommand.For(new ClaudetteCopy(AppInstallKind.Msix, "reapazor.Claudette_1a2b3c4d5e6f7", "0.3.0"), windows: true, "dotnet"));
+        Assert.Null(LoginCommand.For(new ClaudetteCopy(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.3.0"), windows: true, "dotnet"));
     }
 
     // Forward slashes, which every OS reads as separators: backslashes are only separators on Windows.

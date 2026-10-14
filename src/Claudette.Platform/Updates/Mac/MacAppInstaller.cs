@@ -14,7 +14,7 @@ namespace Claudette.Platform.Updates.Mac;
 /// <param name="processId">This process, which the helper waits for.</param>
 public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider timeProvider, string appBundle, string workDirectory, int processId, string launchMode = "open") : IAppInstaller
 {
-    public const string BundleIdentifier = "com.reapazor.claudette";
+    public const string BundleIdentifier = "com.dotbunny.claudette";
 
     private static readonly TimeSpan CommandTimeout = TimeSpan.FromMinutes(2);
 

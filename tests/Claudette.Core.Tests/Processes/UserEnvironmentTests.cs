@@ -16,7 +16,7 @@ public class UserEnvironmentTests
         ["PATH"] = "/usr/bin:/bin",
         ["HOME"] = "/Users/me",
         ["CLAUDETTE_HOME"] = "/tmp/claudette-home",
-        ["XPC_SERVICE_NAME"] = "application.com.reapazor.claudette",
+        ["XPC_SERVICE_NAME"] = "application.com.dotbunny.claudette",
     };
 
     private static readonly Dictionary<string, string> Login = new()
@@ -45,7 +45,7 @@ public class UserEnvironmentTests
         Assert.Equal("/opt/homebrew", merged["HOMEBREW_PREFIX"]);
         Assert.Equal("ghp_secret-value", merged["GITHUB_TOKEN"]);
         // Variables only Claudette has are kept.
-        Assert.Equal("application.com.reapazor.claudette", merged["XPC_SERVICE_NAME"]);
+        Assert.Equal("application.com.dotbunny.claudette", merged["XPC_SERVICE_NAME"]);
     }
 
     [Fact]

@@ -14,7 +14,7 @@ public sealed class StartAtLoginTests
 {
     private static readonly ClaudetteCopy SourceBuild = new(AppInstallKind.SourceBuild, Path.Combine("D:", "src", "Claudette", "bin"), "0.3.0");
     private static readonly ClaudetteCopy OtherCheckout = new(AppInstallKind.SourceBuild, Path.Combine("D:", "src", "Claudette-2", "bin"), "0.3.0");
-    private static readonly ClaudetteCopy Msix = new(AppInstallKind.Msix, "reapazor.Claudette_1a2b3c4d5e6f7", "0.2.0");
+    private static readonly ClaudetteCopy Msix = new(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.2.0");
     private static readonly ClaudetteCopy MacApp = new(AppInstallKind.MacApp, "/Applications/Claudette.app", "0.2.0");
     private static readonly ClaudetteCopy Published = new(AppInstallKind.Other, Path.Combine("C:", "Tools", "Claudette"), "0.2.0");
 

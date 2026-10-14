@@ -27,10 +27,10 @@ public sealed class LaunchAgentLoginItemsTests : IDisposable
 
         items.WriteEntry(new ClaudetteCopy(AppInstallKind.MacApp, "/Applications/R&D/Claudette.app", "0.3.0"));
 
-        Assert.Equal(Path.Combine(LaunchAgents, "com.reapazor.claudette.login.plist"), items.AgentPath);
+        Assert.Equal(Path.Combine(LaunchAgents, "com.dotbunny.claudette.login.plist"), items.AgentPath);
         Assert.Equal(LoginEntryState.Enabled, items.ReadEntry());
         var agent = ReadPlist(items.AgentPath);
-        Assert.Equal("com.reapazor.claudette.login", agent["Label"].Value);
+        Assert.Equal("com.dotbunny.claudette.login", agent["Label"].Value);
         Assert.Equal(["/usr/bin/open", "-a", "/Applications/R&D/Claudette.app", "--args", "--login"], agent["ProgramArguments"].Elements("string").Select(s => s.Value));
         Assert.Equal("true", agent["RunAtLoad"].Name.LocalName);
         // What the agent starts outlives it: a source build's copy, for one.

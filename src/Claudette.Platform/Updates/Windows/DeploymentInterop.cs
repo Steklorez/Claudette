@@ -90,7 +90,7 @@ internal static unsafe partial class Deployment
     [LibraryImport("kernel32.dll")]
     public static partial int GetCurrentPackageFamilyName(ref uint length, char* packageFamilyName);
 
-    /// <summary>This process's package family name, such as <c>reapazor.Claudette_1a2b3c4d5e6f7</c>, or null unpackaged.</summary>
+    /// <summary>This process's package family name, such as <c>dotBunny.Claudette_1a2b3c4d5e6f7</c>, or null unpackaged.</summary>
     public static string? CurrentFamilyName()
     {
         uint length = 0;

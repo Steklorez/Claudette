@@ -40,13 +40,13 @@ The files are in `packaging/`, and `.github/workflows/package.yml` builds them.
 
 - **Windows: MSIX**, one per architecture (x64, arm64), self-contained.
   - `packaging/windows/build-msix.ps1` publishes the app, adds `Package.appxmanifest` and the tile images, builds `resources.pri` for the scaled taskbar icons, packs with `makeappx`, and signs with `signtool`.
-  - The identity is `reapazor.Claudette`, the same as the AppUserModelID an unpackaged Claudette uses. It stays so though the repository is now `dotBunny/Claudette`: a package with another identity would install beside the old one rather than update it ("Updating Claudette" below). The manifest's `Publisher` must match the signing certificate's subject; the script takes it as `-Publisher` or `MSIX_PUBLISHER`.
+  - The identity is `dotBunny.Claudette`, the same as the AppUserModelID an unpackaged Claudette uses. The manifest's `Publisher` must match the signing certificate's subject; the script takes it as `-Publisher` or `MSIX_PUBLISHER`.
   - A startup task (`windows.startupTask`, `ClaudetteAtLogin`, off until Settings turns it on) starts Claudette at login ([§9](#starting-at-login)).
   - **File and registry write virtualization are off** (`desktop6:FileSystemWriteVirtualization`, with the `unvirtualizedResources` capability). Claude Code and every tool it runs are Claudette's children and share its package container. Otherwise their writes under AppData and HKCU would go to Claudette's private copy, where a terminal `claude` wouldn't see them.
   - Windows only installs signed packages. For a local test, sign with a self-signed certificate whose subject matches the publisher, and trust it.
 - **macOS: a `.dmg` per architecture** (arm64, x64) holding `Claudette.app` and an Applications link.
   - `packaging/macos/build-dmg.sh` publishes into the bundle, writes `Info.plist` and the icon, signs every Mach-O file and then the bundle with the hardened runtime, builds the `.dmg`, signs it, notarizes it with `notarytool` and staples the ticket.
-  - The bundle identifier is `com.reapazor.claudette`; User Notifications need one ([§10](#10-notifications)). Like the MSIX identity it stays, because the update checks it and macOS keeps notification permission by it. The entitlements allow only what .NET's JIT needs.
+  - The bundle identifier is `com.dotbunny.claudette`; User Notifications need one ([§10](#10-notifications)). The entitlements allow only what .NET's JIT needs.
   - `Info.plist` has purpose strings for the Documents, Desktop, Downloads, removable and network volume prompts. Claude Code runs as Claudette's child, so macOS asks about Claudette when Claude Code reads a project in one of those places.
 - **The workflow.**
   - A `v*` tag builds signed packages and attaches them to a draft GitHub release once the tests pass too (`ci.yml`, called as a reusable workflow). **Run workflow** builds them for a given version.
@@ -69,7 +69,7 @@ An installed Claudette checks its GitHub releases for a newer version, downloads
 
 - **Checking.**
   - At launch and every 6 hours, Claudette asks the GitHub REST API for `dotBunny/Claudette`'s releases. It doesn't sign in, and the check sends nothing but the request.
-  - Releases up to 0.1.0 ask for `reapazor/Claudette`'s, where the repository was before it moved. GitHub redirects that request and the HTTP client follows it, so no repository may be created at `reapazor/Claudette` (a fork there included) while those copies are in use.
+  - 0.1.0 came from `reapazor/Claudette`, before the repository moved: it asks for that repository's releases, and its packages were `reapazor.Claudette` and `com.reapazor.claudette`. GitHub redirects the request and the HTTP client follows it, so 0.1.0 still announces new releases, with a link to their page; no repository may be created at `reapazor/Claudette` (a fork there included) while those copies are in use. It refuses the new packages, which have another identity, so they're installed by hand; on Windows the MSIX installs beside 0.1.0's.
   - It offers the newest release above the running version. Tags are versions such as `v1.3.0` or `v1.4.0-beta.1`, ordered as Semantic Versioning orders them.
   - Pre-releases count only with **Include pre-releases**. Drafts aren't visible without signing in to GitHub, so a release is offered once it's published: the package workflow's draft release becomes an update when it's published.
   - **Check for Claudette updates automatically** turns this off. Both settings are in Settings → General, which also shows the version, when it last checked and **Check now**. The version is also at the foot of the Settings sidebar ([§14](#version)).
@@ -91,10 +91,10 @@ An installed Claudette checks its GitHub releases for a newer version, downloads
   - It's kept only once its size and the SHA-256 digest GitHub publishes for it match. A package that doesn't match is deleted. A package GitHub publishes no digest for isn't downloaded at all: the dialog says so and links to the release page.
   - A package already downloaded isn't fetched again. Downloads of the running version and older ones are deleted at launch.
 - **Checking the package** before anything closes. If the package fails a check, nothing else happens.
-  - **MSIX:** its manifest must be `reapazor.Claudette`, from the same publisher as the installed package (compared as the package family name, so a package signed by someone else would install beside this one instead of replacing it). It must also be the release's version and this machine's architecture. Windows checks the signature when it installs.
+  - **MSIX:** its manifest must be `dotBunny.Claudette`, from the same publisher as the installed package (compared as the package family name, so a package signed by someone else would install beside this one instead of replacing it). It must also be the release's version and this machine's architecture. Windows checks the signature when it installs.
   - **macOS:** the image is mounted, and its `Claudette.app` copied next to the running one, as `.Claudette-update.app` in the same folder. The copy must have:
     - a valid signature (`codesign --verify --deep --strict`). When the running app is signed with a Developer ID, the copy must also meet the code requirement `anchor apple generic and certificate leaf[subject.OU] = "<its team>"`: a certificate Apple issued to the same team, which an ad-hoc signature or another developer's doesn't. When the running app's own signature can't be read (`codesign` failed or timed out), nothing is installed, rather than the check being skipped;
-    - the bundle identifier `com.reapazor.claudette`;
+    - the bundle identifier `com.dotbunny.claudette`;
     - the release's version.
 - **The handover**, as for a new build ([§9](#working-on-claudette)):
   1. Claudette writes the restart snapshot (every tab, draft, the selected tab and the window's placement) with the versions it's updating from and to.
@@ -1241,7 +1241,7 @@ Changed files shows everything since the session started. A turn's footer shows 
 - **The entry**, one per user:
   - **MSIX:** the package's startup task (`windows.startupTask` in the manifest, task `ClaudetteAtLogin`), turned on and off with `StartupTask`. It's listed as Claudette in Task Manager's Startup apps. Windows starts it without arguments; Claudette tells from its activation (`AppInstance.GetActivatedEventArgs`, `ActivationKind.StartupTask`).
   - **Other Windows builds:** a `Claudette` value under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
-  - **macOS:** a LaunchAgent, `~/Library/LaunchAgents/com.reapazor.claudette.login.plist`, run once at login. For `Claudette.app` it runs `open -a <the app> --args --login`. A LaunchAgent works on macOS 12, which the package still supports, and for a source build, which has no bundle; `SMAppService` needs macOS 13 and a bundle.
+  - **macOS:** a LaunchAgent, `~/Library/LaunchAgents/com.dotbunny.claudette.login.plist`, run once at login. For `Claudette.app` it runs `open -a <the app> --args --login`. A LaunchAgent works on macOS 12, which the package still supports, and for a source build, which has no bundle; `SMAppService` needs macOS 13 and a bundle.
   - **Linux:** `claudette.desktop` in the XDG autostart folder (`$XDG_CONFIG_HOME/autostart`, or `~/.config/autostart`).
   - Every entry but the MSIX's starts Claudette with `--login`, which says it was started at login.
 - **Which Claudette starts.** A machine can have an installed release, another build (an unpackaged Windows one, a Linux one) and source builds in one or more checkouts. The entry starts the best one: a release (MSIX or `Claudette.app`), then another build, then a source build.
@@ -1439,7 +1439,7 @@ Clicking a notification brings Claudette to the front and goes to the relevant t
   - The frames are drawn with the icon ([§2](#packaging-and-signing)).
 - **Flashing.** When a tab starts needing input while Claudette isn't in front, the Windows taskbar button flashes until Claudette comes to the front, or no tab needs input any more. It follows **A tab needs permission or an answer**. The Dock has nothing like it; the waving does that job.
 - **How each OS does it** (the code is in `Claudette.Platform/Notifications`):
-  - **Windows:** WinRT toasts (`ToastNotificationManager`), called through source-generated COM interop so the app stays a plain `net10.0` build. A click raises the toast's `Activated` event in the running Claudette. An MSIX install has package identity. Run unpackaged, Claudette sets its AppUserModelID (`reapazor.Claudette`) and registers it under `HKCU\Software\Classes\AppUserModelId`, as the Windows App SDK does. The badge and the spark use `ITaskbarList3::SetOverlayIcon`, and the flash `FlashWindowEx`.
+  - **Windows:** WinRT toasts (`ToastNotificationManager`), called through source-generated COM interop so the app stays a plain `net10.0` build. A click raises the toast's `Activated` event in the running Claudette. An MSIX install has package identity. Run unpackaged, Claudette sets its AppUserModelID (`dotBunny.Claudette`) and registers it under `HKCU\Software\Classes\AppUserModelId`, as the Windows App SDK does. The badge and the spark use `ITaskbarList3::SetOverlayIcon`, and the flash `FlashWindowEx`.
   - **macOS:** `UNUserNotificationCenter` through the Objective-C runtime, with a delegate that reports clicks and lets notifications show while Claudette is in front. It needs the app bundle's identifier, so a build run with `dotnet run` has no notifications and Settings says so. The badge is the Dock tile's `badgeLabel`, and the animation sets `NSApplication`'s `applicationIconImage` to each frame (nil gives the bundle's icon back).
   - **Linux:** `notify-send --wait` with a default action, which reports a click. Without `notify-send`, there are no notifications.
 

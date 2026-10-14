@@ -14,10 +14,10 @@ namespace Claudette.Platform.LoginItems.Mac;
 /// </summary>
 public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string launchAgentsDirectory) : ILoginItems
 {
-    public const string Label = "com.reapazor.claudette.login";
+    public const string Label = "com.dotbunny.claudette.login";
 
     /// <summary>The app's bundle identifier, so Login Items names the agent after Claudette.</summary>
-    private const string BundleIdentifier = "com.reapazor.claudette";
+    private const string BundleIdentifier = "com.dotbunny.claudette";
 
     public string AgentPath => Path.Combine(launchAgentsDirectory, Label + ".plist");
 
