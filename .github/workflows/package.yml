@@ -94,13 +94,13 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
         run: ./packaging/windows/build-msix.ps1 -Version $env:VERSION -Architecture $env:ARCH
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: claudette-windows-${{ matrix.arch }}
           path: artifacts/*.msix
           if-no-files-found: error
       # Kept out of the package, for reading crash reports' stack traces.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: symbols-windows-${{ matrix.arch }}
           path: artifacts/symbols-win-${{ matrix.arch }}/
@@ -150,12 +150,12 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
         run: packaging/macos/build-dmg.sh "$VERSION" "$ARCH"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: claudette-macos-${{ matrix.arch }}
           path: artifacts/*.dmg
           if-no-files-found: error
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: symbols-macos-${{ matrix.arch }}
           path: artifacts/symbols-osx-${{ matrix.arch }}/
@@ -170,7 +170,7 @@ jobs:
       contents: write
     steps:
       # The packages only: the symbols stay workflow artifacts.
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: artifacts
           pattern: claudette-*
