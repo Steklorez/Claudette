@@ -40,6 +40,7 @@ public sealed record UsageSample(
 /// </summary>
 /// <param name="CostUsd">Claude Code's client-side estimate at list price; not a bill.</param>
 /// <param name="Project">The tab's folder, for usage by project; null for turns recorded before it was kept.</param>
+/// <param name="Account">The account the tab ran under (DESIGN.md §4, "Accounts"); null for the Default account.</param>
 public sealed record TurnRecord(
     DateTimeOffset Timestamp,
     string TabId,
@@ -50,12 +51,13 @@ public sealed record TurnRecord(
     long CacheWrite,
     long CacheRead,
     double CostUsd,
-    string? Project = null)
+    string? Project = null,
+    string? Account = null)
 {
     public long Total => Input + Output + CacheWrite + CacheRead;
 
     /// <summary>One record per model in the result's <c>modelUsage</c>, read the same way as <c>TokenTotals.Add</c>.</summary>
-    public static IReadOnlyList<TurnRecord> FromResult(ResultMessage result, string tabId, DateTimeOffset timestamp, string? project = null)
+    public static IReadOnlyList<TurnRecord> FromResult(ResultMessage result, string tabId, DateTimeOffset timestamp, string? project = null, string? account = null)
     {
         if (result.ModelUsage is not { Count: > 0 } byModel)
         {
@@ -78,7 +80,8 @@ public sealed record TurnRecord(
                 Tokens(usage, "cacheCreationInputTokens"),
                 Tokens(usage, "cacheReadInputTokens"),
                 usage.GetDouble("costUSD") ?? 0,
-                project));
+                project,
+                account));
         }
         return records;
     }
@@ -98,6 +101,14 @@ public sealed record TabTokenSum(string TabId, long Input, long Output, long Cac
 /// <param name="Project">The tab's folder; null for turns recorded before projects were kept.</param>
 /// <param name="Turns">Turns, not records: a turn that used two models counts once.</param>
 public sealed record ProjectTokenSum(string? Project, long Input, long Output, long CacheWrite, long CacheRead, double CostUsd, int Turns)
+{
+    public long Total => Input + Output + CacheWrite + CacheRead;
+}
+
+/// <summary>An account's tokens over a period (DESIGN.md §4, "Accounts").</summary>
+/// <param name="Account">The account's id; null for the Default account.</param>
+/// <param name="Turns">Turns, not records: a turn that used two models counts once.</param>
+public sealed record AccountTokenSum(string? Account, long Input, long Output, long CacheWrite, long CacheRead, double CostUsd, int Turns)
 {
     public long Total => Input + Output + CacheWrite + CacheRead;
 }

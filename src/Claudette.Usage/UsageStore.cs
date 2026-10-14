@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 using Claudette.Core.Json;
 using Claudette.Core.Protocol;
@@ -223,8 +224,8 @@ public sealed class UsageStore : IDisposable
         using var command = _connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
-            INSERT INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project)
-            VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $project)
+            INSERT INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account)
+            VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $project, $account)
             """;
         foreach (var turn in turns)
         {
@@ -239,6 +240,7 @@ public sealed class UsageStore : IDisposable
             Add(command, "$cacheRead", turn.CacheRead);
             Add(command, "$costUsd", turn.CostUsd);
             Add(command, "$project", turn.Project);
+            Add(command, "$account", turn.Account);
             command.ExecuteNonQuery();
         }
         transaction.Commit();
@@ -252,12 +254,12 @@ public sealed class UsageStore : IDisposable
         // tab's index (turns_by_tab), so it would read every turn in the range.
         command.CommandText = tabId is null
             ? """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account FROM turns
               WHERE timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """
             : """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account FROM turns
               WHERE tab_id = $tabId AND timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """;
@@ -281,7 +283,8 @@ public sealed class UsageStore : IDisposable
                 reader.GetInt64(6),
                 reader.GetInt64(7),
                 reader.GetDouble(8),
-                reader.IsDBNull(9) ? null : reader.GetString(9)));
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.IsDBNull(10) ? null : reader.GetString(10)));
         }
         return turns;
     });
@@ -331,15 +334,61 @@ public sealed class UsageStore : IDisposable
         return sums;
     });
 
+    /// <summary>
+    /// An account's estimated spend since <paramref name="from"/>, in US dollars (DESIGN.md §4, "Accounts"); null for the
+    /// Default account. Claude Code's own estimates, at list price.
+    /// </summary>
+    public double GetSpend(string? account, DateTimeOffset from) => Locked(() =>
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = "SELECT TOTAL(cost_usd) FROM turns WHERE timestamp >= $from AND account IS $account";
+        Add(command, "$from", from.ToUnixTimeMilliseconds());
+        Add(command, "$account", account);
+        return Convert.ToDouble(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+    });
+
+    /// <summary>Tokens per account since <paramref name="from"/>, the heaviest first; the Default account's as null.</summary>
+    public IReadOnlyList<AccountTokenSum> GetTokensByAccount(DateTimeOffset from) => Locked(() =>
+    {
+        using var command = _connection.CreateCommand();
+        // A turn's records (one per model) share its timestamp and tab.
+        command.CommandText = """
+            SELECT account, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT tab_id || '|' || timestamp)
+            FROM turns
+            WHERE timestamp >= $from
+            GROUP BY account
+            ORDER BY SUM(input + output + cache_write + cache_read) DESC, account
+            """;
+        Add(command, "$from", from.ToUnixTimeMilliseconds());
+        using var reader = command.ExecuteReader();
+        var sums = new List<AccountTokenSum>();
+        while (reader.Read())
+        {
+            sums.Add(new AccountTokenSum(
+                reader.IsDBNull(0) ? null : reader.GetString(0),
+                reader.GetInt64(1),
+                reader.GetInt64(2),
+                reader.GetInt64(3),
+                reader.GetInt64(4),
+                reader.GetDouble(5),
+                reader.GetInt32(6)));
+        }
+        return sums;
+    });
+
     /// <summary>Each tab's tokens since <paramref name="from"/>, the heaviest first, with its last known name.</summary>
-    public IReadOnlyList<TabTokenSum> GetTokensByTab(DateTimeOffset from) => Locked(() =>
+    /// <param name="planOnly">
+    /// Only the Default account's turns, which are the ones that use the plan: an API key's don't (DESIGN.md §4,
+    /// "Accounts").
+    /// </param>
+    public IReadOnlyList<TabTokenSum> GetTokensByTab(DateTimeOffset from, bool planOnly = false) => Locked(() =>
     {
         using var command = _connection.CreateCommand();
         // A turn's records (one per model) share its timestamp.
-        command.CommandText = """
+        command.CommandText = $"""
             SELECT turns.tab_id, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT timestamp), tabs.name
             FROM turns LEFT JOIN tabs ON tabs.tab_id = turns.tab_id
-            WHERE timestamp >= $from
+            WHERE timestamp >= $from{(planOnly ? " AND account IS NULL" : "")}
             GROUP BY turns.tab_id
             ORDER BY SUM(input + output + cache_write + cache_read) DESC, turns.tab_id
             """;

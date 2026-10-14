@@ -333,6 +333,8 @@ public sealed partial class TabViewModel
             SyncToLibrary = State.SyncToLibrary,
             RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
             Overrides = Copy(State.Overrides) ?? new TabOverrides(),
+            // On the same account, so carrying the conversation on doesn't read it again (DESIGN.md §4, "Accounts").
+            AccountId = Account?.Id,
             KeptSuffixes = [.. State.KeptSuffixes],
             ExpandThinking = State.ExpandThinking,
             // A copy has the same changes, so keeps their marks (DESIGN.md §8, "Reviewed").

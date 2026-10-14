@@ -1308,6 +1308,54 @@ items:
     test: InstallAndAuthTests, AccountAndSignInTests
     fallback: See subscriptionType. 2.1.284 reports none, claude.ai, api_key, api_key_helper, oauth_token or third_party; an unknown value is shown as it is. Since 2.1.286 a Console sign-in's stored key reports api_key (2.1.285 said claude.ai), so it reads as an API key, with Console billing and no Remote Control.
 
+  # --- Accounts (DESIGN.md §4, "Accounts") --------------------------------------------------------------
+  - id: "--settings"
+    kind: flag
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/Services/AccountsService.cs
+    docs: https://code.claude.com/docs/en/cli-reference
+    test: RealCliTests, AccountsTests
+  - id: "apiKeyHelper"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, src/Claudette.App/Services/ApiKeyHelperLaunch.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: RealCliTests, AccountsTests
+    # An API-key account's tab passes {"apiKeyHelper": "\"<Claudette>\" --api-key-helper <id>"} with --settings. Claude
+    # Code runs it through a shell, reads the key from its output, caches it for five minutes
+    # (CLAUDE_CODE_API_KEY_HELPER_TTL_MS) and runs it again after a 401 or 403.
+  - id: "apiKeyHelper outranks a claude.ai sign-in"
+    kind: behavior
+    status: documented
+    usedIn: src/Claudette.App/Services/AccountsService.cs
+    docs: https://code.claude.com/docs/en/authentication
+    test: RealCliTests
+    # "Authentication precedence": ANTHROPIC_AUTH_TOKEN, then ANTHROPIC_API_KEY, then apiKeyHelper, then the claude.ai
+    # login. So an API-key tab runs on its key whatever the Default account is, and goes without the two variables.
+  - id: "ANTHROPIC_API_KEY"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: AccountsTests, RealCliTests
+    # Removed from an API-key account's tabs: under -p it always wins over apiKeyHelper. Default's tabs keep it, as user
+    # configuration.
+  - id: "ANTHROPIC_AUTH_TOKEN"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: AccountsTests
+    # See ANTHROPIC_API_KEY: it outranks apiKeyHelper too.
+  - id: "costUSD"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/TokenTotals.cs, src/Claudette.Usage/UsageRecords.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: UsageStoreTests, AccountsTests
+    # Each model's estimated cost in a result's modelUsage, at list price: an API-key account's spend in the header, its
+    # warnings and the Usage panel's Accounts list. Not a bill.
+
   # --- Plan usage (DESIGN.md §6) ------------------------------------------------------------------------
   - id: "rate_limits_available"
     kind: field

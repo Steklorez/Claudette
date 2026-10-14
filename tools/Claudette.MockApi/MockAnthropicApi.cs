@@ -14,6 +14,7 @@ namespace Claudette.MockApi;
 
 /// <summary>A request the mock received, for tests to check what reached the API.</summary>
 /// <param name="LastUserImages">The images in the latest user message, in order.</param>
+/// <param name="ApiKey">The <c>x-api-key</c> the request came with: which key Claude Code used.</param>
 public sealed record RecordedRequest(
     string Method,
     string Path,
@@ -24,7 +25,8 @@ public sealed record RecordedRequest(
     string LastUserText,
     string Reply,
     string LastToolResultText = "",
-    IReadOnlyList<RecordedImage>? LastUserImages = null);
+    IReadOnlyList<RecordedImage>? LastUserImages = null,
+    string? ApiKey = null);
 
 /// <summary>An image that reached the API: its media type, size, and for a PNG its dimensions.</summary>
 public sealed record RecordedImage(string MediaType, int Bytes, int? Width, int? Height);
@@ -130,13 +132,13 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
 
         if (path.StartsWith("/v1/messages/count_tokens", StringComparison.Ordinal))
         {
-            Record(request.Method, path, body, "count_tokens");
+            Record(request, path, body, "count_tokens");
             await context.Response.WriteAsJsonAsync(new { input_tokens = 100 });
             return;
         }
         if (!path.StartsWith("/v1/messages", StringComparison.Ordinal))
         {
-            Record(request.Method, path, body, "not_found");
+            Record(request, path, body, "not_found");
             context.Response.StatusCode = 404;
             await context.Response.WriteAsJsonAsync(new { type = "error", error = new { type = "not_found_error", message = "mock: not implemented" } });
             return;
@@ -145,14 +147,14 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
         // API_ERROR: overloaded twice, so Claude Code reports its retries (system/api_retry), then a normal reply.
         if (LastUserText(body).Text.Contains("API_ERROR", StringComparison.Ordinal) && Interlocked.Increment(ref _apiErrors) <= 2)
         {
-            Record(request.Method, path, body, "overloaded");
+            Record(request, path, body, "overloaded");
             context.Response.StatusCode = 529;
             await context.Response.WriteAsJsonAsync(new { type = "error", error = new { type = "overloaded_error", message = "mock: overloaded" } });
             return;
         }
 
         var plan = Script(body);
-        Record(request.Method, path, body, plan.Kind);
+        Record(request, path, body, plan.Kind);
         var id = $"msg_mock_{Interlocked.Increment(ref _counter)}";
         var stopReason = plan.Blocks.Any(b => b["type"]!.GetValue<string>() == "tool_use") ? "tool_use" : "end_turn";
         var usage = new JsonObject { ["input_tokens"] = 1000, ["output_tokens"] = 20, ["cache_creation_input_tokens"] = 0, ["cache_read_input_tokens"] = 0 };
@@ -243,10 +245,10 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
         }
     }
 
-    private void Record(string method, string path, JsonObject body, string reply)
+    private void Record(HttpRequest request, string path, JsonObject body, string reply)
     {
         _requests.Enqueue(new RecordedRequest(
-            method,
+            request.Method,
             path,
             body["model"]?.GetValue<string>(),
             body["output_config"]?["effort"]?.GetValue<string>(),
@@ -255,7 +257,8 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
             LastUserText(body).Text,
             reply,
             LastToolResultText(body),
-            LastUserImages(body)));
+            LastUserImages(body),
+            request.Headers["x-api-key"].FirstOrDefault()));
     }
 
     private sealed record Plan(string Kind, List<JsonObject> Blocks, TimeSpan? ChunkDelay = null);

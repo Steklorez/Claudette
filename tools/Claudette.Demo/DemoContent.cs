@@ -10,10 +10,17 @@ namespace Claudette.Demo;
 /// The demo's projects and tabs: three game projects in git repositories (Unreal in C++, Unity in C#, Godot), with
 /// Claude's changes in their working trees, and seven sessions over them, each with its transcript. The first tab,
 /// Grappling hook, is the one the main screenshot shows; Move to the Input System is a thread with two sub-threads, a
-/// plan, a task list part-way done and three subagents.
+/// plan, a task list part-way done and three subagents. Pool particle emitters and Stamina drains twice on clients run
+/// on the studio's API key.
 /// </summary>
 internal static class DemoContent
 {
+    /// <summary>
+    /// The demo's API-key account (DESIGN.md §4, "Accounts"): orbit-game's group uses it, and one starfall tab was moved
+    /// to it. Its key isn't stored anywhere: fake-claude never asks for it.
+    /// </summary>
+    public const string StudioAccount = "studio";
+
     /// <summary>Writes the projects under <paramref name="projects"/> and the transcripts to <paramref name="transcripts"/>.</summary>
     /// <returns>The tabs, the one to show first.</returns>
     public static List<TabState> Write(string projects, string transcripts)
@@ -30,19 +37,23 @@ internal static class DemoContent
         return
         [
             Tab("tab-grapple", starfall, grapple, "Grappling hook", reviewed: [(Path.Combine(starfall, "Source", "Starfall", "Abilities", "GrappleComponent.h"), firstWrite)]),
-            Tab("tab-stamina", starfall, stamina, "Stamina drains twice on clients", mark: TabMark.Question, model: "Sonnet 5.5", effort: "low"),
+            // Moved to the studio's API key, so its row has the account's tag (DESIGN.md §4, "Accounts").
+            Tab("tab-stamina", starfall, stamina, "Stamina drains twice on clients", mark: TabMark.Question, model: "Sonnet 5.5", effort: "low", account: StudioAccount),
             Tab("tab-inventory", tidepool, inventory, "Inventory loses items on save", mark: TabMark.Star, reviewed: inventoryChanges),
             Tab("tab-input", tidepool, input, InputThread, mark: TabMark.Flag, thread: true),
             Tab("tab-ui", tidepool, UiInputModules(tidepool, sentAt), UiSubThread, effort: "medium", threadId: "tab-input"),
             Tab("tab-rumble", tidepool, Rumble(tidepool, sentAt), RumbleSubThread, model: "Sonnet 5.5", effort: "medium", threadId: "tab-input"),
-            Tab("tab-pool", orbit, pool, "Pool particle emitters", mark: TabMark.Pause),
+            // orbit-game's group runs on the studio's API key.
+            Tab("tab-pool", orbit, pool, "Pool particle emitters", mark: TabMark.Pause, account: StudioAccount),
         ];
 
         TabState Tab(string id, string folder, DemoTranscript transcript, string name, TabMark? mark = null,
-            (string Path, string Change)[]? reviewed = null, string model = "Opus 5.5", string effort = "high", bool thread = false, string? threadId = null) => new()
+            (string Path, string Change)[]? reviewed = null, string model = "Opus 5.5", string effort = "high", bool thread = false, string? threadId = null,
+            string? account = null) => new()
             {
                 Id = id,
                 Folder = folder,
+                AccountId = account,
                 SessionId = transcript.SessionId,
                 TranscriptPath = transcript.Save(transcripts),
                 UserName = name,

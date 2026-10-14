@@ -5,8 +5,8 @@ public sealed class CredentialStoreException(string message, Exception? inner = 
 
 /// <summary>
 /// The OS credential store: Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux. Claudette
-/// keeps secrets it must store, such as a Perforce password (DESIGN.md §18), only here: never in its settings files,
-/// never synced, never logged. The implementations are in Claudette.Platform.
+/// keeps secrets it must store, such as a Perforce password (DESIGN.md §18) or an account's API key (§4, "Accounts"),
+/// only here: never in its settings files, never synced, never logged. The implementations are in Claudette.Platform.
 /// </summary>
 public interface ICredentialStore
 {

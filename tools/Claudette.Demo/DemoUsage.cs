@@ -69,9 +69,10 @@ internal static class DemoUsage
                     var tokens = (long)(WindowTokens * share / 4);
                     var at = sessionStart.AddMinutes(20 + (turn * 45) + (turns.Count * 3));
                     turns.Add(new TurnRecord(at, tab.Id, tab.SessionId, "claude-opus-5-5",
-                        tokens / 200, tokens / 25, tokens / 10, tokens - (tokens / 200) - (tokens / 25) - (tokens / 10), tokens / 400_000.0));
+                        tokens / 200, tokens / 25, tokens / 10, tokens - (tokens / 200) - (tokens / 25) - (tokens / 10), tokens / 400_000.0, Account: tab.AccountId));
                 }
             }
+            turns.AddRange(StudioSpend(now, tabs));
             store.AddTurns(turns);
             foreach (var tab in tabs)
             {
@@ -92,6 +93,41 @@ internal static class DemoUsage
                     Limit("weekly_scoped", Fable(Weekly(last)), weeklyResets, "Fable")),
             },
         }.ToJsonString());
+    }
+
+    /// <summary>
+    /// The studio's API key over the last month, for its spend in the header (DESIGN.md §4, "Accounts"): a few dollars
+    /// each working day, and a busy morning today.
+    /// </summary>
+    private static IEnumerable<TurnRecord> StudioSpend(DateTimeOffset now, IReadOnlyList<TabState> tabs)
+    {
+        var studio = tabs.Where(t => t.AccountId == DemoContent.StudioAccount).ToArray();
+        if (studio.Length == 0)
+        {
+            yield break;
+        }
+        for (var day = 29; day >= 1; day--)
+        {
+            var at = now.AddDays(-day);
+            if (TimeZoneInfo.ConvertTime(at, TimeZoneInfo.Local).DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+            {
+                continue;
+            }
+            yield return Turn(at, studio[day % studio.Length], 1.6 + (day % 5 * 0.55));
+        }
+        double[] today = [0.85, 1.3, 0.65, 1.55, 1.05];
+        for (var i = 0; i < today.Length; i++)
+        {
+            yield return Turn(now.AddMinutes(-25 - (i * 35)), studio[i % studio.Length], today[i]);
+        }
+
+        static TurnRecord Turn(DateTimeOffset at, TabState tab, double cost)
+        {
+            // Sonnet 5.5's list prices, mostly cache reads as in a long session.
+            var tokens = (long)(cost / 0.6 * 1_000_000);
+            return new TurnRecord(at, tab.Id, tab.SessionId, "claude-sonnet-5-5", tokens / 50, tokens / 40, tokens / 12,
+                tokens - (tokens / 50) - (tokens / 40) - (tokens / 12), cost, tab.Folder, tab.AccountId);
+        }
     }
 
     private static UsageSnapshot Snapshot(DateTimeOffset at, double session, DateTimeOffset sessionResets, double weekly, DateTimeOffset weeklyResets) => new(

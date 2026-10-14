@@ -15,8 +15,14 @@ internal sealed class Program
     internal static SingleInstance? Instance { get; private set; }
 
     [STAThread]
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
+        // Claude Code asking for an API-key account's key, through the apiKeyHelper Claudette gave it (DESIGN.md §4,
+        // "Accounts"): print it and exit, before anything that would hand off to the running Claudette or open a window.
+        if (Core.Accounts.ApiKeyHelper.TryGetAccountId(args, out var accountId))
+        {
+            return ApiKeyHelperLaunch.Run(accountId);
+        }
         if (OperatingSystem.IsWindows())
         {
             SetWindowsIdentity();
@@ -36,31 +42,31 @@ internal sealed class Program
         if (!restoring && instance.TryHandOffAsync(args).GetAwaiter().GetResult())
         {
             instance.Dispose();
-            return;
+            return 0;
         }
         // At login, a source build starts the installed release instead (DESIGN.md §9, "Starting at login").
         if (LaunchArguments.IsLogin(args) && LoginLaunch.TryHandOver(args, paths, new ProcessLauncher()))
         {
             instance.Dispose();
-            return;
+            return 0;
         }
         // A source build runs from a copy of its build output, so it can be rebuilt while it runs (DESIGN.md §9).
         if (DevelopmentLaunch.TryRunFromCopy(args, paths, new ProcessLauncher()))
         {
             instance.Dispose();
-            return;
+            return 0;
         }
         // Claim the data folder: another launch may have got past the hand-off above at the same moment. Whichever
         // claims first runs, and the other hands its arguments to it (DESIGN.md §4).
         if (!instance.StartAsync(args, takeOver: restoring).GetAwaiter().GetResult())
         {
             instance.Dispose();
-            return;
+            return 0;
         }
         Instance = instance;
         try
         {
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         finally
         {

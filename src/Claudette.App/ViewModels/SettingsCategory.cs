@@ -15,6 +15,8 @@ public static class SettingsCategory
 
     public const string ClaudeCode = "Claude Code";
 
+    public const string Accounts = "Accounts";
+
     public const string NewTabs = "New tabs";
 
     public const string Appearance = "Appearance";

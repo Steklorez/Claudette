@@ -85,6 +85,12 @@ public sealed record ClaudeLaunchOptions
     public string? SettingSources { get; init; }
 
     /// <summary>
+    /// <c>--settings</c>: settings for this session alone, as JSON, over the user's. An API-key account's tab passes its
+    /// <c>apiKeyHelper</c> here (DESIGN.md §4, "Accounts"). Null: none.
+    /// </summary>
+    public string? Settings { get; init; }
+
+    /// <summary>
     /// The host shows MCP servers' requests for input, from the start (<see cref="ClaudeSession.ShowsElicitations"/>).
     /// Not a command-line argument.
     /// </summary>
@@ -138,6 +144,7 @@ public static class ClaudeArguments
         AddOption(args, "--permission-mode", options.PermissionMode);
         AddOption(args, "--fallback-model", options.FallbackModel);
         AddOption(args, "--setting-sources", options.SettingSources);
+        AddOption(args, "--settings", options.Settings);
         AddOption(args, "--worktree", options.Worktree);
         foreach (var directory in options.AddDirectories)
         {

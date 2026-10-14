@@ -68,6 +68,8 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     void IRemoteControlHost.CommandTurnEnded() => _checkIns.TurnEnded();
 
+    string? IRemoteControlHost.AccountRemoteControlReason => AccountRemoteControlReason;
+
     async Task IRemoteControlHost.RestartSessionAsync()
     {
         await StopSessionAsync();

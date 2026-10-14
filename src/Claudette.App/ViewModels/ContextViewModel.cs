@@ -131,8 +131,15 @@ public sealed partial class ContextViewModel : ObservableObject
     /// <summary>Settings → Appearance changed: the ring may have been turned on or off.</summary>
     internal void OnSettingsChanged() => OnPropertyChanged(nameof(ShowRing));
 
-    private void Show(ContextIndicator indicator, ContextBreakdown breakdown)
+    /// <summary>
+    /// The tokens in the context window, as the indicator last showed them: what moving the tab to another account has
+    /// Claude read again (DESIGN.md §4, "Accounts"). Null until the tab has context data.
+    /// </summary>
+    public long? Tokens { get; private set; }
+
+    private void Show(ContextIndicator indicator, ContextBreakdown breakdown, long tokens)
     {
+        Tokens = tokens;
         Text = indicator.Text;
         Detail = indicator.Detail;
         IsHigh = indicator.IsHigh;
@@ -172,7 +179,7 @@ public sealed partial class ContextViewModel : ObservableObject
             }
             _usageUnavailable = false;
             Show(ContextIndicator.From(usage.TotalTokens, usage.MaxTokens, usage.Percentage, usage.AutoCompactEnabled ? usage.AutoCompactThreshold : null, estimated: false),
-                ContextBreakdown.From(usage));
+                ContextBreakdown.From(usage), usage.TotalTokens);
         });
     }
 
@@ -188,7 +195,7 @@ public sealed partial class ContextViewModel : ObservableObject
         }
         var tokens = _callUsage.ContextTokens ?? 0;
         Show(ContextIndicator.From(tokens, window, percentage, _autocompact is { Enabled: true, Threshold: { } threshold } ? threshold : null, estimated: true),
-            ContextBreakdown.Estimated(tokens, window));
+            ContextBreakdown.Estimated(tokens, window), tokens);
     }
 
     /// <summary>Each session event, on the UI thread, before the tab's own handling saves the tab.</summary>

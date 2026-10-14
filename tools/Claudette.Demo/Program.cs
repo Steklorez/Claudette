@@ -7,7 +7,9 @@
 //                   (--still reduces motion, so Claudette on the composer stands still for screenshots),
 //                   seven tabs over three game projects (Unreal in C++, Unity in C#, Godot): the first with a long
 //                   conversation and changed files, one with every file reviewed, and a thread with two sub-threads,
-//                   a plan, a task list part-way done and three subagents; and a plan usage history that ends now
+//                   a plan, a task list part-way done and three subagents; an API-key account, Studio, which
+//                   orbit-game's group and one starfall tab run on; and a usage history that ends now, with the plan's
+//                   usage and a month of Studio's spend
 //   claude-config/  for CLAUDE_CONFIG_DIR: the tabs' transcripts, with the subagents' beside them, and past sessions
 //                   for History: more in each project, one in a worktree of starfall, and four older projects
 //   usage.json      for FAKE_CLAUDE_USAGE: the plan usage fake-claude reports, where the history ends
@@ -18,6 +20,7 @@
 //
 // tools/Claudette.Demo/screenshots.ps1 takes the README's screenshots with it, on Windows.
 using Claudette.Core;
+using Claudette.Core.Accounts;
 using Claudette.Core.Development;
 using Claudette.Core.Settings;
 using Claudette.Demo;
@@ -117,6 +120,10 @@ await new JsonFileStore<AppState>(paths.StateFile).SaveAsync(new AppState
     SidePanelPages = ["Files", "Agents", "Tasks", "Project", "Processes", "Mcp", "ScratchPad"],
     TrustedFolders = [.. tabs.Select(t => t.Folder).Distinct()],
     SessionMarks = sessionMarks,
+    // The studio's API key, which orbit-game's group uses (DESIGN.md §4, "Accounts"). Its key isn't stored: fake-claude
+    // never runs the key helper.
+    Accounts = [new ClaudeAccount { Id = DemoContent.StudioAccount, Name = "Studio", Color = "#A66BFF", DailySpendAlert = 20 }],
+    FolderAccounts = { [tabs.Single(t => t.Id == "tab-pool").Folder] = DemoContent.StudioAccount },
     Window = new WindowPlacement(60, 40, 1480, 920, IsMaximized: false),
 });
 

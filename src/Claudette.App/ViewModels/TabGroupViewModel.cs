@@ -3,7 +3,9 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia.Media;
 using Claudette.Core;
+using Claudette.Core.Accounts;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels;
 
@@ -50,6 +52,30 @@ public sealed partial class TabGroupViewModel : ObservableObject
 
     /// <summary>The user's name for the group, else <see cref="FolderLabel"/>.</summary>
     public string Label => Name ?? FolderLabel;
+
+    /// <summary>The account the group's new tabs use (DESIGN.md §4, "Accounts"); null for Default.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LabelAccountTag), nameof(HasLabelAccountTag))]
+    public partial ClaudeAccount? Account { get; set; }
+
+    /// <summary>The tag beside the label, for an account other than Default.</summary>
+    public AccountTag? LabelAccountTag => AccountTag.For(Account, showDefault: false);
+
+    public bool HasLabelAccountTag => LabelAccountTag is not null;
+
+    /// <summary><b>Account ▸</b> in the group's menu, which the shell keeps current; empty while there's only Default.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAccountMenu))]
+    public partial IReadOnlyList<AccountMenuItem> AccountMenu { get; set; } = [];
+
+    public bool HasAccountMenu => AccountMenu.Count > 0;
+
+    /// <summary>The shell's handler for <see cref="ChooseAccountCommand"/>.</summary>
+    internal Action<TabGroupViewModel, string?>? AccountChosen { get; set; }
+
+    /// <summary>An account picked in <b>Account ▸</b>: the group's new tabs use it.</summary>
+    [RelayCommand]
+    private void ChooseAccount(string? accountId) => AccountChosen?.Invoke(this, accountId);
 
     public ObservableCollection<TabViewModel> Tabs { get; } = [];
 
@@ -132,4 +158,8 @@ public sealed partial class TabGroupViewModel : ObservableObject
 }
 
 /// <summary>One of the group colors, with the name its swatch has for screen readers and in its tip.</summary>
-public sealed record NamedColor(string Name, Color Color);
+public sealed record NamedColor(string Name, Color Color)
+{
+    /// <summary>Its name, as a list that picks one (Settings → Accounts) shows and reads it out.</summary>
+    public override string ToString() => Name;
+}

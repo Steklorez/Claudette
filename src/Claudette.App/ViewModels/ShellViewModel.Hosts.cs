@@ -15,6 +15,8 @@ public sealed partial class ShellViewModel : ISessionOpenerHost
         // A session that worked in a worktree Claude Code made goes back in its main checkout's group.
         state.WorktreeOf ??= GitWorktrees.MainCheckoutOf(state.Folder);
         FolderHistory.Touch(_services.State, state.WorktreeOf ?? state.Folder, _services.Time.GetUtcNow(), _services.Settings.NewTabs.RecentFolderLimit);
+        // A new tab here, so it runs under its group's account (DESIGN.md §4, "Accounts").
+        state.AccountId ??= _services.Accounts.ForFolder(state.WorktreeOf ?? state.Folder);
         var tab = new TabViewModel(_services, this, state, isRestored: true);
         AddTab(tab);
         SelectedTab = tab;

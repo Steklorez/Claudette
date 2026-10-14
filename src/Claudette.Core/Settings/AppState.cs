@@ -1,3 +1,4 @@
+using Claudette.Core.Accounts;
 using Claudette.Core.Development;
 using Claudette.Core.LoginItems;
 using Claudette.Core.Sessions;
@@ -37,6 +38,21 @@ public sealed class AppState
     /// folder").
     /// </summary>
     public Dictionary<string, string> FolderNames { get; set; } = [];
+
+    /// <summary>
+    /// Accounts tabs can run under besides the Default one (DESIGN.md §4, "Accounts"). Per machine: each machine sets up
+    /// its own, and their keys stay in its credential store.
+    /// </summary>
+    public List<ClaudeAccount> Accounts { get; set; } = [];
+
+    /// <summary>
+    /// The account each folder group's new tabs use, by folder path: an account's id, or <c>default</c>. A folder without
+    /// one uses <see cref="NewFolderAccount"/>.
+    /// </summary>
+    public Dictionary<string, string> FolderAccounts { get; set; } = [];
+
+    /// <summary>The account a folder opened for the first time uses; null for the Default account.</summary>
+    public string? NewFolderAccount { get; set; }
 
     /// <summary>Folder groups the user collapsed.</summary>
     public List<string> CollapsedGroups { get; set; } = [];
@@ -179,6 +195,12 @@ public sealed class TabState
     public string? UserName { get; set; }
 
     public bool IsPinned { get; set; }
+
+    /// <summary>
+    /// The account the tab runs Claude Code under (DESIGN.md §4, "Accounts"); null for the Default account. A new tab
+    /// takes its group's; <b>Account ▸</b> in the tab's menu switches it.
+    /// </summary>
+    public string? AccountId { get; set; }
 
     /// <summary>
     /// The icon the user marked the tab with (DESIGN.md §4, "Marks"), as <see cref="TabMarks.Key"/> writes it; null for

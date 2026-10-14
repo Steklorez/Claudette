@@ -16,6 +16,12 @@ internal interface IRemoteControlHost : ITabAreaHost
 
     /// <summary>Stops the tab's <c>claude</c> and starts a new one on the same session.</summary>
     Task RestartSessionAsync();
+
+    /// <summary>
+    /// Why the tab's account can't use Remote Control whatever the Default account can, or null: an API key can't
+    /// (DESIGN.md §4, "Accounts").
+    /// </summary>
+    string? AccountRemoteControlReason { get; }
 }
 
 /// <summary>
@@ -70,11 +76,16 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     /// <summary><b>Connect to the Claude app</b>: the tab connects whenever its session runs, restarts included.</summary>
     public bool IsOn => _host.State.RemoteControl;
 
+    /// <summary>Why this tab can't use Remote Control: its own account's reason, else the Default account's. Null when it can.</summary>
+    public string? UnavailableReason => _host.AccountRemoteControlReason ?? _services.RemoteControl.UnavailableReason;
+
+    private bool IsAvailable => UnavailableReason is null;
+
     /// <summary>The account can use Remote Control; a tab that's on can always be turned off.</summary>
-    public bool CanToggle => _host.State.RemoteControl || _services.RemoteControl.IsAvailable;
+    public bool CanToggle => _host.State.RemoteControl || IsAvailable;
 
     /// <summary>The switch's tip: what it does, or why it's disabled.</summary>
-    public string ToggleTip => !CanToggle && _services.RemoteControl.UnavailableReason is { } reason
+    public string ToggleTip => !CanToggle && UnavailableReason is { } reason
         ? reason
         : "Use this tab from the Claude app on your phone, or at claude.ai/code, while it runs here";
 
@@ -89,7 +100,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     public async Task SetAsync(bool on)
     {
         var state = _host.State;
-        if (on == state.RemoteControl || on && !_services.RemoteControl.IsAvailable)
+        if (on == state.RemoteControl || on && !IsAvailable)
         {
             // The menu item ticked itself as it was clicked: reading the value again puts it back.
             OnPropertyChanged(nameof(IsOn));
@@ -113,7 +124,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     public void OnAvailabilityChanged()
     {
         OnSwitchChanged();
-        if (_host.State.RemoteControl && _services.RemoteControl.IsAvailable && Status.State is RemoteControlState.NotConnected or RemoteControlState.Unavailable)
+        if (_host.State.RemoteControl && IsAvailable && Status.State is RemoteControlState.NotConnected or RemoteControlState.Unavailable)
         {
             RequestConnect();
         }
@@ -195,7 +206,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
         RemoteControlState.Connecting => "Connecting…",
         RemoteControlState.Unavailable => $"Not available: {Status.Detail}",
         _ when _waiting == Change.Connect => "Connects when Claude finishes this turn",
-        _ when _host.State.RemoteControl && _services.RemoteControl.UnavailableReason is { } reason => $"Not available: {reason}",
+        _ when _host.State.RemoteControl && UnavailableReason is { } reason => $"Not available: {reason}",
         _ when _host.State.RemoteControl && _host.Session is null => "Connects when the tab starts",
         _ when Status.Detail is { } why => $"Not connected: {why}",
         _ when _host.State.RemoteControl => "Not connected",
@@ -219,7 +230,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
         {
             return;
         }
-        if (_services.RemoteControl.UnavailableReason is { } reason)
+        if (UnavailableReason is { } reason)
         {
             Status = new RemoteControlStatus(RemoteControlState.Unavailable, Detail: reason);
             _host.AddNote($"Not connecting to the Claude app: {reason}", NoteKind.Warning);

@@ -12,7 +12,7 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 
 ### Run a dozen sessions without losing track of any
 
-- **One tab per session**, grouped by project folder in a sidebar that fits long names, a status line and as many tabs as you like. Each group gets its own color.
+- **One tab per session**, grouped by project folder in a sidebar that fits long names, a status line and as many tabs as you like. Each group gets its own color, and a name of your own when two clones of a project share a folder name.
 - **See where each tab stands at a glance:** busy, needs input, failed or idle, plus its git branch or worktree, its model and effort, how far its task list has got (`2/7`), and a ring that fills up with its context window.
 - **Mark tabs your way** with a check, cross, question mark, star, flag or pause sign. Once every file a tab changed is reviewed, it gets a green **reviewed** badge on its own.
 - **`Ctrl+J` jumps to the next tab waiting for you**, so a permission prompt never sits unanswered behind another tab. `Ctrl+Shift+P` opens a command palette for everything else.
@@ -46,6 +46,15 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 - **Several computers?** They can share their readings, so every machine's header knows what the others used.
 
 ![The detailed usage header: the session chart heading for 90% just before the reset, the week with Fable's own line, the burn rate per hour, and the busiest tabs](docs/screenshots/header-standard-dark.png)
+
+### Keep work on the work account
+
+- **Your plan for your projects, the company's API key for theirs.** Add a key in Settings → Accounts and choose it from a project group's menu: that project's new tabs run on the key, and everything else stays on your own plan. A colored tag on the group, and on any tab that differs from its group, tells you which is which.
+- **The key stays in your OS's credential store.** Claude Code asks Claudette for it as a tab starts, so it's never in a command line, an environment variable or a settings file.
+- **Move a conversation to another account** from the tab's menu. Claudette tells you first what that costs: the other account reads the conversation again, once, without the cache.
+- **See what the key is spending.** Select one of its tabs and the header shows today's, this week's and this month's estimated spend, and you can be warned when a day or a month passes an amount you set. The Usage window splits the tokens and cost by account.
+
+![A tab on the Studio API key: the header shows Studio's estimated spend today, this week and this month in place of the plan's meters, and Studio's purple tag marks the orbit-game group and the starfall tab moved to it](docs/screenshots/accounts-claude-dark.png)
 
 ### Review every change Claude makes
 
@@ -144,7 +153,7 @@ You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds 
 
 ### Try it without an account
 
-`tools/Claudette.Demo` builds a demo, the one in these screenshots: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads, past sessions for History, and a plan usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
+`tools/Claudette.Demo` builds a demo, the one in these screenshots: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads and two on a studio's API key, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
 
 ```sh
 dotnet run --project tools/Claudette.Demo -- <empty folder>
