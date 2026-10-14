@@ -274,12 +274,8 @@ public static class TranscriptReader
         }
         var joined = string.Join("\n", blocks.OfType<JsonObject>().Where(b => b.GetString("type") == "text").Select(b => b.GetString("text")));
         // Attached images are stored inline, as base64 image blocks.
-        var images = blocks.OfType<JsonObject>()
-            .Where(b => b.GetString("type") == "image" && b.GetObject("source")?.GetString("type") == "base64")
-            .Select(b => MessageImage.FromBase64(b.GetObject("source")!.GetString("media_type"), b.GetObject("source")!.GetString("data")))
-            .OfType<MessageImage>()
-            .ToArray();
-        if (joined.Length > 0 || images.Length > 0)
+        var images = MessageImage.FromBlocks(blocks);
+        if (joined.Length > 0 || images.Count > 0)
         {
             AddText(joined, time, items, images);
         }

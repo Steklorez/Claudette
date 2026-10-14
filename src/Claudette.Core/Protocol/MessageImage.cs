@@ -1,8 +1,11 @@
+using System.Text.Json.Nodes;
+
 namespace Claudette.Core.Protocol;
 
 /// <summary>
 /// An image in a user message: attached in the composer (DESIGN.md §5, "Attachments"), or read back from a
-/// transcript. Sent to Claude Code as a base64 <c>image</c> content block.
+/// transcript, or in a tool's result (DESIGN.md §18, "Images from Claude's tools"). Sent to Claude Code as a base64
+/// <c>image</c> content block.
 /// </summary>
 /// <param name="MediaType"><c>image/png</c>, <c>image/jpeg</c>, <c>image/gif</c> or <c>image/webp</c>.</param>
 public sealed record MessageImage(string MediaType, byte[] Data)
@@ -31,6 +34,13 @@ public sealed record MessageImage(string MediaType, byte[] Data)
         }
         return null;
     }
+
+    /// <summary>The images among content blocks: those of type <c>image</c> with a base64 source, in order.</summary>
+    public static IReadOnlyList<MessageImage> FromBlocks(JsonArray blocks) =>
+        [.. blocks.OfType<JsonObject>()
+            .Where(b => b.GetString("type") == "image" && b.GetObject("source")?.GetString("type") == "base64")
+            .Select(b => FromBase64(b.GetObject("source")!.GetString("media_type"), b.GetObject("source")!.GetString("data")))
+            .OfType<MessageImage>()];
 
     /// <summary>The image from a base64 content block, or null when it isn't a valid one.</summary>
     public static MessageImage? FromBase64(string? mediaType, string? data)

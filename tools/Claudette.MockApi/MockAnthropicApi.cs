@@ -35,6 +35,7 @@ public sealed record RecordedImage(string MediaType, int Bytes, int? Width, int?
 /// and any <c>ANTHROPIC_API_KEY</c>. Replies are scripted from keywords in the latest prompt:
 /// <list type="bullet">
 /// <item><c>WRITE_FILE &lt;path&gt;</c>: a Write tool call, then "Done with the tool."</item>
+/// <item><c>READ_FILE &lt;path&gt;</c>: a Read tool call, then "Done with the tool." An image file comes back as an image.</item>
 /// <item><c>EDIT_FILE &lt;path&gt;</c>: a Read, then an Edit replacing <c>ORIGINAL LINE</c> with <c>EDITED LINE</c>, then done.</item>
 /// <item><c>RUN_BASH &lt;command&gt;</c>: a Bash tool call, then done.</item>
 /// <item><c>SLOW</c>: text streamed in small chunks over about 20 seconds.</item>
@@ -343,6 +344,10 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
         {
             return new Plan("agent-reply", [TextBlock(reply.Groups[1].Value.Trim())]);
         }
+        if (ReadPattern().Match(text) is { Success: true } read && tools.Contains("Read"))
+        {
+            return new Plan("tool", [ToolUse("Read", new JsonObject { ["file_path"] = read.Groups[1].Value })]);
+        }
         if (WritePattern().Match(text) is { Success: true } write && tools.Contains("Write"))
         {
             return new Plan("tool", [ToolUse("Write", new JsonObject { ["file_path"] = write.Groups[1].Value, ["content"] = "hello from mock\n" })]);
@@ -456,6 +461,9 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
 
     [GeneratedRegex(@"WRITE_FILE (\S+)")]
     private static partial Regex WritePattern();
+
+    [GeneratedRegex(@"READ_FILE (\S+)")]
+    private static partial Regex ReadPattern();
 
     [GeneratedRegex(@"RUN_BASH (.+)")]
     private static partial Regex BashPattern();

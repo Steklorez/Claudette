@@ -686,6 +686,10 @@ public sealed class ConversationBuilder
                 // (DESIGN.md §18, "Threads").
                 var failed = result.IsError && !(tool.Name == SendMessageCall.ToolName && ThreadMessages.IsDeliveryAnswer(result.Text));
                 tool.ApplyResult(result.Text, failed, message.ToolUseResult);
+                if (result.Images.Count > 0)
+                {
+                    tool.Images = ToolImages.From(tool.Name, tool.Input, result, message.ToolUseResult);
+                }
                 if (!failed && ClaudeDocCall.MayBe(tool.Name))
                 {
                     ShowDoc(tool, result.Text);

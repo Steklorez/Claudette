@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
@@ -104,6 +105,27 @@ public sealed class AvaloniaPlatformServices(Func<TopLevel?> topLevel) : IPlatfo
         {
             await clipboard.SetTextAsync(text);
         }
+    }
+
+    public async Task SetClipboardImageAsync(byte[] data)
+    {
+        if (topLevel()?.Clipboard is not { } clipboard)
+        {
+            return;
+        }
+        Bitmap bitmap;
+        try
+        {
+            using var stream = new MemoryStream(data);
+            bitmap = new Bitmap(stream);
+        }
+        catch (Exception)
+        {
+            // A format Skia can't decode; there's nothing to copy.
+            return;
+        }
+        // Not disposed: the clipboard can hand the bitmap over to another app after this returns.
+        await clipboard.SetBitmapAsync(bitmap);
     }
 
     public async Task<IReadOnlyList<string>> GetClipboardFilesAsync()

@@ -200,6 +200,7 @@ public partial class TabView : UserControl
         if (_tab is not null)
         {
             _tab.ChangedFiles.DiffRequested -= OnDiffRequested;
+            _tab.ImageRequested -= OnImageRequested;
             _tab.ScrollToRequested -= OnScrollToRequested;
             _tab.AgentWindowRequested -= OnAgentWindowRequested;
             _tab.FindFocusRequested -= OnFindFocusRequested;
@@ -209,6 +210,7 @@ public partial class TabView : UserControl
         if (_tab is not null)
         {
             _tab.ChangedFiles.DiffRequested += OnDiffRequested;
+            _tab.ImageRequested += OnImageRequested;
             _tab.ScrollToRequested += OnScrollToRequested;
             _tab.AgentWindowRequested += OnAgentWindowRequested;
             _tab.FindFocusRequested += OnFindFocusRequested;
@@ -302,6 +304,21 @@ public partial class TabView : UserControl
         if (TopLevel.GetTopLevel(this) is Window owner)
         {
             window.Show(owner);
+        }
+        else
+        {
+            window.Show();
+        }
+    }
+
+    /// <summary>An image from a tool's result, full size in a window of its own (DESIGN.md §18, "Images from Claude's tools").</summary>
+    private void OnImageRequested(ImageViewerViewModel viewer)
+    {
+        var window = new ImageWindow { DataContext = viewer };
+        window.Closed += (_, _) => viewer.Dispose();
+        if (TopLevel.GetTopLevel(this) is Window owner)
+        {
+            window.ShowBeside(owner);
         }
         else
         {

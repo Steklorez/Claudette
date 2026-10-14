@@ -1082,6 +1082,19 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             ? _services.Platform.OpenUrlAsync(url)
             : Task.CompletedTask;
 
+    /// <summary>An image from a tool's result, to show full size in a window of its own (DESIGN.md §18, "Images from Claude's tools").</summary>
+    public event Action<ImageViewerViewModel>? ImageRequested;
+
+    /// <summary>A click on an image under a tool's card.</summary>
+    [RelayCommand]
+    private void OpenImage(ToolImage? image)
+    {
+        if (image is not null)
+        {
+            ImageRequested?.Invoke(new ImageViewerViewModel(image, _services));
+        }
+    }
+
     // ---- Copy and times (DESIGN.md §5, "Copy and times") ---------------------------------------------------
 
     /// <summary>How long a Copy button says "Copied", here and in Settings.</summary>

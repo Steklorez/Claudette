@@ -1049,6 +1049,27 @@ items:
     usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs
     test: AttachmentTests, ComposerTests
     fallback: A restored prompt shows its text without thumbnails.
+  - id: "Images in tool results"
+    kind: behavior
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ContentBlocks.cs, src/Claudette.Core/Protocol/MessageImage.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    docs: https://code.claude.com/docs/en/mcp
+    test: ToolImagesTests, ToolImageTests, ToolImageRealCliTests
+    fallback: "A tool_result's content can hold base64 image blocks, as the Messages API's do: a Read of an image, a PDF's pages read with pages, a notebook's figures, Bash output that's an image, an MCP tool's image (checked against 2.1.299, live and in transcripts). Claudette shows them under the tool's card (DESIGN.md §18, \"Images from Claude's tools\"). Non-base64 sources are skipped. If images move elsewhere, the cards show only the text, as before."
+  - id: "FileReadOutput"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ToolImages.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolImagesTests, ToolImageTests
+    fallback: "A Read's tool_use_result names what it read: type image (file.dimensions' originalWidth, originalHeight, displayWidth and displayHeight say what Claude Code scaled it down from), parts (a PDF's pages, firstPage the first one's number) or notebook. Without it, the images are called Image 1, Image 2, and only the file a Read of an image read can be opened."
+  - id: "isImage"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.App/Conversation/ConversationItems.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolImageTests
+    fallback: Bash's output that's a data:image URL comes back as an image block, with isImage on its tool_use_result; the card shows the image and not the URL. Without it, the URL shows as the output again, beside the image.
   - id: "--prompt-suggestions"
     kind: flag
     status: documented

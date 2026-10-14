@@ -14,6 +14,9 @@ public interface IPlatformServices
 
     Task SetClipboardTextAsync(string text);
 
+    /// <summary>Puts an image on the clipboard, from its bytes (PNG, JPEG, GIF or WebP), for <b>Copy image</b>.</summary>
+    Task SetClipboardImageAsync(byte[] data);
+
     /// <summary>Files copied in Finder or Explorer, as local paths, for pasting into the composer (DESIGN.md §5).</summary>
     Task<IReadOnlyList<string>> GetClipboardFilesAsync();
 

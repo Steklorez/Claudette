@@ -247,6 +247,26 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <!-- Images in the result, such as a Read of an image or a screenshot; a click shows one full size (DESIGN.md §18) -->
+        <ItemsControl ItemsSource="{Binding Images}" Margin="22,4,0,2" IsVisible="{Binding HasImages}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel ItemSpacing="6" LineSpacing="6" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="protocol:ToolImage">
+              <Button Classes="flat toolimage" Padding="0" ToolTip.Tip="{Binding Name, StringFormat='{}{0} · click to show it full size'}"
+                      AutomationProperties.Name="{Binding Name, StringFormat='Open {0}'}"
+                      Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenImageCommand}" CommandParameter="{Binding}">
+                <Border Classes="thumbnail">
+                  <Image Source="{Binding Image.Data, Converter={x:Static services:ImageFiles.Preview}}" MaxHeight="120" MaxWidth="320"
+                         Stretch="Uniform" StretchDirection="DownOnly" />
+                </Border>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <!-- Expanded -->
         <StackPanel Spacing="6" Margin="22,2,0,4" IsVisible="{Binding IsExpanded}">

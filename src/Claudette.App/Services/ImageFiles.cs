@@ -1,10 +1,14 @@
+using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 using Claudette.Core.Composer;
 
 namespace Claudette.App.Services;
 
-/// <summary>Attached images (DESIGN.md §5, "Attachments"): bitmaps as bytes to send, and bytes as thumbnails to show.</summary>
+/// <summary>
+/// Attached images (DESIGN.md §5, "Attachments") and images from tools' results (DESIGN.md §18, "Images from Claude's
+/// tools"): bitmaps as bytes to send, and bytes as thumbnails, previews and full size to show.
+/// </summary>
 public static class ImageFiles
 {
     /// <summary>Thumbnails are decoded at twice their shown height, for high-DPI screens.</summary>
@@ -31,8 +35,34 @@ public static class ImageFiles
         return png.LongLength <= Attachments.MaxImageBytes ? png : save(new JpegBitmapEncoderOptions { Quality = JpegQuality });
     }
 
+    /// <summary>The previews of the images under a tool's card are 120 px high, decoded at twice that.</summary>
+    private const int PreviewHeight = 240;
+
     /// <summary>Image bytes to a small bitmap; null when they can't be decoded.</summary>
     public static readonly IValueConverter Thumbnail = new FuncValueConverter<byte[]?, Bitmap?>(data =>
+        Decode(data, stream => Bitmap.DecodeToHeight(stream, ThumbnailHeight, BitmapInterpolationMode.MediumQuality)));
+
+    /// <summary>
+    /// Image bytes to a preview for a tool's card (DESIGN.md §18, "Images from Claude's tools"); an image smaller than
+    /// that is decoded as it is.
+    /// </summary>
+    public static readonly IValueConverter Preview = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream =>
+    {
+        var bitmap = new Bitmap(stream);
+        if (bitmap.PixelSize.Height <= PreviewHeight)
+        {
+            return bitmap;
+        }
+        using (bitmap)
+        {
+            return bitmap.CreateScaledBitmap(new PixelSize(Math.Max(1, bitmap.PixelSize.Width * PreviewHeight / bitmap.PixelSize.Height), PreviewHeight));
+        }
+    }));
+
+    /// <summary>Image bytes to a bitmap at full size, for the image's own window; null when they can't be decoded.</summary>
+    public static readonly IValueConverter Full = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream => new Bitmap(stream)));
+
+    private static Bitmap? Decode(byte[]? data, Func<Stream, Bitmap> decode)
     {
         if (data is not { Length: > 0 })
         {
@@ -41,12 +71,12 @@ public static class ImageFiles
         try
         {
             using var stream = new MemoryStream(data);
-            return Bitmap.DecodeToHeight(stream, ThumbnailHeight, BitmapInterpolationMode.MediumQuality);
+            return decode(stream);
         }
         catch (Exception)
         {
             // A format Skia can't decode (for example an animated WebP it doesn't support); show nothing.
             return null;
         }
-    });
+    }
 }
