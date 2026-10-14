@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:services="using:Claudette.App.Services"
+             xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
+             x:Class="Claudette.App.Views.ReplyImageView"
+             x:DataType="vm:ReplyImageViewModel"
+             Foreground="{Binding $parent[md:MarkdownTextBlock].Foreground}">
+  <!-- An image in a reply (DESIGN.md §18, "Images in Claude's replies"); its look is in App.axaml. It sits in LiveMarkdown's
+       Link span, so it takes the reply's text color rather than the link's (and its underline goes, in the code). -->
+  <Panel>
+    <!-- Until it may load, or when it can't: what it is, and where it's from or why not -->
+    <Border Classes="replyimage" IsVisible="{Binding !IsShown}" ToolTip.Tip="{Binding Address}">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+        <Path Classes="replyimageicon" Data="{StaticResource IconImage}" />
+        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="muted small" Text="{Binding Caption}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Button Grid.Column="2" Content="{Binding LoadText}" Command="{Binding LoadCommand}" IsVisible="{Binding CanLoad}"
+                AutomationProperties.Name="{Binding LoadName}" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+    <Button Classes="flat replyimage" IsVisible="{Binding IsShown}" Command="{Binding OpenCommand}"
+            ToolTip.Tip="{Binding Address}" AutomationProperties.Name="{Binding Title, StringFormat='Open {0}'}">
+      <Image x:Name="Picture" Source="{Binding Image.Data, FallbackValue={x:Null}, Converter={x:Static services:ImageFiles.Reply}}"
+             MaxHeight="480" Stretch="Uniform" StretchDirection="DownOnly" AutomationProperties.Name="{Binding Title}" />
+    </Button>
+  </Panel>
+</UserControl>

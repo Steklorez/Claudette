@@ -94,6 +94,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         ProcessMonitor = new ProcessMonitorViewModel(services, this);
         ChangedFiles = new ChangedFilesViewModel(services, this);
         McpServers = new McpServersViewModel(() => _session, url => _services.Platform.OpenUrlAsync(url));
+        ReplyImages = new ReplyImages(new ReplyImageLoader(services.Http, services.Time), () => Folder);
         ProjectTools = new ProjectToolsViewModel(services, this);
         RemoteControl = new RemoteControlViewModel(services, this);
         Perforce = new PerforceViewModel(services, this);
@@ -1084,6 +1085,9 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>An image from a tool's result, to show full size in a window of its own (DESIGN.md §18, "Images from Claude's tools").</summary>
     public event Action<ImageViewerViewModel>? ImageRequested;
+
+    /// <summary>The images in the tab's replies: which load at once, which the user let load (DESIGN.md §18, "Images in Claude's replies").</summary>
+    public ReplyImages ReplyImages { get; }
 
     /// <summary>A click on an image under a tool's card.</summary>
     [RelayCommand]

@@ -46,21 +46,32 @@ public static class ImageFiles
     /// Image bytes to a preview for a tool's card (DESIGN.md §18, "Images from Claude's tools"); an image smaller than
     /// that is decoded as it is.
     /// </summary>
-    public static readonly IValueConverter Preview = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream =>
+    public static readonly IValueConverter Preview = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream => Fit(stream, int.MaxValue, PreviewHeight)));
+
+    /// <summary>
+    /// Image bytes to a bitmap for a reply (DESIGN.md §18, "Images in Claude's replies"), which shows at most 960 by 480:
+    /// decoded at no more than twice that, and an image smaller than that as it is.
+    /// </summary>
+    public static readonly IValueConverter Reply = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream => Fit(stream, 1920, 960)));
+
+    /// <summary>Image bytes to a bitmap at full size, for the image's own window; null when they can't be decoded.</summary>
+    public static readonly IValueConverter Full = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream => new Bitmap(stream)));
+
+    /// <summary>The image, scaled down to fit <paramref name="maxWidth"/> by <paramref name="maxHeight"/> pixels when it's larger.</summary>
+    private static Bitmap Fit(Stream stream, int maxWidth, int maxHeight)
     {
         var bitmap = new Bitmap(stream);
-        if (bitmap.PixelSize.Height <= PreviewHeight)
+        var (width, height) = (bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+        var scale = Math.Min(1, Math.Min((double)maxWidth / width, (double)maxHeight / height));
+        if (scale >= 1)
         {
             return bitmap;
         }
         using (bitmap)
         {
-            return bitmap.CreateScaledBitmap(new PixelSize(Math.Max(1, bitmap.PixelSize.Width * PreviewHeight / bitmap.PixelSize.Height), PreviewHeight));
+            return bitmap.CreateScaledBitmap(new PixelSize(Math.Max(1, (int)(width * scale)), Math.Max(1, (int)(height * scale))));
         }
-    }));
-
-    /// <summary>Image bytes to a bitmap at full size, for the image's own window; null when they can't be decoded.</summary>
-    public static readonly IValueConverter Full = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream => new Bitmap(stream)));
+    }
 
     private static Bitmap? Decode(byte[]? data, Func<Stream, Bitmap> decode)
     {

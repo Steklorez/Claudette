@@ -79,6 +79,10 @@ public static class ToolImages
         return shown == (width, height) || width <= 0 || height <= 0 ? null : new ImageSize((int)width, (int)height);
     }
 
+    /// <summary>A name to save an image as: <paramref name="name"/> with an extension that fits its type, or <c>image.png</c>.</summary>
+    public static string SaveName(string? name, string mediaType) =>
+        name is { Length: > 0 } ? WithExtension(name, mediaType) : "image" + Extension(mediaType);
+
     /// <summary>The file's name, with its extension changed when it doesn't fit the media type (a PNG Claude Code sent as JPEG).</summary>
     private static string WithExtension(string name, string mediaType) =>
         Extensions(mediaType).Contains(Path.GetExtension(name), StringComparer.OrdinalIgnoreCase)
