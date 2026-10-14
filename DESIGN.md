@@ -464,7 +464,7 @@ The conversation is drawn from Claude Code's structured output stream, not from 
 | Item | How it's shown |
 |---|---|
 | User message | Right-aligned bubble; attached images as thumbnails. Its time and **Copy** on hover ([below](#copy-and-times)). |
-| Assistant text | Markdown with syntax-highlighted code blocks, each with **Copy**. Streams in as it's generated. Its time and **Copy** on hover. |
+| Assistant text | Markdown with syntax-highlighted code blocks, each with **Copy**. Streams in as it's generated. Its time and **Copy** on hover. A click on a link opens it in the browser, as it does in a plan and an agent's prompt and report. Only `https`, `http` and `mailto` links open, as the project's links ([§18](#project-tools)), so a reply can't start a program through a `file:` link or an app's own scheme. |
 | Thinking | Collapsed "Thinking…" row; click to expand. Settings → Appearance → **Show thinking expanded** starts new rows expanded instead. Right-clicking a row gives **Collapse all thinking** and **Expand all thinking**, for the tab alone: every row in it, subagents' groups included, and new rows start the same way from then on, whatever Settings says. The tab keeps the choice, and a copy of it (**Duplicate tab**, **Branch from here**) takes it. |
 | Tool call | Compact card: tool icon, name and a one-line summary (file path, command, search pattern). Expand to see full input and output; an output over 20,000 characters shows its start, with **Show all (n KB)**. |
 | Edit / Write | Card shows `+added −removed`; expand for an inline diff, or **Open diff** to see the file in the diff view ([§8](#8-file-changes--diff-view)): from before Claude's first change in this session to the file now, as Changed files shows it. |

@@ -1,14 +1,18 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.Views;
+using LiveMarkdown.Avalonia;
 
 namespace Claudette.App.UiTests;
 
-/// <summary>The conversation rendered (DESIGN.md §5): virtualized, following new output, and scrolling to a card.</summary>
+/// <summary>The conversation rendered (DESIGN.md §5): virtualized, following new output, scrolling to a card, and links.</summary>
 public sealed class ConversationUiTests
 {
     [AvaloniaFact]
@@ -59,4 +63,35 @@ public sealed class ConversationUiTests
         Assert.NotNull(list.ContainerFromItem(target));
         Assert.Contains("The card to find", UiText.Describe(view), StringComparison.Ordinal);
     }
+
+    [AvaloniaFact]
+    public async Task A_click_on_a_web_link_in_a_reply_opens_it_and_one_to_a_file_doesnt()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        h.Transport.EmitTurn("[Run this](file:///usr/bin/env)\n\n[The Avalonia docs](https://docs.avaloniaui.net/docs/welcome)");
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        await UiText.SettleUntilAsync(window, () => Links(view).Count == 2, "the reply's links");
+        var (file, web) = (Links(view)[0], Links(view)[1]);
+
+        Click(file);
+        Assert.Empty(h.Platform.OpenedUrls);
+        Click(web);
+        Assert.Equal(["https://docs.avaloniaui.net/docs/welcome"], h.Platform.OpenedUrls);
+
+        void Click(MarkdownTextBlock block)
+        {
+            var at = block.TranslatePoint(new Point(4, block.Bounds.Height / 2), window)!.Value;
+            window.MouseMove(at);
+            window.MouseDown(at, MouseButton.Left);
+            window.MouseUp(at, MouseButton.Left);
+            UiText.Settle(window);
+        }
+    }
+
+    /// <summary>The text blocks of the first reply, one per paragraph.</summary>
+    private static List<MarkdownTextBlock> Links(TabView view) =>
+        [.. view.GetVisualDescendants().OfType<ItemsControl>().Single(i => i.Name == "ConversationItems")
+            .GetVisualDescendants().OfType<MarkdownRenderer>().FirstOrDefault()?.GetVisualDescendants().OfType<MarkdownTextBlock>() ?? []];
 }
