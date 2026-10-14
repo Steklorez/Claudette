@@ -1,0 +1,25 @@
+﻿"Accounts"
+"Tabs run under the Default account, Claude Code's own sign-in (Settings → Claude Code), unless their folder group's Account menu, or the tab's own, picks another. Each machine sets up its own accounts."
+"New folders use"
+[choice] "Default"
+[field] "Work"
+[choice] "Blue"
+"API key"
+"Warn when today's estimated spend passes $"
+[button] (icon)
+[button] (icon)
+[field] "20"
+"this month's passes $"
+[button] (icon)
+[button] (icon)
+[field] ""
+[button] Change key…
+[button] Remove…
+"Add an API key"
+"Each key is kept in Test Keychain, never in Claudette's files, and never synced. Claude Code asks Claudette for it when a tab starts, so it's never in a command line or the environment."
+"Name"
+[field] "for example: Work"
+"API key"
+[field] "sk-ant-…"
+[button] Add account
+[button] Reset to defaults

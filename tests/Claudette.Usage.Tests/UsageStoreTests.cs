@@ -294,6 +294,60 @@ public sealed class UsageStoreTests : IDisposable
     }
 
     [Fact]
+    public void An_accounts_spend_and_tokens_are_its_own_turns_and_Defaults_are_the_rest()
+    {
+        var store = Open();
+        store.AddTurns(
+        [
+            // One turn of Work's on two models, one of Default's, and Work's from yesterday.
+            new TurnRecord(Start, "tab-1", "s1", "opus", 100, 10, 0, 0, 0.25, Account: "work"),
+            new TurnRecord(Start, "tab-1", "s1", "haiku", 20, 2, 0, 0, 0.01, Account: "work"),
+            new TurnRecord(Start, "tab-2", "s2", "opus", 300, 30, 0, 0, 0.5),
+            new TurnRecord(Start.AddDays(-1), "tab-1", "s1", "opus", 100, 10, 0, 0, 2.0, Account: "work"),
+        ]);
+        // Read back after reopening: the account is stored, not only kept in memory.
+        store.Dispose();
+        store = Open();
+
+        Assert.Equal(0.26, store.GetSpend("work", Start), precision: 6);
+        Assert.Equal(2.26, store.GetSpend("work", Start.AddDays(-2)), precision: 6);
+        Assert.Equal(0.5, store.GetSpend(null, Start), precision: 6);
+        Assert.Equal(0, store.GetSpend("someone-else", Start));
+        Assert.Equal("work", store.GetTurns(Start, Start, "tab-1")[0].Account);
+
+        var sums = store.GetTokensByAccount(Start);
+        Assert.Equal([(null, 330L, 1), ("work", 132L, 1)], sums.Select(s => (s.Account, s.Total, s.Turns)));
+        // The plan's busiest tabs leave the API key's out.
+        Assert.Equal(["tab-2", "tab-1"], store.GetTokensByTab(Start).Select(s => s.TabId));
+        Assert.Equal(["tab-2"], store.GetTokensByTab(Start, planOnly: true).Select(s => s.TabId));
+    }
+
+    [Fact]
+    public void A_history_from_before_accounts_is_upgraded_and_its_turns_are_the_Default_accounts()
+    {
+        var store = Open();
+        store.AddTurns([new TurnRecord(Start, "tab-1", null, "fable", 1, 1, 1, 1, 0.5, "/work/api")]);
+        store.Dispose();
+        // Version 4 had no account column.
+        using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = DatabasePath, Pooling = false }.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                CREATE TABLE old_turns AS SELECT id, timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project FROM turns;
+                DROP TABLE turns; ALTER TABLE old_turns RENAME TO turns; PRAGMA user_version = 4;
+                """;
+            command.ExecuteNonQuery();
+        }
+
+        var upgraded = Open();
+        upgraded.AddTurns([new TurnRecord(Start.AddMinutes(1), "tab-2", null, "fable", 1, 0, 0, 0, 0.25, "/work/api", "work")]);
+
+        Assert.Equal(0.5, upgraded.GetSpend(null, DateTimeOffset.MinValue), precision: 6);
+        Assert.Equal(0.25, upgraded.GetSpend("work", DateTimeOffset.MinValue), precision: 6);
+    }
+
+    [Fact]
     public void Tokens_by_tab_carry_each_tabs_last_known_name()
     {
         var store = Open();

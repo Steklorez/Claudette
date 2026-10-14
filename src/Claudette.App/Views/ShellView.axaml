@@ -45,6 +45,20 @@
       <Setter Property="Command" Value="{Binding Assign}" />
       <Setter Property="CommandParameter" Value="{Binding Thread}" />
     </ControlTheme>
+    <!-- Account ▸ in a group's and a tab's menu (DESIGN.md §4, "Accounts"): Default, then each account with its tag's
+         color, the one in use ticked. The menu is made again as that changes, so the binding stays one-way. -->
+    <ControlTheme x:Key="AccountMenuItemTheme" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:AccountMenuItem">
+      <Setter Property="ToggleType" Value="Radio" />
+      <Setter Property="IsChecked" Value="{Binding IsChecked, Mode=OneWay}" />
+      <Setter Property="Command" Value="{Binding Pick}" />
+      <Setter Property="CommandParameter" Value="{Binding Id}" />
+    </ControlTheme>
+    <DataTemplate x:Key="AccountMenuItemTemplate" DataType="vm:AccountMenuItem">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Ellipse Width="8" Height="8" Fill="{Binding Brush}" IsVisible="{Binding HasBrush}" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+      </StackPanel>
+    </DataTemplate>
     <DataTemplate x:Key="MarkMenuItemTemplate" DataType="vm:MarkMenuItem">
       <StackPanel Orientation="Horizontal" Spacing="8">
         <views:MarkIcon Mark="{Binding Mark}" VerticalAlignment="Center" />
@@ -61,6 +75,30 @@
       <Setter Property="HorizontalContentAlignment" Value="Left" />
       <Setter Property="Padding" Value="13,7,8,7" />
       <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <!-- An account's tag on a group's label and a tab's row (DESIGN.md §4, "Accounts"): its color, softened behind the
+         name; Default's is muted. Rounder in the Claude style. -->
+    <Style Selector="Border.accounttag">
+      <Setter Property="CornerRadius" Value="3" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.accounttag.default">
+      <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    </Style>
+    <Style Selector="Border.accounttag TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="MaxWidth" Value="90" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Border.accounttag.default TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector=":is(UserControl).claude Border.accounttag">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="6,0" />
     </Style>
     <Style Selector="Button.side Path.icon">
       <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
@@ -182,6 +220,12 @@
                         </Panel>
                         <Ellipse DockPanel.Dock="Left" Width="8" Height="8" Fill="{Binding Brush}" VerticalAlignment="Center" Margin="0,0,7,0" />
                         <TextBlock DockPanel.Dock="Right" Classes="status alert" Text="{Binding UrgentGlyph}" IsVisible="{Binding IsCollapsed}" VerticalAlignment="Center" Margin="6,0,0,0" />
+                        <!-- The account the group's new tabs use, when it isn't Default (DESIGN.md §4, "Accounts") -->
+                        <Border x:Name="GroupAccountTag" DockPanel.Dock="Right" Classes="accounttag" Margin="6,0,0,0" IsVisible="{Binding HasLabelAccountTag}"
+                                Background="{Binding LabelAccountTag.SoftBrush, FallbackValue={x:Null}}" BorderBrush="{Binding LabelAccountTag.Brush, FallbackValue={x:Null}}"
+                                ToolTip.Tip="{Binding LabelAccountTag.Name, StringFormat='New tabs here run under {0}', FallbackValue={x:Null}}">
+                          <TextBlock Text="{Binding LabelAccountTag.Name, FallbackValue=''}" />
+                        </Border>
                         <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                       </DockPanel>
                       <Button.ContextMenu>
@@ -198,6 +242,9 @@
                           <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
                                     IsVisible="{Binding HasName}" />
                           <MenuItem Header="Change color…" Click="OnChangeGroupColor" />
+                          <!-- The account the group's new tabs use (DESIGN.md §4, "Accounts") -->
+                          <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
+                                    ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}" />
                           <Separator />
                           <MenuItem Header="Close group" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseGroupCommand}" CommandParameter="{Binding}" />
                         </ContextMenu>
@@ -268,6 +315,13 @@
                                     <Border x:Name="TaskBadge" DockPanel.Dock="Left" Classes="taskbadge" IsVisible="{Binding ShowTaskBadge}" VerticalAlignment="Center" Margin="0,0,5,0"
                                             ToolTip.Tip="{Binding TaskBadgeTip}" AutomationProperties.Name="{Binding TaskBadgeTip}">
                                       <TextBlock Text="{Binding RunningTaskCount}" />
+                                    </Border>
+                                    <!-- The tab's account, while it isn't its group's (DESIGN.md §4, "Accounts") -->
+                                    <Border x:Name="TabAccountTag" DockPanel.Dock="Right" Classes="accounttag" Classes.default="{Binding RowAccountTag.IsDefault, FallbackValue=False}"
+                                            Margin="5,0,0,0" IsVisible="{Binding ShowsAccountTag}"
+                                            Background="{Binding RowAccountTag.SoftBrush, FallbackValue={x:Null}}" BorderBrush="{Binding RowAccountTag.Brush, FallbackValue={x:Null}}"
+                                            ToolTip.Tip="{Binding RowAccountTag.Tip, FallbackValue={x:Null}}">
+                                      <TextBlock Text="{Binding RowAccountTag.Name, FallbackValue=''}" />
                                     </Border>
                                     <Panel>
                                       <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsRenaming}" />
@@ -355,6 +409,9 @@
                                   <MenuItem Header="Mark" ItemsSource="{Binding MarkMenu}" ItemContainerTheme="{StaticResource MarkMenuItemTheme}"
                                             ItemTemplate="{StaticResource MarkMenuItemTemplate}" />
                                   <MenuItem Header="Clear mark" Command="{Binding ClearMarkCommand}" IsVisible="{Binding HasMark}" />
+                                  <!-- The account the tab runs under; moving it carries the conversation on (DESIGN.md §4, "Accounts") -->
+                                  <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
+                                            ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}" />
                                   <!-- The item ticks itself as it's clicked, then runs the command, so the binding stays one-way -->
                                   <MenuItem Header="Sync to other machines" ToggleType="CheckBox" IsChecked="{Binding SyncToLibrary, Mode=OneWay}"
                                             Command="{Binding ToggleSyncToLibraryCommand}" />
@@ -476,6 +533,8 @@
                         <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
                                   IsVisible="{Binding HasName}" />
                         <MenuItem Header="Change color…" Click="OnChangeGroupColor" />
+                        <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
+                                  ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}" />
                         <Separator />
                         <MenuItem Header="Close group" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseGroupCommand}" CommandParameter="{Binding}" />
                       </ContextMenu>
@@ -514,6 +573,8 @@
                               <MenuItem Header="Mark" ItemsSource="{Binding MarkMenu}" ItemContainerTheme="{StaticResource MarkMenuItemTheme}"
                                         ItemTemplate="{StaticResource MarkMenuItemTemplate}" />
                               <MenuItem Header="Clear mark" Command="{Binding ClearMarkCommand}" IsVisible="{Binding HasMark}" />
+                              <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
+                                        ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}" />
                               <MenuItem Header="Sync to other machines" ToggleType="CheckBox" IsChecked="{Binding SyncToLibrary, Mode=OneWay}"
                                         Command="{Binding ToggleSyncToLibraryCommand}" />
                               <MenuItem Header="Sync now" Command="{Binding SyncNowCommand}" IsVisible="{Binding SyncToLibrary}"

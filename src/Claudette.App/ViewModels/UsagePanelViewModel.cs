@@ -64,6 +64,28 @@ public sealed record ProjectBurnRow(string Name, string? Folder, string Tokens, 
     }
 }
 
+/// <summary>
+/// An account's tokens and estimated spend over the period the Usage panel's <b>Projects</b> list shows (DESIGN.md §4,
+/// "Accounts").
+/// </summary>
+/// <param name="Share">The account's part of all the accounts' tokens in the period, from 0 to 1.</param>
+public sealed record AccountBurnRow(string Name, string Tokens, string Cost, string Turns, double Share)
+{
+    /// <summary>One row per account, the heaviest first; Default by name, and one removed since as such.</summary>
+    public static IReadOnlyList<AccountBurnRow> From(IReadOnlyList<AccountTokenSum> sums, AccountsService accounts)
+    {
+        var total = Math.Max(1, sums.Sum(s => s.Total));
+        return sums
+            .Select(s => new AccountBurnRow(
+                s.Account is null ? AccountsService.DefaultName : accounts.Find(s.Account)?.Name ?? "A removed account",
+                TokenTotals.Short(s.Total),
+                Formats.Dollars(s.CostUsd),
+                $"{s.Turns} turn{(s.Turns == 1 ? "" : "s")}",
+                (double)s.Total / total))
+            .ToArray();
+    }
+}
+
 /// <summary>The period the Usage panel's <b>Projects</b> list covers.</summary>
 public enum ProjectPeriod
 {
@@ -133,6 +155,16 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
     public partial IReadOnlyList<ProjectBurnRow> Projects { get; set; } = [];
 
     public bool HasProjects => Projects.Count > 0;
+
+    /// <summary>
+    /// Tokens and estimated spend per account over <see cref="SelectedProjectPeriod"/>, once there's an account besides
+    /// Default (DESIGN.md §4, "Accounts").
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAccounts))]
+    public partial IReadOnlyList<AccountBurnRow> Accounts { get; set; } = [];
+
+    public bool HasAccounts => Accounts.Count > 0;
 
     public IReadOnlyList<ProjectPeriodChoice> ProjectPeriods { get; } = [.. Enum.GetValues<ProjectPeriod>().Select(p => new ProjectPeriodChoice(p))];
 
@@ -219,13 +251,15 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
             ProjectPeriod.Month => now - TimeSpan.FromDays(30),
             _ => weekStart,
         };
-        (IReadOnlyList<UsageSample> Samples, IReadOnlyList<TabTokenSum> Tabs, IReadOnlyList<ProjectTokenSum> Projects, IReadOnlyList<WindowPeak> Sessions, IReadOnlyList<WindowPeak> Weeks) data;
+        (IReadOnlyList<UsageSample> Samples, IReadOnlyList<TabTokenSum> Tabs, IReadOnlyList<ProjectTokenSum> Projects, IReadOnlyList<AccountTokenSum> Accounts,
+            IReadOnlyList<WindowPeak> Sessions, IReadOnlyList<WindowPeak> Weeks) data;
         try
         {
             data = await Task.Run(() => (
                 store.GetSamples(weekStart, now),
-                store.GetTokensByTab(windowStart),
+                store.GetTokensByTab(windowStart, planOnly: true),
                 store.GetTokensByProject(projectsFrom),
+                store.GetTokensByAccount(projectsFrom),
                 store.GetPastWindows(UsageWindow.Session, now),
                 store.GetPastWindows(UsageWindow.Weekly, now)));
         }
@@ -244,6 +278,7 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         Tabs = TabBurnRow.From(data.Tabs, _tabName);
         OnPropertyChanged(nameof(HasTabs));
         Projects = ProjectBurnRow.From(data.Projects);
+        Accounts = _services.Accounts.HasAccounts || data.Accounts.Any(a => a.Account is not null) ? AccountBurnRow.From(data.Accounts, _services.Accounts) : [];
 
         // Past windows, as far back as the history goes; the lists show a page at a time.
         _pastSessions = data.Sessions

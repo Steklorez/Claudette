@@ -62,6 +62,24 @@ public sealed class RealCliTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task An_api_key_helper_in_the_sessions_own_settings_supplies_the_key_the_api_gets()
+    {
+        // As an API-key account's tab starts (DESIGN.md §4, "Accounts"): the helper in --settings, and no key in the
+        // environment to outrank it. Claudette's helper is Claudette; any command that prints a key stands in for it.
+        await using var session = await StartAsync(
+            environment: new() { ["ANTHROPIC_API_KEY"] = null },
+            settings: """{"apiKeyHelper":"echo sk-ant-helper-123"}""");
+
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        var (done, _) = await session.ReadUntilAsync<TurnCompleted>();
+
+        Assert.Equal("pong", done.Result.Result);
+        var messages = _api.Requests.Where(r => r.Path.StartsWith("/v1/messages", StringComparison.Ordinal) && r.LastUserText.Contains("hello", StringComparison.Ordinal)).ToArray();
+        Assert.NotEmpty(messages);
+        Assert.All(messages, r => Assert.Equal("sk-ant-helper-123", r.ApiKey));
+    }
+
+    [Fact]
     public async Task Without_nonessential_traffic_no_title_is_generated_and_a_rename_reaches_the_transcript()
     {
         await using var session = await StartAsync();
@@ -952,7 +970,7 @@ public sealed class RealCliTests : IAsyncLifetime
     private async Task<ClaudeSession> StartAsync(string? permissionMode = null, string? resume = null, IReadOnlyList<HookRegistration>? hooks = null, string? appendSystemPrompt = null, Dictionary<string, string?>? environment = null,
         string model = "claude-haiku-4-5", bool replayUserMessages = false, bool includeHookEvents = false, bool forkSession = false, string? resumeSessionAt = null,
         string? fallbackModel = null, IReadOnlyList<string>? additionalArguments = null, bool agentProgressSummaries = false, string? worktree = null,
-        IReadOnlyList<string>? addDirectories = null, bool promptSuggestions = false)
+        IReadOnlyList<string>? addDirectories = null, bool promptSuggestions = false, string? settings = null)
     {
         RealCli.SkipUnlessInstalled(_factory is not null);
         var overrides = new Dictionary<string, string?>
@@ -987,6 +1005,7 @@ public sealed class RealCliTests : IAsyncLifetime
             Worktree = worktree,
             AddDirectories = addDirectories ?? [],
             PromptSuggestions = promptSuggestions,
+            Settings = settings,
         }, TestContext.Current.CancellationToken);
     }
 }

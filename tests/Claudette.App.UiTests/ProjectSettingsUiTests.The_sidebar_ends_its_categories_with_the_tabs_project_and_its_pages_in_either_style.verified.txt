@@ -2,6 +2,7 @@
 "Sessions"
 "Processes"
 "Claude Code"
+"Accounts"
 "New tabs"
 "Appearance"
 "Usage"

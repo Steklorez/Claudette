@@ -360,7 +360,7 @@ public sealed partial class UsageViewModel
             try
             {
                 week = StoredWeek.From(store.GetSamples(weekStart, now), WeekBucket);
-                tabs = store.GetTokensByTab(sessionStart);
+                tabs = store.GetTokensByTab(sessionStart, planOnly: true);
             }
             catch (Exception)
             {

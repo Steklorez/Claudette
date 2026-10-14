@@ -89,6 +89,26 @@
         </ItemsControl>
       </StackPanel>
 
+      <!-- Tokens and estimated spend per account, over the same period (DESIGN.md §4, "Accounts") -->
+      <StackPanel Spacing="6" IsVisible="{Binding HasAccounts}">
+        <TextBlock Classes="section" Text="Accounts" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap"
+                   Text="Over the period above. Costs are Claude Code's estimates at list price, not a bill; on a plan, its limits are what count." />
+        <ItemsControl ItemsSource="{Binding Accounts}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:AccountBurnRow">
+              <Grid ColumnDefinitions="*,120,80,70,70" Margin="0,3">
+                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                <ProgressBar Grid.Column="1" Classes="share" Value="{Binding Share}" VerticalAlignment="Center" Margin="8,0" />
+                <TextBlock Grid.Column="2" Classes="mono small" Text="{Binding Tokens}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3" Classes="mono small muted" Text="{Binding Cost}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="4" Classes="small muted" Text="{Binding Turns}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
       <!-- The week -->
       <StackPanel Spacing="6">
         <TextBlock Classes="section" Text="This week" />

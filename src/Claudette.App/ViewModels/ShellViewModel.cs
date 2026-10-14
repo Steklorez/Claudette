@@ -44,6 +44,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.Notifications.SelectedTabId = () => SelectedTab?.Id;
         // The worktrees open tabs work in are never cleaned up (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
+        // Nor is an account an open tab runs under removed (DESIGN.md §4, "Accounts").
+        _services.Accounts.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
         IsCompact = services.Settings.Appearance.Density == Density.Compact;
         IsClaudeStyle = services.Settings.Appearance.Style == AppStyle.Claude;
         IsFullWidth = services.Settings.Appearance.FullWidthConversation;
@@ -57,6 +59,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
                 tab.OnSettingsChanged();
             }
         };
+        // An account added, renamed or removed, or a folder's changed: the groups' and tabs' tags and menus follow.
+        _services.Accounts.Changed += OnAccountsChanged;
         _services.Library.LeaseLost += (sessionId, machine) =>
         {
             foreach (var tab in AllTabs.Where(t => t.State.SessionId == sessionId))
@@ -206,6 +210,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedAccount))]
     public partial TabViewModel? SelectedTab { get; set; }
 
     partial void OnSelectedTabChanged(TabViewModel? oldValue, TabViewModel? newValue)
@@ -395,6 +400,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             {
                 Name = GroupNames.Saved(state, folder),
             };
+            SetUpGroupAccount(group);
             Groups.Add(group);
             UpdateGroupLabels();
             OnPropertyChanged(nameof(HasTabs));

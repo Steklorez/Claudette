@@ -39,6 +39,9 @@ public static class Formats
     public static string FolderName(string path) =>
         Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) is { Length: > 0 } name ? name : path;
 
+    /// <summary>An amount in US dollars, as the token counts' costs show: "$0.75", "$12.40".</summary>
+    public static string Dollars(double usd) => $"${usd:0.00}";
+
     /// <summary>"High" for "high".</summary>
     public static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 }

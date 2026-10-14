@@ -54,7 +54,10 @@ public sealed class AppServices : IAsyncDisposable
     /// be the matching <see cref="Claudette.Platform.Processes.TrackingProcessLauncher"/>. Null in tests.
     /// </param>
     /// <param name="notifier">Shows OS notifications (DESIGN.md §10). Null shows none.</param>
-    /// <param name="credentials">The OS credential store, for stored Perforce passwords (DESIGN.md §18). Null has none.</param>
+    /// <param name="credentials">
+    /// The OS credential store, for stored Perforce passwords (DESIGN.md §18) and accounts' API keys (§4, "Accounts"). Null
+    /// has none.
+    /// </param>
     /// <param name="appInstaller">Installs Claudette's own updates (DESIGN.md §2, "Updating Claudette"). Null can't.</param>
     /// <param name="httpHandler">
     /// Sends Claudette's own web requests: the update check and download, and Claude's service status. Tests pass a fake.
@@ -135,6 +138,7 @@ public sealed class AppServices : IAsyncDisposable
         Notifications =new NotificationService(this, notifier ?? NullNotifier.Instance);
         Tips = new ShortcutTips(Settings);
         Perforce = new PerforceService(this, credentials ?? new UnavailableCredentialStore());
+        Accounts = new AccountsService(this, credentials ?? new UnavailableCredentialStore());
         ProjectTools = new ProjectToolsService(this, systemProcesses, unrealRegistry ?? NoUnrealEngineRegistry.Instance, projectToolPaths ?? ProjectToolPaths.ForCurrentUser());
         ServiceStatus = new ServiceStatusService(this);
         LiveSessions = new LiveSessionsService(this, systemProcesses);
@@ -294,6 +298,9 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>Perforce ticket handling and changelists, shared by the tabs (DESIGN.md §18).</summary>
     public PerforceService Perforce { get; }
+
+    /// <summary>The accounts tabs run under besides the Default one, and their API keys (DESIGN.md §4, "Accounts").</summary>
+    public AccountsService Accounts { get; }
 
     /// <summary>Project tools: detecting a tab's project and running its actions (DESIGN.md §18).</summary>
     public ProjectToolsService ProjectTools { get; }

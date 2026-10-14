@@ -34,11 +34,53 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
 
     /// <summary>The usage header (DESIGN.md §6), once signed in.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasUsage))]
+    [NotifyPropertyChangedFor(nameof(HasUsage), nameof(ShowsTitle), nameof(ShowsUsageDetails))]
     public partial UsageViewModel? Usage { get; set; }
 
-    /// <summary>True once plan usage has arrived. API-key accounts have no plan limits, so the header stays plain.</summary>
-    public bool HasUsage => Usage is { HasData: true };
+    partial void OnUsageChanged(UsageViewModel? oldValue, UsageViewModel? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.PropertyChanged -= OnUsageHeaderChanged;
+        }
+        if (newValue is not null)
+        {
+            newValue.PropertyChanged += OnUsageHeaderChanged;
+        }
+    }
+
+    /// <summary>Plan usage arrived, or the detailed header was turned on or off: what the header shows follows.</summary>
+    private void OnUsageHeaderChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(UsageViewModel.HasData))
+        {
+            OnPropertyChanged(nameof(HasUsage));
+            OnPropertyChanged(nameof(ShowsTitle));
+        }
+        if (e.PropertyName is nameof(UsageViewModel.ShowDetails) or nameof(UsageViewModel.HasData))
+        {
+            OnPropertyChanged(nameof(ShowsUsageDetails));
+        }
+    }
+
+    /// <summary>
+    /// True once plan usage has arrived, and the selected tab runs under the Default account, whose plan it is. API-key
+    /// accounts have no plan limits: the header shows their spend instead (<see cref="Spend"/>), or stays plain.
+    /// </summary>
+    public bool HasUsage => Usage is { HasData: true } && Spend is not { IsShown: true };
+
+    /// <summary>The header while the selected tab runs under an API key: its estimated spend (DESIGN.md §4, "Accounts").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUsage), nameof(ShowsSpend), nameof(ShowsTitle), nameof(ShowsUsageDetails))]
+    public partial AccountSpendViewModel? Spend { get; set; }
+
+    public bool ShowsSpend => Spend is { IsShown: true };
+
+    /// <summary>The detailed header's charts, which are the Default plan's: not while an API key's spend shows.</summary>
+    public bool ShowsUsageDetails => Usage is { ShowDetails: true } && !ShowsSpend;
+
+    /// <summary>The header just says Claudette: no plan usage to show, and no API key's spend.</summary>
+    public bool ShowsTitle => !HasUsage && !ShowsSpend;
 
     /// <summary>The sidebar's "Claude Code … is ready" badge and Settings' update section (DESIGN.md §12).</summary>
     [ObservableProperty]
@@ -202,6 +244,14 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         {
             _shell = new ShellViewModel(services, ShowSignIn);
             _shell.TabStatusChanged += () => _tabsChanged?.Invoke();
+            // The header follows the selected tab's account (DESIGN.md §4, "Accounts").
+            _shell.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ShellViewModel.SelectedAccount))
+                {
+                    Spend?.Show(_shell.SelectedAccount);
+                }
+            };
             OnPropertyChanged(nameof(Shell));
             CurrentPage = _shell;
             var restored = _restore;
@@ -241,15 +291,22 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
                 // The detailed header's busiest tabs, by name (DESIGN.md §6, "Detailed header").
                 TabName = id => _shell?.AllTabs.FirstOrDefault(t => t.Id == id)?.DisplayName,
             };
-            usage.PropertyChanged += (_, e) =>
+            tracker.TurnRecorded += id => _shell?.OnTurnRecorded(id);
+            // An API key's spend warnings (DESIGN.md §4, "Accounts").
+            tracker.SpendRecorded += id => _ = services.Accounts.OnSpendRecordedAsync(id);
+            Usage = usage;
+            Spend = new AccountSpendViewModel(services, tracker);
+            Spend.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(UsageViewModel.HasData))
+                if (e.PropertyName == nameof(AccountSpendViewModel.IsShown))
                 {
                     OnPropertyChanged(nameof(HasUsage));
+                    OnPropertyChanged(nameof(ShowsSpend));
+                    OnPropertyChanged(nameof(ShowsTitle));
+                    OnPropertyChanged(nameof(ShowsUsageDetails));
                 }
             };
-            tracker.TurnRecorded += id => _shell?.OnTurnRecorded(id);
-            Usage = usage;
+            Spend.Show(_shell?.SelectedAccount);
         }
         catch (Exception ex)
         {
@@ -453,6 +510,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         services.Notifications.Activated -= OnNotificationActivated;
         ServiceStatus.Dispose();
         Usage?.Dispose();
+        Spend?.Dispose();
         Updates?.Dispose();
         _shell?.NewBuild?.Dispose();
         Restarts?.Dispose();

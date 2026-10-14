@@ -122,7 +122,32 @@
         <Border DockPanel.Dock="Top" Padding="10,6" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource DividerBrush}">
           <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
             <TextBlock Text="Claudette" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0"
-                       IsVisible="{Binding !HasUsage}" />
+                       IsVisible="{Binding ShowsTitle}" />
+
+            <!-- The selected tab runs under an API key: its estimated spend in place of the plan's meters (DESIGN.md §4,
+                 "Accounts"). Click for the Usage panel. -->
+            <Button x:Name="AccountSpend" Classes="header" IsVisible="{Binding ShowsSpend}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
+                    ToolTip.Tip="{x:Static vm:AccountSpendViewModel.Tooltip}" AutomationProperties.Name="Estimated API spend">
+              <StackPanel Orientation="Horizontal" Spacing="14">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <Ellipse Width="8" Height="8" Fill="{Binding Spend.Tag.Brush, FallbackValue={x:Null}}" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Spend.Account.Name, FallbackValue=''}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" Text="API key, estimated" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <TextBlock Classes="muted small" Text="Today" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Spend.TodayText, FallbackValue=''}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <TextBlock Classes="muted small" Text="This week" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Spend.WeekText, FallbackValue=''}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <TextBlock Classes="muted small" Text="This month" VerticalAlignment="Center" />
+                  <TextBlock Text="{Binding Spend.MonthText, FallbackValue=''}" VerticalAlignment="Center" />
+                </StackPanel>
+              </StackPanel>
+            </Button>
 
             <!-- Click anywhere on the meters for the Usage panel -->
             <Button Classes="header" IsVisible="{Binding HasUsage}" Command="{Binding Usage.OpenPanelCommand}"
@@ -270,7 +295,7 @@
             <!-- The detailed header (DESIGN.md §6): charts of the session and the week, the burn rate and the busiest
                  tabs. Narrow windows leave out the busiest tabs, then the weekly chart. Click for the Usage panel. -->
             <Button Name="UsageDetails" Grid.Row="1" Grid.ColumnSpan="2" Classes="header" Margin="0,6,0,2" HorizontalAlignment="Stretch"
-                    IsVisible="{Binding Usage.ShowDetails, FallbackValue=False}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
+                    IsVisible="{Binding ShowsUsageDetails}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
                     ToolTip.Tip="Usage details (click)" AutomationProperties.Name="Usage charts">
               <Grid Height="150" ColumnDefinitions="3*,2*,Auto,Auto">
                 <!-- The session: usage from the window's start to its reset -->

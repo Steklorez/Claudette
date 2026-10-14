@@ -76,6 +76,12 @@ public sealed class UsageTracker : IAsyncDisposable
     /// <summary>Raised on the UI thread after a tab's turn was recorded, with the tab's id.</summary>
     public event Action<string>? TurnRecorded;
 
+    /// <summary>
+    /// Raised on the UI thread after a turn of an account other than Default was recorded, with the account's id: its
+    /// spend changed (DESIGN.md §4, "Accounts").
+    /// </summary>
+    public event Action<string>? SpendRecorded;
+
     /// <summary>Raised on the UI thread after readings another machine shared were added to the history.</summary>
     public event Action? SamplesImported;
 
@@ -188,9 +194,10 @@ public sealed class UsageTracker : IAsyncDisposable
 
     /// <summary>A tab finished a turn: record its tokens and its name, and poll soon (at most once a minute).</summary>
     /// <param name="project">The tab's folder, for usage by project.</param>
-    public void OnTurnCompleted(string tabId, string tabName, ResultMessage result, string? project = null)
+    /// <param name="account">The account the tab ran under (DESIGN.md §4, "Accounts"); null for the Default account.</param>
+    public void OnTurnCompleted(string tabId, string tabName, ResultMessage result, string? project = null, string? account = null)
     {
-        var records = TurnRecord.FromResult(result, tabId, _services.Time.GetUtcNow(), project);
+        var records = TurnRecord.FromResult(result, tabId, _services.Time.GetUtcNow(), project, account);
         if (records.Count > 0)
         {
             WriteHistory(() =>
@@ -199,7 +206,14 @@ public sealed class UsageTracker : IAsyncDisposable
                 {
                     Store.AddTurns(records);
                     Store.SetTabName(tabId, tabName);
-                    _services.Dispatcher.Post(() => TurnRecorded?.Invoke(tabId));
+                    _services.Dispatcher.Post(() =>
+                    {
+                        TurnRecorded?.Invoke(tabId);
+                        if (account is not null)
+                        {
+                            SpendRecorded?.Invoke(account);
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {

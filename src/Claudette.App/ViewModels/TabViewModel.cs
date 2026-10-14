@@ -90,6 +90,11 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         _services = services;
         _shell = shell;
         State = state;
+        // A new tab runs under its group's account (DESIGN.md §4, "Accounts").
+        if (!isRestored && state.AccountId is null)
+        {
+            state.AccountId = services.Accounts.ForFolder(GroupFolder);
+        }
         TodoList.Time = services.Time;
         ProcessMonitor = new ProcessMonitorViewModel(services, this);
         ChangedFiles = new ChangedFilesViewModel(services, this);
@@ -348,6 +353,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 rows.Add(new InfoRow("Branch", branch));
             }
             AddWorktreeRows(rows);
+            AddAccountInfoRows(rows);
             rows.Add(new InfoRow("Model", $"{ModelName ?? "Default"} · {EffortName}"));
             if (PermissionMode is not null)
             {
@@ -1243,8 +1249,9 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         {
             return;
         }
-        // This start takes the extra folders as they are now.
+        // This start takes the extra folders and the account as they are now.
         _restartForExtraFolders = false;
+        _restartForAccount = false;
         if (!Directory.Exists(Folder))
         {
             MarkFolderMissing();
@@ -1306,6 +1313,13 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 // Copies of files before Claude changes them, so a prompt's changes can be put back (DESIGN.md §5).
                 environment["CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING"] = "true";
             }
+            // An API-key account's key comes from Claudette's key helper, and nothing in the environment outranks it
+            // (DESIGN.md §4, "Accounts").
+            var (accountSettings, accountEnvironment) = _services.Accounts.LaunchFor(Account);
+            foreach (var (name, value) in accountEnvironment)
+            {
+                environment[name] = value;
+            }
             var resumeAt = resume is null ? null : State.ResumeAt;
             if (State.NewWorktree is not null)
             {
@@ -1327,6 +1341,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 ShowsElicitations = true,
                 // Chosen when asked about the folder's own configuration (DESIGN.md §7, "Folder trust").
                 SettingSources = State.WithoutProjectSettings ? "user" : null,
+                Settings = accountSettings,
                 FallbackModel = settings.ClaudeCode.FallbackModel,
                 AgentProgressSummaries = settings.ClaudeCode.SubagentProgressSummaries,
                 // The next prompt Claude Code predicts, which the empty composer shows (DESIGN.md §5, "Prompt suggestions").
@@ -1835,14 +1850,18 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 RemoteControl.OnNotice(remote.Message);
                 break;
             case RateLimitUpdated rateLimit:
-                _services.Usage?.OnRateLimitEvent(rateLimit.Message);
+                // The header's plan usage is the Default account's (DESIGN.md §4, "Accounts").
+                if (Account is null)
+                {
+                    _services.Usage?.OnRateLimitEvent(rateLimit.Message);
+                }
                 _autoContinue.RateLimit(rateLimit.Message.Info);
                 break;
             case TurnCompleted completed:
                 _checkIns.TurnEnded();
                 _autoContinue.TurnEnded(completed.Result);
                 State.SessionId = completed.Result.SessionId ?? State.SessionId;
-                _services.Usage?.OnTurnCompleted(Id, DisplayName, completed.Result, Folder);
+                _services.Usage?.OnTurnCompleted(Id, DisplayName, completed.Result, Folder, Account?.Id);
                 // Only a tab that syncs writes to the library (DESIGN.md §9, "Session library").
                 CopyToLibrary();
                 _services.SaveState();
@@ -1879,6 +1898,11 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                     // After this event is handled: the restart stops the session it came from.
                     var turn = _turnsStarted;
                     _services.Dispatcher.Post(() => _ = RestartForExtraFoldersAsync(afterTurn: turn));
+                }
+                else if (_restartForAccount)
+                {
+                    var turn = _turnsStarted;
+                    _services.Dispatcher.Post(() => _ = RestartForAccountAsync(afterTurn: turn));
                 }
                 break;
             case ConversationReset:

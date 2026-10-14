@@ -148,7 +148,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
     public bool CanChangeRemoteControl => _tab.RemoteControl.CanToggle;
 
     /// <summary>Why the switch is disabled, or null.</summary>
-    public string? RemoteControlUnavailableText => CanChangeRemoteControl ? null : _services.RemoteControl.UnavailableReason;
+    public string? RemoteControlUnavailableText => CanChangeRemoteControl ? null : _tab.RemoteControl.UnavailableReason;
 
     public bool HasRemoteControlUnavailableText => RemoteControlUnavailableText is not null;
 

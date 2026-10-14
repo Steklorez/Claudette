@@ -37,7 +37,8 @@ public sealed partial class TabViewModel
     /// <summary>Holds <paramref name="message"/> if Claude Code needs a sign-in. Returns whether it was held.</summary>
     private bool HoldForSignIn(PendingMessage message)
     {
-        if (!_shell.NeedsSignIn)
+        // An API-key account doesn't use Claude Code's sign-in (DESIGN.md §4, "Accounts").
+        if (!_shell.NeedsSignIn || Account is not null)
         {
             return false;
         }
@@ -74,6 +75,12 @@ public sealed partial class TabViewModel
     /// </summary>
     private void OnAuthenticationRequired()
     {
+        if (Account is { } account)
+        {
+            _awaitingReply.Clear();
+            OnApiKeyRefused(account, null);
+            return;
+        }
         _restartAfterSignIn = true;
         _heldForSignIn.InsertRange(0, _awaitingReply);
         _awaitingReply.Clear();
@@ -84,11 +91,16 @@ public sealed partial class TabViewModel
     /// <summary>The session couldn't start because Claude Code isn't signed in: it starts again after the sign-in.</summary>
     private void OnStartFailedForSignIn(Exception ex)
     {
-        _restartAfterSignIn = true;
-        Status = TabStatus.Error;
         var said = ex is ClaudeSessionExitedException { Exit.StandardErrorTail: { Length: > 0 } tail }
             ? tail.Trim().Split('\n')[^1].Trim()
             : ex.Message;
+        if (Account is { } account)
+        {
+            OnApiKeyRefused(account, said);
+            return;
+        }
+        _restartAfterSignIn = true;
+        Status = TabStatus.Error;
         _conversation.AddNote($"Claude Code needs you to sign in before this tab can start (it said \"{said}\"). It starts again once you've signed in.", NoteKind.Warning);
         _shell.OnAuthenticationRequired();
     }
@@ -96,7 +108,7 @@ public sealed partial class TabViewModel
     /// <summary>Signed out from Claudette: if this tab is running, it restarts on its session after the next sign-in.</summary>
     public void OnSignedOut()
     {
-        if (_session is not null)
+        if (_session is not null && Account is null)
         {
             _restartAfterSignIn = true;
         }

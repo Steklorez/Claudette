@@ -13,8 +13,9 @@ composer's right rather than being caught part-way through falling off it). Then
 - selects the Move to the Input System thread, opens its side panel on Tasks and captures the window as
   tasks-<style>-<theme>.png, then on Agents, with the first subagent selected, as agents-<style>-<theme>.png;
 - expands the usage header and captures the top of the window as header-<style>-<theme>.png;
-- collapses it again, selects Grappling hook, opens History, picks starfall's chip and captures the window as
-  history-<style>-<theme>.png;
+- collapses it again, selects Pool particle emitters, which runs on the Studio API key, and captures the window, with
+  the key's spend in the header and the account's tags, as accounts-<style>-<theme>.png;
+- selects Grappling hook, opens History, picks starfall's chip and captures the window as history-<style>-<theme>.png;
 and closes Claudette by its window, as a user would. Last, it has MascotPictureTests draw Claudette on the composer's
 animation from her art and steps, as claudette.gif.
 
@@ -294,9 +295,16 @@ foreach ($style in 'standard', 'claude') {
             $sidebarTop = (Find-ByText $window 'New tab').Current.BoundingRectangle.Top
             [WindowShot]::Save($window, (Join-Path $Out "header-$style-$theme.png"), [int] ($sidebarTop - 10 * [WindowShot]::Scale($window)))
 
-            # History from a starfall tab, narrowed to starfall by its chip: its tabs' sessions and older ones, one in a worktree.
+            # A tab on the Studio API key: its spend in the header, and the account's tags on orbit-game's group and on the
+            # starfall tab moved to it.
             Invoke-ByText $window 'Collapse the usage header'
             Start-Sleep -Seconds 1
+            Invoke-ByText $window 'Pool particle emitters'
+            Wait-Until { Find-ByText $window 'Estimated API spend' } 'the spend header' 20
+            Start-Sleep -Seconds 2
+            [WindowShot]::Save($window, (Join-Path $Out "accounts-$style-$theme.png"), 0)
+
+            # History from a starfall tab, narrowed to starfall by its chip: its tabs' sessions and older ones, one in a worktree.
             Invoke-ByText $window 'Grappling hook'
             Start-Sleep -Seconds 2
             Invoke-ByText $window 'History'

@@ -9,7 +9,7 @@ namespace Claudette.Usage;
 /// </summary>
 internal static class UsageSchema
 {
-    public const int Version = 4;
+    public const int Version = 5;
 
     private const int SqliteCorrupt = 11;
     private const int SqliteNotADatabase = 26;
@@ -101,6 +101,13 @@ internal static class UsageSchema
         if (!HasColumn(connection, transaction, "turns", "project"))
         {
             create.CommandText = "ALTER TABLE turns ADD COLUMN project TEXT";
+            create.ExecuteNonQuery();
+        }
+        // Version 5: the account the tab ran under (DESIGN.md §4, "Accounts"); null for the Default account, as every
+        // turn recorded before was.
+        if (!HasColumn(connection, transaction, "turns", "account"))
+        {
+            create.CommandText = "ALTER TABLE turns ADD COLUMN account TEXT";
             create.ExecuteNonQuery();
         }
         create.CommandText = $"PRAGMA user_version = {Version}";

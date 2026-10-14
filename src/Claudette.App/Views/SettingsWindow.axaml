@@ -89,6 +89,9 @@
           <DataTemplate DataType="settings:ClaudeCodePage">
             <pages:ClaudeCodePageView />
           </DataTemplate>
+          <DataTemplate DataType="settings:AccountsPage">
+            <pages:AccountsPageView />
+          </DataTemplate>
           <DataTemplate DataType="settings:NewTabsPage">
             <pages:NewTabsPageView />
           </DataTemplate>

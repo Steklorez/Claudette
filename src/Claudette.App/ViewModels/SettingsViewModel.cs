@@ -39,7 +39,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 {
     public static readonly IReadOnlyList<string> AllCategories =
     [
-        SettingsCategory.General, SettingsCategory.Sessions, SettingsCategory.Processes, SettingsCategory.ClaudeCode, SettingsCategory.NewTabs,
+        SettingsCategory.General, SettingsCategory.Sessions, SettingsCategory.Processes, SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.NewTabs,
         SettingsCategory.Appearance, SettingsCategory.Usage, SettingsCategory.QuickSuffixes, SettingsCategory.CheckIns, SettingsCategory.DiffTool,
         SettingsCategory.ProjectTools, SettingsCategory.Notifications, SettingsCategory.Keyboard, SettingsCategory.Perforce, SettingsCategory.Advanced,
     ];
@@ -61,6 +61,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Processes = new ProcessesPage(_context);
         NewTabs = new NewTabsPage(_context);
         ClaudeCode = new ClaudeCodePage(_context, accountText, updates, NewTabs);
+        Accounts = new AccountsPage(_context);
         Appearance = new AppearancePage(_context);
         Usage = new UsagePage(_context);
         QuickSuffixes = new QuickSuffixesPage(_context);
@@ -73,7 +74,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Advanced = new AdvancedPage(_context, ClaudeCode);
         Pages =
         [
-            General, Sessions, Processes, ClaudeCode, NewTabs, Appearance, Usage, QuickSuffixes, CheckIns, DiffTool, ProjectTools, Notifications, Keyboard, Perforce, Advanced,
+            General, Sessions, Processes, ClaudeCode, Accounts, NewTabs, Appearance, Usage, QuickSuffixes, CheckIns, DiffTool, ProjectTools, Notifications, Keyboard, Perforce, Advanced,
             .. Project is { } project ? [new ProjectLinksPage(_context, project), new ProjectActionsPage(_context, project), new ProjectToolChoicesPage(_context, project)] : Array.Empty<SettingsPage>(),
         ];
         SelectedCategory = AllCategories[0];
@@ -98,6 +99,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     {
         General.Dispose();
         ClaudeCode.Dispose();
+        Accounts.Dispose();
         Project?.Dispose();
     }
 
@@ -112,6 +114,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public ProcessesPage Processes { get; }
 
     public ClaudeCodePage ClaudeCode { get; }
+
+    public AccountsPage Accounts { get; }
 
     public NewTabsPage NewTabs { get; }
 
