@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Claudette.Core.Diffs;
+using Claudette.Core.Files;
 using Claudette.Core.Git;
 using Claudette.Core.Installation;
 using Claudette.Core.Processes;
@@ -132,8 +133,10 @@ public sealed class RealCliTests : IAsyncLifetime
             var (started, _) = await session.ReadUntilAsync<TurnStarted>();
             await session.ReadUntilAsync<TurnCompleted>();
 
-            // DESIGN.md §4, "Worktree tabs": system/init reports the worktree as where it works (checked with 2.1.286).
-            Assert.Equal(Path.GetFullPath(GitWorktrees.PathFor(Work, "real-check")), Path.GetFullPath(started.Init.Cwd!));
+            // DESIGN.md §4, "Worktree tabs": system/init reports the worktree as where it works (checked with 2.1.286), by
+            // its real path: on macOS the temporary folder's /var is /private/var.
+            var expected = GitWorktrees.PathFor(Work, "real-check");
+            Assert.True(RealPath.Same(expected, started.Init.Cwd!), $"Expected the worktree {expected}, was {started.Init.Cwd}");
         }
 
         var worktree = await new GitWorktrees(new GitWorkingTree(new ProcessLauncher(), TimeProvider.System)).FindAsync(Work, GitWorktrees.PathFor(Work, "real-check"), TestContext.Current.CancellationToken);
