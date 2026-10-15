@@ -47,10 +47,13 @@ public class MascotUiTests
         var send = scene.Window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Send" && b.IsEffectivelyVisible);
         var box = scene.InWindow(scene.Box);
         var cell = scene.Layer.Figure.Bounds.Width / MascotArt.Width;
-        Assert.Equal(scene.InWindow(send).Center.X, scene.InWindow(scene.Layer.Figure).Center.X, cell);
+        var room = scene.Director.Room!.Value;
+        // Over Send, as near as the box's rounded corner lets her: the round Send sits close to it (DESIGN.md §3).
+        var figure = scene.InWindow(scene.Layer.Figure);
+        var nearest = Math.Min(scene.InWindow(send).Center.X, box.Left + room.Right * cell - figure.Width / 2);
+        Assert.Equal(nearest, figure.Center.X, cell);
 
         // Her room, which she never leaves (MascotTests), is the box's last third, out to its right corner.
-        var room = scene.Director.Room!.Value;
         Assert.InRange(room.Left * cell, box.Width * 2 / 3, box.Width * 2 / 3 + cell);
         Assert.InRange(box.Width - room.Right * cell, scene.Box.CornerRadius.TopRight, scene.Box.CornerRadius.TopRight + 2 + cell);
     }

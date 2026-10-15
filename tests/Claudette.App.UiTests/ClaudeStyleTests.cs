@@ -74,7 +74,7 @@ public class ClaudeStyleTests
         Assert.IsAssignableFrom<ISolidColorBrush>(window.FindResource(window.ActualThemeVariant, key)).Color;
 
     [AvaloniaFact]
-    public async Task The_Claude_style_rounds_the_cards_paints_yours_warm_and_makes_Send_a_round_arrow()
+    public async Task Send_is_a_round_arrow_in_both_styles_and_the_Claude_style_rounds_the_cards_and_paints_yours_warm()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
@@ -86,13 +86,12 @@ public class ClaudeStyleTests
         window.Show();
         await UiText.SettleUntilAsync(window, () => YourCard(window) is not null, "the message");
 
-        // Standard: your card in the categorical palette's magenta, full width, and a Send label (DESIGN.md §18,
-        // "Conversation cards").
+        // Standard: your card in the categorical palette's magenta, full width (DESIGN.md §18, "Conversation cards"),
+        // and Send a round arrow in the accent, as in the Claude style (DESIGN.md §3).
         Assert.Equal(Token(window, "CardYouStripeBrush"), Stripe(YourCard(window)!));
         Assert.Equal(HorizontalAlignment.Stretch, YourCard(window)!.HorizontalAlignment);
         Assert.Equal(new CornerRadius(8), YourCard(window)!.CornerRadius);
-        Assert.True(SendPart<TextBlock>(window).IsEffectivelyVisible);
-        Assert.False(SendPart<Path>(window).IsEffectivelyVisible);
+        AssertRound(window);
 
         h.Services.Settings.Appearance.Style = AppStyle.Claude;
         h.Services.SaveSettings();
@@ -100,13 +99,7 @@ public class ClaudeStyleTests
 
         // Claude: rounder. Its warm grey comes with the colors (The_Claude_style_repaints_the_window_the_tokens_and_the_accent…).
         Assert.Equal(new CornerRadius(14), YourCard(window)!.CornerRadius);
-        Assert.False(SendPart<TextBlock>(window).IsEffectivelyVisible);
-        Assert.True(SendPart<Path>(window).IsEffectivelyVisible);
-        var send = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("send"));
-        Assert.Equal(32, send.Bounds.Width);
-        Assert.Equal(32, send.Bounds.Height);
-        Assert.Equal("Send", Avalonia.Automation.AutomationProperties.GetName(send));
-        AssertDrawnAboutTheMiddle(send);
+        AssertRound(window);
 
         // Stop too, while a turn runs.
         tab.ComposerText = "And the first line?";
@@ -116,6 +109,19 @@ public class ClaudeStyleTests
         h.Transport.EmitTurn("It keeps it.");
         await TabTestHarness.Eventually(() => !tab.IsWorking, "the reply");
         window.Close();
+    }
+
+    /// <summary>Send: a 32-pixel circle with its arrow drawn about its middle, named for a screen reader.</summary>
+    private static void AssertRound(Window window)
+    {
+        var send = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("send"));
+        Assert.Equal(32, send.Bounds.Width);
+        Assert.Equal(32, send.Bounds.Height);
+        Assert.Equal(new CornerRadius(16), send.CornerRadius);
+        Assert.Contains("accent", send.Classes);
+        Assert.Equal("Send", Avalonia.Automation.AutomationProperties.GetName(send));
+        Assert.DoesNotContain(send.GetVisualDescendants().OfType<TextBlock>(), t => t.IsEffectivelyVisible);
+        AssertDrawnAboutTheMiddle(send);
     }
 
     private static Button? RoundButton(Window window, string name) =>
@@ -136,6 +142,4 @@ public class ClaudeStyleTests
 
     private static Color Stripe(Card card) => Assert.IsAssignableFrom<ISolidColorBrush>(card.StripeBrush).Color;
 
-    private static T SendPart<T>(Window window) where T : Control =>
-        window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("send")).GetVisualDescendants().OfType<T>().Single();
 }

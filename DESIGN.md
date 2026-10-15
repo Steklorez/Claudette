@@ -194,7 +194,7 @@ Settings → Appearance → **Style** picks one of two looks, in light and dark 
 - Tool calls in a row share one card, as tiles side by side, each with a small status dot (running, done, failed), what it worked on, how it went and its output's first line. A tile's target is cut to fit, a file by the end of its path; hovering it shows it in full (a whole command, with its line breaks, or a file's whole path). A click opens its detail under the tiles.
 - Diffs are inline, in red and green.
 - Thinking is a quiet card whose line opens it. Collapsed, its text isn't laid out at all; expanded while it streams in, it grows in steps (each an eighth longer) rather than with every piece, and shows all of it once it's done.
-- The composer is a rounded box with the mode and model controls beside it, and a square Stop button.
+- The composer is a rounded box with the mode and model controls beside it. Send and Stop are round buttons, as in the Claude style: an arrow in the OS's accent color, and a square in the plain button's colors.
 - Inline code and code blocks use VS Code's Light+ and Dark+ colors. They change with the theme, as the diff view's do, including in code already shown and in a diff view that's open.
 
 **Claude** takes the Claude apps (the iOS app and claude.ai) as its reference. The layout, tool rows, diffs and every control stay the same; the look changes:
@@ -206,7 +206,7 @@ Settings → Appearance → **Style** picks one of two looks, in light and dark 
   - Cautions (a waiting prompt, a usage alert, "Needs your input") are warm tints of the accent rather than yellow. Errors, diffs, the charts' model lines and a tab group's own color keep their usual colors.
 - **The cards take the Claude apps' colors**: your messages warm grey, as the Claude apps' bubbles are, Claude's replies its orange, and the files a turn changed blue, which stays apart from the orange with color blindness ([§18](#conversation-cards)).
 - **Claude's replies are set in a serif**, as the Claude apps set them. Their typeface isn't available, so it's the closest installed one: Charter on macOS, Georgia or Cambria on Windows, and Charter, Noto Serif or DejaVu Serif on Linux. A conversation font set in Settings wins.
-- **The composer** is a big rounded box lifted a little off the page, and Send and Stop are round buttons; Send is an arrow.
+- **The composer** is a big rounded box lifted a little off the page. Send and Stop are the same round buttons as in Standard, with Send in Claude's orange.
 - **Rounder corners** on the cards, code blocks and the sidebar's rows.
 - **No Mica**, so the sidebar and header stay warm rather than showing the desktop through.
 

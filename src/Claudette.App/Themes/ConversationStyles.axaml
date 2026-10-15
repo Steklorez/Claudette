@@ -529,19 +529,11 @@
     <Setter Property="CornerRadius" Value="12" />
   </Style>
 
-  <!-- Send and Stop. In the Claude style they're round, with an arrow for Send, as in the Claude apps, and a drawn
-       square for Stop: the ■ character sits off-center in a circle, by its font's ascent and descent. The icons fill
-       the button and have no border, so nothing puts them off the middle (IconSendArrow in App.axaml says why). -->
-  <Style Selector="Button.send">
-    <Setter Property="Padding" Value="14,4" />
-  </Style>
-  <Style Selector="Button.stop">
-    <Setter Property="Padding" Value="12,4" />
-  </Style>
-  <Style Selector="Button.send Path.sendarrow, Button.stop Path.stopsquare">
-    <Setter Property="IsVisible" Value="False" />
-  </Style>
-  <Style Selector=".claude Button.send, .claude Button.stop">
+  <!-- Send and Stop, in both styles (DESIGN.md §3): round, with an arrow for Send, as in the Claude apps, and a drawn
+       square for Stop: the ■ character sits off-center in a circle, by its font's ascent and descent. Send takes the
+       accent and Stop the plain button's colors, so each style colors them its own way. The icons fill the button and
+       have no border, so nothing puts them off the middle (IconSendArrow in App.axaml says why). -->
+  <Style Selector="Button.send, Button.stop">
     <Setter Property="CornerRadius" Value="16" />
     <Setter Property="Width" Value="32" />
     <Setter Property="Height" Value="32" />
@@ -549,12 +541,6 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="HorizontalContentAlignment" Value="Center" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
-  </Style>
-  <Style Selector=".claude Button.send TextBlock.sendlabel, .claude Button.stop TextBlock.stoplabel">
-    <Setter Property="IsVisible" Value="False" />
-  </Style>
-  <Style Selector=".claude Button.send Path.sendarrow, .claude Button.stop Path.stopsquare">
-    <Setter Property="IsVisible" Value="True" />
   </Style>
   <!-- Tool card icons (DESIGN.md §5): 12×12 strokes from App.axaml, drawn as they are. -->
   <Style Selector="Path.toolicon">

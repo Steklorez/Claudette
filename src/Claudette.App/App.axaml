@@ -449,7 +449,7 @@
       <StreamGeometry x:Key="IconClose">M2,2 L10,10 M10,2 L2,10</StreamGeometry>
       <!-- A square, filled: Stop on a running project run in the sidebar (DESIGN.md §18). -->
       <StreamGeometry x:Key="IconStop">M2,2 L10,2 L10,10 L2,10 Z</StreamGeometry>
-      <!-- 32×32, the size of the Claude style's round Send and Stop buttons (DESIGN.md §3), so they're drawn about the
+      <!-- 32×32, the size of the round Send and Stop buttons (DESIGN.md §3), so they're drawn about the
            button's own middle. A smaller icon is centered by layout, which rounds it to a whole pixel: at 150% one 10 or
            14 wide lands half a pixel off. The square's 12 is whole pixels at 100%, 150% and 200%. -->
       <StreamGeometry x:Key="IconSendArrow">M16,21 L16,11.5 M11.5,15.5 L16,11 L20.5,15.5</StreamGeometry>
