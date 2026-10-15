@@ -186,6 +186,9 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     /// <summary>The label over a message Claudette sent by itself or passed on, or null for one the user sent.</summary>
     public string? AutomaticLabel => Label ?? (IsCheckIn ? "Automatic check-in" : IsAutoContinue ? "Automatic continue after the usage limit reset" : null);
 
+    /// <summary>Its card's label (DESIGN.md §18, "Conversation cards"): "You", or who sent it when it wasn't the user.</summary>
+    public string CardLabel => AutomaticLabel ?? "You";
+
     /// <summary>
     /// The note on threads Claudette sent after the message (DESIGN.md §18, "Threads"): the card says so in a line, with
     /// the note as its tip.
@@ -241,6 +244,13 @@ public sealed partial class AssistantTextItem : MessageItem
 
     [ObservableProperty]
     public partial bool IsStreaming { get; set; } = true;
+
+    /// <summary>
+    /// Claude carried on working after it, with a tool call in the same turn: a step on the way rather than the turn's
+    /// answer, so its card is quieter (DESIGN.md §18, "Conversation cards").
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsIntermediate { get; set; }
 
     public string Text => Markdown.ToString();
 
@@ -335,11 +345,94 @@ public sealed partial class ThinkingItem : ConversationItem
 }
 
 /// <summary>
-/// A tool call card: icon, name and one-line summary, expandable to the full input and output (DESIGN.md §5).
-/// Edit and Write show a diff; Bash shows its command and output.
+/// A tool call: a tile in its group's card, with its icon, name, target and state, which opens to the full input and
+/// output (DESIGN.md §5, §18 "Conversation cards"). Edit and Write show a diff; Bash shows its command and output; Read
+/// the file as Claude read it.
 /// </summary>
 public partial class ToolUseItem : ConversationItem
 {
+    private TimeProvider? _clock;
+
+    /// <summary>The card of calls it's a tile in; null for a subagent, which is a card of its own.</summary>
+    public ToolGroupItem? Group { get; internal set; }
+
+    /// <summary>When Claude made the call: live, as it arrived; restored, from its transcript entry. Null when unknown.</summary>
+    public DateTimeOffset? StartedAt { get; private set; }
+
+    /// <summary>When its result came back, by the same clock; null while it runs, or when unknown.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Duration), nameof(DurationText), nameof(StateText))]
+    public partial DateTimeOffset? CompletedAt { get; set; }
+
+    /// <summary>"14:05" today, as a message's time reads (DESIGN.md §5, "Copy and times").</summary>
+    public string? TimeText => StartedAt is { } started && _clock is { } clock ? MessageTimes.Short(started, clock) : null;
+
+    public string? TimeTip => StartedAt is { } started && _clock is { } clock ? MessageTimes.Full(started, clock) : null;
+
+    public bool HasTime => TimeText is not null;
+
+    /// <summary>How long it took, from the call to its result; null while it runs or when either time is unknown.</summary>
+    public TimeSpan? Duration => CompletedAt - StartedAt is { } took && took >= TimeSpan.Zero ? took : null;
+
+    /// <summary>"0.4s", "12s", "1m 05s".</summary>
+    public string? DurationText => Duration is { } took
+        ? took.TotalSeconds < 10 ? string.Create(CultureInfo.CurrentCulture, $"{took.TotalSeconds:0.0}s") : Formats.Elapsed(took)
+        : null;
+
+    /// <summary>Sets when the call was made; <paramref name="clock"/> says what "today" is when its time is shown.</summary>
+    public void Stamp(DateTimeOffset? startedAt, TimeProvider clock)
+    {
+        StartedAt = startedAt;
+        _clock = clock;
+        RefreshTime();
+    }
+
+    /// <summary>"Today" moved on: the short time may need its day now.</summary>
+    public void RefreshTime()
+    {
+        OnPropertyChanged(nameof(StartedAt));
+        OnPropertyChanged(nameof(TimeText));
+        OnPropertyChanged(nameof(TimeTip));
+        OnPropertyChanged(nameof(HasTime));
+    }
+
+    /// <summary>
+    /// The tile's state line: "Running…", "Failed · 2.1s", or what the result says and how long it took ("120 lines ·
+    /// 0.3s", "Done · 4.2s"). An Edit's or Write's counts show beside it instead of "Done".
+    /// </summary>
+    public string StateText
+    {
+        get
+        {
+            if (!IsComplete)
+            {
+                return "Running…";
+            }
+            var first = IsError ? "Failed" : ResultInfo?.Facts ?? (HasDiff ? null : "Done");
+            var parts = new[] { first, DurationText }.Where(p => p is not null).ToArray();
+            return parts.Length > 0 ? string.Join(" · ", parts) : "Done";
+        }
+    }
+
+    /// <summary>The typed view of the result's <c>tool_use_result</c>: lines read, files found, a fetch's status.</summary>
+    public ToolOutput? ResultInfo { get; private set; }
+
+    /// <summary>Most of a Read's text kept for its tile and window; a longer file is cut, as a tool's output is shown.</summary>
+    public const int ReadTextLimit = 200_000;
+
+    /// <summary>The file as a Read read it, without line numbers (cut at <see cref="ReadTextLimit"/>); null for other tools.</summary>
+    public string? ReadText { get; private set; }
+
+    /// <summary>The line <see cref="ReadText"/> starts at.</summary>
+    public int ReadStartLine => ResultInfo?.StartLine ?? 1;
+
+    public bool HasReadText => !string.IsNullOrEmpty(ReadText);
+
+    /// <summary>The read text as the opened tile shows it: the start of a long one, as for output.</summary>
+    public string? ShownReadText => ReadText is { Length: > ShownOutputLimit } text && !ShowsAllOutput ? text[..ShownOutputLimit] : ReadText;
+
+    public bool IsReadTextCut => !ShowsAllOutput && ReadText is { Length: > ShownOutputLimit };
+
     public ToolUseItem(string toolUseId, string name, JsonObject input)
     {
         ToolUseId = toolUseId;
@@ -366,6 +459,28 @@ public partial class ToolUseItem : ConversationItem
     public JsonObject Input { get; }
 
     public string Summary { get; }
+
+    /// <summary>
+    /// What its tile says it worked on (DESIGN.md §18, "Conversation cards"): the summary, but a file by the end of its
+    /// path, which says the most in a tile's width: <c>…\Player\StarfallCharacter.cpp</c>.
+    /// </summary>
+    public string TileSummary
+    {
+        get
+        {
+            if ((Str(Input, "file_path") ?? Str(Input, "notebook_path")) is not { Length: > 0 } path)
+            {
+                return Summary;
+            }
+            var separator = path.Contains('\\') && !path.Contains('/') ? '\\' : '/';
+            var parts = path.Split('/', '\\').Where(p => p.Length > 0).ToArray();
+            var tail = parts.Length > 2 ? $"…{separator}{parts[^2]}{separator}{parts[^1]}" : path;
+            return Name == "Read" && Input["offset"] is { } offset ? $"{tail} (from line {offset})" : tail;
+        }
+    }
+
+    /// <summary>What a screen reader calls its tile: the tool and what it worked on, "Edit C:\src\auth.cs".</summary>
+    public string TileName => Summary.Length > 0 ? $"{Name} {Summary}" : Name;
 
     /// <summary>The summary in full, for its tooltip: a command keeps its line breaks.</summary>
     public string FullSummary => Name is "Bash" or "PowerShell" && Str(Input, "command") is { } command
@@ -406,7 +521,7 @@ public partial class ToolUseItem : ConversationItem
     public bool HasDetail => !string.IsNullOrEmpty(Detail);
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasDiff), nameof(DiffStats))]
+    [NotifyPropertyChangedFor(nameof(HasDiff), nameof(DiffStats), nameof(StateText))]
     public partial DiffView? Diff { get; set; }
 
     public bool HasDiff => Diff is { Lines.Count: > 0 };
@@ -423,7 +538,7 @@ public partial class ToolUseItem : ConversationItem
     public const int ShownOutputLimit = 20_000;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShownOutput), nameof(IsOutputCut))]
+    [NotifyPropertyChangedFor(nameof(ShownOutput), nameof(IsOutputCut), nameof(ShownReadText), nameof(IsReadTextCut))]
     public partial bool ShowsAllOutput { get; private set; }
 
     /// <summary>
@@ -434,7 +549,7 @@ public partial class ToolUseItem : ConversationItem
 
     public bool IsOutputCut => !ShowsAllOutput && Output is { Length: > ShownOutputLimit };
 
-    public string ShowAllOutputText => Output is { } output
+    public string ShowAllOutputText => (Output ?? ReadText) is { } output
         ? $"Show all ({(output.Length + 1023) / 1024:N0} KB)"
         : "Show all";
 
@@ -448,17 +563,17 @@ public partial class ToolUseItem : ConversationItem
     public bool HasResultSummary => !string.IsNullOrEmpty(ResultSummary);
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanOpenDiff))]
+    [NotifyPropertyChangedFor(nameof(CanOpenDiff), nameof(StateText))]
     public partial bool IsError { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanOpenDiff))]
+    [NotifyPropertyChangedFor(nameof(CanOpenDiff), nameof(StateText))]
     public partial bool IsComplete { get; set; }
 
     [ObservableProperty]
     public partial bool IsExpanded { get; set; }
 
-    public bool CanExpand => HasDetail || HasDiff || HasOutput || IsBash;
+    public bool CanExpand => HasDetail || HasDiff || HasOutput || IsBash || HasReadText;
 
     [RelayCommand]
     private void Toggle() => IsExpanded = !IsExpanded;
@@ -468,6 +583,17 @@ public partial class ToolUseItem : ConversationItem
     {
         IsComplete = true;
         IsError = isError;
+        ResultInfo = isError ? null : ToolOutput.From(Name, toolUseResult);
+        if (ResultInfo?.FileContent is { Length: > 0 } read)
+        {
+            ReadText = read.Length > ReadTextLimit ? read[..ReadTextLimit] : read;
+            OnPropertyChanged(nameof(ReadText));
+            OnPropertyChanged(nameof(HasReadText));
+            OnPropertyChanged(nameof(ShownReadText));
+            OnPropertyChanged(nameof(IsReadTextCut));
+        }
+        OnPropertyChanged(nameof(ResultInfo));
+        OnPropertyChanged(nameof(StateText));
         if (toolUseResult is JsonObject result)
         {
             if (result["structuredPatch"] is JsonArray { Count: > 0 } patch)
@@ -719,6 +845,24 @@ public sealed partial class NoteItem(string text, NoteKind kind) : ConversationI
     public bool IsError => Kind == NoteKind.Error;
 
     public bool IsWarning => Kind == NoteKind.Warning;
+
+    public bool IsInfo => Kind == NoteKind.Info;
+
+    /// <summary>Its card's label (DESIGN.md §18, "Conversation cards").</summary>
+    public string KindLabel => Kind switch
+    {
+        NoteKind.Error => "Error",
+        NoteKind.Warning => "Warning",
+        _ => "Note",
+    };
+
+    /// <summary>Its card's icon: the key of one in App.axaml.</summary>
+    public string KindIcon => Kind switch
+    {
+        NoteKind.Error => "IconCardError",
+        NoteKind.Warning => "IconCardWarning",
+        _ => "IconCardNote",
+    };
 }
 
 /// <summary>How a hook run ended, or that it hasn't yet.</summary>
@@ -813,18 +957,76 @@ public sealed partial class TurnFileRow(TurnSummaryItem turn, Core.Diffs.TurnFil
 
     public string DisplayPath { get; } = displayPath;
 
+    /// <summary>The file's own name, which the Modified files card puts first.</summary>
+    public string FileName => Path.GetFileName(DisplayPath.TrimEnd('/', '\\')) is { Length: > 0 } name ? name : DisplayPath;
+
+    /// <summary>The folder it's in, as the path shows it; null for a file at the top of the tab's folder.</summary>
+    public string? Folder => Path.GetDirectoryName(DisplayPath) is { Length: > 0 } folder ? folder.Replace('\\', '/') : null;
+
+    public bool HasFolder => Folder is not null;
+
     /// <summary><c>+12 −3</c> once counted against how the turn left the file; null until then, or when it can't be.</summary>
     [ObservableProperty]
     public partial string? Stats { get; set; }
 }
 
 /// <summary>
-/// The small footer after each turn: duration, tokens and model (DESIGN.md §5), and the files the turn changed (DESIGN.md
-/// §8, "Changes per turn").
+/// The footer after each turn (DESIGN.md §5): a Turn statistics card with its duration, tokens and model, and above it a
+/// Modified files card with the files the turn changed (DESIGN.md §8, "Changes per turn").
 /// </summary>
 public sealed partial class TurnSummaryItem(string text) : ConversationItem
 {
+    private TimeProvider? _clock;
+
     public string Text { get; } = text;
+
+    /// <summary>The tool calls the turn made, every agent's; 0 when it made none.</summary>
+    public int ToolCalls { get; init; }
+
+    /// <summary>The input tokens read from the prompt cache, when the result says.</summary>
+    public long? CacheReadTokens { get; init; }
+
+    /// <summary>
+    /// What the Turn statistics card says: <see cref="Text"/>, then how much came from the prompt cache and the tool
+    /// calls: "1m 4s · 75.2k in · 904 out · Opus 5.5 · 62k from cache · 7 tool calls".
+    /// </summary>
+    public string StatsText
+    {
+        get
+        {
+            var parts = new List<string> { Text };
+            if (CacheReadTokens is > 0 and var cached)
+            {
+                parts.Add($"{Tokens(cached)} from cache");
+            }
+            if (ToolCalls > 0)
+            {
+                parts.Add(ToolCalls == 1 ? "1 tool call" : $"{ToolCalls} tool calls");
+            }
+            return string.Join(" · ", parts.Where(p => p.Length > 0));
+        }
+    }
+
+    /// <summary>When the turn ended, by the tab's clock.</summary>
+    public DateTimeOffset? EndedAt { get; private set; }
+
+    public string? TimeText => EndedAt is { } ended && _clock is { } clock ? MessageTimes.Short(ended, clock) : null;
+
+    public string? TimeTip => EndedAt is { } ended && _clock is { } clock ? MessageTimes.Full(ended, clock) : null;
+
+    internal void Stamp(DateTimeOffset? endedAt, TimeProvider clock)
+    {
+        EndedAt = endedAt;
+        _clock = clock;
+        RefreshTime();
+    }
+
+    /// <summary>"Today" moved on: the short time may need its day now.</summary>
+    public void RefreshTime()
+    {
+        OnPropertyChanged(nameof(TimeText));
+        OnPropertyChanged(nameof(TimeTip));
+    }
 
     /// <summary>The files the turn changed with Edit, Write, MultiEdit or NotebookEdit, in order; empty when it changed none.</summary>
     [ObservableProperty]
@@ -837,7 +1039,8 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
 
     /// <summary>The footer for a turn's result; null when the result says none of those.</summary>
     /// <param name="modelName">Turns a model id into a display name.</param>
-    internal static TurnSummaryItem? For(ResultMessage result, Func<string?, string?> modelName)
+    /// <param name="toolCalls">The tool calls the turn made.</param>
+    internal static TurnSummaryItem? For(ResultMessage result, Func<string?, string?> modelName, int toolCalls = 0)
     {
         var parts = new List<string>();
         if (result.DurationMs is { } ms)
@@ -854,7 +1057,9 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
         {
             parts.Add(string.Join(", ", models.Select(m => modelName(m.Key) ?? m.Key)));
         }
-        return parts.Count > 0 ? new TurnSummaryItem(string.Join(" · ", parts)) : null;
+        return parts.Count > 0
+            ? new TurnSummaryItem(string.Join(" · ", parts)) { ToolCalls = toolCalls, CacheReadTokens = Number(result.Usage?["cache_read_input_tokens"]) }
+            : null;
     }
 
     private static string Tokens(long count) => count switch

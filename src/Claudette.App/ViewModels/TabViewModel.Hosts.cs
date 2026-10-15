@@ -23,7 +23,7 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     // ---- The process monitor -----------------------------------------------------------------------------------------
 
-    IEnumerable<ToolUseItem> IProcessMonitorHost.ToolItems => Items.OfType<ToolUseItem>();
+    IEnumerable<ToolUseItem> IProcessMonitorHost.ToolItems => Items.ToolCalls();
 
     string? IProcessMonitorHost.TaskIdFor(string toolUseId) => Tasks.TaskIdFor(toolUseId);
 
@@ -39,7 +39,7 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     void IChangedFilesHost.CopyToLibrary() => CopyToLibrary();
 
-    bool IChangedFilesHost.IsSelected => IsSelected;
+    bool IChangedFilesHost.IsSelected => IsShown;
 
     void IChangedFilesHost.AllReviewedChanged()
     {

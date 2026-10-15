@@ -80,6 +80,9 @@ public sealed partial class TabViewModel
     /// <summary>A thread's sub-threads, in the order they joined it, which decides their names when two share one.</summary>
     public ObservableCollection<TabViewModel> SubThreads { get; } = [];
 
+    /// <summary>A thread with sub-threads, which <b>Show with its sub-threads</b> puts beside it (DESIGN.md §18, "Split panes").</summary>
+    public bool HasSubThreads => IsThread && SubThreads.Count > 0;
+
     /// <summary>Neither a thread nor a sub-thread: it can become a thread. Threads don't nest.</summary>
     public bool CanMakeThread => !IsThread && !IsSubThread;
 
@@ -200,6 +203,7 @@ public sealed partial class TabViewModel
 
     private void SubThreadsChanged()
     {
+        OnPropertyChanged(nameof(HasSubThreads));
         OnPropertyChanged(nameof(WaitingSubThreads));
         OnPropertyChanged(nameof(HasThreadStrip));
         OnPropertyChanged(nameof(ThreadTip));

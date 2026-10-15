@@ -13,7 +13,7 @@
       <TextBlock Grid.Row="1" Classes="label" Text="Style" />
       <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding Style}"
                 AutomationProperties.Name="Style"
-                ToolTip.Tip="Claude looks like the Claude apps: ivory and warm greys, Claude's orange, message bubbles and serif replies. Standard uses neutral greys and your OS's accent color." />
+                ToolTip.Tip="Claude looks like the Claude apps: ivory and warm greys, Claude's orange, rounder cards and serif replies. Standard uses neutral greys and your OS's accent color." />
       <!-- Compact tightens the conversation, the sidebar's rows and the composer (DESIGN.md §14) -->
       <TextBlock Grid.Row="2" Classes="label" Text="Density" />
       <ComboBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Densities}" SelectedItem="{Binding Density}"
@@ -43,6 +43,9 @@
     <CheckBox Content="Full-width conversation" IsChecked="{Binding FullWidthConversation}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="The conversation and the message box fill the tab's width. Off, they stop at a width that's easy to read, in the middle of a wide window." />
+    <CheckBox Content="Quieter in-between steps" IsChecked="{Binding QuietSteps}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="Tool calls, thinking, hooks, notes and the replies Claude carried on after are drawn without their card's tint and outline, so your prompts, Claude's answers and the files it changed stand out. Pointing at one brings it back." />
     <CheckBox Content="Show thinking expanded" IsChecked="{Binding ExpandThinking}" />
     <CheckBox Content="Show fun words while Claude works" IsChecked="{Binding FunWorkingWords}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
@@ -50,6 +53,10 @@
     <CheckBox Content="Show what Claude is doing while it works" IsChecked="{Binding ShowToolInWorkingLine}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="While a tool runs, the line says what it's doing instead, such as “Running dotnet test…” or “Reading TabView.axaml…”." />
+    <!-- The prompt cache's countdown in the composer's bar (DESIGN.md §6, "Prompt cache") -->
+    <CheckBox Content="Show when the prompt cache expires" IsChecked="{Binding ShowPromptCacheExpiry}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="A count beside the context in the message box's bar, such as “Cache 52m”: how long your next message can read the conversation from the prompt cache, for much less than reading it all again. It turns amber in the last 3 minutes." />
     <CheckBox Content="Detailed usage header" IsChecked="{Binding DetailedUsageHeader}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="Draws the usage header taller, with charts of the session and the week, the burn rate and the busiest tabs. The chevron at the header's right does the same. Kept on this machine, not synced." />

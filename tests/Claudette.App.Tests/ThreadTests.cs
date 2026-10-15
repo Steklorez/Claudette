@@ -315,9 +315,9 @@ public class ThreadTests
         h.Transport.EmitTo(0, ToolResult("toolu_s", ThreadMessages.Delivered("Art page", waits: false), isError: true));
         h.Transport.EmitTo(0, Wire.Tool(null, "toolu_d", "SendMessage", new JsonObject { ["to"] = "Art page", ["message"] = "And this." }));
         h.Transport.EmitTo(0, ToolResult("toolu_d", ThreadMessages.Declined("Art page"), isError: true));
-        await TabTestHarness.Eventually(() => plan.Items.OfType<ToolUseItem>().Count(t => t.IsComplete) == 2, "both results");
+        await TabTestHarness.Eventually(() => plan.Items.ToolCalls().Count(t => t.IsComplete) == 2, "both results");
 
-        var rows = plan.Items.OfType<ToolUseItem>().ToList();
+        var rows = plan.Items.ToolCalls().ToList();
         Assert.False(rows[0].IsError);
         Assert.True(rows[1].IsError);
     }

@@ -315,7 +315,7 @@ public sealed class MascotLayer : Control
     }
 
     /// <summary>
-    /// After each layout pass: whether she's on screen (her tab is the selected one), the size of a cell, and where on
+    /// After each layout pass: whether she's on screen (her tab is the selected one, its pane the focused one), the size of a cell, and where on
     /// the edge she has room.
     /// </summary>
     private void OnLayoutUpdated(object? sender, EventArgs e)
@@ -324,7 +324,8 @@ public sealed class MascotLayer : Control
         {
             return;
         }
-        var shown = IsEffectivelyVisible && Bounds.Width > 0;
+        // With tabs side by side, she's on the focused pane's composer only (DESIGN.md §18, "Split panes").
+        var shown = IsEffectivelyVisible && Bounds.Width > 0 && this.FindAncestorOfType<TabView>()?.DataContext is not ViewModels.TabViewModel { IsSelected: false };
         Report(_ => director.SetShown(this, shown));
         if (shown != _shown)
         {

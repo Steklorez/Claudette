@@ -29,6 +29,9 @@ public sealed class RestartSnapshot
 
     public string? SelectedTabId { get; set; }
 
+    /// <summary>The tabs side by side, left to right (DESIGN.md §18, "Split panes"); null with one on screen.</summary>
+    public List<string>? PaneTabIds { get; set; }
+
     /// <summary>Unsent messages, by tab id.</summary>
     public Dictionary<string, TabDraft> Drafts { get; set; } = [];
 

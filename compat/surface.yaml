@@ -1070,6 +1070,42 @@ items:
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolImageTests
     fallback: Bash's output that's a data:image URL comes back as an image block, with isImage on its tool_use_result; the card shows the image and not the URL. Without it, the URL shows as the output again, beside the image.
+  # --- Tool results on their tiles (DESIGN.md §18, "Conversation cards") ---------------------------------
+  - id: "file.content"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/Conversation/ConversationItems.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolOutputTests, ConversationCardsTests, ToolCallWindowTests
+    fallback: "A Read's tool_use_result of type text has the file as it read it, without line numbers (file.content), with file.startLine, numLines and totalLines (checked against 2.1.284). Its tile says how many lines it read, and its detail and window show the file. Without them, the tile says Done and the file isn't shown; the tool_result's numbered text still is in the call's Details."
+  - id: "GrepOutput"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/ViewModels/ToolCallWindowViewModel.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolOutputTests, ToolCallWindowTests
+    fallback: "A Grep's tool_use_result: mode, numFiles, numLines, numMatches and filenames. The tile says what it found by its mode, and the window lists the files. A content-mode result's text is ripgrep's lines (path:line:text), which the window groups by file. Without them, the tile says Done and the window shows the result as text."
+  - id: "GlobOutput"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/ViewModels/ToolCallWindowViewModel.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolOutputTests, ToolCallWindowTests
+    fallback: "A Glob's tool_use_result: numFiles, filenames and truncated. The tile says how many files, with a + when the list was cut, and the window lists them. Without them, the tile says Done and the window shows the result as text."
+  - id: "WebFetchOutput"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolOutputTests
+    fallback: "A WebFetch's tool_use_result: code, codeText and bytes, which the tile shows as \"200 OK · 14 KB\". Without them, the tile says Done."
+  - id: "WriteOutput"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/Conversation/ConversationItems.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ToolOutputTests
+    fallback: "A Write's tool_use_result type: create for a new file, update for one it replaced. The tile says Created or Updated. Without it, the tile shows only the counts."
   - id: "--prompt-suggestions"
     kind: flag
     status: documented
@@ -1144,15 +1180,15 @@ items:
   - id: "settings.local.json"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.Core/Claude/SpinnerVerbs.cs, src/Claudette.Core/Claude/StartingPermissionMode.cs
+    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.Core/Claude/ClaudeSettingsFiles.cs, src/Claudette.Core/Claude/SpinnerVerbs.cs, src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/settings
-    test: RealCliTests, SpinnerVerbsTests, StartingPermissionModeTests
+    test: RealCliTests, SpinnerVerbsTests, StartingPermissionModeTests, PromptCacheTests
   - id: "settings.json"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Claude/SpinnerVerbs.cs, src/Claudette.Core/Claude/StartingPermissionMode.cs
+    usedIn: src/Claudette.Core/Claude/ClaudeSettingsFiles.cs, src/Claudette.Core/Claude/SpinnerVerbs.cs, src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/settings
-    test: SpinnerVerbsTests, StartingPermissionModeTests
+    test: SpinnerVerbsTests, StartingPermissionModeTests, PromptCacheTests
   - id: ".mcp.json"
     kind: file
     status: documented
@@ -1335,18 +1371,19 @@ items:
   - id: "ANTHROPIC_API_KEY"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, src/Claudette.Core/Sessions/PromptCache.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
-    test: AccountsTests, RealCliTests
+    test: AccountsTests, RealCliTests, PromptCacheTests
     # Removed from an API-key account's tabs: under -p it always wins over apiKeyHelper. Default's tabs keep it, as user
-    # configuration.
+    # configuration. Before a session's first system/init says its apiKeySource, it also says the tab is billed by the
+    # token, for the prompt cache's default lifetime (DESIGN.md §6, "Prompt cache"). Its value is never read.
   - id: "ANTHROPIC_AUTH_TOKEN"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, src/Claudette.Core/Sessions/PromptCache.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
-    test: AccountsTests
-    # See ANTHROPIC_API_KEY: it outranks apiKeyHelper too.
+    test: AccountsTests, PromptCacheTests
+    # See ANTHROPIC_API_KEY: it outranks apiKeyHelper too, and a tab with it isn't on a subscription's prompt cache default.
   - id: "costUSD"
     kind: field
     status: documented
@@ -1461,6 +1498,127 @@ items:
     # On each model in the initialize reply; left out for a model without auto mode (Haiku 4.5 in 2.1.284). The mode
     # picker offers Auto only for the tab's model when it's true, and so does a plan's card (DESIGN.md §7).
 
+  # --- Prompt cache (DESIGN.md §6, "Prompt cache") ------------------------------------------------------
+  - id: "cache_creation"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/PromptCacheWrites.cs, src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: PromptCacheWritesTests, PromptCacheTests
+    fallback: "The Usage type's cache_creation on a result's usage: ephemeral_5m_input_tokens and ephemeral_1h_input_tokens, what the turn wrote to the cache at each lifetime (every recording since 2.1.284 has it, all zeros against the mock, which caches nothing). The latest turn that wrote any says the cache's lifetime, after Claude Code's own configuration. Without it the chip goes by that configuration, then Claude Code's default: an hour for a subscription, five minutes otherwise."
+  - id: "ephemeral_1h_input_tokens"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/PromptCacheWrites.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: PromptCacheWritesTests
+    fallback: See cache_creation. Any tokens here mean the 1-hour lifetime.
+  - id: "ephemeral_5m_input_tokens"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/PromptCacheWrites.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: PromptCacheWritesTests
+    fallback: See cache_creation. Tokens here, with none at an hour, mean the 5-minute lifetime.
+  - id: "message.usage.cache_creation"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: PromptCacheWritesTests, PromptCacheTests
+    fallback: "Optional, and unverified: the Messages API's usage has it, but no recording shows it on an assistant message (the mock's usage leaves it out). Read on the main agent's messages only, and from a restored tab's transcript, where it beats the result's, which can count subagents' writes. Without it the result's is used."
+  - id: "apiKeySource"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.Core/Sessions/PromptCache.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: PromptCacheWritesTests, PromptCacheTests
+    fallback: "On system/init: ANTHROPIC_API_KEY, apiKeyHelper or /login managed key for an API key, none for a claude.ai sign-in, a bearer token or a cloud provider. Anything but none means the tab is billed by the token (the prompt cache's default is five minutes). Without it, the environment's ANTHROPIC_API_KEY and claude auth status's authMethod and apiProvider decide, and anything else is taken for a subscription."
+  - id: "promptCacheTtl"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: PromptCacheTests
+    fallback: "5m or 1h, from the tab's .claude/settings.local.json, then .claude/settings.json, then the user's settings.json (as spinnerVerbs is read; managed settings aren't). Since 2.1.242. Below CLAUDE_CODE_PROMPT_CACHE_TTL and FORCE_PROMPT_CACHING_5M, above ENABLE_PROMPT_CACHING_1H. Any other value is passed over, to the next file."
+  - id: "env"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: PromptCacheTests
+    fallback: "The settings files' env, read only for the prompt cache's variables (and whether ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN is set): a value there overrides the environment claude starts with, the most specific file's winning, and an empty one unsets it. If Claude Code stops applying it, a variable set only there would show a lifetime the session doesn't use, until a turn's writes say."
+  - id: "DISABLE_PROMPT_CACHING"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: Read from the environment the tab's claude starts with and its settings files' env. On (1, true, yes or on, as Claude Code reads a switch), there's no cache and no chip, whatever the per-model variables say.
+  - id: "DISABLE_PROMPT_CACHING_FABLE"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: No chip while the tab's model id has "fable" in it. The per-model variables are matched by the family's name in the model id, which may not be exactly what "the default <family> model" means in the docs.
+  - id: "DISABLE_PROMPT_CACHING_HAIKU"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: See DISABLE_PROMPT_CACHING_FABLE, for "haiku".
+  - id: "DISABLE_PROMPT_CACHING_OPUS"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: See DISABLE_PROMPT_CACHING_FABLE, for "opus".
+  - id: "DISABLE_PROMPT_CACHING_SONNET"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: See DISABLE_PROMPT_CACHING_FABLE, for "sonnet".
+  - id: "CLAUDE_CODE_PROMPT_CACHE_TTL"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: 5m or 1h for the main conversation, since 2.1.242; over promptCacheTtl and ENABLE_PROMPT_CACHING_1H, under FORCE_PROMPT_CACHING_5M. Any other value is passed over. CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL isn't read, since subagents' caches aren't the conversation's.
+  - id: "ENABLE_PROMPT_CACHING_1H"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: On, the 1-hour lifetime, below CLAUDE_CODE_PROMPT_CACHE_TTL and promptCacheTtl. The deprecated ENABLE_PROMPT_CACHING_1H_BEDROCK isn't read; a turn's writes still show its hour.
+  - id: "FORCE_PROMPT_CACHING_5M"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: On, the 5-minute lifetime, over everything else.
+  - id: "Subscription users within included usage receive the 1-hour TTL automatically"
+    kind: behavior
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: PromptCacheTests
+    fallback: "ENABLE_PROMPT_CACHING_1H's entry: a subscription's main conversation gets an hour while it's within included usage, and every other request, an API key's or a cloud provider's, five minutes. Claudette can't tell whether a subscription is drawing on usage credits, so its tooltip says usually; it's the last resort, after the configuration and a turn's writes, which show the hour or the five minutes the session really got."
+  - id: "prompt_cache_likely_expired"
+    kind: behavior
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/PromptCache.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    docs: https://code.claude.com/docs/en/hooks
+    test: PromptCacheTests
+    fallback: "Not read: Claudette follows the rule this hook field states, that the cache is likely gone once the last response is older than the session's lifetime or a compaction replaced the conversation. So the countdown starts again at each main-agent assistant message and at the result of a turn that made a request; subagents have caches of their own (the sub-agents page), so their messages don't count. A compact_boundary or conversation_reset forgets it, as does switching the model (each model has its own cache, the settings page says) or the account."
+
   # --- History and the session library (DESIGN.md §9) --------------------------------------------------
   - id: "isMeta"
     kind: file
@@ -1568,7 +1726,7 @@ items:
     status: documented
     usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: ChangedFilesTests, TaskProgressTests
+    test: ChangedFilesTests, TaskProgressTests, ReplyFileTests
   - id: "filePath"
     kind: field
     status: documented
@@ -1584,7 +1742,7 @@ items:
   - id: "notebook_path"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs
+    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests
 

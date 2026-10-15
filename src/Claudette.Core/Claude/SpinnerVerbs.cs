@@ -1,6 +1,4 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using Claudette.Core.Json;
 
 namespace Claudette.Core.Claude;
 
@@ -26,23 +24,11 @@ public static class SpinnerVerbs
 
     /// <summary>
     /// Where Claude Code looks for settings for a session in <paramref name="projectFolder"/>, most specific first:
-    /// the project's local and shared settings, then the user's. Managed settings aren't read.
+    /// the project's local and shared settings, then the user's (<see cref="ClaudeSettingsFiles.ForSession"/>).
     /// </summary>
     /// <param name="configDirectory">Claude Code's config folder (<c>claude auth status</c>'s <c>configDirectory</c>); null skips the user's file.</param>
-    public static IReadOnlyList<string> SettingsFiles(string? configDirectory, string? projectFolder)
-    {
-        var files = new List<string>();
-        if (projectFolder is not null)
-        {
-            files.Add(Path.Combine(projectFolder, ".claude", "settings.local.json"));
-            files.Add(Path.Combine(projectFolder, ".claude", "settings.json"));
-        }
-        if (configDirectory is not null)
-        {
-            files.Add(Path.Combine(configDirectory, "settings.json"));
-        }
-        return files;
-    }
+    public static IReadOnlyList<string> SettingsFiles(string? configDirectory, string? projectFolder) =>
+        ClaudeSettingsFiles.ForSession(configDirectory, projectFolder);
 
     /// <summary>
     /// The verbs to show: the built-in list, with the <c>spinnerVerbs</c> of the most specific file that sets it.
@@ -71,30 +57,20 @@ public static class SpinnerVerbs
     /// <summary>The file's <c>spinnerVerbs</c>, or null when it has none Claudette can use.</summary>
     private static (string Mode, IReadOnlyList<string> Verbs)? Read(string file)
     {
-        try
-        {
-            if (!File.Exists(file)
-                || JsonTree.Parse(File.ReadAllText(file), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true })
-                    is not JsonObject root
-                || root["spinnerVerbs"] is not JsonObject setting)
-            {
-                return null;
-            }
-            var mode = setting["mode"] is JsonValue value && value.TryGetValue<string>(out var text) ? text : "append";
-            if (mode is not ("append" or "replace"))
-            {
-                return null;
-            }
-            var verbs = (setting["verbs"] as JsonArray ?? [])
-                .Select(v => v is JsonValue item && item.TryGetValue<string>(out var verb) ? verb.Trim().TrimEnd('…', '.').Trim() : "")
-                .Where(v => v.Length > 0)
-                .Distinct(StringComparer.Ordinal)
-                .ToArray();
-            return (mode, verbs);
-        }
-        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        if (ClaudeSettingsFiles.Read(file)?["spinnerVerbs"] is not JsonObject setting)
         {
             return null;
         }
+        var mode = setting["mode"] is JsonValue value && value.TryGetValue<string>(out var text) ? text : "append";
+        if (mode is not ("append" or "replace"))
+        {
+            return null;
+        }
+        var verbs = (setting["verbs"] as JsonArray ?? [])
+            .Select(v => v is JsonValue item && item.TryGetValue<string>(out var verb) ? verb.Trim().TrimEnd('…', '.').Trim() : "")
+            .Where(v => v.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        return (mode, verbs);
     }
 }

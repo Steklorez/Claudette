@@ -3,8 +3,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Conversation;
 using Claudette.App.Diffs;
 using Claudette.App.Services;
@@ -37,6 +39,9 @@ public partial class TabView : UserControl
         InitializeComponent();
         // Tunnel, so the prompt's shortcuts are seen before the composer turns Enter into a new line.
         AddHandler(KeyDownEvent, OnPromptKeyDown, RoutingStrategies.Tunnel);
+        // With tabs side by side, a click or the focus in a pane makes it the focused one (DESIGN.md §18, "Split panes").
+        AddHandler(PointerPressedEvent, (_, _) => ViewModel?.FocusPane(), RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(GotFocusEvent, (_, _) => ViewModel?.FocusPane(), RoutingStrategies.Bubble, handledEventsToo: true);
         ComposerPanel.Sent += () => _stickToBottom = true;
         // Claudette on the composer keeps clear of Jump to latest, and ducks while a thread's strip or a dialog sits over
         // the composer (DESIGN.md §5).
@@ -50,6 +55,8 @@ public partial class TabView : UserControl
         ConversationScroll.AddHandler(KeyDownEvent, (_, e) => _readerScrolling |= e.Key is Key.Up or Key.PageUp or Key.Home, RoutingStrategies.Tunnel, handledEventsToo: true);
         ConversationScroll.AddHandler(InputElement.ScrollGestureEvent, (_, e) => _readerScrolling |= e.Delta.Y < 0, RoutingStrategies.Tunnel, handledEventsToo: true);
         ConversationItems.ContainerPrepared += OnConversationContainerPrepared;
+        ScrollMarks.MarkClicked += mark => ScrollItemToTop(mark.Index);
+        ActualThemeVariantChanged += (_, _) => UpdateMarks();
         // Copy on a code block goes through the tab and says "Copied" (DESIGN.md §5, "Copy and times").
         CodeBlockCopy.Attach(this);
         // Add to scratch pad: a code block's button, and the menu of text selected in the conversation (DESIGN.md §18).
@@ -201,7 +208,9 @@ public partial class TabView : UserControl
         {
             _tab.ChangedFiles.DiffRequested -= OnDiffRequested;
             _tab.ImageRequested -= OnImageRequested;
+            _tab.ToolWindowRequested -= OnToolWindowRequested;
             _tab.ScrollToRequested -= OnScrollToRequested;
+            _tab.MessageJumpRequested -= OnMessageJumpRequested;
             _tab.AgentWindowRequested -= OnAgentWindowRequested;
             _tab.FindFocusRequested -= OnFindFocusRequested;
             _tab.Find.PropertyChanged -= OnFindPropertyChanged;
@@ -211,7 +220,9 @@ public partial class TabView : UserControl
         {
             _tab.ChangedFiles.DiffRequested += OnDiffRequested;
             _tab.ImageRequested += OnImageRequested;
+            _tab.ToolWindowRequested += OnToolWindowRequested;
             _tab.ScrollToRequested += OnScrollToRequested;
+            _tab.MessageJumpRequested += OnMessageJumpRequested;
             _tab.AgentWindowRequested += OnAgentWindowRequested;
             _tab.FindFocusRequested += OnFindFocusRequested;
             _tab.Find.PropertyChanged += OnFindPropertyChanged;
@@ -240,22 +251,146 @@ public partial class TabView : UserControl
         }
     }
 
-    /// <summary>Marks the current match's container; the conversation is virtualized, so a new container is marked as it's made.</summary>
+    /// <summary>
+    /// Marks the current match's container, or the Tool calls card's when the match is one of its calls (whose tile is
+    /// open); the conversation is virtualized, so a new container is marked as it's made.
+    /// </summary>
     private void MarkFindCurrent()
     {
         if (_findMarked is not null && ConversationItems.ContainerFromItem(_findMarked) is { } old)
         {
             old.Classes.Remove("findcurrent");
         }
-        _findMarked = _tab?.Find.Current;
+        _findMarked = _tab?.Find.Current is { } match ? _tab.TopLevelItemOf(match) ?? match : null;
         if (_findMarked is not null && ConversationItems.ContainerFromItem(_findMarked) is { } current)
         {
             current.Classes.Add("findcurrent");
         }
     }
 
-    private void OnConversationContainerPrepared(object? sender, ContainerPreparedEventArgs e) =>
+    private void OnConversationContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    {
         e.Container.Classes.Set("findcurrent", _findMarked is not null && ReferenceEquals(ConversationItems.ItemFromContainer(e.Container), _findMarked));
+        if (ConversationItems.ItemsPanelRoot is ConversationPanel panel && !ReferenceEquals(panel, _panel))
+        {
+            if (_panel is not null)
+            {
+                _panel.Arranged -= OnPanelArranged;
+            }
+            _panel = panel;
+            _panel.Arranged += OnPanelArranged;
+        }
+    }
+
+    // ---- Marks beside the scroll bar, and going from message to message (DESIGN.md §18, "Conversation cards") ----
+
+    /// <summary>The conversation's panel, once it has items: where each one is.</summary>
+    private ConversationPanel? _panel;
+
+    private void OnPanelArranged(object? sender, EventArgs e) => UpdateMarks();
+
+    /// <summary>Where the panel starts in the scroll viewer's content: below the list's margin.</summary>
+    private double PanelOrigin(ConversationPanel panel) =>
+        ConversationItems.Margin.Top + (panel.TranslatePoint(default, ConversationItems)?.Y ?? 0);
+
+    /// <summary>The marks for the items worth finding again, where the panel last laid them out; none while all of it fits.</summary>
+    private void UpdateMarks()
+    {
+        if (_panel is not { } panel || _tab is not { } tab)
+        {
+            return;
+        }
+        var scroll = ConversationScroll;
+        var extent = scroll.Extent.Height;
+        List<ScrollMark> marks = [];
+        if (extent > scroll.Viewport.Height + 1)
+        {
+            var origin = PanelOrigin(panel);
+            var brushes = new Dictionary<LandmarkKind, IBrush>();
+            for (var i = 0; i < tab.Items.Count; i++)
+            {
+                if (ConversationLandmarks.KindOf(tab.Items[i]) is not { } kind)
+                {
+                    continue;
+                }
+                if (!brushes.TryGetValue(kind, out var brush))
+                {
+                    brush = brushes[kind] = MarkBrush(kind);
+                }
+                marks.Add(new ScrollMark((origin + panel.TopOf(i)) / extent, brush, i, ConversationLandmarks.Describe(tab.Items[i])));
+            }
+        }
+        if (!marks.SequenceEqual(ScrollMarks.Marks))
+        {
+            ScrollMarks.Marks = marks;
+        }
+    }
+
+    private IBrush MarkBrush(LandmarkKind kind) =>
+        this.FindResource(ActualThemeVariant, kind switch
+        {
+            LandmarkKind.Prompt => "CardYouStripeBrush",
+            LandmarkKind.Waiting => "MeterWarningBrush",
+            LandmarkKind.Error => "ErrorTextBrush",
+            _ => "CardFilesStripeBrush",
+        }) as IBrush ?? Brushes.Gray;
+
+    /// <summary>F3, F4 and their Ctrl/Cmd forms: the message before or after the one at the top of the view, the first, the latest.</summary>
+    private void OnMessageJumpRequested(MessageJump jump)
+    {
+        if (jump == MessageJump.Latest)
+        {
+            OnJumpToLatest(this, new RoutedEventArgs());
+            return;
+        }
+        if (_panel is not { } panel || _tab is not { } tab)
+        {
+            return;
+        }
+        var items = tab.Items;
+        var target = ConversationLandmarks.First(items);
+        if (jump != MessageJump.First)
+        {
+            var viewTop = ConversationScroll.Offset.Y - PanelOrigin(panel);
+            var at = panel.ItemAt(Math.Max(0, viewTop + 1));
+            // A message the top of the view cuts off is the one before: going back starts with its own top.
+            target = jump == MessageJump.Previous && at >= 0 && at < items.Count && panel.TopOf(at) < viewTop - 1 && ConversationLandmarks.IsMessage(items[at])
+                ? at
+                : ConversationLandmarks.Step(items, at, forward: jump == MessageJump.Next);
+        }
+        if (target >= 0)
+        {
+            ScrollItemToTop(target);
+        }
+    }
+
+    /// <summary>
+    /// Puts an item's top at the top of the view. The panel may only have estimated where it is, so once it's laid out
+    /// the view lines it up again.
+    /// </summary>
+    private void ScrollItemToTop(int index)
+    {
+        if (_panel is not { } panel)
+        {
+            return;
+        }
+        void Align(double top)
+        {
+            // The reader moved, so the conversation stops following new output (DESIGN.md §5).
+            _stickToBottom = false;
+            _readerScrolling = true;
+            var max = Math.Max(0, ConversationScroll.Extent.Height - ConversationScroll.Viewport.Height);
+            ConversationScroll.Offset = new Vector(ConversationScroll.Offset.X, Math.Clamp(top - 8, 0, max));
+        }
+        Align(PanelOrigin(panel) + panel.TopOf(index));
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (ConversationItems.ContainerFromIndex(index) is { } container && container.TranslatePoint(default, ConversationItems) is { } at)
+            {
+                Align(ConversationItems.Margin.Top + at.Y);
+            }
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
+    }
 
     /// <summary>Enter goes to the next match, Shift+Enter the one before, Esc closes the bar.</summary>
     private void OnFindKeyDown(object? sender, KeyEventArgs e)
@@ -319,6 +454,34 @@ public partial class TabView : UserControl
         if (TopLevel.GetTopLevel(this) is Window owner)
         {
             window.ShowBeside(owner);
+        }
+        else
+        {
+            window.Show();
+        }
+    }
+
+    // The tool calls open in windows of their own: opening one again brings its window to the front.
+    private readonly Dictionary<ToolUseItem, ToolCallWindow> _toolWindows = [];
+
+    /// <summary>A tool call in a window of its own, which follows it while it runs (DESIGN.md §18, "Conversation cards").</summary>
+    private void OnToolWindowRequested(ToolUseItem tool)
+    {
+        if (_toolWindows.TryGetValue(tool, out var open))
+        {
+            open.Activate();
+            return;
+        }
+        if (_tab is not { } tab)
+        {
+            return;
+        }
+        var window = new ToolCallWindow { DataContext = tab.ToolWindowFor(tool, ActualThemeVariant == ThemeVariant.Dark) };
+        _toolWindows[tool] = window;
+        window.Closed += (_, _) => _toolWindows.Remove(tool);
+        if (TopLevel.GetTopLevel(this) is Window owner)
+        {
+            window.Show(owner);
         }
         else
         {

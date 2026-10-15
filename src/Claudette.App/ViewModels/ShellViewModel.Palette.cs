@@ -84,6 +84,19 @@ public sealed partial class ShellViewModel
         if (SelectedTab is { } tab)
         {
             Command("Find in the conversation", () => tab.OpenFindCommand.Execute(null), KeyboardShortcuts.Find);
+            // DESIGN.md §18, "Conversation cards": the messages, by the keys or from here.
+            Command("Go to the first message", () => tab.JumpToMessage(MessageJump.First), KeyboardShortcuts.FirstMessage);
+            Command("Go to the latest", () => tab.JumpToMessage(MessageJump.Latest), KeyboardShortcuts.LatestMessage);
+            // DESIGN.md §18, "Split panes".
+            if (IsSplit)
+            {
+                Command("Close this pane", () => ClosePane(tab));
+                Command("Close the other panes", CloseOtherPanes);
+            }
+            if (tab.HasSubThreads || tab.ThreadHead is { HasSubThreads: true })
+            {
+                Command("Show the thread with its sub-threads", () => ShowThreadSideBySide(tab));
+            }
             if (tab.StopCommand.CanExecute(null))
             {
                 Command("Stop Claude", () => tab.StopCommand.Execute(null), KeyboardShortcuts.Stop);

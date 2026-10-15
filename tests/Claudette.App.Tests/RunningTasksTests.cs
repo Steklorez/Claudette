@@ -31,7 +31,7 @@ public class RunningTasksTests
         Assert.Equal("IconToolBash", task.IconKey);
         Assert.Equal("Start the dev server", task.Title);
         Assert.Equal("Shell command: Start the dev server\nnpm run dev\nClick to show it in the conversation.", task.Tooltip);
-        Assert.Same(tab.Items.OfType<ToolUseItem>().First(t => t.ToolUseId == "b1"), task.Tool);
+        Assert.Same(tab.Items.ToolCalls().First(t => t.ToolUseId == "b1"), task.Tool);
         Assert.True(tab.HasRunningTasks);
         Assert.Equal(1, tab.RunningTaskCount);
         Assert.Equal("1 running task", tab.RunningTasksText);
@@ -121,7 +121,7 @@ public class RunningTasksTests
         Assert.Equal(TaskKind.Monitor, task.Kind);
         Assert.Equal("IconToolMonitor", task.IconKey);
         Assert.Equal("Monitor: Watch the build log\ntail -f build.log\nClick to show it in the conversation.", task.Tooltip);
-        Assert.Equal("IconToolMonitor", tab.Items.OfType<ToolUseItem>().Single().IconKey);
+        Assert.Equal("IconToolMonitor", tab.Items.ToolCalls().Single().IconKey);
 
         h.Transport.Emit(Wire.Updated("task-m", "killed"));
         await TabTestHarness.Eventually(() => tab.Tasks.Count == 0, "the watch to end");
@@ -196,7 +196,7 @@ public class RunningTasksTests
 
         tab.ShowTaskCommand.Execute(tab.Tasks.Running[0]);
 
-        var card = group.Items.OfType<ToolUseItem>().Single();
+        var card = group.Items.ToolCalls().Single();
         Assert.Same(card, scrolledTo);
         Assert.True(group.IsExpanded);
     }

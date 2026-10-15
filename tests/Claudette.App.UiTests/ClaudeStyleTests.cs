@@ -6,6 +6,7 @@ using Path = Avalonia.Controls.Shapes.Path;
 using Avalonia.Layout;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.Themes;
@@ -39,12 +40,16 @@ public class ClaudeStyleTests
             Assert.Equal(Color.Parse("#FAF9F5"), BackgroundOf(window));
             Assert.Equal(Color.Parse("#F5F4ED"), Token(window, "SidebarBrush"));
             Assert.Equal(AppColors.ClaudeAccent, (Color)window.FindResource("SystemAccentColor")!);
+            // The cards' colors too (DESIGN.md §18, "Conversation cards"): your cards warm grey, Claude's orange.
+            Assert.Equal(Color.Parse("#B0AEA5"), Token(window, "CardYouStripeBrush"));
+            Assert.Equal(Color.Parse("#D97757"), Token(window, "CardClaudeStripeBrush"));
 
             app.RequestedThemeVariant = ThemeVariant.Dark;
             UiText.Settle(window);
 
             Assert.Equal(Color.Parse("#262624"), BackgroundOf(window));
             Assert.Equal(Color.Parse("#1F1E1D"), Token(window, "SidebarBrush"));
+            Assert.Equal(Color.Parse("#8A887F"), Token(window, "CardYouStripeBrush"));
 
             app.Colors.Apply(AppStyle.Standard);
             app.RequestedThemeVariant = ThemeVariant.Light;
@@ -52,6 +57,7 @@ public class ClaudeStyleTests
 
             Assert.Equal(systemBackground, BackgroundOf(window));
             Assert.Equal(Color.Parse("#F0F0F2"), Token(window, "SidebarBrush"));
+            Assert.Equal(Color.Parse("#E87BA4"), Token(window, "CardYouStripeBrush"));
             Assert.Equal(systemAccent, (Color)window.FindResource("SystemAccentColor")!);
         }
         finally
@@ -68,7 +74,7 @@ public class ClaudeStyleTests
         Assert.IsAssignableFrom<ISolidColorBrush>(window.FindResource(window.ActualThemeVariant, key)).Color;
 
     [AvaloniaFact]
-    public async Task The_Claude_style_puts_your_messages_in_bubbles_on_the_right_and_makes_Send_a_round_arrow()
+    public async Task The_Claude_style_rounds_the_cards_paints_yours_warm_and_makes_Send_a_round_arrow()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
@@ -78,11 +84,13 @@ public class ClaudeStyleTests
         await TabTestHarness.Eventually(() => !tab.IsWorking, "the reply");
         var window = new MainWindow { DataContext = new MainWindowViewModel(h.Services) { CurrentPage = h.Shell }, Width = 1000, Height = 700 };
         window.Show();
-        await UiText.SettleUntilAsync(window, () => Bubble(window) is not null, "the message");
+        await UiText.SettleUntilAsync(window, () => YourCard(window) is not null, "the message");
 
-        // Standard: the VS Code extension's bordered box, full width, and a Send label.
-        Assert.Equal(HorizontalAlignment.Stretch, Bubble(window)!.HorizontalAlignment);
-        Assert.Equal(new CornerRadius(8), Bubble(window)!.CornerRadius);
+        // Standard: your card in the categorical palette's magenta, full width, and a Send label (DESIGN.md §18,
+        // "Conversation cards").
+        Assert.Equal(Token(window, "CardYouStripeBrush"), Stripe(YourCard(window)!));
+        Assert.Equal(HorizontalAlignment.Stretch, YourCard(window)!.HorizontalAlignment);
+        Assert.Equal(new CornerRadius(8), YourCard(window)!.CornerRadius);
         Assert.True(SendPart<TextBlock>(window).IsEffectivelyVisible);
         Assert.False(SendPart<Path>(window).IsEffectivelyVisible);
 
@@ -90,9 +98,8 @@ public class ClaudeStyleTests
         h.Services.SaveSettings();
         UiText.Settle(window);
 
-        Assert.Equal(HorizontalAlignment.Right, Bubble(window)!.HorizontalAlignment);
-        Assert.Equal(new CornerRadius(18), Bubble(window)!.CornerRadius);
-        Assert.Equal(new Thickness(0), Bubble(window)!.BorderThickness);
+        // Claude: rounder. Its warm grey comes with the colors (The_Claude_style_repaints_the_window_the_tokens_and_the_accent…).
+        Assert.Equal(new CornerRadius(14), YourCard(window)!.CornerRadius);
         Assert.False(SendPart<TextBlock>(window).IsEffectivelyVisible);
         Assert.True(SendPart<Path>(window).IsEffectivelyVisible);
         var send = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("send"));
@@ -124,8 +131,10 @@ public class ClaudeStyleTests
         Assert.Equal(new Point(16, 16), icon.Data!.Bounds.Center);
     }
 
-    private static Border? Bubble(Window window) =>
-        window.GetVisualDescendants().OfType<Border>().FirstOrDefault(b => b.Classes.Contains("usermessage"));
+    private static Card? YourCard(Window window) =>
+        window.GetVisualDescendants().OfType<Card>().FirstOrDefault(c => c.Classes.Contains("you"));
+
+    private static Color Stripe(Card card) => Assert.IsAssignableFrom<ISolidColorBrush>(card.StripeBrush).Color;
 
     private static T SendPart<T>(Window window) where T : Control =>
         window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("send")).GetVisualDescendants().OfType<T>().Single();

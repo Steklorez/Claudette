@@ -527,18 +527,20 @@ public class SidePanelUiTests
     }
 
     [AvaloniaFact]
-    public async Task A_changed_files_letter_and_counts_and_a_tool_rows_summary_sit_on_their_names_baseline_at_any_code_size()
+    public async Task A_changed_files_letter_and_counts_and_a_tool_tiles_counts_sit_on_their_names_baseline_at_any_code_size()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var (window, row) = await ShowChangedFileAsync(h);
         var name = row.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "FileName");
         var aligned = row.GetVisualDescendants().OfType<TextBlock>().Where(t => Baseline.GetAlignWith(t) == name).ToList();
-        var tool = window.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "ToolName" && t.Text == "Edit");
+        // An Edit's tile has its counts beside its state (DESIGN.md §18, "Conversation cards").
+        var tool = window.GetVisualDescendants().OfType<TextBlock>()
+            .Single(t => t.Name == "TileState" && t.DataContext is Conversation.ToolUseItem { Name: "Edit" });
         var summary = window.GetVisualDescendants().OfType<TextBlock>().Where(t => Baseline.GetAlignWith(t) == tool && t.IsEffectivelyVisible).ToList();
 
-        // The status letter and the counts; the tool's summary and its counts.
+        // The status letter and the counts; the tile's counts.
         Assert.Equal(2, aligned.Count);
-        Assert.Equal(2, summary.Count);
+        Assert.Single(summary);
         void AllOnBaseline()
         {
             UiText.Settle(window);

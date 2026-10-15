@@ -41,7 +41,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
                 tab.OnSidePanelPagesChanged();
             }
         });
-        _services.Notifications.SelectedTabId = () => SelectedTab?.Id;
+        // Panes fold away as the window narrows, and come back as it widens (DESIGN.md §18, "Split panes").
+        Layout.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ShellLayout.MaxPanes) && _panes.Count > 1)
+            {
+                UpdatePanes();
+            }
+        };
+        _services.Notifications.ShownTabIds = () => [.. Panes.Select(t => t.Id)];
         // The worktrees open tabs work in are never cleaned up (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
         // Nor is an account an open tab runs under removed (DESIGN.md §4, "Accounts").
@@ -50,11 +58,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         IsCompact = services.Settings.Appearance.Density == Density.Compact;
         IsClaudeStyle = services.Settings.Appearance.Style == AppStyle.Claude;
         IsFullWidth = services.Settings.Appearance.FullWidthConversation;
+        IsQuietSteps = services.Settings.Appearance.QuietSteps;
         _services.SettingsChanged += (_, _) =>
         {
             IsCompact = _services.Settings.Appearance.Density == Density.Compact;
             IsClaudeStyle = _services.Settings.Appearance.Style == AppStyle.Claude;
             IsFullWidth = _services.Settings.Appearance.FullWidthConversation;
+            IsQuietSteps = _services.Settings.Appearance.QuietSteps;
             foreach (var tab in AllTabs)
             {
                 tab.OnSettingsChanged();
@@ -217,6 +227,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     partial void OnSelectedTabChanged(TabViewModel? oldValue, TabViewModel? newValue)
     {
+        // On screen first, so a tab takes the focus already showing (DESIGN.md §18, "Split panes").
+        PlaceSelected(oldValue, newValue);
+        UpdatePanes();
         if (oldValue is not null)
         {
             oldValue.IsSelected = false;
@@ -292,7 +305,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
                 tab.MarkFolderMissing();
             }
         }
+        RestorePanes(snapshot is null ? state.PaneTabIds : snapshot.PaneTabIds);
         SelectedTab = AllTabs.FirstOrDefault(t => t.Id == (snapshot?.SelectedTabId ?? state.SelectedTabId)) ?? AllTabs.FirstOrDefault();
+        UpdatePanes();
         SaveTabs();
         foreach (var tab in AllTabs.Where(t => snapshot?.RunningTabIds.Contains(t.Id) == true))
         {
@@ -566,10 +581,21 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             UpdateGroupLabels();
             OnPropertyChanged(nameof(HasTabs));
         }
+        // A pane closes with its tab; the one beside it takes the focus if it had it (DESIGN.md §18, "Split panes").
+        var pane = _panes.IndexOf(tab);
+        if (pane >= 0)
+        {
+            _panes.RemoveAt(pane);
+        }
         if (SelectedTab == tab)
         {
             var remaining = AllTabs.ToList();
-            SelectedTab = remaining.Count == 0 ? null : remaining[Math.Clamp(index, 0, remaining.Count - 1)];
+            SelectedTab = _panes.Count > 0 ? _panes[Math.Min(pane, _panes.Count - 1)]
+                : remaining.Count == 0 ? null : remaining[Math.Clamp(index, 0, remaining.Count - 1)];
+        }
+        else if (pane >= 0)
+        {
+            UpdatePanes();
         }
         SaveTabs();
         OnTabStatusChanged();
@@ -818,6 +844,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     {
         Tabs = AllTabs.Select(t => t.State).ToList(),
         SelectedTabId = SelectedTab?.Id,
+        PaneTabIds = _panes.Count > 1 ? [.. _panes.Select(t => t.Id)] : null,
         Drafts = AllTabs.Where(t => t.Draft is not null).ToDictionary(t => t.Id, t => t.Draft!),
         RunningTabIds = AllTabs.Where(t => t.IsProcessRunning).Select(t => t.Id).ToList(),
         InterruptedTabIds = AllTabs.Where(t => t.IsInTurn).Select(t => t.Id).ToList(),
@@ -831,8 +858,11 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     {
         var tabs = AllTabs.ToArray();
         var selected = _services.State.SelectedTabId;
+        var panes = _services.State.PaneTabIds;
+        _panes.Clear();
         SelectedTab = null;
         _services.State.SelectedTabId = selected;
+        _services.State.PaneTabIds = panes;
         Groups.Clear();
         OpenTabs.Clear();
         OnPropertyChanged(nameof(HasTabs));
@@ -850,8 +880,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>
     /// Settings → Appearance → Style is Claude (DESIGN.md §3, "Visual style"): the view takes the <c>claude</c> class,
-    /// whose styles give the conversation the Claude apps' shapes: your messages in bubbles, a rounded composer with a
-    /// round send button, rounder code blocks and cards. The colors and the replies' serif are app-wide resources.
+    /// whose styles give the conversation the Claude apps' shapes: rounder cards and code blocks, a rounded composer with
+    /// a round send button. The colors and the replies' serif are app-wide resources.
     /// </summary>
     [ObservableProperty]
     public partial bool IsClaudeStyle { get; private set; }
@@ -862,6 +892,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// </summary>
     [ObservableProperty]
     public partial bool IsFullWidth { get; private set; }
+
+    /// <summary>
+    /// Settings → Appearance → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): the view takes the
+    /// <c>quietsteps</c> class, whose styles draw the cards of steps on the way without their tint and outline.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsQuietSteps { get; private set; }
 
     // ---- Sidebar and side panel (DESIGN.md §3, §4, "Sidebar") -------------------------------------------------
 

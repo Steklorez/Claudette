@@ -23,11 +23,14 @@
 [button] Project tools: work
 [button] History
 [button] Settings
-"Found two problems in Parser.cs."
-"12:00"
+"Claude"
 [button] Copy message
 [button] Add to scratch pad
 [button] Show as the plan
+"12:00"
+"Found two problems in Parser.cs."
+"Turn"
+"12:00"
 "Opus"
 [field] "Message Claude…  (Enter to send, Shift+Enter for a new line, Esc to stop)"
 [button] Attach a file
@@ -37,6 +40,7 @@
 [button] Manual ▾
 [button] Files (0)
 [button] Context 1%
+"Cache 60m"
 [button] 120 tok
 [button] ⓘ
 [button] Send

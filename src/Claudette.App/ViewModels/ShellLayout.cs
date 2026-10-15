@@ -52,20 +52,29 @@ public sealed partial class ShellLayout : ViewModelBase
 
     /// <summary>Whether the sidebar shows only its rail.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSidebarExpanded), nameof(SidebarDisplayWidth))]
+    [NotifyPropertyChangedFor(nameof(IsSidebarExpanded), nameof(SidebarDisplayWidth), nameof(MaxPanes))]
     public partial bool IsSidebarCollapsed { get; set; }
 
     public bool IsSidebarExpanded => !IsSidebarCollapsed;
 
     /// <summary>The expanded sidebar's width, as the user dragged it.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SidebarDisplayWidth))]
+    [NotifyPropertyChangedFor(nameof(SidebarDisplayWidth), nameof(MaxPanes))]
     public partial double SidebarWidth { get; set; }
 
     /// <summary>Whether the selected tab shows its side panel, which the sidebar leaves the least width for.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SidebarDisplayWidth))]
+    [NotifyPropertyChangedFor(nameof(SidebarDisplayWidth), nameof(MaxPanes))]
     public partial bool IsSidePanelShown { get; set; }
+
+    /// <summary>
+    /// How many tabs fit side by side (DESIGN.md §18, "Split panes"): each pane keeps <see cref="MinConversationWidth"/>
+    /// beside the sidebar as it shows and, while the focused tab shows its side panel, the side panel's least. Panes past
+    /// that fold away first, and come back as the window widens.
+    /// </summary>
+    public int MaxPanes =>
+        double.IsInfinity(_availableWidth) ? ShellViewModel.MostPanes
+        : Math.Clamp((int)((_availableWidth - SidebarDisplayWidth - (IsSidePanelShown ? MinSidePanelWidth : 0)) / MinConversationWidth), 1, ShellViewModel.MostPanes);
 
     /// <summary>The sidebar as shown: the rail, or the width the user dragged as far as there's room for it.</summary>
     public double SidebarDisplayWidth => IsSidebarCollapsed ? RailWidth : Math.Min(SidebarWidth, SidebarRoom);
@@ -95,6 +104,7 @@ public sealed partial class ShellLayout : ViewModelBase
     {
         _availableWidth = width;
         OnPropertyChanged(nameof(SidebarDisplayWidth));
+        OnPropertyChanged(nameof(MaxPanes));
         var narrow = width < NarrowWidth;
         if (narrow == _isNarrow)
         {

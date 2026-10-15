@@ -27,6 +27,13 @@ public sealed record SystemInitMessage(
 
     /// <summary>How many MCP servers the session has (<c>mcp_servers</c>), whether they connected or not.</summary>
     public int McpServerCount => Raw.GetArray("mcp_servers")?.Count ?? 0;
+
+    /// <summary>
+    /// Where the API key for the session's requests comes from (<c>apiKeySource</c>): <c>ANTHROPIC_API_KEY</c>,
+    /// <c>apiKeyHelper</c>, <c>/login managed key</c>, or <c>none</c> for a claude.ai sign-in, a bearer token or a cloud
+    /// provider. Null when Claude Code doesn't say.
+    /// </summary>
+    public string? ApiKeySource => Raw.GetString("apiKeySource");
 }
 
 /// <summary>
@@ -73,6 +80,12 @@ public sealed record AssistantMessage(
     /// an ordinary reply.
     /// </summary>
     public string? ResumeReason => Raw.GetString("resume_reason");
+
+    /// <summary>
+    /// What the call wrote to the prompt cache at each lifetime (<c>message.usage.cache_creation</c>), when its usage
+    /// says (DESIGN.md §6, "Prompt cache"). Repeated on each message of the call, like the rest of its usage.
+    /// </summary>
+    public PromptCacheWrites? CacheWrites => PromptCacheWrites.From(Raw.GetObject("message")?.GetObject("usage"));
 }
 
 /// <summary>
@@ -161,6 +174,12 @@ public sealed record ResultMessage(
     public double? DurationMs => Raw.GetDouble("duration_ms");
 
     public int? NumTurns => Raw.GetDouble("num_turns") is { } turns ? (int)turns : null;
+
+    /// <summary>
+    /// What the turn wrote to the prompt cache at each lifetime (<c>usage.cache_creation</c>; DESIGN.md §6, "Prompt
+    /// cache"). Null when its usage doesn't say.
+    /// </summary>
+    public PromptCacheWrites? CacheWrites => PromptCacheWrites.From(Usage);
 }
 
 public sealed record RateLimitEventMessage(JsonObject Info, JsonObject Raw) : ClaudeMessage("rate_limit_event", Raw);

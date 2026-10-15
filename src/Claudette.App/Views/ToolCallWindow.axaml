@@ -1,0 +1,167 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Claudette.App.ViewModels"
+        xmlns:conv="using:Claudette.App.Conversation"
+        xmlns:controls="using:Claudette.App.Controls"
+        x:Class="Claudette.App.Views.ToolCallWindow"
+        x:DataType="vm:ToolCallWindowViewModel"
+        Title="{Binding Title}"
+        Width="900" Height="640" MinWidth="480" MinHeight="300"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="ListBox.lines">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+    <Style Selector="ListBox.lines ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="ListBox.lines ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.lines ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.diffline.added">
+      <Setter Property="Background" Value="{DynamicResource DiffAddedBrush}" />
+    </Style>
+    <Style Selector="Border.diffline.removed">
+      <Setter Property="Background" Value="{DynamicResource DiffRemovedBrush}" />
+    </Style>
+    <Style Selector="Border.diffline.hunk">
+      <Setter Property="Background" Value="{DynamicResource DiffHunkBrush}" />
+    </Style>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,4,0,2" />
+    </Style>
+    <Style Selector="Border.codeblock">
+      <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="8,6" />
+    </Style>
+  </Window.Styles>
+
+  <!-- DESIGN.md §18, "Conversation cards": a tool call in a window that follows it -->
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Padding="14,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+        <Path Classes="toolicon" Data="{Binding Tool.IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" Margin="0,0,8,0" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                   ToolTip.Tip="{Binding Tool.FullSummary}" />
+        <Button Grid.Column="2" Content="Open diff" Command="{Binding OpenDiffCommand}" IsVisible="{Binding CanOpenDiff}"
+                ToolTip.Tip="The file in the diff view, from before Claude's first change in this session to now" />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <TextBlock Classes="status small" Classes.busy="{Binding !Tool.IsComplete}" Classes.ok="{Binding Tool.IsComplete}" Classes.failed="{Binding Tool.IsError}"
+                     Text="●" VerticalAlignment="Center" />
+          <TextBlock Classes="small" Classes.muted="{Binding !Tool.IsError}" Classes.error="{Binding Tool.IsError}" Text="{Binding StatusLine}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted small" Text="{Binding Tool.TimeTip}" IsVisible="{Binding Tool.HasTime}" VerticalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <TabControl Padding="14,8">
+      <TabItem Header="Call">
+        <Panel>
+          <!-- Bash: the command, then its output, as it comes when the command ends -->
+          <DockPanel IsVisible="{Binding IsCommand}">
+            <Border DockPanel.Dock="Top" Classes="codeblock" Margin="0,0,0,8">
+              <SelectableTextBlock Classes="mono" Text="{Binding Tool.Command, StringFormat='$ {0}'}" TextWrapping="Wrap" />
+            </Border>
+            <TextBlock DockPanel.Dock="Top" Classes="muted small" Text="{Binding Tool.ResultSummary}" IsVisible="{Binding Tool.HasResultSummary}" Margin="0,0,0,6" />
+            <TextBlock DockPanel.Dock="Top" Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding !Tool.IsComplete}"
+                       Text="Claude Code sends a command's output when it ends. It shows here then." />
+            <ScrollViewer HorizontalScrollBarVisibility="Auto">
+              <SelectableTextBlock Classes="mono small" Text="{Binding Tool.Output}" />
+            </ScrollViewer>
+          </DockPanel>
+
+          <!-- Read: the file as Claude read it -->
+          <ListBox Classes="lines" ItemsSource="{Binding FileLines}" IsVisible="{Binding IsFile}">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="vm:CodeLine">
+                <Grid ColumnDefinitions="56,*" Margin="0,0,8,0">
+                  <TextBlock Classes="mono muted small" Text="{Binding Number}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                  <controls:ScrollingLine Grid.Column="1">
+                    <controls:ColoredTextBlock Classes="mono" Code="{Binding Text}" Runs="{Binding Runs}" />
+                  </controls:ScrollingLine>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <!-- Edit, Write: the change this call made -->
+          <ScrollViewer IsVisible="{Binding IsDiff}" HorizontalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Tool.Diff.Lines, FallbackValue={x:Null}}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="conv:DiffLine">
+                  <Border Classes="diffline" Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsRemoved}" Classes.hunk="{Binding IsHunk}" Padding="6,0">
+                    <Grid ColumnDefinitions="44,44,14,*">
+                      <TextBlock Classes="mono muted small" Text="{Binding OldNumberText}" HorizontalAlignment="Right" Margin="0,0,6,0" />
+                      <TextBlock Grid.Column="1" Classes="mono muted small" Text="{Binding NewNumberText}" HorizontalAlignment="Right" Margin="0,0,6,0" />
+                      <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Marker}" />
+                      <SelectableTextBlock Grid.Column="3" Classes="mono" Text="{Binding Text}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <!-- Grep, Glob: what it found, file by file -->
+          <ScrollViewer IsVisible="{Binding IsSearch}" HorizontalScrollBarVisibility="Auto">
+            <StackPanel Spacing="8">
+              <ItemsControl ItemsSource="{Binding SearchFiles}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="vm:SearchFile">
+                    <StackPanel Margin="0,0,0,6">
+                      <SelectableTextBlock Classes="mono small" FontWeight="SemiBold" Text="{Binding Path}" />
+                      <ItemsControl ItemsSource="{Binding Matches}" IsVisible="{Binding HasMatches}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="vm:SearchMatch">
+                            <Grid ColumnDefinitions="56,*">
+                              <TextBlock Classes="mono muted small" Text="{Binding Number}" HorizontalAlignment="Right" Margin="0,0,12,0" />
+                              <SelectableTextBlock Grid.Column="1" Classes="mono small" Text="{Binding Text}" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <SelectableTextBlock Classes="mono small" Text="{Binding ResultText}" IsVisible="{Binding ShowsSearchText}" />
+            </StackPanel>
+          </ScrollViewer>
+
+          <!-- Any other tool: what it was given and what it returned -->
+          <ScrollViewer IsVisible="{Binding IsOther}" HorizontalScrollBarVisibility="Auto">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="section small" Text="Arguments" />
+              <SelectableTextBlock Classes="mono small" Text="{Binding InputText}" />
+              <TextBlock Classes="section small" Text="Result" IsVisible="{Binding HasResultText}" />
+              <SelectableTextBlock Classes="mono small" Text="{Binding ResultText}" TextWrapping="Wrap" IsVisible="{Binding HasResultText}" />
+            </StackPanel>
+          </ScrollViewer>
+        </Panel>
+      </TabItem>
+      <!-- The call as the tool received it and what it returned -->
+      <TabItem Header="Details">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="section small" Text="Arguments" />
+            <SelectableTextBlock Classes="mono small" Text="{Binding InputText}" />
+            <TextBlock Classes="section small" Text="Result" IsVisible="{Binding HasResultText}" />
+            <SelectableTextBlock Classes="mono small" Text="{Binding ResultText}" IsVisible="{Binding HasResultText}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</Window>

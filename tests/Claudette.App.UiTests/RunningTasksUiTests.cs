@@ -79,7 +79,7 @@ public class RunningTasksUiTests
         row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         UiText.Settle(window);
         Assert.False(flyout.IsOpen);
-        Assert.True(tab.Items.OfType<ToolUseItem>().Single(t => t.ToolUseId == "b1").IsExpanded);
+        Assert.True(tab.Items.ToolCalls().Single(t => t.ToolUseId == "b1").IsExpanded);
 
         // The last one ending takes the chip away.
         foreach (var id in new[] { "task-1", "task-m", "task-bg" })

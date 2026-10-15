@@ -35,7 +35,7 @@ public sealed partial class TabViewModel
     /// on (DESIGN.md §3).
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SidePanelToggleText))]
+    [NotifyPropertyChangedFor(nameof(SidePanelToggleText), nameof(ShowsSidePanel))]
     public partial bool IsSidePanelOpen { get; set; }
 
     /// <summary>The header's side panel button: its tip and name.</summary>
@@ -273,13 +273,7 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>Every reply in the conversation, subagents' groups' too.</summary>
-    private static IEnumerable<AssistantTextItem> Replies(IEnumerable<ConversationItem> items) =>
-        items.SelectMany<ConversationItem, AssistantTextItem>(item => item switch
-        {
-            AssistantTextItem reply => [reply],
-            SubagentItem group => Replies(group.Items),
-            _ => [],
-        });
+    private static IEnumerable<AssistantTextItem> Replies(IEnumerable<ConversationItem> items) => items.Descendants().OfType<AssistantTextItem>();
 
     /// <summary>Opens the side panel on the Project page: <b>Show output…</b>, a run's entry, or its notification.</summary>
     private void OpenProjectPage()

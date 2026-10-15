@@ -26,7 +26,7 @@ public sealed partial class TabViewModel
             _services.Random,
             () => _services.Settings.Appearance.ShowToolInWorkingLine,
             () => _services.ReduceMotion);
-        line.SetShown(IsSelected);
+        line.SetShown(IsShown);
         return line;
     }
 
@@ -90,6 +90,8 @@ public sealed partial class TabViewModel
         }
         OnPropertyChanged(nameof(IsWorkingLineShown));
         TellMascot();
+        // The prompt cache's chip hides while a turn runs (DESIGN.md §6, "Prompt cache").
+        RefreshPromptCache();
     }
 
     /// <summary>

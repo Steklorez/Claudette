@@ -44,8 +44,8 @@ public sealed class ToolImageRealCliTests
         await tab.SendCommand.ExecuteAsync(null);
 
         await Claudette.Tests.Waiting.UntilAsync(
-            () => InlineDispatcher.Read(() => tab.Items.OfType<ToolUseItem>().Any(t => t is { Name: "Read", IsComplete: true })), "the Read's result", TimeSpan.FromSeconds(60));
-        var card = InlineDispatcher.Read(() => tab.Items.OfType<ToolUseItem>().Single(t => t.Name == "Read"));
+            () => InlineDispatcher.Read(() => tab.Items.ToolCalls().Any(t => t is { Name: "Read", IsComplete: true })), "the Read's result", TimeSpan.FromSeconds(60));
+        var card = InlineDispatcher.Read(() => tab.Items.ToolCalls().Single(t => t.Name == "Read"));
         Assert.False(card.IsError, card.ResultSummary);
         var image = Assert.Single(card.Images);
         Assert.Equal(("pixel.png", path), (image.Name, image.FilePath));

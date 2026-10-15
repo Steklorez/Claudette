@@ -319,7 +319,7 @@ public enum AppStyle
     /// <summary>Claudette's own look, after Claude Code's VS Code extension: neutral greys and the OS's accent color.</summary>
     Standard,
 
-    /// <summary>The Claude apps' look: ivory and warm greys, Claude's orange, message bubbles and serif replies.</summary>
+    /// <summary>The Claude apps' look: ivory and warm greys, Claude's orange, rounder cards and serif replies.</summary>
     Claude,
 }
 
@@ -347,6 +347,12 @@ public sealed class AppearanceSettings
 
     /// <summary>The working line says what the running tool is doing, such as "Running dotnet test…".</summary>
     public bool ShowToolInWorkingLine { get; set; } = true;
+
+    /// <summary>
+    /// The composer's bar shows how long the tab's prompt cache has left, such as "Cache 52m" (DESIGN.md §6, "Prompt
+    /// cache"). On by default.
+    /// </summary>
+    public bool ShowPromptCacheExpiry { get; set; } = true;
 
     /// <summary>A small ring on each tab's row showing how full its context is (DESIGN.md §4, "Sidebar").</summary>
     public bool ShowContextOnTabs { get; set; } = true;
@@ -389,6 +395,13 @@ public sealed class AppearanceSettings
     /// (DESIGN.md §14). Off by default.
     /// </summary>
     public bool FullWidthConversation { get; set; }
+
+    /// <summary>
+    /// The conversation's steps on the way (tool calls, thinking, hook runs, notes and the replies Claude carried on
+    /// after) lose their cards' tint and outline until they're pointed at (DESIGN.md §18, "Conversation cards"). On by
+    /// default.
+    /// </summary>
+    public bool QuietSteps { get; set; } = true;
 
     /// <summary>Settings → Appearance → Motion (DESIGN.md §3, "Accessibility").</summary>
     public MotionSetting Motion { get; set; } = MotionSetting.System;

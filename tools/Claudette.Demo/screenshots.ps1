@@ -9,7 +9,7 @@ For Standard and Claude, dark and light: makes the demo content afresh, starts t
 icon, opens the Grappling hook tab's Changed files, and captures the window as <style>-<theme>.png, and Claudette standing on
 the composer, close up, as claudette-<style>-<theme>.png (the demo runs with motion reduced, so she stands still at the
 composer's right rather than being caught part-way through falling off it). Then it:
-- opens the diff of StarfallCharacter.cpp from an Edit card and captures that window as diff-<style>-<theme>.png;
+- opens the diff of StarfallCharacter.cpp from an Edit's tile and captures that window as diff-<style>-<theme>.png;
 - selects the Move to the Input System thread, opens its side panel on Tasks and captures the window as
   tasks-<style>-<theme>.png, then on Agents, with the first subagent selected, as agents-<style>-<theme>.png;
 - expands the usage header and captures the top of the window as header-<style>-<theme>.png;
@@ -185,26 +185,6 @@ function Invoke-Element($element, [string] $what) {
     throw "Nothing to click around '$what'."
 }
 
-# Clicks the control named $button on the same row as the first text named $row that has one, such as an Edit card's
-# Open diff: which of those buttons is which depends on what the conversation has scrolled into view.
-function Invoke-OnRow([IntPtr] $hwnd, [string] $row, [string] $button) {
-    $root = [System.Windows.Automation.AutomationElement]::FromHandle($hwnd)
-    $named = { param($name) $root.FindAll([System.Windows.Automation.TreeScope]::Descendants,
-        (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, $name))) }
-    $buttons = & $named $button
-    foreach ($text in & $named $row) {
-        $line = $text.Current.BoundingRectangle
-        foreach ($candidate in $buttons) {
-            $box = $candidate.Current.BoundingRectangle
-            if ([Math]::Abs(($box.Top + $box.Bottom) / 2 - ($line.Top + $line.Bottom) / 2) -lt $line.Height) {
-                Invoke-Element $candidate $button
-                return
-            }
-        }
-    }
-    throw "No '$button' on a row with '$row'."
-}
-
 # Selects the item at $index (from 0) of the tree named $tree, such as a node of the agent map.
 function Select-TreeItem([IntPtr] $hwnd, [string] $tree, [int] $index) {
     $type = { param($t) New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::ControlTypeProperty, $t) }
@@ -268,7 +248,10 @@ foreach ($style in 'standard', 'claude') {
             [WindowShot]::SaveRegion($window, (Join-Path $Out "claudette-$style-$theme.png"), [int] ($send.Right - 616 * $scale),
                 [int] ($send.Top - 150 * $scale), [int] ($send.Right + 24 * $scale), [int] ($send.Bottom + 34 * $scale))
 
-            Invoke-OnRow $window (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp') 'Open diff'
+            # An Edit's tile opens its detail, which has Open in the diff view.
+            Invoke-ByText $window ('Edit ' + (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp'))
+            Start-Sleep -Seconds 1
+            Invoke-ByText $window 'Open in the diff view'
             Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } 'the diff view' 20
             $diff = [WindowShot]::OtherWindow($claudette.Id, $window)
             [WindowShot]::Resize($diff, 1000, 470)
