@@ -48,6 +48,8 @@ public sealed record StartupFailure(string Reason, string Errors)
         "worktree_unverified" => "Claude Code couldn't check this session's worktree just now. Restarting the tab may work.",
         "cli_version_too_old" => "This Claude Code is older than Anthropic allows. Update it (Settings → Claude Code), then restart the tab.",
         "bypass_root" => "Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings…, then restart the tab.",
+        "org_config_required_unavailable" => "Your organization's policy and settings, which it requires before a session starts, couldn't be loaded. Check the network or proxy, then restart the tab.",
+        "org_config_refused" => "Anthropic refused your organization's policy and settings for this sign-in: it expired or was revoked, or your organization doesn't allow Claude Code for this account. Sign in again, or ask an admin.",
         _ => null,
     };
 

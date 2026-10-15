@@ -235,7 +235,7 @@ In both styles, text in a different font or size beside other text sits on its b
   - Needs input: a permission prompt or question is waiting (highlighted, so it stands out from any tab)
   - Finished while in the background (unread dot)
   - Error or process exited. The tab's row and info card say what went wrong: the last line Claude Code wrote to its error output, or why it couldn't start.
-  - **Why it couldn't start.** Every `claude` starts with `CLAUDE_CODE_STARTUP_FAILURE_RESULTS=1`, so a start Claude Code refuses ends with a result that says why (`startup_failure_reason`, with its error text), not only a line of error output. The tab puts each reason in words with what to do: an organization's settings that don't allow the sign-in or provider, a proxy setting that isn't a URL, Git for Windows missing, a Claude Code too old to run, Bypass mode while running as root, a conversation held by a background session, and so on, followed by what Claude Code said. A folder Claude Code can't use offers **Choose folder…**, as a missing folder does ([§9](#restore-on-launch)). A reason Claudette doesn't know shows Claude Code's own text.
+  - **Why it couldn't start.** Every `claude` starts with `CLAUDE_CODE_STARTUP_FAILURE_RESULTS=1`, so a start Claude Code refuses ends with a result that says why (`startup_failure_reason`, with its error text), not only a line of error output. The tab puts each reason in words with what to do: an organization's settings that don't allow the sign-in or provider, or that it requires and that couldn't be loaded or were refused, a proxy setting that isn't a URL, Git for Windows missing, a Claude Code too old to run, Bypass mode while running as root, a conversation held by a background session, and so on, followed by what Claude Code said. A folder Claude Code can't use offers **Choose folder…**, as a missing folder does ([§9](#restore-on-launch)). A reason Claudette doesn't know shows Claude Code's own text.
 - **Model and effort** are easy to see for every tab. The second line of the tab's row shows them (for example `Opus · High`), and the composer bar shows the same thing in full for the selected tab. See [Model & effort](#model--effort).
 - **Tab info card.** Hovering a tab shows a card with the tab's details. It's the one place features add per-tab information, rather than putting it in the tab name. It shows:
   - The full folder path and git branch.
@@ -1456,7 +1456,7 @@ Claudette can host the Claude Code session that works on Claudette's own source.
   - The message typed in each tab, with its one-off suffixes and attached images.
   - The selected tab, and the window's position and size.
   - Tabs whose Claude Code was running start again straight away and resume their sessions. The others start when selected, as on launch.
-  - A tab that was in a turn carries it on. The restart stops its Claude Code without interrupting the turn, so the transcript ends in it, and the tab starts again with `CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1`: Claude Code re-runs the turn by itself, and the conversation says *"Carrying on with the turn the restart cut off."* (the re-run's messages carry `resume_reason`). Only once, and only within 10 minutes (`CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS`, as long as a snapshot lasts), so a restart taken back a day later after an update doesn't re-run a stale prompt. This is the one time Claude Code works without being asked: only for a restart Claudette made.
+  - A tab that was in a turn carries it on. The restart stops its Claude Code without interrupting the turn, so the transcript ends in it, and the tab starts again with `CLAUDE_CODE_RESUME_INTERRUPTED_TURN=1`: Claude Code re-runs the turn by itself, and the conversation says *"Carrying on with the turn the restart cut off."* (the re-run's messages carry `resume_reason`, which by 2.1.300 also marks a turn Claude Code goes on with from its tool calls or a permission prompt rather than running again; the note fits both). Only once, and only within 10 minutes (`CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS`, as long as a snapshot lasts), so a restart taken back a day later after an update doesn't re-run a stale prompt. This is the one time Claude Code works without being asked: only for a restart Claudette made.
   - Processes the tabs started are stopped, as when Claudette closes ([Process monitor](#process-monitor)).
 - **The handover:**
   1. The running build copies the new one and writes a snapshot of the above to `restart.json` in the data folder. It saves its state, then stops every tab as closing does, and from then on writes no settings or state.
@@ -1699,7 +1699,7 @@ claude -p --input-format stream-json --output-format stream-json --verbose
 - `account`: `email`, `organization`, `subscriptionType` and `tokenSource`.
 - Also `current_permission_mode`, `agents`, output styles and `pid`.
 
-The `system/init` message that follows gives `session_id`, `model`, `permissionMode`, `claude_code_version` and `capabilities`. In 2.1.284 the capabilities were `interrupt_receipt_v1`, `interrupt_cancel_queued_v1`, `msg_lifecycle_v1`, `mcp_read_resource_v1` and `mcp_tool_ui_meta_v1`. 2.1.285 can add `third_party_notification_caution`, which goes with the notifications a cloud session queues for Claude, and 2.1.286 lists `sdk_mcp_tools_list_changed`, `sdk_mcp_manifests` and `ui_surface_v1`; Claudette uses none of them.
+The `system/init` message that follows gives `session_id`, `model`, `permissionMode`, `claude_code_version` and `capabilities`. In 2.1.284 the capabilities were `interrupt_receipt_v1`, `interrupt_cancel_queued_v1`, `msg_lifecycle_v1`, `mcp_read_resource_v1` and `mcp_tool_ui_meta_v1`. 2.1.285 can add `third_party_notification_caution`, which goes with the notifications a cloud session queues for Claude, 2.1.286 lists `sdk_mcp_tools_list_changed`, `sdk_mcp_manifests` and `ui_surface_v1`, and 2.1.300 adds `interrupt_send_now_v1` and `request_marker_lists_v1`; Claudette uses none of them.
 
 **Wire format.** Every control message is one JSON line:
 
@@ -2019,7 +2019,7 @@ The spike's Node scripts (a mock Messages API, a stream-json driver and the scen
 | Piece | Location |
 |---|---|
 | Fake transport and replay transport | `tests/Claudette.Core.Tests/Support/` |
-| Protocol fixtures | `tests/Claudette.Core.Tests/Fixtures/protocol/2.1.284/`: `01`–`06` and `signed-out` from the spikes, `07`–`11` from `ProtocolRecordingTests`, and `12-subagents` recorded from the mock's `SUBAGENTS`. A later version's folder (`2.1.285/`, `2.1.286/`) holds `07`–`11` recorded again when its compatibility report is handled; the parsing and Diagnostics tests read every version's |
+| Protocol fixtures | `tests/Claudette.Core.Tests/Fixtures/protocol/2.1.284/`: `01`–`06` and `signed-out` from the spikes, `07`–`11` from `ProtocolRecordingTests`, and `12-subagents` recorded from the mock's `SUBAGENTS`. A later version's folder (`2.1.285/`, `2.1.286/`, `2.1.300/`) holds `07`–`11` recorded again when its compatibility report is handled; the parsing and Diagnostics tests read every version's |
 | Record mode | `tools/Claudette.Fixtures/` (`ProtocolFixtureWriter`: a protocol log to a cleaned fixture), used by `ProtocolRecordingTests` and `LiveTests` |
 | `fake-claude` | `tools/Claudette.FakeClaude/`. Scripted by the prompt (`ASK_PERMISSION`, `SLOW`, `CRASH`, `SPAWN`, `SILENT`, `HANG`, `AUTH_FAIL`, `LIMIT`, `RUN_BASH`, `SUBAGENTS`) and by environment variables, rather than scenario files; see the header of its `Program.cs`. Its sign-in (`auth login`, `auth logout`, the sign-in control requests) is kept in a file in `CLAUDE_CONFIG_DIR`, so a sign-in sticks. Its reply to a message with images names their media types. |
 | Mock Messages API | `tools/Claudette.MockApi/`. Runs in-process in tests, or on its own with `dotnet run`. |
@@ -2108,15 +2108,23 @@ The report for 2.1.286 matched 51 changes. What it changed:
 - A policy turning Remote Control off now disconnects the session, with `worker_shutting_down` and the reason `remote_control_disabled`. The tab says Remote Control isn't available, and no tab tries again until Claudette restarts or another account signs in.
 - The recorded scenarios (`07`–`11`, in `2.1.286/`) are otherwise the same. In them 2.1.286 sent no `autocompact_state`, `rate_limit_event`, `active_goal` or `commands_changed`, `result` lost 2.1.285's timing fields, and `system/init` gained `memory_paths` and the capabilities `sdk_mcp_tools_list_changed`, `sdk_mcp_manifests` and `ui_surface_v1`. Claudette needs none of them. The subagent hand-back frame, `api_retry`'s attempt counts and the real-CLI tests are unchanged.
 
+The report for 2.1.300 (#48) matched 113 changes across fourteen releases, nearly all docs rewording and fixes. What it changed:
+
+- Two new startup failures, `org_config_required_unavailable` and `org_config_refused` (an organization's required policy that couldn't be loaded, or was refused for the sign-in), are put in words like the others ([§4](#4-tabs--sessions), "Why it couldn't start").
+- `resume_reason` also marks a turn Claude Code goes on with after a restart, from its tool calls or a permission prompt, not only one it runs again. The note Claudette adds fits both.
+- New fields Claudette doesn't read, now known to Diagnostics: `run_id` on task messages (one per run of a task; a resumed subagent keeps its `task_id`), `parent_task_id` on `task_started`, `agent_id` on a subagent's `assistant` and `user` messages, `api_message_id` on every `stream_event` and `safety_stops` on `result`. The `initialize` response adds `claude_code_version`, and `system/init` the capabilities `interrupt_send_now_v1` and `request_marker_lists_v1`.
+- In the recorded scenarios (`07`–`11`, in `2.1.300/`), an interrupted reply now ends with its `content_block_stop`, `message_delta` and `message_stop`, after the assistant message; Claudette reads only the deltas from stream events, so nothing changes. The real-CLI tests pass against 2.1.300.
+- Not used yet: the `get_task_output` control request (the last 8 KiB of a background shell's or Monitor's output), `tool_use_result`'s `{ detachedToolCall: true }` for a WebFetch or WebSearch that steps aside for a message sent with priority `now` (Claudette doesn't send one), and `claude project purge`, now `claude purge`.
+
 ### Tested versions
 
 - Claudette records two versions:
   - `ClaudeLocator.MinimumVersion` (`minimum` in `compat/surface.yaml`): the hard floor from [§12](#applying-it).
   - `ClaudeLocator.LastTestedVersion` (`lastTested`): updated each time a compatibility report is handled.
-- A version newer than the last tested one is allowed. Settings → Claude Code shows a quiet note, *"Newer than the last tested version (2.1.286)"*, and nothing more intrusive.
+- A version newer than the last tested one is allowed. Settings → Claude Code shows a quiet note, *"Newer than the last tested version (2.1.300)"*, and nothing more intrusive.
 - A version older than the last tested one, but not older than the minimum, is supported too, with a nudge to update and nothing that blocks:
-  - Settings → Claude Code adds *"Older than the last tested version (2.1.286); updating is recommended"*.
-  - When the update badge offers a newer version ([§12](#applying-it)), its dialog adds *"Claudette was last tested with 2.1.286."*
+  - Settings → Claude Code adds *"Older than the last tested version (2.1.300); updating is recommended"*.
+  - When the update badge offers a newer version ([§12](#applying-it)), its dialog adds *"Claudette was last tested with 2.1.300."*
   - Only the minimum is required. It goes up only when Claudette starts relying on something a newer version adds, not with each compatibility report.
 
 ### Staying tolerant at runtime

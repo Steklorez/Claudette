@@ -76,8 +76,8 @@ public sealed record AssistantMessage(
     public string? Uuid => Raw.GetString("uuid");
 
     /// <summary>
-    /// Why Claude Code is running this turn again, such as <c>interrupted_turn</c> after a restart cut it off; null for
-    /// an ordinary reply.
+    /// Why this turn carries on one a restart cut off, such as <c>interrupted_turn</c>: Claude Code runs it again, or
+    /// (by 2.1.300) goes on from its tool calls or the permission prompt it took over. Null for an ordinary reply.
     /// </summary>
     public string? ResumeReason => Raw.GetString("resume_reason");
 
