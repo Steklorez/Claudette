@@ -38,6 +38,13 @@ public sealed partial class WorkingLine(
     /// <summary>The glyph when the fun is off, or motion is reduced: still, in the same place.</summary>
     public const string StillGlyph = "✻";
 
+    /// <summary>
+    /// Every glyph on one line, drawn unseen behind the glyph so the line is as tall as its tallest frame. The frames come
+    /// from different fonts (· from the interface font, the stars from a symbol font), so the glyph on its own made the
+    /// line grow and shrink as it twinkled, and the conversation above it with it.
+    /// </summary>
+    public static readonly string AllFrames = string.Concat(Frames.Append(StillGlyph).Distinct());
+
     private readonly Lock _lock = new();
     private ITimer? _timer;
     private bool _running;

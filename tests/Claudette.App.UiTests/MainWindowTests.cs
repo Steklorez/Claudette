@@ -335,9 +335,11 @@ public class MainWindowTests
         await tab.SendCommand.ExecuteAsync(null);
         await UiText.SettleUntilAsync(window, () => line.IsEffectivelyVisible, "the working line");
 
-        // The Stop shortcut as it reads on this OS: "Esc", or "⎋" on macOS.
+        // The Stop shortcut as it reads on this OS: "Esc", or "⎋" on macOS. Every frame sits unseen behind the glyph, so the
+        // line keeps the height of the tallest whichever shows.
         var stop = h.Services.Tips.Text(KeyboardShortcuts.Stop);
-        Assert.Equal($"· Noodling… 0s · {stop} to stop", string.Join(' ', line.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text)));
+        Assert.Equal($"· Noodling… 0s · {stop} to stop", string.Join(' ', line.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Opacity > 0).Select(t => t.Text)));
+        Assert.Contains(line.GetVisualDescendants().OfType<TextBlock>(), t => t.Opacity == 0 && WorkingLine.Frames.All(t.Text!.Contains));
 
         h.Transport.Emit("""{"type":"result","subtype":"success","is_error":false,"session_id":"s1"}""");
         await UiText.SettleUntilAsync(window, () => !line.IsEffectivelyVisible, "the end of the turn");
