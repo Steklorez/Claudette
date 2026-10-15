@@ -12,7 +12,7 @@ public class SettingsDefaultsTests
     {
         await using var h = new TabTestHarness();
         var s = h.Services.Settings;
-        s.Sessions.RestoreUnpinnedTabs = true;
+        s.Sessions.RestoreUnpinnedTabs = false;
         s.Sessions.MachineName = "DESK";
         s.Sessions.SyncNewTabs = true;
         s.Sessions.LibraryFolder = Path.Combine(h.Root, "library");
@@ -39,7 +39,7 @@ public class SettingsDefaultsTests
         settings.DiffTool.ResetCommand.Execute(null);
         settings.Advanced.ResetCommand.Execute(null);
 
-        Assert.False(s.Sessions.RestoreUnpinnedTabs);
+        Assert.True(s.Sessions.RestoreUnpinnedTabs);
         Assert.Null(s.Sessions.MachineName);
         Assert.False(s.Sessions.SyncNewTabs);
         Assert.False(settings.Sessions.SyncNewTabs);

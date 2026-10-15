@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -109,6 +110,27 @@ public class MascotUiTests
         // The layer itself lets clicks through: beside her, the conversation is what's there.
         var beside = new Point(her.Right + 40, her.Center.Y);
         Assert.Null((scene.Window.InputHitTest(beside) as Visual)?.FindAncestorOfType<MascotLayer>(includeSelf: true));
+    }
+
+    [AvaloniaFact]
+    public async Task Her_menu_is_drawn_in_the_window_with_every_entry_showing()
+    {
+        await using var scene = await Scene.OpenAsync();
+        await scene.UntilStandingAsync();
+        var her = scene.InWindow(scene.Layer.Figure);
+        var menu = scene.Layer.Figure.ContextMenu!;
+
+        scene.Window.MouseDown(her.Center, MouseButton.Right);
+        scene.Window.MouseUp(her.Center, MouseButton.Right);
+        UiText.Settle(scene.Window);
+
+        Assert.True(menu.IsOpen);
+        // Not a window of its own: on the desktop, one can come out shorter than the menu, which then shows only its
+        // scroll arrows. Headless, every menu is drawn in the window, so this checks she asks for it.
+        Assert.True(Assert.IsType<Popup>(menu.Parent).ShouldUseOverlayLayer);
+        Assert.DoesNotContain(menu.GetVisualDescendants().OfType<RepeatButton>(), b => b.IsVisible);
+        Assert.Equal(menu.DesiredSize.Height, menu.Bounds.Height, precision: 1);
+        menu.Close();
     }
 
     [AvaloniaFact]

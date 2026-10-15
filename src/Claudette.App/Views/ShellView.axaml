@@ -404,7 +404,7 @@
                                 <ContextMenu>
                                   <MenuItem Header="Rename" Command="{Binding StartRenameCommand}" />
                                   <MenuItem Header="Reset name" Command="{Binding ResetNameCommand}" IsVisible="{Binding HasUserName}" />
-                                  <MenuItem Header="{Binding PinMenuText}" Command="{Binding TogglePinCommand}" />
+                                  <MenuItem Header="{Binding PinMenuText}" Command="{Binding TogglePinCommand}" ToolTip.Tip="{x:Static vm:TabViewModel.PinMenuTip}" />
                                   <!-- An icon of the user's own under the status icon (DESIGN.md §4, "Marks") -->
                                   <MenuItem Header="Mark" ItemsSource="{Binding MarkMenu}" ItemContainerTheme="{StaticResource MarkMenuItemTheme}"
                                             ItemTemplate="{StaticResource MarkMenuItemTemplate}" />
@@ -569,7 +569,7 @@
                           <Button.ContextMenu>
                             <ContextMenu>
                               <MenuItem Header="Rename" Command="{Binding StartRenameCommand}" />
-                              <MenuItem Header="{Binding PinMenuText}" Command="{Binding TogglePinCommand}" />
+                              <MenuItem Header="{Binding PinMenuText}" Command="{Binding TogglePinCommand}" ToolTip.Tip="{x:Static vm:TabViewModel.PinMenuTip}" />
                               <MenuItem Header="Mark" ItemsSource="{Binding MarkMenu}" ItemContainerTheme="{StaticResource MarkMenuItemTheme}"
                                         ItemTemplate="{StaticResource MarkMenuItemTemplate}" />
                               <MenuItem Header="Clear mark" Command="{Binding ClearMarkCommand}" IsVisible="{Binding HasMark}" />

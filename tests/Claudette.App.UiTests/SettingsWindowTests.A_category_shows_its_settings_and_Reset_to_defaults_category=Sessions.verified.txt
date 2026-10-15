@@ -1,5 +1,5 @@
 ﻿"Sessions"
-[ ] Also restore unpinned tabs when Claudette starts
+[x] Also restore unpinned tabs when Claudette starts
 "Pinned tabs are always restored."
 "Name for this machine"
 [field] "{machine}"

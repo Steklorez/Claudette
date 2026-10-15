@@ -275,6 +275,11 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
 
     public string PinMenuText => IsPinned ? "Unpin tab" : "Pin tab";
 
+    /// <summary>What pinning does, for the menu item's tip. True whichever way Also restore unpinned tabs is set.</summary>
+    public static string PinMenuTip =>
+        "A pinned tab comes back every time Claudette starts, sits at the start of its group, and stays open on Close group and Close other tabs. "
+        + "Unpinned tabs come back only while Also restore unpinned tabs is on in Settings → Sessions.";
+
     [RelayCommand]
     private void TogglePin()
     {

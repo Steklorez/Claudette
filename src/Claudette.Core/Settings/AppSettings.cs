@@ -439,8 +439,11 @@ public enum Density
 
 public sealed class SessionSettings
 {
-    /// <summary>Pinned tabs are always restored; this also restores the unpinned ones (DESIGN.md §9).</summary>
-    public bool RestoreUnpinnedTabs { get; set; }
+    /// <summary>
+    /// Pinned tabs are always restored; this also restores the unpinned ones (DESIGN.md §9). On by default, so a launch
+    /// that isn't a restart handover, such as after an update installed by hand, still brings back every tab.
+    /// </summary>
+    public bool RestoreUnpinnedTabs { get; set; } = true;
 
     /// <summary>The session library folder (DESIGN.md §9). Null uses the app data folder.</summary>
     public string? LibraryFolder { get; set; }

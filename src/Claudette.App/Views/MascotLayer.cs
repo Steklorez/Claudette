@@ -2,9 +2,11 @@ using System.ComponentModel;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.VisualTree;
 using Claudette.App.Games;
 using Claudette.App.Mascot;
@@ -180,6 +182,8 @@ public sealed class MascotLayer : Control
             hide.Bind(MenuItem.CommandProperty, this.GetObservable(HideCommandProperty));
             menu.Items.Add(hide);
             figure.ContextMenu = menu;
+            // Drawn in the window rather than a window of its own (DESIGN.md §3), whose size can fall short of the menu.
+            figure.Styles.Add(new Style(x => x.OfType<Popup>()) { Setters = { new Setter(Popup.ShouldUseOverlayLayerProperty, true) } });
         }
     }
 

@@ -66,7 +66,7 @@ public class DraftsAndStashTests
     [Fact]
     public async Task A_restored_tab_has_its_draft_back_and_the_drafts_of_tabs_not_restored_go()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(s => s.Sessions.RestoreUnpinnedTabs = false);
         var pinned = new TabState { Folder = h.WorkFolder, IsPinned = true };
         var unpinned = new TabState { Folder = h.WorkFolder };
         h.Services.State.Tabs = [pinned, unpinned];
