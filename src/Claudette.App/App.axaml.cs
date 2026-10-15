@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Themes;
 using Claudette.App.ViewModels;
@@ -49,6 +50,8 @@ public partial class App : Application
         Colors = new AppColors(this);
         // Images in Markdown load only what may, through Claudette's own client (DESIGN.md §18, "Images in Claude's replies").
         MarkdownNode.Edit(pipeline => pipeline.Unregister<LinkInlineNode>().Register<ReplyLinkInlineNode>());
+        // Right-click menus as wide as their longest entry (DESIGN.md §3).
+        ContextMenuPlacement.Use();
     }
 
     public override void OnFrameworkInitializationCompleted()
