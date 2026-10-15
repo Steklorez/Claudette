@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Claudette.App.Games;
 using Claudette.App.Mascot;
 
 namespace Claudette.App.Views;
@@ -28,6 +29,12 @@ public sealed class MascotLayer : Control
 
     /// <summary>Her menu's <b>Hide Claudette</b>.</summary>
     public static readonly StyledProperty<ICommand?> HideCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(HideCommand));
+
+    /// <summary>Her menu's games (DESIGN.md §18, "Games with Claudette"), given the <see cref="GameKind"/> to play.</summary>
+    public static readonly StyledProperty<ICommand?> PlayCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(PlayCommand));
+
+    /// <summary>Her menu has the games: Settings → Appearance → <b>Games with Claudette</b> is on.</summary>
+    public static readonly StyledProperty<bool> CanPlayProperty = AvaloniaProperty.Register<MascotLayer, bool>(nameof(CanPlay));
 
     /// <summary>The colour of the z's, the "!" and her other marks: the theme's muted text.</summary>
     public static readonly StyledProperty<IBrush?> ThemeBrushProperty = AvaloniaProperty.Register<MascotLayer, IBrush?>(nameof(ThemeBrush));
@@ -89,6 +96,18 @@ public sealed class MascotLayer : Control
         set => SetValue(HideCommandProperty, value);
     }
 
+    public ICommand? PlayCommand
+    {
+        get => GetValue(PlayCommandProperty);
+        set => SetValue(PlayCommandProperty, value);
+    }
+
+    public bool CanPlay
+    {
+        get => GetValue(CanPlayProperty);
+        set => SetValue(CanPlayProperty, value);
+    }
+
     public IBrush? ThemeBrush
     {
         get => GetValue(ThemeBrushProperty);
@@ -145,9 +164,22 @@ public sealed class MascotLayer : Control
             figure.PointerMoved += OnFigureMoved;
             figure.PointerReleased += OnFigureReleased;
             figure.PointerCaptureLost += (_, _) => LetGo();
+            var menu = new ContextMenu();
+            // A game against her (DESIGN.md §18, "Games with Claudette"), while they're on.
+            foreach (var (header, kind) in new[] { ("Play tic-tac-toe", GameKind.TicTacToe), ("Play Connect Four", GameKind.ConnectFour), ("Play hangman", GameKind.Hangman) })
+            {
+                var play = new MenuItem { Header = header, CommandParameter = kind };
+                play.Bind(MenuItem.CommandProperty, this.GetObservable(PlayCommandProperty));
+                play.Bind(IsVisibleProperty, this.GetObservable(CanPlayProperty));
+                menu.Items.Add(play);
+            }
+            var separator = new Separator();
+            separator.Bind(IsVisibleProperty, this.GetObservable(CanPlayProperty));
+            menu.Items.Add(separator);
             var hide = new MenuItem { Header = "Hide Claudette" };
             hide.Bind(MenuItem.CommandProperty, this.GetObservable(HideCommandProperty));
-            figure.ContextMenu = new ContextMenu { Items = { hide } };
+            menu.Items.Add(hide);
+            figure.ContextMenu = menu;
         }
     }
 

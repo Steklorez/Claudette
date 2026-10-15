@@ -46,6 +46,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.Worktrees.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
         // Nor is an account an open tab runs under removed (DESIGN.md §4, "Accounts").
         _services.Accounts.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
+        WatchGames();
         IsCompact = services.Settings.Appearance.Density == Density.Compact;
         IsClaudeStyle = services.Settings.Appearance.Style == AppStyle.Claude;
         IsFullWidth = services.Settings.Appearance.FullWidthConversation;
@@ -143,6 +144,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         OnTabProcessesSampled();
         // Claudette on the composer points out the other tabs waiting on the user (DESIGN.md §5).
         SelectedTab?.TellMascot();
+        UpdateGameCall();
         TabStatusChanged?.Invoke();
     }
 
@@ -230,6 +232,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
         _services.State.SelectedTabId = newValue?.Id;
         _services.SaveState();
+        UpdateGameCall();
     }
 
     [ObservableProperty]

@@ -811,6 +811,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         _autoContinue.SettingsChanged();
         Perforce.OnSettingsChanged();
         ProjectTools.OnSettingsChanged();
+        OnGamesSettingsChanged();
         OnBranchChanged();
         OnPropertyChanged(nameof(ShowTaskProgressBadge));
         OnPropertyChanged(nameof(RowDetail));

@@ -1,0 +1,148 @@
+<!-- Games with Claudette (DESIGN.md §18): the side panel's Games page, the same game in every tab. Made only while it
+     shows (the tab's ShownGames). Its look is in Themes/ConversationStyles.axaml. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:services="using:Claudette.App.Services"
+             xmlns:games="using:Claudette.App.Games"
+             x:Class="Claudette.App.Views.GamesView"
+             x:DataType="services:GameService"
+             Focusable="True">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Classes="gameheader">
+      <!-- The games: another one drops the round in progress, uncounted -->
+      <WrapPanel ItemSpacing="4" LineSpacing="4">
+        <Button Classes="flat gamechoice" Classes.selected="{Binding IsTicTacToe}" Command="{Binding SwitchCommand}" CommandParameter="{x:Static games:GameKind.TicTacToe}">
+          <TextBlock Text="Tic-tac-toe" Classes.muted="{Binding !IsTicTacToe}" />
+        </Button>
+        <Button Classes="flat gamechoice" Classes.selected="{Binding IsConnectFour}" Command="{Binding SwitchCommand}" CommandParameter="{x:Static games:GameKind.ConnectFour}">
+          <TextBlock Text="Connect Four" Classes.muted="{Binding !IsConnectFour}" />
+        </Button>
+        <Button Classes="flat gamechoice" Classes.selected="{Binding IsHangman}" Command="{Binding SwitchCommand}" CommandParameter="{x:Static games:GameKind.Hangman}">
+          <TextBlock Text="Hangman" Classes.muted="{Binding !IsHangman}" />
+        </Button>
+      </WrapPanel>
+      <!-- A tab waits on the user: the game stays as it is -->
+      <Border Classes="codeblock" IsVisible="{Binding HasCall}">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <TextBlock Classes="warning" Text="{Binding Call}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Go there" Command="{Binding AnswerCallCommand}" IsVisible="{Binding CanAnswerCall}" />
+        </Grid>
+      </Border>
+      <!-- Whose move it is, or how the round ended, and how well she plays -->
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBlock Text="{Binding Game.Status, FallbackValue={x:Null}}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <ComboBox Grid.Column="1" ItemsSource="{Binding Game.Levels, FallbackValue={x:Null}}" SelectedItem="{Binding Game.Level, FallbackValue={x:Null}}"
+                  IsVisible="{Binding Game.HasLevels, FallbackValue=False}" AutomationProperties.Name="Level" ToolTip.Tip="How well Claudette plays" />
+      </Grid>
+    </StackPanel>
+
+    <!-- The board, then the score, a new round and the end of the game under it -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <StackPanel>
+        <ContentControl Content="{Binding Game}">
+          <ContentControl.DataTemplates>
+            <!-- Tic-tac-toe: three by three, the user ✕ and Claudette ○ -->
+            <DataTemplate DataType="vm:TicTacToeViewModel">
+              <StackPanel Classes="gameboard">
+                <ItemsControl ItemsSource="{Binding Squares}" HorizontalAlignment="Left">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <UniformGrid Columns="3" Rows="3" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:TicTacToeSquare">
+                      <Button Classes="gamesquare" Classes.winning="{Binding IsWinning}" Command="{Binding PlayCommand}" AutomationProperties.Name="{Binding Name}">
+                        <Panel>
+                          <Path Classes="gamex" Data="{StaticResource IconClose}" IsVisible="{Binding IsYours}" />
+                          <Ellipse Classes="gameo" IsVisible="{Binding IsHers}" />
+                        </Panel>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </DataTemplate>
+  
+            <!-- Connect Four: seven columns of six; a column is a button that drops a piece in it -->
+            <DataTemplate DataType="vm:ConnectFourViewModel">
+              <StackPanel Classes="gameboard">
+                <ItemsControl ItemsSource="{Binding Columns}" HorizontalAlignment="Left">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" Spacing="2" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:ConnectFourColumn">
+                      <Button Classes="gamecolumn" Command="{Binding DropCommand}" AutomationProperties.Name="{Binding Name}">
+                        <ItemsControl ItemsSource="{Binding Cells}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                              <StackPanel Spacing="3" />
+                            </ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:ConnectFourCell">
+                              <Ellipse Classes="gamepiece" Classes.yours="{Binding IsYours}" Classes.hers="{Binding IsHers}" Classes.winning="{Binding IsWinning}" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </DataTemplate>
+  
+            <!-- Hangman: the gallows, what she said about the word, the word so far, and the letters -->
+            <DataTemplate DataType="vm:HangmanViewModel">
+              <StackPanel Classes="gameboard">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                  <Canvas Width="80" Height="108" AutomationProperties.Name="{Binding FigureName}">
+                    <Line Classes="gallows" StartPoint="4,104" EndPoint="66,104" />
+                    <Line Classes="gallows" StartPoint="18,104" EndPoint="18,6" />
+                    <Line Classes="gallows" StartPoint="18,6" EndPoint="58,6" />
+                    <Line Classes="gallows" StartPoint="18,24" EndPoint="36,6" />
+                    <Line Classes="gallows" StartPoint="58,6" EndPoint="58,18" />
+                    <Ellipse Classes="hanged" Canvas.Left="49" Canvas.Top="18" Width="18" Height="18" IsVisible="{Binding ShowsHead}" />
+                    <Line Classes="hanged" StartPoint="58,36" EndPoint="58,64" IsVisible="{Binding ShowsBody}" />
+                    <Line Classes="hanged" StartPoint="58,43" EndPoint="47,56" IsVisible="{Binding ShowsLeftArm}" />
+                    <Line Classes="hanged" StartPoint="58,43" EndPoint="69,56" IsVisible="{Binding ShowsRightArm}" />
+                    <Line Classes="hanged" StartPoint="58,64" EndPoint="49,82" IsVisible="{Binding ShowsLeftLeg}" />
+                    <Line Classes="hanged" StartPoint="58,64" EndPoint="67,82" IsVisible="{Binding ShowsRightLeg}" />
+                  </Canvas>
+                  <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding Hint}" TextWrapping="Wrap" VerticalAlignment="Bottom" />
+                </Grid>
+                <TextBlock Classes="hangmanword" Text="{Binding Pattern}" AutomationProperties.Name="{Binding PatternName}" />
+                <ItemsControl ItemsSource="{Binding Letters}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel ItemSpacing="3" LineSpacing="3" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:HangmanLetter">
+                      <Button Classes="gameletter" Classes.found="{Binding IsFound}" Classes.missed="{Binding IsMissed}" Content="{Binding Text}"
+                              Command="{Binding GuessCommand}" AutomationProperties.Name="{Binding Name}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </DataTemplate>
+          </ContentControl.DataTemplates>
+        </ContentControl>
+        <StackPanel Classes="gamefooter">
+          <TextBlock Classes="muted small" Text="{Binding Game.ScoreText, FallbackValue={x:Null}}" IsVisible="{Binding Game.HasScore, FallbackValue=False}" />
+          <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6">
+            <Button Content="{Binding Game.NewRoundText, FallbackValue={x:Null}}" Command="{Binding Game.NewRoundCommand, FallbackValue={x:Null}}" />
+            <Button Grid.Column="1" Classes="flat" Content="Reset score" Command="{Binding Game.ResetScoreCommand, FallbackValue={x:Null}}"
+                    IsVisible="{Binding Game.HasScore, FallbackValue=False}" ToolTip.Tip="Start this game's score again from nothing" />
+            <Button Grid.Column="3" Classes="flat" Content="Done playing" Command="{Binding CloseCommand}" ToolTip.Tip="End the game. The Games page goes until you start another." />
+          </Grid>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

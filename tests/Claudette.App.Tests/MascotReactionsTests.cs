@@ -189,6 +189,33 @@ public class MascotReactionsTests
     }
 
     [Fact]
+    public void A_game_has_her_think_with_a_question_mark_wipe_her_brow_at_a_close_call_and_cheer_or_reel_at_the_end()
+    {
+        using var stage = new MascotStage();
+        stage.ShowStanding();
+
+        (Action React, string Prop)[] reactions =
+        [
+            (stage.Director.GameThinking, "question"),
+            (stage.Director.GameCloseCall, "sweat"),
+            (stage.Director.GameWon, "confetti-y"),
+            (stage.Director.GameLost, "star"),
+        ];
+        foreach (var (react, prop) in reactions)
+        {
+            var from = stage.Frames.Count;
+            react();
+            stage.Run(TimeSpan.FromSeconds(3));
+            Assert.Contains(prop, PropNames(stage.Since(from)));
+        }
+
+        var before = stage.Frames.Count;
+        stage.Director.GameDrawn();
+        stage.Run(TimeSpan.FromSeconds(2));
+        Assert.Contains(stage.Since(before), f => f.Pose == "armsUp" && f.Drop < 0);
+    }
+
+    [Fact]
     public void Every_task_done_brings_confetti_and_every_file_reviewed_a_stamp_and_its_check_mark()
     {
         using var stage = new MascotStage();

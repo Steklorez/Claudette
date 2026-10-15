@@ -67,6 +67,7 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
         Entry("Claudette's size", pageText: "Size"),
         Entry("How often Claudette does something", pageText: "How often"),
         Entry("Claudette shares tips"),
+        Entry("Games with Claudette"),
         Entry("Density"),
         Entry("Full-width conversation"),
         Entry("Zoom"),
@@ -253,6 +254,13 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     {
         get => Settings.Appearance.ClaudetteTips;
         set => Set(value, v => Settings.Appearance.ClaudetteTips = v);
+    }
+
+    /// <summary>Tic-tac-toe, Connect Four and hangman against her (DESIGN.md §18, "Games with Claudette").</summary>
+    public bool GamesWithClaudette
+    {
+        get => Settings.Appearance.GamesWithClaudette;
+        set => Set(value, v => Settings.Appearance.GamesWithClaudette = v);
     }
 
     /// <summary>The detailed usage header goes back to its default too, though it's kept with the machine's state.</summary>

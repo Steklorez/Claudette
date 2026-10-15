@@ -1,5 +1,6 @@
-<!-- A tab's side panel (DESIGN.md §3): changed files, agents, tasks, MCP servers, the project's tools, the scratch pad
-     and, when the monitor is on, processes. TabView holds it in a border it sizes. -->
+<!-- A tab's side panel (DESIGN.md §3): changed files, agents, tasks, MCP servers, the project's tools, the scratch pad,
+     the game against Claudette while one is open and, when the monitor is on, processes. TabView holds it in a border it
+     sizes. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Claudette.App.ViewModels"
@@ -61,6 +62,11 @@
           <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad") -->
           <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.ScratchPad}" Classes.selected="{Binding IsScratchPadPage}" Command="{Binding ShowScratchPadPageCommand}" ToolTip.Tip="Notes shared by the tabs in this project">
             <TextBlock Text="Scratch Pad" Classes.muted="{Binding !IsScratchPadPage}" />
+          </Button>
+          <!-- A game against Claudette, while one is open (DESIGN.md §18, "Games with Claudette") -->
+          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Games}" Classes.selected="{Binding IsGamesPage}" Command="{Binding ShowGamesPageCommand}" IsVisible="{Binding Games.IsOpen}"
+                  ToolTip.Tip="Playing against Claudette">
+            <TextBlock Text="Games" Classes.muted="{Binding !IsGamesPage}" />
           </Button>
           <!-- The pages that don't fit, with a dot when one of them shows one; its menu is made as it opens -->
           <controls:FreshMenuButton x:Name="MorePages" Classes="flat" Padding="6" VerticalAlignment="Center" ToolTip.Tip="More pages" AutomationProperties.Name="More pages">
@@ -356,6 +362,15 @@
       <Panel IsVisible="{Binding IsScratchPadPage}">
         <views:ScratchPadView DataContext="{Binding ShownScratchPad}" />
       </Panel>
+
+      <!-- Games with Claudette (DESIGN.md §18): made only while the page shows a game -->
+      <ContentControl IsVisible="{Binding IsGamesPage}" Content="{Binding ShownGames}">
+        <ContentControl.ContentTemplate>
+          <DataTemplate DataType="services:GameService">
+            <views:GamesView />
+          </DataTemplate>
+        </ContentControl.ContentTemplate>
+      </ContentControl>
 
       <!-- Processes (DESIGN.md §4, "Process monitor") -->
       <DockPanel IsVisible="{Binding IsProcessesPage}">

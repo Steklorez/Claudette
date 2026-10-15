@@ -540,6 +540,9 @@
           <SolidColorBrush x:Key="OkTextBrush" Color="#107C10" />
           <!-- The star a tab can be marked with (DESIGN.md §4, "Marks"): gold, apart from the question mark's amber. -->
           <SolidColorBrush x:Key="MarkStarBrush" Color="#B8860B" />
+          <!-- Games with Claudette (DESIGN.md §18): the user's marks and pieces blue, hers the berry of her hair tie. -->
+          <SolidColorBrush x:Key="GameYouBrush" Color="#2A78D6" />
+          <SolidColorBrush x:Key="GameClaudetteBrush" Color="#B8336A" />
           <SolidColorBrush x:Key="AccentStatusBrush" Color="{DynamicResource SystemAccentColor}" />
           <SolidColorBrush x:Key="CautionBorderBrush" Color="#D9A400" />
           <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#FFF6D6" />
@@ -607,6 +610,8 @@
           <SolidColorBrush x:Key="WarningTextBrush" Color="#FCE100" />
           <SolidColorBrush x:Key="OkTextBrush" Color="#6CCB5F" />
           <SolidColorBrush x:Key="MarkStarBrush" Color="#F5B83D" />
+          <SolidColorBrush x:Key="GameYouBrush" Color="#5B9BD5" />
+          <SolidColorBrush x:Key="GameClaudetteBrush" Color="#E0608F" />
           <SolidColorBrush x:Key="AccentStatusBrush" Color="{DynamicResource SystemAccentColorLight2}" />
           <SolidColorBrush x:Key="CautionBorderBrush" Color="#8A6D00" />
           <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#2B2610" />

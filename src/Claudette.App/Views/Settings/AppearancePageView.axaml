@@ -77,6 +77,10 @@
     <CheckBox Content="Claudette shares tips" IsChecked="{Binding ClaudetteTips}" IsEnabled="{Binding ShowClaudette}" Margin="28,0,0,0" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="56,-8,0,0"
                Text="Now and then, at most every ten minutes and never while you're typing, she holds up a tip, such as a shortcut you might not know." />
+    <!-- Games with Claudette (DESIGN.md §18): she plays whether or not she's on the composer -->
+    <CheckBox Content="Games with Claudette" IsChecked="{Binding GamesWithClaudette}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="Play tic-tac-toe, Connect Four or hangman against her while Claude works or a usage limit holds a task. Right-click her, use the command palette, or the usage limit bar; the game opens on the side panel's Games page." />
     <Button Content="Reset to defaults" Command="{Binding ResetCommand}" />
   </StackPanel>
 </UserControl>

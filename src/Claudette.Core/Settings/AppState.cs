@@ -168,6 +168,28 @@ public sealed class AppState
 
     /// <summary>The worktrees the last cleanup removed, and when, for Settings → General to say.</summary>
     public WorktreeCleanupRecord? LastWorktreeCleanup { get; set; }
+
+    /// <summary>Each game's score and level against Claudette (DESIGN.md §18, "Games with Claudette").</summary>
+    public GamesState Games { get; set; } = new();
+}
+
+/// <summary>The games against Claudette (DESIGN.md §18, "Games with Claudette"), by game: its score and the level chosen.</summary>
+public sealed class GamesState
+{
+    public Dictionary<string, GameScore> Scores { get; set; } = [];
+
+    /// <summary>The level chosen for each game that has levels, by name.</summary>
+    public Dictionary<string, string> Levels { get; set; } = [];
+}
+
+/// <summary>A game's rounds so far against Claudette, from the user's side.</summary>
+public sealed class GameScore
+{
+    public int Wins { get; set; }
+
+    public int Losses { get; set; }
+
+    public int Draws { get; set; }
 }
 
 /// <summary>What a worktree cleanup removed (DESIGN.md §4, "Cleaning up worktrees").</summary>

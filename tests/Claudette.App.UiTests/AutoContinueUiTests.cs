@@ -3,6 +3,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Claudette.App.Games;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
@@ -47,6 +48,38 @@ public class AutoContinueUiTests
         Assert.False(bar.IsEffectivelyVisible);
 
         await Verify($"Continuing:\n{waiting}\n\nAfter Don't continue:\n{stopped}");
+    }
+
+    [AvaloniaFact]
+    public async Task Until_the_limit_resets_the_bar_offers_a_game_against_Claudette()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.ComposerText = "Refactor the parser";
+        await tab.SendCommand.ExecuteAsync(null);
+        HitLimit(h, h.Time.GetUtcNow() + TimeSpan.FromHours(2));
+        await UiText.SettleUntilAsync(window, () => tab.HasLimitWait, "the wait");
+
+        var offer = Bar(window, tab).GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == "Play a game while you wait").FindAncestorOfType<Button>()!;
+        Assert.True(offer.IsEffectivelyVisible);
+        var flyout = Assert.IsType<MenuFlyout>(offer.Flyout);
+        Assert.Equal(["Tic-tac-toe", "Connect Four", "Hangman"], flyout.Items.OfType<MenuItem>().Select(i => i.Header as string));
+
+        flyout.ShowAt(offer);
+        UiText.Settle(window);
+        flyout.Items.OfType<MenuItem>().Last().Command!.Execute(GameKind.Hangman);
+        flyout.Hide();
+        UiText.Settle(window);
+        Assert.IsType<HangmanViewModel>(h.Services.Games.Game);
+        Assert.True(tab.IsGamesPage);
+
+        // Left stopped, the limit still holds.
+        tab.DontContinueCommand.Execute(null);
+        await UiText.SettleUntilAsync(window, () => tab.CanContinueAfterLimit, "the wait to stop");
+        UiText.Settle(window);
+        Assert.True(offer.IsEffectivelyVisible);
+        window.Close();
     }
 
     /// <summary>The bar's border: the one around the wait's text.</summary>

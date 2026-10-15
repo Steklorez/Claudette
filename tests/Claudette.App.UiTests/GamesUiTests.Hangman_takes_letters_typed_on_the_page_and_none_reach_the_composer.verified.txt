@@ -1,0 +1,34 @@
+﻿[button] Tic-tac-toe
+[button] Connect Four
+[button] Hangman
+"No D. 5 misses left."
+"A programming word, 9 letters"
+"B _ _ _ _ _ _ _ _"
+[button] Letter A: A
+[button] B, in the word: B
+[button] Letter C: C
+[button] D, not in the word: D
+[button] Letter E: E
+[button] Letter F: F
+[button] Letter G: G
+[button] Letter H: H
+[button] Letter I: I
+[button] Letter J: J
+[button] Letter K: K
+[button] Letter L: L
+[button] Letter M: M
+[button] Letter N: N
+[button] Letter O: O
+[button] Letter P: P
+[button] Letter Q: Q
+[button] Letter R: R
+[button] Letter S: S
+[button] Letter T: T
+[button] Letter U: U
+[button] Letter V: V
+[button] Letter W: W
+[button] Letter X: X
+[button] Letter Y: Y
+[button] Letter Z: Z
+[button] New game
+[button] Done playing

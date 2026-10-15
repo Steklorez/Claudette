@@ -23,7 +23,7 @@ public sealed partial class TabViewModel
     /// <summary>A usage limit stopped the last turn, and the tab waits for it to reset; null otherwise.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasLimitWait), nameof(LimitWaitText), nameof(WillContinueAfterLimit), nameof(CanContinueAfterLimit),
-        nameof(ContinueAfterLimitText), nameof(RowDetail), nameof(InfoRows))]
+        nameof(ContinueAfterLimitText), nameof(RowDetail), nameof(InfoRows), nameof(CanPlayWhileWaiting))]
     public partial LimitWait? LimitWait { get; private set; }
 
     public bool HasLimitWait => LimitWait is not null;

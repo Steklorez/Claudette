@@ -45,6 +45,8 @@
 [choice] "Lively: every 10 to 30 seconds"
 [x] Claudette shares tips
 "Now and then, at most every ten minutes and never while you're typing, she holds up a tip, such as a shortcut you might not know."
+[x] Games with Claudette
+"Play tic-tac-toe, Connect Four or hangman against her while Claude works or a usage limit holds a task. Right-click her, use the command palette, or the usage limit bar; the game opens on the side panel's Games page."
 [button] Reset to defaults
 [button] Line up
 [button] Page up

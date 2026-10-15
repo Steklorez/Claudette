@@ -133,6 +133,7 @@ public sealed class AppServices : IAsyncDisposable
         Drafts = new DraftService(this);
         Worktrees = new WorktreeCleanupService(this);
         Mascot = new MascotService(this);
+        Games = new GameService(this);
         ProtocolLog.DeleteOld(paths.ProtocolLogDirectory, timeProvider.GetUtcNow());
         BeforeContentStore.DeleteOld(paths.BeforeContentDirectory, timeProvider.GetUtcNow());
         Notifications =new NotificationService(this, notifier ?? NullNotifier.Instance);
@@ -152,6 +153,7 @@ public sealed class AppServices : IAsyncDisposable
             Library.OnSettingsChanged();
             ScratchPads.OnSettingsChanged();
             Mascot.OnSettingsChanged();
+            Games.OnSettingsChanged();
             ClaudeUpdates?.OnSettingsChanged();
             Notifications.OnSettingsChanged();
             KeepAwake.OnSettingsChanged();
@@ -357,6 +359,9 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>Claudette on the composer, shared by the tabs (DESIGN.md §5).</summary>
     public MascotService Mascot { get; }
+
+    /// <summary>The game open against Claudette, shared by the tabs (DESIGN.md §18, "Games with Claudette").</summary>
+    public GameService Games { get; }
 
     public AppPaths Paths { get; }
 
@@ -642,6 +647,7 @@ public sealed class AppServices : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Worktrees.Dispose();
+        Games.Dispose();
         Mascot.Dispose();
         ScratchPads.Dispose();
         Library.Dispose();

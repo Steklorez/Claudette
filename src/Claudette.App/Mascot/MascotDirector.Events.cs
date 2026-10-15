@@ -3,7 +3,7 @@ namespace Claudette.App.Mascot;
 /// <summary>
 /// Claudette on the composer's reactions to what happens (DESIGN.md §5): a turn finishing or failing, Claude's tasks
 /// all done, every changed file reviewed, a message sent, a file attached, a huge paste, her name typed, being poked,
-/// a file dragged over the composer, and being picked up and carried.
+/// a file dragged over the composer, being picked up and carried, and a game against the user (DESIGN.md §18).
 /// </summary>
 public sealed partial class MascotDirector
 {
@@ -57,6 +57,23 @@ public sealed partial class MascotDirector
 
     /// <summary>The user typed her name: she waves back.</summary>
     public void Greeted() => React(MascotAntics.WaveBack);
+
+    // ---- Games with Claudette (DESIGN.md §18) ---------------------------------------------------------------------
+
+    /// <summary>She thinks about her move in a game: a "?" over her head.</summary>
+    public void GameThinking() => React(MascotAntics.Puzzled);
+
+    /// <summary>She won a game: confetti.</summary>
+    public void GameWon() => React(MascotAntics.Confetti);
+
+    /// <summary>She lost a game: she's dizzy for a moment.</summary>
+    public void GameLost() => React(MascotAntics.Dizzy);
+
+    /// <summary>A game ended in a draw: a hop.</summary>
+    public void GameDrawn() => React(MascotAntics.Hop);
+
+    /// <summary>A close call in a game: she wipes her brow.</summary>
+    public void GameCloseCall() => React(MascotAntics.WipeBrow);
 
     /// <summary>A file is being dragged over the composer, or no longer is: she's ready to catch it.</summary>
     public void SetDragHover(bool hovering)

@@ -18,12 +18,15 @@ public enum SidePanelPage
     Tasks,
     Mcp,
     ScratchPad,
+
+    /// <summary>A game against Claudette, while one is open (DESIGN.md §18, "Games with Claudette").</summary>
+    Games,
 }
 
 /// <summary>
 /// The side panel (DESIGN.md §3): Changed files, Agents, Tasks, Project when the tab has project tools, MCP when the
-/// session has MCP servers, Processes when the monitor is on, and the project's scratch pad. Which page shows, how wide
-/// it is and the pages' order.
+/// session has MCP servers, Processes when the monitor is on, the project's scratch pad, and Games while a game is open.
+/// Which page shows, how wide it is and the pages' order.
 /// </summary>
 public sealed partial class TabViewModel
 {
@@ -70,7 +73,7 @@ public sealed partial class TabViewModel
     /// <summary>Which page of the side panel shows.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFilesPage), nameof(IsAgentsPage), nameof(IsProjectPage), nameof(IsProcessesPage), nameof(IsTasksPage), nameof(IsMcpPage),
-        nameof(IsScratchPadPage))]
+        nameof(IsScratchPadPage), nameof(IsGamesPage), nameof(ShownGames))]
     public partial SidePanelPage Page { get; set; }
 
     partial void OnPageChanged(SidePanelPage value)
@@ -195,6 +198,7 @@ public sealed partial class TabViewModel
         SidePanelPage.Processes => ProcessMonitor.IsOn,
         SidePanelPage.Tasks => TodoList.HasAnything,
         SidePanelPage.Mcp => HasMcpServers,
+        SidePanelPage.Games => Games.IsOpen,
         _ => true,
     };
 

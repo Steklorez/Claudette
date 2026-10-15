@@ -58,7 +58,8 @@ public class SidePanelTests
 
         // Dragged onto Agents' place, the scratch pad takes it, and Agents moves over.
         first.MoveSidePanelPage(SidePanelPage.ScratchPad, SidePanelPage.Agents);
-        SidePanelPage[] moved = [SidePanelPage.Files, SidePanelPage.ScratchPad, SidePanelPage.Agents, SidePanelPage.Project, SidePanelPage.Processes, SidePanelPage.Tasks, SidePanelPage.Mcp];
+        SidePanelPage[] moved = [SidePanelPage.Files, SidePanelPage.ScratchPad, SidePanelPage.Agents, SidePanelPage.Project, SidePanelPage.Processes, SidePanelPage.Tasks, SidePanelPage.Mcp,
+            SidePanelPage.Games];
         Assert.Equal(moved, second.SidePanelPages);
         Assert.Contains(nameof(TabViewModel.SidePanelPages), changed);
         Assert.Equal(moved.Select(p => p.ToString()), h.Services.State.SidePanelPages);
@@ -94,12 +95,12 @@ public class SidePanelTests
     public async Task A_saved_order_leaves_out_names_it_doesnt_know_and_puts_a_page_it_doesnt_name_after_the_one_it_follows()
     {
         await using var h = new TabTestHarness();
-        // Saved before MCP was a page, and with one since taken out.
+        // Saved before MCP and Games were pages, and with one since taken out.
         h.Services.State.SidePanelPages = ["ScratchPad", "Tasks", "Gone", "Files", "Agents", "Project", "Processes", "Files"];
 
         var layout = new ShellViewModel(h.Services, () => { }).Layout;
 
-        Assert.Equal([SidePanelPage.ScratchPad, SidePanelPage.Tasks, SidePanelPage.Mcp, SidePanelPage.Files, SidePanelPage.Agents, SidePanelPage.Project, SidePanelPage.Processes],
+        Assert.Equal([SidePanelPage.ScratchPad, SidePanelPage.Games, SidePanelPage.Tasks, SidePanelPage.Mcp, SidePanelPage.Files, SidePanelPage.Agents, SidePanelPage.Project, SidePanelPage.Processes],
             layout.SidePanelPages);
     }
 

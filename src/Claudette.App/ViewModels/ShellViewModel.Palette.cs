@@ -1,3 +1,4 @@
+using Claudette.App.Games;
 using Claudette.Core;
 using Claudette.Core.Accessibility;
 using Claudette.Core.Settings;
@@ -105,6 +106,13 @@ public sealed partial class ShellViewModel
                 Command("Show MCP servers", () => tab.OpenSidePanelPage(SidePanelPage.Mcp));
             }
             Command("Show scratch pad", () => tab.OpenSidePanelPage(SidePanelPage.ScratchPad));
+            // DESIGN.md §18, "Games with Claudette".
+            if (_services.Games.IsEnabled)
+            {
+                Command("Play tic-tac-toe with Claudette", () => tab.PlayGame(GameKind.TicTacToe));
+                Command("Play Connect Four with Claudette", () => tab.PlayGame(GameKind.ConnectFour));
+                Command("Play hangman with Claudette", () => tab.PlayGame(GameKind.Hangman));
+            }
             Command("Tab settings…", () => OpenTabSettingsCommand.Execute(tab));
             AsyncCommand("Duplicate tab", () => DuplicateTabAsync(tab));
             if (CanOpenWorktreeTab(tab))

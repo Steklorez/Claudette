@@ -1,0 +1,14 @@
+﻿[button] Tic-tac-toe
+[button] Connect Four
+[button] Hangman
+"Your move."
+[choice] "Normal"
+[button] Column 1, 0 of 6 filled
+[button] Column 2, 0 of 6 filled
+[button] Column 3, 1 of 6 filled
+[button] Column 4, 1 of 6 filled
+[button] Column 5, 0 of 6 filled
+[button] Column 6, 0 of 6 filled
+[button] Column 7, 0 of 6 filled
+[button] New game
+[button] Done playing

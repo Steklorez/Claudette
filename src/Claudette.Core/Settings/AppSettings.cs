@@ -375,6 +375,12 @@ public sealed class AppearanceSettings
     /// <summary>She shares a tip now and then, such as a shortcut.</summary>
     public bool ClaudetteTips { get; set; } = true;
 
+    /// <summary>
+    /// Tic-tac-toe, Connect Four and hangman against Claudette, on the side panel's Games page (DESIGN.md §18, "Games with
+    /// Claudette"). On by default.
+    /// </summary>
+    public bool GamesWithClaudette { get; set; } = true;
+
     /// <summary>How much room the conversation, the sidebar's rows and the composer take (DESIGN.md §14).</summary>
     public Density Density { get; set; } = Density.Comfortable;
 

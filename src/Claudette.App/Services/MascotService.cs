@@ -92,8 +92,24 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
     /// <summary>A file is being dragged over the selected tab's composer, or no longer is.</summary>
     public void DragHover(bool hovering) => Director?.SetDragHover(hovering);
 
-    /// <summary>The user typed in the selected tab's composer.</summary>
+    /// <summary>The user typed in the selected tab's composer, or moved in a game.</summary>
     public void Nudge() => Director?.Nudge();
+
+    // ---- Games with Claudette (DESIGN.md §18) -----------------------------------------------------------------------
+
+    /// <summary>She thinks about her move.</summary>
+    public void GameThinking() => Director?.GameThinking();
+
+    /// <summary>She won the round.</summary>
+    public void GameWon() => Director?.GameWon();
+
+    /// <summary>She lost the round.</summary>
+    public void GameLost() => Director?.GameLost();
+
+    public void GameDrawn() => Director?.GameDrawn();
+
+    /// <summary>She blocked a winning move, or the user has one miss left.</summary>
+    public void GameCloseCall() => Director?.GameCloseCall();
 
     /// <summary>Her menu's <b>Hide Claudette</b>: turns the setting off. Settings → Appearance brings her back.</summary>
     [RelayCommand]
@@ -122,6 +138,8 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
             ("", "Up brings back your earlier prompts"),
             ("", "Drop a file on the message box to attach it"),
             ("", "Right-click me if you'd like me to go"),
+            // DESIGN.md §18, "Games with Claudette": while there's a wait.
+            (Settings.GamesWithClaudette && _situation.Mood is MascotMood.Working or MascotMood.Resting ? "" : null, "Right-click me for a game while you wait"),
         }.Where(t => t.Shortcut is not null).ToArray();
         if (tips.Length == 0)
         {
