@@ -15,7 +15,7 @@ Claudette does not replace Claude Code. It runs the real `claude` CLI as a child
 ### Non-goals (v1)
 
 - Calling the Claude API directly. All model work goes through Claude Code.
-- Being a code editor or IDE. Files open in the user's own editor.
+- Being an IDE. Claudette has an editor for reading and touching up a project's files beside the conversation ([§18](#project-files)), but no language services, building, debugging or source control: those stay in the user's own tools.
 - Replacing Claude Code's configuration. Claudette reads and respects `~/.claude` settings, `CLAUDE.md`, MCP servers and hooks, but doesn't try to manage them.
 - Linux polish. It should build and run on Linux, but only Windows and macOS are tested and packaged.
 
@@ -29,10 +29,12 @@ Claudette does not replace Claude Code. It runs the real `claude` CLI as a child
 | Pattern | MVVM with CommunityToolkit.Mvvm | |
 | Markdown | LiveMarkdown.Avalonia | For assistant messages. Built for streaming: text is appended as it arrives instead of re-rendering the whole message. Includes syntax-highlighted code blocks. (Markdown.Avalonia only had an alpha for Avalonia 12.) |
 | Diffs | Claudette's own line diff and diff view, highlighted with TextMateSharp | The TextMate grammars and themes LiveMarkdown already ships for code blocks. AvaloniaEdit was the plan, but a read-only diff doesn't need an editor. |
+| Code editor | AvaloniaEdit, with AvaloniaEdit.TextMate | Planned, for the Project Files tab ([§18](#project-files)). It highlights with the same TextMate grammars and themes as the diff view. |
 | Usage history | SQLite (Microsoft.Data.Sqlite) | [§6](#usage-history) |
 | Dependency | Claude Code CLI | Must already be installed. Claudette finds `claude` on `PATH` (on macOS and Linux, the login shell's `PATH`, [§13](#login-shell-environment)) or at a path set in Settings, checks its version on launch against a minimum supported version, and shows a setup screen if it is missing or too old. Sign-in is handled inside Claudette (see [§11](#11-sign-in)). |
 | Service status | Claude's public status page, status.claude.com | Read for the header's status dot and the incident banner: its Statuspage summary, with no sign-in. Settings → General turns it off. [§18](#service-status). |
 | Packaging | Windows: MSIX. macOS: signed, notarized `.app` in a `.dmg`. | [Below](#packaging-and-signing). |
+| User guide | Jekyll with Just the Docs, on GitHub Pages | https://claudette.dotbunny.com, built from `docs/` on `main`. Planned ([below](#user-guide)). |
 
 ### Packaging and signing
 
@@ -139,6 +141,62 @@ Planned, not started. Tried on a branch on 2026-10-11 against .NET 11 RC1 (SDK `
 > - CI on macOS and Linux, where the process-tree, Keychain, `caffeinate`, login shell, single-instance and `update-helper.sh` tests run. .NET 11 creates the single-instance pipe's socket with mode 0600.
 > - A signed, notarized `.dmg` and a signed MSIX from `package.yml`.
 > - Timers across sleep on Windows. .NET 11's timers there count only time awake, as they already do on macOS and Linux ([the breaking change](https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/11/environment-tickcount-windows-behavior)). The check-in and auto-continue monitors read the clock every 10 and 30 seconds, so they're unaffected; a usage poll can come up to 5 minutes after waking instead of at once.
+
+### User guide
+
+Planned 2026-10-15, not started. A website at https://claudette.dotbunny.com that shows people how to use every part of Claudette, with pictures: what each part is for, how to do things with it, the settings that change it and its shortcuts. The README stays the repository's front page, and links to the guide.
+
+- **Where it lives.** In `docs/` on `main`. GitHub Pages builds the site from that folder on every push to `main` (the repository's Settings → Pages: **Deploy from a branch**, `main`, `/docs`).
+  - So the guide changes in the same pull request as the feature it describes, and is reviewed with it, as DESIGN.md is. A GitHub wiki was the other choice. It's a repository of its own, edited without pull requests, so it would fall behind the app; and search engines index only the wikis of repositories with 500 stars or more.
+  - `docs/CNAME` holds the domain, `claudette.dotbunny.com`. GitHub wrote it when the domain was set, and deleting it unsets the domain. The domain's DNS points at GitHub Pages, and the site answers over HTTPS (with a 404 until there's a page).
+  - Everything in `docs/` is published, the README's screenshots included. Nothing outside it is.
+- **How it's built.** With Jekyll, as GitHub Pages runs it for a branch, so no workflow of ours builds or deploys it. The theme is [Just the Docs](https://just-the-docs.com), as a `remote_theme` pinned to a release's tag. It gives a sidebar from each page's front matter (`nav_order`, `parent`, `has_children`), search built with the site, callouts, and an **Edit this page on GitHub** link. MkDocs Material was the other choice; it would need Pages switched to **GitHub Actions** and a workflow to build the site, for nothing the guide needs.
+  - `docs/_config.yml`: the title; `url: https://claudette.dotbunny.com` and no `baseurl`, since the site is the domain's root; the theme; the plugins (`jekyll-remote-theme`, `jekyll-seo-tag` and `jekyll-sitemap`, all on GitHub Pages' list); search; links to the repository and its Releases; and the edit link, to `docs/` on `main`.
+  - **Light and dark.** The site follows the reader's system, as Claudette does by default. Just the Docs has a light scheme and a dark one but nothing that follows the system, so `_includes/head_custom.html` calls `jtd.setTheme` from `prefers-color-scheme`, and again when that changes. The page has no switch of its own, so the pictures can follow the same setting (**Pictures**, below).
+  - **The icon and favicon:** `packaging/icon/build-icons.mjs` writes them to `docs/assets/` too, so they stay the app's ([Packaging and signing](#packaging-and-signing)). The site in Claudette's own colors, as a custom scheme in `_sass/color_schemes/`, can come later.
+  - **Previewing it.** `docs/Gemfile` names the `github-pages` gem, which pins Jekyll and the plugins to GitHub's versions. With Ruby installed, `bundle exec jekyll serve` in `docs/` serves the site locally.
+  - **Checks.** `.github/workflows/docs.yml` runs on pull requests and pushes that change `docs/`. It builds the site with the `github-pages` gem and runs html-proofer over it, for internal links only. A broken link, a missing picture or a picture with no alt text fails the pull request instead of reaching the site. Its actions are pinned to commits, as `package.yml`'s are.
+- **The chapters**, in the sidebar in this order. Each is a folder of pages with an `index.md`. A page is written from the DESIGN.md sections beside it, then checked against the running app.
+
+  | Chapter | Its pages | From |
+  |---|---|---|
+  | **Home** (`docs/index.md`) | What Claudette is, a picture of the window, the downloads, where to start. | [§1](#1-goals), the README |
+  | **Getting started** | Installing (Claude Code first; Windows, macOS, from source), the first launch and the setup screen, signing in, a first tab, a tour of the window, trying Claudette on the demo. | [§2](#2-platform--tech-stack), [§3](#3-main-window), [§11](#11-sign-in), [Folder trust](#folder-trust) |
+  | **Tabs and sessions** | Opening tabs, the sidebar (groups, rows, marks), the tab's menu and **Tab settings…**, split panes, the command palette and the next tab waiting, worktree tabs and cleaning them up, closing and restoring. | [§4](#4-tabs--sessions), [Split panes](#split-panes), [Restore on launch](#restore-on-launch) |
+  | **The conversation** | The cards, tool calls and a call's window, subagents, hook runs and notes, the turn's footer, finding your way (the marks, `F3` and `F4`, find), copying, quoting and exporting, rewind and branch, images, files named in replies, the working line and running tasks. | [§5](#5-conversation-view), [Conversation cards](#conversation-cards), [Images from Claude's tools](#images-from-claudes-tools), [Images in Claude's replies](#images-in-claudes-replies), [Files named in Claude's replies](#files-named-in-claudes-replies) |
+  | **The composer** | Sending and steering, queued messages, `/` and `@`, attachments and large pastes, earlier prompts, drafts and the stash, quick suffixes, model, effort and mode, prompt suggestions, check-ins. | [§5](#composer) |
+  | **Permissions and prompts** | Permission cards and rules, the starting mode, questions, plans, MCP servers asking for input, folder trust. | [§7](#7-permission-prompts) |
+  | **Plans, tasks and agents** | The Tasks page and following a plan, Claude Docs, the agent map, threads. | [Tasks](#tasks), [Claude Docs](#claude-docs), [Agent map](#agent-map), [Threads](#threads) |
+  | **Reviewing changes** | Changed files and reviewed ticks, the diff view and reverting, changes per turn, external diff tools. | [§8](#8-file-changes--diff-view) |
+  | **Usage and limits** | The header and the detailed header, alerts, the Usage window, context and compacting, the prompt cache, continuing after a limit resets, sharing across machines, Claude's service status. | [§6](#6-token-burn-awareness), [Service status](#service-status) |
+  | **Accounts** | API-key accounts, a folder's account, moving a tab, spend and its warnings. | [Accounts](#accounts) |
+  | **History and syncing** | History, the session library, syncing tabs, settings sync, the scratch pad. | [§9](#9-sessions-history-restore--sync), [Settings sync](#settings-sync-optional), [Scratch pad](#scratch-pad) |
+  | **Projects** | Project tools (a page each for Unreal, Unity and Godot), `claudette.json`'s actions and links, the project's settings, the process monitor, MCP servers, Perforce. | [Project tools](#project-tools), [Process monitor](#process-monitor), [MCP servers](#mcp-servers), [Perforce ticket handling](#perforce-ticket-handling) |
+  | **Away from your desk** | Remote Control, notifications and the badge, keeping the computer awake, starting at login. | [Remote Control](#remote-control-the-claude-app), [§10](#10-notifications), [Keeping the computer awake](#keeping-the-computer-awake), [Starting at login](#starting-at-login) |
+  | **Claudette** | Claudette on the composer, and games with her. | [Claudette on the composer](#claudette-on-the-composer), [Games with Claudette](#games-with-claudette) |
+  | **Settings** | A page per category, per-tab overrides, the styles and themes, accessibility. | [§14](#14-settings), [Visual style](#visual-style), [Accessibility](#accessibility) |
+  | **Updates** | Claude Code's updates and Claudette's own. | [§12](#12-claude-code-updates), [Updating Claudette](#updating-claudette) |
+  | **Troubleshooting** | Claude Code missing or too old, signing in, a failed or possibly stuck tab, a folder that's gone, Diagnostics and the protocol log, reporting an issue, where Claudette keeps its data. | [§11](#11-sign-in), [§16](#staying-tolerant-at-runtime), [Version](#version), [Storage](#storage) |
+  | **Reference** | Every keyboard shortcut, with its default on Windows and Linux and on macOS; the `claudette.json` format; the command line (`--folder`). | [Keyboard shortcuts](#keyboard-shortcuts), [Project tools](#project-tools) |
+- **What a page says.**
+  - It's for people using Claudette, not working on it: what the part is for, how to do each thing (in numbered steps where there are steps), the settings that change it (linking to their Settings page) and its shortcuts. No class names, protocol or other internals.
+  - It uses the app's own words, in bold, exactly as the app shows them: Settings → Appearance → **Style**, **Always allow**. Shortcuts are written as here (`Ctrl/Cmd+J`); the Reference chapter lists both.
+  - What Claude Code itself does (permission modes, hooks, MCP servers, `CLAUDE.md`, Plan mode) links to [Claude Code's docs](https://code.claude.com/docs) rather than being explained again.
+  - Only what's built (✅ in this document) has a page. A feature that's only designed gets its page when it's built. Something built but still to verify on a real machine is covered like the rest.
+  - **Ahead of a release.** The site is published from `main`, so it can describe things no release has yet. A section about one starts with a *New in the next release* note (`{% include unreleased.html %}`), which publishing the release removes.
+- **Pictures.**
+  - They're of the real app running the demo (`tools/Claudette.Demo`), never anyone's account or projects. The UI tests' headless renders won't do: they draw text about twice as wide as a screen does.
+  - `tools/Claudette.Demo/screenshots.ps1` takes the README's pictures, clicking through UI Automation and capturing with `PrintWindow`, into `docs/screenshots/`. The guide's come from a sibling, `guide-screenshots.ps1`, with the helpers both use moved into a module. Each shot is a name, the steps to it, and the element to crop to, from its UI Automation bounds with a margin: a picture of the part a page describes reads better than the whole window. They go in `docs/screenshots/guide/<chapter>/<name>-<light|dark>.png`.
+  - In the Standard style, light and dark. The Claude style shows only on the pages about it: every picture in all four looks would double what the pictures add to the repository, for little (the README's 33 are 6.8 MB).
+  - A page shows the picture that matches the reader's theme, through an include, `{% include shot.html name="…" alt="…" %}`, which writes a `<picture>` with a `prefers-color-scheme: dark` source. Every picture has alt text that says what it shows, as the README's do.
+  - **What the demo doesn't show yet.** The demo grows what a chapter needs, or the script makes it happen with `fake-claude`'s prompts: a waiting permission (`ASK_PERMISSION`), a usage limit (`LIMIT`), a process for the process monitor (`SPAWN`), a prompt suggestion (`SUGGEST`), a Claude Doc (`DOC`), and the sign-in screen (`FAKE_CLAUDE_LOGGED_IN=0`). A question, a plan to approve and an MCP server's form need `fake-claude` to learn them, as the mock API knows `ASK_QUESTION` and `EXIT_PLAN`. Perforce has no fake outside the tests, so its page can do without pictures.
+  - The script runs on Windows. What only macOS or Linux shows, such as the menu bar and the Dock icon's badge and animation, is captured by hand and named `-macos`, or described without a picture.
+- **Keeping it current.** With the first chapter, CLAUDE.md gets `docs/` in its layout and a rule: a change people can see updates its guide page and retakes its pictures in the same change, as it updates DESIGN.md. The `issues` skill's plans include the page. The README links to the guide at its top and under Getting started.
+- **In steps:**
+  1. `guide-screenshots.ps1`, and what the demo needs for Getting started.
+  2. The site and Getting started: `_config.yml`, the theme in light and dark, the includes, the home page, `docs.yml`, the Getting started chapter in full with its pictures, the CLAUDE.md rule and the README's links. Chapters join the sidebar once they're written, never as empty pages, since everything on `main` is published.
+  3. The other chapters, in the table's order, a pull request each, with their pictures and what the demo and the script need for them.
+- **To decide later**, since it's what the user sees: whether Claudette links to the guide, through **Help** in the command palette, `F1`, the foot of Settings' sidebar beside **Report an issue**, or a link from each Settings page to its chapter.
 
 ## 3. Main Window
 
@@ -265,7 +323,7 @@ In both styles, text in a different font or size beside other text sits on its b
     - The label shows the name in place of the folder's. A named group doesn't count as a clash, so another folder of the same name keeps its plain name (`api` beside *Side project*).
     - Saving it empty, or as the folder's own label, goes back to the folder's name, as does **Reset name**, in the menu while the group has a name.
     - The name is remembered for the folder on this machine (in `state.json`), as the color is.
-  - Hovering the label shows the full path. The group's `+` opens a new tab in the same folder.
+  - Hovering the label shows the full path. The group's `+` opens a new tab in the same folder. A **Project files** button beside it, opening the project's editor, is planned ([§18](#project-files)).
   - A group can be collapsed to just its label. A collapsed group still shows the most urgent status of its tabs, such as "needs input".
   - Tabs can be dragged to reorder them within their group, and groups can be dragged (by their label) to reorder them. A tab can't be dragged into another group, because its folder is fixed, and pinned tabs stay ahead of the others.
     - A dragged tab's row is marked as a selected one is, and the list rearranges as soon as the pointer passes the middle of a neighbor. Dropped in the sidebar, the tab is selected, as a click would. **Move up** and **Move down** in the tab menu do the same from the keyboard or mouse.
@@ -1198,7 +1256,7 @@ In a terminal, Claude Code asks before it works in a folder for the first time, 
   - Long lines scroll sideways with a scroll bar along the bottom, Shift and the mouse wheel, or a touchpad. Every line scrolls together, both sides at once when they're side by side, and the line numbers stay where they are. The rows scroll up and down as usual.
   - Highlighting uses TextMate grammars, by file extension, with the dark or light theme to match the app. Files over 20,000 lines, and binary files, are shown without it. A line over 1,000 characters, as a minified file's, gets 50 ms and shows the rest in the default color; a shorter line is tokenized whole, since with a budget the first line of a freshly loaded grammar, or any line on a busy machine, could come back half colored.
   - A leading byte order mark isn't counted as a change.
-- Actions: open in external diff tool, open in external editor (the app the OS uses for that file type), reveal in Finder/Explorer, copy path.
+- Actions: open in external diff tool, open in external editor (the app the OS uses for that file type), reveal in Finder/Explorer, copy path. Once [Project files](#project-files) is built, **Open** goes to Claudette's own editor unless Settings → Editor says otherwise, and **Open in the OS's app** stays.
 - If the folder is a git repo, a toggle switches to **working tree vs HEAD**. This also shows changes made by Bash commands or by the user.
   - Git is asked once Claude's edits pause (half a second after the last), not once per edit, and a listing a newer one supersedes is stopped. A tab in the background asks git once it's shown.
   - It covers the whole repository, not only the tab's folder.
@@ -2352,10 +2410,12 @@ Claudette has to keep working when Claude Code adds things it doesn't know about
     - **Resizing split panes and dragging tabs onto them ([§18](#split-panes)).** ✅ Built 2026-10-15. The line between two panes drags to trade their width, kept with the app state; a tab's row dragged from the sidebar onto a pane opens beside it, or in its place with no room for another.
       - **Still to verify:** both on real macOS and Linux desktops, with a touchpad as well as a mouse (so far on Windows and headlessly).
     - **Moving to .NET 11 ([§2](#moving-to-net-11)).** Planned for .NET 11's release on 2026-11-10, once dropping macOS 12 and 13 is decided. On macOS, .NET 11 starts processes with `posix_spawn` rather than `fork()`, which stops a source build started from a terminal printing `MallocStackLogging` lines. On Windows it builds and passes every test with one package reference removed; macOS and Linux are still to verify.
+    - **Project files ([§18](#project-files)).** Designed 2026-10-15, not built. One Project Files tab per folder group, opened beside the group's `+`. It has an explorer (on the left, or the right) that finds files by name, and files in tabs in an AvaloniaEdit editor, with a chip for the line endings and indentation. Saving keeps unsaved edits through quitting and restarts. Claude's changes show as gutter bars with a peek, inline or side by side, with **Reviewed**. Files named in replies and Changed files' files open in it (Settings → Editor). It replaces the non-goal of not being an editor ([§1](#non-goals-v1)). Built in steps 0 (a spike) to 4.
+    - **User guide ([§2](#user-guide)).** Planned 2026-10-15, not started. A site at claudette.dotbunny.com, which GitHub Pages builds from `docs/` on `main` with Jekyll and Just the Docs: a chapter for each part of Claudette, written for the people using it, with pictures of the demo in light and dark taken by a script, a check for broken links on each pull request, and pages kept current in the same change as the features they describe.
 
 ## 18. Future Features
 
-Features beyond v1. All below are built (milestones 10, 11, 13, 14, 15 and 17); new ones go here first, each with a fuller design before it's built.
+Features beyond v1. All below are built (milestones 10, 11, 13, 14, 15 and 17), except [Project files](#project-files), which is designed but not built yet. New ones go here first, each with a fuller design before it's built.
 
 ### Perforce ticket handling
 
@@ -2934,6 +2994,7 @@ Claude names files as it works: *"`weapons.md` is written"*, *"see `docs/specs/w
 - **Where the file is.** A path is read against the tab's folder (the worktree, for a tab in one), then its extra folders. A name, or a path that isn't there from the folder (`specs/weapons.md`), is the file with that name the session's tools last read or changed, the main agent's or a subagent's; failing that, the project's files with it (the composer's `@` list: what git tracks, or a walk of the folder), the shallowest first.
 - **A click.**
   - A file opens in the app the OS uses for it, as Changed files' **Open** does ([§8](#8-file-changes--diff-view)): Claudette isn't an editor ([§1](#non-goals-v1)). A line isn't passed on, since the OS's apps have no common way to take one.
+    - Planned: once [Project files](#project-files) is built, a file opens in Claudette's own editor instead, at the line named, unless Settings → Editor says to use the OS's app. Scripts open there as text rather than showing in their folder, since showing their text doesn't run them.
   - A folder opens in Finder, Explorer or the file manager.
   - A program, script, shortcut or installer (`.exe`, `.bat`, `.ps1`, `.js`, `.sh`, `.py`, `.lnk`, `.app`, `.desktop` and the like, or a file without an extension whose execute bit is set on macOS and Linux) shows in its folder rather than opening, since opening one runs it, and a reply can be prompt-injected to point at one under an innocent name (`[the spec](tools/setup.bat)`).
   - A name that matches several files offers them in a menu at the click, from the tab's folder (`docs/weapons.md`, `Plugins/Combat/weapons.md`); one is opened when it's picked, none when the menu closes.
@@ -3042,6 +3103,287 @@ While Claude works, or a usage limit holds a task, the user can play a game agai
 - **Keyboard and screen readers.** Each square, column and letter is a button with a name (*"Top left, empty"*, *"Column 3, 2 of 6 filled"*, *"Letter E"*). While the page has focus, the number keys play tic-tac-toe's squares (1 to 9, from the top left) and Connect Four's columns (1 to 7), and the letters guess in hangman; none of it reaches the composer. Her moves and every result are read out (*"Claudette took the middle."*, *"You win!"*).
 
 How it's built: `Games/` holds the rules and Claudette's play, with no UI and the random choices passed in: `TicTacToe` and `TicTacToeOpponent` (minimax), `ConnectFour` and `ConnectFourOpponent` (a depth-limited alpha-beta search), and `Hangman` and `HangmanWords`. `Services/GameService` holds the one game that's open, keeps each game's score and level in `state.json` (`AppState.Games`), and tells Claudette what happened through `MascotService`; the shell tells it which tabs wait. Each game has a view model on `GameViewModel` (`TicTacToeViewModel`, `ConnectFourViewModel`, `HangmanViewModel`), which waits for her move on the injected clock. `Views/GamesView` is the page, made only while it shows: the tab's `ShownGames` is null otherwise, so a tab with no game open holds nothing for it. `GamesTests` (the rules and her play: Unbeatable never loses any game it can be played into), `GameServiceTests` and `GamesUiTests`.
+
+### Project files
+
+Designed 2026-10-15; not built yet. **Steps**, at the end, gives the order it's built in.
+
+A code editor for the project's files, in a tab of the project's own: a tree of its folders and files, the files open in tabs, and Claude's changes marked where they are in the code. Until now Claudette left editing to the user's own editor ([§1](#non-goals-v1)), so reading what Claude wrote, or fixing a line of it, meant leaving the conversation. It's an editor, not an IDE: no language services, building, debugging or source control.
+
+```
+┌────────────────────┬──────────────────────┬──────────────────────────────────────────────────┐
+│ ▾ ● NightOwl  ▤ +  │ Explorer     ⌕ ⊟ ⋯   │ PlayerController.cpp ● │ Config.h │ ⋯            │
+│ │ ▤ Project Files  │ ▾ Source             ├──────────────────────────────────────────────────┤
+│ │   PlayerContro…  │   ▾ Game             │ Edit · Inline changes · Side by side  ✓ Reviewed │
+│ │ ● refactor au…   │     ▾ Player       • │  40    float Health = 100.f;                     │
+│ │   Opus · High    │       PlayerCon…   M │  41  ▌ float Speed = 600.f;                      │
+│ │ ! fix login b…   │       Config.h       │  42  ▌ void Tick(float Dt) override;             │
+│ │   Needs input    │ ▸ Config             │  43    };                                        │
+│                    │   README.md        A │                                                  │
+│                    │                      │                   ╭────────────────────────────╮ │
+│                    │                      │                   │ Ln 42, Col 7 · C++ · CRLF  │ │
+│                    │                      │                   │ UTF-8 · 4 spaces           │ │
+│                    │                      │                   ╰────────────────────────────╯ │
+└────────────────────┴──────────────────────┴──────────────────────────────────────────────────┘
+```
+
+- **The Project Files tab.**
+  - A project's group has at most one. The **Project files** button (a file icon, its tip *"Project files"*) beside the group's `+` opens it, or selects it when it's open. So do:
+    - **Open project files** in the group's menu, in the full sidebar and the rail;
+    - the command palette's **Open project files** and **Go to file…** ([§4](#command-palette));
+    - opening a file from elsewhere (**Opening files in the editor**, below).
+  - **Its row** is the group's first, above pinned tabs.
+    - It has a file icon where a tab has its status icon, the name **Project Files**, and on its second line the file showing (`PlayerController.cpp`), or *No files open*.
+    - While files have unsaved edits, the second line says *2 unsaved* in the caution color, and the icon has a dot.
+    - It has a close button as a tab's row does. The rail shows it as a square with the file icon.
+    - Its menu: **Open beside**, **Close pane** (while it's in one), **Reveal in Finder/Explorer**, **Copy path** and **Close**.
+  - It stays first: it can't be dragged within the group, and **Move up** and **Move down** pass it by. Its row can be dragged onto a pane ([Split panes](#split-panes)).
+  - `Ctrl+Tab`, `Ctrl/Cmd+1…9` and `Ctrl/Cmd+J` go only through session tabs and skip it, so opening it never changes the session tabs' numbers. It's reached with a click, its button, or `Ctrl/Cmd+P` (**Finding a file by name**, below).
+  - **It keeps its group in the sidebar.** Closing the group's last session tab leaves the group with only its Files tab, and **Close group** closes it too.
+  - It comes back on launch with the files it had open, as a pinned tab does. It has no `claude` to start.
+  - **It has nothing a session has:**
+    - no composer and no side panel; the header's side panel button hides while it has the focus;
+    - no status, usage or notifications;
+    - and Claudette on the composer stays on the session panes.
+- **Panes.** It takes part in split panes as a session tab does ([Split panes](#split-panes)), so the conversation can be on one side and the code on the other.
+  - That covers **Open beside**, dragging its row onto a pane, resizing, and the restart snapshot.
+  - Its pane keeps 360 pixels for the editor, plus the explorer's least while it shows.
+- **The layout.** The explorer and the editor sit side by side.
+  - The explorer is on the left by default, or on the right with Settings → Editor → **Explorer side**. The explorer's **⋯** menu has **Move to the right** (or **left**), which changes the same setting.
+  - **Width.** Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default; a double-click on the edge goes back to that. The width is the same for every Files tab, and remembered.
+  - A button at the start of the file tabs' row hides and shows the explorer, and that's remembered too.
+  - In a narrow pane, the explorer narrows first, down to its least, and the editor keeps its 360 pixels.
+- **The explorer.**
+  - **Its header** has the group's label, **Find file** (a magnifier, `Ctrl/Cmd+P`), **Collapse all** and **⋯**. The **⋯** menu has:
+    - **Show only changed files**;
+    - **Claude's changes** or **Against git HEAD**, in a repository (**Claude's changes**, below);
+    - **Move to the right**;
+    - **Refresh**.
+  - **The tree** lists folders first, then files, by name, ignoring case. A folder's entries are read when it's expanded.
+    - `.git` isn't shown.
+    - What git ignores is shown dimmed. Git is asked as a folder is read, with `--no-optional-locks`. Outside a repository, the folders the composer's `@` list skips (`node_modules`, `bin`, `obj` and the like) are dimmed instead.
+    - A link to a folder shows with a link badge and expands like a folder, unless it leads back up into the tree.
+  - **It follows the disk.** The folders shown are watched. Half a second after files appear, go or are renamed, they're redrawn, keeping what's expanded and selected.
+  - **Claude's changes in the tree.**
+    - A file Claude changed has a letter at its right in the change colors: **M**, or **A** for a file Claude created.
+    - A folder holding one has a dot.
+    - A reviewed file's letter is faint.
+    - **Show only changed files** shows just those, and the files Claude deleted, struck through. Opening a deleted file shows its diff.
+  - **Opening.** A click opens a file in the preview tab; a double-click or Enter opens it to stay (**File tabs**, below). The arrow keys move without opening anything, and Right and Left expand and collapse.
+  - **A file's menu:** **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **Copy path**, **Copy relative path** and **Reveal in Finder/Explorer**.
+    - On a program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`), **Open in the OS's app** shows it in its folder rather than running it, as a reply's link does ([Files named in Claude's replies](#files-named-in-claudes-replies)).
+  - **A folder's menu:** **Copy path**, **Copy relative path**, **Reveal in Finder/Explorer** and **Collapse**.
+- **Finding a file by name.**
+  - **Find file** in the explorer's header, or `Ctrl/Cmd+P` anywhere (rebindable, [§14](#keyboard-shortcuts)), puts a box at the top of the explorer and gives it the focus. From a conversation, `Ctrl/Cmd+P` first opens the project's Files tab, beside the conversation or in its place, as **Show files from a conversation** says (**Opening files in the editor**, below).
+  - **What's searched.** Typing swaps the tree for a list of the files whose names match, best first.
+    - It covers what the composer's `@` lists ([§5](#autocomplete)): the files git tracks and the new ones it doesn't ignore. Outside a repository, it's a walk of the folder that skips `node_modules`, `bin`, `obj` and the like.
+    - Ignored files are left to the tree.
+    - Only names are searched, not what's in the files.
+  - **Matching** is the `@` list's: the letters in order, in the name first, then in the path. A match at the start of the name or of a word, or with the letters together, comes first, then shorter paths.
+  - **Each result** is one line: the name, with its matched letters bold, then, muted, its folder relative to the project's (`PlayerController.cpp  Source/Game/Player`). So files with the same name can be told apart at a glance.
+    - A path too long for the width is cut short from its start (`…/Game/Player`), and its tip shows the whole path.
+    - A file at the top of the project shows no folder.
+  - **Choosing.**
+    - `Up` and `Down` choose, and `Enter` or a click opens the choice to stay.
+    - A line number after the name goes to that line: `player:42`.
+    - `Esc`, or emptying the box, brings the tree back, with the file just opened selected in it.
+  - **How many.** The list holds the best 200, and says so: *"200 of 1,204 files. Type more to narrow them."*
+    - While the list is first being made, it says *Listing files…*.
+    - A project with more files than the `@` list's 100,000 says its list is cut short.
+- **File tabs.** A row of tabs over the editor, one per open file.
+  - **A tab shows:**
+    - the file's name, with its parent folder too when two open files share a name (`Player/Config.h`, `Enemy/Config.h`);
+    - a dot while it has unsaved edits, which becomes the × on hover;
+    - a pin while it's pinned, and a small check while it's reviewed.
+  - Its tip gives the path from the project's folder, and who changed the file (*"Changed by Claude in refactor auth"*).
+  - **Preview.** A click in the explorer opens a file in the preview tab, with its name in italics, and the next file opened that way replaces it. Typing in it, double-clicking its tab, or opening the file to stay keeps it.
+  - **Pinned** tabs sit first, and **Close others**, **Close to the right**, **Close saved** and **Close all** leave them open.
+  - **Using the row.** A click selects a tab, a middle click closes it, and dragging moves it along the row. When the tabs don't fit, the row scrolls sideways (the mouse wheel works) and keeps the selected one in view, and a **⋯** at its end lists every open file.
+  - **A tab's menu:** **Close**, **Close others**, **Close to the right**, **Close saved**, **Close all**, **Pin** (or **Unpin**), **Copy path**, **Copy relative path**, **Reveal in the explorer** (selects it in the tree), **Reveal in Finder/Explorer**, **Open in the OS's app** and, while Claude changed the file, **Reviewed**.
+  - `Ctrl+PageDown` and `Ctrl+PageUp` (`Cmd+Option+→` and `←` on macOS) go to the next and previous file. The window's **Close tab** shortcut closes the file showing (**Keyboard**, below).
+- **The editor.**
+  - **Its look.**
+    - The code font and size from Settings → Appearance, scaled by the zoom ([§3](#accessibility)).
+    - Its colors are the diff view's TextMate theme for the app's theme and style ([§8](#8-file-changes--diff-view)), so code looks the same in a reply's code block, in a diff and here.
+    - The selection and the current line's highlight use the app's own tokens.
+  - **What it does:**
+    - line numbers, with the current line drawn faintly;
+    - find and replace (`Ctrl/Cmd+F`, and `Ctrl+H` or `Cmd+Option+F` on macOS), with match case, whole word and regular expressions;
+    - **Go to line** (`Ctrl+G`);
+    - folding by indentation, in any language;
+    - box selection, dragging with `Alt` (`Option`) held.
+  - **Word wrap** follows Settings → Editor (off by default). `Alt+Z` (`Option+Z`) changes it for the file showing.
+  - Tab and new lines indent as the file does (**The chip**, below). Undo goes back through the file's edits while it's open.
+  - **Which files open.**
+    - Text in UTF-8, or in UTF-16 or UTF-32 when its byte order mark says so, as Revert reads files ([Reverting](#reverting)).
+    - A file that isn't valid text in one of those (Latin-1, say) opens read-only, saying why: saving a guess would change characters nobody touched.
+    - Binary files (§8's test) and files over 10 MB don't open. The editor says so, with **Open in the OS's app**.
+    - A file Claudette isn't allowed to write opens read-only, saying so.
+    - Highlighting stops at 20,000 lines, and a line over 1,000 characters gets 50 ms, as in the diff view.
+- **The chip.** A small rounded chip at the editor's bottom right, over the text, says where the cursor is and what the file is: *Ln 42, Col 7 · C++ · CRLF · UTF-8 · 4 spaces*. It fades while the cursor's line is under it, so it never hides what's being typed.
+  - **The language** is the grammar the file's extension picks, as in the diff view. For a file without an extension, its first line's `#!` picks it (`bash`, `python`, `node`). Otherwise it's *Plain text*.
+  - **Line endings:** *CRLF* or *LF*, whichever the file mostly has, or *Mixed* while it has both. New lines take the file's.
+    - A click offers **LF** and **CRLF**, which changes every line's.
+    - That's an edit like any other: Undo takes it back, and Save writes it.
+  - **The encoding:** *UTF-8*, *UTF-8 with BOM*, *UTF-16 LE* and so on. Saving keeps it.
+  - **Indentation:** *4 spaces* or *Tabs*, found from the file's indented lines. A file with none gets Settings → Editor's default (4 spaces).
+    - A click offers **Indent with spaces** or **Indent with tabs**, and a width of 2, 4 or 8.
+    - The choice is for Tab and new lines in this file while it's open; the lines already there stay as they are.
+  - The position, the language and the encoding are only shown; a click on them does nothing.
+- **Saving.**
+  - **The keys.** `Ctrl/Cmd+S` saves the file showing while the Files tab has the focus; anywhere else it stays the composer's **Stash** ([§5](#drafts-and-the-stash)). `Ctrl/Cmd+Alt+S` saves every open file. While the Files tab has the focus, the command palette has both.
+  - **How it writes.** A save keeps the file's encoding, byte order mark and line endings. It writes to a temporary name and renames it over the file, as Revert does ([Reverting](#reverting)): a link is written through, and the file keeps its permissions.
+  - **Only over what was opened.** It writes only if the file is still what was opened or last saved. Otherwise it asks, as described under **When a file changes on disk**.
+  - **Unsaved edits are kept.** A file's unsaved text is copied to the data folder a second after typing stops.
+    - So quitting Claudette, a crash, or a restart into a new build ([§9](#working-on-claudette)) asks nothing and loses nothing: the file comes back with its edits and its dot.
+    - Saving, or **Don't save**, removes the copy.
+  - **Closing a file** with unsaved edits asks first, in place: *"Save PlayerController.cpp?"*, with **Save**, **Don't save** and **Cancel**.
+  - **Closing the Files tab or its group** with unsaved files asks once, naming them, with **Save all**, **Don't save** and **Cancel**.
+- **When a file changes on disk** (Claude's edits, a `git checkout`, the user's other editor):
+  - **Noticing it.** An open file is watched. It's also looked at again when a tab of the project changes it with a tool, when one finishes a turn, and when Claudette comes to the front.
+  - **With no unsaved edits**, the file is read again where it was: the cursor, selection, scroll and folds stay on their lines as near as they can. Undo takes the change back as one step.
+  - **With unsaved edits**, a banner over the editor, in the caution colors, says *"Claude changed PlayerController.cpp in refactor auth while you were editing it."* When it wasn't one of the project's tabs, it says *"PlayerController.cpp changed on disk while you were editing it."* It offers:
+    - **Compare**, which shows the file on disk against the edits, side by side;
+    - **Keep mine**, which keeps the edits; saving then writes over the file on disk without asking again;
+    - **Use theirs**, which reads the file again; Undo can take that back.
+  - **Deleted or renamed:** a banner says the file is gone. The text stays: **Save** writes it back, and **Close** closes it.
+- **Claude's changes.**
+  - **Against what.** A file's "before" is what it held before Claude first changed it in any of the project's open tabs: of the "befores" their Changed files have for it ([§8](#8-file-changes--diff-view)), the earliest.
+    - With one tab, the editor and that tab's Changed files show the same changes.
+    - The changes come from open tabs, so closing the last tab that changed a file takes its marks away.
+    - In a git repository, the explorer's **⋯** switches the whole Files tab to **Against git HEAD**, as Changed files' switch does. That also shows the changes the user, commands and closed tabs made.
+  - **What's compared.** That "before" is compared with the editor's text, unsaved edits and all, as Changed files compares it with the file on disk now.
+    - It's worked out again 300 ms after typing stops, away from the UI thread.
+    - A file over 20,000 lines, or with too many changes to compare (the line diff's limit), shows none, and its tab's tip says why.
+  - **Gutter bars**, between the line numbers and the text: a green bar beside lines added, a bar in the accent beside lines changed, and a small red notch between two lines where lines were removed.
+  - **Peek.** A click on a bar opens the old lines under the change, pushing the lines below it down.
+    - Its header names the tab, or tabs, that changed the file and when: *"Changed by Claude in refactor auth · 14:05"*. That links to the tab, at its last change to the file.
+    - The header also has **Revert**, the previous and next change, and ×.
+    - Under the header are the lines the change replaced, highlighted, in the removed color.
+    - **Revert** puts them back in the editor's text as one step, which Undo takes back. The file then has unsaved edits: nothing is written until it's saved.
+    - `F3` and `F4`, the conversation's previous and next message ([§14](#keyboard-shortcuts)), go to the previous and next change and open its peek.
+  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**.
+    - The last two are §8's diff view inside the tab, read-only, with **Whole file**, the highlighting, and **Revert** on each change.
+    - **Revert** there changes the editor's text, as the peek's does.
+    - A double-click on a line goes back to **Edit** at that line.
+    - Each open file keeps its own choice.
+  - **Reviewed.** The bar has **Reviewed**, and so does the file tab's menu.
+    - Ticking it ticks the file in every one of the project's open tabs whose Changed files lists it, at its latest change, as ticking it there does ([§8](#8-file-changes--diff-view), "Reviewed"). The rows' reviewed icon follows.
+    - It shows as ticked while every one of those tabs has the file ticked.
+- **Opening files in the editor.** Settings → Editor → **Open files in**: **Claudette's editor** (the default) or **The app the OS uses**, as before.
+  - **Where from:**
+    - a file named in Claude's replies ([Files named in Claude's replies](#files-named-in-claudes-replies));
+    - Changed files' **Open**, and the diff window's;
+    - the file named on a Read, Edit, Write or NotebookEdit card, which becomes a link.
+  - Each of their menus keeps **Open in the OS's app**.
+  - **At the line.** A line named in a reply (`Player.cpp:42`, `:42:7`, `#L42-L51`) is gone to, and a range is selected. An Edit card's file opens at the first line its change touched, from its `structuredPatch`.
+  - **Which Files tab.** The one of the group whose folder holds the file, the deepest one when a group's folder is inside another's.
+    - A file in no group's folder (`~/.claude/settings.json`) opens in the Files tab of the clicked tab's group. Its file tab shows its whole path, and the explorer doesn't list it.
+  - **Where it shows.** A click in a conversation opens the Files tab beside it, as **Open beside** does, unless it's on screen already. With Settings → Editor → **Show files from a conversation** set to **In its place**, the Files tab takes the conversation's pane instead, as selecting it in the sidebar does. Either way it takes the focus, so the keyboard goes to the editor.
+  - **What still goes elsewhere:**
+    - A program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`) still shows in its folder.
+    - Binary files and files over 10 MB open in the OS's app.
+    - A folder in the project shows in the explorer, expanded and selected. One elsewhere opens in Finder, Explorer or the file manager.
+  - **Scripts** (`.bat`, `.ps1`, `.sh`, `.py`, `.js`) open in the editor, since showing their text doesn't run them.
+  - With **The app the OS uses**, every file goes where it went before.
+- **Settings → Editor**, a new category:
+  - **Explorer side**: left (the default) or right;
+  - **Open files in**: Claudette's editor (the default) or the app the OS uses;
+  - **Show files from a conversation**: beside it (the default) or in its place;
+  - **Word wrap**: off by default;
+  - **Indentation**, for files that have none: 4 spaces by default.
+- **Keyboard.**
+  - **Go to file** (`Ctrl/Cmd+P`) is a new rebindable shortcut. **Open project files** is in the list, without a default.
+  - **The window's shortcuts that act on a tab** act on the editor while the Files tab has the focus:
+    - **Find** opens the editor's find;
+    - **Close tab** closes the file showing, and the Files tab itself once none is open;
+    - **Previous message** and **Next message** go through the changes.
+  - **The editor's own keys** are listed under Settings → Keyboard's fixed keys:
+    - `Ctrl/Cmd+S` saves, and `Ctrl/Cmd+Alt+S` saves all;
+    - `Ctrl+H` replaces (`Cmd+Option+F` on macOS);
+    - `Ctrl+G` goes to a line;
+    - `Alt+Z` turns word wrap on or off;
+    - `Ctrl+PageDown` and `Ctrl+PageUp` (`Cmd+Option+→` and `←`) go to the next and previous file.
+- **Accessibility.**
+  - The explorer, the file tabs, the chip, the peek's buttons and the banners have names a screen reader can say.
+  - The editor's text can't be read by a screen reader yet. AvaloniaEdit has no automation support, and Avalonia has none for text ranges (AvaloniaEdit #541). So every file's menu keeps **Open in the OS's app**, for an editor that can be read.
+  - Zoom and reduced motion apply as they do everywhere else ([§3](#accessibility)).
+- **Not covered:**
+  - completion, errors, going to a definition and other language services;
+  - searching what's in the files;
+  - creating, renaming, deleting and moving files;
+  - splitting the editor;
+  - more than one cursor (AvaloniaEdit has only box selection);
+  - previews of images;
+  - saving by itself;
+  - git staging and commits;
+  - a terminal.
+
+**Steps.**
+
+0. **Spike.** Put AvaloniaEdit 12.0.0 and AvaloniaEdit.TextMate 12.0.0 into Claudette, to find out:
+   - whether the editor draws in the headless UI tests, so Verify snapshots can cover it;
+   - whether its TextMate colors match `Diffs/SyntaxHighlighter`'s, in both styles and themes;
+   - how it copes with a 50,000-line file, and with a 5 MB file on one line;
+   - whether room can be opened between two lines for the peek, with an `InlineObjectElement` from a `VisualLineElementGenerator`, since AvaloniaEdit has nothing like Monaco's view zones;
+   - what typing Japanese with Windows' IME does, since support for showing the text being composed is still in an open pull request (AvaloniaEdit #592).
+
+   Its findings replace this list.
+1. **The tab in the shell:** the tab, its row, button and menus, panes, saving and restoring it, and the restart snapshot, with an empty editor.
+2. **The explorer and the editor:** the tree, finding a file by name, file tabs, editing, the chip, saving, keeping unsaved edits, changes on disk, and the keyboard.
+3. **Claude's changes:** the "before", the gutter bars and peek, the explorer's letters and filter, inline and side by side, and **Reviewed**.
+4. **Opening files in the editor:** the setting, and each way in.
+
+Each step updates this section with what was built, the other sections it touches (§3, §4, §8, §14), its milestone ([§17](#17-milestones)) and [CLAUDE.md](CLAUDE.md)'s layout.
+
+**How it's built** (planned).
+
+- **Packages.** `Avalonia.AvaloniaEdit` and `AvaloniaEdit.TextMate` 12.0.0 (MIT), which use the TextMateSharp already referenced. Two of AvaloniaEdit's open bugs shape how it's used:
+  - The editor keeps `AllowScrollBelowDocument` on, since with it off, dragging a selection to the last line freezes it (#614).
+  - It has a least size, since squeezed very small it overflows its stack (#596, #613).
+- **Core,** in `ProjectFiles/`:
+  - `FolderListing`: a folder's entries, with what git ignores.
+  - `TextFile`: reading and saving with the encoding, byte order mark and line endings. Saving goes through `AtomicFile`, with the check `Revert.Write` makes.
+  - `Indentation` and `LineEndings`: finding and converting them.
+  - `DiskChange`: what a change on disk does to an open file. It's pure.
+  - `ProjectChanges`: each file's earliest "before" across the project's tabs.
+  - `EditorBackups`: unsaved text, in `editor-backups` in the data folder.
+  - Watching goes through a new `IFolderWatcher`, so tests use a fake. Finding a file uses `ProjectFileIndex` and `PathMatcher`.
+- **The shell.**
+  - `IShellTab` is what `TabViewModel` and `ProjectFilesViewModel` both are: an id, a name, a group folder, being selected and shown, and a pane.
+  - Panes, the main area and the sidebar's rows take either kind, each with its own template.
+  - `AllTabs` and `OpenTabs` stay sessions only, so nothing that counts, closes, restores or threads sessions changes.
+  - `ShellViewModel.Selected` is the focused tab, and `SelectedTab` is that tab when it's a session.
+  - `TabGroupViewModel.Files` holds the group's Files tab.
+  - `AppState.ProjectFiles` keeps each folder's expanded folders and open files: which are pinned, which is the preview and which is showing, and each file's cursor, scroll and mode.
+  - The groups' order is kept apart from the tabs', since a group can have no session tab.
+- **The app.**
+  - `ProjectFilesViewModel`: the explorer, the open files and finding a file.
+  - `ProjectFileViewModel`: one open file.
+  - `Views/ProjectFilesView`.
+  - `Views/Editor/`: `ChangeMargin` (the bars), `ChangePeekGenerator` (the peek) and `EditorChip`.
+  - `Controls/DiffView`: the diff view, taken out of `DiffWindow` so that the window and the Files tab both show it.
+  - The change colors are new tokens in `App.axaml`, with Claude values in `Themes/ClaudeColors.axaml`, light and dark.
+- **Claude Code:** nothing new. The changes come from the `originalFile` that Changed files already reads, so `compat/surface.yaml` doesn't change.
+
+**Tests** (planned).
+
+- **In Core:**
+  - `FolderListingTests`;
+  - `TextFileTests`: encodings, byte order marks, line endings, links and permissions, and refusing to write over a change;
+  - `DiskChangeTests`;
+  - `ProjectChangesTests`: several tabs, and one of them closed;
+  - `IndentationTests`, `LineEndingsTests` and `EditorBackupsTests`.
+- **In the app**, with `TabTestHarness` and `FakeTimeProvider`:
+  - opening, previewing, pinning and closing files;
+  - saving, and **Don't save**;
+  - Claude's edit arriving with and without unsaved edits;
+  - unsaved text kept through a restart;
+  - reviewed ticks reaching each tab;
+  - a reply's `Player.cpp:42` opening at its line, beside the conversation and, with the setting, in its place;
+  - the Files tab in panes;
+  - its group outliving its last session tab.
+- **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; and the list of files found by name.
 
 ## 19. Open Questions
 
