@@ -330,7 +330,7 @@ public sealed class ConversationBuilder
             case AssistantMessageReceived assistant:
                 if (!_carriedOnNoted && assistant.Message.ResumeReason is not null)
                 {
-                    // A turn Claude Code re-runs after a restart cut it off (DESIGN.md §9, "Working on Claudette").
+                    // A turn Claude Code re-runs, or goes on with, after a restart cut it off (DESIGN.md §9, "Working on Claudette").
                     _carriedOnNoted = true;
                     AddNote("Carrying on with the turn the restart cut off.");
                 }
