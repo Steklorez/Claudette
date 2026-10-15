@@ -153,7 +153,7 @@ public class SidePanelUiTests
         Assert.Equal(["Changed Files", "Scratch Pad", "Agents", "Tasks", "MCP"], PageTabs(row).Select(p => Label(p).Text));
         Assert.True(tab.IsScratchPadPage);
         AssertLaidOut(row);
-        Assert.Equal(["Files", "ScratchPad", "Agents", "Project", "Processes", "Tasks", "Mcp"], h.Services.State.SidePanelPages);
+        Assert.Equal(["Files", "ScratchPad", "Agents", "Project", "Processes", "Tasks", "Mcp", "Games"], h.Services.State.SidePanelPages);
 
         // A tab's menu moves it too, past the next page the tab has.
         var moveRight = PageTab(row, "Changed Files").ContextMenu!.Items.OfType<MenuItem>().Single(m => m.Header as string == "Move right");

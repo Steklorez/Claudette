@@ -14,7 +14,7 @@
 
 versions:
   minimum: 2.1.284     # ClaudeLocator.MinimumVersion
-  lastTested: 2.1.286  # ClaudeLocator.LastTestedVersion; bump when a compatibility report is handled
+  lastTested: 2.1.300  # ClaudeLocator.LastTestedVersion; bump when a compatibility report is handled
 
 items:
   # --- Launch flags ------------------------------------------------------------------------------------
@@ -459,7 +459,7 @@ items:
     usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#resume_reason
     test: RestartTests, RealCliTests
-    fallback: On a re-run's assistant messages and result; the first one adds a note. Without it the re-run reads as an ordinary turn.
+    fallback: On the assistant messages and result of a turn a restart cut off, when Claude Code re-runs it or (by 2.1.300) goes on from its tool calls or the permission prompt it took over; the first one adds a note. Without it the turn reads as an ordinary one.
   - id: "startup_failure_reason"
     kind: field
     status: documented
