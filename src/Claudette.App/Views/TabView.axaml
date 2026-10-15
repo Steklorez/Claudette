@@ -698,21 +698,28 @@
       </controls:Card>
     </DataTemplate>
 
-    <!-- A turn's footer (DESIGN.md §18, "Conversation cards"): a Modified files card with each file the turn changed,
-         which opens the turn's changes to it (DESIGN.md §8, "Changes per turn"), and a Turn statistics card. -->
+    <!-- A turn's footer (DESIGN.md §18, "Conversation cards"): a Modified files card with a tile for each file the turn
+         changed, laid out as a Tool calls card's are, which opens the turn's changes to it (DESIGN.md §8, "Changes per
+         turn"), and a Turn statistics card. -->
     <DataTemplate DataType="conv:TurnSummaryItem">
       <StackPanel Classes="turnfooter">
         <controls:Card Classes="files" Label="Modified files" Icon="{StaticResource IconCardFiles}" Detail="{Binding FilesText}"
                        TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" IsVisible="{Binding HasFiles}">
           <ItemsControl ItemsSource="{Binding Files}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <controls:TilesPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="conv:TurnFileRow">
-                <Button Classes="flat row" Padding="2,2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ToolTip.Tip="{Binding Change.Path}"
+                <Button Classes="flat tile" ToolTip.Tip="{Binding Change.Path}"
                         AutomationProperties.Name="{Binding DisplayPath, StringFormat='What this turn changed in {0}'}"
                         Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenTurnDiffCommand}" CommandParameter="{Binding}">
-                  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="2">
                     <TextBlock x:Name="FileName" Classes="small" FontWeight="SemiBold" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Row="1" Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis" IsVisible="{Binding HasFolder}" />
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis"
+                               IsVisible="{Binding HasFolder}" />
                     <!-- The counts, monospace: on the name's baseline (Controls/Baseline). -->
                     <TextBlock Grid.Column="1" Classes="mono small" Text="{Binding Stats}" VerticalAlignment="Top"
                                controls:Baseline.AlignWith="{Binding #FileName}" />

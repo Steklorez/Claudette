@@ -122,7 +122,7 @@ public class ComposerExtrasUiTests
         await UiText.SettleUntilAsync(window, () => tab.Items.LastOrDefault() is TurnSummaryItem { HasFiles: true } t && t.Files[0].Stats is not null, "the footer");
         UiText.Settle(window);
 
-        // A Modified files card, each file on a row that opens the turn's changes to it (DESIGN.md §18, "Conversation cards").
+        // A Modified files card, each file on a tile that opens the turn's changes to it (DESIGN.md §18, "Conversation cards").
         var card = window.GetVisualDescendants().OfType<Card>().Single(c => c.Classes.Contains("files"));
         Assert.True(card.IsEffectivelyVisible);
         Assert.Equal("Modified files", card.Label);

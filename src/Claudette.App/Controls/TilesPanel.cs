@@ -4,9 +4,9 @@ using Avalonia.Controls;
 namespace Claudette.App.Controls;
 
 /// <summary>
-/// Lays a Tool calls card's tiles out in rows (DESIGN.md §18, "Conversation cards"): as many columns as fit at
-/// <see cref="TileWidth"/> each, up to <see cref="MaxColumns"/>, sharing the width evenly. A row is as tall as its tallest
-/// tile, and every tile in it takes that height, so their edges line up.
+/// Lays a Tool calls or Modified files card's tiles out in rows (DESIGN.md §18, "Conversation cards"): as many columns
+/// as fit at <see cref="TileWidth"/> each, up to <see cref="MaxColumns"/>, sharing the width evenly. A row is as tall as
+/// its tallest tile, and every tile in it takes that height, so their edges line up.
 /// </summary>
 public sealed class TilesPanel : Panel
 {

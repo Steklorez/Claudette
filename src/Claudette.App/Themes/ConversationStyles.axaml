@@ -232,7 +232,8 @@
     <Setter Property="Opacity" Value="0.88" />
   </Style>
 
-  <!-- A tool call's tile in its card: raised a little off it, with the open one marked. -->
+  <!-- A tool call's tile in its card, or a changed file's in a Modified files card: raised a little off it, with the open
+       one marked. -->
   <Style Selector="Button.tile">
     <Setter Property="Padding" Value="8,6" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
