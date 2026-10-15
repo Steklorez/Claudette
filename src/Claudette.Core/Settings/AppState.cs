@@ -76,6 +76,12 @@ public sealed class AppState
     public List<string>? SidePanelPages { get; set; }
 
     /// <summary>
+    /// The share of the width each tab side by side has, left to right, as the user dragged the lines between them
+    /// (DESIGN.md §18, "Split panes"); null while they share it evenly.
+    /// </summary>
+    public List<double>? PaneShares { get; set; }
+
+    /// <summary>
     /// The usage header is drawn taller, with charts of the session and the week (DESIGN.md §6, "Detailed header").
     /// Its chevron and Settings → Appearance both set it. Kept per machine, like the sidebar's collapsed state.
     /// </summary>

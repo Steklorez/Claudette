@@ -125,6 +125,24 @@
     <Style Selector="Border#SidebarEdge:pointerover">
       <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
     </Style>
+    <!-- Where a dragged tab would open (DESIGN.md §18, "Split panes"): an accent outline over the half or pane it takes. -->
+    <Style Selector="Border.panedrop">
+      <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <!-- What dropping it does, on a pill of its own so it reads over the conversation under the outline. -->
+    <Style Selector="Border.panedroplabel">
+      <Setter Property="Background" Value="{DynamicResource DialogBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="12,5" />
+    </Style>
+    <Style Selector="Border.panedroplabel TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
     <!-- A tab's Claude app icon while it connects or reconnects (DESIGN.md §18, "Remote Control"). -->
     <Style Selector="Border#RemoteIcon.settling">
       <Setter Property="Opacity" Value="0.45" />
@@ -270,7 +288,7 @@
                       <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="vm:TabViewModel">
                           <StackPanel Spacing="1" Classes.subthread="{Binding IsSubThread}">
-                            <Button Classes="tab tabrow" Classes.selected="{Binding IsSelected}" Classes.bypass="{Binding IsBypassMode}"
+                            <Button Classes="tab tabrow" Classes.selected="{Binding IsSelected}" Classes.dragged="{Binding IsDragged}" Classes.bypass="{Binding IsBypassMode}"
                                     Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectCommand}" CommandParameter="{Binding}"
                                     DoubleTapped="OnTabDoubleTapped" ToolTip.ShowDelay="600" ToolTip.Placement="Right">
                               <ToolTip.Tip>
@@ -850,9 +868,9 @@
     <Border x:Name="SidebarEdge" Grid.Column="0" Width="6" Margin="0,0,-3,0" HorizontalAlignment="Right" Background="Transparent"
             Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding Layout.IsSidebarExpanded}" />
 
-    <!-- Tabs: one view per tab, kept alive while hidden -->
-    <!-- The tabs on screen, side by side when there are several (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
-    <ItemsControl Grid.Column="1" Classes="panes" ItemsSource="{Binding OpenTabs}">
+    <!-- The tabs on screen, side by side when there are several, each with the share of the width its pane was dragged to
+         (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
+    <ItemsControl x:Name="PaneHost" Grid.Column="1" Classes="panes" ItemsSource="{Binding OpenTabs}">
       <ItemsControl.Styles>
         <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:TabViewModel">
           <Setter Property="IsVisible" Value="{Binding IsShown}" />
@@ -863,7 +881,8 @@
       </ItemsControl.Styles>
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
-          <controls:PanesPanel />
+          <controls:PanesPanel Shares="{Binding $parent[ItemsControl].((vm:ShellViewModel)DataContext).Layout.PaneShares, FallbackValue={x:Null}}"
+                               LeastWidth="{x:Static vm:ShellLayout.MinConversationWidth}" />
         </ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
@@ -872,6 +891,19 @@
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
+
+    <!-- The lines between the panes, to drag; a double-click shares the width evenly again (DESIGN.md §18, "Split panes"). -->
+    <controls:PaneDividers x:Name="PaneLines" Grid.Column="1" Highlight="{DynamicResource AccentStatusBrush}"
+                           AutomationProperties.Name="Lines between the panes" />
+
+    <!-- Where a tab's row dragged from the sidebar would open: beside a pane, on the half under the pointer, or in its place. -->
+    <Canvas x:Name="PaneDropLayer" Grid.Column="1" IsHitTestVisible="False" IsVisible="False">
+      <Border x:Name="PaneDropTarget" Classes="panedrop">
+        <Border Classes="panedroplabel" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock x:Name="PaneDropText" Classes="small" FontWeight="SemiBold" />
+        </Border>
+      </Border>
+    </Canvas>
 
     <!-- No tabs -->
     <StackPanel Grid.Column="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasTabs}">

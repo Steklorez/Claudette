@@ -268,7 +268,8 @@ In both styles, text in a different font or size beside other text sits on its b
   - Hovering the label shows the full path. The group's `+` opens a new tab in the same folder.
   - A group can be collapsed to just its label. A collapsed group still shows the most urgent status of its tabs, such as "needs input".
   - Tabs can be dragged to reorder them within their group, and groups can be dragged (by their label) to reorder them. A tab can't be dragged into another group, because its folder is fixed, and pinned tabs stay ahead of the others.
-    - A dragged tab is selected, and the list rearranges as soon as the pointer passes the middle of a neighbor. **Move up** and **Move down** in the tab menu do the same from the keyboard or mouse.
+    - A dragged tab's row is marked as a selected one is, and the list rearranges as soon as the pointer passes the middle of a neighbor. Dropped in the sidebar, the tab is selected, as a click would. **Move up** and **Move down** in the tab menu do the same from the keyboard or mouse.
+    - Dragged out onto the conversation, the tab opens beside a pane instead ([§18](#split-panes)). It isn't selected as the drag starts, which would put it in the focused pane before it's anywhere.
   - A group with a single tab still gets a label, so the sidebar always looks the same.
 - Closing a tab that is working asks for confirmation, then stops the process. Right-clicking a group label gives **New tab here**, **New tab in a worktree** (for a folder in a git repository, [below](#worktree-tabs)), **History for this folder** (History listing only that folder's sessions, [§9](#history)), **Collapse group** (or **Expand group**), **Rename…** (and **Reset name**), **Change color…**, **Account ▸** (once there's an account besides Default, [below](#accounts)) and **Close group**.
 - **Pinned tabs** come back every time Claudette launches, resuming their sessions.
@@ -587,7 +588,7 @@ A user message's **⋯** menu goes back to it. Claude Code does the work: a resu
 - Drag and drop, paste, or pick with the attach button images and files to attach them. See [Attachments](#attachments).
 - Per-tab controls in the bar above the composer: working folder (read-only), model, effort level, permission mode, the **Agents** button while the tab has subagents ([§18](#agent-map)), the **running tasks** chip while Claude Code has work going in the background (*"● 2 running tasks"*, [below](#running-tasks)), context window usage %, tokens used.
 - **The status line**, under the box: the working folder, the tab's status (and **Restart** when it has stopped), and at its right how Claude's plan and tasks are going, which opens the Tasks page ([Tasks](#tasks)).
-- **The bar keeps Send in view.** The choices (model, effort, permission mode) are at its left, and the counts (processes, Agents, running tasks, Files, context, tokens) with **Send** at its right. When they don't all fit on one line, as in a narrow window, the right-hand group moves to a second line under the choices, still at the right, rather than being pushed out of sight (`ControlBarPanel`).
+- **The bar keeps Send in view.** The choices (model, effort, permission mode) are at its left, and the counts (processes, Agents, running tasks, Files, context, tokens) with **Send** at its right. When they don't all fit on one line, as in a narrow window, the right-hand group moves to a second line under the choices, still at the right, rather than being pushed out of sight (`ControlBarPanel`). In a pane too narrow even for the group on a line of its own (tabs side by side, §18), the group wraps onto another line, with Send still last at the right.
 
 ### Queued messages
 
@@ -2348,6 +2349,8 @@ Claudette has to keep working when Claude Code adds things it doesn't know about
       - **Still to verify:** the page and the boards on real Windows, macOS and Linux desktops, in both styles and themes (so far rendered headlessly), and her reactions beside a real game.
     - **The facelift: conversation cards ([§18](#conversation-cards)), split panes ([§18](#split-panes)) and the prompt cache timer ([§6](#prompt-cache)).** ✅ Built 2026-10-15, in one change, after [CodeAlta](https://codealta.github.io/)'s timeline. Every step is a card with its kind's color; a run of tool calls is one card of tiles, each opening its detail and a window that follows the call; a turn ends with Modified files and Turn statistics cards; steps on the way are quieter; marks beside the scroll bar and F3/F4 find the messages again; up to three tabs sit side by side; and the composer bar says how long the prompt cache keeps the conversation.
       - **Still to verify:** the cards, tiles, marks and panes on real macOS and Linux desktops (so far on Windows and headlessly); the prompt cache's `cache_creation` on a real subscription's assistant messages, which no recording has yet (the mocks cache nothing), so the lifetime comes from the turn's `result` or the documented default.
+    - **Resizing split panes and dragging tabs onto them ([§18](#split-panes)).** ✅ Built 2026-10-15. The line between two panes drags to trade their width, kept with the app state; a tab's row dragged from the sidebar onto a pane opens beside it, or in its place with no room for another.
+      - **Still to verify:** both on real macOS and Linux desktops, with a touchpad as well as a mouse (so far on Windows and headlessly).
     - **Moving to .NET 11 ([§2](#moving-to-net-11)).** Planned for .NET 11's release on 2026-11-10, once dropping macOS 12 and 13 is decided. On macOS, .NET 11 starts processes with `posix_spawn` rather than `fork()`, which stops a source build started from a terminal printing `MallocStackLogging` lines. On Windows it builds and passes every test with one package reference removed; macOS and Linux are still to verify.
 
 ## 18. Future Features
@@ -2989,10 +2992,15 @@ Every step of the conversation is a card: a stripe down its left edge in its kin
 
 ✅ Built 2026-10-15.
 
-Up to three tabs side by side, each pane with its own conversation, composer and working line, sharing the width evenly with a line between them.
+Up to three tabs side by side, each pane with its own conversation, composer and working line, with a line between them. They share the width evenly until a line is dragged.
 
 - **Opening them.**
   - A tab's menu has **Open beside**. The tab opens after the focused pane and takes the focus; with three panes, it takes the place of the last one without the focus.
+  - **Dragging a tab's row** from the sidebar onto a pane opens the tab beside it, on the half it's dropped on, and the tab takes the focus.
+    - With no room for another pane, it takes the place of the pane it's dropped on.
+    - A tab already on screen moves there; on its own pane nothing happens.
+    - While the row is over a pane, an outline in the accent marks the half, or the pane, it would take, saying *Open beside*, *Move here* or *Open here, in its place*.
+    - Dropped back on the sidebar, it's selected, as a click would ([§4](#sidebar)).
   - A thread's menu has **Show with its sub-threads**: the thread and its first sub-threads, as many as fit beside it ([Threads](#threads)).
   - The command palette has **Close this pane**, **Close the other panes** and **Show the thread with its sub-threads**.
 - **Focus.** The selected tab is the focused pane's.
@@ -3003,13 +3011,18 @@ Up to three tabs side by side, each pane with its own conversation, composer and
 - **On screen.** Every tab in a pane is on screen, as the selected tab is on its own: it starts its `claude`, its working line runs, its changed files and message times stay fresh, it isn't marked unread, and its notifications are skipped while Claudette is in front ([§10](#10-notifications)).
 - **The side panel** shows only on the focused pane. The other panes keep it closed, and each tab keeps its own choice for when it has the focus.
 - **Room.** Each pane keeps the conversation's 360 pixels beside the sidebar, and beside the focused pane's side panel's least while it shows. Panes past that fold away, keeping the focused one and its neighbours, and come back as the window widens.
+- **Resizing.** Drag the line between two panes to make one wider and the other narrower.
+  - The two trade width. Each keeps the conversation's 360 pixels and, on the focused pane while its side panel shows, the side panel's least; the other panes stay as they are.
+  - The line is drawn in the accent while it's pointed at or dragged. It takes hold a few pixels either side, more to its right, since the pane to its left has its scroll bar there.
+  - A double-click on a line shares the width evenly again.
+  - The shares are kept with the app state, for as many panes as there are. A pane opening or closing shares the width evenly again; panes folding away in a narrow window keep them for when they come back. Shares that would leave a pane under 360 pixels give way to even ones.
 - **Closing.** **Close pane** takes a tab off the screen and leaves it open. Closing a tab takes its pane with it. Either way, the pane beside takes the focus if the one going had it.
 - **Kept** with the app state and in the restart snapshot (`PaneTabIds`), so the panes come back.
-- **Not covered:** dragging a tab's row onto the conversation's edge to open it beside, resizing panes against each other, and panes stacked one over another.
+- **Not covered:** panes stacked one over another.
 - **How it's built.**
-  - **The shell:** `ShellViewModel.Panes.cs` keeps the panes. `TabViewModel.IsShown` (in a pane) is apart from `IsSelected` (focused); outside a split, being on screen follows the selection, as before.
-  - **The tab:** `IsInSplit`, `PaneIndex`, `ShowsSidePanel` and `FocusPane`.
-  - **The layout:** `Controls/PanesPanel` lays the panes out, and `ShellLayout.MaxPanes` says how many fit.
+  - **The shell:** `ShellViewModel.Panes.cs` keeps the panes. `TabViewModel.IsShown` (in a pane) is apart from `IsSelected` (focused); outside a split, being on screen follows the selection, as before. `PaneDropFor` and `DropOnPane` are what a row dropped on a pane does.
+  - **The tab:** `IsInSplit`, `PaneIndex`, `ShowsSidePanel` and `FocusPane`, and `IsDragged` for its row while it's dragged.
+  - **The layout:** `Controls/PanesPanel` lays the panes out by `ShellLayout.PaneShares` (`ResizePanes`, saved as `PaneShares` in the app state), and `ShellLayout.MaxPanes` says how many fit. `Controls/PaneDividers` lies over the panes and takes the pointer only near the lines between them. `ShellView` carries the sidebar's drag out onto the panes and marks where a row would open.
   - **What follows it:** `NotificationService.ShownTabIds` skips notifications for every tab on screen, and `MascotLayer` reports Claudette shown only on the focused pane's composer.
 
 ### Games with Claudette

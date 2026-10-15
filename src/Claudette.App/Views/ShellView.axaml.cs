@@ -51,6 +51,11 @@ public partial class ShellView : UserControl
         };
         // A narrow window shows the sidebar's rail (DESIGN.md §4, "Sidebar").
         SizeChanged += (_, e) => ViewModel?.Layout.SetAvailableWidth(e.NewSize.Width);
+        // The lines between tabs side by side, to drag (DESIGN.md §18, "Split panes").
+        PaneHost.LayoutUpdated += (_, _) => WatchPanes();
+        PaneLines.Dragged += OnPaneLineDragged;
+        PaneLines.DragEnded += () => ViewModel?.Layout.SavePaneShares();
+        PaneLines.ResetRequested += () => ViewModel?.Layout.ResetPaneShares();
     }
 
     // ---- Resizing the sidebar -------------------------------------------------------------------------------------
@@ -110,8 +115,8 @@ public partial class ShellView : UserControl
 
     private void OnListPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        _dragItem = null;
-        _dragging = false;
+        // Whatever an earlier drag left, such as one whose pointer capture was lost.
+        EndTabDrag();
         if (!e.GetCurrentPoint(GroupList).Properties.IsLeftButtonPressed)
         {
             return;
@@ -127,26 +132,37 @@ public partial class ShellView : UserControl
         _dragStart = e.GetPosition(GroupList);
     }
 
-    /// <summary>The dragged item moves as soon as the pointer passes the middle of a neighbor, so the list shows the result live.</summary>
+    /// <summary>
+    /// The dragged item moves as soon as the pointer passes the middle of a neighbor, so the list shows the result live. A
+    /// tab dragged over the panes shows where it would open there instead (DESIGN.md §18, "Split panes").
+    /// </summary>
     private void OnListPointerMoved(object? sender, PointerEventArgs e)
     {
         if (_dragItem is null || ViewModel is not { } shell)
         {
             return;
         }
-        var y = e.GetPosition(GroupList).Y;
+        var at = e.GetPosition(GroupList);
         if (!_dragging)
         {
-            if (Math.Abs(y - _dragStart.Y) < DragThreshold)
+            // A group moves only up and down; a tab can also go out to the panes.
+            var moved = _dragItem is TabViewModel ? Math.Max(Math.Abs(at.X - _dragStart.X), Math.Abs(at.Y - _dragStart.Y)) : Math.Abs(at.Y - _dragStart.Y);
+            if (moved < DragThreshold)
             {
                 return;
             }
             _dragging = true;
             if (_dragItem is TabViewModel dragged)
             {
-                shell.SelectCommand.Execute(dragged);
+                // Selected once it's dropped: selecting it now would put it in the focused pane before it's anywhere.
+                dragged.IsDragged = true;
             }
         }
+        if (_dragItem is TabViewModel overPanes && ShowPaneDrop(shell, overPanes, e))
+        {
+            return;
+        }
+        var y = at.Y;
         switch (_dragItem)
         {
             case TabViewModel tab when shell.Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group:
@@ -199,9 +215,111 @@ public partial class ShellView : UserControl
             // Releasing the capture un-presses the button without a click, so dropping a group doesn't also collapse it.
             e.Pointer.Capture(null);
             e.Handled = true;
+            if (_dragItem is TabViewModel tab && ViewModel is { } shell)
+            {
+                // On a pane it opens there (DESIGN.md §18, "Split panes"); anywhere else it's selected, as a click would.
+                if (PaneDropAt(shell, tab, e) is { } drop)
+                {
+                    shell.DropOnPane(tab, drop.Index, drop.After);
+                }
+                else
+                {
+                    shell.SelectCommand.Execute(tab);
+                }
+            }
         }
+        EndTabDrag();
+    }
+
+    /// <summary>The drag is over, dropped or lost: the row and the panes go back to how they look.</summary>
+    private void EndTabDrag()
+    {
+        if (_dragItem is TabViewModel tab)
+        {
+            tab.IsDragged = false;
+        }
+        PaneDropLayer.IsVisible = false;
         _dragItem = null;
         _dragging = false;
+    }
+
+    // ---- Tabs side by side (DESIGN.md §18, "Split panes") ---------------------------------------------------------
+
+    /// <summary>The panel the panes are laid out in, once it's made.</summary>
+    private Controls.PanesPanel? Panes => PaneHost.ItemsPanelRoot as Controls.PanesPanel;
+
+    private Controls.PanesPanel? _panesWatched;
+
+    /// <summary>The lines' strip follows the panes as they're laid out.</summary>
+    private void WatchPanes()
+    {
+        if (Panes is not { } panel || ReferenceEquals(panel, _panesWatched))
+        {
+            return;
+        }
+        _panesWatched = panel;
+        panel.Arranged += (_, _) => PaneLines.Lines = panel.Lines;
+    }
+
+    /// <summary>Dragging the line after pane <paramref name="line"/>: each pane keeps its conversation's least, and its side panel's while it shows.</summary>
+    private void OnPaneLineDragged(int line, double x)
+    {
+        if (ViewModel is not { } shell || Panes is not { } panel)
+        {
+            return;
+        }
+        var leasts = shell.Panes.Select(p => ShellLayout.MinConversationWidth + (p.ShowsSidePanel ? ShellLayout.MinSidePanelWidth : 0)).ToList();
+        shell.Layout.ResizePanes(line, x, panel.Bounds.Width, leasts);
+    }
+
+    /// <summary>Where a tab dragged from the sidebar would open: the pane under the pointer, and which half of it; null off the panes.</summary>
+    private (int Index, bool After, Rect Pane)? PaneDropAt(ShellViewModel shell, TabViewModel tab, PointerEventArgs e)
+    {
+        if (Panes is not { } panel)
+        {
+            return null;
+        }
+        var at = e.GetPosition(panel);
+        if (at.Y < 0 || at.Y > panel.Bounds.Height)
+        {
+            return null;
+        }
+        foreach (var pane in panel.Children.Where(c => c.IsVisible && Controls.PanesPanel.GetIndex(c) >= 0))
+        {
+            var bounds = pane.Bounds;
+            if (at.X >= bounds.Left && at.X < bounds.Right && shell.PaneDropFor(tab, Controls.PanesPanel.GetIndex(pane)) != PaneDrop.None)
+            {
+                return (Controls.PanesPanel.GetIndex(pane), at.X >= bounds.Center.X, bounds);
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Over the panes, the half or the pane a dragged tab would take is marked, and says what dropping it does. True while
+    /// it's over one; off them, the mark goes and the sidebar's own reordering carries on.
+    /// </summary>
+    private bool ShowPaneDrop(ShellViewModel shell, TabViewModel tab, PointerEventArgs e)
+    {
+        if (PaneDropAt(shell, tab, e) is not { } drop)
+        {
+            PaneDropLayer.IsVisible = false;
+            return false;
+        }
+        var kind = shell.PaneDropFor(tab, drop.Index);
+        var pane = drop.Pane.Deflate(8);
+        var target = kind == PaneDrop.Replace ? pane
+            : drop.After ? new Rect(pane.Center.X, pane.Top, pane.Width / 2, pane.Height)
+            : new Rect(pane.Left, pane.Top, pane.Width / 2, pane.Height);
+        Canvas.SetLeft(PaneDropTarget, target.Left);
+        Canvas.SetTop(PaneDropTarget, target.Top);
+        PaneDropTarget.Width = target.Width;
+        PaneDropTarget.Height = target.Height;
+        PaneDropText.Text = kind == PaneDrop.Replace ? "Open here, in its place"
+            : tab.IsShown ? "Move here"
+            : "Open beside";
+        PaneDropLayer.IsVisible = true;
+        return true;
     }
 
     private ShellViewModel? ViewModel => DataContext as ShellViewModel;

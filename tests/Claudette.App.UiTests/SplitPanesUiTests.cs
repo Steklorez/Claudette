@@ -67,6 +67,82 @@ public sealed class SplitPanesUiTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public async Task Dragging_the_line_between_two_panes_widens_one_and_narrows_the_other()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        h.Factory.ProcessPerSession = true;
+        var alpha = await ThreadScript.OpenAsync(h, "Alpha");
+        var beta = await ThreadScript.OpenAsync(h, "Beta");
+        h.Shell.SelectedTab = alpha;
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1600, 800);
+        h.Shell.OpenBesideCommand.Execute(beta);
+        UiText.Settle(window);
+        var (left, right) = (View(window, alpha), View(window, beta));
+        // The second pane's view is a pixel narrower, for the line it draws: each is measured against itself.
+        var (before, rightBefore) = (left.Bounds.Width, right.Bounds.Width);
+        var lines = window.GetVisualDescendants().OfType<Controls.PaneDividers>().Single();
+        Assert.Single(lines.Lines);
+
+        // Pressed just right of the line, where the next pane's margin is, and dragged 150 to the right.
+        var start = lines.TranslatePoint(new Point(lines.Lines[0] + 2, lines.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(start, MouseButton.Left);
+        window.MouseMove(start + new Vector(75, 0));
+        window.MouseMove(start + new Vector(150, 0));
+        window.MouseUp(start + new Vector(150, 0), MouseButton.Left);
+        UiText.Settle(window);
+
+        Assert.Equal(before + 150, left.Bounds.Width, precision: 0);
+        Assert.Equal(rightBefore - 150, right.Bounds.Width, precision: 0);
+        // Kept, for the next launch.
+        Assert.Equal(2, h.Services.State.PaneShares!.Count);
+        Assert.Equal(lines.Lines[0], left.Bounds.Width, precision: 0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task A_tabs_row_dragged_onto_the_right_half_of_the_conversation_opens_beside_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        h.Factory.ProcessPerSession = true;
+        var alpha = await ThreadScript.OpenAsync(h, "Alpha");
+        var beta = await ThreadScript.OpenAsync(h, "Beta");
+        h.Shell.SelectedTab = alpha;
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1600, 800);
+        UiText.Settle(window);
+        var row = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("tabrow") && b.DataContext == beta);
+        var pane = View(window, alpha);
+
+        var from = row.TranslatePoint(new Point(row.Bounds.Width / 2, row.Bounds.Height / 2), window)!.Value;
+        var to = pane.TranslatePoint(new Point(pane.Bounds.Width * 3 / 4, pane.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(from, MouseButton.Left);
+        window.MouseMove(from + new Vector(20, 0));
+        window.MouseMove(to);
+        UiText.Settle(window);
+
+        // The row is marked while it's dragged, and the pane's right half says what dropping it there does; nothing has
+        // moved yet.
+        Assert.Contains("dragged", row.Classes);
+        var target = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "PaneDropTarget");
+        Assert.True(target.IsEffectivelyVisible);
+        Assert.Contains("Open beside", UiText.Describe(target), StringComparison.Ordinal);
+        Assert.True(target.TranslatePoint(default, pane)!.Value.X >= pane.Bounds.Width / 2 - 1, "The mark isn't on the right half.");
+        Assert.Same(alpha, h.Shell.SelectedTab);
+        Assert.False(beta.IsShown);
+
+        window.MouseUp(to, MouseButton.Left);
+        UiText.Settle(window);
+
+        Assert.Equal([alpha, beta], h.Shell.Panes);
+        Assert.Same(beta, h.Shell.SelectedTab);
+        Assert.DoesNotContain("dragged", row.Classes);
+        Assert.False(target.IsEffectivelyVisible);
+        window.Close();
+    }
+
+    private static TabView View(Window window, object tab) =>
+        window.GetVisualDescendants().OfType<TabView>().Single(v => v.IsEffectivelyVisible && v.DataContext == tab);
+
     private static Border Header(TabView view) => view.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "PaneHeader");
 
     private static Border SidePanel(TabView view) => view.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "SidePanel");

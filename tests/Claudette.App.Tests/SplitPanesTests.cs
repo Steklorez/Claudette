@@ -194,4 +194,94 @@ public class SplitPanesTests
         Assert.Equal([a.Id, b.Id], snapshot.PaneTabIds);
         Assert.Equal(b.Id, snapshot.SelectedTabId);
     }
+
+    [Fact]
+    public async Task Dragging_the_line_between_two_panes_trades_their_width_and_each_keeps_its_least()
+    {
+        var (h, a, b, c) = await ThreeTabsAsync();
+        await using var _ = h;
+        h.Shell.OpenBesideCommand.Execute(b);
+        h.Shell.OpenBesideCommand.Execute(c);
+        var layout = h.Shell.Layout;
+        Assert.Equal([1 / 3.0, 1 / 3.0, 1 / 3.0], layout.SharesFor(3));
+        double[] leasts = [360, 360, 360];
+
+        // The line after the first pane, from 400 out to 430, across 1200: the second pane gives the first its 30, and
+        // the third keeps its share.
+        layout.ResizePanes(0, 430, 1200, leasts);
+        Assert.Equal([430 / 1200.0, 370 / 1200.0, 1 / 3.0], layout.SharesFor(3), new ShareComparer());
+
+        // Not past the second pane's least: of the 800 the two have, it keeps 360.
+        layout.ResizePanes(0, 1000, 1200, leasts);
+        Assert.Equal([440 / 1200.0, 360 / 1200.0, 1 / 3.0], layout.SharesFor(3), new ShareComparer());
+        // Nor past the first's.
+        layout.ResizePanes(0, 10, 1200, leasts);
+        Assert.Equal([360 / 1200.0, 440 / 1200.0, 1 / 3.0], layout.SharesFor(3), new ShareComparer());
+
+        // Kept once the drag ends, and for as many panes as there are: two panes share evenly.
+        layout.SavePaneShares();
+        Assert.Equal(3, h.Services.State.PaneShares!.Count);
+        Assert.Equal([0.5, 0.5], layout.SharesFor(2));
+
+        // A double-click on a line shares it evenly again.
+        layout.ResetPaneShares();
+        Assert.Null(h.Services.State.PaneShares);
+        Assert.Equal([1 / 3.0, 1 / 3.0, 1 / 3.0], layout.SharesFor(3));
+    }
+
+    [Fact]
+    public async Task A_pane_coming_or_going_shares_the_width_evenly_again()
+    {
+        var (h, a, b, c) = await ThreeTabsAsync();
+        await using var _ = h;
+        h.Shell.OpenBesideCommand.Execute(b);
+        h.Shell.Layout.ResizePanes(0, 700, 1000, [360, 360]);
+        h.Shell.Layout.SavePaneShares();
+        Assert.Equal(0.64, h.Shell.Layout.SharesFor(2)[0], precision: 6);
+
+        h.Shell.OpenBesideCommand.Execute(c);
+
+        Assert.Empty(h.Shell.Layout.PaneShares);
+        Assert.Null(h.Services.State.PaneShares);
+    }
+
+    [Fact]
+    public async Task A_row_dropped_on_a_panes_half_opens_beside_it_there_and_with_no_room_takes_its_place()
+    {
+        var (h, a, b, c) = await ThreeTabsAsync();
+        await using var _ = h;
+        var d = await ThreadScript.OpenAsync(h, "Delta");
+        h.Shell.SelectedTab = a;
+
+        // On Alpha's left half: Beta opens before it, and takes the focus.
+        Assert.Equal(PaneDrop.Beside, h.Shell.PaneDropFor(b, 0));
+        h.Shell.DropOnPane(b, 0, after: false);
+        Assert.Equal([b, a], h.Shell.Panes);
+        Assert.Same(b, h.Shell.SelectedTab);
+
+        // On Alpha's right half: after it.
+        h.Shell.DropOnPane(c, 1, after: true);
+        Assert.Equal([b, a, c], h.Shell.Panes);
+
+        // Every pane taken: Delta takes the place of the pane it's dropped on.
+        Assert.Equal(PaneDrop.Replace, h.Shell.PaneDropFor(d, 1));
+        h.Shell.DropOnPane(d, 1, after: false);
+        Assert.Equal([b, d, c], h.Shell.Panes);
+        Assert.False(a.IsShown);
+
+        // A tab on screen moves to where it's dropped; on its own pane nothing happens.
+        Assert.Equal(PaneDrop.None, h.Shell.PaneDropFor(c, 2));
+        Assert.Equal(PaneDrop.Beside, h.Shell.PaneDropFor(c, 0));
+        h.Shell.DropOnPane(c, 0, after: false);
+        Assert.Equal([c, b, d], h.Shell.Panes);
+        Assert.Same(c, h.Shell.SelectedTab);
+    }
+
+    /// <summary>Shares compared to six places: they're worked out from widths.</summary>
+    private sealed class ShareComparer : IEqualityComparer<double>
+    {
+        public bool Equals(double x, double y) => Math.Abs(x - y) < 1e-6;
+
+        public int GetHashCode(double obj) => 0;
+    }
 }

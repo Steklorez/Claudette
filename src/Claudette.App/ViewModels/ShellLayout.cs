@@ -8,7 +8,8 @@ namespace Claudette.App.ViewModels;
 /// The shell's widths (DESIGN.md §3, §4, "Sidebar"): the sidebar's, collapsed to its rail by the user or by a narrow
 /// window, and the side panel's, which every tab shares. What the user chooses is kept in the app state. Neither has a
 /// most; between them the conversation keeps <see cref="MinConversationWidth"/>, and when the window is too narrow for
-/// both, the side panel gives way first. And the order of the side panel's pages, which every tab shares too.
+/// both, the side panel gives way first. And the order of the side panel's pages, which every tab shares too, and the
+/// share of the width each of the tabs side by side has.
 /// </summary>
 public sealed partial class ShellLayout : ViewModelBase
 {
@@ -34,6 +35,7 @@ public sealed partial class ShellLayout : ViewModelBase
         SidebarWidth = Math.Max(state.SidebarWidth ?? DefaultSidebarWidth, MinSidebarWidth);
         SidePanelWidth = Math.Max(state.SidePanelWidth ?? DefaultSidePanelWidth, MinSidePanelWidth);
         SidePanelPages = PageOrder(state.SidePanelPages);
+        PaneShares = state.PaneShares is { Count: > 1 } shares && shares.All(s => s > 0) ? [.. shares] : [];
     }
 
     /// <summary>The conversation keeps at least this much room between the sidebar and the side panel (DESIGN.md §3).</summary>
@@ -149,6 +151,61 @@ public sealed partial class ShellLayout : ViewModelBase
     public void SaveSidePanelWidth()
     {
         _state.SidePanelWidth = SidePanelWidth;
+        _saveState();
+    }
+
+    // ---- Tabs side by side (DESIGN.md §18, "Split panes"): the share of the width each has -------------------------
+
+    /// <summary>
+    /// The share of the width each pane has, left to right, summing to 1, as the user dragged the lines between them;
+    /// empty while they share it evenly. They hold for as many panes as they name.
+    /// </summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<double> PaneShares { get; private set; } = [];
+
+    /// <summary>The shares for <paramref name="count"/> panes: the dragged ones when they're for that many, else even.</summary>
+    public IReadOnlyList<double> SharesFor(int count) =>
+        PaneShares.Count == count && count > 0 ? PaneShares : [.. Enumerable.Repeat(count > 0 ? 1.0 / count : 0, count)];
+
+    /// <summary>
+    /// Dragging the line after pane <paramref name="line"/> to <paramref name="x"/>, across panes
+    /// <paramref name="width"/> wide: the two panes beside it trade width, each keeping its least of
+    /// <paramref name="leasts"/>, and the others stay as they are. <see cref="SavePaneShares"/> keeps the result.
+    /// </summary>
+    public void ResizePanes(int line, double x, double width, IReadOnlyList<double> leasts)
+    {
+        var count = leasts.Count;
+        if (line < 0 || line >= count - 1 || width <= 0)
+        {
+            return;
+        }
+        var shares = SharesFor(count).ToArray();
+        var left = shares.Take(line).Sum() * width;
+        var right = left + (shares[line] + shares[line + 1]) * width;
+        if (right - left < leasts[line] + leasts[line + 1])
+        {
+            return;
+        }
+        var at = Math.Clamp(x, left + leasts[line], right - leasts[line + 1]);
+        shares[line] = (at - left) / width;
+        shares[line + 1] = (right - at) / width;
+        PaneShares = shares;
+    }
+
+    /// <summary>The panes share the width evenly again: a double-click on a line between them, or a pane coming or going.</summary>
+    public void ResetPaneShares()
+    {
+        if (PaneShares.Count == 0)
+        {
+            return;
+        }
+        PaneShares = [];
+        SavePaneShares();
+    }
+
+    public void SavePaneShares()
+    {
+        _state.PaneShares = PaneShares.Count > 0 ? [.. PaneShares] : null;
         _saveState();
     }
 

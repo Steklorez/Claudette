@@ -462,6 +462,13 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Its row is being dragged in the sidebar (DESIGN.md §4, "Sidebar"): marked as a selected row is, until it's dropped
+    /// and selected, or opened in a pane.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsDragged { get; set; }
+
     /// <summary>It shares the window with other tabs, side by side: its pane has a header line (DESIGN.md §18, "Split panes").</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowsSidePanel))]

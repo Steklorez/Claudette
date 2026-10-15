@@ -260,7 +260,8 @@
     <Style Selector="Button.tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
     </Style>
-    <Style Selector="Button.tab.selected /template/ ContentPresenter#PART_ContentPresenter">
+    <!-- The selected row, and a row being dragged (DESIGN.md §4, "Sidebar"), which is selected once it's dropped. -->
+    <Style Selector="Button.tab.selected /template/ ContentPresenter#PART_ContentPresenter, Button.tab.dragged /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}" />
     </Style>
     <!-- A tab in Bypass permissions mode stands out (DESIGN.md §7). -->

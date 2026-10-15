@@ -16,6 +16,9 @@ public sealed partial class ShellViewModel
     /// <summary>The tabs the user put side by side, left to right, whether or not the window has room for them all now.</summary>
     private readonly List<TabViewModel> _panes = [];
 
+    /// <summary>How many tabs <see cref="_panes"/> held last time; -1 before the first look.</summary>
+    private int _paneCount = -1;
+
     /// <summary>The tabs on screen, left to right.</summary>
     public ObservableCollection<TabViewModel> Panes { get; } = [];
 
@@ -79,6 +82,12 @@ public sealed partial class ShellViewModel
             }
             OnPropertyChanged(nameof(IsSplit));
         }
+        // A pane coming or going: the panes share the width evenly again. Folding away in a narrow window isn't one.
+        if (_paneCount >= 1 && _panes.Count != _paneCount)
+        {
+            Layout.ResetPaneShares();
+        }
+        _paneCount = _panes.Count;
         var ids = _panes.Count > 1 ? _panes.Select(t => t.Id).ToList() : null;
         if (!(ids ?? []).SequenceEqual(_services.State.PaneTabIds ?? []))
         {
@@ -126,6 +135,52 @@ public sealed partial class ShellViewModel
                 }
             }
             _panes.Insert(Math.Clamp(after + 1, 0, _panes.Count), tab);
+        }
+        if (ReferenceEquals(SelectedTab, tab))
+        {
+            UpdatePanes();
+        }
+        else
+        {
+            SelectedTab = tab;
+        }
+    }
+
+    /// <summary>
+    /// What dropping <paramref name="tab"/>'s row on pane <paramref name="index"/> does (DESIGN.md §18, "Split panes"):
+    /// opens it beside that pane, or, with no room for another, in its place. Nothing on its own pane.
+    /// </summary>
+    public PaneDrop PaneDropFor(TabViewModel tab, int index)
+    {
+        if (index < 0 || index >= Panes.Count || ReferenceEquals(Panes[index], tab) || !OpenTabs.Contains(tab))
+        {
+            return PaneDrop.None;
+        }
+        // A tab already on screen moves; any other needs room for one more.
+        var full = _panes.Count >= MostPanes || Panes.Count >= Math.Min(MostPanes, Layout.MaxPanes);
+        return _panes.Contains(tab) || !full ? PaneDrop.Beside : PaneDrop.Replace;
+    }
+
+    /// <summary>
+    /// A tab's row dropped on pane <paramref name="index"/>'s left half, or its right one when <paramref name="after"/>
+    /// (DESIGN.md §18, "Split panes"): the tab opens there and takes the focus.
+    /// </summary>
+    public void DropOnPane(TabViewModel tab, int index, bool after)
+    {
+        var drop = PaneDropFor(tab, index);
+        if (drop == PaneDrop.None)
+        {
+            return;
+        }
+        var target = Panes[index];
+        if (drop == PaneDrop.Replace)
+        {
+            _panes[_panes.IndexOf(target)] = tab;
+        }
+        else
+        {
+            _panes.Remove(tab);
+            _panes.Insert(_panes.IndexOf(target) + (after ? 1 : 0), tab);
         }
         if (ReferenceEquals(SelectedTab, tab))
         {
@@ -200,4 +255,17 @@ public sealed partial class ShellViewModel
             }
         }
     }
+}
+
+/// <summary>What dropping a tab's row on a pane does (DESIGN.md §18, "Split panes").</summary>
+public enum PaneDrop
+{
+    /// <summary>Nothing: it's that pane's own tab.</summary>
+    None,
+
+    /// <summary>It opens beside the pane, on the half it was dropped on.</summary>
+    Beside,
+
+    /// <summary>It takes the pane's place: there's no room for another.</summary>
+    Replace,
 }

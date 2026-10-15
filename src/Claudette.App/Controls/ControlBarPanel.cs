@@ -6,7 +6,9 @@ namespace Claudette.App.Controls;
 /// <summary>
 /// The composer's control bar (DESIGN.md §5): its first child at the start and its last at the end, on one line when
 /// both fit, or else the last on a line of its own under the first, still at the end. The chips on the left can outgrow
-/// a narrow window, and Send, on the right, must never be pushed out of view.
+/// a narrow window, and Send, on the right, must never be pushed out of view. On a line of its own the last gets only
+/// the bar's width, so if it's wider still (the counts, in a narrow pane) and wraps itself, it takes more lines rather
+/// than running past the end.
 /// </summary>
 public sealed class ControlBarPanel : Panel
 {
@@ -25,7 +27,7 @@ public sealed class ControlBarPanel : Panel
         AffectsMeasure<ControlBarPanel>(RowSpacingProperty);
     }
 
-    /// <summary>Whether the bar took two lines at its last arrange.</summary>
+    /// <summary>Whether the bar took two lines (or more) at its last measure.</summary>
     public bool IsWrapped { get; private set; }
 
     protected override Size MeasureOverride(Size availableSize)
@@ -39,8 +41,13 @@ public sealed class ControlBarPanel : Panel
         {
             child.Measure(unbounded);
         }
+        IsWrapped = !Fits(availableSize.Width);
+        if (IsWrapped && Children[^1].DesiredSize.Width > availableSize.Width)
+        {
+            Children[^1].Measure(availableSize);
+        }
         var (start, end) = (Children[0].DesiredSize, Children[^1].DesiredSize);
-        return Fits(availableSize.Width)
+        return !IsWrapped
             ? new Size(start.Width + end.Width, Math.Max(start.Height, end.Height))
             : new Size(Math.Max(start.Width, end.Width), start.Height + RowSpacing + end.Height);
     }
@@ -53,7 +60,6 @@ public sealed class ControlBarPanel : Panel
         }
         var (first, last) = (Children[0], Children[^1]);
         var (start, end) = (first.DesiredSize, last.DesiredSize);
-        IsWrapped = !Fits(finalSize.Width);
         if (!IsWrapped)
         {
             var height = Math.Max(start.Height, end.Height);

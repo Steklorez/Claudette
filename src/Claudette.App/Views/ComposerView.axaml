@@ -428,7 +428,8 @@
               </Button>
             </StackPanel>
   
-            <StackPanel Orientation="Horizontal" Spacing="2">
+            <!-- In a pane too narrow even for these on their own line, they wrap onto another, Send still last at the right -->
+            <WrapPanel ItemSpacing="2" LineSpacing="4" ItemsAlignment="End">
               <!-- Processes summary (DESIGN.md §4) -->
               <Button Classes="flat" IsVisible="{Binding ProcessMonitor.ShowSummary}"
                       ToolTip.Tip="Processes this tab started" Click="OnShowProcesses">
@@ -588,7 +589,7 @@
               <Button x:Name="StopButton" Classes="stop" Margin="6,0,0,0" ToolTip.Tip="Stop (Esc)" AutomationProperties.Name="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsWorking}">
                 <Path Classes="stopsquare" Data="{StaticResource IconStopRound}" Fill="{Binding $parent[Button].Foreground}" Width="32" Height="32" Stretch="None" />
               </Button>
-            </StackPanel>
+            </WrapPanel>
           </controls:ControlBarPanel>
         </Grid>
       </Border>
