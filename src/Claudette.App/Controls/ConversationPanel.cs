@@ -202,8 +202,24 @@ public sealed class ConversationPanel : VirtualizingPanel
         finally
         {
             _isInLayout = false;
+            Arranged?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    /// <summary>The items have their places again: the scroll bar's marks follow them (DESIGN.md §18, "Conversation cards").</summary>
+    public event EventHandler? Arranged;
+
+    /// <summary>
+    /// Where item <paramref name="index"/> starts, in this panel: where it was laid out, or, for an item not measured
+    /// yet, where the heights it's taken to have put it. The end of the last item for the item count.
+    /// </summary>
+    public double TopOf(int index) => index >= 0 && index <= _heights.Count && index < _tops.Length ? _tops[index] : ItemsHeight;
+
+    /// <summary>The items' height in all, as last laid out.</summary>
+    public double ItemsHeight => _heights.Count > 0 && _heights.Count < _tops.Length ? _tops[_heights.Count] : 0;
+
+    /// <summary>The item at <paramref name="y"/> in this panel: the last one starting at or above it; -1 with none.</summary>
+    public int ItemAt(double y) => _heights.Count == 0 ? -1 : IndexAt(y);
 
     /// <summary>The view and <see cref="CacheLength"/> screens either side; only the start until the view is known.</summary>
     private (double Top, double Bottom) Window()

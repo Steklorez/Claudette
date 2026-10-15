@@ -8,18 +8,57 @@ namespace Claudette.App.Conversation;
 /// <summary>
 /// Find in the conversation (DESIGN.md §5, "Find"): the items whose text has the query, ignoring case, in order, with
 /// one of them current. Looks through prompts, replies, thinking, tool calls with their output, notes, hook runs and
-/// subagents' items. The view scrolls to <see cref="Current"/> and marks it.
+/// subagents' items. Each call in a Tool calls card is a match of its own. The view scrolls to <see cref="Current"/>
+/// and marks the card that holds it.
 /// </summary>
 public sealed partial class ConversationSearch : ObservableObject
 {
     private readonly ObservableCollection<ConversationItem> _items;
     private List<ConversationItem> _matches = [];
 
+    // The Tool calls cards whose calls are watched: a call joining one is new to the conversation as an item would be.
+    private readonly HashSet<ToolGroupItem> _watched = [];
+
     public ConversationSearch(ObservableCollection<ConversationItem> items)
     {
         _items = items;
         // New items while the bar is open count too, without moving the current one.
         _items.CollectionChanged += OnItemsChanged;
+    }
+
+    /// <summary>What's searched, in order: the top-level items, with each card of calls standing for its calls.</summary>
+    private static IEnumerable<ConversationItem> Searched(IEnumerable<ConversationItem> items) =>
+        items.SelectMany<ConversationItem, ConversationItem>(item => item is ToolGroupItem group ? group.Calls : [item]);
+
+    private void Watch()
+    {
+        foreach (var group in _items.OfType<ToolGroupItem>())
+        {
+            if (_watched.Add(group))
+            {
+                group.Calls.CollectionChanged += OnCallsChanged;
+            }
+        }
+        foreach (var gone in _watched.Where(g => !_items.Contains(g)).ToArray())
+        {
+            gone.Calls.CollectionChanged -= OnCallsChanged;
+            _watched.Remove(gone);
+        }
+    }
+
+    /// <summary>A call joined a card: the card and the items before it, as for a new item.</summary>
+    private void OnCallsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (!IsOpen || Query.Trim().Length == 0 || sender is not ObservableCollection<ToolUseItem> calls)
+        {
+            return;
+        }
+        if (e.Action == NotifyCollectionChangedAction.Add && _items.Count > 0 && _items[^1] is ToolGroupItem last && ReferenceEquals(last.Calls, calls))
+        {
+            Refresh(Math.Max(0, _items.Count - 1 - StillFillingIn));
+            return;
+        }
+        Search(keepCurrent: true);
     }
 
     [ObservableProperty]
@@ -97,33 +136,40 @@ public sealed partial class ConversationSearch : ObservableObject
         {
             return;
         }
+        Watch();
         if (e is { Action: NotifyCollectionChangedAction.Add, NewItems: { } added } && e.NewStartingIndex == _items.Count - added.Count)
         {
             // Only the new items, and the few before them, rather than the whole conversation again.
-            var from = Math.Max(0, e.NewStartingIndex - StillFillingIn);
-            var query = Query.Trim();
-            var again = _items.Skip(from).ToList();
-            _matches.RemoveAll(again.Contains);
-            _matches.AddRange(again.Where(item => Matches(item, query)));
-            OnPropertyChanged(nameof(Count));
-            if (Current is null || !_matches.Contains(Current))
-            {
-                SetCurrent(_matches.LastOrDefault());
-            }
-            else
-            {
-                OnPropertyChanged(nameof(CountText));
-            }
+            Refresh(Math.Max(0, e.NewStartingIndex - StillFillingIn));
             return;
         }
         Search(keepCurrent: true);
     }
 
-    private void Search(bool keepCurrent)
+    /// <summary>Looks through the items from <paramref name="from"/> on again, keeping the matches before them.</summary>
+    private void Refresh(int from)
     {
         var query = Query.Trim();
+        var again = Searched(_items.Skip(from)).ToList();
+        _matches.RemoveAll(again.Contains);
+        _matches.AddRange(again.Where(item => Matches(item, query)));
+        OnPropertyChanged(nameof(Count));
+        if (Current is null || !_matches.Contains(Current))
+        {
+            SetCurrent(_matches.LastOrDefault());
+        }
+        else
+        {
+            OnPropertyChanged(nameof(CountText));
+        }
+    }
+
+    private void Search(bool keepCurrent)
+    {
+        Watch();
+        var query = Query.Trim();
         var previous = Current;
-        _matches = query.Length == 0 ? [] : [.. _items.Where(item => Matches(item, query))];
+        _matches = query.Length == 0 ? [] : [.. Searched(_items).Where(item => Matches(item, query))];
         OnPropertyChanged(nameof(Count));
         if (keepCurrent && previous is not null && _matches.Contains(previous))
         {
@@ -153,6 +199,7 @@ public sealed partial class ConversationSearch : ObservableObject
     private static bool Matches(ConversationItem item, string query) => item switch
     {
         SubagentItem agent => Has(agent.Name, query) || Has(agent.FullSummary, query) || Has(agent.Output, query) || agent.Items.Any(child => Matches(child, query)),
+        ToolGroupItem group => group.Calls.Any(call => Matches(call, query)),
         _ => TextOf(item).Any(text => Has(text, query)),
     };
 
@@ -162,12 +209,12 @@ public sealed partial class ConversationSearch : ObservableObject
         UserMessageItem user => [user.CopyText],
         AssistantTextItem reply => [reply.Text],
         ThinkingItem thinking => [thinking.Text],
-        ToolUseItem tool => [tool.Name, tool.FullSummary, tool.Detail, tool.Output, tool.ResultSummary, tool.Doc?.Text],
+        ToolUseItem tool => [tool.Name, tool.FullSummary, tool.Detail, tool.Output, tool.ReadText, tool.ResultSummary, tool.Doc?.Text],
         NoteItem note => [note.Text],
         HookRunItem hook => [hook.Title, hook.Output],
         McpInputItem input => [input.Title, input.Message],
         PromptItem prompt => [prompt.Outcome, prompt.Request.ToolName, prompt is PlanItem plan ? plan.Plan.ToString() : null],
-        TurnSummaryItem summary => [summary.Text],
+        TurnSummaryItem summary => [summary.StatsText, .. summary.Files.Select(f => f.DisplayPath)],
         TaskStartItem start => [start.Todo.Title],
         TasksSummaryItem tasks => [tasks.Text],
         DocSummaryItem doc => [doc.Text],

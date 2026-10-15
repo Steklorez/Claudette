@@ -28,10 +28,10 @@ public sealed class FindTests
         var tab = await h.OpenTabAsync();
         EmitBash(h, "t1", "make vulkan", "error: VULKAN_SDK not set");
         EmitBash(h, "t2", "make metal", "ok");
-        await TabTestHarness.Eventually(() => tab.IsSettled && tab.Items.OfType<ToolUseItem>().Count() == 2, "the cards");
+        await TabTestHarness.Eventually(() => tab.IsSettled && tab.Items.ToolCalls().Count() == 2, "the cards");
         var scrolled = new List<ConversationItem>();
         tab.ScrollToRequested += scrolled.Add;
-        var (vulkan, metal) = (tab.Items.OfType<ToolUseItem>().First(), tab.Items.OfType<ToolUseItem>().Last());
+        var (vulkan, metal) = (tab.Items.ToolCalls().First(), tab.Items.ToolCalls().Last());
 
         tab.OpenFindCommand.Execute(null);
         tab.Find.Query = "VULKAN_SDK";

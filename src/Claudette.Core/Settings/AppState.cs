@@ -20,6 +20,9 @@ public sealed class AppState
 
     public string? SelectedTabId { get; set; }
 
+    /// <summary>The tabs side by side, left to right (DESIGN.md §18, "Split panes"); null with one on screen.</summary>
+    public List<string>? PaneTabIds { get; set; }
+
     public List<RecentFolder> RecentFolders { get; set; } = [];
 
     public List<string> FavoriteFolders { get; set; } = [];

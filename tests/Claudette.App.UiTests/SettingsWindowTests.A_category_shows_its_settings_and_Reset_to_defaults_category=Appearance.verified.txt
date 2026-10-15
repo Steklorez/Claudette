@@ -24,11 +24,15 @@
 "Leave a font empty for the default. A font that isn't installed on this machine falls back to the default."
 [ ] Full-width conversation
 "The conversation and the message box fill the tab's width. Off, they stop at a width that's easy to read, in the middle of a wide window."
+[x] Quieter in-between steps
+"Tool calls, thinking, hooks, notes and the replies Claude carried on after are drawn without their card's tint and outline, so your prompts, Claude's answers and the files it changed stand out. Pointing at one brings it back."
 [ ] Show thinking expanded
 [x] Show fun words while Claude works
 "A twinkling line above the message box, such as “Noodling… 42s · 3.1k tokens”. Off, it says “Working…”. Verbs added to spinnerVerbs in Claude Code's settings show here too."
 [x] Show what Claude is doing while it works
 "While a tool runs, the line says what it's doing instead, such as “Running dotnet test…” or “Reading TabView.axaml…”."
+[x] Show when the prompt cache expires
+"A count beside the context in the message box's bar, such as “Cache 52m”: how long your next message can read the conversation from the prompt cache, for much less than reading it all again. It turns amber in the last 3 minutes."
 [ ] Detailed usage header
 "Draws the usage header taller, with charts of the session and the week, the burn rate and the busiest tabs. The chevron at the header's right does the same. Kept on this machine, not synced."
 [x] Show context on tab rows

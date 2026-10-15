@@ -4,26 +4,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
         xmlns:controls="using:Claudette.App.Controls">
-  <!-- The chip with a message's time and Copy button: quiet until the message is hovered or focused. It's 22 pixels
-       tall and sits above the message, so it doesn't hide the first line, overlapping it by 3 so the pointer can move
-       from the message onto it without leaving the message. -->
-  <Style Selector="ContentControl.messagetools">
-    <Setter Property="HorizontalAlignment" Value="Right" />
-    <Setter Property="VerticalAlignment" Value="Top" />
-    <Setter Property="Margin" Value="0,-19,4,0" />
-    <Setter Property="Padding" Value="1" />
-    <Setter Property="Background" Value="{DynamicResource DialogBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="6" />
-    <Setter Property="Opacity" Value="0" />
-    <Setter Property="IsHitTestVisible" Value="False" />
-  </Style>
-  <Style Selector="Panel.message:pointerover > ContentControl.messagetools, Panel.message:focus-within > ContentControl.messagetools">
-    <Setter Property="Opacity" Value="1" />
-    <Setter Property="IsHitTestVisible" Value="True" />
-  </Style>
-
   <!-- "Jump to latest" (DESIGN.md §5): an accent pill lifted off the conversation. A plain button's fill is see-through
        in the dark theme, so the text under it showed through and it was hard to find. -->
   <Style Selector="Button.jumplatest">
@@ -101,40 +81,218 @@
     <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
     <Setter Property="CornerRadius" Value="6" />
   </Style>
-  <Style Selector="Border.usermessage">
-    <Setter Property="Background" Value="{DynamicResource UserBoxBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource UserBoxBorderBrush}" />
-    <Setter Property="BorderThickness" Value="1" />
+  <!-- The conversation's cards (DESIGN.md §18, "Conversation cards"): a stripe down the left edge in the kind's color,
+       over a faint tint of it inside a thin outline, with a header line (icon, label, detail, the card's buttons on
+       hover, the time) and the step under it. The kind is a class; one without its own colors is neutral. -->
+  <Style Selector="controls|Card">
+    <Setter Property="Padding" Value="12,8,12,9" />
     <Setter Property="CornerRadius" Value="8" />
-    <Setter Property="Padding" Value="12,8" />
-    <Setter Property="Margin" Value="0,6,0,2" />
+    <Setter Property="StripeBrush" Value="{DynamicResource CardNeutralStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardNeutralTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardNeutralOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardNeutralLabelBrush}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Card" Background="{TemplateBinding TintBrush}" BorderBrush="{TemplateBinding OutlineBrush}" BorderThickness="1"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <!-- The stripe covers the outline's left edge, curving with the corners. -->
+          <Border Name="PART_Stripe" BorderBrush="{TemplateBinding StripeBrush}" BorderThickness="3,0,0,0" Margin="-1,-1,0,-1"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <Grid Name="PART_Body" Margin="{TemplateBinding Padding}" ColumnDefinitions="Auto,Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
+              <Path Name="PART_Icon" Classes="toolicon" Data="{TemplateBinding Icon}" Stroke="{TemplateBinding LabelBrush}" Margin="0,0,6,0"
+                    IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <TextBlock Name="PART_Label" Grid.Column="1" Classes="small" FontWeight="SemiBold" Foreground="{TemplateBinding LabelBrush}"
+                         Text="{TemplateBinding Label}" VerticalAlignment="Center"
+                         IsVisible="{TemplateBinding Label, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <TextBlock Name="PART_Detail" Grid.Column="2" Classes="muted small" Text="{TemplateBinding Detail}" TextTrimming="CharacterEllipsis"
+                         Margin="8,0,0,0" VerticalAlignment="Center" ToolTip.Tip="{TemplateBinding Detail}"
+                         IsVisible="{TemplateBinding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <ContentPresenter Name="PART_Actions" Grid.Column="3" Content="{TemplateBinding Actions}" ContentTemplate="{TemplateBinding ActionsTemplate}"
+                                Margin="8,-4,0,-4" VerticalAlignment="Center"
+                                IsVisible="{TemplateBinding Actions, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <TextBlock Name="PART_Time" Grid.Column="4" Classes="muted small" Text="{TemplateBinding TimeText}" ToolTip.Tip="{TemplateBinding TimeTip}"
+                         Background="Transparent" Margin="8,0,0,0" VerticalAlignment="Center"
+                         IsVisible="{TemplateBinding TimeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <ContentPresenter Name="PART_ContentPresenter" Grid.Row="1" Grid.ColumnSpan="5" Margin="0,6,0,0"
+                                Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+            </Grid>
+          </Border>
+        </Border>
+      </ControlTemplate>
+    </Setter>
   </Style>
-  <Style Selector=".compact Border.usermessage">
-    <Setter Property="Padding" Value="10,4" />
-    <Setter Property="Margin" Value="0,3,0,1" />
+  <Style Selector="controls|Card.you">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardYouStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardYouTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardYouOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardYouLabelBrush}" />
   </Style>
-  <!-- Settings → Appearance → Style → Claude (DESIGN.md §3): your messages are bubbles on the right, as in the Claude
-       apps, and Claude's replies run full width beside them. -->
-  <Style Selector=".claude Border.usermessage">
-    <Setter Property="CornerRadius" Value="18" />
-    <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="Padding" Value="14,9" />
-    <Setter Property="Margin" Value="72,10,0,6" />
-    <Setter Property="HorizontalAlignment" Value="Right" />
+  <Style Selector="controls|Card.claude">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardClaudeStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardClaudeTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardClaudeOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardClaudeLabelBrush}" />
   </Style>
-  <Style Selector=".claude.compact Border.usermessage">
-    <Setter Property="Padding" Value="12,5" />
-    <Setter Property="Margin" Value="72,4,0,2" />
+  <Style Selector="controls|Card.files">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardFilesStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardFilesTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardFilesOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardFilesLabelBrush}" />
   </Style>
-  <Style Selector="StackPanel.toolcard">
-    <Setter Property="Spacing" Value="4" />
+  <Style Selector="controls|Card.stats">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardStatsStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardStatsTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardStatsOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardStatsLabelBrush}" />
   </Style>
-  <Style Selector=".compact StackPanel.toolcard">
-    <Setter Property="Spacing" Value="1" />
+  <!-- Waiting on the user (DESIGN.md §7): the caution colors a prompt has always had, warm tints in the Claude style. -->
+  <Style Selector="controls|Card.waiting">
+    <Setter Property="StripeBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource WarningTextBrush}" />
   </Style>
-  <!-- Tool, thinking and subagent rows -->
+  <Style Selector="controls|Card.error">
+    <Setter Property="StripeBrush" Value="{DynamicResource ErrorTextBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardErrorTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardErrorOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="controls|Card.warning">
+    <Setter Property="StripeBrush" Value="{DynamicResource MeterWarningBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardWarningTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardWarningOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <!-- A one-line card: the step on the header line, after the label. -->
+  <Style Selector="controls|Card.inline /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Grid.Row" Value="0" />
+    <Setter Property="Grid.Column" Value="2" />
+    <Setter Property="Grid.ColumnSpan" Value="1" />
+    <Setter Property="Margin" Value="8,0,0,0" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+  </Style>
+  <Style Selector="controls|Card.inline /template/ TextBlock#PART_Detail">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <!-- On a card of one line that wraps, the label and time stay on its first line. -->
+  <Style Selector="controls|Card.inline /template/ TextBlock#PART_Label, controls|Card.inline /template/ TextBlock#PART_Time">
+    <Setter Property="VerticalAlignment" Value="Top" />
+  </Style>
+  <Style Selector="controls|Card.inline /template/ Path#PART_Icon">
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Margin" Value="0,2,6,0" />
+  </Style>
+  <Style Selector="controls|Card.inline">
+    <Setter Property="Padding" Value="12,5,12,6" />
+  </Style>
+  <Style Selector="controls|Card:headerless /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Grid.Row" Value="0" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+  <!-- The card's buttons (Copy and so on) show while it's pointed at or has the focus, so the header stays quiet. -->
+  <Style Selector="controls|Card /template/ ContentPresenter#PART_Actions">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="IsHitTestVisible" Value="False" />
+  </Style>
+  <Style Selector="controls|Card:pointerover /template/ ContentPresenter#PART_Actions, controls|Card:focus-within /template/ ContentPresenter#PART_Actions">
+    <Setter Property="Opacity" Value="1" />
+    <Setter Property="IsHitTestVisible" Value="True" />
+  </Style>
+  <Style Selector=".compact controls|Card">
+    <Setter Property="Padding" Value="10,4,10,5" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector=".compact controls|Card /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Margin" Value="0,3,0,0" />
+  </Style>
+  <Style Selector=".compact controls|Card.inline /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Margin" Value="8,0,0,0" />
+  </Style>
+  <Style Selector=".compact controls|Card.inline">
+    <Setter Property="Padding" Value="10,2,10,3" />
+  </Style>
+  <!-- Settings → Appearance → Style → Claude (DESIGN.md §3): rounder cards, as the Claude apps' are. -->
+  <Style Selector=".claude controls|Card">
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="14,9,14,10" />
+  </Style>
+  <Style Selector=".claude.compact controls|Card">
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="12,5,12,6" />
+  </Style>
+  <!-- Settings → Appearance → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): a step on the way loses
+       its tint and outline, keeping its stripe, until it's pointed at or has the focus. In the Standard style its text
+       is a little softer too, still at least 4.5:1; the Claude style's muted text is already as soft as it can be. -->
+  <Style Selector=".quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Border#PART_Card">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector=":not(.claude).quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Grid#PART_Body">
+    <Setter Property="Opacity" Value="0.88" />
+  </Style>
+
+  <!-- A tool call's tile in its card: raised a little off it, with the open one marked. -->
+  <Style Selector="Button.tile">
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.tile /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CardTileBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardTileBorderBrush}" />
+  </Style>
+  <Style Selector="Button.tile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardTileBorderBrush}" />
+  </Style>
+  <Style Selector="Button.tile.open /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+  </Style>
+  <Style Selector=".compact Button.tile">
+    <Setter Property="Padding" Value="6,3" />
+  </Style>
+  <Style Selector=".claude Button.tile">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <!-- The open tile's detail, under the tiles. -->
+  <Style Selector="Border.tiledetail">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Margin" Value="0,8,0,0" />
+    <Setter Property="Padding" Value="0,8,0,0" />
+  </Style>
+  <Style Selector=".compact Border.tiledetail">
+    <Setter Property="Margin" Value="0,4,0,0" />
+    <Setter Property="Padding" Value="0,4,0,0" />
+  </Style>
+  <!-- A thinking card's or a hook's row that opens it, and a subagent's. -->
   <Style Selector=".compact controls|ConversationPanel.conversation Button.row">
     <Setter Property="Padding" Value="4,0" />
+  </Style>
+  <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes"): the focused one's has the accent under it. -->
+  <Style Selector="Border.paneheader">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,3,6,3" />
+  </Style>
+  <Style Selector="Border.paneheader.focused">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,2" />
+    <Setter Property="Padding" Value="12,3,6,2" />
+  </Style>
+  <!-- A turn's two footer cards, Modified files over Turn statistics, as far apart as any two items. -->
+  <Style Selector="StackPanel.turnfooter">
+    <Setter Property="Spacing" Value="8" />
+  </Style>
+  <Style Selector=".compact StackPanel.turnfooter">
+    <Setter Property="Spacing" Value="3" />
   </Style>
   <Style Selector="StackPanel.composerarea">
     <Setter Property="Margin" Value="16,4,16,12" />
@@ -331,7 +489,7 @@
   <Style Selector="Border.chip.kept">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
   </Style>
-  <!-- Prompts waiting on the user (DESIGN.md §7); quieter once answered. -->
+  <!-- A box that waits on the user, such as the scratch pad's conflict, in the caution colors (DESIGN.md §7). -->
   <Style Selector="Border.prompt">
     <Setter Property="Padding" Value="12,10" />
     <Setter Property="CornerRadius" Value="8" />
@@ -397,14 +555,6 @@
   </Style>
   <Style Selector=".claude Button.send Path.sendarrow, .claude Button.stop Path.stopsquare">
     <Setter Property="IsVisible" Value="True" />
-  </Style>
-  <Style Selector="Border.prompt.question">
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
-    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
-  </Style>
-  <Style Selector="Border.prompt.answered">
-    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
-    <Setter Property="Background" Value="Transparent" />
   </Style>
   <!-- Tool card icons (DESIGN.md §5): 12×12 strokes from App.axaml, drawn as they are. -->
   <Style Selector="Path.toolicon">

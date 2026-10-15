@@ -178,6 +178,10 @@ public static class KeyboardShortcuts
     public const string NextTabNeedingInput = "tabs.nextNeedingInput";
     public const string CommandPalette = "palette.open";
     public const string Find = "conversation.find";
+    public const string PreviousMessage = "conversation.previousMessage";
+    public const string NextMessage = "conversation.nextMessage";
+    public const string FirstMessage = "conversation.firstMessage";
+    public const string LatestMessage = "conversation.latestMessage";
     public const string ZoomIn = "view.zoomIn";
     public const string ZoomOut = "view.zoomOut";
     public const string ResetZoom = "view.zoomReset";
@@ -202,6 +206,10 @@ public static class KeyboardShortcuts
         new(NextTabNeedingInput, "Go to the next tab waiting for you", Chord("Primary+J")),
         new(CommandPalette, "Command palette", Chord("Primary+Shift+P")),
         new(Find, "Find in the conversation", Chord("Primary+F")),
+        new(PreviousMessage, "Previous message in the conversation", Chord("F3")),
+        new(NextMessage, "Next message in the conversation", Chord("F4")),
+        new(FirstMessage, "First message in the conversation", Chord("Primary+F3")),
+        new(LatestMessage, "Latest in the conversation", Chord("Primary+F4")),
         new(ZoomIn, "Zoom in", Chord("Primary+OemPlus")),
         new(ZoomOut, "Zoom out", Chord("Primary+OemMinus")),
         new(ResetZoom, "Reset zoom", Chord("Primary+D0")),

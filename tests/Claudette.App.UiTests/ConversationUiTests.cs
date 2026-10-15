@@ -65,19 +65,23 @@ public sealed class ConversationUiTests
     }
 
     [AvaloniaFact]
-    public async Task A_click_on_a_web_link_in_a_reply_opens_it_and_one_to_a_file_doesnt()
+    public async Task A_click_on_a_web_link_in_a_reply_opens_it_and_one_to_a_program_doesnt_run_it()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
+        await File.WriteAllTextAsync(Path.Combine(h.WorkFolder, "setup.bat"), "", TestContext.Current.CancellationToken);
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.Transport.EmitTurn("[Run this](file:///usr/bin/env)\n\n[The Avalonia docs](https://docs.avaloniaui.net/docs/welcome)");
+        h.Transport.EmitTurn("[The spec](setup.bat)\n\n[The Avalonia docs](https://docs.avaloniaui.net/docs/welcome)");
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
         await UiText.SettleUntilAsync(window, () => Links(view).Count == 2, "the reply's links");
-        var (file, web) = (Links(view)[0], Links(view)[1]);
+        var (program, web) = (Links(view)[0], Links(view)[1]);
 
-        Click(file);
-        Assert.Empty(h.Platform.OpenedUrls);
+        // Shown in its folder, not run (DESIGN.md §18, "Files named in Claude's replies"); the web link works meanwhile.
+        Click(program);
         Click(web);
+        await UiText.SettleUntilAsync(window, () => h.Platform.RevealedFolders.Count > 0, "the program's folder");
+        Assert.Equal([h.WorkFolder], h.Platform.RevealedFolders);
+        Assert.Empty(h.Platform.OpenedFiles);
         Assert.Equal(["https://docs.avaloniaui.net/docs/welcome"], h.Platform.OpenedUrls);
 
         void Click(MarkdownTextBlock block)

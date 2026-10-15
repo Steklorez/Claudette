@@ -125,7 +125,7 @@ public class TaskProgressTests
         // With two in progress, the main agent's work counts toward neither.
         Update(h, "u2", "2", "in_progress");
         Edit(h, "e4", Path.Combine(h.WorkFolder, "readme.md"));
-        await TabTestHarness.Eventually(() => tab.Items.OfType<ToolUseItem>().Any(t => t.ToolUseId == "e4" && t.IsComplete), "the last change made");
+        await TabTestHarness.Eventually(() => tab.Items.ToolCalls().Any(t => t.ToolUseId == "e4" && t.IsComplete), "the last change made");
         Assert.Equal(2, task.Files.Count);
         Assert.Empty(tab.TodoList.Items[1].Files);
     }

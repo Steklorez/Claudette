@@ -67,7 +67,7 @@ public class ConversationBuilderTests
         Apply(Result("b2", new JsonObject { ["stdout"] = "", ["stderr"] = "", ["interrupted"] = false, ["backgroundTaskId"] = "bash_1", ["timedOutAfterMs"] = 120000 }));
         Apply(Result("b3", new JsonObject { ["stdout"] = "", ["stderr"] = "", ["interrupted"] = false, ["backgroundTaskId"] = "bash_2" }));
 
-        var cards = _items.OfType<ToolUseItem>().ToList();
+        var cards = _items.ToolCalls().ToList();
         Assert.Equal(["Committed 1a2b3c4 on main", "Pushed main", "Rebased onto origin/main", "Opened PR #42"], cards[0].GitChips.Select(c => c.Text));
         Assert.Equal("https://github.com/o/r/pull/42", cards[0].GitChips[^1].Url);
         Assert.Equal("Reached its 2m 00s time limit; carries on in the background", cards[1].ResultSummary);
@@ -206,7 +206,7 @@ public class ConversationBuilderTests
         Apply("""{"type":"assistant","message":{"content":[{"type":"tool_use","id":"t1","name":"Read","input":{"file_path":"src/app.cs"}}]}}""");
         Apply("""{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"line one\nline two","is_error":false}]}}""");
 
-        var tool = Assert.IsType<ToolUseItem>(Assert.Single(_items));
+        var tool = OnlyCall(_items);
         Assert.Equal("Read", tool.Name);
         Assert.Equal("src/app.cs", tool.Summary);
         Assert.Equal("line one", tool.ResultSummary);
@@ -237,7 +237,7 @@ public class ConversationBuilderTests
         Assert.Equal("Explore", agent.AgentType);
         Assert.Equal("Find tests", agent.Summary);
         Assert.True(agent.IsComplete);
-        var grep = Assert.IsType<ToolUseItem>(agent.Items[0]);
+        var grep = Assert.Single(Assert.IsType<ToolGroupItem>(agent.Items[0]).Calls);
         Assert.Equal("3 files", grep.ResultSummary);
         var nested = Assert.IsType<SubagentItem>(agent.Items[1]);
         Assert.Equal("nested reply", Assert.IsType<AssistantTextItem>(Assert.Single(nested.Items)).Text);
@@ -334,7 +334,7 @@ public class ConversationBuilderTests
     {
         Apply("""{"type":"assistant","message":{"content":[{"type":"text","text":"big reply"},{"type":"tool_use","id":"r1","name":"Read","input":{"file_path":"a.cs"}}]}}""");
 
-        var read = Assert.IsType<ToolUseItem>(_items[1]);
+        var read = Assert.Single(Assert.IsType<ToolGroupItem>(_items[1]).Calls);
         Assert.Null(read.Input.Parent);
         Assert.Equal("a.cs", read.Input["file_path"]!.GetValue<string>());
     }
@@ -343,7 +343,7 @@ public class ConversationBuilderTests
     public void A_long_output_shows_its_start_until_Show_all()
     {
         Apply("""{"type":"assistant","message":{"content":[{"type":"tool_use","id":"g1","name":"Grep","input":{"pattern":"x"}}]}}""");
-        var grep = Assert.IsType<ToolUseItem>(Assert.Single(_items));
+        var grep = OnlyCall(_items);
         var output = new string('x', ToolUseItem.ShownOutputLimit + 5000);
 
         grep.ApplyResult(output, isError: false, toolUseResult: null);
@@ -416,7 +416,7 @@ public class ConversationBuilderTests
         Apply("""{"type":"assistant","message":{"content":[{"type":"tool_use","id":"b1","name":"Bash","input":{"command":"dotnet test"}}]}}""");
         Apply("""{"type":"user","tool_use_result":{"stdout":"Passed!\nTotal 8","stderr":"","interrupted":false},"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"b1","content":"Passed!\nTotal 8"}]}}""");
 
-        var bash = Assert.IsType<ToolUseItem>(Assert.Single(_items));
+        var bash = OnlyCall(_items);
         Assert.Equal("dotnet test", bash.Command);
         Assert.Equal("Passed!\nTotal 8", bash.Output);
         Assert.Equal("Passed!", bash.ResultSummary);
@@ -430,7 +430,7 @@ public class ConversationBuilderTests
         Apply("""{"type":"user","tool_use_result":{"stdout":"done","stderr":"","interrupted":"yes"},"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"b1","content":"done"}]}}""");
         Apply("""{"type":"user","tool_use_result":{"type":7,"content":"x"},"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"w1","content":"File created"}]}}""");
 
-        var tools = _items.OfType<ToolUseItem>().ToList();
+        var tools = _items.ToolCalls().ToList();
         Assert.Equal("done", tools[0].ResultSummary);
         Assert.True(tools[1].IsComplete);
     }
@@ -439,7 +439,7 @@ public class ConversationBuilderTests
     public void An_edit_shows_the_structured_patch()
     {
         Apply("""{"type":"assistant","message":{"content":[{"type":"tool_use","id":"e1","name":"Edit","input":{"file_path":"a.cs","old_string":"x","new_string":"y"}}]}}""");
-        var edit = Assert.IsType<ToolUseItem>(Assert.Single(_items));
+        var edit = OnlyCall(_items);
         Assert.Equal("+1 −1", edit.DiffStats);
 
         Apply("""{"type":"user","tool_use_result":{"structuredPatch":[{"oldStart":1,"oldLines":2,"newStart":1,"newLines":3,"lines":[" a","-x","+y","+z"]}]},"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"e1","content":"The file a.cs has been updated."}]}}""");
@@ -514,7 +514,7 @@ public class ConversationBuilderTests
         var task = Assert.Single(tasks.Items);
         Assert.Equal(("1", "From the helper", "helper", true), (task.Id, task.Content, task.Owner, task.IsActive));
         var group = Assert.IsType<SubagentItem>(Assert.Single(items));
-        Assert.Equal("TodoWrite", Assert.IsType<ToolUseItem>(Assert.Single(group.Items)).Name);
+        Assert.Equal("TodoWrite", OnlyCall(group.Items).Name);
     }
 
     // Calls to claude.ai's Docs connector as Claude Code 2.1.284 passed them on, cut down (DESIGN.md §5, "Claude Docs").
@@ -559,7 +559,7 @@ public class ConversationBuilderTests
         Apply(builder, """{"type":"assistant","message":{"content":[{"type":"text","text":"Your task list is done."}]}}""");
         Apply(builder, """{"type":"result","subtype":"success","is_error":false,"result":"Your task list is done.","duration_ms":1000,"num_turns":3,"usage":{"input_tokens":10,"output_tokens":5}}""");
 
-        var cards = items.OfType<ToolUseItem>().ToList();
+        var cards = items.ToolCalls().ToList();
         Assert.Equal(new DocLink("Created “Enemies: your task list”", DocUrl), cards[0].Doc);
         Assert.Equal(new DocLink("Edited “Enemies: your task list”", DocUrl), cards[1].Doc);
         // The link takes the place of the reply's JSON.
@@ -591,7 +591,7 @@ public class ConversationBuilderTests
         Apply(builder, DocCall("c1", "update", EditDoc));
         Apply(builder, DocReply("c1", """{"verdict":"allow","rev":7}"""));
         Assert.Empty(tasks.Docs);
-        Assert.Null(items.OfType<ToolUseItem>().Single().Doc);
+        Assert.Null(items.ToolCalls().Single().Doc);
 
         Apply(builder, DocCall("c2", "create", """{"object":"utterance","container":{"kind":"project","id":"d0c-1"},"payload":{"value":{"body":"A question"}}}"""));
         Apply(builder, DocReply("c2", $$$"""{"verdict":"allow","minted":"u1","frame":{"slug":"d0c-1","url":"{{{DocUrl}}}"}}"""));
@@ -599,7 +599,7 @@ public class ConversationBuilderTests
         var doc = Assert.Single(tasks.Docs);
         // Without a clock, no times.
         Assert.Equal(("Claude Doc", "Commented on"), (doc.DisplayTitle, doc.TimeText));
-        Assert.Equal(new DocLink("Commented on a Claude Doc", DocUrl), items.OfType<ToolUseItem>().Last().Doc);
+        Assert.Equal(new DocLink("Commented on a Claude Doc", DocUrl), items.ToolCalls().Last().Doc);
     }
 
     [Fact]
@@ -612,7 +612,7 @@ public class ConversationBuilderTests
         Replay(builder, DocReply("c1", DocMade));
 
         Assert.Single(tasks.Docs);
-        Assert.NotNull(items.OfType<ToolUseItem>().Single().Doc);
+        Assert.NotNull(items.ToolCalls().Single().Doc);
 
         // A turn after the restore names only the docs it changed itself.
         Apply(builder, """{"type":"result","subtype":"success","is_error":false,"result":"ok","duration_ms":1000,"num_turns":1,"usage":{"input_tokens":10,"output_tokens":5}}""");
@@ -665,4 +665,7 @@ public class ConversationBuilderTests
         };
         builder.Apply(sessionEvent);
     }
+
+    /// <summary>The one tool call in a conversation that holds only a Tool calls card with it (DESIGN.md §18, "Conversation cards").</summary>
+    private static ToolUseItem OnlyCall(IEnumerable<ConversationItem> items) => Assert.Single(Assert.IsType<ToolGroupItem>(Assert.Single(items)).Calls);
 }

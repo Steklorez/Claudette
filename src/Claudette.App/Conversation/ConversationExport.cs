@@ -81,6 +81,10 @@ public static class ConversationExport
                 case ThinkingItem thinking when options.IncludeThinking && thinking.HasText:
                     Block(string.Join('\n', thinking.Text.TrimEnd().Split('\n').Select(l => "> " + l)));
                     break;
+                case ToolGroupItem group:
+                    // A card of calls: each call on its line, as before there were cards.
+                    WriteMarkdown(md, group.Calls, options, depth);
+                    break;
                 case SubagentItem agent:
                     Block($"- **{agent.Name}** {OneLine(agent.Summary)}{Result(agent)}");
                     if (options.IncludeSubagents)
@@ -135,6 +139,9 @@ public static class ConversationExport
                     break;
                 case ThinkingItem thinking when options.IncludeThinking && thinking.HasText:
                     html.Append("<details class=\"thinking\"><summary>Thinking</summary><div class=\"md\">").Append(Encode(thinking.Text.TrimEnd())).AppendLine("</div></details>");
+                    break;
+                case ToolGroupItem group:
+                    WriteHtml(html, group.Calls, options);
                     break;
                 case SubagentItem agent:
                     html.Append("<div class=\"tool\"><b>").Append(Encode(agent.Name)).Append("</b> ").Append(Encode(OneLine(agent.Summary))).Append(Encode(Result(agent)));

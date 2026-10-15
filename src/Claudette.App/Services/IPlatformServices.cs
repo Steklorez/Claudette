@@ -35,6 +35,13 @@ public interface IPlatformServices
     /// </summary>
     Task OpenPathAsync(string path) => Directory.Exists(path) ? RevealFolderAsync(path) : OpenFileAsync(path);
 
+    /// <summary>
+    /// A menu of <paramref name="choices"/> at the pointer, over <paramref name="anchor"/> (the control clicked), such as
+    /// the files a name in a reply matches (DESIGN.md §18, "Files named in Claude's replies"). Returns the index of the
+    /// one picked, or null when the menu closed without one.
+    /// </summary>
+    Task<int?> ChooseAsync(object? anchor, IReadOnlyList<string> choices) => Task.FromResult<int?>(null);
+
     /// <summary>The font families installed on this machine, for Settings → Appearance. Empty when unknown.</summary>
     IReadOnlyList<string> InstalledFonts() => [];
 

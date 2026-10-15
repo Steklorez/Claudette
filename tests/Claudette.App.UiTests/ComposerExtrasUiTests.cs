@@ -6,6 +6,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
@@ -121,15 +122,15 @@ public class ComposerExtrasUiTests
         await UiText.SettleUntilAsync(window, () => tab.Items.LastOrDefault() is TurnSummaryItem { HasFiles: true } t && t.Files[0].Stats is not null, "the footer");
         UiText.Settle(window);
 
-        var files = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("turnfiles"));
-        Assert.True(files.IsEffectivelyVisible);
-        Assert.Contains("· 1 file changed", UiText.Describe(files), StringComparison.Ordinal);
-        var flyout = Assert.IsType<Flyout>(files.Flyout);
-        flyout.ShowAt(files);
-        UiText.Settle(window);
-        var list = Assert.IsAssignableFrom<Control>(flyout.Content);
-        await UiText.SettleUntilAsync(window, () => UiText.Describe(list).Contains("\"+1 −0\"", StringComparison.Ordinal), "the file's counts");
-        Assert.Contains("\"auth.cs\"", UiText.Describe(list), StringComparison.Ordinal);
+        // A Modified files card, each file on a row that opens the turn's changes to it (DESIGN.md §18, "Conversation cards").
+        var card = window.GetVisualDescendants().OfType<Card>().Single(c => c.Classes.Contains("files"));
+        Assert.True(card.IsEffectivelyVisible);
+        Assert.Equal("Modified files", card.Label);
+        Assert.Equal("1 file changed", card.Detail);
+        await UiText.SettleUntilAsync(window, () => UiText.Describe(card).Contains("\"+1 −0\"", StringComparison.Ordinal), "the file's counts");
+        Assert.Contains("\"auth.cs\"", UiText.Describe(card), StringComparison.Ordinal);
+        var row = card.GetVisualDescendants().OfType<Button>().Single(b => Avalonia.Automation.AutomationProperties.GetName(b) == "What this turn changed in auth.cs");
+        Assert.True(row.Command!.CanExecute(row.CommandParameter));
     }
 
     [AvaloniaFact]

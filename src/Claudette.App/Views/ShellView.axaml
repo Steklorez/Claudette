@@ -2,15 +2,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Claudette.App.ViewModels"
              xmlns:views="using:Claudette.App.Views"
+             xmlns:controls="using:Claudette.App.Controls"
              x:Class="Claudette.App.Views.ShellView"
              x:DataType="vm:ShellViewModel"
              Classes.compact="{Binding IsCompact}"
              Classes.claude="{Binding IsClaudeStyle}"
-             Classes.fullwidth="{Binding IsFullWidth}">
+             Classes.fullwidth="{Binding IsFullWidth}"
+             Classes.quietsteps="{Binding IsQuietSteps}">
   <!-- Settings → Appearance → Density (DESIGN.md §14): "compact" tightens the rows, the conversation and the composer,
        through the styles in App.axaml and TabView. Settings → Appearance → Style (DESIGN.md §3): "claude" gives them
        the Claude apps' shapes. Settings → Appearance → Full-width conversation (DESIGN.md §14): "fullwidth" lets the
-       conversation and the composer fill the tab. -->
+       conversation and the composer fill the tab. Settings → Appearance → Quieter in-between steps (DESIGN.md §18,
+       "Conversation cards"): "quietsteps" draws the steps on the way without their cards' tint and outline. -->
 
   <UserControl.Resources>
     <!-- The tab info card (DESIGN.md §4), used as the tab tooltip. -->
@@ -430,6 +433,11 @@
                                   </MenuItem>
                                   <MenuItem Header="Duplicate tab" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).DuplicateTabCommand}" CommandParameter="{Binding}"
                                             ToolTip.Tip="A new tab that carries this session on as a copy" />
+                                  <!-- Tabs side by side (DESIGN.md §18, "Split panes") -->
+                                  <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand}" CommandParameter="{Binding}"
+                                            IsVisible="{Binding !IsShown}" ToolTip.Tip="Shows this tab beside the one you're in, each with its own conversation and message box" />
+                                  <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}"
+                                            ToolTip.Tip="Takes this tab off the screen; it stays open in the sidebar" />
                                   <!-- Threads (DESIGN.md §18): a tab whose Claude hands work to others in its group -->
                                   <MenuItem Header="Thread">
                                     <MenuItem Header="Make this tab a thread" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).MakeThreadCommand}" CommandParameter="{Binding}" IsVisible="{Binding CanMakeThread}"
@@ -438,6 +446,8 @@
                                     <MenuItem Header="New sub-thread in a worktree" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewSubThreadInWorktreeCommand}" CommandParameter="{Binding}" IsVisible="{Binding IsThread}" />
                                     <MenuItem Header="Assign to thread" ItemsSource="{Binding AssignableThreads}" ItemContainerTheme="{StaticResource ThreadMenuItemTheme}" IsVisible="{Binding CanBeAssigned}" />
                                     <MenuItem Header="Go to thread" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).GoToThreadCommand}" CommandParameter="{Binding}" IsVisible="{Binding IsSubThread}" />
+                                    <MenuItem Header="Show with its sub-threads" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ShowThreadSideBySideCommand}" CommandParameter="{Binding}"
+                                              IsVisible="{Binding HasSubThreads}" ToolTip.Tip="The thread beside its first sub-threads, each with its own conversation" />
                                     <MenuItem Header="Detach from thread" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).DetachFromThreadCommand}" CommandParameter="{Binding}" IsVisible="{Binding IsSubThread}" />
                                     <MenuItem Header="Ask before sending to sub-threads" ToggleType="CheckBox" IsChecked="{Binding AskBeforeSendingToSubThreads, Mode=OneWay}"
                                               Command="{Binding ToggleAskBeforeSendingToSubThreadsCommand}" IsVisible="{Binding IsThread}" />
@@ -590,6 +600,11 @@
                                 </MenuItem>
                               <MenuItem Header="Duplicate tab" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).DuplicateTabCommand}" CommandParameter="{Binding}"
                                         ToolTip.Tip="A new tab that carries this session on as a copy" />
+                              <!-- Tabs side by side (DESIGN.md §18, "Split panes") -->
+                              <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand}" CommandParameter="{Binding}"
+                                        IsVisible="{Binding !IsShown}" ToolTip.Tip="Shows this tab beside the one you're in, each with its own conversation and message box" />
+                              <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}"
+                                        ToolTip.Tip="Takes this tab off the screen; it stays open in the sidebar" />
                               <!-- Threads (DESIGN.md §18): a tab whose Claude hands work to others in its group -->
                               <MenuItem Header="Thread">
                                 <MenuItem Header="Make this tab a thread" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).MakeThreadCommand}" CommandParameter="{Binding}" IsVisible="{Binding CanMakeThread}"
@@ -598,6 +613,8 @@
                                 <MenuItem Header="New sub-thread in a worktree" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewSubThreadInWorktreeCommand}" CommandParameter="{Binding}" IsVisible="{Binding IsThread}" />
                                 <MenuItem Header="Assign to thread" ItemsSource="{Binding AssignableThreads}" ItemContainerTheme="{StaticResource ThreadMenuItemTheme}" IsVisible="{Binding CanBeAssigned}" />
                                 <MenuItem Header="Go to thread" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).GoToThreadCommand}" CommandParameter="{Binding}" IsVisible="{Binding IsSubThread}" />
+                                <MenuItem Header="Show with its sub-threads" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ShowThreadSideBySideCommand}" CommandParameter="{Binding}"
+                                          IsVisible="{Binding HasSubThreads}" ToolTip.Tip="The thread beside its first sub-threads, each with its own conversation" />
                                 <MenuItem Header="Detach from thread" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).DetachFromThreadCommand}" CommandParameter="{Binding}" IsVisible="{Binding IsSubThread}" />
                                 <MenuItem Header="Ask before sending to sub-threads" ToggleType="CheckBox" IsChecked="{Binding AskBeforeSendingToSubThreads, Mode=OneWay}"
                                           Command="{Binding ToggleAskBeforeSendingToSubThreadsCommand}" IsVisible="{Binding IsThread}" />
@@ -834,15 +851,24 @@
             Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding Layout.IsSidebarExpanded}" />
 
     <!-- Tabs: one view per tab, kept alive while hidden -->
-    <ItemsControl Grid.Column="1" ItemsSource="{Binding OpenTabs}">
+    <!-- The tabs on screen, side by side when there are several (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
+    <ItemsControl Grid.Column="1" Classes="panes" ItemsSource="{Binding OpenTabs}">
+      <ItemsControl.Styles>
+        <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:TabViewModel">
+          <Setter Property="IsVisible" Value="{Binding IsShown}" />
+          <Setter Property="controls:PanesPanel.Index" Value="{Binding PaneIndex}" />
+          <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+          <Setter Property="BorderThickness" Value="{Binding PaneIndex, Converter={x:Static controls:PanesPanel.DividerThickness}}" />
+        </Style>
+      </ItemsControl.Styles>
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
-          <Panel />
+          <controls:PanesPanel />
         </ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
         <DataTemplate DataType="vm:TabViewModel">
-          <views:TabView IsVisible="{Binding IsSelected}" />
+          <views:TabView />
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>

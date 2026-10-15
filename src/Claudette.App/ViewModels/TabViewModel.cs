@@ -173,24 +173,11 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
     public void ScrollTo(ConversationItem item) => ScrollToRequested?.Invoke(item);
 
     /// <summary>
-    /// The conversation's top-level item that holds <paramref name="item"/>: itself, or the subagent group it's inside,
-    /// however deep. Null when it isn't in the conversation. The view brings that into view first, since the
-    /// conversation is virtualized and only items in view have controls.
+    /// The conversation's top-level item that holds <paramref name="item"/>: itself, the Tool calls card it's a tile in,
+    /// or the subagent group it's inside, however deep. Null when it isn't in the conversation. The view brings that into
+    /// view first, since the conversation is virtualized and only items in view have controls.
     /// </summary>
-    public ConversationItem? TopLevelItemOf(ConversationItem item)
-    {
-        foreach (var top in Items)
-        {
-            if (ReferenceEquals(top, item) || top is SubagentItem group && Contains(group, item))
-            {
-                return top;
-            }
-        }
-        return null;
-
-        static bool Contains(SubagentItem group, ConversationItem item) =>
-            group.Items.Any(child => ReferenceEquals(child, item) || child is SubagentItem inner && Contains(inner, item));
-    }
+    public ConversationItem? TopLevelItemOf(ConversationItem item) => Items.TopLevelOf(item);
 
     /// <summary>The processes the tab started (DESIGN.md §4, "Process monitor").</summary>
     public ProcessMonitorViewModel ProcessMonitor { get; }
@@ -426,16 +413,42 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>The installed Claude Code version changed: the info card may need its "is installed" note.</summary>
     public void OnClaudeVersionsChanged() => OnPropertyChanged(nameof(InfoRows));
 
+    /// <summary>
+    /// The tab the keyboard, the header and Claudette on the composer follow: the focused pane's, with tabs side by side
+    /// (DESIGN.md §18, "Split panes"). On its own, it's also the one on screen.
+    /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsSidePanel))]
     public partial bool IsSelected { get; set; }
 
     partial void OnIsSelectedChanged(bool value)
     {
-        Working.SetShown(value);
+        if (!IsInSplit)
+        {
+            IsShown = value;
+        }
         TellLayoutAboutSidePanel();
         if (value)
         {
             TellMascot();
+        }
+        ProjectTools.Runs.UpdateShownRun();
+    }
+
+    /// <summary>
+    /// On screen, in a pane (DESIGN.md §18, "Split panes"): its session starts, its working line runs and what it shows
+    /// stays fresh, and it isn't unread. The selected tab, or each of the tabs side by side.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsShown { get; set; }
+
+    partial void OnIsShownChanged(bool value)
+    {
+        Working.SetShown(value);
+        // Only a tab on screen counts its prompt cache down; it catches up here (DESIGN.md §6, "Prompt cache").
+        RefreshPromptCache();
+        if (value)
+        {
             ChangedFiles.RefreshIfStale();
             if (Status == TabStatus.Unread)
             {
@@ -447,8 +460,32 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             _ = ProjectTools.RefreshFileAsync();
             RefreshBranch();
         }
-        ProjectTools.Runs.UpdateShownRun();
     }
+
+    /// <summary>It shares the window with other tabs, side by side: its pane has a header line (DESIGN.md §18, "Split panes").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsSidePanel))]
+    public partial bool IsInSplit { get; set; }
+
+    /// <summary>Its place among the panes, from the left; -1 when it isn't in one.</summary>
+    [ObservableProperty]
+    public partial int PaneIndex { get; set; } = -1;
+
+    /// <summary>The side panel shows: it's open, and with tabs side by side, only on the focused pane.</summary>
+    public bool ShowsSidePanel => IsSidePanelOpen && (IsSelected || !IsInSplit);
+
+    /// <summary>A click or the focus in its pane: the keyboard and the header follow this tab now.</summary>
+    public void FocusPane()
+    {
+        if (IsShown && !IsSelected)
+        {
+            _shell.SelectedTab = this;
+        }
+    }
+
+    /// <summary><b>Close pane</b> on its pane's header: the tab stays open, out of sight.</summary>
+    [RelayCommand]
+    private void ClosePane() => _shell.ClosePaneCommand.Execute(this);
 
     /// <summary>Two check-ins in a row got no reply (DESIGN.md §5, "Check-ins on long turns"); shown on the tab's row.</summary>
     [ObservableProperty]
@@ -663,6 +700,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             State.Overrides.Model = model.Value;
             _modelId = model.ResolvedModel ?? model.Value;
             ModelName = model.DisplayName;
+            ForgetPromptCache();
             if (Effort is { } effort && !model.SupportedEffortLevels.Contains(effort))
             {
                 await _session.SetEffortAsync(null);
@@ -818,6 +856,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         ProjectTools.OnSettingsChanged();
         OnGamesSettingsChanged();
         OnBranchChanged();
+        RefreshPromptCache();
         OnPropertyChanged(nameof(ShowTaskProgressBadge));
         OnPropertyChanged(nameof(RowDetail));
         // Naming sessions after their tabs turned on: a running one takes its name now (DESIGN.md §13).
@@ -1085,15 +1124,27 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>
     /// Opens a link clicked in a reply, a plan or a card. LiveMarkdown's renderers pass the click's
-    /// <see cref="LinkClickedEventArgs"/>, the cards the address. Only https, http and mailto links open, as the project's
-    /// links do (DESIGN.md §18, "Links"): a reply can't run a program through a <c>file:</c> or an app's own link.
+    /// <see cref="LinkClickedEventArgs"/>, the cards the address. Only https, http and mailto links open in the browser, as
+    /// the project's links do (DESIGN.md §18, "Links"): a reply can't run a program through an app's own link. A link in
+    /// Markdown to a file, or inline code that names one, opens the file, but never runs it (DESIGN.md §18, "Files named
+    /// in Claude's replies"). Clicks don't wait for each other: a file being looked for, or the menu of several, leaves
+    /// every other link working.
     /// </summary>
-    [RelayCommand]
-    private Task OpenLinkAsync(object? link) =>
-        (link is LinkClickedEventArgs clicked ? clicked.HRef?.OriginalString : link?.ToString()) is { Length: > 0 } url
-        && Uri.TryCreate(url, UriKind.Absolute, out var uri) && ProjectLinks.AllowedSchemes.Contains(uri.Scheme)
-            ? _services.Platform.OpenUrlAsync(url)
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private Task OpenLinkAsync(object? link)
+    {
+        if ((link is LinkClickedEventArgs clicked ? clicked.HRef?.OriginalString : link?.ToString()) is not { Length: > 0 } url)
+        {
+            return Task.CompletedTask;
+        }
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && ProjectLinks.AllowedSchemes.Contains(uri.Scheme))
+        {
+            return _services.Platform.OpenUrlAsync(url);
+        }
+        return link is LinkClickedEventArgs markdown && ReplyFileReference.FromLink(url) is { } file
+            ? OpenFileReferenceAsync(file, markdown.Source)
             : Task.CompletedTask;
+    }
 
     /// <summary>An image from a tool's result, to show full size in a window of its own (DESIGN.md §18, "Images from Claude's tools").</summary>
     public event Action<ImageViewerViewModel>? ImageRequested;
@@ -1110,6 +1161,23 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             ImageRequested?.Invoke(new ImageViewerViewModel(image, _services));
         }
     }
+
+    /// <summary>A tool call to show in a window of its own, which follows it (DESIGN.md §18, "Conversation cards").</summary>
+    public event Action<ToolUseItem>? ToolWindowRequested;
+
+    /// <summary><b>Open in a window</b>, on an open tile's detail.</summary>
+    [RelayCommand]
+    private void OpenToolWindow(ToolUseItem? tool)
+    {
+        if (tool is not null)
+        {
+            ToolWindowRequested?.Invoke(tool);
+        }
+    }
+
+    /// <summary>The window's side of a tool call: its running time by the tab's clock, and Open diff as the tile's.</summary>
+    public ToolCallWindowViewModel ToolWindowFor(ToolUseItem tool, bool dark) =>
+        new(tool, _services.Time, _services.Dispatcher, dark, call => ChangedFiles.OpenToolDiffCommand.Execute(call));
 
     // ---- Copy and times (DESIGN.md §5, "Copy and times") ---------------------------------------------------
 
@@ -1159,17 +1227,24 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>A message's short time says "today" only on the day it was sent; looking at the tab again catches up.</summary>
     private void RefreshMessageTimes()
     {
-        foreach (var message in Messages(Items))
+        foreach (var item in Items.Descendants())
         {
-            message.RefreshTime();
+            switch (item)
+            {
+                case MessageItem message:
+                    message.RefreshTime();
+                    break;
+                case ToolGroupItem group:
+                    group.RefreshTime();
+                    break;
+                case SubagentItem agent:
+                    agent.RefreshTime();
+                    break;
+                case TurnSummaryItem turn:
+                    turn.RefreshTime();
+                    break;
+            }
         }
-
-        static IEnumerable<MessageItem> Messages(IEnumerable<ConversationItem> items) => items.SelectMany(item => item switch
-        {
-            MessageItem message => [message],
-            SubagentItem group => Messages(group.Items),
-            _ => [],
-        });
     }
 
     // ---- Check-ins (DESIGN.md §5, "Check-ins on long turns") ----------------------------------------------
@@ -1375,6 +1450,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             }
             _session = session;
             _claudeName = options.Name;
+            _claudeVariables = options.EnvironmentOverrides;
             _services.LiveSessions.Refresh();
             if (!fork)
             {
@@ -1384,6 +1460,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             // A new claude has none of the old one's tasks.
             Tasks.Clear();
             _ = LoadSpinnerVerbsAsync();
+            _ = LoadPromptCacheConfigAsync();
             _services.RememberModels(session.Initialization?.Models);
             State.SessionStartedAt ??= _services.Time.GetUtcNow();
             // The installed version is what just started; system/init confirms it with the first turn.
@@ -1624,6 +1701,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                         var assistantEvent = new AssistantMessageReceived(assistant);
                         _conversation.Replay(assistantEvent, item.Time);
                         ChangedFiles.Record(assistantEvent, live: false);
+                        ReplayForPromptCache(assistant, item.Time);
                         break;
                     case TranscriptMessage { Message: UserMessage results }:
                         var resultsEvent = new ToolResultsReceived(results);
@@ -1633,6 +1711,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 }
             }
             RestoreChosenPlan();
+            RefreshPromptCache();
             if (State.AutoName is null && transcript.Title is { } title)
             {
                 State.AutoName = title;
@@ -1771,6 +1850,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         Perforce.OnSessionEvent(sessionEvent);
         Context.OnSessionEvent(session, sessionEvent);
         TrackToolsForWorkingLine(sessionEvent);
+        TrackPromptCache(sessionEvent);
         if (ApiTrouble.Reports(sessionEvent))
         {
             // Claude's status may explain it: check now rather than at the next poll (DESIGN.md §18, "Service status").
@@ -1871,7 +1951,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 // Only a tab that syncs writes to the library (DESIGN.md §9, "Session library").
                 CopyToLibrary();
                 _services.SaveState();
-                if (!IsSelected && !completed.Result.IsError)
+                if (!IsShown && !completed.Result.IsError)
                 {
                     Status = TabStatus.Unread;
                 }
@@ -2049,6 +2129,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 await _session.SetModelAsync(model);
                 _modelId = FindModel(model)?.ResolvedModel ?? model;
                 ModelName = ModelDisplayName(_modelId) ?? model;
+                ForgetPromptCache();
             }
             var effort = State.Overrides.Effort ?? _services.Settings.NewTabs.DefaultEffort;
             if (State.Overrides.Effort != previous.Effort)
@@ -2141,6 +2222,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         AgentTicker.Stop();
         TaskTicker.Stop();
         CheckInTicker.Stop();
+        PromptCacheTicker.Stop();
         // The session's last events aren't applied once it stops, so nothing else would end the turn's line, and its
         // timer would keep this tab alive.
         Working.Dispose();

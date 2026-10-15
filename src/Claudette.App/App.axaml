@@ -210,6 +210,12 @@
       <Setter Property="HorizontalContentAlignment" Value="Left" />
       <Setter Property="Padding" Value="4,2" />
     </Style>
+    <!-- A chip that only tells, such as the composer bar's prompt cache (DESIGN.md §6): a flat button's room, no hover. -->
+    <Style Selector="TextBlock.infochip">
+      <Setter Property="Padding" Value="6,3" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
 
     <!-- Tabs: rows in the sidebar (DESIGN.md §4) -->
     <Style Selector="Button.tab">
@@ -507,6 +513,18 @@
       <!-- A cloud: a remote agent in the running tasks list. -->
       <StreamGeometry x:Key="IconToolRemote">M3,9.5 L9,9.5 A2.25,2.25 0 0 0 9.2,5 A3,3 0 0 0 3.4,4.6 A2.45,2.45 0 0 0 3,9.5 Z</StreamGeometry>
       <StreamGeometry x:Key="IconToolDefault">M6,1 L10.5,3.5 L10.5,8.5 L6,11 L1.5,8.5 L1.5,3.5 Z M1.5,3.5 L6,6 L10.5,3.5 M6,6 L6,11</StreamGeometry>
+      <!-- The conversation's cards (DESIGN.md §18, "Conversation cards"): the icon before each kind's label. 12×12 strokes. -->
+      <StreamGeometry x:Key="IconCardYou">M6,1.5 A2.25,2.25 0 1 1 6,6 A2.25,2.25 0 1 1 6,1.5 Z M1.5,11 C1.5,8.4 3.5,7.2 6,7.2 C8.5,7.2 10.5,8.4 10.5,11</StreamGeometry>
+      <StreamGeometry x:Key="IconCardClaude">M6,1 L6,11 M1.5,3.5 L10.5,8.5 M1.5,8.5 L10.5,3.5</StreamGeometry>
+      <StreamGeometry x:Key="IconCardThinking">M4.2,8.6 C3,7.8 2.4,6.6 2.4,5.3 A3.6,3.6 0 0 1 9.6,5.3 C9.6,6.6 9,7.8 7.8,8.6 L7.8,9.5 L4.2,9.5 Z M4.6,11.2 L7.4,11.2</StreamGeometry>
+      <StreamGeometry x:Key="IconCardTools">M1.5,2 L10.5,2 L10.5,10 L1.5,10 Z M3.5,4.8 L5.2,6.3 L3.5,7.8 M6.5,7.8 L8.5,7.8</StreamGeometry>
+      <StreamGeometry x:Key="IconCardFiles">M2.5,1 L7.5,1 L9.5,3 L9.5,11 L2.5,11 Z M7.5,1 L7.5,3 L9.5,3 M6,5 L6,9 M4,7 L8,7</StreamGeometry>
+      <StreamGeometry x:Key="IconCardStats">M1.5,9.5 A4.5,4.5 0 0 1 10.5,9.5 M6,9.5 L8.4,6.1 M1.5,9.5 L10.5,9.5</StreamGeometry>
+      <StreamGeometry x:Key="IconCardNote">M6,1 A5,5 0 1 1 6,11 A5,5 0 1 1 6,1 Z M6,5.4 L6,8.6 M6,3.4 L6,3.6</StreamGeometry>
+      <StreamGeometry x:Key="IconCardWarning">M6,1.5 L11,10.5 L1,10.5 Z M6,4.8 L6,7.4 M6,8.9 L6,9.1</StreamGeometry>
+      <StreamGeometry x:Key="IconCardError">M6,1 A5,5 0 1 1 6,11 A5,5 0 1 1 6,1 Z M4.2,4.2 L7.8,7.8 M7.8,4.2 L4.2,7.8</StreamGeometry>
+      <StreamGeometry x:Key="IconCardHook">M7,1 L2.5,6.5 L6,6.5 L5,11 L9.5,5.5 L6,5.5 Z</StreamGeometry>
+      <StreamGeometry x:Key="IconCardPermission">M6,1 L10.5,2.6 L10.5,6 C10.5,8.6 8.5,10.3 6,11 C3.5,10.3 1.5,8.6 1.5,6 L1.5,2.6 Z</StreamGeometry>
       <!-- A tab's marks (DESIGN.md §4, "Marks"), drawn by MarkIcon, which names them IconMark and the mark. 12×12. -->
       <StreamGeometry x:Key="IconMarkCheck">M1.5,6.5 L4.5,9.5 L10.5,2.5</StreamGeometry>
       <StreamGeometry x:Key="IconMarkCross">M2.5,2.5 L9.5,9.5 M9.5,2.5 L2.5,9.5</StreamGeometry>
@@ -526,7 +544,6 @@
           <SolidColorBrush x:Key="MutedTextBrush" Color="#5F6368" />
           <SolidColorBrush x:Key="DividerBrush" Color="#1F000000" />
           <SolidColorBrush x:Key="CardBrush" Color="#FAFAFA" />
-          <SolidColorBrush x:Key="ToolCardBrush" Color="#F3F3F5" />
           <SolidColorBrush x:Key="SubtleBrush" Color="#F4F4F6" />
           <SolidColorBrush x:Key="HoverBrush" Color="#0F000000" />
           <SolidColorBrush x:Key="TabSelectedBrush" Color="#FFFFFF" />
@@ -549,9 +566,6 @@
           <SolidColorBrush x:Key="DiffAddedBrush" Color="#E6F4EA" />
           <SolidColorBrush x:Key="DiffRemovedBrush" Color="#FCE8E6" />
           <SolidColorBrush x:Key="DiffHunkBrush" Color="#EEF1F8" />
-          <SolidColorBrush x:Key="UserBoxBrush" Color="#F4F4F6" />
-          <SolidColorBrush x:Key="UserBoxBorderBrush" Color="#1F000000" />
-          <SolidColorBrush x:Key="SubagentLineBrush" Color="#33000000" />
           <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.14" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#C42B1C" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A000000" />
@@ -590,6 +604,37 @@
           <SolidColorBrush x:Key="InlineCodeBrush" Color="#0F000000" />
           <SolidColorBrush x:Key="InlineCodeTextBrush" Color="#A31515" />
           <tm:ThemeName x:Key="CodeColorTheme">LightPlus</tm:ThemeName>
+          <!-- The conversation's cards (DESIGN.md §18, "Conversation cards"): a stripe, a faint tint, a thin outline and the
+               label's color for each kind that has a color of its own. The stripes are the categorical palette's
+               magenta, blue and green, checked with its validator (color blindness included) for every pair; the labels
+               are darker steps of them, at least 4.5:1 on the tint. Other kinds are neutral; turn statistics slate. -->
+          <SolidColorBrush x:Key="CardYouStripeBrush" Color="#E87BA4" />
+          <SolidColorBrush x:Key="CardYouTintBrush" Color="#E87BA4" Opacity="0.07" />
+          <SolidColorBrush x:Key="CardYouOutlineBrush" Color="#E87BA4" Opacity="0.35" />
+          <SolidColorBrush x:Key="CardYouLabelBrush" Color="#B4326A" />
+          <SolidColorBrush x:Key="CardClaudeStripeBrush" Color="#2A78D6" />
+          <SolidColorBrush x:Key="CardClaudeTintBrush" Color="#2A78D6" Opacity="0.05" />
+          <SolidColorBrush x:Key="CardClaudeOutlineBrush" Color="#2A78D6" Opacity="0.28" />
+          <SolidColorBrush x:Key="CardClaudeLabelBrush" Color="#1F5FAE" />
+          <SolidColorBrush x:Key="CardFilesStripeBrush" Color="#008300" />
+          <SolidColorBrush x:Key="CardFilesTintBrush" Color="#008300" Opacity="0.05" />
+          <SolidColorBrush x:Key="CardFilesOutlineBrush" Color="#008300" Opacity="0.28" />
+          <SolidColorBrush x:Key="CardFilesLabelBrush" Color="#006400" />
+          <SolidColorBrush x:Key="CardStatsStripeBrush" Color="#6B7A90" />
+          <SolidColorBrush x:Key="CardStatsTintBrush" Color="#6B7A90" Opacity="0.06" />
+          <SolidColorBrush x:Key="CardStatsOutlineBrush" Color="#6B7A90" Opacity="0.3" />
+          <SolidColorBrush x:Key="CardStatsLabelBrush" Color="#55657A" />
+          <SolidColorBrush x:Key="CardNeutralStripeBrush" Color="#9AA0A6" />
+          <SolidColorBrush x:Key="CardNeutralTintBrush" Color="#000000" Opacity="0.025" />
+          <SolidColorBrush x:Key="CardNeutralOutlineBrush" Color="#000000" Opacity="0.1" />
+          <SolidColorBrush x:Key="CardNeutralLabelBrush" Color="#5F6368" />
+          <SolidColorBrush x:Key="CardErrorTintBrush" Color="#C42B1C" Opacity="0.06" />
+          <SolidColorBrush x:Key="CardErrorOutlineBrush" Color="#C42B1C" Opacity="0.3" />
+          <SolidColorBrush x:Key="CardWarningTintBrush" Color="#D98A00" Opacity="0.07" />
+          <SolidColorBrush x:Key="CardWarningOutlineBrush" Color="#D98A00" Opacity="0.35" />
+          <!-- A tile in a Tool calls card: raised a little off the card. -->
+          <SolidColorBrush x:Key="CardTileBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="CardTileBorderBrush" Color="#1A000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="MicaPageBrush" Color="#202020" />
@@ -597,7 +642,6 @@
           <SolidColorBrush x:Key="MutedTextBrush" Color="#A6A6A6" />
           <SolidColorBrush x:Key="DividerBrush" Color="#2EFFFFFF" />
           <SolidColorBrush x:Key="CardBrush" Color="#1F1F1F" />
-          <SolidColorBrush x:Key="ToolCardBrush" Color="#1A1A1C" />
           <SolidColorBrush x:Key="SubtleBrush" Color="#1C1C1F" />
           <SolidColorBrush x:Key="HoverBrush" Color="#14FFFFFF" />
           <SolidColorBrush x:Key="TabSelectedBrush" Color="#2B2B2F" />
@@ -618,9 +662,6 @@
           <SolidColorBrush x:Key="DiffAddedBrush" Color="#1D3B26" />
           <SolidColorBrush x:Key="DiffRemovedBrush" Color="#46201F" />
           <SolidColorBrush x:Key="DiffHunkBrush" Color="#23283A" />
-          <SolidColorBrush x:Key="UserBoxBrush" Color="#1E1E22" />
-          <SolidColorBrush x:Key="UserBoxBorderBrush" Color="#33FFFFFF" />
-          <SolidColorBrush x:Key="SubagentLineBrush" Color="#40FFFFFF" />
           <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.22" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#E0605A" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FFFFFF" />
@@ -653,6 +694,32 @@
           <SolidColorBrush x:Key="InlineCodeBrush" Color="#1FFFFFFF" />
           <SolidColorBrush x:Key="InlineCodeTextBrush" Color="#D7BA7D" />
           <tm:ThemeName x:Key="CodeColorTheme">DarkPlus</tm:ThemeName>
+          <SolidColorBrush x:Key="CardYouStripeBrush" Color="#D55181" />
+          <SolidColorBrush x:Key="CardYouTintBrush" Color="#D55181" Opacity="0.1" />
+          <SolidColorBrush x:Key="CardYouOutlineBrush" Color="#D55181" Opacity="0.4" />
+          <SolidColorBrush x:Key="CardYouLabelBrush" Color="#EE8FB4" />
+          <SolidColorBrush x:Key="CardClaudeStripeBrush" Color="#3987E5" />
+          <SolidColorBrush x:Key="CardClaudeTintBrush" Color="#3987E5" Opacity="0.09" />
+          <SolidColorBrush x:Key="CardClaudeOutlineBrush" Color="#3987E5" Opacity="0.38" />
+          <SolidColorBrush x:Key="CardClaudeLabelBrush" Color="#7FB2F0" />
+          <SolidColorBrush x:Key="CardFilesStripeBrush" Color="#008300" />
+          <SolidColorBrush x:Key="CardFilesTintBrush" Color="#008300" Opacity="0.12" />
+          <SolidColorBrush x:Key="CardFilesOutlineBrush" Color="#2FA02F" Opacity="0.4" />
+          <SolidColorBrush x:Key="CardFilesLabelBrush" Color="#5CC45C" />
+          <SolidColorBrush x:Key="CardStatsStripeBrush" Color="#8494AB" />
+          <SolidColorBrush x:Key="CardStatsTintBrush" Color="#8494AB" Opacity="0.08" />
+          <SolidColorBrush x:Key="CardStatsOutlineBrush" Color="#8494AB" Opacity="0.32" />
+          <SolidColorBrush x:Key="CardStatsLabelBrush" Color="#A3B1C6" />
+          <SolidColorBrush x:Key="CardNeutralStripeBrush" Color="#6E737B" />
+          <SolidColorBrush x:Key="CardNeutralTintBrush" Color="#FFFFFF" Opacity="0.03" />
+          <SolidColorBrush x:Key="CardNeutralOutlineBrush" Color="#FFFFFF" Opacity="0.12" />
+          <SolidColorBrush x:Key="CardNeutralLabelBrush" Color="#A6A6A6" />
+          <SolidColorBrush x:Key="CardErrorTintBrush" Color="#FF6B61" Opacity="0.1" />
+          <SolidColorBrush x:Key="CardErrorOutlineBrush" Color="#FF6B61" Opacity="0.4" />
+          <SolidColorBrush x:Key="CardWarningTintBrush" Color="#F2B233" Opacity="0.08" />
+          <SolidColorBrush x:Key="CardWarningOutlineBrush" Color="#F2B233" Opacity="0.35" />
+          <SolidColorBrush x:Key="CardTileBrush" Color="#FFFFFF" Opacity="0.04" />
+          <SolidColorBrush x:Key="CardTileBorderBrush" Color="#FFFFFF" Opacity="0.1" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>

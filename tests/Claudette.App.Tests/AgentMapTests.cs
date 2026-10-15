@@ -622,7 +622,7 @@ public class AgentMapTests
         Assert.Equal(AgentStatus.Done, nested.Status);
         Assert.Equal("Deep answer.", nested.ResultText);
         Assert.Equal("Deep answer.", Assert.IsType<AssistantTextItem>(Assert.Single(nested.Item!.Items)).Text);
-        Assert.Equal("Grep todo", explore.Item!.Items.OfType<ToolUseItem>().Select(t => $"{t.Name} {t.Summary}").First());
+        Assert.Equal("Grep todo", explore.Item!.Items.ToolCalls().Select(t => $"{t.Name} {t.Summary}").First());
         var background = tab.Agents.Find("bg")!;
         Assert.Equal(AgentStatus.Done, background.Status);
         Assert.Equal("Waited.", background.ResultText);

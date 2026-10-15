@@ -155,8 +155,8 @@ public class ToolImageTests
 
     private static async Task<ToolUseItem> CardAsync(TabViewModel tab)
     {
-        await TabTestHarness.Eventually(() => tab.Items.OfType<ToolUseItem>().SingleOrDefault() is { IsComplete: true }, "the tool's result");
-        return tab.Items.OfType<ToolUseItem>().Single();
+        await TabTestHarness.Eventually(() => tab.Items.ToolCalls().SingleOrDefault() is { IsComplete: true }, "the tool's result");
+        return tab.Items.ToolCalls().Single();
     }
 
     private static JsonObject ImageBlock() =>

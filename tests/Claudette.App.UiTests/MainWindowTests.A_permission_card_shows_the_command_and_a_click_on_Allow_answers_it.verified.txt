@@ -1,8 +1,10 @@
-﻿"clean up"
-"12:00"
+﻿"You"
 [button] Copy message
 [button] Add to scratch pad
 [button] More for this message
+"12:00"
+"clean up"
+"Permission"
 "Allow this command?"
 "$ rm -rf build"
 [button] Allow

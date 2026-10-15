@@ -531,17 +531,19 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
-    public async Task A_replys_time_and_Copy_show_on_hover_and_on_keyboard_focus()
+    public async Task A_replys_time_shows_on_its_card_and_Copy_on_hover_and_on_keyboard_focus()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
         h.Transport.EmitTurn("Found **two** problems.");
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         await UiText.SettleUntilAsync(window, () => UiText.Describe(window).Contains("Found two problems.", StringComparison.Ordinal), "the reply");
-        var reply = window.GetVisualDescendants().OfType<Panel>().Single(p => p.Classes.Contains("message"));
-        var tools = reply.GetVisualDescendants().OfType<ContentControl>().Single(c => c.Classes.Contains("messagetools"));
+        var reply = window.GetVisualDescendants().OfType<Card>().Single(c => c.Classes.Contains("claude"));
+        var tools = reply.GetVisualDescendants().OfType<ContentPresenter>().Single(c => c.Name == "PART_Actions");
         var copy = tools.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Copy message");
-        var time = tools.GetVisualDescendants().OfType<TextBlock>().First();
+        // The time is on the card's header line, always (DESIGN.md §18, "Conversation cards").
+        var time = reply.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "PART_Time");
+        Assert.True(time.IsEffectivelyVisible);
         Assert.Equal(0, tools.Opacity);
         Assert.False(tools.IsHitTestVisible);
         Assert.Equal("12:00", time.Text);

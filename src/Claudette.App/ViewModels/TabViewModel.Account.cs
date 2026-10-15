@@ -94,6 +94,8 @@ public sealed partial class TabViewModel
         }
         _restartForAccount = false;
         await StopSessionAsync();
+        // Accounts share no prompt cache: the conversation is read again in full (DESIGN.md §6, "Prompt cache").
+        ResetPromptCache();
         _conversation.AddNote($"Started Claude Code again under {AccountName}.");
         Status = TabStatus.NotStarted;
         await EnsureStartedAsync();
@@ -111,6 +113,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(InfoRows));
         RemoteControl.OnAvailabilityChanged();
         _shell.OnTabAccountChanged(this);
+        RefreshPromptCache();
     }
 
     /// <summary>The info card's "Account" row, once there's an account besides Default.</summary>

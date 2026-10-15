@@ -53,7 +53,7 @@ public sealed class ThreadRealCliTests
         var report = InlineDispatcher.Read(() => plan.Items.OfType<UserMessageItem>().Single(m => m.AutomaticLabel == "From the sub-threads"));
         Assert.Contains("## Art page\n\nFinished. Its final reply:\n\nThe art page is done.", report.Text, StringComparison.Ordinal);
         // The tool call reads as a refusal to Claude Code, but its row says it went.
-        var send = InlineDispatcher.Read(() => plan.Items.OfType<ToolUseItem>().Single(t => t.Name == "SendMessage"));
+        var send = InlineDispatcher.Read(() => plan.Items.ToolCalls().Single(t => t.Name == "SendMessage"));
         Assert.True(send.IsComplete);
         Assert.False(send.IsError);
         Assert.Contains(api.Requests, r => r.LastToolResultText.StartsWith("Claudette delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal));

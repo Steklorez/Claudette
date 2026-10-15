@@ -639,7 +639,7 @@ public class SidePanelTests
         {
             EmitEdit(h, $"e{i}", Path.Combine(h.WorkFolder, $"f{i}.cs"));
         }
-        await TabTestHarness.Eventually(() => tab.Items.OfType<Conversation.ToolUseItem>().Count() == 5 && tab.IsSettled, "the edits");
+        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Count() == 5 && tab.IsSettled, "the edits");
         Assert.Equal(1, Volatile.Read(ref statuses));
         h.Time.Advance(ChangedFilesViewModel.GitRefreshDelay);
         await TabTestHarness.Eventually(() => Volatile.Read(ref statuses) == 2, "one listing for the five");
@@ -647,7 +647,7 @@ public class SidePanelTests
         // In the background (another tab selected), it waits to be shown.
         tab.IsSelected = false;
         EmitEdit(h, "e9", Path.Combine(h.WorkFolder, "f9.cs"));
-        await TabTestHarness.Eventually(() => tab.Items.OfType<Conversation.ToolUseItem>().Count() == 6 && tab.IsSettled, "the edit");
+        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Count() == 6 && tab.IsSettled, "the edit");
         h.Time.Advance(ChangedFilesViewModel.GitRefreshDelay * 4);
         Assert.Equal(2, Volatile.Read(ref statuses));
         tab.IsSelected = true;
@@ -1002,7 +1002,7 @@ public class SidePanelTests
         var tab = await h.OpenTabAsync();
         h.Transport.Emit("""{"type":"assistant","message":{"content":[{"type":"tool_use","id":"b1","name":"Bash","input":{"command":"npm run dev","run_in_background":true}}]}}""");
         h.Transport.Emit("""{"type":"system","subtype":"task_started","task_id":"task-9","tool_use_id":"b1","description":"npm run dev","task_type":"local_bash"}""");
-        await TabTestHarness.Eventually(() => tab.Items.OfType<Conversation.ToolUseItem>().Any(), "the Bash card");
+        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Any(), "the Bash card");
         h.Trees.Trees[4242].Children.Add((6001, "node"));
 
         h.Time.Advance(ProcessSampler.SummaryInterval);

@@ -152,7 +152,7 @@ public class TasksPlanTests
         var file = Path.Combine(h.WorkFolder, "README.md");
         h.Transport.Emit(Wire.Tool(null, "w1", "Write", new JsonObject { ["file_path"] = file, ["content"] = "# Readme" }));
         h.Transport.Emit(Wire.Result("w1", "File created", toolUseResult: new JsonObject { ["type"] = "create", ["filePath"] = file }));
-        await TabTestHarness.Eventually(() => tab.Items.OfType<ToolUseItem>().Any(t => t.IsComplete), "the write");
+        await TabTestHarness.Eventually(() => tab.Items.ToolCalls().Any(t => t.IsComplete), "the write");
 
         Assert.Empty(tab.TodoList.Plans);
         Assert.False(tab.TodoList.HasAnything);

@@ -428,6 +428,18 @@ internal sealed class NoPlatform : IPlatformServices
         OpenedFiles.Add(path);
         return Task.CompletedTask;
     }
+
+    /// <summary>The menus shown, each with its choices, in order.</summary>
+    public List<IReadOnlyList<string>> Menus { get; } = [];
+
+    /// <summary>What a menu picks: an index, or null to close it without one.</summary>
+    public int? ChoiceToPick { get; set; }
+
+    public Task<int?> ChooseAsync(object? anchor, IReadOnlyList<string> choices)
+    {
+        Menus.Add(choices);
+        return Task.FromResult(ChoiceToPick);
+    }
 }
 
 /// <summary>A process tree the test controls: which children are "running", and whether they were killed.</summary>
@@ -512,6 +524,8 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.RemoteControl.EnvironmentVariable = _ => null;
         // Nor do its organization's managed Claude Code settings (DESIGN.md §7, "Starting mode").
         Services.ClaudeManagedSettingsDirectory = null;
+        // Nor its environment, for what Claude Code's configuration says (its DISABLE_PROMPT_CACHING, say).
+        Services.ClaudeEnvironmentFor = (overrides, _) => Task.FromResult(Core.Claude.ClaudeEnvironment.From(ClaudeUserEnvironment, overrides));
         configure?.Invoke(Services.Settings);
         if (updater is not null)
         {
@@ -523,6 +537,12 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.UseSessionFactory(Factory);
         Shell = new ShellViewModel(Services, () => OnAuthenticationRequired());
     }
+
+    /// <summary>
+    /// Stands in for the user environment each tab's <c>claude</c> starts from, as far as Claudette reads it (DESIGN.md
+    /// §6, "Prompt cache"): empty unless a test sets variables.
+    /// </summary>
+    public Dictionary<string, string> ClaudeUserEnvironment { get; } = new(StringComparer.Ordinal);
 
     /// <summary>What the main window does when a tab finds Claude Code signed out (DESIGN.md §11).</summary>
     public Action OnAuthenticationRequired { get; set; } = () => { };

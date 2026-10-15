@@ -17,6 +17,12 @@ internal sealed class StreamingBlocks(ObservableCollection<ConversationItem> ite
     private bool _textDeltasSinceAssistant;
     private bool _thinkingDeltasSinceAssistant;
 
+    /// <summary>The newest reply row, open or closed, until something takes it: a tool call after it makes it a step on the way.</summary>
+    public AssistantTextItem? LastText { get; private set; }
+
+    /// <summary>Forgets <see cref="LastText"/>: the turn ended, or a prompt began another.</summary>
+    public void ForgetLastText() => LastText = null;
+
     public void OnTextDelta(string text)
     {
         _textDeltasSinceAssistant = true;
@@ -46,6 +52,7 @@ internal sealed class StreamingBlocks(ObservableCollection<ConversationItem> ite
             _text = new AssistantTextItem();
             stamp(_text);
             items.Add(_text);
+            LastText = _text;
         }
         _text.Append(text);
     }
@@ -95,5 +102,6 @@ internal sealed class StreamingBlocks(ObservableCollection<ConversationItem> ite
     {
         _text = null;
         _thinking = null;
+        LastText = null;
     }
 }

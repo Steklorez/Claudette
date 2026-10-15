@@ -36,6 +36,9 @@ public sealed class ConversationBuilder
     // The Claude Docs the turn under way made or changed, which its end names. The main agent's builder keeps them.
     private readonly List<(DocRow Doc, ClaudeDocChange Change)> _turnDocs = [];
 
+    // The tool calls the turn under way made, every agent's, for its Turn statistics card. The main agent's builder keeps them.
+    private int _turnToolCalls;
+
     // The last entry of the main conversation Claude Code gave an id: where a resume would stop to leave out what comes
     // next (DESIGN.md §5, "Rewind and branch").
     private string? _lastEntryUuid;
@@ -174,6 +177,14 @@ public sealed class ConversationBuilder
     /// <summary>The row the latest turn's end added about the task list; null when it added none.</summary>
     public TasksSummaryItem? TurnTasksSummary { get; private set; }
 
+    /// <summary>
+    /// The files the session's tools read or changed, the main agent's and its subagents', each once, the latest last:
+    /// where a name in a reply is looked for first (DESIGN.md §18, "Files named in Claude's replies").
+    /// </summary>
+    public IReadOnlyList<string> FilePaths => Root._filePaths;
+
+    private readonly List<string> _filePaths = [];
+
     private bool IsReplaying => _parent?.IsReplaying ?? _replaying;
 
     private ConversationBuilder Root => _parent?.Root ?? this;
@@ -233,9 +244,45 @@ public sealed class ConversationBuilder
     private UserMessageItem AddUser(UserMessageItem item, DateTimeOffset? sentAt)
     {
         _blocks.Close();
+        _blocks.ForgetLastText();
         Stamp(item, sentAt);
         Items.Add(item);
         return item;
+    }
+
+    /// <summary>
+    /// A call joins the Tool calls card at the end of the conversation, or starts one when anything else is last
+    /// (DESIGN.md §18, "Conversation cards").
+    /// </summary>
+    private void AddToolCard(ToolUseItem tool)
+    {
+        if (Items.Count > 0 && Items[^1] is ToolGroupItem open)
+        {
+            open.Add(tool);
+            return;
+        }
+        var group = new ToolGroupItem();
+        if (Clock is { } clock)
+        {
+            group.UseClock(clock);
+        }
+        group.Add(tool);
+        Items.Add(group);
+    }
+
+    /// <summary>Takes a call's tile away, and its card with it when it was the card's only one.</summary>
+    private void RemoveToolCard(ToolUseItem tool)
+    {
+        if (tool.Group is not { } group)
+        {
+            Items.Remove(tool);
+            return;
+        }
+        group.Remove(tool);
+        if (group.Calls.Count == 0)
+        {
+            Items.Remove(group);
+        }
     }
 
     /// <summary>
@@ -273,6 +320,15 @@ public sealed class ConversationBuilder
         }
     }
 
+    /// <summary>A tool call takes the time it was made, as a message does: now, or its transcript entry's.</summary>
+    private void StampCall(ToolUseItem tool)
+    {
+        if (Clock is { } clock)
+        {
+            tool.Stamp(Now(), clock);
+        }
+    }
+
     public void AddNote(string text, NoteKind kind = NoteKind.Info, string? link = null)
     {
         _blocks.Close();
@@ -300,6 +356,7 @@ public sealed class ConversationBuilder
         _taskFiles.Clear();
         _tasksChangedThisTurn = false;
         _turnDocs.Clear();
+        _turnToolCalls = 0;
         TurnTasksSummary = null;
         // A cleared conversation is a new one: nothing before it to go back to.
         _lastEntryUuid = null;
@@ -492,7 +549,7 @@ public sealed class ConversationBuilder
         var item = _prompts.Add(request);
         if (item is not PermissionItem && request.ToolUseId is { } id && _toolUses.TryGetValue(id, out var row))
         {
-            Items.Remove(row);
+            RemoveToolCard(row);
         }
         if (item is PlanItem plan && _parent is null && _todoList?.OnPlanProposed(request.ToolUseId, plan.HasPlan ? plan.Plan.ToString() : null) is { } version)
         {
@@ -536,6 +593,16 @@ public sealed class ConversationBuilder
 
                 case ToolUseBlock toolUse:
                     _blocks.Close();
+                    // Claude carried on after its reply: the reply was a step on the way, not the turn's answer.
+                    if (_blocks.LastText is { } reply)
+                    {
+                        reply.IsIntermediate = true;
+                        _blocks.ForgetLastText();
+                    }
+                    if (!IsReplaying)
+                    {
+                        Root._turnToolCalls++;
+                    }
                     // Tasks are the session's, whichever agent makes them; a subagent's TodoWrite list is its own, and
                     // shows as a card in its group (DESIGN.md §5, "Tasks").
                     if (_todoList is not null && !(_parent is not null && toolUse.Name == "TodoWrite"))
@@ -568,6 +635,7 @@ public sealed class ConversationBuilder
                     if (toolUse.Name is "Agent" or "Task")
                     {
                         var subagent = new SubagentItem(toolUse.Id, toolUse.Name, toolUse.Input);
+                        StampCall(subagent);
                         var child = new ConversationBuilder(subagent.Items, todoList: null, _modelName) { _parent = this, _todoList = _todoList };
                         // Its traffic fills its group and its node in the agent map, under this agent.
                         child._agents = _agents;
@@ -581,12 +649,14 @@ public sealed class ConversationBuilder
                     else
                     {
                         var tool = new ToolUseItem(toolUse.Id, toolUse.Name, toolUse.Input);
+                        StampCall(tool);
                         _toolUses[toolUse.Id] = tool;
-                        Items.Add(tool);
+                        AddToolCard(tool);
                         _tasks?.OnToolUse(tool);
                     }
                     TrackPlanDraft(toolUse);
                     TrackTaskFile(toolUse);
+                    TrackFile(toolUse);
                     break;
             }
         }
@@ -629,6 +699,17 @@ public sealed class ConversationBuilder
             && IsInPlanMode?.Invoke() == true)
         {
             _draftCalls[toolUse.Id] = (toolUse.Name, toolUse.Input);
+        }
+    }
+
+    /// <summary>A file a tool reads or changes, for <see cref="FilePaths"/>.</summary>
+    private void TrackFile(ToolUseBlock toolUse)
+    {
+        if ((toolUse.Input.GetString("file_path") ?? toolUse.Input.GetString("notebook_path")) is { Length: > 0 } path)
+        {
+            var files = Root._filePaths;
+            files.Remove(path);
+            files.Add(path);
         }
     }
 
@@ -685,6 +766,10 @@ public sealed class ConversationBuilder
                 // A thread's message Claudette delivered itself reads as a refusal to Claude Code, but it went
                 // (DESIGN.md §18, "Threads").
                 var failed = result.IsError && !(tool.Name == SendMessageCall.ToolName && ThreadMessages.IsDeliveryAnswer(result.Text));
+                if (tool.StartedAt is not null)
+                {
+                    tool.CompletedAt = Now();
+                }
                 tool.ApplyResult(result.Text, failed, message.ToolUseResult);
                 if (result.Images.Count > 0)
                 {
@@ -770,6 +855,9 @@ public sealed class ConversationBuilder
     {
         var tasksChanged = _tasksChangedThisTurn;
         _tasksChangedThisTurn = false;
+        var toolCalls = _turnToolCalls;
+        _turnToolCalls = 0;
+        _blocks.ForgetLastText();
         TurnTasksSummary = null;
         // A plan still waiting can't be answered once its turn is over.
         _todoList?.EndWaitingPlans();
@@ -798,8 +886,12 @@ public sealed class ConversationBuilder
             Items.Add(TurnTasksSummary);
         }
         AddTurnDocs();
-        if (TurnSummaryItem.For(result, _modelName) is { } summary)
+        if (TurnSummaryItem.For(result, _modelName, toolCalls) is { } summary)
         {
+            if (Clock is { } clock)
+            {
+                summary.Stamp(Now(), clock);
+            }
             Items.Add(summary);
         }
     }

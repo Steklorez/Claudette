@@ -496,6 +496,10 @@
                   </Flyout>
                 </Button.Flyout>
               </Button>
+
+              <!-- The prompt cache (DESIGN.md §6, "Prompt cache"): how long the next message reads the conversation from it -->
+              <TextBlock x:Name="PromptCacheChip" Classes="muted small infochip" Classes.warning="{Binding IsPromptCacheEnding}"
+                         Text="{Binding PromptCacheText}" ToolTip.Tip="{Binding PromptCacheTip}" IsVisible="{Binding IsPromptCacheShown}" />
   
               <Button Classes="flat" ToolTip.Tip="Tokens used by this tab">
                 <TextBlock Classes="muted small" Text="{Binding Context.TokensShort}" />

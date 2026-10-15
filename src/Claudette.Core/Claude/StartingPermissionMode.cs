@@ -1,6 +1,4 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using Claudette.Core.Json;
 
 namespace Claudette.Core.Claude;
 
@@ -92,7 +90,7 @@ public sealed record StartingPermissionMode(string? DefaultMode, bool AutoModeDi
         var disabled = false;
         foreach (var file in files)
         {
-            if (ReadObject(file.Path) is not { } root)
+            if (ClaudeSettingsFiles.Read(file.Path) is not { } root)
             {
                 continue;
             }
@@ -133,20 +131,6 @@ public sealed record StartingPermissionMode(string? DefaultMode, bool AutoModeDi
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return [];
-        }
-    }
-
-    private static JsonObject? ReadObject(string file)
-    {
-        try
-        {
-            return File.Exists(file)
-                ? JsonTree.Parse(File.ReadAllText(file), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }) as JsonObject
-                : null;
-        }
-        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
-        {
-            return null;
         }
     }
 

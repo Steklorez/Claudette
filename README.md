@@ -16,6 +16,7 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 - **See where each tab stands at a glance:** busy, needs input, failed or idle, plus its git branch or worktree, its model and effort, how far its task list has got (`2/7`), and a ring that fills up with its context window.
 - **Mark tabs your way** with a check, cross, question mark, star, flag or pause sign. Once every file a tab changed is reviewed, it gets a green **reviewed** badge on its own.
 - **`Ctrl+J` jumps to the next tab waiting for you**, so a permission prompt never sits unanswered behind another tab. `Ctrl+Shift+P` opens a command palette for everything else.
+- **Tabs side by side:** open up to three at once, each with its own conversation and message box, such as a thread beside its sub-threads.
 - **Worktree tabs** give a session its own git worktree and branch, so parallel tabs in one repository never trip over each other's edits. Claudette runs your setup steps in each new worktree, and can clean up the ones you've merged.
 - **Sessions that know each other.** Each tab's session goes by the tab's name in Claude Code, so other sessions can message it by name. Type `@` in the composer to name another tab, another Claude Code session on this machine or one of the tab's subagents, and Claude is told how to reach it.
 - **Pinned tabs come back** every time you launch, resuming exactly where they left off.
@@ -42,6 +43,7 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 - **A trendline with a projection:** *"On track: about 70% used when the session resets"*, or a warning in amber and red: *"At this rate you'll hit the limit in 1h 05m"*.
 - **Open the header up** with its chevron for the full picture, without leaving your work: this session's chart, with the warning and critical bands and exactly when you'll cross them (*"Hits 90% at 10:59 PM, 12m before it resets"*), the week day by day with each model-specific limit, your burn rate per hour, the time left at that rate, and the three tabs burning the most.
 - **Alerts** when you cross a threshold or are on course to hit the limit, and a Usage window with past sessions and weeks.
+- **Know when the prompt cache runs out:** *"Cache 52m"* beside the context says how long your next message can read the conversation from Claude's cache, for much less than reading it all again, and turns amber in its last three minutes.
 - **Hit the limit mid-task? Go to bed.** The tab waits for the reset and carries on with the task by itself.
 - **Several computers?** They can share their readings, so every machine's header knows what the others used.
 
@@ -61,15 +63,18 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 - **Changed files**, live, with `+/−` counts, for everything the session touched, or for the whole working tree against `HEAD`.
 - **A real diff view** in its own window, side by side or inline, syntax highlighted, with **Revert** for a single hunk or the whole file.
 - **Tick files as reviewed.** A tick sticks until Claude edits that file again, survives restarts and follows the session to your other machines.
-- **Every turn says what it changed:** *"3 files changed"*, one click from each file's diff for just that turn.
+- **Every turn ends with what it changed:** a Modified files card, one click from each file's diff for just that turn.
 - **Prefer your own tools?** Send diffs to Beyond Compare, VS Code, WinMerge, Kaleidoscope, Meld, P4Merge or your git difftool, or open the file in your editor.
 
 ![The diff view of StarfallCharacter.cpp: the include, the air control change and the grappling hook's component and bindings Claude added](docs/screenshots/diff-standard-dark.png)
 
 ### A conversation built for code
 
-- Replies render as Markdown with syntax-highlighted code blocks, one-click **Copy**, and links that open in your browser. Tool calls are compact rows that expand when you want the detail.
-- **See what Claude sees:** a screenshot from Playwright or Chrome, an image Claude reads, a PDF's pages or a notebook's figures show right under the tool's row. Click one for the full size, with **Copy image** and **Save as…**.
+- **Every step is a card in its own color:** your messages, Claude's replies, the files a turn changed and what it cost, so the conversation reads at a glance. The steps on the way are quieter until you point at them.
+- **Tool calls side by side:** a run of calls is one card of tiles, each with what it worked on, how it went and its output's first line. Click one for the detail, or open it in a window that follows the call: the command's output, the file as Claude read it, the change it made, what a search found.
+- **Find your way back:** marks beside the scroll bar show where your messages, waiting prompts and errors are, and `F3` and `F4` go from message to message.
+- Replies render as Markdown with syntax-highlighted code blocks, one-click **Copy**, and links that open in your browser.
+- **See what Claude sees:** a screenshot from Playwright or Chrome, an image Claude reads, a PDF's pages or a notebook's figures show right on the tool's tile. Click one for the full size, with **Copy image** and **Save as…**.
 - **Images in replies can't phone home.** A chart Claude saves in your project shows inline, but a web image waits until you click **Load image**, so a reply that was prompt-injected through something Claude read can't leak your data in an image's address just by being shown.
 - **Permission prompts, questions and plans are cards**, not walls of text: Allow, Always allow, Deny, a plan to approve or send back, a question with its choices.
 - **Steer while Claude works:** messages you send mid-turn reach it at the next tool call, or wait for the turn to end if you'd rather, with **Send now** for one that can't wait. If a turn goes quiet for too long, Claudette checks in, and if nothing answers it flags the tab as possibly stuck so it doesn't burn your plan unnoticed.
@@ -95,7 +100,7 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 
 ### Two looks, light and dark
 
-**Standard** follows Claude Code's VS Code extension: dense, calm and in your OS's accent color. **Claude** takes after the Claude apps, with warm colors and a serif for replies. Both come in light and dark, follow your system or not, and switch instantly.
+**Standard** is dense and calm, in your OS's accent color, with cards in magenta, blue and green. **Claude** takes after the Claude apps, with warm colors, rounder cards and a serif for replies. Both come in light and dark, follow your system or not, and switch instantly.
 
 <table>
   <tr>

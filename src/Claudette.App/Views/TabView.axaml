@@ -16,12 +16,10 @@
              FontFamily="{DynamicResource ConversationFont}">
 
   <UserControl.Resources>
-    <!-- A message's time and Copy button (DESIGN.md §5, "Copy and times"): a small chip on its top-right corner, shown
-         on hover and while it has keyboard focus. -->
+    <!-- A message's Copy and Add to scratch pad (DESIGN.md §5, "Copy and times"): on its card's header line, before the
+         time, shown on hover and while it has keyboard focus. -->
     <DataTemplate x:Key="MessageTools" x:DataType="conv:MessageItem">
       <StackPanel Orientation="Horizontal" Spacing="2">
-        <TextBlock Classes="muted small" Background="Transparent" Text="{Binding TimeText}" ToolTip.Tip="{Binding TimeTip}" IsVisible="{Binding HasTime}"
-                   VerticalAlignment="Center" Margin="6,0,2,0" />
         <Button Classes="flat" Padding="5,3" VerticalAlignment="Center" ToolTip.Tip="Copy message" AutomationProperties.Name="Copy message"
                 Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).CopyMessageCommand}" CommandParameter="{Binding}">
           <Panel>
@@ -77,6 +75,145 @@
         </Button>
       </StackPanel>
     </DataTemplate>
+    <!-- A tool call's tile in its card (DESIGN.md §18, "Conversation cards"): the call's status, icon, tool and time,
+         what it worked on, how it went and the first line of its output. A click opens its detail under the tiles. -->
+    <DataTemplate x:Key="ToolTile" x:DataType="conv:ToolUseItem">
+      <Button Classes="flat tile" Classes.open="{Binding IsExpanded}" Command="{Binding ToggleCommand}" ToolTip.Tip="{Binding FullSummary}"
+              AutomationProperties.Name="{Binding TileName}">
+        <StackPanel Spacing="2">
+          <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+            <TextBlock Classes="status small" Classes.busy="{Binding !IsComplete}" Classes.ok="{Binding IsComplete}" Classes.failed="{Binding IsError}"
+                       Text="●" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Path Grid.Column="1" Classes="toolicon" Data="{Binding IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" Margin="0,0,6,0" />
+            <TextBlock Grid.Column="2" Classes="small" FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="3" Classes="muted small" Text="{Binding TimeText}" ToolTip.Tip="{Binding TimeTip}" IsVisible="{Binding HasTime}"
+                       VerticalAlignment="Center" Margin="6,0,0,0" />
+          </Grid>
+          <TextBlock Classes="mono muted small" Text="{Binding TileSummary}" TextTrimming="CharacterEllipsis"
+                     IsVisible="{Binding TileSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <!-- How it went, and an Edit's or Write's counts beside it: on the state's baseline (Controls/Baseline). -->
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock x:Name="TileState" Classes="small" Classes.muted="{Binding !IsError}" Classes.error="{Binding IsError}" Text="{Binding StateText}" />
+            <TextBlock Classes="mono small" Text="{Binding DiffStats}" IsVisible="{Binding HasDiff}" controls:Baseline.AlignWith="{Binding #TileState}" />
+          </StackPanel>
+          <TextBlock Classes="mono muted small" Text="{Binding ResultSummary}" Classes.error="{Binding IsError}" TextTrimming="CharacterEllipsis"
+                     IsVisible="{Binding HasResultSummary}" />
+          <!-- The Claude Doc the call made or changed, which opens in the browser (DESIGN.md §5, "Claude Docs") -->
+          <Button Classes="flat" Padding="0" HorizontalAlignment="Left" IsVisible="{Binding HasDoc}" ToolTip.Tip="{Binding Doc.Url, FallbackValue={x:Null}}"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Doc.Url, FallbackValue={x:Null}}">
+            <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Doc.Text, FallbackValue={x:Null}}" TextDecorations="Underline"
+                       TextTrimming="CharacterEllipsis" />
+          </Button>
+          <!-- What git did in a Bash command: a commit, a push, a pull request (DESIGN.md §5) -->
+          <ItemsControl ItemsSource="{Binding GitChips}" Margin="0,2,0,0" IsVisible="{Binding HasGitChips}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel ItemSpacing="6" LineSpacing="4" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="conv:GitChip">
+                <Panel>
+                  <Border Classes="chip" IsVisible="{Binding !HasUrl}">
+                    <TextBlock Classes="small" Text="{Binding Text}" />
+                  </Border>
+                  <Button Classes="flat chip" IsVisible="{Binding HasUrl}" ToolTip.Tip="{Binding Url}"
+                          Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Url}">
+                    <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Text}" TextDecorations="Underline" />
+                  </Button>
+                </Panel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <!-- Images in the result, such as a Read of an image or a screenshot; a click shows one full size (DESIGN.md §18) -->
+          <ItemsControl ItemsSource="{Binding Images}" Margin="0,2,0,0" IsVisible="{Binding HasImages}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel ItemSpacing="6" LineSpacing="6" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="protocol:ToolImage">
+                <Button Classes="flat toolimage" Padding="0" ToolTip.Tip="{Binding Name, StringFormat='{}{0} · click to show it full size'}"
+                        AutomationProperties.Name="{Binding Name, StringFormat='Open {0}'}"
+                        Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenImageCommand}" CommandParameter="{Binding}">
+                  <Border Classes="thumbnail">
+                    <Image Source="{Binding Image.Data, Converter={x:Static services:ImageFiles.Preview}}" MaxHeight="120" MaxWidth="320"
+                           Stretch="Uniform" StretchDirection="DownOnly" />
+                  </Border>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Button>
+    </DataTemplate>
+
+    <!-- An open tile's detail: the call in full, with Open diff for a file change and its own window (DESIGN.md §18). -->
+    <DataTemplate x:Key="ToolDetail" x:DataType="conv:ToolUseItem">
+      <StackPanel Spacing="6">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="4">
+          <TextBlock Classes="small" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding FullSummary}">
+            <Run FontWeight="SemiBold" Text="{Binding Name}" />
+            <Run Foreground="{DynamicResource MutedTextBrush}" Text="{Binding Summary}" />
+          </TextBlock>
+          <!-- Edit / Write: the file in the diff view (DESIGN.md §5, §8) -->
+          <Button Grid.Column="1" Classes="flat" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding CanOpenDiff}"
+                  ToolTip.Tip="Open in the diff view" AutomationProperties.Name="Open in the diff view"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenToolDiffCommand}" CommandParameter="{Binding}">
+            <TextBlock Classes="muted small" Text="Open diff" />
+          </Button>
+          <Button Grid.Column="2" Classes="flat" Padding="6,4" VerticalAlignment="Center" ToolTip.Tip="Open in a window that follows the call"
+                  AutomationProperties.Name="Open in a window"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenToolWindowCommand}" CommandParameter="{Binding}">
+            <Path Classes="toolicon" Data="{StaticResource IconOpenWindow}" />
+          </Button>
+          <Button Grid.Column="3" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ToggleCommand}"
+                  ToolTip.Tip="Close" AutomationProperties.Name="Close the call's detail">
+            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+          </Button>
+        </Grid>
+        <Border Classes="codeblock" IsVisible="{Binding IsBash}">
+          <SelectableTextBlock Classes="mono" Text="{Binding Command, StringFormat='$ {0}'}" TextWrapping="Wrap" />
+        </Border>
+        <Border Classes="codeblock" IsVisible="{Binding HasDetail}">
+          <ScrollViewer MaxHeight="260" HorizontalScrollBarVisibility="Auto">
+            <SelectableTextBlock Classes="mono small" Text="{Binding Detail}" />
+          </ScrollViewer>
+        </Border>
+        <Border Classes="codeblock" Padding="0" IsVisible="{Binding HasDiff}">
+          <ScrollViewer MaxHeight="420" HorizontalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Diff.Lines, FallbackValue={x:Null}}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+          </ScrollViewer>
+        </Border>
+        <Border Classes="codeblock" IsVisible="{Binding HasOutput}">
+          <StackPanel Spacing="4">
+            <ScrollViewer MaxHeight="320" HorizontalScrollBarVisibility="Auto">
+              <SelectableTextBlock Classes="mono small" Text="{Binding ShownOutput}" />
+            </ScrollViewer>
+            <Button Classes="flat" HorizontalAlignment="Left" Content="{Binding ShowAllOutputText}" Command="{Binding ShowAllOutputCommand}" IsVisible="{Binding IsOutputCut}"
+                    ToolTip.Tip="Only the start of this long output is shown, to keep the conversation quick" />
+          </StackPanel>
+        </Border>
+        <!-- Read: the file as Claude read it -->
+        <Border Classes="codeblock" IsVisible="{Binding HasReadText}">
+          <StackPanel Spacing="4">
+            <ScrollViewer MaxHeight="320" HorizontalScrollBarVisibility="Auto">
+              <SelectableTextBlock Classes="mono small" Text="{Binding ShownReadText}" />
+            </ScrollViewer>
+            <Button Classes="flat" HorizontalAlignment="Left" Content="{Binding ShowAllOutputText}" Command="{Binding ShowAllOutputCommand}" IsVisible="{Binding IsReadTextCut}"
+                    ToolTip.Tip="Only the start of this long file is shown, to keep the conversation quick" />
+          </StackPanel>
+        </Border>
+        <TextBlock Classes="muted small" Text="Nothing more to show for this call." IsVisible="{Binding !CanExpand}" />
+      </StackPanel>
+    </DataTemplate>
   </UserControl.Resources>
 
   <UserControl.Styles>
@@ -86,11 +223,11 @@
   <!-- Conversation templates (DESIGN.md §5). Declared on the control so nested subagent groups use them too. -->
   <UserControl.DataTemplates>
 
+    <!-- Your message (DESIGN.md §5): a You card, or what sent it when it wasn't you, such as an automatic check-in. -->
     <DataTemplate DataType="conv:UserMessageItem">
-      <Panel Classes="message">
-        <Border Classes="usermessage">
+      <controls:Card Classes="you" Label="{Binding CardLabel}" Icon="{StaticResource IconCardYou}" TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}"
+                     Actions="{Binding}" ActionsTemplate="{StaticResource UserMessageTools}">
           <StackPanel Spacing="4">
-            <TextBlock Classes="muted small" Text="{Binding AutomaticLabel}" IsVisible="{Binding AutomaticLabel, Converter={x:Static ObjectConverters.IsNotNull}}" />
             <!-- Attached images (DESIGN.md §5, "Attachments") -->
             <ItemsControl ItemsSource="{Binding Images}" IsVisible="{Binding HasImages}">
               <ItemsControl.ItemsPanel>
@@ -132,25 +269,30 @@
               </Button>
             </StackPanel>
           </StackPanel>
-        </Border>
-        <ContentControl Classes="messagetools" Content="{Binding}" ContentTemplate="{StaticResource UserMessageTools}" />
-      </Panel>
+      </controls:Card>
     </DataTemplate>
 
+    <!-- Claude's reply: a Claude card, quieter once Claude carried on working after it (DESIGN.md §18, "Conversation cards"). -->
     <DataTemplate DataType="conv:AssistantTextItem">
-      <Panel Classes="message">
+      <controls:Card Classes="claude" Classes.quiet="{Binding IsIntermediate}" Label="Claude" Icon="{StaticResource IconCardClaude}"
+                     TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" Actions="{Binding}" ActionsTemplate="{StaticResource ReplyTools}">
         <md:MarkdownRenderer MarkdownBuilder="{Binding Markdown}"
                              LinkCommand="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" />
-        <ContentControl Classes="messagetools" Content="{Binding}" ContentTemplate="{StaticResource ReplyTools}" />
-      </Panel>
+      </controls:Card>
     </DataTemplate>
 
+    <!-- Claude's thinking: a quiet card whose line opens it. -->
     <DataTemplate DataType="conv:ThinkingItem">
+      <controls:Card Classes="thinking quiet">
       <StackPanel Spacing="2">
-        <Button Classes="flat row" Command="{Binding ToggleCommand}" IsHitTestVisible="{Binding HasText}">
+        <Button Classes="flat row" Command="{Binding ToggleCommand}" IsHitTestVisible="{Binding HasText}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <TextBlock Classes="muted" Text="✻" />
-            <TextBlock Classes="muted" FontStyle="Italic" Text="{Binding Header}" />
+            <Path Classes="toolicon" Data="{StaticResource IconCardThinking}" Stroke="{Binding $parent[controls:Card].LabelBrush}" />
+            <TextBlock Classes="small" FontWeight="SemiBold" Foreground="{Binding $parent[controls:Card].LabelBrush}" Text="{Binding Header}" VerticalAlignment="Center" />
+            <Panel IsVisible="{Binding HasText}">
+              <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
+              <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+            </Panel>
           </StackPanel>
           <!-- Every thinking row in the tab, and the ones to come, without changing Settings (DESIGN.md §5). -->
           <Button.ContextMenu>
@@ -162,144 +304,79 @@
             </ContextMenu>
           </Button.ContextMenu>
         </Button>
-        <SelectableTextBlock Classes="muted" FontStyle="Italic" TextWrapping="Wrap" Margin="22,0,0,4"
+        <SelectableTextBlock Classes="muted" FontStyle="Italic" TextWrapping="Wrap" Margin="22,4,0,2"
                              Text="{Binding ShownText}" IsVisible="{Binding IsExpanded}" />
       </StackPanel>
+      </controls:Card>
     </DataTemplate>
 
-    <!-- Subagent: must come before ToolUseItem, which it derives from. -->
+    <!-- Subagent: a card whose line opens the agent's own cards. Must come before ToolUseItem, which it derives from. -->
     <DataTemplate DataType="conv:SubagentItem">
+      <controls:Card Classes="agent quiet">
       <StackPanel Spacing="2">
-        <Button Classes="flat row" Command="{Binding ToggleCommand}">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Classes="status" Classes.busy="{Binding !IsComplete}" Classes.ok="{Binding IsSucceeded}" Classes.failed="{Binding IsError}" Text="●" VerticalAlignment="Center" />
-            <Path Classes="toolicon" Data="{Binding IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" />
-            <TextBlock FontWeight="SemiBold" Text="{Binding AgentType}" VerticalAlignment="Center" />
-            <TextBlock Classes="muted" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-          </StackPanel>
+        <Button Classes="flat row" Command="{Binding ToggleCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+          <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
+            <TextBlock Classes="status small" Classes.busy="{Binding !IsComplete}" Classes.ok="{Binding IsSucceeded}" Classes.failed="{Binding IsError}" Text="●"
+                       VerticalAlignment="Center" Margin="0,0,6,0" />
+            <Path Grid.Column="1" Classes="toolicon" Data="{Binding IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" Stroke="{Binding $parent[controls:Card].LabelBrush}"
+                  Margin="0,0,6,0" />
+            <TextBlock Grid.Column="2" Classes="small" FontWeight="SemiBold" Foreground="{Binding $parent[controls:Card].LabelBrush}" Text="{Binding AgentType}"
+                       VerticalAlignment="Center" Margin="0,0,8,0" />
+            <TextBlock Grid.Column="3" Classes="muted small" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="4" Classes="muted small" Text="{Binding TimeText}" ToolTip.Tip="{Binding TimeTip}" IsVisible="{Binding HasTime}"
+                       VerticalAlignment="Center" Margin="8,0,0,0" Background="Transparent" />
+            <Panel Grid.Column="5" Margin="6,0,0,0">
+              <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
+              <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+            </Panel>
+          </Grid>
         </Button>
-        <Border BorderBrush="{DynamicResource SubagentLineBrush}" BorderThickness="2,0,0,0" Margin="10,0,0,0" Padding="12,2,0,2"
-                IsVisible="{Binding IsExpanded}">
-          <StackPanel Spacing="6">
-            <SelectableTextBlock Classes="muted small" Text="{Binding Detail}" TextWrapping="Wrap" MaxHeight="120" IsVisible="{Binding HasDetail}" />
-            <!-- Virtualized like the conversation: a collapsed group builds nothing, an open one only what's in view. -->
-            <ItemsControl Classes="subagentitems" ItemsSource="{Binding Items}" ClipToBounds="False">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <controls:ConversationPanel />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-            </ItemsControl>
-          </StackPanel>
-        </Border>
-      </StackPanel>
-    </DataTemplate>
-
-    <DataTemplate DataType="conv:ToolUseItem">
-      <StackPanel Classes="toolcard">
-        <Grid ColumnDefinitions="*,Auto">
-          <Button Classes="flat row" Command="{Binding ToggleCommand}" IsHitTestVisible="{Binding CanExpand}">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
-              <TextBlock Classes="status" Classes.busy="{Binding !IsComplete}" Classes.ok="{Binding IsComplete}" Classes.failed="{Binding IsError}"
-                         Text="●" VerticalAlignment="Center" Margin="0,0,8,0" />
-              <Path Grid.Column="1" Classes="toolicon" Data="{Binding IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" Margin="0,0,6,0" />
-              <!-- The summary and the counts are monospace, beside the tool's name: on its baseline (Controls/Baseline). -->
-              <TextBlock x:Name="ToolName" Grid.Column="2" FontWeight="SemiBold" Text="{Binding Name}" VerticalAlignment="Center" Margin="0,0,8,0" />
-              <TextBlock Grid.Column="3" Classes="mono muted" Text="{Binding Summary}" MaxWidth="560" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                         ToolTip.Tip="{Binding FullSummary}" controls:Baseline.AlignWith="{Binding #ToolName}" />
-              <TextBlock Grid.Column="5" Classes="mono small" Text="{Binding DiffStats}" IsVisible="{Binding HasDiff}" VerticalAlignment="Center" Margin="12,0,0,0"
-                         controls:Baseline.AlignWith="{Binding #ToolName}" />
-            </Grid>
-          </Button>
-          <!-- Edit / Write: the file in the diff view (DESIGN.md §5, §8) -->
-          <Button Grid.Column="1" Classes="flat" Padding="6,2" Margin="4,0,0,0" VerticalAlignment="Center" IsVisible="{Binding CanOpenDiff}"
-                  ToolTip.Tip="Open in the diff view" AutomationProperties.Name="Open in the diff view"
-                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenToolDiffCommand}" CommandParameter="{Binding}">
-            <TextBlock Classes="muted small" Text="Open diff" />
-          </Button>
-        </Grid>
-        <TextBlock Classes="muted small mono" Text="{Binding ResultSummary}" Classes.error="{Binding IsError}" TextTrimming="CharacterEllipsis"
-                   Margin="22,0,0,0" IsVisible="{Binding HasResultSummary}" />
-        <!-- The Claude Doc the call made or changed, which opens in the browser (DESIGN.md §5, "Claude Docs") -->
-        <Button Classes="flat" Padding="0" Margin="22,2,0,0" HorizontalAlignment="Left" IsVisible="{Binding HasDoc}" ToolTip.Tip="{Binding Doc.Url, FallbackValue={x:Null}}"
-                Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Doc.Url, FallbackValue={x:Null}}">
-          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Doc.Text, FallbackValue={x:Null}}" TextDecorations="Underline"
-                     TextTrimming="CharacterEllipsis" />
-        </Button>
-        <!-- What git did in a Bash command: a commit, a push, a pull request (DESIGN.md §5) -->
-        <ItemsControl ItemsSource="{Binding GitChips}" Margin="22,4,0,0" IsVisible="{Binding HasGitChips}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <WrapPanel ItemSpacing="6" LineSpacing="4" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="conv:GitChip">
-              <Panel>
-                <Border Classes="chip" IsVisible="{Binding !HasUrl}">
-                  <TextBlock Classes="small" Text="{Binding Text}" />
-                </Border>
-                <Button Classes="flat chip" IsVisible="{Binding HasUrl}" ToolTip.Tip="{Binding Url}"
-                        Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Url}">
-                  <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Text}" TextDecorations="Underline" />
-                </Button>
-              </Panel>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <!-- Images in the result, such as a Read of an image or a screenshot; a click shows one full size (DESIGN.md §18) -->
-        <ItemsControl ItemsSource="{Binding Images}" Margin="22,4,0,2" IsVisible="{Binding HasImages}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <WrapPanel ItemSpacing="6" LineSpacing="6" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="protocol:ToolImage">
-              <Button Classes="flat toolimage" Padding="0" ToolTip.Tip="{Binding Name, StringFormat='{}{0} · click to show it full size'}"
-                      AutomationProperties.Name="{Binding Name, StringFormat='Open {0}'}"
-                      Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenImageCommand}" CommandParameter="{Binding}">
-                <Border Classes="thumbnail">
-                  <Image Source="{Binding Image.Data, Converter={x:Static services:ImageFiles.Preview}}" MaxHeight="120" MaxWidth="320"
-                         Stretch="Uniform" StretchDirection="DownOnly" />
-                </Border>
-              </Button>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <!-- Expanded -->
-        <StackPanel Spacing="6" Margin="22,2,0,4" IsVisible="{Binding IsExpanded}">
-          <Border Classes="codeblock" IsVisible="{Binding IsBash}">
-            <SelectableTextBlock Classes="mono" Text="{Binding Command, StringFormat='$ {0}'}" TextWrapping="Wrap" />
-          </Border>
-          <Border Classes="codeblock" IsVisible="{Binding HasDetail}">
-            <ScrollViewer MaxHeight="260" HorizontalScrollBarVisibility="Auto">
-              <SelectableTextBlock Classes="mono small" Text="{Binding Detail}" />
-            </ScrollViewer>
-          </Border>
-          <Border Classes="codeblock" Padding="0" IsVisible="{Binding HasDiff}">
-            <ScrollViewer MaxHeight="420" HorizontalScrollBarVisibility="Auto">
-              <ItemsControl ItemsSource="{Binding Diff.Lines}">
-                <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <VirtualizingStackPanel />
-                  </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-              </ItemsControl>
-            </ScrollViewer>
-          </Border>
-          <Border Classes="codeblock" IsVisible="{Binding HasOutput}">
-            <StackPanel Spacing="4">
-              <ScrollViewer MaxHeight="320" HorizontalScrollBarVisibility="Auto">
-                <SelectableTextBlock Classes="mono small" Text="{Binding ShownOutput}" />
-              </ScrollViewer>
-              <Button Classes="flat" HorizontalAlignment="Left" Content="{Binding ShowAllOutputText}" Command="{Binding ShowAllOutputCommand}" IsVisible="{Binding IsOutputCut}"
-                      ToolTip.Tip="Only the start of this long output is shown, to keep the conversation quick" />
-            </StackPanel>
-          </Border>
+        <TextBlock Classes="muted small" Text="{Binding ResultSummary}" Classes.error="{Binding IsError}" TextTrimming="CharacterEllipsis"
+                   Margin="22,0,0,0" IsVisible="{Binding HasResultSummary}" ToolTip.Tip="{Binding ResultSummary}" />
+        <StackPanel Spacing="6" Margin="4,6,0,2" IsVisible="{Binding IsExpanded}">
+          <SelectableTextBlock Classes="muted small" Text="{Binding Detail}" TextWrapping="Wrap" MaxHeight="120" IsVisible="{Binding HasDetail}" />
+          <!-- Virtualized like the conversation: a collapsed group builds nothing, an open one only what's in view. -->
+          <ItemsControl Classes="subagentitems" ItemsSource="{Binding Items}" ClipToBounds="False">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <controls:ConversationPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
         </StackPanel>
       </StackPanel>
+      </controls:Card>
+    </DataTemplate>
+
+    <!-- A run of tool calls: one card, a tile for each call, and the open tile's detail under them (DESIGN.md §18). -->
+    <DataTemplate DataType="conv:ToolGroupItem">
+      <controls:Card Classes="tools quiet" Label="Tool calls" Icon="{StaticResource IconCardTools}" Detail="{Binding CountText}"
+                     TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}">
+        <StackPanel>
+          <ItemsControl ItemsSource="{Binding Calls}" ItemTemplate="{StaticResource ToolTile}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <controls:TilesPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+          <Border Classes="tiledetail" IsVisible="{Binding HasExpanded}">
+            <ContentControl Content="{Binding Expanded}" ContentTemplate="{StaticResource ToolDetail}" />
+          </Border>
+        </StackPanel>
+      </controls:Card>
+    </DataTemplate>
+
+    <!-- A call on its own, outside a Tool calls card (the conversation always puts calls in one; this is in case). -->
+    <DataTemplate DataType="conv:ToolUseItem">
+      <controls:Card Classes="tools quiet" Label="Tool call" Icon="{StaticResource IconCardTools}" TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}">
+        <StackPanel>
+          <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolTile}" />
+          <Border Classes="tiledetail" IsVisible="{Binding IsExpanded}">
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolDetail}" />
+          </Border>
+        </StackPanel>
+      </controls:Card>
     </DataTemplate>
 
     <DataTemplate DataType="conv:DiffLine">
@@ -315,7 +392,7 @@
 
     <!-- Permission prompt (DESIGN.md §7) -->
     <DataTemplate DataType="conv:PermissionItem">
-      <Border Classes="prompt" Classes.answered="{Binding !IsPending}">
+      <controls:Card Classes="prompt" Classes.waiting="{Binding IsPending}" Classes.quiet="{Binding !IsPending}" Label="Permission" Icon="{StaticResource IconCardPermission}">
         <StackPanel Spacing="8">
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
@@ -383,12 +460,12 @@
 
           <TextBlock Classes="muted small" Text="{Binding Outcome}" TextWrapping="Wrap" IsVisible="{Binding HasOutcome}" />
         </StackPanel>
-      </Border>
+      </controls:Card>
     </DataTemplate>
 
     <!-- Clarifying questions (AskUserQuestion) -->
     <DataTemplate DataType="conv:QuestionItem">
-      <Border Classes="prompt question" Classes.answered="{Binding !IsPending}">
+      <controls:Card Classes="prompt" Classes.waiting="{Binding IsPending}" Classes.quiet="{Binding !IsPending}" Label="Question" Icon="{StaticResource IconToolQuestion}">
         <StackPanel Spacing="10">
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
@@ -443,12 +520,12 @@
           </StackPanel>
           <TextBlock Classes="muted small" Text="{Binding Outcome}" TextWrapping="Wrap" IsVisible="{Binding HasOutcome}" />
         </StackPanel>
-      </Border>
+      </controls:Card>
     </DataTemplate>
 
     <!-- A plan to approve (ExitPlanMode) -->
     <DataTemplate DataType="conv:PlanItem">
-      <Border Classes="prompt question" Classes.answered="{Binding !IsPending}">
+      <controls:Card Classes="prompt" Classes.waiting="{Binding IsPending}" Classes.quiet="{Binding !IsPending}" Label="Plan" Icon="{StaticResource IconToolPlan}">
         <StackPanel Spacing="10">
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
@@ -487,12 +564,12 @@
           </StackPanel>
           <TextBlock Classes="muted small" Text="{Binding Outcome}" TextWrapping="Wrap" IsVisible="{Binding HasOutcome}" />
         </StackPanel>
-      </Border>
+      </controls:Card>
     </DataTemplate>
 
     <!-- An MCP server asking for input (DESIGN.md §7, "MCP servers asking for input") -->
     <DataTemplate DataType="conv:McpInputItem">
-      <Border Classes="prompt question" Classes.answered="{Binding !IsPending}">
+      <controls:Card Classes="prompt" Classes.waiting="{Binding IsPending}" Classes.quiet="{Binding !IsPending}" Label="Input requested" Icon="{StaticResource IconToolMcp}">
         <StackPanel Spacing="10">
           <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
           <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap" />
@@ -532,42 +609,48 @@
           </WrapPanel>
           <TextBlock Classes="muted small" Text="{Binding Outcome}" TextWrapping="Wrap" IsVisible="{Binding HasOutcome}" />
         </StackPanel>
-      </Border>
+      </controls:Card>
     </DataTemplate>
 
-    <!-- A hook from the user's or project's settings ran (DESIGN.md §5, "Hook runs") -->
+    <!-- A hook from the user's or project's settings ran (DESIGN.md §5, "Hook runs"): a quiet one-line card, red when it failed -->
     <DataTemplate DataType="conv:HookRunItem">
-      <StackPanel Spacing="2">
-        <ToggleButton Classes="flat row" IsChecked="{Binding IsExpanded}" IsHitTestVisible="{Binding HasOutput}">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <TextBlock Classes="muted" Text="⚙" />
-            <TextBlock Classes="muted small" Text="{Binding Title}" />
-            <TextBlock Classes="muted small" Classes.error="{Binding IsFailed}" Text="{Binding StatusText}" />
-          </StackPanel>
-        </ToggleButton>
-        <Border Classes="codeblock" IsVisible="{Binding IsExpanded}" Margin="20,0,0,0">
-          <SelectableTextBlock Classes="mono" Text="{Binding Output}" TextWrapping="Wrap" />
-        </Border>
-      </StackPanel>
+      <controls:Card Classes="inline" Classes.quiet="{Binding !IsFailed}" Classes.error="{Binding IsFailed}" Label="Hook" Icon="{StaticResource IconCardHook}">
+        <StackPanel Spacing="4">
+          <ToggleButton Classes="flat row" Padding="0" IsChecked="{Binding IsExpanded}" IsHitTestVisible="{Binding HasOutput}" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Classes="muted small" Text="{Binding Title}" />
+              <TextBlock Classes="muted small" Classes.error="{Binding IsFailed}" Text="{Binding StatusText}" />
+            </StackPanel>
+          </ToggleButton>
+          <Border Classes="codeblock" IsVisible="{Binding IsExpanded}">
+            <SelectableTextBlock Classes="mono" Text="{Binding Output}" TextWrapping="Wrap" />
+          </Border>
+        </StackPanel>
+      </controls:Card>
     </DataTemplate>
 
+    <!-- A note from Claude Code or Claudette: a one-line card, quiet for information, amber for a warning, red for an error -->
     <DataTemplate DataType="conv:NoteItem">
-      <StackPanel Spacing="2">
-        <SelectableTextBlock Classes="muted small" FontStyle="Italic" TextWrapping="Wrap" Text="{Binding Text}"
-                             Classes.error="{Binding IsError}" Classes.warning="{Binding IsWarning}" />
-        <!-- Such as the tab's session in the Claude app (DESIGN.md §18, "Remote Control") -->
-        <Button Classes="flat" Padding="0" HorizontalAlignment="Left" IsVisible="{Binding HasLink}" ToolTip.Tip="Open in your browser"
-                Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Link}">
-          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Link}" TextWrapping="Wrap" TextDecorations="Underline" />
-        </Button>
-      </StackPanel>
+      <controls:Card Classes="inline" Classes.quiet="{Binding IsInfo}" Classes.warning="{Binding IsWarning}" Classes.error="{Binding IsError}"
+                     Label="{Binding KindLabel}" Icon="{Binding KindIcon, Converter={x:Static conv:ToolIcons.Geometry}}">
+        <StackPanel Spacing="2">
+          <SelectableTextBlock Classes="small" Classes.muted="{Binding IsInfo}" TextWrapping="Wrap" Text="{Binding Text}" />
+          <!-- Such as the tab's session in the Claude app (DESIGN.md §18, "Remote Control") -->
+          <Button Classes="flat" Padding="0" HorizontalAlignment="Left" IsVisible="{Binding HasLink}" ToolTip.Tip="Open in your browser"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Link}">
+            <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding Link}" TextWrapping="Wrap" TextDecorations="Underline" />
+          </Button>
+        </StackPanel>
+      </controls:Card>
     </DataTemplate>
 
     <!-- Skipped by Claudette, shown while protocol logging is on (DESIGN.md §16) -->
     <DataTemplate DataType="conv:UnsupportedMessageItem">
-      <Expander Header="{Binding Title}" IsExpanded="{Binding IsExpanded}" Padding="8,4">
-        <SelectableTextBlock Text="{Binding Json}" FontFamily="{DynamicResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
-      </Expander>
+      <controls:Card Classes="quiet">
+        <Expander Header="{Binding Title}" IsExpanded="{Binding IsExpanded}" Padding="8,4">
+          <SelectableTextBlock Text="{Binding Json}" FontFamily="{DynamicResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+        </Expander>
+      </controls:Card>
     </DataTemplate>
 
     <!-- Where one of Claude's tasks started (DESIGN.md §5, "Tasks"): a rule with the task in it, which opens the Tasks page -->
@@ -588,76 +671,92 @@
 
     <!-- Where the task list stands as a turn that changed it ends, with Continue while tasks are left (DESIGN.md §5, "Tasks") -->
     <DataTemplate DataType="conv:TasksSummaryItem">
-      <WrapPanel ItemSpacing="8" Margin="0,2,0,2">
-        <TextBlock Classes="status small" Classes.ok="{Binding AllDone}" Text="{Binding Glyph}" VerticalAlignment="Center" />
-        <TextBlock Classes="small" Text="{Binding Text}" VerticalAlignment="Center" />
-        <Button Classes="flat" Padding="6,1" VerticalAlignment="Center" IsVisible="{Binding IsContinueOffered}"
-                Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ContinueTasksCommand}" CommandParameter="{Binding}"
-                ToolTip.Tip="Ask Claude to carry on with the tasks that are left">
-          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Continue" />
-        </Button>
-      </WrapPanel>
+      <controls:Card Classes="inline stats" Label="Tasks" Icon="{StaticResource IconToolTodo}">
+        <WrapPanel ItemSpacing="8">
+          <TextBlock Classes="status small" Classes.ok="{Binding AllDone}" Text="{Binding Glyph}" VerticalAlignment="Center" />
+          <TextBlock Classes="small" Text="{Binding Text}" VerticalAlignment="Center" TextWrapping="Wrap" />
+          <Button Classes="flat" Padding="6,0" VerticalAlignment="Center" IsVisible="{Binding IsContinueOffered}"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ContinueTasksCommand}" CommandParameter="{Binding}"
+                  ToolTip.Tip="Ask Claude to carry on with the tasks that are left">
+            <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Continue" />
+          </Button>
+        </WrapPanel>
+      </controls:Card>
     </DataTemplate>
 
     <!-- A Claude Doc the turn made or changed, with Open, as it ends (DESIGN.md §5, "Claude Docs") -->
     <DataTemplate DataType="conv:DocSummaryItem">
-      <WrapPanel ItemSpacing="8" Margin="0,2,0,2">
-        <Path Classes="toolicon" Data="{StaticResource IconToolRead}" VerticalAlignment="Center" />
-        <TextBlock Classes="small" Text="{Binding Text}" VerticalAlignment="Center" />
-        <Button Classes="flat" Padding="6,1" VerticalAlignment="Center" ToolTip.Tip="{Binding Doc.Url}"
-                AutomationProperties.Name="{Binding Doc.DisplayTitle, StringFormat='Open {0}'}"
-                Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Doc.Url}">
-          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Open" />
-        </Button>
-      </WrapPanel>
+      <controls:Card Classes="inline files" Label="Claude Doc" Icon="{StaticResource IconToolRead}">
+        <WrapPanel ItemSpacing="8">
+          <TextBlock Classes="small" Text="{Binding Text}" VerticalAlignment="Center" TextWrapping="Wrap" />
+          <Button Classes="flat" Padding="6,0" VerticalAlignment="Center" ToolTip.Tip="{Binding Doc.Url}"
+                  AutomationProperties.Name="{Binding Doc.DisplayTitle, StringFormat='Open {0}'}"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" CommandParameter="{Binding Doc.Url}">
+            <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Open" />
+          </Button>
+        </WrapPanel>
+      </controls:Card>
     </DataTemplate>
 
+    <!-- A turn's footer (DESIGN.md §18, "Conversation cards"): a Modified files card with each file the turn changed,
+         which opens the turn's changes to it (DESIGN.md §8, "Changes per turn"), and a Turn statistics card. -->
     <DataTemplate DataType="conv:TurnSummaryItem">
-      <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
-        <TextBlock Classes="muted small" Text="{Binding Text}" Opacity="0.8" VerticalAlignment="Center" />
-        <!-- The files the turn changed, each opening the turn's changes to it (DESIGN.md §8, "Changes per turn") -->
-        <Button Classes="flat turnfiles" Padding="0" VerticalAlignment="Center" IsVisible="{Binding HasFiles}"
-                ToolTip.Tip="What this turn changed, file by file">
-          <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding FilesText, StringFormat='· {0}'}" />
-          <Button.Flyout>
-            <Flyout Placement="BottomEdgeAlignedLeft">
-              <StackPanel MinWidth="280" MaxWidth="560" Spacing="2">
-                <TextBlock Classes="muted small" Margin="8,2" Text="Changed in this turn" />
-                <ItemsControl ItemsSource="{Binding Files}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="conv:TurnFileRow">
-                      <Button Classes="flat row" HorizontalContentAlignment="Stretch" ToolTip.Tip="{Binding Change.Path}"
-                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenTurnDiffCommand}" CommandParameter="{Binding}">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                          <TextBlock Classes="mono small" Text="{Binding DisplayPath}" TextTrimming="PathSegmentEllipsis" />
-                          <TextBlock Grid.Column="1" Classes="muted small mono" Text="{Binding Stats}" />
-                        </Grid>
-                      </Button>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </StackPanel>
-            </Flyout>
-          </Button.Flyout>
-        </Button>
+      <StackPanel Classes="turnfooter">
+        <controls:Card Classes="files" Label="Modified files" Icon="{StaticResource IconCardFiles}" Detail="{Binding FilesText}"
+                       TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" IsVisible="{Binding HasFiles}">
+          <ItemsControl ItemsSource="{Binding Files}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="conv:TurnFileRow">
+                <Button Classes="flat row" Padding="2,2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ToolTip.Tip="{Binding Change.Path}"
+                        AutomationProperties.Name="{Binding DisplayPath, StringFormat='What this turn changed in {0}'}"
+                        Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenTurnDiffCommand}" CommandParameter="{Binding}">
+                  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                    <TextBlock x:Name="FileName" Classes="small" FontWeight="SemiBold" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Row="1" Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis" IsVisible="{Binding HasFolder}" />
+                    <!-- The counts, monospace: on the name's baseline (Controls/Baseline). -->
+                    <TextBlock Grid.Column="1" Classes="mono small" Text="{Binding Stats}" VerticalAlignment="Top"
+                               controls:Baseline.AlignWith="{Binding #FileName}" />
+                  </Grid>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </controls:Card>
+        <controls:Card Classes="inline stats quiet" Label="Turn" Icon="{StaticResource IconCardStats}" TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}">
+          <TextBlock Classes="muted small" Text="{Binding StatsText}" TextWrapping="Wrap" />
+        </controls:Card>
       </StackPanel>
     </DataTemplate>
   </UserControl.DataTemplates>
 
-  <Grid RowDefinitions="*,Auto" ColumnDefinitions="*,Auto">
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,Auto">
 
-    <!-- Side panel (DESIGN.md §3): changed files, agents, the project's tools and, when the monitor is on, processes -->
-    <Border x:Name="SidePanel" Grid.Column="1" Grid.RowSpan="2" Width="{Binding SidePanelWidth}" IsVisible="{Binding IsSidePanelOpen}"
+    <!-- Side panel (DESIGN.md §3): changed files, agents, the project's tools and, when the monitor is on, processes.
+         With tabs side by side, only the focused pane's shows (DESIGN.md §18, "Split panes"). -->
+    <Border x:Name="SidePanel" Grid.Column="1" Grid.RowSpan="3" Width="{Binding SidePanelWidth}" IsVisible="{Binding ShowsSidePanel}"
             BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource SubtleBrush}">
       <views:SidePanelView />
     </Border>
 
     <!-- Drag the side panel's edge to resize it; double-click for the default width. -->
-    <Border x:Name="SidePanelEdge" Grid.Column="1" Grid.RowSpan="2" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent"
-            Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding IsSidePanelOpen}" />
+    <Border x:Name="SidePanelEdge" Grid.Column="1" Grid.RowSpan="3" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent"
+            Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding ShowsSidePanel}" />
+
+    <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes"): the tab and its folder, and Close pane.
+         The focused pane's has the accent line under it. -->
+    <Border x:Name="PaneHeader" Classes="paneheader" Classes.focused="{Binding IsSelected}" IsVisible="{Binding IsInSplit}">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Classes="small" FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" MaxWidth="320" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ClosePaneCommand}"
+                ToolTip.Tip="Close pane: the tab stays open in the sidebar" AutomationProperties.Name="Close pane">
+          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+        </Button>
+      </Grid>
+    </Border>
 
     <!-- Conversation -->
-    <Grid x:Name="ConversationArea" Grid.Row="0">
+    <Grid x:Name="ConversationArea" Grid.Row="1">
       <DockPanel>
         <!-- Find in the conversation (DESIGN.md §5, "Find"): Enter for the next match, Shift+Enter the one before, Esc closes -->
         <Border DockPanel.Dock="Top" Classes="findbar" IsVisible="{Binding Find.IsOpen}">
@@ -758,6 +857,7 @@
           </StackPanel>
         </Border>
 
+        <Panel>
         <ScrollViewer x:Name="ConversationScroll" HorizontalScrollBarVisibility="Disabled">
           <!-- Not clipped, so the first message's time and Copy chip can sit above it (DESIGN.md §5). -->
           <ItemsControl x:Name="ConversationItems" ItemsSource="{Binding Items}" ClipToBounds="False">
@@ -772,6 +872,10 @@
             </ItemsControl.ItemsPanel>
           </ItemsControl>
         </ScrollViewer>
+        <!-- Marks beside the scroll bar where your messages, waiting prompts, errors and changed files are; a click goes
+             there (DESIGN.md §18, "Conversation cards"). Clear of the scroll bar, which Fluent draws over the content. -->
+        <controls:ScrollMarks x:Name="ScrollMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" />
+        </Panel>
       </DockPanel>
 
       <Button x:Name="JumpToLatest" Classes="accent jumplatest" Content="↓ Jump to latest" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,12"
@@ -834,6 +938,6 @@
     </Grid>
 
     <!-- Composer (DESIGN.md §5) -->
-    <views:ComposerView x:Name="ComposerPanel" Grid.Row="1" />
+    <views:ComposerView x:Name="ComposerPanel" Grid.Row="2" />
   </Grid>
 </UserControl>

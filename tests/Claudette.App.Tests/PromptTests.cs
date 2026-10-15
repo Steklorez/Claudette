@@ -177,7 +177,9 @@ public class PromptTests
               {"question":"Which database?","header":"Database","multiSelect":false,"options":[{"label":"Postgres","description":"Relational"},{"label":"SQLite","description":"File"}]},
               {"question":"Which parts?","header":"Parts","multiSelect":true,"options":[{"label":"API","description":""},{"label":"UI","description":""}]}]}}}
             """);
-        Assert.DoesNotContain(tab.Items, i => i is ToolUseItem { Name: "AskUserQuestion" });
+        Assert.DoesNotContain(tab.Items.ToolCalls(), t => t.Name == "AskUserQuestion");
+        // Its Tool calls card had only it, so the card went too (DESIGN.md §18, "Conversation cards").
+        Assert.DoesNotContain(tab.Items, i => i is ToolGroupItem);
         Assert.False(prompt.SubmitCommand.CanExecute(null));
 
         prompt.Questions[0].Options[1].IsSelected = true;

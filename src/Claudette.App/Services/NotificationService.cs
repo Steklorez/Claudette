@@ -60,8 +60,8 @@ public sealed class NotificationService : IDisposable
     /// <summary>Whether Claudette's window is in front. Set by the main window.</summary>
     public bool IsAppActive { get; private set; }
 
-    /// <summary>The selected tab's id. Set by the shell.</summary>
-    public Func<string?> SelectedTabId { get; set; } = () => null;
+    /// <summary>The ids of the tabs on screen: the selected tab, or the tabs side by side (DESIGN.md §18, "Split panes"). Set by the shell.</summary>
+    public Func<IReadOnlyCollection<string>> ShownTabIds { get; set; } = () => [];
 
     /// <summary>Raised on the UI thread when the user clicks one of Claudette's notifications.</summary>
     public event Action<NotificationTarget>? Activated;
@@ -78,7 +78,7 @@ public sealed class NotificationService : IDisposable
             return false;
         }
         // A project action's end is news whichever tab is showing, until Claudette is in front: the sidebar already says it.
-        if (IsAppActive && (tabId is null || tabId == SelectedTabId() || kind == NotificationKind.ProjectAction))
+        if (IsAppActive && (tabId is null || ShownTabIds().Contains(tabId) || kind == NotificationKind.ProjectAction))
         {
             return false;
         }
@@ -132,9 +132,9 @@ public sealed class NotificationService : IDisposable
         if (active)
         {
             SetFlashing(false);
-            if (SelectedTabId() is { } selected)
+            foreach (var shown in ShownTabIds())
             {
-                ClearTab(selected);
+                ClearTab(shown);
             }
         }
     }

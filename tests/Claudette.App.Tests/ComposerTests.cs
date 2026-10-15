@@ -522,8 +522,8 @@ public partial class ComposerTests
             ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = "e1", ["content"] = "Edited" }) },
             ["tool_use_result"] = new JsonObject { ["filePath"] = path, ["oldString"] = "old line", ["newString"] = "new line", ["originalFile"] = "old line\n", ["structuredPatch"] = new JsonArray() },
         });
-        await TabTestHarness.Eventually(() => tab.Items.OfType<ToolUseItem>().Any(t => t.CanOpenDiff), "the finished edit");
-        var card = InlineDispatcher.Read(() => tab.Items.OfType<ToolUseItem>().Single());
+        await TabTestHarness.Eventually(() => tab.Items.ToolCalls().Any(t => t.CanOpenDiff), "the finished edit");
+        var card = InlineDispatcher.Read(() => tab.Items.ToolCalls().Single());
 
         await tab.ChangedFiles.OpenToolDiffCommand.ExecuteAsync(card);
 

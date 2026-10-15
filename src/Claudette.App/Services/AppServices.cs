@@ -124,6 +124,8 @@ public sealed class AppServices : IAsyncDisposable
         // The first launch that knows about folder trust trusts the folders already used here (DESIGN.md §7).
         State.TrustFoldersAlreadyUsed();
         UserEnvironment = new UserEnvironment(loginShell, () => Settings.ClaudeCode.UseLoginShellEnvironment, Loggers.CreateLogger("LoginShell"));
+        ClaudeEnvironmentFor = async (overrides, cancellationToken) =>
+            ClaudeEnvironment.From(await UserEnvironment.GetAsync(cancellationToken).ConfigureAwait(false), overrides);
         KeepAwake = new KeepAwakeService(this, sleepBlocker ?? new NoSleepBlocker());
         RemoteControl = new RemoteControlService(this);
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, RemoteControl.ClaudeVariables);
@@ -375,6 +377,14 @@ public sealed class AppServices : IAsyncDisposable
     /// merged in when it's used (DESIGN.md §13, "Login shell environment"). The app starts reading it at launch.
     /// </summary>
     public UserEnvironment UserEnvironment { get; }
+
+    /// <summary>
+    /// The environment a tab's <c>claude</c> starts with, as the session factory builds it: the user environment,
+    /// cleaned, with the tab's own variables on top (DESIGN.md §13). Read for what Claude Code's configuration says
+    /// there, such as how long its prompt cache lasts (DESIGN.md §6, "Prompt cache"). Tests replace it, so the machine
+    /// running them doesn't decide.
+    /// </summary>
+    internal Func<IReadOnlyDictionary<string, string?>, CancellationToken, Task<IReadOnlyDictionary<string, string>>> ClaudeEnvironmentFor { get; set; }
 
     public IPlatformServices Platform { get; }
 

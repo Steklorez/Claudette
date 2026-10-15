@@ -396,6 +396,10 @@ public partial class ShellView : UserControl
         {
             findTab.OpenFindCommand.Execute(null);
         }
+        else if (JumpFor(Is) is { } jump && shell.SelectedTab is { } jumpTab)
+        {
+            jumpTab.JumpToMessage(jump);
+        }
         else if (Is(KeyboardShortcuts.ZoomIn))
         {
             shell.ZoomInCommand.Execute(null);
@@ -427,6 +431,14 @@ public partial class ShellView : UserControl
         }
         e.Handled = true;
     }
+
+    /// <summary>The message jump a key asks for (DESIGN.md §18, "Conversation cards"); null when it asks for none.</summary>
+    private static MessageJump? JumpFor(Func<string, bool> @is) =>
+        @is(KeyboardShortcuts.PreviousMessage) ? MessageJump.Previous
+        : @is(KeyboardShortcuts.NextMessage) ? MessageJump.Next
+        : @is(KeyboardShortcuts.FirstMessage) ? MessageJump.First
+        : @is(KeyboardShortcuts.LatestMessage) ? MessageJump.Latest
+        : null;
 
     private void OnTabDoubleTapped(object? sender, TappedEventArgs e)
     {

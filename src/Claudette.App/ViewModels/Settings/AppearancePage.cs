@@ -59,6 +59,7 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
         Entry("Show thinking expanded"),
         Entry("Show fun words while Claude works"),
         Entry("Show what Claude is doing while it works"),
+        Entry("Show when the prompt cache expires"),
         Entry("Detailed usage header"),
         Entry("Show context on tab rows"),
         Entry("Show git branch on tab rows"),
@@ -70,6 +71,7 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
         Entry("Games with Claudette"),
         Entry("Density"),
         Entry("Full-width conversation"),
+        Entry("Quieter in-between steps"),
         Entry("Zoom"),
         Entry("Motion"),
         Entry("Reduce motion", pageText: "Motion"),
@@ -107,6 +109,13 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     {
         get => Settings.Appearance.FullWidthConversation;
         set => Set(value, v => Settings.Appearance.FullWidthConversation = v);
+    }
+
+    /// <summary>Steps on the way are drawn quieter than prompts, answers and changes (DESIGN.md §18, "Conversation cards").</summary>
+    public bool QuietSteps
+    {
+        get => Settings.Appearance.QuietSteps;
+        set => Set(value, v => Settings.Appearance.QuietSteps = v);
     }
 
     // ---- Fonts (DESIGN.md §14, "Appearance") ----------------------------------------------------------------------
@@ -181,6 +190,13 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     {
         get => Settings.Appearance.ShowToolInWorkingLine;
         set => Set(value, v => Settings.Appearance.ShowToolInWorkingLine = v);
+    }
+
+    /// <summary>The composer's chip with how long the prompt cache has left (DESIGN.md §6, "Prompt cache").</summary>
+    public bool ShowPromptCacheExpiry
+    {
+        get => Settings.Appearance.ShowPromptCacheExpiry;
+        set => Set(value, v => Settings.Appearance.ShowPromptCacheExpiry = v);
     }
 
     /// <summary>

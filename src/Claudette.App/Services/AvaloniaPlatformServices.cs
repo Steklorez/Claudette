@@ -87,6 +87,28 @@ public sealed class AvaloniaPlatformServices(Func<TopLevel?> topLevel) : IPlatfo
         }
     }
 
+    public Task<int?> ChooseAsync(object? anchor, IReadOnlyList<string> choices)
+    {
+        if ((anchor as Control ?? topLevel()) is not { } target || choices.Count == 0)
+        {
+            return Task.FromResult<int?>(null);
+        }
+        var chosen = new TaskCompletionSource<int?>();
+        var menu = new ContextMenu();
+        for (var i = 0; i < choices.Count; i++)
+        {
+            var index = i;
+            // An underscore in a header marks its access key; doubled, it's shown.
+            var item = new MenuItem { Header = choices[i].Replace("_", "__", StringComparison.Ordinal) };
+            item.Click += (_, _) => chosen.TrySetResult(index);
+            menu.Items.Add(item);
+        }
+        // After a click's own handler, so the pick wins.
+        menu.Closed += (_, _) => Dispatcher.UIThread.Post(() => chosen.TrySetResult(null));
+        menu.Open(target);
+        return chosen.Task;
+    }
+
     public IReadOnlyList<string> InstalledFonts()
     {
         try
