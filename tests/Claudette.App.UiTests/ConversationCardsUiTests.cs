@@ -144,6 +144,30 @@ public sealed class ConversationCardsUiTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public async Task An_open_thinking_card_ends_where_the_thinking_does_whatever_blank_lines_it_ends_with()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        const string thought = "The tests pass, so I should write up a short report and check whether it was pushed.";
+        foreach (var text in new[] { thought, "\n" + thought + "\n\n\n" })
+        {
+            var thinking = new ThinkingItem { IsExpanded = true };
+            thinking.Append(text);
+            thinking.IsStreaming = false;
+            tab.Items.Add(thinking);
+        }
+        UiText.Settle(window);
+
+        var cards = window.GetVisualDescendants().OfType<Card>().Where(c => c.Classes.Contains("thinking")).ToList();
+        Assert.Equal(2, cards.Count);
+        // Claude's thinking often starts or ends with blank lines: they leave no empty room in the card.
+        Assert.Equal(cards[0].Bounds.Height, cards[1].Bounds.Height);
+        Assert.Contains(thought, UiText.Describe(cards[1]), StringComparison.Ordinal);
+        window.Close();
+    }
+
     private static bool IsAtTheTop(Control container, TabView view)
     {
         var scroll = view.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "ConversationScroll");

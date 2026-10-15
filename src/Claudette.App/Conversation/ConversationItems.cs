@@ -293,11 +293,12 @@ public sealed partial class ThinkingItem : ConversationItem
     }
 
     /// <summary>
-    /// What the view shows: the text while the row is expanded, else nothing, so collapsed thinking is never made into a
+    /// What the view shows: the text while the card is open, else nothing, so collapsed thinking is never made into a
     /// string. While it streams in, the view hears of it as it grows by an eighth (at least 256 characters) rather than
-    /// with every piece, and all of it once it's done.
+    /// with every piece, and all of it once it's done. Without the blank lines Claude's thinking often starts or ends
+    /// with, which would leave empty room in its card.
     /// </summary>
-    public string? ShownText => IsExpanded ? Text : null;
+    public string? ShownText => IsExpanded ? Text.Trim() : null;
 
     private void TextChanged(bool force)
     {
