@@ -63,10 +63,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     internal void StartFind()
     {
-        if (!IsExplorerShown)
-        {
-            _shell.Layout.IsExplorerHidden = false;
-        }
+        ShowExplorer();
         IsFinding = true;
         FindFocusRequested?.Invoke();
         // Listed now, so the first keystroke has something to look through.

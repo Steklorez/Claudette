@@ -196,7 +196,7 @@ public sealed partial class ShellViewModel
     /// Opens <paramref name="path"/> in the Files tab of the group whose folder holds it (the deepest), or for a file in
     /// none, of <paramref name="from"/>'s group, at <paramref name="line"/> when given (DESIGN.md §18, "Project files",
     /// "Opening files in the editor"). From a conversation the Files tab opens beside it, or in its place, as Settings →
-    /// Editor says, and takes the focus.
+    /// Editor says, and takes the focus. Opened beside it for its first file, its explorer starts hidden.
     /// </summary>
     internal async Task OpenInEditorAsync(string path, int? line, int? column, int? endLine, TabViewModel? from)
     {
@@ -211,7 +211,11 @@ public sealed partial class ShellViewModel
         var files = ProjectFilesFor(group);
         if (from is not null)
         {
-            ShowFromConversation(files);
+            var first = files.OpenFiles.Count == 0;
+            if (ShowFromConversation(files) && first)
+            {
+                files.HideExplorerHere();
+            }
         }
         else
         {
@@ -222,16 +226,17 @@ public sealed partial class ShellViewModel
 
     /// <summary>
     /// Shows a Files tab from the focused conversation: beside it, as <b>Open beside</b> does, or in its place, as Settings
-    /// → Editor says. One already on screen is only focused.
+    /// → Editor says. One already on screen is only focused. True when it opened beside.
     /// </summary>
-    private void ShowFromConversation(ProjectFilesViewModel files)
+    private bool ShowFromConversation(ProjectFilesViewModel files)
     {
         if (files.IsShown || SelectedTab is null || _services.Settings.Editor.FilesFromConversation == FilesFromConversation.InPlace)
         {
             Selected = files;
-            return;
+            return false;
         }
         OpenBeside(files);
+        return true;
     }
 
     /// <summary>A session tab from a Files tab (the peek's header): on screen, it takes the focus; else it opens beside.</summary>

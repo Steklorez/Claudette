@@ -311,6 +311,7 @@ public sealed partial class ProjectFilesViewModel
     /// <summary>A folder shown in the explorer, expanded and selected: one a reply named.</summary>
     internal async Task RevealFolderInTreeAsync(string folder)
     {
+        ShowExplorer();
         if (!_started)
         {
             Start();
@@ -323,8 +324,17 @@ public sealed partial class ProjectFilesViewModel
         }
     }
 
+    /// <summary>A file tab's <b>Reveal in the explorer</b>, which shows the explorer if it's hidden.</summary>
     [RelayCommand]
-    private Task RevealRowInTreeAsync(ProjectFileViewModel? file) => file is null ? Task.CompletedTask : RevealInTreeAsync(file.Path);
+    private Task RevealRowInTreeAsync(ProjectFileViewModel? file)
+    {
+        if (file is null)
+        {
+            return Task.CompletedTask;
+        }
+        ShowExplorer();
+        return RevealInTreeAsync(file.Path);
+    }
 
     [RelayCommand]
     private Task OpenRowInSystemAsync(ExplorerRow? row) => row is null ? Task.CompletedTask : OpenInSystemAsync(row.FullPath);

@@ -26,6 +26,12 @@ public sealed class ProjectFilesState
 
     /// <summary>Changes are against git's HEAD rather than Claude's "before".</summary>
     public bool AgainstGitHead { get; set; }
+
+    /// <summary>
+    /// The explorer is hidden in this tab alone, whatever the others do: a conversation opened its first file beside it,
+    /// so the file has the pane. Showing the explorer clears it.
+    /// </summary>
+    public bool ExplorerHidden { get; set; }
 }
 
 /// <summary>An open file's tab, as it's saved.</summary>

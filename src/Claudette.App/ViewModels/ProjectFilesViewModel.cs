@@ -29,6 +29,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         Folder = state.Folder;
         ShowOnlyChanged = state.ShowOnlyChanged;
         AgainstGitHead = state.AgainstGitHead;
+        _explorerHiddenHere = state.ExplorerHidden;
         _refreshWait = new UiTimeout(services.Time, services.Dispatcher);
         _changesWait = new UiTimeout(services.Time, services.Dispatcher);
         _stateWait = new UiTimeout(services.Time, services.Dispatcher);
@@ -173,11 +174,57 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
     /// <summary>The explorer's width: the same for every Project Files tab.</summary>
     public double ExplorerWidth => _shell.Layout.ExplorerWidth;
 
+    /// <summary>The explorer is hidden in this tab alone: a conversation opened its first file beside it.</summary>
+    private bool _explorerHiddenHere;
+
     /// <summary>The explorer shows; a button at the start of the file tabs' row hides it, for every Project Files tab.</summary>
-    public bool IsExplorerShown => !_shell.Layout.IsExplorerHidden;
+    public bool IsExplorerShown => !_shell.Layout.IsExplorerHidden && !_explorerHiddenHere;
 
     [RelayCommand]
-    private void ToggleExplorer() => _shell.Layout.IsExplorerHidden = !_shell.Layout.IsExplorerHidden;
+    private void ToggleExplorer()
+    {
+        if (IsExplorerShown)
+        {
+            _shell.Layout.IsExplorerHidden = true;
+        }
+        else
+        {
+            ShowExplorer();
+        }
+    }
+
+    /// <summary>The explorer shows again, in every Project Files tab and in this one where it started hidden.</summary>
+    private void ShowExplorer()
+    {
+        _shell.Layout.IsExplorerHidden = false;
+        if (_explorerHiddenHere)
+        {
+            _explorerHiddenHere = false;
+            OnExplorerShownChanged();
+            OnFileStateChanged();
+        }
+    }
+
+    /// <summary>
+    /// A conversation opened the first file beside it (DESIGN.md §18, "Project files", "Opening files in the editor"): the
+    /// explorer starts hidden in this tab, leaving the file the pane.
+    /// </summary>
+    internal void HideExplorerHere()
+    {
+        if (_explorerHiddenHere)
+        {
+            return;
+        }
+        _explorerHiddenHere = true;
+        OnExplorerShownChanged();
+        OnFileStateChanged();
+    }
+
+    private void OnExplorerShownChanged()
+    {
+        OnPropertyChanged(nameof(IsExplorerShown));
+        OnPropertyChanged(nameof(ToggleExplorerText));
+    }
 
     public string ToggleExplorerText => IsExplorerShown ? "Hide the explorer" : "Show the explorer";
 
@@ -199,8 +246,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         }
         else if (e.PropertyName == nameof(ShellLayout.IsExplorerHidden))
         {
-            OnPropertyChanged(nameof(IsExplorerShown));
-            OnPropertyChanged(nameof(ToggleExplorerText));
+            OnExplorerShownChanged();
         }
     }
 
@@ -259,6 +305,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         }
         State.ShowOnlyChanged = ShowOnlyChanged;
         State.AgainstGitHead = AgainstGitHead;
+        State.ExplorerHidden = _explorerHiddenHere;
         return State;
     }
 

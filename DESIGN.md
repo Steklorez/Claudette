@@ -3180,7 +3180,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
 - **The layout.** The explorer and the editor sit side by side.
   - The explorer is on the left by default, or on the right with Settings → Editor → **Explorer side**. The explorer's **⋯** menu has **Move to the right** (or **left**), which changes the same setting.
   - **Width.** Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default; a double-click on the edge goes back to that. The width is the same for every Files tab, and remembered.
-  - A button at the start of the file tabs' row hides and shows the explorer, and that's remembered too.
+  - A button at the start of the file tabs' row hides and shows the explorer, and that's remembered too. A Files tab a conversation opened beside it for its first file starts with its explorer hidden (**Opening files in the editor**, below).
   - In a narrow pane, the explorer narrows first, to leave the editor 360 pixels, down to its own least; only then does the editor narrow.
 - **The explorer.**
   - **Its header** has the group's label, **Find file** (a magnifier, `Ctrl/Cmd+P`), **Collapse all** and **⋯**. The **⋯** menu has:
@@ -3312,6 +3312,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - **Which Files tab.** The one of the group whose folder holds the file, the deepest one when a group's folder is inside another's.
     - A file in no group's folder (`~/.claude/settings.json`) opens in the Files tab of the clicked tab's group. Its file tab shows its whole path, and the explorer doesn't list it.
   - **Where it shows.** A click in a conversation opens the Files tab beside it, as **Open beside** does, unless it's on screen already. With Settings → Editor → **Show files from a conversation** set to **In its place**, the Files tab takes the conversation's pane instead, as selecting it in the sidebar does. Either way it takes the focus, so the keyboard goes to the editor.
+    - Opened beside the conversation for its first file (it had none open), the Files tab starts with its explorer hidden, so the file has the pane. That's this tab alone, and it's kept with the tab; the other Files tabs keep theirs. The explorer's button, **Find file** and **Reveal in the explorer** bring it back, and so does a folder named in a reply.
   - **What still goes elsewhere:**
     - A program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`) still shows in its folder.
     - Binary files and files over 10 MB open in the OS's app.

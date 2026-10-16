@@ -44,6 +44,69 @@ public class ProjectFilesOpeningTests
     }
 
     [Fact]
+    public async Task The_first_file_opened_beside_the_conversation_has_the_pane_with_the_explorer_hidden_in_that_tab_alone()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, "a.txt"));
+        Write(Path.Combine(h.WorkFolder, "b.txt"));
+
+        await tab.OpenLinkCommand.ExecuteAsync(Click("a.txt"));
+
+        var files = h.Shell.Groups.Single().Files!;
+        Assert.False(files.IsExplorerShown);
+        Assert.Equal("Show the explorer", files.ToggleExplorerText);
+        Assert.False(h.Shell.Layout.IsExplorerHidden);
+        Assert.True(files.CaptureState().ExplorerHidden);
+
+        files.ToggleExplorerCommand.Execute(null);
+
+        Assert.True(files.IsExplorerShown);
+        Assert.False(files.CaptureState().ExplorerHidden);
+
+        // Not its first file: the explorer stays as it is.
+        h.Shell.SelectedTab = tab;
+        files.ClosePaneCommand.Execute(null);
+        await tab.OpenLinkCommand.ExecuteAsync(Click("b.txt"));
+
+        Assert.Equal([tab, (IShellTab)files], h.Shell.Panes);
+        Assert.True(files.IsExplorerShown);
+    }
+
+    [Fact]
+    public async Task An_explorer_hidden_for_the_first_file_comes_back_to_find_a_file_or_reveal_one()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, "a.txt"));
+        await tab.OpenLinkCommand.ExecuteAsync(Click("a.txt"));
+        var files = h.Shell.Groups.Single().Files!;
+
+        files.StartFindCommand.Execute(null);
+
+        Assert.True(files.IsExplorerShown);
+
+        files.StopFindCommand.Execute(null);
+        files.HideExplorerHere();
+        await files.RevealRowInTreeCommand.ExecuteAsync(files.Showing);
+
+        Assert.True(files.IsExplorerShown);
+        Assert.Equal("a.txt", files.SelectedRow?.RelativePath);
+    }
+
+    [Fact]
+    public async Task In_the_conversations_place_the_first_file_keeps_the_explorer()
+    {
+        await using var h = new TabTestHarness(s => s.Editor.FilesFromConversation = FilesFromConversation.InPlace);
+        var tab = await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, "a.txt"));
+
+        await tab.OpenLinkCommand.ExecuteAsync(Click("a.txt"));
+
+        Assert.True(h.Shell.Groups.Single().Files!.IsExplorerShown);
+    }
+
+    [Fact]
     public async Task With_Settings_so_the_Files_tab_takes_the_conversations_place()
     {
         await using var h = new TabTestHarness(s => s.Editor.FilesFromConversation = FilesFromConversation.InPlace);
