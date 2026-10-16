@@ -6,12 +6,15 @@ A .NET desktop app that wraps Claude Code in a native GUI: one tab per Claude Co
 
 [GUIDE.md](GUIDE.md) is the plan for the user guide in `docs/`: how its pages are written and their pictures taken, and which page describes each part of Claudette.
 
+[CHANGELOG.md](CHANGELOG.md) says what changed in each version, for the people using Claudette, in the Keep a Changelog format; the guide's Changelog page and each release's notes come from it.
+
 ## Working with the design
 
 - Read the relevant DESIGN.md sections before building a feature.
 - If the implementation has to differ from the design, update DESIGN.md in the same change. If the difference is a product decision (what the user sees or can do), ask first.
 - Build in the order given in §17 Milestones.
 - Record spike findings in DESIGN.md, replacing the spike note.
+- A change people would notice adds its entry under **Unreleased** in CHANGELOG.md, in the same change: what they can now do or what works differently, in the app's own words, not how it was built (GUIDE.md, "The changelog"). Refactoring, tests, CI and changes to the docs alone don't get one.
 - A new part of Claudette in DESIGN.md gets its row in GUIDE.md's map of pages in the same change. Once its chapter of the guide is written, a change people can see also updates its page and retakes its pictures (GUIDE.md, "Keeping it current").
 
 ## Backlog

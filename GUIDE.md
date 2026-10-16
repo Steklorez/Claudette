@@ -1,21 +1,26 @@
 # Claudette User Guide
 
-The plan for Claudette's user guide, the website at https://claudette.dotbunny.com that shows people how to use every part of Claudette. [DESIGN.md](DESIGN.md) says what Claudette does; this file says how the guide is built, how a page is written, how its pictures are taken, and which page describes each part of Claudette. `§n` still means a section of DESIGN.md, whose [User guide](DESIGN.md#user-guide) section has the decisions behind the site.
+The plan for Claudette's user guide, the website at https://claudette.dotbunny.com that shows people how to use every part of Claudette. [DESIGN.md](DESIGN.md) says what Claudette does; this file says how the guide is built, how a page is written, how its pictures are taken, which page describes each part of Claudette, and how `CHANGELOG.md` is kept. `§n` still means a section of DESIGN.md, whose [User guide](DESIGN.md#user-guide) section has the decisions behind the site.
 
 Planned 2026-10-15, not started.
 
 ## 1. The site
 
-- **Where it lives.** In `docs/` on `main`. GitHub Pages builds the site from that folder on every push to `main` (the repository's Settings → Pages: **Deploy from a branch**, `main`, `/docs`).
+- **Where it lives.** In `docs/` on `main`, with `CHANGELOG.md` from the repository's root. A workflow of ours builds the site and publishes it to GitHub Pages (the repository's Settings → Pages → Source: **GitHub Actions**).
   - `docs/CNAME` holds the domain, `claudette.dotbunny.com`. GitHub wrote it when the domain was set, and deleting it unsets the domain. The domain's DNS points at GitHub Pages, and the site answers over HTTPS (with a 404 until there's a page).
-  - Everything in `docs/` is published, the README's screenshots included. Nothing outside it is, so this file isn't.
-- **How it's built.** With Jekyll, as GitHub Pages runs it for a branch, so no workflow of ours builds or deploys it. The theme is [Just the Docs](https://just-the-docs.com), as a `remote_theme` pinned to a release's tag. It gives a sidebar from each page's front matter (`nav_order`, `parent`, `has_children`), search built with the site, callouts, and an **Edit this page on GitHub** link.
+  - Everything in `docs/` is published, the README's screenshots included, and so is the changelog. Nothing else outside it is, so this file isn't.
+- **How it's built.** With Jekyll, through the `github-pages` gem (`docs/Gemfile`), which pins Jekyll and the plugins to the versions GitHub Pages uses. The theme is [Just the Docs](https://just-the-docs.com), as a `remote_theme` pinned to a release's tag. It gives a sidebar from each page's front matter (`nav_order`, `parent`, `has_children`), search built with the site, callouts, and an **Edit this page on GitHub** link.
+  - **Why a workflow.** GitHub Pages' own build from a branch would do for the written pages, with no workflow to keep. But it reads only `docs/` and runs only on a push, and two pages need more ([Downloads and the changelog](#5-downloads-and-the-changelog)): the Changelog page is made from `CHANGELOG.md` at the root, and the Downloads page from the releases, so it's rebuilt whenever one is published.
   - `docs/_config.yml`: the title; `url: https://claudette.dotbunny.com` and no `baseurl`, since the site is the domain's root; the theme; the plugins (`jekyll-remote-theme`, `jekyll-seo-tag` and `jekyll-sitemap`, all on GitHub Pages' list); search; links to the repository and its Releases; and the edit link, to `docs/` on `main`.
-  - **Light and dark.** The site follows the reader's system, as Claudette does by default. Just the Docs has a light scheme and a dark one but nothing that follows the system, so `_includes/head_custom.html` calls `jtd.setTheme` from `prefers-color-scheme`, and again when that changes. The page has no switch of its own, so the pictures can follow the same setting ([§3](#3-pictures)).
+  - **Light and dark.** The site follows the reader's system, as Claudette does by default. Just the Docs has a light scheme and a dark one but nothing that follows the system, so `_includes/head_custom.html` calls `jtd.setTheme` from `prefers-color-scheme`, and again when that changes. The page has no switch of its own, so the pictures can follow the same setting ([Pictures](#3-pictures)).
   - **The icon and favicon:** `packaging/icon/build-icons.mjs` writes them to `docs/assets/` too, so they stay the app's ([Packaging and signing](DESIGN.md#packaging-and-signing)). The site in Claudette's own colors, as a custom scheme in `_sass/color_schemes/`, can come later.
-  - **Previewing it.** `docs/Gemfile` names the `github-pages` gem, which pins Jekyll and the plugins to GitHub's versions. With Ruby installed, `bundle exec jekyll serve` in `docs/` serves the site locally.
-  - **Checks.** `.github/workflows/docs.yml` runs on pull requests and pushes that change `docs/`. It builds the site with the `github-pages` gem and runs html-proofer over it, for internal links only. A broken link, a missing picture or a picture with no alt text fails the pull request instead of reaching the site. Its actions are pinned to commits, as `package.yml`'s are.
-- **Chapters and pages.** Each chapter in [§4](#4-the-chapters) is a folder of pages with an `index.md`, which says what the chapter covers and lists its pages. A page's file is its title in lowercase with hyphens: **Worktree tabs** is `docs/tabs/worktree-tabs.md`. Chapters sit in the sidebar in the map's order.
+- **The workflow**, `.github/workflows/docs.yml`.
+  - It runs on a push to `main` that changes `docs/` or `CHANGELOG.md`, on a release being published, edited, unpublished or deleted, and from **Run workflow**. A pull request that changes either gets the same build and checks, without publishing.
+  - **Building.** `docs/_scripts/prepare.sh` writes the two files the generated pages read, which `.gitignore` keeps out of the repository ([Downloads and the changelog](#5-downloads-and-the-changelog)): `docs/_data/releases.json`, from the GitHub API with the workflow's token, and `docs/_includes/changelog.md`, from `CHANGELOG.md`. Then Jekyll builds the site. If the API can't be read, or `CHANGELOG.md` has no version in it, the build fails rather than publish an empty page.
+  - **Checks.** html-proofer runs over the built site, for internal links only. A broken link, a missing picture or a picture with no alt text fails the run instead of reaching the site.
+  - **Publishing**, on `main` and for releases: `actions/upload-pages-artifact` and `actions/deploy-pages`, in the `github-pages` environment, one at a time. The workflow can read the repository and write to Pages, nothing else. Its actions are pinned to commits, as `package.yml`'s are.
+- **Previewing it.** With Ruby installed, run `docs/_scripts/prepare.sh` (it needs `gh` signed in, or `GH_TOKEN`), then `bundle exec jekyll serve` in `docs/`. Without the first step, the written pages are all there, and the two generated pages link to GitHub instead.
+- **Chapters and pages.** Each chapter in [The chapters](#4-the-chapters) is a folder of pages with an `index.md`, which says what the chapter covers and lists its pages. A page's file is its title in lowercase with hyphens: **Worktree tabs** is `docs/tabs/worktree-tabs.md`. Chapters sit in the sidebar in the map's order.
 
 ## 2. Writing a page
 
@@ -31,7 +36,7 @@ Planned 2026-10-15, not started.
 - **Windows, macOS and Linux.** A difference is written where it applies: "On macOS, …". Reference → **Windows, macOS and Linux** collects them.
 - **Claude Code's part.** What Claude Code itself does (permission modes, hooks, MCP servers, `CLAUDE.md`, Plan mode) links to [Claude Code's docs](https://code.claude.com/docs) rather than being explained again. The page says what Claudette shows of it.
 - **Only what's built.** Only what's built (✅ in DESIGN.md) has a page. A feature that's only designed gets its page when it's built, and a page that mentions one doesn't. Something built but still to verify on a real machine is covered like the rest.
-- **Ahead of a release.** The site is published from `main`, so it can describe things no release has yet. A section about one starts with a *New in the next release* note (`{% include unreleased.html %}`), which publishing the release removes.
+- **Ahead of a release.** The site is published from `main`, so it can describe things no release has yet. A section about one starts with a *New in the next release* note (`{% include unreleased.html %}`), which publishing the release removes ([Downloads and the changelog](#5-downloads-and-the-changelog), "Releasing"). The change is under **Unreleased** in `CHANGELOG.md` meanwhile.
 
 ## 3. Pictures
 
@@ -48,14 +53,18 @@ Each chapter's table lists its pages in order, what each covers, and the DESIGN.
 
 ### Home (`docs/index.md`)
 
-What Claudette is, a picture of the window, the downloads, where to start. From [§1](DESIGN.md#1-goals) and the README.
+What Claudette is, a picture of the window, a download button for the latest release with what's new in it, where to start. From [§1](DESIGN.md#1-goals) and the README.
+
+### Downloads (`docs/downloads.md`)
+
+One page, second in the sidebar: the latest release's packages, the next version when a pre-release is newer, and every earlier release. Made from the releases ([Downloads and the changelog](#5-downloads-and-the-changelog)).
 
 ### Getting started (`getting-started/`)
 
 | Page | Covers | From |
 |---|---|---|
 | What you need | Windows (x64 and arm64), macOS 12 or later, Linux from source and less polished; Claude Code installed first, at its minimum version. | [§1](DESIGN.md#1-goals), [§2](DESIGN.md#2-platform--tech-stack) |
-| Installing | Claude Code first. The MSIX on Windows, which shares Claude Code's configuration with the terminal's `claude`. The `.dmg` on macOS, moving Claudette to Applications, and the privacy prompts that name Claudette when Claude reads a project in Documents or Downloads. | [Packaging and signing](DESIGN.md#packaging-and-signing) |
+| Installing | Claude Code first. Which package to take from the Downloads page. The MSIX on Windows, which shares Claude Code's configuration with the terminal's `claude`. The `.dmg` on macOS, moving Claudette to Applications, and the privacy prompts that name Claudette when Claude reads a project in Documents or Downloads. | [Packaging and signing](DESIGN.md#packaging-and-signing) |
 | The first launch | *Looking for Claude Code…*, the setup screen (**Update now**, **Check again**, **Choose claude…**, **Install instructions**), Claude Code's minimum version. | [§2](DESIGN.md#2-platform--tech-stack), [§12](DESIGN.md#12-claude-code-updates) |
 | Signing in | The sign-in screen, finishing in the browser, **Enter a code instead**, **More options** (a Console account, SSO), **I've already signed in**. What can go wrong is in Troubleshooting. | [§11](DESIGN.md#11-sign-in) |
 | Your first tab | The new tab picker, choosing a folder, the folder trust question, sending a message, **Stop**. | [Opening a tab](DESIGN.md#opening-a-tab), [Folder trust](DESIGN.md#folder-trust), [Composer](DESIGN.md#composer) |
@@ -246,7 +255,7 @@ What Claudette is, a picture of the window, the downloads, where to start. From 
 | Page | Covers | From |
 |---|---|---|
 | Claude Code's updates | The badge, what **Update now** does for each way of installing it, **Update on next launch**, **Dismiss**, tabs keeping their version until they restart, updates turned off. | [§12](DESIGN.md#12-claude-code-updates) |
-| Claudette's updates | **Check for Claudette updates automatically** and **Include pre-releases**, the badge, **Restart to update**, **Update when idle**, **Skip this version**, copies that can't update themselves, upgrading from 0.1.0. | [Updating Claudette](DESIGN.md#updating-claudette) |
+| Claudette's updates | **Check for Claudette updates automatically** and **Include pre-releases**, the badge, **Restart to update**, **Update when idle**, **Skip this version**, copies that can't update themselves, upgrading from 0.1.0; what's new in each version is on the Changelog page. | [Updating Claudette](DESIGN.md#updating-claudette) |
 | When an update fails | What comes back, installing by hand, moving Claudette to Applications. | [Updating Claudette](DESIGN.md#updating-claudette) |
 
 ### Troubleshooting (`troubleshooting/`)
@@ -283,32 +292,83 @@ What Claudette is, a picture of the window, the downloads, where to start. From 
 | `claudette.json` | The format of `claudette.json` and `claudette.local.json`: actions and their fields, links and their placeholders, comments, and what's skipped. | [Project tools](DESIGN.md#project-tools) |
 | Windows, macOS and Linux | What differs on each: installing, menus, notifications, the credential store, keeping awake, starting at login, what isn't tested yet. | [§2](DESIGN.md#2-platform--tech-stack), the pages' own notes |
 
-## 5. Coverage
+### Changelog (`docs/changelog.md`)
+
+One page, last in the sidebar: what changed in each version, newest first, with what's on `main` and not yet released at the top. Made from `CHANGELOG.md` ([Downloads and the changelog](#5-downloads-and-the-changelog)).
+
+## 5. Downloads and the changelog
+
+Two pages are made from data rather than written: the Downloads page from the repository's releases, and the Changelog page from `CHANGELOG.md`.
+
+### The Downloads page
+
+- **The latest release** comes first: its version and date, links to what's new in it (its section of the Changelog page) and to its release on GitHub, and a download for each package.
+  - **Windows**: **x64 (Intel or AMD)** and **Arm64**, the MSIX files.
+  - **macOS**: **Apple silicon** and **Intel**, the `.dmg` files.
+  - **Linux**: no package, and a link to Getting started → **Running from source**.
+  - Each package shows its file's name and size, and its SHA-256 digest, for anyone who wants to check the file (`Get-FileHash` in PowerShell, `shasum -a 256` on a Mac). Claudette's own updates check it themselves ([Updating Claudette](DESIGN.md#updating-claudette)).
+- **Which one you need.** On Windows, Settings → System → About → **System type**. On a Mac, Apple menu → **About This Mac** → **Chip**: an Apple M-series chip is Apple silicon.
+- **The next version**, when a pre-release is newer than the latest release: in a box of its own, marked as a pre-release, saying that Claudette offers pre-releases only with Settings → General → **Include pre-releases**.
+- **Earlier releases**, newest first: each with its date, its packages, and links to its changelog section and its release. 0.1.0, from before the repository moved, says it can't update itself to a later version, which is installed by hand.
+- Then links to Getting started → **What you need** and **Installing**, and to Updates → **Claudette's updates**: once installed, Claudette updates itself.
+- **Which file is which.** `package.yml` names the packages `Claudette-<version>-<x64|arm64>.<msix|dmg>` ([Packaging and signing](DESIGN.md#packaging-and-signing)), as the update check expects. The page reads the OS from the extension and the processor from the name, and lists anything else attached to a release under **Other files**.
+- **The data.** `docs/_scripts/prepare.sh` reads the repository's releases from the GitHub API and writes `docs/_data/releases.json`: the published releases (drafts never show), each with its tag, name, date, whether it's a pre-release, its page, and its packages' names, sizes, digests and download addresses. It also works out which is the latest release and whether a newer pre-release is the next version, by Semantic Versioning, so the page itself only lays them out.
+- **Without JavaScript.** The page is built with the site, which is rebuilt whenever a release is published, edited, unpublished or deleted ([The site](#1-the-site)). Without the data, as in a preview that skipped `prepare.sh`, it links to the Releases page on GitHub instead.
+- The home page's download button goes here, and so does the README's link, once the page is published.
+
+### The changelog
+
+- **`CHANGELOG.md`**, at the repository's root, says what changed in each version, for the people using Claudette. It follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/):
+  - `## [Unreleased]` at the top, then `## [X.Y.Z] - YYYY-MM-DD` for each release, newest first.
+  - Under each, only the headings it needs, in this order: `### Added`, `### Changed`, `### Deprecated`, `### Removed`, `### Fixed`, `### Security`.
+  - At the bottom, a link for each version: Unreleased compared with the latest release, each release with the one before it, and the first release's own page.
+- **What goes in.** Anything people using Claudette could notice: what they can do now, what works differently, what's going away or gone, what was fixed that they could have run into, and what affects their security. Not refactoring, tests, CI, or changes to DESIGN.md or this file.
+  - A fix to something no release has had yet changes that thing's entry under **Unreleased**, rather than adding one under **Fixed**.
+  - A change Claude Code made that Claudette now handles goes in when people can tell, such as the version Claudette is tested with.
+- **How it's written.** As a guide page is ([Writing a page](#2-writing-a-page)): for the people using Claudette, in the app's own words in bold, saying what they can now do and where (Settings → Usage → **Keep usage history**), not how it was built. An entry is a sentence or two, starting with the thing that changed in bold when that helps the reader scan. It can link to the change's guide page by its full address once the page exists.
+- **When.** In the same change as the code, as DESIGN.md is: a change people would notice adds its entry under **Unreleased**.
+- **Releasing.**
+  1. One change turns `## [Unreleased]` into the version with the day's date, starts an empty `## [Unreleased]` above it, and updates the links at the bottom. The version follows Semantic Versioning: until 1.0.0, a section with **Added**, **Changed**, **Deprecated** or **Removed** raises the second number, and **Fixed** or **Security** alone the third. It's the version `Directory.Build.props` names ([Version](DESIGN.md#version)).
+  2. The tag `vX.Y.Z` goes on that change. `package.yml` drafts the release with the version's section as its notes ([Packaging and signing](DESIGN.md#packaging-and-signing)), so the release on GitHub and Claudette's update dialog say what the Changelog page says.
+  3. Publishing the release rebuilds the site: the Downloads page lists it, and the guide's *New in the next release* notes for it are removed in a change of their own.
+  4. `Directory.Build.props` moves to the next version to work on.
+- **The Changelog page** (`docs/changelog.md`) has its own title and introduction: what the version numbers mean, and that **Unreleased** is what's on `main` and in this guide, but not yet in a release. Under them it includes `docs/_includes/changelog.md`, which `prepare.sh` copies from `CHANGELOG.md` from its first version on, giving each version's heading an id (`v0.2.0`, and `unreleased`) for the Downloads page to link to. Without it, the page links to `CHANGELOG.md` on GitHub.
+
+## 6. Coverage
 
 The map covers every part of Claudette that DESIGN.md describes. When a chapter is written, its pages are checked against more than its DESIGN.md sections:
 
 - The app's own lists: the Settings pages' search entries, the command palette's commands (`ShellViewModel.Palette.cs`), the shortcuts (`KeyboardShortcuts.cs`), and the menus (the tab's, the group's, the project's, the cards'). Each item in the chapter's part of the app is named on its page.
 - The running app, for labels: where DESIGN.md's words differ from the app's, the page uses the app's, and DESIGN.md is corrected.
 
-## 6. Keeping it current
+## 7. Keeping it current
 
 - A change people can see updates its guide page and retakes its pictures in the same change, as it updates DESIGN.md, once its chapter is written. CLAUDE.md says so.
 - A new part of Claudette in DESIGN.md gets its row in the map here in the same change, whether or not its chapter is written yet.
-- The `issues` skill's plans include the page.
+- A change people would notice adds its entry to `CHANGELOG.md`'s **Unreleased** section in the same change ([The changelog](#the-changelog)). CLAUDE.md says so too.
+- The `issues` skill's plans include the page, and what it builds includes the changelog's entry.
 - The README links to the guide at its top and under Getting started, once Getting started is published.
 
-## 7. Steps
+## 8. Steps
 
 1. **DESIGN.md in line with the app**, since the pages are written from it.
    - Mark what's built. These have no ✅ in DESIGN.md but are in the app, so check each and mark it: tab marks and the reviewed icon, worktree tabs, a group's name and color, extra folders, **Ultracode**, **Output style**, **Zoom**, **Motion**, the side panel's page order, Claudette on the composer, Claude Docs, folder trust, the starting mode, keeping the computer awake, sharing usage, several prompts waiting, History's project chips. Project files says "not built yet" at its top and in §17, but its steps are all ✅ and it's merged.
    - Use the app's labels. Settings → Editor's (**The explorer is on the**, **Wrap long lines**, **Indent new lines with**, **Show a file clicked in a conversation**), **Reveal in file manager**, the banner for a file gone from disk (**Keep editing**), the indentation menu, General's **Name each tab's session in Claude Code after the tab** and Sessions' **Sync Claudette's settings through the library**.
    - The end of a turn: [Changes per turn](DESIGN.md#changes-per-turn) still describes the turn's footer, which [Conversation cards](DESIGN.md#conversation-cards) replaced with the **Modified files** and **Turn** cards.
    - The tab's menu in [Sidebar](DESIGN.md#sidebar) leaves out **Account ▸**, **Duplicate tab**, **Export conversation…** and **Close other tabs**, which other sections put in it.
-2. `guide-screenshots.ps1`, and what the demo needs for Getting started.
-3. The site and Getting started: `_config.yml`, the theme in light and dark, the includes, the home page, `docs.yml`, the Getting started chapter in full with its pictures, and the README's links. Chapters join the sidebar once they're written, never as empty pages, since everything on `main` is published.
-4. The other chapters, in the map's order, a pull request each, with their pictures and what the demo and the script need for them.
+2. **The changelog's releases.** `package.yml` drafts a release with its version's section of `CHANGELOG.md` as the notes, in place of notes generated from pull requests.
+3. `guide-screenshots.ps1`, and what the demo needs for Getting started.
+4. **The site, Downloads, the Changelog and Getting started.**
+   - `_config.yml`, the theme in light and dark, the includes, and Settings → Pages → Source switched to **GitHub Actions**.
+   - `docs.yml` and `prepare.sh`.
+   - The home page, the Downloads page and the Changelog page.
+   - The Getting started chapter in full, with its pictures.
+   - The README's links, to the guide and to the Downloads page.
 
-## 8. To decide later
+   Chapters join the sidebar once they're written, never as empty pages, since everything on `main` is published. The Downloads and Changelog pages can come before Getting started, since they need no pictures.
+5. The other chapters, in the map's order, a pull request each, with their pictures and what the demo and the script need for them.
+
+## 9. To decide later
 
 - Whether Claudette links to the guide. It's what the user sees, so it's decided in DESIGN.md ([User guide](DESIGN.md#user-guide)).
-- A check that the guide names everything: a test that reads `docs/` and fails when a Settings search entry, a shortcut or a palette command appears on no page. It would make [§5](#5-coverage) automatic, at the cost of tying the guide's words to the app's.
+- A check that the guide names everything: a test that reads `docs/` and fails when a Settings search entry, a shortcut or a palette command appears on no page. It would make [Coverage](#6-coverage) automatic, at the cost of tying the guide's words to the app's.

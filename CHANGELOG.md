@@ -1,0 +1,84 @@
+# Changelog
+
+What's changed in each version of Claudette, for the people using it.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Until 1.0.0, a new feature or a change you'd notice raises the second number (0.2.0 to 0.3.0), and fixes alone the third (0.3.0 to 0.3.1).
+
+## [Unreleased]
+
+### Added
+
+- **Project Files**: a tab for each project with an explorer and a code editor, opened with the file button beside a group's **+**, or **Go to file…** (`Ctrl/Cmd+P`). Find a file by name, edit it and save it; unsaved edits are kept when Claudette closes. Claude's changes are marked in the gutter, with a peek to see what was there and **Revert** it. A file named in the conversation opens in it at the line. Settings → Editor sets it up, or sends files to the OS's app instead.
+- **API-key accounts.** Add a key in Settings → Accounts → **Add an API key**; it's kept only in the OS's credential store. A project group's **Account ▸** menu picks the account its new tabs use, and a tab's moves it to another, saying first what the move costs. While one of its tabs is selected, the header shows the account's estimated spend today, this week and this month, and Settings → Accounts can warn when a day or a month passes an amount.
+- **Files named in Claude's replies open.** A Markdown link to a file, or a file's name in code (`Player.cpp:42`), opens the file with a click. Several files with that name are offered in a menu.
+- **Tabs side by side.** **Open beside** in a tab's menu, or drag its row onto the conversation: up to three tabs at once, each with its own conversation and composer. Drag the line between two to share the width differently.
+- **Conversation cards.** Each step is a card in its kind's color. A run of tool calls is one card of tiles, each opening its detail or a window of its own, and a turn ends with its **Modified files** and a **Turn** card. Marks beside the scroll bar show your messages, waiting prompts and errors; `F3` and `F4` go to the previous and next message, and `Ctrl/Cmd+F3` and `Ctrl/Cmd+F4` to the first and the latest.
+- **The prompt cache's timer.** *Cache 52m* beside the context says how long your next message can read the conversation from Claude's cache, and turns amber in its last three minutes. Settings → Appearance → **Show when the prompt cache expires** turns it off.
+- **Games with Claudette.** Tic-tac-toe, Connect Four and hangman, from her right-click menu, the command palette, or **Play a game while you wait** when a usage limit stops a task. Settings → Appearance → **Games with Claudette** turns them off.
+- **Clear usage history on every machine…** in Settings → Usage, while **Share usage with my other machines** is on.
+
+### Changed
+
+- **Also restore unpinned tabs** (Settings → Sessions) is on for new installs, so every tab comes back at launch. Settings saved by 0.2.0 or earlier keep it off until it's turned on, or Sessions' **Reset to defaults** is used.
+- Tested with Claude Code 2.1.300. A tab Claude Code refuses to start because of an organization's configuration says so in words.
+- The license's copyright holder is dotBunny Inc.
+
+### Fixed
+
+- Right-click menus no longer run off the bottom of some displays, and Claudette's own menu stays inside the window.
+- The folder trust question fits in the window when a folder's configuration lists a lot.
+- The spacing of thinking and the height of lines in the conversation.
+
+## [0.2.0] - 2026-10-14
+
+### Added
+
+- **Threads.** Make a tab a thread from its **Thread ▸** menu, and its Claude hands work to the other tabs in its project, its sub-threads, and gets one report back when they've finished. You approve each message first, unless **Ask before sending to sub-threads** is off, and answer the sub-threads' prompts from a strip over the thread's composer.
+- **Following a plan.** The Tasks page shows Claude's plan while it writes it in Plan mode, keeps every version with **Changes from** the one before, and can take a reply as the plan. Each task says who worked on it, how long it took, and the files and tokens it used. A tab's row shows how far its tasks have got (`3/7`), and a turn that ends with tasks left offers **Continue**.
+- **Sessions that know each other.** Each tab's session goes by the tab's name in Claude Code (Settings → General → **Name each tab's session in Claude Code after the tab**), so other sessions can message it by name. `@` in the composer names another tab, another Claude Code session on this machine, or one of the tab's subagents. The tab's menu has **Copy session ID**, and its info card **Reached as**.
+- **Claudette on the composer**, who climbs onto the message box and reacts to what the tab is doing. Settings → Appearance → **Show Claudette on the composer** turns her off.
+- **Claude Docs.** A doc Claude writes on claude.ai with the Docs connector gets a link on its card, a row with **Open** at the end of the turn, and a place on the Tasks page.
+- **Images from Claude's tools** show under their cards: an image Claude read, a PDF's pages, a notebook's figures, an MCP tool's screenshot. A click opens one full size, with **Copy image**, **Save as…** and **Open**.
+- **Prompt suggestions.** Settings → Claude Code → **Suggest my next prompt** shows what Claude Code thinks you'll send next in the empty composer; `Tab` takes it.
+- **Keep this computer awake** in Settings → General, while Claude has work to finish or whenever Claudette is running, and the cup in the header that turns it on and off.
+- The button at the header's right shows and hides the side panel, and its pages can be dragged into the order you like (or **Move left**, **Move right** and **Reset order**).
+- History has a chip for each recent project, to list only its sessions, and a group's menu has **History for this folder**.
+- The Processes page collapses a process's children, counting them and their CPU and memory on its row, with **Expand all** and **Collapse all**.
+
+### Changed
+
+- Claudette moved to [dotBunny/Claudette](https://github.com/dotBunny/Claudette), and its packages are dotBunny's. 0.1.0 announces 0.2.0 but can't install it, so install 0.2.0 by hand; on Windows it installs beside 0.1.0.
+
+### Fixed
+
+- A link clicked in a reply opens again.
+- When the last tab in a worktree reached through a symbolic link closes, Claudette offers to remove the worktree.
+
+### Security
+
+- A reply's images no longer load by themselves. An image from the web, or a file outside the tab's folder, waits for **Load image**, so a reply can't send anything out in an image's address, and an image on a network path never loads.
+
+## [0.1.0] - 2026-10-08
+
+The first public release.
+
+### Added
+
+- **Tabs**, each a Claude Code session running the real `claude` with your settings, `CLAUDE.md`, MCP servers and hooks, grouped by folder in a sidebar with each group's color. Status icons, pins, marks and the reviewed badge, tabs restored at launch, the command palette (`Ctrl/Cmd+Shift+P`) and the next tab waiting for you (`Ctrl/Cmd+J`).
+- **Worktree tabs**, each in a git worktree and branch of its own, with setup actions for each new worktree and cleaning up the ones you've merged; and extra folders a tab's Claude may also use.
+- **The conversation**: replies in Markdown, tool calls with their diffs and output, subagents, thinking, hook runs, find (`Ctrl/Cmd+F`), exporting to Markdown or a web page, and going back to an earlier message with **Edit and resend…**, **Branch from here** and **Restore files to before this…**. The working line says what Claude is doing, and a chip counts the tasks it keeps running.
+- **The composer**: `/` commands and `@` files, attachments and large pastes, earlier prompts, drafts and the stash (`Ctrl/Cmd+S`), messages queued while Claude works, quick suffixes, the model, effort and permission mode, **Ultracode** and output styles, and check-ins on long turns.
+- **Permission prompts** as cards, with **Always allow** rules you can edit, questions, plans to approve, MCP servers' forms, and a question before using a new folder's own configuration.
+- **Changes to review**: the Changed files page, a diff view, ticking files reviewed, reverting a change or a whole file, and your own diff tool.
+- **Usage**: the session and weekly meters with a trendline and a projection, a detailed header with charts, alerts, a Usage window with each project's tokens and cost, the context window and **Compact now**, continuing a task when a usage limit resets, and usage shared between your machines.
+- **History** of every session, and a session library in a synced folder that lets another machine continue the tabs you choose, with Claudette's settings synced too.
+- The **agent map** of Claude's subagents, the **Tasks** page, the **MCP** page, the **Processes** page and a **scratch pad** for each project.
+- **Project tools** for Unreal Engine, Unity and Godot, your own actions and links in `claudette.json`, and Perforce logins kept fresh, with each tab's changelist.
+- **The Claude app**: connect a tab to use it from your phone or claude.ai. Notifications, the Dock or taskbar badge, starting at login, and Claude's service status in the header.
+- **Updates** to Claude Code, and to Claudette itself.
+- The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
+- Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
+
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/dotBunny/Claudette/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/dotBunny/Claudette/releases/tag/v0.1.0
