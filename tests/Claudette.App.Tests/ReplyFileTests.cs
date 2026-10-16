@@ -38,6 +38,8 @@ public class ReplyFileTests
     /// <summary>A turn in which Claude wrote <paramref name="path"/>.</summary>
     private static async Task WriteTurnAsync(TabTestHarness h, TabViewModel tab, string id, string path)
     {
+        // The turn before it left a footer last, so it's this turn's that's waited for.
+        var footers = InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Count());
         h.Transport.Emit(new JsonObject
         {
             ["type"] = "assistant",
@@ -50,7 +52,7 @@ public class ReplyFileTests
             ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = id, ["content"] = "File created." }) },
         });
         h.Transport.Emit(Result);
-        await TabTestHarness.Eventually(() => tab.Status != TabStatus.Working && tab.Items.LastOrDefault() is TurnSummaryItem, "the turn's footer");
+        await TabTestHarness.Eventually(() => tab.Status != TabStatus.Working && tab.Items.OfType<TurnSummaryItem>().Count() > footers, "the turn's footer");
     }
 
     [Fact]
@@ -109,7 +111,8 @@ public class ReplyFileTests
         // Another file with the name, which the session didn't touch.
         Write(Path.Combine(h.WorkFolder, "Plugins", "Combat", "weapons.md"));
         h.Transport.EmitTurn("Writing the spec.");
-        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle, "the first turn");
+        // The tab is idle before the turn arrives too: its footer is what says it has.
+        await TabTestHarness.Eventually(() => tab.Items.LastOrDefault() is TurnSummaryItem, "the first turn");
         await WriteTurnAsync(h, tab, "w1", spec);
 
         var found = await tab.ReplyFiles.FindAsync(ReplyFileReference.FromCode("weapons.md")!, clicked: false, TestContext.Current.CancellationToken);
