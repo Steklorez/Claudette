@@ -33,7 +33,7 @@ search_exclude: true
         <a class="pill pill-primary" href="{% if mac %}{{ mac.browser_download_url }}{% else %}{{ '/downloads.html' | relative_url }}{% endif %}">{% include icon.html name="laptop" %}<span>macOS <small>Apple silicon</small></span></a>
       </div>
     </div>
-    <p class="get-note">Needs <a href="https://code.claude.com/docs/en/setup">Claude Code</a> · Windows 10 and 11, macOS 12 or later · <a href="{{ '/downloads.html' | relative_url }}">Every package</a></p>
+    <p class="get-note">Needs <a href="https://code.claude.com/docs/en/setup">Claude Code</a> · Windows 10 and 11, macOS 12 or later · <a href="{{ '/downloads.html' | relative_url }}">Every package</a><br>On Linux, <a href="{{ '/getting-started/running-from-source.html' | relative_url }}">run it from source</a>: every change is built and tested there too.</p>
   </div>
 
   <div class="hero-actions">
@@ -46,7 +46,7 @@ search_exclude: true
     <li>{% include icon.html name="terminal" %} Runs the real <code>claude</code></li>
     <li>{% include icon.html name="shield" %} <strong>No analytics</strong></li>
     <li>{% include icon.html name="code" %} MIT licensed</li>
-    <li>{% include icon.html name="monitor" %} Windows and macOS</li>
+    <li>{% include icon.html name="monitor" %} Windows, macOS and Linux</li>
   </ul>
 </section>
 

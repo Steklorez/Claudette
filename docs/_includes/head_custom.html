@@ -1,7 +1,7 @@
 {%- comment -%}
   Light or dark as the reader's system is (GUIDE.md, "Light and dark"), and again when that changes: Claudette's own
   schemes, _sass/color_schemes/claudette-*.scss. The pictures follow the same setting through shot.html, so the page has
-  no switch of its own.
+  no theme switch of its own.
 {%- endcomment -%}
 <script>
   (function () {
@@ -9,5 +9,25 @@
     function follow() { jtd.setTheme(dark.matches ? 'claudette-dark' : 'claudette-light'); }
     follow();
     dark.addEventListener('change', follow);
+  })();
+</script>
+{%- comment -%}
+  The reading width, or the window's full width once the reader asks for it with header_custom.html's button (GUIDE.md,
+  "The reading width"). The browser remembers the choice for every page, and it's applied here, before the page is
+  drawn, so the page doesn't jump.
+{%- endcomment -%}
+<script>
+  (function () {
+    var key = 'claudette-guide-width';
+    var root = document.documentElement;
+    try { root.classList.toggle('full-width', localStorage.getItem(key) === 'full'); } catch (e) { }
+    document.addEventListener('click', function (event) {
+      if (!event.target.closest('#width-toggle')) return;
+      var full = root.classList.toggle('full-width');
+      try {
+        if (full) localStorage.setItem(key, 'full');
+        else localStorage.removeItem(key);
+      } catch (e) { }
+    });
   })();
 </script>

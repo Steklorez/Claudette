@@ -44,7 +44,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
 
     private readonly AppServices _services;
     private readonly UsageTracker _tracker;
-    private readonly UsageAlerts _alerts = new();
+    private readonly UsageAlerts _alerts;
     private readonly ITimer _clock;
     private List<UsagePoint> _history = [];
 
@@ -52,6 +52,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     {
         _services = services;
         _tracker = tracker;
+        _alerts = new UsageAlerts(services.Time);
         _tracker.Updated += OnUpdated;
         _tracker.TurnRecorded += OnTurnRecorded;
         _tracker.SamplesImported += OnSamplesImported;
@@ -119,6 +120,20 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void DismissAlert() => Alert = null;
 
+    /// <summary>
+    /// While usage credits pay for Claude, what the notice under the header says: which limit is used up, until when,
+    /// and what's been spent (DESIGN.md §6, "Usage credits"). It can't be dismissed: it goes when they stop paying.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsUsingCredits))]
+    public partial string? CreditsNotice { get; set; }
+
+    public bool IsUsingCredits => CreditsNotice is not null;
+
+    /// <summary>The notice's button: the plan's usage on claude.ai, where usage credits are turned off or capped.</summary>
+    [RelayCommand]
+    private Task OpenCreditsSettingsAsync() => _services.Platform.OpenUrlAsync(AccountViewModel.ClaudeUsageUrl);
+
     /// <summary>Set by the view: opens the Usage panel.</summary>
     public Func<Task>? ShowUsagePanel { get; set; }
 
@@ -138,8 +153,12 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         var usage = _services.Settings.Usage;
         foreach (var alert in _alerts.Observe(snapshot, Projection(snapshot), usage.WarnPercent, usage.CriticalPercent))
         {
-            // The line under the header, and an OS notification when Claudette isn't in front (DESIGN.md §6, §10).
-            Alert = alert;
+            // The line under the header, and an OS notification when Claudette isn't in front (DESIGN.md §6, §10). Usage
+            // credits have their notice there already.
+            if (alert.Kind != UsageAlertKind.UsingCredits)
+            {
+                Alert = alert;
+            }
             _services.Notifications.Notify(NotificationKind.UsageAlert, alert.Title, alert.Message, key: alert.Kind.ToString());
         }
     }
@@ -183,11 +202,13 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CriticalPercent));
         var snapshot = _tracker.Current;
         HasData = snapshot?.Session is not null || snapshot?.WeeklyAll is not null;
+        var now = _services.Time.GetUtcNow();
+        // It ends once the limit resets, without waiting for a reading to say so.
+        CreditsNotice = CreditUse.From(snapshot, now)?.Describe(_services.Time);
         if (snapshot is null)
         {
             return;
         }
-        var now = _services.Time.GetUtcNow();
         var usage = _services.Settings.Usage;
         AsOfText = now - snapshot.AsOf > TimeSpan.FromMinutes(10) ? $"as of {snapshot.AsOf.ToLocalTime():t}" : null;
 

@@ -16,8 +16,8 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
 Claudette is closed by its window, as a user would, each time.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
-CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view, clicks
-and text through UI Automation, and Enter is posted to the window. Two shots need the real keyboard or pointer: the
+CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view,
+clicks and Enter are posted to the window, and its controls are found and its text set through UI Automation. Two shots need the real keyboard or pointer: the
 command palette (Ctrl+Shift+P) and a tab's info card (the pointer resting on its row). They're taken only with
 -WithInput, which borrows both for a few seconds each and puts them back.
 
@@ -203,7 +203,7 @@ foreach ($theme in $Themes) {
             # From the top of the first group to Settings under the last.
             Shot 'tabs/sidebar' {
                 param($path)
-                Save-Elements $window $path ((Find-ByText $window 'New tab'), (Find-ById $window 'GroupList'), (Find-ByText $window 'Settings')) 10
+                Save-Elements $window $path ((Find-ByText $window 'New tab'), (Find-ById $window 'GroupList'), (Find-ByText $window 'User guide')) 10
             }
 
             # The card has no control of its own: its tiles, with room around them for its header and edge.

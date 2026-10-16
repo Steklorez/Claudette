@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.Core;
 using Claudette.Core.Files;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
@@ -49,6 +50,70 @@ public class UsageHeaderTests
         Assert.True(header.Session.IsWarning);
         header.DismissAlertCommand.Execute(null);
         Assert.False(header.HasAlert);
+    }
+
+    [Fact]
+    public async Task Usage_credits_paying_show_a_notice_until_the_limit_resets_and_notify_once()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(1);
+
+        tracker.OnRateLimitEvent(Event(0.97, resets, 0.60, usingCredits: false));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+        Assert.False(header.IsUsingCredits);
+
+        h.Time.Advance(TimeSpan.FromMinutes(10));
+        tracker.OnRateLimitEvent(Event(1.0, resets, 0.61, usingCredits: true));
+
+        await TabTestHarness.Eventually(() => header.IsUsingCredits, "the notice");
+        Assert.Equal($"Your session limit is used up, so your usage credits pay for Claude until it resets {Formats.When(resets, h.Time)}.", header.CreditsNotice);
+        var notified = Assert.Single(h.Notifier.Shown, n => n.Title == CreditUse.Title);
+        Assert.Equal(header.CreditsNotice, notified.Body);
+        // The notice says it: the dismissible line under the header is for the other alerts.
+        Assert.NotEqual(UsageAlertKind.UsingCredits, header.Alert?.Kind);
+
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(1.0, resets, 0.62, usingCredits: true));
+        Assert.Single(h.Notifier.Shown, n => n.Title == CreditUse.Title);
+
+        // The header's clock notices the reset without a new reading.
+        h.Time.Advance(resets - h.Time.GetUtcNow() + TimeSpan.FromSeconds(30));
+        await TabTestHarness.Eventually(() => !header.IsUsingCredits, "the notice gone");
+        Assert.Null(header.CreditsNotice);
+    }
+
+    [Fact]
+    public async Task The_credits_notice_says_what_get_usage_reports_was_spent()
+    {
+        await using var h = new TabTestHarness();
+        var resets = h.Time.GetUtcNow().AddMinutes(30);
+        h.Transport.Answers["get_usage"] = _ => new JsonObject
+        {
+            ["rate_limits_available"] = true,
+            ["rate_limits"] = new JsonObject
+            {
+                ["limits"] = new JsonArray(
+                    new JsonObject { ["kind"] = "session", ["percent"] = 100, ["resets_at"] = resets.ToString("O") },
+                    new JsonObject { ["kind"] = "weekly_all", ["percent"] = 64, ["resets_at"] = resets.AddDays(2).ToString("O") }),
+                ["extra_usage"] = new JsonObject { ["is_enabled"] = true, ["monthly_limit"] = 5000, ["used_credits"] = 1240, ["utilization"] = 24.8, ["currency"] = "USD" },
+            },
+        };
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+
+        tracker.Start();
+
+        await TabTestHarness.Eventually(() => header.IsUsingCredits, "the notice");
+        Assert.Equal(
+            $"Your session limit is used up, so your usage credits pay for Claude until it resets {Formats.When(resets, h.Time)}. $12.40 of $50.00 spent this month.",
+            header.CreditsNotice);
+        // Already paying when Claudette started: no notification.
+        Assert.DoesNotContain(h.Notifier.Shown, n => n.Title == CreditUse.Title);
+
+        await header.OpenCreditsSettingsCommand.ExecuteAsync(null);
+        Assert.Equal(AccountViewModel.ClaudeUsageUrl, Assert.Single(h.Platform.OpenedUrls));
     }
 
     [Fact]
@@ -345,17 +410,23 @@ public class UsageHeaderTests
         Assert.Equal(["its new name", "fix the build", "A closed tab"], rows.Select(r => r.Name));
     }
 
-    private static RateLimitEventMessage Event(double session, DateTimeOffset sessionResets, double weekly)
+    private static RateLimitEventMessage Event(double session, DateTimeOffset sessionResets, double weekly, bool? usingCredits = null)
     {
         var info = new JsonObject
         {
-            ["status"] = "allowed",
+            ["status"] = usingCredits == true ? "rejected" : "allowed",
             ["unifiedWindows"] = new JsonObject
             {
                 ["five_hour"] = new JsonObject { ["utilization"] = session, ["resetsAt"] = sessionResets.ToUnixTimeSeconds() },
                 ["seven_day"] = new JsonObject { ["utilization"] = weekly, ["resetsAt"] = sessionResets.AddDays(3).ToUnixTimeSeconds() },
             },
         };
+        if (usingCredits is { } paying)
+        {
+            info["isUsingOverage"] = paying;
+            info["rateLimitType"] = "five_hour";
+            info["resetsAt"] = sessionResets.ToUnixTimeSeconds();
+        }
         return new RateLimitEventMessage(info, new JsonObject { ["type"] = "rate_limit_event", ["rate_limit_info"] = info.DeepClone() });
     }
 

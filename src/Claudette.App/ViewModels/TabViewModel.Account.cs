@@ -110,6 +110,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(ShowsAccountTag));
         OnPropertyChanged(nameof(AccountMenu));
         OnPropertyChanged(nameof(HasAccountMenu));
+        OnPropertyChanged(nameof(HasUsageCreditsMenu));
         OnPropertyChanged(nameof(InfoRows));
         RemoteControl.OnAvailabilityChanged();
         _shell.OnTabAccountChanged(this);

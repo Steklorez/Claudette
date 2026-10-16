@@ -55,16 +55,19 @@
       </Grid>
     </Border>
 
-    <!-- A usage limit stopped the task: it continues when the limit resets (DESIGN.md §6, "Continuing after a limit resets") -->
+    <!-- A usage limit stopped the task: it continues when the limit resets (DESIGN.md §6, "Continuing after a limit resets").
+         A tab that doesn't use usage credits waits the same way, and can start using them ("Tabs that don't use usage credits"). -->
     <Border Classes="codeblock" IsVisible="{Binding HasLimitWait}">
       <StackPanel Spacing="4">
-        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
           <TextBlock TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding LimitWaitText}" />
-          <Button Grid.Column="1" Content="Don't continue" Command="{Binding DontContinueCommand}" IsVisible="{Binding WillContinueAfterLimit}"
+          <Button Grid.Column="1" Content="Use usage credits" Command="{Binding UseUsageCreditsNowCommand}" IsVisible="{Binding CanUseCreditsNow}"
+                  ToolTip.Tip="Let this tab use usage credits from now on, and carry on now. Its menu turns them off again." />
+          <Button Grid.Column="2" Content="Don't continue" Command="{Binding DontContinueCommand}" IsVisible="{Binding CanStopContinuing}"
                   ToolTip.Tip="Leave the task stopped. Send a message to go on yourself." />
-          <Button Grid.Column="1" Content="{Binding ContinueAfterLimitText}" Command="{Binding ContinueAfterLimitCommand}" IsVisible="{Binding CanContinueAfterLimit}" />
-          <Button Grid.Column="2" Classes="flat" Padding="4" ToolTip.Tip="Close" AutomationProperties.Name="Close" VerticalAlignment="Center"
-                  Command="{Binding DismissLimitWaitCommand}" IsVisible="{Binding CanContinueAfterLimit}">
+          <Button Grid.Column="2" Content="{Binding ContinueAfterLimitText}" Command="{Binding ContinueAfterLimitCommand}" IsVisible="{Binding CanContinueAfterLimit}" />
+          <Button Grid.Column="3" Classes="flat" Padding="4" ToolTip.Tip="Close" AutomationProperties.Name="Close" VerticalAlignment="Center"
+                  Command="{Binding DismissLimitWaitCommand}" IsVisible="{Binding CanDismissLimitWait}">
             <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="7" Height="7" Stretch="Uniform" />
           </Button>
         </Grid>

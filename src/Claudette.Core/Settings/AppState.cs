@@ -406,8 +406,14 @@ public sealed class TabOverrides
     /// </summary>
     public bool? ContinueAfterLimitReset { get; set; }
 
+    /// <summary>
+    /// Carry on with usage credits once a limit is used up (DESIGN.md §6, "Tabs that don't use usage credits"), or null
+    /// for Settings → Usage. The tab's menu sets it too.
+    /// </summary>
+    public bool? UseUsageCredits { get; set; }
+
     public bool HasAny => Model is not null || Effort is not null || PermissionMode is not null || CheckIns is not null || ShowProcessMonitor is not null
-        || ContinueAfterLimitReset is not null;
+        || ContinueAfterLimitReset is not null || UseUsageCredits is not null;
 }
 
 public sealed class RecentFolder

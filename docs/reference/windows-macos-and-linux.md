@@ -13,7 +13,7 @@ Claudette runs on all three, and almost everything works the same. This page col
 
 - **Windows**: an MSIX package for x64 or Arm64.
 - **macOS**: a `.dmg` for Apple silicon or Intel, on macOS 12 or later.
-- **Linux**: there's no package yet. You run Claudette from source, and it's less polished. Only Windows and macOS are packaged and tested.
+- **Linux**: there's no package yet, so you run Claudette from source. Every change to Claudette is built and tested on Linux, as on Windows and macOS.
 - **Everywhere**: [Claude Code](https://code.claude.com/docs), installed first.
 
 See [What you need](../getting-started/what-you-need.md), [Installing](../getting-started/installing.md) and [Running from source](../getting-started/running-from-source.md).

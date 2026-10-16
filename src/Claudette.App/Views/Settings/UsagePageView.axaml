@@ -21,6 +21,9 @@
     <CheckBox Content="Continue tasks when a usage limit resets" IsChecked="{Binding ContinueAfterLimitReset}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="When a usage limit stops Claude mid-task, the tab waits for the limit to reset, then asks Claude to continue from where it left off. Each tab can change this in its Tab settings." />
+    <CheckBox Content="Use usage credits once a limit is used up" IsChecked="{Binding UseUsageCredits}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="When your plan has usage credits turned on, they pay for Claude once your session or weekly limit is used up. Turn this off and tabs stop instead, and wait for the limit to reset, as they do at a usage limit. Each tab can change this from its menu or its Tab settings, so only the work that matters spends them." />
     <Grid ColumnDefinitions="220,*,Auto" ColumnSpacing="8">
       <TextBlock Classes="label" Text="Keep usage history" />
       <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding HistoryRetentionChoices}" SelectedItem="{Binding KeepUsageHistory}" />

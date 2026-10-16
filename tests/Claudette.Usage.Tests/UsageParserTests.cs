@@ -113,6 +113,63 @@ public sealed class UsageParserTests
     }
 
     [Fact]
+    public void Get_usage_reads_the_plans_usage_credits()
+    {
+        Assert.Equal(new UsageCredits(false, null, null, null, Now), UsageParser.FromGetUsage(UsageFixtures.GetUsage(), Now)!.Credits);
+
+        var response = UsageFixtures.GetUsage();
+        response["rate_limits"]!["extra_usage"] = Parse("""{"is_enabled":true,"monthly_limit":5000,"used_credits":1240,"utilization":24.8,"currency":"USD"}""");
+
+        Assert.Equal(new UsageCredits(true, 1240, 5000, "USD", Now), UsageParser.FromGetUsage(response, Now)!.Credits);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("""{"utilization":null}""")]
+    [InlineData("""{"is_enabled":"yes"}""")]
+    [InlineData("[true]")]
+    public void Get_usage_without_usable_usage_credits_reports_none(string extraUsage)
+    {
+        var response = UsageFixtures.GetUsage();
+        response["rate_limits"]!["extra_usage"] = JsonNode.Parse(extraUsage);
+
+        var snapshot = UsageParser.FromGetUsage(response, Now);
+
+        Assert.Equal(13, snapshot!.Session!.Percent);
+        Assert.Null(snapshot.Credits);
+    }
+
+    [Fact]
+    public void Get_usage_leaves_out_negative_amounts()
+    {
+        var response = UsageFixtures.GetUsage();
+        response["rate_limits"]!["extra_usage"] = Parse("""{"is_enabled":true,"monthly_limit":-1,"used_credits":-5}""");
+
+        Assert.Equal(new UsageCredits(true, null, null, null, Now), UsageParser.FromGetUsage(response, Now)!.Credits);
+    }
+
+    [Fact]
+    public void Rate_limit_event_reads_whether_usage_credits_are_paying()
+    {
+        var snapshot = UsageParser.FromRateLimitEvent(UsageFixtures.RateLimitInfo(), Now);
+
+        Assert.Equal(new CreditsReport(false, "five_hour", UsageFixtures.SessionResetsAt, Now), snapshot!.CreditsReport);
+        Assert.Null(snapshot.Credits);
+    }
+
+    [Fact]
+    public void Rate_limit_event_saying_usage_credits_pay_counts_without_a_window()
+    {
+        var info = Parse("""{"status":"rejected","overageStatus":"allowed","isUsingOverage":true,"rateLimitType":"seven_day_opus","resetsAt":1790766000}""");
+
+        var snapshot = UsageParser.FromRateLimitEvent(info, Now);
+
+        Assert.NotNull(snapshot);
+        Assert.Empty(snapshot.Limits);
+        Assert.Equal(new CreditsReport(true, "seven_day_opus", UsageFixtures.WeekResetsAt, Now), snapshot.CreditsReport);
+    }
+
+    [Fact]
     public void Rate_limit_event_reads_the_unified_windows()
     {
         var snapshot = UsageParser.FromRateLimitEvent(UsageFixtures.RateLimitInfo(), Now);
@@ -384,14 +441,34 @@ public sealed class UsageParserTests
     }
 
     [Fact]
-    public void Get_usage_and_usage_command_updates_replace_everything()
+    public void Get_usage_and_usage_command_updates_replace_the_limits()
     {
         var previous = UsageParser.FromGetUsage(UsageFixtures.GetUsage(), Now)!;
         var fromPoll = UsageFixtures.Snapshot(Now, 20);
         var fromCommand = fromPoll with { Source = UsageSource.UsageCommand };
 
         Assert.Same(fromPoll, UsageParser.Merge(previous, fromPoll));
-        Assert.Same(fromCommand, UsageParser.Merge(previous, fromCommand));
+        var merged = UsageParser.Merge(previous, fromCommand);
+        Assert.Same(fromCommand.Limits, merged.Limits);
+        // /usage says nothing about usage credits, so get_usage's last word on them stays.
+        Assert.Equal(previous.Credits, merged.Credits);
+    }
+
+    [Fact]
+    public void Usage_credits_and_what_Claude_Code_said_about_them_last_until_their_own_source_says_again()
+    {
+        var poll = UsageFixtures.Snapshot(Now, 100) with { Credits = new UsageCredits(true, 1240, 5000, "USD", Now) };
+        var paying = UsageParser.FromRateLimitEvent(Parse("""{"isUsingOverage":true,"rateLimitType":"five_hour","resetsAt":1790648400}"""), Now.AddMinutes(1))!;
+
+        var afterEvent = UsageParser.Merge(poll, paying);
+        Assert.Equal(poll.Credits, afterEvent.Credits);
+        Assert.True(afterEvent.CreditsReport!.IsUsing);
+        Assert.Equal(100, afterEvent.Session!.Percent);
+
+        // This poll reported no usage credits, and get_usage never says whether they're paying.
+        var afterPoll = UsageParser.Merge(afterEvent, UsageFixtures.Snapshot(Now.AddMinutes(5), 100));
+        Assert.Null(afterPoll.Credits);
+        Assert.Equal(afterEvent.CreditsReport, afterPoll.CreditsReport);
     }
 
     private static JsonObject Parse(string json) => JsonNode.Parse(json)!.AsObject();

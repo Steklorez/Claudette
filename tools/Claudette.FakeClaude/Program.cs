@@ -18,7 +18,8 @@
 //   FAKE_CLAUDE_EXIT_AFTER_INITIALIZE  "1": exit with code 3 right after answering initialize
 //   FAKE_CLAUDE_USAGE         answers get_usage (DESIGN.md §6): a path to a recorded response, or "demo" for a plan
 //                             whose session use starts at 35% and climbs 0.6% a minute, so the header's meters,
-//                             sparkline and projection can be seen without an account. Unset: get_usage fails.
+//                             sparkline and projection can be seen without an account, or "credits" for a used-up
+//                             session that usage credits pay for ("Usage credits"). Unset: get_usage fails.
 //
 // Session prompts:
 //   ASK_PERMISSION   asks can_use_tool for a Bash command, then reports whether it was allowed
@@ -367,11 +368,12 @@ internal sealed class FakeSession(string version, string permissionMode, bool pr
         {
             return null;
         }
-        if (setting != "demo")
+        if (setting is not ("demo" or "credits"))
         {
             return JsonNode.Parse(File.ReadAllText(setting))?.AsObject();
         }
-        var session = Math.Min(100, 35 + 0.6 * (DateTimeOffset.UtcNow - Started).TotalMinutes);
+        var credits = setting == "credits";
+        var session = credits ? 100 : Math.Min(100, 35 + 0.6 * (DateTimeOffset.UtcNow - Started).TotalMinutes);
         static JsonObject Limit(string kind, double percent, DateTimeOffset resets, string? model = null) => new()
         {
             ["kind"] = kind,
@@ -392,6 +394,9 @@ internal sealed class FakeSession(string version, string permissionMode, bool pr
                     Limit("session", session, Started.AddHours(2)),
                     Limit("weekly_all", 57, Started.AddDays(3)),
                     Limit("weekly_scoped", 20, Started.AddDays(3), "Fable")),
+                ["extra_usage"] = credits
+                    ? new JsonObject { ["is_enabled"] = true, ["monthly_limit"] = 5000, ["used_credits"] = 1240, ["utilization"] = 24.8, ["currency"] = "USD" }
+                    : new JsonObject { ["is_enabled"] = false, ["monthly_limit"] = null, ["used_credits"] = null, ["utilization"] = null },
             },
         };
     }

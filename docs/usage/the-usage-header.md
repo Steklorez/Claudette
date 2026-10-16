@@ -35,6 +35,20 @@ It's one of these:
 
 The pace is measured over the last 30 minutes by default, so one big turn doesn't swing the projection. Change the window with **Burn rate window (minutes)**.
 
+## When usage credits pay
+
+If your plan has usage credits, they pay for Claude once a limit is used up, up to the cap set on claude.ai. While they do, a notice runs across the window straight under the header:
+
+> **Using usage credits.** *Your session limit is used up, so your usage credits pay for Claude until it resets at 15:45. $12.40 of $50.00 spent this month.*
+
+- It names the limit that's used up (the session, the week or a model's) and when it resets, then what's been spent this month, against your cap when the account has one of its own.
+- **Manage on claude.ai** opens your plan's usage on claude.ai, where you turn usage credits off or change the cap.
+- It has no **Dismiss**. It goes by itself when credits stop paying: the limit resets, credits are turned off or reach the cap, or Claude Code says they aren't paying.
+- It shows whichever tab is selected, one on an [API-key account](../accounts/api-key-accounts.md) too, since your plan's other tabs are still spending them, apart from [those that don't use them](tabs-that-dont-use-usage-credits.md).
+- Just after Claudette starts, it waits for the first reading or the next turn.
+
+An OS notification tells you when credits start paying: see [Alerts](alerts.md).
+
 ## Model meters
 
 **Show model-specific weekly limits** (Settings → Usage, on by default) shows the model meters. Claude Code reports them. If a version of Claude Code stops reporting them, the model meters go away and the rest of the header carries on, unless **If Claude Code stops reporting them, read model limits from /usage** is on. Then Claudette reads the text Claude Code prints for `/usage` instead. That costs nothing, but it can break when Claude Code changes the wording, so it's off by default.

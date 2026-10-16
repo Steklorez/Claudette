@@ -7,6 +7,9 @@ public enum UsageAlertKind
     ThresholdCrossed,
     ProjectedToHitLimit,
     LimitReset,
+
+    /// <summary>Usage credits started paying for Claude (DESIGN.md §6, "Usage credits"). An OS notification only: the notice under the header says it already.</summary>
+    UsingCredits,
 }
 
 /// <summary>Something worth an OS notification (DESIGN.md §6, "Alerts"; §10).</summary>
@@ -20,11 +23,14 @@ public sealed record UsageAlert(UsageAlertKind Kind, string Title, string Messag
 /// <item>The session crossing the warning and then the critical threshold, upward, once each per session window.</item>
 /// <item>The projection first saying the limit will be hit before the reset, once per session window.</item>
 /// <item>Any limit resetting: its reset time moves forward and its percentage drops.</item>
+/// <item>Usage credits starting to pay (<see cref="CreditUse.From"/>), once each time they do.</item>
 /// </list>
 /// A session window is identified by its reset time. The first session reading after a restart seeds the state
-/// without alerting, so levels that were already crossed before the restart stay quiet.
+/// without alerting, so levels that were already crossed before the restart stay quiet; so does the first reading that
+/// says anything about usage credits.
 /// </summary>
-public sealed class UsageAlerts
+/// <param name="clock">For when a limit resets, in its time zone, in a credits alert.</param>
+public sealed class UsageAlerts(TimeProvider clock)
 {
     /// <summary>
     /// Sources report the same reset a little differently (<c>/usage</c> shows minutes only), so reset times this
@@ -39,6 +45,8 @@ public sealed class UsageAlerts
     private bool _warnFired;
     private bool _criticalFired;
     private bool _projectionFired;
+    private bool _creditsSeeded;
+    private bool _usingCredits;
 
     public IReadOnlyList<UsageAlert> Observe(UsageSnapshot snapshot, BurnProjection? sessionProjection, double warn, double critical)
     {
@@ -53,6 +61,17 @@ public sealed class UsageAlerts
                     alerts.Add(ResetAlert(reading));
                 }
                 _last[key] = reading;
+            }
+
+            if (snapshot.Credits is not null || snapshot.CreditsReport is not null)
+            {
+                var use = CreditUse.From(snapshot, snapshot.AsOf);
+                if (use is not null && _creditsSeeded && !_usingCredits)
+                {
+                    alerts.Add(new UsageAlert(UsageAlertKind.UsingCredits, CreditUse.Title, use.Describe(clock)));
+                }
+                _creditsSeeded = true;
+                _usingCredits = use is not null;
             }
 
             if (snapshot.Session is not { } session)

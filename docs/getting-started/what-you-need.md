@@ -15,7 +15,7 @@ Claudette runs Claude Code in every tab, so Claude Code has to be installed firs
 |---|---|---|
 | Windows | Windows 10 (version 2004 or later) and Windows 11, on x64 and Arm64 processors | Installed from an MSIX package. |
 | macOS | macOS 12 or later, on Apple silicon and Intel | Installed from a `.dmg`. |
-| Linux | From source only | It builds and runs, but only Windows and macOS are tested and packaged, so Linux is less polished. |
+| Linux | From source | Every change to Claudette is built and tested on Linux, as on Windows and macOS. There's no package yet. |
 
 You don't need to install .NET to use a package from the [Downloads page](../downloads.md). Running from source does need it: see [Running from source](running-from-source.md).
 

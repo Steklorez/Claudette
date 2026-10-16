@@ -60,12 +60,15 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         ];
         MonitorChoices = [new Choice(null, $"Default ({(defaults.Processes.ShowMonitor ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
         AutoContinueChoices = [new Choice(null, $"Default ({(defaults.Usage.ContinueAfterLimitReset ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
+        UsageCreditsChoices = [new Choice(null, $"Default ({(defaults.Usage.UseUsageCredits ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
+        ShowsUsageCredits = tab.HasUsageCreditsMenu;
 
         SelectedModel = ModelChoices.First(c => c.Value == overrides.Model);
         SelectedEffort = EffortChoices.FirstOrDefault(c => c.Value == overrides.Effort) ?? EffortChoices[0];
         SelectedMode = ModeChoices.FirstOrDefault(c => c.Value == overrides.PermissionMode) ?? ModeChoices[0];
         SelectedMonitor = MonitorChoices.First(c => c.Value == overrides.ShowProcessMonitor switch { true => On, false => Off, null => null });
         SelectedAutoContinue = AutoContinueChoices.First(c => c.Value == overrides.ContinueAfterLimitReset switch { true => On, false => Off, null => null });
+        SelectedUsageCredits = UsageCreditsChoices.First(c => c.Value == overrides.UseUsageCredits switch { true => On, false => Off, null => null });
 
         var checkIns = overrides.CheckIns ?? defaults.CheckIns;
         UseCustomCheckIns = overrides.CheckIns is not null;
@@ -102,6 +105,17 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial Choice SelectedAutoContinue { get; set; }
+
+    /// <summary>
+    /// Carrying on with usage credits once a limit is used up (DESIGN.md §6, "Tabs that don't use usage credits"). Only on
+    /// the Default account: an API key has none.
+    /// </summary>
+    public IReadOnlyList<Choice> UsageCreditsChoices { get; }
+
+    public bool ShowsUsageCredits { get; }
+
+    [ObservableProperty]
+    public partial Choice SelectedUsageCredits { get; set; }
 
     [ObservableProperty]
     public partial Choice SelectedModel { get; set; }
@@ -203,6 +217,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
             PermissionMode = SelectedMode.Value,
             ShowProcessMonitor = SelectedMonitor.Value switch { On => true, Off => false, _ => null },
             ContinueAfterLimitReset = SelectedAutoContinue.Value switch { On => true, Off => false, _ => null },
+            UseUsageCredits = SelectedUsageCredits.Value switch { On => true, Off => false, _ => null },
             CheckIns = UseCustomCheckIns
                 ? new CheckInSettings
                 {
@@ -229,6 +244,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         SelectedMode = ModeChoices[0];
         SelectedMonitor = MonitorChoices[0];
         SelectedAutoContinue = AutoContinueChoices[0];
+        SelectedUsageCredits = UsageCreditsChoices[0];
         UseCustomCheckIns = false;
     }
 

@@ -22,7 +22,7 @@ standard-dark.png.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
 CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view, and
-clicks through UI Automation.
+clicks are posted to the window, its controls found through UI Automation.
 
 .PARAMETER Projects
 Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing

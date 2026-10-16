@@ -265,7 +265,7 @@
               <TextBlock Classes="muted small" Text="{Binding QueuedText}" VerticalAlignment="Center" />
               <Button Classes="flat" Padding="0" VerticalAlignment="Center" IsVisible="{Binding IsHeld}"
                       Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).SendHeldNowCommand}" CommandParameter="{Binding}"
-                      ToolTip.Tip="Sends it now, into the turn: Claude reads it at its next step">
+                      ToolTip.Tip="{Binding SendNowTip}">
                 <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Send now" TextDecorations="Underline" />
               </Button>
               <Button Classes="flat" Padding="0" VerticalAlignment="Center"

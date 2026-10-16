@@ -358,6 +358,10 @@ public sealed partial class TabViewModel
         var stamp = NewStamp(fromUser: false);
         var card = _conversation.AddUserMessage(text, label: "From the sub-threads", isFromThread: true);
         card.SentId = stamp.Uuid;
+        if (HoldForCredits(card, new PendingMessage(text, [], null, stamp)))
+        {
+            return;
+        }
         card.IsQueued = IsInTurn;
         _ = SendRawAsync(text, stamp: stamp);
     }
@@ -381,6 +385,10 @@ public sealed partial class TabViewModel
         var stamp = NewStamp(fromUser: false);
         var card = _conversation.AddUserMessage(message, label: $"From the thread {head.DisplayName}", isFromThread: true);
         card.SentId = stamp.Uuid;
+        if (HoldForCredits(card, new PendingMessage(text, [], null, stamp)))
+        {
+            return true;
+        }
         if (IsWorking || IsInTurn)
         {
             Hold(card, new PendingMessage(text, [], null, stamp));

@@ -186,10 +186,11 @@ public sealed class UsageTracker : IAsyncDisposable
                 var latest = Store.GetLatestSample()?.ToSnapshot();
                 _services.Dispatcher.Post(() =>
                 {
-                    // The header shows the newest reading any machine took, as it does after a restart.
+                    // The header shows the newest reading any machine took, as it does after a restart. Samples don't
+                    // keep usage credits, so this machine's last word on them stays.
                     if (latest is not null && (Current is null || latest.AsOf > Current.AsOf))
                     {
-                        Current = latest;
+                        Current = latest with { Credits = Current?.Credits, CreditsReport = Current?.CreditsReport };
                         _poller.Restore(latest);
                     }
                     SamplesImported?.Invoke();
@@ -265,7 +266,7 @@ public sealed class UsageTracker : IAsyncDisposable
         {
             if (latest is not null)
             {
-                Current = latest;
+                Current = latest with { Credits = Current?.Credits, CreditsReport = Current?.CreditsReport };
                 _poller.Restore(latest);
             }
             _services.NotifyUsageHistoryCleared(cleared.ResetTabTotals);

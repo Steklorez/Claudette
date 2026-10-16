@@ -44,4 +44,13 @@ public sealed record UsageSnapshot(IReadOnlyList<LimitReading> Limits, DateTimeO
     public LimitReading? WeeklyAll => Limits.FirstOrDefault(l => l.Kind == LimitKind.WeeklyAll);
 
     public IReadOnlyList<LimitReading> WeeklyModels => [.. Limits.Where(l => l.Kind == LimitKind.WeeklyModel)];
+
+    /// <summary>
+    /// The plan's usage credits, from <c>get_usage</c>; null when it reported none. Other sources' readings keep the
+    /// last one (<see cref="UsageParser.Merge"/>; DESIGN.md §6, "Usage credits").
+    /// </summary>
+    public UsageCredits? Credits { get; init; }
+
+    /// <summary>What Claude Code last said about usage credits, from a <c>rate_limit_event</c>; later readings keep it.</summary>
+    public CreditsReport? CreditsReport { get; init; }
 }

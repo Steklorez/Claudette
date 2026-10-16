@@ -500,6 +500,10 @@
                                   <!-- The account the tab runs under; moving it carries the conversation on (DESIGN.md §4, "Accounts") -->
                                   <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
                                             ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}" />
+                                  <!-- Whether the tab carries on with usage credits once a limit is used up (DESIGN.md §6, "Tabs that don't use usage credits") -->
+                                  <MenuItem Header="Use usage credits" ToggleType="CheckBox" IsChecked="{Binding UsesUsageCredits, Mode=OneWay}"
+                                            Command="{Binding ToggleUseUsageCreditsCommand}" IsVisible="{Binding HasUsageCreditsMenu}"
+                                            ToolTip.Tip="{x:Static vm:TabViewModel.UsageCreditsMenuTip}" />
                                   <!-- The item ticks itself as it's clicked, then runs the command, so the binding stays one-way -->
                                   <MenuItem Header="Sync to other machines" ToggleType="CheckBox" IsChecked="{Binding SyncToLibrary, Mode=OneWay}"
                                             Command="{Binding ToggleSyncToLibraryCommand}" />
@@ -672,6 +676,9 @@
                               <MenuItem Header="Clear mark" Command="{Binding ClearMarkCommand}" IsVisible="{Binding HasMark}" />
                               <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
                                         ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}" />
+                              <MenuItem Header="Use usage credits" ToggleType="CheckBox" IsChecked="{Binding UsesUsageCredits, Mode=OneWay}"
+                                        Command="{Binding ToggleUseUsageCreditsCommand}" IsVisible="{Binding HasUsageCreditsMenu}"
+                                        ToolTip.Tip="{x:Static vm:TabViewModel.UsageCreditsMenuTip}" />
                               <MenuItem Header="Sync to other machines" ToggleType="CheckBox" IsChecked="{Binding SyncToLibrary, Mode=OneWay}"
                                         Command="{Binding ToggleSyncToLibraryCommand}" />
                               <MenuItem Header="Sync now" Command="{Binding SyncNowCommand}" IsVisible="{Binding SyncToLibrary}"

@@ -23,6 +23,7 @@ In the order the menu has them:
 | **Mark ▸** | Puts an icon of your own under the status icon: **Check**, **Cross**, **Question mark**, **Star**, **Flag** or **Pause**. | [Names, marks and pins](names-marks-and-pins.md#marks) |
 | **Clear mark** | Takes the mark off. Shown while the tab has one. | [Names, marks and pins](names-marks-and-pins.md#marks) |
 | **Account ▸** | Moves the tab to another account. Shown once there's an account besides Default. | [Moving a tab to another account](../accounts/moving-a-tab-to-another-account.md) |
+| **Use usage credits** | A check item: once a limit is used up, the tab carries on with your plan's usage credits. Unticked, it stops and waits for the limit to reset. Not on an API-key account. | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
 | **Sync to other machines** | A check item: copies the tab's session to the session library after each turn. | [Syncing a tab](../history/syncing-a-tab.md) |
 | **Sync now** | Copies the session to the library straight away. Shown while the tab syncs. | [Syncing a tab](../history/syncing-a-tab.md) |
 | **Connect to the Claude app** | A check item: connects the tab to the Claude app whenever its session runs. Greyed out, with the reason as its tip, when the account can't use it. | [The Claude app](../away/the-claude-app.md) |
@@ -54,7 +55,7 @@ The **Thread ▸** submenu offers whichever of these apply to the tab:
 
 {% include unreleased.html %}
 
-Three items come with features that no release has yet: **Account ▸** (API-key accounts), and **Open beside** and **Close pane** (tabs side by side).
+Four items come with features that no release has yet: **Account ▸** (API-key accounts), **Use usage credits**, and **Open beside** and **Close pane** (tabs side by side).
 
 ## Duplicate tab
 

@@ -1,13 +1,18 @@
 <#
 .SYNOPSIS
 What screenshots.ps1 and guide-screenshots.ps1 share (Windows): building Claudette and the demo, starting Claudette on the
-demo and closing it, finding and clicking its controls through UI Automation, and capturing its windows with PrintWindow.
+demo and closing it, finding its controls through UI Automation and clicking them, and capturing its windows with
+PrintWindow.
 
 .DESCRIPTION
 Claudette runs with CLAUDETTE_UNFOCUSED=1 and its windows behind the user's, so a run leaves the focus, the keyboard and
-the pointer to the user. Clicks and text go through UI Automation and keys without modifiers are posted to the window,
-none of which needs the focus. Only a key chord or a hover needs the real keyboard or pointer: Enter-Input borrows them
-and Exit-Input gives them back. The focus watch warns if Claudette came to the front otherwise.
+the pointer to the user, as far as Windows lets it. Controls are found and read through UI Automation, but clicked by
+posting the mouse's messages to their window, and keys without modifiers are posted too: Windows brings a window to
+the front, focus and all, for each of UI Automation's own actions (Invoke, Select, Toggle, SetValue). Text still goes
+through SetValue, as typing posted to a window that isn't active doesn't reach its text box. And the first click in
+each window comes to the front anyway: Avalonia focuses the window it's clicked in. Only a key chord or a hover needs
+the real keyboard or pointer: Enter-Input borrows them and Exit-Input gives them back. The focus watch warns if
+Claudette came to the front otherwise.
 #>
 $ErrorActionPreference = 'Stop'
 
@@ -46,6 +51,7 @@ public static class WindowShot
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
     [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
     [DllImport("user32.dll")] static extern uint MapVirtualKey(uint code, uint type);
+    [DllImport("user32.dll")] static extern bool ScreenToClient(IntPtr hwnd, ref POINT point);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out RECT value, int size);
 
     /// <summary>
@@ -186,6 +192,22 @@ public static class WindowShot
         long scan = MapVirtualKey((uint)key, 0 /* MAPVK_VK_TO_VSC */);
         PostMessage(hwnd, 0x0100 /* WM_KEYDOWN */, new IntPtr(key), new IntPtr(1 | (scan << 16)));
         PostMessage(hwnd, 0x0101 /* WM_KEYUP */, new IntPtr(key), new IntPtr(1 | (scan << 16) | (1L << 30) | (1L << 31)));
+    }
+
+    /// <summary>
+    /// Clicks (<paramref name="x"/>, <paramref name="y"/>) on the screen in the window by posting the mouse's messages,
+    /// which needs neither the focus nor the pointer, then tells the window the pointer left, so nothing stays hovered
+    /// to show a tip over the user's windows.
+    /// </summary>
+    public static void PostClick(IntPtr hwnd, int x, int y)
+    {
+        var point = new POINT { X = x, Y = y };
+        ScreenToClient(hwnd, ref point);
+        var at = new IntPtr((point.Y << 16) | (point.X & 0xFFFF));
+        PostMessage(hwnd, 0x0200 /* WM_MOUSEMOVE */, IntPtr.Zero, at);
+        PostMessage(hwnd, 0x0201 /* WM_LBUTTONDOWN */, new IntPtr(1) /* MK_LBUTTON */, at);
+        PostMessage(hwnd, 0x0202 /* WM_LBUTTONUP */, IntPtr.Zero, at);
+        PostMessage(hwnd, 0x02A3 /* WM_MOUSELEAVE */, IntPtr.Zero, IntPtr.Zero);
     }
 
     /// <summary>Brings the window back from being minimized, and to the front; whether it got there.</summary>
@@ -368,7 +390,7 @@ function Invoke-Element($element, [string] $what) {
     while ($element) {
         $pattern = $null
         if ($element.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref] $pattern)) {
-            $pattern.Invoke()
+            Send-Click $element
             return
         }
         $element = $walker.GetParent($element)
@@ -376,14 +398,36 @@ function Invoke-Element($element, [string] $what) {
     throw "Nothing to click around '$what'."
 }
 
-# Selects the item at $index (from 0) of the tree named $tree, such as a node of the agent map.
+# The window $element is drawn in: the one around it with a handle, such as Settings or a popup.
+function Get-ElementWindow($element) {
+    $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
+    while ($element -and $element.Current.NativeWindowHandle -eq 0) { $element = $walker.GetParent($element) }
+    if (-not $element) { throw 'Found no window around the control.' }
+    [IntPtr] $element.Current.NativeWindowHandle
+}
+
+# Clicks the middle of $element, scrolled into view first if it's out of it, by posting the mouse's messages to its window.
+function Send-Click($element) {
+    $pattern = $null
+    if ($element.Current.IsOffscreen -and $element.TryGetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern, [ref] $pattern)) {
+        $pattern.ScrollIntoView()
+        Start-Sleep -Milliseconds 300
+    }
+    $rect = $element.Current.BoundingRectangle
+    if ($rect.IsEmpty) { throw "'$($element.Current.Name)' isn't on screen to click." }
+    [WindowShot]::PostClick((Get-ElementWindow $element), [int] ($rect.Left + $rect.Width / 2), [int] ($rect.Top + $rect.Height / 2))
+}
+
+# Selects the item at $index (from 0) of the tree named $tree, such as a node of the agent map, by clicking its header:
+# the item's middle can be one of its children's.
 function Select-TreeItem([IntPtr] $hwnd, [string] $tree, [int] $index) {
     $found = Find-ByType $hwnd 'Tree' $tree
     if (-not $found) { throw "Found no tree named '$tree'." }
     $type = New-Object System.Windows.Automation.PropertyCondition($ae::ControlTypeProperty, [System.Windows.Automation.ControlType]::TreeItem)
     $items = $found.FindAll($descendants, $type)
     if ($items.Count -le $index) { throw "The tree '$tree' has $($items.Count) items." }
-    $items[$index].GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    $header = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetFirstChild($items[$index])
+    Send-Click $(if ($header) { $header } else { $items[$index] })
 }
 
 # Scrolls $element into view in the list or conversation that holds it, if that can. With the conversation's scroll pane
@@ -402,7 +446,8 @@ function Show-Element([IntPtr] $hwnd, $element, $scroller = $null, [int] $gap = 
     }
 }
 
-# Puts $text in the text box $element, without typing it.
+# Puts $text in the text box $element, without typing it. Through UI Automation, which brings the window to the front:
+# typing posted to it reaches a text box only while its window is active, as Avalonia drops the keyboard focus otherwise.
 function Set-ElementText($element, [string] $text) {
     $element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text)
 }
@@ -524,15 +569,19 @@ function Close-Window([IntPtr] $hwnd) {
 
 # Turns the check box named $text on or off.
 function Set-Toggle($from, [string] $text, [bool] $on) {
-    $toggle = (Find-ByText $from $text).GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
-    if (($toggle.Current.ToggleState -eq 'On') -ne $on) { $toggle.Toggle() }
+    $box = Find-ByText $from $text
+    $toggle = $box.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+    if (($toggle.Current.ToggleState -eq 'On') -ne $on) {
+        Send-Click $box
+        Wait-Until { ($toggle.Current.ToggleState -eq 'On') -eq $on } "'$text' to change" 10
+    }
 }
 
 # Selects the list item named $text, such as one of Settings' categories.
 function Select-ListItem($from, [string] $text) {
     $item = Find-ByType $from 'ListItem' $text
     if (-not $item) { throw "Found no list item named '$text'." }
-    $item.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    Send-Click $item
 }
 
 function Wait-Until([scriptblock] $condition, [string] $what, [int] $seconds = 60) {

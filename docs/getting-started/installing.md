@@ -42,7 +42,7 @@ Claude Code runs as Claudette's child, so when Claude reads a project in Documen
 
 ## On Linux
 
-There is no package. [Run Claudette from source](running-from-source.md).
+There is no package yet. [Run Claudette from source](running-from-source.md): every change to Claudette is built and tested on Linux, as on Windows and macOS.
 
 ## Upgrading from 0.1.0
 

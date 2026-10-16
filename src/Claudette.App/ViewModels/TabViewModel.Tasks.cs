@@ -260,7 +260,12 @@ public sealed partial class TabViewModel
         row.IsContinueOffered = false;
         _autoContinue.UserSent();
         var stamp = NewStamp(fromUser: true);
-        _conversation.AddUserMessage(ContinueTasksMessage).SentId = stamp.Uuid;
+        var card = _conversation.AddUserMessage(ContinueTasksMessage);
+        card.SentId = stamp.Uuid;
+        if (HoldForCredits(card, new PendingMessage(ContinueTasksMessage, [], null, stamp)))
+        {
+            return;
+        }
         await SendRawAsync(ContinueTasksMessage, stamp: stamp);
     }
 }

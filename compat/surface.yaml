@@ -1453,6 +1453,20 @@ items:
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: UsageParserTests, AutoContinueMonitorTests
     fallback: Only needed when unifiedWindows is missing (five_hour = session, seven_day = weekly). Without it, such an event is ignored and get_usage still supplies the readings. On a rejected event it also names the limit that stopped a turn (five_hour, seven_day, seven_day_opus, seven_day_sonnet); without it the bar says "usage limit".
+  # Usage credits paying for Claude once a plan limit is used up (DESIGN.md §6, "Usage credits").
+  - id: "rate_limits.extra_usage"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Usage/UsageParser.cs, src/Claudette.Usage/UsageCredits.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: UsageParserTests, UsageCreditsTests, UsageHeaderTests
+    fallback: Reads is_enabled, used_credits, monthly_limit (minor units) and currency; a null monthly_limit isn't no cap. Without it (or is_enabled), the poll says nothing about credits, and only isUsingOverage shows the notice.
+  - id: "isUsingOverage"
+    kind: field
+    status: undocumented
+    usedIn: src/Claudette.Usage/UsageParser.cs, src/Claudette.Usage/UsageCredits.cs, src/Claudette.Core/Sessions/AutoContinueMonitor.cs, src/Claudette.App/ViewModels/TabViewModel.UsageCredits.cs
+    test: UsageParserTests, UsageCreditsTests, UsageHeaderTests, UsageCreditsUiTests, AutoContinueMonitorTests, UsageCreditsTabTests
+    fallback: rate_limit_info.isUsingOverage, with rateLimitType and resetsAt for the used-up limit (status rejected, overageStatus allowed). Without it, the notice shows from get_usage alone, rate_limits.extra_usage.is_enabled with the session or weekly limit at 100%, a poll late and without a model's own limit. A tab that doesn't use usage credits stops a turn on it, and treats such a rejection as one the turn got past rather than the limit; without it, the tab holds messages by the poll alone, and a turn already running on credits isn't stopped.
   - id: "/usage"
     kind: command
     status: documented

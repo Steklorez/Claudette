@@ -25,7 +25,7 @@ Released {{ latest.published_at | date: "%-d %B %Y" }}. [What's new]({{ latest.h
 
 - **Windows:** **x64** for most PCs with an Intel or AMD processor, **Arm64** for a Snapdragon or other Arm processor. Settings → System → About → **System type** says which yours is.
 - **macOS:** **Apple silicon** for a Mac with an M-series chip, **Intel** for the rest. Apple menu → **About This Mac** → **Chip** (or **Processor**) says which.
-- **Linux:** there's no package yet. [Run it from source](getting-started/running-from-source.md).
+- **Linux:** there's no package yet. [Run it from source](getting-started/running-from-source.md): every change is built and tested on Linux too.
 
 The SHA-256 digest is there for anyone who wants to check a file: `Get-FileHash <file>` in PowerShell, `shasum -a 256 <file>` on a Mac. Claudette checks its own updates' files itself.
 

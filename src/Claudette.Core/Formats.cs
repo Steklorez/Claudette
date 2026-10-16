@@ -35,6 +35,16 @@ public static class Formats
         _ => string.Create(CultureInfo.InvariantCulture, $"{(int)span.TotalDays}d {span.Hours}h"),
     };
 
+    /// <summary>"at 15:45" today, else "on Mon at 09:00", in the clock's time zone.</summary>
+    public static string When(DateTimeOffset time, TimeProvider clock)
+    {
+        var local = TimeZoneInfo.ConvertTime(time, clock.LocalTimeZone);
+        var today = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), clock.LocalTimeZone).Date;
+        return local.Date == today
+            ? $"at {local.ToString("t", CultureInfo.CurrentCulture)}"
+            : $"on {local.ToString("ddd", CultureInfo.CurrentCulture)} at {local.ToString("t", CultureInfo.CurrentCulture)}";
+    }
+
     /// <summary>A folder's own name, with or without a separator at its end; the whole path when it has none (a drive's root).</summary>
     public static string FolderName(string path) =>
         Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) is { Length: > 0 } name ? name : path;

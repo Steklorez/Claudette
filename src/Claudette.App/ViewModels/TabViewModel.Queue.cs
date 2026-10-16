@@ -27,11 +27,12 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// The turn ended: the oldest held message goes, as the next turn. Not while a usage limit stopped the turn, which
-    /// would stop it too; they wait for the next turn to end, or for <b>Send now</b>.
+    /// would stop it too; they wait for the next turn to end, or for <b>Send now</b>. Nor while usage credits pay and the
+    /// tab doesn't use them: they wait for the limit to reset (DESIGN.md §6, "Tabs that don't use usage credits").
     /// </summary>
     private void SendNextHeld()
     {
-        if (_held.Count == 0 || HasLimitWait || _session is null)
+        if (_held.Count == 0 || _autoContinue.Wait is not null || _session is null || HoldHeldForCredits())
         {
             return;
         }
@@ -55,6 +56,13 @@ public sealed partial class TabViewModel
         _held.RemoveAt(index);
         held.IsHeld = false;
         held.IsQueued = IsWorking;
+        if (held.IsHeldForCredits)
+        {
+            // Sent anyway: usage credits pay for its turn (DESIGN.md §6, "Tabs that don't use usage credits").
+            held.IsHeldForCredits = false;
+            _creditsAllowedThisTurn = true;
+            HeldForCreditsChanged();
+        }
         OnHeldMessageSent(held);
         return SendRawAsync(message.Text, message.Images, message.Suffix, message.Stamp);
     }
@@ -69,6 +77,7 @@ public sealed partial class TabViewModel
         }
         _held.RemoveAt(index);
         TakeBack([id]);
+        HeldForCreditsChanged();
         return true;
     }
 
@@ -77,6 +86,17 @@ public sealed partial class TabViewModel
     {
         var ids = _held.Select(h => h.Card.SentId).OfType<string>().ToList();
         _held.Clear();
+        HeldForCreditsChanged();
         return ids;
+    }
+
+    /// <summary>A message held for usage credits went, or was taken back: a wait only for them ends with the last.</summary>
+    private void HeldForCreditsChanged()
+    {
+        if (!HasHeldForCredits)
+        {
+            _autoContinue.HeldMessagesGone();
+        }
+        OnPropertyChanged(nameof(LimitWaitText));
     }
 }

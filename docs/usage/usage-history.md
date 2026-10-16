@@ -1,7 +1,7 @@
 ---
 title: Usage history
 parent: Usage and limits
-nav_order: 9
+nav_order: 10
 summary: "Claudette keeps your usage on this machine, in a small database, so the trendline, the charts and the per-tab numbers survive a restart."
 ---
 

@@ -271,6 +271,122 @@ public sealed class AutoContinueMonitorTests : IDisposable
         Assert.Null(AutoContinueMonitor.Rejection(JsonNode.Parse("""{"status":"rejected"}""")!.AsObject()));
     }
 
+    // ---- Tabs that don't use usage credits (DESIGN.md §6) ----------------------------------------------------------
+
+    [Fact]
+    public void A_rejection_usage_credits_pay_for_didnt_stop_the_turn()
+    {
+        var paid = Rejected(Reset);
+        paid["isUsingOverage"] = true;
+        _monitor.TurnStarted();
+        _monitor.RateLimit(paid);
+        _monitor.TurnEnded(LimitResult());
+
+        Assert.Null(_monitor.Wait);
+    }
+
+    [Fact]
+    public void A_turn_stopped_for_usage_credits_waits_for_the_reset_as_at_the_limit()
+    {
+        var reset = Reset;
+        _monitor.TurnStarted();
+        _monitor.StoppedForCredits(reset, "seven_day");
+        // The stopped turn's own end isn't the limit, and leaves the wait as it is.
+        _monitor.TurnEnded(Result(isError: true, terminalReason: "aborted_streaming"));
+
+        var wait = Assert.IsType<LimitWait>(_monitor.Wait);
+        Assert.Equal(LimitWaitCause.CreditsOff, wait.Cause);
+        Assert.True(wait.IsForCredits);
+        Assert.True(wait.WillContinue);
+        Assert.Equal("weekly limit", wait.LimitName);
+
+        AdvanceTo(reset + AutoContinueMonitor.Grace);
+        Assert.Equal([AutoContinueMonitor.Message], _sent);
+
+        // Turned off, it waits for the user, as at the limit.
+        _enabled = false;
+        _monitor.TurnStarted();
+        _monitor.StoppedForCredits(Reset, "five_hour");
+        Assert.Equal(LimitWaitHold.TurnedOff, _monitor.Wait?.Hold);
+    }
+
+    [Fact]
+    public void A_message_held_for_usage_credits_goes_at_the_reset_whatever_auto_continue_says()
+    {
+        _enabled = false;
+        var reset = Reset;
+        _monitor.HoldingForCredits(reset, "five_hour");
+
+        var wait = Assert.IsType<LimitWait>(_monitor.Wait);
+        Assert.Equal(LimitWaitCause.MessageHeld, wait.Cause);
+        Assert.True(wait.WillContinue);
+        _monitor.SettingsChanged();
+        Assert.True(_monitor.Wait?.WillContinue);
+
+        AdvanceTo(reset + AutoContinueMonitor.Grace);
+        Assert.Equal([AutoContinueMonitor.Message], _sent);
+    }
+
+    [Fact]
+    public void A_message_held_while_a_stopped_task_waits_keeps_that_wait()
+    {
+        var reset = Reset;
+        _monitor.TurnStarted();
+        _monitor.StoppedForCredits(reset, "five_hour");
+
+        _monitor.HoldingForCredits(reset + TimeSpan.FromMinutes(5), "five_hour");
+
+        Assert.Equal(LimitWaitCause.CreditsOff, _monitor.Wait?.Cause);
+        Assert.Equal(reset, _monitor.Wait?.ResetsAt);
+        // Only a wait for the held messages ends when they're taken back.
+        _monitor.HeldMessagesGone();
+        Assert.NotNull(_monitor.Wait);
+    }
+
+    [Fact]
+    public void Held_messages_taken_back_end_their_wait()
+    {
+        _monitor.HoldingForCredits(Reset, "five_hour");
+
+        _monitor.HeldMessagesGone();
+
+        Assert.Null(_monitor.Wait);
+    }
+
+    [Fact]
+    public void Allowing_usage_credits_continues_now_or_closes_a_wait_that_wouldnt_continue()
+    {
+        _monitor.TurnStarted();
+        _monitor.StoppedForCredits(Reset, "five_hour");
+
+        _monitor.CreditsAllowed();
+
+        Assert.Equal([AutoContinueMonitor.Message], _sent);
+        Assert.Null(_monitor.Wait);
+
+        _enabled = false;
+        _monitor.TurnStarted();
+        _monitor.StoppedForCredits(Reset, "five_hour");
+        _monitor.CreditsAllowed();
+        Assert.Single(_sent);
+        Assert.Null(_monitor.Wait);
+
+        // A wait for the limit itself isn't one for usage credits.
+        _enabled = true;
+        StopAtLimit(Reset);
+        _monitor.CreditsAllowed();
+        Assert.Single(_sent);
+        Assert.NotNull(_monitor.Wait);
+    }
+
+    [Fact]
+    public void A_held_message_more_than_a_day_away_waits_for_the_user()
+    {
+        _monitor.HoldingForCredits(_time.GetUtcNow() + TimeSpan.FromDays(3), "seven_day");
+
+        Assert.Equal(LimitWaitHold.TooFar, _monitor.Wait?.Hold);
+    }
+
     /// <summary>What Claude Code sends when a turn runs into the limit: the rejection, then the failed turn.</summary>
     private void StopAtLimit(DateTimeOffset reset, string limitType = "five_hour")
     {

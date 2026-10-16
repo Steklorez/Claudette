@@ -6,7 +6,7 @@ namespace Claudette.App.ViewModels.Settings;
 
 /// <summary>
 /// Settings → Usage (DESIGN.md §6): the warning levels, the burn rate, the model meters, continuing after a limit
-/// resets, the usage history and sharing usage with other machines.
+/// resets, usage credits, the usage history and sharing usage with other machines.
 /// </summary>
 public sealed partial class UsagePage(SettingsContext context) : SettingsPage(context, SettingsCategory.Usage)
 {
@@ -18,6 +18,7 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
         Entry("Show model-specific weekly limits"),
         Entry("Read model limits from /usage"),
         Entry("Continue tasks when a usage limit resets"),
+        Entry("Use usage credits once a limit is used up"),
         Entry("Keep usage history"),
         Entry("Clear usage history"),
         Entry("Share usage with my other machines"),
@@ -59,6 +60,13 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
     {
         get => Settings.Usage.ContinueAfterLimitReset;
         set => Set(value, v => Settings.Usage.ContinueAfterLimitReset = v);
+    }
+
+    /// <summary>DESIGN.md §6, "Tabs that don't use usage credits". Each tab can override it from its menu or Tab settings.</summary>
+    public bool UseUsageCredits
+    {
+        get => Settings.Usage.UseUsageCredits;
+        set => Set(value, v => Settings.Usage.UseUsageCredits = v);
     }
 
     /// <summary>DESIGN.md §6, "Sharing across machines".</summary>

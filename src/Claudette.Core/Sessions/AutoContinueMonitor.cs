@@ -30,6 +30,22 @@ public enum LimitWaitHold
     Missed,
 }
 
+/// <summary>Why a tab waits for a usage limit to reset (DESIGN.md §6, "Tabs that don't use usage credits").</summary>
+public enum LimitWaitCause
+{
+    /// <summary>The limit stopped the turn.</summary>
+    Limit,
+
+    /// <summary>Usage credits began paying for the turn, and the tab, which doesn't use them, stopped it.</summary>
+    CreditsOff,
+
+    /// <summary>
+    /// Usage credits are paying, and the tab, which doesn't use them, holds a message until the limit resets. Nothing
+    /// was stopped: the message is what goes at the reset, whatever auto-continue says, since the user sent it.
+    /// </summary>
+    MessageHeld,
+}
+
 /// <summary>
 /// A turn that Claude Code ended at a plan usage limit, and the limit's reset (DESIGN.md §6, "Continuing after a limit
 /// resets"). Saved with the tab, so a restart keeps waiting.
@@ -39,14 +55,23 @@ public enum LimitWaitHold
 /// <param name="ContinueAt">When to continue: shortly after the reset, so the server has reset too.</param>
 /// <param name="Hold">Why the tab won't continue by itself, or <see cref="LimitWaitHold.None"/> when it will.</param>
 /// <param name="HasReset">The limit has reset, and the tab didn't continue by itself.</param>
-public sealed record LimitWait(DateTimeOffset ResetsAt, string? LimitType, DateTimeOffset ContinueAt, LimitWaitHold Hold, bool HasReset = false)
+/// <param name="Cause">Why it waits: the limit stopped the turn, or the tab doesn't use usage credits.</param>
+public sealed record LimitWait(DateTimeOffset ResetsAt, string? LimitType, DateTimeOffset ContinueAt, LimitWaitHold Hold, bool HasReset = false,
+    LimitWaitCause Cause = LimitWaitCause.Limit)
 {
+    /// <summary>The tab waits because it doesn't use usage credits, not because the limit stopped it.</summary>
+    [JsonIgnore]
+    public bool IsForCredits => Cause != LimitWaitCause.Limit;
+
     [JsonIgnore]
     public bool WillContinue => Hold == LimitWaitHold.None && !HasReset;
 
     /// <summary>"session limit", "weekly limit" or "Opus limit", as Claude Code names them in its error.</summary>
     [JsonIgnore]
-    public string LimitName => LimitType switch
+    public string LimitName => NameOf(LimitType);
+
+    /// <summary>The name of the limit a <c>rateLimitType</c> stands for, as <see cref="LimitName"/>.</summary>
+    public static string NameOf(string? limitType) => limitType switch
     {
         "five_hour" => "session limit",
         "seven_day" => "weekly limit",
@@ -68,6 +93,8 @@ public sealed record LimitWait(DateTimeOffset ResetsAt, string? LimitType, DateT
 /// continue</b> (for that reset), after <see cref="MaxRepeats"/> continues in a row that hit the limit again, and when
 /// the reset was more than <see cref="MissedAfter"/> before it noticed.</item>
 /// <item>Any turn that starts ends the wait: the user sent something, or something else started one.</item>
+/// <item>A tab that doesn't use usage credits waits the same way when it stops a turn they began paying for, or holds a
+/// message while they pay (<see cref="LimitWaitCause"/>; DESIGN.md §6, "Tabs that don't use usage credits").</item>
 /// </list>
 /// </summary>
 public sealed class AutoContinueMonitor : IDisposable
@@ -134,16 +161,74 @@ public sealed class AutoContinueMonitor : IDisposable
         return false;
     });
 
-    /// <summary>The <c>rate_limit_info</c> of a <c>rate_limit_event</c>.</summary>
+    /// <summary>
+    /// The <c>rate_limit_info</c> of a <c>rate_limit_event</c>. A rejection usage credits pay for
+    /// (<c>isUsingOverage</c>, undocumented) didn't stop the turn.
+    /// </summary>
     public void RateLimit(JsonObject info) => Update(() =>
     {
-        if (Rejection(info) is not { } rejection)
+        if (Rejection(info) is not { } rejection || info.GetBool("isUsingOverage") == true)
         {
             return false;
         }
         _rejection = rejection;
         return _endedAtLimit && Arm();
     });
+
+    /// <summary>
+    /// The tab stopped the turn because usage credits began paying for it, and it doesn't use them: it waits for the
+    /// limit to reset as if the limit had stopped it, under the same rules.
+    /// </summary>
+    public void StoppedForCredits(DateTimeOffset resetsAt, string? limitType) => Update(() =>
+    {
+        _rejection = null;
+        _endedAtLimit = false;
+        return Arm(resetsAt, limitType, LimitWaitCause.CreditsOff);
+    });
+
+    /// <summary>
+    /// The tab holds a message while usage credits pay, as it doesn't use them: it goes once the limit resets. A wait
+    /// for credits already under way keeps going, and its reset sends the message in place of the continue.
+    /// </summary>
+    public void HoldingForCredits(DateTimeOffset resetsAt, string? limitType) => Update(() =>
+    {
+        if (_wait is { IsForCredits: true, HasReset: false })
+        {
+            return false;
+        }
+        var now = _time.GetUtcNow();
+        var hold = resetsAt - now > MaxWait ? LimitWaitHold.TooFar : LimitWaitHold.None;
+        return SetWait(new LimitWait(resetsAt, limitType, ContinueAt(resetsAt, now), hold, Cause: LimitWaitCause.MessageHeld));
+    });
+
+    /// <summary>The messages a <see cref="LimitWaitCause.MessageHeld"/> wait was for were taken back: it ends.</summary>
+    public void HeldMessagesGone() => Update(() => _wait is { Cause: LimitWaitCause.MessageHeld } && SetWait(null));
+
+    /// <summary>
+    /// The tab uses usage credits now: a wait for them ends, and one that would have continued at the reset continues
+    /// now instead.
+    /// </summary>
+    public void CreditsAllowed()
+    {
+        var send = false;
+        Update(() =>
+        {
+            if (_wait is not { IsForCredits: true, HasReset: false } wait)
+            {
+                return false;
+            }
+            if (!wait.WillContinue)
+            {
+                return SetWait(null);
+            }
+            send = true;
+            return Continue();
+        });
+        if (send)
+        {
+            _sendContinue(Message);
+        }
+    }
 
     /// <summary>A turn ended. Stopping it (<c>terminal_reason</c> <c>aborted_streaming</c> or <c>aborted_tools</c>) isn't the limit.</summary>
     public void TurnEnded(ResultMessage result) => Update(() =>
@@ -205,9 +290,12 @@ public sealed class AutoContinueMonitor : IDisposable
     /// <summary>Closes a wait that won't continue by itself.</summary>
     public void Dismiss() => Update(() => _wait is { WillContinue: false } && SetWait(null));
 
-    /// <summary>The setting may have changed: a wait that follows it (on, or turned off) takes the new value.</summary>
+    /// <summary>
+    /// The setting may have changed: a wait that follows it (on, or turned off) takes the new value. A held message
+    /// doesn't follow it.
+    /// </summary>
     public void SettingsChanged() => Update(() =>
-        _wait is { HasReset: false, Hold: LimitWaitHold.None or LimitWaitHold.TurnedOff } wait
+        _wait is { HasReset: false, Hold: LimitWaitHold.None or LimitWaitHold.TurnedOff, Cause: not LimitWaitCause.MessageHeld } wait
         && SetWait(wait with { Hold = _enabled() ? LimitWaitHold.None : LimitWaitHold.TurnedOff }));
 
     /// <summary>A wait saved with the tab, after a restart. It may have reset meanwhile.</summary>
@@ -282,6 +370,11 @@ public sealed class AutoContinueMonitor : IDisposable
         var (resetsAt, limitType) = _rejection!.Value;
         _rejection = null;
         _endedAtLimit = false;
+        return Arm(resetsAt, limitType, LimitWaitCause.Limit);
+    }
+
+    private bool Arm(DateTimeOffset resetsAt, string? limitType, LimitWaitCause cause)
+    {
         _repeats = _continued ? _repeats + 1 : 0;
         _continued = false;
         var now = _time.GetUtcNow();
@@ -290,10 +383,11 @@ public sealed class AutoContinueMonitor : IDisposable
             : _repeats > MaxRepeats ? LimitWaitHold.Repeated
             : resetsAt - now > MaxWait ? LimitWaitHold.TooFar
             : LimitWaitHold.None;
-        // A reset already past (a clock that runs ahead, say) continues shortly rather than straight away.
-        var continueAt = (resetsAt > now ? resetsAt : now) + Grace;
-        return SetWait(new LimitWait(resetsAt, limitType, continueAt, hold));
+        return SetWait(new LimitWait(resetsAt, limitType, ContinueAt(resetsAt, now), hold, Cause: cause));
     }
+
+    /// <summary>A reset already past (a clock that runs ahead, say) continues shortly rather than straight away.</summary>
+    private static DateTimeOffset ContinueAt(DateTimeOffset resetsAt, DateTimeOffset now) => (resetsAt > now ? resetsAt : now) + Grace;
 
     private bool Continue()
     {

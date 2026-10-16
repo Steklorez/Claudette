@@ -110,8 +110,22 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     [NotifyPropertyChangedFor(nameof(QueuedText), nameof(CancelQueuedTip))]
     public partial bool IsHeld { get; set; }
 
+    /// <summary>
+    /// Held until a usage limit resets, by a tab that doesn't use usage credits while they pay (DESIGN.md §6, "Tabs that
+    /// don't use usage credits"). <b>Send now</b> sends it anyway, paid for with them.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QueuedText), nameof(SendNowTip))]
+    public partial bool IsHeldForCredits { get; set; }
+
     /// <summary>What the queued line says: when it goes.</summary>
-    public string QueuedText => IsHeld ? "Queued: sent when this turn ends" : "Queued: sent when Claude can take it";
+    public string QueuedText => IsHeldForCredits ? "Queued: sent when the usage limit resets"
+        : IsHeld ? "Queued: sent when this turn ends"
+        : "Queued: sent when Claude can take it";
+
+    public string SendNowTip => IsHeldForCredits
+        ? "Sends it now, paid for with usage credits"
+        : "Sends it now, into the turn: Claude reads it at its next step";
 
     public string CancelQueuedTip => IsHeld
         ? "Takes the message back before it's sent, and puts it in the composer"

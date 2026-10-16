@@ -1,0 +1,8 @@
+{%- comment -%}
+  In the header, before the links: Full width spreads the page across the window, and Reading width puts it back
+  (GUIDE.md, "The reading width"). head_custom.html remembers the choice; custom.scss shows the label for it.
+{%- endcomment -%}
+<button type="button" class="site-button width-toggle" id="width-toggle">
+  <span class="width-toggle-full">{% include icon.html name="unfold-horizontal" %}Full width</span>
+  <span class="width-toggle-reading">{% include icon.html name="fold-horizontal" %}Reading width</span>
+</button>

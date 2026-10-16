@@ -880,6 +880,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         Context.OnSettingsChanged();
         ProcessMonitor.UpdateSampler();
         _autoContinue.SettingsChanged();
+        OnUsageCreditsChoiceChanged();
         Perforce.OnSettingsChanged();
         ProjectTools.OnSettingsChanged();
         OnGamesSettingsChanged();
@@ -993,6 +994,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _recall.Add(typed);
         _firstPrompt ??= text.Length > 0 ? text : suffixText;
         var sent = mentions?.Text ?? text;
+        // Usage credits pay, and the tab doesn't use them: it goes when the limit resets (DESIGN.md §6).
+        if (HoldForCredits(card, new PendingMessage(sent, images, suffixText, stamp)))
+        {
+            return;
+        }
         if (HoldsWhileWorking)
         {
             // Held until the turn ends, as Settings → General says (DESIGN.md §5, "Queued messages").
@@ -1998,9 +2004,13 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                     _services.Usage?.OnRateLimitEvent(rateLimit.Message);
                 }
                 _autoContinue.RateLimit(rateLimit.Message.Info);
+                // Usage credits began paying, and the tab doesn't use them (DESIGN.md §6, "Tabs that don't use usage credits").
+                StopIfCreditsPay(rateLimit.Message.Info);
                 break;
             case TurnCompleted completed:
                 _checkIns.TurnEnded();
+                _creditsAllowedThisTurn = false;
+                _stoppingForCredits = false;
                 _autoContinue.TurnEnded(completed.Result);
                 State.SessionId = completed.Result.SessionId ?? State.SessionId;
                 _services.Usage?.OnTurnCompleted(Id, DisplayName, completed, Folder, Account?.Id, Account?.Name);
@@ -2175,6 +2185,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _services.SaveState();
         ProcessMonitor.UpdateSampler();
         _autoContinue.SettingsChanged();
+        OnUsageCreditsChoiceChanged();
         if (_session is null)
         {
             return;

@@ -1,4 +1,5 @@
 using Claudette.Usage.Tests.Support;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Claudette.Usage.Tests;
 
@@ -8,7 +9,7 @@ public sealed class UsageAlertsTests
     private static readonly DateTimeOffset WindowA = Now.AddHours(2);
     private static readonly DateTimeOffset WindowB = WindowA.AddHours(5);
 
-    private readonly UsageAlerts _alerts = new();
+    private readonly UsageAlerts _alerts = new(new FakeTimeProvider(Now));
 
     [Fact]
     public void Warning_then_critical_fire_once_each_per_window()
@@ -191,6 +192,34 @@ public sealed class UsageAlertsTests
         Assert.Same(threshold, UsageAlerts.Refresh(threshold, newWindow, Now));
         Assert.Same(reset, UsageAlerts.Refresh(reset, newWindow, Now));
     }
+
+    [Fact]
+    public void Usage_credits_starting_to_pay_alert_once_each_time_they_start()
+    {
+        var credits = new UsageCredits(true, 1240, 5000, "USD", Now);
+        Assert.Empty(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 80, WindowA) with { Credits = credits }, null, 75, 90)));
+
+        var started = Assert.Single(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 100, WindowA) with { Credits = credits }, null, 75, 90)));
+        Assert.Equal("Using usage credits", started.Title);
+        Assert.Equal("Your session limit is used up, so your usage credits pay for Claude until it resets at 20:00. $12.40 of $50.00 spent this month.", started.Message);
+        Assert.Empty(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 100, WindowA) with { Credits = credits }, null, 75, 90)));
+
+        // The session resets, and is used up again.
+        Assert.Empty(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 3, WindowB) with { Credits = credits }, null, 75, 90)));
+        Assert.Single(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 100, WindowB) with { Credits = credits }, null, 75, 90)));
+    }
+
+    [Fact]
+    public void Usage_credits_already_paying_at_the_first_reading_dont_alert()
+    {
+        var paying = new CreditsReport(true, "five_hour", WindowA, Now);
+
+        Assert.Empty(Credits(Observe(40)));
+        Assert.Empty(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 100, WindowA) with { CreditsReport = paying }, null, 75, 90)));
+        Assert.Empty(Credits(_alerts.Observe(UsageFixtures.Snapshot(Now, 100, WindowA) with { CreditsReport = paying }, null, 75, 90)));
+    }
+
+    private static IEnumerable<UsageAlert> Credits(IEnumerable<UsageAlert> alerts) => alerts.Where(a => a.Kind == UsageAlertKind.UsingCredits);
 
     private IReadOnlyList<UsageAlert> Observe(double session, DateTimeOffset? resetsAt = null, BurnProjection? projection = null) =>
         _alerts.Observe(UsageFixtures.Snapshot(Now, session, resetsAt ?? WindowA), projection, 75, 90);

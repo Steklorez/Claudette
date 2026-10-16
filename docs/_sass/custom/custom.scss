@@ -234,6 +234,61 @@ body::before {
   word-break: break-all;
 }
 
+// The page's width (header_custom.html, head_custom.html): Just the Docs' reading width, or with full-width on the page,
+// the sidebar at its own width and the page across the rest of the window. Only where the window is wider than the
+// two (lg): a narrower one fills it already.
+.width-toggle {
+  display: none;
+  font: inherit;
+  font-size: 0.75rem;
+  color: $link-color;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: 999px;
+
+  @include mq(lg) {
+    display: flex;
+  }
+
+  span {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .icon {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .width-toggle-reading {
+    display: none;
+  }
+}
+
+.full-width {
+  .width-toggle-full {
+    display: none;
+  }
+
+  .width-toggle .width-toggle-reading {
+    display: flex;
+  }
+
+  @include mq(lg) {
+    .side-bar {
+      width: $nav-width;
+    }
+
+    .side-bar + .main {
+      max-width: none;
+      margin-left: $nav-width;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .main-content .child-cards a {
     transition: none;

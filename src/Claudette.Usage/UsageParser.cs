@@ -40,7 +40,7 @@ public static partial class UsageParser
             {
                 limits = FromWindowFields(rateLimits);
             }
-            return Snapshot(limits, now, UsageSource.GetUsage);
+            return Snapshot(limits, now, UsageSource.GetUsage) is { } snapshot ? snapshot with { Credits = FromExtraUsage(rateLimits, now) } : null;
         }
         catch (Exception)
         {
@@ -50,8 +50,20 @@ public static partial class UsageParser
     }
 
     /// <summary>
+    /// <c>rate_limits.extra_usage</c>: the plan's usage credits (DESIGN.md §6, "Usage credits"). Null when the plan has
+    /// none, or <c>is_enabled</c> is missing.
+    /// </summary>
+    private static UsageCredits? FromExtraUsage(JsonObject rateLimits, DateTimeOffset now) =>
+        rateLimits.GetObject("extra_usage") is { } extra && extra.GetBool("is_enabled") is { } enabled
+            ? new UsageCredits(enabled, NonNegative(extra.GetDouble("used_credits")), NonNegative(extra.GetDouble("monthly_limit")), extra.GetString("currency"), now)
+            : null;
+
+    private static double? NonNegative(double? value) => value is >= 0 ? value : null;
+
+    /// <summary>
     /// The <c>rate_limit_info</c> of a <c>rate_limit_event</c> message. Gives the session and weekly readings only:
-    /// <c>unifiedWindows</c> when present (undocumented), otherwise the documented top-level window.
+    /// <c>unifiedWindows</c> when present (undocumented), otherwise the documented top-level window. With
+    /// <c>isUsingOverage</c> (undocumented), also whether usage credits are paying, even when it has no readings.
     /// </summary>
     public static UsageSnapshot? FromRateLimitEvent(JsonObject rateLimitInfo, DateTimeOffset now)
     {
@@ -75,7 +87,12 @@ public static partial class UsageParser
                         break;
                 }
             }
-            return Snapshot(limits, now, UsageSource.RateLimitEvent);
+            if (rateLimitInfo.GetBool("isUsingOverage") is not { } usingCredits)
+            {
+                return Snapshot(limits, now, UsageSource.RateLimitEvent);
+            }
+            var report = new CreditsReport(usingCredits, rateLimitInfo.GetString("rateLimitType"), rateLimitInfo.GetTime("resetsAt"), now);
+            return (Snapshot(limits, now, UsageSource.RateLimitEvent) ?? new UsageSnapshot([], now, UsageSource.RateLimitEvent)) with { CreditsReport = report };
         }
         catch (Exception)
         {
@@ -172,7 +189,9 @@ public static partial class UsageParser
     /// readings it has, and keeps the rest; that way the model meters don't disappear between polls. Any other source
     /// replaces the set of limits.</item>
     /// </list>
-    /// Readings kept from <paramref name="previous"/> keep the time they were reported.
+    /// Readings kept from <paramref name="previous"/> keep the time they were reported. Only <c>get_usage</c> reports
+    /// the plan's usage credits, and only a <c>rate_limit_event</c> whether they're paying, so each is kept until its own
+    /// source says again (DESIGN.md §6, "Usage credits").
     /// </summary>
     public static UsageSnapshot Merge(UsageSnapshot? previous, UsageSnapshot update)
     {
@@ -204,7 +223,10 @@ public static partial class UsageParser
                 keptAny = true;
             }
         }
-        return keptAny ? update with { Limits = limits } : update;
+        var merged = keptAny ? update with { Limits = limits } : update;
+        var credits = update.Source == UsageSource.GetUsage ? update.Credits : previous.Credits;
+        var report = update.CreditsReport ?? previous.CreditsReport;
+        return credits == merged.Credits && report == merged.CreditsReport ? merged : merged with { Credits = credits, CreditsReport = report };
     }
 
     /// <summary>Whether <paramref name="update"/> is older than <paramref name="current"/>, which was reported at <paramref name="reportedAt"/>.</summary>

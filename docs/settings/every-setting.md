@@ -144,12 +144,13 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 | **Show model-specific weekly limits** | On | Yes | No | [The usage header](../usage/the-usage-header.md) |
 | **If Claude Code stops reporting them, read model limits from /usage** | Off | Yes | No | [The usage header](../usage/the-usage-header.md) |
 | **Continue tasks when a usage limit resets** | On | Yes | Yes (**Auto-continue**) | [When a limit stops a task](../usage/when-a-limit-stops-a-task.md) |
+| **Use usage credits once a limit is used up** | On | Yes | Yes (**Usage credits**, and the tab's menu) | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
 | **Keep usage history**, with **Clear usage history…** | 1 month (or 1 day, 1 week, 1 year or Forever) | Yes | No | [Usage history](../usage/usage-history.md) |
 | **Share usage with my other machines** | Off | Yes | No | [Sharing usage across machines](../usage/sharing-usage-across-machines.md) |
 | **Clear usage history on every machine…** (while sharing is on) | | No | No | [Sharing usage across machines](../usage/sharing-usage-across-machines.md) |
 
 {: .note }
-**Clear usage history on every machine…** is new in the next release.
+**Use usage credits once a limit is used up** and **Clear usage history on every machine…** are new in the next release.
 
 ## Quick suffixes
 

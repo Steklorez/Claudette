@@ -1,0 +1,2 @@
+﻿"Using usage credits. Your session limit is used up, so your usage credits pay for Claude until it resets at 13:20."
+[button] Manage on claude.ai

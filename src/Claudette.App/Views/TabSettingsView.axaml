@@ -9,7 +9,7 @@
       <TextBlock Classes="muted small" TextWrapping="Wrap"
                  Text="These replace the defaults from Settings for this tab only, and are saved with the tab." />
 
-      <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+      <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
         <TextBlock Text="Model" VerticalAlignment="Center" />
         <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
         <TextBlock Grid.Row="1" Text="Effort" VerticalAlignment="Center" />
@@ -22,6 +22,9 @@
         <TextBlock Grid.Row="4" Text="Auto-continue" VerticalAlignment="Center" />
         <ComboBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AutoContinueChoices}" SelectedItem="{Binding SelectedAutoContinue}"
                   ToolTip.Tip="When a usage limit stops Claude mid-task, continue the task once the limit resets" />
+        <TextBlock Grid.Row="5" Text="Usage credits" VerticalAlignment="Center" IsVisible="{Binding ShowsUsageCredits}" />
+        <ComboBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding UsageCreditsChoices}" SelectedItem="{Binding SelectedUsageCredits}"
+                  IsVisible="{Binding ShowsUsageCredits}" ToolTip.Tip="{x:Static vm:TabViewModel.UsageCreditsMenuTip}" />
       </Grid>
 
       <CheckBox Content="Use different check-in settings for this tab" IsChecked="{Binding UseCustomCheckIns}" />

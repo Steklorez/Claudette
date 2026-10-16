@@ -13,10 +13,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Files named in Claude's replies open.** A Markdown link to a file, or a file's name in code (`Player.cpp:42`), opens the file with a click. Several files with that name are offered in a menu.
 - **Tabs side by side.** **Open beside** in a tab's menu, or drag its row onto the conversation: up to three tabs at once, each with its own conversation and composer. Drag the line between two to share the width differently.
 - **Conversation cards.** Each step is a card in its kind's color. A run of tool calls is one card of tiles, each opening its detail or a window of its own, and a turn ends with its **Modified files** and a **Turn** card. Marks beside the scroll bar show your messages, waiting prompts and errors; `F3` and `F4` go to the previous and next message, and `Ctrl/Cmd+F3` and `Ctrl/Cmd+F4` to the first and the latest.
+- **Using usage credits.** Once a limit is used up and your plan's usage credits pay for Claude, a notice under the header says which limit, when it resets, and what you've spent this month, with **Manage on claude.ai**. It stays until they stop paying, and an OS notification tells you when they start.
+- **Tabs that don't use usage credits.** Untick **Use usage credits** in a tab's menu, or turn off Settings → Usage → **Use usage credits once a limit is used up** for every tab, and once a limit is used up the tab stops and waits for it to reset instead of spending them, so credits go only to the work that matters. A message you send meanwhile waits for the reset, with **Send now** to send it anyway.
 - **The prompt cache's timer.** *Cache 52m* beside the context says how long your next message can read the conversation from Claude's cache, and turns amber in its last three minutes. Settings → Appearance → **Show when the prompt cache expires** turns it off.
 - **Games with Claudette.** Tic-tac-toe, Connect Four and hangman, from her right-click menu, the command palette, or **Play a game while you wait** when a usage limit stops a task. Settings → Appearance → **Games with Claudette** turns them off.
 - **Clear usage history on every machine…** in Settings → Usage, while **Share usage with my other machines** is on.
-- **User guide**, at the foot of the Settings sidebar, opens Claudette's guide in your browser.
+- **User guide**, under **Settings** at the foot of the sidebar and at the foot of the Settings sidebar, opens Claudette's guide in your browser.
 - A turn's changes to a file open in your diff tool too, from the diff window's **Open in diff tool**, and its menu has **Open in the OS's app**.
 
 ### Changed

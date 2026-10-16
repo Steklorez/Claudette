@@ -25,6 +25,8 @@ A minute after the reset, the tab sends *Continue from where you left off.* It a
 
 Only a limit that waiting fixes starts a wait. A rejection that needs usage credits, a turn you stopped, running out of turns or budget, or a server error doesn't.
 
+A tab that doesn't use usage credits waits the same way when they'd pay for it: see [Tabs that don't use usage credits](tabs-that-dont-use-usage-credits.md).
+
 ## When it won't continue by itself
 
 The bar says why, and offers **Continue when it resets** (or **Continue**, once the limit has reset) and a close button.
@@ -62,4 +64,5 @@ While a limit holds a task, the bar has **Play a game while you wait** with a me
 ## See also
 
 - [Alerts](alerts.md), which warn you before you get here.
+- [Tabs that don't use usage credits](tabs-that-dont-use-usage-credits.md), which wait here rather than spend them.
 - [Check-ins on long turns](../composer/check-ins-on-long-turns.md), the other message Claudette sends on its own.

@@ -373,6 +373,18 @@
           </Grid>
         </Border>
 
+        <!-- Usage credits pay for Claude (DESIGN.md §6, "Usage credits"): no Dismiss, it goes when they stop paying -->
+        <Border Name="CreditsNotice" DockPanel.Dock="Top" Classes="statusbanner" IsVisible="{Binding Usage.IsUsingCredits, FallbackValue=False}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+              <Run FontWeight="SemiBold" Text="Using usage credits." />
+              <Run Text="{Binding Usage.CreditsNotice, FallbackValue=''}" />
+            </TextBlock>
+            <Button Grid.Column="1" Classes="flat" Content="Manage on claude.ai" Command="{Binding Usage.OpenCreditsSettingsCommand, FallbackValue={x:Null}}"
+                    VerticalAlignment="Center" ToolTip.Tip="Your plan's usage on claude.ai, in your browser: where usage credits are turned off or capped" />
+          </Grid>
+        </Border>
+
         <!-- Claude has an incident, or maintenance (DESIGN.md §18, "Service status"), until dismissed or over -->
         <Border Name="ServiceStatusBanner" DockPanel.Dock="Top" Classes="statusbanner" Classes.info="{Binding ServiceStatus.IsInfoBanner}"
                 IsVisible="{Binding ServiceStatus.ShowBanner}">

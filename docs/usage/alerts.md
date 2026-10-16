@@ -14,12 +14,13 @@ Claudette tells you when your session is getting full, so you don't have to watc
 - **The session crosses a warning level.** One alert when it passes the warning level (75% by default), and one when it passes the alert level (90%). If it jumps past both, that's one alert. The title reads *Session usage passed 75%*, and the message says *You've used 76% of your session limit. It resets in 2h 14m.*
 - **You're on pace to hit the limit.** When the projection first says you'll reach the limit before the session resets: *On pace to hit the session limit*, with the same line the header shows.
 - **A limit resets.** When any limit's window starts over and its percentage drops: *Session limit reset*, *Weekly limit reset*, or a model's, with the new percentage.
+- **Usage credits start paying.** When a limit is used up and your plan's usage credits start paying for Claude: *Using usage credits*, with the same line as [the notice under the header](the-usage-header.md#when-usage-credits-pay). Once each time they start.
 
-Each alert comes once per window. The first reading after Claudette starts doesn't alert for levels you'd already crossed.
+Each alert comes once per window. The first reading after Claudette starts doesn't alert for levels you'd already crossed, or for usage credits already paying.
 
 ## Where they show
 
-- **A line under the header**, with **Dismiss**. A threshold alert's line keeps up with the session meter, so the two never disagree.
+- **A line under the header**, with **Dismiss**. A threshold alert's line keeps up with the session meter, so the two never disagree. Usage credits have their notice instead, which stays until they stop paying.
 - **An OS notification**, when Claudette isn't in front. Clicking it opens [the Usage window](the-usage-window.md).
 
 [Notifications](../away/notifications.md) explains how notifications work on each system.
