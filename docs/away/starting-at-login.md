@@ -2,6 +2,7 @@
 title: Starting at login
 parent: Away from your desk
 nav_order: 5
+summary: "Claudette can start by itself when you log in to your computer, with your tabs back where they were, so a task you left for tomorrow is a click away."
 ---
 
 # Starting at login

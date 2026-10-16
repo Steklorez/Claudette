@@ -2,6 +2,7 @@
 title: The diff view
 parent: Reviewing changes
 nav_order: 2
+summary: "The diff view shows what Claude changed in one file: the file as it was before Claude's first change in the session, against the file as it is now."
 ---
 
 # The diff view

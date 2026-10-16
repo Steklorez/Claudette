@@ -1,7 +1,9 @@
 ---
 title: Updates
-nav_order: 19
+parent: Help
+nav_order: 1
 has_children: true
+summary: "Claude Code's updates and Claudette's."
 ---
 
 # Updates

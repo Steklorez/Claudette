@@ -2,6 +2,7 @@
 title: Worktree tabs
 parent: Tabs and sessions
 nav_order: 11
+summary: "Several tabs in one folder edit the same files, so one tab's changes can trip another's."
 ---
 
 # Worktree tabs

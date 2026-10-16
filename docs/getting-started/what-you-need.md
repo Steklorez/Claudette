@@ -2,6 +2,7 @@
 title: What you need
 parent: Getting started
 nav_order: 1
+summary: "Claudette runs Claude Code in every tab, so Claude Code has to be installed first."
 ---
 
 # What you need

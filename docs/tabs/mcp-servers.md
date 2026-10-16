@@ -2,6 +2,7 @@
 title: MCP servers
 parent: Tabs and sessions
 nav_order: 13
+summary: "MCP servers give Claude extra tools."
 ---
 
 # MCP servers

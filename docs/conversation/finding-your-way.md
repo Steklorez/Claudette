@@ -2,6 +2,7 @@
 title: Finding your way
 parent: The conversation
 nav_order: 6
+summary: "A long conversation can run to thousands of cards."
 ---
 
 # Finding your way

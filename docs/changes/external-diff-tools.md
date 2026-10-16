@@ -2,6 +2,7 @@
 title: External diff tools
 parent: Reviewing changes
 nav_order: 6
+summary: "If you have a diff tool you prefer, Claudette can open a changed file's diff in it instead of the built-in diff view."
 ---
 
 # External diff tools

@@ -1,0 +1,239 @@
+---
+layout: landing
+title: Claudette
+description: Claude Code in a real desktop window. Every session in its own tab, every change ready to review, and your plan's usage on screen the whole time.
+image: /screenshots/standard-dark.png
+nav_exclude: true
+search_exclude: true
+---
+{%- comment -%}
+  The landing page (GUIDE.md, "The landing page"). The packages' buttons come from the latest release (site.github).
+{%- endcomment -%}
+{%- assign latest = site.github.latest_release -%}
+{%- assign windows = nil -%}
+{%- assign mac = nil -%}
+{%- for asset in latest.assets -%}
+  {%- if asset.name contains "-x64.msix" -%}{%- assign windows = asset -%}{%- endif -%}
+  {%- if asset.name contains "-arm64.dmg" -%}{%- assign mac = asset -%}{%- endif -%}
+{%- endfor -%}
+
+<section class="hero">
+  <div class="hero-mark" aria-hidden="true">
+    <img class="hero-sprite" src="{{ '/assets/claudette.svg' | relative_url }}" alt="" width="120" height="120">
+    <img class="hero-wordmark" src="{{ '/assets/wordmark.svg' | relative_url }}" alt="" width="540" height="80">
+  </div>
+  <p class="kicker">Claude Code, in a real desktop window</p>
+  <h1 class="hero-title">Every session in a tab.<br><span class="gradient-text">Every change in sight.</span></h1>
+  <p class="hero-lead">Claudette runs the real Claude Code, with your settings, <code>CLAUDE.md</code>, MCP servers and hooks, and draws it as a native app: a tab for each session, every change ready to review, and your plan's usage on screen the whole time.</p>
+
+  <div class="get" id="download">
+    <div class="get-card">
+      <p class="get-label">{% include icon.html name="download" %} Download Claudette{% if latest.tag_name %} {{ latest.tag_name | remove_first: "v" }}{% endif %}</p>
+      <div class="get-buttons">
+        <a class="pill pill-primary" href="{% if windows %}{{ windows.browser_download_url }}{% else %}{{ '/downloads.html' | relative_url }}{% endif %}">{% include icon.html name="monitor" %}<span>Windows <small>x64</small></span></a>
+        <a class="pill pill-primary" href="{% if mac %}{{ mac.browser_download_url }}{% else %}{{ '/downloads.html' | relative_url }}{% endif %}">{% include icon.html name="laptop" %}<span>macOS <small>Apple silicon</small></span></a>
+      </div>
+    </div>
+    <p class="get-note">Needs <a href="https://code.claude.com/docs/en/setup">Claude Code</a> · Windows 10 and 11, macOS 12 or later · <a href="{{ '/downloads.html' | relative_url }}">Every package</a></p>
+  </div>
+
+  <div class="hero-actions">
+    <a class="pill pill-outline" href="{{ '/getting-started/' | relative_url }}">{% include icon.html name="book" %}<span>Get started</span></a>
+    <a class="pill pill-outline" href="#tour"><span>Take the tour</span>{% include icon.html name="arrow-down" %}</a>
+    <a class="text-link" href="https://github.com/dotBunny/Claudette">{% include icon.html name="github" %} View on GitHub</a>
+  </div>
+
+  <ul class="trust">
+    <li>{% include icon.html name="terminal" %} Runs the real <code>claude</code></li>
+    <li>{% include icon.html name="shield" %} <strong>No analytics</strong></li>
+    <li>{% include icon.html name="code" %} MIT licensed</li>
+    <li>{% include icon.html name="monitor" %} Windows and macOS</li>
+  </ul>
+</section>
+
+<div class="hero-shot" data-reveal>
+  <div class="frame frame-hero">
+    <div class="frame-bar" aria-hidden="true"><img src="{{ '/assets/claudette.svg' | relative_url }}" alt="" width="16" height="16"><span>Claudette</span><i></i><i></i><i></i></div>
+    {% include picture.html name="standard" alt="Claudette's window: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files page in the side panel, the plan's usage in the header, and Claudette herself standing on the message box" width=2224 height=1427 eager=true %}
+  </div>
+</div>
+
+<section class="tour" id="tour" aria-labelledby="tour-title">
+  <div class="section-head" data-reveal>
+    <p class="kicker">See it in action</p>
+    <h2 id="tour-title">Everything Claude does,<br>where you can see it.</h2>
+    <p>From the first message to the last diff. Scroll through a day with Claudette.</p>
+  </div>
+
+  <nav class="story-index" aria-label="The tour">
+    <a href="#tabs"><span>01</span> Tabs</a>
+    <a href="#plans"><span>02</span> Plans</a>
+    <a href="#agents"><span>03</span> Agents</a>
+    <a href="#usage"><span>04</span> Usage</a>
+    <a href="#review"><span>05</span> Review</a>
+    <a href="#files"><span>06</span> Files</a>
+    <a href="#accounts"><span>07</span> Accounts</a>
+    <a href="#anywhere"><span>08</span> Anywhere</a>
+  </nav>
+
+  <div class="story">
+    <section class="story-step" id="tabs" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>01</span> Tabs and sessions</p>
+        <h3>A dozen sessions.<br>Not one lost.</h3>
+        <p>Every session gets a tab, grouped by project in a sidebar that shows each one's status, branch, model and context at a glance. Mark tabs your way, and press <kbd>Ctrl/Cmd+J</kbd> for the next one waiting for you.</p>
+        <a class="more" href="{{ '/tabs/' | relative_url }}">Tabs and sessions {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot is-tall">
+        <div class="frame">{% include picture.html name="guide/tabs/sidebar" alt="The sidebar: three project groups and seven tabs, each with its status, model and effort, git branch and context ring, a thread with its two sub-threads, and the Studio account's tag" width=460 height=1306 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="plans" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>02</span> Plans, tasks and threads</p>
+        <h3>Big jobs.<br>Shared out.</h3>
+        <p>Follow Claude's plan as it writes it, with every version, and watch each task get done: who's on it, how long it took and what it changed. Make a tab a thread, and its Claude hands work to the other tabs in its project, with one report back.</p>
+        <a class="more" href="{{ '/threads/' | relative_url }}">Threads {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="tasks-standard" alt="A thread moving a Unity game to the Input System: its two sub-threads under it in the sidebar, the plan it approved with Changes from v1, and its tasks two of seven done" width=2224 height=1427 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="agents" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>03</span> The agent map</p>
+        <h3>See every agent<br>at work.</h3>
+        <p>The agent map draws Claude's subagents as a tree while they fan out, nested as they nest, with what each is doing right now. Select one for what it was asked and what it returned, or stop it.</p>
+        <a class="more" href="{{ '/plans/the-agent-map.html' | relative_url }}">The agent map {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="agents-standard" alt="The agent map: three Explore subagents that surveyed the project in parallel, the first selected with its prompt and its report" width=2224 height=1427 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="usage" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>04</span> Usage and limits</p>
+        <h3>Know your plan.<br>Before it runs out.</h3>
+        <p>Live meters for the session and the week, a projection of where you'll land, and alerts before you hit a limit. If you do hit one mid-task, the tab waits for the reset and carries on by itself.</p>
+        <a class="more" href="{{ '/usage/' | relative_url }}">Usage and limits {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="header-standard" alt="The detailed usage header: the session chart heading for 90% just before the reset, the week with a model's own line, the burn rate per hour and the busiest tabs" width=2224 height=374 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="review" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>05</span> Reviewing changes</p>
+        <h3>Every change.<br>Reviewed.</h3>
+        <p>Every file the session touched, with a real diff view, <strong>Revert</strong> for a hunk or the whole file, and ticks that stick until Claude edits the file again. Or send the diff to Beyond Compare, VS Code or your own tool.</p>
+        <a class="more" href="{{ '/changes/' | relative_url }}">Reviewing changes {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="diff-standard" alt="The diff view of StarfallCharacter.cpp: the include, the air control change and the grappling hook's component Claude added" width=1482 height=696 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="files" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>06</span> Project files <em class="soon">Next release</em></p>
+        <h3>The code,<br>beside the conversation.</h3>
+        <p>A project's files in a tab of their own, with an explorer and an editor. Claude's changes are marked in the gutter, with a peek at what was there. Click a file Claude names, and it opens at the line.</p>
+        <a class="more" href="{{ '/project-files/' | relative_url }}">Project files {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="guide/project-files/files-tab" alt="A project's Files tab: the explorer with the files Claude changed marked, and StarfallCharacter.cpp open in the editor with Claude's changes in the gutter" width=2224 height=1427 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="accounts" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>07</span> Accounts <em class="soon">Next release</em></p>
+        <h3>Your plan for yours.<br>Their key for theirs.</h3>
+        <p>Run a client's projects on their API key and everything else on your own plan. The key stays in your OS's credential store, and the header shows what it's spending today, this week and this month.</p>
+        <a class="more" href="{{ '/accounts/' | relative_url }}">Accounts {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="accounts-standard" alt="A tab on the Studio API key: the header shows Studio's estimated spend today, this week and this month, and Studio's tag marks its group and tab" width=2224 height=1427 %}</div>
+      </div>
+    </section>
+
+    <section class="story-step" id="anywhere" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>08</span> History and syncing</p>
+        <h3>Pick up<br>anywhere.</h3>
+        <p>Search every past session, Claude's replies too. Carry a conversation to your other computer through a folder Dropbox, Google Drive or OneDrive keeps in sync, or keep it going from your phone with the Claude app.</p>
+        <a class="more" href="{{ '/history/' | relative_url }}">History and syncing {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="history-standard" alt="History narrowed to the starfall project by its chip: its open tabs' sessions and older ones, one from a worktree" width=2224 height=1427 %}</div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<section class="band looks" aria-labelledby="looks-title">
+  <div class="section-head" data-reveal>
+    <p class="kicker">Make it yours</p>
+    <h2 id="looks-title">Two looks.<br>Light and dark.</h2>
+    <p><strong>Standard</strong> is dense and calm, in your OS's accent color. <strong>Claude</strong> takes after the Claude apps, with warm colors, rounder cards and a serif for replies. Both follow your system, or not.</p>
+  </div>
+  <div class="looks-grid">
+    <figure data-reveal>
+      <div class="frame">{% include picture.html name="standard" alt="The Standard style" width=2224 height=1427 %}</div>
+      <figcaption>Standard</figcaption>
+    </figure>
+    <figure data-reveal>
+      <div class="frame">{% include picture.html name="claude" alt="The Claude style" width=2224 height=1427 %}</div>
+      <figcaption>Claude</figcaption>
+    </figure>
+  </div>
+  <p class="band-more" data-reveal><a class="more" href="{{ '/settings/styles-and-themes.html' | relative_url }}">Styles and themes {% include icon.html name="arrow-right" %}</a></p>
+</section>
+
+<section class="band mascot" aria-labelledby="mascot-title">
+  <div class="mascot-copy" data-reveal>
+    <p class="kicker">Meet Claudette</p>
+    <h2 id="mascot-title">She keeps you<br>company.</h2>
+    <p>Claudette stands on the message box while you work. She reads along with a magnifying glass, hammers while Claude edits, juggles a ball for each subagent, waves when Claude needs you, and throws confetti when the task list is done.</p>
+    <p>Poke her and drag her about, and soon play her at tic-tac-toe while a usage limit resets <em class="soon">Next release</em>. She stands still if you reduce motion, and Settings can turn her off.</p>
+    <a class="more" href="{{ '/claudette/' | relative_url }}">Claudette on the composer {% include icon.html name="arrow-right" %}</a>
+  </div>
+  <div class="mascot-stage" data-reveal>
+    <picture>
+      <source srcset="{{ '/screenshots/claudette-standard-dark.png' | relative_url }}" media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)">
+      <source srcset="{{ '/screenshots/claudette-standard-light.png' | relative_url }}" media="(prefers-reduced-motion: reduce)">
+      <img src="{{ '/screenshots/claudette.gif' | relative_url }}" alt="Claudette climbing up onto the message box, then dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up" width="400" height="136" loading="lazy">
+    </picture>
+  </div>
+</section>
+
+<section class="band more-grid" aria-labelledby="more-title">
+  <div class="section-head" data-reveal>
+    <p class="kicker">And the rest</p>
+    <h2 id="more-title">Made for the way you work.</h2>
+  </div>
+  <div class="cards">
+    <a class="card" href="{{ '/tabs/worktree-tabs.html' | relative_url }}" data-reveal>{% include icon.html name="branch" %}<strong>Worktree tabs</strong><span>Parallel tabs in one repository, each on its own branch.</span></a>
+    <a class="card" href="{{ '/project-tools/' | relative_url }}" data-reveal>{% include icon.html name="gamepad" %}<strong>Project tools</strong><span>Unreal Engine, Unity and Godot: build, launch, open the solution.</span></a>
+    <a class="card" href="{{ '/away/the-claude-app.html' | relative_url }}" data-reveal>{% include icon.html name="phone" %}<strong>The Claude app</strong><span>Keep a conversation going from your phone.</span></a>
+    <a class="card" href="{{ '/tabs/the-command-palette.html' | relative_url }}" data-reveal>{% include icon.html name="command" %}<strong>Command palette</strong><span>Everything Claudette can do, a few keystrokes away.</span></a>
+    <a class="card" href="{{ '/conversation/the-scratch-pad.html' | relative_url }}" data-reveal>{% include icon.html name="note" %}<strong>Scratch pad</strong><span>A pad per project for commands, notes and snippets.</span></a>
+    <a class="card" href="{{ '/project-tools/perforce.html' | relative_url }}" data-reveal>{% include icon.html name="key" %}<strong>Perforce</strong><span>Tickets kept fresh, and each tab's changelist.</span></a>
+    <a class="card" href="{{ '/away/notifications.html' | relative_url }}" data-reveal>{% include icon.html name="bell" %}<strong>Notifications</strong><span>Know when a tab needs you, wherever you are.</span></a>
+    <a class="card" href="{{ '/settings/accessibility.html' | relative_url }}" data-reveal>{% include icon.html name="eye" %}<strong>Accessibility</strong><span>Zoom, reduced motion and screen readers.</span></a>
+  </div>
+</section>
+
+<section class="closing" data-reveal aria-labelledby="closing-title">
+  <img class="closing-sprite" src="{{ '/assets/claudette.svg' | relative_url }}" alt="" width="64" height="64">
+  <h2 id="closing-title">Your next session starts here.</h2>
+  <p>Install Claude Code. Download Claudette. Open a folder.</p>
+  <div class="hero-actions">
+    <a class="pill pill-light" href="#download">{% include icon.html name="download" %}<span>Download Claudette</span></a>
+    <a class="pill pill-outline-light" href="{{ '/guide/' | relative_url }}">{% include icon.html name="book" %}<span>Read the docs</span></a>
+  </div>
+</section>

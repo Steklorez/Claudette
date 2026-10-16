@@ -2,6 +2,7 @@
 title: Diagnostics and logs
 parent: Troubleshooting
 nav_order: 8
+summary: "When something looks wrong, Claudette has a page of diagnostics and two kinds of logs to look at."
 ---
 
 # Diagnostics and logs

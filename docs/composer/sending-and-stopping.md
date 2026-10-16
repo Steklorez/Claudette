@@ -2,6 +2,7 @@
 title: Sending and stopping
 parent: The composer
 nav_order: 1
+summary: "The message box at the foot of a tab is where you talk to Claude."
 ---
 
 # Sending and stopping

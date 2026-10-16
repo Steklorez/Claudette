@@ -12,18 +12,21 @@ Planned 2026-10-15. Built 2026-10-16: the site, every chapter, and the pictures 
 - **How it's built.** With Jekyll and the plugins GitHub Pages has ([its versions](https://pages.github.com/versions/)); `docs/Gemfile` names the `github-pages` gem, which pins the same versions for previewing. The theme is [Just the Docs](https://just-the-docs.com), as a `remote_theme` pinned to a release's tag. It gives a sidebar from each page's front matter (`nav_order`, `parent`, `has_children`), search built with the site, callouts, and an **Edit this page on GitHub** link.
   - **Why GitHub Pages' own build.** It needs no workflow to publish, and nothing of ours runs to build the site. The price is GitHub Pages' limits: only its own plugins, and nothing outside `docs/`. So the changelog is a link to `CHANGELOG.md` rather than a page made from it, and the Downloads page reads the releases through `jekyll-github-metadata`, one of those plugins ([Downloads and the changelog](#5-downloads-and-the-changelog)). A workflow of ours that built and published the site could do more, at the cost of keeping it.
   - `docs/_config.yml`: the title; `url: https://claudette.dotbunny.com` and no `baseurl`, since the site is the domain's root; the theme; the plugins (`jekyll-remote-theme`, `jekyll-seo-tag`, `jekyll-sitemap` and `jekyll-github-metadata`); `repository`, for the releases; search; a link to the repository; the **Changelog** link; and the edit link, to `docs/` on `main`. GitHub Pages also turns on `jekyll-relative-links`, so a page links to another by its `.md` file, which reads on GitHub too.
-  - **Light and dark.** The site follows the reader's system, as Claudette does by default. Just the Docs has a light scheme and a dark one but nothing that follows the system, so `_includes/head_custom.html` calls `jtd.setTheme` from `prefers-color-scheme`, and again when that changes. The page has no switch of its own, so the pictures can follow the same setting ([Pictures](#3-pictures)).
-  - **The icon and favicon:** `packaging/icon/build-icons.mjs` writes them to `docs/assets/` too, so they stay the app's ([Packaging and signing](DESIGN.md#packaging-and-signing)). The site in Claudette's own colors, as a custom scheme in `_sass/color_schemes/`, can come later.
+  - **Light and dark.** The site follows the reader's system, as Claudette does by default. Just the Docs switches schemes but doesn't follow the system, so `_includes/head_custom.html` calls `jtd.setTheme` with Claudette's light or dark scheme from `prefers-color-scheme`, and again when that changes. The page has no switch of its own, so the pictures can follow the same setting ([Pictures](#3-pictures)).
+  - **The icon, favicon and wordmark:** `packaging/icon/build-icons.mjs` writes them to `docs/assets/` too, so they stay the app's ([Packaging and signing](DESIGN.md#packaging-and-signing)). The wordmark is her name in the icon's pixels.
+  - **Its look.** Claudette's colors, from her icon: Claude's coral, her hair's rust and her hair tie's raspberry, over Anthropic's ivory or charcoal. `_sass/custom/setup.scss` holds them, `_sass/color_schemes/claudette-light.scss` and `claudette-dark.scss` are the schemes (with `assets/css/just-the-docs-claudette-*.scss` to switch to them), and `_sass/custom/custom.scss` the shapes: her colors across the top, rounder corners, pictures framed with a glow, and the *New in the next release* label as a pill. `_includes/title.html` puts her icon and name at the top of the sidebar, and `_includes/components/children_nav.html` (Just the Docs' own, changed) lists a section's chapters and a chapter's pages as cards, each with its `summary`.
 - **The check**, `.github/workflows/docs.yml`. On a pull request or a push to `main` that changes `docs/`, it builds the site with `docs/Gemfile`'s gems and runs html-proofer over it, for internal links only. A broken link, a missing picture or a picture with no alt text fails the run instead of reaching the site. It doesn't publish anything.
 - **Previewing it.** With Ruby installed, run `bundle install`, then `bundle exec jekyll serve` in `docs/`. The Downloads page reads the releases from GitHub's API; without a token (`JEKYLL_GITHUB_TOKEN`) it still can, a few times an hour.
-- **Chapters and pages.** Each chapter in [The chapters](#4-the-chapters) is a folder of pages with an `index.md`, which says what the chapter covers; the theme lists its pages. A page's file is its title in lowercase with hyphens: **Worktree tabs** is `docs/tabs/worktree-tabs.md`. Chapters sit in the sidebar in the map's order.
+- **The landing page**, `docs/index.html`, is the site's front page, like a product's home page rather than a page of the guide: a page of its own outside Just the Docs (`_layouts/landing.html`, `assets/css/landing.css`, `assets/js/landing.js`), with a header for **Home**, **Docs**, **Downloads**, the changelog and GitHub. It has her and her name, the latest release's packages (from `site.github`), a tour of eight features with the README's pictures, the two styles, Claudette herself, cards for the rest, and a last call to download. Its pictures follow the reader's theme through `_includes/picture.html`, its icons are drawn inline (`_includes/icon.html`, from Lucide), so it loads nothing from elsewhere, and its motion (pictures rising into view, the tour's index following along) stops with reduced motion, when her animation gives way to her still picture too. What a release doesn't have yet is marked *Next release*.
+- **The guide** starts at `/guide/`, the **Overview** (`docs/guide/index.md`), which **Docs** opens. Its chapters are grouped into sections in the sidebar, each a page in `docs/guide/` ([The chapters](#4-the-chapters)), so the sidebar has ten entries rather than twenty-three; **Getting started** and **Downloads** stand on their own.
+- **Chapters and pages.** Each chapter in [The chapters](#4-the-chapters) is a folder of pages with an `index.md`, which says what the chapter covers and has its section as its `parent`; the theme lists its pages as cards. A page's file is its title in lowercase with hyphens: **Worktree tabs** is `docs/tabs/worktree-tabs.md`. Every chapter and page has a `summary` in its front matter, a line saying what it's for, which its card shows. Chapters sit in the sidebar in the map's order.
 
 ## 2. Writing a page
 
 - **Who it's for.** People using Claudette, not working on it: what the part is for, how to do each thing (in numbered steps where there are steps), the settings that change it and its shortcuts. No class names, protocol or other internals.
 - **The app's own words.** In bold, exactly as the app shows them: Settings → Appearance → **Style**, **Always allow**. Where DESIGN.md and the app disagree, the app wins, and DESIGN.md is corrected in the same change. Shortcuts are written as `Ctrl/Cmd+J`; the Reference chapter lists both.
 - **One home for each part.** Each part of Claudette is explained on one page, the one the map names. Other pages say what it is in a sentence and link to it. A setting is explained on its feature's page, and Settings → **Every setting** links there.
-- **The shape of a page.**
+- **The shape of a page.** Its front matter has its `title`, its chapter as its `parent`, its `nav_order`, and a `summary`: what the part is for, in a line.
   1. What the part is for, in a sentence or two, and a picture of it.
   2. How to do each thing with it, a heading each.
   3. **Settings**: each setting that changes it, its default, and a link to its Settings page.
@@ -47,9 +50,23 @@ Planned 2026-10-15. Built 2026-10-16: the site, every chapter, and the pictures 
 
 Each chapter's table lists its pages in order, what each covers, and the DESIGN.md sections it's written from. A page is written from those sections, then checked against the running app.
 
-### Home (`docs/index.md`)
+The sidebar groups the chapters into sections (`docs/guide/<section>.md`), in this order:
 
-What Claudette is, a picture of the window, a download button for the latest release with what's new in it, where to start. From [§1](DESIGN.md#1-goals) and the README.
+| Section | Chapters |
+|---|---|
+| Overview | The guide's start (`docs/guide/index.md`): where to start, and what's in each section. |
+| Downloads | Its own page. |
+| Getting started | Its own chapter. |
+| Sessions | Tabs and sessions, The conversation, The composer, Permissions and prompts, History and syncing. |
+| Agents and threads | Plans, tasks and agents, Threads. |
+| Code and changes | Reviewing changes, Project files, Project tools. |
+| Usage and accounts | Usage and limits, Accounts. |
+| Make it yours | Settings, Away from your desk, Claudette. |
+| Help | Updates, Troubleshooting, Privacy and your data, Reference. |
+
+### Home (`docs/index.html`)
+
+The landing page ([The site](#1-the-site)): what Claudette is, the latest release's packages, a tour of its main features with pictures, its two styles, Claudette herself, and where to start. From [§1](DESIGN.md#1-goals) and the README.
 
 ### Downloads (`docs/downloads.md`)
 

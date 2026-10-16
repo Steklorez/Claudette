@@ -2,6 +2,7 @@
 title: The composer bar
 parent: The composer
 nav_order: 2
+summary: "The bar under the message box holds your choices on its left and the counts for the tab on its right, with Send last."
 ---
 
 # The composer bar

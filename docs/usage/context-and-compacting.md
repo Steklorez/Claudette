@@ -2,6 +2,7 @@
 title: Context and compacting
 parent: Usage and limits
 nav_order: 5
+summary: "Separate from your plan's limits, each tab has a context window: how much of the conversation Claude can hold at once."
 ---
 
 # Context and compacting

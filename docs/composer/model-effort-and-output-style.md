@@ -2,6 +2,7 @@
 title: Model, effort and output style
 parent: The composer
 nav_order: 7
+summary: "Two buttons on the left of the composer bar show which model the tab uses and how hard it thinks."
 ---
 
 # Model, effort and output style

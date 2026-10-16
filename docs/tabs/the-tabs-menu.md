@@ -2,6 +2,7 @@
 title: The tab's menu
 parent: Tabs and sessions
 nav_order: 5
+summary: "Right-click a tab's row in the sidebar for its menu."
 ---
 
 # The tab's menu

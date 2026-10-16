@@ -1,7 +1,9 @@
 ---
 title: The composer
-nav_order: 6
+parent: Sessions
+nav_order: 3
 has_children: true
+summary: "Sending and stopping, slash commands and mentions, attachments, drafts, quick suffixes, the model and effort."
 ---
 
 # The composer

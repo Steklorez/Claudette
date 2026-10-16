@@ -1,7 +1,9 @@
 ---
 title: Tabs and sessions
-nav_order: 4
+parent: Sessions
+nav_order: 1
 has_children: true
+summary: "Opening, grouping, marking and closing tabs, the side panel, split panes, worktree tabs and the process monitor."
 ---
 
 # Tabs and sessions

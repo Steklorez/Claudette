@@ -1,7 +1,9 @@
 ---
 title: Away from your desk
-nav_order: 16
+parent: Make it yours
+nav_order: 2
 has_children: true
+summary: "Notifications, the Claude app, keeping the computer awake and starting at login."
 ---
 
 # Away from your desk

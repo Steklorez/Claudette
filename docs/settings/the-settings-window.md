@@ -2,6 +2,7 @@
 title: The Settings window
 parent: Settings
 nav_order: 1
+summary: "Everything you can change in Claudette is in the Settings window: a list of categories down the left, and the one you pick on the right."
 ---
 
 # The Settings window

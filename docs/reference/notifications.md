@@ -2,6 +2,7 @@
 title: Notifications
 parent: Reference
 nav_order: 3
+summary: "Every kind of notification Claudette sends, the switch that turns it off, what it says and where a click goes."
 ---
 
 # Notifications

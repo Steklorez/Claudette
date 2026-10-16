@@ -2,6 +2,7 @@
 title: Exporting
 parent: The conversation
 nav_order: 9
+summary: "The file is written under a temporary name and then renamed, so a failed export never leaves half a file under the name you chose."
 ---
 
 # Exporting

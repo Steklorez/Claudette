@@ -2,6 +2,7 @@
 title: Settings sync
 parent: History and syncing
 nav_order: 5
+summary: "Settings sync keeps Claudette's settings the same on every machine that uses the same session library folder."
 ---
 
 # Settings sync

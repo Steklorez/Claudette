@@ -2,6 +2,7 @@
 title: Sending work and getting reports
 parent: Threads
 nav_order: 3
+summary: "How the thread's Claude hands work to its sub-threads, and how their results come back to it in one report."
 ---
 
 # Sending work and getting reports

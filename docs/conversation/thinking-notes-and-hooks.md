@@ -2,6 +2,7 @@
 title: Thinking, notes and hooks
 parent: The conversation
 nav_order: 3
+summary: "Between your messages and Claude's replies, the conversation shows Claude's thinking, notices from Claude Code and Claudette, and the hooks that ran."
 ---
 
 # Thinking, notes and hooks

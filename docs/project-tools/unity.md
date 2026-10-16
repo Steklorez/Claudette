@@ -2,6 +2,7 @@
 title: Unity
 parent: Project tools
 nav_order: 3
+summary: "A Unity project gets a row with its name and editor version, and actions to open the editor and build."
 ---
 
 # Unity

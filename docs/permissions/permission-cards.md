@@ -2,6 +2,7 @@
 title: Permission cards
 parent: Permissions and prompts
 nav_order: 1
+summary: "When Claude Code needs your permission to use a tool, such as running a command or editing a file, the tab shows a card in the conversation and waits for you."
 ---
 
 # Permission cards

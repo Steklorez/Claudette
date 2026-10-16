@@ -1,0 +1,19 @@
+// The guide in dark: Anthropic's charcoal, ivory text and a lighter coral (head_custom.html picks it when the system is
+// dark).
+$color-scheme: dark;
+$body-background-color: $cl-charcoal;
+$body-heading-color: $cl-ivory;
+$body-text-color: #d9d5cc;
+$link-color: #ec9776;
+$nav-child-link-color: #b9b4aa;
+$sidebar-color: #1b1a18;
+$base-button-color: #2a2825;
+$btn-primary-color: $cl-coral-deep;
+$code-background-color: #1e1d1b;
+$feedback-color: #1b1a18;
+$table-background-color: #1b1a18;
+$search-background-color: #23221f;
+$search-result-preview-color: #b9b4aa;
+$border-color: #2f2d29;
+
+@import "./vendor/accessible-pygments/github-dark";

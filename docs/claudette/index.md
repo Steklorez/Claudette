@@ -1,7 +1,9 @@
 ---
 title: Claudette
-nav_order: 17
+parent: Make it yours
+nav_order: 3
 has_children: true
+summary: "Claudette on the composer, and her games."
 ---
 
 # Claudette

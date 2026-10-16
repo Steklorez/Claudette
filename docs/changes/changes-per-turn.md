@@ -2,6 +2,7 @@
 title: Changes per turn
 parent: Reviewing changes
 nav_order: 5
+summary: "Changed files shows everything since the session started."
 ---
 
 # Changes per turn

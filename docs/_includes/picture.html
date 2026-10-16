@@ -1,0 +1,11 @@
+{%- comment -%}
+  A screenshot on the landing page in the reader's theme, as shot.html is in the guide:
+    {% include picture.html name="tasks-standard" alt="…" width=2224 height=1427 %}
+  shows screenshots/<name>-dark.png when the reader's system is dark, and screenshots/<name>-light.png otherwise. The
+  width and height keep its place while it loads.
+{%- endcomment -%}
+{%- assign base = "/screenshots/" | append: include.name -%}
+<picture>
+  <source srcset="{{ base | append: '-dark.png' | relative_url }}" media="(prefers-color-scheme: dark)">
+  <img src="{{ base | append: '-light.png' | relative_url }}" alt="{{ include.alt | escape }}" width="{{ include.width }}" height="{{ include.height }}"{% unless include.eager %} loading="lazy"{% endunless %} decoding="async">
+</picture>

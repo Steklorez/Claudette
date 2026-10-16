@@ -2,6 +2,7 @@
 title: Copying and quoting
 parent: The conversation
 nav_order: 7
+summary: "You can copy a whole message, copy a selection, quote part of a reply back to Claude, or keep a piece of it on the project's scratch pad."
 ---
 
 # Copying and quoting

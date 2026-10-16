@@ -2,6 +2,7 @@
 title: Claude's changes in the editor
 parent: Project files
 nav_order: 7
+summary: "Claude's changes marked in the explorer and the editor's gutter, with a peek at what was there and Revert."
 ---
 
 # Claude's changes in the editor

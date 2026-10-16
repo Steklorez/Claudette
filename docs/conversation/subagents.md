@@ -2,6 +2,7 @@
 title: Subagents
 parent: The conversation
 nav_order: 4
+summary: "Claude can hand part of its work to a subagent: a helper that runs inside the same session with its own instructions and its own tool calls, and hands a report back."
 ---
 
 # Subagents

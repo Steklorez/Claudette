@@ -2,6 +2,7 @@
 title: Folder trust
 parent: Permissions and prompts
 nav_order: 6
+summary: "A folder can carry its own Claude Code configuration: hooks, commands, environment variables, MCP servers."
 ---
 
 # Folder trust

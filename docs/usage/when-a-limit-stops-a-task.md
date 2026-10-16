@@ -2,6 +2,7 @@
 title: When a limit stops a task
 parent: Usage and limits
 nav_order: 8
+summary: "When a plan limit stops a task, the tab waits for the reset and carries on by itself."
 ---
 
 # When a limit stops a task

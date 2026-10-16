@@ -2,6 +2,7 @@
 title: Unreal Engine
 parent: Project tools
 nav_order: 2
+summary: "An Unreal Engine project gets a row with its name and engine, and actions to launch the editor, generate project files and build."
 ---
 
 # Unreal Engine

@@ -2,6 +2,7 @@
 title: The detailed header
 parent: Usage and limits
 nav_order: 2
+summary: "The header can be drawn taller, with charts, so you can keep an eye on usage without opening the Usage window."
 ---
 
 # The detailed header

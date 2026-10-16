@@ -2,6 +2,7 @@
 title: Every setting
 parent: Settings
 nav_order: 2
+summary: "A table for each category in the Settings window, in the order its sidebar lists them."
 ---
 
 # Every setting

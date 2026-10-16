@@ -2,6 +2,7 @@
 title: Closing and restoring
 parent: Tabs and sessions
 nav_order: 14
+summary: "Closing a tab stops its Claude Code, and Claudette asks first when something would be lost."
 ---
 
 # Closing and restoring

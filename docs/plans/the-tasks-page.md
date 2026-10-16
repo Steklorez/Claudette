@@ -2,6 +2,7 @@
 title: The Tasks page
 parent: Plans, tasks and agents
 nav_order: 1
+summary: "When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, the side panel gets a Tasks page, and the tab shows how far the work has got, such as 2 of 5."
 ---
 
 # The Tasks page

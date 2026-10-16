@@ -2,6 +2,7 @@
 title: Signing in
 parent: Troubleshooting
 nav_order: 2
+summary: "Signing in describes the sign-in screen."
 ---
 
 # Signing in

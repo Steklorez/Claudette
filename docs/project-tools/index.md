@@ -1,7 +1,9 @@
 ---
 title: Project tools
-nav_order: 15
+parent: Code and changes
+nav_order: 3
 has_children: true
+summary: "Unreal Engine, Unity, Godot, your own actions and links, and Perforce."
 ---
 
 # Project tools

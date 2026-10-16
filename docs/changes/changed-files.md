@@ -2,6 +2,7 @@
 title: Changed files
 parent: Reviewing changes
 nav_order: 1
+summary: "The Changed Files page of a tab's side panel lists the files Claude changed in that tab's session, each added, modified or deleted, with how many lines changed."
 ---
 
 # Changed files

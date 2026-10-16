@@ -2,6 +2,7 @@
 title: Styles and themes
 parent: Settings
 nav_order: 3
+summary: "Claudette has two looks, Standard and Claude, and each comes in light and dark."
 ---
 
 # Styles and themes

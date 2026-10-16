@@ -2,6 +2,7 @@
 title: Something missing on Linux
 parent: Troubleshooting
 nav_order: 6
+summary: "Claudette builds and runs on Linux, but only Windows and macOS are tested and packaged, so it's less polished there."
 ---
 
 # Something missing on Linux

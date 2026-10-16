@@ -2,6 +2,7 @@
 title: A tab that seems stuck
 parent: Troubleshooting
 nav_order: 4
+summary: "A turn can run a long time without being stuck: a test run or a build may take many minutes."
 ---
 
 # A tab that seems stuck

@@ -2,6 +2,7 @@
 title: The tab info card
 parent: Tabs and sessions
 nav_order: 6
+summary: "The info card is where a tab's details live, so they don't crowd its name."
 ---
 
 # The tab info card

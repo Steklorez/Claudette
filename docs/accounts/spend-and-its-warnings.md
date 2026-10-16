@@ -2,6 +2,7 @@
 title: Spend and its warnings
 parent: Accounts
 nav_order: 5
+summary: "An API key has no plan limits, so there's nothing for the usage meters to measure."
 ---
 
 # Spend and its warnings

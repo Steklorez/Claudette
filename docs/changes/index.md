@@ -1,7 +1,9 @@
 ---
 title: Reviewing changes
-nav_order: 10
+parent: Code and changes
+nav_order: 1
 has_children: true
+summary: "Changed files, the diff view, reviewed files, reverting, and your own diff tool."
 ---
 
 # Reviewing changes

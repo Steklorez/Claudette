@@ -2,6 +2,7 @@
 title: Claude Code's updates
 parent: Updates
 nav_order: 1
+summary: "How Claude Code updates depends on how it was installed."
 ---
 
 # Claude Code's updates

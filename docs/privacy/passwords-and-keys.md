@@ -2,6 +2,7 @@
 title: Passwords and keys
 parent: Privacy and your data
 nav_order: 3
+summary: "Claudette keeps the secrets you give it, Perforce passwords and API keys, in your operating system's credential store and nowhere else."
 ---
 
 # Passwords and keys

@@ -1,7 +1,9 @@
 ---
 title: Project files
-nav_order: 11
+parent: Code and changes
+nav_order: 2
 has_children: true
+summary: "A project's explorer and editor, and Claude's changes in it."
 ---
 
 # Project files

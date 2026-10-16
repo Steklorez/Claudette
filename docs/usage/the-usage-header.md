@@ -2,6 +2,7 @@
 title: The usage header
 parent: Usage and limits
 nav_order: 1
+summary: "The strip across the top of the window shows how much of your plan's limits you've used, how fast you're using them, and when you'll hit the limit at that rate."
 ---
 
 # The usage header

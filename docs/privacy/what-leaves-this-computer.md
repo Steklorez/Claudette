@@ -2,6 +2,7 @@
 title: What leaves this computer
 parent: Privacy and your data
 nav_order: 2
+summary: "Claudette has no sign-in of its own and sends no analytics."
 ---
 
 # What leaves this computer

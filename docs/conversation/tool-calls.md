@@ -2,6 +2,7 @@
 title: Tool calls
 parent: The conversation
 nav_order: 2
+summary: "When Claude reads a file, edits one, runs a command or searches, that is a tool call."
 ---
 
 # Tool calls

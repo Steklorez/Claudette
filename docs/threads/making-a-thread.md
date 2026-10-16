@@ -2,6 +2,7 @@
 title: Making a thread
 parent: Threads
 nav_order: 2
+summary: "Everything about threads is in a tab's Thread submenu: right-click the tab in the sidebar, or in the rail when the sidebar is collapsed."
 ---
 
 # Making a thread

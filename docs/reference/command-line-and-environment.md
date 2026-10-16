@@ -2,6 +2,7 @@
 title: Command line and environment
 parent: Reference
 nav_order: 4
+summary: "How to start Claudette from a terminal, the environment variables Claudette reads, and what Claudette passes to the programs it starts."
 ---
 
 # Command line and environment

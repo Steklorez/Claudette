@@ -2,6 +2,7 @@
 title: Check-ins on long turns
 parent: The composer
 nav_order: 9
+summary: "If a turn runs for a long time, Claudette can ask Claude how it's going, so a tab doesn't sit stuck and burn usage without anyone noticing."
 ---
 
 # Check-ins on long turns

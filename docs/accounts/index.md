@@ -1,7 +1,9 @@
 ---
 title: Accounts
-nav_order: 13
+parent: Usage and accounts
+nav_order: 2
 has_children: true
+summary: "Your Claude sign-in, API-key accounts and their spend."
 ---
 
 # Accounts

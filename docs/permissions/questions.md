@@ -2,6 +2,7 @@
 title: Questions
 parent: Permissions and prompts
 nav_order: 3
+summary: "Claude sometimes stops to ask you something with options to pick from, instead of guessing."
 ---
 
 # Questions

@@ -2,6 +2,7 @@
 title: Split panes
 parent: Tabs and sessions
 nav_order: 9
+summary: "Show up to three tabs side by side, each pane with its own conversation, composer and working line and a line between them."
 ---
 
 # Split panes

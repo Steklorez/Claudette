@@ -2,6 +2,7 @@
 title: Claude is having problems
 parent: Troubleshooting
 nav_order: 7
+summary: "When Claude itself has trouble, tabs fail in ways that look like Claudette's fault or yours: retries, overloaded errors, a sign-in that won't finish."
 ---
 
 # Claude is having problems

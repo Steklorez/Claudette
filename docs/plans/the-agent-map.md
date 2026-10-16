@@ -2,6 +2,7 @@
 title: The agent map
 parent: Plans, tasks and agents
 nav_order: 3
+summary: "When Claude fans work out to several subagents, possibly nested, the conversation shows each as a group (Subagents)."
 ---
 
 # The agent map

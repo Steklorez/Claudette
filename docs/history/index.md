@@ -1,7 +1,9 @@
 ---
 title: History and syncing
-nav_order: 14
+parent: Sessions
+nav_order: 5
 has_children: true
+summary: "History, the session library, and picking up on another machine."
 ---
 
 # History and syncing

@@ -2,6 +2,7 @@
 title: Opening tabs
 parent: Tabs and sessions
 nav_order: 1
+summary: "Every tab has a working folder, which you pick when you open it."
 ---
 
 # Opening tabs

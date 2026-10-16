@@ -1,7 +1,9 @@
 ---
 title: Troubleshooting
-nav_order: 20
+parent: Help
+nav_order: 2
 has_children: true
+summary: "What to do when something goes wrong."
 ---
 
 # Troubleshooting

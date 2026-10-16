@@ -2,6 +2,7 @@
 title: History
 parent: History and syncing
 nav_order: 1
+summary: "History lists your past sessions, grouped by project, so you can pick one up again in a new tab."
 ---
 
 # History

@@ -2,6 +2,7 @@
 title: Keyboard
 parent: Settings
 nav_order: 5
+summary: "Settings → Keyboard sets which key sends your message and lists every shortcut Claudette handles."
 ---
 
 # Keyboard

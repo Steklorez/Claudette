@@ -2,6 +2,7 @@
 title: Quick suffixes
 parent: The composer
 nav_order: 6
+summary: "Saved snippets of instructions you add to a message in a click, such as asking Claude to ask questions first."
 ---
 
 # Quick suffixes

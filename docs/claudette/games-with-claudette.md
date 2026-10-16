@@ -2,6 +2,7 @@
 title: Games with Claudette
 parent: Claudette
 nav_order: 2
+summary: "While Claude works, or a usage limit holds a task, you can play a game against Claudette: tic-tac-toe, Connect Four or hangman."
 ---
 
 # Games with Claudette

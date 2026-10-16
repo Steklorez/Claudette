@@ -2,6 +2,7 @@
 title: File tabs
 parent: Project files
 nav_order: 4
+summary: "A row of tabs sits over the editor, one for each open file."
 ---
 
 # File tabs

@@ -2,6 +2,7 @@
 title: The explorer
 parent: Project files
 nav_order: 2
+summary: "The explorer is the tree of the project's folders and files at the side of a Files tab."
 ---
 
 # The explorer

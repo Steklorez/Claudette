@@ -2,6 +2,7 @@
 title: MCP servers asking for input
 parent: Permissions and prompts
 nav_order: 5
+summary: "An MCP server can ask you something in the middle of a turn: a missing detail, a choice, or a sign-in to finish in the browser."
 ---
 
 # MCP servers asking for input

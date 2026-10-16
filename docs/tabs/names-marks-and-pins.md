@@ -2,6 +2,7 @@
 title: Names, marks and pins
 parent: Tabs and sessions
 nav_order: 4
+summary: "Three small things set a tab apart in the sidebar: its name, an icon of your own (a mark), and whether it's pinned."
 ---
 
 # Names, marks and pins

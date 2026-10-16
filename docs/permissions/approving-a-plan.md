@@ -2,6 +2,7 @@
 title: Approving a plan
 parent: Permissions and prompts
 nav_order: 4
+summary: "In Plan mode, Claude looks around and writes a plan instead of changing anything, then asks you to approve it before it starts."
 ---
 
 # Approving a plan

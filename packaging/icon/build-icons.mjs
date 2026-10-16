@@ -5,6 +5,7 @@
 //   packaging/icon/claudette-1024.png         the macOS icon, on an ivory tile; build-dmg.sh scales it
 //   src/Claudette.App/Assets/claudette.ico    the window and executable icon
 //   docs/assets/claudette.svg, favicon.ico    the user guide's logo and favicon (GUIDE.md, "The site")
+//   docs/assets/wordmark.svg                  her name in pixels, for the guide's landing page
 //   packaging/windows/Assets/*.png            the MSIX logos, and the taskbar's unplated sizes
 //   src/Claudette.App/Assets/AppIcon/*.png    the animations' frames (DESIGN.md §10): the taskbar overlay's pulsing
 //                                             spark and running hourglass, and the Dock icon typing, waving and
@@ -450,6 +451,47 @@ function svg() {
   ].join('\n');
 }
 
+// Her name in the same pixels as her icon, for the user guide's landing page: 5×7 letters a cell apart, in her colors from
+// amber through Claude's coral to her hair tie's raspberry, over a shadow a cell down and right in her hair's rust.
+const letters = {
+  C: ['.###.', '#...#', '#....', '#....', '#....', '#...#', '.###.'],
+  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  D: ['####.', '#...#', '#...#', '#...#', '#...#', '#...#', '####.'],
+  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
+  T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
+};
+
+function wordmark(word = 'CLAUDETTE') {
+  const rows = letters.C.map((_, y) => [...word].map(letter => letters[letter][y]).join('.'));
+  const width = rows[0].length + 1;
+  const runs = (dx, dy) => rows.flatMap((row, y) => {
+    const rects = [];
+    for (let x = 0; x < row.length; ) {
+      let end = x + 1;
+      while (end < row.length && row[end] === row[x]) end++;
+      if (row[x] === '#') rects.push(`<rect x="${x + dx}" y="${y + dy}" width="${end - x}" height="1"/>`);
+      x = end;
+    }
+    return rects;
+  }).join('');
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${rows.length + 1}" shape-rendering="crispEdges">`,
+    '  <!-- Drawn by packaging/icon/build-icons.mjs. -->',
+    `  <title>${word[0]}${word.slice(1).toLowerCase()}</title>`,
+    '  <defs>',
+    `    <linearGradient id="her-colors" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${width}" y2="0">`,
+    '      <stop offset="0" stop-color="#F0A35E"/><stop offset="0.45" stop-color="#D97757"/><stop offset="1" stop-color="#B8336A"/>',
+    '    </linearGradient>',
+    '  </defs>',
+    `  <g fill="${palette.H}" fill-opacity="0.3">${runs(1, 1)}</g>`,
+    `  <g fill="url(#her-colors)">${runs(0, 0)}</g>`,
+    '</svg>',
+    '',
+  ].join('\n');
+}
+
 function write(path, content) {
   const full = join(root, path);
   mkdirSync(dirname(full), { recursive: true });
@@ -463,6 +505,7 @@ write('packaging/icon/claudette-1024.png', png(macIcon()));
 write('src/Claudette.App/Assets/claudette.ico', ico([16, 20, 24, 32, 40, 48, 64, 128, 256].map(size => icon(size))));
 write('docs/assets/claudette.svg', svg());
 write('docs/assets/favicon.ico', ico([16, 32, 48].map(size => icon(size))));
+write('docs/assets/wordmark.svg', wordmark());
 
 const assets = 'packaging/windows/Assets';
 for (const size of [16, 20, 24, 30, 32, 36, 40, 48, 64, 256]) {

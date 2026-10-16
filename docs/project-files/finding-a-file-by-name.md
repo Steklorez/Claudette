@@ -2,6 +2,7 @@
 title: Finding a file by name
 parent: Project files
 nav_order: 3
+summary: "Type part of a file's name and the explorer swaps its tree for a list of the files that match, best first."
 ---
 
 # Finding a file by name

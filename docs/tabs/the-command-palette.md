@@ -2,6 +2,7 @@
 title: The command palette
 parent: Tabs and sessions
 nav_order: 10
+summary: "The command palette is a box over the window that does anything Claudette has a command for, when you type a few letters of it."
 ---
 
 # The command palette

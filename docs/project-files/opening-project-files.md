@@ -2,6 +2,7 @@
 title: Opening project files
 parent: Project files
 nav_order: 1
+summary: "A Project Files tab shows a project's files beside, or instead of, its conversations: the explorer on one side and the files you've opened, in tabs, on the other."
 ---
 
 # Opening project files

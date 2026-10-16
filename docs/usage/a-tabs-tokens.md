@@ -2,6 +2,7 @@
 title: A tab's tokens
 parent: Usage and limits
 nav_order: 4
+summary: "Each tab counts the tokens it has used."
 ---
 
 # A tab's tokens

@@ -2,6 +2,7 @@
 title: The session library
 parent: History and syncing
 nav_order: 2
+summary: "The session library is Claudette's own folder of sessions."
 ---
 
 # The session library

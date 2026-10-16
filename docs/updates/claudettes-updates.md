@@ -2,6 +2,7 @@
 title: Claudette's updates
 parent: Updates
 nav_order: 2
+summary: "An installed Claudette checks for a newer version, downloads it, installs it and restarts into it, with every tab as it was."
 ---
 
 # Claudette's updates

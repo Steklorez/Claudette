@@ -2,6 +2,7 @@
 title: Sub-threads waiting on you
 parent: Threads
 nav_order: 4
+summary: "A sub-thread is a whole tab, so it stops for your permission, questions and plans like any other."
 ---
 
 # Sub-threads waiting on you

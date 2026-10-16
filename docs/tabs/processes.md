@@ -2,6 +2,7 @@
 title: Processes
 parent: Tabs and sessions
 nav_order: 12
+summary: "The process monitor shows what each tab has started, such as test runs, dev servers, builds and MCP servers, with their CPU and memory use."
 ---
 
 # Processes

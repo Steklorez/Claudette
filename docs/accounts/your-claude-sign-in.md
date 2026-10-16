@@ -2,6 +2,7 @@
 title: Your Claude sign-in
 parent: Accounts
 nav_order: 1
+summary: "Claude Code keeps your Claude credentials, not Claudette."
 ---
 
 # Your Claude sign-in

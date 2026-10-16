@@ -2,6 +2,7 @@
 title: The end of a turn
 parent: The conversation
 nav_order: 5
+summary: "The cards that end a turn: the files it changed, its statistics, where the task list stands and the docs Claude wrote."
 ---
 
 # The end of a turn

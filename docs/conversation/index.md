@@ -1,7 +1,9 @@
 ---
 title: The conversation
-nav_order: 5
+parent: Sessions
+nav_order: 2
 has_children: true
+summary: "Reading the conversation, tool calls, subagents, finding your way, copying, rewinding, images and links."
 ---
 
 # The conversation

@@ -1,7 +1,9 @@
 ---
 title: Reference
-nav_order: 22
+parent: Help
+nav_order: 4
 has_children: true
+summary: "Shortcuts, icons, notifications, the command line and claudette.json."
 ---
 
 # Reference

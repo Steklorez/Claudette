@@ -2,6 +2,7 @@
 title: Claude Code missing or too old
 parent: Troubleshooting
 nav_order: 1
+summary: "Claudette runs your installed Claude Code, so without one it can't start a tab."
 ---
 
 # Claude Code missing or too old

@@ -2,6 +2,7 @@
 title: Reverting
 parent: Reviewing changes
 nav_order: 4
+summary: "When you've read a change and don't want it, the diff view can put the file back as it was, as long as Claudette knows what the file held before."
 ---
 
 # Reverting

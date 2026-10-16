@@ -2,6 +2,7 @@
 title: Picking up on another machine
 parent: History and syncing
 nav_order: 4
+summary: "A session that syncs shows up in History on your other machines, where you can continue it."
 ---
 
 # Picking up on another machine

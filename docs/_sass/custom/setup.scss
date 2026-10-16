@@ -1,0 +1,14 @@
+// Claudette's colors, from her icon (packaging/icon/build-icons.mjs) and the Claude style: Claude's coral, her hair's
+// rust and her hair tie's raspberry, over Anthropic's charcoal and ivory. The schemes and custom.scss use them.
+$cl-coral: #d97757;
+$cl-coral-deep: #b5573a;
+$cl-rust: #a8492f;
+$cl-raspberry: #b8336a;
+$cl-amber: #f0a35e;
+$cl-charcoal: #141413;
+$cl-ivory: #faf9f5;
+$cl-gradient: linear-gradient(110deg, $cl-amber 0%, $cl-coral 42%, $cl-raspberry 100%);
+
+$border-radius: 8px;
+$body-font-family: system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+$mono-font-family: "Cascadia Mono", "SFMono-Regular", menlo, consolas, monospace;

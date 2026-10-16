@@ -2,6 +2,7 @@
 title: Actions and links
 parent: Project tools
 nav_order: 5
+summary: "A folder's own commands and web links in the project row's menu: run the tests, start a server, open the issue board."
 ---
 
 # Actions and links

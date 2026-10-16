@@ -2,6 +2,7 @@
 title: How Claudette uses Claude Code
 parent: Getting started
 nav_order: 7
+summary: "Claudette doesn't replace Claude Code and doesn't call Claude's API itself."
 ---
 
 # How Claudette uses Claude Code

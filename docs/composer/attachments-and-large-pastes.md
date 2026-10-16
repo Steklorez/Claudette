@@ -2,6 +2,7 @@
 title: Attachments and large pastes
 parent: The composer
 nav_order: 4
+summary: "You can give Claude images and files by dropping them on the message box, pasting them or picking them with the paper clip."
 ---
 
 # Attachments and large pastes

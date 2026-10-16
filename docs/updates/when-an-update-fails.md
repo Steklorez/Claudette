@@ -2,6 +2,7 @@
 title: When an update fails
 parent: Updates
 nav_order: 3
+summary: "Claudette updates in steps, so you can tell where one went wrong."
 ---
 
 # When an update fails

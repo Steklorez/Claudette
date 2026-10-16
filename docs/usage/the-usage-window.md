@@ -2,6 +2,7 @@
 title: The Usage window
 parent: Usage and limits
 nav_order: 3
+summary: "The Usage window is the header's detail: a larger chart of the session, which tab and which project used the most, the week, and how past sessions and weeks went."
 ---
 
 # The Usage window

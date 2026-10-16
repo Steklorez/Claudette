@@ -2,6 +2,7 @@
 title: The Claude app
 parent: Away from your desk
 nav_order: 3
+summary: "A tab can be used from the Claude app on your phone, or at claude.ai/code in a browser, while Claudette keeps running it on your computer."
 ---
 
 # The Claude app

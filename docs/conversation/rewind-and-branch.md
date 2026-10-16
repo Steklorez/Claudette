@@ -2,6 +2,7 @@
 title: Rewind and branch
 parent: The conversation
 nav_order: 10
+summary: "You can go back to an earlier message: change it and send it again, start a new tab from just before it, or put the files Claude changed since back as they were."
 ---
 
 # Rewind and branch

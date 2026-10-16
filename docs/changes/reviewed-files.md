@@ -2,6 +2,7 @@
 title: Reviewed files
 parent: Reviewing changes
 nav_order: 3
+summary: "When Claude has changed a lot of files, it helps to keep track of the ones you've read."
 ---
 
 # Reviewed files

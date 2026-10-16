@@ -2,6 +2,7 @@
 title: Reaching other sessions
 parent: Threads
 nav_order: 5
+summary: "Claude Code sessions can message each other by name with SendMessage, which is Claude Code's own tool."
 ---
 
 # Reaching other sessions

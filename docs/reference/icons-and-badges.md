@@ -2,6 +2,7 @@
 title: Icons and badges
 parent: Reference
 nav_order: 2
+summary: "Every status icon, badge and dot in Claudette's window, what it means, and the page that explains it."
 ---
 
 # Icons and badges

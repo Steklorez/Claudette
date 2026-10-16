@@ -2,6 +2,7 @@
 title: Folder groups
 parent: Tabs and sessions
 nav_order: 3
+summary: "Tabs that share a working folder sit together in a group in the sidebar, like browser tab groups."
 ---
 
 # Folder groups

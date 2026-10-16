@@ -1,7 +1,9 @@
 ---
 title: Threads
-nav_order: 9
+parent: Agents and threads
+nav_order: 2
 has_children: true
+summary: "Spreading one job over several tabs, and sessions that message each other."
 ---
 
 # Threads

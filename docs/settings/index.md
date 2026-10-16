@@ -1,7 +1,9 @@
 ---
 title: Settings
-nav_order: 18
+parent: Make it yours
+nav_order: 1
 has_children: true
+summary: "The Settings window, every setting, styles, accessibility and the keyboard."
 ---
 
 # Settings

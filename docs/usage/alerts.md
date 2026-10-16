@@ -2,6 +2,7 @@
 title: Alerts
 parent: Usage and limits
 nav_order: 7
+summary: "Claudette tells you when your session is getting full, so you don't have to watch the header."
 ---
 
 # Alerts

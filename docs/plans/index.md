@@ -1,7 +1,9 @@
 ---
 title: Plans, tasks and agents
-nav_order: 8
+parent: Agents and threads
+nav_order: 1
 has_children: true
+summary: "The Tasks page, Claude Docs and the agent map."
 ---
 
 # Plans, tasks and agents

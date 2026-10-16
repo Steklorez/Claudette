@@ -2,6 +2,7 @@
 title: Prompt suggestions
 parent: The composer
 nav_order: 8
+summary: "After Claude replies, Claude Code can guess what you'll send next."
 ---
 
 # Prompt suggestions

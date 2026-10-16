@@ -2,6 +2,7 @@
 title: The scratch pad
 parent: The conversation
 nav_order: 8
+summary: "The scratch pad is a place for notes beside the conversation: what to check later, a command worth keeping, a piece of a reply."
 ---
 
 # The scratch pad

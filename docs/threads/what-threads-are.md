@@ -2,6 +2,7 @@
 title: What threads are
 parent: Threads
 nav_order: 1
+summary: "A thread is a tab whose Claude can hand work to other tabs in the same folder group."
 ---
 
 # What threads are

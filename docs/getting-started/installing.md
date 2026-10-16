@@ -2,6 +2,7 @@
 title: Installing
 parent: Getting started
 nav_order: 2
+summary: "Install Claude Code first, then Claudette."
 ---
 
 # Installing

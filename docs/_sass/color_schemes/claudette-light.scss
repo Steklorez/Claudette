@@ -1,0 +1,18 @@
+// The guide in light: ivory and charcoal, with coral links (head_custom.html picks it when the system is light).
+$color-scheme: light;
+$body-background-color: $cl-ivory;
+$body-heading-color: $cl-charcoal;
+$body-text-color: #3d3a35;
+$link-color: $cl-coral-deep;
+$nav-child-link-color: #3d3a35;
+$sidebar-color: #f3f1ea;
+$base-button-color: #efece3;
+$btn-primary-color: $cl-coral-deep;
+$code-background-color: #f3f1ea;
+$feedback-color: #efece3;
+$table-background-color: #fffefb;
+$search-background-color: #fffefb;
+$search-result-preview-color: #5c574f;
+$border-color: #e3dfd3;
+
+@import "./vendor/accessible-pygments/github-light";

@@ -2,6 +2,7 @@
 title: The sidebar
 parent: Tabs and sessions
 nav_order: 2
+summary: "The sidebar lists your tabs down the left of the window, grouped by working folder, so long session names, a status line and many tabs all fit."
 ---
 
 # The sidebar

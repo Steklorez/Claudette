@@ -2,6 +2,7 @@
 title: Claude Docs
 parent: Plans, tasks and agents
 nav_order: 2
+summary: "Claude can write a doc on claude.ai with claude.ai's Claude Docs connector, which comes from your claude.ai account: a task list to work through, a report, notes to keep."
 ---
 
 # Claude Docs

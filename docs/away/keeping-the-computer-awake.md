@@ -2,6 +2,7 @@
 title: Keeping the computer awake
 parent: Away from your desk
 nav_order: 4
+summary: "Long tasks outlast the time before a computer goes to sleep."
 ---
 
 # Keeping the computer awake

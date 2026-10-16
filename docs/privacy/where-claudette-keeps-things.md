@@ -2,6 +2,7 @@
 title: Where Claudette keeps things
 parent: Privacy and your data
 nav_order: 1
+summary: "Claudette keeps its files in two folders in your user profile: one for its settings and one for everything else, its data."
 ---
 
 # Where Claudette keeps things

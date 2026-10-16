@@ -2,6 +2,7 @@
 title: Claude can't find a program
 parent: Troubleshooting
 nav_order: 5
+summary: "On macOS and Linux, you may see Claude fail to run node, dotnet, brew or another program in a Claudette tab, while the same command works in a terminal with claude."
 ---
 
 # Claude can't find a program

@@ -2,6 +2,7 @@
 title: Images
 parent: The conversation
 nav_order: 11
+summary: "The images Claude's tools hand it, shown under their cards, and the images in its replies."
 ---
 
 # Images

@@ -2,6 +2,7 @@
 title: Keyboard shortcuts
 parent: Reference
 nav_order: 1
+summary: "Every shortcut Claudette handles, with its default on Windows and Linux and on macOS."
 ---
 
 # Keyboard shortcuts

@@ -2,6 +2,7 @@
 title: Using project tools
 parent: Project tools
 nav_order: 1
+summary: "A tab can do things for the project in its folder: launch the editor, generate project files, build, open the solution."
 ---
 
 # Using project tools

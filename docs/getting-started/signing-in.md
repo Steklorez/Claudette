@@ -2,6 +2,7 @@
 title: Signing in
 parent: Getting started
 nav_order: 4
+summary: "Claude Code keeps its own sign-in."
 ---
 
 # Signing in

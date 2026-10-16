@@ -2,6 +2,7 @@
 title: Permission modes
 parent: Permissions and prompts
 nav_order: 2
+summary: "A permission mode decides how much Claude Code asks about before it acts."
 ---
 
 # Permission modes

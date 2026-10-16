@@ -1,7 +1,9 @@
 ---
 title: Permissions and prompts
-nav_order: 7
+parent: Sessions
+nav_order: 4
 has_children: true
+summary: "Permission cards and modes, questions, plans to approve, MCP servers' forms and folder trust."
 ---
 
 # Permissions and prompts

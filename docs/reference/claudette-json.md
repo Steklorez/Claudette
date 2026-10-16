@@ -2,6 +2,7 @@
 title: claudette.json
 parent: Reference
 nav_order: 5
+summary: "The format of the two files that hold a folder's own actions and links."
 ---
 
 # `claudette.json`

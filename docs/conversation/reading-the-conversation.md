@@ -2,6 +2,7 @@
 title: Reading the conversation
 parent: The conversation
 nav_order: 1
+summary: "A tab's conversation is drawn from what Claude Code sends, not from terminal text."
 ---
 
 # Reading the conversation

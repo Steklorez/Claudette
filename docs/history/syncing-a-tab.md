@@ -2,6 +2,7 @@
 title: Syncing a tab
 parent: History and syncing
 nav_order: 3
+summary: "Syncing is a choice each tab makes."
 ---
 
 # Syncing a tab

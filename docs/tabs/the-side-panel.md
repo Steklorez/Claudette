@@ -2,6 +2,7 @@
 title: The side panel
 parent: Tabs and sessions
 nav_order: 8
+summary: "The side panel sits at the right of the conversation."
 ---
 
 # The side panel

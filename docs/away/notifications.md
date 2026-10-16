@@ -2,6 +2,7 @@
 title: Notifications
 parent: Away from your desk
 nav_order: 1
+summary: "Your OS's notifications when a tab needs you and you aren't looking: a tab finished, a prompt is waiting, a limit, an update."
 ---
 
 # Notifications

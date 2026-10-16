@@ -2,6 +2,7 @@
 title: A tour of the window
 parent: Getting started
 nav_order: 6
+summary: "The usage header, the sidebar, the conversation, the side panel and the composer, and where each is explained."
 ---
 
 # A tour of the window

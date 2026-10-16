@@ -2,6 +2,7 @@
 title: Godot
 parent: Project tools
 nav_order: 4
+summary: "A Godot project gets a row with its name and version, and actions to open the editor and run the game."
 ---
 
 # Godot

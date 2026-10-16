@@ -2,6 +2,7 @@
 title: Getting started
 nav_order: 3
 has_children: true
+summary: "What you need, installing, signing in, your first tab, and a tour of the window."
 ---
 
 # Getting started

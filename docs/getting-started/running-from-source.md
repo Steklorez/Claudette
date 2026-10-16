@@ -2,6 +2,7 @@
 title: Running from source
 parent: Getting started
 nav_order: 8
+summary: "You can build and run Claudette from a checkout of its repository."
 ---
 
 # Running from source

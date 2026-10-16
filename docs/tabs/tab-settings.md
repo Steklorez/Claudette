@@ -2,6 +2,7 @@
 title: Tab settings
 parent: Tabs and sessions
 nav_order: 7
+summary: "Some settings can be different for one tab."
 ---
 
 # Tab settings

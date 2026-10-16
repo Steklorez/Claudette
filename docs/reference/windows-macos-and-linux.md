@@ -2,6 +2,7 @@
 title: Windows, macOS and Linux
 parent: Reference
 nav_order: 6
+summary: "Claudette runs on all three, and almost everything works the same."
 ---
 
 # Windows, macOS and Linux

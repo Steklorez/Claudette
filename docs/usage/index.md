@@ -1,7 +1,9 @@
 ---
 title: Usage and limits
-nav_order: 12
+parent: Usage and accounts
+nav_order: 1
 has_children: true
+summary: "The usage header, the Usage window, context, the prompt cache, alerts, and what happens at a limit."
 ---
 
 # Usage and limits

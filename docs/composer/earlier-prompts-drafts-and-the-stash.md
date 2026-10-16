@@ -2,6 +2,7 @@
 title: Earlier prompts, drafts and the stash
 parent: The composer
 nav_order: 5
+summary: "Bring back earlier prompts, keep an unsent message when you quit, and put a message aside for later."
 ---
 
 # Earlier prompts, drafts and the stash

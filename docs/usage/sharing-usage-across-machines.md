@@ -2,6 +2,7 @@
 title: Sharing usage across machines
 parent: Usage and limits
 nav_order: 10
+summary: "Your plan's limits belong to your account, so every machine signed in to it sees the same usage."
 ---
 
 # Sharing usage across machines

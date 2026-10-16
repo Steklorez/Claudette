@@ -2,6 +2,7 @@
 title: Settings back to their defaults
 parent: Troubleshooting
 nav_order: 10
+summary: "Claudette keeps its settings in a file, and its tabs and other state in another."
 ---
 
 # Settings back to their defaults

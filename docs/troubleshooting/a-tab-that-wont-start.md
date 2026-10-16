@@ -2,6 +2,7 @@
 title: A tab that won't start
 parent: Troubleshooting
 nav_order: 3
+summary: "A tab that can't start, or whose Claude Code stops, shows an error icon in the sidebar."
 ---
 
 # A tab that won't start

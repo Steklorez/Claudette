@@ -1,7 +1,9 @@
 ---
 title: Privacy and your data
-nav_order: 21
+parent: Help
+nav_order: 3
 has_children: true
+summary: "What Claudette keeps, where, and what leaves your computer."
 ---
 
 # Privacy and your data

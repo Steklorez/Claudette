@@ -2,6 +2,7 @@
 title: Opening files from the conversation
 parent: Project files
 nav_order: 8
+summary: "When Claude names a file, or you click a file in Changed files, the file opens in the project's Files tab, at the line that's named."
 ---
 
 # Opening files from the conversation

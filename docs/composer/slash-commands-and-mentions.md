@@ -2,6 +2,7 @@
 title: Slash commands and mentions
 parent: The composer
 nav_order: 3
+summary: "Type / or @ in the message box and a list opens above it: / for Claude Code's commands, @ for files, folders and other sessions."
 ---
 
 # Slash commands and mentions

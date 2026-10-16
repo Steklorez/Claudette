@@ -2,6 +2,7 @@
 title: The Dock and taskbar icon
 parent: Away from your desk
 nav_order: 2
+summary: "The icon in the Dock or on the taskbar shows how many tabs need you and whether Claude is working, without bringing the window up."
 ---
 
 # The Dock and taskbar icon

@@ -2,6 +2,7 @@
 title: Reporting an issue
 parent: Troubleshooting
 nav_order: 9
+summary: "Problems with Claudette go to its GitHub issues."
 ---
 
 # Reporting an issue

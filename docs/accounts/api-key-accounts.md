@@ -2,6 +2,7 @@
 title: API-key accounts
 parent: Accounts
 nav_order: 2
+summary: "An API-key account lets a tab run Claude Code on an API key instead of your Claude sign-in."
 ---
 
 # API-key accounts

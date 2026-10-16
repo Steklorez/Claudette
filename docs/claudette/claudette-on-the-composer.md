@@ -2,6 +2,7 @@
 title: Claudette on the composer
 parent: Claudette
 nav_order: 1
+summary: "Claudette stands on the top edge of the message box and does little things now and then, the way a small mascot sits above the message box in the Claude apps."
 ---
 
 # Claudette on the composer

@@ -17,7 +17,7 @@ repository: dotBunny/Claudette
 
 logo: /assets/claudette.svg
 favicon_ico: /assets/favicon.ico
-color_scheme: light
+color_scheme: claudette-light
 
 search_enabled: true
 search:
@@ -29,7 +29,10 @@ heading_anchors: true
 back_to_top: true
 back_to_top_text: Back to top
 
+# The header of every guide page: back to the landing page, the downloads, and the repository.
 aux_links:
+  Home: /
+  Downloads: /downloads.html
   GitHub: https://github.com/dotBunny/Claudette
 
 # The changelog is CHANGELOG.md itself, last in the sidebar (GUIDE.md, "The changelog").
