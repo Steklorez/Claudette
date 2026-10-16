@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 namespace Claudette.App.Controls;
@@ -11,7 +12,10 @@ namespace Claudette.App.Controls;
 /// The conversation's items one above the other, with controls only for those in view and <see cref="CacheLength"/>
 /// screens either side (DESIGN.md §5). It remembers each item's height once it has measured it, and places the items
 /// by those heights, so an item that changes height (a reply streaming in, a card opening) moves only the items after
-/// it. Items it hasn't measured yet are taken to be the average height of those it has.
+/// it. While the UI is otherwise idle it builds the items it hasn't measured at this width, half a screen's worth at a
+/// time, to learn their heights, so where each item is, and the marks beside the scroll bar, stop moving as the user
+/// scrolls.
+/// Until then they're taken to be the average height of those it has measured.
 /// </summary>
 /// <remarks>
 /// Avalonia's <see cref="VirtualizingStackPanel"/> loses its place whenever one of its built items changes height, and
@@ -35,6 +39,9 @@ public sealed class ConversationPanel : VirtualizingPanel
 
     /// <summary>Each item's height when it was last measured; NaN for one not measured yet.</summary>
     private readonly List<double> _heights = [];
+
+    /// <summary>The width each item was last measured at; NaN for one not measured yet.</summary>
+    private readonly List<double> _widths = [];
 
     private double _measuredTotal;
     private int _measuredCount;
@@ -168,6 +175,7 @@ public sealed class ConversationPanel : VirtualizingPanel
 
             UpdateTops();
             (_builtTop, _builtBottom, _extent) = (_tops[first], _tops[index], _tops[items.Count]);
+            QueueSurvey();
             return new Size(width, _extent);
         }
         finally
@@ -249,15 +257,20 @@ public sealed class ConversationPanel : VirtualizingPanel
 
     // ---- Heights and places ---------------------------------------------------------------------------------------
 
-    private void SetHeight(int index, double height)
+    /// <param name="estimate">Whether an item measured for the first time changes <see cref="_estimate"/> now.</param>
+    private void SetHeight(int index, double height, bool estimate = true)
     {
         var old = _heights[index];
         _heights[index] = height;
+        _widths[index] = _lastWidth;
         if (double.IsNaN(old))
         {
             _measuredTotal += height;
             _measuredCount++;
-            _estimate = _measuredTotal / _measuredCount;
+            if (estimate)
+            {
+                _estimate = _measuredTotal / _measuredCount;
+            }
         }
         else
         {
@@ -301,6 +314,84 @@ public sealed class ConversationPanel : VirtualizingPanel
         return low;
     }
 
+    // ---- Learning the heights of the items out of view -------------------------------------------------------------
+
+    /// <summary>A pass of <see cref="Survey"/> is waiting for the UI to be idle.</summary>
+    private bool _surveyQueued;
+
+    /// <summary>Every item has been measured at the width the panel was last measured at.</summary>
+    internal bool KnowsEveryHeight => NextToSurvey(0) < 0;
+
+    /// <summary>After a measure, while there's an item it hasn't measured at this width: a pass when the UI is idle.</summary>
+    private void QueueSurvey()
+    {
+        if (!_surveyQueued && _viewport.Height > 0 && !KnowsEveryHeight)
+        {
+            _surveyQueued = true;
+            Dispatcher.UIThread.Post(Survey, DispatcherPriority.Background);
+        }
+    }
+
+    /// <summary>
+    /// Builds the next half screen's worth of items not measured at this width, from the top, measures them and puts
+    /// their controls back. The measure that follows places the items by their heights, and queues the next pass.
+    /// </summary>
+    /// <remarks>
+    /// The items above the view changing height move it: the scroll viewer keeps what's in view where it is, by the
+    /// items built around it. So the measure that follows builds around where the view will be, not where it was,
+    /// keeping those items built however far the pass moved them. An item measured in a pass leaves the height taken
+    /// for the items not measured yet as it was, so the pass moves only the items it measured, and those after them.
+    /// </remarks>
+    private void Survey()
+    {
+        _surveyQueued = false;
+        var items = Items;
+        if (_heights.Count != items.Count || _viewport.Height <= 0 || double.IsNaN(_lastWidth)
+            || !IsEffectivelyVisible || TopLevel.GetTopLevel(this) is null)
+        {
+            // Out of sight, such as a tab in the background: the measure when it shows again carries on.
+            return;
+        }
+        var size = new Size(_lastWidth, double.PositiveInfinity);
+        var (measured, moved) = (0.0, 0.0);
+        for (var index = NextToSurvey(0); index >= 0 && measured < _viewport.Height / 2; index = NextToSurvey(index + 1))
+        {
+            var old = double.IsNaN(_heights[index]) ? _estimate : _heights[index];
+            var element = GetOrCreate(items, index);
+            element.Measure(size);
+            var height = element.DesiredSize.Height;
+            SetHeight(index, height, estimate: false);
+            Recycle(element);
+            measured += height;
+            if (index < _firstIndex)
+            {
+                moved += height - old;
+            }
+        }
+        _viewport = _viewport.Translate(new Vector(0, moved));
+        if (KnowsEveryHeight)
+        {
+            // The last of them: an item added later, not measured yet, is taken to be the average of all of them.
+            _estimate = _measuredTotal / Math.Max(1, _measuredCount);
+        }
+        InvalidateMeasure();
+    }
+
+    /// <summary>The first item from <paramref name="from"/> not measured at this width, leaving out those the measure builds; -1 for none.</summary>
+    private int NextToSurvey(int from)
+    {
+        var builtEnd = _firstIndex + _realized.Count;
+        for (var i = from; i < _widths.Count; i++)
+        {
+            // NaN for an item not measured yet, which never equals a width.
+            if (_widths[i] != _lastWidth && (i < _firstIndex || i >= builtEnd) && i != _scrollToIndex)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     // ---- The items changing ---------------------------------------------------------------------------------------
 
     protected override void OnItemsControlChanged(ItemsControl? oldValue)
@@ -311,6 +402,7 @@ public sealed class ConversationPanel : VirtualizingPanel
         _previous.Clear();
         _recyclePool.Clear();
         _heights.Clear();
+        _widths.Clear();
         (_measuredTotal, _measuredCount, _firstIndex) = (0, 0, 0);
         (_scrollTo, _scrollToIndex) = (null, -1);
     }
@@ -341,6 +433,7 @@ public sealed class ConversationPanel : VirtualizingPanel
     private void Insert(int index, int count)
     {
         _heights.InsertRange(index, Enumerable.Repeat(double.NaN, count));
+        _widths.InsertRange(index, Enumerable.Repeat(double.NaN, count));
         if (index <= _firstIndex)
         {
             for (var k = 0; k < _realized.Count; k++)
@@ -375,6 +468,7 @@ public sealed class ConversationPanel : VirtualizingPanel
             }
         }
         _heights.RemoveRange(index, count);
+        _widths.RemoveRange(index, count);
 
         var removeFrom = Math.Clamp(index - _firstIndex, 0, _realized.Count);
         var removeTo = Math.Clamp(index + count - _firstIndex, 0, _realized.Count);
@@ -424,6 +518,8 @@ public sealed class ConversationPanel : VirtualizingPanel
         }
         _heights.Clear();
         _heights.AddRange(Enumerable.Repeat(double.NaN, count));
+        _widths.Clear();
+        _widths.AddRange(Enumerable.Repeat(double.NaN, count));
         (_measuredTotal, _measuredCount, _firstIndex) = (0, 0, 0);
     }
 

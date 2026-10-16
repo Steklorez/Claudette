@@ -282,7 +282,7 @@
     <DataTemplate DataType="conv:AssistantTextItem">
       <controls:Card Classes="claude" Classes.quiet="{Binding IsIntermediate}" Label="Claude" Icon="{StaticResource IconCardClaude}"
                      TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" Actions="{Binding}" ActionsTemplate="{StaticResource ReplyTools}">
-        <md:MarkdownRenderer MarkdownBuilder="{Binding Markdown}"
+        <md:MarkdownRenderer UpdateProducer="{Binding Parsed, FallbackValue={x:Static conv:KeptMarkdown.None}}"
                              LinkCommand="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" />
       </controls:Card>
     </DataTemplate>
@@ -542,7 +542,7 @@
                         ToolTip.Tip="Show what changed from the version before, line by line">
             <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="{Binding ChangesLabel}" />
           </ToggleButton>
-          <md:MarkdownRenderer MarkdownBuilder="{Binding Plan}" IsVisible="{Binding ShowsPlan}"
+          <md:MarkdownRenderer UpdateProducer="{Binding ParsedPlan, FallbackValue={x:Static conv:KeptMarkdown.None}}" IsVisible="{Binding ShowsPlan}"
                                LinkCommand="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" />
           <Border Classes="codeblock" Padding="0" IsVisible="{Binding ShowChanges}">
             <ScrollViewer MaxHeight="420" HorizontalScrollBarVisibility="Auto">
@@ -876,10 +876,10 @@
           <ItemsControl x:Name="ConversationItems" ItemsSource="{Binding Items}" ClipToBounds="False">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
-                <!-- The messages a screen above and below the view stay built (CacheLength), not only those in it. A
-                     reply's Markdown lays out in the background, so a reply built again starts one line tall: built
-                     a screen ahead, it has its height before it comes into view. The panel remembers each message's
-                     height, so one changing height, as a reply streams in, moves only those after it (DESIGN.md §5). -->
+                <!-- The messages a screen above and below the view stay built (CacheLength), not only those in it, so
+                     one coming into view already has its height. The panel remembers each message's height, so one
+                     changing height, as a reply streams in, moves only those after it, and measures the others while
+                     the UI is idle, so the scroll bar and its marks hold still (DESIGN.md §5). -->
                 <controls:ConversationPanel Classes="conversation" CacheLength="1" />
               </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>

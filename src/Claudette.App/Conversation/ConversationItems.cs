@@ -243,6 +243,9 @@ public sealed partial class AssistantTextItem : MessageItem
 {
     public ObservableStringBuilder Markdown { get; } = new();
 
+    /// <summary>The <see cref="Markdown"/> its card shows, parsed once (DESIGN.md §5).</summary>
+    public KeptMarkdown Parsed => field ??= new(Markdown);
+
     [ObservableProperty]
     public partial bool IsStreaming { get; set; } = true;
 

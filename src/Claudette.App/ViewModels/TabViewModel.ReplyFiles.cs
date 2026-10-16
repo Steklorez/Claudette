@@ -45,7 +45,7 @@ public sealed partial class TabViewModel
             }
             path = found[chosen];
         }
-        if (!await OpenPathAsync(path, reference.Line, reference.Column, reference.EndLine))
+        if (await OpenPathAsync(path, reference.Line, reference.Column, reference.EndLine) == OpenedPath.NotFound)
         {
             _conversation.AddNote($"Couldn't find {reference.Path}.", NoteKind.Warning);
         }
@@ -55,25 +55,27 @@ public sealed partial class TabViewModel
     /// Opens a file the session named (DESIGN.md §18, "Project files", "Opening files in the editor"): in the project's
     /// Files tab at <paramref name="line"/>, as Settings → Editor says, or else in the app the OS uses. A program or
     /// shortcut that isn't text shows in its folder rather than running, and a folder shows in the explorer when it's in
-    /// the project, else in Finder or Explorer. False when it isn't there.
+    /// the project, else in Finder or Explorer.
     /// </summary>
-    internal async Task<bool> OpenPathAsync(string path, int? line = null, int? column = null, int? endLine = null)
+    internal async Task<OpenedPath> OpenPathAsync(string path, int? line = null, int? column = null, int? endLine = null)
     {
         var (exists, isFolder, isExecutable) = await Task.Run(() => Inspect(path));
         if (!exists)
         {
-            return false;
+            return OpenedPath.NotFound;
         }
         if (isFolder)
         {
-            if (!await _shell.RevealInProjectFilesAsync(path))
+            if (await _shell.RevealInProjectFilesAsync(path))
             {
-                await _services.Platform.RevealFolderAsync(path);
+                return OpenedPath.InClaudette;
             }
+            await _services.Platform.RevealFolderAsync(path);
         }
         else if (await Task.Run(() => _shell.OpensInEditor(path)))
         {
             await _shell.OpenInEditorAsync(path, line, column, endLine, this);
+            return OpenedPath.InClaudette;
         }
         else if (ReplyFileReference.IsProgram(path, isExecutable))
         {
@@ -86,7 +88,7 @@ public sealed partial class TabViewModel
         {
             await _services.Platform.OpenFileAsync(path);
         }
-        return true;
+        return OpenedPath.Elsewhere;
     }
 
     /// <summary>A tool card's <b>Open</b>: the file it worked on, at the first line an edit changed or where a read started.</summary>
@@ -98,7 +100,7 @@ public sealed partial class TabViewModel
             return;
         }
         var path = Path.IsPathRooted(file) ? file : Path.Combine(Folder, file);
-        if (!await OpenPathAsync(path, tool.FileLine))
+        if (await OpenPathAsync(path, tool.FileLine) == OpenedPath.NotFound)
         {
             _conversation.AddNote($"Couldn't find {file}.", NoteKind.Warning);
         }
@@ -149,4 +151,17 @@ public sealed partial class TabViewModel
             return (false, false, false);
         }
     }
+}
+
+/// <summary>Where <see cref="TabViewModel.OpenPathAsync"/> opened a path.</summary>
+internal enum OpenedPath
+{
+    /// <summary>It isn't there.</summary>
+    NotFound,
+
+    /// <summary>In Claudette's window: the file in the project's Files tab, or the folder in its explorer.</summary>
+    InClaudette,
+
+    /// <summary>In the OS's app for it, or Finder, Explorer or the file manager.</summary>
+    Elsewhere,
 }

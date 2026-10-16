@@ -26,6 +26,12 @@ If no later turn changed the file, the diff is against the file as it is now, an
 
 This view only shows the changes. It has no **Revert** or **Reviewed**, which belong to the file's changes as Changed files shows them. A file whose earlier contents aren't known is shown as it is, as in Changed files.
 
+## In your diff tool
+
+{% include unreleased.html %}
+
+With an [external diff tool](external-diff-tools.md) set, **Open in diff tool** opens the turn's changes in it: the file before the turn, against how the turn left it, or against the file itself when no later turn changed it. The **…** menu has **Open in the OS's app**, as in Changed files.
+
 ## When there's no card
 
 - A restored tab's earlier turns have none, since restoring replays no turn's end.

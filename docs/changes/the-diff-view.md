@@ -42,7 +42,13 @@ The same actions are on the right-click menu of a row in Changed files.
 
 {% include unreleased.html %}
 
-**Open** opens the file in Claudette's own editor ([Project files](../project-files/index.md)), unless Settings → **Editor** → **Open files in** is set to **The app the OS uses for the file**. **Open in the OS's app** is always there when you want the app your system uses for that kind of file, such as an editor you can read with a screen reader.
+**Open** opens the file in Claudette's own editor ([Project files](../project-files/index.md)), unless Settings → **Editor** → **Open files in** is set to **The app the OS uses for the file**. When the file opens in Claudette's editor, the diff window closes, so it doesn't hide the editor behind it. **Open in the OS's app** is always there when you want the app your system uses for that kind of file, such as an editor you can read with a screen reader.
+
+Settings → **Editor** → **Open in the diff window** can send **Open** elsewhere:
+
+- **Opens the file, as Open files in says**: the default, described above.
+- **Opens the file in the app the OS uses for it**, whatever **Open files in** says. The diff window stays open.
+- **Opens the changes in the diff tool**: the same as **Open in diff tool**, once you've set an [external diff tool](external-diff-tools.md). A file whose earlier contents aren't known opens as **Open files in** says, since the tool would have nothing to compare.
 
 ## A file whose earlier contents aren't known
 
@@ -51,6 +57,7 @@ The view shows the file as it is now, with nothing marked as changed, and says t
 ## Settings
 
 - Settings → **Editor** → **Open files in**: where **Open** goes ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md)).
+- Settings → **Editor** → **Open in the diff window**: whether the diff window's **Open** goes there, to the OS's app, or to your diff tool ([Opening the file](#opening-the-file)).
 - Settings → **Diff tool**: which program opens a changed file's diff ([External diff tools](external-diff-tools.md)).
 
 ## See also

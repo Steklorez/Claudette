@@ -6,9 +6,9 @@ namespace Claudette.App.Controls;
 /// <summary>
 /// The composer's control bar (DESIGN.md §5): its first child at the start and its last at the end, on one line when
 /// both fit, or else the last on a line of its own under the first, still at the end. The chips on the left can outgrow
-/// a narrow window, and Send, on the right, must never be pushed out of view. On a line of its own the last gets only
-/// the bar's width, so if it's wider still (the counts, in a narrow pane) and wraps itself, it takes more lines rather
-/// than running past the end.
+/// a narrow window, and Send, on the right, must never be pushed out of view. Once they're on lines of their own, each
+/// gets only the bar's width, so one that's wider still (the chips or the counts, in a narrow pane) and wraps itself
+/// takes more lines rather than running past the end into whatever is beside the bar.
 /// </summary>
 public sealed class ControlBarPanel : Panel
 {
@@ -42,9 +42,12 @@ public sealed class ControlBarPanel : Panel
             child.Measure(unbounded);
         }
         IsWrapped = !Fits(availableSize.Width);
-        if (IsWrapped && Children[^1].DesiredSize.Width > availableSize.Width)
+        if (IsWrapped)
         {
-            Children[^1].Measure(availableSize);
+            foreach (var child in new[] { Children[0], Children[^1] }.Where(c => c.DesiredSize.Width > availableSize.Width))
+            {
+                child.Measure(availableSize);
+            }
         }
         var (start, end) = (Children[0].DesiredSize, Children[^1].DesiredSize);
         return !IsWrapped

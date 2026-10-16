@@ -516,6 +516,9 @@ public sealed partial class PlanItem : PromptItem
 
     public ObservableStringBuilder Plan { get; } = new();
 
+    /// <summary>The <see cref="Plan"/> its card shows, parsed once (DESIGN.md §5).</summary>
+    public KeptMarkdown ParsedPlan => field ??= new(Plan);
+
     /// <summary>The card shows the plan's text rather than saying Claude is ready.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowsPlan))]

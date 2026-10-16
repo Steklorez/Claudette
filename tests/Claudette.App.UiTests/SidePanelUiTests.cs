@@ -410,7 +410,7 @@ public class SidePanelUiTests
         {
             string? marked = "none";
             var source = new DiffSource(file, "src/auth.cs", "one\n", "compared with before Claude's first change in this session",
-                OpenInDiffTool: null, () => Task.CompletedTask, () => Task.CompletedTask, () => Task.CompletedTask,
+                OpenInDiffTool: null, () => Task.FromResult(false), () => Task.CompletedTask, () => Task.CompletedTask,
                 Review: new DiffReview(() => "e1", () => false, change => marked = change));
             var window = new DiffWindow { DataContext = new DiffWindowViewModel(source, dark: false) };
             window.Show();

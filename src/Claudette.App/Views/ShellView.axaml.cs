@@ -717,6 +717,15 @@ public partial class ShellView : UserControl
         }
         var settings = new SettingsViewModel(main.Services, main.AccountText, main.Updates, opening) { Account = main.Account, AppUpdates = main.AppUpdate };
         var window = new SettingsWindow { DataContext = settings };
+        if (UnfocusedWindows.IsOn)
+        {
+            // A modal window activates its owner as it closes, which would take the focus (DESIGN.md §9, "Working on Claudette").
+            var closed = new TaskCompletionSource();
+            window.Closed += (_, _) => closed.TrySetResult();
+            window.Show(owner);
+            await closed.Task;
+            return;
+        }
         await window.ShowDialog(owner);
     }
 }

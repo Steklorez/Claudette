@@ -42,7 +42,8 @@ Click **Test** to open a sample diff in the tool. The page says *Opened a sample
 
 ## What changes once a tool is set
 
-- Every changed file gets **Open in diff tool**, in its menu in [Changed files](changed-files.md) and in the diff view.
+- Every changed file gets **Open in diff tool**, in its menu in [Changed files](changed-files.md) and in the diff view. A turn's changes, opened from its **Modified files** card, get it too ([Changes per turn](changes-per-turn.md#in-your-diff-tool)), as new in the next release.
+- Settings → **Editor** → **Open in the diff window**, new in the next release, can have the diff view's **Open** button open the tool too ([The diff view](the-diff-view.md#opening-the-file)).
 - A double-click on a file in Changed files opens the tool, and a single click only selects it. The built-in view stays in the file's menu as **Open diff**.
 - A file whose earlier contents aren't known always opens in the built-in view.
 

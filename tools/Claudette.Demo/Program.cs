@@ -1,10 +1,11 @@
 // claudette-demo: demo content for trying Claudette's UI and for its screenshots, with no account and no tokens.
 //
-//   claudette-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still]
+//   claudette-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]
 //
 // Makes, in <folder> (replacing what an earlier run made there):
 //   home/           for CLAUDETTE_HOME: settings with fake-claude as Claude Code and the theme and style asked for
-//                   (--still reduces motion, so Claudette on the composer stands still for screenshots),
+//                   (--still reduces motion, so Claudette on the composer stands still for screenshots, and --quiet
+//                   turns the OS's notifications off, which a Claudette kept behind other windows would send),
 //                   seven tabs over three game projects (Unreal in C++, Unity in C#, Godot): the first with a long
 //                   conversation and changed files, one with every file reviewed, and a thread with two sub-threads,
 //                   a plan, a task list part-way done and three subagents; an API-key account, Studio, which
@@ -25,10 +26,11 @@ using Claudette.Core.Development;
 using Claudette.Core.Settings;
 using Claudette.Demo;
 
-const string Usage = "usage: claudette-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still]";
+const string Usage = "usage: claudette-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]";
 string? folder = null;
 string? projects = null;
 var still = false;
+var quiet = false;
 var theme = ThemeChoice.Dark;
 var style = AppStyle.Standard;
 try
@@ -49,6 +51,9 @@ try
                 break;
             case "--still":
                 still = true;
+                break;
+            case "--quiet":
+                quiet = true;
                 break;
             default:
                 folder = folder is null && !arg.StartsWith('-') ? arg : throw new ArgumentException($"Unexpected argument: {arg}");
@@ -106,6 +111,13 @@ if (still)
 {
     // Screenshots catch her standing on the composer rather than part-way through falling off it.
     settings.Appearance.Motion = MotionSetting.Reduce;
+}
+if (quiet)
+{
+    // Kept behind other windows, as the screenshot scripts keep it, Claudette would think the user away and tell them.
+    var notifications = settings.Notifications;
+    notifications.TurnFinished = notifications.NeedsInput = notifications.ProcessErrors = notifications.UsageAlerts = false;
+    notifications.SignIn = notifications.UpdateReady = notifications.ProjectActions = false;
 }
 settings.Sessions.RestoreUnpinnedTabs = true;
 await new JsonFileStore<AppSettings>(paths.SettingsFile).SaveAsync(settings);

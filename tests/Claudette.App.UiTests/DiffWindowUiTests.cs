@@ -117,7 +117,7 @@ public class DiffWindowUiTests
     private static async Task<(DiffWindow Window, DiffWindowViewModel ViewModel)> ShowAsync(DiffFile file, bool dark = false)
     {
         var source = new DiffSource(file.Path, "src/auth.cs", file.Before, "compared with before Claude's first change in this session",
-            OpenInDiffTool: null, () => Task.CompletedTask, () => Task.CompletedTask, () => Task.CompletedTask);
+            OpenInDiffTool: null, () => Task.FromResult(false), () => Task.CompletedTask, () => Task.CompletedTask);
         var viewModel = new DiffWindowViewModel(source, dark);
         var window = new DiffWindow { DataContext = viewModel, Width = 700, Height = 400 };
         window.Show();

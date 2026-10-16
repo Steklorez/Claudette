@@ -3,6 +3,8 @@ using Claudette.App.Conversation;
 using Claudette.App.Diffs;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.Core.Processes;
+using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
 
@@ -90,6 +92,106 @@ public class ChangesPerTurnTests
         await TabTestHarness.Eventually(() => !view.IsLoading, "the diff");
         Assert.Equal("+1 −0", view.Stats);
         Assert.False(view.CanRevert);
+    }
+
+    // ---- Open in the diff window (DESIGN.md §8) -------------------------------------------------------------------
+
+    [Fact]
+    public async Task Open_in_a_turns_diff_opens_the_file_in_the_projects_Files_tab_and_closes_the_diff()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var path = Path.Combine(h.WorkFolder, "auth.cs");
+        var view = await TurnDiffAsync(h, tab, path);
+        var closed = false;
+        view.CloseRequested += () => closed = true;
+
+        await view.OpenInEditorCommand.ExecuteAsync(null);
+
+        Assert.True(h.Shell.SelectedFiles?.OpenFiles.Any(f => f.Path == path));
+        Assert.Empty(h.Platform.OpenedFiles);
+        // The diff window stays over Claudette's, so it would hide the file.
+        Assert.True(closed);
+    }
+
+    [Fact]
+    public async Task Open_in_a_turns_diff_can_open_the_file_in_the_OSs_app_and_keep_the_diff()
+    {
+        await using var h = new TabTestHarness(s => s.Editor.DiffWindowOpen = DiffWindowOpen.System);
+        var tab = await h.OpenTabAsync();
+        var path = Path.Combine(h.WorkFolder, "auth.cs");
+        var view = await TurnDiffAsync(h, tab, path);
+        var closed = false;
+        view.CloseRequested += () => closed = true;
+
+        await view.OpenInEditorCommand.ExecuteAsync(null);
+
+        Assert.Equal([path], h.Platform.OpenedFiles);
+        Assert.Null(h.Shell.SelectedFiles);
+        Assert.False(closed);
+    }
+
+    [Fact]
+    public async Task Open_in_a_turns_diff_can_open_its_changes_in_the_diff_tool_as_the_turn_left_the_file()
+    {
+        // Git starts processes on other threads, so the diff tool's start is kept as it happens rather than looked for after.
+        ProcessStartSpec? diffTool = null;
+        var launcher = new FakeLauncher
+        {
+            // Only the diff tool is wanted running: git, which finds the folder isn't a repository, ends at once.
+            OnStart = (spec, process) =>
+            {
+                if (Path.GetFileNameWithoutExtension(spec.FileName) == "meld")
+                {
+                    diffTool = spec;
+                }
+                else
+                {
+                    process.Exit(128);
+                }
+            },
+        };
+        await using var h = new TabTestHarness(s =>
+        {
+            s.DiffTool.Kind = "custom";
+            s.DiffTool.CustomCommand = "meld {left} {right}";
+            s.Editor.DiffWindowOpen = DiffWindowOpen.DiffTool;
+        }, launcher: launcher);
+        var tab = await h.OpenTabAsync();
+        var path = Path.Combine(h.WorkFolder, "auth.cs");
+        DiffSource? opened = null;
+        tab.ChangedFiles.DiffRequested += source => opened = source;
+        await EditTurnAsync(h, tab, "e1", path, "one\n", "one\ntwo\n");
+        var first = (TurnSummaryItem)tab.Items.Last();
+        await EditTurnAsync(h, tab, "e2", path, "one\ntwo\n", "one\ntwo\nthree\n");
+        var second = (TurnSummaryItem)tab.Items.Last();
+
+        // The first turn's changes end where the second turn's start, as its diff does.
+        tab.ChangedFiles.OpenTurnDiffCommand.Execute(first.Files[0]);
+        var view = new DiffWindowViewModel(opened!, dark: false);
+        Assert.True(view.CanOpenInDiffTool);
+        await view.OpenInEditorCommand.ExecuteAsync(null);
+        var spec = diffTool!;
+        var ct = TestContext.Current.CancellationToken;
+        Assert.Equal(("one\n", "one\ntwo\n"), (await File.ReadAllTextAsync(spec.Arguments[0], ct), await File.ReadAllTextAsync(spec.Arguments[1], ct)));
+        Assert.Null(h.Shell.SelectedFiles);
+
+        // The last turn's are against the file itself.
+        tab.ChangedFiles.OpenTurnDiffCommand.Execute(second.Files[0]);
+        await new DiffWindowViewModel(opened!, dark: false).OpenInEditorCommand.ExecuteAsync(null);
+        spec = diffTool!;
+        Assert.Equal(path, spec.Arguments[1]);
+        Assert.Equal("one\ntwo\n", await File.ReadAllTextAsync(spec.Arguments[0], ct));
+    }
+
+    /// <summary>A turn that changed <paramref name="path"/>, and its diff in the diff view.</summary>
+    private static async Task<DiffWindowViewModel> TurnDiffAsync(TabTestHarness h, TabViewModel tab, string path)
+    {
+        DiffSource? opened = null;
+        tab.ChangedFiles.DiffRequested += source => opened = source;
+        await EditTurnAsync(h, tab, "e1", path, "one\n", "one\ntwo\n");
+        tab.ChangedFiles.OpenTurnDiffCommand.Execute(((TurnSummaryItem)tab.Items.Last()).Files[0]);
+        return new DiffWindowViewModel(opened!, dark: false);
     }
 
     [Fact]

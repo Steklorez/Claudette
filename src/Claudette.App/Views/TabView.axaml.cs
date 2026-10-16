@@ -184,6 +184,11 @@ public partial class TabView : UserControl
             ScrollToEnd();
         }
         JumpToLatest.IsVisible = !_stickToBottom && distanceFromBottom > FollowOutput.Threshold;
+        // The panel's arrange places the marks before the scroll viewer takes in its new height: they follow that too.
+        if (e.ExtentDelta.Y != 0 || e.ViewportDelta.Y != 0)
+        {
+            UpdateMarks();
+        }
     }
 
     private static bool IsOnScrollBar(object? source) => source is Visual visual && visual.FindAncestorOfType<ScrollBar>(includeSelf: true) is not null;

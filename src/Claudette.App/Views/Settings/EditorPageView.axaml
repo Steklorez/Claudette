@@ -35,6 +35,16 @@
       <RadioButton GroupName="FromConversation" Content="Beside the conversation" IsChecked="{Binding FilesBeside}" />
       <RadioButton GroupName="FromConversation" Content="In its place" IsChecked="{Binding FilesInPlace}" />
     </StackPanel>
+    <StackPanel Spacing="4">
+      <TextBlock Text="Open in the diff window" />
+      <TextBlock Classes="muted small" TextWrapping="Wrap"
+                 Text="The diff window closes when the file opens in Claudette's editor, so the editor isn't hidden behind it." />
+      <RadioButton GroupName="DiffWindowOpen" Content="Opens the file, as Open files in says" IsChecked="{Binding DiffOpensAsAbove}" />
+      <RadioButton GroupName="DiffWindowOpen" Content="Opens the file in the app the OS uses for it" IsChecked="{Binding DiffOpensInSystem}" />
+      <RadioButton GroupName="DiffWindowOpen" Content="Opens the changes in the diff tool" IsChecked="{Binding DiffOpensInDiffTool}" IsEnabled="{Binding HasDiffTool}" />
+      <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding !HasDiffTool}"
+                 Text="Choose a diff tool in Settings → Diff tool to use it here." />
+    </StackPanel>
     <Button Content="Reset to defaults" Command="{Binding ResetCommand}" />
   </StackPanel>
 </UserControl>

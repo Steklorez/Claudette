@@ -207,6 +207,23 @@ public sealed partial class DiffToolTests : IDisposable
     }
 
     [Fact]
+    public async Task Two_versions_neither_the_file_now_launch_as_two_read_only_files()
+    {
+        var choice = new DiffToolChoice(DiffToolKind.Custom, CustomCommand: """ "C:\Tools\My Diff\diff.exe" "{left}" "{right}" /title1="{leftTitle}" /title2="{rightTitle}" """);
+
+        await Launcher().LaunchBetweenAsync(choice, "before\n", "after the turn\n", "auth.cs", TempDirectory, TestContext.Current.CancellationToken);
+
+        var spec = Assert.Single(_launcher.Started);
+        var folder = Path.Combine(TempDirectory, "20260928-143005-123");
+        var (left, right) = (Path.Combine(folder, "auth (before).cs"), Path.Combine(folder, "auth (after).cs"));
+        Assert.Equal([left, right, "/title1=auth.cs (before)", "/title2=auth.cs (after)"], spec.Arguments);
+        Assert.Equal(folder, spec.WorkingDirectory);
+        Assert.Equal("before\n", await File.ReadAllTextAsync(left, TestContext.Current.CancellationToken));
+        Assert.Equal("after the turn\n", await File.ReadAllTextAsync(right, TestContext.Current.CancellationToken));
+        Assert.All([left, right], file => Assert.True(File.GetAttributes(file).HasFlag(FileAttributes.ReadOnly)));
+    }
+
+    [Fact]
     public async Task A_preset_launches_the_detected_executable_with_its_arguments()
     {
         var probe = new FakeFileProbe { Variables = { ["ProgramFiles"] = @"C:\Program Files" }, Files = { @"C:\Program Files\WinMerge\WinMergeU.exe" } };

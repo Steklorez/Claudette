@@ -182,11 +182,15 @@ public sealed partial class ProjectFilesViewModel
     private Task CloseAllFilesAsync() => CloseFilesAsync([.. OpenFiles.Where(f => !f.IsPinned)]);
 
     /// <summary>
-    /// <c>Ctrl/Cmd+W</c> with the Project Files tab focused: the file showing, and once none is open, the tab itself.
+    /// <c>Ctrl/Cmd+W</c> with the Project Files tab focused: the file showing, and once none is open, the tab itself
+    /// (straight away when it's beside another tab with its explorer hidden).
     /// </summary>
     internal Task CloseShowingOrTabAsync() => Showing is { } showing ? CloseFilesAsync([showing]) : _shell.CloseProjectFilesAsync(this);
 
-    /// <summary>Closes <paramref name="files"/>, asking once about the ones with unsaved edits. False when it didn't.</summary>
+    /// <summary>
+    /// Closes <paramref name="files"/>, asking once about the ones with unsaved edits. False when it didn't. The last one
+    /// closed beside another tab with the explorer hidden closes the Files tab too (<see cref="ClosesWithLastFile"/>).
+    /// </summary>
     private async Task<bool> CloseFilesAsync(IReadOnlyList<ProjectFileViewModel> files)
     {
         if (files.Count == 0)
@@ -202,8 +206,19 @@ public sealed partial class ProjectFilesViewModel
         {
             Remove(file);
         }
+        if (OpenFiles.Count == 0 && ClosesWithLastFile)
+        {
+            await _shell.CloseProjectFilesAsync(this);
+        }
         return true;
     }
+
+    /// <summary>
+    /// Beside another tab with its explorer hidden, as a file opened from a conversation leaves it, the Files tab has
+    /// nothing to show once its last file closes: it closes too, and the tab beside it has the width again (DESIGN.md
+    /// §18, "Project files", "File tabs").
+    /// </summary>
+    private bool ClosesWithLastFile => IsShown && _shell.IsSplit && !IsExplorerShown;
 
     /// <summary>
     /// The Project Files tab, or its group, is closing: asks once about the files with unsaved edits. False for Cancel,

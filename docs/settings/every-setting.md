@@ -186,6 +186,7 @@ This category's page is headed Project Files.
 | **Indent new lines with** | 4 spaces (or 2 spaces, 8 spaces or Tabs) | No | No | [Editing](../project-files/editing.md) |
 | **Open files in** | Claudette's editor, at the line named (or the app the OS uses) | No | No | [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) |
 | **Show a file clicked in a conversation** | Beside the conversation (or In its place) | No | No | [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) |
+| **Open in the diff window** | Opens the file, as Open files in says (or in the app the OS uses, or the changes in the diff tool) | No | No | [The diff view](../changes/the-diff-view.md#opening-the-file) |
 
 ## Project tools
 

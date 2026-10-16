@@ -7,6 +7,7 @@ using Claudette.Core.Diffs;
 using Claudette.Core.Git;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
+using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -76,7 +77,7 @@ internal interface IChangedFilesHost : ITabAreaHost
     void AllReviewedChanged();
 
     /// <summary>Opens a file, in the project's Files tab or the OS's app, as Settings → Editor says (DESIGN.md §18, "Project files").</summary>
-    Task<bool> OpenPathAsync(string path);
+    Task<OpenedPath> OpenPathAsync(string path);
 }
 
 /// <summary>The tab's changed files and diffs (DESIGN.md §8).</summary>
@@ -282,18 +283,61 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             : change.IsNew ? "this turn's changes: new in it, against the file now"
             : "this turn's changes: before it, against the file now";
         var file = new ChangedFileRow { Path = change.Path, DisplayPath = row.DisplayPath, Status = change.IsNew ? "A" : "M", StatusText = "" };
+        Func<Task>? inDiffTool = HasDiffTool && change.BeforeKnown ? () => OpenTurnInDiffToolAsync(change.Path, change.Before, after) : null;
         DiffRequested?.Invoke(new DiffSource(
             change.Path,
             row.DisplayPath,
             change.Before,
             label,
-            null,
-            () => OpenFileInEditorAsync(file),
+            inDiffTool,
+            () => OpenFromDiffAsync(file, inDiffTool),
             () => RevealFileAsync(file),
             () => CopyFilePathAsync(file),
             change.BeforeKnown,
             After: after,
-            AllowRevert: false));
+            AllowRevert: false,
+            OpenInSystem: () => OpenFileInSystemAsync(file)));
+    }
+
+    /// <summary>A turn's changes in the external diff tool: before the turn, against how it left the file, or the file now.</summary>
+    private async Task OpenTurnInDiffToolAsync(string path, string? before, DiffAfter? after)
+    {
+        try
+        {
+            var launcher = new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment);
+            if (after is null)
+            {
+                await launcher.LaunchAsync(DiffTool, before, path, DiffTempDirectory);
+            }
+            else
+            {
+                await launcher.LaunchBetweenAsync(DiffTool, before, after.Text, Path.GetFileName(path), DiffTempDirectory);
+            }
+        }
+        catch (Exception ex)
+        {
+            _host.AddNote($"Couldn't open the diff tool: {ex.Message}", NoteKind.Error);
+        }
+    }
+
+    /// <summary>
+    /// The diff window's <b>Open</b>, as Settings → Editor → <b>Open in the diff window</b> says (DESIGN.md §8): the file
+    /// as <b>Open files in</b> says, the file in the OS's app, or the changes in the diff tool when there's one for them.
+    /// True when the file opened in Claudette's window, which the diff window stays over.
+    /// </summary>
+    private async Task<bool> OpenFromDiffAsync(ChangedFileRow row, Func<Task>? inDiffTool)
+    {
+        switch (_services.Settings.Editor.DiffWindowOpen)
+        {
+            case DiffWindowOpen.System:
+                await OpenFileInSystemAsync(row);
+                return false;
+            case DiffWindowOpen.DiffTool when inDiffTool is not null:
+                await inDiffTool();
+                return false;
+            default:
+                return !row.IsDeleted && await _host.OpenPathAsync(row.Path) == OpenedPath.InClaudette;
+        }
     }
 
     private void QueueRefresh()
@@ -634,6 +678,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
         var before = row.FromGit ? await _services.Git.GetHeadContentAsync(_host.Folder, row.Path) : row.Before;
         var beforeKnown = row.FromGit || row.BeforeKnown;
+        Func<Task>? inDiffTool = HasDiffTool && beforeKnown ? () => OpenFileInDiffToolAsync(row) : null;
         DiffRequested?.Invoke(new DiffSource(
             row.Path,
             row.DisplayPath,
@@ -642,8 +687,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 : !beforeKnown ? "what it held before Claude's first change isn't known, so there's nothing to compare it with"
                 : before is null ? "new in this session"
                 : "compared with before Claude's first change in this session",
-            HasDiffTool && beforeKnown ? () => OpenFileInDiffToolAsync(row) : null,
-            () => OpenFileInEditorAsync(row),
+            inDiffTool,
+            () => OpenFromDiffAsync(row, inDiffTool),
             () => RevealFileAsync(row),
             () => CopyFilePathAsync(row),
             beforeKnown,

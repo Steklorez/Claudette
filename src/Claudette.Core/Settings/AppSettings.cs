@@ -171,6 +171,9 @@ public sealed class EditorSettings
     /// <summary>Where the Project Files tab shows a file clicked in a conversation.</summary>
     public FilesFromConversation FilesFromConversation { get; set; } = FilesFromConversation.Beside;
 
+    /// <summary>What the diff window's <b>Open</b> does (DESIGN.md §8).</summary>
+    public DiffWindowOpen DiffWindowOpen { get; set; } = DiffWindowOpen.AsOpenFilesIn;
+
     /// <summary>Long lines wrap at the editor's width.</summary>
     public bool WordWrap { get; set; }
 
@@ -193,6 +196,18 @@ public enum OpenFilesIn
 
     /// <summary>The app the OS uses for the file, as before the editor.</summary>
     System,
+}
+
+public enum DiffWindowOpen
+{
+    /// <summary>The file, as <see cref="EditorSettings.OpenFilesIn"/> says.</summary>
+    AsOpenFilesIn,
+
+    /// <summary>The file, in the app the OS uses for it.</summary>
+    System,
+
+    /// <summary>The changes, in the external diff tool; the file as <see cref="AsOpenFilesIn"/> when there's none for them.</summary>
+    DiffTool,
 }
 
 public enum FilesFromConversation

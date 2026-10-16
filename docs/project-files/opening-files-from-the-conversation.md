@@ -13,7 +13,7 @@ When Claude names a file, or you click a file in Changed files, the file opens i
 ## Where a file opens from
 
 - A file named in Claude's replies ([Files and links in replies](../conversation/files-and-links-in-replies.md)).
-- **Open** in Changed files, and in the diff window ([The diff view](../changes/the-diff-view.md#opening-the-file)).
+- **Open** in Changed files, and in the diff window, which then closes so it doesn't hide the editor ([The diff view](../changes/the-diff-view.md#opening-the-file)). Settings → **Editor** → **Open in the diff window** can send the diff window's elsewhere.
 - **Open** in the details of a Read, Edit, Write or NotebookEdit call's tile, beside **Open diff** ([Tool calls](../conversation/tool-calls.md)).
 
 Each of their menus keeps **Open in the OS's app**.
@@ -33,6 +33,8 @@ A click in a conversation opens the Files tab beside it, as **Open beside** does
 Settings → **Editor** → **Show a file clicked in a conversation** can change that to **In its place**: the Files tab then takes the conversation's pane, as selecting it in the sidebar does.
 
 When the Files tab opens beside the conversation for its first file, it starts with its explorer hidden, so the file has the pane. That's this Files tab alone, and it's kept with it: the other Files tabs keep theirs. The explorer's button, **Find file** and **Reveal in the explorer** bring it back, and so does a folder named in a reply ([The explorer](the-explorer.md#hiding-it)).
+
+Close the file when you're done with it, and the Files tab closes too: the conversation has its width back. If you showed the explorer meanwhile, the Files tab stays beside the conversation ([File tabs](file-tabs.md#closing)).
 
 ## What still goes elsewhere
 

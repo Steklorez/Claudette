@@ -19,7 +19,9 @@ composer's right rather than being caught part-way through falling off it). Then
 and closes Claudette by its window, as a user would. Last, it has MascotPictureTests draw Claudette on the composer's
 animation from her art and steps, as claudette.gif.
 
-Captures go through PrintWindow, so other windows over Claudette's don't matter, and clicks through UI Automation.
+A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
+CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view, and
+clicks through UI Automation.
 
 .PARAMETER Projects
 Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing
@@ -62,54 +64,57 @@ foreach ($style in 'standard', 'claude') {
                 Invoke-ByText $window $text
                 Start-Sleep -Seconds 2
             }
-            [WindowShot]::Save($window, (Join-Path $Out "$style-$theme.png"), 0)
+            Set-Step 'the window'
+            Save-Window $window (Join-Path $Out "$style-$theme.png")
 
             # Claudette on the composer, close up: with motion reduced she stands still at its right, over Send.
             $send = (Find-ByText $window 'Send').Current.BoundingRectangle
-            $scale = [WindowShot]::Scale($window)
-            [WindowShot]::SaveRegion($window, (Join-Path $Out "claudette-$style-$theme.png"), [int] ($send.Right - 616 * $scale),
-                [int] ($send.Top - 150 * $scale), [int] ($send.Right + 24 * $scale), [int] ($send.Bottom + 34 * $scale))
+            Save-Rect $window (Join-Path $Out "claudette-$style-$theme.png") $send @((616 - $send.Width / [WindowShot]::Scale($window)), 150, 24, 34)
 
             # An Edit's tile opens its detail, which has Open in the diff view.
+            Set-Step 'the diff view'
             Invoke-ByText $window ('Edit ' + (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp'))
             Start-Sleep -Seconds 1
             Invoke-ByText $window 'Open in the diff view'
-            Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } 'the diff view' 20
-            $diff = [WindowShot]::OtherWindow($claudette.Id, $window)
+            $diff = Get-OtherWindow $claudette $window 'the diff view'
             [WindowShot]::Resize($diff, 1000, 470)
             Start-Sleep -Seconds 2
-            [WindowShot]::Save($diff, (Join-Path $Out "diff-$style-$theme.png"), 0)
+            Save-Window $diff (Join-Path $Out "diff-$style-$theme.png")
 
             # The thread: its plan and tasks, then its subagents with the first one's details.
+            Set-Step 'the thread'
             Invoke-ByText $window 'Move to the Input System'
             Start-Sleep -Seconds 2
             Invoke-ByText $window 'Show the side panel'
             Start-Sleep -Seconds 1
             Invoke-ByText $window 'Tasks'
             Start-Sleep -Seconds 2
-            [WindowShot]::Save($window, (Join-Path $Out "tasks-$style-$theme.png"), 0)
+            Save-Window $window (Join-Path $Out "tasks-$style-$theme.png")
             Invoke-ByText $window 'Agents'
             Start-Sleep -Seconds 1
             Select-TreeItem $window 'Agents' 1
             Start-Sleep -Seconds 2
-            [WindowShot]::Save($window, (Join-Path $Out "agents-$style-$theme.png"), 0)
+            Save-Window $window (Join-Path $Out "agents-$style-$theme.png")
 
             # The detailed usage header, down to its edge: just above the sidebar's first button.
+            Set-Step 'the usage header'
             Invoke-ByText $window 'Expand the usage header'
             Start-Sleep -Seconds 3
             $sidebarTop = (Find-ByText $window 'New tab').Current.BoundingRectangle.Top
-            [WindowShot]::Save($window, (Join-Path $Out "header-$style-$theme.png"), [int] ($sidebarTop - 10 * [WindowShot]::Scale($window)))
+            Save-Window $window (Join-Path $Out "header-$style-$theme.png") ([int] ($sidebarTop - 10 * [WindowShot]::Scale($window)))
 
             # A tab on the Studio API key: its spend in the header, and the account's tags on orbit-game's group and on the
             # starfall tab moved to it.
+            Set-Step 'the API-key account'
             Invoke-ByText $window 'Collapse the usage header'
             Start-Sleep -Seconds 1
             Invoke-ByText $window 'Pool particle emitters'
             Wait-Until { Find-ByText $window 'Estimated API spend' -Optional } 'the spend header' 20
             Start-Sleep -Seconds 2
-            [WindowShot]::Save($window, (Join-Path $Out "accounts-$style-$theme.png"), 0)
+            Save-Window $window (Join-Path $Out "accounts-$style-$theme.png")
 
             # History from a starfall tab, narrowed to starfall by its chip: its tabs' sessions and older ones, one in a worktree.
+            Set-Step 'History'
             Invoke-ByText $window 'Grappling hook'
             Start-Sleep -Seconds 2
             Invoke-ByText $window 'History'
@@ -117,7 +122,7 @@ foreach ($style in 'standard', 'claude') {
             Start-Sleep -Seconds 2
             Invoke-Element (Find-ByPrefix $window 'starfall, ') 'starfall'
             Start-Sleep -Seconds 2
-            [WindowShot]::Save($window, (Join-Path $Out "history-$style-$theme.png"), 0)
+            Save-Window $window (Join-Path $Out "history-$style-$theme.png")
         }
         finally {
             Stop-Claudette $claudette

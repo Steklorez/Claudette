@@ -8,7 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- **Project Files**: a tab for each project with an explorer and a code editor, opened with the file button beside a group's **+**, or **Go to file…** (`Ctrl/Cmd+P`). Find a file by name, edit it and save it; unsaved edits are kept when Claudette closes. Claude's changes are marked in the gutter, with a peek to see what was there and **Revert** it. A file named in the conversation opens in it at the line. Settings → Editor sets it up, or sends files to the OS's app instead.
+- **Project Files**: a tab for each project with an explorer and a code editor, opened with the file button beside a group's **+**, or **Go to file…** (`Ctrl/Cmd+P`). Find a file by name, edit it and save it; unsaved edits are kept when Claudette closes. Claude's changes are marked in the gutter, with a peek to see what was there and **Revert** it. A file named in the conversation opens in it at the line, beside the conversation, which gets its width back when you close the file. The diff window's **Open** brings it in front of the diff, which closes. Settings → Editor sets it up, or sends files to the OS's app instead, and **Open in the diff window** can open the file in the OS's app, or the changes in your diff tool.
 - **API-key accounts.** Add a key in Settings → Accounts → **Add an API key**; it's kept only in the OS's credential store. A project group's **Account ▸** menu picks the account its new tabs use, and a tab's moves it to another, saying first what the move costs. While one of its tabs is selected, the header shows the account's estimated spend today, this week and this month, and Settings → Accounts can warn when a day or a month passes an amount.
 - **Files named in Claude's replies open.** A Markdown link to a file, or a file's name in code (`Player.cpp:42`), opens the file with a click. Several files with that name are offered in a menu.
 - **Tabs side by side.** **Open beside** in a tab's menu, or drag its row onto the conversation: up to three tabs at once, each with its own conversation and composer. Drag the line between two to share the width differently.
@@ -16,6 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **The prompt cache's timer.** *Cache 52m* beside the context says how long your next message can read the conversation from Claude's cache, and turns amber in its last three minutes. Settings → Appearance → **Show when the prompt cache expires** turns it off.
 - **Games with Claudette.** Tic-tac-toe, Connect Four and hangman, from her right-click menu, the command palette, or **Play a game while you wait** when a usage limit stops a task. Settings → Appearance → **Games with Claudette** turns them off.
 - **Clear usage history on every machine…** in Settings → Usage, while **Share usage with my other machines** is on.
+- A turn's changes to a file open in your diff tool too, from the diff window's **Open in diff tool**, and its menu has **Open in the OS's app**.
 
 ### Changed
 
@@ -28,7 +29,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Right-click menus no longer run off the bottom of some displays, and Claudette's own menu stays inside the window.
 - The folder trust question fits in the window when a folder's configuration lists a lot.
 - The spacing of thinking and the height of lines in the conversation.
+- In a long conversation, the scroll bar keeps its size and place as you scroll, rather than changing as each message comes into view.
 - The tab info card's **Project** row no longer ends a sentence with two full stops when the project's engine wasn't found.
+- In a narrow conversation, as beside the side panel, the line saying what Claude is doing no longer runs over the side panel: a long command trims to fit. The composer's choices wrap onto another line, and the folder and status under it trim, rather than running past its edge.
 
 ## [0.2.0] - 2026-10-14
 

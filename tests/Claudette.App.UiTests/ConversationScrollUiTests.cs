@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
@@ -105,7 +106,9 @@ public class ConversationScrollUiTests
             tab.Items.Add(thinking);
         }
         var history = tab.Items.ToHashSet();
-        await UiText.SettleUntilAsync(window, () => Rendered() && FromBottom() <= 1, "the conversation rendered at the bottom");
+        // Every message measured once, as the list does out of view when the UI is idle; after that, none is built again.
+        var panel = (ConversationPanel)items.ItemsPanelRoot!;
+        await UiText.SettleUntilAsync(window, () => Rendered() && FromBottom() <= 1 && panel.KnowsEveryHeight, "the conversation rendered at the bottom");
 
         var rebuilt = new List<string>();
         items.ContainerPrepared += (_, e) =>
@@ -143,6 +146,46 @@ public class ConversationScrollUiTests
 
         Assert.True(rebuilt.Count == 0, $"Built again: {string.Join(", ", rebuilt)}");
         Assert.True(rendered.Count == 0, $"Rendered again: {string.Join(", ", rendered)}");
+    }
+
+    [AvaloniaFact]
+    public async Task The_marks_beside_the_scroll_bar_stay_where_their_messages_are_as_the_reader_scrolls()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1100, 800);
+        var scroll = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "ConversationScroll");
+        var items = window.GetVisualDescendants().OfType<ItemsControl>().Single(c => c.Name == "ConversationItems");
+        var marks = window.GetVisualDescendants().OfType<ScrollMarks>().Single();
+        // Replies from a line to a page long, as in a long session: far from the list's first guess at their heights.
+        for (var i = 0; i < 30; i++)
+        {
+            tab.Items.Add(new UserMessageItem($"Question {i}"));
+            var reply = new AssistantTextItem();
+            reply.Append(string.Join("\n\n", Enumerable.Repeat($"Reply {i}: some text that wraps over a line or two in the conversation view.", 1 + i % 7 * 3)));
+            reply.IsStreaming = false;
+            tab.Items.Add(reply);
+        }
+        await UiText.SettleUntilAsync(window, () => items.ItemsPanelRoot is ConversationPanel { KnowsEveryHeight: true } && marks.Marks.Count == 30,
+            "every message measured");
+        // The scroll viewer takes in the list's last height a moment after the list lays out, and the marks with it.
+        UiText.Settle(window);
+        var placed = marks.Marks.Select(m => m.Fraction).ToList();
+
+        // From the bottom to the top a screen at a time, building the replies on the way: no mark moves.
+        for (var page = 0; page < 40 && scroll.Offset.Y > 0; page++)
+        {
+            WheelUp(window, scroll, scroll.Viewport.Height);
+            Assert.Equal(placed, marks.Marks.Select(m => m.Fraction), (a, b) => Math.Abs(a - b) * scroll.Extent.Height < 0.5);
+        }
+        Assert.Equal(0, scroll.Offset.Y);
+
+        // Each reply's Markdown is shown by its own control, while it has one: none is left following a reply it's gone from.
+        foreach (var reply in tab.Items.OfType<AssistantTextItem>())
+        {
+            Assert.Equal(items.ContainerFromItem(reply) is null ? 0 : 1, reply.Parsed.RendererCount);
+        }
+        window.Close();
     }
 
     private static Point Center(Window window, ScrollViewer scroll) =>

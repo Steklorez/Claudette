@@ -95,6 +95,60 @@ public class ProjectFilesOpeningTests
     }
 
     [Fact]
+    public async Task Closing_the_last_file_opened_beside_the_conversation_closes_the_Files_tab_and_gives_the_conversation_its_width()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, "a.txt"));
+        Write(Path.Combine(h.WorkFolder, "b.txt"));
+        await tab.OpenLinkCommand.ExecuteAsync(Click("a.txt"));
+        await tab.OpenLinkCommand.ExecuteAsync(Click("b.txt"));
+        var group = h.Shell.Groups.Single();
+        var files = group.Files!;
+
+        await files.CloseFileCommand.ExecuteAsync(files.Showing);
+
+        // A file still open: the Files tab stays beside.
+        Assert.Equal([tab, (IShellTab)files], h.Shell.Panes);
+
+        await files.CloseFileCommand.ExecuteAsync(files.Showing);
+
+        Assert.Null(group.Files);
+        Assert.Equal([(IShellTab)tab], h.Shell.Panes);
+        Assert.Same(tab, h.Shell.Selected);
+    }
+
+    [Fact]
+    public async Task A_Files_tab_with_its_explorer_showing_or_on_its_own_stays_once_its_last_file_closes()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, "a.txt"));
+        var b = Write(Path.Combine(h.WorkFolder, "b.txt"));
+        await tab.OpenLinkCommand.ExecuteAsync(Click("a.txt"));
+        var group = h.Shell.Groups.Single();
+        var files = group.Files!;
+        files.ToggleExplorerCommand.Execute(null);
+
+        await files.CloseFileCommand.ExecuteAsync(files.Showing);
+
+        Assert.Same(files, group.Files);
+        Assert.Equal([tab, (IShellTab)files], h.Shell.Panes);
+
+        // On its own, with the explorer hidden.
+        await files.OpenFileAsync(b, preview: false);
+        files.ToggleExplorerCommand.Execute(null);
+        h.Shell.ClosePaneCommand.Execute(tab);
+        Assert.False(files.IsExplorerShown);
+        Assert.Equal([(IShellTab)files], h.Shell.Panes);
+
+        await files.CloseFileCommand.ExecuteAsync(files.Showing);
+
+        Assert.Same(files, group.Files);
+        Assert.Empty(files.OpenFiles);
+    }
+
+    [Fact]
     public async Task In_the_conversations_place_the_first_file_keeps_the_explorer()
     {
         await using var h = new TabTestHarness(s => s.Editor.FilesFromConversation = FilesFromConversation.InPlace);

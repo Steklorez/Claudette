@@ -675,7 +675,12 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         var label = _comparingDisk ? "on disk, against your edits" : _baselineLabel;
         var wholeFile = Diff?.ShowWholeFile;
         Diff = new DiffWindowViewModel(new DiffSource(Path, RelativePath, before, label, null,
-            () => _owner.OpenInSystemAsync(Path), () => _owner.RevealAsync(Path), () => _owner.CopyPathAsync(Path), known,
+            async () =>
+            {
+                await _owner.OpenInSystemAsync(Path);
+                return false;
+            },
+            () => _owner.RevealAsync(Path), () => _owner.CopyPathAsync(Path), known,
             After: new DiffAfter(text), AllowRevert: !IsReadOnly && !_comparingDisk, RevertInto: RevertInto), _owner.IsDarkTheme)
         {
             IsSideBySide = Mode == FileViewMode.SideBySide,

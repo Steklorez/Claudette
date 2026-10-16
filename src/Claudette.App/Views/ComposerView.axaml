@@ -17,19 +17,21 @@
              ClipToBounds="False">
   <StackPanel Classes="composerarea">
 
-    <!-- Working line (DESIGN.md §5): a twinkling glyph, a fun verb, the turn's time and tokens -->
+    <!-- Working line (DESIGN.md §5): a twinkling glyph, a fun verb, the turn's time and tokens. In a narrow pane the verb
+         trims first, then the time and tokens, so the line stays within the composer. -->
     <Panel x:Name="WorkingLine" Margin="4,0,4,-2" IsVisible="{Binding IsWorkingLineShown}">
-      <StackPanel Orientation="Horizontal" Spacing="8" DataContext="{Binding Working}" x:DataType="vm:WorkingLine"
-                  Background="Transparent" ToolTip.Tip="{Binding ActivityDetail}">
+      <DockPanel DataContext="{Binding Working}" x:DataType="vm:WorkingLine" Background="Transparent" ToolTip.Tip="{Binding ActivityDetail}">
         <!-- As tall as the tallest frame, whichever shows, so the line holds still (WorkingLine.AllFrames). -->
-        <Panel Width="14" VerticalAlignment="Center">
+        <Panel DockPanel.Dock="Left" Width="14" Margin="0,0,8,0" VerticalAlignment="Center">
           <TextBlock Classes="working-glyph" Text="{x:Static vm:WorkingLine.AllFrames}" Opacity="0" IsHitTestVisible="False"
                      AutomationProperties.AccessibilityView="Raw" />
           <TextBlock Classes="working-glyph" Text="{Binding Glyph}" TextAlignment="Center" VerticalAlignment="Center" />
         </Panel>
-        <TextBlock Classes="working-verb" Text="{Binding Verb}" VerticalAlignment="Center" />
-        <TextBlock Classes="muted small" Text="{Binding Detail}" VerticalAlignment="Center" />
-      </StackPanel>
+        <controls:GiveWayPanel Spacing="8">
+          <TextBlock Classes="working-verb" Text="{Binding Verb}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+          <TextBlock Classes="muted small" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        </controls:GiveWayPanel>
+      </DockPanel>
     </Panel>
 
     <!-- Possibly stuck (check-ins) -->
@@ -128,12 +130,12 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
         </ScrollViewer>
-        <StackPanel Orientation="Horizontal" Spacing="8">
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
           <Button Classes="accent" Content="Trust this folder" Command="{Binding TrustFolderCommand}" />
           <Button Content="Start without it" Command="{Binding StartWithoutFolderSettingsCommand}"
                   ToolTip.Tip="Claude Code starts without this folder's own settings, MCP servers and CLAUDE.md" />
           <Button Content="{Binding CloseMissingText}" Command="{Binding UnpinAndCloseCommand}" />
-        </StackPanel>
+        </WrapPanel>
       </StackPanel>
     </Border>
 
@@ -141,10 +143,10 @@
     <Border Classes="codeblock" IsVisible="{Binding IsFolderMissing}">
       <StackPanel Spacing="8">
         <TextBlock Classes="error" TextWrapping="Wrap" Text="{Binding FolderMissingText}" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
           <Button Classes="accent" Content="Choose folder…" Command="{Binding ChooseFolderCommand}" />
           <Button Content="{Binding CloseMissingText}" Command="{Binding UnpinAndCloseCommand}" />
-        </StackPanel>
+        </WrapPanel>
       </StackPanel>
     </Border>
 
@@ -152,10 +154,10 @@
     <Border Classes="codeblock" IsVisible="{Binding IsSessionMissing}">
       <StackPanel Spacing="8">
         <TextBlock Classes="warning" TextWrapping="Wrap" Text="{x:Static vm:TabViewModel.SessionMissingText}" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
           <Button Classes="accent" Content="Start a new session" Command="{Binding StartNewSessionCommand}" />
           <Button Content="{Binding CloseMissingText}" Command="{Binding UnpinAndCloseCommand}" />
-        </StackPanel>
+        </WrapPanel>
       </StackPanel>
     </Border>
 
@@ -279,7 +281,8 @@
           <!-- Control bar: the chips on the left, and on the right the counts and Send, which move under the chips when
                both don't fit on one line (DESIGN.md §5) -->
           <controls:ControlBarPanel Grid.Row="2">
-            <StackPanel Orientation="Horizontal" Spacing="2">
+            <!-- On a line of their own and still too wide, the chips wrap onto another -->
+            <WrapPanel ItemSpacing="2" LineSpacing="4">
               <!-- Attach a file (DESIGN.md §5, "Attachments"); dropping and pasting work too -->
               <Button Classes="flat" Padding="6,4" ToolTip.Tip="Attach a file or image (or drop or paste one)" AutomationProperties.Name="Attach a file"
                       Click="OnAttachClicked">
@@ -434,8 +437,8 @@
                   </Flyout>
                 </Button.Flyout>
               </Button>
-            </StackPanel>
-  
+            </WrapPanel>
+
             <!-- In a pane too narrow even for these on their own line, they wrap onto another, Send still last at the right -->
             <WrapPanel ItemSpacing="2" LineSpacing="4" ItemsAlignment="End">
               <!-- Processes summary (DESIGN.md §4) -->
@@ -611,13 +614,14 @@
               Command="{Binding OpenTasksPageCommand}" ToolTip.Tip="Show the Tasks page">
         <TextBlock Classes="muted small" Text="{Binding TodoList.StatusText}" MaxWidth="360" TextTrimming="CharacterEllipsis" />
       </Button>
-      <StackPanel Orientation="Horizontal" Spacing="10">
+      <!-- In a narrow pane the folder trims first, then the status -->
+      <controls:GiveWayPanel Spacing="10">
         <TextBlock Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis" MaxWidth="520" />
-        <TextBlock Classes="muted small" Text="{Binding StatusTip}" />
+        <TextBlock Classes="muted small" Text="{Binding StatusTip}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding StatusTip}" />
         <Button Classes="flat" Padding="4,0" IsVisible="{Binding CanRestart}" Command="{Binding RestartCommand}">
           <TextBlock Classes="small" Text="Restart" />
         </Button>
-      </StackPanel>
+      </controls:GiveWayPanel>
     </DockPanel>
   </StackPanel>
 </UserControl>

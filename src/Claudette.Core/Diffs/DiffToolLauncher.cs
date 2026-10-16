@@ -68,6 +68,20 @@ public sealed class DiffToolLauncher
             !string.IsNullOrEmpty(folder) && Directory.Exists(folder) ? folder : null);
     }
 
+    /// <summary>
+    /// Opens two versions of <paramref name="fileName"/>, neither of them the file now, such as a turn's changes against
+    /// how the turn left it (DESIGN.md §8, "Changes per turn"): both sides are temporary read-only files, empty for null.
+    /// </summary>
+    /// <exception cref="DiffToolException">As for <see cref="LaunchAsync"/>.</exception>
+    public async Task LaunchBetweenAsync(DiffToolChoice choice, string? beforeContent, string? afterContent, string fileName, string tempDirectory, CancellationToken cancellationToken = default)
+    {
+        var (program, template) = Resolve(choice);
+        var folder = DiffTempFiles.CreateLaunchFolder(tempDirectory, _timeProvider.GetUtcNow());
+        var left = await DiffTempFiles.WriteAsync(folder, DiffTempFiles.BeforeFileName(fileName), beforeContent, readOnly: true, cancellationToken).ConfigureAwait(false);
+        var right = await DiffTempFiles.WriteAsync(folder, DiffTempFiles.AfterFileName(fileName), afterContent, readOnly: true, cancellationToken).ConfigureAwait(false);
+        Start(program, template, new DiffToolSides(left, right, $"{fileName} (before)", $"{fileName} (after)"), folder);
+    }
+
     /// <summary>Opens a small sample diff of two temporary files, for <b>Test</b> in Settings.</summary>
     /// <exception cref="DiffToolException">As for <see cref="LaunchAsync"/>.</exception>
     public async Task TestAsync(DiffToolChoice choice, string tempDirectory, CancellationToken cancellationToken = default)

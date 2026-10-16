@@ -13,9 +13,13 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
   side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window and the Settings window;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
   a permission waiting (ASK_PERMISSION) and a process for the process monitor (SPAWN).
-Claudette is closed by its window, as a user would, each time. Captures go through PrintWindow, so other windows over
-Claudette's don't matter, and clicks through UI Automation. Keys and the pointer, which need the window in front, are
-used only for the command palette (Ctrl+Shift+P) and the tab's info card (hovering its row).
+Claudette is closed by its window, as a user would, each time.
+
+A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
+CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view, clicks
+and text through UI Automation, and Enter is posted to the window. Two shots need the real keyboard or pointer: the
+command palette (Ctrl+Shift+P) and a tab's info card (the pointer resting on its row). They're taken only with
+-WithInput, which borrows both for a few seconds each and puts them back.
 
 .PARAMETER Projects
 Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing
@@ -27,11 +31,18 @@ The shots to take, by name (tabs/sidebar) or chapter (tabs). Every shot by defau
 .PARAMETER Themes
 The themes to take them in.
 
+.PARAMETER WithInput
+Takes the shots that need the real keyboard or pointer too: Claudette comes to the front for a few seconds each, and the
+shot is tried again if the mouse or keyboard is used meanwhile. Leave them alone while it runs.
+
 .EXAMPLE
 tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo
 
 .EXAMPLE
 tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo -Only tabs/sidebar, usage -Themes dark
+
+.EXAMPLE
+tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo -Only tabs/info-card, tabs/command-palette -WithInput
 #>
 param(
     [Parameter(Mandatory)] [string] $Projects,
@@ -39,6 +50,7 @@ param(
     [string] $Work = (Join-Path ([IO.Path]::GetTempPath()) 'claudette-demo'),
     [string[]] $Only = @(),
     [string[]] $Themes = @('dark', 'light'),
+    [switch] $WithInput,
     # How long Claudette gets to start and restore its tabs before the first click.
     [int] $SettleSeconds = 10
 )
@@ -51,6 +63,7 @@ $Out = (Resolve-Path $Out).Path
 Import-Module (Join-Path $PSScriptRoot 'Screenshots.psm1') -Force -DisableNameChecking
 $build = Build-Claudette $repo
 $failed = @()
+$skipped = @()
 
 # Whether any of the shots is one to take.
 function Test-Wanted([string[]] $names) {
@@ -68,8 +81,6 @@ function Use-Claudette([hashtable] $environment, [scriptblock] $steps) {
     try {
         $script:window = $claudette.MainWindowHandle
         Start-Sleep -Seconds $SettleSeconds
-        # Away from the window, so nothing under the pointer is lit.
-        [WindowShot]::MovePointer(5, 5)
         & $steps
     }
     finally {
@@ -77,18 +88,34 @@ function Use-Claudette([hashtable] $environment, [scriptblock] $steps) {
     }
 }
 
-# One shot: $steps gets the path to save the picture to.
-function Shot([string] $name, [scriptblock] $steps) {
+# One shot: $steps gets the path to save the picture to. -NeedsInput for one that borrows the keyboard or pointer, taken
+# only with -WithInput, and tried again if the user had them meanwhile.
+function Shot([string] $name, [scriptblock] $steps, [switch] $NeedsInput) {
     if (-not (Test-Wanted $name)) { return }
+    if ($NeedsInput -and -not $WithInput) {
+        if ($script:skipped -notcontains $name) { $script:skipped += $name }
+        return
+    }
     $path = Join-Path $Out "$name-$theme.png"
     New-Item -ItemType Directory -Force (Split-Path $path) | Out-Null
     Write-Host "  $name"
-    try {
-        & $steps $path
-    }
-    catch {
-        Write-Warning "$name ($theme): $_"
-        $script:failed += "$name ($theme)"
+    Set-Step $name
+    $tries = if ($NeedsInput) { 3 } else { 1 }
+    for ($try = 1; $try -le $tries; $try++) {
+        try {
+            & $steps $path
+            return
+        }
+        catch {
+            if ($try -lt $tries) {
+                Write-Host "    trying again: $_"
+                Start-Sleep -Seconds 3
+            }
+            else {
+                Write-Warning "$name ($theme): $_"
+                $script:failed += "$name ($theme)"
+            }
+        }
     }
 }
 
@@ -105,9 +132,9 @@ function Show-Tabs {
 # Opens Settings, which is a window of its own, and returns it.
 function Open-Settings {
     Invoke-ByText $window 'Settings'
-    Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } 'the Settings window' 20
+    $settings = Get-OtherWindow $claudette $window 'the Settings window'
     Start-Sleep -Seconds 2
-    [WindowShot]::OtherWindow($claudette.Id, $window)
+    $settings
 }
 
 # The side panel, down to the bottom of $last (a control on its page) when that's given, or $height device-independent
@@ -150,7 +177,7 @@ foreach ($theme in $Themes) {
                 param($path)
                 Wait-Until { Find-ByText $window 'Sign in' -Optional } 'the sign-in screen' 30
                 Start-Sleep -Seconds 1
-                [WindowShot]::Save($window, $path, 0)
+                Save-Window $window $path
             }
         }
     }
@@ -177,30 +204,6 @@ foreach ($theme in $Themes) {
             Shot 'tabs/sidebar' {
                 param($path)
                 Save-Elements $window $path ((Find-ByText $window 'New tab'), (Find-ById $window 'GroupList'), (Find-ByText $window 'Settings')) 10
-            }
-
-            # The card over a tab's row once the pointer has rested on it: a window of its own.
-            Shot 'tabs/info-card' {
-                param($path)
-                $row = (Find-ByText $window 'Grappling hook').Current.BoundingRectangle
-                [WindowShot]::MovePointer([int] ($row.Left + 30), [int] ($row.Top + 10))
-                Start-Sleep -Milliseconds 300
-                [WindowShot]::MovePointer([int] ($row.Left + 40), [int] ($row.Top + 10))
-                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } "the tab's info card" 20
-                Start-Sleep -Seconds 1
-                [WindowShot]::Save([WindowShot]::OtherWindow($claudette.Id, $window), $path, 0)
-                [WindowShot]::MovePointer(5, 5)
-                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -eq [IntPtr]::Zero } "the info card to go" 20
-            }
-
-            Shot 'tabs/command-palette' {
-                param($path)
-                Send-Keys $window 'Ctrl+Shift+P'
-                Wait-Until { Find-ByText $window 'Command palette' -Optional } 'the command palette' 20
-                Start-Sleep -Seconds 1
-                Save-Element $window $path (Get-Parent (Find-ByText $window 'Command palette')) 12
-                Send-Keys $window 'Esc'
-                Wait-Until { -not (Find-ByText $window 'Command palette' -Optional) } 'the command palette to close' 20
             }
 
             # The card has no control of its own: its tiles, with room around them for its header and edge.
@@ -239,10 +242,9 @@ foreach ($theme in $Themes) {
             Shot 'usage/usage-window' {
                 param($path)
                 Invoke-ByText $window 'Usage details'
-                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } 'the Usage window' 20
+                $usage = Get-OtherWindow $claudette $window 'the Usage window'
                 Start-Sleep -Seconds 3
-                $usage = [WindowShot]::OtherWindow($claudette.Id, $window)
-                [WindowShot]::Save($usage, $path, 0)
+                Save-Window $usage $path
                 Close-Window $usage
                 Start-Sleep -Seconds 1
             }
@@ -252,7 +254,7 @@ foreach ($theme in $Themes) {
                 $settings = Open-Settings
                 Select-ListItem $settings 'General'
                 Start-Sleep -Seconds 1
-                [WindowShot]::Save($settings, $path, 0)
+                Save-Window $settings $path
                 Close-Window $settings
                 Start-Sleep -Seconds 1
             }
@@ -262,7 +264,7 @@ foreach ($theme in $Themes) {
                 $settings = Open-Settings
                 Select-ListItem $settings 'Appearance'
                 Start-Sleep -Seconds 1
-                [WindowShot]::Save($settings, $path, 0)
+                Save-Window $settings $path
                 Close-Window $settings
                 Start-Sleep -Seconds 1
             }
@@ -272,9 +274,49 @@ foreach ($theme in $Themes) {
                 $settings = Open-Settings
                 Select-ListItem $settings 'Accounts'
                 Start-Sleep -Seconds 1
-                [WindowShot]::Save($settings, $path, 0)
+                Save-Window $settings $path
                 Close-Window $settings
                 Start-Sleep -Seconds 1
+            }
+
+            # The two that borrow the keyboard and pointer (-WithInput), one after the other.
+            # The card over a tab's row once the pointer has rested on it: a window of its own.
+            Shot 'tabs/info-card' -NeedsInput {
+                param($path)
+                $row = (Find-ByText $window 'Grappling hook').Current.BoundingRectangle
+                $x = [int] ($row.Left + 40)
+                $y = [int] ($row.Top + 10)
+                Enter-Input $window
+                try {
+                    [WindowShot]::MovePointer($x - 10, $y)
+                    Start-Sleep -Milliseconds 300
+                    [WindowShot]::MovePointer($x, $y)
+                    Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } "the tab's info card" 20
+                    Start-Sleep -Seconds 1
+                    $at = [WindowShot]::Pointer()
+                    if ($at[0] -ne $x -or $at[1] -ne $y) { throw 'The pointer moved.' }
+                    Save-Window ([WindowShot]::OtherWindow($claudette.Id, $window)) $path -Hovered
+                }
+                finally {
+                    Exit-Input $window
+                }
+                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -eq [IntPtr]::Zero } 'the info card to go' 20
+            }
+
+            Shot 'tabs/command-palette' -NeedsInput {
+                param($path)
+                Enter-Input $window
+                try {
+                    Send-Keys $window 'Ctrl+Shift+P'
+                    Wait-Until { Find-ByText $window 'Command palette' -Optional } 'the command palette' 20
+                    Start-Sleep -Seconds 1
+                    Save-Element $window $path (Get-Parent (Find-ByText $window 'Command palette')) 12
+                }
+                finally {
+                    Exit-Input $window
+                    if (Find-ByText $window 'Command palette' -Optional) { Send-WindowKey $window 'Esc' }
+                }
+                Wait-Until { -not (Find-ByText $window 'Command palette' -Optional) } 'the command palette to close' 20
             }
 
             # The notes go in the project's pad, which every tab of it shares.
@@ -291,14 +333,14 @@ foreach ($theme in $Themes) {
                 param($path)
                 Invoke-ByText $window 'Project files'
                 Start-Sleep -Seconds 3
-                Send-Keys $window 'Ctrl+P'
+                Invoke-ByText $window 'Find a file by name'
                 Wait-Until { Find-ById $window 'FindBox' } 'the file finder' 20
                 Set-ElementText (Find-ById $window 'FindBox') 'StarfallCharacter.cpp'
                 Start-Sleep -Seconds 2
-                Send-Keys $window 'Enter'
+                Send-WindowKey $window 'Enter'
                 Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
                 Start-Sleep -Seconds 3
-                [WindowShot]::Save($window, $path, 0)
+                Save-Window $window $path
             }
         }
     }
@@ -369,4 +411,8 @@ foreach ($theme in $Themes) {
 }
 
 if ($failed) { Write-Warning "Not taken: $($failed -join ', ')." }
+if ($skipped) {
+    Write-Host "Skipped, as they borrow the keyboard and pointer: $($skipped -join ', '). To take them, run this again with"
+    Write-Host "-Only $($skipped -join ', ') -WithInput, and leave the mouse and keyboard alone for a minute."
+}
 Write-Host "Saved to $Out"

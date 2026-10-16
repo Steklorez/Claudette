@@ -35,6 +35,10 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 }
 
 /// <summary>What the diff view compares, and what it can do with the file.</summary>
+/// <param name="OpenInEditor">
+/// <b>Open</b>: true when the file opened in Claudette's window, such as in the project's Files tab, which the diff
+/// window stays over, so it closes.
+/// </param>
 /// <param name="BeforeKnown">
 /// False when there's nothing to compare with: what the file held before Claude's first change isn't known (DESIGN.md
 /// §8, "Before content"). The view shows the whole file as it is now, with nothing marked as changed.
@@ -60,7 +64,7 @@ public sealed record DiffSource(
     string? Before,
     string BeforeLabel,
     Func<Task>? OpenInDiffTool,
-    Func<Task> OpenInEditor,
+    Func<Task<bool>> OpenInEditor,
     Func<Task> Reveal,
     Func<Task> CopyPath,
     bool BeforeKnown = true,
@@ -154,7 +158,14 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     private Task OpenInDiffToolAsync() => _source.OpenInDiffTool?.Invoke() ?? Task.CompletedTask;
 
     [RelayCommand]
-    private Task OpenInEditorAsync() => _source.OpenInEditor();
+    private async Task OpenInEditorAsync()
+    {
+        if (await _source.OpenInEditor())
+        {
+            // Claudette's window has the file now, and this one, which stays over it, would hide it.
+            CloseRequested?.Invoke();
+        }
+    }
 
     public bool CanOpenInSystem => _source.OpenInSystem is not null;
 

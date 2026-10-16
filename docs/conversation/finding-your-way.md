@@ -18,7 +18,7 @@ While the conversation scrolls, a thin strip beside its scroll bar marks where t
 - errors, in red;
 - turns that changed files, in the **Modified files** card's color.
 
-Each mark sits where its card is in the conversation's height. Hover one to see what it is, and click it to go there. A card not yet drawn is placed by an estimate of its height, so its mark can move a little once you get there. The wheel and clicks reach the conversation through the strip, apart from the marks themselves.
+Each mark sits where its card is in the conversation's height. Hover one to see what it is, and click it to go there. The marks stay put as you scroll. Just after a long conversation opens, or the window changes width, they settle for a moment while Claudette measures the cards out of view. The wheel and clicks reach the conversation through the strip, apart from the marks themselves.
 
 ## From message to message
 {% include unreleased.html %}

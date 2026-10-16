@@ -22,10 +22,15 @@ public static partial class DiffTempFiles
     }
 
     /// <summary><c>auth.cs</c> becomes <c>auth (before).cs</c>, keeping the extension last.</summary>
-    public static string BeforeFileName(string fileName)
+    public static string BeforeFileName(string fileName) => Named(fileName, "before");
+
+    /// <summary><c>auth.cs</c> becomes <c>auth (after).cs</c>: how a turn left it, when that isn't the file now.</summary>
+    public static string AfterFileName(string fileName) => Named(fileName, "after");
+
+    private static string Named(string fileName, string side)
     {
         var stem = Path.GetFileNameWithoutExtension(fileName);
-        return stem.Length == 0 ? $"{fileName} (before)" : $"{stem} (before){Path.GetExtension(fileName)}";
+        return stem.Length == 0 ? $"{fileName} ({side})" : $"{stem} ({side}){Path.GetExtension(fileName)}";
     }
 
     /// <summary>

@@ -345,6 +345,32 @@ public class MainWindowTests
         await UiText.SettleUntilAsync(window, () => !line.IsEffectivelyVisible, "the end of the turn");
     }
 
+    /// <summary>
+    /// In a narrow pane nothing in the composer runs past its edge into the side panel beside it (DESIGN.md §5): a long
+    /// command on the working line trims, the chips wrap under each other, and the folder on the status line trims.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task In_a_narrow_pane_the_composer_stays_within_its_width()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, width: 700);
+        tab.ComposerText = "Fix the build";
+        await tab.SendCommand.ExecuteAsync(null);
+        tab.Working.SetActivity("Running cd /d/Workspaces/dotBunny/DETHOL/Projects/DETHOL && dotnet test --filter Category!=Live…");
+        var line = window.GetVisualDescendants().OfType<Panel>().Single(p => p.Name == "WorkingLine");
+        await UiText.SettleUntilAsync(window, () => line.IsEffectivelyVisible, "the working line");
+
+        var composer = window.GetVisualDescendants().OfType<ComposerView>().Single();
+        double Right(Visual c) => c.TranslatePoint(new Point(c.Bounds.Width, 0), window)!.Value.X;
+        var overrun = composer.GetVisualDescendants().OfType<Control>()
+            .Where(c => c.IsEffectivelyVisible && c.Bounds.Width > 0 && c is TextBlock or Button && c.FindAncestorOfType<MascotLayer>() is null)
+            .Where(c => Right(c) > Right(composer) + 0.5)
+            .Select(c => $"{c.GetType().Name} {(c as TextBlock)?.Text ?? AutomationProperties.GetName(c)} ends at {Right(c)}")
+            .ToList();
+        Assert.True(overrun.Count == 0, $"Past the composer's right edge at {Right(composer)}:\n{string.Join('\n', overrun)}");
+    }
+
     [AvaloniaFact]
     public async Task A_permission_card_shows_the_command_and_a_click_on_Allow_answers_it()
     {

@@ -13,6 +13,7 @@ public sealed class EditorPage(SettingsContext context) : SettingsPage(context, 
         Entry("Explorer side", pageText: "The explorer is on the"),
         Entry("Open files in Claudette's editor", pageText: "Open files in"),
         Entry("Show files from a conversation", pageText: "Show a file clicked in a conversation"),
+        Entry("Open in the diff window", pageText: "Open in the diff window"),
         Entry("Word wrap", pageText: "Wrap long lines"),
         Entry("Indentation", pageText: "Indent new lines with"),
     ];
@@ -112,6 +113,54 @@ public sealed class EditorPage(SettingsContext context) : SettingsPage(context, 
         Editor.FilesFromConversation = where;
         OnPropertyChanged(nameof(FilesBeside));
         OnPropertyChanged(nameof(FilesInPlace));
+        Save();
+    }
+
+    public bool DiffOpensAsAbove
+    {
+        get => Editor.DiffWindowOpen == DiffWindowOpen.AsOpenFilesIn;
+        set
+        {
+            if (value)
+            {
+                SetDiffWindowOpen(DiffWindowOpen.AsOpenFilesIn);
+            }
+        }
+    }
+
+    public bool DiffOpensInSystem
+    {
+        get => Editor.DiffWindowOpen == DiffWindowOpen.System;
+        set
+        {
+            if (value)
+            {
+                SetDiffWindowOpen(DiffWindowOpen.System);
+            }
+        }
+    }
+
+    public bool DiffOpensInDiffTool
+    {
+        get => Editor.DiffWindowOpen == DiffWindowOpen.DiffTool;
+        set
+        {
+            if (value)
+            {
+                SetDiffWindowOpen(DiffWindowOpen.DiffTool);
+            }
+        }
+    }
+
+    /// <summary>A diff tool is set in Settings → Diff tool, for <b>Open in the diff window</b> to use.</summary>
+    public bool HasDiffTool => Settings.DiffTool.Kind != "builtIn";
+
+    private void SetDiffWindowOpen(DiffWindowOpen what)
+    {
+        Editor.DiffWindowOpen = what;
+        OnPropertyChanged(nameof(DiffOpensAsAbove));
+        OnPropertyChanged(nameof(DiffOpensInSystem));
+        OnPropertyChanged(nameof(DiffOpensInDiffTool));
         Save();
     }
 

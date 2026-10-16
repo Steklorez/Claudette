@@ -140,18 +140,56 @@ public class ConversationPanelTests
         GC.KeepAlive(window);
     }
 
+    [AvaloniaFact]
+    public async Task Rows_out_of_view_are_measured_while_the_UI_is_idle_so_none_moves_as_the_view_scrolls()
+    {
+        var (window, scroll, items, rows) = Show(300);
+        var panel = (ConversationPanel)items.ItemsPanelRoot!;
+        await UiText.SettleUntilAsync(window, () => panel.KnowsEveryHeight, "every row measured");
+
+        // Every row where the rows above it put it, with controls still only around the view.
+        var tops = Tops(panel, rows.Count);
+        Assert.Equal(Enumerable.Range(0, rows.Count + 1).Select(i => rows.Take(i).Sum(r => r.Height)), tops);
+        Assert.Equal(rows.Sum(r => r.Height), scroll.Extent.Height);
+        Assert.InRange(Built(items).Count(), 1, rows.Count / 4);
+
+        foreach (var offset in new[] { 9000.0, 4000, 0 })
+        {
+            scroll.Offset = new Vector(0, offset);
+            UiText.Settle(window);
+            Assert.Equal(tops, Tops(panel, rows.Count));
+        }
+        GC.KeepAlive(window);
+    }
+
+    [AvaloniaFact]
+    public async Task At_a_new_width_the_rows_out_of_view_are_measured_again()
+    {
+        var (window, scroll, items, rows) = Show(100, () => new WrappingRowView());
+        var panel = (ConversationPanel)items.ItemsPanelRoot!;
+        await UiText.SettleUntilAsync(window, () => panel.KnowsEveryHeight, "every row measured");
+        Assert.Equal(rows.Sum(r => r.Height), scroll.Extent.Height);
+
+        window.Width = 200;
+
+        await UiText.SettleUntilAsync(window, () => scroll.Extent.Height == 2 * rows.Sum(r => r.Height), "every row measured at the new width");
+        GC.KeepAlive(window);
+    }
+
+    private static List<double> Tops(ConversationPanel panel, int count) => [.. Enumerable.Range(0, count + 1).Select(panel.TopOf)];
+
     private static IEnumerable<(int Index, Control Container, Rect Bounds)> Built(ItemsControl items) =>
         items.GetRealizedContainers().Select(c => (Index: items.IndexFromContainer(c), Container: c, c.Bounds)).OrderBy(b => b.Index);
 
     /// <summary>Rows of different heights in a scroll viewer as high as <see cref="ViewHeight"/>.</summary>
-    private static (Window Window, ScrollViewer Scroll, ItemsControl Items, ObservableCollection<Row> Rows) Show(int count)
+    private static (Window Window, ScrollViewer Scroll, ItemsControl Items, ObservableCollection<Row> Rows) Show(int count, Func<Control>? view = null)
     {
         var rows = new ObservableCollection<Row>(Enumerable.Range(0, count).Select(i => new Row(i, 20 + i % 7 * 15)));
         var items = new ItemsControl
         {
             ItemsSource = rows,
             ItemsPanel = new FuncTemplate<Panel?>(() => new ConversationPanel { CacheLength = 1 }),
-            ItemTemplate = new FuncDataTemplate<Row>((_, _) => new RowView()),
+            ItemTemplate = new FuncDataTemplate<Row>((_, _) => view?.Invoke() ?? new RowView()),
         };
         var scroll = new ScrollViewer { Content = items };
         var window = UiText.Show(scroll, 300, ViewHeight);
@@ -198,5 +236,18 @@ public class ConversationPanelTests
         }
 
         private void OnRowChanged(object? sender, PropertyChangedEventArgs e) => Height = _row!.Height;
+    }
+
+    /// <summary>As high as its row says, and twice that under 250 pixels wide, as text wrapping onto more lines.</summary>
+    private sealed class WrappingRowView : Control
+    {
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+            InvalidateMeasure();
+        }
+
+        protected override Size MeasureOverride(Size availableSize) =>
+            new(0, DataContext is Row row ? (availableSize.Width < 250 ? 2 : 1) * row.Height : 0);
     }
 }

@@ -74,4 +74,24 @@ public class ControlBarPanelTests
         var at = send.TranslatePoint(default, bar)!.Value;
         Assert.Equal(new Point(350 - 150, 24 + 4 + 30 + 4), at);
     }
+
+    [AvaloniaFact]
+    public void Chips_wider_than_the_bar_on_their_own_wrap_rather_than_running_past_the_end()
+    {
+        // The model, effort and mode, as in a narrow pane: 3 × 150 plus spacing is wider than the bar's 350.
+        var chips = new WrapPanel
+        {
+            ItemSpacing = 2,
+            LineSpacing = 4,
+            Children = { new Border { Width = 150, Height = 24 }, new Border { Width = 150, Height = 24 }, new Border { Width = 150, Height = 24 } },
+        };
+        var send = new Border { Width = 100, Height = 30 };
+        var bar = new ControlBarPanel { RowSpacing = 4, Children = { chips, send } };
+        UiText.Show(new Border { Width = 350, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top, Child = bar });
+
+        Assert.True(bar.IsWrapped);
+        Assert.True(chips.Bounds.Right <= 350, $"The chips run to {chips.Bounds.Right}, past the bar's 350.");
+        Assert.Equal(24 + 4 + 24, chips.Bounds.Height);
+        Assert.Equal(new Rect(250, 24 + 4 + 24 + 4, 100, 30), send.Bounds);
+    }
 }

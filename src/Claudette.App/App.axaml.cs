@@ -61,6 +61,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            UnfocusedWindows.Use(this);
             var window = _mainWindow = new MainWindow();
             _placement = new WindowPlacementTracker(window);
             var launcher = new ProcessLauncher();

@@ -44,13 +44,15 @@ The tab's menu has:
 
 A file with unsaved edits asks first ([Saving](saving.md)).
 
+When the Files tab is beside another tab with its explorer hidden, as it is when a file you clicked in the conversation opened it ([Opening files from the conversation](opening-files-from-the-conversation.md)), closing its last file closes the Files tab too, and the conversation has its width back. With the explorer showing, or with the Files tab on its own, it stays open with no file.
+
 The rest of the menu is **Pin** or **Unpin**, **Reviewed** while Claude has changed the file, **Copy path**, **Copy relative path**, **Reveal in the explorer** (which selects it in the tree, and shows the explorer if it's hidden), **Reveal in file manager** and **Open in the OS's app**.
 
 ## Moving between files
 
 `Ctrl+PageDown` and `Ctrl+PageUp` go to the next and previous file, or `Cmd+Option+→` and `Cmd+Option+←` on macOS.
 
-The window's **Close tab** shortcut, `Ctrl/Cmd+W` unless you've changed it, closes the file showing while a Files tab has the focus, and the Files tab itself once no file is open.
+The window's **Close tab** shortcut, `Ctrl/Cmd+W` unless you've changed it, closes the file showing while a Files tab has the focus, and the Files tab itself once no file is open, or with the last file when it's beside another tab with its explorer hidden ([Closing](#closing)).
 
 ## Coming back
 

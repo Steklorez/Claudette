@@ -13,7 +13,7 @@ public sealed class DiffRevertTests : IDisposable
     private async Task<DiffWindowViewModel> OpenAsync(string path, string? before, bool beforeKnown = true, bool fromGit = false)
     {
         var source = new DiffSource(path, Path.GetFileName(path), before, "before Claude's first change", null,
-            () => Task.CompletedTask, () => Task.CompletedTask, () => Task.CompletedTask, beforeKnown, FromGit: fromGit);
+            () => Task.FromResult(false), () => Task.CompletedTask, () => Task.CompletedTask, beforeKnown, FromGit: fromGit);
         var view = new DiffWindowViewModel(source, dark: false);
         await TabTestHarness.Eventually(() => !view.IsLoading, "the diff");
         return view;
