@@ -41,8 +41,6 @@ With usage sharing on, a project adds up the tabs other machines sync to the [se
 
 ## Accounts
 
-{% include unreleased.html %}
-
 Once you have an API-key account besides Default, **Accounts** appears under **Projects**, over the same period: the tokens, estimated cost and turns each account has used, with Default's turns as one row. Hover over a row for the split by machine.
 
 Only turns under your Default account count in the tab list and in the header's charts, because a key's turns don't use your plan. See [Spend and its warnings](../accounts/spend-and-its-warnings.md).

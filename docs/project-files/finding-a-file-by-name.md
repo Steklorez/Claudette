@@ -7,8 +7,6 @@ summary: "Type part of a file's name and the explorer swaps its tree for a list 
 
 # Finding a file by name
 
-{% include unreleased.html %}
-
 Type part of a file's name and the explorer swaps its tree for a list of the files that match, best first.
 
 ## Starting a search

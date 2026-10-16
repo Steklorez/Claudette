@@ -12,15 +12,11 @@ When Claude finishes a turn, the conversation ends it with a few short cards: th
 {% include shot.html name="guide/conversation/turn-end" alt="The end of a turn: a Modified files card with a tile for each changed file, and a Turn card with its duration, tokens and model." %}
 
 ## Modified files
-{% include unreleased.html %}
-
 A turn that changed files ends with a **Modified files** card. The header says *3 files changed*. It has a tile for each file the turn changed with Edit, Write, MultiEdit or NotebookEdit, its subagents' changes included. A tile shows the file's name, its counts (`+12 −3`) beside it, and its folder under it. Hover a tile for the full path.
 
 Click a tile to open that turn's changes to the file in the [diff view](../changes/the-diff-view.md): the file as it was before the turn's first change, against how the turn left it. If no later turn changed the file, the diff is against the file as it is now, and the header says so. Changes you made yourself between turns count toward the turn before them. This diff only shows: there is no **Revert** or **Reviewed** in it. Those belong to [Changed files](../changes/changed-files.md), which lists everything since the session started. [Changes per turn](../changes/changes-per-turn.md) has more.
 
 ## Turn
-{% include unreleased.html %}
-
 A **Turn** card, one quiet line, comes next: how long the turn took, tokens in and out, the model, how much came from the prompt cache, and how many tool calls every agent made. For example: *1m 4s · 75.2k in · 904 out · Opus 5.5 · 62k from cache · 7 tool calls*. The time the turn ended is at the right.
 
 ## Tasks

@@ -56,13 +56,9 @@ Claudette also sets some variables itself on every `claude` it starts:
 
 ### Keys and accounts
 
-{% include unreleased.html %}
-
 A tab on an [API-key account](../accounts/api-key-accounts.md) starts without `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`, which would otherwise win over the account's key. The key itself never goes in the environment: Claude Code gets it from a small helper Claudette runs.
 
 ### The prompt cache
-
-{% include unreleased.html %}
 
 To say how long the prompt cache lasts, Claudette reads `CLAUDE_CODE_PROMPT_CACHE_TTL`, `ENABLE_PROMPT_CACHING_1H`, `FORCE_PROMPT_CACHING_5M`, `DISABLE_PROMPT_CACHING` and the per-model `DISABLE_PROMPT_CACHING_…` variables, both from the environment and from the `env` of Claude Code's settings files. See [The prompt cache](../usage/the-prompt-cache.md).
 

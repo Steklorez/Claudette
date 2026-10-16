@@ -7,8 +7,6 @@ summary: "Each folder group in the sidebar has an account that its new tabs run 
 
 # A folder's account
 
-{% include unreleased.html %}
-
 Each folder group in the sidebar has an account that its new tabs run under. Pick it once for a folder, and every tab you open there afterward uses it.
 
 {% include shot.html name="accounts-standard" alt="A tab on the Studio API key: the header shows the key's estimated spend, and Studio's tag sits on the orbit-game group and on a tab that was moved to it" %}

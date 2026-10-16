@@ -7,8 +7,6 @@ summary: "Show up to three tabs side by side, each pane with its own conversatio
 
 # Split panes
 
-{% include unreleased.html %}
-
 Show up to three tabs side by side, each pane with its own conversation, composer and working line and a line between them. The panes share the width evenly until you drag a line. Use it to watch a thread and its sub-threads at once, or to keep one tab in view while you work in another.
 
 ## Opening a pane

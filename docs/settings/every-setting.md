@@ -46,7 +46,7 @@ The page also shows Claudette's version and update status, with **Check now**, *
 | **Sync Claudette's settings through the library** | Off | No | No | [Settings sync](../history/settings-sync.md) |
 
 {: .note }
-**Also restore unpinned tabs when Claudette starts** is on for new installs from the next release. Settings saved by 0.2.0 or earlier keep it off until you turn it on, or use this category's **Reset to defaults**.
+**Also restore unpinned tabs when Claudette starts** is on for new installs from 0.3.0. Settings saved by 0.2.0 or earlier keep it off until you turn it on, or use this category's **Reset to defaults**.
 
 ## Processes
 
@@ -76,8 +76,6 @@ The page also shows Claudette's version and update status, with **Check now**, *
 The page also shows the installed Claude Code and how it was installed, with **Check now**, **Update now**, **Update on next launch** and **What's new** ([Claude Code's updates](../updates/claude-codes-updates.md)), and the signed-in account with **Sign in** and **Sign out…** ([Your Claude sign-in](../accounts/your-claude-sign-in.md)).
 
 ## Accounts
-
-{% include unreleased.html %}
 
 This category is this machine's own. None of it syncs, and a tab can't override it. Accounts and their keys are on the [Accounts](../accounts/index.md) pages.
 
@@ -131,9 +129,6 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 | **Claudette shares tips** | On | Yes | No | [Claudette on the composer](../claudette/claudette-on-the-composer.md) |
 | **Games with Claudette** | On | Yes | No | [Games with Claudette](../claudette/games-with-claudette.md) |
 
-{: .note }
-**Quieter in-between steps**, **Show when the prompt cache expires** and **Games with Claudette** are new in the next release.
-
 ## Usage
 
 | Setting | Default | Syncs | Per tab | Explained in |
@@ -148,9 +143,6 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 | **Keep usage history**, with **Clear usage history…** | 1 month (or 1 day, 1 week, 1 year or Forever) | Yes | No | [Usage history](../usage/usage-history.md) |
 | **Share usage with my other machines** | Off | Yes | No | [Sharing usage across machines](../usage/sharing-usage-across-machines.md) |
 | **Clear usage history on every machine…** (while sharing is on) | | No | No | [Sharing usage across machines](../usage/sharing-usage-across-machines.md) |
-
-{: .note }
-**Use usage credits once a limit is used up** and **Clear usage history on every machine…** are new in the next release.
 
 ## Quick suffixes
 
@@ -176,8 +168,6 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 | **Command** (for a custom command), with **Test** | Empty | No | No | [External diff tools](../changes/external-diff-tools.md) |
 
 ## Editor
-
-{% include unreleased.html %}
 
 This category's page is headed Project Files.
 

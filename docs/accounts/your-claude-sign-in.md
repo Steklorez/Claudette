@@ -40,8 +40,6 @@ The banner's **Sign in** opens the sign-in dialog and starts signing in. [Signin
 
 ## The Default account
 
-{% include unreleased.html %}
-
 Once you add an [API-key account](api-key-accounts.md), this sign-in is called **Default**. Tabs run under it unless their folder group or the tab picks another account, and the header's plan meters are its plan's.
 
 The sign-in banner and the messages held while signed out are about Default. A tab on an API-key account has its own key, and doesn't use them.

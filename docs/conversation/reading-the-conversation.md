@@ -12,8 +12,6 @@ A tab's conversation is drawn from what Claude Code sends, not from terminal tex
 {% include shot.html name="standard" alt="The main window: a conversation in cards, with a Tool calls card, and Changed files in the side panel." %}
 
 ## The cards
-{% include unreleased.html %}
-
 Every step is a card: a stripe down its left edge in the card's color, over a faint tint of it, inside a thin outline. The card always names its kind in words, so the color is never the only clue.
 
 A card's header line has an icon, the kind in the card's color, a few muted words (a Tool calls card says *4 calls · 1 running*), and its time at the right. While you point at a card, or move the keyboard focus onto it, its buttons appear before the time: **Copy message**, **Add to scratch pad** and **⋯**. Short cards, such as a note or the **Turn** card, put the step on the header line.
@@ -43,8 +41,6 @@ A message in a restored tab shows the time Claude Code recorded for it. A messag
 The conversation scrolls to follow new output. Scroll up, with the wheel, the scroll bar, the keys or a swipe, and it stops following, so it never pulls you back down while you read. A **Jump to latest** button appears at the bottom right. Click it, or press `Ctrl/Cmd+F4`, to go to the end and follow again.
 
 ## Quieter in-between steps
-{% include unreleased.html %}
-
 The steps on the way to an answer are less important than the answer. With **Quieter in-between steps** on, tool calls, thinking, subagents, hook runs that didn't fail, notes, answered prompts, a turn's statistics, and a reply Claude carried on after (one followed by a tool call in the same turn) lose their card's tint and outline and keep the stripe. Pointing at one, or moving the keyboard focus onto it, brings them back. In the Standard style their text is a little softer too.
 
 Your messages, Claude's answers, changed files, errors and prompts waiting for you always keep their full look.

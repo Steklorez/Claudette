@@ -41,8 +41,6 @@ Claudette on the composer notices too: she stamps the edge of the box, which lea
 
 ## In a Files tab
 
-{% include unreleased.html %}
-
 A project's Files tab has a **Reviewed** button for a file Claude changed, and the file tab's menu has **Reviewed**. It ticks the file in every one of the project's open tabs that lists it, and the rows' reviewed icon follows. See [Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md#reviewed).
 
 ## See also

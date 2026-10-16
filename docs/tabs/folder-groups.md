@@ -71,13 +71,9 @@ Right-click a group's label, in the full sidebar or the rail:
 
 ## The Project files button
 
-{% include unreleased.html %}
-
 A button beside a group's **+** (tip: **Project files**) opens that folder's Files tab, an explorer and an editor for the project. It's the same as **Open project files** in the group's menu. See [Opening project files](../project-files/opening-project-files.md).
 
 ## The account new tabs use
-
-{% include unreleased.html %}
 
 Once you've added an API-key account in Settings → Accounts, the group's menu has **Account ▸**, which lists Default and each account with its color, the group's ticked. The choice is for the group's new tabs and is remembered for the folder on this machine. Tabs already open keep their account. A group that uses an account other than Default shows a small tag with the account's name beside its label. See [A folder's account](../accounts/a-folders-account.md).
 

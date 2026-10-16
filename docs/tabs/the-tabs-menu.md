@@ -51,12 +51,6 @@ The **Thread ▸** submenu offers whichever of these apply to the tab:
 - **Ask before sending to sub-threads**, a check item on a thread
 - **Stop being a thread**
 
-## New in the next release
-
-{% include unreleased.html %}
-
-Four items come with features that no release has yet: **Account ▸** (API-key accounts), **Use usage credits**, and **Open beside** and **Close pane** (tabs side by side).
-
 ## Duplicate tab
 
 **Duplicate tab** opens a new tab in the same group that carries the session on as a copy. The two go their own ways from there, and the original doesn't change.

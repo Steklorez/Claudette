@@ -7,8 +7,6 @@ summary: "Claude's changes marked in the explorer and the editor's gutter, with 
 
 # Claude's changes in the editor
 
-{% include unreleased.html %}
-
 A Files tab marks what Claude changed where it is: a letter in the explorer, a bar in the editor's gutter beside each changed line, and the lines it replaced a click away.
 
 ## What the changes are against

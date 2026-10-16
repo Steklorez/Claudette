@@ -69,8 +69,6 @@ The ring is hidden until the tab has context data, so a tab that hasn't started 
 
 ## Account tags
 
-{% include unreleased.html %}
-
 Once you've added an API-key account, a folder group whose new tabs use an account other than Default has a small tag with the account's name beside its label, and a tab whose account differs from its group's has the tag on its row. See [A folder's account](../accounts/a-folders-account.md).
 
 ## Threads and project runs

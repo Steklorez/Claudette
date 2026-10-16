@@ -40,8 +40,6 @@ A revert keeps the file's line endings, whether it ends with a newline, its byte
 
 ## In a Files tab
 
-{% include unreleased.html %}
-
 The peek under a change in the editor has a **Revert** too, and so does each change in the tab's inline and side by side views. Those change the editor's text instead of writing the file: Undo takes them back, and nothing is written until you save ([Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md)).
 
 ## See also

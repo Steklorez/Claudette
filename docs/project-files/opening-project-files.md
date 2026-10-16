@@ -7,8 +7,6 @@ summary: "A Project Files tab shows a project's files beside, or instead of, its
 
 # Opening project files
 
-{% include unreleased.html %}
-
 A Project Files tab shows a project's files beside, or instead of, its conversations: the explorer on one side and the files you've opened, in tabs, on the other. A folder group has at most one.
 
 {% include shot.html name="guide/project-files/files-tab" alt="A project's Files tab: the explorer's tree on the left with letters beside the files Claude changed, and a C++ file open in the editor with its tabs above it and Claude's changes marked in the gutter." %}

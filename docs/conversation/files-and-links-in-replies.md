@@ -14,8 +14,6 @@ Claude names files as it works: *`weapons.md` is written*, *see `docs/specs/weap
 A click on a web link in a reply, a plan, or a subagent's prompt or report opens it in your browser. Only `https`, `http` and `mailto` links open this way, so a reply can't start a program through an app's own address scheme.
 
 ## Files and folders
-{% include unreleased.html %}
-
 These mentions are clickable:
 
 - A Markdown link whose address is a path, relative to the tab's folder or not, or a `file:` address on this computer. A line or heading in it (`#L42`, `#guns`) is left out.
@@ -40,8 +38,6 @@ A path is read from the tab's folder (the worktree, for a tab in one), then its 
 Inline code is looked for as the reply shows, before you click, and some paths reach the network just by being looked up (`/net/<host>` on macOS). So that lookup touches only the tab's folders, your home folder and, on Windows, the computer's own drives, not a mapped network drive. A file elsewhere becomes a link only when Claude's tools named it. A click looks wherever its path points. A network path (`\\server\share\…`, `//server/…`, `file://server/…`) is never looked at, since Windows would hand its server your credentials.
 
 ## Settings
-{% include unreleased.html %}
-
 Where a clicked file opens is set in Settings → Editor: **Open files in**, and **Show a file clicked in a conversation** (**Beside the conversation** or **In its place**). [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) explains both.
 
 ## See also

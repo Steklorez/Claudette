@@ -7,8 +7,6 @@ summary: "A row of tabs sits over the editor, one for each open file."
 
 # File tabs
 
-{% include unreleased.html %}
-
 A row of tabs sits over the editor, one for each open file. With no file open, the space under it says *No file open* and offers a **Find a file…** button.
 
 ## What a tab shows

@@ -43,8 +43,6 @@ Most of these show only when they apply to the tab.
 
 ## The prompt cache
 
-{% include unreleased.html %}
-
 After the context, a chip such as *Cache 52m* says how long your next message can read the conversation from the prompt cache, which costs much less than Claude reading it all again. In its last three minutes it turns the caution color, then reads *Cache <1m* and *Cache expired*. It shows only between turns, once the conversation has made its first request.
 
 Settings → Appearance → **Show when the prompt cache expires** turns it off. [The prompt cache](../usage/the-prompt-cache.md) explains it.

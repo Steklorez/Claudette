@@ -36,8 +36,6 @@ Reordering keeps them together: **Move up** and **Move down** on a thread move i
 
 ## Showing a thread with its sub-threads
 
-{% include unreleased.html %}
-
 Choose **Thread** → **Show with its sub-threads** on a thread to see it beside its sub-threads: the thread and its first sub-threads, as many as fit, each with its own conversation and composer. The command palette has **Show the thread with its sub-threads**. [Split panes](../tabs/split-panes.md) explains the panes.
 
 ## See also

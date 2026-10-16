@@ -7,8 +7,6 @@ summary: "While Claude works, or a usage limit holds a task, you can play a game
 
 # Games with Claudette
 
-{% include unreleased.html %}
-
 While Claude works, or a usage limit holds a task, you can play a game against Claudette: tic-tac-toe, Connect Four or hangman. The games never touch Claude Code, use no usage and reach nothing outside Claudette. A game left open stays out of the way of everything else.
 
 ## Start a game

@@ -50,8 +50,6 @@ The wait is saved with the tab, so a restart, including one into a new build of 
 
 ## Play a game while you wait
 
-{% include unreleased.html %}
-
 While a limit holds a task, the bar has **Play a game while you wait** with a menu: **Tic-tac-toe**, **Connect Four** and **Hangman**. The game opens in the side panel. See [Games with Claudette](../claudette/games-with-claudette.md).
 
 ## Settings

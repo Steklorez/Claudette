@@ -7,8 +7,6 @@ summary: "An API key has no plan limits, so there's nothing for the usage meters
 
 # Spend and its warnings
 
-{% include unreleased.html %}
-
 An API key has no plan limits, so there's nothing for the usage meters to measure. While a tab on an API-key account is selected, the header shows what that key is costing instead.
 
 {% include shot.html name="accounts-standard" alt="A tab on the Studio API key: the header shows the key's estimated spend, Studio's tag on the orbit-game group and on a moved tab" %}

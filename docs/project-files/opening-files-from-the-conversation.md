@@ -7,8 +7,6 @@ summary: "When Claude names a file, or you click a file in Changed files, the fi
 
 # Opening files from the conversation
 
-{% include unreleased.html %}
-
 When Claude names a file, or you click a file in Changed files, the file opens in the project's Files tab, at the line that's named. Claude's replies, a tool call's details and Changed files all reach the editor this way.
 
 ## Where a file opens from

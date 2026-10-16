@@ -42,8 +42,6 @@ The data folder holds:
 | `utility`, `project-jobs`, `builds`, `presence` | Working files: the folder of Claudette's hidden helper session, files that project actions write for Claudette to read, the copies a source build runs from, and a marker that exists while Claudette's window is in front. |
 | `restart.json`, `restart-ready` | Files that exist only while Claudette restarts into an update or a new build, to carry your tabs across. |
 
-{% include unreleased.html %}
-
 Unsaved edits in a [Project files](../project-files/saving.md) tab are kept in `editor-backups`, so quitting never loses them. The names and colors of your [API-key accounts](../accounts/api-key-accounts.md) are in `state.json`. Their keys aren't ([Passwords and keys](passwords-and-keys.md)).
 
 Claudette writes its files whole or not at all: to a temporary file, then renamed over the real one. A crash or a power cut leaves the old file or the new one, never half of one. A settings or state file that isn't valid is kept next to it as `<name>.<time>.bad`, and Claudette starts from defaults ([Settings back to their defaults](../troubleshooting/settings-back-to-their-defaults.md)).

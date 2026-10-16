@@ -47,8 +47,6 @@ A row shows only when the tab has something to say. They come in this order:
 
 ## The Account row
 
-{% include unreleased.html %}
-
 Once you've added an API-key account, the card has an **Account** row after the worktree rows: the tab's account, or *Default*. See [Moving a tab to another account](../accounts/moving-a-tab-to-another-account.md).
 
 ## See also

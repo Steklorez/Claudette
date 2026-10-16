@@ -7,8 +7,6 @@ summary: "Once a limit is used up, a tab can stop and wait for the reset rather 
 
 # Tabs that don't use usage credits
 
-{% include unreleased.html %}
-
 If your plan has usage credits turned on, they pay for Claude once your session or weekly limit is used up, for every tab alike. You can keep them for the work that matters: a tab that doesn't use them stops instead, and waits for the limit to reset, as it would at a limit with no credits behind it.
 
 ## Choosing

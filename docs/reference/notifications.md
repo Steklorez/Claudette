@@ -33,8 +33,6 @@ Two more switches in Settings → Notifications are about the icon, not notifica
 
 ## API-key spend warnings
 
-{% include unreleased.html %}
-
 A spend warning for an [API-key account](../accounts/spend-and-its-warnings.md) is a usage notification, on the same switch: *"Studio: $5.20 today"* when its estimated spend passes the amount you set for the day, or *"Studio: $41.00 this month"* for the month.
 
 ## On each system

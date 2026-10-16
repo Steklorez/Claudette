@@ -37,14 +37,28 @@ For the whole window:
 - **Collapse the sidebar** or **Expand the sidebar**
 - **Zoom in**, **Zoom out**, and **Reset zoom** while zoomed
 - **Go to the next tab waiting for you**, when another tab is waiting
+- **Go to file…**, which finds a file by its name in the project's Files tab. See [Finding a file by name](../project-files/finding-a-file-by-name.md).
+
+While a project's Files tab has the focus:
+
+- **Save the file**, while it has unsaved edits, and **Save all files**, while any file does
+- **Close the file** and **Go to line…**, while a file is showing
+- **Show only changed files** (or **Show every file in the explorer**) and **Hide the explorer** (or **Show the explorer**)
+- **Close this pane** and **Close the other panes**, with tabs [side by side](split-panes.md)
+- **Close project files**
 
 For the selected tab:
 
 - **Find in the conversation**
+- **Go to the first message** and **Go to the latest**, which jump through the conversation. See [Finding your way](../conversation/finding-your-way.md).
+- **Close this pane** and **Close the other panes**, with tabs [side by side](split-panes.md)
+- **Show the thread with its sub-threads**, on a thread or one of its sub-threads
 - **Stop Claude**, while Claude works
 - The project's main action, named for it (such as *Build*), with the project's name beside it
 - **Stash the message**, while something's typed in the composer
 - **Show changed files**, **Show the agent map**, **Show tasks**, **Show processes**, **Show MCP servers** (when the session has some) and **Show scratch pad**
+- **Open project files**, which opens the project's Files tab. See [Opening project files](../project-files/opening-project-files.md).
+- **Play tic-tac-toe with Claudette**, **Play Connect Four with Claudette** and **Play hangman with Claudette**, unless the games are turned off. See [Games with Claudette](../claudette/games-with-claudette.md).
 - **Tab settings…**, **Duplicate tab** and **Export conversation…**
 - **New tab in a worktree**, for a folder in a git repository
 - The thread commands that apply: **Make this tab a thread**, **New sub-thread**, **New sub-thread in a worktree**, **Ask before sending to sub-threads** (or **Stop asking before sending to sub-threads**), **Stop being a thread**, **Assign to thread:** and a thread's name, **Go to thread** and **Detach from thread**
@@ -58,17 +72,6 @@ An entry matches when the letters you typed appear in its name in order, ignorin
 ## Going to the next tab waiting for you
 
 `Ctrl/Cmd+J` selects the next tab, in sidebar order after the selected one and going round, that's waiting for you: a permission prompt, a question or a plan. Nothing happens when no other tab is waiting. The palette has the same command, **Go to the next tab waiting for you**, while one is.
-
-## New in the next release
-
-{% include unreleased.html %}
-
-Some commands come with features that no release has yet:
-
-- **Go to file…** and **Open project files**, which open the project's Files tab. While a Files tab has the focus, the palette has its own commands for saving, closing a file, going to a line, showing only changed files, hiding the explorer and closing the tab. See [Opening project files](../project-files/opening-project-files.md).
-- **Close this pane**, **Close the other panes** and **Show the thread with its sub-threads**, with tabs [side by side](split-panes.md).
-- **Go to the first message** and **Go to the latest**, which jump through the conversation.
-- **Play tic-tac-toe with Claudette**, **Play Connect Four with Claudette** and **Play hangman with Claudette**. See [Games with Claudette](../claudette/games-with-claudette.md).
 
 ## Shortcuts
 

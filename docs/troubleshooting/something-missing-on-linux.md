@@ -25,8 +25,6 @@ Install the `libsecret-tools` package, then restart Claudette.
 
 ## API keys for accounts: `secret-tool`
 
-{% include unreleased.html %}
-
 An API-key account's key goes in the same store, through `secret-tool`. Without it, adding an API key in Settings → Accounts is off, and Settings says why. Install `libsecret-tools` as above.
 
 ## Environment

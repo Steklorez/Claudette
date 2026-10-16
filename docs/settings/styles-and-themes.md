@@ -43,8 +43,6 @@ All four, side by side:
 
 ## The conversation's colors
 
-{% include unreleased.html %}
-
 Each step in the conversation is a card with a stripe down its left edge in its kind's color. The style changes the colors, so what the cards mean stays the same:
 
 | Card | Standard | Claude |

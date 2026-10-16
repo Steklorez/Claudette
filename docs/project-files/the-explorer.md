@@ -7,8 +7,6 @@ summary: "The explorer is the tree of the project's folders and files at the sid
 
 # The explorer
 
-{% include unreleased.html %}
-
 The explorer is the tree of the project's folders and files at the side of a Files tab. It marks the files Claude changed, and it keeps up with the disk.
 
 ## The header

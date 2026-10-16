@@ -98,8 +98,6 @@ On Windows, the taskbar button's overlay shows the number of tabs needing input,
 
 ## Accounts, Project files and the conversation
 
-{% include unreleased.html %}
-
 | Icon | What it means | More |
 |---|---|---|
 | A small tag with an account's name beside a group's label, or on a tab's row | New tabs here run under that API-key account, or this tab does. Default's tag is muted | [A folder's account](../accounts/a-folders-account.md) |

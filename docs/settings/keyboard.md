@@ -54,8 +54,6 @@ The page lists these under the shortcuts:
 
 ## The editor's keys
 
-{% include unreleased.html %}
-
 In a [Project Files](../project-files/index.md) tab, these keys also can't be changed:
 
 | Action | Windows and Linux | macOS |

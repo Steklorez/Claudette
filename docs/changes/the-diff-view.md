@@ -41,8 +41,6 @@ The same actions are on the right-click menu of a row in Changed files.
 
 ## Opening the file
 
-{% include unreleased.html %}
-
 **Open** opens the file in Claudette's own editor ([Project files](../project-files/index.md)), unless Settings → **Editor** → **Open files in** is set to **The app the OS uses for the file**. When the file opens in Claudette's editor, the diff window closes, so it doesn't hide the editor behind it. **Open in the OS's app** is always there when you want the app your system uses for that kind of file, such as an editor you can read with a screen reader.
 
 Settings → **Editor** → **Open in the diff window** can send **Open** elsewhere:

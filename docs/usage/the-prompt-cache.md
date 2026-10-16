@@ -7,8 +7,6 @@ summary: "Claude keeps a conversation in a cache for a while after each request 
 
 # The prompt cache
 
-{% include unreleased.html %}
-
 Claude keeps a conversation in a cache for a while after each request that reads or writes it, for five minutes or an hour. A message you send in that time reads the conversation from the cache, at a fraction of the price, and on a plan for much less of your usage limits. After it, Claude reads the whole conversation again in full. Each tab shows how long its cache has left.
 
 ## The Cache chip

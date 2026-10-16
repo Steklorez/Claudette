@@ -6,8 +6,6 @@ summary: "When Claude reads a file, edits one, runs a command or searches, that 
 ---
 
 # Tool calls
-{% include unreleased.html %}
-
 When Claude reads a file, edits one, runs a command or searches, that is a tool call. Calls that come one after another share a single **Tool calls** card, with a tile for each call.
 
 {% include shot.html name="guide/conversation/tool-calls" alt="A Tool calls card with tiles for several calls: files read, an edit with its line counts, and a command." %}

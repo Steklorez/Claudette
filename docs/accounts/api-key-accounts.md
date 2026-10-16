@@ -7,8 +7,6 @@ summary: "An API-key account lets a tab run Claude Code on an API key instead of
 
 # API-key accounts
 
-{% include unreleased.html %}
-
 An API-key account lets a tab run Claude Code on an API key instead of your Claude sign-in. It suits a work key beside a personal plan. API keys are the only kind of account you can add besides Default.
 
 {% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Accounts with an account named Studio: its name and tag color, its two spend warnings, Change key and Remove, and the form for adding another key" %}

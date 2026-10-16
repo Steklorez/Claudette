@@ -7,8 +7,6 @@ summary: "Claudette doesn't save for you."
 
 # Saving
 
-{% include unreleased.html %}
-
 Claudette doesn't save for you. A file with unsaved edits has a dot on its tab until you save it, but its edits are kept safe meanwhile.
 
 ## Saving a file

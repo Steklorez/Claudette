@@ -35,8 +35,6 @@ Turning it off stops this machine writing and reading. The files already in the 
 
 ## Clearing usage on every machine
 
-{% include unreleased.html %}
-
 **Clear usage history…** clears this machine's history only. **Clear usage history on every machine…**, under **Share usage with my other machines**, clears the shared usage too. It's available while sharing is on.
 
 1. Click **Clear usage history on every machine…**.

@@ -7,8 +7,6 @@ summary: "You can move a tab that's open to another account and carry on with th
 
 # Moving a tab to another account
 
-{% include unreleased.html %}
-
 You can move a tab that's open to another account and carry on with the same conversation. It costs one re-read of the conversation, which Claudette tells you about first.
 
 ## Moving it

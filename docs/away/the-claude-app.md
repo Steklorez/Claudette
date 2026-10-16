@@ -51,8 +51,6 @@ Remote Control needs a claude.ai subscription: Pro, Max, Team or Enterprise (on 
 
 When Claudette can tell your account can't use it, Settings → Claude Code says *Not available:* with the reason, and every tab's switch is disabled. A tab whose switch was already on says why it didn't connect, and can still be turned off. Claude Code checks the rest when a tab connects, such as your plan, your organization's policy and feature flags, and the tab shows its reason. If a policy turns Remote Control off, no tab tries again until Claudette restarts or another account signs in.
 
-{% include unreleased.html %}
-
 A tab that runs under one of Claudette's [API-key accounts](../accounts/api-key-accounts.md) can't connect either, whatever your Default account can do.
 
 ## Privacy

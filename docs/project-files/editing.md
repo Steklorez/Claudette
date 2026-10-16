@@ -7,8 +7,6 @@ summary: "The editor shows one file at a time, in the Files tab, under its file 
 
 # Editing
 
-{% include unreleased.html %}
-
 The editor shows one file at a time, in the Files tab, under its [file tabs](file-tabs.md). Click in the text and type. Nothing is written to disk until you [save](saving.md).
 
 ## What the editor does

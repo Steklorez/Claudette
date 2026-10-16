@@ -57,8 +57,6 @@ With tabs [side by side](split-panes.md), the side panel shows only on the focus
 
 ## The Games page
 
-{% include unreleased.html %}
-
 While you play a game against Claudette, it opens on a **Games** page. See [Games with Claudette](../claudette/games-with-claudette.md).
 
 ## See also

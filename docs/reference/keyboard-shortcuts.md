@@ -58,8 +58,6 @@ They answer the oldest waiting prompt in the tab. With **Send with** set to `Ctr
 
 ### Moving through the conversation
 
-{% include unreleased.html %}
-
 | Command | Windows and Linux | macOS | More |
 |---|---|---|---|
 | Previous message in the conversation | `F3` | `F3` | [Finding your way](../conversation/finding-your-way.md) |
@@ -74,8 +72,6 @@ They answer the oldest waiting prompt in the tab. With **Send with** set to `Ctr
 | Run the project's main action | `Ctrl+Shift+E` | `Cmd+Shift+E` | [Project tools](../project-tools/using-project-tools.md) |
 
 ## Project files
-
-{% include unreleased.html %}
 
 The shortcut that goes to a file is rebindable. The editor's own keys are fixed, and work while a Project Files tab has the focus. In that tab, **Find**, **Close tab**, and the previous and next message shortcuts act on the editor too: `Ctrl/Cmd+F` finds in the file, `Ctrl/Cmd+W` closes the file showing (and the Files tab once none is open), and `F3` and `F4` go to the previous and next change.
 
@@ -116,8 +112,6 @@ These aren't in the list of rebindable shortcuts.
 | Settings, while recording a shortcut | `Esc` | Cancels the recording. |
 
 ### Games
-
-{% include unreleased.html %}
 
 While the Games page has the focus, the number keys play tic-tac-toe's squares (1 to 9 from the top left) and Connect Four's columns (1 to 7), and the letters guess in hangman. None of it reaches the message box. See [Games with Claudette](../claudette/games-with-claudette.md).
 

@@ -50,8 +50,6 @@ Claude Code can withdraw a prompt it no longer needs. Its card closes and says *
 
 ## Finding a waiting prompt
 
-{% include unreleased.html %}
-
 A mark beside the conversation's scroll bar shows where each waiting prompt is, and a click goes there. [Finding your way](../conversation/finding-your-way.md) explains the marks.
 
 ## What never asks

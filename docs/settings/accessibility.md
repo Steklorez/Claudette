@@ -14,12 +14,10 @@ Claudette works with screen readers, scales to a size you can read, and can hold
 - **Every control has a name** a screen reader can say: a button with text says its text, and a button with only an icon has a name of its own, such as "Copy version details".
 - **What a notification would say is read out too**, whether or not the notification is shown, so you don't need notifications on to hear it. A prompt that's waiting ("work: Allow this command? npm test"), a turn that finished ("work: Claude finished.") and an error are announced. They go to a polite live region, so they wait for what the screen reader is saying and never cut in on it.
 - **Some actions announce themselves.** Each zoom change says "Zoom 125%", and adding to the scratch pad says "Added to the scratch pad."
-- **The games**, new in the next release, have a name on every square, column and letter ("Top left, empty", "Column 3, 2 of 6 filled", "Letter E"), and Claudette's moves and every result are read out ("Claudette took the middle.", "You win!").
+- **The games** have a name on every square, column and letter ("Top left, empty", "Column 3, 2 of 6 filled", "Letter E"), and Claudette's moves and every result are read out ("Claudette took the middle.", "You win!").
 - **Claudette on the composer** is decoration, and screen readers pass her by. What she says in her bubbles is said elsewhere too, by the badge and the announcements for waiting tabs.
 
 ### What the editor can't do yet
-
-{% include unreleased.html %}
 
 The text in a [Project Files](../project-files/index.md) editor can't be read by a screen reader yet. The editor Claudette uses has no support for it, and neither does the toolkit under it. The explorer, the file tabs, the chip and the banners around the text do have names. Until the editor can be read, every file's menu has **Open in the OS's app**, which opens the file in an editor that can be.
 

@@ -31,8 +31,6 @@ When Claudette logs in for you, it gives the password to `p4 login` on its stand
 
 ## API keys
 
-{% include unreleased.html %}
-
 A key you add in Settings → Accounts → **Add an API key** goes to the credential store as soon as you save it. Claudette's files keep only the account's name and color. Without a credential store, such as Linux without `secret-tool`, adding a key is off, and says why.
 
 Claude Code gets the key when it asks for it, through a small command that Claudette itself runs: it prints the key from the credential store for the `claude` that asked, then exits. The key isn't in an environment variable, on a command line or in a file. **Change key…** replaces it, and **Remove…** on an account deletes the key from the store. See [API-key accounts](../accounts/api-key-accounts.md).

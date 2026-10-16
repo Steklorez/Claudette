@@ -34,8 +34,6 @@ A pinned tab comes back every time Claudette starts and resumes its session. Pin
 
 ## Unpinned tabs
 
-{% include unreleased.html %}
-
 Unpinned tabs that were open when Claudette quit come back only while Settings → Sessions → **Also restore unpinned tabs when Claudette starts** is on. It's on by default for a new install, so every tab comes back at launch. Settings saved by 0.2.0 or earlier had it off and keep it off until you turn it on, or use Sessions' **Reset to defaults**.
 
 ## What comes back
