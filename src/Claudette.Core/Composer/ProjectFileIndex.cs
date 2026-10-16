@@ -79,6 +79,35 @@ public sealed class ProjectFileIndex(string folder, GitWorkingTree git, TimeProv
     /// <summary>Whether the listing came from git (so it respects <c>.gitignore</c>).</summary>
     public bool FromGit { get; private set; }
 
+    /// <summary>
+    /// Whether the latest listing has <paramref name="path"/> (relative, with forward slashes, a folder's ending in
+    /// one). From git, one it has isn't ignored. The listing is sorted, so it's a binary search.
+    /// </summary>
+    public bool Contains(string path)
+    {
+        var paths = Current;
+        var low = 0;
+        var high = paths.Count - 1;
+        while (low <= high)
+        {
+            var middle = low + ((high - low) / 2);
+            var order = string.CompareOrdinal(paths[middle].Path, path);
+            if (order == 0)
+            {
+                return true;
+            }
+            if (order < 0)
+            {
+                low = middle + 1;
+            }
+            else
+            {
+                high = middle - 1;
+            }
+        }
+        return false;
+    }
+
     public bool IsFresh
     {
         get

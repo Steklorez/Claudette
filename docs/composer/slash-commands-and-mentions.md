@@ -32,6 +32,22 @@ What the commands do is Claude Code's: see [Claude Code's commands](https://code
 
 When you send the message, Claude Code reads each mentioned file and gives Claude its content, with no permission prompt. A folder becomes a listing, and an image file becomes an image. Absolute paths outside the folder work too. A path that doesn't exist stays as text. See [Claude Code's common workflows](https://code.claude.com/docs/en/common-workflows).
 
+## Typing a path
+
+{% include unreleased.html %}
+
+Type a folder after `@`, up to a slash, and the list shows what's in it: folders first, then files, narrowed to the names that start with what you type after the slash.
+
+- **Anywhere on this computer.** A path that starts with a drive or a share on Windows (`@C:\Work\`, `@D:/`, `@\\server\share\`), with `/` on macOS and Linux, with `~/` for your home folder, or with `../` lists that folder and nothing else, under the folder's own path, such as *D:/Work/Game/*. Picking a folder carries on into it. Picking a file inserts its full path, with forward slashes: `@C:/Users/sam/notes.md`. A folder that isn't there says *No such folder*, and an empty one *Nothing in this folder*.
+- **In the project.** A folder in the working folder (`@Source/`, or `@./` for the top) lists its own entries ahead of the usual matches, with what the list otherwise leaves out: the files git ignores (outside git, the folders it skips), dimmed, as the [Project Files explorer](../project-files/the-explorer.md) shows them.
+- A folder is read once as you reach it, and kept for a few seconds, so typing in it is instant. A slow or network drive says *Listing D:/Work/…* while it's read, rather than holding up the message box.
+
+## The tab's extra folders
+
+{% include unreleased.html %}
+
+The files in the tab's [extra folders](../tabs/tab-settings.md) are in the list too, matched with the working folder's, each with its folder's name before its path (*shared/lib/*). With nothing typed, each extra folder is listed after the top of the working folder, as *Extra folder*. Picking one of their files or folders inserts its full path, since it isn't in the working folder.
+
 ## Sessions, tabs and agents
 
 The same `@` list starts with the sessions Claude can message, up to eight, and its heading reads **Sessions and files**. Each is marked by what it is:

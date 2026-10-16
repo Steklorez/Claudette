@@ -133,6 +133,7 @@ public sealed class AppServices : IAsyncDisposable
         RemoteControl = new RemoteControlService(this);
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, RemoteControl.ClaudeVariables);
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment);
+        MentionFolders = new MentionFolderReader(Git, timeProvider);
         Library = new LibraryService(this);
         ScratchPads = new ScratchPadService(this);
         Drafts = new DraftService(this);
@@ -517,6 +518,12 @@ public sealed class AppServices : IAsyncDisposable
         _fileIndexes[key] = new WeakReference<ProjectFileIndex>(index);
         return index;
     }
+
+    /// <summary>Reads the folders a path typed after <c>@</c> names (DESIGN.md §5, "Autocomplete").</summary>
+    public MentionFolderReader MentionFolders { get; }
+
+    /// <summary>The user's home folder, for <c>@~/</c>. Tests give it a folder of their own.</summary>
+    public string HomeFolder { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
     /// <summary>For the working line's verbs (DESIGN.md §5). Tests give it a seed.</summary>
     public Random Random { get; set; } = Random.Shared;

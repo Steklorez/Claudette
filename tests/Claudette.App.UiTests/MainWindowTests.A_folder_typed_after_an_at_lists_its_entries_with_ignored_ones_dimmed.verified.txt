@@ -1,0 +1,5 @@
+﻿"Files and folders"
+[button] (parts below)
+  "node_modules/"
+[button] (parts below)
+  "src/"

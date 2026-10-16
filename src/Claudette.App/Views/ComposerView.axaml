@@ -260,7 +260,7 @@
                       <DataTemplate DataType="vm:CompletionItem">
                         <Button Classes="flat row completion" Classes.selected="{Binding IsSelected}" Focusable="False" Padding="8,4"
                                 HorizontalContentAlignment="Stretch" Click="OnCompletionClicked">
-                          <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8">
+                          <Grid Classes="completionrow" Classes.ignored="{Binding IsIgnored}" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8">
                             <Path Classes="toolicon" Data="{Binding IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" />
                             <!-- The hint and the description are smaller, the hint monospace: on the title's baseline (Controls/Baseline). -->
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">

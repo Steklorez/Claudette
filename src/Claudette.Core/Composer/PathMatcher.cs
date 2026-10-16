@@ -1,5 +1,8 @@
 namespace Claudette.Core.Composer;
 
+/// <summary>A path <see cref="PathMatcher"/> matched, and how well: higher is better.</summary>
+public readonly record struct ScoredPath(IndexedPath Path, int Score);
+
 /// <summary>
 /// Ranks a working folder's paths against what's typed after <c>@</c> (DESIGN.md §5, "Composer"). Case doesn't
 /// matter. Best first:
@@ -16,7 +19,14 @@ namespace Claudette.Core.Composer;
 public static class PathMatcher
 {
     /// <param name="cancellationToken">Cancelled when another keystroke makes this match stale.</param>
-    public static IReadOnlyList<IndexedPath> Match(IReadOnlyList<IndexedPath> paths, string query, int limit = 50, CancellationToken cancellationToken = default)
+    public static IReadOnlyList<IndexedPath> Match(IReadOnlyList<IndexedPath> paths, string query, int limit = 50, CancellationToken cancellationToken = default) =>
+        [.. MatchScored(paths, query, limit, cancellationToken).Select(s => s.Path)];
+
+    /// <summary>
+    /// <see cref="Match"/>, with each match's score, so several folders' matches can be ranked together. With no
+    /// query, every score is 0.
+    /// </summary>
+    public static IReadOnlyList<ScoredPath> MatchScored(IReadOnlyList<IndexedPath> paths, string query, int limit = 50, CancellationToken cancellationToken = default)
     {
         query = query.Replace('\\', '/');
         if (query.Length == 0)
@@ -25,6 +35,7 @@ public static class PathMatcher
                 .OrderBy(p => p.IsFolder ? 0 : 1)
                 .ThenBy(p => p.Path, StringComparer.OrdinalIgnoreCase)
                 .Take(limit)
+                .Select(p => new ScoredPath(p, 0))
                 .ToArray();
         }
 
@@ -53,7 +64,7 @@ public static class PathMatcher
             .ThenBy(s => s.Path.Path.Length)
             .ThenBy(s => s.Path.Path, StringComparer.OrdinalIgnoreCase)
             .Take(limit)
-            .Select(s => s.Path)
+            .Select(s => new ScoredPath(s.Path, s.Score))
             .ToArray();
     }
 

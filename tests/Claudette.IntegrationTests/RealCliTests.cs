@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json.Nodes;
+using Claudette.Core.Composer;
 using Claudette.Core.Diffs;
 using Claudette.Core.Files;
 using Claudette.Core.Git;
@@ -707,6 +708,25 @@ public sealed class RealCliTests : IAsyncLifetime
 
         var request = _api.Requests.Last(r => r.Reply == "text");
         Assert.Contains("MENTIONED FILE CONTENT", request.LastUserText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task An_at_mention_of_a_full_path_outside_the_folder_is_read_too()
+    {
+        await using var session = await StartAsync();
+        var outside = _root.Combine("other folder");
+        Directory.CreateDirectory(outside);
+        await File.WriteAllTextAsync(Path.Combine(outside, "notes.txt"), "OUTSIDE FILE CONTENT\n", TestContext.Current.CancellationToken);
+        // As the composer writes one outside the working folder (DESIGN.md §5, "Autocomplete"): in full, with forward
+        // slashes, and quoted for the space.
+        var mention = ComposerTokens.Mention(Path.Combine(outside, "notes.txt"));
+        Assert.StartsWith("@\"", mention, StringComparison.Ordinal);
+        Assert.DoesNotContain('\\', mention);
+
+        await session.SendUserMessageAsync($"hello, see {mention}", TestContext.Current.CancellationToken);
+        await session.ReadUntilAsync<TurnCompleted>();
+
+        Assert.Contains("OUTSIDE FILE CONTENT", _api.Requests.Last(r => r.Reply == "text").LastUserText, StringComparison.Ordinal);
     }
 
     [Fact]

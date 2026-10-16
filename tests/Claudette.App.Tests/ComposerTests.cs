@@ -227,6 +227,119 @@ public partial class ComposerTests
     }
 
     [Fact]
+    public async Task A_path_outside_the_folder_lists_that_folder_from_disk()
+    {
+        await using var h = new TabTestHarness();
+        var other = Path.Combine(h.Root, "other");
+        Directory.CreateDirectory(Path.Combine(other, "docs"));
+        await File.WriteAllTextAsync(Path.Combine(other, "notes.md"), "", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(other, "numbers.txt"), "", TestContext.Current.CancellationToken);
+        var tab = await h.OpenTabAsync();
+        var completions = tab.Completions;
+        var mention = other.Replace('\\', '/') + "/";
+
+        completions.Update("see @../other/", 14);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["docs/", "notes.md", "numbers.txt"], "the folder's entries");
+        // The header names the folder, so the rows don't.
+        Assert.Equal(mention, completions.Header);
+        Assert.Null(completions.Items[1].Detail);
+
+        completions.Update("see @../other/no", 16);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["notes.md"], "the entries starting with what's typed");
+        // In full, so it means the same wherever Claude Code is.
+        Assert.Equal($"see @{mention}notes.md ", completions.Accept()?.Text);
+    }
+
+    [Fact]
+    public async Task An_absolute_path_completes_folder_by_folder()
+    {
+        await using var h = new TabTestHarness();
+        var other = Path.Combine(h.Root, "other");
+        Directory.CreateDirectory(Path.Combine(other, "docs"));
+        var tab = await h.OpenTabAsync();
+        var completions = tab.Completions;
+        var typed = "@" + other + Path.DirectorySeparatorChar + "do";
+
+        completions.Update(typed, typed.Length);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["docs/"], "the folder");
+        var edit = completions.Accept()!.Value;
+        completions.Update(edit.Text, edit.Caret);
+
+        Assert.Equal("@" + other.Replace('\\', '/') + "/docs/", edit.Text);
+        await TabTestHarness.Eventually(() => completions.Message == "Nothing in this folder", "the empty folder");
+
+        completions.Update("@../missing/", 12);
+        await TabTestHarness.Eventually(() => completions.Message == "No such folder", "the missing folder");
+    }
+
+    [Fact]
+    public async Task A_tilde_is_the_home_folder()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.HomeFolder = Path.Combine(h.Root, "home");
+        Directory.CreateDirectory(Path.Combine(h.Services.HomeFolder, "Documents"));
+        var tab = await h.OpenTabAsync();
+        var completions = tab.Completions;
+
+        completions.Update("@~/Doc", 6);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["Documents/"], "the home folder's entries");
+
+        Assert.Equal("@" + h.Services.HomeFolder.Replace('\\', '/') + "/Documents/", completions.Accept()?.Text);
+    }
+
+    [Fact]
+    public async Task The_extra_folders_files_are_listed_too_in_full()
+    {
+        await using var h = new TabTestHarness();
+        await File.WriteAllTextAsync(Path.Combine(h.WorkFolder, "readme.md"), "", TestContext.Current.CancellationToken);
+        var shared = Path.Combine(h.Root, "shared");
+        Directory.CreateDirectory(Path.Combine(shared, "lib"));
+        await File.WriteAllTextAsync(Path.Combine(shared, "lib", "helper.cs"), "", TestContext.Current.CancellationToken);
+        var tab = await h.OpenTabAsync();
+        await tab.SetExtraFoldersAsync([shared]);
+        var completions = tab.Completions;
+        var mention = shared.Replace('\\', '/') + "/";
+
+        // With nothing typed, each extra folder itself, after the top of the working folder.
+        completions.Update("@", 1);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["readme.md", "shared/"], "the top and the extra folder");
+        Assert.Equal("Extra folder", completions.Items[1].Detail);
+        Assert.Equal(mention, completions.Items[1].Value);
+
+        completions.Update("@help", 5);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["helper.cs"], "the extra folder's file");
+        Assert.Equal("shared/lib/", completions.Items[0].Detail);
+        Assert.Equal($"@{mention}lib/helper.cs ", completions.Accept()?.Text);
+    }
+
+    [Fact]
+    public async Task A_typed_folder_lists_its_own_entries_with_ignored_ones_dimmed()
+    {
+        await using var h = new TabTestHarness();
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "src"));
+        await File.WriteAllTextAsync(Path.Combine(h.WorkFolder, "src", "app.cs"), "", TestContext.Current.CancellationToken);
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "node_modules", "lib"));
+        await File.WriteAllTextAsync(Path.Combine(h.WorkFolder, "node_modules", "lib", "index.js"), "", TestContext.Current.CancellationToken);
+        var tab = await h.OpenTabAsync();
+        var completions = tab.Completions;
+
+        // The fuzzy list leaves out what's ignored (outside git, the folders it skips) ...
+        completions.Update("@ind", 4);
+        await TabTestHarness.Eventually(() => completions.Message == "No matching files", "no match");
+
+        // ... and a folder typed in full shows it, dimmed.
+        completions.Update("@node_modules/", 14);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["lib/"], "the ignored folder's entries");
+        Assert.True(completions.Items[0].IsIgnored);
+        Assert.Equal("node_modules/", completions.Items[0].Detail);
+        Assert.Equal("@node_modules/lib/", completions.Accept()?.Text);
+
+        completions.Update("@src/", 5);
+        await TabTestHarness.Eventually(() => Titles(tab) is ["app.cs"], "the folder's entries");
+        Assert.False(completions.Items[0].IsIgnored);
+    }
+
+    [Fact]
     public async Task Tabs_in_the_same_folder_share_one_listing_of_its_files()
     {
         await using var h = new TabTestHarness();

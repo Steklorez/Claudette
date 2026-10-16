@@ -680,4 +680,8 @@
   <Style Selector="Button.completion.selected /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
   </Style>
+  <!-- What git ignores, in a folder typed after @: dimmed, as the Project Files explorer has it -->
+  <Style Selector="Grid.completionrow.ignored">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
 </Styles>

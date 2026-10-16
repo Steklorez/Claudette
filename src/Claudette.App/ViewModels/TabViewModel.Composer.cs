@@ -86,8 +86,27 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>The <c>/</c> and <c>@</c> popup.</summary>
-    public ComposerCompletions Completions => _completions ??= new ComposerCompletions(() => SlashCommands, () => FileIndex, _services.Dispatcher,
+    public ComposerCompletions Completions => _completions ??= new ComposerCompletions(() => SlashCommands, () => MentionFiles, _services.Dispatcher,
         MentionTargets, _services.LiveSessions.Refresh);
+
+    /// <summary>Where the <c>@</c> list finds files: the working folder, the extra folders, and folders typed after it.</summary>
+    internal MentionFiles MentionFiles => new(FileIndex, ExtraFileIndexes, _services.MentionFolders, _services.HomeFolder);
+
+    private IReadOnlyList<ProjectFileIndex> _extraFileIndexes = [];
+
+    /// <summary>The extra folders' listings for <c>@</c>, shared as the working folder's is, and found again when they change.</summary>
+    private IReadOnlyList<ProjectFileIndex> ExtraFileIndexes
+    {
+        get
+        {
+            var folders = ExtraFolders;
+            if (_extraFileIndexes.Count != folders.Count || _extraFileIndexes.Where((index, i) => index.Folder != folders[i]).Any())
+            {
+                _extraFileIndexes = [.. folders.Select(_services.FileIndexFor)];
+            }
+            return _extraFileIndexes;
+        }
+    }
 
     /// <summary>The session's slash commands: from <c>initialize</c>, then each turn's <c>system/init</c>.</summary>
     internal SlashCommandCatalog SlashCommands
@@ -126,6 +145,10 @@ public sealed partial class TabViewModel
             case TurnCompleted:
                 // The turn may have added or removed files.
                 _fileIndex?.Invalidate();
+                foreach (var index in _extraFileIndexes)
+                {
+                    index.Invalidate();
+                }
                 break;
             case PromptSuggested suggested:
                 // Only for an empty composer, with nothing sent since the turn ended.

@@ -1039,6 +1039,12 @@ items:
     usedIn: src/Claudette.Core/Composer/ComposerTokens.cs, src/Claudette.Core/Composer/Attachment.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
+  - id: "@path mentions of a full path outside the working folder, with forward slashes and quoted when it has spaces"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.Core/Composer/MentionFolder.cs, src/Claudette.App/ViewModels/ComposerCompletions.cs
+    test: RealCliTests
+    fallback: 2.1.284 reads @"C:/a folder/notes.txt" without asking, as it does a path inside the folder, so the composer inserts files outside the working folder and its extra folders' files in full (DESIGN.md §5, "Autocomplete"). If it stops, insert them relative to the working folder (../other/notes.txt), and failing that, offer to add the file's folder as one of the tab's extra folders.
   - id: "@path mentions are only read in the last content block"
     kind: behavior
     status: undocumented

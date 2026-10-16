@@ -451,6 +451,29 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task A_folder_typed_after_an_at_lists_its_entries_with_ignored_ones_dimmed()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "node_modules", "lib"));
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "src"));
+        await File.WriteAllTextAsync(Path.Combine(h.WorkFolder, "src", "app.cs"), "", TestContext.Current.CancellationToken);
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        var composer = window.GetVisualDescendants().OfType<TextBox>().Single(t => t.Name == "Composer");
+        var popup = window.GetVisualDescendants().OfType<Popup>().Single(p => p.Name == "CompletionPopup");
+
+        composer.Focus();
+        window.KeyTextInput("@./");
+        await Waiting.UntilAsync(() => popup.IsOpen && tab.Completions.Items.Count == 2, "the folder's entries", poll: () => UiText.Settle(window));
+        UiText.Settle(window);
+
+        // node_modules is a folder the list skips outside git, so it's dimmed, as the Project Files explorer has it.
+        var rows = popup.Child!.GetVisualDescendants().OfType<Grid>().Where(g => g.Classes.Contains("completionrow")).ToArray();
+        Assert.Equal([0.5, 1.0], rows.Select(r => r.Opacity));
+        await Verify(UiText.Describe(popup.Child!));
+    }
+
+    [AvaloniaFact]
     public async Task Sync_to_other_machines_ticks_in_the_tab_menu_and_marks_the_row()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
