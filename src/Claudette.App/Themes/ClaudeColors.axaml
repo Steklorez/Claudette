@@ -29,6 +29,10 @@
       <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A1F1E1D" />
       <SolidColorBrush x:Key="MeterBrush" Color="#D97757" />
       <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#FAF9F5" />
+      <!-- The Project Files tab's editor (DESIGN.md §18): changed lines' bars, the selection and the current line in Claude's warm tones. -->
+      <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#D97757" />
+      <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0A1F1E1D" />
+      <SolidColorBrush x:Key="EditorSelectionBrush" Color="#D97757" Opacity="0.22" />
       <SolidColorBrush x:Key="InlineCodeBrush" Color="#EDEAE0" />
       <SolidColorBrush x:Key="InlineCodeTextBrush" Color="#9E3D25" />
       <!-- Cautions (a waiting prompt, a usage alert) in warm tints of the accent rather than yellow. -->
@@ -65,6 +69,9 @@
          (#1F1E1D), off-white text (#FAF9F5) and warm grey muted text. -->
     <ResourceDictionary x:Key="Dark">
       <SolidColorBrush x:Key="MicaPageBrush" Color="#262624" />
+      <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#D97757" />
+      <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0FFAF9F5" />
+      <SolidColorBrush x:Key="EditorSelectionBrush" Color="#D97757" Opacity="0.3" />
       <SolidColorBrush x:Key="MicaSidebarBrush" Color="#1F1E1D" />
       <SolidColorBrush x:Key="MutedTextBrush" Color="#9C9A92" />
       <SolidColorBrush x:Key="DividerBrush" Color="#26DEDCD1" />

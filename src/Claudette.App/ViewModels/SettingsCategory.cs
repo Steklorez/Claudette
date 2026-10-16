@@ -29,6 +29,8 @@ public static class SettingsCategory
 
     public const string DiffTool = "Diff tool";
 
+    public const string Editor = "Editor";
+
     public const string ProjectTools = "Project tools";
 
     public const string Notifications = "Notifications";

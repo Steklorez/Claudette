@@ -1,0 +1,123 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:views="using:Claudette.App.Views"
+             xmlns:editor="using:Claudette.App.Views.Editor"
+             xmlns:pf="using:Claudette.Core.ProjectFiles"
+             x:Class="Claudette.App.Views.ProjectFileView"
+             x:DataType="vm:ProjectFileViewModel">
+  <!-- One open file in a Project Files tab (DESIGN.md §18, "Project files"): its banners, the bar for its changes, the
+       editor or its changes inline or side by side, and the chip. Its look is in Themes/ProjectFilesStyles.axaml. -->
+  <DockPanel>
+    <!-- It changed, or went, on disk under unsaved edits ("When a file changes on disk") -->
+    <Border DockPanel.Dock="Top" Classes="filebanner" IsVisible="{Binding HasBanner}">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+          <Button Content="Compare" Command="{Binding CompareCommand}" IsVisible="{Binding IsChangedBanner}"
+                  ToolTip.Tip="The file on disk against your edits, side by side" />
+          <Button Content="Keep mine" Command="{Binding KeepMineCommand}" IsVisible="{Binding IsChangedBanner}"
+                  ToolTip.Tip="Keep editing; saving writes over the file on disk" />
+          <Button Content="Use theirs" Command="{Binding UseTheirsCommand}" IsVisible="{Binding IsChangedBanner}"
+                  ToolTip.Tip="Read the file on disk again; Undo can bring your edits back" />
+          <Button Content="Keep editing" Command="{Binding KeepMineCommand}" IsVisible="{Binding IsDeletedBanner}"
+                  ToolTip.Tip="Keep the text; saving writes the file back" />
+        </StackPanel>
+        <TextBlock Text="{Binding BannerText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+      </DockPanel>
+    </Border>
+    <!-- A save that failed -->
+    <Border DockPanel.Dock="Top" Classes="filenote" IsVisible="{Binding SaveError, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Classes="small error" Text="{Binding SaveError}" TextWrapping="Wrap" />
+    </Border>
+    <!-- Why it opened read-only -->
+    <Border DockPanel.Dock="Top" Classes="filenote" IsVisible="{Binding IsReadOnly}">
+      <TextBlock Classes="muted small" Text="{Binding ReadOnlyReason}" TextWrapping="Wrap" />
+    </Border>
+    <!-- Claude's changes: the editor, or them inline or side by side, and Reviewed ("Claude's changes"). A narrow pane
+         wraps Whole file and Reviewed onto a second line. -->
+    <Border DockPanel.Dock="Top" Classes="modebar" IsVisible="{Binding ShowsModeBar}">
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <!-- The modes, as one control in three parts -->
+        <Border Classes="modes">
+          <StackPanel Orientation="Horizontal">
+            <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Edit" IsChecked="{Binding IsEditMode}" />
+            <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Inline changes" IsChecked="{Binding IsInlineMode}" />
+            <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Side by side" IsChecked="{Binding IsSideBySideMode}" />
+          </StackPanel>
+        </Border>
+        <ToggleButton Content="Whole file" IsVisible="{Binding IsDiffMode}"
+                      IsChecked="{Binding Diff.ShowWholeFile, FallbackValue=False}" ToolTip.Tip="The whole file, not just its changes" />
+        <ToggleButton x:Name="ReviewedButton" IsVisible="{Binding CanReview}" IsChecked="{Binding IsReviewed, Mode=OneWay}"
+                      Command="{Binding ToggleReviewedCommand}"
+                      ToolTip.Tip="Mark this file as reviewed in every tab of the project that changed it. It stays reviewed until Claude changes it again.">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <Path Data="{StaticResource IconCheck}" Stroke="{DynamicResource OkTextBrush}" StrokeThickness="1.5" Width="10" Height="10" Stretch="Uniform"
+                  VerticalAlignment="Center" IsVisible="{Binding IsReviewed}" />
+            <TextBlock Text="Reviewed" VerticalAlignment="Center" />
+          </StackPanel>
+        </ToggleButton>
+      </WrapPanel>
+    </Border>
+
+    <Panel x:Name="FileContent">
+      <TextBlock Classes="muted" Margin="16" Text="Reading…" IsVisible="{Binding !IsLoaded}" />
+      <!-- Binary, too large, gone or unreadable: the OS's app may open it -->
+      <StackPanel Classes="nofile" IsVisible="{Binding HasProblem}">
+        <TextBlock Text="{Binding ProblemText}" TextWrapping="Wrap" TextAlignment="Center" />
+        <Button HorizontalAlignment="Center" Content="Open in the OS's app" Click="OnOpenInSystem" />
+      </StackPanel>
+      <editor:CodeEditor x:Name="CodeEditor">
+        <editor:CodeEditor.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="IsText" />
+            <Binding Path="IsEditMode" />
+          </MultiBinding>
+        </editor:CodeEditor.IsVisible>
+      </editor:CodeEditor>
+      <views:DiffLines DataContext="{Binding Diff}" DoubleTapped="OnDiffDoubleTapped" IsVisible="{Binding $parent[UserControl].((vm:ProjectFileViewModel)DataContext).IsDiffMode, FallbackValue=False}" />
+      <!-- The chip ("The chip"): where the cursor is and what the file is; line endings and indentation change from it -->
+      <Border x:Name="Chip" Classes="chip">
+        <Border.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="IsText" />
+            <Binding Path="IsEditMode" />
+          </MultiBinding>
+        </Border.IsVisible>
+        <WrapPanel ItemSpacing="4">
+          <TextBlock Text="{Binding PositionText}" />
+          <TextBlock Text="·" />
+          <TextBlock Text="{Binding Language.Name}" />
+          <TextBlock Text="·" />
+          <Button Classes="flat chippart" ToolTip.Tip="Line endings: change every line's" AutomationProperties.Name="Line endings">
+            <TextBlock Text="{Binding LineEndingLabel}" />
+            <Button.Flyout>
+              <MenuFlyout>
+                <MenuItem Header="LF" Command="{Binding SetLineEndingsCommand}" CommandParameter="{x:Static pf:LineEndingKind.Lf}" />
+                <MenuItem Header="CRLF" Command="{Binding SetLineEndingsCommand}" CommandParameter="{x:Static pf:LineEndingKind.Crlf}" />
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+          <TextBlock Text="·" />
+          <TextBlock Text="{Binding EncodingLabel}" />
+          <TextBlock Text="·" />
+          <Button x:Name="IndentButton" Classes="flat chippart" ToolTip.Tip="Indentation: what Tab and new lines use in this file" AutomationProperties.Name="Indentation">
+            <TextBlock Text="{Binding Indent.Label}" />
+            <Button.Flyout>
+              <MenuFlyout ItemsSource="{Binding IndentChoices}">
+                <MenuFlyout.ItemContainerTheme>
+                  <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:IndentChoice">
+                    <Setter Property="Header" Value="{Binding Label}" />
+                    <Setter Property="ToggleType" Value="Radio" />
+                    <Setter Property="IsChecked" Value="{Binding IsCurrent, Mode=OneWay}" />
+                    <Setter Property="Command" Value="{Binding $parent[UserControl].((vm:ProjectFileViewModel)DataContext).SetIndentCommand, FallbackValue={x:Null}}" />
+                    <Setter Property="CommandParameter" Value="{Binding}" />
+                  </ControlTheme>
+                </MenuFlyout.ItemContainerTheme>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+        </WrapPanel>
+      </Border>
+    </Panel>
+  </DockPanel>
+</UserControl>

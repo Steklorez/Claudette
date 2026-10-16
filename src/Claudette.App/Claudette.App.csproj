@@ -22,6 +22,8 @@
     <PackageReference Include="LiveMarkdown.Avalonia" />
     <PackageReference Include="TextMateSharp" />
     <PackageReference Include="TextMateSharp.Grammars" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
   </ItemGroup>
 
   <ItemGroup>

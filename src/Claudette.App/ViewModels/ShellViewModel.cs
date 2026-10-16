@@ -114,10 +114,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public IEnumerable<TabViewModel> AllTabs => Groups.SelectMany(g => g.Tabs);
 
     /// <summary>
-    /// Every open tab. Each gets its own view, kept alive while hidden, so switching tabs keeps scroll position and
-    /// half-typed messages.
+    /// Every open tab, the Project Files tabs among them (DESIGN.md §18, "Project files"). Each gets its own view, kept
+    /// alive while hidden, so switching tabs keeps scroll position and half-typed messages.
     /// </summary>
-    public ObservableCollection<TabViewModel> OpenTabs { get; } = [];
+    public ObservableCollection<IShellTab> OpenTabs { get; } = [];
 
     public bool HasTabs => Groups.Count > 0;
 
@@ -221,11 +221,31 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         return true;
     }
 
+    /// <summary>
+    /// The tab the keyboard, the header and the panes follow: a session's, or a folder group's Project Files tab
+    /// (DESIGN.md §18, "Project files").
+    /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedAccount))]
-    public partial TabViewModel? SelectedTab { get; set; }
+    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedAccount), nameof(ProjectTab))]
+    public partial IShellTab? Selected { get; set; }
 
-    partial void OnSelectedTabChanged(TabViewModel? oldValue, TabViewModel? newValue)
+    /// <summary>The focused tab when it's a session's; null while nothing, or a Project Files tab, has the focus.</summary>
+    public TabViewModel? SelectedTab
+    {
+        get => Selected as TabViewModel;
+        set => Selected = value;
+    }
+
+    /// <summary>The focused tab when it's a Project Files tab.</summary>
+    public ProjectFilesViewModel? SelectedFiles => Selected as ProjectFilesViewModel;
+
+    /// <summary>
+    /// The tab whose project the sidebar's foot and Settings' project pages show: the focused session's, or with a
+    /// Project Files tab focused, its group's first session's.
+    /// </summary>
+    public TabViewModel? ProjectTab => SelectedTab ?? SelectedFiles?.Group.Tabs.FirstOrDefault();
+
+    partial void OnSelectedChanged(IShellTab? oldValue, IShellTab? newValue)
     {
         // On screen first, so a tab takes the focus already showing (DESIGN.md §18, "Split panes").
         PlaceSelected(oldValue, newValue);
@@ -237,7 +257,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         if (newValue is not null)
         {
             newValue.IsSelected = true;
-            if (_services.Notifications.IsAppActive)
+            if (newValue is TabViewModel && _services.Notifications.IsAppActive)
             {
                 // Looked at now: its notifications are no longer news (DESIGN.md §10).
                 _services.Notifications.ClearTab(newValue.Id);
@@ -305,8 +325,12 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
                 tab.MarkFolderMissing();
             }
         }
+        // The Project Files tabs come back every time, as pinned tabs do (DESIGN.md §18, "Project files").
+        RestoreProjectFiles();
+        RestoreGroupOrder();
         RestorePanes(snapshot is null ? state.PaneTabIds : snapshot.PaneTabIds);
-        SelectedTab = AllTabs.FirstOrDefault(t => t.Id == (snapshot?.SelectedTabId ?? state.SelectedTabId)) ?? AllTabs.FirstOrDefault();
+        var selectedId = snapshot?.SelectedTabId ?? state.SelectedTabId;
+        Selected = OpenTabs.FirstOrDefault(t => t.Id == selectedId) ?? AllTabs.FirstOrDefault() ?? (IShellTab?)Groups.Select(g => g.Files).FirstOrDefault(f => f is not null);
         UpdatePanes();
         SaveTabs();
         foreach (var tab in AllTabs.Where(t => snapshot?.RunningTabIds.Contains(t.Id) == true))
@@ -387,7 +411,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } old)
         {
             old.Tabs.Remove(tab);
-            if (old.Tabs.Count == 0)
+            if (old.IsEmpty)
             {
                 Groups.Remove(old);
             }
@@ -408,25 +432,42 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     private void AddTab(TabViewModel tab)
     {
         // A tab in a worktree is in its main checkout's group (DESIGN.md §4, "Worktree tabs").
-        var folder = tab.GroupFolder;
-        var group = Groups.FirstOrDefault(g => FolderHistory.SamePath(g.Folder, folder));
-        if (group is null)
-        {
-            var state = _services.State;
-            var color = GroupColors.ForNewGroup(state, folder, Groups.Select(g => g.Color).ToArray());
-            group = new TabGroupViewModel(folder, color, state.CollapsedGroups.Any(c => FolderHistory.SamePath(c, folder)))
-            {
-                Name = GroupNames.Saved(state, folder),
-            };
-            SetUpGroupAccount(group);
-            Groups.Add(group);
-            UpdateGroupLabels();
-            OnPropertyChanged(nameof(HasTabs));
-        }
+        var group = GroupFor(tab.GroupFolder);
         // Pinned tabs sit at the start of their group.
         var index = tab.IsPinned ? group.Tabs.Count(t => t.IsPinned) : group.Tabs.Count;
         group.Tabs.Insert(index, tab);
         OpenTabs.Add(tab);
+    }
+
+    /// <summary>The group of <paramref name="folder"/>, made with its remembered color and name when it isn't open.</summary>
+    private TabGroupViewModel GroupFor(string folder)
+    {
+        if (Groups.FirstOrDefault(g => FolderHistory.SamePath(g.Folder, folder)) is { } existing)
+        {
+            return existing;
+        }
+        var state = _services.State;
+        var color = GroupColors.ForNewGroup(state, folder, Groups.Select(g => g.Color).ToArray());
+        var group = new TabGroupViewModel(folder, color, state.CollapsedGroups.Any(c => FolderHistory.SamePath(c, folder)))
+        {
+            Name = GroupNames.Saved(state, folder),
+        };
+        SetUpGroupAccount(group);
+        Groups.Add(group);
+        UpdateGroupLabels();
+        OnPropertyChanged(nameof(HasTabs));
+        return group;
+    }
+
+    /// <summary>A group with neither a session tab nor its Project Files tab leaves the sidebar.</summary>
+    private void RemoveGroupIfEmpty(TabGroupViewModel? group)
+    {
+        if (group is { IsEmpty: true })
+        {
+            Groups.Remove(group);
+            UpdateGroupLabels();
+            OnPropertyChanged(nameof(HasTabs));
+        }
     }
 
     // ---- History (DESIGN.md §9) -------------------------------------------------------------------------
@@ -560,12 +601,23 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     private Task CloseOtherTabsAsync(TabViewModel? keep) =>
         CloseAllAndTidyAsync([.. AllTabs.Where(t => t != keep && !t.IsPinned)]);
 
+    /// <summary><b>Close group</b>: its tabs but the pinned ones, and its Project Files tab, asking about unsaved files first.</summary>
     [RelayCommand]
-    private Task CloseGroupAsync(TabGroupViewModel? group) =>
-        CloseAllAndTidyAsync(group?.Tabs.Where(t => !t.IsPinned).ToArray() ?? []);
+    private async Task CloseGroupAsync(TabGroupViewModel? group)
+    {
+        if (group?.Files is { } files && !await CloseProjectFilesAsync(files))
+        {
+            return;
+        }
+        await CloseAllAndTidyAsync(group?.Tabs.Where(t => !t.IsPinned).ToArray() ?? []);
+    }
 
+    /// <summary>
+    /// <c>Ctrl/Cmd+W</c>, and the macOS menu's <b>Close Tab</b>: the selected tab, or with a Project Files tab focused, its
+    /// file showing, and the tab itself once none is open (DESIGN.md §18, "Project files", "Keyboard").
+    /// </summary>
     [RelayCommand(AllowConcurrentExecutions = true)]
-    private Task CloseSelectedTabAsync() => CloseTabAsync(SelectedTab);
+    private Task CloseSelectedTabAsync() => SelectedFiles is { } files ? files.CloseShowingOrTabAsync() : CloseTabAsync(SelectedTab);
 
     private async Task RemoveTabAsync(TabViewModel tab, bool killProcesses = true)
     {
@@ -575,23 +627,19 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         var group = Groups.FirstOrDefault(g => g.Tabs.Contains(tab));
         group?.Tabs.Remove(tab);
         OpenTabs.Remove(tab);
-        if (group is { Tabs.Count: 0 })
-        {
-            Groups.Remove(group);
-            UpdateGroupLabels();
-            OnPropertyChanged(nameof(HasTabs));
-        }
+        RemoveGroupIfEmpty(group);
         // A pane closes with its tab; the one beside it takes the focus if it had it (DESIGN.md §18, "Split panes").
         var pane = _panes.IndexOf(tab);
         if (pane >= 0)
         {
             _panes.RemoveAt(pane);
         }
-        if (SelectedTab == tab)
+        if (ReferenceEquals(Selected, tab))
         {
             var remaining = AllTabs.ToList();
-            SelectedTab = _panes.Count > 0 ? _panes[Math.Min(pane, _panes.Count - 1)]
-                : remaining.Count == 0 ? null : remaining[Math.Clamp(index, 0, remaining.Count - 1)];
+            Selected = _panes.Count > 0 ? _panes[Math.Min(pane, _panes.Count - 1)]
+                : remaining.Count > 0 ? remaining[Math.Clamp(index, 0, remaining.Count - 1)]
+                : group?.Files ?? Groups.Select(g => g.Files).FirstOrDefault(f => f is not null);
         }
         else if (pane >= 0)
         {
@@ -633,6 +681,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Ctrl+Tab and Ctrl+Shift+Tab: the session tabs, going round. Project Files tabs are skipped, so their numbers never
+    /// move (DESIGN.md §18, "Project files"); from one, the next tab is its group's first.
+    /// </summary>
     private void SelectOffset(int offset)
     {
         var tabs = AllTabs.ToList();
@@ -640,7 +692,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         {
             return;
         }
-        var index = SelectedTab is null ? 0 : tabs.IndexOf(SelectedTab);
+        if (SelectedTab is null)
+        {
+            var first = SelectedFiles?.Group.Tabs.FirstOrDefault() is { } groupFirst ? tabs.IndexOf(groupFirst) : 0;
+            SelectedTab = tabs[(offset > 0 ? first : first - 1 + tabs.Count) % tabs.Count];
+            return;
+        }
+        var index = tabs.IndexOf(SelectedTab);
         SelectedTab = tabs[(index + offset + tabs.Count) % tabs.Count];
     }
 
@@ -843,7 +901,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public RestartSnapshot CaptureForRestart() => new()
     {
         Tabs = AllTabs.Select(t => t.State).ToList(),
-        SelectedTabId = SelectedTab?.Id,
+        SelectedTabId = Selected?.Id,
         PaneTabIds = _panes.Count > 1 ? [.. _panes.Select(t => t.Id)] : null,
         Drafts = AllTabs.Where(t => t.Draft is not null).ToDictionary(t => t.Id, t => t.Draft!),
         RunningTabIds = AllTabs.Where(t => t.IsProcessRunning).Select(t => t.Id).ToList(),
@@ -857,15 +915,19 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public async Task CloseTabsForRestartAsync()
     {
         var tabs = AllTabs.ToArray();
+        var files = Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray();
         var selected = _services.State.SelectedTabId;
         var panes = _services.State.PaneTabIds;
+        // The Project Files tabs' state, and their unsaved edits, for the new build (DESIGN.md §18, "Project files").
+        SaveTabs();
         _panes.Clear();
-        SelectedTab = null;
+        Selected = null;
         _services.State.SelectedTabId = selected;
         _services.State.PaneTabIds = panes;
         Groups.Clear();
         OpenTabs.Clear();
         OnPropertyChanged(nameof(HasTabs));
+        await Task.WhenAll(files.Select(f => f.DisposeAsync().AsTask()));
         // A turn is left as it is, not interrupted, so Claude Code can carry it on after the restart.
         await Task.WhenAll(tabs.Select(t => t.CloseAsync(killProcesses: true, interruptTurn: false).AsTask()));
         OnTabStatusChanged();
@@ -908,10 +970,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     // ---- Settings -------------------------------------------------------------------------------------------
 
     [RelayCommand]
-    private Task OpenSettingsAsync() => ShowSettingsAsync(null, SelectedTab);
+    private Task OpenSettingsAsync() => ShowSettingsAsync(null, ProjectTab);
 
     /// <summary>Opens Settings at a category, for example Quick suffixes from the suffix menu's <b>Edit suffixes…</b>.</summary>
-    internal Task OpenSettingsAtAsync(string category) => ShowSettingsAsync(category, SelectedTab);
+    internal Task OpenSettingsAtAsync(string category) => ShowSettingsAsync(category, ProjectTab);
 
     /// <summary>
     /// Opens Settings at one of <paramref name="tab"/>'s project pages (DESIGN.md §14, "The project's pages"): Actions for
@@ -992,7 +1054,11 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     private void SaveTabs()
     {
-        _services.State.Tabs = AllTabs.Select(t => t.State).ToList();
+        var state = _services.State;
+        state.Tabs = AllTabs.Select(t => t.State).ToList();
+        // A group with only its Project Files tab has no tab above to place it by (DESIGN.md §18, "Project files").
+        state.GroupOrder = Groups.Select(g => g.Folder).ToList();
+        state.ProjectFiles = Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().Select(f => f.CaptureState()).ToList();
         _services.SaveState();
     }
 
@@ -1013,6 +1079,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         SaveTabs();
+        await Task.WhenAll(Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray().Select(f => f.DisposeAsync().AsTask()));
         await Task.WhenAll(AllTabs.ToArray().Select(t => t.DisposeAsync().AsTask()));
     }
 }

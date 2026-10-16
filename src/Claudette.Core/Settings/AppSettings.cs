@@ -30,6 +30,9 @@ public sealed class AppSettings
 
     public DiffToolSettings DiffTool { get; set; } = new();
 
+    /// <summary>Settings → Editor: the Project Files tab, and where files open (DESIGN.md §18, "Project files").</summary>
+    public EditorSettings Editor { get; set; } = new();
+
     /// <summary>Settings → Project tools (DESIGN.md §18). Per machine, like the diff tool.</summary>
     public ProjectToolSettings ProjectTools { get; set; } = new();
 
@@ -156,6 +159,51 @@ public sealed class ProcessSettings
 }
 
 /// <summary>How changed files open (DESIGN.md §8, "External diff tool"). Per machine: program paths differ.</summary>
+/// <summary>Settings → Editor (DESIGN.md §18, "Project files").</summary>
+public sealed class EditorSettings
+{
+    /// <summary>Which side of the Project Files tab the explorer is on.</summary>
+    public ExplorerSide ExplorerSide { get; set; } = ExplorerSide.Left;
+
+    /// <summary>Where a file named in a reply, or Changed files' <b>Open</b>, goes.</summary>
+    public OpenFilesIn OpenFilesIn { get; set; } = OpenFilesIn.Editor;
+
+    /// <summary>Where the Project Files tab shows a file clicked in a conversation.</summary>
+    public FilesFromConversation FilesFromConversation { get; set; } = FilesFromConversation.Beside;
+
+    /// <summary>Long lines wrap at the editor's width.</summary>
+    public bool WordWrap { get; set; }
+
+    /// <summary>Tab and new lines in a file that has no indentation to go by: so many spaces, or tabs.</summary>
+    public int IndentSize { get; set; } = 4;
+
+    public bool IndentWithTabs { get; set; }
+}
+
+public enum ExplorerSide
+{
+    Left,
+    Right,
+}
+
+public enum OpenFilesIn
+{
+    /// <summary>The project's Files tab, at the line named.</summary>
+    Editor,
+
+    /// <summary>The app the OS uses for the file, as before the editor.</summary>
+    System,
+}
+
+public enum FilesFromConversation
+{
+    /// <summary>The Files tab opens beside the conversation, as <b>Open beside</b> does.</summary>
+    Beside,
+
+    /// <summary>It takes the conversation's pane, as selecting it in the sidebar does.</summary>
+    InPlace,
+}
+
 public sealed class DiffToolSettings
 {
     /// <summary><c>builtIn</c>, <c>preset</c> or <c>custom</c>.</summary>

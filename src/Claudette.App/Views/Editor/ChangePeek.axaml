@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             x:Class="Claudette.App.Views.Editor.ChangePeek"
+             x:DataType="vm:ProjectFileViewModel">
+  <!-- The peek (DESIGN.md §18, "Project files", "Claude's changes"): under a change, the lines it replaced, with Revert,
+       the previous and next change, and ×. The editor opens room for it under the change's last line. -->
+  <Border Classes="changepeek">
+    <DockPanel>
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="10,4,6,4">
+        <!-- Who changed it and when; a click goes to that tab, at its change -->
+        <Button Classes="flat peeklink" HorizontalAlignment="Left" Command="{Binding ShowChangeCommand}" IsVisible="{Binding CanShowChange}" ToolTip.Tip="{Binding ShowChangeTip}">
+          <TextBlock Classes="small" Text="{Binding PeekHeader}" TextTrimming="CharacterEllipsis" />
+        </Button>
+        <TextBlock Classes="small" Text="{Binding PeekHeader}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsVisible="{Binding !CanShowChange}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+          <Button Classes="flat" Padding="8,2" Content="Revert" Command="{Binding RevertPeekCommand}" IsEnabled="{Binding !IsReadOnly}"
+                  ToolTip.Tip="Put these lines back in place of the change. Undo takes it back; nothing is written until you save." />
+          <Button Classes="flat" Padding="6,4" Command="{Binding PreviousChangeCommand}" ToolTip.Tip="Previous change (F3)" AutomationProperties.Name="Previous change">
+            <Path Data="{StaticResource IconChevronUp}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="10" Height="10" Stretch="Uniform" />
+          </Button>
+          <Button Classes="flat" Padding="6,4" Command="{Binding NextChangeCommand}" ToolTip.Tip="Next change (F4)" AutomationProperties.Name="Next change">
+            <Path Data="{StaticResource IconChevronDown}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="10" Height="10" Stretch="Uniform" />
+          </Button>
+          <Button Classes="flat" Padding="6,4" Command="{Binding ClosePeekCommand}" ToolTip.Tip="Close" AutomationProperties.Name="Close the peek">
+            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+          </Button>
+        </StackPanel>
+      </Grid>
+      <!-- The old lines, colored as the file is, by an editor of their own; or a note for lines only added -->
+      <Panel>
+        <Border x:Name="OldLinesHost" Classes="peekold" />
+        <TextBlock x:Name="NothingRemoved" Classes="muted small" Margin="10,2,10,6" Text="These lines are new: nothing was there before." IsVisible="False" />
+      </Panel>
+    </DockPanel>
+  </Border>
+</UserControl>

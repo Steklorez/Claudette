@@ -226,6 +226,11 @@ public partial class TabView : UserControl
             _tab.AgentWindowRequested += OnAgentWindowRequested;
             _tab.FindFocusRequested += OnFindFocusRequested;
             _tab.Find.PropertyChanged += OnFindPropertyChanged;
+            if (_tab.TakePendingScroll() is { } pending)
+            {
+                // Once the conversation's cards are laid out.
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => OnScrollToRequested(pending), Avalonia.Threading.DispatcherPriority.Loaded);
+            }
         }
         MarkFindCurrent();
     }

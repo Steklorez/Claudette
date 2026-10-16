@@ -1,0 +1,25 @@
+﻿"work"
+[button] Find a file by name
+[button] Collapse all
+[button] More explorer actions
+"Source"
+"Starfall.uproject"
+[button] Hide the explorer
+[button] Every open file
+[button] Player.cpp
+  "Player.cpp"
+  [button] Close the file
+[toggle on] Edit
+[toggle] Inline changes
+[toggle] Side by side
+[toggle] Reviewed
+[editor, 11 lines, caret 1:1] "#include "Player.h"⏎⏎void APlayer::Dash()⏎{⏎    if (!HasAuthority())⏎    {⏎        return;⏎    }⏎    Spend(DashCost);⏎}⏎"
+"Ln 1, Col 1"
+"·"
+"C++"
+"·"
+[button] Line endings: LF
+"·"
+"UTF-8"
+"·"
+[button] Indentation: 4 spaces

@@ -22,7 +22,8 @@ public class ReplyFileUiTests
     [AvaloniaFact]
     public async Task Inline_code_that_names_a_file_becomes_a_link_that_opens_it()
     {
-        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        // In the OS's app, as Settings → Editor can say; the editor's way is ProjectFilesUiTests'.
+        await using var h = new TabTestHarness(s => s.Editor.OpenFilesIn = Core.Settings.OpenFilesIn.System, dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
         var spec = Path.Combine(h.WorkFolder, "docs", "specs", "weapons.md");
         Directory.CreateDirectory(Path.GetDirectoryName(spec)!);

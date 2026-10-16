@@ -77,15 +77,63 @@ public sealed class ReplyFileReferenceTests
     [InlineData("")]
     public void A_links_address_elsewhere_isnt(string address) => Assert.Null(ReplyFileReference.FromLink(address));
 
+    [Theory]
+    [InlineData("Player.cpp:42:7", "Player.cpp", 42, 7, null)]
+    [InlineData(@"C:\Work\Player.cpp:42:7", @"C:\Work\Player.cpp", 42, 7, null)]
+    [InlineData("Player.cpp:42-50", "Player.cpp", 42, null, 50)]
+    [InlineData("Player.cpp#L42C7", "Player.cpp", 42, 7, null)]
+    [InlineData("Player.cpp#L42-L50", "Player.cpp", 42, null, 50)]
+    [InlineData("Player.cpp#L42-50", "Player.cpp", 42, null, 50)]
+    // A range's end column isn't kept: the range selects whole lines.
+    [InlineData("Player.cpp#L42C7-L50C3", "Player.cpp", 42, 7, 50)]
+    // A range that doesn't end after it starts is only its first line.
+    [InlineData("Player.cpp:50-42", "Player.cpp", 50, null, null)]
+    [InlineData("Player.cpp:42-42", "Player.cpp", 42, null, null)]
+    // Lines and columns count from 1.
+    [InlineData("Player.cpp:42:0", "Player.cpp", 42, null, null)]
+    [InlineData("Player.cpp:0", "Player.cpp", null, null, null)]
+    public void Inline_code_can_name_a_column_or_a_range_of_lines(string code, string path, int? line, int? column, int? endLine)
+    {
+        var reference = ReplyFileReference.FromCode(code);
+
+        Assert.NotNull(reference);
+        Assert.Equal((path, line, column, endLine), (reference.Path, reference.Line, reference.Column, reference.EndLine));
+    }
+
+    [Theory]
+    [InlineData("src/Player.cpp#L42C7", "src/Player.cpp", 42, 7, null)]
+    [InlineData("docs/specs/weapons.md#L10-L20", "docs/specs/weapons.md", 10, null, 20)]
+    [InlineData("src/Player.cpp:42:7", "src/Player.cpp", 42, 7, null)]
+    [InlineData("src/Player.cpp:42-50", "src/Player.cpp", 42, null, 50)]
+    [InlineData("docs/specs/weapons.md#guns", "docs/specs/weapons.md", null, null, null)]
+    public void A_links_address_can_name_a_column_or_a_range_of_lines(string address, string path, int? line, int? column, int? endLine)
+    {
+        var reference = ReplyFileReference.FromLink(address);
+
+        Assert.NotNull(reference);
+        Assert.Equal((path, line, column, endLine), (reference.Path, reference.Line, reference.Column, reference.EndLine));
+    }
+
+    [Fact]
+    public void A_file_named_without_a_line_has_no_column_or_range()
+    {
+        var reference = ReplyFileReference.FromCode("weapons.md");
+
+        Assert.NotNull(reference);
+        Assert.Null(reference.Line);
+        Assert.Null(reference.Column);
+        Assert.Null(reference.EndLine);
+    }
+
     [Fact]
     public void Inline_code_reads_back_from_its_escaped_link_as_it_was()
     {
-        foreach (var code in new[] { "weapons.md:42", "Player.cpp#L42", "100%.md", @"C:\Work\a b.md", "docs/specs/weapons.md" })
+        foreach (var code in new[] { "weapons.md:42", "Player.cpp#L42", "100%.md", @"C:\Work\a b.md", "docs/specs/weapons.md", "Player.cpp:42:7", "Player.cpp#L42-L50" })
         {
             var reference = ReplyFileReference.FromCode(code)!;
             var back = ReplyFileReference.FromLink(new Uri(Uri.EscapeDataString(code), UriKind.Relative).OriginalString);
 
-            Assert.Equal((reference.Path, reference.Line), (back?.Path, back?.Line));
+            Assert.Equal((reference.Path, reference.Line, reference.Column, reference.EndLine), (back?.Path, back?.Line, back?.Column, back?.EndLine));
         }
     }
 

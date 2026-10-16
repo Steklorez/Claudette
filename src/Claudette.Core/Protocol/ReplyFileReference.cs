@@ -11,7 +11,9 @@ namespace Claudette.Core.Protocol;
 /// <param name="Text">What the reply wrote.</param>
 /// <param name="Path">The path, without a line number or fragment; a link's is unescaped.</param>
 /// <param name="Line">The line it points at, when it says.</param>
-public sealed partial record ReplyFileReference(string Text, string Path, int? Line = null)
+/// <param name="Column">The column on that line, when it says (<c>:42:7</c>, <c>#L42C7</c>).</param>
+/// <param name="EndLine">The last line of a range it points at (<c>:42-51</c>, <c>#L42-L51</c>), which the editor selects.</param>
+public sealed partial record ReplyFileReference(string Text, string Path, int? Line = null, int? Column = null, int? EndLine = null)
 {
     /// <summary>
     /// Inline code that names a file or folder: a path, or a name with an extension. Code such as <c>Foo.Bar()</c>,
@@ -25,12 +27,12 @@ public sealed partial record ReplyFileReference(string Text, string Path, int? L
         {
             return null;
         }
-        var (path, line) = WithoutLine(text);
+        var (path, line, column, end) = WithoutLine(text);
         if (FilePath(path) is not { } local || !LooksLikeFile(local))
         {
             return null;
         }
-        return new ReplyFileReference(code, local, line);
+        return new ReplyFileReference(code, local, line, column, end);
     }
 
     /// <summary>
@@ -61,8 +63,8 @@ public sealed partial record ReplyFileReference(string Text, string Path, int? L
         {
             return null;
         }
-        var (path, line) = WithoutLine(unescaped + (LinePattern().IsMatch(fragment) ? fragment : ""));
-        return FilePath(path) is { } local ? new ReplyFileReference(address, local, line) : null;
+        var (path, line, column, end) = WithoutLine(unescaped + (LinePattern().IsMatch(fragment) ? fragment : ""));
+        return FilePath(path) is { } local ? new ReplyFileReference(address, local, line, column, end) : null;
     }
 
     /// <summary>
@@ -107,12 +109,20 @@ public sealed partial record ReplyFileReference(string Text, string Path, int? L
         path.Length >= 2 && path[0] is '\\' or '/' && path[1] is '\\' or '/';
 
     /// <summary>The path without a line number: <c>Player.cpp:42</c>, <c>:42:7</c>, <c>:42-51</c>, <c>#L42</c>, <c>#L42-L51</c>.</summary>
-    private static (string Path, int? Line) WithoutLine(string text) =>
-        LinePattern().Match(text) is { Success: true } match && match.Index > 0
-            ? (text[..match.Index], int.TryParse(match.Groups["line"].ValueSpan, out var line) && line > 0 ? line : null)
-            : (text, null);
+    private static (string Path, int? Line, int? Column, int? EndLine) WithoutLine(string text)
+    {
+        if (LinePattern().Match(text) is not { Success: true } match || match.Index == 0)
+        {
+            return (text, null, null, null);
+        }
+        var line = Number(match.Groups["line"]);
+        var end = Number(match.Groups["end"]);
+        return (text[..match.Index], line, Number(match.Groups["column"]), end is { } last && line is { } first && last > first ? last : null);
 
-    [GeneratedRegex(@"(?::(?<line>\d{1,7})(?:[:-]\d{1,7})?|#L(?<line>\d{1,7})(?:C\d+)?(?:-L?\d{1,7}(?:C\d+)?)?)$")]
+        static int? Number(Group group) => group.Success && int.TryParse(group.ValueSpan, out var value) && value > 0 ? value : null;
+    }
+
+    [GeneratedRegex(@"(?::(?<line>\d{1,7})(?::(?<column>\d{1,7})|-(?<end>\d{1,7}))?|#L(?<line>\d{1,7})(?:C(?<column>\d+))?(?:-L?(?<end>\d{1,7})(?:C\d+)?)?)$")]
     private static partial Regex LinePattern();
 
     /// <summary>

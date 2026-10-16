@@ -40,7 +40,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public static readonly IReadOnlyList<string> AllCategories =
     [
         SettingsCategory.General, SettingsCategory.Sessions, SettingsCategory.Processes, SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.NewTabs,
-        SettingsCategory.Appearance, SettingsCategory.Usage, SettingsCategory.QuickSuffixes, SettingsCategory.CheckIns, SettingsCategory.DiffTool,
+        SettingsCategory.Appearance, SettingsCategory.Usage, SettingsCategory.QuickSuffixes, SettingsCategory.CheckIns, SettingsCategory.DiffTool, SettingsCategory.Editor,
         SettingsCategory.ProjectTools, SettingsCategory.Notifications, SettingsCategory.Keyboard, SettingsCategory.Perforce, SettingsCategory.Advanced,
     ];
 
@@ -67,6 +67,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         QuickSuffixes = new QuickSuffixesPage(_context);
         CheckIns = new CheckInsPage(_context);
         DiffTool = new DiffToolPage(_context);
+        Editor = new EditorPage(_context);
         ProjectTools = new ProjectToolsPage(_context);
         Notifications = new NotificationsPage(_context);
         Keyboard = new KeyboardPage(_context);
@@ -74,7 +75,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Advanced = new AdvancedPage(_context, ClaudeCode);
         Pages =
         [
-            General, Sessions, Processes, ClaudeCode, Accounts, NewTabs, Appearance, Usage, QuickSuffixes, CheckIns, DiffTool, ProjectTools, Notifications, Keyboard, Perforce, Advanced,
+            General, Sessions, Processes, ClaudeCode, Accounts, NewTabs, Appearance, Usage, QuickSuffixes, CheckIns, DiffTool, Editor, ProjectTools, Notifications, Keyboard, Perforce, Advanced,
             .. Project is { } project ? [new ProjectLinksPage(_context, project), new ProjectActionsPage(_context, project), new ProjectToolChoicesPage(_context, project)] : Array.Empty<SettingsPage>(),
         ];
         SelectedCategory = AllCategories[0];
@@ -128,6 +129,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public CheckInsPage CheckIns { get; }
 
     public DiffToolPage DiffTool { get; }
+
+    public EditorPage Editor { get; }
 
     public ProjectToolsPage ProjectTools { get; }
 

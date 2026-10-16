@@ -526,6 +526,13 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.ClaudeManagedSettingsDirectory = null;
         // Nor its environment, for what Claude Code's configuration says (its DISABLE_PROMPT_CACHING, say).
         Services.ClaudeEnvironmentFor = (overrides, _) => Task.FromResult(Core.Claude.ClaudeEnvironment.From(ClaudeUserEnvironment, overrides));
+        // The Project Files tabs' watching is the test's to say (DESIGN.md §18, "Project files"), and with no UI thread to
+        // own AvaloniaEdit's documents, their text is plain.
+        Services.FolderWatcher = FolderWatcher;
+        if (Services.Dispatcher is InlineDispatcher)
+        {
+            Services.EditorDocuments = text => new PlainEditorDocument(text);
+        }
         configure?.Invoke(Services.Settings);
         if (updater is not null)
         {
@@ -548,6 +555,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
     public Action OnAuthenticationRequired { get; set; } = () => { };
 
     public FakeProcessTreeTracker Trees { get; }
+
+    /// <summary>Stands in for the OS's file notifications, for the Project Files tabs (DESIGN.md §18, "Project files").</summary>
+    public FakeFolderWatcher FolderWatcher { get; } = new();
 
     public NoPlatform Platform { get; } = new();
 

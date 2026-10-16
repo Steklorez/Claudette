@@ -29,7 +29,7 @@ Claudette does not replace Claude Code. It runs the real `claude` CLI as a child
 | Pattern | MVVM with CommunityToolkit.Mvvm | |
 | Markdown | LiveMarkdown.Avalonia | For assistant messages. Built for streaming: text is appended as it arrives instead of re-rendering the whole message. Includes syntax-highlighted code blocks. (Markdown.Avalonia only had an alpha for Avalonia 12.) |
 | Diffs | Claudette's own line diff and diff view, highlighted with TextMateSharp | The TextMate grammars and themes LiveMarkdown already ships for code blocks. AvaloniaEdit was the plan, but a read-only diff doesn't need an editor. |
-| Code editor | AvaloniaEdit, with AvaloniaEdit.TextMate | Planned, for the Project Files tab ([§18](#project-files)). It highlights with the same TextMate grammars and themes as the diff view. |
+| Code editor | AvaloniaEdit, with AvaloniaEdit.TextMate | The Project Files tab's editor ([§18](#project-files)). It highlights with the same TextMate grammars and themes as the diff view. |
 | Usage history | SQLite (Microsoft.Data.Sqlite) | [§6](#usage-history) |
 | Dependency | Claude Code CLI | Must already be installed. Claudette finds `claude` on `PATH` (on macOS and Linux, the login shell's `PATH`, [§13](#login-shell-environment)) or at a path set in Settings, checks its version on launch against a minimum supported version, and shows a setup screen if it is missing or too old. Sign-in is handled inside Claudette (see [§11](#11-sign-in)). |
 | Service status | Claude's public status page, status.claude.com | Read for the header's status dot and the incident banner: its Statuspage summary, with no sign-in. Settings → General turns it off. [§18](#service-status). |
@@ -323,7 +323,7 @@ In both styles, text in a different font or size beside other text sits on its b
     - The label shows the name in place of the folder's. A named group doesn't count as a clash, so another folder of the same name keeps its plain name (`api` beside *Side project*).
     - Saving it empty, or as the folder's own label, goes back to the folder's name, as does **Reset name**, in the menu while the group has a name.
     - The name is remembered for the folder on this machine (in `state.json`), as the color is.
-  - Hovering the label shows the full path. The group's `+` opens a new tab in the same folder. A **Project files** button beside it, opening the project's editor, is planned ([§18](#project-files)).
+  - Hovering the label shows the full path. The group's `+` opens a new tab in the same folder. The **Project files** button beside it opens the project's editor ([§18](#project-files)).
   - A group can be collapsed to just its label. A collapsed group still shows the most urgent status of its tabs, such as "needs input".
   - Tabs can be dragged to reorder them within their group, and groups can be dragged (by their label) to reorder them. A tab can't be dragged into another group, because its folder is fixed, and pinned tabs stay ahead of the others.
     - A dragged tab's row is marked as a selected one is, and the list rearranges as soon as the pointer passes the middle of a neighbor. Dropped in the sidebar, the tab is selected, as a click would. **Move up** and **Move down** in the tab menu do the same from the keyboard or mouse.
@@ -384,7 +384,7 @@ Kept worktrees pile up. Settings → General → **Worktrees** can remove them o
 `Ctrl/Cmd+Shift+P` opens a box over the window that does anything Claudette has a command for, by typing a few letters of it.
 
 - **What it lists**, in this order before anything is typed:
-  - **Commands**: new tab, History, Settings, collapsing the sidebar, zooming in and out (and back to 100% when zoomed, [§3](#accessibility)), going to the next tab waiting (when one is); and for the selected tab, find, the conversation's first message and its latest, closing panes (with tabs side by side) and showing a thread with its sub-threads ([§18](#split-panes)), Stop (while Claude works), the project's main action, **Stash the message** (while something's typed, [§5](#drafts-and-the-stash)), the side panel's pages, **Tab settings…**, **Duplicate tab**, **New tab in a worktree** (for a folder in a git repository, [Worktree tabs](#worktree-tabs)), restarting Claude Code (when it stopped) and closing the tab. Each shows its shortcut, so the palette teaches them.
+  - **Commands**: new tab, History, Settings, collapsing the sidebar, zooming in and out (and back to 100% when zoomed, [§3](#accessibility)), going to the next tab waiting (when one is); and for the selected tab, find, the conversation's first message and its latest, closing panes (with tabs side by side) and showing a thread with its sub-threads ([§18](#split-panes)), Stop (while Claude works), the project's main action, **Stash the message** (while something's typed, [§5](#drafts-and-the-stash)), the side panel's pages, **Tab settings…**, **Duplicate tab**, **New tab in a worktree** (for a folder in a git repository, [Worktree tabs](#worktree-tabs)), restarting Claude Code (when it stopped) and closing the tab. **Go to file…** and **Open project files** open the project's Files tab; while it has the focus, the palette has its own commands instead: saving the file and all files, closing the file, going to a line, showing only changed files, hiding the explorer and closing the Files tab ([§18](#project-files)). Each shows its shortcut, so the palette teaches them.
   - **Tabs**, by name with their folder: picking one selects it.
   - **Folders**: favorites, then recent folders. Picking one opens a new tab there.
   - **Settings** categories: picking one opens Settings there.
@@ -1256,7 +1256,7 @@ In a terminal, Claude Code asks before it works in a folder for the first time, 
   - Long lines scroll sideways with a scroll bar along the bottom, Shift and the mouse wheel, or a touchpad. Every line scrolls together, both sides at once when they're side by side, and the line numbers stay where they are. The rows scroll up and down as usual.
   - Highlighting uses TextMate grammars, by file extension, with the dark or light theme to match the app. Files over 20,000 lines, and binary files, are shown without it. A line over 1,000 characters, as a minified file's, gets 50 ms and shows the rest in the default color; a shorter line is tokenized whole, since with a budget the first line of a freshly loaded grammar, or any line on a busy machine, could come back half colored.
   - A leading byte order mark isn't counted as a change.
-- Actions: open in external diff tool, open in external editor (the app the OS uses for that file type), reveal in Finder/Explorer, copy path. Once [Project files](#project-files) is built, **Open** goes to Claudette's own editor unless Settings → Editor says otherwise, and **Open in the OS's app** stays.
+- Actions: open in external diff tool, open in external editor (the app the OS uses for that file type), reveal in Finder/Explorer, copy path. **Open** goes to Claudette's own editor ([Project files](#project-files)) unless Settings → Editor says otherwise, and **Open in the OS's app** stays.
 - If the folder is a git repo, a toggle switches to **working tree vs HEAD**. This also shows changes made by Bash commands or by the user.
   - Git is asked once Claude's edits pause (half a second after the last), not once per edit, and a listing a newer one supersedes is stopped. A tab in the background asks git once it's shown.
   - It covers the whole repository, not only the tab's folder.
@@ -1913,6 +1913,7 @@ A **Settings** window opens with `Ctrl+,` on Windows or `Cmd+,` on macOS, where 
 | Quick suffixes | The list of suffixes: label, text and optional shortcut. Add, edit, reorder, delete. See [§5](#quick-suffixes). |
 | Check-ins | On/off. Run time before checking in. Quiet time before checking in. Check-in message text. Notify me when a check-in is sent. See [§5](#check-ins-on-long-turns). |
 | Diff tool | Built-in, a preset or a custom command, with **Test**. See [§8](#external-diff-tool). |
+| Editor | The Project Files tab's explorer on the left (the default) or right. Open files in Claudette's editor (the default) or the app the OS uses. Show files from a conversation beside it (the default) or in its place. Word wrap (off by default). Indentation for files that have none (4 spaces by default). See [§18](#project-files). |
 | Project tools | Unreal's default editor configuration (Development or DebugGame). Project files for Visual Studio, VS Code or Xcode (the OS's own by default). Tell Claude about Unreal projects (on by default). Unity's default code optimization (Release or Debug), and Tell Claude about Unity projects (on by default). The Godot executable (**Browse…**, **Detect**), and Tell Claude about Godot projects (on by default). Open solutions with the OS's app, Rider, Visual Studio, VS Code or another program (**Browse…**). See [§18](#project-tools). |
 | Notifications | On/off for each type in [§10](#10-notifications), including **A project action finishes**. Dock/taskbar badge on/off, and animating the icon while tabs work or wait. |
 | Keyboard | Send with: Enter (the default) or `Ctrl/Cmd+Enter`. List of shortcuts, each one rebindable ([below](#keyboard-shortcuts)). |
@@ -1921,7 +1922,7 @@ A **Settings** window opens with `Ctrl+,` on Windows or `Cmd+,` on macOS, where 
 
 ### Keyboard shortcuts
 
-Settings → Keyboard lists every shortcut Claudette handles, with its default from the section that describes it: new tab, close tab, next and previous tab, go to tab 1–9, History, Settings, collapsing the sidebar, Stop, the quick suffixes menu, stashing the message (`Ctrl/Cmd+S`, [§5](#drafts-and-the-stash)), allowing or denying the waiting prompt, running the project's main action (`Ctrl/Cmd+Shift+E`, [§18](#project-tools)), finding in the conversation (`Ctrl/Cmd+F`, [§5](#find)), going to the previous and next message in it (`F3` and `F4`) and to its first and latest (`Ctrl/Cmd+F3`, `Ctrl/Cmd+F4`, [§18](#conversation-cards)), going to the next tab waiting for you (`Ctrl/Cmd+J`, [§4](#4-tabs--sessions)), the command palette (`Ctrl/Cmd+Shift+P`, [§4](#command-palette)), and zooming in, out and back to 100% (`Ctrl/Cmd +`, `−` and `0`, [§3](#accessibility)). A shortcut on a digit, `+` or `−` also answers to the number pad's key.
+Settings → Keyboard lists every shortcut Claudette handles, with its default from the section that describes it: new tab, close tab, next and previous tab, go to tab 1–9, History, Settings, collapsing the sidebar, Stop, the quick suffixes menu, stashing the message (`Ctrl/Cmd+S`, [§5](#drafts-and-the-stash)), allowing or denying the waiting prompt, running the project's main action (`Ctrl/Cmd+Shift+E`, [§18](#project-tools)), finding in the conversation (`Ctrl/Cmd+F`, [§5](#find)), going to the previous and next message in it (`F3` and `F4`) and to its first and latest (`Ctrl/Cmd+F3`, `Ctrl/Cmd+F4`, [§18](#conversation-cards)), going to the next tab waiting for you (`Ctrl/Cmd+J`, [§4](#4-tabs--sessions)), the command palette (`Ctrl/Cmd+Shift+P`, [§4](#command-palette)), zooming in, out and back to 100% (`Ctrl/Cmd +`, `−` and `0`, [§3](#accessibility)), and going to a file in the project (`Ctrl/Cmd+P`, [§18](#project-files)). Its fixed keys include the Project Files tab's editor's own ([§18](#project-files), "Keyboard"). A shortcut on a digit, `+` or `−` also answers to the number pad's key.
 
 - **Rebinding.** Click a shortcut and press the new keys; Esc cancels. **Reset** puts one back, **Remove** clears it, and **Reset to defaults** restores them all.
 - **One key for both OSes.** Shortcuts are stored with a *Primary* modifier: Ctrl on Windows and Linux, Cmd on macOS. That way a shortcut synced between a Windows machine and a Mac means the same thing on both. Ctrl is its own modifier only on macOS; elsewhere it is Primary.
@@ -2410,12 +2411,13 @@ Claudette has to keep working when Claude Code adds things it doesn't know about
     - **Resizing split panes and dragging tabs onto them ([§18](#split-panes)).** ✅ Built 2026-10-15. The line between two panes drags to trade their width, kept with the app state; a tab's row dragged from the sidebar onto a pane opens beside it, or in its place with no room for another.
       - **Still to verify:** both on real macOS and Linux desktops, with a touchpad as well as a mouse (so far on Windows and headlessly).
     - **Moving to .NET 11 ([§2](#moving-to-net-11)).** Planned for .NET 11's release on 2026-11-10, once dropping macOS 12 and 13 is decided. On macOS, .NET 11 starts processes with `posix_spawn` rather than `fork()`, which stops a source build started from a terminal printing `MallocStackLogging` lines. On Windows it builds and passes every test with one package reference removed; macOS and Linux are still to verify.
-    - **Project files ([§18](#project-files)).** Designed 2026-10-15, not built. One Project Files tab per folder group, opened beside the group's `+`. It has an explorer (on the left, or the right) that finds files by name, and files in tabs in an AvaloniaEdit editor, with a chip for the line endings and indentation. Saving keeps unsaved edits through quitting and restarts. Claude's changes show as gutter bars with a peek, inline or side by side, with **Reviewed**. Files named in replies and Changed files' files open in it (Settings → Editor). It replaces the non-goal of not being an editor ([§1](#non-goals-v1)). Built in steps 0 (a spike) to 4.
+    - **Project files ([§18](#project-files)).** ✅ Built 2026-10-15. One Project Files tab per folder group, opened beside the group's `+`. It has an explorer (on the left, or the right) that finds files by name, and files in tabs in an AvaloniaEdit editor, with a chip for the line endings and indentation. Saving keeps unsaved edits through quitting and restarts. Claude's changes show as gutter bars with a peek, inline or side by side, with **Reviewed**. Files named in replies and Changed files' files open in it (Settings → Editor). It replaces the non-goal of not being an editor ([§1](#non-goals-v1)). The spike found AvaloniaEdit fits, its colors match the diff view's, and the peek works; its tokenizing on the UI thread and very long lines are worked around.
+      - **Still to verify:** typing with a real IME, macOS and Linux (so far on Windows, on a real screen and headlessly), and the timings on real screens.
     - **User guide ([§2](#user-guide)).** Planned 2026-10-15, not started. A site at claudette.dotbunny.com, which GitHub Pages builds from `docs/` on `main` with Jekyll and Just the Docs: a chapter for each part of Claudette, written for the people using it, with pictures of the demo in light and dark taken by a script, a check for broken links on each pull request, and pages kept current in the same change as the features they describe.
 
 ## 18. Future Features
 
-Features beyond v1. All below are built (milestones 10, 11, 13, 14, 15 and 17), except [Project files](#project-files), which is designed but not built yet. New ones go here first, each with a fuller design before it's built.
+Features beyond v1. All below are built (milestones 10, 11, 13, 14, 15 and 17). New ones go here first, each with a fuller design before it's built.
 
 ### Perforce ticket handling
 
@@ -2994,7 +2996,7 @@ Claude names files as it works: *"`weapons.md` is written"*, *"see `docs/specs/w
 - **Where the file is.** A path is read against the tab's folder (the worktree, for a tab in one), then its extra folders. A name, or a path that isn't there from the folder (`specs/weapons.md`), is the file with that name the session's tools last read or changed, the main agent's or a subagent's; failing that, the project's files with it (the composer's `@` list: what git tracks, or a walk of the folder), the shallowest first.
 - **A click.**
   - A file opens in the app the OS uses for it, as Changed files' **Open** does ([§8](#8-file-changes--diff-view)): Claudette isn't an editor ([§1](#non-goals-v1)). A line isn't passed on, since the OS's apps have no common way to take one.
-    - Planned: once [Project files](#project-files) is built, a file opens in Claudette's own editor instead, at the line named, unless Settings → Editor says to use the OS's app. Scripts open there as text rather than showing in their folder, since showing their text doesn't run them.
+    - With [Project files](#project-files), a file opens in Claudette's own editor instead, at the line named, unless Settings → Editor says to use the OS's app. Scripts open there as text rather than showing in their folder, since showing their text doesn't run them.
   - A folder opens in Finder, Explorer or the file manager.
   - A program, script, shortcut or installer (`.exe`, `.bat`, `.ps1`, `.js`, `.sh`, `.py`, `.lnk`, `.app`, `.desktop` and the like, or a file without an extension whose execute bit is set on macOS and Linux) shows in its folder rather than opening, since opening one runs it, and a reply can be prompt-injected to point at one under an innocent name (`[the spec](tools/setup.bat)`).
   - A name that matches several files offers them in a menu at the click, from the tab's folder (`docs/weapons.md`, `Plugins/Combat/weapons.md`); one is opened when it's picked, none when the menu closes.
@@ -3106,7 +3108,7 @@ How it's built: `Games/` holds the rules and Claudette's play, with no UI and th
 
 ### Project files
 
-Designed 2026-10-15; not built yet. **Steps**, at the end, gives the order it's built in.
+Designed, spiked and built 2026-10-15. **Spike findings**, **How it's built** and **Tests** are near the end.
 
 A code editor for the project's files, in a tab of the project's own: a tree of its folders and files, the files open in tabs, and Claude's changes marked where they are in the code. Until now Claudette left editing to the user's own editor ([§1](#non-goals-v1)), so reading what Claude wrote, or fixing a line of it, meant leaving the conversation. It's an editor, not an IDE: no language services, building, debugging or source control.
 
@@ -3147,12 +3149,12 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - and Claudette on the composer stays on the session panes.
 - **Panes.** It takes part in split panes as a session tab does ([Split panes](#split-panes)), so the conversation can be on one side and the code on the other.
   - That covers **Open beside**, dragging its row onto a pane, resizing, and the restart snapshot.
-  - Its pane keeps 360 pixels for the editor, plus the explorer's least while it shows.
+  - Its pane keeps the least width every pane does, 360 pixels. Inside it, the explorer gives way first (**The layout**, below).
 - **The layout.** The explorer and the editor sit side by side.
   - The explorer is on the left by default, or on the right with Settings → Editor → **Explorer side**. The explorer's **⋯** menu has **Move to the right** (or **left**), which changes the same setting.
   - **Width.** Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default; a double-click on the edge goes back to that. The width is the same for every Files tab, and remembered.
   - A button at the start of the file tabs' row hides and shows the explorer, and that's remembered too.
-  - In a narrow pane, the explorer narrows first, down to its least, and the editor keeps its 360 pixels.
+  - In a narrow pane, the explorer narrows first, to leave the editor 360 pixels, down to its own least; only then does the editor narrow.
 - **The explorer.**
   - **Its header** has the group's label, **Find file** (a magnifier, `Ctrl/Cmd+P`), **Collapse all** and **⋯**. The **⋯** menu has:
     - **Show only changed files**;
@@ -3205,7 +3207,8 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - **Its look.**
     - The code font and size from Settings → Appearance, scaled by the zoom ([§3](#accessibility)).
     - Its colors are the diff view's TextMate theme for the app's theme and style ([§8](#8-file-changes--diff-view)), so code looks the same in a reply's code block, in a diff and here.
-    - The selection and the current line's highlight use the app's own tokens.
+    - The selection is a see-through tint of the app's own token, so the code keeps its colors under it. The current line's highlight uses the app's tokens too.
+    - Addresses in the code aren't links. A click on one does what a click on any other text does.
   - **What it does:**
     - line numbers, with the current line drawn faintly;
     - find and replace (`Ctrl/Cmd+F`, and `Ctrl+H` or `Cmd+Option+F` on macOS), with match case, whole word and regular expressions;
@@ -3219,7 +3222,9 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - A file that isn't valid text in one of those (Latin-1, say) opens read-only, saying why: saving a guess would change characters nobody touched.
     - Binary files (§8's test) and files over 10 MB don't open. The editor says so, with **Open in the OS's app**.
     - A file Claudette isn't allowed to write opens read-only, saying so.
-    - Highlighting stops at 20,000 lines, and a line over 1,000 characters gets 50 ms, as in the diff view.
+    - **Highlighting** colors what's on screen first and the rest of the file in the background, so even a long file opens colored where it's being read.
+    - A line over 2,000 characters, such as a minified file's, stays in the default color, since coloring one that long slows every keystroke.
+    - A file with a line over 1,000,000 characters opens read-only, saying why: typing on a line that long takes about half a second a key.
 - **The chip.** A small rounded chip at the editor's bottom right, over the text, says where the cursor is and what the file is: *Ln 42, Col 7 · C++ · CRLF · UTF-8 · 4 spaces*. It fades while the cursor's line is under it, so it never hides what's being typed.
   - **The language** is the grammar the file's extension picks, as in the diff view. For a file without an extension, its first line's `#!` picks it (`bash`, `python`, `node`). Otherwise it's *Plain text*.
   - **Line endings:** *CRLF* or *LF*, whichever the file mostly has, or *Mixed* while it has both. New lines take the file's.
@@ -3262,7 +3267,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - Under the header are the lines the change replaced, highlighted, in the removed color.
     - **Revert** puts them back in the editor's text as one step, which Undo takes back. The file then has unsaved edits: nothing is written until it's saved.
     - `F3` and `F4`, the conversation's previous and next message ([§14](#keyboard-shortcuts)), go to the previous and next change and open its peek.
-  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**.
+  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**. In a pane too narrow for the bar's one row, **Whole file** and **Reviewed** go onto a second.
     - The last two are §8's diff view inside the tab, read-only, with **Whole file**, the highlighting, and **Revert** on each change.
     - **Revert** there changes the editor's text, as the peek's does.
     - A double-click on a line goes back to **Edit** at that line.
@@ -3274,7 +3279,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - **Where from:**
     - a file named in Claude's replies ([Files named in Claude's replies](#files-named-in-claudes-replies));
     - Changed files' **Open**, and the diff window's;
-    - the file named on a Read, Edit, Write or NotebookEdit card, which becomes a link.
+    - **Open** in the details of a Read, Edit, Write or NotebookEdit card, beside **Open diff**.
   - Each of their menus keeps **Open in the OS's app**.
   - **At the line.** A line named in a reply (`Player.cpp:42`, `:42:7`, `#L42-L51`) is gone to, and a range is selected. An Edit card's file opens at the first line its change touched, from its `structuredPatch`.
   - **Which Files tab.** The one of the group whose folder holds the file, the deepest one when a group's folder is inside another's.
@@ -3293,7 +3298,8 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - **Word wrap**: off by default;
   - **Indentation**, for files that have none: 4 spaces by default.
 - **Keyboard.**
-  - **Go to file** (`Ctrl/Cmd+P`) is a new rebindable shortcut. **Open project files** is in the list, without a default.
+  - **Go to file** (`Ctrl/Cmd+P`) is a new rebindable shortcut.
+  - **Not built yet:** **Open project files** in the list without a default. Settings → Keyboard can't list a command with no default yet, so for now it's the group's button, its menu and the command palette.
   - **The window's shortcuts that act on a tab** act on the editor while the Files tab has the focus:
     - **Find** opens the editor's find;
     - **Close tab** closes the file showing, and the Files tab itself once none is open;
@@ -3319,71 +3325,111 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - git staging and commits;
   - a terminal.
 
-**Steps.**
+**Steps.** ✅ All built 2026-10-15, in this order: the spike; the tab in the shell; the explorer and the editor; Claude's changes; opening files in the editor.
 
-0. **Spike.** Put AvaloniaEdit 12.0.0 and AvaloniaEdit.TextMate 12.0.0 into Claudette, to find out:
-   - whether the editor draws in the headless UI tests, so Verify snapshots can cover it;
-   - whether its TextMate colors match `Diffs/SyntaxHighlighter`'s, in both styles and themes;
-   - how it copes with a 50,000-line file, and with a 5 MB file on one line;
-   - whether room can be opened between two lines for the peek, with an `InlineObjectElement` from a `VisualLineElementGenerator`, since AvaloniaEdit has nothing like Monaco's view zones;
-   - what typing Japanese with Windows' IME does, since support for showing the text being composed is still in an open pull request (AvaloniaEdit #592).
+**Spike findings** (2026-10-15).
 
-   Its findings replace this list.
-1. **The tab in the shell:** the tab, its row, button and menus, panes, saving and restoring it, and the restart snapshot, with an empty editor.
-2. **The explorer and the editor:** the tree, finding a file by name, file tabs, editing, the chip, saving, keeping unsaved edits, changes on disk, and the keyboard.
-3. **Claude's changes:** the "before", the gutter bars and peek, the explorer's letters and filter, inline and side by side, and **Reviewed**.
-4. **Opening files in the editor:** the setting, and each way in.
+How it was tested:
+- AvaloniaEdit 12.0.0 and AvaloniaEdit.TextMate 12.0.0 ran inside Claudette's own `App`, with its styles, fonts and colors, on Windows.
+- The editor was drawn with Skia on Avalonia's headless platform, so frames could be saved, looked at and timed.
+- The timings come from that harness. It adds about 5 ms a frame, and its numbers varied by up to half between runs, so they're sizes, not promises.
 
-Each step updates this section with what was built, the other sections it touches (§3, §4, §8, §14), its milestone ([§17](#17-milestones)) and [CLAUDE.md](CLAUDE.md)'s layout.
+- **It fits.**
+  - It builds against Avalonia 12.1.4 with warnings as errors, and TextMateSharp stays at 2.0.4.
+  - It adds 670 KB: `AvaloniaEdit.dll` and `AvaloniaEdit.TextMate.dll`.
+  - Its theme has to be included in `App.axaml` (`avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml`).
+  - Its find and replace panel comes with it, with match case, whole word, regular expressions, replace and replace all. It suits both themes.
+- **Its colors match the diff view's** character for character, once AvaloniaEdit's own links are off.
+  - That held for ten of the repository's files (C#, AXAML, JavaScript, Markdown, YAML, PowerShell, shell, JSON, C++ and Python) in both themes.
+  - With the links on, AvaloniaEdit draws every address in a fixed blue in both themes and opens it itself. So the editor turns them off (`EnableHyperlinks`, `EnableEmailHyperlinks`).
+  - Text with no color of its own takes the editor's text color, as in the diff view.
+- **A large file is quick.** The test file was 50,000 lines (2.1 MB) of C#.
+  - It opens in about 0.7 seconds with its first screen colored. The rest is tokenized in the background in 5 to 8 seconds.
+  - A page down takes 35 to 50 ms a frame, and a keystroke 20 to 35 ms.
+  - Typing `/*` at the top recolors the whole file as a comment within about 120 ms.
+  - It takes 35 to 70 MB more managed memory, and about 150 MB more working set.
+  - Core's `LineDiff` compares the whole file in 17 to 30 ms, so the bars can be worked out again after each pause in typing.
+- **Long lines are slow, for two reasons.**
+  - **Tokenizing on the UI thread.** AvaloniaEdit.TextMate tokenizes every line on screen again, on the UI thread, each time the view scrolls, sideways included (`TextEditorModel.TokenizeViewPort`). TextMateSharp gives a line up to 3 seconds and its first 10,000 characters. On a minified line of 10 KB or more, each scroll and each keystroke near the line's end froze the editor for 3 to 9 seconds.
+  - **Coloring.** Coloring a line in thousands of runs is slow in itself: 300 to 450 ms a keystroke for a minified line of 10 to 100 KB.
+  - **Without TextMate**, a keystroke took about 90 ms on a 100 KB line, about 225 ms on 1 MB and about 830 ms on 5 MB.
+  - **So the editor doesn't use `InstallTextMate`.**
+    - It keeps AvaloniaEdit.TextMate's public coloring transformer (`TextMateColoringTransformer`, with `SetModel`, `SetGrammar` and `SetTheme`), over TextMateSharp's `TMModel`, which tokenizes on its own thread.
+    - It feeds that model through Claudette's own view of the document, so nothing tokenizes on the UI thread.
+    - It leaves lines over 2,000 characters uncolored.
+  - **With both,** a keystroke took 19 ms on a 2 KB line, 37 ms on 10 KB, 185 ms on 100 KB and 410 ms on 1 MB. Hence the 2,000 characters, and opening read-only past 1,000,000 (**Which files open**, above).
+- **The peek works.**
+  - **How.** An `InlineObjectElement` sits at the end of the line, with `TextBlock.BaselineOffset` set to the text's baseline. That makes its row grow downward by exactly the peek's height: 76 pixels for the header and two old lines. The content is then moved to the text view's left edge, as wide as the view.
+  - **The lines under it** move down, and the caret, clicks and selection on them still land on the right line.
+  - **A selection** through the peeked line doesn't cover the peek.
+  - **Its buttons** take clicks.
+  - **The old lines** inside it are a second, read-only editor with the same coloring.
+  - **It stays** when there's typing on the peeked line, and when it's scrolled away and back.
+  - **Three things to build around:**
+    - **The caret.** AvaloniaEdit draws the caret as tall as its row: `Caret.CalcCaretRectangle` uses the line's top and bottom, where AvalonEdit used the text's. So on a peeked line the caret ran down the peek: 94 pixels for a 17.5-pixel line. The editor draws its own caret from `VisualYPosition.TextTop` and `TextBottom`, with AvaloniaEdit's made transparent. An upstream fix would make that unnecessary.
+    - **The current line's highlight** covers the whole row too, peek and all. The editor draws its own, the text's height.
+    - **Its position.** A peek placed by line number stays on that line number when lines are added above. So it's placed by a `TextAnchor`, which moves with the text.
+- **The gutter bars** are an `AbstractMargin` drawn from the visible lines, using `LineDiff`'s hunks with no context. They drew added, changed and removed lines in both styles, with changed lines in the accent.
+- **The selection.** AvaloniaEdit's default is a solid accent, over which some syntax colors are hard to read. The editor sets a see-through one.
+- **The UI tests.**
+  - The editor lays out under the tests' headless drawing.
+  - Typing and `Ctrl+Z` reach it through the window, once its `TextArea` has the focus (not the `TextEditor`).
+  - `UiText.Describe` shows nothing of it, since it draws its text itself. So `UiText` will describe a `TextEditor` by its lines, caret and selection. The peek, the chip and the banners are ordinary controls it already reads.
+  - The Skia harness's frames, which the headless tests don't draw, were checked by eye.
+- **Screen readers.** The editor and its text area have no automation peer (`NoneAutomationPeer`), as expected (**Accessibility**, above).
+- **IME.** AvaloniaEdit 12.0.0 tells Avalonia it can't show text being composed (`SupportsPreedit` is false). So an IME composes in its own window at the caret, and the text arrives once it's done.
+- **Still to verify:**
+  - typing with a real IME: Japanese on Windows, and Korean on macOS, where it's reported broken;
+  - the timings on real screens rather than headless;
+  - macOS and Linux (so far only Windows).
+- **Verified once built:** the editor beside a real conversation in a pane, on Windows, in both styles and themes.
 
-**How it's built** (planned).
+**How it's built.**
 
-- **Packages.** `Avalonia.AvaloniaEdit` and `AvaloniaEdit.TextMate` 12.0.0 (MIT), which use the TextMateSharp already referenced. Two of AvaloniaEdit's open bugs shape how it's used:
+- **Packages.** `Avalonia.AvaloniaEdit` and `AvaloniaEdit.TextMate` 12.0.0 (MIT), which use the TextMateSharp already referenced. `App.axaml` includes AvaloniaEdit's Fluent theme. Two of AvaloniaEdit's open bugs shape how it's used:
   - The editor keeps `AllowScrollBelowDocument` on, since with it off, dragging a selection to the last line freezes it (#614).
   - It has a least size, since squeezed very small it overflows its stack (#596, #613).
 - **Core,** in `ProjectFiles/`:
-  - `FolderListing`: a folder's entries, with what git ignores.
-  - `TextFile`: reading and saving with the encoding, byte order mark and line endings. Saving goes through `AtomicFile`, with the check `Revert.Write` makes.
+  - `FolderListing`: a folder's entries (`TreeEntry`), folders first, with what git ignores (`GitWorkingTree.CheckIgnoredAsync`, `git check-ignore` in batches of 200) and links that lead back up.
+  - `TextFile`: reading (the encoding, the reason a file opens read-only, or why it doesn't open) and saving with the encoding, byte order mark and line endings. Saving goes through `Revert.Write`, so `AtomicFile` and its check that the file is still what was read.
   - `Indentation` and `LineEndings`: finding and converting them.
   - `DiskChange`: what a change on disk does to an open file. It's pure.
-  - `ProjectChanges`: each file's earliest "before" across the project's tabs.
-  - `EditorBackups`: unsaved text, in `editor-backups` in the data folder.
-  - Watching goes through a new `IFolderWatcher`, so tests use a fake. Finding a file uses `ProjectFileIndex` and `PathMatcher`.
+  - `ProjectChanges`: each file's earliest "before" across the project's tabs, and who changed it (`ChangeAuthor`, with its tab and latest tool call).
+  - `ChangeMarkers`: the gutter's blocks, from `LineDiff`'s hunks with no context; none past 20,000 lines.
+  - `EditorBackups`: unsaved text, in `editor-backups` in the data folder, with a hash of the file it was typed over. Those no open file has used for 30 days go at launch.
+  - `ProjectFilesState` and `OpenFileState`, kept in `AppState.ProjectFiles`.
+  - Watching goes through `Files/IFolderWatcher`, so tests use a fake. Finding a file uses `ProjectFileIndex` and `PathMatcher`.
+  - `ReplyFileReference` reads a column and the end of a range too (`:42:7`, `:42-50`, `#L42C7`, `#L42-L50`).
 - **The shell.**
   - `IShellTab` is what `TabViewModel` and `ProjectFilesViewModel` both are: an id, a name, a group folder, being selected and shown, and a pane.
-  - Panes, the main area and the sidebar's rows take either kind, each with its own template.
-  - `AllTabs` and `OpenTabs` stay sessions only, so nothing that counts, closes, restores or threads sessions changes.
-  - `ShellViewModel.Selected` is the focused tab, and `SelectedTab` is that tab when it's a session.
-  - `TabGroupViewModel.Files` holds the group's Files tab.
-  - `AppState.ProjectFiles` keeps each folder's expanded folders and open files: which are pinned, which is the preview and which is showing, and each file's cursor, scroll and mode.
-  - The groups' order is kept apart from the tabs', since a group can have no session tab.
+  - `OpenTabs` and the panes take either kind, and the main area and the sidebar's rows have a template for each. `AllTabs` stays sessions only, so nothing that counts, closes, restores or threads sessions changes.
+  - `ShellViewModel.Selected` is the focused tab; `SelectedTab` is that tab when it's a session, and `SelectedFiles` when it's a Files tab. `ProjectTab` is the session the project's settings and menu go by: the focused one, or the Files tab's group's first.
+  - `TabGroupViewModel.Files` holds the group's Files tab, and a group goes only once it has neither tabs nor that.
+  - `ShellViewModel.ProjectFiles.cs` opens, closes and restores Files tabs, and opens files in them from elsewhere. `AppState.GroupOrder` keeps the groups' order apart from the tabs', since a group can have no session tab. `ShellLayout` keeps the explorer's width and whether it's hidden.
 - **The app.**
-  - `ProjectFilesViewModel`: the explorer, the open files and finding a file.
-  - `ProjectFileViewModel`: one open file.
-  - `Views/ProjectFilesView`.
-  - `Views/Editor/`: `ChangeMargin` (the bars), `ChangePeekGenerator` (the peek) and `EditorChip`.
-  - `Controls/DiffView`: the diff view, taken out of `DiffWindow` so that the window and the Files tab both show it.
-  - The change colors are new tokens in `App.axaml`, with Claude values in `Themes/ClaudeColors.axaml`, light and dark.
-- **Claude Code:** nothing new. The changes come from the `originalFile` that Changed files already reads, so `compat/surface.yaml` doesn't change.
+  - `ProjectFilesViewModel`: the tab, with partials for the explorer (`ExplorerRow`, watching the folders shown), the open files (closing, asking first with `CloseQuestion`, pinning, saving), finding a file by name (`FoundFile`), and Claude's changes (the letters, **Show only changed files**, **Against git HEAD**, **Reviewed**).
+  - `ProjectFileViewModel`: one open file: its text, the chip, saving, the banner, the marks and the peek, the modes and their `DiffWindowViewModel`.
+  - `Editor/`: `IEditorDocument`, over AvaloniaEdit's `TextDocument` in the app (`TextEditorDocument`) and over a string in the view model tests, since AvaloniaEdit's document only answers the thread that made it; and `EditorLanguages`, the chip's language.
+  - `Views/ProjectFilesView` (the explorer, the file tabs, the question before closing) and `Views/ProjectFileView` (the banner, the modes, the editor or the diff, the chip).
+  - `Views/Editor/`:
+    - `CodeEditor`: the editor, with go to line, find and replace, word wrap and folding.
+    - `TextMateLines` and `TextMateColoring`: AvaloniaEdit.TextMate's coloring transformer over a `TMModel` that Claudette feeds itself, so nothing tokenizes on the UI thread, with lines over 2,000 characters left uncolored.
+    - `EditorRenderers`: `CurrentLineHighlight`, the text's height rather than the row's; `PeekCaretLayer`, which on a peeked line hides AvaloniaEdit's caret and draws one the text's height (elsewhere AvaloniaEdit's own shows); and `IndentationFolding`, since AvaloniaEdit only comes with XML's.
+    - `ChangeMargin`: the bars.
+    - `ChangePeek` and `ChangePeekGenerator`: the peek, placed by a `TextAnchor`.
+  - `Views/DiffLines`: the diff view's lines, taken out of `DiffWindow` so that the window and the Files tab both show them. In the tab, `DiffSource.RevertInto` reverts into the editor's text rather than the file.
+  - `Themes/ProjectFilesStyles.axaml`: the tab's look. The change and editor colors are new tokens in `App.axaml`, with Claude values in `Themes/ClaudeColors.axaml`, light and dark.
+  - Settings → Editor is `Settings/EditorPage`.
+  - Opening a path from a tab goes through `TabViewModel.OpenPathAsync`, which Changed files reaches through `IChangedFilesHost.OpenPathAsync`.
+- **Claude Code:** nothing new. The changes come from the `originalFile` that Changed files already reads, and an Edit card's line from its `structuredPatch`, so `compat/surface.yaml` doesn't change.
 
-**Tests** (planned).
+**Tests.**
 
-- **In Core:**
-  - `FolderListingTests`;
-  - `TextFileTests`: encodings, byte order marks, line endings, links and permissions, and refusing to write over a change;
-  - `DiskChangeTests`;
-  - `ProjectChangesTests`: several tabs, and one of them closed;
-  - `IndentationTests`, `LineEndingsTests` and `EditorBackupsTests`.
-- **In the app**, with `TabTestHarness` and `FakeTimeProvider`:
-  - opening, previewing, pinning and closing files;
-  - saving, and **Don't save**;
-  - Claude's edit arriving with and without unsaved edits;
-  - unsaved text kept through a restart;
-  - reviewed ticks reaching each tab;
-  - a reply's `Player.cpp:42` opening at its line, beside the conversation and, with the setting, in its place;
-  - the Files tab in panes;
-  - its group outliving its last session tab.
-- **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; and the list of files found by name.
+- **In Core**, in `ProjectFiles/`: `FolderListingTests`, `TextFileTests` (encodings and byte order marks, line endings, binary, too large, read-only, refusing to write over a change, and writing a deleted file back), `DiskChangeTests`, `ChangeMarkersTests`, `ProjectChangesTests`, `IndentationTests`, `LineEndingsTests`, `EditorBackupsTests` and `ProjectFilesStateTests`; and `FolderWatcherTests`, `GitWorkingTreeTests` (what git ignores) and `ReplyFileReferenceTests` (columns and ranges).
+- **In the app**, with `TabTestHarness` and `FakeTimeProvider` (`FakeFolderWatcher` for the OS's notices, and `PlainEditorDocument` for the text):
+  - `ProjectFilesTests`: the group's button, the keyboard skipping the tab, the group outliving its last session tab, `Ctrl/Cmd+W`; the explorer and the disk; previews, pins, tab labels, files that aren't text, the chip; saving, **Don't save**, **Save** on the question, and a file changed under a save; Claude's edit with and without unsaved edits, the marks, the peek's link to the tab, a double-click in the diff, **Reviewed** and **Show only changed files**; finding a file by name; and what comes back at launch and after a restart.
+  - `ProjectFilesOpeningTests`: a reply's file opening at its line beside the conversation or, with the setting, in its place; what still goes to the OS; a folder in the explorer; **Go to file**; the tab in panes.
+- **`ProjectFilesUiTests`:** the tab rendered, as a snapshot; the peek under its change; Inline changes; the explorer on the right; the group's row and button. `UiText` describes a `TextEditor` by its first lines, caret and selection, since it draws its text itself.
 
 ## 19. Open Questions
 

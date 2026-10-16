@@ -6,6 +6,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using AvaloniaEdit;
 
 namespace Claudette.App.UiTests;
 
@@ -89,10 +90,25 @@ public static class UiText
         Button button => $"[button] {Label(button)}",
         SplitButton split => $"[split button] {Label(split)}",
         ProgressBar bar => $"[meter {bar.Value:0}%]",
+        TextEditor editor => EditorLine(editor),
         Image image => AutomationProperties.GetName(image) is { Length: > 0 } name ? $"[image] {Quote(name)}" : "[image]",
         TextBlock block when !IsInside<TextBox>(visual) && TextOf(block) is { Length: > 0 } text => Quote(text),
         _ => null,
     };
+
+    /// <summary>
+    /// An editor (DESIGN.md §18, "Project files"): its first lines, how many there are, and where its cursor and selection
+    /// are. What it holds inline, such as a change's peek, is listed under it.
+    /// </summary>
+    private static string EditorLine(TextEditor editor)
+    {
+        var document = editor.Document;
+        var lines = document?.LineCount ?? 0;
+        var caret = editor.TextArea.Caret;
+        var selected = editor.SelectionLength > 0 ? $", {editor.SelectionLength} selected" : "";
+        var text = document is null ? "" : string.Join('\n', document.Lines.Take(12).Select(document.GetText));
+        return $"[editor{(editor.IsReadOnly ? " read-only" : "")}, {lines} line{(lines == 1 ? "" : "s")}, caret {caret.Line}:{caret.Column}{selected}] {Quote(text)}";
+    }
 
     /// <summary>A text block's text, including one built from inlines (Markdown, runs with formatting).</summary>
     private static string? TextOf(TextBlock block) => block.Text is { Length: > 0 } text ? text : block.Inlines is { } inlines ? Flatten(inlines) : null;

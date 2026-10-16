@@ -1,0 +1,294 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ae="using:AvaloniaEdit"
+        xmlns:aeEditing="using:AvaloniaEdit.Editing"
+        xmlns:aeFolding="using:AvaloniaEdit.Folding"
+        xmlns:editor="using:Claudette.App.Views.Editor">
+  <!-- The Project Files tab's look (DESIGN.md §18, "Project files"): the explorer, the file tabs, the editor, the chip,
+       the banners and the peek. Under the "claude" class, the Claude style's rounder shapes. -->
+
+  <!-- The explorer: its own surface, as the sidebar has, with a divider on the side the editor is. -->
+  <Style Selector="Border.explorer">
+    <Setter Property="Background" Value="{DynamicResource SidebarBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+  </Style>
+  <Style Selector="Border.explorer.right">
+    <Setter Property="BorderThickness" Value="1,0,0,0" />
+  </Style>
+  <Style Selector="TextBlock.explorertitle">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="ListBox.explorerlist">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="0,0,0,8" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+  </Style>
+  <Style Selector="ListBox.explorerlist ListBoxItem">
+    <Setter Property="Padding" Value="8,2,6,2" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Margin" Value="4,0" />
+  </Style>
+  <Style Selector=".compact ListBox.explorerlist ListBoxItem">
+    <Setter Property="Padding" Value="8,1,6,1" />
+  </Style>
+  <Style Selector=".claude ListBox.explorerlist ListBoxItem">
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <!-- What git ignores, dimmed. -->
+  <Style Selector="Panel.explorerrow.ignored">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+  <!-- A file Claude deleted, in Show only changed files. -->
+  <Style Selector="TextBlock.deleted">
+    <Setter Property="TextDecorations" Value="Strikethrough" />
+  </Style>
+  <Style Selector="Path.rowicon">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="1.2" />
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- A changed file's letter, in the change colors; faint once it's reviewed. -->
+  <Style Selector="TextBlock.changeletter">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource ChangeModifiedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="6,0,2,0" />
+  </Style>
+  <Style Selector="TextBlock.changeletter.added">
+    <Setter Property="Foreground" Value="{DynamicResource ChangeAddedBrush}" />
+  </Style>
+  <Style Selector="TextBlock.changeletter.reviewed">
+    <Setter Property="Opacity" Value="0.4" />
+  </Style>
+  <Style Selector="Ellipse.changedinside">
+    <Setter Property="Fill" Value="{DynamicResource ChangeModifiedBrush}" />
+    <Setter Property="Width" Value="5" />
+    <Setter Property="Height" Value="5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="6,0,4,0" />
+  </Style>
+  <Style Selector="TextBox.findfile">
+    <Setter Property="Margin" Value="8,0,8,6" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector="Border.explorerheader">
+    <Setter Property="Padding" Value="12,6,4,6" />
+  </Style>
+
+  <!-- The file tabs' row over the editor: each tab its name, a dot while it has unsaved edits that's the × on hover. -->
+  <Style Selector="Border.filetabs">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="MinHeight" Value="32" />
+  </Style>
+  <Style Selector="Button.filetab">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Padding" Value="12,6,6,6" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Button.filetab.showing">
+    <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}" />
+  </Style>
+  <Style Selector="Button.filetab.showing /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}" />
+  </Style>
+  <Style Selector="Button.filetab TextBlock.tablabel">
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- The file showing in full text, the others muted. -->
+  <Style Selector="Button.filetab:not(.showing) TextBlock.tablabel">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <!-- The preview tab, in italics: the next file opened from the explorer takes its place. -->
+  <Style Selector="Button.filetab.preview TextBlock.tablabel">
+    <Setter Property="FontStyle" Value="Italic" />
+  </Style>
+  <Style Selector="Button.filetab Button.closefile">
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+  <Style Selector="Button.filetab.showing Button.closefile, Button.filetab:pointerover Button.closefile">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="Button.filetab.modified Button.closefile">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Button.filetab.modified:pointerover Button.closefile">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <Style Selector="Button.filetab Ellipse.unsaved">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Button.filetab.modified Ellipse.unsaved">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <Style Selector="Button.filetab.modified:pointerover Ellipse.unsaved">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Ellipse.unsaved">
+    <Setter Property="Width" Value="8" />
+    <Setter Property="Height" Value="8" />
+    <Setter Property="Margin" Value="5,0" />
+    <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector=".claude Button.filetab">
+    <Setter Property="CornerRadius" Value="8,8,0,0" />
+  </Style>
+
+  <!-- Over a file: its banner (changed or gone on disk), the question before files close, a save that failed. -->
+  <Style Selector="Border.filebanner">
+    <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,6" />
+  </Style>
+  <Style Selector="Border.filenote">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,4" />
+  </Style>
+  <!-- Edit, Inline changes, Side by side and Reviewed, while the file has changes. -->
+  <Style Selector="Border.modebar">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="8,3" />
+  </Style>
+  <!-- The mode showing is filled, the others plain, inside one outline -->
+  <Style Selector="Border.modes">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style Selector="Border.modes RadioButton">
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <!-- Whole file and Reviewed, each in an outline of its own like the modes' -->
+  <Style Selector="Border.modebar WrapPanel > ToggleButton">
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+  </Style>
+  <Style Selector="Border.modebar :is(ToggleButton)">
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="10,2" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="Border.modebar :is(ToggleButton):pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="Border.modebar :is(ToggleButton):checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+    <!-- The view's own text color, not the accent's white -->
+    <Setter Property="Foreground" Value="{Binding $parent[UserControl].Foreground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+  </Style>
+
+  <!-- The chip, at the editor's bottom right, over the text; it fades while the cursor's line is under it. -->
+  <Style Selector="Border.chip">
+    <Setter Property="Background" Value="{DynamicResource DialogBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="10,3" />
+    <Setter Property="Margin" Value="0,0,22,10" />
+    <Setter Property="MaxWidth" Value="340" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Bottom" />
+    <Setter Property="Opacity" Value="0.95" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.chip.faded">
+    <Setter Property="Opacity" Value="0.25" />
+  </Style>
+  <Style Selector=".reducemotion Border.chip">
+    <Setter Property="Transitions" Value="{x:Null}" />
+  </Style>
+  <Style Selector="Border.chip TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.chip Button.chippart">
+    <Setter Property="Padding" Value="2,0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- The editor: the code font comes from Settings → Appearance; the selection is a see-through tint. -->
+  <Style Selector="ae|TextEditor.codeeditor">
+    <Setter Property="LineNumbersForeground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="ae|TextEditor.codeeditor aeEditing|TextArea">
+    <Setter Property="SelectionBrush" Value="{DynamicResource EditorSelectionBrush}" />
+    <Setter Property="SelectionForeground" Value="{x:Null}" />
+    <Setter Property="SelectionBorder" Value="{x:Null}" />
+    <Setter Property="SelectionCornerRadius" Value="2" />
+  </Style>
+  <!-- The fold markers: muted outlines rather than AvaloniaEdit's white boxes, in full text under the pointer -->
+  <Style Selector="ae|TextEditor.codeeditor aeFolding|FoldingMargin">
+    <Setter Property="FoldingMarkerBrush" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="FoldingMarkerBackgroundBrush" Value="Transparent" />
+    <Setter Property="SelectedFoldingMarkerBrush" Value="{Binding $parent[ae:TextEditor].Foreground}" />
+    <Setter Property="SelectedFoldingMarkerBackgroundBrush" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <Style Selector="Border.gotoline">
+    <Setter Property="Background" Value="{DynamicResource DialogBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="6" />
+  </Style>
+
+  <!-- The peek under a change. -->
+  <Style Selector="Border.changepeek">
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ChangeModifiedBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,1" />
+    <Setter Property="Margin" Value="0,2,0,4" />
+  </Style>
+  <!-- The header's tab name goes to the change: a link's underline under the pointer, without a button's room -->
+  <Style Selector="Button.peeklink">
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.peeklink:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.peeklink:pointerover TextBlock">
+    <Setter Property="TextDecorations" Value="Underline" />
+  </Style>
+  <Style Selector="Border.peekold">
+    <Setter Property="Background" Value="{DynamicResource DiffRemovedBrush}" />
+  </Style>
+
+  <!-- With nothing open. -->
+  <Style Selector="StackPanel.nofile">
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Spacing" Value="8" />
+    <Setter Property="MaxWidth" Value="360" />
+  </Style>
+</Styles>

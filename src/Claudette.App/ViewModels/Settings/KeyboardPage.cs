@@ -67,7 +67,22 @@ public sealed partial class KeyboardPage : SettingsPage
     /// <summary>The keys that can't be rebound, listed under the shortcuts.</summary>
     public string FixedKeysText =>
         $"In the message box, {new KeyChord(ChordModifiers.Primary | ChordModifiers.Shift, "V").Display(Claudette.App.Services.Shortcuts.IsMac)} pastes text as it is, however long. "
-        + "In the new tab picker, 1–9 pick a folder; in the quick suffixes menu, 1–9 pick a suffix.";
+        + "In the new tab picker, 1–9 pick a folder; in the quick suffixes menu, 1–9 pick a suffix. "
+        + EditorKeysText;
+
+    /// <summary>The Project Files tab's own keys (DESIGN.md §18, "Project files", "Keyboard").</summary>
+    private static string EditorKeysText
+    {
+        get
+        {
+            var mac = Claudette.App.Services.Shortcuts.IsMac;
+            string Keys(ChordModifiers modifiers, string key) => new KeyChord(modifiers, key).Display(mac);
+            var replace = mac ? Keys(ChordModifiers.Primary | ChordModifiers.Alt, "F") : Keys(ChordModifiers.Primary, "H");
+            var files = mac ? $"{Keys(ChordModifiers.Primary | ChordModifiers.Alt, "Right")} and {Keys(ChordModifiers.Primary | ChordModifiers.Alt, "Left")}" : "Ctrl+PageDown and Ctrl+PageUp";
+            return $"In a Project Files tab, {Keys(ChordModifiers.Primary, "S")} saves the file and {Keys(ChordModifiers.Primary | ChordModifiers.Alt, "S")} every file, "
+                + $"{replace} replaces, Ctrl+G goes to a line, {(mac ? "Option" : "Alt")}+Z wraps long lines, and {files} go to the next and previous file.";
+        }
+    }
 
     private void SetSendKey(SendKey key)
     {

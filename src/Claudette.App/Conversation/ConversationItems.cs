@@ -459,6 +459,22 @@ public partial class ToolUseItem : ConversationItem
 
     public JsonObject Input { get; }
 
+    /// <summary>
+    /// The file a Read, Edit, Write, MultiEdit or NotebookEdit worked on, which its detail's <b>Open</b> opens (DESIGN.md
+    /// §18, "Project files", "Opening files in the editor"); null for other tools.
+    /// </summary>
+    public string? FilePath => Name is "Read" or "Edit" or "Write" or "MultiEdit" or "NotebookEdit"
+        ? Str(Input, "file_path") ?? Str(Input, "notebook_path")
+        : null;
+
+    public bool CanOpenFile => FilePath is { Length: > 0 };
+
+    /// <summary>The line to open the file at: an edit's first changed line, from its <c>structuredPatch</c>, or where a Read started.</summary>
+    public int? FileLine => ChangedLine ?? (Name == "Read" && ResultInfo is { } read ? read.StartLine : null);
+
+    /// <summary>The first line an Edit or Write changed, from its result's <c>structuredPatch</c>.</summary>
+    private int? ChangedLine { get; set; }
+
     public string Summary { get; }
 
     /// <summary>
@@ -600,6 +616,7 @@ public partial class ToolUseItem : ConversationItem
             if (result["structuredPatch"] is JsonArray { Count: > 0 } patch)
             {
                 Diff = DiffView.FromStructuredPatch(patch);
+                ChangedLine = FirstChangedLine(patch);
             }
             else if (Name == "Write" && Str(result, "type") == "create" && Str(result, "content") is { } content)
             {
@@ -713,6 +730,17 @@ public partial class ToolUseItem : ConversationItem
     };
 
     protected static string? Str(JsonObject obj, string name) => obj.GetString(name);
+
+    /// <summary>The first line a <c>structuredPatch</c> changed: its first hunk's start, past the unchanged lines leading it.</summary>
+    private static int? FirstChangedLine(JsonArray patch)
+    {
+        if (patch[0] is not JsonObject hunk || hunk["newStart"].AsWholeNumber() is not { } start)
+        {
+            return null;
+        }
+        var context = hunk["lines"] is JsonArray lines ? lines.TakeWhile(l => l is JsonValue value && value.TryGetValue<string>(out var line) && line.StartsWith(' ')).Count() : 0;
+        return (int)Math.Max(1, start + context);
+    }
 
     protected static string? FirstLine(string? text)
     {

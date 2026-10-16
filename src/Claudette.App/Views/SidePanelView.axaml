@@ -125,7 +125,8 @@
                     <MenuItem Header="Open diff" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileDiffCommand}" CommandParameter="{Binding}" />
                     <MenuItem Header="Open in diff tool" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInDiffToolCommand}" CommandParameter="{Binding}"
                               IsVisible="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.HasDiffTool}" />
-                    <MenuItem Header="Open in editor" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInEditorCommand}" CommandParameter="{Binding}" />
+                    <MenuItem Header="Open" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInEditorCommand}" CommandParameter="{Binding}" />
+                    <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInSystemCommand}" CommandParameter="{Binding}" />
                     <MenuItem Header="Reveal in folder" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFileCommand}" CommandParameter="{Binding}" />
                     <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.CopyFilePathCommand}" CommandParameter="{Binding}" />
                   </ContextMenu>

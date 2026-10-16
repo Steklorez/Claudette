@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ae="using:AvaloniaEdit"
+             x:Class="Claudette.App.Views.Editor.CodeEditor">
+  <!-- An open file's editor (DESIGN.md §18, "Project files", "The editor"): AvaloniaEdit, in the code font and size from
+       Settings → Appearance, colored as the diff view colors code. Its look is in ProjectFilesView's styles. -->
+  <Panel>
+    <ae:TextEditor x:Name="Editor" Classes="codeeditor"
+                   FontFamily="{DynamicResource MonoFont}" FontSize="{DynamicResource CodeFontSize}"
+                   ShowLineNumbers="True" Background="Transparent"
+                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                   MinWidth="120" MinHeight="60"
+                   AutomationProperties.Name="Editor" />
+    <!-- Go to line (Ctrl+G) -->
+    <Border x:Name="GoToLineBox" Classes="gotoline" IsVisible="False" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBox x:Name="GoToLineText" Width="220" PlaceholderText="Go to line" AutomationProperties.Name="Go to line" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

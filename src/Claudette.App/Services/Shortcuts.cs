@@ -115,6 +115,9 @@ public sealed class ShortcutTips(AppSettings settings) : ObservableObject
         ? $"Messages put aside with Stash ({shortcut}), which every tab shares"
         : "Messages put aside with Stash, which every tab shares";
 
+    /// <summary>The Project Files tab's <b>Find file</b> (DESIGN.md §18, "Project files").</summary>
+    public string GoToFile => Tip("Find a file by name", KeyboardShortcuts.GoToFile);
+
     public string CollapseSidebar => Tip("Collapse the sidebar", KeyboardShortcuts.ToggleSidebar);
 
     public string ExpandSidebar => Tip("Expand the sidebar", KeyboardShortcuts.ToggleSidebar);

@@ -15,6 +15,9 @@
     <!-- Also what LiveMarkdown uses; the diff view highlights code with it. -->
     <PackageVersion Include="TextMateSharp" Version="2.0.4" />
     <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.4" />
+    <!-- The Project Files tab's editor (DESIGN.md §18, "Project files"). AvaloniaEdit.TextMate takes TextMateSharp 2.0.3 or later. -->
+    <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+    <PackageVersion Include="AvaloniaEdit.TextMate" Version="12.0.0" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />

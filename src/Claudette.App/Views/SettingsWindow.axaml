@@ -104,6 +104,9 @@
           <DataTemplate DataType="settings:DiffToolPage">
             <pages:DiffToolPageView />
           </DataTemplate>
+          <DataTemplate DataType="settings:EditorPage">
+            <pages:EditorPageView />
+          </DataTemplate>
           <DataTemplate DataType="settings:ProjectToolsPage">
             <pages:ProjectToolsPageView />
           </DataTemplate>

@@ -61,13 +61,29 @@ public static class AtomicFile
     }
 
     /// <summary>
+    /// The file a link at <paramref name="path"/> leads to; null for a file that isn't a link, or isn't there (a deleted
+    /// file being written back).
+    /// </summary>
+    private static string? LinkTarget(string path)
+    {
+        try
+        {
+            return new FileInfo(path).ResolveLinkTarget(returnFinalTarget: true)?.FullName;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Replaces the contents of a file of the user's, as <see cref="WriteAllText"/> does, without changing what it is: a
     /// symbolic link is written through, to the file it points to, rather than replaced by a file, and on macOS and
     /// Linux the file keeps its permissions, such as being executable.
     /// </summary>
     public static void ReplaceContents(string path, ReadOnlySpan<byte> bytes)
     {
-        var target = new FileInfo(path).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? Path.GetFullPath(path);
+        var target = LinkTarget(path) ?? Path.GetFullPath(path);
         var temp = TempPath(target);
         try
         {

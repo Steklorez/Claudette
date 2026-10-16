@@ -3,17 +3,21 @@ using Claudette.App.Conversation;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
 using Claudette.Core.Protocol;
+using Claudette.Core.Settings;
 using LiveMarkdown.Avalonia;
 
 namespace Claudette.App.Tests;
 
 /// <summary>
 /// Files named in replies (DESIGN.md §18, "Files named in Claude's replies"): a click on a link to one, or on inline code
-/// that names one, opens it in the OS's app, shows a program in its folder instead, offers a menu when a name matches
-/// several files, and says so when there's none.
+/// that names one, opens it in the OS's app (with Settings → Editor so set; in the editor by default, ProjectFilesOpeningTests),
+/// shows a program in its folder instead, offers a menu when a name matches several files, and says so when there's none.
 /// </summary>
 public class ReplyFileTests
 {
+    /// <summary>Settings → Editor → Open files in the app the OS uses, as before the editor (DESIGN.md §18, "Project files").</summary>
+    private static void OpenInSystem(AppSettings settings) => settings.Editor.OpenFilesIn = OpenFilesIn.System;
+
     private const string Result = """{"type":"result","subtype":"success","is_error":false,"session_id":"s1","duration_ms":1200}""";
 
     /// <summary>A click on a link in a reply's Markdown, as LiveMarkdown's renderer passes it.</summary>
@@ -52,7 +56,7 @@ public class ReplyFileTests
     [Fact]
     public async Task A_link_to_a_file_in_the_tabs_folder_opens_it_in_the_oss_app()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(OpenInSystem);
         var tab = await h.OpenTabAsync();
         var spec = Write(Path.Combine(h.WorkFolder, "docs", "specs", "weapons.md"));
 
@@ -81,7 +85,7 @@ public class ReplyFileTests
     [Fact]
     public async Task A_program_or_script_shows_in_its_folder_instead_of_running_and_a_folder_opens_as_one()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(OpenInSystem);
         var tab = await h.OpenTabAsync();
         Write(Path.Combine(h.WorkFolder, "docs", "check.bat"));
         Write(Path.Combine(h.WorkFolder, "tools", "build.py"));
@@ -99,7 +103,7 @@ public class ReplyFileTests
     [Fact]
     public async Task A_name_is_the_file_the_session_worked_on_and_opens_from_its_inline_code()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(OpenInSystem);
         var tab = await h.OpenTabAsync();
         var spec = Path.Combine(h.WorkFolder, "docs", "specs", "weapons.md");
         // Another file with the name, which the session didn't touch.
@@ -121,7 +125,7 @@ public class ReplyFileTests
     [Fact]
     public async Task A_name_that_matches_several_project_files_offers_them_in_a_menu()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(OpenInSystem);
         var tab = await h.OpenTabAsync();
         Write(Path.Combine(h.WorkFolder, "docs", "weapons.md"));
         var plugin = Write(Path.Combine(h.WorkFolder, "Plugins", "Combat", "weapons.md"));

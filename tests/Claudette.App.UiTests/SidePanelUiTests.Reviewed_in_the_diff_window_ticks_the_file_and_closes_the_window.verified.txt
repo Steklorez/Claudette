@@ -2,7 +2,7 @@
 "+1 −0"
 [toggle] Side by side
 [toggle] Whole file
-[button] Open in editor
+[button] Open
 [button] Revert file
 [button] More actions: …
 [button] Reviewed

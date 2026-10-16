@@ -152,23 +152,29 @@
     <!-- An open tile's detail: the call in full, with Open diff for a file change and its own window (DESIGN.md §18). -->
     <DataTemplate x:Key="ToolDetail" x:DataType="conv:ToolUseItem">
       <StackPanel Spacing="6">
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="4">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="4">
           <TextBlock Classes="small" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding FullSummary}">
             <Run FontWeight="SemiBold" Text="{Binding Name}" />
             <Run Foreground="{DynamicResource MutedTextBrush}" Text="{Binding Summary}" />
           </TextBlock>
+          <!-- The file it worked on, in the editor at its line or the OS's app (DESIGN.md §18, "Project files") -->
+          <Button Grid.Column="1" Classes="flat" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding CanOpenFile}"
+                  ToolTip.Tip="{Binding FilePath}" AutomationProperties.Name="Open the file"
+                  Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenToolFileCommand}" CommandParameter="{Binding}">
+            <TextBlock Classes="muted small" Text="Open" />
+          </Button>
           <!-- Edit / Write: the file in the diff view (DESIGN.md §5, §8) -->
-          <Button Grid.Column="1" Classes="flat" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding CanOpenDiff}"
+          <Button Grid.Column="2" Classes="flat" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding CanOpenDiff}"
                   ToolTip.Tip="Open in the diff view" AutomationProperties.Name="Open in the diff view"
                   Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenToolDiffCommand}" CommandParameter="{Binding}">
             <TextBlock Classes="muted small" Text="Open diff" />
           </Button>
-          <Button Grid.Column="2" Classes="flat" Padding="6,4" VerticalAlignment="Center" ToolTip.Tip="Open in a window that follows the call"
+          <Button Grid.Column="3" Classes="flat" Padding="6,4" VerticalAlignment="Center" ToolTip.Tip="Open in a window that follows the call"
                   AutomationProperties.Name="Open in a window"
                   Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenToolWindowCommand}" CommandParameter="{Binding}">
             <Path Classes="toolicon" Data="{StaticResource IconOpenWindow}" />
           </Button>
-          <Button Grid.Column="3" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ToggleCommand}"
+          <Button Grid.Column="4" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ToggleCommand}"
                   ToolTip.Tip="Close" AutomationProperties.Name="Close the call's detail">
             <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
           </Button>
