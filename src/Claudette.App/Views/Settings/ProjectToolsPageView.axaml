@@ -7,7 +7,7 @@
   <StackPanel Spacing="12">
     <TextBlock Classes="section" Text="Project tools" />
     <TextBlock Classes="muted small" TextWrapping="Wrap"
-               Text="When a tab's folder holds a project Claudette knows, such as an Unreal Engine project, the sidebar gets a row for the project, above Links, with its actions: launch the editor, generate project files, build. These settings stay on this machine." />
+               Text="When a tab's folder holds a project Claudette knows, such as an Unreal Engine project, the sidebar's foot gets a row for the project, whose menu has its actions and links: launch the editor, generate project files, build. These settings stay on this machine." />
     <TextBlock Text="Unreal Engine" FontWeight="SemiBold" />
     <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto" RowSpacing="10">
       <TextBlock Classes="label" Text="Default editor configuration" />

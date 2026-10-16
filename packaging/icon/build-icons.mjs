@@ -4,6 +4,7 @@
 //   packaging/icon/claudette.svg              the icon as vectors, also Rider's project icon (.idea/.idea.Claudette/.idea/icon.svg)
 //   packaging/icon/claudette-1024.png         the macOS icon, on an ivory tile; build-dmg.sh scales it
 //   src/Claudette.App/Assets/claudette.ico    the window and executable icon
+//   docs/assets/claudette.svg, favicon.ico    the user guide's logo and favicon (GUIDE.md, "The site")
 //   packaging/windows/Assets/*.png            the MSIX logos, and the taskbar's unplated sizes
 //   src/Claudette.App/Assets/AppIcon/*.png    the animations' frames (DESIGN.md §10): the taskbar overlay's pulsing
 //                                             spark and running hourglass, and the Dock icon typing, waving and
@@ -460,6 +461,8 @@ write('packaging/icon/claudette.svg', svg());
 write('.idea/.idea.Claudette/.idea/icon.svg', svg());
 write('packaging/icon/claudette-1024.png', png(macIcon()));
 write('src/Claudette.App/Assets/claudette.ico', ico([16, 20, 24, 32, 40, 48, 64, 128, 256].map(size => icon(size))));
+write('docs/assets/claudette.svg', svg());
+write('docs/assets/favicon.ico', ico([16, 32, 48].map(size => icon(size))));
 
 const assets = 'packaging/windows/Assets';
 for (const size of [16, 20, 24, 30, 32, 36, 40, 48, 64, 256]) {

@@ -1,0 +1,42 @@
+name: Docs
+
+# Checks the user guide (GUIDE.md, "The site"): builds docs/ with the gems GitHub Pages uses, then checks the built
+# site's internal links and pictures, so a broken link, a missing picture or one without alt text fails here rather
+# than reaching the site. It doesn't publish: GitHub Pages builds and publishes docs/ from main itself.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: docs
+      - name: Build
+        env:
+          # The Downloads page lists the releases through the GitHub API.
+          JEKYLL_GITHUB_TOKEN: ${{ github.token }}
+          PAGES_REPO_NWO: ${{ github.repository }}
+        run: bundle exec jekyll build
+      - name: Check links and pictures
+        run: bundle exec htmlproofer _site --disable-external --no-enforce-https

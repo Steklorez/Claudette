@@ -1,0 +1,372 @@
+<#
+.SYNOPSIS
+Takes the user guide's screenshots (Windows): the demo from claudette-demo in the Standard style, dark then light, each
+picture cropped to the part of Claudette the page describes.
+
+.DESCRIPTION
+GUIDE.md ("Pictures") says what the pictures are. Each shot is a name (<chapter>/<picture>), the steps to it and the part of the window
+to crop to, from the control's UI Automation bounds with a margin; it's saved as <Out>\<chapter>\<picture>-<theme>.png.
+For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so no account and no tokens) three times:
+- signed out (FAKE_CLAUDE_LOGGED_IN=0), for the sign-in screen;
+- as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
+  alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
+  side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window and the Settings window;
+- and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
+  a permission waiting (ASK_PERMISSION) and a process for the process monitor (SPAWN).
+Claudette is closed by its window, as a user would, each time. Captures go through PrintWindow, so other windows over
+Claudette's don't matter, and clicks through UI Automation. Keys and the pointer, which need the window in front, are
+used only for the command palette (Ctrl+Shift+P) and the tab's info card (hovering its row).
+
+.PARAMETER Projects
+Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing
+about you, such as C:\Demo. It must be empty, or one claudette-demo made.
+
+.PARAMETER Only
+The shots to take, by name (tabs/sidebar) or chapter (tabs). Every shot by default.
+
+.PARAMETER Themes
+The themes to take them in.
+
+.EXAMPLE
+tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo
+
+.EXAMPLE
+tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo -Only tabs/sidebar, usage -Themes dark
+#>
+param(
+    [Parameter(Mandatory)] [string] $Projects,
+    [string] $Out = (Join-Path $PSScriptRoot '..\..\docs\screenshots\guide'),
+    [string] $Work = (Join-Path ([IO.Path]::GetTempPath()) 'claudette-demo'),
+    [string[]] $Only = @(),
+    [string[]] $Themes = @('dark', 'light'),
+    # How long Claudette gets to start and restore its tabs before the first click.
+    [int] $SettleSeconds = 10
+)
+
+$ErrorActionPreference = 'Stop'
+$repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+New-Item -ItemType Directory -Force $Out | Out-Null
+$Out = (Resolve-Path $Out).Path
+
+Import-Module (Join-Path $PSScriptRoot 'Screenshots.psm1') -Force -DisableNameChecking
+$build = Build-Claudette $repo
+$failed = @()
+
+# Whether any of the shots is one to take.
+function Test-Wanted([string[]] $names) {
+    foreach ($name in $names) {
+        if ($Only.Count -eq 0) { return $true }
+        foreach ($wanted in $Only) { if ($name -eq $wanted -or $name.StartsWith("$wanted/")) { return $true } }
+    }
+    $false
+}
+
+# Starts Claudette on the demo afresh in the theme, runs $steps with $window and $claudette set, and closes it.
+function Use-Claudette([hashtable] $environment, [scriptblock] $steps) {
+    New-DemoContent $build.Demo $Work $Projects 'standard' $theme
+    $script:claudette = Start-Claudette $build.App $Work $environment
+    try {
+        $script:window = $claudette.MainWindowHandle
+        Start-Sleep -Seconds $SettleSeconds
+        # Away from the window, so nothing under the pointer is lit.
+        [WindowShot]::MovePointer(5, 5)
+        & $steps
+    }
+    finally {
+        Stop-Claudette $claudette
+    }
+}
+
+# One shot: $steps gets the path to save the picture to.
+function Shot([string] $name, [scriptblock] $steps) {
+    if (-not (Test-Wanted $name)) { return }
+    $path = Join-Path $Out "$name-$theme.png"
+    New-Item -ItemType Directory -Force (Split-Path $path) | Out-Null
+    Write-Host "  $name"
+    try {
+        & $steps $path
+    }
+    catch {
+        Write-Warning "$name ($theme): $_"
+        $script:failed += "$name ($theme)"
+    }
+}
+
+# A tab loads its session when it's first shown: visit each, then come back to Grappling hook.
+function Show-Tabs {
+    $tabs = 'Stamina drains twice on clients', 'Inventory loses items on save', 'Move to the Input System', 'UI on the Input System',
+        'Gamepad rumble', 'Pool particle emitters', 'Grappling hook'
+    foreach ($text in $tabs) {
+        Invoke-ByText $window $text
+        Start-Sleep -Seconds 2
+    }
+}
+
+# Opens Settings, which is a window of its own, and returns it.
+function Open-Settings {
+    Invoke-ByText $window 'Settings'
+    Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } 'the Settings window' 20
+    Start-Sleep -Seconds 2
+    [WindowShot]::OtherWindow($claudette.Id, $window)
+}
+
+# The side panel, down to the bottom of $last (a control on its page) when that's given, or $height device-independent
+# pixels from its top: a page is often much shorter than the panel.
+function Get-PanelRect($last = $null, [int] $height = 0) {
+    $panel = Get-Parent (Find-ByText $window 'Close side panel')
+    $rect = $panel.Current.BoundingRectangle
+    $scale = [WindowShot]::Scale($window)
+    $bottom = 0
+    if ($last) { $bottom = $last.Current.BoundingRectangle.Bottom + 12 * $scale }
+    elseif ($height) { $bottom = $rect.Top + $height * $scale }
+    if ($bottom) { $rect = New-Object System.Windows.Rect($rect.Left, $rect.Top, $rect.Width, ($bottom - $rect.Top)) }
+    $rect
+}
+
+# Shows the side panel of the selected tab if it's hidden.
+function Show-SidePanel {
+    if (Find-ByText $window 'Show the side panel' -Optional) {
+        Invoke-ByText $window 'Show the side panel'
+        Start-Sleep -Seconds 1
+    }
+}
+
+# Opens a page of the side panel, such as Scratch Pad, in the tab.
+function Show-SidePage([string] $tab, [string] $page) {
+    Invoke-ByText $window $tab
+    Start-Sleep -Seconds 2
+    Show-SidePanel
+    Invoke-ByText $window $page
+    Start-Sleep -Seconds 2
+}
+
+foreach ($theme in $Themes) {
+    Write-Host "standard $theme"
+
+    # Signed out.
+    if (Test-Wanted 'getting-started/sign-in') {
+        Use-Claudette @{ FAKE_CLAUDE_LOGGED_IN = '0' } {
+            Shot 'getting-started/sign-in' {
+                param($path)
+                Wait-Until { Find-ByText $window 'Sign in' -Optional } 'the sign-in screen' 30
+                Start-Sleep -Seconds 1
+                [WindowShot]::Save($window, $path, 0)
+            }
+        }
+    }
+
+    # As the demo is.
+    if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
+        'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'usage/usage-window',
+        'settings/settings-window', 'settings/appearance', 'accounts/settings-accounts', 'project-files/files-tab') {
+        Use-Claudette @{} {
+            Show-Tabs
+
+            # The picker, which has the older projects as recent folders.
+            Shot 'getting-started/new-tab' {
+                param($path)
+                Invoke-ByText $window 'New tab'
+                Wait-Until { Find-ById $window 'SearchBox' } 'the new tab picker' 20
+                Start-Sleep -Seconds 1
+                Save-Element $window $path (Get-Parent (Find-ById $window 'SearchBox')) 12
+                Invoke-ByText $window 'Cancel'
+                Start-Sleep -Seconds 1
+            }
+
+            # From the top of the first group to Settings under the last.
+            Shot 'tabs/sidebar' {
+                param($path)
+                Save-Elements $window $path ((Find-ByText $window 'New tab'), (Find-ById $window 'GroupList'), (Find-ByText $window 'Settings')) 10
+            }
+
+            # The card over a tab's row once the pointer has rested on it: a window of its own.
+            Shot 'tabs/info-card' {
+                param($path)
+                $row = (Find-ByText $window 'Grappling hook').Current.BoundingRectangle
+                [WindowShot]::MovePointer([int] ($row.Left + 30), [int] ($row.Top + 10))
+                Start-Sleep -Milliseconds 300
+                [WindowShot]::MovePointer([int] ($row.Left + 40), [int] ($row.Top + 10))
+                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } "the tab's info card" 20
+                Start-Sleep -Seconds 1
+                [WindowShot]::Save([WindowShot]::OtherWindow($claudette.Id, $window), $path, 0)
+                [WindowShot]::MovePointer(5, 5)
+                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -eq [IntPtr]::Zero } "the info card to go" 20
+            }
+
+            Shot 'tabs/command-palette' {
+                param($path)
+                Send-Keys $window 'Ctrl+Shift+P'
+                Wait-Until { Find-ByText $window 'Command palette' -Optional } 'the command palette' 20
+                Start-Sleep -Seconds 1
+                Save-Element $window $path (Get-Parent (Find-ByText $window 'Command palette')) 12
+                Send-Keys $window 'Esc'
+                Wait-Until { -not (Find-ByText $window 'Command palette' -Optional) } 'the command palette to close' 20
+            }
+
+            # The card has no control of its own: its tiles, with room around them for its header and edge.
+            Shot 'conversation/tool-calls' {
+                param($path)
+                Invoke-ByText $window 'Grappling hook'
+                Start-Sleep -Seconds 2
+                $tiles = Get-Parent (Find-ByText $window ('Write ' + (Join-Path $Projects 'starfall\Source\Starfall\Abilities\GrappleComponent.h')))
+                Show-Element $window $tiles (Find-ById $window 'ConversationScroll') 50
+                Start-Sleep -Seconds 1
+                Save-Element $window $path $tiles @(19, 36, 12, 14)
+            }
+
+            # The bar, the message box and the status line under it.
+            Shot 'composer/composer' {
+                param($path)
+                Invoke-ByText $window 'Grappling hook'
+                Start-Sleep -Seconds 2
+                # Room above for Claudette, who stands on its edge.
+                Save-Element $window $path (Find-ById $window 'ComposerPanel') @(6, 46, 6, 6)
+            }
+
+            Shot 'changes/changed-files' {
+                param($path)
+                Show-SidePage 'Grappling hook' 'Changed Files'
+                $rows = (Find-ById $window 'ChangedFilesList').FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
+                Save-Rect $window $path (Get-PanelRect $rows[$rows.Count - 1]) 0
+            }
+
+            Shot 'project-tools/project-page' {
+                param($path)
+                Show-SidePage 'Grappling hook' 'Project'
+                Save-Rect $window $path (Get-PanelRect (Find-Lowest (Get-Parent (Find-ByText $window 'Close side panel')))) 0
+            }
+
+            Shot 'usage/usage-window' {
+                param($path)
+                Invoke-ByText $window 'Usage details'
+                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } 'the Usage window' 20
+                Start-Sleep -Seconds 3
+                $usage = [WindowShot]::OtherWindow($claudette.Id, $window)
+                [WindowShot]::Save($usage, $path, 0)
+                Close-Window $usage
+                Start-Sleep -Seconds 1
+            }
+
+            Shot 'settings/settings-window' {
+                param($path)
+                $settings = Open-Settings
+                Select-ListItem $settings 'General'
+                Start-Sleep -Seconds 1
+                [WindowShot]::Save($settings, $path, 0)
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+            }
+
+            Shot 'settings/appearance' {
+                param($path)
+                $settings = Open-Settings
+                Select-ListItem $settings 'Appearance'
+                Start-Sleep -Seconds 1
+                [WindowShot]::Save($settings, $path, 0)
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+            }
+
+            Shot 'accounts/settings-accounts' {
+                param($path)
+                $settings = Open-Settings
+                Select-ListItem $settings 'Accounts'
+                Start-Sleep -Seconds 1
+                [WindowShot]::Save($settings, $path, 0)
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+            }
+
+            # The notes go in the project's pad, which every tab of it shares.
+            Shot 'conversation/scratch-pad' {
+                param($path)
+                Show-SidePage 'Grappling hook' 'Scratch Pad'
+                Set-ElementText (Find-ByType $window 'Edit' 'Scratch pad') "- Let go when the player jumps, or past Range`n- Try AirControl 0.6 with a gamepad: does the swing feel right?`n- Create IA_Grapple in the editor and assign it to Grapple Action`n- Ask Claude about a cooldown"
+                Start-Sleep -Seconds 2
+                Save-Rect $window $path (Get-PanelRect -height 330) 0
+            }
+
+            # Last, as it takes the layout with it: the group's Files tab, with a changed file open to show Claude's marks.
+            Shot 'project-files/files-tab' {
+                param($path)
+                Invoke-ByText $window 'Project files'
+                Start-Sleep -Seconds 3
+                Send-Keys $window 'Ctrl+P'
+                Wait-Until { Find-ById $window 'FindBox' } 'the file finder' 20
+                Set-ElementText (Find-ById $window 'FindBox') 'StarfallCharacter.cpp'
+                Start-Sleep -Seconds 2
+                Send-Keys $window 'Enter'
+                Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
+                Start-Sleep -Seconds 3
+                [WindowShot]::Save($window, $path, 0)
+            }
+        }
+    }
+
+    # Sending prompts, which stay in the conversations: each in its own tab.
+    if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-card', 'tabs/processes') {
+        Use-Claudette @{} {
+            Show-Tabs
+
+            # First, as Claudette says "Another tab needs you" over the composer once one does, which a limit shows beside.
+            Shot 'usage/limit' {
+                param($path)
+                Invoke-ByText $window 'UI on the Input System'
+                Start-Sleep -Seconds 2
+                Send-Message $window 'LIMIT 30'
+                Wait-Until { Find-ByText $window 'Play a game while you wait' -Optional } 'the limit' 30
+                Start-Sleep -Seconds 2
+                Save-Elements $window $path ((Find-ByText $window 'LIMIT 30'), (Find-ById $window 'ComposerPanel')) @(20, 40, 12, 4)
+            }
+
+            # A turn that changed files ends with the Modified files card and the Turn card under it: an Edit on two files.
+            Shot 'conversation/turn-end' {
+                param($path)
+                Invoke-ByText $window 'Grappling hook'
+                Start-Sleep -Seconds 2
+                $source = Join-Path $Projects 'starfall\Source\Starfall'
+                Send-Message $window ('EDIT_FILE ' + (Join-Path $source 'Player\StarfallCharacter.h') + ' | ' + (Join-Path $source 'Abilities\GrappleComponent.cpp'))
+                Wait-Until { Find-ByPrefix $window 'What this turn changed in' } 'the Modified files card' 30
+                Wait-Until { Find-ByPrefix $window '5.2k in' } 'the Turn card' 30
+                Start-Sleep -Seconds 2
+                $tiles = Get-Parent (Find-ByPrefix $window 'What this turn changed in')
+                Save-Elements $window $path @($tiles, (Find-ByPrefix $window '5.2k in')) @(19, 36, 12, 8)
+            }
+
+            # The card's edge isn't a control's: its text and buttons, with room around them.
+            Shot 'permissions/permission-card' {
+                param($path)
+                Invoke-ByText $window 'Gamepad rumble'
+                Start-Sleep -Seconds 2
+                Send-Message $window 'ASK_PERMISSION'
+                Wait-Until { Find-ByText $window 'Allow this command?' -Optional } 'the permission card' 30
+                Start-Sleep -Seconds 1
+                Save-Elements $window $path ((Find-ByText $window 'Allow this command?'), (Find-ByText $window 'Allow'), (Find-ByPrefix $window 'Deny with a message')) @(19, 32, 19, 10)
+            }
+
+            # The process monitor is off by default: turn it on in Settings, then start a process that outlasts the turn.
+            Shot 'tabs/processes' {
+                param($path)
+                Invoke-ByText $window 'Inventory loses items on save'
+                Start-Sleep -Seconds 2
+                $settings = Open-Settings
+                Select-ListItem $settings 'Processes'
+                Start-Sleep -Seconds 1
+                Set-Toggle $settings 'Show the process monitor' $true
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+                Send-Message $window 'SPAWN 600'
+                Show-SidePanel
+                Wait-Until { Find-ByText $window 'Processes' -Optional } 'the Processes page' 30
+                Invoke-ByText $window 'Processes'
+                Start-Sleep -Seconds 2
+                Wait-Until { Find-ByText $window '--child 600' -Optional } 'the spawned process' 60
+                Start-Sleep -Seconds 3
+                Save-Rect $window $path (Get-PanelRect (Find-ByText $window '--child 600')) 0
+            }
+        }
+    }
+}
+
+if ($failed) { Write-Warning "Not taken: $($failed -join ', ')." }
+Write-Host "Saved to $Out"

@@ -1,0 +1,17 @@
+# For previewing the user guide (GUIDE.md, "Previewing it"): github-pages pins Jekyll and its plugins to the versions
+# GitHub Pages builds the site with. The theme, Just the Docs, comes through jekyll-remote-theme, pinned in _config.yml.
+source "https://rubygems.org"
+
+gem "github-pages", "~> 232", group: :jekyll_plugins
+
+group :checks do
+  # docs.yml checks the built site's internal links and pictures.
+  gem "html-proofer", "~> 5.0"
+end
+
+# jekyll serve on Ruby 3, and Windows' time zones and file watching.
+gem "webrick", "~> 1.9"
+platforms :windows do
+  gem "tzinfo-data"
+  gem "wdm", "~> 0.2"
+end

@@ -1,0 +1,49 @@
+{%- comment -%}
+  One release's packages (GUIDE.md, "The Downloads page"): {% include release.html release=r buttons=true %}.
+  package.yml names them Claudette-<version>-<x64|arm64>.<msix|dmg>: the extension says the OS, the name the processor.
+  Anything else attached to the release is listed under Other files.
+{%- endcomment -%}
+{%- assign release = include.release -%}
+{%- assign kinds = "msix:x64:Windows:x64 (Intel or AMD),msix:arm64:Windows:Arm64,dmg:arm64:macOS:Apple silicon,dmg:x64:macOS:Intel" | split: "," -%}
+{%- if include.buttons -%}
+<p class="download-buttons">
+{%- for kind in kinds -%}
+  {%- assign part = kind | split: ":" -%}
+  {%- assign suffix = "-" | append: part[1] | append: "." | append: part[0] -%}
+  {%- for asset in release.assets -%}
+    {%- if asset.name contains suffix and asset.name contains "Claudette-" -%}
+  <a class="btn btn-primary" href="{{ asset.browser_download_url }}">{{ part[2] }}, {{ part[3] }}</a>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+</p>
+{%- endif %}
+<table class="release-assets">
+  <thead><tr><th>Package</th><th>File</th><th>SHA-256</th></tr></thead>
+  <tbody>
+{%- for kind in kinds -%}
+  {%- assign part = kind | split: ":" -%}
+  {%- assign suffix = "-" | append: part[1] | append: "." | append: part[0] -%}
+  {%- for asset in release.assets -%}
+    {%- if asset.name contains suffix and asset.name contains "Claudette-" %}
+    <tr>
+      <td>{{ part[2] }}, {{ part[3] }}</td>
+      <td><a href="{{ asset.browser_download_url }}">{{ asset.name }}</a> ({{ asset.size | divided_by: 1048576.0 | round: 1 }} MB)</td>
+      <td>{% if asset.digest %}{{ asset.digest | remove_first: "sha256:" }}{% else %}—{% endif %}</td>
+    </tr>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor %}
+  </tbody>
+</table>
+{%- assign others = "" | split: "" -%}
+{%- for asset in release.assets -%}
+  {%- assign ext = asset.name | split: "." | last -%}
+  {%- unless asset.name contains "Claudette-" and ext == "msix" or ext == "dmg" -%}
+    {%- assign others = others | push: asset -%}
+  {%- endunless -%}
+{%- endfor -%}
+{%- if others.size > 0 %}
+<p>Other files:
+{%- for asset in others %} <a href="{{ asset.browser_download_url }}">{{ asset.name }}</a>{% unless forloop.last %},{% endunless %}{% endfor %}</p>
+{%- endif %}

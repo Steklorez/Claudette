@@ -1,0 +1,70 @@
+---
+title: The usage header
+parent: Usage and limits
+nav_order: 1
+---
+
+# The usage header
+
+The strip across the top of the window shows how much of your plan's limits you've used, how fast you're using them, and when you'll hit the limit at that rate. It's there whichever tab is selected, and it keeps up even when no tab is working.
+
+{% include shot.html name="standard" alt="Claudette's window with the usage header across the top: the session meter and its countdown, a small chart, the weekly meters and the line that says where the session is heading" %}
+
+## What's in it
+
+- **Session** is the most prominent meter: a bar, the percent used, and a countdown such as *resets in 2h 14m*. A session is a 5-hour window. Hover over it for the clock time it resets.
+- **The trendline** is a small chart beside it of this window's usage so far. A dotted line carries the current rate forward to show where the window is heading, and faint dashed lines mark the warning and alert levels.
+- **The line under the session meter** says in words where that's heading. See below.
+- **Weekly** meters are smaller and stacked, with the limit across all models on top. Each shows its percent and when it resets (*resets Thu 9:00 AM*). Hover over one for the full reset time.
+- **Model meters** sit under **Weekly**: one for each weekly limit your plan has for a particular model, named for the model.
+
+## Colors and warning levels
+
+A meter turns amber at the warning level, 75% by default, and red at the alert level, 90% by default. The percent beside it takes the color too. The same two levels apply to every meter, and to the [alerts](alerts.md).
+
+## The line under the session meter
+
+It's one of these:
+
+- *At this rate you'll hit the limit in 1h 05m, 1h 09m before it resets.* In amber or red. At the pace of the last half hour, you'd reach 100% before the window resets.
+- *On track: about 70% used when the session resets.* At that pace, you'd get through the window.
+- *No recent usage.* Nothing has been used lately, so there's no pace to project. Claudette says so instead of carrying on a stale rate.
+- *Not enough data yet.* Claudette needs a few minutes of readings to measure a pace.
+- *You've hit the limit.* See [When a limit stops a task](when-a-limit-stops-a-task.md).
+
+The pace is measured over the last 30 minutes by default, so one big turn doesn't swing the projection. Change the window with **Burn rate window (minutes)**.
+
+## Model meters
+
+**Show model-specific weekly limits** (Settings → Usage, on by default) shows the model meters. Claude Code reports them. If a version of Claude Code stops reporting them, the model meters go away and the rest of the header carries on, unless **If Claude Code stops reporting them, read model limits from /usage** is on. Then Claudette reads the text Claude Code prints for `/usage` instead. That costs nothing, but it can break when Claude Code changes the wording, so it's off by default.
+
+## How current the numbers are
+
+Claudette reads your usage when it starts, after each turn (at most once a minute) and every 5 minutes otherwise, and the meters also move as your tabs work. When the numbers are more than 10 minutes old, for example just after launch before the first reading, the header adds *as of 14:02* beside the line under the session meter.
+
+Within one window a meter only goes up. A reading lower than the one shown, for the same window, is out of date, so Claudette keeps the higher one.
+
+## When there are no meters
+
+A sign-in with no plan limits, such as an API key, has no meters, and the header just says **Claudette**. If Claudette can't start tracking usage, the header says **Usage unavailable** and why, and your tabs keep working.
+
+## Opening the details
+
+Click anywhere on the meters to open [the Usage window](the-usage-window.md). The chevron at the header's right draws the header taller, with charts: see [The detailed header](the-detailed-header.md).
+
+## Settings
+
+All in Settings → Usage.
+
+| Setting | Default |
+|---|---|
+| **Warn at (% of session used)** | 75 |
+| **Alert at (% of session used)** | 90 |
+| **Burn rate window (minutes)** | 30 (from 5 to 300) |
+| **Show model-specific weekly limits** | On |
+| **If Claude Code stops reporting them, read model limits from /usage** | Off |
+
+## See also
+
+- [The detailed header](the-detailed-header.md) for the charts.
+- [Your Claude sign-in](../accounts/your-claude-sign-in.md) for the plan beside your email, which opens your plan's usage on claude.ai.

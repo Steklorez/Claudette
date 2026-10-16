@@ -240,6 +240,19 @@ public class ProjectToolsTests
     }
 
     [Fact]
+    public async Task The_info_card_names_an_engine_that_wasnt_found_and_the_note_as_two_sentences()
+    {
+        var h = new TabTestHarness();
+        await using var _h = h;
+        Write(Path.Combine(h.WorkFolder, "Starfall.uproject"), """{ "FileVersion": 3, "EngineAssociation": "5.6" }""");
+
+        var tab = await OpenWithProjectAsync(h);
+
+        var row = InlineDispatcher.Read(() => tab.InfoRows.Single(r => r.Label == "Project"));
+        Assert.Equal("Starfall: The engine for EngineAssociation \"5.6\" wasn't found on this machine. Claude was told how to build it.", row.Value);
+    }
+
+    [Fact]
     public async Task No_note_when_Settings_turns_it_off()
     {
         var (h, _, _) = UnrealHarness(s => s.ProjectTools.TellClaudeAboutUnreal = false);

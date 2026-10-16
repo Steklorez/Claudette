@@ -1,0 +1,15 @@
+{%- comment -%}
+  A screenshot in the reader's theme (GUIDE.md, "Pictures"):
+    {% include shot.html name="guide/tabs/sidebar" alt="What the picture shows" caption="Optional" %}
+  shows screenshots/<name>-dark.png when the reader's system is dark, and screenshots/<name>-light.png otherwise.
+{%- endcomment -%}
+{%- assign base = "/screenshots/" | append: include.name -%}
+<figure class="shot">
+  <picture>
+    <source srcset="{{ base | append: '-dark.png' | relative_url }}" media="(prefers-color-scheme: dark)">
+    <img src="{{ base | append: '-light.png' | relative_url }}" alt="{{ include.alt | escape }}" loading="lazy">
+  </picture>
+  {%- if include.caption %}
+  <figcaption>{{ include.caption }}</figcaption>
+  {%- endif %}
+</figure>

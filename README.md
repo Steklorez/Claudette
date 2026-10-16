@@ -6,6 +6,8 @@
 
 It isn't a reimplementation. Each tab runs the real `claude` CLI, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions, and Claudette draws it as proper native UI instead of a terminal. Windows and macOS, built with .NET 10 and Avalonia.
 
+**[The user guide](https://claudette.dotbunny.com)** shows how to use every part of it.
+
 ![Claudette: seven tabs over three game projects, a C++ conversation with tool calls and a code block, the Changed files panel, the plan usage header, and Claudette herself standing on the message box](docs/screenshots/standard-dark.png)
 
 ## Why you'll want it
@@ -146,10 +148,10 @@ Native notifications and a taskbar or Dock badge when a tab needs you. A side pa
 
 ## Getting started
 
-You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds `claude` on your `PATH`, and can sign you in if you aren't already.
+You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds `claude` on your `PATH`, and can sign you in if you aren't already. The guide's [Getting started](https://claudette.dotbunny.com/getting-started/) takes you through it.
 
-- **Windows:** the MSIX from [Releases](https://github.com/dotBunny/Claudette/releases).
-- **macOS:** the `.dmg` from [Releases](https://github.com/dotBunny/Claudette/releases).
+- **Windows:** the MSIX from the [Downloads page](https://claudette.dotbunny.com/downloads.html).
+- **macOS:** the `.dmg` from the [Downloads page](https://claudette.dotbunny.com/downloads.html).
 - **From source** (Windows, macOS or Linux), with the .NET SDK that `global.json` names:
 
   ```sh
