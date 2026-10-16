@@ -329,7 +329,8 @@ Two pages are made from data rather than written: the Downloads page from the re
 - **When.** In the same change as the code, as DESIGN.md is: a change people would notice adds its entry under **Unreleased**.
 - **Releasing.**
   1. One change turns `## [Unreleased]` into the version with the day's date, starts an empty `## [Unreleased]` above it, and updates the links at the bottom. The version follows Semantic Versioning: until 1.0.0, a section with **Added**, **Changed**, **Deprecated** or **Removed** raises the second number, and **Fixed** or **Security** alone the third. It's the version `Directory.Build.props` names ([Version](DESIGN.md#version)).
-  2. The tag `vX.Y.Z` goes on that change. `package.yml` drafts the release with the version's section as its notes ([Packaging and signing](DESIGN.md#packaging-and-signing)), so the release on GitHub and Claudette's update dialog say what the Changelog page says.
+  2. The tag `vX.Y.Z` goes on that change. `package.yml` drafts the release with the version's section as its notes, from `packaging/release-notes.sh` ([Packaging and signing](DESIGN.md#packaging-and-signing)), so the release on GitHub and Claudette's update dialog say what the Changelog page says. A tag whose version has no section fails before anything is built.
+     - A pre-release (`v0.4.0-beta.1`) needs no section of its own: its notes are **Unreleased**'s, which stays as it is until the release.
   3. Publishing the release rebuilds the site: the Downloads page lists it, and the guide's *New in the next release* notes for it are removed in a change of their own.
   4. `Directory.Build.props` moves to the next version to work on.
 - **The Changelog page** (`docs/changelog.md`) has its own title and introduction: what the version numbers mean, and that **Unreleased** is what's on `main` and in this guide, but not yet in a release. Under them it includes `docs/_includes/changelog.md`, which `prepare.sh` copies from `CHANGELOG.md` from its first version on, giving each version's heading an id (`v0.2.0`, and `unreleased`) for the Downloads page to link to. Without it, the page links to `CHANGELOG.md` on GitHub.
@@ -356,7 +357,7 @@ The map covers every part of Claudette that DESIGN.md describes. When a chapter 
    - Use the app's labels. Settings → Editor's (**The explorer is on the**, **Wrap long lines**, **Indent new lines with**, **Show a file clicked in a conversation**), **Reveal in file manager**, the banner for a file gone from disk (**Keep editing**), the indentation menu, General's **Name each tab's session in Claude Code after the tab** and Sessions' **Sync Claudette's settings through the library**.
    - The end of a turn: [Changes per turn](DESIGN.md#changes-per-turn) still describes the turn's footer, which [Conversation cards](DESIGN.md#conversation-cards) replaced with the **Modified files** and **Turn** cards.
    - The tab's menu in [Sidebar](DESIGN.md#sidebar) leaves out **Account ▸**, **Duplicate tab**, **Export conversation…** and **Close other tabs**, which other sections put in it.
-2. **The changelog's releases.** `package.yml` drafts a release with its version's section of `CHANGELOG.md` as the notes, in place of notes generated from pull requests.
+2. ✅ **The changelog's releases**, done 2026-10-16. `package.yml` drafts a release with its version's section of `CHANGELOG.md` as the notes, in place of notes generated from pull requests, and `Directory.Build.props` moved to 0.3.0.
 3. `guide-screenshots.ps1`, and what the demo needs for Getting started.
 4. **The site, Downloads, the Changelog and Getting started.**
    - `_config.yml`, the theme in light and dark, the includes, and Settings → Pages → Source switched to **GitHub Actions**.
