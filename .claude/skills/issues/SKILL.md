@@ -45,6 +45,7 @@ Once the user picks an issue, or agrees to the suggestion:
 
 Follow CLAUDE.md and DESIGN.md as for any change:
 - Update DESIGN.md in the same change.
+- Add the change's entry under **Unreleased** in `CHANGELOG.md` when people using Claudette would notice it.
 - Add to `compat/surface.yaml` for anything new from Claude Code.
 - Write tests, then run the build and the free suite:
   - `dotnet build Claudette.slnx`

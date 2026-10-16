@@ -2,7 +2,8 @@ name: Package
 
 # MSIX for Windows and a signed, notarized .dmg for macOS (DESIGN.md §2, "Packaging").
 #
-# - A tag like v1.2.3 builds signed packages and attaches them to a draft release.
+# - A tag like v1.2.3 builds signed packages and attaches them to a draft release, whose notes are the version's section
+#   of CHANGELOG.md (packaging/release-notes.sh).
 # - "Run workflow" builds them for a version you give, without a release.
 # - Pull requests that change packaging build unsigned packages, to check the scripts.
 #
@@ -55,6 +56,23 @@ jobs:
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+      # A release's notes are its version's section of CHANGELOG.md (packaging/release-notes.sh), so a tag without one
+      # fails here, before anything is built. A pull request reads the latest release's, to check the script.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name != 'workflow_dispatch'
+      - name: Release notes
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [[ "$GITHUB_REF" != refs/tags/v* ]]; then
+            VERSION="$(sed -n '/^## \[[0-9]/{s/^## \[\([^]]*\)\].*/\1/p;q;}' CHANGELOG.md)"
+          fi
+          if ! packaging/release-notes.sh "$VERSION" > /dev/null; then
+            echo "::error::CHANGELOG.md has no notes for '$VERSION'. Add its section before tagging (GUIDE.md, \"The changelog\")."
+            exit 1
+          fi
 
   # The tests, before a tag's packages become a release (ci.yml, called as a reusable workflow). Pull requests and
   # "Run workflow" leave them to the CI workflow.
@@ -169,6 +187,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Before the packages: checking out cleans the folder.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release notes
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: packaging/release-notes.sh "$VERSION" > "$RUNNER_TEMP/release-notes.md"
       # The packages only: the symbols stay workflow artifacts.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -179,4 +203,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.version.outputs.version }}
-        run: gh release create "${GITHUB_REF#refs/tags/}" artifacts/* --repo "$GITHUB_REPOSITORY" --draft --generate-notes --title "Claudette $VERSION"
+        run: gh release create "${GITHUB_REF#refs/tags/}" artifacts/* --repo "$GITHUB_REPOSITORY" --draft --notes-file "$RUNNER_TEMP/release-notes.md" --title "Claudette $VERSION"
