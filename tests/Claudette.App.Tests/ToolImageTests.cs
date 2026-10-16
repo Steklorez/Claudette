@@ -149,7 +149,9 @@ public class ToolImageTests
         h.Shell.Restore(null);
         var tab = h.Shell.AllTabs.Single();
 
-        var card = await CardAsync(tab);
+        // The transcript is replayed off the test's thread, and a card gets its images just after its result.
+        await TabTestHarness.Eventually(() => tab.Items.ToolCalls().SingleOrDefault() is { IsComplete: true, HasImages: true }, "the tool's images");
+        var card = tab.Items.ToolCalls().Single();
         Assert.Equal(("pic.png", path), (card.Images.Single().Name, card.Images.Single().FilePath));
     }
 
