@@ -36,6 +36,36 @@ public sealed partial class ShellLayout : ViewModelBase
         SidePanelWidth = Math.Max(state.SidePanelWidth ?? DefaultSidePanelWidth, MinSidePanelWidth);
         SidePanelPages = PageOrder(state.SidePanelPages);
         PaneShares = state.PaneShares is { Count: > 1 } shares && shares.All(s => s > 0) ? [.. shares] : [];
+        ExplorerWidth = Math.Max(state.ExplorerWidth ?? DefaultExplorerWidth, MinExplorerWidth);
+        IsExplorerHidden = state.ExplorerHidden;
+    }
+
+    // ---- The Project Files tabs' explorer (DESIGN.md §18, "Project files"): one width for every tab's ---------------
+
+    public const double DefaultExplorerWidth = 260;
+    public const double MinExplorerWidth = 180;
+
+    /// <summary>The explorer's width, as the user dragged it. Each tab's view shows it as far as there's room, leaving its editor <see cref="MinConversationWidth"/>.</summary>
+    [ObservableProperty]
+    public partial double ExplorerWidth { get; private set; }
+
+    /// <summary>The explorer is hidden, by its button, in every Project Files tab.</summary>
+    [ObservableProperty]
+    public partial bool IsExplorerHidden { get; set; }
+
+    partial void OnIsExplorerHiddenChanged(bool value)
+    {
+        _state.ExplorerHidden = value;
+        _saveState();
+    }
+
+    /// <summary>Dragging the explorer's edge. <see cref="SaveExplorerWidth"/> keeps the result when the drag ends.</summary>
+    public void ResizeExplorer(double width) => ExplorerWidth = Math.Max(width, MinExplorerWidth);
+
+    public void SaveExplorerWidth()
+    {
+        _state.ExplorerWidth = ExplorerWidth;
+        _saveState();
     }
 
     /// <summary>The conversation keeps at least this much room between the sidebar and the side panel (DESIGN.md §3).</summary>

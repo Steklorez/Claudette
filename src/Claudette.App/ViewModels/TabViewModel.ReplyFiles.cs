@@ -1,5 +1,6 @@
 using Claudette.App.Conversation;
 using Claudette.Core.Protocol;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels;
 
@@ -44,10 +45,35 @@ public sealed partial class TabViewModel
             }
             path = found[chosen];
         }
+        if (!await OpenPathAsync(path, reference.Line, reference.Column, reference.EndLine))
+        {
+            _conversation.AddNote($"Couldn't find {reference.Path}.", NoteKind.Warning);
+        }
+    }
+
+    /// <summary>
+    /// Opens a file the session named (DESIGN.md §18, "Project files", "Opening files in the editor"): in the project's
+    /// Files tab at <paramref name="line"/>, as Settings → Editor says, or else in the app the OS uses. A program or
+    /// shortcut that isn't text shows in its folder rather than running, and a folder shows in the explorer when it's in
+    /// the project, else in Finder or Explorer. False when it isn't there.
+    /// </summary>
+    internal async Task<bool> OpenPathAsync(string path, int? line = null, int? column = null, int? endLine = null)
+    {
         var (exists, isFolder, isExecutable) = await Task.Run(() => Inspect(path));
         if (!exists)
         {
-            _conversation.AddNote($"Couldn't find {reference.Path}.", NoteKind.Warning);
+            return false;
+        }
+        if (isFolder)
+        {
+            if (!await _shell.RevealInProjectFilesAsync(path))
+            {
+                await _services.Platform.RevealFolderAsync(path);
+            }
+        }
+        else if (await Task.Run(() => _shell.OpensInEditor(path)))
+        {
+            await _shell.OpenInEditorAsync(path, line, column, endLine, this);
         }
         else if (ReplyFileReference.IsProgram(path, isExecutable))
         {
@@ -56,14 +82,43 @@ public sealed partial class TabViewModel
                 await _services.Platform.RevealFolderAsync(parent);
             }
         }
-        else if (isFolder)
-        {
-            await _services.Platform.RevealFolderAsync(path);
-        }
         else
         {
             await _services.Platform.OpenFileAsync(path);
         }
+        return true;
+    }
+
+    /// <summary>A tool card's <b>Open</b>: the file it worked on, at the first line an edit changed or where a read started.</summary>
+    [RelayCommand]
+    private async Task OpenToolFileAsync(ToolUseItem? tool)
+    {
+        if (tool?.FilePath is not { } file)
+        {
+            return;
+        }
+        var path = Path.IsPathRooted(file) ? file : Path.Combine(Folder, file);
+        if (!await OpenPathAsync(path, tool.FileLine))
+        {
+            _conversation.AddNote($"Couldn't find {file}.", NoteKind.Warning);
+        }
+    }
+
+    /// <summary>
+    /// A Files tab's peek went to the change this tab made (DESIGN.md §18, "Project files", "Claude's changes"): its tool
+    /// call, expanded, with the subagent groups around it open.
+    /// </summary>
+    internal void ShowToolUse(string toolUseId)
+    {
+        if (_conversation.FindToolUse(toolUseId) is not { } tool)
+        {
+            return;
+        }
+        for (var owner = Agents.OwnerOf(tool.ToolUseId); owner?.Item is { } group; owner = owner.Parent)
+        {
+            group.IsExpanded = true;
+        }
+        ScrollTo(tool);
     }
 
     /// <summary>A file in the menu of several: inside the tab's folder from there, else in full.</summary>

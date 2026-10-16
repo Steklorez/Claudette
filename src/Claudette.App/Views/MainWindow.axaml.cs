@@ -32,6 +32,8 @@ public partial class MainWindow : Window
             }
             // Back from another machine, perhaps, with a scratch pad changed there (DESIGN.md §18, "Scratch pad").
             _viewModel?.Services.ScratchPads.OnAppActivated();
+            // Back from another editor, perhaps, with an open file changed there (DESIGN.md §18, "Project files").
+            _viewModel?.Shell?.OnAppActivated();
         };
         Deactivated += (_, _) => _viewModel?.Services.Notifications.SetAppActive(false);
         // A narrow window leaves the busiest tabs, then the weekly chart, out of the detailed header (DESIGN.md §6).

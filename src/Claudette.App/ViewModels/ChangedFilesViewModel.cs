@@ -74,6 +74,9 @@ internal interface IChangedFilesHost : ITabAreaHost
 
     /// <summary><see cref="ChangedFilesViewModel.AllReviewed"/> changed: the tab's row shows the reviewed icon, or its mark again.</summary>
     void AllReviewedChanged();
+
+    /// <summary>Opens a file, in the project's Files tab or the OS's app, as Settings → Editor says (DESIGN.md §18, "Project files").</summary>
+    Task<bool> OpenPathAsync(string path);
 }
 
 /// <summary>The tab's changed files and diffs (DESIGN.md §8).</summary>
@@ -131,10 +134,33 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 _changes = new ChangedFiles(_services.Time) { Befores = new BeforeContentStore(_services.Paths.BeforeContentDirectory, _services.Time) };
                 _changes.Changed += QueueRefresh;
                 _changes.Changed += QueueAllReviewed;
+                _changes.Changed += OnClaudeChanged;
             }
             return _changes;
         }
     }
+
+    private void OnClaudeChanged() => ClaudeChangesUpdated?.Invoke();
+
+    // ---- For the project's Project Files tab (DESIGN.md §18, "Project files", "Claude's changes") ---------------------
+
+    /// <summary>The files Claude changed in the session, each with its "before".</summary>
+    internal IReadOnlyList<ChangedFile> ClaudeChanges => Changes.Files;
+
+    /// <summary>Claude changed a file, or the changes were read back again.</summary>
+    internal event Action? ClaudeChangesUpdated;
+
+    /// <summary>A file was ticked as reviewed, or unticked.</summary>
+    internal event Action? ReviewedChanged;
+
+    /// <summary>Whether Claude changed <paramref name="path"/> in the session.</summary>
+    internal bool HasClaudeChange(string path) => Changes.Find(path) is not null;
+
+    /// <summary>Whether <paramref name="path"/> is ticked as reviewed, as of Claude's latest change to it.</summary>
+    internal bool IsFileReviewed(string path) => Reviewed.IsReviewed(path, Changes.Find(path));
+
+    /// <summary>Ticks <paramref name="path"/> as reviewed at Claude's latest change to it, or unticks it: the Files tab's <b>Reviewed</b>.</summary>
+    internal void SetFileReviewedFromProject(string path, bool reviewed) => SetFileReviewed(path, reviewed, ReviewedFiles.LatestChange(Changes.Find(path)));
 
     /// <summary>The files marked as reviewed, kept in the tab's state (DESIGN.md §8, "Reviewed").</summary>
     private ReviewedFiles Reviewed => _reviewed ??= new ReviewedFiles(_host.State.ReviewedFiles);
@@ -187,8 +213,10 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         {
             _changes.Changed -= QueueRefresh;
             _changes.Changed -= QueueAllReviewed;
+            _changes.Changed -= OnClaudeChanged;
             _changes = null;
         }
+        ClaudeChangesUpdated?.Invoke();
         _inspections.Clear();
         // The footers are read back without their files: a transcript has no turns to show.
         _turns.Clear();
@@ -486,6 +514,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         UpdateAllReviewed();
         _services.SaveState();
         QueueReviewSync();
+        ReviewedChanged?.Invoke();
     }
 
     /// <summary>
@@ -622,7 +651,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 () => ReviewedFiles.LatestChange(Changes.Find(row.Path)),
                 () => Reviewed.IsReviewed(row.Path, Changes.Find(row.Path)),
                 change => SetFileReviewed(row.Path, reviewed: true, change)),
-            FromGit: row.FromGit));
+            FromGit: row.FromGit,
+            OpenInSystem: () => OpenFileInSystemAsync(row)));
     }
 
     /// <summary>
@@ -678,8 +708,14 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
     }
 
+    /// <summary><b>Open</b>: in the project's Files tab, or the OS's app, as Settings → Editor says (DESIGN.md §18, "Project files").</summary>
     [RelayCommand]
     private Task OpenFileInEditorAsync(ChangedFileRow? row) =>
+        row is { IsDeleted: false } ? _host.OpenPathAsync(row.Path) : Task.CompletedTask;
+
+    /// <summary><b>Open in the OS's app</b>, whatever Settings → Editor says.</summary>
+    [RelayCommand]
+    private Task OpenFileInSystemAsync(ChangedFileRow? row) =>
         row is { IsDeleted: false } ? _services.Platform.OpenFileAsync(row.Path) : Task.CompletedTask;
 
     [RelayCommand]

@@ -14,13 +14,13 @@ public sealed partial class ShellViewModel
     public const int MostPanes = 3;
 
     /// <summary>The tabs the user put side by side, left to right, whether or not the window has room for them all now.</summary>
-    private readonly List<TabViewModel> _panes = [];
+    private readonly List<IShellTab> _panes = [];
 
     /// <summary>How many tabs <see cref="_panes"/> held last time; -1 before the first look.</summary>
     private int _paneCount = -1;
 
     /// <summary>The tabs on screen, left to right.</summary>
-    public ObservableCollection<TabViewModel> Panes { get; } = [];
+    public ObservableCollection<IShellTab> Panes { get; } = [];
 
     /// <summary>More than one tab is on screen.</summary>
     public bool IsSplit => Panes.Count > 1;
@@ -29,7 +29,7 @@ public sealed partial class ShellViewModel
     /// The selection moved to <paramref name="tab"/>: one already on screen is only focused; any other takes the place of
     /// the pane that had the focus.
     /// </summary>
-    private void PlaceSelected(TabViewModel? previous, TabViewModel? tab)
+    private void PlaceSelected(IShellTab? previous, IShellTab? tab)
     {
         if (tab is null)
         {
@@ -60,7 +60,7 @@ public sealed partial class ShellViewModel
     private void UpdatePanes()
     {
         _panes.RemoveAll(t => !OpenTabs.Contains(t));
-        if (SelectedTab is { } selected && !_panes.Contains(selected))
+        if (Selected is { } selected && !_panes.Contains(selected))
         {
             _panes.Add(selected);
         }
@@ -100,13 +100,13 @@ public sealed partial class ShellViewModel
     /// The panes there's room for, <paramref name="room"/> of them side by side: the focused pane and its neighbours, in
     /// their order.
     /// </summary>
-    private List<TabViewModel> Fit(int room)
+    private List<IShellTab> Fit(int room)
     {
         if (_panes.Count <= room)
         {
             return [.. _panes];
         }
-        var focused = SelectedTab is null ? 0 : Math.Max(0, _panes.IndexOf(SelectedTab));
+        var focused = Selected is null ? 0 : Math.Max(0, _panes.IndexOf(Selected));
         var start = Math.Clamp(focused - (room - 1), 0, _panes.Count - room);
         return _panes.GetRange(start, room);
     }
@@ -116,7 +116,7 @@ public sealed partial class ShellViewModel
     /// from. With every pane taken, it takes the place of the last one that isn't focused.
     /// </summary>
     [RelayCommand]
-    private void OpenBeside(TabViewModel? tab)
+    private void OpenBeside(IShellTab? tab)
     {
         if (tab is null || !OpenTabs.Contains(tab))
         {
@@ -124,8 +124,8 @@ public sealed partial class ShellViewModel
         }
         if (!_panes.Contains(tab))
         {
-            var after = SelectedTab is null ? -1 : _panes.IndexOf(SelectedTab);
-            if (_panes.Count >= MostPanes && _panes.LastOrDefault(p => !ReferenceEquals(p, SelectedTab)) is { } replaced)
+            var after = Selected is null ? -1 : _panes.IndexOf(Selected);
+            if (_panes.Count >= MostPanes && _panes.LastOrDefault(p => !ReferenceEquals(p, Selected)) is { } replaced)
             {
                 var at = _panes.IndexOf(replaced);
                 _panes.RemoveAt(at);
@@ -136,13 +136,13 @@ public sealed partial class ShellViewModel
             }
             _panes.Insert(Math.Clamp(after + 1, 0, _panes.Count), tab);
         }
-        if (ReferenceEquals(SelectedTab, tab))
+        if (ReferenceEquals(Selected, tab))
         {
             UpdatePanes();
         }
         else
         {
-            SelectedTab = tab;
+            Selected = tab;
         }
     }
 
@@ -150,7 +150,7 @@ public sealed partial class ShellViewModel
     /// What dropping <paramref name="tab"/>'s row on pane <paramref name="index"/> does (DESIGN.md §18, "Split panes"):
     /// opens it beside that pane, or, with no room for another, in its place. Nothing on its own pane.
     /// </summary>
-    public PaneDrop PaneDropFor(TabViewModel tab, int index)
+    public PaneDrop PaneDropFor(IShellTab tab, int index)
     {
         if (index < 0 || index >= Panes.Count || ReferenceEquals(Panes[index], tab) || !OpenTabs.Contains(tab))
         {
@@ -165,7 +165,7 @@ public sealed partial class ShellViewModel
     /// A tab's row dropped on pane <paramref name="index"/>'s left half, or its right one when <paramref name="after"/>
     /// (DESIGN.md §18, "Split panes"): the tab opens there and takes the focus.
     /// </summary>
-    public void DropOnPane(TabViewModel tab, int index, bool after)
+    public void DropOnPane(IShellTab tab, int index, bool after)
     {
         var drop = PaneDropFor(tab, index);
         if (drop == PaneDrop.None)
@@ -182,28 +182,28 @@ public sealed partial class ShellViewModel
             _panes.Remove(tab);
             _panes.Insert(_panes.IndexOf(target) + (after ? 1 : 0), tab);
         }
-        if (ReferenceEquals(SelectedTab, tab))
+        if (ReferenceEquals(Selected, tab))
         {
             UpdatePanes();
         }
         else
         {
-            SelectedTab = tab;
+            Selected = tab;
         }
     }
 
     /// <summary><b>Close pane</b>: the tab stays open, out of sight, and the pane beside it takes the focus if it had it.</summary>
     [RelayCommand]
-    private void ClosePane(TabViewModel? tab)
+    private void ClosePane(IShellTab? tab)
     {
         if (tab is null || _panes.Count < 2 || _panes.IndexOf(tab) is not (>= 0 and var at))
         {
             return;
         }
         _panes.RemoveAt(at);
-        if (ReferenceEquals(SelectedTab, tab))
+        if (ReferenceEquals(Selected, tab))
         {
-            SelectedTab = _panes[Math.Min(at, _panes.Count - 1)];
+            Selected = _panes[Math.Min(at, _panes.Count - 1)];
         }
         else
         {
@@ -215,7 +215,7 @@ public sealed partial class ShellViewModel
     [RelayCommand]
     private void CloseOtherPanes()
     {
-        _panes.RemoveAll(p => !ReferenceEquals(p, SelectedTab));
+        _panes.RemoveAll(p => !ReferenceEquals(p, Selected));
         UpdatePanes();
     }
 
@@ -233,13 +233,13 @@ public sealed partial class ShellViewModel
         _panes.Clear();
         _panes.Add(head);
         _panes.AddRange(head.SubThreads.Where(OpenTabs.Contains).Take(MostPanes - 1));
-        if (ReferenceEquals(SelectedTab, head))
+        if (ReferenceEquals(Selected, head))
         {
             UpdatePanes();
         }
         else
         {
-            SelectedTab = head;
+            Selected = head;
         }
     }
 

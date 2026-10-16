@@ -68,6 +68,65 @@
         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
       </StackPanel>
     </DataTemplate>
+    <!-- A group's Project Files tab's row (DESIGN.md §18, "Project files"): first in its group, a file icon, its name, and
+         the file showing, or in the caution color how many files are unsaved. It isn't dragged within the group, but can
+         be dragged onto a pane. -->
+    <DataTemplate x:Key="ProjectFilesRow" DataType="vm:ProjectFilesViewModel">
+      <Button Classes="tab tabrow filesrow" Classes.selected="{Binding IsSelected}" Classes.dragged="{Binding IsDragged}"
+              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectFilesCommand}" CommandParameter="{Binding}"
+              ToolTip.Tip="{Binding RowTip}" ToolTip.ShowDelay="600" ToolTip.Placement="Right" AutomationProperties.Name="{Binding DisplayName}">
+        <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="6">
+          <Panel VerticalAlignment="Top" Margin="0,3,0,0">
+            <Path Data="{StaticResource IconFiles}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Height="11" Stretch="Uniform" />
+            <Ellipse Width="5" Height="5" Fill="{DynamicResource WarningTextBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
+                     IsVisible="{Binding HasUnsaved}" />
+          </Panel>
+          <StackPanel Grid.Column="1" Spacing="1">
+            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="muted small" Classes.warning="{Binding HasUnsaved}" Text="{Binding RowDetail}" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <Button Grid.Column="2" Classes="flat closetab" Padding="4" VerticalAlignment="Top" ToolTip.Tip="Close" AutomationProperties.Name="Close project files"
+                  Command="{Binding CloseCommand}">
+            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+          </Button>
+        </Grid>
+        <Button.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                      IsVisible="{Binding !IsShown}" ToolTip.Tip="Shows the project's files beside the tab you're in" />
+            <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}"
+                      ToolTip.Tip="Takes it off the screen; it stays open in the sidebar" />
+            <MenuItem Header="Reveal in file manager" Command="{Binding RevealFolderCommand}" />
+            <MenuItem Header="Copy path" Command="{Binding CopyFolderPathCommand}" />
+            <Separator />
+            <MenuItem Header="Close" Command="{Binding CloseCommand}" />
+          </ContextMenu>
+        </Button.ContextMenu>
+      </Button>
+    </DataTemplate>
+    <!-- Its square on the rail. -->
+    <DataTemplate x:Key="ProjectFilesSquare" DataType="vm:ProjectFilesViewModel">
+      <Button Classes="tab" Classes.selected="{Binding IsSelected}" Width="38" Height="34" Padding="0" HorizontalAlignment="Center"
+              HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectFilesCommand}" CommandParameter="{Binding}"
+              ToolTip.Tip="{Binding RowTip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding DisplayName}">
+        <Panel>
+          <Path Data="{StaticResource IconFiles}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="12" Height="12" Stretch="Uniform"
+                HorizontalAlignment="Center" VerticalAlignment="Center" />
+          <Ellipse Width="5" Height="5" Fill="{DynamicResource WarningTextBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,5,0"
+                   IsVisible="{Binding HasUnsaved}" />
+        </Panel>
+        <Button.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                      IsVisible="{Binding !IsShown}" />
+            <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}" />
+            <Separator />
+            <MenuItem Header="Close" Command="{Binding CloseCommand}" />
+          </ContextMenu>
+        </Button.ContextMenu>
+      </Button>
+    </DataTemplate>
   </UserControl.Resources>
 
   <UserControl.Styles>
@@ -227,7 +286,7 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="vm:TabGroupViewModel">
                 <StackPanel Margin="0,6,0,0">
-                  <Grid ColumnDefinitions="*,Auto">
+                  <Grid ColumnDefinitions="*,Auto,Auto">
                     <!-- Group label: click to collapse; right-click for group actions -->
                     <Button Classes="flat grouplabel" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="4,4"
                             ToolTip.Tip="{Binding Summary}"
@@ -257,6 +316,8 @@
                                     IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch" />
                           <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                           <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" />
                           <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}" />
                           <!-- A name of the user's own in place of the folder's (DESIGN.md §4, "Grouped by folder") -->
                           <MenuItem Header="Rename…" Click="OnRenameGroup" />
@@ -271,14 +332,21 @@
                         </ContextMenu>
                       </Button.ContextMenu>
                     </Button>
-                    <Button Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="New tab in this folder" AutomationProperties.Name="New tab in this folder"
+                    <!-- The group's Project Files tab (DESIGN.md §18, "Project files"): opens it, or selects it -->
+                    <Button x:Name="ProjectFilesButton" Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="Project files" AutomationProperties.Name="Project files"
+                            Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" VerticalAlignment="Center">
+                      <Path Data="{StaticResource IconFiles}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Height="11" Stretch="Uniform" />
+                    </Button>
+                    <Button Grid.Column="2" Classes="flat" Padding="6" ToolTip.Tip="New tab in this folder" AutomationProperties.Name="New tab in this folder"
                             Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewTabInGroupCommand}" CommandParameter="{Binding}" VerticalAlignment="Center">
                       <Path Data="{StaticResource IconPlus}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="9" Height="9" Stretch="Uniform" />
                     </Button>
                   </Grid>
 
-                  <!-- Tabs, under a line in the group's color -->
+                  <!-- Tabs, under a line in the group's color; its Project Files tab first (DESIGN.md §18, "Project files") -->
                   <Border Margin="9,2,0,0" Padding="5,0,0,0" BorderBrush="{Binding Brush}" BorderThickness="2,0,0,0" IsVisible="{Binding IsExpanded}">
+                    <StackPanel Spacing="1">
+                    <ContentControl Content="{Binding Files}" IsVisible="{Binding HasFiles}" ContentTemplate="{StaticResource ProjectFilesRow}" />
                     <ItemsControl ItemsSource="{Binding Tabs}">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -527,6 +595,7 @@
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    </StackPanel>
                   </Border>
                 </StackPanel>
               </DataTemplate>
@@ -568,6 +637,7 @@
                       </ContextMenu>
                     </Button.ContextMenu>
                   </Button>
+                  <ContentControl Content="{Binding Files}" IsVisible="{Binding HasFiles}" ContentTemplate="{StaticResource ProjectFilesSquare}" />
                   <ItemsControl ItemsSource="{Binding Tabs}" IsVisible="{Binding IsExpanded}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
@@ -667,23 +737,23 @@
             <!-- The selected tab's project tools and links (DESIGN.md §18, "Project tools"): the project's name and version,
                  else the folder's name, or while a job runs, its name; a click opens the project's menu -->
             <Button x:Name="ProjectButton" Classes="flat side" HorizontalContentAlignment="Stretch"
-                    IsVisible="{Binding SelectedTab, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    ToolTip.Tip="{Binding SelectedTab.ProjectTools.ButtonTip}" ToolTip.Placement="Right" AutomationProperties.Name="Project tools">
+                    IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    ToolTip.Tip="{Binding ProjectTab.ProjectTools.ButtonTip}" ToolTip.Placement="Right" AutomationProperties.Name="Project tools">
               <DockPanel>
                 <!-- As wide as the other icons, so the busy dot lines up with them -->
                 <Panel DockPanel.Dock="Left" Width="13" VerticalAlignment="Center">
-                  <Path Classes="icon" Data="{StaticResource IconProject}" IsVisible="{Binding !SelectedTab.ProjectTools.Runs.IsJobRunning, FallbackValue=True}" />
+                  <Path Classes="icon" Data="{StaticResource IconProject}" IsVisible="{Binding !ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=True}" />
                   <TextBlock Classes="status busy" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
-                             IsVisible="{Binding SelectedTab.ProjectTools.Runs.IsJobRunning, FallbackValue=False}" />
+                             IsVisible="{Binding ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=False}" />
                 </Panel>
                 <Path DockPanel.Dock="Right" Data="{StaticResource IconChevronRight}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="9" Height="9"
                       Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,0,0" IsVisible="{Binding Layout.IsSidebarExpanded}" />
-                <TextBlock Margin="10,0,0,0" Text="{Binding SelectedTab.ProjectTools.ButtonText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                <TextBlock Margin="10,0,0,0" Text="{Binding ProjectTab.ProjectTools.ButtonText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                            IsVisible="{Binding Layout.IsSidebarExpanded}" />
               </DockPanel>
               <Button.Flyout>
                 <Flyout Placement="RightEdgeAlignedBottom" Opened="OnProjectMenuOpened">
-                  <StackPanel x:Name="ProjectMenu" MinWidth="300" MaxWidth="440" Spacing="1" DataContext="{Binding SelectedTab}" x:DataType="vm:TabViewModel">
+                  <StackPanel x:Name="ProjectMenu" MinWidth="300" MaxWidth="440" Spacing="1" DataContext="{Binding ProjectTab}" x:DataType="vm:TabViewModel">
                     <TextBlock Text="{Binding ProjectTools.HeaderTitle}" FontWeight="SemiBold" Margin="8,2,8,0" />
                     <ItemsControl ItemsSource="{Binding ProjectTools.HeaderLines}" Margin="8,0,8,2">
                       <ItemsControl.ItemTemplate>
@@ -872,7 +942,7 @@
          (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
     <ItemsControl x:Name="PaneHost" Grid.Column="1" Classes="panes" ItemsSource="{Binding OpenTabs}">
       <ItemsControl.Styles>
-        <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:TabViewModel">
+        <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:IShellTab">
           <Setter Property="IsVisible" Value="{Binding IsShown}" />
           <Setter Property="controls:PanesPanel.Index" Value="{Binding PaneIndex}" />
           <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
@@ -885,11 +955,14 @@
                                LeastWidth="{x:Static vm:ShellLayout.MinConversationWidth}" />
         </ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
+      <ItemsControl.DataTemplates>
         <DataTemplate DataType="vm:TabViewModel">
           <views:TabView />
         </DataTemplate>
-      </ItemsControl.ItemTemplate>
+        <DataTemplate DataType="vm:ProjectFilesViewModel">
+          <views:ProjectFilesView />
+        </DataTemplate>
+      </ItemsControl.DataTemplates>
     </ItemsControl>
 
     <!-- The lines between the panes, to drag; a double-click shares the width evenly again (DESIGN.md §18, "Split panes"). -->

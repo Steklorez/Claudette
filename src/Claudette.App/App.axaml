@@ -29,6 +29,8 @@
     <!-- The spectrum and hue slider of a folder group's color picker (Views/GroupColorPicker). -->
     <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
     <StyleInclude Source="avares://LiveMarkdown.Avalonia/Styles.axaml" />
+    <!-- The Project Files tab's editor (DESIGN.md §18, "Project files"). -->
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     <!-- LiveMarkdown brings its own fonts (Arial for text, Consolas for code); use the conversation's and code's from
          Settings → Appearance instead. Later styles win, so these follow the include. -->
     <!-- Claude's replies: the conversation font, or a serif in the Claude style (DESIGN.md §3, "Visual style"). -->
@@ -500,6 +502,10 @@
       <StreamGeometry x:Key="IconToolSearch">M5,1.5 A3.5,3.5 0 1 1 5,8.5 A3.5,3.5 0 1 1 5,1.5 M7.5,7.5 L10.5,10.5</StreamGeometry>
       <!-- A project (DESIGN.md §18, "Project tools"): a cube, for the sidebar's project row -->
       <StreamGeometry x:Key="IconProject">M6,1 L10.5,3.5 L10.5,8.5 L6,11 L1.5,8.5 L1.5,3.5 Z M1.5,3.5 L6,6 L10.5,3.5 M6,6 L6,11</StreamGeometry>
+      <!-- A folder tree: a group's Project files button and its Project Files tab (DESIGN.md §18, "Project files"). 12×12. -->
+      <StreamGeometry x:Key="IconFiles">M1.5,1.5 L4.5,1.5 L5.5,2.8 L10.5,2.8 L10.5,6 L1.5,6 Z M3,6 L3,10 L6,10 M3,8 L6,8 M6.5,7 L10.5,7 L10.5,9 L6.5,9 Z M6.5,9.2 L10.5,9.2 L10.5,11 L6.5,11 Z</StreamGeometry>
+      <!-- Lines folding up: the explorer's Collapse all. 12×12. -->
+      <StreamGeometry x:Key="IconCollapseAll">M1.5,1.5 L10.5,1.5 L10.5,10.5 L1.5,10.5 Z M3.5,6 L8.5,6</StreamGeometry>
       <StreamGeometry x:Key="IconToolFolder">M1,2.5 L4.5,2.5 L5.5,4 L11,4 L11,10 L1,10 Z</StreamGeometry>
       <StreamGeometry x:Key="IconToolWeb">M6,1 A5,5 0 1 1 6,11 A5,5 0 1 1 6,1 M1,6 L11,6 M6,1 C3.6,3.6 3.6,8.4 6,11 M6,1 C8.4,3.6 8.4,8.4 6,11</StreamGeometry>
       <StreamGeometry x:Key="IconToolWebSearch">M5,1.5 A3.5,3.5 0 1 1 5,8.5 A3.5,3.5 0 1 1 5,1.5 M1.5,5 L8.5,5 M5,1.5 C3.7,3 3.7,7 5,8.5 M5,1.5 C6.3,3 6.3,7 5,8.5 M7.5,7.5 L10.5,10.5</StreamGeometry>
@@ -567,6 +573,13 @@
           <SolidColorBrush x:Key="DiffAddedBrush" Color="#E6F4EA" />
           <SolidColorBrush x:Key="DiffRemovedBrush" Color="#FCE8E6" />
           <SolidColorBrush x:Key="DiffHunkBrush" Color="#EEF1F8" />
+          <!-- The Project Files tab's editor (DESIGN.md §18, "Project files"): the gutter's bars, the current line, and the
+               selection, a see-through tint so the code keeps its colors under it. -->
+          <SolidColorBrush x:Key="ChangeAddedBrush" Color="#2EA043" />
+          <SolidColorBrush x:Key="ChangeModifiedBrush" Color="{DynamicResource SystemAccentColor}" />
+          <SolidColorBrush x:Key="ChangeRemovedBrush" Color="#D1242F" />
+          <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0A000000" />
+          <SolidColorBrush x:Key="EditorSelectionBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.25" />
           <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.14" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#C42B1C" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A000000" />
@@ -663,6 +676,11 @@
           <SolidColorBrush x:Key="DiffAddedBrush" Color="#1D3B26" />
           <SolidColorBrush x:Key="DiffRemovedBrush" Color="#46201F" />
           <SolidColorBrush x:Key="DiffHunkBrush" Color="#23283A" />
+          <SolidColorBrush x:Key="ChangeAddedBrush" Color="#3FB950" />
+          <SolidColorBrush x:Key="ChangeModifiedBrush" Color="{DynamicResource SystemAccentColorLight2}" />
+          <SolidColorBrush x:Key="ChangeRemovedBrush" Color="#F85149" />
+          <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0FFFFFFF" />
+          <SolidColorBrush x:Key="EditorSelectionBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.3" />
           <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.22" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#E0605A" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FFFFFF" />

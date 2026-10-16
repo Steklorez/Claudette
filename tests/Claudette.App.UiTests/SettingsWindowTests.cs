@@ -181,8 +181,8 @@ public class SettingsWindowTests
         Assert.Equal("Claudette 0.1.0 · 842169b", version.GetVisualDescendants().OfType<TextBlock>().Single().Text);
         var report = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.ReportIssueCommand);
         Assert.True(report.IsEffectivelyVisible);
-        // The foot sits below the categories, not over them, with Report an issue last.
-        var categories = sidebar.GetVisualDescendants().OfType<ListBox>().First(l => l.IsVisible);
+        // The foot sits below the categories, not over them, with Report an issue last. They scroll when they don't fit.
+        var categories = sidebar.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "SidebarList");
         var categoriesBottom = categories.TranslatePoint(new Point(0, categories.Bounds.Height), sidebar)!.Value.Y;
         Assert.True(version.TranslatePoint(default, sidebar)!.Value.Y >= categoriesBottom);
         Assert.True(report.TranslatePoint(default, sidebar)!.Value.Y >= version.TranslatePoint(new Point(0, version.Bounds.Height), sidebar)!.Value.Y);

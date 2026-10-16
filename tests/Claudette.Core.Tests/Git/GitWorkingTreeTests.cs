@@ -44,6 +44,7 @@ public sealed class GitWorkingTreeTests : IDisposable
         Assert.Empty(await git.GetChangesAsync(_repo, Token));
         Assert.Null(await git.GetHeadContentAsync(_repo, Path.Combine(_repo, "a.txt"), Token));
         Assert.Null(await git.HasUncommittedChangesAsync(_repo, Token));
+        Assert.Null(await git.CheckIgnoredAsync(_repo, ["a.txt"], Token));
     }
 
     [Fact]
@@ -55,6 +56,7 @@ public sealed class GitWorkingTreeTests : IDisposable
         Assert.Empty(await _git.GetChangesAsync(_repo, Token));
         Assert.Null(await _git.GetHeadContentAsync(_repo, Path.Combine(_repo, "a.txt"), Token));
         Assert.Null(await _git.HasUncommittedChangesAsync(_repo, Token));
+        Assert.Null(await _git.CheckIgnoredAsync(_repo, ["a.txt"], Token));
         Assert.Null(await _git.GetRepositoryRootAsync(Path.Combine(_root, "missing"), Token));
     }
 
@@ -217,6 +219,60 @@ public sealed class GitWorkingTreeTests : IDisposable
         Write("b.txt", "b\n");
 
         Assert.True(await _git.HasUncommittedChangesAsync(_repo, Token));
+    }
+
+    [Fact]
+    public async Task Ignored_paths_are_the_ones_git_ignores_and_doesnt_track()
+    {
+        Assert.SkipWhen(!GitInstalled, "git isn't on PATH.");
+        await InitAsync();
+        Write(".gitignore", "build/\n*.log\n!keep.log\n");
+        Write("tracked.log", "x\n");
+        await GitAsync("add", "-f", "tracked.log");
+        Directory.CreateDirectory(Path.Combine(_repo, "build"));
+
+        var ignored = await _git.CheckIgnoredAsync(_repo, ["build/", "src/", "src/debug.log", "app.log", "keep.log", "tracked.log", "with space ü.log", "readme.md"], Token);
+
+        // The paths needn't be there, and come back as they were asked.
+        Assert.NotNull(ignored);
+        Assert.Equal(["app.log", "build/", "src/debug.log", "with space ü.log"], ignored.Order(StringComparer.Ordinal));
+        // Nothing ignored is an empty set, not "can't say".
+        Assert.Empty((await _git.CheckIgnoredAsync(_repo, ["readme.md", "keep.log"], Token))!);
+    }
+
+    [Fact]
+    public async Task Many_paths_are_asked_about_in_batches()
+    {
+        Assert.SkipWhen(!GitInstalled, "git isn't on PATH.");
+        await InitAsync();
+        Write(".gitignore", "*.log\n");
+        // Every third path is ignored, in each batch of 200.
+        var paths = Enumerable.Range(0, 450).Select(i => i % 3 == 0 ? $"file{i}.log" : $"file{i}.txt").ToArray();
+
+        var ignored = await _git.CheckIgnoredAsync(_repo, paths, Token);
+
+        Assert.NotNull(ignored);
+        Assert.Equal(paths.Where(p => p.EndsWith(".log", StringComparison.Ordinal)).Order(StringComparer.Ordinal), ignored.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public async Task Checking_what_git_ignores_goes_by_its_exit_code()
+    {
+        var launcher = new Support.FakeProcessLauncher();
+        var git = new GitWorkingTree(launcher, TimeProvider.System);
+
+        // 1: none of them is ignored.
+        var none = git.CheckIgnoredAsync(_repo, ["a.txt"], Token);
+        launcher.Processes[0].Exit(1);
+        Assert.Empty((await none)!);
+
+        // 128: git couldn't tell.
+        var cant = git.CheckIgnoredAsync(_repo, ["a.txt"], Token);
+        launcher.Processes[1].Exit(128);
+        Assert.Null(await cant);
+
+        // Without taking the index's lock, as the explorer asks often.
+        Assert.Equal(["-c", "core.quotepath=false", "--no-optional-locks", "check-ignore"], launcher.Started[0].Arguments.Take(4));
     }
 
     [Fact]

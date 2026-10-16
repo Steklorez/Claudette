@@ -1,0 +1,268 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:views="using:Claudette.App.Views"
+             x:Class="Claudette.App.Views.ProjectFilesView"
+             x:DataType="vm:ProjectFilesViewModel">
+  <!-- A folder group's Project Files tab (DESIGN.md §18, "Project files"): the explorer, on the left or the right, and
+       the files open in tabs. Its look is in Themes/ProjectFilesStyles.axaml. -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
+    <StyleInclude Source="avares://Claudette/Themes/ProjectFilesStyles.axaml" />
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*">
+    <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes") -->
+    <Border x:Name="PaneHeader" Classes="paneheader" Classes.focused="{Binding IsSelected}" IsVisible="{Binding IsInSplit}">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Classes="small" FontWeight="SemiBold" Text="{Binding DisplayName}" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ClosePaneCommand}"
+                ToolTip.Tip="Close pane: the tab stays open in the sidebar" AutomationProperties.Name="Close pane">
+          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+        </Button>
+      </Grid>
+    </Border>
+
+    <Grid x:Name="Body" Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+      <!-- The explorer ("The explorer"); its column is the first or the last, as Settings → Editor says -->
+      <Border x:Name="Explorer" Classes="explorer" Classes.right="{Binding IsExplorerOnRight}" Width="{Binding ExplorerWidth}" IsVisible="{Binding IsExplorerShown}">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Classes="explorerheader">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+              <TextBlock Classes="explorertitle" Text="{Binding ExplorerTitle}" ToolTip.Tip="{Binding Folder}" />
+              <Button Grid.Column="1" Classes="flat" Padding="6,4" Command="{Binding StartFindCommand}"
+                      ToolTip.Tip="{Binding FindTip}" AutomationProperties.Name="Find a file by name">
+                <Path Data="{StaticResource IconToolSearch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="11" Height="11" Stretch="Uniform" />
+              </Button>
+              <Button Grid.Column="2" Classes="flat" Padding="6,4" Command="{Binding CollapseAllCommand}" ToolTip.Tip="Collapse all" AutomationProperties.Name="Collapse all">
+                <Path Data="{StaticResource IconCollapseAll}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="11" Height="11" Stretch="Uniform" />
+              </Button>
+              <Button Grid.Column="3" Classes="flat" Padding="6,4" ToolTip.Tip="More" AutomationProperties.Name="More explorer actions">
+                <Path Data="{StaticResource IconMore}" Fill="{DynamicResource MutedTextBrush}" Width="11" Height="11" Stretch="Uniform" />
+                <Button.Flyout>
+                  <MenuFlyout>
+                    <MenuItem Header="Show only changed files" ToggleType="CheckBox" IsChecked="{Binding ShowOnlyChanged, Mode=OneWay}" Command="{Binding ToggleShowOnlyChangedCommand}" />
+                    <Separator IsVisible="{Binding IsGitRepository}" />
+                    <MenuItem Header="Claude's changes" ToggleType="Radio" IsChecked="{Binding AgainstClaudeChanges}" IsVisible="{Binding IsGitRepository}"
+                              ToolTip.Tip="Mark what the project's open tabs changed, against before Claude's first change" />
+                    <MenuItem Header="Against git HEAD" ToggleType="Radio" IsChecked="{Binding AgainstGitHead}" IsVisible="{Binding IsGitRepository}"
+                              ToolTip.Tip="Mark every change since the last commit: yours, commands' and closed tabs' too" />
+                    <Separator />
+                    <MenuItem Header="{Binding MoveExplorerText}" Command="{Binding MoveExplorerCommand}" />
+                    <MenuItem Header="Refresh" Command="{Binding RefreshExplorerCommand}" />
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
+            </Grid>
+          </Border>
+          <!-- Finding a file by name ("Finding a file by name") -->
+          <TextBox x:Name="FindBox" DockPanel.Dock="Top" Classes="findfile" Text="{Binding FindText}" IsVisible="{Binding IsFinding}"
+                   PlaceholderText="Find a file by name" AutomationProperties.Name="Find a file by name" KeyDown="OnFindKeyDown" />
+          <TextBlock DockPanel.Dock="Bottom" Classes="muted small" Margin="12,4,12,8" Text="{Binding FindSummary}" TextWrapping="Wrap"
+                     IsVisible="{Binding IsListingFound}" />
+          <Panel>
+            <!-- The tree -->
+            <ListBox x:Name="TreeList" Classes="explorerlist" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" IsVisible="{Binding ShowsTree}"
+                     AutomationProperties.Name="Project files" KeyDown="OnTreeKeyDown">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:ExplorerRow">
+                  <Panel Classes="explorerrow" Classes.ignored="{Binding IsIgnored}" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700"
+                         Tapped="OnRowTapped" DoubleTapped="OnRowDoubleTapped">
+                    <DockPanel>
+                      <Border DockPanel.Dock="Left" Width="{Binding Indent}" />
+                      <Panel DockPanel.Dock="Left" Width="14">
+                        <Path Data="{StaticResource IconChevronRight}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="8" Height="8" Stretch="Uniform"
+                              IsVisible="{Binding IsCollapsedFolder}" VerticalAlignment="Center" />
+                        <Path Data="{StaticResource IconChevronDown}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="8" Height="8" Stretch="Uniform"
+                              IsVisible="{Binding IsExpanded}" VerticalAlignment="Center" />
+                      </Panel>
+                      <Panel DockPanel.Dock="Left" Margin="0,0,6,0">
+                        <Path Classes="rowicon" Data="{StaticResource IconToolFolder}" IsVisible="{Binding IsFolder}" />
+                        <Path Classes="rowicon" Data="{StaticResource IconToolRead}" IsVisible="{Binding IsFile}" />
+                      </Panel>
+                      <TextBlock DockPanel.Dock="Right" Classes="changeletter" Classes.added="{Binding ChangeLetter, Converter={x:Static vm:Converters.IsAddedLetter}}"
+                                 Classes.reviewed="{Binding IsReviewed}" Text="{Binding ChangeLetter}" IsVisible="{Binding HasChangeLetter}" />
+                      <Ellipse DockPanel.Dock="Right" Classes="changedinside" IsVisible="{Binding HasChangesInside}" />
+                      <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <Panel.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="Open" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).OpenRowToStayCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsFile}" />
+                        <MenuItem Header="Open in the OS's app" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).OpenRowInSystemCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsFile}" />
+                        <MenuItem Header="Open diff" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).OpenRowDiffCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding HasChangeLetter}" />
+                        <Separator IsVisible="{Binding IsFile}" />
+                        <MenuItem Header="Copy path" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CopyRowPathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Copy relative path" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CopyRowRelativePathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Reveal in file manager" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RevealRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Collapse" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).ToggleRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsExpanded}" />
+                      </ContextMenu>
+                    </Panel.ContextMenu>
+                  </Panel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <!-- Show only changed files -->
+            <Panel IsVisible="{Binding ShowsChangedList}">
+              <TextBlock Classes="muted small" Margin="12,8" Text="Nothing has changed." TextWrapping="Wrap" IsVisible="{Binding HasNoChanges}" />
+              <ListBox x:Name="ChangedList" Classes="explorerlist" ItemsSource="{Binding ChangedRows}" AutomationProperties.Name="Changed files" KeyDown="OnTreeKeyDown">
+                <ListBox.ItemTemplate>
+                  <DataTemplate DataType="vm:ExplorerRow">
+                    <Panel Classes="explorerrow" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700" Tapped="OnRowTapped" DoubleTapped="OnRowDoubleTapped">
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Classes="changeletter" Classes.added="{Binding ChangeLetter, Converter={x:Static vm:Converters.IsAddedLetter}}"
+                                   Classes.reviewed="{Binding IsReviewed}" Text="{Binding ChangeLetter}" IsVisible="{Binding HasChangeLetter}" />
+                        <TextBlock Text="{Binding Name}" Classes.deleted="{Binding IsDeleted}" VerticalAlignment="Center" Margin="0,0,6,0" DockPanel.Dock="Left" />
+                        <TextBlock Classes="muted small" Text="{Binding FolderText}" TextTrimming="LeadingCharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding HasFolderText}" />
+                      </DockPanel>
+                    </Panel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Panel>
+            <!-- Files found by name, best first, each with its folder beside it -->
+            <ListBox x:Name="FoundList" Classes="explorerlist" ItemsSource="{Binding Found}" SelectedItem="{Binding SelectedFound}" IsVisible="{Binding IsListingFound}"
+                     AutomationProperties.Name="Files found by name">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:FoundFile">
+                  <DockPanel Background="Transparent" ToolTip.Tip="{Binding RelativePath}" ToolTip.ShowDelay="700" Tapped="OnFoundTapped">
+                    <ItemsControl DockPanel.Dock="Left" ItemsSource="{Binding NameParts}" VerticalAlignment="Center" Margin="0,0,8,0">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                          <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:NamePart">
+                          <TextBlock Text="{Binding Text}" FontWeight="{Binding IsMatch, Converter={x:Static vm:Converters.BoldIfTrue}}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="muted small" Text="{Binding Folder}" TextTrimming="LeadingCharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding HasFolder}" />
+                  </DockPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Panel>
+        </DockPanel>
+      </Border>
+      <!-- Drag the explorer's edge to resize it; double-click for the default width -->
+      <Border x:Name="ExplorerEdge" Width="6" Background="Transparent" Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding IsExplorerShown}" />
+
+      <!-- The files: their tabs, the question before files close, and the one showing -->
+      <DockPanel x:Name="Files" Grid.Column="1">
+        <Border DockPanel.Dock="Top" Classes="filetabs">
+          <DockPanel>
+            <Button DockPanel.Dock="Left" Classes="flat" Padding="9,0" VerticalAlignment="Stretch" Command="{Binding ToggleExplorerCommand}"
+                    ToolTip.Tip="{Binding ToggleExplorerText}" AutomationProperties.Name="{Binding ToggleExplorerText}">
+              <Path Data="{StaticResource IconSidebar}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="12" Height="12" Stretch="Uniform" />
+            </Button>
+            <Button DockPanel.Dock="Right" Classes="flat" Padding="9,0" VerticalAlignment="Stretch" ToolTip.Tip="Every open file" AutomationProperties.Name="Every open file"
+                    IsVisible="{Binding HasShowing}">
+              <Path Data="{StaticResource IconMore}" Fill="{DynamicResource MutedTextBrush}" Width="11" Height="11" Stretch="Uniform" />
+              <Button.Flyout>
+                <MenuFlyout ItemsSource="{Binding OpenFiles}">
+                  <MenuFlyout.ItemContainerTheme>
+                    <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:ProjectFileViewModel">
+                      <Setter Property="Header" Value="{Binding TabLabel}" />
+                      <Setter Property="ToggleType" Value="Radio" />
+                      <Setter Property="IsChecked" Value="{Binding IsShowing, Mode=OneWay}" />
+                      <Setter Property="Command" Value="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).ShowFileCommand, FallbackValue={x:Null}}" />
+                      <Setter Property="CommandParameter" Value="{Binding}" />
+                    </ControlTheme>
+                  </MenuFlyout.ItemContainerTheme>
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+            <ScrollViewer x:Name="TabsScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+              <ItemsControl x:Name="FileTabs" ItemsSource="{Binding OpenFiles}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="vm:ProjectFileViewModel">
+                    <Button Classes="flat filetab" Classes.showing="{Binding IsShowing}" Classes.preview="{Binding IsPreview}" Classes.modified="{Binding IsModified}"
+                            Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).ShowFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                            ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700" DoubleTapped="OnFileTabDoubleTapped" PointerReleased="OnFileTabPointerReleased"
+                            AutomationProperties.Name="{Binding TabLabel}">
+                      <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Path Data="{StaticResource IconPin}" Fill="{DynamicResource MutedTextBrush}" Width="7" Height="9" Stretch="Uniform" IsVisible="{Binding IsPinned}" VerticalAlignment="Center" />
+                        <TextBlock Classes="tablabel" Text="{Binding TabLabel}" />
+                        <Path Data="{StaticResource IconCheck}" Stroke="{DynamicResource OkTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform"
+                              IsVisible="{Binding IsReviewed}" VerticalAlignment="Center" ToolTip.Tip="Reviewed" />
+                        <Panel Width="18" VerticalAlignment="Center">
+                          <Ellipse Classes="unsaved" ToolTip.Tip="Unsaved edits" />
+                          <Button Classes="flat closefile" Padding="4" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CloseFileCommand, FallbackValue={x:Null}}"
+                                  CommandParameter="{Binding}" ToolTip.Tip="Close" AutomationProperties.Name="Close the file">
+                            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="7" Height="7" Stretch="Uniform" />
+                          </Button>
+                        </Panel>
+                      </StackPanel>
+                      <Button.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="Close" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CloseFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Close others" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CloseOtherFilesCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Close to the right" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CloseFilesToTheRightCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Close saved" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CloseSavedFilesCommand, FallbackValue={x:Null}}" />
+                          <MenuItem Header="Close all" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CloseAllFilesCommand, FallbackValue={x:Null}}" />
+                          <Separator />
+                          <MenuItem Header="{Binding PinMenuText}" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).TogglePinFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Reviewed" ToggleType="CheckBox" IsChecked="{Binding IsReviewed, Mode=OneWay}" IsVisible="{Binding CanReview}"
+                                    Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).ToggleFileReviewedCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <Separator />
+                          <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CopyFilePathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Copy relative path" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CopyFileRelativePathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Reveal in the explorer" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).RevealRowInTreeCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).RevealFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).OpenFileInSystemCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        </ContextMenu>
+                      </Button.ContextMenu>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </Border>
+        <!-- Closing files with unsaved edits asks first, in place ("Saving") -->
+        <Border DockPanel.Dock="Top" Classes="filebanner" IsVisible="{Binding IsAskingToClose}">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+              <Button Classes="accent" Content="{Binding Closing.SaveText, FallbackValue='Save'}" Command="{Binding SaveAndCloseCommand}" />
+              <Button Content="Don't save" Command="{Binding CloseWithoutSavingCommand}" />
+              <Button Content="Cancel" Command="{Binding CancelCloseCommand}" />
+            </StackPanel>
+            <TextBlock Text="{Binding Closing.Text, FallbackValue=''}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          </DockPanel>
+        </Border>
+        <Panel>
+          <StackPanel Classes="nofile" IsVisible="{Binding !HasShowing}">
+            <TextBlock Classes="muted" Text="No file open" HorizontalAlignment="Center" />
+            <TextBlock Classes="muted small" TextWrapping="Wrap" TextAlignment="Center"
+                       Text="Pick a file in the explorer, or find one by name." />
+            <Button HorizontalAlignment="Center" Content="Find a file…" Command="{Binding StartFindCommand}" />
+          </StackPanel>
+          <ItemsControl x:Name="OpenFileViews" ItemsSource="{Binding OpenFiles}">
+            <ItemsControl.Styles>
+              <Style Selector="ItemsControl > ContentPresenter" x:DataType="vm:ProjectFileViewModel">
+                <Setter Property="IsVisible" Value="{Binding IsShowing}" />
+              </Style>
+            </ItemsControl.Styles>
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <Panel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:ProjectFileViewModel">
+                <views:ProjectFileView />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Panel>
+      </DockPanel>
+    </Grid>
+  </Grid>
+</UserControl>

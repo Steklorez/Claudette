@@ -185,6 +185,7 @@ public static class KeyboardShortcuts
     public const string ZoomIn = "view.zoomIn";
     public const string ZoomOut = "view.zoomOut";
     public const string ResetZoom = "view.zoomReset";
+    public const string GoToFile = "files.goTo";
 
     /// <summary>Every rebindable command, in the order Settings lists them.</summary>
     public static IReadOnlyList<ShortcutCommand> All { get; } =
@@ -213,6 +214,7 @@ public static class KeyboardShortcuts
         new(ZoomIn, "Zoom in", Chord("Primary+OemPlus")),
         new(ZoomOut, "Zoom out", Chord("Primary+OemMinus")),
         new(ResetZoom, "Reset zoom", Chord("Primary+D0")),
+        new(GoToFile, "Go to a file in the project", Chord("Primary+P")),
     ];
 
     public static ShortcutCommand Command(string id) => All.First(c => c.Id == id);

@@ -50,6 +50,9 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory)
     /// <summary>Each tab's unsent message, and the stash (DESIGN.md §5, "Drafts and the stash").</summary>
     public string DraftsDirectory => Path.Combine(DataDirectory, Composer.DraftStore.FolderName);
 
+    /// <summary>The Project Files tabs' unsaved edits, so quitting never loses them (DESIGN.md §18, "Project files").</summary>
+    public string EditorBackupsDirectory => Path.Combine(DataDirectory, ProjectFiles.EditorBackups.FolderName);
+
     /// <summary>Downloaded Claudette releases, one folder per version (DESIGN.md §2, "Updating Claudette").</summary>
     public string UpdatesDirectory => Path.Combine(DataDirectory, "updates");
 

@@ -82,6 +82,24 @@ public sealed class AppState
     public List<double>? PaneShares { get; set; }
 
     /// <summary>
+    /// Each folder group's Project Files tab, with the files it has open (DESIGN.md §18, "Project files"). They come back
+    /// on every launch, as pinned tabs do.
+    /// </summary>
+    public List<ProjectFiles.ProjectFilesState> ProjectFiles { get; set; } = [];
+
+    /// <summary>
+    /// The folder groups' order in the sidebar, by folder, since a group with only its Project Files tab has no tab in
+    /// <see cref="Tabs"/> to place it by. Null: the order the tabs are in.
+    /// </summary>
+    public List<string>? GroupOrder { get; set; }
+
+    /// <summary>The Project Files tabs' explorer's width as the user dragged it, or null for the default. One for every tab.</summary>
+    public double? ExplorerWidth { get; set; }
+
+    /// <summary>The Project Files tabs' explorer is hidden, by its button.</summary>
+    public bool ExplorerHidden { get; set; }
+
+    /// <summary>
     /// The usage header is drawn taller, with charts of the session and the week (DESIGN.md §6, "Detailed header").
     /// Its chevron and Settings → Appearance both set it. Kept per machine, like the sidebar's collapsed state.
     /// </summary>

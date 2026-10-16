@@ -81,6 +81,35 @@ public sealed partial class ShellViewModel
         {
             Command("Go to the next tab waiting for you", SelectNextNeedingInput, KeyboardShortcuts.NextTabNeedingInput);
         }
+        // DESIGN.md §18, "Project files".
+        if (Groups.Count > 0)
+        {
+            Command("Go to file…", GoToFile, KeyboardShortcuts.GoToFile);
+        }
+        if (SelectedFiles is { } files)
+        {
+            if (files.Showing is { IsModified: true })
+            {
+                AsyncCommand("Save the file", files.SaveAsync);
+            }
+            if (files.HasUnsaved)
+            {
+                AsyncCommand("Save all files", files.SaveAllAsync);
+            }
+            if (files.Showing is { } showing)
+            {
+                AsyncCommand("Close the file", () => files.CloseShowingOrTabAsync(), KeyboardShortcuts.CloseTab);
+                Command("Go to line…", showing.RequestGoToLine);
+            }
+            Command(files.ShowOnlyChanged ? "Show every file in the explorer" : "Show only changed files", () => files.ShowOnlyChanged = !files.ShowOnlyChanged);
+            Command(files.ToggleExplorerText, () => files.ToggleExplorerCommand.Execute(null));
+            if (IsSplit)
+            {
+                Command("Close this pane", () => ClosePane(files));
+                Command("Close the other panes", CloseOtherPanes);
+            }
+            AsyncCommand("Close project files", () => CloseProjectFilesAsync(files));
+        }
         if (SelectedTab is { } tab)
         {
             Command("Find in the conversation", () => tab.OpenFindCommand.Execute(null), KeyboardShortcuts.Find);
@@ -119,6 +148,10 @@ public sealed partial class ShellViewModel
                 Command("Show MCP servers", () => tab.OpenSidePanelPage(SidePanelPage.Mcp));
             }
             Command("Show scratch pad", () => tab.OpenSidePanelPage(SidePanelPage.ScratchPad));
+            if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group)
+            {
+                Command("Open project files", () => OpenProjectFiles(group));
+            }
             // DESIGN.md §18, "Games with Claudette".
             if (_services.Games.IsEnabled)
             {
@@ -172,6 +205,14 @@ public sealed partial class ShellViewModel
                 SelectedTab = open;
                 return Task.CompletedTask;
             }, Detail: open.FolderName));
+        }
+        foreach (var openFiles in Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>())
+        {
+            entries.Add(new PaletteEntry(openFiles.DisplayName, "Tab", () =>
+            {
+                Selected = openFiles;
+                return Task.CompletedTask;
+            }, Detail: openFiles.Group.Label));
         }
 
         var state = _services.State;

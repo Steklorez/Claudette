@@ -126,6 +126,8 @@ public partial class ShellView : UserControl
         _dragItem = button switch
         {
             { DataContext: TabViewModel { IsRenaming: false } tab } when button.Classes.Contains("tab") => tab,
+            // A Project Files tab's row only goes out to the panes (DESIGN.md §18, "Project files").
+            { DataContext: ProjectFilesViewModel files } when button.Classes.Contains("tab") => files,
             { DataContext: TabGroupViewModel group } when button.Classes.Contains("grouplabel") => group,
             _ => null,
         };
@@ -146,19 +148,19 @@ public partial class ShellView : UserControl
         if (!_dragging)
         {
             // A group moves only up and down; a tab can also go out to the panes.
-            var moved = _dragItem is TabViewModel ? Math.Max(Math.Abs(at.X - _dragStart.X), Math.Abs(at.Y - _dragStart.Y)) : Math.Abs(at.Y - _dragStart.Y);
+            var moved = _dragItem is IShellTab ? Math.Max(Math.Abs(at.X - _dragStart.X), Math.Abs(at.Y - _dragStart.Y)) : Math.Abs(at.Y - _dragStart.Y);
             if (moved < DragThreshold)
             {
                 return;
             }
             _dragging = true;
-            if (_dragItem is TabViewModel dragged)
+            if (_dragItem is IShellTab dragged)
             {
                 // Selected once it's dropped: selecting it now would put it in the focused pane before it's anywhere.
                 dragged.IsDragged = true;
             }
         }
-        if (_dragItem is TabViewModel overPanes && ShowPaneDrop(shell, overPanes, e))
+        if (_dragItem is IShellTab overPanes && ShowPaneDrop(shell, overPanes, e))
         {
             return;
         }
@@ -215,7 +217,7 @@ public partial class ShellView : UserControl
             // Releasing the capture un-presses the button without a click, so dropping a group doesn't also collapse it.
             e.Pointer.Capture(null);
             e.Handled = true;
-            if (_dragItem is TabViewModel tab && ViewModel is { } shell)
+            if (_dragItem is IShellTab tab && ViewModel is { } shell)
             {
                 // On a pane it opens there (DESIGN.md §18, "Split panes"); anywhere else it's selected, as a click would.
                 if (PaneDropAt(shell, tab, e) is { } drop)
@@ -224,7 +226,7 @@ public partial class ShellView : UserControl
                 }
                 else
                 {
-                    shell.SelectCommand.Execute(tab);
+                    shell.Selected = tab;
                 }
             }
         }
@@ -234,7 +236,7 @@ public partial class ShellView : UserControl
     /// <summary>The drag is over, dropped or lost: the row and the panes go back to how they look.</summary>
     private void EndTabDrag()
     {
-        if (_dragItem is TabViewModel tab)
+        if (_dragItem is IShellTab tab)
         {
             tab.IsDragged = false;
         }
@@ -273,7 +275,7 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>Where a tab dragged from the sidebar would open: the pane under the pointer, and which half of it; null off the panes.</summary>
-    private (int Index, bool After, Rect Pane)? PaneDropAt(ShellViewModel shell, TabViewModel tab, PointerEventArgs e)
+    private (int Index, bool After, Rect Pane)? PaneDropAt(ShellViewModel shell, IShellTab tab, PointerEventArgs e)
     {
         if (Panes is not { } panel)
         {
@@ -299,7 +301,7 @@ public partial class ShellView : UserControl
     /// Over the panes, the half or the pane a dragged tab would take is marked, and says what dropping it does. True while
     /// it's over one; off them, the mark goes and the sidebar's own reordering carries on.
     /// </summary>
-    private bool ShowPaneDrop(ShellViewModel shell, TabViewModel tab, PointerEventArgs e)
+    private bool ShowPaneDrop(ShellViewModel shell, IShellTab tab, PointerEventArgs e)
     {
         if (PaneDropAt(shell, tab, e) is not { } drop)
         {
@@ -372,7 +374,7 @@ public partial class ShellView : UserControl
     /// The project's menu opened: look at the project's files again, so what's enabled is current (a solution generated
     /// from a terminal, say). The menu updates in place when that's done (DESIGN.md §18).
     /// </summary>
-    private void OnProjectMenuOpened(object? sender, EventArgs e) => ViewModel?.SelectedTab?.ProjectTools.RefreshCommand.Execute(null);
+    private void OnProjectMenuOpened(object? sender, EventArgs e) => ViewModel?.ProjectTab?.ProjectTools.RefreshCommand.Execute(null);
 
     /// <summary>An entry of the project's menu was picked: the menu closes, as a menu does.</summary>
     /// <summary>Closes the menu once the item has run its command, which a button does after raising Click.</summary>
@@ -474,9 +476,21 @@ public partial class ShellView : UserControl
             return;
         }
 
+        // With a Project Files tab focused, its own keys, and the window's shortcuts that act on a tab act on its editor
+        // (DESIGN.md §18, "Project files", "Keyboard").
+        if (shell.SelectedFiles is { } files && HandleFilesKey(files, e, Is))
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (Is(KeyboardShortcuts.NextTab))
         {
             shell.SelectNextCommand.Execute(null);
+        }
+        else if (Is(KeyboardShortcuts.GoToFile))
+        {
+            shell.GoToFileCommand.Execute(null);
         }
         else if (Is(KeyboardShortcuts.PreviousTab))
         {
@@ -548,6 +562,64 @@ public partial class ShellView : UserControl
             return;
         }
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// A Project Files tab's keys: <c>Ctrl/Cmd+S</c> saves (the composer's Stash elsewhere), <c>Ctrl/Cmd+Alt+S</c> saves
+    /// all, Find opens the editor's find, the previous and next message go through the changes, and
+    /// <c>Ctrl+PageDown</c>/<c>Ctrl+PageUp</c> (<c>Cmd+Option+→</c>/<c>←</c>) go to the next and previous file. Close tab
+    /// is the shell's, which closes the file showing.
+    /// </summary>
+    private static bool HandleFilesKey(ProjectFilesViewModel files, KeyEventArgs e, Func<string, bool> @is)
+    {
+        var primary = Shortcuts.IsMac ? KeyModifiers.Meta : KeyModifiers.Control;
+        if (e.Key == Key.S && e.KeyModifiers == primary)
+        {
+            files.SaveCommand.Execute(null);
+            return true;
+        }
+        if (e.Key == Key.S && e.KeyModifiers == (primary | KeyModifiers.Alt))
+        {
+            files.SaveAllCommand.Execute(null);
+            return true;
+        }
+        if (@is(KeyboardShortcuts.Find))
+        {
+            if (files.Showing is { IsText: true, IsEditMode: true } showing)
+            {
+                showing.RequestFind(replace: false);
+            }
+            else
+            {
+                files.StartFind();
+            }
+            return true;
+        }
+        if (@is(KeyboardShortcuts.PreviousMessage) && files.Showing is { } previous)
+        {
+            previous.PreviousChangeCommand.Execute(null);
+            return true;
+        }
+        if (@is(KeyboardShortcuts.NextMessage) && files.Showing is { } next)
+        {
+            next.NextChangeCommand.Execute(null);
+            return true;
+        }
+        var nextFile = Shortcuts.IsMac ? e.Key == Key.Right && e.KeyModifiers == (KeyModifiers.Meta | KeyModifiers.Alt) : e.Key == Key.PageDown && e.KeyModifiers == KeyModifiers.Control;
+        var previousFile = Shortcuts.IsMac ? e.Key == Key.Left && e.KeyModifiers == (KeyModifiers.Meta | KeyModifiers.Alt) : e.Key == Key.PageUp && e.KeyModifiers == KeyModifiers.Control;
+        if (nextFile || previousFile)
+        {
+            if (nextFile)
+            {
+                files.NextFile();
+            }
+            else
+            {
+                files.PreviousFile();
+            }
+            return true;
+        }
+        return false;
     }
 
     /// <summary>The message jump a key asks for (DESIGN.md §18, "Conversation cards"); null when it asks for none.</summary>

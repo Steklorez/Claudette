@@ -49,6 +49,11 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 /// reads the file.
 /// </param>
 /// <param name="AllowRevert">Whether <b>Revert</b> is offered; a turn's changes are only shown.</param>
+/// <param name="OpenInSystem"><b>Open in the OS's app</b>, whatever Settings → Editor says; null leaves it out.</param>
+/// <param name="RevertInto">
+/// Where <b>Revert</b> puts the text back instead of writing the file: the Project Files tab's editor (DESIGN.md §18,
+/// "Project files"), which compares with its own text. False when it couldn't.
+/// </param>
 public sealed record DiffSource(
     string Path,
     string DisplayPath,
@@ -62,7 +67,9 @@ public sealed record DiffSource(
     DiffReview? Review = null,
     bool FromGit = false,
     DiffAfter? After = null,
-    bool AllowRevert = true);
+    bool AllowRevert = true,
+    Func<string?, bool>? RevertInto = null,
+    Func<Task>? OpenInSystem = null);
 
 /// <summary>A diff's "after" side that isn't the file now; null text means the file didn't exist then.</summary>
 public sealed record DiffAfter(string? Text);
@@ -149,6 +156,11 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     [RelayCommand]
     private Task OpenInEditorAsync() => _source.OpenInEditor();
 
+    public bool CanOpenInSystem => _source.OpenInSystem is not null;
+
+    [RelayCommand]
+    private Task OpenInSystemAsync() => _source.OpenInSystem?.Invoke() ?? Task.CompletedTask;
+
     [RelayCommand]
     private Task RevealAsync() => _source.Reveal();
 
@@ -167,7 +179,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     public bool CanRevert => HasRevertTarget && !IsLoading && _after is not null && !_isBinary && !string.Equals(_after, _source.Before, StringComparison.Ordinal);
 
     /// <summary>There's something to put back: what the file held is known, and from git, the file is at HEAD.</summary>
-    private bool HasRevertTarget => _source.AllowRevert && _source.After is null && _source.BeforeKnown && !(_source.FromGit && _source.Before is null);
+    private bool HasRevertTarget => _source.AllowRevert && (_source.After is null || _source.RevertInto is not null) && _source.BeforeKnown && !(_source.FromGit && _source.Before is null);
 
     /// <summary><b>Revert file</b>'s tip: what the file goes back to.</summary>
     public string RevertFileTip => _source.FromGit ? "Put the whole file back as it is at HEAD" : "Put the whole file back as it was before Claude changed it";
@@ -200,6 +212,14 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     {
         if (!CanRevert)
         {
+            return;
+        }
+        if (_source.RevertInto is { } revertInto)
+        {
+            if (!revertInto(text))
+            {
+                Message = ChangedSince;
+            }
             return;
         }
         var path = _source.Path;

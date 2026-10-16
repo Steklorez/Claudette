@@ -187,6 +187,33 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
         return TrimOutput(result.StandardOutput).Split('\0', StringSplitOptions.RemoveEmptyEntries).Distinct(StringComparer.Ordinal).ToArray();
     }
 
+    /// <summary>
+    /// Which of <paramref name="paths"/>, relative to <paramref name="folder"/> with forward slashes (a folder's with one
+    /// at its end), git ignores, for the Project Files tab's explorer (DESIGN.md §18, "Project files"). A tracked file is
+    /// never ignored. Null when the folder isn't in a repository, or git can't say.
+    /// </summary>
+    public async Task<IReadOnlySet<string>?> CheckIgnoredAsync(string folder, IReadOnlyList<string> paths, CancellationToken cancellationToken = default)
+    {
+        var ignored = new HashSet<string>(StringComparer.Ordinal);
+        // A batch at a time, well inside a command line's limit.
+        foreach (var batch in paths.Chunk(200))
+        {
+            // Not -z: git takes that only with --stdin. A name git has to quote (with a tab or a quote mark in it) doesn't
+            // match, so it shows as not ignored.
+            var result = await RunAsync(folder, ["--no-optional-locks", "check-ignore", "--", .. batch], cancellationToken).ConfigureAwait(false);
+            // 0: some are ignored; 1: none are; anything else, git couldn't tell (not a repository, say).
+            if (result is not { ExitCode: 0 or 1 })
+            {
+                return null;
+            }
+            foreach (var path in result.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                ignored.Add(path.TrimEnd('\r'));
+            }
+        }
+        return ignored;
+    }
+
     /// <summary>Whether anything differs from HEAD, including untracked files. Null when it can't be told.</summary>
     public async Task<bool?> HasUncommittedChangesAsync(string folder, CancellationToken cancellationToken = default)
     {

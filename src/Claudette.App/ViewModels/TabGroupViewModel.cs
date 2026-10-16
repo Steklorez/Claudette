@@ -79,6 +79,21 @@ public sealed partial class TabGroupViewModel : ObservableObject
 
     public ObservableCollection<TabViewModel> Tabs { get; } = [];
 
+    /// <summary>
+    /// The group's Project Files tab (DESIGN.md §18, "Project files"), its first row; null while it isn't open. It keeps
+    /// the group in the sidebar with no session tab left.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFiles), nameof(HasNoFiles))]
+    public partial ProjectFilesViewModel? Files { get; set; }
+
+    public bool HasFiles => Files is not null;
+
+    public bool HasNoFiles => Files is null;
+
+    /// <summary>Neither a session tab nor its Project Files tab is open: the group leaves the sidebar.</summary>
+    public bool IsEmpty => Tabs.Count == 0 && Files is null;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Brush), nameof(SoftBrush))]
     public partial Color Color { get; set; }

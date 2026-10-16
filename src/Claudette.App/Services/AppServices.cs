@@ -5,11 +5,14 @@ using Claudette.Core.Auth;
 using Claudette.Core.Claude;
 using Claudette.Core.Composer;
 using Claudette.Core.Credentials;
+using Claudette.App.Editor;
 using Claudette.Core.Diffs;
+using Claudette.Core.Files;
 using Claudette.Core.Git;
 using Claudette.Core.Installation;
 using Claudette.Core.LoginItems;
 using Claudette.Core.Processes;
+using Claudette.Core.ProjectFiles;
 using Claudette.Core.ProjectTools;
 using Claudette.Core.ProjectTools.Unreal;
 using Claudette.Core.Protocol;
@@ -138,6 +141,7 @@ public sealed class AppServices : IAsyncDisposable
         Games = new GameService(this);
         ProtocolLog.DeleteOld(paths.ProtocolLogDirectory, timeProvider.GetUtcNow());
         BeforeContentStore.DeleteOld(paths.BeforeContentDirectory, timeProvider.GetUtcNow());
+        EditorBackups = new EditorBackups(paths.EditorBackupsDirectory, timeProvider);
         Notifications =new NotificationService(this, notifier ?? NullNotifier.Instance);
         Tips = new ShortcutTips(Settings);
         Perforce = new PerforceService(this, credentials ?? new UnavailableCredentialStore());
@@ -166,6 +170,18 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>Tooltips naming the current keyboard shortcuts (DESIGN.md §14, "Keyboard").</summary>
     public ShortcutTips Tips { get; }
+
+    /// <summary>The Project Files tabs' unsaved edits, kept on disk (DESIGN.md §18, "Project files").</summary>
+    public EditorBackups EditorBackups { get; }
+
+    /// <summary>
+    /// Makes an open file's document. AvaloniaEdit's, which only the UI thread may touch; view model tests, which have no
+    /// UI thread, put in a plain one.
+    /// </summary>
+    internal Func<string, IEditorDocument> EditorDocuments { get; set; } = text => new TextEditorDocument(text);
+
+    /// <summary>Watches the explorer's folders and the open files' (DESIGN.md §18, "Project files"); tests put in a fake.</summary>
+    internal IFolderWatcher FolderWatcher { get; set; } = new FolderWatcher();
 
     /// <summary>
     /// Claudette's animations stop (DESIGN.md §3, "Accessibility"): Settings → Appearance → Motion says so, or follows

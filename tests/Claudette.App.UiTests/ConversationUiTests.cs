@@ -67,7 +67,8 @@ public sealed class ConversationUiTests
     [AvaloniaFact]
     public async Task A_click_on_a_web_link_in_a_reply_opens_it_and_one_to_a_program_doesnt_run_it()
     {
-        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        // With files opening in the OS's app, where a script would run (DESIGN.md §18, "Files named in Claude's replies").
+        await using var h = new TabTestHarness(s => s.Editor.OpenFilesIn = Core.Settings.OpenFilesIn.System, dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
         await File.WriteAllTextAsync(Path.Combine(h.WorkFolder, "setup.bat"), "", TestContext.Current.CancellationToken);
         var window = UiText.Show(new ShellView { DataContext = h.Shell });

@@ -64,7 +64,7 @@ public sealed record InfoRow(string Label, string Value, bool CanCopy = false);
 /// One tab: one Claude Code session in a working folder (DESIGN.md §4). Starts its process lazily, when first selected
 /// or sent a message.
 /// </summary>
-public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
+public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDisposable
 {
     private readonly AppServices _services;
     private readonly ShellViewModel _shell;
@@ -169,8 +169,29 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>Asks the view to scroll to a conversation item, for example the card that started a process.</summary>
     public event Action<ConversationItem>? ScrollToRequested;
 
-    /// <summary>Asks the view to scroll to <paramref name="item"/>, wherever it is in the conversation.</summary>
-    public void ScrollTo(ConversationItem item) => ScrollToRequested?.Invoke(item);
+    /// <summary>
+    /// Asks the view to scroll to <paramref name="item"/>, wherever it is in the conversation; a tab not on screen yet
+    /// scrolls there once its view comes.
+    /// </summary>
+    public void ScrollTo(ConversationItem item)
+    {
+        if (ScrollToRequested is { } scroll)
+        {
+            scroll(item);
+            return;
+        }
+        _pendingScroll = item;
+    }
+
+    private ConversationItem? _pendingScroll;
+
+    /// <summary>What a view coming to the tab scrolls to first: an item asked for while it had none, such as a change a Files tab's peek went to.</summary>
+    internal ConversationItem? TakePendingScroll()
+    {
+        var item = _pendingScroll;
+        _pendingScroll = null;
+        return item;
+    }
 
     /// <summary>
     /// The conversation's top-level item that holds <paramref name="item"/>: itself, the Tool calls card it's a tile in,
@@ -1875,6 +1896,11 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         }
         _conversation.Apply(sessionEvent);
         ChangedFiles.Record(sessionEvent);
+        // A tool call's result: the project's Files tab looks at its open files again (DESIGN.md §18, "Project files").
+        if (sessionEvent is ToolResultsReceived)
+        {
+            _shell.OnTabWroteFiles(this);
+        }
         TrackReplies(sessionEvent);
         ObserveForComposer(sessionEvent);
         Perforce.OnSessionEvent(sessionEvent);
@@ -2005,6 +2031,8 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 RemoteControl.OnTurnCompleted(session);
                 // The files this turn changed, on its footer (DESIGN.md §8, "Changes per turn").
                 ChangedFiles.EndTurn(Items.LastOrDefault() as TurnSummaryItem);
+                // Bash may have changed files too: the project's Files tab looks at its open ones (DESIGN.md §18, "Project files").
+                _shell.OnTabWroteFiles(this);
                 // A thread waiting on this tab hears how the turn ended, before the thread's next message goes (DESIGN.md §18, "Threads").
                 OnTurnEndedForThread(completed.Result);
                 // A message held until the turn ended goes now (DESIGN.md §5, "Queued messages").

@@ -39,6 +39,8 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     void IChangedFilesHost.CopyToLibrary() => CopyToLibrary();
 
+    Task<bool> IChangedFilesHost.OpenPathAsync(string path) => OpenPathAsync(path);
+
     bool IChangedFilesHost.IsSelected => IsShown;
 
     void IChangedFilesHost.AllReviewedChanged()
