@@ -4,12 +4,15 @@ A .NET desktop app that wraps Claude Code in a native GUI: one tab per Claude Co
 
 [DESIGN.md](DESIGN.md) is the spec. `§n` always means a section of DESIGN.md.
 
+[GUIDE.md](GUIDE.md) is the plan for the user guide in `docs/`: how its pages are written and their pictures taken, and which page describes each part of Claudette.
+
 ## Working with the design
 
 - Read the relevant DESIGN.md sections before building a feature.
 - If the implementation has to differ from the design, update DESIGN.md in the same change. If the difference is a product decision (what the user sees or can do), ask first.
 - Build in the order given in §17 Milestones.
 - Record spike findings in DESIGN.md, replacing the spike note.
+- A new part of Claudette in DESIGN.md gets its row in GUIDE.md's map of pages in the same change. Once its chapter of the guide is written, a change people can see also updates its page and retakes its pictures (GUIDE.md, "Keeping it current").
 
 ## Backlog
 
@@ -36,6 +39,7 @@ The backlog is the open GitHub issues on `dotBunny/Claudette` assigned to `reapa
   - `tools/`: `Claudette.FakeClaude` (the `fake-claude` test double), `Claudette.MockApi` (a mock Messages API), `Claudette.Fixtures` (record mode: a protocol log to a cleaned fixture) and `Claudette.Demo` (`claudette-demo`: demo projects, tabs and usage history to run Claudette on with `fake-claude`, and `screenshots.ps1`, which takes the README's screenshots in `docs/screenshots/` from it).
   - `compat/`: the compatibility surface list, check script and snapshots (§16).
   - `packaging/`: the MSIX and `.dmg` build scripts, manifest, `Info.plist`, entitlements and icons (`icon/build-icons.mjs` draws them all); `.github/workflows/package.yml` runs them (§2, "Packaging and signing").
+  - `docs/`: the user guide, which GitHub Pages publishes at https://claudette.dotbunny.com, so everything in it is public (GUIDE.md).
 - `Claudette.Core`, `Claudette.Usage` and `Claudette.Platform` must not reference Avalonia.
 - Development happens on Windows, but the app must also run on macOS and Linux. Keep OS-specific code behind interfaces, in `Claudette.Platform`.
 - In XAML:
