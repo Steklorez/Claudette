@@ -150,6 +150,28 @@ public sealed class ProjectFilesUiTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public async Task Find_takes_the_keyboard_so_what_is_typed_is_searched_for()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, _, _, window) = await ShowAsync(h);
+        var editor = Editor(window);
+        editor.TextArea.Focus();
+        UiText.Settle(window);
+
+        var primary = OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control;
+        window.KeyPressQwerty(PhysicalKey.F, primary);
+        window.KeyReleaseQwerty(PhysicalKey.F, primary);
+        UiText.Settle(window);
+        window.KeyTextInput("Dash");
+        UiText.Settle(window);
+
+        Assert.False(editor.SearchPanel.IsClosed);
+        Assert.Equal("Dash", editor.SearchPanel.SearchPattern);
+        Assert.Equal(File.ReadAllText(Path.Combine(h.WorkFolder, "Source", "Player.cpp")), editor.Document.Text);
+        window.Close();
+    }
+
     private static async Task<TextBox> NewEntryBoxAsync(Window window)
     {
         TextBox? box = null;

@@ -11,7 +11,8 @@ public partial class NewTabPickerView : UserControl
     {
         InitializeComponent();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
-        AttachedToVisualTree += (_, _) => SearchBox.Focus();
+        // Once the overlay showing it is visible too: the view is attached before the overlay is.
+        AttachedToVisualTree += (_, _) => Avalonia.Threading.Dispatcher.UIThread.Post(() => SearchBox.Focus());
     }
 
     private NewTabPickerViewModel? ViewModel => DataContext as NewTabPickerViewModel;

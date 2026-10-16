@@ -992,7 +992,7 @@ An OS notification (optional) when:
 - A limit resets.
 - Usage credits start paying for Claude ([Usage credits](#usage-credits)).
 
-Each alert fires once per window. The first reading after a restart doesn't alert for levels that were already crossed. The alert also shows as a dismissible line under the header, and the OS notification is skipped while Claudette is in front ([§10](#10-notifications)). A threshold alert's line keeps up with the session meter (the percentage, rounded the same way, and the countdown), so the two never disagree.
+Each alert fires once per window. The first reading after a restart doesn't alert for levels that were already crossed. The alert also shows as a dismissible line under the header, and the OS notification is skipped while Claudette is in front ([§10](#10-notifications)). A threshold alert's line keeps up with the session meter (the percentage, rounded the same way, and the countdown), so the two never disagree. The projection alert's line keeps up with the projection under the session meter in the same way, and goes once the projection no longer hits the limit before the reset.
 
 ### Usage credits
 

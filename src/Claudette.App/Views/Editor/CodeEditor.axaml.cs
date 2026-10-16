@@ -275,7 +275,8 @@ public partial class CodeEditor : UserControl
         }
         search.IsReplaceMode = replace && !Editor.IsReadOnly;
         search.Open();
-        search.Reactivate();
+        // The first time, its box is only there once the panel has laid out; until then Reactivate does nothing.
+        Later(search.Reactivate);
     }
 
     private void OpenGoToLine()

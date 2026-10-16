@@ -174,8 +174,9 @@ public sealed class UsageAlertsTests
         Observe(10);
         var alert = Assert.Single(Observe(91));
 
-        var later = UsageAlerts.Refresh(alert, new LimitReading(LimitKind.Session, "Session", 94.2, WindowA, null, false), Now.AddMinutes(30));
+        var later = UsageAlerts.Refresh(alert, new LimitReading(LimitKind.Session, "Session", 94.2, WindowA, null, false), new BurnProjection(), Now.AddMinutes(30));
 
+        Assert.NotNull(later);
         Assert.Equal("Session usage passed 90%", later.Title);
         Assert.Equal("You've used 94% of your session limit. It resets in 1h 30m.", later.Message);
         Assert.Equal(90, later.Threshold);
@@ -189,8 +190,24 @@ public sealed class UsageAlertsTests
         var reset = Assert.Single(Observe(3, WindowB));
         var newWindow = new LimitReading(LimitKind.Session, "Session", 3, WindowB, null, false);
 
-        Assert.Same(threshold, UsageAlerts.Refresh(threshold, newWindow, Now));
-        Assert.Same(reset, UsageAlerts.Refresh(reset, newWindow, Now));
+        Assert.Same(threshold, UsageAlerts.Refresh(threshold, newWindow, new BurnProjection(), Now));
+        Assert.Same(reset, UsageAlerts.Refresh(reset, newWindow, new BurnProjection(), Now));
+    }
+
+    [Fact]
+    public void A_projection_alert_follows_the_projection_until_it_no_longer_hits_the_limit()
+    {
+        var hitting = new BurnProjection { CurrentPercent = 40, RatePerHour = 60, HitsLimitBeforeReset = true, TimeToLimit = TimeSpan.FromHours(1), MarginBeforeReset = TimeSpan.FromHours(1) };
+        var alert = Assert.Single(Observe(40, projection: hitting));
+        var later = new LimitReading(LimitKind.Session, "Session", 70, WindowA, null, false);
+
+        var closer = UsageAlerts.Refresh(alert, later, hitting with { CurrentPercent = 70, TimeToLimit = TimeSpan.FromMinutes(20), MarginBeforeReset = TimeSpan.FromMinutes(70) }, Now.AddMinutes(30));
+        Assert.NotNull(closer);
+        Assert.Equal("On pace to hit the session limit", closer.Title);
+        Assert.Equal("At this rate you'll hit the limit in 20m, 1h 10m before it resets.", closer.Message);
+
+        Assert.Null(UsageAlerts.Refresh(alert, later, new BurnProjection { CurrentPercent = 70, RatePerHour = 1, PercentAtReset = 72 }, Now.AddMinutes(30)));
+        Assert.Null(UsageAlerts.Refresh(alert, later with { Percent = 100 }, hitting with { CurrentPercent = 100 }, Now.AddMinutes(30)));
     }
 
     [Fact]

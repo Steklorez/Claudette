@@ -112,7 +112,7 @@ public sealed class UsageAlerts(TimeProvider clock)
             if (sessionProjection is { HitsLimitBeforeReset: true } && session.Percent < 100 && !_projectionFired)
             {
                 _projectionFired = true;
-                alerts.Add(new UsageAlert(UsageAlertKind.ProjectedToHitLimit, "On pace to hit the session limit", sessionProjection.Describe()));
+                alerts.Add(ProjectionAlert(sessionProjection));
             }
         }
         return alerts;
@@ -122,13 +122,21 @@ public sealed class UsageAlerts(TimeProvider clock)
         previous is { } before && current is { } after && after - before > SameWindowTolerance;
 
     /// <summary>
-    /// A threshold alert brought up to date with <paramref name="session"/>, so the line under the header says what the
-    /// meter says. Any other alert, or one for a window that has since reset, stays as it is.
+    /// An alert brought up to date, so the line under the header says what the header says: a threshold alert with
+    /// <paramref name="session"/>, and a projection alert with <paramref name="projection"/>, or null once the projection
+    /// no longer hits the limit before the reset. Any other alert, or a threshold alert for a window that has since reset,
+    /// stays as it is.
     /// </summary>
-    public static UsageAlert Refresh(UsageAlert alert, LimitReading session, DateTimeOffset now) =>
-        alert is { Kind: UsageAlertKind.ThresholdCrossed, Threshold: { } threshold } && session.Percent >= threshold
-            ? ThresholdAlert(session, threshold, now)
-            : alert;
+    public static UsageAlert? Refresh(UsageAlert alert, LimitReading session, BurnProjection projection, DateTimeOffset now) =>
+        alert switch
+        {
+            { Kind: UsageAlertKind.ThresholdCrossed, Threshold: { } threshold } when session.Percent >= threshold => ThresholdAlert(session, threshold, now),
+            { Kind: UsageAlertKind.ProjectedToHitLimit } => projection.HitsLimitBeforeReset && session.Percent < 100 ? ProjectionAlert(projection) : null,
+            _ => alert,
+        };
+
+    private static UsageAlert ProjectionAlert(BurnProjection projection) =>
+        new(UsageAlertKind.ProjectedToHitLimit, "On pace to hit the session limit", projection.Describe());
 
     private static UsageAlert ThresholdAlert(LimitReading session, double threshold, DateTimeOffset now)
     {

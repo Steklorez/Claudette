@@ -154,6 +154,34 @@ public class UsageHeaderTests
     }
 
     [Fact]
+    public async Task The_projection_alert_follows_the_projection_and_goes_when_the_pace_slows()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(4);
+
+        tracker.OnRateLimitEvent(Event(0.40, resets, 0.30));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+        h.Time.Advance(TimeSpan.FromMinutes(10));
+        tracker.OnRateLimitEvent(Event(0.50, resets, 0.31));
+        await TabTestHarness.Eventually(() => header.HasAlert, "the alert");
+        Assert.Equal("On pace to hit the session limit", header.Alert!.Title);
+        Assert.Equal("At this rate you'll hit the limit in 50m, 3h 00m before it resets.", header.Alert.Message);
+
+        // The header's clock moves the projection on, and the line with it.
+        h.Time.Advance(TimeSpan.FromMinutes(1));
+        await TabTestHarness.Eventually(() => header.Alert?.Message != "At this rate you'll hit the limit in 50m, 3h 00m before it resets.", "the line moved on");
+        Assert.Equal(header.ProjectionText, header.Alert!.Message);
+
+        h.Time.Advance(TimeSpan.FromMinutes(29));
+        tracker.OnRateLimitEvent(Event(0.52, resets, 0.31));
+
+        await TabTestHarness.Eventually(() => !header.HasAlert, "the alert gone");
+        Assert.Equal("On track: about 65% used when the session resets.", header.ProjectionText);
+    }
+
+    [Fact]
     public async Task The_usage_panel_lists_every_past_session_a_page_at_a_time()
     {
         await using var h = new TabTestHarness();

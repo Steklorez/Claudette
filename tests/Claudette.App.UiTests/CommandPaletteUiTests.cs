@@ -9,7 +9,7 @@ using Claudette.App.Views;
 
 namespace Claudette.App.UiTests;
 
-/// <summary>The command palette and prompt recall, by keyboard (DESIGN.md §4, §5).</summary>
+/// <summary>The command palette, the new tab picker and prompt recall, by keyboard (DESIGN.md §4, §5).</summary>
 public class CommandPaletteUiTests
 {
     private static readonly RawInputModifiers Primary = OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control;
@@ -44,6 +44,23 @@ public class CommandPaletteUiTests
         Press(window, PhysicalKey.P, Primary | RawInputModifiers.Shift);
         Press(window, PhysicalKey.Escape);
         Assert.False(h.Shell.IsPaletteOpen);
+    }
+
+    [AvaloniaFact]
+    public async Task The_new_tab_picker_opens_from_its_shortcut_with_its_search_box_taking_the_keyboard()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1100, 800);
+
+        Press(window, PhysicalKey.T, Primary);
+        Assert.True(h.Shell.IsPickerOpen);
+        var box = window.GetVisualDescendants().OfType<TextBox>().Single(b => b.Name == "SearchBox" && b.IsEffectivelyVisible);
+        Assert.True(box.IsFocused);
+
+        window.KeyTextInput("star");
+        UiText.Settle(window);
+        Assert.Equal("star", h.Shell.Picker!.Search);
     }
 
     [AvaloniaFact]

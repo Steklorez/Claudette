@@ -109,7 +109,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// The latest usage alert, shown under the header until dismissed. A threshold alert's numbers follow the session
-    /// meter.
+    /// meter, and a projection alert's the projection, until the projection stops saying the limit will be hit.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAlert))]
@@ -225,8 +225,8 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
             SessionProjection = ProjectionLine(projection, session.ResetsAt, now);
             if (Alert is { } alert)
             {
-                // The line under the header keeps saying what the meter says.
-                Alert = UsageAlerts.Refresh(alert, session, now);
+                // The line under the header keeps saying what the meter and the projection say.
+                Alert = UsageAlerts.Refresh(alert, session, projection, now);
             }
         }
 

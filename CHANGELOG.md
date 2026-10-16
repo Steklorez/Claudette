@@ -29,12 +29,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- **On pace to hit the session limit** under the header keeps up with the projection, and goes once you're no longer on pace to hit it, rather than repeating the time it was first worked out from.
 - Right-click menus no longer run off the bottom of some displays, and Claudette's own menu stays inside the window.
 - The folder trust question fits in the window when a folder's configuration lists a lot.
 - The spacing of thinking and the height of lines in the conversation.
 - In a long conversation, the scroll bar keeps its size and place as you scroll, rather than changing as each message comes into view.
 - The tab info card's **Project** row no longer ends a sentence with two full stops when the project's engine wasn't found.
 - In a narrow conversation, as beside the side panel, the line saying what Claude is doing no longer runs over the side panel: a long command trims to fit. The composer's choices wrap onto another line, and the folder and status under it trim, rather than running past its edge.
+- **New tab** (`Ctrl/Cmd+T`) puts the cursor in its search box, so you can type a folder's name straight away.
 
 ## [0.2.0] - 2026-10-14
 
