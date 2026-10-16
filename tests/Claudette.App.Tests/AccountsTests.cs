@@ -137,6 +137,37 @@ public class AccountsTests
     }
 
     [Fact]
+    public async Task A_tab_moved_to_an_api_key_counts_only_what_its_turns_there_spend()
+    {
+        // The resumed claude starts from the totals the transcript saved, and its first result carries them: without
+        // them taken off, the whole conversation's spend so far would count against the key (DESIGN.md §6).
+        await using var h = new TabTestHarness();
+        UseKeys(h);
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
+        var tab = await h.OpenTabAsync();
+        h.Transport.EmitTurn();
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.IsSettled && tab.State.Tokens.Turns == 2, "two turns on Default");
+        // What Claude Code saves when the process exits: the two turns' totals.
+        h.WriteTranscript("s1", """{"type":"cost-state","sessionId":"s1","totalCostUSD":0.02,"modelUsage":{"claude-opus-5-5":{"inputTokens":200,"outputTokens":40,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"costUSD":0.02}}}""");
+
+        tab.SwitchAccountCommand.Execute(work.Id);
+        await Assert.IsType<ConfirmationViewModel>(h.Shell.Confirmation).ConfirmCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.IsSettled, "the restart");
+        Assert.Equal(240, Assert.Single(h.Factory.Launches[1].RestoredUsage).Total);
+        h.Transport.RestoreUsage("claude-opus-5-5", 200, 40, 0.02);
+        h.Transport.EmitTurn();
+
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Turns == 3, "the turn under Work");
+        Assert.Equal(360, tab.State.Tokens.Total);
+        await TabTestHarness.Eventually(() => tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue) > 0, "the turn's record");
+        Assert.Equal(0.01, tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue), precision: 6);
+        Assert.Equal(0.02, tracker.Store.GetSpend(null, DateTimeOffset.MinValue), precision: 6);
+    }
+
+    [Fact]
     public async Task A_tab_with_nothing_to_carry_on_moves_without_asking()
     {
         await using var h = new TabTestHarness();

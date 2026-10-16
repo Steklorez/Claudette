@@ -221,7 +221,7 @@ public class ConversationCardsTests
         {
             AssistantMessage a => new AssistantMessageReceived(a),
             UserMessage u => new ToolResultsReceived(u),
-            ResultMessage r => new TurnCompleted(r),
+            ResultMessage r => new TurnCompleted(r, ModelUsageTotals.From(r.ModelUsage)),
             _ => throw new InvalidOperationException(message.GetType().Name),
         });
     }

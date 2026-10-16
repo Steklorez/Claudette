@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using Claudette.Core;
 using Claudette.Core.Docs;
 using Claudette.Core.Protocol;
+using Claudette.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveMarkdown.Avalonia;
@@ -1039,9 +1040,10 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
     public string FilesText => Files.Count == 1 ? "1 file changed" : $"{Files.Count} files changed";
 
     /// <summary>The footer for a turn's result; null when the result says none of those.</summary>
+    /// <param name="spent">What the turn spent, by model: the models it names.</param>
     /// <param name="modelName">Turns a model id into a display name.</param>
     /// <param name="toolCalls">The tool calls the turn made.</param>
-    internal static TurnSummaryItem? For(ResultMessage result, Func<string?, string?> modelName, int toolCalls = 0)
+    internal static TurnSummaryItem? For(ResultMessage result, ModelUsageTotals spent, Func<string?, string?> modelName, int toolCalls = 0)
     {
         var parts = new List<string>();
         if (result.DurationMs is { } ms)
@@ -1054,9 +1056,10 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
             var output = Number(usage["output_tokens"]) ?? 0;
             parts.Add($"{Tokens(input)} in · {Tokens(output)} out");
         }
-        if (result.ModelUsage is { Count: > 0 } models)
+        // Only the models this turn used: the result's own list counts every turn of the process.
+        if (!spent.IsEmpty)
         {
-            parts.Add(string.Join(", ", models.Select(m => modelName(m.Key) ?? m.Key)));
+            parts.Add(string.Join(", ", spent.Models.Keys.Select(m => modelName(m) ?? m)));
         }
         return parts.Count > 0
             ? new TurnSummaryItem(string.Join(" · ", parts)) { ToolCalls = toolCalls, CacheReadTokens = Number(result.Usage?["cache_read_input_tokens"]) }

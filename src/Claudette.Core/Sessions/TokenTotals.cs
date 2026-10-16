@@ -1,7 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using Claudette.Core.Protocol;
-
 namespace Claudette.Core.Sessions;
 
 /// <summary>Tokens and estimated cost for one model.</summary>
@@ -34,30 +30,29 @@ public sealed class TokenTotals
 
     public double EstimatedCostUsd => Models.Values.Sum(m => m.EstimatedCostUsd);
 
-    /// <summary>Adds one turn's usage, from the result's per-model <c>modelUsage</c>.</summary>
-    public void Add(ResultMessage result)
+    /// <summary>
+    /// Adds one turn's usage (<see cref="TurnCompleted.Usage"/>, its share of the result's running totals). A turn that
+    /// spent nothing isn't counted.
+    /// </summary>
+    public void Add(ModelUsageTotals turn)
     {
-        if (result.ModelUsage is not { Count: > 0 } byModel)
+        if (turn.IsEmpty)
         {
             return;
         }
         Turns++;
-        foreach (var (model, node) in byModel)
+        foreach (var (model, usage) in turn.Models)
         {
-            if (node is not JsonObject usage)
-            {
-                continue;
-            }
             if (!Models.TryGetValue(model, out var totals))
             {
                 totals = new ModelTokenTotals();
                 Models[model] = totals;
             }
-            totals.Input += Number(usage["inputTokens"]);
-            totals.Output += Number(usage["outputTokens"]);
-            totals.CacheWrite += Number(usage["cacheCreationInputTokens"]);
-            totals.CacheRead += Number(usage["cacheReadInputTokens"]);
-            totals.EstimatedCostUsd += usage["costUSD"] is JsonValue cost && cost.GetValueKind() == JsonValueKind.Number ? cost.GetValue<double>() : 0;
+            totals.Input += usage.Input;
+            totals.Output += usage.Output;
+            totals.CacheWrite += usage.CacheWrite;
+            totals.CacheRead += usage.CacheRead;
+            totals.EstimatedCostUsd += usage.CostUsd;
         }
     }
 
@@ -68,6 +63,4 @@ public sealed class TokenTotals
         >= 1_000 => $"{tokens / 1_000.0:0.#}k tok",
         _ => $"{tokens} tok",
     };
-
-    private static long Number(JsonNode? node) => node.AsWholeNumber() ?? 0;
 }

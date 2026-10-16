@@ -4,6 +4,7 @@ using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
 using Claudette.Core.Files;
 using Claudette.Core.Protocol;
+using Claudette.Core.Sessions;
 using Claudette.Usage;
 
 namespace Claudette.App.Tests;
@@ -358,8 +359,10 @@ public class UsageHeaderTests
         return new RateLimitEventMessage(info, new JsonObject { ["type"] = "rate_limit_event", ["rate_limit_info"] = info.DeepClone() });
     }
 
-    private static ResultMessage Result(long input, long output) =>
-        (ResultMessage)(MessageParser.TryParse(new JsonObject
+    /// <summary>A turn that spent this much.</summary>
+    private static TurnCompleted Result(long input, long output)
+    {
+        var result = (ResultMessage)(MessageParser.TryParse(new JsonObject
         {
             ["type"] = "result",
             ["subtype"] = "success",
@@ -367,4 +370,6 @@ public class UsageHeaderTests
             ["session_id"] = "s1",
             ["modelUsage"] = new JsonObject { ["claude-opus-5-5"] = new JsonObject { ["inputTokens"] = input, ["outputTokens"] = output, ["costUSD"] = 0.01 } },
         }.ToJsonString(), out var message, out _) ? message! : throw new InvalidOperationException());
+        return new TurnCompleted(result, ModelUsageTotals.From(result.ModelUsage));
+    }
 }

@@ -127,7 +127,7 @@
             <!-- The selected tab runs under an API key: its estimated spend in place of the plan's meters (DESIGN.md §4,
                  "Accounts"). Click for the Usage panel. -->
             <Button x:Name="AccountSpend" Classes="header" IsVisible="{Binding ShowsSpend}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
-                    ToolTip.Tip="{x:Static vm:AccountSpendViewModel.Tooltip}" AutomationProperties.Name="Estimated API spend">
+                    ToolTip.Tip="{Binding Spend.Tooltip, FallbackValue={x:Null}}" AutomationProperties.Name="Estimated API spend">
               <StackPanel Orientation="Horizontal" Spacing="14">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                   <Ellipse Width="8" Height="8" Fill="{Binding Spend.Tag.Brush, FallbackValue={x:Null}}" VerticalAlignment="Center" />

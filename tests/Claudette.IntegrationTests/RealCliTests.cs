@@ -7,6 +7,7 @@ using Claudette.Core.Installation;
 using Claudette.Core.Processes;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
+using Claudette.Core.Transcripts;
 using Claudette.IntegrationTests.Support;
 using Claudette.MockApi;
 
@@ -115,6 +116,38 @@ public sealed class RealCliTests : IAsyncLifetime
         Assert.Equal(MockAnthropicApi.Suggestion, suggested.Suggestion);
         Assert.Equal(SessionState.Idle, session.State);
         Assert.Contains(_api.Requests, r => r.Reply == "suggestion");
+    }
+
+    [Fact]
+    public async Task Each_turn_counts_once_and_a_resumed_session_counts_only_its_new_turn()
+    {
+        // A result's modelUsage is the process's running total, and a resumed process starts from the totals its
+        // transcript saved when the last one exited (DESIGN.md §6, "Usage history").
+        string sessionId;
+        ModelUsageTotals one;
+        await using (var session = await StartAsync())
+        {
+            await session.SendUserMessageAsync("hello one", TestContext.Current.CancellationToken);
+            var (first, _) = await session.ReadUntilAsync<TurnCompleted>();
+            await session.SendUserMessageAsync("hello two", TestContext.Current.CancellationToken);
+            var (second, _) = await session.ReadUntilAsync<TurnCompleted>();
+            one = first.Usage;
+            sessionId = first.Result.SessionId!;
+
+            Assert.False(one.IsEmpty);
+            Assert.Equal(one.Total, second.Usage.Total);
+            Assert.Equal(2 * one.Total, ModelUsageTotals.From(second.Result.ModelUsage).Total);
+        }
+        var transcript = Directory.EnumerateFiles(Path.Combine(Config, "projects"), $"{sessionId}.jsonl", SearchOption.AllDirectories).Single();
+        var saved = await CostState.ReadAllAsync(transcript, TestContext.Current.CancellationToken);
+        Assert.Equal(2 * one.Total, saved[^1].Total);
+
+        await using var resumed = await StartAsync(resume: sessionId, restoredUsage: saved);
+        await resumed.SendUserMessageAsync("hello three", TestContext.Current.CancellationToken);
+        var (third, _) = await resumed.ReadUntilAsync<TurnCompleted>();
+
+        Assert.Equal(3 * one.Total, ModelUsageTotals.From(third.Result.ModelUsage).Total);
+        Assert.Equal(one.Total, third.Usage.Total);
     }
 
     // ---- Rewind and branch, hook rows, MCP servers (DESIGN.md §5, §4) ------------------------------------------------
@@ -970,7 +1003,7 @@ public sealed class RealCliTests : IAsyncLifetime
     private async Task<ClaudeSession> StartAsync(string? permissionMode = null, string? resume = null, IReadOnlyList<HookRegistration>? hooks = null, string? appendSystemPrompt = null, Dictionary<string, string?>? environment = null,
         string model = "claude-haiku-4-5", bool replayUserMessages = false, bool includeHookEvents = false, bool forkSession = false, string? resumeSessionAt = null,
         string? fallbackModel = null, IReadOnlyList<string>? additionalArguments = null, bool agentProgressSummaries = false, string? worktree = null,
-        IReadOnlyList<string>? addDirectories = null, bool promptSuggestions = false, string? settings = null)
+        IReadOnlyList<string>? addDirectories = null, bool promptSuggestions = false, string? settings = null, IReadOnlyList<ModelUsageTotals>? restoredUsage = null)
     {
         RealCli.SkipUnlessInstalled(_factory is not null);
         var overrides = new Dictionary<string, string?>
@@ -1006,6 +1039,7 @@ public sealed class RealCliTests : IAsyncLifetime
             AddDirectories = addDirectories ?? [],
             PromptSuggestions = promptSuggestions,
             Settings = settings,
+            RestoredUsage = restoredUsage ?? [],
         }, TestContext.Current.CancellationToken);
     }
 }

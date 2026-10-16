@@ -53,7 +53,7 @@
         <ItemsControl ItemsSource="{Binding Tabs}">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:TabBurnRow">
-              <Grid ColumnDefinitions="*,120,80,70,70" Margin="0,3">
+              <Grid ColumnDefinitions="*,120,80,70,70" Margin="0,3" Background="Transparent" ToolTip.Tip="{Binding Tooltip}">
                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                 <ProgressBar Grid.Column="1" Classes="share" Value="{Binding Share}" VerticalAlignment="Center" Margin="8,0" />
                 <TextBlock Grid.Column="2" Classes="mono small" Text="{Binding Tokens}" HorizontalAlignment="Right" VerticalAlignment="Center" />
@@ -72,7 +72,7 @@
           <ComboBox Grid.Column="1" MinWidth="170" ItemsSource="{Binding ProjectPeriods}" SelectedItem="{Binding SelectedProjectPeriod}"
                     AutomationProperties.Name="Period" />
         </Grid>
-        <TextBlock Classes="muted small" Text="Tokens used in each folder, across all its tabs." TextWrapping="Wrap" />
+        <TextBlock Classes="muted small" Text="{Binding ProjectsNote}" TextWrapping="Wrap" />
         <TextBlock Classes="muted" Text="No turns in this period." IsVisible="{Binding !HasProjects}" />
         <ItemsControl ItemsSource="{Binding Projects}">
           <ItemsControl.ItemTemplate>
@@ -97,7 +97,7 @@
         <ItemsControl ItemsSource="{Binding Accounts}">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:AccountBurnRow">
-              <Grid ColumnDefinitions="*,120,80,70,70" Margin="0,3">
+              <Grid ColumnDefinitions="*,120,80,70,70" Margin="0,3" Background="Transparent" ToolTip.Tip="{Binding Tooltip}">
                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                 <ProgressBar Grid.Column="1" Classes="share" Value="{Binding Share}" VerticalAlignment="Center" Margin="8,0" />
                 <TextBlock Grid.Column="2" Classes="mono small" Text="{Binding Tokens}" HorizontalAlignment="Right" VerticalAlignment="Center" />

@@ -49,6 +49,13 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
 
     public string NameOf(string? id) => Find(id)?.Name ?? DefaultName;
 
+    /// <summary>
+    /// This machine's account named <paramref name="name"/>, without case or spaces at its ends: the same account as
+    /// another machine's of that name (DESIGN.md §6, "Sharing across machines"). Null when there's none.
+    /// </summary>
+    public ClaudeAccount? FindByName(string? name) =>
+        name?.Trim() is { Length: > 0 } wanted ? All.FirstOrDefault(a => string.Equals(a.Name.Trim(), wanted, StringComparison.OrdinalIgnoreCase)) : null;
+
     /// <summary>The color of an account's tag; the muted text color's stand-in for Default, which has no tag.</summary>
     public static Color ColorOf(ClaudeAccount? account) =>
         account is not null && TabGroupViewModel.TryParseHex(account.Color, out var color) ? color : TabGroupViewModel.Palette[0].Color;
@@ -169,8 +176,21 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
     // ---- Spend warnings ---------------------------------------------------------------------------------------------
 
     /// <summary>
+    /// Other machines' turns under API-key accounts of these names were added to the usage history (DESIGN.md §6, "Sharing
+    /// across machines"): this machine's accounts of the same names may have passed their warnings.
+    /// </summary>
+    public async Task OnTurnsImportedAsync(IReadOnlyCollection<string> accountNames)
+    {
+        foreach (var account in accountNames.Select(FindByName).OfType<ClaudeAccount>().DistinctBy(a => a.Id).ToArray())
+        {
+            await OnSpendRecordedAsync(account.Id);
+        }
+    }
+
+    /// <summary>
     /// A turn of <paramref name="accountId"/>'s was recorded: warns once a day and once a month when its estimated spend
-    /// passes what Settings → Accounts says. Reads the usage history off the UI thread.
+    /// passes what Settings → Accounts says. The spend counts other machines' turns under an account of the same name
+    /// (DESIGN.md §6, "Sharing across machines"). Reads the usage history off the UI thread.
     /// </summary>
     public async Task OnSpendRecordedAsync(string accountId)
     {
@@ -180,10 +200,11 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         }
         var now = services.Time.GetLocalNow();
         var (today, month) = (SpendPeriods.StartOfDay(now), SpendPeriods.StartOfMonth(now));
+        var name = account.Name;
         double spentToday, spentThisMonth;
         try
         {
-            (spentToday, spentThisMonth) = await Task.Run(() => (usage.Store.GetSpend(account.Id, today), usage.Store.GetSpend(account.Id, month))).ConfigureAwait(false);
+            (spentToday, spentThisMonth) = await Task.Run(() => (usage.Store.GetSpend(account.Id, today, name), usage.Store.GetSpend(account.Id, month, name))).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

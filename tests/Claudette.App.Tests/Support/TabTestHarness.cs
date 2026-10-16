@@ -142,9 +142,17 @@ internal sealed class ScriptedTransport : IClaudeTransport
         return ValueTask.CompletedTask;
     }
 
-    public void Emit(JsonObject message) => _process.Write(message.ToJsonString());
+    public void Emit(JsonObject message) => Emit(message.ToJsonString());
 
-    public void Emit(string line) => _process.Write(line);
+    public void Emit(string line)
+    {
+        // Claude Code starts its running totals again when the conversation is cleared.
+        if (line.Contains("\"conversation_reset\"", StringComparison.Ordinal))
+        {
+            _process.RunningUsage.Clear();
+        }
+        _process.Write(line);
+    }
 
     /// <summary>
     /// Emits on the pretend process started <paramref name="index"/>th (0 for the first), for tests with several tabs
@@ -176,9 +184,29 @@ internal sealed class ScriptedTransport : IClaudeTransport
         _ => "",
     };
 
-    /// <summary>A complete turn: init, a text reply and a result with usage.</summary>
+    /// <summary>
+    /// Starts the current pretend process's running totals from what a transcript saved, as Claude Code does for a resumed
+    /// or forked session: its results carry them from then on.
+    /// </summary>
+    public void RestoreUsage(string model, long input, long output, double cost) => _process.RunningUsage[model] = (input, output, cost);
+
+    /// <summary>
+    /// A complete turn: init, a text reply and a result with usage. The turn spends 100 input and 20 output tokens and
+    /// $0.01; the result carries the pretend process's running totals, as Claude Code's does.
+    /// </summary>
     public void EmitTurn(string reply = "ok", string model = "claude-opus-5-5", string sessionId = "s1")
     {
+        var running = _process.RunningUsage;
+        var (input, output, cost) = running.GetValueOrDefault(model);
+        running[model] = (input + 100, output + 20, cost + 0.01);
+        var modelUsage = new JsonObject();
+        foreach (var (name, totals) in running)
+        {
+            modelUsage[name] = new JsonObject
+            {
+                ["inputTokens"] = totals.Input, ["outputTokens"] = totals.Output, ["cacheReadInputTokens"] = 0, ["cacheCreationInputTokens"] = 0, ["costUSD"] = totals.Cost,
+            };
+        }
         Emit(new JsonObject { ["type"] = "system", ["subtype"] = "init", ["session_id"] = sessionId, ["model"] = model, ["permissionMode"] = "default" });
         Emit(new JsonObject
         {
@@ -192,10 +220,7 @@ internal sealed class ScriptedTransport : IClaudeTransport
             ["is_error"] = false,
             ["result"] = reply,
             ["session_id"] = sessionId,
-            ["modelUsage"] = new JsonObject
-            {
-                [model] = new JsonObject { ["inputTokens"] = 100, ["outputTokens"] = 20, ["cacheReadInputTokens"] = 0, ["cacheCreationInputTokens"] = 0, ["costUSD"] = 0.01 },
-            },
+            ["modelUsage"] = modelUsage,
         });
     }
 
@@ -219,6 +244,9 @@ internal sealed class ScriptedTransport : IClaudeTransport
         public TaskCompletionSource<TransportExit> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public bool HasExited => Completion.Task.IsCompleted;
+
+        /// <summary>What the process has spent by model, which each result it writes reports in <c>modelUsage</c>.</summary>
+        public Dictionary<string, (long Input, long Output, double Cost)> RunningUsage { get; } = [];
 
         public void Write(string line) => Output.Writer.TryWrite(line);
 
@@ -283,7 +311,7 @@ internal sealed class ScriptedSessionFactory(ScriptedTransport transport, TimePr
         {
             transport.RestartIfExited();
         }
-        var session = new ClaudeSession(transport.ForSession(), time, showsElicitations: options.ShowsElicitations);
+        var session = new ClaudeSession(transport.ForSession(), time, showsElicitations: options.ShowsElicitations, restoredUsage: options.RestoredUsage);
         Sessions.Add(session);
         try
         {

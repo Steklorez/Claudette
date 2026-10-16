@@ -60,6 +60,7 @@ public sealed partial class UsageViewModel
 
     private StoredWeek _storedWeek = StoredWeek.Empty;
     private IReadOnlyList<TabTokenSum> _tabSums = [];
+    private IReadOnlyDictionary<string, string> _machineNames = new Dictionary<string, string>();
     private DateTimeOffset? _lastDetailsQuery;
     /// <summary>The session's and the week's reset times when the history was last read, to notice a window resetting.</summary>
     private (DateTimeOffset? Session, DateTimeOffset? Week)? _queriedResets;
@@ -245,7 +246,7 @@ public sealed partial class UsageViewModel
             ? []
             : [new ChartLegendItem("All models", Percent(all.Percent), 0), .. models.Select((m, i) => new ChartLegendItem(m.Label, Percent(m.Percent), i + 1))];
 
-        BusiestTabs = [.. TabBurnRow.From(_tabSums, TabName ?? (_ => null)).Take(BusiestTabCount)];
+        BusiestTabs = [.. TabBurnRow.From(_tabSums, TabName ?? (_ => null), _machineNames).Take(BusiestTabCount)];
     }
 
     private static string Percent(double value) => string.Create(CultureInfo.CurrentCulture, $"{value:0}%");
@@ -328,6 +329,15 @@ public sealed partial class UsageViewModel
         }
     }
 
+    /// <summary>Other machines' turns in synced sessions count toward the busiest tabs too (DESIGN.md §6, "Sharing across machines").</summary>
+    private void OnTurnsImported(IReadOnlyCollection<string> accountNames)
+    {
+        if (IsDetailed)
+        {
+            QueryDetails();
+        }
+    }
+
     private void OnUsageHistoryCleared(object? sender, bool alsoResetTabTotals)
     {
         _storedWeek = StoredWeek.Empty;
@@ -357,10 +367,12 @@ public sealed partial class UsageViewModel
         {
             StoredWeek week;
             IReadOnlyList<TabTokenSum> tabs;
+            IReadOnlyDictionary<string, string> machines;
             try
             {
                 week = StoredWeek.From(store.GetSamples(weekStart, now), WeekBucket);
                 tabs = store.GetTokensByTab(sessionStart, planOnly: true);
+                machines = store.GetMachineNames();
             }
             catch (Exception)
             {
@@ -373,6 +385,7 @@ public sealed partial class UsageViewModel
                 {
                     _storedWeek = week;
                     _tabSums = tabs;
+                    _machineNames = machines;
                     Refresh();
                 }
             });

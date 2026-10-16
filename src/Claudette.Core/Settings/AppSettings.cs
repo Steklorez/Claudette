@@ -272,6 +272,12 @@ public sealed class ClaudeCodeSettings
     /// </summary>
     public bool KeepFileCheckpoints { get; set; } = true;
 
+    /// <summary>
+    /// Claude gets Claude Code's task-tracking tools on every model, which it gives only older models by default, so the
+    /// pinned list, the status line and the tab's row can follow Claude's tasks (DESIGN.md §5, "Tasks"). On by default.
+    /// </summary>
+    public bool GiveClaudeTaskList { get; set; } = true;
+
     /// <summary>A row in the conversation for every hook run, not only those that fail or print (DESIGN.md §5, "Hook runs").</summary>
     public bool ShowAllHookRuns { get; set; }
 

@@ -186,7 +186,7 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         .. HasAccounts
             ? [
                 Entry("Warn when today's estimated spend passes"),
-                Entry("Warn when this month's estimated spend passes", pageText: "this month's passes"),
+                Entry("Warn when this month's estimated spend passes"),
                 Entry("Change an API key", pageText: "Change key"),
             ]
             : Array.Empty<SettingsSearchResult>(),

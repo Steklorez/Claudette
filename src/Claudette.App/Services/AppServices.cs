@@ -419,6 +419,27 @@ public sealed class AppServices : IAsyncDisposable
         UsageHistoryCleared?.Invoke(this, alsoResetTabTotals);
     }
 
+    /// <summary>
+    /// <b>Clear on every machine</b> (DESIGN.md §6, "Clear usage history"): clears this machine's usage history as
+    /// <see cref="ClearUsageHistoryAsync"/> does, then the usage shared in the session library, leaving a note the other
+    /// machines that share clear theirs by. Returns false when the library couldn't be reached; this machine's is cleared
+    /// either way.
+    /// </summary>
+    public async Task<bool> ClearUsageHistoryEverywhereAsync(bool alsoResetTabTotals)
+    {
+        var shared = true;
+        if (UsageHistory is { } history)
+        {
+            var at = await Task.Run(history.Clear);
+            shared = Usage is null || await Usage.ClearEverywhereAsync(at, alsoResetTabTotals);
+        }
+        UsageHistoryCleared?.Invoke(this, alsoResetTabTotals);
+        return shared;
+    }
+
+    /// <summary>Another machine cleared usage history on every machine, and the tracker cleared this one's (on the UI thread).</summary>
+    internal void NotifyUsageHistoryCleared(bool alsoResetTabTotals) => UsageHistoryCleared?.Invoke(this, alsoResetTabTotals);
+
     public ClaudeInstall? Install { get; private set; }
 
     public IClaudeSessionFactory? Sessions { get; private set; }

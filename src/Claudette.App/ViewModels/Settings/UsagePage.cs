@@ -21,6 +21,7 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
         Entry("Keep usage history"),
         Entry("Clear usage history"),
         Entry("Share usage with my other machines"),
+        Entry("Clear usage history on every machine"),
     ];
 
     public decimal? WarnPercent
@@ -64,7 +65,11 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
     public bool ShareUsageThroughLibrary
     {
         get => Settings.Usage.ShareThroughLibrary;
-        set => Set(value, v => Settings.Usage.ShareThroughLibrary = v);
+        set
+        {
+            Set(value, v => Settings.Usage.ShareThroughLibrary = v);
+            ClearEverywhereCommand.NotifyCanExecuteChanged();
+        }
     }
 
     // ---- Usage history (DESIGN.md §6, "Usage history") ----------------------------------------------------------
@@ -102,11 +107,44 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
         UsageClearedText = AlsoResetTabTotals ? "Usage history and tab token totals cleared." : "Usage history cleared.";
     }
 
+    // ---- Clear on every machine (DESIGN.md §6, "Clear usage history") -------------------------------------------------
+
+    /// <summary>"Clear on every machine" asks first.</summary>
+    public InlineConfirmation ClearEverywhereConfirmation => field ??= new(ClearEverywhereAsync);
+
+    /// <summary>The confirmation's checkbox: every machine resets the token totals saved with its tabs too.</summary>
+    [ObservableProperty]
+    public partial bool AlsoResetTabTotalsEverywhere { get; set; }
+
+    [ObservableProperty]
+    public partial string? ClearedEverywhereText { get; set; }
+
+    /// <summary>Only while usage is shared: the machines that don't share have nothing in the library to clear.</summary>
+    private bool CanClearEverywhere() => Settings.Usage.ShareThroughLibrary;
+
+    [RelayCommand(CanExecute = nameof(CanClearEverywhere))]
+    private void ClearEverywhere()
+    {
+        AlsoResetTabTotalsEverywhere = false;
+        ClearedEverywhereText = null;
+        ClearEverywhereConfirmation.Ask();
+    }
+
+    private async Task ClearEverywhereAsync()
+    {
+        var reset = AlsoResetTabTotalsEverywhere;
+        var shared = await Services.ClearUsageHistoryEverywhereAsync(reset);
+        ClearedEverywhereText = shared
+            ? $"Usage history{(reset ? " and tab token totals" : "")} cleared here and in the session library. Your other machines clear theirs the next time they check, within a minute if they're running."
+            : "Usage history cleared here, but the session library couldn't be reached to clear the shared usage. Try again once it's available.";
+    }
+
     /// <summary><b>Keep usage history</b> stays as it is.</summary>
     protected override void ResetSettings()
     {
         var keep = Settings.Usage.KeepHistory;
         Settings.Usage = new UsageSettings { KeepHistory = keep };
         Save();
+        ClearEverywhereCommand.NotifyCanExecuteChanged();
     }
 }

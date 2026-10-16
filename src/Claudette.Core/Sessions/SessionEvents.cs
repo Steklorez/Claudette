@@ -27,7 +27,12 @@ public sealed record ToolResultsReceived(UserMessage Message) : SessionEvent;
 /// <summary>Output of a local command, such as the note Claude Code posts after a model change.</summary>
 public sealed record LocalCommandOutputReceived(string Text) : SessionEvent;
 
-public sealed record TurnCompleted(ResultMessage Result) : SessionEvent;
+/// <summary>A turn ended.</summary>
+/// <param name="Usage">
+/// What this turn spent, by model: its share of the result's running totals (<see cref="ProcessUsage"/>). Read this
+/// rather than the result's <c>modelUsage</c>, which counts every turn of the process.
+/// </param>
+public sealed record TurnCompleted(ResultMessage Result, ModelUsageTotals Usage) : SessionEvent;
 
 public sealed record StateChanged(SessionState State) : SessionEvent;
 

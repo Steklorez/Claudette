@@ -9,7 +9,7 @@ namespace Claudette.Usage;
 /// </summary>
 internal static class UsageSchema
 {
-    public const int Version = 5;
+    public const int Version = 6;
 
     private const int SqliteCorrupt = 11;
     private const int SqliteNotADatabase = 26;
@@ -89,6 +89,10 @@ internal static class UsageSchema
                 machine TEXT PRIMARY KEY,
                 through INTEGER NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS machines (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL
+            );
             """;
         create.ExecuteNonQuery();
         // Version 3: the machine a shared sample came from; null for this machine's own.
@@ -110,6 +114,23 @@ internal static class UsageSchema
             create.CommandText = "ALTER TABLE turns ADD COLUMN account TEXT";
             create.ExecuteNonQuery();
         }
+        // Version 6: turns shared through synced sessions (DESIGN.md §6, "Sharing across machines"). Each turn's id across
+        // machines (null for turns recorded before, which are never shared), the machine an imported one came from (null
+        // for this machine's own), the project's key and folder name, an API-key account's name, and the plan account a
+        // Default account's turn was signed in to.
+        foreach (var column in (string[])["uid", "machine", "project_key", "project_name", "account_name", "plan"])
+        {
+            if (!HasColumn(connection, transaction, "turns", column))
+            {
+                create.CommandText = $"ALTER TABLE turns ADD COLUMN {column} TEXT";
+                create.ExecuteNonQuery();
+            }
+        }
+        create.CommandText = """
+            CREATE UNIQUE INDEX IF NOT EXISTS turns_by_uid ON turns (uid) WHERE uid IS NOT NULL;
+            CREATE INDEX IF NOT EXISTS turns_by_session ON turns (session_id);
+            """;
+        create.ExecuteNonQuery();
         create.CommandText = $"PRAGMA user_version = {Version}";
         create.ExecuteNonQuery();
         transaction.Commit();

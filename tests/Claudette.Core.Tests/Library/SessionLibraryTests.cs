@@ -456,6 +456,57 @@ public sealed class SessionLibraryTests : IDisposable
     [Fact]
     public void No_shared_usage_yet_reads_as_none() => Assert.Empty(_library.ReadSharedUsage("machine1"));
 
+    [Fact]
+    public async Task A_sessions_usage_file_is_saved_with_it_and_left_alone_when_theres_none_to_save()
+    {
+        var (transcript, _) = LocalSession();
+
+        await _library.SaveAsync(Record(), transcript, null, force: false, usageJson: """{"version":1,"turns":[]}""", Ct);
+        await _library.SaveAsync(Record(), transcript, null, Ct);
+
+        Assert.Contains($"sessions/{Id}/usage.json", FilesInLibrary());
+        Assert.Equal("""{"version":1,"turns":[]}""", _library.ReadSessionUsage(Id).Main);
+    }
+
+    [Fact]
+    public async Task Clearing_the_shared_usage_deletes_every_machines_files_and_leaves_a_note_but_not_the_sessions()
+    {
+        var (transcript, _) = LocalSession();
+        await _library.SaveAsync(Record(), transcript, null, force: false, usageJson: "turns", Ct);
+        await File.WriteAllTextAsync(Path.Combine(_library.GetSessionFolder(Id), "usage (1).json"), "copy", Ct);
+        await _library.WriteSharedUsageAsync("machine1", """{"version":1}""", Ct);
+
+        Assert.Equal(3, await _library.ClearSharedUsageAsync("""{"at":1}""", Ct));
+
+        Assert.Equal([$"sessions/{Id}/{Id}.jsonl", $"sessions/{Id}/record.json", "usage/cleared.json"], FilesInLibrary());
+        Assert.Equal("""{"at":1}""", _library.ReadUsageCleared());
+        // The note isn't a machine's usage.
+        Assert.Empty(_library.ReadSharedUsage("machine2"));
+    }
+
+    [Fact]
+    public void Without_a_clear_there_is_no_note() => Assert.Null(_library.ReadUsageCleared());
+
+    [Fact]
+    public async Task A_sessions_usage_files_include_a_sync_clients_conflict_copies_but_not_half_written_ones()
+    {
+        var (transcript, _) = LocalSession();
+        await _library.SaveAsync(Record(), transcript, null, force: false, usageJson: "main", Ct);
+        var folder = _library.GetSessionFolder(Id);
+        await File.WriteAllTextAsync(Path.Combine(folder, "usage (1).json"), "copy", Ct);
+        await File.WriteAllTextAsync(Path.Combine(folder, "usage.json.0123.tmp"), "half", Ct);
+
+        var texts = _library.ReadSessionUsage(Id);
+
+        Assert.Equal("main", texts.Main);
+        Assert.Equal(["copy"], texts.Copies);
+        Assert.Equal(["usage (1).json", "usage.json"], _library.SessionUsageFiles().Select(f => Path.GetFileName(f.Path)));
+        Assert.All(_library.SessionUsageFiles(), f => Assert.Equal(Id, f.SessionId));
+        var none = _library.ReadSessionUsage("no-such-session");
+        Assert.Null(none.Main);
+        Assert.Empty(none.Copies);
+    }
+
     [Theory]
     [InlineData("abc (1).jsonl", "copy 1")]
     [InlineData("abc (DESKTOP-01's conflicted copy 2026-09-28).jsonl", "DESKTOP-01's conflicted copy 2026-09-28")]

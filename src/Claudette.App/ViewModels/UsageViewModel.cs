@@ -55,6 +55,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         _tracker.Updated += OnUpdated;
         _tracker.TurnRecorded += OnTurnRecorded;
         _tracker.SamplesImported += OnSamplesImported;
+        _tracker.TurnsImported += OnTurnsImported;
         _services.SettingsChanged += (_, _) => Refresh();
         _services.StateChanged += OnStateChanged;
         _services.UsageHistoryCleared += OnUsageHistoryCleared;
@@ -279,6 +280,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         _tracker.Updated -= OnUpdated;
         _tracker.TurnRecorded -= OnTurnRecorded;
         _tracker.SamplesImported -= OnSamplesImported;
+        _tracker.TurnsImported -= OnTurnsImported;
         _services.StateChanged -= OnStateChanged;
         _services.UsageHistoryCleared -= OnUsageHistoryCleared;
         // A read of the history still running is dropped.

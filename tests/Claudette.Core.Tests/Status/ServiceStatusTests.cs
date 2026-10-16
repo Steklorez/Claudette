@@ -260,7 +260,7 @@ public class ServiceStatusTests
         {
             SystemMessage system => new SystemNotice(system),
             ToolProgressMessage progress => new ToolProgress(progress),
-            ResultMessage result => new TurnCompleted(result),
+            ResultMessage result => new TurnCompleted(result, ModelUsageTotals.From(result.ModelUsage)),
             _ => throw new InvalidOperationException($"Not expected here: {message.GetType().Name}"),
         };
     }

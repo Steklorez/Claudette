@@ -216,7 +216,7 @@ public sealed partial class ContextViewModel : ObservableObject
                 _autocompact = autocompact.State;
                 break;
             case TurnCompleted completed:
-                _host.State.Tokens.Add(completed.Result);
+                _host.State.Tokens.Add(completed.Usage);
                 _callUsage.TurnEnded(completed.Result);
                 RefreshTokens();
                 _ = RefreshUsageAsync(session);

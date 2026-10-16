@@ -211,8 +211,11 @@ public sealed class SettingsAndStateTests : IDisposable
               "claude-haiku-4-5":{"inputTokens":5,"outputTokens":5,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"costUSD":0.01}}}
             """, out var message, out _);
 
-        totals.Add((ResultMessage)message!);
-        totals.Add((ResultMessage)message!);
+        // Two turns that each spent this much.
+        var turn = ModelUsageTotals.From(((ResultMessage)message!).ModelUsage);
+        totals.Add(turn);
+        totals.Add(turn);
+        totals.Add(ModelUsageTotals.Empty);
 
         Assert.Equal(2, totals.Turns);
         Assert.Equal(2680, totals.Total);

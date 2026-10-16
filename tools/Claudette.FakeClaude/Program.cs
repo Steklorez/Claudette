@@ -44,7 +44,8 @@
 //                    with a prompt_suggestion message after the result (DESIGN.md §5, "Prompt suggestions")
 //   anything else    replies "pong: <prompt>" (or, while signed out, as AUTH_FAIL does)
 // A message with images (content blocks) is read as its text plus "[images: image/png, …]", so the reply says what
-// arrived.
+// arrived. Each finished turn spends 1,200 input, 80 output and 4,000 cache-read tokens of claude-fake-1, $0.02, and its
+// result reports what the process has spent so far in modelUsage and total_cost_usd, as Claude Code's does.
 //
 //   fake-claude --child <seconds> [busy]   the child process SPAWN starts
 //
@@ -212,7 +213,18 @@ return await new FakeSession(version, modeFlag >= 0 && modeFlag + 1 < args.Lengt
 
 internal sealed class FakeSession(string version, string permissionMode, bool promptSuggestions)
 {
+    // What each finished turn spends.
+    private const long TurnInputTokens = 1200;
+    private const long TurnOutputTokens = 80;
+    private const long TurnCacheReadTokens = 4000;
+    private const double TurnCostUsd = 0.02;
+
     private readonly string _sessionId = Guid.NewGuid().ToString();
+    // What the process has spent so far, which every result reports.
+    private long _spentInput;
+    private long _spentOutput;
+    private long _spentCacheRead;
+    private double _spentCost;
     // Reported as Claude Code reports it: the --permission-mode it started with, then set_permission_mode's.
     private string _permissionMode = permissionMode;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
@@ -653,15 +665,36 @@ internal sealed class FakeSession(string version, string permissionMode, bool pr
         ["parent_tool_use_id"] = parent,
     });
 
-    private Task ResultAsync(string text) => WriteAsync(new JsonObject
+    /// <summary>
+    /// A turn's result. Each turn spends <see cref="TurnInputTokens"/> and so on, and the result reports what the process
+    /// has spent so far, as Claude Code's <c>modelUsage</c> and <c>total_cost_usd</c> do (DESIGN.md §6, "Usage history").
+    /// </summary>
+    private Task ResultAsync(string text)
     {
-        ["type"] = "result",
-        ["subtype"] = "success",
-        ["is_error"] = false,
-        ["result"] = text,
-        ["terminal_reason"] = "completed",
-        ["session_id"] = _sessionId,
-    });
+        _spentInput += TurnInputTokens;
+        _spentOutput += TurnOutputTokens;
+        _spentCacheRead += TurnCacheReadTokens;
+        _spentCost += TurnCostUsd;
+        return WriteAsync(new JsonObject
+        {
+            ["type"] = "result",
+            ["subtype"] = "success",
+            ["is_error"] = false,
+            ["result"] = text,
+            ["terminal_reason"] = "completed",
+            ["session_id"] = _sessionId,
+            ["usage"] = new JsonObject { ["input_tokens"] = TurnInputTokens, ["output_tokens"] = TurnOutputTokens, ["cache_read_input_tokens"] = TurnCacheReadTokens, ["cache_creation_input_tokens"] = 0 },
+            ["total_cost_usd"] = _spentCost,
+            ["modelUsage"] = new JsonObject
+            {
+                ["claude-fake-1"] = new JsonObject
+                {
+                    ["inputTokens"] = _spentInput, ["outputTokens"] = _spentOutput, ["cacheReadInputTokens"] = _spentCacheRead, ["cacheCreationInputTokens"] = 0,
+                    ["costUSD"] = _spentCost, ["contextWindow"] = 200000,
+                },
+            },
+        });
+    }
 
     /// <summary>
     /// DOC: Claude writing a doc on claude.ai with the Docs connector, its calls shaped as Claude Code 2.1.284 passed them

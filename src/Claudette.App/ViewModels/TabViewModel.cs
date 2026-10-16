@@ -1377,6 +1377,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
         {
             return;
         }
+        var restoredUsage = ReadRestoredUsageAsync(resume);
 
         var settings = _services.Settings;
         try
@@ -1400,6 +1401,11 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             {
                 // Copies of files before Claude changes them, so a prompt's changes can be put back (DESIGN.md §5).
                 environment["CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING"] = "true";
+            }
+            if (settings.ClaudeCode.GiveClaudeTaskList)
+            {
+                // The task-tracking tools on every model: Claude Code gives them only older ones (DESIGN.md §5, "Tasks").
+                environment["CLAUDE_CODE_ENABLE_TODO_TOOLS"] = "1";
             }
             // An API-key account's key comes from Claudette's key helper, and nothing in the environment outranks it
             // (DESIGN.md §4, "Accounts").
@@ -1427,6 +1433,8 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 IncludeHookEvents = true,
                 // MCP servers' requests for input are cards in the conversation, including ones as the servers connect.
                 ShowsElicitations = true,
+                // So the first turn of a resumed or forked session counts only what it spends (DESIGN.md §6).
+                RestoredUsage = await restoredUsage,
                 // Chosen when asked about the folder's own configuration (DESIGN.md §7, "Folder trust").
                 SettingSources = State.WithoutProjectSettings ? "user" : null,
                 Settings = accountSettings,
@@ -1535,6 +1543,21 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
             _conversation.AddNote($"Couldn't start Claude Code: {ex.Message}", NoteKind.Error);
             NotifyProcessError($"Couldn't start Claude Code: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// The running totals the session's transcript saved, which Claude Code starts a resumed or forked process from
+    /// (DESIGN.md §6, "Usage history"). None for a new session, or when there's no transcript here to read.
+    /// </summary>
+    /// <param name="resume">What the start resumes: the session's id, or its local working copy.</param>
+    private async Task<IReadOnlyList<ModelUsageTotals>> ReadRestoredUsageAsync(string? resume)
+    {
+        if (resume is null)
+        {
+            return [];
+        }
+        var transcript = Path.IsPathRooted(resume) && File.Exists(resume) ? resume : _services.Library.FindTranscript(resume, State.TranscriptPath);
+        return transcript is null ? [] : await CostState.ReadAllAsync(transcript);
     }
 
     // ---- Missing folder (DESIGN.md §9, "Missing folder") -------------------------------------------------------
@@ -1954,7 +1977,7 @@ public sealed partial class TabViewModel : ViewModelBase, IAsyncDisposable
                 _checkIns.TurnEnded();
                 _autoContinue.TurnEnded(completed.Result);
                 State.SessionId = completed.Result.SessionId ?? State.SessionId;
-                _services.Usage?.OnTurnCompleted(Id, DisplayName, completed.Result, Folder, Account?.Id);
+                _services.Usage?.OnTurnCompleted(Id, DisplayName, completed, Folder, Account?.Id, Account?.Name);
                 // Only a tab that syncs writes to the library (DESIGN.md §9, "Session library").
                 CopyToLibrary();
                 _services.SaveState();

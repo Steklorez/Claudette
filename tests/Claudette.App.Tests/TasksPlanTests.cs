@@ -47,6 +47,42 @@ public class TasksPlanTests
     }
 
     [Fact]
+    public async Task With_a_plan_approved_and_no_tasks_the_status_line_says_Claude_is_following_it()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Wire.Tool(null, "t1", "ExitPlanMode", new JsonObject()));
+        h.Transport.Emit(PlanRequest("p1", "t1"));
+        await TabTestHarness.Eventually(() => tab.Items.OfType<PlanItem>().Any(), "the plan card");
+        Assert.Null(tab.TodoList.StatusText);
+
+        tab.Items.OfType<PlanItem>().Single().ApproveAcceptingEditsCommand.Execute(null);
+        h.Transport.Emit(Approved("t1"));
+
+        await TabTestHarness.Eventually(() => tab.TodoList.HasStatus, "the status line");
+        Assert.Equal("Following the plan", tab.TodoList.StatusText);
+
+        // Tasks Claude makes from it say how far it's got instead.
+        h.Transport.Emit(Wire.Tool(null, "c1", "TaskCreate", new JsonObject { ["subject"] = "Fix the config" }));
+        await TabTestHarness.Eventually(() => tab.TodoList.HasItems, "the task");
+        Assert.Equal("0 of 1 task", tab.TodoList.StatusText);
+    }
+
+    [Fact]
+    public async Task Claude_gets_a_task_list_on_every_model_unless_Settings_says_not()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Assert.Equal("1", h.Factory.Launches.Single().EnvironmentOverrides["CLAUDE_CODE_ENABLE_TODO_TOOLS"]);
+
+        // Turned off, a tab started after the change leaves the variable to the user's environment.
+        h.Services.Settings.ClaudeCode.GiveClaudeTaskList = false;
+        await ((IRemoteControlHost)tab).RestartSessionAsync();
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2, "the restart");
+        Assert.False(h.Factory.Launches[^1].EnvironmentOverrides.ContainsKey("CLAUDE_CODE_ENABLE_TODO_TOOLS"));
+    }
+
+    [Fact]
     public async Task A_plan_approved_in_the_Claude_app_heads_the_tasks_page_too()
     {
         await using var h = new TabTestHarness();
@@ -79,6 +115,7 @@ public class TasksPlanTests
         Assert.Equal($"Here's my plan for #16.\n\n{PlanText}", tab.TodoList.Plan);
         Assert.Equal(PlanSource.Reply, tab.TodoList.PlanSource);
         Assert.Equal(reply.SentAt, tab.TodoList.PlanAt);
+        Assert.Equal("Following the plan", tab.TodoList.StatusText);
         Assert.True(tab.TodoList.HasAnything);
         Assert.True(tab.IsSidePanelOpen);
         Assert.True(tab.IsTasksPage);

@@ -552,13 +552,14 @@ public sealed partial class TodoList : ObservableObject
     private string NowText => Current is { } current ? $" · Now: {current.DisplayText}" : "";
 
     /// <summary>
-    /// The status line's words (DESIGN.md §5, "Tasks"): "Drafting the plan…", "3 of 7 tasks · Running the tests" or "All 7
-    /// tasks done"; null with nothing to say.
+    /// The status line's words (DESIGN.md §5, "Tasks"): "Drafting the plan…", "3 of 7 tasks · Running the tests", "All 7
+    /// tasks done", or "Following the plan" with an approved or chosen plan and no tasks; null with nothing to say.
     /// </summary>
     public string? StatusText =>
         IsDrafting ? "Drafting the plan…"
         : HasTasksLeft ? $"{DoneCount} of {Count(Items.Count)}" + (Current is { } current ? $" · {current.DisplayText}" : "")
         : AllDone ? AllDoneText
+        : NewestPlan?.State is PlanState.Approved or PlanState.Reply ? "Following the plan"
         : null;
 
     public bool HasStatus => StatusText is not null;

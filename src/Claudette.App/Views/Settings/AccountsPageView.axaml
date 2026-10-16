@@ -45,12 +45,12 @@
                 </ComboBox>
                 <TextBlock Grid.Column="3" Classes="muted small" Text="API key" VerticalAlignment="Center" />
               </Grid>
-              <Grid ColumnDefinitions="Auto,100,Auto,100" ColumnSpacing="8">
-                <TextBlock Classes="label" Text="Warn when today's estimated spend passes $" VerticalAlignment="Center" />
+              <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+                <TextBlock Classes="label" Text="Warn when today's estimated spend passes ($)" TextWrapping="Wrap" />
                 <NumericUpDown Grid.Column="1" Minimum="0" Increment="5" FormatString="0.##" Value="{Binding DailySpendAlert}"
                                AutomationProperties.Name="Daily spend warning in dollars" />
-                <TextBlock Grid.Column="2" Classes="label" Text="this month's passes $" VerticalAlignment="Center" Margin="8,0,0,0" />
-                <NumericUpDown Grid.Column="3" Minimum="0" Increment="10" FormatString="0.##" Value="{Binding MonthlySpendAlert}"
+                <TextBlock Grid.Row="1" Classes="label" Text="Warn when this month's estimated spend passes ($)" TextWrapping="Wrap" />
+                <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Increment="10" FormatString="0.##" Value="{Binding MonthlySpendAlert}"
                                AutomationProperties.Name="Monthly spend warning in dollars" />
               </Grid>
               <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !IsChangingKey}">

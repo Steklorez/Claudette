@@ -288,9 +288,10 @@ items:
   - id: "conversation_reset"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: MessageParserTests, AgentMapTests
+    test: MessageParserTests, AgentMapTests, ProcessUsageTests
+    # Also starts modelUsage's running totals again (DESIGN.md §6, "Usage history").
   - id: "api_retry"
     kind: message
     status: documented
@@ -416,6 +417,13 @@ items:
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: CleanEnvironmentTests
     fallback: Inherited from a parent Claude Code session, it switches the to-do tool from TodoWrite to the Task tools; it's in the session variable list. The to-do list handles both.
+  - id: "CLAUDE_CODE_ENABLE_TODO_TOOLS"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.App/ViewModels/TabViewModel.cs
+    docs: https://code.claude.com/docs/en/tools-reference#task-tool-availability
+    test: TasksPlanTests
+    fallback: Settings → Claude Code → Give Claude a task list (on by default) sets it to 1, so models newer than Opus 4.7, Sonnet 4.6 and Haiku 4.5 get the Task tools too (Claude Code v2.1.233 and later; from v2.1.268 those models don't have them by default). If it stops working, those models make no task list and the status line says only "Following the plan" after a plan; --allowedTools TaskCreate does the same.
 
   # --- Control requests (wire names come from the Agent SDK sources) -----------------------------------
   - id: "control_request"
@@ -1126,6 +1134,13 @@ items:
     fallback: The docs say only "after each turn"; 2.1.284 sends it straight after the result, none after a conversation's first turn, also with nonessential traffic off, and none when promptSuggestionEnabled is false or CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false. Claudette shows one only while the session is idle, so one that came before the result would be dropped. If that happens, keep the newest suggestion from the turn and show it when the turn ends.
 
   # --- Transcripts (read when restoring a tab) ----------------------------------------------------------
+  - id: "cost-state"
+    kind: file
+    status: undocumented
+    usedIn: src/Claudette.Core/Transcripts/CostState.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/cost-tracking
+    test: ProcessUsageTests, RealCliTests
+    fallback: The docs say Claude Code saves a session's totals to its transcript when a process exits normally and starts a resumed or forked session from them (since 2.1.277); 2.1.284 writes {"type":"cost-state","modelUsage":{…}} lines. Claudette takes the latest one the first result could have grown from as the turn's baseline. Without one, or if the format changes, the baseline is empty and a resumed tab's first turn counts what Claude Code restored too, once.
   - id: "ai-title"
     kind: file
     status: undocumented
@@ -1387,11 +1402,11 @@ items:
   - id: "costUSD"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/TokenTotals.cs, src/Claudette.Usage/UsageRecords.cs
+    usedIn: src/Claudette.Core/Sessions/TurnUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: UsageStoreTests, AccountsTests
-    # Each model's estimated cost in a result's modelUsage, at list price: an API-key account's spend in the header, its
-    # warnings and the Usage panel's Accounts list. Not a bill.
+    test: ProcessUsageTests, UsageStoreTests, AccountsTests
+    # Each model's estimated cost in a result's modelUsage, at list price and running like the rest of modelUsage: an
+    # API-key account's spend in the header, its warnings and the Usage panel's Accounts list. Not a bill.
 
   # --- Plan usage (DESIGN.md §6) ------------------------------------------------------------------------
   - id: "rate_limits_available"
@@ -1454,9 +1469,12 @@ items:
   - id: "modelUsage"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/TokenTotals.cs, src/Claudette.Usage/UsageRecords.cs
-    docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: UsageStoreTests
+    usedIn: src/Claudette.Core/Sessions/TurnUsage.cs, src/Claudette.Core/Sessions/ClaudeSession.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/cost-tracking
+    test: ProcessUsageTests, RealCliTests
+    # The process's running totals, not the turn's: each turn is what it added to the result before (ProcessUsage).
+    # Started again by conversation_reset (/clear, /reset, /new); a resumed or forked session's start from the
+    # transcript's cost-state; a crash's last result may be zeroed. Includes subagents and compaction, unlike usage.
   - id: "contextWindow"
     kind: field
     status: documented

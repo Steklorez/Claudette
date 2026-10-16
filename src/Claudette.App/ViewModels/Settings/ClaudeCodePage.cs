@@ -35,6 +35,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         Entry("Path to claude"),
         Entry("Fallback model"),
         Entry("Keep copies of files Claude changes, so prompts can be rewound"),
+        Entry("Give Claude a task list"),
         Entry("Show every hook run in the conversation"),
         Entry("Summarize subagents' progress"),
         Entry("Suggest my next prompt"),
@@ -90,6 +91,13 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
     {
         get => Settings.ClaudeCode.KeepFileCheckpoints;
         set => Set(value, v => Settings.ClaudeCode.KeepFileCheckpoints = v);
+    }
+
+    /// <summary><b>Give Claude a task list</b> (DESIGN.md §5, "Tasks").</summary>
+    public bool GiveClaudeTaskList
+    {
+        get => Settings.ClaudeCode.GiveClaudeTaskList;
+        set => Set(value, v => Settings.ClaudeCode.GiveClaudeTaskList = v);
     }
 
     /// <summary><b>Show every hook run in the conversation</b>.</summary>

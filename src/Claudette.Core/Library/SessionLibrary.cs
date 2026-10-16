@@ -10,6 +10,13 @@ namespace Claudette.Core.Library;
 /// <param name="ConflictLabel">What tells the copy apart, for example <c>copy 1</c> or <c>DESKTOP-01's conflicted copy 2026-09-28</c>.</param>
 public sealed record LibraryEntry(SessionRecord Record, string TranscriptPath, bool IsConflictCopy, string? ConflictLabel);
 
+/// <summary>A synced session's usage file in the library, with what tells whether it changed since it was last read.</summary>
+public sealed record SessionUsageFileInfo(string SessionId, string Path, long Length, DateTime LastWriteUtc);
+
+/// <summary>A synced session's usage file as the library has it, and a sync client's conflict copies of it.</summary>
+/// <param name="Main">The <c>usage.json</c>; null when there's none.</param>
+public sealed record SessionUsageTexts(string? Main, IReadOnlyList<string> Copies);
+
 /// <summary>
 /// Claudette's session library (DESIGN.md §9, "Session library (sync across machines)"): a folder the user chooses,
 /// possibly one kept up to date by Google Drive, Dropbox or OneDrive. Claudette only reads and writes files; the sync
@@ -19,8 +26,10 @@ public sealed record LibraryEntry(SessionRecord Record, string TranscriptPath, b
 ///                                   &lt;session-id&gt;.jsonl
 ///                                   subagents/*.jsonl
 ///                                   lease.json
+///                                   usage.json     (while machines share their usage)
 /// &lt;library&gt;/settings-sync.json
 /// &lt;library&gt;/usage/&lt;machine id&gt;.json
+/// &lt;library&gt;/usage/cleared.json         (when usage was last cleared on every machine)
 /// &lt;library&gt;/scratch/&lt;pad id&gt;.json      (ScratchPads.ScratchPadStore)
 /// </code>
 /// Files are written to a temporary name and then renamed, so a sync client never uploads a half-written file.
@@ -29,9 +38,15 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
 {
     public const string SessionsFolderName = "sessions";
     public const string RecordFileName = "record.json";
+
+    /// <summary>Every machine's turns in the session, while machines share their usage (DESIGN.md §6, "Sharing across machines").</summary>
+    public const string UsageFileName = "usage.json";
     public const string SubagentsFolderName = "subagents";
     public const string SettingsSyncFileName = "settings-sync.json";
     public const string UsageFolderName = "usage";
+
+    /// <summary>In the usage folder: when <b>Clear on every machine</b> last cleared the shared usage (DESIGN.md §6, "Clear usage history").</summary>
+    public const string UsageClearedFileName = "cleared.json";
 
     private const string TranscriptExtension = ".jsonl";
 
@@ -71,7 +86,7 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
         foreach (var path in Directory.EnumerateFiles(UsageFolder, "*.json"))
         {
             var machineId = Path.GetFileNameWithoutExtension(path);
-            if (LibraryFiles.IsTemp(path) || machineId == exceptMachineId || !IsValidId(machineId))
+            if (LibraryFiles.IsTemp(path) || machineId == exceptMachineId || !IsValidId(machineId) || Path.GetFileName(path) == UsageClearedFileName)
             {
                 continue;
             }
@@ -84,6 +99,56 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
             }
         }
         return files;
+    }
+
+    /// <summary>The note <b>Clear on every machine</b> leaves (DESIGN.md §6, "Clear usage history"); null when there's none, or it can't be read just now.</summary>
+    public string? ReadUsageCleared()
+    {
+        var path = Path.Combine(UsageFolder, UsageClearedFileName);
+        try
+        {
+            return File.Exists(path) ? LibraryFiles.ReadText(path) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// <b>Clear on every machine</b> (DESIGN.md §6, "Clear usage history"): deletes every machine's shared plan usage and
+    /// every synced session's usage files, then leaves <paramref name="clearedJson"/> for the other machines to clear
+    /// theirs by. A file that can't be deleted just now is left; the machines that read it skip what's older than the note.
+    /// Returns how many files were deleted.
+    /// </summary>
+    public async Task<int> ClearSharedUsageAsync(string clearedJson, CancellationToken cancellationToken = default)
+    {
+        var deleted = 0;
+        var files = Directory.Exists(UsageFolder) ? Directory.EnumerateFiles(UsageFolder).ToList() : [];
+        foreach (var folder in SessionFolders())
+        {
+            try
+            {
+                files.AddRange(Directory.EnumerateFiles(folder, Path.GetFileNameWithoutExtension(UsageFileName) + "*" + Path.GetExtension(UsageFileName)));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+        foreach (var path in files)
+        {
+            try
+            {
+                File.Delete(path);
+                deleted++;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+        Directory.CreateDirectory(UsageFolder);
+        await LibraryFiles.WriteTextAsync(Path.Combine(UsageFolder, UsageClearedFileName), clearedJson, cancellationToken).ConfigureAwait(false);
+        return deleted;
     }
 
     /// <summary>
@@ -99,7 +164,15 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
 
     /// <inheritdoc cref="SaveAsync(SessionRecord, string, string?, CancellationToken)"/>
     /// <param name="force">Copies every file again, even ones that look unchanged: <b>Sync now</b> (DESIGN.md §9, "Writing").</param>
-    public async Task SaveAsync(SessionRecord record, string transcriptPath, string? subagentsDirectory, bool force, CancellationToken cancellationToken = default)
+    public Task SaveAsync(SessionRecord record, string transcriptPath, string? subagentsDirectory, bool force, CancellationToken cancellationToken = default) =>
+        SaveAsync(record, transcriptPath, subagentsDirectory, force, usageJson: null, cancellationToken);
+
+    /// <inheritdoc cref="SaveAsync(SessionRecord, string, string?, bool, CancellationToken)"/>
+    /// <param name="usageJson">
+    /// The session's usage file (<see cref="UsageFileName"/>) to write before the record, when machines share their usage
+    /// (DESIGN.md §6, "Sharing across machines"); null leaves the one there alone.
+    /// </param>
+    public async Task SaveAsync(SessionRecord record, string transcriptPath, string? subagentsDirectory, bool force, string? usageJson, CancellationToken cancellationToken = default)
     {
         var folder = GetSessionFolder(record.SessionId);
         // Serialized first: the caller may change the record while the files copy.
@@ -110,8 +183,82 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
         {
             await CopyTranscriptsAsync(subagentsDirectory, Path.Combine(folder, SubagentsFolderName), force, cancellationToken).ConfigureAwait(false);
         }
+        if (usageJson is not null)
+        {
+            await LibraryFiles.WriteTextAsync(Path.Combine(folder, UsageFileName), usageJson, cancellationToken).ConfigureAwait(false);
+        }
         await LibraryFiles.WriteTextAsync(Path.Combine(folder, RecordFileName), json, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// A synced session's usage files (DESIGN.md §6, "Sharing across machines"): its <see cref="UsageFileName"/>, and any
+    /// copies a sync client made of it in a conflict, which hold turns too. Files that can't be read just now are left out.
+    /// </summary>
+    public SessionUsageTexts ReadSessionUsage(string sessionId)
+    {
+        var folder = GetSessionFolder(sessionId);
+        if (!Directory.Exists(folder))
+        {
+            return new SessionUsageTexts(null, []);
+        }
+        string? main = null;
+        var copies = new List<string>();
+        foreach (var path in UsageFilesIn(folder))
+        {
+            try
+            {
+                var text = LibraryFiles.ReadText(path);
+                if (Path.GetFileName(path) == UsageFileName)
+                {
+                    main = text;
+                }
+                else
+                {
+                    copies.Add(text);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+            }
+        }
+        return new SessionUsageTexts(main, copies);
+    }
+
+    /// <summary>
+    /// Every synced session's usage files, with when each was last written and how long it is, so a reader can skip the
+    /// ones it has read already. A folder that can't be listed is skipped.
+    /// </summary>
+    public IReadOnlyList<SessionUsageFileInfo> SessionUsageFiles()
+    {
+        var files = new List<SessionUsageFileInfo>();
+        foreach (var folder in SessionFolders())
+        {
+            var sessionId = Path.GetFileName(folder);
+            if (!IsValidId(sessionId))
+            {
+                continue;
+            }
+            try
+            {
+                foreach (var path in UsageFilesIn(folder))
+                {
+                    var info = new FileInfo(path);
+                    files.Add(new SessionUsageFileInfo(sessionId, path, info.Length, info.LastWriteTimeUtc));
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Skip it; it may be mid-sync.
+            }
+        }
+        return files;
+    }
+
+    /// <summary>A session folder's usage file and a sync client's conflict copies of it (<c>usage (1).json</c> and so on).</summary>
+    private static IEnumerable<string> UsageFilesIn(string folder) =>
+        Directory.EnumerateFiles(folder, Path.GetFileNameWithoutExtension(UsageFileName) + "*" + Path.GetExtension(UsageFileName))
+            .Where(path => !LibraryFiles.IsTemp(path))
+            .Order(StringComparer.Ordinal);
 
     /// <summary>
     /// Every session folder with a readable record and transcript, newest first. Conflict copies that a sync client

@@ -15,6 +15,7 @@ namespace Claudette.Usage;
 /// <item>Samples other machines shared through the session library, imported with the name of the machine they came
 /// from (DESIGN.md §6, "Sharing across machines").</item>
 /// <item>Per-turn token records, per tab, and each tab's last known name.</item>
+/// <item>Turns other machines ran in synced sessions, with their machines' names (<see cref="SessionUsageFile"/>).</item>
 /// </list>
 /// No conversation content is ever stored. Synchronous and safe to call from any thread; keep it off the UI thread.
 /// Times are stored to the millisecond.
@@ -218,14 +219,20 @@ public sealed class UsageStore : IDisposable
         });
     }
 
+    /// <summary>
+    /// Records this machine's turns, each with an id of its own that it keeps on every machine it's shared with (DESIGN.md
+    /// §6, "Sharing across machines").
+    /// </summary>
     public void AddTurns(IEnumerable<TurnRecord> turns) => Locked(() =>
     {
         using var transaction = _connection.BeginTransaction();
         using var command = _connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
-            INSERT INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account)
-            VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $project, $account)
+            INSERT INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account,
+                               uid, project_key, project_name, account_name, plan)
+            VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $project, $account,
+                    $uid, $projectKey, $projectName, $accountName, $plan)
             """;
         foreach (var turn in turns)
         {
@@ -241,10 +248,195 @@ public sealed class UsageStore : IDisposable
             Add(command, "$costUsd", turn.CostUsd);
             Add(command, "$project", turn.Project);
             Add(command, "$account", turn.Account);
+            Add(command, "$uid", Guid.NewGuid().ToString("N"));
+            Add(command, "$projectKey", turn.ProjectKey);
+            Add(command, "$projectName", turn.ProjectName);
+            Add(command, "$accountName", turn.AccountName);
+            Add(command, "$plan", turn.Plan);
             command.ExecuteNonQuery();
         }
         transaction.Commit();
     });
+
+    /// <summary>
+    /// A synced session's turns as this machine has them, to share in the session's usage file (DESIGN.md §6, "Sharing
+    /// across machines"): its own, under <paramref name="thisMachine"/>, and those other machines shared. Turns recorded
+    /// before turns were shared have no id and are left out.
+    /// </summary>
+    /// <param name="thisMachineName">This machine's name, for the file's list of machines.</param>
+    public SessionUsage GetSessionUsage(string sessionId, string thisMachine, string thisMachineName) => Locked(() =>
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = """
+            SELECT uid, timestamp, COALESCE(machine, $thisMachine), tab_id, model, input, output, cache_write, cache_read, cost_usd,
+                   project_key, project_name, plan, account, account_name
+            FROM turns WHERE session_id = $sessionId AND uid IS NOT NULL
+            ORDER BY timestamp, id
+            """;
+        Add(command, "$sessionId", sessionId);
+        Add(command, "$thisMachine", thisMachine);
+        var turns = new List<SharedTurn>();
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                turns.Add(new SharedTurn(
+                    reader.GetString(0),
+                    DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(1)),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetInt64(5),
+                    reader.GetInt64(6),
+                    reader.GetInt64(7),
+                    reader.GetInt64(8),
+                    reader.GetDouble(9),
+                    NullableString(reader, 10),
+                    NullableString(reader, 11),
+                    NullableString(reader, 12),
+                    NullableString(reader, 13),
+                    NullableString(reader, 14)));
+            }
+        }
+        var machines = ReadNames("SELECT id, name FROM machines", turns.Select(t => t.Machine));
+        machines[thisMachine] = thisMachineName;
+        var tabs = ReadNames("SELECT tab_id, name FROM tabs", turns.Select(t => t.Tab));
+        return new SessionUsage(SessionUsageFile.FileVersion, machines, tabs, turns);
+    });
+
+    /// <summary>
+    /// Adds turns another machine shared in a synced session (DESIGN.md §6, "Sharing across machines"), each once by its
+    /// id, with the names of their machines and tabs. Turns older than <paramref name="keepFor"/> or the last Clear aren't
+    /// added. One from a machine whose clock is ahead keeps its time, which only places it in a period, so two of its turns
+    /// stay two. Returns the turns added.
+    /// </summary>
+    /// <param name="sessionId">The session the turns were run in.</param>
+    public IReadOnlyList<SharedTurn> ImportTurns(string sessionId, IEnumerable<SharedTurn> turns, IReadOnlyDictionary<string, string> machines,
+        IReadOnlyDictionary<string, string> tabs, TimeSpan? keepFor) => Locked(() =>
+    {
+        var now = _time.GetUtcNow();
+        using var transaction = _connection.BeginTransaction();
+        using var floor = _connection.CreateCommand();
+        floor.Transaction = transaction;
+        floor.CommandText = "SELECT through FROM imports WHERE machine = $every";
+        Add(floor, "$every", EveryMachine);
+        var cutoff = Math.Max(floor.ExecuteScalar() is long cleared ? cleared : long.MinValue, keepFor is { } keep ? (now - keep).ToUnixTimeMilliseconds() : long.MinValue);
+
+        using var insert = _connection.CreateCommand();
+        insert.Transaction = transaction;
+        insert.CommandText = """
+            INSERT OR IGNORE INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, account,
+                                         uid, machine, project_key, project_name, account_name, plan)
+            VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $account,
+                    $uid, $machine, $projectKey, $projectName, $accountName, $plan)
+            """;
+        var added = new List<SharedTurn>();
+        foreach (var turn in turns)
+        {
+            var timestamp = turn.At.ToUnixTimeMilliseconds();
+            if (timestamp < cutoff)
+            {
+                continue;
+            }
+            insert.Parameters.Clear();
+            Add(insert, "$timestamp", timestamp);
+            Add(insert, "$tabId", turn.Tab);
+            Add(insert, "$sessionId", sessionId);
+            Add(insert, "$model", turn.Model);
+            Add(insert, "$input", turn.Input);
+            Add(insert, "$output", turn.Output);
+            Add(insert, "$cacheWrite", turn.CacheWrite);
+            Add(insert, "$cacheRead", turn.CacheRead);
+            Add(insert, "$costUsd", turn.CostUsd);
+            Add(insert, "$account", turn.AccountId);
+            Add(insert, "$uid", turn.Id);
+            Add(insert, "$machine", turn.Machine);
+            Add(insert, "$projectKey", turn.Project);
+            Add(insert, "$projectName", turn.ProjectName);
+            // Matched to this machine's accounts without the spaces at its ends, as names are compared.
+            Add(insert, "$accountName", turn.Account?.Trim());
+            Add(insert, "$plan", turn.Plan);
+            if (insert.ExecuteNonQuery() > 0)
+            {
+                added.Add(turn);
+            }
+        }
+        using var names = _connection.CreateCommand();
+        names.Transaction = transaction;
+        foreach (var machine in added.Select(t => t.Machine).Distinct(StringComparer.Ordinal))
+        {
+            if (machines.TryGetValue(machine, out var name))
+            {
+                names.Parameters.Clear();
+                names.CommandText = "INSERT INTO machines (id, name) VALUES ($id, $name) ON CONFLICT (id) DO UPDATE SET name = excluded.name";
+                Add(names, "$id", machine);
+                Add(names, "$name", name);
+                names.ExecuteNonQuery();
+            }
+        }
+        foreach (var (tab, name) in tabs)
+        {
+            names.Parameters.Clear();
+            // Only for another machine's tab with turns here: never this machine's own tabs' names.
+            names.CommandText = """
+                INSERT INTO tabs (tab_id, name) SELECT $tabId, $name WHERE EXISTS (SELECT 1 FROM turns WHERE tab_id = $tabId AND machine IS NOT NULL)
+                ON CONFLICT (tab_id) DO UPDATE SET name = excluded.name
+                """;
+            Add(names, "$tabId", tab);
+            Add(names, "$name", name);
+            names.ExecuteNonQuery();
+        }
+        transaction.Commit();
+        return added;
+    });
+
+    /// <summary>The names of the machines that shared turns, by their ids.</summary>
+    public IReadOnlyDictionary<string, string> GetMachineNames() => Locked(() => ReadNames("SELECT id, name FROM machines", null));
+
+    /// <summary>
+    /// Gives this machine's turns recorded before projects had keys the key of their folder, where <paramref name="keyFor"/>
+    /// knows it (the folder still exists), so a project's older and newer turns are one row in the Usage panel. Their counts
+    /// are left as they are. Returns how many turn records were given one.
+    /// </summary>
+    /// <param name="keyFor">A folder's project key and name; null when it can't be told. Called outside the store's lock.</param>
+    public int BackfillProjectKeys(Func<string, (string Key, string Name)?> keyFor)
+    {
+        var folders = Locked(() =>
+        {
+            using var command = _connection.CreateCommand();
+            command.CommandText = "SELECT DISTINCT project FROM turns WHERE machine IS NULL AND project IS NOT NULL AND project_key IS NULL";
+            using var reader = command.ExecuteReader();
+            var found = new List<string>();
+            while (reader.Read())
+            {
+                found.Add(reader.GetString(0));
+            }
+            return found;
+        });
+        var keys = folders.Select(folder => (Folder: folder, Project: keyFor(folder))).Where(f => f.Project is not null).ToArray();
+        if (keys.Length == 0)
+        {
+            return 0;
+        }
+        return Locked(() =>
+        {
+            using var transaction = _connection.BeginTransaction();
+            using var update = _connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE turns SET project_key = $key, project_name = $name WHERE machine IS NULL AND project = $project AND project_key IS NULL";
+            var updated = 0;
+            foreach (var (folder, project) in keys)
+            {
+                update.Parameters.Clear();
+                Add(update, "$key", project!.Value.Key);
+                Add(update, "$name", project.Value.Name);
+                Add(update, "$project", folder);
+                updated += update.ExecuteNonQuery();
+            }
+            transaction.Commit();
+            return updated;
+        });
+    }
 
     /// <summary>Turn records from <paramref name="from"/> to <paramref name="to"/> (both inclusive), oldest first.</summary>
     public IReadOnlyList<TurnRecord> GetTurns(DateTimeOffset from, DateTimeOffset to, string? tabId = null) => Locked(() =>
@@ -305,17 +497,22 @@ public sealed class UsageStore : IDisposable
         command.ExecuteNonQuery();
     });
 
-    /// <summary>Tokens per project since <paramref name="from"/>, the heaviest first; turns without a project together.</summary>
+    /// <summary>
+    /// Tokens per project and machine since <paramref name="from"/>, the heaviest first; turns without a project together.
+    /// A project's turns go together by its key, whichever of its folders (a worktree, another clone) they were in.
+    /// </summary>
     public IReadOnlyList<ProjectTokenSum> GetTokensByProject(DateTimeOffset from) => Locked(() =>
     {
         using var command = _connection.CreateCommand();
-        // A turn's records (one per model) share its timestamp and tab.
+        // A turn's records (one per model) share its timestamp and tab. Of a project's folders, the first by name is a
+        // worktree's main checkout, which its worktrees are inside.
         command.CommandText = """
-            SELECT project, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT tab_id || '|' || timestamp)
+            SELECT MIN(project), project_key, MAX(project_name), machine,
+                   SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT tab_id || '|' || timestamp)
             FROM turns
             WHERE timestamp >= $from
-            GROUP BY project
-            ORDER BY SUM(input + output + cache_write + cache_read) DESC, project
+            GROUP BY COALESCE(project_key, project), machine
+            ORDER BY SUM(input + output + cache_write + cache_read) DESC, COALESCE(project_key, project), machine
             """;
         Add(command, "$from", from.ToUnixTimeMilliseconds());
         using var reader = command.ExecuteReader();
@@ -323,13 +520,18 @@ public sealed class UsageStore : IDisposable
         while (reader.Read())
         {
             sums.Add(new ProjectTokenSum(
-                reader.IsDBNull(0) ? null : reader.GetString(0),
-                reader.GetInt64(1),
-                reader.GetInt64(2),
-                reader.GetInt64(3),
+                NullableString(reader, 0),
                 reader.GetInt64(4),
-                reader.GetDouble(5),
-                reader.GetInt32(6)));
+                reader.GetInt64(5),
+                reader.GetInt64(6),
+                reader.GetInt64(7),
+                reader.GetDouble(8),
+                reader.GetInt32(9))
+            {
+                Key = NullableString(reader, 1),
+                Name = NullableString(reader, 2),
+                Machine = NullableString(reader, 3),
+            });
         }
         return sums;
     });
@@ -338,26 +540,39 @@ public sealed class UsageStore : IDisposable
     /// An account's estimated spend since <paramref name="from"/>, in US dollars (DESIGN.md §4, "Accounts"); null for the
     /// Default account. Claude Code's own estimates, at list price.
     /// </summary>
-    public double GetSpend(string? account, DateTimeOffset from) => Locked(() =>
+    /// <param name="name">
+    /// The account's name: other machines' turns under an API-key account of that name count too (DESIGN.md §6, "Sharing
+    /// across machines"). Null counts only this machine's.
+    /// </param>
+    public double GetSpend(string? account, DateTimeOffset from, string? name = null) => Locked(() =>
     {
         using var command = _connection.CreateCommand();
-        command.CommandText = "SELECT TOTAL(cost_usd) FROM turns WHERE timestamp >= $from AND account IS $account";
+        command.CommandText = """
+            SELECT TOTAL(cost_usd) FROM turns WHERE timestamp >= $from
+            AND ((machine IS NULL AND account IS $account)
+                 OR ($name IS NOT NULL AND machine IS NOT NULL AND account IS NOT NULL AND account_name = $name COLLATE NOCASE))
+            """;
         Add(command, "$from", from.ToUnixTimeMilliseconds());
         Add(command, "$account", account);
+        Add(command, "$name", name?.Trim());
         return Convert.ToDouble(command.ExecuteScalar(), CultureInfo.InvariantCulture);
     });
 
-    /// <summary>Tokens per account since <paramref name="from"/>, the heaviest first; the Default account's as null.</summary>
+    /// <summary>
+    /// Tokens per account and machine since <paramref name="from"/>, the heaviest first; the Default account's as null.
+    /// Another machine's API-key account comes with its name, which matches it to this machine's.
+    /// </summary>
     public IReadOnlyList<AccountTokenSum> GetTokensByAccount(DateTimeOffset from) => Locked(() =>
     {
         using var command = _connection.CreateCommand();
         // A turn's records (one per model) share its timestamp and tab.
         command.CommandText = """
-            SELECT account, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT tab_id || '|' || timestamp)
+            SELECT account, CASE WHEN machine IS NULL THEN NULL ELSE MAX(account_name) END, machine,
+                   SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT tab_id || '|' || timestamp)
             FROM turns
             WHERE timestamp >= $from
-            GROUP BY account
-            ORDER BY SUM(input + output + cache_write + cache_read) DESC, account
+            GROUP BY account, machine
+            ORDER BY SUM(input + output + cache_write + cache_read) DESC, account, machine
             """;
         Add(command, "$from", from.ToUnixTimeMilliseconds());
         using var reader = command.ExecuteReader();
@@ -365,13 +580,17 @@ public sealed class UsageStore : IDisposable
         while (reader.Read())
         {
             sums.Add(new AccountTokenSum(
-                reader.IsDBNull(0) ? null : reader.GetString(0),
-                reader.GetInt64(1),
-                reader.GetInt64(2),
+                NullableString(reader, 0),
                 reader.GetInt64(3),
                 reader.GetInt64(4),
-                reader.GetDouble(5),
-                reader.GetInt32(6)));
+                reader.GetInt64(5),
+                reader.GetInt64(6),
+                reader.GetDouble(7),
+                reader.GetInt32(8))
+            {
+                AccountName = NullableString(reader, 1),
+                Machine = NullableString(reader, 2),
+            });
         }
         return sums;
     });
@@ -386,10 +605,10 @@ public sealed class UsageStore : IDisposable
         using var command = _connection.CreateCommand();
         // A turn's records (one per model) share its timestamp.
         command.CommandText = $"""
-            SELECT turns.tab_id, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT timestamp), tabs.name
+            SELECT turns.tab_id, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read), SUM(cost_usd), COUNT(DISTINCT timestamp), tabs.name, turns.machine
             FROM turns LEFT JOIN tabs ON tabs.tab_id = turns.tab_id
             WHERE timestamp >= $from{(planOnly ? " AND account IS NULL" : "")}
-            GROUP BY turns.tab_id
+            GROUP BY turns.tab_id, turns.machine
             ORDER BY SUM(input + output + cache_write + cache_read) DESC, turns.tab_id
             """;
         Add(command, "$from", from.ToUnixTimeMilliseconds());
@@ -405,7 +624,10 @@ public sealed class UsageStore : IDisposable
                 reader.GetInt64(4),
                 reader.GetDouble(5),
                 reader.GetInt32(6),
-                reader.IsDBNull(7) ? null : reader.GetString(7)));
+                reader.IsDBNull(7) ? null : reader.GetString(7))
+            {
+                Machine = NullableString(reader, 8),
+            });
         }
         return sums;
     });
@@ -427,36 +649,83 @@ public sealed class UsageStore : IDisposable
             var deleted = Execute(transaction, "DELETE FROM samples WHERE timestamp < $cutoff", cutoff)
                 + Execute(transaction, "DELETE FROM turns WHERE timestamp < $cutoff", cutoff);
             Execute(transaction, "DELETE FROM tabs WHERE tab_id NOT IN (SELECT tab_id FROM turns)", null);
+            Execute(transaction, "DELETE FROM machines WHERE id NOT IN (SELECT machine FROM turns WHERE machine IS NOT NULL)", null);
             transaction.Commit();
             return deleted;
         });
     }
 
     /// <summary>
-    /// Deletes every sample, turn record and tab name ("Clear usage history"). Samples other machines shared up to now
-    /// aren't imported again.
+    /// Deletes every sample, turn record and tab name ("Clear usage history"). Samples and turns other machines shared up
+    /// to now aren't imported again. Returns that moment, to the millisecond, as <see cref="ClearedAt"/> has it.
     /// </summary>
-    public void Clear() => Locked(() =>
+    public DateTimeOffset Clear() => Locked(() =>
     {
+        var now = _time.GetUtcNow().ToUnixTimeMilliseconds();
         using (var transaction = _connection.BeginTransaction())
         {
             Execute(transaction, "DELETE FROM samples", null);
             Execute(transaction, "DELETE FROM turns", null);
             Execute(transaction, "DELETE FROM tabs", null);
+            Execute(transaction, "DELETE FROM machines", null);
             Execute(transaction, "DELETE FROM imports", null);
-            using var floor = _connection.CreateCommand();
-            floor.Transaction = transaction;
-            floor.CommandText = "INSERT INTO imports (machine, through) VALUES ($every, $now)";
-            Add(floor, "$every", EveryMachine);
-            Add(floor, "$now", _time.GetUtcNow().ToUnixTimeMilliseconds());
-            floor.ExecuteNonQuery();
+            SetFloor(transaction, now);
             transaction.Commit();
         }
         // Give the space back and leave nothing of the old rows in the file.
         Execute(null, "VACUUM", null);
         _lastSaved = null;
         _lastWrite = null;
+        return DateTimeOffset.FromUnixTimeMilliseconds(now);
     });
+
+    /// <summary>When the history was last cleared, here or by <see cref="ClearThrough"/>; null if it never was.</summary>
+    public DateTimeOffset? ClearedAt => Locked(() =>
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = "SELECT through FROM imports WHERE machine = $every";
+        Add(command, "$every", EveryMachine);
+        return command.ExecuteScalar() is long through ? DateTimeOffset.FromUnixTimeMilliseconds(through) : (DateTimeOffset?)null;
+    });
+
+    /// <summary>
+    /// Another machine cleared usage history on every machine at <paramref name="at"/> (DESIGN.md §6, "Clear usage
+    /// history"): deletes the samples and turn records up to then, and the names left without turns, and imports nothing
+    /// from before it again. What came after it stays. Returns the number of samples and turn records deleted.
+    /// </summary>
+    public int ClearThrough(DateTimeOffset at) => Locked(() =>
+    {
+        var through = at.ToUnixTimeMilliseconds();
+        using var transaction = _connection.BeginTransaction();
+        var deleted = Execute(transaction, "DELETE FROM samples WHERE timestamp <= $cutoff", through)
+            + Execute(transaction, "DELETE FROM turns WHERE timestamp <= $cutoff", through);
+        Execute(transaction, "DELETE FROM tabs WHERE tab_id NOT IN (SELECT tab_id FROM turns)", null);
+        Execute(transaction, "DELETE FROM machines WHERE id NOT IN (SELECT machine FROM turns WHERE machine IS NOT NULL)", null);
+        SetFloor(transaction, through);
+        transaction.Commit();
+        if (ReadLatestSample(ownOnly: true) is { } latest)
+        {
+            _lastSaved = SampleValues.From(latest);
+            _lastWrite = latest.Timestamp;
+        }
+        else
+        {
+            _lastSaved = null;
+            _lastWrite = null;
+        }
+        return deleted;
+    });
+
+    /// <summary>Nothing from before <paramref name="through"/> is imported again, nor before any later floor already set.</summary>
+    private void SetFloor(SqliteTransaction transaction, long through)
+    {
+        using var floor = _connection.CreateCommand();
+        floor.Transaction = transaction;
+        floor.CommandText = "INSERT INTO imports (machine, through) VALUES ($every, $through) ON CONFLICT (machine) DO UPDATE SET through = MAX(through, excluded.through)";
+        Add(floor, "$every", EveryMachine);
+        Add(floor, "$through", through);
+        floor.ExecuteNonQuery();
+    }
 
     public void Dispose()
     {
@@ -578,6 +847,27 @@ public sealed class UsageStore : IDisposable
 
     private static void Add(SqliteCommand command, string name, object? value) =>
         command.Parameters.AddWithValue(name, value ?? DBNull.Value);
+
+    private static string? NullableString(SqliteDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+
+    /// <summary>Ids and names from a two-column query, only for <paramref name="ids"/> when given. Called under the lock.</summary>
+    private Dictionary<string, string> ReadNames(string sql, IEnumerable<string>? ids)
+    {
+        var wanted = ids?.ToHashSet(StringComparer.Ordinal);
+        using var command = _connection.CreateCommand();
+        command.CommandText = sql;
+        using var reader = command.ExecuteReader();
+        var names = new Dictionary<string, string>(StringComparer.Ordinal);
+        while (reader.Read())
+        {
+            var id = reader.GetString(0);
+            if (wanted is null || wanted.Contains(id))
+            {
+                names[id] = reader.GetString(1);
+            }
+        }
+        return names;
+    }
 
     private static string? ModelsToJson(IReadOnlyList<LimitReading> models)
     {

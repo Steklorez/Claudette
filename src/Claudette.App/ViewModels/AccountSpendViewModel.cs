@@ -8,8 +8,9 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// The header while the selected tab runs under an API key (DESIGN.md §4, "Accounts"): the account, and its estimated
-/// spend today, this week and this month, from Claude Code's own per-turn estimates on this machine. The plan meters are
-/// the Default account's, so they make way.
+/// spend today, this week and this month, from Claude Code's own per-turn estimates on this machine, and other machines'
+/// under an account of the same name while they share their usage. The plan meters are the Default account's, so they
+/// make way.
 /// </summary>
 public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
 {
@@ -31,11 +32,13 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         _logger = services.Loggers.CreateLogger("Accounts");
         _ticker = new UiTicker(services.Time, services.Dispatcher, RefreshInterval, () => _ = RefreshAsync());
         tracker.SpendRecorded += OnSpendRecorded;
+        tracker.TurnsImported += OnTurnsImported;
     }
 
     public void Dispose()
     {
         _tracker.SpendRecorded -= OnSpendRecorded;
+        _tracker.TurnsImported -= OnTurnsImported;
         _ticker.Dispose();
     }
 
@@ -57,13 +60,18 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     public partial string MonthText { get; private set; } = "";
 
-    public static string Tooltip =>
-        "Estimated spend on this API key from this machine's tabs: Claude Code's own estimates at list price, not your bill. Click for usage details.";
+    /// <summary>Whose tabs the spend is from: other machines' too, while they share their usage (DESIGN.md §6, "Sharing across machines").</summary>
+    public string Tooltip =>
+        (_services.Settings.Usage.ShareThroughLibrary
+            ? "Estimated spend on this API key from this machine's tabs, and other machines' tabs that sync to the session library under an account of the same name"
+            : "Estimated spend on this API key from this machine's tabs")
+        + ": Claude Code's own estimates at list price, not your bill. Click for usage details.";
 
     /// <summary>The selected tab changed, or its account did.</summary>
     public void Show(ClaudeAccount? account)
     {
         Account = account;
+        OnPropertyChanged(nameof(Tooltip));
         _ticker.Run(account is not null);
         if (account is null)
         {
@@ -81,6 +89,15 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>Another machine's turns under an account of this one's name count toward its spend.</summary>
+    private void OnTurnsImported(IReadOnlyCollection<string> accountNames)
+    {
+        if (Account is { } account && accountNames.Contains(account.Name.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            _ = RefreshAsync();
+        }
+    }
+
     /// <summary>Reads the spend off the UI thread.</summary>
     internal async Task RefreshAsync()
     {
@@ -90,13 +107,14 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         }
         var read = ++_reads;
         var now = _services.Time.GetLocalNow();
+        var name = account.Name;
         double today, week, month;
         try
         {
             (today, week, month) = await Task.Run(() => (
-                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfDay(now)),
-                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfWeek(now)),
-                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfMonth(now))));
+                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfDay(now), name),
+                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfWeek(now), name),
+                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfMonth(now), name)));
         }
         catch (Exception ex)
         {

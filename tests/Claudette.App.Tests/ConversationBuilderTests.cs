@@ -405,9 +405,22 @@ public class ConversationBuilderTests
     [Fact]
     public void A_completed_turn_gets_a_summary()
     {
-        Apply("""{"type":"result","subtype":"success","is_error":false,"result":"ok","duration_ms":12300,"usage":{"input_tokens":10,"cache_read_input_tokens":4000,"output_tokens":312},"modelUsage":{"claude-opus-5-5":{}}}""");
+        Apply("""{"type":"result","subtype":"success","is_error":false,"result":"ok","duration_ms":12300,"usage":{"input_tokens":10,"cache_read_input_tokens":4000,"output_tokens":312},"modelUsage":{"claude-opus-5-5":{"inputTokens":10,"cacheReadInputTokens":4000,"outputTokens":312,"costUSD":0.01}}}""");
 
         Assert.Equal("12.3s · 4k in · 312 out · claude-opus-5-5", Assert.IsType<TurnSummaryItem>(Assert.Single(_items)).Text);
+    }
+
+    [Fact]
+    public void A_turns_summary_names_only_the_models_it_used()
+    {
+        // The result's modelUsage counts every turn of the process, so a model used only earlier is still in it.
+        Assert.True(MessageParser.TryParse("""{"type":"result","subtype":"success","is_error":false,"result":"ok","duration_ms":1000,"modelUsage":{"claude-haiku-4-5":{"inputTokens":50,"costUSD":0.001},"claude-opus-5-5":{"inputTokens":10,"costUSD":0.01}}}""", out var message, out _));
+        var result = (ResultMessage)message!;
+        var turn = new ModelUsageTotals(new Dictionary<string, UsageCounts> { ["claude-opus-5-5"] = new(10, 0, 0, 0, 0.01) });
+
+        _builder.Apply(new TurnCompleted(result, turn));
+
+        Assert.Equal("1s · claude-opus-5-5", Assert.IsType<TurnSummaryItem>(Assert.Single(_items)).Text);
     }
 
     [Fact]
@@ -659,7 +672,7 @@ public class ConversationBuilderTests
             UserMessage { LocalCommandOutput: { } output } => new LocalCommandOutputReceived(output),
             UserMessage { IsReplay: true } u => new PromptReplayed(u),
             UserMessage u => new ToolResultsReceived(u),
-            ResultMessage r => new TurnCompleted(r),
+            ResultMessage r => new TurnCompleted(r, ModelUsageTotals.From(r.ModelUsage)),
             SystemMessage s => new SystemNotice(s),
             _ => throw new InvalidOperationException($"No event for {message.GetType().Name}"),
         };

@@ -19,9 +19,18 @@ public sealed record SharedUsage(int Version, string MachineName, string? Writte
 }
 
 /// <summary>
+/// <b>Clear on every machine</b> (DESIGN.md §6, "Clear usage history"): when a machine cleared its usage history and the
+/// library's, which every machine that shares clears its own up to.
+/// </summary>
+/// <param name="MachineName">The machine that cleared it, for the log.</param>
+/// <param name="ResetTabTotals">The tabs' saved token totals were reset too, so each machine resets its own.</param>
+public sealed record UsageCleared(DateTimeOffset At, string MachineName, bool ResetTabTotals);
+
+/// <summary>
 /// Plan usage shared between machines through the session library (DESIGN.md §6, "Sharing across machines"). Each
 /// machine that shares writes its own samples of the last <see cref="SharedPeriod"/> to a file of its own, and imports
-/// the others', from machines signed in to the same account. Only plan usage readings: never token records or tab names.
+/// the others', from machines signed in to the same account. Only plan usage readings: synced tabs' turns are shared in
+/// their sessions' folders instead (<see cref="SessionUsageFile"/>).
 /// </summary>
 public static class UsageSharing
 {
@@ -132,6 +141,30 @@ public static class UsageSharing
                 Time(entry, "weeklyResetsAt"), models));
         }
         return new SharedUsage(version, machine, writtenBy, account, published, samples);
+    }
+
+    /// <summary>The note <b>Clear on every machine</b> leaves in the library.</summary>
+    public static string WriteCleared(UsageCleared cleared) => new JsonObject
+    {
+        ["version"] = FileVersion,
+        ["at"] = cleared.At.ToUnixTimeMilliseconds(),
+        ["machine"] = cleared.MachineName,
+        ["resetTabTotals"] = cleared.ResetTabTotals,
+    }.ToJsonString();
+
+    /// <summary>Reads the note <b>Clear on every machine</b> left; null for one without a time, or that isn't one.</summary>
+    public static UsageCleared? ReadCleared(string json)
+    {
+        try
+        {
+            return JsonTree.ParseObject(json) is { } file && Time(file, "at") is { } at
+                ? new UsageCleared(at, file.GetString("machine") ?? "", file.GetBool("resetTabTotals") == true)
+                : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     /// <summary>A time in Unix milliseconds; null when it's missing or out of range, rather than throwing.</summary>

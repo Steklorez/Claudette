@@ -4,6 +4,7 @@ using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
 using Claudette.Core.Protocol;
+using Claudette.Core.Sessions;
 using Claudette.Usage;
 
 namespace Claudette.App.Tests;
@@ -306,8 +307,10 @@ public class UsageDetailsTests
 
     private static TurnRecord Turn(DateTimeOffset at, string tab, long tokens) => new(at, tab, "s1", "claude-opus-5-5", tokens, 0, 0, 0, 0.01);
 
-    private static ResultMessage Result(long input) =>
-        (ResultMessage)(MessageParser.TryParse(new JsonObject
+    /// <summary>A turn that spent this much.</summary>
+    private static TurnCompleted Result(long input)
+    {
+        var result = (ResultMessage)(MessageParser.TryParse(new JsonObject
         {
             ["type"] = "result",
             ["subtype"] = "success",
@@ -315,4 +318,6 @@ public class UsageDetailsTests
             ["session_id"] = "s1",
             ["modelUsage"] = new JsonObject { ["claude-opus-5-5"] = new JsonObject { ["inputTokens"] = input, ["outputTokens"] = 0, ["costUSD"] = 0.01 } },
         }.ToJsonString(), out var message, out _) ? message! : throw new InvalidOperationException());
+        return new TurnCompleted(result, ModelUsageTotals.From(result.ModelUsage));
+    }
 }

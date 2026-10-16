@@ -41,6 +41,7 @@ public sealed class ClaudeSession : IAsyncDisposable
     private HookCallbackRegistry _hooks = new([]);
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Task _readLoop;
+    private readonly ProcessUsage _usage;
     private int _unknownMessageCount;
     private int _protocolErrorCount;
     private readonly Lock _stateLock = new();
@@ -51,10 +52,15 @@ public sealed class ClaudeSession : IAsyncDisposable
     /// Sets <see cref="ShowsElicitations"/> before anything is read, so a request that comes while the session starts,
     /// as an MCP server connects, is shown rather than declined.
     /// </param>
+    /// <param name="restoredUsage">
+    /// The running totals a resumed or forked session's transcript saved (<see cref="ClaudeLaunchOptions.RestoredUsage"/>),
+    /// so the first turn counts only what it spent.
+    /// </param>
     public ClaudeSession(IClaudeTransport transport, TimeProvider timeProvider, ILogger<ClaudeSession>? logger = null, ProtocolDiagnostics? diagnostics = null,
-        bool showsElicitations = false)
+        bool showsElicitations = false, IReadOnlyList<ModelUsageTotals>? restoredUsage = null)
     {
         ShowsElicitations = showsElicitations;
+        _usage = new ProcessUsage(restoredUsage);
         _transport = transport;
         _time = timeProvider;
         _logger = logger ?? NullLogger<ClaudeSession>.Instance;
@@ -519,7 +525,7 @@ public sealed class ClaudeSession : IAsyncDisposable
             case ResultMessage result:
                 SessionId = result.SessionId ?? SessionId;
                 StartupFailure ??= StartupFailure.From(result);
-                Publish(new TurnCompleted(result));
+                Publish(new TurnCompleted(result, _usage.Turn(result)));
                 SetState(SessionState.Idle);
                 break;
 
@@ -541,6 +547,8 @@ public sealed class ClaudeSession : IAsyncDisposable
                 break;
 
             case ConversationResetMessage reset:
+                // Claude Code's running totals start again too.
+                _usage.Reset();
                 Publish(new ConversationReset(reset.Trigger));
                 break;
 

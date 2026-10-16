@@ -117,6 +117,10 @@
     <CheckBox Content="Keep copies of files Claude changes, so prompts can be rewound" IsChecked="{Binding KeepFileCheckpoints}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="Restore files and Edit and resend put files back as they were before a prompt. Claude Code keeps the copies with the session, as its terminal does. Applies to tabs started after the change." />
+    <!-- DESIGN.md §5, "Tasks" -->
+    <CheckBox Content="Give Claude a task list" IsChecked="{Binding GiveClaudeTaskList}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="Claude writes down the steps of its work and ticks them off, so the to-do list over the conversation, the status line and the tab's row show how far it's got. Claude Code leaves the list out for newer models, to save room in the context. Applies to tabs started after the change." />
     <CheckBox Content="Show every hook run in the conversation" IsChecked="{Binding ShowAllHookRuns}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="Off, only hooks that fail, or print something while they run, get a row." />

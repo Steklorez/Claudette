@@ -176,13 +176,16 @@ public partial class MainWindow : Window
         }
         var panel = new UsagePanelViewModel(main.Services, tracker, header, id => main.Shell?.AllTabs.FirstOrDefault(t => t.Id == id)?.DisplayName);
         void OnTurnRecorded(string tabId) => panel.Refresh();
+        void OnTurnsImported(IReadOnlyCollection<string> accountNames) => panel.Refresh();
         tracker.TurnRecorded += OnTurnRecorded;
         tracker.SamplesImported += panel.Refresh;
+        tracker.TurnsImported += OnTurnsImported;
         _usageWindow = new UsageWindow { DataContext = panel };
         _usageWindow.Closed += (_, _) =>
         {
             tracker.TurnRecorded -= OnTurnRecorded;
             tracker.SamplesImported -= panel.Refresh;
+            tracker.TurnsImported -= OnTurnsImported;
             _usageWindow = null;
         };
         _usageWindow.Show(this);

@@ -501,7 +501,7 @@ public sealed class ConversationBuilder
                 _blocks.Close();
                 _carriedOnNoted = false;
                 _retryNote = null;
-                ApplyTurnCompleted(completed.Result);
+                ApplyTurnCompleted(completed.Result, completed.Usage);
                 _agents?.OnTurnCompleted();
                 break;
 
@@ -851,7 +851,7 @@ public sealed class ConversationBuilder
         }
     }
 
-    private void ApplyTurnCompleted(ResultMessage result)
+    private void ApplyTurnCompleted(ResultMessage result, ModelUsageTotals usage)
     {
         var tasksChanged = _tasksChangedThisTurn;
         _tasksChangedThisTurn = false;
@@ -886,7 +886,7 @@ public sealed class ConversationBuilder
             Items.Add(TurnTasksSummary);
         }
         AddTurnDocs();
-        if (TurnSummaryItem.For(result, _modelName, toolCalls) is { } summary)
+        if (TurnSummaryItem.For(result, usage, _modelName, toolCalls) is { } summary)
         {
             if (Clock is { } clock)
             {

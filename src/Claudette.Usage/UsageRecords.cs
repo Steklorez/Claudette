@@ -1,5 +1,4 @@
-using System.Text.Json.Nodes;
-using Claudette.Core.Protocol;
+using Claudette.Core.Sessions;
 
 namespace Claudette.Usage;
 
@@ -56,37 +55,26 @@ public sealed record TurnRecord(
 {
     public long Total => Input + Output + CacheWrite + CacheRead;
 
-    /// <summary>One record per model in the result's <c>modelUsage</c>, read the same way as <c>TokenTotals.Add</c>.</summary>
-    public static IReadOnlyList<TurnRecord> FromResult(ResultMessage result, string tabId, DateTimeOffset timestamp, string? project = null, string? account = null)
-    {
-        if (result.ModelUsage is not { Count: > 0 } byModel)
-        {
-            return [];
-        }
-        var records = new List<TurnRecord>();
-        foreach (var (model, node) in byModel)
-        {
-            if (node is not JsonObject usage)
-            {
-                continue;
-            }
-            records.Add(new TurnRecord(
-                timestamp,
-                tabId,
-                result.SessionId,
-                model,
-                Tokens(usage, "inputTokens"),
-                Tokens(usage, "outputTokens"),
-                Tokens(usage, "cacheCreationInputTokens"),
-                Tokens(usage, "cacheReadInputTokens"),
-                usage.GetDouble("costUSD") ?? 0,
-                project,
-                account));
-        }
-        return records;
-    }
+    /// <summary>The project's key (<c>Claudette.Core.Git.ProjectKey</c>), the same on other machines with a clone of it.</summary>
+    public string? ProjectKey { get; init; }
 
-    private static long Tokens(JsonObject usage, string name) => usage.GetDouble(name) is { } value ? (long)value : 0;
+    /// <summary>The project's folder name, which names it on a machine that doesn't have it.</summary>
+    public string? ProjectName { get; init; }
+
+    /// <summary>An API-key account's name, which other machines match their own accounts by.</summary>
+    public string? AccountName { get; init; }
+
+    /// <summary>For the Default account's turns, the plan account signed in (<see cref="UsageSharing.AccountKey"/>).</summary>
+    public string? Plan { get; init; }
+
+    /// <summary>
+    /// One record per model a turn used, from its share of the result's running totals (<see cref="TurnCompleted.Usage"/>),
+    /// as <c>TokenTotals.Add</c> counts it.
+    /// </summary>
+    public static IReadOnlyList<TurnRecord> From(ModelUsageTotals turn, string? sessionId, string tabId, DateTimeOffset timestamp, string? project = null,
+        string? account = null) =>
+        [.. turn.Models.Select(m => new TurnRecord(timestamp, tabId, sessionId, m.Key, m.Value.Input, m.Value.Output, m.Value.CacheWrite, m.Value.CacheRead,
+            m.Value.CostUsd, project, account))];
 }
 
 /// <summary>A tab's tokens since some moment, for "which tab is burning the most".</summary>
@@ -95,22 +83,43 @@ public sealed record TurnRecord(
 public sealed record TabTokenSum(string TabId, long Input, long Output, long CacheWrite, long CacheRead, double CostUsd, int Turns, string? Name = null)
 {
     public long Total => Input + Output + CacheWrite + CacheRead;
+
+    /// <summary>The machine whose tab it is, when another one shared it (DESIGN.md §6, "Sharing across machines"); null for this machine's.</summary>
+    public string? Machine { get; init; }
 }
 
-/// <summary>A project's tokens over a period, for usage by project (DESIGN.md §6, "Usage history").</summary>
-/// <param name="Project">The tab's folder; null for turns recorded before projects were kept.</param>
+/// <summary>
+/// A project's tokens over a period, for usage by project (DESIGN.md §6, "Usage history"): one machine's, so the
+/// Usage panel can add up every machine's and say how much each did.
+/// </summary>
+/// <param name="Project">This machine's folder for it; null for another machine's turns, and turns recorded before projects were kept.</param>
 /// <param name="Turns">Turns, not records: a turn that used two models counts once.</param>
 public sealed record ProjectTokenSum(string? Project, long Input, long Output, long CacheWrite, long CacheRead, double CostUsd, int Turns)
 {
     public long Total => Input + Output + CacheWrite + CacheRead;
+
+    /// <summary>The project's key, which every machine's turns in it share; null for turns recorded before keys were kept.</summary>
+    public string? Key { get; init; }
+
+    /// <summary>The project's folder name as the turns' machine recorded it.</summary>
+    public string? Name { get; init; }
+
+    /// <summary>The machine that shared these turns; null for this machine's.</summary>
+    public string? Machine { get; init; }
 }
 
 /// <summary>An account's tokens over a period (DESIGN.md §4, "Accounts").</summary>
-/// <param name="Account">The account's id; null for the Default account.</param>
+/// <param name="Account">The account's id on the machine whose turns these are; null for the Default account.</param>
 /// <param name="Turns">Turns, not records: a turn that used two models counts once.</param>
 public sealed record AccountTokenSum(string? Account, long Input, long Output, long CacheWrite, long CacheRead, double CostUsd, int Turns)
 {
     public long Total => Input + Output + CacheWrite + CacheRead;
+
+    /// <summary>The account's name, for another machine's API-key account: this machine's account of that name is the same one.</summary>
+    public string? AccountName { get; init; }
+
+    /// <summary>The machine that shared these turns; null for this machine's.</summary>
+    public string? Machine { get; init; }
 }
 
 /// <summary>A plan window of the usage history: the 5-hour session or the week across all models.</summary>

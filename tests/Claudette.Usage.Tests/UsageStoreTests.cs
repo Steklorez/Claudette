@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using Claudette.Core.Protocol;
+using Claudette.Core.Sessions;
 using Claudette.Usage.Tests.Support;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Time.Testing;
@@ -182,18 +182,18 @@ public sealed class UsageStoreTests : IDisposable
     }
 
     [Fact]
-    public void Turn_records_come_one_per_model_from_a_result()
+    public void Turn_records_come_one_per_model_the_turn_used()
     {
         var modelUsage = JsonNode.Parse("""
             {
               "claude-fable-5": {"inputTokens": 10, "outputTokens": 200, "cacheCreationInputTokens": 3000, "cacheReadInputTokens": 40000, "costUSD": 0.25, "contextWindow": 200000},
               "claude-haiku-4-5": {"inputTokens": 5, "outputTokens": 6, "costUSD": 0.001},
+              "claude-unused": {"inputTokens": 0, "outputTokens": 0, "costUSD": 0},
               "broken": 12
             }
             """)!.AsObject();
-        var result = new ResultMessage("success", false, "ok", null, "session-1", 0.251, null, modelUsage, []);
 
-        var turns = TurnRecord.FromResult(result, "tab-1", Start);
+        var turns = TurnRecord.From(ModelUsageTotals.From(modelUsage), "session-1", "tab-1", Start);
 
         Assert.Equal(
             [
@@ -201,7 +201,7 @@ public sealed class UsageStoreTests : IDisposable
                 new TurnRecord(Start, "tab-1", "session-1", "claude-haiku-4-5", 5, 6, 0, 0, 0.001),
             ],
             turns);
-        Assert.Empty(TurnRecord.FromResult(result with { ModelUsage = null }, "tab-1", Start));
+        Assert.Empty(TurnRecord.From(ModelUsageTotals.Empty, "session-1", "tab-1", Start));
     }
 
     [Fact]

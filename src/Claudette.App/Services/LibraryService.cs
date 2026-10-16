@@ -180,7 +180,11 @@ public sealed class LibraryService : IDisposable
             {
                 return new LibraryCopyResult.NotHeld();
             }
-            await Library.SaveAsync(record, transcript, subagents, force).ConfigureAwait(false);
+            // Every machine's turns in the session, while machines share their usage (DESIGN.md §6, "Sharing across machines").
+            var usage = _services.Usage is { } tracker
+                ? await tracker.SessionUsageForLibraryAsync(record.SessionId, Library.ReadSessionUsage(record.SessionId)).ConfigureAwait(false)
+                : null;
+            await Library.SaveAsync(record, transcript, subagents, force, usage).ConfigureAwait(false);
             // The lease is taken last, so a lease of this run's says the copy is complete.
             if (stillSyncing())
             {

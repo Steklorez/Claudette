@@ -310,6 +310,7 @@ In both styles, text in a different font or size beside other text sits on its b
   - Input, output, cache write and cache read tokens, split by model when the session used more than one.
   - Two time spans: **this session window** (since the current 5-hour window started, which is the part that counts against the session limit) and **all time** for this tab's session.
   - An estimated cost, labeled as an estimate (Claude Code computes it at list price; it is not your bill).
+  - Each turn adds what it spent, worked out from Claude Code's running totals ([§6](#data-source)), so a long session isn't counted again with every turn.
   - Shown in short form in the composer bar (for example `1.2M tok`). Click it for a popover with the full breakdown and a small per-turn chart. The window's tokens and the chart come from the usage history, read once (a week's turns for the tab, by its index) when the popover opens and again as the tab's turns are recorded while it's open; other tabs' turns don't touch it.
   - Saved with the tab, so the counts survive app restarts and session resumes.
   - The same numbers feed the "which tab is burning the most" view in the Usage panel ([§6](#6-token-burn-awareness)).
@@ -546,17 +547,17 @@ Tabs can run Claude Code under accounts besides the one it's signed in to, for p
   - While Claude works, the move waits for the turn to end, as a change of extra folders does.
 - **What an API key changes.**
   - It has no plan limits. Its tabs' `rate_limit_event`s don't reach the header, whose plan is the Default account's.
-  - While one of its tabs is selected, the header shows its spend instead of the plan: the account's name and color, and its estimated spend today, this week (from the first day of the week in the user's locale) and this month, from Claude Code's `costUSD` for each turn on this machine. It's labeled an estimate, and a click opens the Usage panel. The plan's meters, sparkline, chevron and detailed header come back with a Default tab.
-  - **Spend warnings.** Each account can warn when today's or this month's estimated spend passes an amount (Settings → Accounts, off until set): once a day and once a month, as a usage alert ([§10](#10-notifications)), remembered so a restart doesn't repeat it.
+  - While one of its tabs is selected, the header shows its spend instead of the plan: the account's name and color, and its estimated spend today, this week (from the first day of the week in the user's locale) and this month, from Claude Code's `costUSD` for each turn on this machine, and, while usage is shared, other machines' synced tabs' turns under an API-key account of the same name ([§6](#sharing-across-machines)). It's labeled an estimate, and a click opens the Usage panel. The plan's meters, sparkline, chevron and detailed header come back with a Default tab.
+  - **Spend warnings.** Each account can warn when today's or this month's estimated spend passes an amount (Settings → Accounts, off until set): once a day and once a month, as a usage alert ([§10](#10-notifications)), remembered so a restart doesn't repeat it. The spend is the header's, so another machine's turns under the same name count, and each machine warns for itself.
   - A key Claude Code refuses, or can't get, is the tab's own error: *"Claude Code couldn't use Work's API key. Check the key in Settings → Accounts, or move the tab to another account."* The sign-in banner, holding messages and restarting after a sign-in ([§11](#11-sign-in)) are the Default account's.
   - It can't use Remote Control, which needs a claude.ai sign-in ([§18](#remote-control-the-claude-app)): its tabs' **Connect to the Claude app** is off, saying why.
-- **Settings → Accounts.** **New folders use**. Each account, with its name, its color, **Warn when today's estimated spend passes $** and **this month's passes $**, **Change key…**, and **Remove…**, which asks first in place and can't while an open tab runs under the account; the folders that used it use Default again. **Add an API key**, with a name and the key. Without a credential store (Linux without `secret-tool`), adding is off, saying why. **Reset to defaults** only sets **New folders use** back to Default: the accounts are the user's.
+- **Settings → Accounts.** **New folders use**. Each account, with its name, its color, **Warn when today's estimated spend passes ($)** and **Warn when this month's estimated spend passes ($)**, **Change key…**, and **Remove…**, which asks first in place and can't while an open tab runs under the account; the folders that used it use Default again. **Add an API key**, with a name and the key. Without a credential store (Linux without `secret-tool`), adding is off, saying why. **Reset to defaults** only sets **New folders use** back to Default: the accounts are the user's.
 - **Usage history.** Each turn record has its account, null for Default, as every turn recorded before accounts is. Once there's an account besides Default, the Usage panel lists **Accounts** under **Projects**, over the same period: tokens, estimated cost and turns each ([§6](#usage-history)).
 - **Still to build.**
   - **Second claude.ai sign-ins**, such as a company Team plan beside a personal one. Each gets a config folder of its own (a new one in Claudette's data folder, or one already used, such as `~/.claude-work`) with its own sign-in and sign-out. It shares Default's settings, CLAUDE.md, skills, agents, commands, output styles and plugins through links. Its MCP servers are in `.claude.json` with its sign-in, so they're copied when the account is made, with **Copy from Default again**. Plan usage is tracked per account, History and the other reads cover every folder, and moving a tab copies its transcript, subagents and checkpoints, as **Choose folder…** does. First, a spike: whether a linked `settings.json` stays linked when Claude Code saves it (file links on Windows also need Developer Mode). If not, folders are linked as junctions, CLAUDE.md is pulled in with an `@` import, and `settings.json` is copied whenever Default's changes.
   - **A strip of accounts** beside the weekly meters when there are several: a plan's session percentage, or a key's spend today. Only accounts with open tabs are polled; the others show their last reading, marked with its age.
   - **When a plan limit stops a tab,** offering to continue it under another account with room, or an API key, with what the re-read costs, beside **Continue when the limit resets**.
-  - **Not planned:** Bedrock, Vertex and Foundry accounts; syncing accounts between machines; real spend from the Admin API, which needs an organization admin's key.
+  - **Not planned:** Bedrock, Vertex and Foundry accounts; syncing accounts between machines (only their turns' spend is matched, by name); real spend from the Admin API, which needs an organization admin's key.
 
 ## 5. Conversation View
 
@@ -727,9 +728,10 @@ When Claude keeps a task list (`TodoWrite`, or `TaskCreate` and `TaskUpdate`), t
 - **Where each task starts.** When a task goes in progress, the conversation gets a slim row there, a rule with the task in it: *"◐ #3 Run the migration"*, with *Started 14:05* at its right, then ☑ and *Took 4m* once it's done. A subagent's task has it in the subagent's group. Clicking it opens the Tasks page. A task that goes back to waiting and starts again keeps its first row. The pinned list's tasks go to their rows too. A restored tab has them, dated by its transcript. Find looks through them, and an export keeps them as a line.
 - **When a turn ends.** After a turn that changed the task list ends normally (reading it with `TaskList` or `TaskGet` doesn't count), a row before its footer says where the list stands: *"✓ All 7 tasks done · 23m"*, timed from the first task's start (or, without one, its adding) to the turn's end, or *"4 of 7 tasks left · Next: #4 Run the migration"* (*"In progress: …"* while one still is) with **Continue**, which sends *"Carry on with the tasks that are left."* as the user's message. **Continue** is offered on the latest such row only, until the next turn starts. The **Finished** notification starts with the same words ([§10](#10-notifications)). Only live, as the footer is.
 - **Progress elsewhere.**
-  - **The status line**, under the composer: at its right, *"Drafting the plan…"* while Claude writes one, *"3 of 7 tasks · Running the tests"* while tasks are left (the one in progress, in its active form), and *"All 7 tasks done"* once they are. Clicking it opens the Tasks page.
+  - **The status line**, under the composer: at its right, *"Drafting the plan…"* while Claude writes one, *"3 of 7 tasks · Running the tests"* while tasks are left (the one in progress, in its active form), and *"All 7 tasks done"* once they are. With no tasks, *"Following the plan"* once a plan is approved or a reply is shown as the plan. Clicking it opens the Tasks page.
   - **The tab's row** ([§4](#sidebar)): while tasks are left, a *3/7* badge at the right of the second line, before the branch, whose tip names the one in progress (*"3 of 7 tasks done · Now: Running the tests"*); clicking it selects the tab and opens the Tasks page. While the tab works with a task in progress, the second line says the task (*"Running the tests"*) instead of the model and effort, which come back when the turn ends. **Show task progress on tab rows** (Settings → Appearance, on by default) turns both off.
   - **The info card** ([§4](#4-tabs--sessions)): a *Tasks* row, *"3 of 7 done · Now: Running the tests"*.
+- **Giving Claude the tools.** Since 2.1.268, Claude Code gives its task-tracking tools only to Opus 4.7, Sonnet 4.6, Haiku 4.5 and older models: newer ones keep track of their work without a written list, so they make no tasks and only the plan shows here. Settings → Claude Code → **Give Claude a task list** (on by default) starts tabs with `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`, which gives every model the tools, at the cost of the room their definitions and reminders take in the context. Off, Claudette leaves the variable as the user's environment has it. It applies to tabs started after the change.
 - Tasks are the session's, so a subagent's `TaskCreate` and `TaskUpdate` calls land here too; a subagent's own `TodoWrite` list stays a card in its group. The calls themselves show here rather than as cards, as do `TaskList` and `TaskGet`, whose results fill in what the calls didn't show. A restored tab's tasks are dated by their transcript entries.
 - The command palette's **Show tasks** opens the side panel on this page. `/clear` empties it, versions and all, as it does the pinned list.
 - **How it's built.** `Conversation/TodoList.cs` keeps the tasks, the plan's versions (`PlanVersion`), the draft and the suggestion; `ConversationBuilder` feeds it, adds the rows where tasks start (`TaskStartItem`) and the row at a turn's end (`TasksSummaryItem`), and decides which task each change and call counts toward; `TabViewModel.SidePanel.cs` and `TabViewModel.Tasks.cs` have the commands and the row's badge. `TasksPlanTests`, `TaskBoardTests` and `TaskProgressTests` (the view model), `PlanRealCliTests` (the draft, with the real `claude` in Plan mode against the mock), `TasksAndMcpPagesUiTests` and `TaskProgressUiTests` (the views).
@@ -1075,7 +1077,7 @@ Token and context data are documented:
 
 | Data | Source |
 |---|---|
-| Tokens per turn and per tab | `usage` and `modelUsage` on each `result` message. Per-call `usage` on `assistant` messages moves the composer's count during a turn: Claude Code repeats a call's usage on each of its content blocks, so calls are counted once by message ID, with their latest figures. `modelUsage` also includes `costUSD` and `contextWindow`. |
+| Tokens per turn and per tab | `modelUsage` on each `result` message, by model with `costUSD` and `contextWindow`, subagents and compaction included. It's the `claude` process's running total, not the turn's, so a turn is what it added to the result before (`ProcessUsage`): a model whose figures didn't grow wasn't used. `/clear` (`conversation_reset`) starts the totals again; a result with none (`/clear`'s own, an interrupt before anything was counted, a crash's zeroed one) counts nothing. A resumed or forked session's process starts from the totals Claude Code saved in the transcript when the last one exited normally (`cost-state` entries, undocumented), so its first turn counts from the latest one its result could have grown from. Per-call `usage` on `assistant` messages moves the composer's count during a turn: Claude Code repeats a call's usage on each of its content blocks, so calls are counted once by message ID, with their latest figures. Turns recorded before Claudette worked this out counted every earlier turn of their process again; they're left as they were. |
 | Context window % | The `get_context_usage` control request after each turn. Without it (it fails, or this Claude Code lacks it), an estimate: the main agent's latest call (everything it read plus what it wrote) ÷ that model's `contextWindow` from the last `result`, updated with each call. The estimate warns at 90% of the auto-compact threshold from `autocompact_state` (undocumented; sent before each turn with `enabled`, `effective_window` and `threshold`), or at 80% without it. |
 
 **Sampling.**
@@ -1093,7 +1095,7 @@ Token and context data are documented:
 
 ### Usage history
 
-Claudette stores usage data locally in a SQLite file in the app data folder, so the trendline, charts and per-tab stats survive restarts. The file is per machine and isn't synced, though its plan usage samples can be shared ([Sharing across machines](#sharing-across-machines)). It holds three kinds of records.
+Claudette stores usage data locally in a SQLite file in the app data folder, so the trendline, charts and per-tab stats survive restarts. The file is per machine and isn't synced, though its plan usage samples and synced tabs' turns can be shared ([Sharing across machines](#sharing-across-machines)). It holds three kinds of records.
 
 **Plan usage samples** (app-wide):
 
@@ -1109,18 +1111,20 @@ A sample is saved only when a value changes, and at most once a minute. These fe
 - Timestamp.
 - Tab and session ID.
 - The tab's folder (its project). Turns recorded before Claudette kept it have none.
+- The project's key and name: a hash of the git remote and the folder's path inside the repository, the same on every machine with a clone of it, as the scratch pad's ([§18](#scratch-pad)); without a remote, a hash of the folder that's this machine's own. The name is the folder's, or a worktree's main checkout's. Turns recorded before keys were kept are given their folder's key at launch, when the folder still exists, so a project stays one row; their counts aren't touched.
 - Model.
 - Input, output, cache write and cache read tokens.
 - Estimated cost.
-- The account the tab ran under; none for the Default account, as for turns recorded before accounts ([§4](#accounts)).
+- The account the tab ran under; none for the Default account, as for turns recorded before accounts ([§4](#accounts)). An API-key account's name too, and for the Default account, a hash of the plan account it was signed in to.
+- An id of its own, kept on every machine it's shared with, and for a turn another machine shared, which machine that was ([Sharing across machines](#sharing-across-machines)). Turns recorded before turns were shared have no id and are never shared.
 
 These feed each tab's per-turn chart, the "which tab is burning the most" view, the detailed header's busiest tabs, and the Usage panel's **Projects** list.
 
-**Projects** (Usage panel): tokens, estimated cost and turns per folder, across every tab that worked in it, open or closed, heaviest first, with each one's share of the total. A picker chooses the period: **This session window**, **This week** (the default, like the chart beside it) or **The last 30 days** (as far as **Keep usage history** allows). A row is named by its folder; two folders of the same name show their parent folder too, and the tooltip has the full path. Turns from before projects were kept are one row, **Earlier turns**.
+**Projects** (Usage panel): tokens, estimated cost and turns per project, across every tab that worked in it, open or closed, in any of its folders (a worktree, another clone), heaviest first, with each one's share of the total. A picker chooses the period: **This session window**, **This week** (the default, like the chart beside it) or **The last 30 days** (as far as **Keep usage history** allows). A row is named by its folder; two of the same name show their parent folder too, and the tooltip has the full path. Turns from before projects were kept are one row, **Earlier turns**. With other machines' turns, see [Sharing across machines](#sharing-across-machines).
 
 **Tab names** (per tab): each tab's last known name, so its rows are still named once it's closed. It's kept when a turn is recorded and whenever the name changes after that, and only for a tab with turn records. Turns and names are written in the order they happen, so a rename just after a turn isn't lost. A name goes when its tab's last turn record does (retention or **Clear usage history**). Turns recorded before names were kept show as "A closed tab".
 
-**Not stored:** prompts, replies, code or any other conversation content. That stays in Claude Code's transcripts and the session library. A tab's name is kept, although it's often the title Claude Code gave the conversation ([§4](#4-tabs--sessions)): it's what the sidebar, History and the session library show, and it never leaves this machine.
+**Not stored:** prompts, replies, code or any other conversation content. That stays in Claude Code's transcripts and the session library. A tab's name is kept, although it's often the title Claude Code gave the conversation ([§4](#4-tabs--sessions)): it's what the sidebar, History and the session library show. It leaves this machine only with a synced tab's turns, while usage is shared, into the session library that already holds the tab's transcript.
 
 **Retention.** Settings → Usage → **Keep usage history** with these options:
 
@@ -1132,30 +1136,52 @@ These feed each tab's per-turn chart, the "which tab is burning the most" view, 
 
 Records older than the chosen period are deleted at launch and once a day. With **1 day**, the weekly chart only covers the last day. The header meters and projection are unaffected, since they only need the current 5-hour window and the latest weekly value.
 
-**Clear usage history.** A button beside the retention option. After confirming, it deletes every stored sample, per-turn record and tab name.
+**Clear usage history.** A button beside the retention option. After confirming, it deletes every stored sample, per-turn record, tab name and other machine's name.
 
 - The header meters fill in again at the next update from Claude Code.
 - Each tab's running token totals are kept, because they're saved with the tab ([§4](#4-tabs--sessions)). A checkbox in the confirmation, **Also reset per-tab token totals**, clears those too.
+- It's this machine's history only: the usage shared in the session library, and what other machines imported, stay.
+
+**Clear usage history on every machine…** A button under **Share usage with my other machines**, offered while it's on. After confirming, in place, with **Also reset per-tab token totals on every machine**:
+
+- This machine's history is cleared as above.
+- Every machine's shared usage in the library goes: each `usage/<machine id>.json` and every synced session's `usage.json`, with any conflict copies. The sessions themselves stay.
+- A note, `usage/cleared.json`, says when, which machine, and whether the tabs' totals were reset. Every machine that shares reads it before it next writes or reads shared usage: within a minute while it runs, or at launch. If it's newer than that machine's own last clear, the machine clears its history up to that moment, keeping what it recorded after, and imports nothing from before it again. It resets its tabs' totals too when the note says so. Until it has, it writes no session's usage, so nothing cleared comes back.
+- The setting says how it went: *"Usage history cleared here and in the session library. Your other machines clear theirs the next time they check, within a minute if they're running."*, or, when the library can't be reached, that only this machine's was cleared.
+- A machine that doesn't share isn't cleared. It never sees the note until it shares, and then clears what came before it.
 
 Even **Forever** stays small: roughly tens of megabytes a year of heavy use.
 
 ### Sharing across machines
 
-The plan's limits are the account's, so every machine signed in to it sees the same usage, but each machine only charts the readings it took itself. **Share usage with my other machines** (Settings → Usage, off by default) fills in the gaps through the session library ([§9](#session-library-sync-across-machines)), so a machine that sat idle still charts the usage another machine ran up.
+The plan's limits are the account's, so every machine signed in to it sees the same usage, but each machine only charts the readings it took itself, and only counts the turns it ran. **Share usage with my other machines** (Settings → Usage, off by default) fills in the gaps through the session library ([§9](#session-library-sync-across-machines)), so a machine that sat idle still charts the usage another machine ran up, and a project's tokens and estimated cost add up every machine's synced tabs.
 
-- **What's shared:** plan usage samples only (session, weekly and model-specific percentages, their reset times, and when each was taken), from the last 8 days: a week's window and a day to spare. Never per-turn token records or tab names, which stay on the machine they came from.
+- **What's shared:**
+  - Plan usage samples (session, weekly and model-specific percentages, their reset times, and when each was taken), from the last 8 days: a week's window and a day to spare.
+  - The turns of tabs that sync to the library ([§9](#session-library-sync-across-machines)), in their session's folder: each turn's time, model, tokens, estimated cost, project key and name, tab and machine, and its account (the plan account's hash for Default, or an API-key account's name). Only turns recorded since turns were shared; earlier ones, and tabs that don't sync, stay on their machine.
 - **How.** Each machine that shares writes its own samples to `usage/<machine id>.json` in the library: after each sample it saves, at launch, when sharing is turned on and when the library folder changes. The file is written to a temporary name and then renamed, as the library's other files are. The machine id is made up once and kept on the machine, so the file keeps its name when the machine's is changed, and two machines with the same name don't share a file. Nothing is shared live: the SQLite file itself never goes into the library.
+- **A synced session's turns** go in `usage.json` in its folder, written with each copy of the session, before its record ([§9](#session-library-sync-across-machines), "Writing"), and only when it gains turns.
+  - The machine writing the session puts in every turn it has for it, its own and those it imported, merged with the ones already in the file and in any copy a sync client made of it in a conflict, each once by its id. So a session continued on another machine and back keeps every machine's turns, and a lease held elsewhere only delays this machine's.
+  - A file in a format newer than this Claudette reads is left as it is.
 - **Reading the others'.** At launch and once a minute, each machine that shares reads the other machines' files and adds their samples to its own history, marked with the machine they came from.
   - Only files from the same account count: each names its account by a hash of the email and organization Claude Code reports, so the email isn't written to the library. An account with no email (an API key) has no plan limits to share.
   - A sample is added once: each machine's newest imported sample is remembered, and only newer ones are added. Samples older than **Keep usage history** aren't added.
   - The header, its trendline and projection, the detailed header's charts and the Usage panel take them in straight away. When the newest sample is newer than this machine's latest reading, the header shows it, as it does after a restart.
   - This machine's own file is never read back, and its shared samples never include ones it imported, so readings don't echo between machines.
-- **Format.** Each file says which format it's in and which version of Claudette wrote it (for the log).
+- **Reading the others' turns.** At the same times, each machine reads the synced sessions' `usage.json` files that changed since it last read them (all of them at launch) and adds the turns other machines ran, marked with their machine.
+  - A turn is added once, by its id; this machine's own are never added back. Turns older than **Keep usage history**, or than the last **Clear usage history**, aren't added. A turn from a machine whose clock is ahead keeps its time.
+  - The Default account's turns count only from machines signed in to the same plan account, as samples do. An API-key account's always count, under its name.
+  - The Usage panel and the detailed header take them in straight away:
+    - **Projects** adds up every machine's turns in a project: the same remote and folder inside it, whatever the folder is called on each. A project only other machines have is named as they name it, with the machine's name beside it when two are named alike. A project without a git remote is a row per machine. A row's tooltip says what each machine spent: *This machine: $3.10 · 12 turns*, *Laptop: $1.20 · 4 turns*.
+    - **Tabs in this session window** and the busiest tabs list another machine's tabs as *Fix the loader · Laptop*.
+    - **Accounts** counts another machine's API-key turns with this machine's account of the same name (without case or spaces at its ends), or as an account of their own; Default is every machine's plan turns. The tooltip splits it by machine.
+  - An API-key account's spend in the header and its warnings ([§4](#accounts)) count other machines' turns under an account of the same name, and are checked again when they're added.
+- **Format.** Each file says which format it's in, and the samples file which version of Claudette wrote it (for the log).
   - A change that only adds fields keeps the format, since readers ignore fields they don't know.
-  - One that removes a field or changes what one means takes the next format number. A Claudette that doesn't know that number leaves the machine's readings out until it's updated, and says so once in its log, rather than guess what they mean.
+  - One that removes a field or changes what one means takes the next format number. A Claudette that doesn't know that number leaves the machine's readings or the session's turns out until it's updated, and says so in its log, rather than guess what they mean.
   - A Claudette keeps reading every format before its own, so machines can be updated one at a time.
-- **Clear usage history** deletes imported samples too, and the ones shared up to then aren't imported again.
-- Turning sharing off stops writing and reading. The file already in the library stays, as a session's copy does when its tab stops syncing.
+- **Clear usage history** deletes imported samples and turns too, and the ones shared up to then aren't imported again. **Clear usage history on every machine** also clears the library's shared usage and, through a note there, every sharing machine's history ([Usage history](#usage-history)).
+- Turning sharing off stops writing and reading. The files already in the library stay, as a session's copy does when its tab stops syncing.
 
 ## 7. Permission Prompts
 
@@ -1437,8 +1463,9 @@ Claudette keeps its own **session library** in a folder the user chooses (Settin
 
 - A **session record** (JSON): the tab name and mark ([§4](#4-tabs--sessions), "Marks"), model, effort, per-tab overrides, token stats, which machine last used it and when, the project identity (below), and the changed files ticked as reviewed ([§8](#8-file-changes--diff-view)). Their paths are relative to the session's folder, since that folder's path differs between machines; a file with no relative path from there, such as one on another drive, is left out.
 - A **copy of Claude Code's transcript** (`.jsonl`), plus subagent transcripts.
+- A **usage file** (`usage.json`), while machines share their usage: every machine's turns in the session, counts only ([§6](#sharing-across-machines)).
 
-The library also holds `settings-sync.json` while settings sync ([§14](#settings-sync-optional)), a `usage` folder with a file per machine that shares its plan usage ([§6](#sharing-across-machines)), and a `scratch` folder with the scratch pads of projects with a git remote ([§18](#scratch-pad)). The privacy note below covers the pads too.
+The library also holds `settings-sync.json` while settings sync ([§14](#settings-sync-optional)), a `usage` folder with a file per machine that shares its plan usage and, once usage was cleared on every machine, a note saying when ([§6](#sharing-across-machines)), and a `scratch` folder with the scratch pads of projects with a git remote ([§18](#scratch-pad)). The privacy note below covers the pads too.
 
 Claude Code's credentials and settings are never copied.
 
@@ -1905,11 +1932,11 @@ A **Settings** window opens with `Ctrl+,` on Windows or `Cmd+,` on macOS, where 
 | General | Start Claudette when I log in (off by default; this machine's, kept by the OS, and left by **Reset to defaults**; [§9](#starting-at-login)). Confirm before closing a working tab. Also rename the session in Claude Code when a tab is renamed. Show Claude's service status (on by default): the header's dot and the incident banner ([§18](#service-status)). Messages sent while Claude works: sent into the turn (the default) or queued until it ends ([§5](#queued-messages)). Keep this computer awake (off by default), only while Claude has work to finish or whenever Claudette is running; the header's cup is the same switch ([§9](#keeping-the-computer-awake)). **Worktrees**: remove worktrees once everything in them is merged (off), and remove worktrees no tab has used for *Never* (the default) to 90 days, with what the last cleanup removed and **Clean up now** ([§4](#cleaning-up-worktrees)); this machine's, like the rest of the page. Claudette's version and updates: check for updates automatically (on by default), include pre-releases (off), **Check now**, and the update's actions. See [Updating Claudette](#updating-claudette). |
 | Sessions | Also restore unpinned tabs on launch (on by default; pinned tabs are always restored). Session library folder (with **Browse…** and **Move library…**, which copies existing sessions to the new folder). Sync new tabs to the session library (off by default; each tab can be switched with **Sync to other machines** in its menu). Name for this machine, as shown in History. How long to keep sessions in the library. Sync Claudette's settings through the library (off by default). See [§9](#session-library-sync-across-machines) and [Settings sync](#settings-sync-optional). |
 | Processes | Show the process monitor. Refresh interval. Show command lines. See [§4](#process-monitor). |
-| Claude Code | Path to `claude` (auto-detected, with **Browse…**). Installed version and install method, from `claude doctor`. Signed-in account (email, plan and organization), with **Sign in** / **Sign out…**, the same as the header's account menu ([§11](#signing-in)). Check for Claude Code updates automatically. Ask before using a new folder's own configuration (on by default; [Folder trust](#folder-trust)). Suggest my next prompt (off by default; [§5](#prompt-suggestions)). Use my login shell's environment (macOS and Linux only, on by default; [§13](#login-shell-environment)). **Claude app (Remote Control)**: Connect new tabs to the Claude app (off by default; each tab has its own switch), with what it does, the privacy note and how to get pushes on the phone, and Keep this computer awake while tabs are connected (on by default). Disabled, with the reason, when the account can't use it ([§18](#remote-control-the-claude-app)). |
+| Claude Code | Path to `claude` (auto-detected, with **Browse…**). Installed version and install method, from `claude doctor`. Signed-in account (email, plan and organization), with **Sign in** / **Sign out…**, the same as the header's account menu ([§11](#signing-in)). Check for Claude Code updates automatically. Ask before using a new folder's own configuration (on by default; [Folder trust](#folder-trust)). Suggest my next prompt (off by default; [§5](#prompt-suggestions)). Give Claude a task list (on by default; [§5](#tasks)). Use my login shell's environment (macOS and Linux only, on by default; [§13](#login-shell-environment)). **Claude app (Remote Control)**: Connect new tabs to the Claude app (off by default; each tab has its own switch), with what it does, the privacy note and how to get pushes on the phone, and Keep this computer awake while tabs are connected (on by default). Disabled, with the reason, when the account can't use it ([§18](#remote-control-the-claude-app)). |
 | Accounts | New folders use (Default unless changed). Each account besides Default: its name, its tag's color, warnings when its estimated spend passes an amount today or this month, **Change key…** and **Remove…**. **Add an API key**: a name and the key, which goes only to the OS credential store. This machine's, not synced. See [§4](#accounts). |
 | New tabs | Default model, effort level and permission mode. The permission mode is **Claude Code's default** unless chosen, named with the mode it gives, usually Auto ([Starting mode](#starting-mode)). The model and effort lists are what Claude Code offered in its last `initialize` reply on this machine (the models and each one's effort levels, kept with the machine's state), with a built-in list only until a session has started; Tab settings… lists them the same way. Number of recent folders to keep (default 20), and **Clear recent folders**. Favorite folders (**Add folder…**, **Move up**, **Move down**, **Remove**), in the order the new tab picker shows them. See [Opening a tab](#opening-a-tab). |
 | Appearance | Theme: follow system, light or dark. Style: Standard (the default) or Claude, the Claude apps' look ([Visual style](#visual-style)). Font and size for the conversation, and for code: pick an installed font or type a name; empty means the default (the app's own font, and Cascadia Mono, Consolas or Menlo for code), and a font that isn't installed falls back to it. Markdown follows these too (LiveMarkdown brings its own Arial and Consolas otherwise). Show thinking expanded or collapsed by default. Show fun words while Claude works, and show what Claude is doing while it works (both on by default; [Working line](#working-line)). **Detailed usage header** (off by default): the same switch as the header's chevron, kept on this machine rather than synced ([Detailed header](#detailed-header)). Show context on tab rows (on by default; [§4](#sidebar)). Show git branch on tab rows (on by default; [§4](#sidebar)). Show task progress on tab rows (on by default; [§5](#tasks)). **Show Claudette on the composer** (on by default), with her size, how often she does something, and whether she shares tips ([§5](#claudette-on-the-composer)). **Games with Claudette** (on by default; [§18](#games-with-claudette)). **Density**: Comfortable (the default) or Compact, which tightens the conversation's spacing, message and card padding and tool rows, the sidebar's rows, and the composer's padding. It applies at once and syncs with the other Appearance settings. **Full-width conversation** (off by default): the conversation, the composer, the pinned to-do list and a thread's strip fill the tab's width, instead of stopping at 900 pixels (a width that's easy to read) in the middle of a wide window; it applies at once and syncs too. **Zoom** (80% to 200%; kept on this machine) and **Motion** (follow the system, reduce, or don't), [Accessibility](#accessibility). |
-| Usage | Warning thresholds (default 75% and 90%). Burn rate window (default 30 minutes). Show model-specific weekly meters, and read them from `/usage` if `get_usage` stops working (off by default). Continue tasks when a usage limit resets (on by default; each tab can override it; [Continuing after a limit resets](#continuing-after-a-limit-resets)). Keep usage history: 1 day, 1 week, 1 month (default), 1 year or forever, with a **Clear usage history** button beside it. See [Usage history](#usage-history). Share usage with my other machines (off by default; [Sharing across machines](#sharing-across-machines)). |
+| Usage | Warning thresholds (default 75% and 90%). Burn rate window (default 30 minutes). Show model-specific weekly meters, and read them from `/usage` if `get_usage` stops working (off by default). Continue tasks when a usage limit resets (on by default; each tab can override it; [Continuing after a limit resets](#continuing-after-a-limit-resets)). Keep usage history: 1 day, 1 week, 1 month (default), 1 year or forever, with a **Clear usage history** button beside it. See [Usage history](#usage-history). Share usage with my other machines: plan readings, and synced tabs' turns (off by default; [Sharing across machines](#sharing-across-machines)), with **Clear usage history on every machine…** under it. |
 | Quick suffixes | The list of suffixes: label, text and optional shortcut. Add, edit, reorder, delete. See [§5](#quick-suffixes). |
 | Check-ins | On/off. Run time before checking in. Quiet time before checking in. Check-in message text. Notify me when a check-in is sent. See [§5](#check-ins-on-long-turns). |
 | Diff tool | Built-in, a preset or a custom command, with **Test**. See [§8](#external-diff-tool). |
@@ -2410,7 +2437,7 @@ Claudette has to keep working when Claude Code adds things it doesn't know about
     - **Resizing split panes and dragging tabs onto them ([§18](#split-panes)).** ✅ Built 2026-10-15. The line between two panes drags to trade their width, kept with the app state; a tab's row dragged from the sidebar onto a pane opens beside it, or in its place with no room for another.
       - **Still to verify:** both on real macOS and Linux desktops, with a touchpad as well as a mouse (so far on Windows and headlessly).
     - **Moving to .NET 11 ([§2](#moving-to-net-11)).** Planned for .NET 11's release on 2026-11-10, once dropping macOS 12 and 13 is decided. On macOS, .NET 11 starts processes with `posix_spawn` rather than `fork()`, which stops a source build started from a terminal printing `MallocStackLogging` lines. On Windows it builds and passes every test with one package reference removed; macOS and Linux are still to verify.
-    - **Project files ([§18](#project-files)).** Designed 2026-10-15, not built. One Project Files tab per folder group, opened beside the group's `+`. It has an explorer (on the left, or the right) that finds files by name, and files in tabs in an AvaloniaEdit editor, with a chip for the line endings and indentation. Saving keeps unsaved edits through quitting and restarts. Claude's changes show as gutter bars with a peek, inline or side by side, with **Reviewed**. Files named in replies and Changed files' files open in it (Settings → Editor). It replaces the non-goal of not being an editor ([§1](#non-goals-v1)). Built in steps 0 (a spike) to 4.
+    - **Project files ([§18](#project-files)).** Designed 2026-10-15, not built. One Project Files tab per folder group, opened beside the group's `+`. It has an explorer (on the left, or the right) that finds files by name, and files in tabs in an AvaloniaEdit editor, with a chip for the line endings and indentation. Saving keeps unsaved edits through quitting and restarts. Claude's changes show as gutter bars with a peek, inline or side by side, with **Reviewed**. Files named in replies and Changed files' files open in it (Settings → Editor). It replaces the non-goal of not being an editor ([§1](#non-goals-v1)). The spike (step 0) was done on 2026-10-15: AvaloniaEdit fits, its colors match the diff view's, and the peek works. Its tokenizing on the UI thread and very long lines need working around. Steps 1 to 4 are still to build.
     - **User guide ([§2](#user-guide)).** Planned 2026-10-15, not started. A site at claudette.dotbunny.com, which GitHub Pages builds from `docs/` on `main` with Jekyll and Just the Docs: a chapter for each part of Claudette, written for the people using it, with pictures of the demo in light and dark taken by a script, a check for broken links on each pull request, and pages kept current in the same change as the features they describe.
 
 ## 18. Future Features
@@ -3106,7 +3133,7 @@ How it's built: `Games/` holds the rules and Claudette's play, with no UI and th
 
 ### Project files
 
-Designed 2026-10-15; not built yet. **Steps**, at the end, gives the order it's built in.
+Designed 2026-10-15, and its spike done the same day (**Spike findings**, near the end); not built yet. **Steps** gives the order it's built in.
 
 A code editor for the project's files, in a tab of the project's own: a tree of its folders and files, the files open in tabs, and Claude's changes marked where they are in the code. Until now Claudette left editing to the user's own editor ([§1](#non-goals-v1)), so reading what Claude wrote, or fixing a line of it, meant leaving the conversation. It's an editor, not an IDE: no language services, building, debugging or source control.
 
@@ -3205,7 +3232,8 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - **Its look.**
     - The code font and size from Settings → Appearance, scaled by the zoom ([§3](#accessibility)).
     - Its colors are the diff view's TextMate theme for the app's theme and style ([§8](#8-file-changes--diff-view)), so code looks the same in a reply's code block, in a diff and here.
-    - The selection and the current line's highlight use the app's own tokens.
+    - The selection is a see-through tint of the app's own token, so the code keeps its colors under it. The current line's highlight uses the app's tokens too.
+    - Addresses in the code aren't links. A click on one does what a click on any other text does.
   - **What it does:**
     - line numbers, with the current line drawn faintly;
     - find and replace (`Ctrl/Cmd+F`, and `Ctrl+H` or `Cmd+Option+F` on macOS), with match case, whole word and regular expressions;
@@ -3219,7 +3247,9 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - A file that isn't valid text in one of those (Latin-1, say) opens read-only, saying why: saving a guess would change characters nobody touched.
     - Binary files (§8's test) and files over 10 MB don't open. The editor says so, with **Open in the OS's app**.
     - A file Claudette isn't allowed to write opens read-only, saying so.
-    - Highlighting stops at 20,000 lines, and a line over 1,000 characters gets 50 ms, as in the diff view.
+    - **Highlighting** colors what's on screen first and the rest of the file in the background, so even a long file opens colored where it's being read.
+    - A line over 2,000 characters, such as a minified file's, stays in the default color, since coloring one that long slows every keystroke.
+    - A file with a line over 1,000,000 characters opens read-only, saying why: typing on a line that long takes about half a second a key.
 - **The chip.** A small rounded chip at the editor's bottom right, over the text, says where the cursor is and what the file is: *Ln 42, Col 7 · C++ · CRLF · UTF-8 · 4 spaces*. It fades while the cursor's line is under it, so it never hides what's being typed.
   - **The language** is the grammar the file's extension picks, as in the diff view. For a file without an extension, its first line's `#!` picks it (`bash`, `python`, `node`). Otherwise it's *Plain text*.
   - **Line endings:** *CRLF* or *LF*, whichever the file mostly has, or *Mixed* while it has both. New lines take the file's.
@@ -3321,14 +3351,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
 
 **Steps.**
 
-0. **Spike.** Put AvaloniaEdit 12.0.0 and AvaloniaEdit.TextMate 12.0.0 into Claudette, to find out:
-   - whether the editor draws in the headless UI tests, so Verify snapshots can cover it;
-   - whether its TextMate colors match `Diffs/SyntaxHighlighter`'s, in both styles and themes;
-   - how it copes with a 50,000-line file, and with a 5 MB file on one line;
-   - whether room can be opened between two lines for the peek, with an `InlineObjectElement` from a `VisualLineElementGenerator`, since AvaloniaEdit has nothing like Monaco's view zones;
-   - what typing Japanese with Windows' IME does, since support for showing the text being composed is still in an open pull request (AvaloniaEdit #592).
-
-   Its findings replace this list.
+0. **Spike.** ✅ Done 2026-10-15. Its findings are under **Spike findings**, below.
 1. **The tab in the shell:** the tab, its row, button and menus, panes, saving and restoring it, and the restart snapshot, with an empty editor.
 2. **The explorer and the editor:** the tree, finding a file by name, file tabs, editing, the chip, saving, keeping unsaved edits, changes on disk, and the keyboard.
 3. **Claude's changes:** the "before", the gutter bars and peek, the explorer's letters and filter, inline and side by side, and **Reviewed**.
@@ -3336,9 +3359,66 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
 
 Each step updates this section with what was built, the other sections it touches (§3, §4, §8, §14), its milestone ([§17](#17-milestones)) and [CLAUDE.md](CLAUDE.md)'s layout.
 
+**Spike findings** (2026-10-15).
+
+How it was tested:
+- AvaloniaEdit 12.0.0 and AvaloniaEdit.TextMate 12.0.0 ran inside Claudette's own `App`, with its styles, fonts and colors, on Windows.
+- The editor was drawn with Skia on Avalonia's headless platform, so frames could be saved, looked at and timed.
+- The timings come from that harness. It adds about 5 ms a frame, and its numbers varied by up to half between runs, so they're sizes, not promises.
+
+- **It fits.**
+  - It builds against Avalonia 12.1.4 with warnings as errors, and TextMateSharp stays at 2.0.4.
+  - It adds 670 KB: `AvaloniaEdit.dll` and `AvaloniaEdit.TextMate.dll`.
+  - Its theme has to be included in `App.axaml` (`avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml`).
+  - Its find and replace panel comes with it, with match case, whole word, regular expressions, replace and replace all. It suits both themes.
+- **Its colors match the diff view's** character for character, once AvaloniaEdit's own links are off.
+  - That held for ten of the repository's files (C#, AXAML, JavaScript, Markdown, YAML, PowerShell, shell, JSON, C++ and Python) in both themes.
+  - With the links on, AvaloniaEdit draws every address in a fixed blue in both themes and opens it itself. So the editor turns them off (`EnableHyperlinks`, `EnableEmailHyperlinks`).
+  - Text with no color of its own takes the editor's text color, as in the diff view.
+- **A large file is quick.** The test file was 50,000 lines (2.1 MB) of C#.
+  - It opens in about 0.7 seconds with its first screen colored. The rest is tokenized in the background in 5 to 8 seconds.
+  - A page down takes 35 to 50 ms a frame, and a keystroke 20 to 35 ms.
+  - Typing `/*` at the top recolors the whole file as a comment within about 120 ms.
+  - It takes 35 to 70 MB more managed memory, and about 150 MB more working set.
+  - Core's `LineDiff` compares the whole file in 17 to 30 ms, so the bars can be worked out again after each pause in typing.
+- **Long lines are slow, for two reasons.**
+  - **Tokenizing on the UI thread.** AvaloniaEdit.TextMate tokenizes every line on screen again, on the UI thread, each time the view scrolls, sideways included (`TextEditorModel.TokenizeViewPort`). TextMateSharp gives a line up to 3 seconds and its first 10,000 characters. On a minified line of 10 KB or more, each scroll and each keystroke near the line's end froze the editor for 3 to 9 seconds.
+  - **Coloring.** Coloring a line in thousands of runs is slow in itself: 300 to 450 ms a keystroke for a minified line of 10 to 100 KB.
+  - **Without TextMate**, a keystroke took about 90 ms on a 100 KB line, about 225 ms on 1 MB and about 830 ms on 5 MB.
+  - **So the editor doesn't use `InstallTextMate`.**
+    - It keeps AvaloniaEdit.TextMate's public coloring transformer (`TextMateColoringTransformer`, with `SetModel`, `SetGrammar` and `SetTheme`), over TextMateSharp's `TMModel`, which tokenizes on its own thread.
+    - It feeds that model through Claudette's own view of the document, so nothing tokenizes on the UI thread.
+    - It leaves lines over 2,000 characters uncolored.
+  - **With both,** a keystroke took 19 ms on a 2 KB line, 37 ms on 10 KB, 185 ms on 100 KB and 410 ms on 1 MB. Hence the 2,000 characters, and opening read-only past 1,000,000 (**Which files open**, above).
+- **The peek works.**
+  - **How.** An `InlineObjectElement` sits at the end of the line, with `TextBlock.BaselineOffset` set to the text's baseline. That makes its row grow downward by exactly the peek's height: 76 pixels for the header and two old lines. The content is then moved to the text view's left edge, as wide as the view.
+  - **The lines under it** move down, and the caret, clicks and selection on them still land on the right line.
+  - **A selection** through the peeked line doesn't cover the peek.
+  - **Its buttons** take clicks.
+  - **The old lines** inside it are a second, read-only editor with the same coloring.
+  - **It stays** when there's typing on the peeked line, and when it's scrolled away and back.
+  - **Three things to build around:**
+    - **The caret.** AvaloniaEdit draws the caret as tall as its row: `Caret.CalcCaretRectangle` uses the line's top and bottom, where AvalonEdit used the text's. So on a peeked line the caret ran down the peek: 94 pixels for a 17.5-pixel line. The editor draws its own caret from `VisualYPosition.TextTop` and `TextBottom`, with AvaloniaEdit's made transparent. An upstream fix would make that unnecessary.
+    - **The current line's highlight** covers the whole row too, peek and all. The editor draws its own, the text's height.
+    - **Its position.** A peek placed by line number stays on that line number when lines are added above. So it's placed by a `TextAnchor`, which moves with the text.
+- **The gutter bars** are an `AbstractMargin` drawn from the visible lines, using `LineDiff`'s hunks with no context. They drew added, changed and removed lines in both styles, with changed lines in the accent.
+- **The selection.** AvaloniaEdit's default is a solid accent, over which some syntax colors are hard to read. The editor sets a see-through one.
+- **The UI tests.**
+  - The editor lays out under the tests' headless drawing.
+  - Typing and `Ctrl+Z` reach it through the window, once its `TextArea` has the focus (not the `TextEditor`).
+  - `UiText.Describe` shows nothing of it, since it draws its text itself. So `UiText` will describe a `TextEditor` by its lines, caret and selection. The peek, the chip and the banners are ordinary controls it already reads.
+  - The Skia harness's frames, which the headless tests don't draw, were checked by eye.
+- **Screen readers.** The editor and its text area have no automation peer (`NoneAutomationPeer`), as expected (**Accessibility**, above).
+- **IME.** AvaloniaEdit 12.0.0 tells Avalonia it can't show text being composed (`SupportsPreedit` is false). So an IME composes in its own window at the caret, and the text arrives once it's done.
+- **Still to verify:**
+  - typing with a real IME: Japanese on Windows, and Korean on macOS, where it's reported broken;
+  - the timings on real screens rather than headless;
+  - macOS and Linux (so far only Windows);
+  - the editor beside a real conversation in a pane.
+
 **How it's built** (planned).
 
-- **Packages.** `Avalonia.AvaloniaEdit` and `AvaloniaEdit.TextMate` 12.0.0 (MIT), which use the TextMateSharp already referenced. Two of AvaloniaEdit's open bugs shape how it's used:
+- **Packages.** `Avalonia.AvaloniaEdit` and `AvaloniaEdit.TextMate` 12.0.0 (MIT), which use the TextMateSharp already referenced. `App.axaml` includes AvaloniaEdit's Fluent theme. Two of AvaloniaEdit's open bugs shape how it's used:
   - The editor keeps `AllowScrollBelowDocument` on, since with it off, dragging a selection to the last line freezes it (#614).
   - It has a least size, since squeezed very small it overflows its stack (#596, #613).
 - **Core,** in `ProjectFiles/`:
@@ -3361,7 +3441,13 @@ Each step updates this section with what was built, the other sections it touche
   - `ProjectFilesViewModel`: the explorer, the open files and finding a file.
   - `ProjectFileViewModel`: one open file.
   - `Views/ProjectFilesView`.
-  - `Views/Editor/`: `ChangeMargin` (the bars), `ChangePeekGenerator` (the peek) and `EditorChip`.
+  - `Views/Editor/`:
+    - `TextMateColoring`: AvaloniaEdit.TextMate's coloring transformer over a `TMModel` that Claudette feeds itself, so nothing tokenizes on the UI thread, with lines over 2,000 characters left uncolored.
+    - `EditorCaret` and `CurrentLineHighlight`: both the text's height, not the row's.
+    - `ChangeMargin`: the bars.
+    - `ChangePeekGenerator`: the peek, placed by a `TextAnchor`.
+    - `IndentationFolding`: folding by indentation, since AvaloniaEdit only comes with XML's.
+    - `EditorChip`.
   - `Controls/DiffView`: the diff view, taken out of `DiffWindow` so that the window and the Files tab both show it.
   - The change colors are new tokens in `App.axaml`, with Claude values in `Themes/ClaudeColors.axaml`, light and dark.
 - **Claude Code:** nothing new. The changes come from the `originalFile` that Changed files already reads, so `compat/surface.yaml` doesn't change.
@@ -3383,7 +3469,7 @@ Each step updates this section with what was built, the other sections it touche
   - a reply's `Player.cpp:42` opening at its line, beside the conversation and, with the setting, in its place;
   - the Files tab in panes;
   - its group outliving its last session tab.
-- **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; and the list of files found by name.
+- **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; and the list of files found by name. `UiText` learns to describe a `TextEditor` by its lines, caret and selection, since it draws its text itself.
 
 ## 19. Open Questions
 

@@ -5,11 +5,11 @@
 [field] "Work"
 [choice] "Blue"
 "API key"
-"Warn when today's estimated spend passes $"
+"Warn when today's estimated spend passes ($)"
 [button] (icon)
 [button] (icon)
 [field] "20"
-"this month's passes $"
+"Warn when this month's estimated spend passes ($)"
 [button] (icon)
 [button] (icon)
 [field] ""

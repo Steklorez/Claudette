@@ -96,6 +96,12 @@ public sealed record ClaudeLaunchOptions
     /// </summary>
     public bool ShowsElicitations { get; init; }
 
+    /// <summary>
+    /// The running totals a resumed or forked session's transcript saved, which Claude Code starts the process from
+    /// (<see cref="ProcessUsage"/>). Not a command-line argument.
+    /// </summary>
+    public IReadOnlyList<ModelUsageTotals> RestoredUsage { get; init; } = [];
+
     /// <summary>Applied on top of the clean environment. A null value removes the variable.</summary>
     public IReadOnlyDictionary<string, string?> EnvironmentOverrides { get; init; } = new Dictionary<string, string?>();
 

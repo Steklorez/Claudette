@@ -65,21 +65,25 @@ public class SettingsDefaultsTests
     }
 
     [Fact]
-    public async Task The_fallback_model_checkpoints_and_hook_rows_are_settings_with_defaults()
+    public async Task The_fallback_model_checkpoints_task_list_and_hook_rows_are_settings_with_defaults()
     {
         await using var h = new TabTestHarness();
         using var settings = new SettingsViewModel(h.Services, null);
         Assert.Equal("None", settings.ClaudeCode.FallbackModel.Label);
         Assert.True(settings.ClaudeCode.KeepFileCheckpoints);
+        Assert.True(settings.ClaudeCode.GiveClaudeTaskList);
         Assert.False(settings.ClaudeCode.ShowAllHookRuns);
 
         settings.ClaudeCode.FallbackModel = settings.ClaudeCode.FallbackModelChoices.Single(c => c.Value == "sonnet");
         settings.ClaudeCode.KeepFileCheckpoints = false;
+        settings.ClaudeCode.GiveClaudeTaskList = false;
         settings.ClaudeCode.ShowAllHookRuns = true;
 
-        Assert.Equal(("sonnet", false, true), (h.Services.Settings.ClaudeCode.FallbackModel, h.Services.Settings.ClaudeCode.KeepFileCheckpoints, h.Services.Settings.ClaudeCode.ShowAllHookRuns));
+        var claudeCode = h.Services.Settings.ClaudeCode;
+        Assert.Equal(("sonnet", false, false, true), (claudeCode.FallbackModel, claudeCode.KeepFileCheckpoints, claudeCode.GiveClaudeTaskList, claudeCode.ShowAllHookRuns));
         settings.ClaudeCode.ResetCommand.Execute(null);
-        Assert.Equal((null, true, false), (h.Services.Settings.ClaudeCode.FallbackModel, h.Services.Settings.ClaudeCode.KeepFileCheckpoints, h.Services.Settings.ClaudeCode.ShowAllHookRuns));
+        claudeCode = h.Services.Settings.ClaudeCode;
+        Assert.Equal((null, true, true, false), (claudeCode.FallbackModel, claudeCode.KeepFileCheckpoints, claudeCode.GiveClaudeTaskList, claudeCode.ShowAllHookRuns));
     }
 
     [Fact]
