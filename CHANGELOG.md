@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-16
+
 ### Added
 
 - **Project Files**: a tab for each project with an explorer and a code editor, opened with the file button beside a group's **+**, or **Go to file…** (`Ctrl/Cmd+P`). Find a file by name, or make a new file or folder from the explorer's menus, then edit it and save it; unsaved edits are kept when Claudette closes. Claude's changes are marked in the gutter, with a peek to see what was there and **Revert** it. A file named in the conversation opens in it at the line, beside the conversation, which gets its width back when you close the file. The diff window's **Open** brings it in front of the diff, which closes. Settings → Editor sets it up, or sends files to the OS's app instead, and **Open in the diff window** can open the file in the OS's app, or the changes in your diff tool.
@@ -88,6 +90,7 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/dotBunny/Claudette/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dotBunny/Claudette/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dotBunny/Claudette/releases/tag/v0.1.0
