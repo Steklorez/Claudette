@@ -29,19 +29,26 @@
       <Border x:Name="Explorer" Classes="explorer" Classes.right="{Binding IsExplorerOnRight}" Width="{Binding ExplorerWidth}" IsVisible="{Binding IsExplorerShown}">
         <DockPanel>
           <Border DockPanel.Dock="Top" Classes="explorerheader">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
               <TextBlock Classes="explorertitle" Text="{Binding ExplorerTitle}" ToolTip.Tip="{Binding Folder}" />
-              <Button Grid.Column="1" Classes="flat" Padding="6,4" Command="{Binding StartFindCommand}"
+              <!-- In the selected row's folder ("New files and folders") -->
+              <Button Grid.Column="1" Classes="flat" Padding="6,4" Command="{Binding NewFileCommand}" CommandParameter="{Binding SelectedRow}"
+                      ToolTip.Tip="New file" AutomationProperties.Name="New file">
+                <Path Data="{StaticResource IconToolWrite}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Height="11" Stretch="Uniform" />
+              </Button>
+              <Button Grid.Column="2" Classes="flat" Padding="6,4" Command="{Binding StartFindCommand}"
                       ToolTip.Tip="{Binding FindTip}" AutomationProperties.Name="Find a file by name">
                 <Path Data="{StaticResource IconToolSearch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="11" Height="11" Stretch="Uniform" />
               </Button>
-              <Button Grid.Column="2" Classes="flat" Padding="6,4" Command="{Binding CollapseAllCommand}" ToolTip.Tip="Collapse all" AutomationProperties.Name="Collapse all">
+              <Button Grid.Column="3" Classes="flat" Padding="6,4" Command="{Binding CollapseAllCommand}" ToolTip.Tip="Collapse all" AutomationProperties.Name="Collapse all">
                 <Path Data="{StaticResource IconCollapseAll}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="11" Height="11" Stretch="Uniform" />
               </Button>
-              <Button Grid.Column="3" Classes="flat" Padding="6,4" ToolTip.Tip="More" AutomationProperties.Name="More explorer actions">
+              <Button Grid.Column="4" Classes="flat" Padding="6,4" ToolTip.Tip="More" AutomationProperties.Name="More explorer actions">
                 <Path Data="{StaticResource IconMore}" Fill="{DynamicResource MutedTextBrush}" Width="11" Height="11" Stretch="Uniform" />
                 <Button.Flyout>
                   <MenuFlyout>
+                    <MenuItem Header="New folder" Command="{Binding NewFolderCommand}" CommandParameter="{Binding SelectedRow}" />
+                    <Separator />
                     <MenuItem Header="Show only changed files" ToggleType="CheckBox" IsChecked="{Binding ShowOnlyChanged, Mode=OneWay}" Command="{Binding ToggleShowOnlyChangedCommand}" />
                     <Separator IsVisible="{Binding IsGitRepository}" />
                     <MenuItem Header="Claude's changes" ToggleType="Radio" IsChecked="{Binding AgainstClaudeChanges}" IsVisible="{Binding IsGitRepository}"
@@ -65,7 +72,28 @@
             <!-- The tree -->
             <ListBox x:Name="TreeList" Classes="explorerlist" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" IsVisible="{Binding ShowsTree}"
                      AutomationProperties.Name="Project files" KeyDown="OnTreeKeyDown">
-              <ListBox.ItemTemplate>
+              <!-- The empty space under the tree: at the top of the project -->
+              <ListBox.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="New file" Command="{Binding NewFileCommand}" />
+                  <MenuItem Header="New folder" Command="{Binding NewFolderCommand}" />
+                </ContextMenu>
+              </ListBox.ContextMenu>
+              <ListBox.DataTemplates>
+                <!-- A new file's or folder's name, typed at the top of its folder ("New files and folders"); before the
+                     row's template, which would match it too -->
+                <DataTemplate DataType="vm:NewEntryRow">
+                  <Grid ColumnDefinitions="Auto,14,Auto,*" RowDefinitions="Auto,Auto" ContextRequested="OnNewRowContextRequested">
+                    <Border Width="{Binding Indent}" />
+                    <Panel Grid.Column="2" Margin="0,0,6,0">
+                      <Path Classes="rowicon" Data="{StaticResource IconToolFolder}" IsVisible="{Binding IsNewFolder}" />
+                      <Path Classes="rowicon" Data="{StaticResource IconToolRead}" IsVisible="{Binding IsNewFile}" />
+                    </Panel>
+                    <TextBox Grid.Column="3" Classes="newentry" Text="{Binding NameText}" PlaceholderText="{Binding Placeholder}" AutomationProperties.Name="{Binding Placeholder}"
+                             KeyDown="OnNewRowKeyDown" LostFocus="OnNewRowLostFocus" AttachedToVisualTree="OnNewRowAttached" />
+                    <TextBlock Grid.Row="1" Grid.Column="3" Classes="small error newentryproblem" Text="{Binding Problem}" IsVisible="{Binding HasProblem}" />
+                  </Grid>
+                </DataTemplate>
                 <DataTemplate DataType="vm:ExplorerRow">
                   <Panel Classes="explorerrow" Classes.ignored="{Binding IsIgnored}" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700"
                          Tapped="OnRowTapped" DoubleTapped="OnRowDoubleTapped">
@@ -92,6 +120,9 @@
                         <MenuItem Header="Open in the OS's app" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).OpenRowInSystemCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsFile}" />
                         <MenuItem Header="Open diff" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).OpenRowDiffCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding HasChangeLetter}" />
                         <Separator IsVisible="{Binding IsFile}" />
+                        <MenuItem Header="New file" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).NewFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="New folder" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).NewFolderCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        <Separator />
                         <MenuItem Header="Copy path" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CopyRowPathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Copy relative path" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CopyRowRelativePathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Reveal in file manager" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RevealRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
@@ -100,7 +131,7 @@
                     </Panel.ContextMenu>
                   </Panel>
                 </DataTemplate>
-              </ListBox.ItemTemplate>
+              </ListBox.DataTemplates>
             </ListBox>
             <!-- Show only changed files -->
             <Panel IsVisible="{Binding ShowsChangedList}">

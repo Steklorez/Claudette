@@ -81,6 +81,15 @@
     <Setter Property="Padding" Value="8,4" />
     <Setter Property="MinHeight" Value="0" />
   </Style>
+  <!-- A new file's or folder's name, in its row, and why it can't be used under it. -->
+  <Style Selector="TextBox.newentry">
+    <Setter Property="Padding" Value="4,1" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector="TextBlock.newentryproblem">
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Margin" Value="0,3,0,2" />
+  </Style>
   <Style Selector="Border.explorerheader">
     <Setter Property="Padding" Value="12,6,4,6" />
   </Style>

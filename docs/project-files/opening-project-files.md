@@ -23,6 +23,8 @@ Any of these opens the group's Files tab, or selects it when it's open:
 - `Ctrl/Cmd+P`, which also starts a search ([Finding a file by name](finding-a-file-by-name.md)).
 - Opening a file from a conversation ([Opening files from the conversation](opening-files-from-the-conversation.md)).
 
+The **Project files** button and **Open project files** always show the explorer, even if you hid it ([The explorer](the-explorer.md#hiding-it)).
+
 ## Its row in the sidebar
 
 The tab's row is the first in its group, above pinned tabs. It has a file icon where a session tab has its status icon, the name **Project Files**, and on its second line the file showing, or *No files open*. While files have unsaved edits, the second line says how many, such as *2 unsaved*, in the caution color, and the icon has a dot. The collapsed sidebar shows it as a square with the file icon.

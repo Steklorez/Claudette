@@ -12,14 +12,16 @@ public sealed partial class ShellViewModel
 {
     /// <summary>
     /// The group's <b>Project files</b> button, and its menu's <b>Open project files</b>: opens its Project Files tab, or
-    /// selects it when it's open.
+    /// selects it when it's open, with its explorer showing.
     /// </summary>
     [RelayCommand]
     private void OpenProjectFiles(TabGroupViewModel? group)
     {
         if (group is not null)
         {
-            Selected = ProjectFilesFor(group);
+            var files = ProjectFilesFor(group);
+            files.ShowExplorer();
+            Selected = files;
         }
     }
 

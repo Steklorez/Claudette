@@ -15,9 +15,10 @@ The explorer is the tree of the project's folders and files at the side of a Fil
 
 The header has the group's name, then:
 
+- **New file**, a page with a plus ([New files and folders](#new-files-and-folders));
 - **Find file**, a magnifier, which is `Ctrl/Cmd+P` ([Finding a file by name](finding-a-file-by-name.md));
 - **Collapse all**;
-- **⋯**, which has **Show only changed files**, **Claude's changes** and **Against git HEAD** (in a repository), **Move to the right** (or **Move to the left**) and **Refresh**.
+- **⋯**, which has **New folder**, **Show only changed files**, **Claude's changes** and **Against git HEAD** (in a repository), **Move to the right** (or **Move to the left**) and **Refresh**.
 
 ## The tree
 
@@ -40,13 +41,33 @@ The header has the group's name, then:
 
 How the changes are worked out, and **Claude's changes** against **Against git HEAD**, are on [Claude's changes in the editor](claudes-changes-in-the-editor.md).
 
+## New files and folders
+
+1. Choose where it goes:
+   - right-click a folder and choose **New file** or **New folder** to make it in that folder;
+   - right-click a file for the same, to make it beside the file;
+   - right-click the empty space under the tree to make it at the top of the project;
+   - or use the header's **New file**, or **⋯** → **New folder**: they go in the selected folder, beside the selected file, or at the top of the project when nothing is selected.
+2. The folder opens, and a box for the name appears at the top of it. Type the name. Slashes make folders on the way: `AI/Brain.cpp` makes the `AI` folder and the file in it.
+3. Press `Enter`.
+
+A new file is empty and opens to stay, ready to type in. A new folder is selected in the tree.
+
+`Esc`, or a click elsewhere, closes the box without making anything, and so does `Enter` with the box empty.
+
+As you type, the line under the box says if the name can't be used, and `Enter` keeps the box until it can: a file or folder with that name is already there, the name is `.` or `..`, or it has a character your system doesn't allow in names. On Windows, that's `< > : " | ? *`, a name ending in a space or a dot, and the names Windows keeps for itself, such as `CON`, `NUL` and `COM1`.
+
+Claudette never writes over a file. If one with the name appears while you type, it stays as it is and the box says so.
+
 ## Menus
 
-Right-click a file for **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **Copy path**, **Copy relative path** and **Reveal in file manager**.
+Right-click a file for **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **New file**, **New folder**, **Copy path**, **Copy relative path** and **Reveal in file manager**.
 
 On a program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`), **Open in the OS's app** shows it in its folder rather than running it.
 
-Right-click a folder for **Copy path**, **Copy relative path**, **Reveal in file manager** and **Collapse**.
+Right-click a folder for **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager** and **Collapse**.
+
+Right-click the empty space under the tree for **New file** and **New folder**, at the top of the project.
 
 **Reveal in file manager** opens Explorer on Windows, Finder on macOS and your file manager on Linux.
 
@@ -62,6 +83,8 @@ The button at the start of the file tabs' row, with the tip **Hide the explorer*
 
 A Files tab that a conversation opened beside it for its first file starts with its explorer hidden ([Opening files from the conversation](opening-files-from-the-conversation.md)).
 
+Opening the Files tab from its group, with the **Project files** button or **Open project files**, always shows the explorer ([Opening project files](opening-project-files.md)).
+
 ## Settings
 
 | Setting | Default | Where |
@@ -75,7 +98,8 @@ A Files tab that a conversation opened beside it for its first file starts with 
 | `Ctrl/Cmd+P` | Find a file by name |
 | `Up`, `Down` | Move through the tree |
 | `Right`, `Left` | Expand or collapse a folder |
-| `Enter` | Open the file to stay |
+| `Enter` | Open the file to stay; in a new file's or folder's box, make it |
+| `Esc` | In a new file's or folder's box, close it without making anything |
 
 ## See also
 

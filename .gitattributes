@@ -3,3 +3,6 @@
 
 # Shell scripts run on macOS and Linux: keep them LF on a Windows checkout too.
 *.sh text eol=lf
+
+# Batch files: cmd reads them reliably only with CRLF, so keep them that way on any checkout.
+*.bat text eol=crlf

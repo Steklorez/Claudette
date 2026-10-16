@@ -194,7 +194,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
     }
 
     /// <summary>The explorer shows again, in every Project Files tab and in this one where it started hidden.</summary>
-    private void ShowExplorer()
+    internal void ShowExplorer()
     {
         _shell.Layout.IsExplorerHidden = false;
         if (_explorerHiddenHere)

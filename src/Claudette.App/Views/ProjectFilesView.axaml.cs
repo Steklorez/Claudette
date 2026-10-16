@@ -46,12 +46,16 @@ public partial class ProjectFilesView : UserControl
         {
             _files.PropertyChanged -= OnFilesChanged;
             _files.FindFocusRequested -= FocusFindBox;
+            _files.NamingStarted -= OnNamingStarted;
+            _files.TreeFocusRequested -= FocusTree;
         }
         _files = DataContext as ProjectFilesViewModel;
         if (_files is not null)
         {
             _files.PropertyChanged += OnFilesChanged;
             _files.FindFocusRequested += FocusFindBox;
+            _files.NamingStarted += OnNamingStarted;
+            _files.TreeFocusRequested += FocusTree;
             PlaceExplorer();
             TellTheme();
             if (_files.IsFinding)
@@ -177,7 +181,8 @@ public partial class ProjectFilesView : UserControl
     /// <summary>Enter opens a file to stay; Right and Left open and close folders; Left on a file or a closed folder goes up.</summary>
     private void OnTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        if (_files is null || (sender as ListBox)?.SelectedItem is not ExplorerRow row || e.KeyModifiers != KeyModifiers.None)
+        if (_files is null || (sender as ListBox)?.SelectedItem is not ExplorerRow row || e.KeyModifiers != KeyModifiers.None
+            || (e.Source as StyledElement)?.DataContext is NewEntryRow)
         {
             return;
         }
@@ -247,6 +252,62 @@ public partial class ProjectFilesView : UserControl
             _files?.OpenFoundCommand.Execute(found);
         }
     }
+
+    // ---- New files and folders ----------------------------------------------------------------------------------
+
+    /// <summary>The new row in view, so its box is made and takes the keyboard.</summary>
+    private void OnNamingStarted(NewEntryRow row) => TreeList.ScrollIntoView(row);
+
+    private void OnNewRowAttached(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (sender is TextBox box)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => box.Focus());
+        }
+    }
+
+    /// <summary>
+    /// In the new row's box: Enter makes it, Esc leaves it. Up and Down stay in the box rather than moving through the
+    /// tree, which would take the keyboard away.
+    /// </summary>
+    private void OnNewRowKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_files is null)
+        {
+            return;
+        }
+        switch (e.Key)
+        {
+            case Key.Enter:
+                _files.CommitNewEntryCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Key.Escape:
+                _files.CancelNewEntryCommand.Execute(null);
+                FocusTree();
+                e.Handled = true;
+                break;
+            case Key.Up or Key.Down or Key.PageUp or Key.PageDown:
+                e.Handled = true;
+                break;
+        }
+    }
+
+    /// <summary>A click elsewhere leaves the new row without making anything; the box's own menu (Paste) doesn't.</summary>
+    private void OnNewRowLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox box && box.ContextFlyout is not { IsOpen: true } && box.ContextMenu is not { IsOpen: true })
+        {
+            _files?.CancelNewEntryCommand.Execute(null);
+        }
+    }
+
+    /// <summary>The new row has no menu: the empty space's doesn't open over it.</summary>
+    private void OnNewRowContextRequested(object? sender, ContextRequestedEventArgs e) => e.Handled = true;
+
+    /// <summary>The keyboard back in the tree, on the selected row, or the first.</summary>
+    private void FocusTree() => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        (TreeList.ContainerFromIndex(Math.Max(TreeList.SelectedIndex, 0)) ?? (Control)TreeList).Focus());
 
     // ---- The file tabs ------------------------------------------------------------------------------------------
 

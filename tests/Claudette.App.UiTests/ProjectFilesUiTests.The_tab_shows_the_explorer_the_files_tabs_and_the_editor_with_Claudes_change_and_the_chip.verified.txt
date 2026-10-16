@@ -1,4 +1,5 @@
 ﻿"work"
+[button] New file
 [button] Find a file by name
 [button] Collapse all
 [button] More explorer actions

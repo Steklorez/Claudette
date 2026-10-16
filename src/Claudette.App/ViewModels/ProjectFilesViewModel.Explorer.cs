@@ -9,9 +9,10 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// A row of the Project Files tab's explorer (DESIGN.md §18, "Project files", "The explorer"): a folder or a file of the
-/// tree, indented by its depth, or in <b>Show only changed files</b>, a file Claude changed with its folder beside it.
+/// tree, indented by its depth, or in <b>Show only changed files</b>, a file Claude changed with its folder beside it. A
+/// new file's or folder's name is typed in a <see cref="NewEntryRow"/>.
 /// </summary>
-public sealed partial class ExplorerRow : ObservableObject
+public partial class ExplorerRow : ObservableObject
 {
     public ExplorerRow(TreeEntry entry, int depth, string? folderText = null)
     {
@@ -168,7 +169,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task ToggleRowAsync(ExplorerRow? row)
     {
-        if (row is not { CanExpand: true })
+        if (row is not { CanExpand: true } or NewEntryRow)
         {
             return Task.CompletedTask;
         }
@@ -184,7 +185,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task OpenRowAsync(ExplorerRow? row)
     {
-        if (row is null)
+        if (row is null or NewEntryRow)
         {
             return Task.CompletedTask;
         }
@@ -199,7 +200,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task OpenRowToStayAsync(ExplorerRow? row)
     {
-        if (row is null)
+        if (row is null or NewEntryRow)
         {
             return Task.CompletedTask;
         }
@@ -246,6 +247,7 @@ public sealed partial class ProjectFilesViewModel
             Rows.RemoveAt(index + 1);
         }
         Unwatch(row.FullPath);
+        ForgetNamingRowIfGone();
         OnFileStateChanged();
     }
 
@@ -413,9 +415,7 @@ public sealed partial class ProjectFilesViewModel
 
     private async Task ReadQueuedFoldersAsync()
     {
-        var folders = _foldersToRead.ToArray();
         var files = _filesToCheck.ToArray();
-        _foldersToRead.Clear();
         _filesToCheck.Clear();
         foreach (var path in files)
         {
@@ -424,6 +424,13 @@ public sealed partial class ProjectFilesViewModel
                 await file.CheckDiskAsync();
             }
         }
+        // While a new file's or folder's name is typed, the tree waits: drawing it again would take the box away.
+        if (NamingRow is not null)
+        {
+            return;
+        }
+        var folders = _foldersToRead.ToArray();
+        _foldersToRead.Clear();
         foreach (var folder in folders)
         {
             await ReadFolderAgainAsync(folder);
@@ -497,6 +504,7 @@ public sealed partial class ProjectFilesViewModel
         {
             Rows.Insert(start + i, rebuilt[i]);
         }
+        ForgetNamingRowIfGone();
         if (selected is not null && Rows.Contains(selected))
         {
             SelectedRow = selected;

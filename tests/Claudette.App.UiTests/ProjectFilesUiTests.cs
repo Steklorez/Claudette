@@ -1,7 +1,9 @@
 using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Claudette.App.Services;
@@ -145,6 +147,86 @@ public sealed class ProjectFilesUiTests
 
         var explorer = View(window).GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "TreeList");
         Assert.True(explorer.TranslatePoint(default, window)!.Value.X > Editor(window).TranslatePoint(default, window)!.Value.X);
+        window.Close();
+    }
+
+    private static async Task<TextBox> NewEntryBoxAsync(Window window)
+    {
+        TextBox? box = null;
+        await UiText.SettleUntilAsync(window,
+            () => (box = View(window).GetVisualDescendants().OfType<TextBox>().FirstOrDefault(b => b.DataContext is NewEntryRow)) is { IsFocused: true },
+            "the new row's box to take the keyboard");
+        return box!;
+    }
+
+    private static void Press(TopLevel keys, PhysicalKey key)
+    {
+        keys.KeyPressQwerty(key, RawInputModifiers.None);
+        keys.KeyReleaseQwerty(key, RawInputModifiers.None);
+    }
+
+    [AvaloniaFact]
+    public async Task A_new_files_box_takes_the_keyboard_says_why_a_name_cant_be_used_and_Enter_makes_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, files, _, window) = await ShowAsync(h);
+        var source = files.Rows.Single(r => r.Name == "Source");
+        files.SelectedRow = source;
+
+        await files.NewFileCommand.ExecuteAsync(source);
+        var box = await NewEntryBoxAsync(window);
+        var keys = TopLevel.GetTopLevel(box)!;
+        keys.KeyTextInput("Player.cpp");
+        UiText.Settle(window);
+
+        var shown = UiText.Describe(View(window).GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "TreeList"));
+        Assert.Contains("\"There's already a file called Player.cpp here.\"", shown, StringComparison.Ordinal);
+
+        // Space types a space, rather than opening the row selected; Up stays in the box.
+        box.SelectAll();
+        keys.KeyTextInput("Weapon");
+        keys.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None);
+        keys.KeyTextInput(" ");
+        keys.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
+        keys.KeyTextInput("Data.cpp");
+        Press(keys, PhysicalKey.ArrowUp);
+        UiText.Settle(window);
+        Assert.Equal("Weapon Data.cpp", box.Text);
+        Assert.Same(source, files.SelectedRow);
+        Assert.True(box.IsFocused);
+
+        Press(keys, PhysicalKey.Enter);
+        var path = Path.Combine(h.WorkFolder, "Source", "Weapon Data.cpp");
+        await UiText.SettleUntilAsync(window, () => files.Showing?.Path == path, "the new file to open");
+        Assert.True(File.Exists(path));
+        Assert.Null(files.NamingRow);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task Esc_or_a_click_elsewhere_leaves_the_new_row_without_making_anything()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, files, _, window) = await ShowAsync(h);
+        var tree = View(window).GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "TreeList");
+
+        await files.NewFolderCommand.ExecuteAsync(null);
+        var box = await NewEntryBoxAsync(window);
+        TopLevel.GetTopLevel(box)!.KeyTextInput("Art");
+        Press(TopLevel.GetTopLevel(box)!, PhysicalKey.Escape);
+        UiText.Settle(window);
+
+        Assert.Null(files.NamingRow);
+        Assert.True(tree.IsKeyboardFocusWithin);
+
+        await files.NewFileCommand.ExecuteAsync(null);
+        _ = await NewEntryBoxAsync(window);
+        Editor(window).TextArea.Focus();
+        UiText.Settle(window);
+
+        Assert.Null(files.NamingRow);
+        Assert.DoesNotContain(files.Rows, r => r is NewEntryRow);
+        Assert.False(Directory.Exists(Path.Combine(h.WorkFolder, "Art")));
         window.Close();
     }
 

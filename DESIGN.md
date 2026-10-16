@@ -3120,7 +3120,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
 ```
 
 - **The Project Files tab.**
-  - A project's group has at most one. The **Project files** button (a file icon, its tip *"Project files"*) beside the group's `+` opens it, or selects it when it's open. So do:
+  - A project's group has at most one. The **Project files** button (a file icon, its tip *"Project files"*) beside the group's `+` opens it, or selects it when it's open, with its explorer showing even where it was hidden (**The layout**, below). So do:
     - **Open project files** in the group's menu, in the full sidebar and the rail;
     - the command palette's **Open project files** and **Go to file…** ([§4](#command-palette));
     - opening a file from elsewhere (**Opening files in the editor**, below).
@@ -3143,10 +3143,11 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
 - **The layout.** The explorer and the editor sit side by side.
   - The explorer is on the left by default, or on the right with Settings → Editor → **The explorer is on the** (**Left** or **Right**). The explorer's **⋯** menu has **Move to the right** (or **left**), which changes the same setting.
   - **Width.** Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default; a double-click on the edge goes back to that. The width is the same for every Files tab, and remembered.
-  - A button at the start of the file tabs' row hides and shows the explorer, and that's remembered too. A Files tab a conversation opened beside it for its first file starts with its explorer hidden (**Opening files in the editor**, below).
+  - A button at the start of the file tabs' row hides and shows the explorer, and that's remembered too. A Files tab a conversation opened beside it for its first file starts with its explorer hidden (**Opening files in the editor**, below). Opening the Files tab from its group (the **Project files** button, **Open project files**) shows the explorer again, in every Files tab.
   - In a narrow pane, the explorer narrows first, to leave the editor 360 pixels, down to its own least; only then does the editor narrow.
 - **The explorer.**
-  - **Its header** has the group's label, **Find file** (a magnifier, `Ctrl/Cmd+P`), **Collapse all** and **⋯**. The **⋯** menu has:
+  - **Its header** has the group's label, **New file** (a page with a plus), **Find file** (a magnifier, `Ctrl/Cmd+P`), **Collapse all** and **⋯**. The **⋯** menu has:
+    - **New folder** (**New files and folders**, below);
     - **Show only changed files**;
     - **Claude's changes** or **Against git HEAD**, in a repository (**Claude's changes**, below);
     - **Move to the right**;
@@ -3162,9 +3163,22 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - A reviewed file's letter is faint.
     - **Show only changed files** shows just those, and the files Claude deleted, struck through. Opening a deleted file shows its diff.
   - **Opening.** A click opens a file in the preview tab; a double-click or Enter opens it to stay (**File tabs**, below). The arrow keys move without opening anything, and Right and Left expand and collapse.
-  - **A file's menu:** **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **Copy path**, **Copy relative path** and **Reveal in file manager**.
+  - **A file's menu:** **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **New file**, **New folder**, **Copy path**, **Copy relative path** and **Reveal in file manager**.
     - On a program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`), **Open in the OS's app** shows it in its folder rather than running it, as a reply's link does ([Files named in Claude's replies](#files-named-in-claudes-replies)).
-  - **A folder's menu:** **Copy path**, **Copy relative path**, **Reveal in file manager** and **Collapse**.
+  - **A folder's menu:** **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager** and **Collapse**.
+  - **The empty space under the tree** has a menu of its own: **New file** and **New folder**.
+  - **New files and folders.**
+    - **Where they go.** From a folder's menu, in that folder; from a file's, beside it, in its folder; from the empty space under the tree, at the top of the project. The header's **New file** and **⋯** → **New folder** go by the selected row: in a selected folder, beside a selected file, at the top with nothing selected.
+    - **Naming it.** The folder expands, and a row takes the top of its entries, indented as they are, with a file's or a folder's icon and a box with the keyboard in it (*File name*, *Folder name*). `Enter` makes it; `Esc`, or a click elsewhere, leaves without making anything, as does `Enter` with the box empty.
+      - Slashes make the folders on the way: `AI/Brain.cpp` makes `AI` and the file in it. Spaces around the name are dropped.
+      - While the box is open, the tree waits to show what changed on disk, so the row isn't taken from under the typing; it catches up once the box goes.
+      - If **Show only changed files** or the found files' list has the tree's place, the tree comes back first.
+    - **What's refused** is said under the box, in the error color, as it's typed; `Enter` keeps the box until the name can be used:
+      - a name already there (*"There's already a file called Brain.cpp here."*), or a file where a folder on the way would go;
+      - `.` and `..`, so the name can't lead out of the folder;
+      - a control character, and on Windows, `< > : " | ? *`, a name ending in a space or a dot, and the names Windows keeps for devices (`CON`, `NUL`, `COM1` and the like, with or without an extension);
+      - anything the system refuses when it's made, with its reason.
+    - **Then:** a new file is empty and opens to stay, with the keyboard in the editor; a new folder is selected, with the keyboard in the tree. Either way it's selected in the tree, with the folders down to it expanded. Nothing is written over: a file that appears with the name meanwhile stays as it is, and the box says so.
 - **Finding a file by name.**
   - **Find file** in the explorer's header, or `Ctrl/Cmd+P` anywhere (rebindable, [§14](#keyboard-shortcuts)), puts a box at the top of the explorer and gives it the focus. From a conversation, `Ctrl/Cmd+P` first opens the project's Files tab, beside the conversation or in its place, as **Show a file clicked in a conversation** says (**Opening files in the editor**, below).
   - **What's searched.** Typing swaps the tree for a list of the files whose names match, best first.
@@ -3276,7 +3290,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
   - **Which Files tab.** The one of the group whose folder holds the file, the deepest one when a group's folder is inside another's.
     - A file in no group's folder (`~/.claude/settings.json`) opens in the Files tab of the clicked tab's group. Its file tab shows its whole path, and the explorer doesn't list it.
   - **Where it shows.** A click in a conversation opens the Files tab beside it, as **Open beside** does, unless it's on screen already. With Settings → Editor → **Show a file clicked in a conversation** set to **In its place** (the default is **Beside the conversation**), the Files tab takes the conversation's pane instead, as selecting it in the sidebar does. Either way it takes the focus, so the keyboard goes to the editor.
-    - Opened beside the conversation for its first file (it had none open), the Files tab starts with its explorer hidden, so the file has the pane. That's this tab alone, and it's kept with the tab; the other Files tabs keep theirs. The explorer's button, **Find file** and **Reveal in the explorer** bring it back, and so does a folder named in a reply.
+    - Opened beside the conversation for its first file (it had none open), the Files tab starts with its explorer hidden, so the file has the pane. That's this tab alone, and it's kept with the tab; the other Files tabs keep theirs. The explorer's button, **Find file** and **Reveal in the explorer** bring it back, and so do a folder named in a reply and opening the Files tab from its group.
     - Closing the last file there closes the Files tab too, and the conversation has its width back (**File tabs**, above).
   - **What still goes elsewhere:**
     - A program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`) still shows in its folder.
@@ -3442,6 +3456,7 @@ How it was tested:
   - It has a least size, since squeezed very small it overflows its stack (#596, #613).
 - **Core,** in `ProjectFiles/`:
   - `FolderListing`: a folder's entries (`TreeEntry`), folders first, with what git ignores (`GitWorkingTree.CheckIgnoredAsync`, `git check-ignore` in batches of 200) and links that lead back up.
+  - `NewEntry`: a new file's or folder's name checked as it's typed (`NewEntryName`: its path, or why it can't be used), and the file or folder made, never over a file already there.
   - `TextFile`: reading (the encoding, the reason a file opens read-only, or why it doesn't open) and saving with the encoding, byte order mark and line endings. Saving goes through `Revert.Write`, so `AtomicFile` and its check that the file is still what was read.
   - `Indentation` and `LineEndings`: finding and converting them.
   - `DiskChange`: what a change on disk does to an open file. It's pure.
@@ -3458,7 +3473,7 @@ How it was tested:
   - `TabGroupViewModel.Files` holds the group's Files tab, and a group goes only once it has neither tabs nor that.
   - `ShellViewModel.ProjectFiles.cs` opens, closes and restores Files tabs, and opens files in them from elsewhere. `AppState.GroupOrder` keeps the groups' order apart from the tabs', since a group can have no session tab. `ShellLayout` keeps the explorer's width and whether it's hidden.
 - **The app.**
-  - `ProjectFilesViewModel`: the tab, with partials for the explorer (`ExplorerRow`, watching the folders shown), the open files (closing, asking first with `CloseQuestion`, pinning, saving), finding a file by name (`FoundFile`), and Claude's changes (the letters, **Show only changed files**, **Against git HEAD**, **Reviewed**).
+  - `ProjectFilesViewModel`: the tab, with partials for the explorer (`ExplorerRow`, watching the folders shown), new files and folders (`NewEntryRow`, the row the name is typed in, which the tree's list draws with a template of its own), the open files (closing, asking first with `CloseQuestion`, pinning, saving), finding a file by name (`FoundFile`), and Claude's changes (the letters, **Show only changed files**, **Against git HEAD**, **Reviewed**).
   - `ProjectFileViewModel`: one open file: its text, the chip, saving, the banner, the marks and the peek, the modes and their `DiffWindowViewModel`.
   - `Editor/`: `IEditorDocument`, over AvaloniaEdit's `TextDocument` in the app (`TextEditorDocument`) and over a string in the view model tests, since AvaloniaEdit's document only answers the thread that made it; and `EditorLanguages`, the chip's language.
   - `Views/ProjectFilesView` (the explorer, the file tabs, the question before closing) and `Views/ProjectFileView` (the banner, the modes, the editor or the diff, the chip).
@@ -3478,11 +3493,11 @@ How it was tested:
 
 **Tests.**
 
-- **In Core**, in `ProjectFiles/`: `FolderListingTests`, `TextFileTests` (encodings and byte order marks, line endings, binary, too large, read-only, refusing to write over a change, and writing a deleted file back), `DiskChangeTests`, `ChangeMarkersTests`, `ProjectChangesTests`, `IndentationTests`, `LineEndingsTests`, `EditorBackupsTests` and `ProjectFilesStateTests`; and `FolderWatcherTests`, `GitWorkingTreeTests` (what git ignores) and `ReplyFileReferenceTests` (columns and ranges).
+- **In Core**, in `ProjectFiles/`: `FolderListingTests`, `NewEntryTests` (the names refused, on Windows and elsewhere), `TextFileTests` (encodings and byte order marks, line endings, binary, too large, read-only, refusing to write over a change, and writing a deleted file back), `DiskChangeTests`, `ChangeMarkersTests`, `ProjectChangesTests`, `IndentationTests`, `LineEndingsTests`, `EditorBackupsTests` and `ProjectFilesStateTests`; and `FolderWatcherTests`, `GitWorkingTreeTests` (what git ignores) and `ReplyFileReferenceTests` (columns and ranges).
 - **In the app**, with `TabTestHarness` and `FakeTimeProvider` (`FakeFolderWatcher` for the OS's notices, and `PlainEditorDocument` for the text):
-  - `ProjectFilesTests`: the group's button, the keyboard skipping the tab, the group outliving its last session tab, `Ctrl/Cmd+W`; the explorer and the disk; previews, pins, tab labels, files that aren't text, the chip; saving, **Don't save**, **Save** on the question, and a file changed under a save; Claude's edit with and without unsaved edits, the marks, the peek's link to the tab, a double-click in the diff, **Reviewed** and **Show only changed files**; finding a file by name; and what comes back at launch and after a restart.
-  - `ProjectFilesOpeningTests`: a reply's file opening at its line beside the conversation or, with the setting, in its place; what still goes to the OS; a folder in the explorer; **Go to file**; the tab in panes.
-- **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; and the list of files found by name.
+  - `ProjectFilesTests`: the group's button, the keyboard skipping the tab, the group outliving its last session tab, `Ctrl/Cmd+W`; the explorer and the disk; new files and folders, where they go and the names refused; previews, pins, tab labels, files that aren't text, the chip; saving, **Don't save**, **Save** on the question, and a file changed under a save; Claude's edit with and without unsaved edits, the marks, the peek's link to the tab, a double-click in the diff, **Reviewed** and **Show only changed files**; finding a file by name; and what comes back at launch and after a restart.
+  - `ProjectFilesOpeningTests`: a reply's file opening at its line beside the conversation or, with the setting, in its place; what still goes to the OS; a folder in the explorer; the group's button bringing the explorer back; **Go to file**; the tab in panes.
+- **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; the list of files found by name; and the new row's box with the keyboard: what it refuses, `Enter`, `Esc` and a click elsewhere.
 
 ## 19. Open Questions
 

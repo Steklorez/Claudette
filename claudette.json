@@ -23,6 +23,20 @@
       "command": "dotnet build src\\Claudette.App\\Claudette.App.csproj -c Release",
       "mode": "output",
       "ifExists": "src/Claudette.App/Claudette.App.csproj"
+    },
+    {
+      "name": "Build & Host Docs",
+      "command": "host-docs.bat",
+      "mode": "output",
+      "os": ["windows"],
+      "ifExists": "host-docs.bat"
+    },
+    {
+      "name": "Build & Host Docs",
+      "command": "bash ./host-docs.sh",
+      "mode": "output",
+      "os": ["macos", "linux"],
+      "ifExists": "host-docs.sh"
     }
   ]
 }

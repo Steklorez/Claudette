@@ -74,6 +74,32 @@ public class ProjectFilesOpeningTests
     }
 
     [Fact]
+    public async Task The_groups_button_shows_the_Files_tab_with_its_explorer()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, "a.txt"));
+        await tab.OpenLinkCommand.ExecuteAsync(Click("a.txt"));
+        var group = h.Shell.Groups.Single();
+        var files = group.Files!;
+        Assert.False(files.IsExplorerShown);
+
+        h.Shell.OpenProjectFilesCommand.Execute(group);
+
+        Assert.True(files.IsExplorerShown);
+        Assert.False(files.CaptureState().ExplorerHidden);
+        Assert.Same(files, h.Shell.Selected);
+
+        // Hidden in every Files tab, too.
+        files.ToggleExplorerCommand.Execute(null);
+        h.Shell.SelectedTab = tab;
+        h.Shell.OpenProjectFilesCommand.Execute(group);
+
+        Assert.True(files.IsExplorerShown);
+        Assert.False(h.Shell.Layout.IsExplorerHidden);
+    }
+
+    [Fact]
     public async Task An_explorer_hidden_for_the_first_file_comes_back_to_find_a_file_or_reveal_one()
     {
         await using var h = new TabTestHarness();

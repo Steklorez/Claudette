@@ -180,6 +180,105 @@ public class ProjectFilesTests
         await TabTestHarness.Eventually(() => files.Rows.Any(r => r.Name == "b.txt"), "the new file");
     }
 
+    // ---- New files and folders ---------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task New_file_on_a_folders_menu_opens_the_folder_and_makes_the_file_in_it_opened_to_stay()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, "Source", "Player.cpp"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        var source = files.Rows.Single(r => r.Name == "Source");
+
+        await files.NewFileCommand.ExecuteAsync(source);
+
+        // The box takes the top of the folder, which opens.
+        var row = Assert.IsType<NewEntryRow>(files.Rows[files.Rows.IndexOf(source) + 1]);
+        Assert.Same(row, files.NamingRow);
+        Assert.True(source.IsExpanded);
+        Assert.Equal((1, "File name"), (row.Depth, row.Placeholder));
+
+        row.NameText = "Weapon.cpp";
+        await files.CommitNewEntryCommand.ExecuteAsync(null);
+
+        var path = Path.Combine(h.WorkFolder, "Source", "Weapon.cpp");
+        Assert.Equal("", File.ReadAllText(path));
+        Assert.Null(files.NamingRow);
+        Assert.DoesNotContain(files.Rows, r => r is NewEntryRow);
+        Assert.Equal("Source/Weapon.cpp", files.SelectedRow?.RelativePath);
+        Assert.Equal(path, files.Showing?.Path);
+        Assert.False(files.Showing!.IsPreview);
+    }
+
+    [Fact]
+    public async Task New_folder_goes_beside_a_file_or_at_the_top_and_makes_the_folders_typed()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, "Source", "Player.cpp"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        var source = files.Rows.Single(r => r.Name == "Source");
+        await files.ToggleRowCommand.ExecuteAsync(source);
+
+        // A file's menu: in the folder it's in.
+        await files.NewFolderCommand.ExecuteAsync(files.Rows.Single(r => r.Name == "Player.cpp"));
+
+        Assert.Equal(Path.Combine(h.WorkFolder, "Source"), files.NamingRow!.InFolder);
+        Assert.Equal(files.Rows.IndexOf(source) + 1, files.Rows.IndexOf(files.NamingRow));
+
+        // The header's, with nothing selected: the top of the project, in place of the other.
+        files.SelectedRow = null;
+        await files.NewFolderCommand.ExecuteAsync(files.SelectedRow);
+
+        var row = files.NamingRow!;
+        Assert.Equal((0, 0, "Folder name"), (files.Rows.IndexOf(row), row.Depth, row.Placeholder));
+        Assert.Single(files.Rows, r => r is NewEntryRow);
+
+        row.NameText = "Art/Icons";
+        await files.CommitNewEntryCommand.ExecuteAsync(null);
+
+        Assert.True(Directory.Exists(Path.Combine(h.WorkFolder, "Art", "Icons")));
+        Assert.Equal("Art/Icons", files.SelectedRow?.RelativePath);
+        Assert.True(files.Rows.Single(r => r.Name == "Art").IsExpanded);
+        Assert.Empty(files.OpenFiles);
+    }
+
+    [Fact]
+    public async Task A_name_thats_taken_is_refused_in_the_box_and_Esc_makes_nothing()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, "a.txt"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        files.ShowOnlyChanged = true;
+
+        await files.NewFileCommand.ExecuteAsync(null);
+        var row = files.NamingRow!;
+
+        Assert.True(files.ShowsTree);
+        row.NameText = "a.txt";
+        Assert.Equal("There's already a file called a.txt here.", row.Problem);
+
+        await files.CommitNewEntryCommand.ExecuteAsync(null);
+
+        Assert.Same(row, files.NamingRow);
+        row.NameText = "b.txt";
+        Assert.Null(row.Problem);
+
+        // What changes on disk meanwhile waits for the box to go, rather than drawing the tree again from under it.
+        var added = Write(Path.Combine(h.WorkFolder, "c.txt"), "");
+        h.FolderWatcher.Changed(added);
+        h.Time.Advance(ProjectFilesViewModel.RefreshDelay);
+
+        Assert.Contains(row, files.Rows);
+        Assert.DoesNotContain(files.Rows, r => r.Name == "c.txt");
+
+        files.CancelNewEntryCommand.Execute(null);
+
+        Assert.Null(files.NamingRow);
+        await TabTestHarness.Eventually(() => files.Rows.Any(r => r.Name == "c.txt"), "the file added meanwhile");
+        Assert.DoesNotContain(row, files.Rows);
+        Assert.False(File.Exists(Path.Combine(h.WorkFolder, "b.txt")));
+    }
+
     // ---- Open files --------------------------------------------------------------------------------------------------
 
     [Fact]
