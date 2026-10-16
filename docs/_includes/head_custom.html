@@ -1,0 +1,19 @@
+{%- comment -%}
+  Light or dark as the reader's system is (GUIDE.md, "Light and dark"), and again when that changes. The pictures follow
+  the same setting through shot.html, so the page has no switch of its own.
+{%- endcomment -%}
+<script>
+  (function () {
+    var dark = window.matchMedia('(prefers-color-scheme: dark)');
+    function follow() { jtd.setTheme(dark.matches ? 'dark' : 'light'); }
+    follow();
+    dark.addEventListener('change', follow);
+  })();
+</script>
+<style>
+  .shot img { display: block; max-width: 100%; height: auto; border-radius: 6px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); }
+  .shot { margin: 1rem 0 1.5rem; }
+  .shot figcaption { font-size: 0.85em; opacity: 0.75; margin-top: 0.4rem; }
+  .download-buttons .btn { margin: 0 0.5rem 0.5rem 0; }
+  .release-assets td:nth-child(3) { font-family: monospace; font-size: 0.75em; word-break: break-all; }
+</style>

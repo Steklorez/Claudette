@@ -25,6 +25,9 @@
 //   RUN_BASH <cmd>   a Bash tool call: calls back any PreToolUse hooks registered with initialize for Bash
 //                    (hook_callback, as Claude Code does), then "runs" it; the result is FAKE_CLAUDE_BASH_OUTPUT, or
 //                    "ran: <cmd>". A hook that doesn't answer within its timeout is cancelled and the command isn't run.
+//   EDIT_FILE <path> [| <path>...]
+//                    an Edit tool call on each file, which must exist, that leaves it as it is and reports it as it was
+//                    without its first line, so the turn changed one line in each (DESIGN.md §8, "Changes per turn")
 //   SUBAGENTS        a nested fan-out of subagents, as Claude Code sends it: two in parallel, one of which asks
 //                    for permission from inside the subagent (and can be stopped with stop_task while it waits),
 //                    the other starting a nested Explore subagent (DESIGN.md §18, "Agent map")
@@ -504,6 +507,10 @@ internal sealed class FakeSession(string version, string permissionMode, bool pr
                 {
                     await RunBashAsync(prompt["RUN_BASH ".Length..].Trim());
                 }
+                else if (prompt.StartsWith("EDIT_FILE ", StringComparison.Ordinal))
+                {
+                    await EditFilesAsync(prompt["EDIT_FILE ".Length..].Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
+                }
                 else if (prompt.StartsWith("DOC", StringComparison.Ordinal))
                 {
                     await DocAsync();
@@ -649,6 +656,41 @@ internal sealed class FakeSession(string version, string permissionMode, bool pr
             ["tool_use_result"] = blocked ? $"Error: {output}" : new JsonObject { ["stdout"] = output, ["stderr"] = "", ["interrupted"] = false },
         });
         await ResultAsync(blocked ? "The hook timed out." : "Done with the tool.");
+    }
+
+    /// <summary>
+    /// EDIT_FILE: an Edit tool call on each file that puts back its first line, as Claude Code reports it: the file as it
+    /// was in <c>originalFile</c>, without that line. The file itself isn't touched.
+    /// </summary>
+    private async Task EditFilesAsync(string[] paths)
+    {
+        foreach (var path in paths.Select(Path.GetFullPath))
+        {
+            var toolUseId = $"toolu_fake_{Interlocked.Increment(ref _requestCounter)}";
+            var text = await File.ReadAllTextAsync(path);
+            var firstEnd = text.IndexOf('\n') + 1;
+            var original = text[firstEnd..];
+            var oldString = original.Split('\n')[0];
+            var newString = text[..firstEnd] + oldString;
+            await AssistantAsync(new JsonObject
+            {
+                ["type"] = "tool_use", ["id"] = toolUseId, ["name"] = "Edit",
+                ["input"] = new JsonObject { ["file_path"] = path, ["old_string"] = oldString, ["new_string"] = newString },
+            });
+            await WriteAsync(new JsonObject
+            {
+                ["type"] = "user",
+                ["message"] = new JsonObject { ["role"] = "user", ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = toolUseId, ["content"] = $"The file {path} has been updated.", ["is_error"] = false }) },
+                ["parent_tool_use_id"] = null,
+                ["tool_use_result"] = new JsonObject
+                {
+                    ["filePath"] = path, ["oldString"] = oldString, ["newString"] = newString, ["originalFile"] = original,
+                    ["structuredPatch"] = new JsonArray(), ["userModified"] = false, ["replaceAll"] = false,
+                },
+            });
+        }
+        await AssistantAsync(new JsonObject { ["type"] = "text", ["text"] = "Done." });
+        await ResultAsync("edited");
     }
 
     private Task DeltaAsync(string text) => WriteAsync(new JsonObject

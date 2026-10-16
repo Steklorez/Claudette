@@ -316,7 +316,6 @@
                                     IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch" />
                           <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                           <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}" />
-                        <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" />
                           <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" />
                           <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}" />
                           <!-- A name of the user's own in place of the folder's (DESIGN.md §4, "Grouped by folder") -->

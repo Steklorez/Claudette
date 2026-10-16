@@ -13,8 +13,8 @@
 #   fallback  what to do if it breaks (required for undocumented and experimental entries)
 
 versions:
-  minimum: 2.1.284     # ClaudeLocator.MinimumVersion
-  lastTested: 2.1.300  # ClaudeLocator.LastTestedVersion; bump when a compatibility report is handled
+  minimum: 2.1.284     # ClaudeLocator.MinimumVersion, and docs/_config.yml for the user guide
+  lastTested: 2.1.300  # ClaudeLocator.LastTestedVersion and docs/_config.yml; bump when a compatibility report is handled
 
 items:
   # --- Launch flags ------------------------------------------------------------------------------------

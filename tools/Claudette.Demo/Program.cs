@@ -8,8 +8,8 @@
 //                   seven tabs over three game projects (Unreal in C++, Unity in C#, Godot): the first with a long
 //                   conversation and changed files, one with every file reviewed, and a thread with two sub-threads,
 //                   a plan, a task list part-way done and three subagents; an API-key account, Studio, which
-//                   orbit-game's group and one starfall tab run on; and a usage history that ends now, with the plan's
-//                   usage and a month of Studio's spend
+//                   orbit-game's group and one starfall tab run on; the older projects as recent folders; and a usage
+//                   history that ends now, with the plan's usage and a month of Studio's spend
 //   claude-config/  for CLAUDE_CONFIG_DIR: the tabs' transcripts, with the subagents' beside them, and past sessions
 //                   for History: more in each project, one in a worktree of starfall, and four older projects
 //   usage.json      for FAKE_CLAUDE_USAGE: the plan usage fake-claude reports, where the history ends
@@ -119,6 +119,12 @@ await new JsonFileStore<AppState>(paths.StateFile).SaveAsync(new AppState
     SidePanelWidth = 420,
     SidePanelPages = ["Files", "Agents", "Tasks", "Project", "Processes", "Mcp", "ScratchPad"],
     TrustedFolders = [.. tabs.Select(t => t.Folder).Distinct()],
+    // The older projects, which the new tab picker lists as recent folders.
+    RecentFolders =
+    [
+        .. new[] { "shader-lab", "build-farm", "lighthouse-launcher", "pixel-tools" }
+            .Select((name, i) => new RecentFolder { Path = Path.Combine(projects, name), LastUsed = DateTimeOffset.UtcNow.AddDays(-2 - 3 * i) }),
+    ],
     SessionMarks = sessionMarks,
     // The studio's API key, which orbit-game's group uses (DESIGN.md §4, "Accounts"). Its key isn't stored: fake-claude
     // never runs the key helper.

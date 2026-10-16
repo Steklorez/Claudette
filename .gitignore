@@ -493,3 +493,10 @@ $RECYCLE.BIN/
 
 # Worktrees Claude Code makes for parallel work.
 .claude/worktrees/
+
+# The user guide's site, built by Jekyll when previewing it (GUIDE.md, "Previewing it").
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+docs/.bundle/
+docs/vendor/

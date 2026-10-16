@@ -1,0 +1,103 @@
+---
+title: Styles and themes
+parent: Settings
+nav_order: 3
+---
+
+# Styles and themes
+
+Claudette has two looks, Standard and Claude, and each comes in light and dark. You pick the look with **Style** and the light or dark with **Theme**, in Settings → Appearance. Both change at once, with no restart.
+
+{% include shot.html name="guide/settings/appearance" alt="Settings, Appearance: the theme, style and density, the conversation and code fonts with their sizes, zoom and motion, and the switches for what the conversation, the tab rows and Claudette show" %}
+
+## Theme
+
+Settings → Appearance → **Theme** is **System**, **Light** or **Dark**. **System**, the default, follows your OS and changes when it does.
+
+## Style
+
+Settings → Appearance → **Style** is **Standard** (the default) or **Claude**. The layout, the tool rows, the diffs and every control are the same in both. The look changes.
+
+{% include shot.html name="standard" alt="Claudette in the Standard style: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files page in the side panel, the plan's usage in the header and Claudette standing on the message box" %}
+
+**Standard** takes Claude Code's extension for Visual Studio Code as its reference: a dense, calm layout in neutral greys, with your OS's accent color for selection, the usage meters and checked boxes. Diffs are inline, in red and green, and code takes Visual Studio Code's Light+ and Dark+ colors. The composer is a rounded box, and Send and Stop are round buttons: an arrow in the accent color, and a square.
+
+{% include shot.html name="claude" alt="The same window in the Claude style: an ivory page and warm greys, Claude's orange for the accent, rounder cards and the replies set in a serif" %}
+
+**Claude** takes the Claude apps (the iOS app and claude.ai) as its reference:
+
+- **Colors** from the Claude apps. In light, an ivory page, a warmer sidebar, white cards and composer, and near-black text. In dark, a charcoal page, a darker sidebar and lighter cards. The accent is Claude's orange, including the working line's glyph and verb and the Send button.
+- **Cautions are warm tints of the orange**, not yellow: a waiting prompt, a usage alert, *Needs your input*. Errors, diffs, the charts' model lines and a folder group's own color keep their usual colors.
+- **Claude's replies are set in a serif**, as in the Claude apps. Their typeface isn't available, so Claudette uses the closest installed one: Charter on macOS, Georgia or Cambria on Windows, and Charter, Noto Serif or DejaVu Serif on Linux. A conversation font you pick in Settings wins.
+- **A bigger composer**, a big rounded box lifted a little off the page, and rounder corners on the cards, code blocks and the sidebar's rows.
+- **No desktop showing through** the sidebar and header, as the Mica effect lets it on Windows, so they stay warm.
+
+All four, side by side:
+
+| ![Claudette in the Standard style, light](../screenshots/standard-light.png) | ![Claudette in the Standard style, dark](../screenshots/standard-dark.png) |
+|:---:|:---:|
+| Standard, light | Standard, dark |
+| ![Claudette in the Claude style, light](../screenshots/claude-light.png) | ![Claudette in the Claude style, dark](../screenshots/claude-dark.png) |
+| Claude, light | Claude, dark |
+
+## The conversation's colors
+
+{% include unreleased.html %}
+
+Each step in the conversation is a card with a stripe down its left edge in its kind's color. The style changes the colors, so what the cards mean stays the same:
+
+| Card | Standard | Claude |
+|---|---|---|
+| Your messages | Magenta | Warm grey |
+| Claude's replies | Blue | Orange |
+| The files a turn changed | Green | Blue, which stays apart from the orange with color blindness |
+
+Tool calls, thinking, subagents and notes are neutral in both, and a turn's statistics are slate. [Reading the conversation](../conversation/reading-the-conversation.md) explains the cards.
+
+## Density
+
+Settings → Appearance → **Density** is **Comfortable** (the default) or **Compact**. Compact tightens the conversation's spacing, the padding of messages and cards, the tool rows, the sidebar's rows and the composer's padding, so more fits on screen.
+
+## Fonts
+
+Four settings in Settings → Appearance choose the type:
+
+- **Conversation font** and **Conversation font size** (9 to 28, 14 by default) for the conversation, which includes the Markdown in replies.
+- **Code font** and **Code font size** (8 to 28, 13 by default) for code blocks, commands and diffs.
+
+Pick a font from the list of the ones installed, or type a name. Leave a font empty for the default: Claudette's own font, and Cascadia Mono, Consolas or Menlo for code. A font that isn't installed on this machine falls back to the default.
+
+[Zoom](accessibility.md#zoom) scales everything in the main window, fonts included.
+
+## What the tab rows show
+
+Three switches in Settings → Appearance decide what a tab's row in the sidebar carries, beside its status icon. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
+
+- **Show context on tab rows** puts a small ring on the row that fills as the tab's context window does. It turns amber when Claude Code is about to compact the conversation, and red when it's nearly full ([Context and compacting](../usage/context-and-compacting.md)).
+- **Show git branch on tab rows** shows the branch the tab's folder has checked out, such as `main`, at the right of the row's second line. A tab in a worktree shows the worktree's name instead.
+- **Show task progress on tab rows** shows how many of Claude's tasks are done, such as `3/7`, at the right of the second line, and the task Claude is working on in place of the model while it works ([The Tasks page](../plans/the-tasks-page.md)).
+
+All three are on by default.
+
+## Settings
+
+All of these are in Settings → Appearance, and all of them sync to your other machines when [settings sync](../history/settings-sync.md) is on.
+
+| Setting | Default |
+|---|---|
+| **Theme** | System |
+| **Style** | Standard |
+| **Density** | Comfortable |
+| **Conversation font** | Claudette's default |
+| **Conversation font size** | 14 |
+| **Code font** | Cascadia Mono, Consolas or Menlo |
+| **Code font size** | 13 |
+| **Show context on tab rows** | On |
+| **Show git branch on tab rows** | On |
+| **Show task progress on tab rows** | On |
+
+## See also
+
+- [Accessibility](accessibility.md) for **Zoom** and **Motion**, which are on the same page of Settings.
+- [Reading the conversation](../conversation/reading-the-conversation.md) for **Full-width conversation** and **Quieter in-between steps**.
+- [Claudette on the composer](../claudette/claudette-on-the-composer.md) for her settings, which are in Appearance too.

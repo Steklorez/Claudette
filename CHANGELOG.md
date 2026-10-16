@@ -28,6 +28,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Right-click menus no longer run off the bottom of some displays, and Claudette's own menu stays inside the window.
 - The folder trust question fits in the window when a folder's configuration lists a lot.
 - The spacing of thinking and the height of lines in the conversation.
+- The tab info card's **Project** row no longer ends a sentence with two full stops when the project's engine wasn't found.
 
 ## [0.2.0] - 2026-10-14
 

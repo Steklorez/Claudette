@@ -270,7 +270,8 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
         var text = project.HeaderLines.Count > 0 ? $"{project.Name}: {project.HeaderLines[0]}" : $"{project.Name} ({project.KindName})";
         if (_noteSent is not null)
         {
-            text += ". Claude was told how to build it.";
+            // A header line can be a sentence of its own, such as an engine that wasn't found.
+            text += text.EndsWith('.') ? " Claude was told how to build it." : ". Claude was told how to build it.";
         }
         rows.Add(new InfoRow("Project", text));
     }

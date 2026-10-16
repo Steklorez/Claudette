@@ -1,0 +1,60 @@
+# Claudette's user guide (GUIDE.md). GitHub Pages builds it from docs/ on main and publishes it at the domain in CNAME.
+# So only GitHub Pages' own plugins (https://pages.github.com/versions/) and no build scripts of ours.
+title: Claudette
+description: How to use Claudette, the desktop app that puts Claude Code in a native window.
+url: https://claudette.dotbunny.com
+lang: en
+
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-github-metadata
+
+# The repository, for site.github: the Downloads page lists its releases.
+repository: dotBunny/Claudette
+
+logo: /assets/claudette.svg
+favicon_ico: /assets/favicon.ico
+color_scheme: light
+
+search_enabled: true
+search:
+  heading_level: 3
+  previews: 2
+  button: true
+
+heading_anchors: true
+back_to_top: true
+back_to_top_text: Back to top
+
+aux_links:
+  GitHub: https://github.com/dotBunny/Claudette
+
+# The changelog is CHANGELOG.md itself, last in the sidebar (GUIDE.md, "The changelog").
+nav_external_links:
+  - title: Changelog
+    url: https://github.com/dotBunny/Claudette/blob/main/CHANGELOG.md
+    hide_icon: false
+
+gh_edit_link: true
+gh_edit_link_text: Edit this page on GitHub
+gh_edit_repository: https://github.com/dotBunny/Claudette
+gh_edit_branch: main
+gh_edit_source: docs
+gh_edit_view_mode: edit
+
+# Claude Code's versions, which pages name: compat/surface.yaml's minimum and lastTested (ClaudeLocator). Change them
+# together.
+claude_code:
+  minimum: 2.1.284
+  tested: 2.1.300
+
+footer_content: 'Claudette is made by <a href="https://dotbunny.com">dotBunny</a> under the <a href="https://github.com/dotBunny/Claudette/blob/main/LICENSE">MIT license</a>. It isn''t made by Anthropic.'
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - .bundle/

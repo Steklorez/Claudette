@@ -2,25 +2,21 @@
 
 The plan for Claudette's user guide, the website at https://claudette.dotbunny.com that shows people how to use every part of Claudette. [DESIGN.md](DESIGN.md) says what Claudette does; this file says how the guide is built, how a page is written, how its pictures are taken, which page describes each part of Claudette, and how `CHANGELOG.md` is kept. `§n` still means a section of DESIGN.md, whose [User guide](DESIGN.md#user-guide) section has the decisions behind the site.
 
-Planned 2026-10-15, not started.
+Planned 2026-10-15. Built 2026-10-16: the site, every chapter, and the pictures the demo can show ([Steps](#8-steps)).
 
 ## 1. The site
 
-- **Where it lives.** In `docs/` on `main`, with `CHANGELOG.md` from the repository's root. A workflow of ours builds the site and publishes it to GitHub Pages (the repository's Settings → Pages → Source: **GitHub Actions**).
-  - `docs/CNAME` holds the domain, `claudette.dotbunny.com`. GitHub wrote it when the domain was set, and deleting it unsets the domain. The domain's DNS points at GitHub Pages, and the site answers over HTTPS (with a 404 until there's a page).
-  - Everything in `docs/` is published, the README's screenshots included, and so is the changelog. Nothing else outside it is, so this file isn't.
-- **How it's built.** With Jekyll, through the `github-pages` gem (`docs/Gemfile`), which pins Jekyll and the plugins to the versions GitHub Pages uses. The theme is [Just the Docs](https://just-the-docs.com), as a `remote_theme` pinned to a release's tag. It gives a sidebar from each page's front matter (`nav_order`, `parent`, `has_children`), search built with the site, callouts, and an **Edit this page on GitHub** link.
-  - **Why a workflow.** GitHub Pages' own build from a branch would do for the written pages, with no workflow to keep. But it reads only `docs/` and runs only on a push, and two pages need more ([Downloads and the changelog](#5-downloads-and-the-changelog)): the Changelog page is made from `CHANGELOG.md` at the root, and the Downloads page from the releases, so it's rebuilt whenever one is published.
-  - `docs/_config.yml`: the title; `url: https://claudette.dotbunny.com` and no `baseurl`, since the site is the domain's root; the theme; the plugins (`jekyll-remote-theme`, `jekyll-seo-tag` and `jekyll-sitemap`, all on GitHub Pages' list); search; links to the repository and its Releases; and the edit link, to `docs/` on `main`.
+- **Where it lives.** In `docs/` on `main`. GitHub Pages builds it from there itself (the repository's Settings → Pages → Source: **Deploy from a branch**, `main`, `/docs`) and publishes it at the domain.
+  - `docs/CNAME` holds the domain, `claudette.dotbunny.com`. GitHub wrote it when the domain was set, and deleting it unsets the domain. The domain's DNS points at GitHub Pages, and the site answers over HTTPS.
+  - Everything in `docs/` is published, the README's screenshots included. Nothing outside it is, so this file isn't, and neither is `CHANGELOG.md`: the sidebar's **Changelog** links to it on GitHub.
+- **How it's built.** With Jekyll and the plugins GitHub Pages has ([its versions](https://pages.github.com/versions/)); `docs/Gemfile` names the `github-pages` gem, which pins the same versions for previewing. The theme is [Just the Docs](https://just-the-docs.com), as a `remote_theme` pinned to a release's tag. It gives a sidebar from each page's front matter (`nav_order`, `parent`, `has_children`), search built with the site, callouts, and an **Edit this page on GitHub** link.
+  - **Why GitHub Pages' own build.** It needs no workflow to publish, and nothing of ours runs to build the site. The price is GitHub Pages' limits: only its own plugins, and nothing outside `docs/`. So the changelog is a link to `CHANGELOG.md` rather than a page made from it, and the Downloads page reads the releases through `jekyll-github-metadata`, one of those plugins ([Downloads and the changelog](#5-downloads-and-the-changelog)). A workflow of ours that built and published the site could do more, at the cost of keeping it.
+  - `docs/_config.yml`: the title; `url: https://claudette.dotbunny.com` and no `baseurl`, since the site is the domain's root; the theme; the plugins (`jekyll-remote-theme`, `jekyll-seo-tag`, `jekyll-sitemap` and `jekyll-github-metadata`); `repository`, for the releases; search; a link to the repository; the **Changelog** link; and the edit link, to `docs/` on `main`. GitHub Pages also turns on `jekyll-relative-links`, so a page links to another by its `.md` file, which reads on GitHub too.
   - **Light and dark.** The site follows the reader's system, as Claudette does by default. Just the Docs has a light scheme and a dark one but nothing that follows the system, so `_includes/head_custom.html` calls `jtd.setTheme` from `prefers-color-scheme`, and again when that changes. The page has no switch of its own, so the pictures can follow the same setting ([Pictures](#3-pictures)).
   - **The icon and favicon:** `packaging/icon/build-icons.mjs` writes them to `docs/assets/` too, so they stay the app's ([Packaging and signing](DESIGN.md#packaging-and-signing)). The site in Claudette's own colors, as a custom scheme in `_sass/color_schemes/`, can come later.
-- **The workflow**, `.github/workflows/docs.yml`.
-  - It runs on a push to `main` that changes `docs/` or `CHANGELOG.md`, on a release being published, edited, unpublished or deleted, and from **Run workflow**. A pull request that changes either gets the same build and checks, without publishing.
-  - **Building.** `docs/_scripts/prepare.sh` writes the two files the generated pages read, which `.gitignore` keeps out of the repository ([Downloads and the changelog](#5-downloads-and-the-changelog)): `docs/_data/releases.json`, from the GitHub API with the workflow's token, and `docs/_includes/changelog.md`, from `CHANGELOG.md`. Then Jekyll builds the site. If the API can't be read, or `CHANGELOG.md` has no version in it, the build fails rather than publish an empty page.
-  - **Checks.** html-proofer runs over the built site, for internal links only. A broken link, a missing picture or a picture with no alt text fails the run instead of reaching the site.
-  - **Publishing**, on `main` and for releases: `actions/upload-pages-artifact` and `actions/deploy-pages`, in the `github-pages` environment, one at a time. The workflow can read the repository and write to Pages, nothing else. Its actions are pinned to commits, as `package.yml`'s are.
-- **Previewing it.** With Ruby installed, run `docs/_scripts/prepare.sh` (it needs `gh` signed in, or `GH_TOKEN`), then `bundle exec jekyll serve` in `docs/`. Without the first step, the written pages are all there, and the two generated pages link to GitHub instead.
-- **Chapters and pages.** Each chapter in [The chapters](#4-the-chapters) is a folder of pages with an `index.md`, which says what the chapter covers and lists its pages. A page's file is its title in lowercase with hyphens: **Worktree tabs** is `docs/tabs/worktree-tabs.md`. Chapters sit in the sidebar in the map's order.
+- **The check**, `.github/workflows/docs.yml`. On a pull request or a push to `main` that changes `docs/`, it builds the site with `docs/Gemfile`'s gems and runs html-proofer over it, for internal links only. A broken link, a missing picture or a picture with no alt text fails the run instead of reaching the site. It doesn't publish anything.
+- **Previewing it.** With Ruby installed, run `bundle install`, then `bundle exec jekyll serve` in `docs/`. The Downloads page reads the releases from GitHub's API; without a token (`JEKYLL_GITHUB_TOKEN`) it still can, a few times an hour.
+- **Chapters and pages.** Each chapter in [The chapters](#4-the-chapters) is a folder of pages with an `index.md`, which says what the chapter covers; the theme lists its pages. A page's file is its title in lowercase with hyphens: **Worktree tabs** is `docs/tabs/worktree-tabs.md`. Chapters sit in the sidebar in the map's order.
 
 ## 2. Writing a page
 
@@ -41,9 +37,9 @@ Planned 2026-10-15, not started.
 ## 3. Pictures
 
 - They're of the real app running the demo (`tools/Claudette.Demo`), never anyone's account or projects. The UI tests' headless renders won't do: they draw text about twice as wide as a screen does.
-- `tools/Claudette.Demo/screenshots.ps1` takes the README's pictures, clicking through UI Automation and capturing with `PrintWindow`, into `docs/screenshots/`. The guide's come from a sibling, `guide-screenshots.ps1`, with the helpers both use moved into a module. Each shot is a name, the steps to it, and the element to crop to, from its UI Automation bounds with a margin: a picture of the part a page describes reads better than the whole window. They go in `docs/screenshots/guide/<chapter>/<name>-<light|dark>.png`.
+- `tools/Claudette.Demo/screenshots.ps1` takes the README's pictures, clicking through UI Automation and capturing with `PrintWindow`, into `docs/screenshots/`. The guide's come from a sibling, `guide-screenshots.ps1` (`-Only` takes a shot's name or a chapter's), with the helpers both use in `Screenshots.psm1`. Each shot is a name, the steps to it, and the element to crop to, from its UI Automation bounds with a margin: a picture of the part a page describes reads better than the whole window. They go in `docs/screenshots/guide/<chapter>/<name>-<light|dark>.png`.
 - In the Standard style, light and dark. The Claude style shows only on the pages about it: every picture in all four looks would double what the pictures add to the repository, for little (the README's 33 are 6.8 MB).
-- A page shows the picture that matches the reader's theme, through an include, `{% include shot.html name="…" alt="…" %}`, which writes a `<picture>` with a `prefers-color-scheme: dark` source. Every picture has alt text that says what it shows, as the README's do.
+- A page shows the picture that matches the reader's theme, through an include, `{% include shot.html name="…" alt="…" %}`, which writes a `<picture>` with a `prefers-color-scheme: dark` source. The name is the picture's path under `docs/screenshots/` without `-light.png` or `-dark.png`: `guide/tabs/sidebar` for one of the guide's, `tasks-standard` for one of the README's, which pages use where they fit. Every picture has alt text that says what it shows, as the README's do.
 - **What the demo doesn't show yet.** The demo grows what a chapter needs, or the script makes it happen with `fake-claude`'s prompts: a waiting permission (`ASK_PERMISSION`), a usage limit (`LIMIT`), a process for the process monitor (`SPAWN`), a prompt suggestion (`SUGGEST`), a Claude Doc (`DOC`), and the sign-in screen (`FAKE_CLAUDE_LOGGED_IN=0`). A question, a plan to approve and an MCP server's form need `fake-claude` to learn them, as the mock API knows `ASK_QUESTION` and `EXIT_PLAN`. Perforce has no fake outside the tests, so its page can do without pictures.
 - The script runs on Windows. What only macOS or Linux shows, such as the menu bar and the Dock icon's badge and animation, is captured by hand and named `-macos`, or described without a picture.
 
@@ -76,7 +72,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 
 | Page | Covers | From |
 |---|---|---|
-| Opening tabs | The new tab picker (search, **Favorites**, **Recent folders**, **Browse…**, **Open from History…**, `1`–`9`, its right-click menu), a group's **+**, dropping a folder on the sidebar, **File → Open Recent** and the Dock menu on macOS, the jump list on Windows, `--folder`, one Claudette at a time. | [Opening a tab](DESIGN.md#opening-a-tab) |
+| Opening tabs | The new tab picker (search, favorites then recent folders in one list, **Browse…**, **Open from History…**, `1`–`9`, its right-click menu), a group's **+**, dropping a folder on the sidebar, **File → Open Recent** and the Dock menu on macOS, the jump list on Windows, `--folder`, one Claudette at a time. | [Opening a tab](DESIGN.md#opening-a-tab) |
 | The sidebar | A tab's row: the status icons, the second line (*Needs your input*, *Possibly stuck*, the task in progress), the badges (pin, sync, phone, gear, running tasks, task progress, branch, changelist, account, context ring), the info card on hover, resizing, the rail and narrow windows. | [Sidebar](DESIGN.md#sidebar), [§4](DESIGN.md#4-tabs--sessions) |
 | Folder groups | Groups and their colors, **Rename…** and **Change color…**, collapsing, dragging tabs and groups, the group's menu (**New tab here**, **History for this folder**, **Account ▸**, **Close group**). | [§4](DESIGN.md#4-tabs--sessions) |
 | Names, marks and pins | Claude Code's titles and the folder name before one, **Rename** and **Reset name**, **Name each tab's session in Claude Code after the tab**, **Mark ▸** and **Clear mark**, the reviewed icon over a mark, **Pin tab**. | [§4](DESIGN.md#4-tabs--sessions), [§13](DESIGN.md#13-architecture) |
@@ -89,7 +85,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Worktree tabs | **New tab in a worktree**, how a worktree tab shows, duplicating and branching in one, closing its last tab (**Remove**, **Keep**, **Remove and discard**), Settings → General → **Worktrees** and **Clean up now**. Setup actions for a new worktree are in Project tools. | [Worktree tabs](DESIGN.md#worktree-tabs), [Cleaning up worktrees](DESIGN.md#cleaning-up-worktrees) |
 | Processes | The process monitor: turning it on, the composer bar's summary, the header's total, the **Processes** page and its menu, stopping a process. | [Process monitor](DESIGN.md#process-monitor) |
 | MCP servers | The **MCP** page: each server's status, **Reconnect**, **Turn off**, **Sign in** and **Sign out**. A server's form is in Permissions and prompts. | [MCP servers](DESIGN.md#mcp-servers) |
-| Closing and restoring | Closing a working tab and its confirmations (**Close and stop them**, **Close, leave running**), pinned tabs, restoring at launch and **Also restore unpinned tabs**, tabs that start when selected, a folder that's gone, a session Claude Code deleted, **Restart** after `claude` stops. | [§4](DESIGN.md#4-tabs--sessions), [Restore on launch](DESIGN.md#restore-on-launch), [§13](DESIGN.md#13-architecture) |
+| Closing and restoring | Closing a working tab and its confirmations (**Close and stop them**, **Close, leave running**), pinned tabs, restoring at launch and **Also restore unpinned tabs when Claudette starts**, tabs that start when selected, a folder that's gone, a session Claude Code deleted, **Restart** after `claude` stops. | [§4](DESIGN.md#4-tabs--sessions), [Restore on launch](DESIGN.md#restore-on-launch), [§13](DESIGN.md#13-architecture) |
 
 ### The conversation (`conversation/`)
 
@@ -114,7 +110,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Page | Covers | From |
 |---|---|---|
 | Sending and stopping | **Send with**, **Stop** and `Esc`, messages sent while Claude works: into the turn, or queued with **Send now** and **Cancel**. | [Composer](DESIGN.md#composer), [Queued messages](DESIGN.md#queued-messages) |
-| The composer bar | The folder, model, effort and mode on the left; processes, **Agents**, running tasks, **Files**, context, the prompt cache, tokens and **ⓘ** on the right; the status line under the box. Each links to its page. | [Composer](DESIGN.md#composer) |
+| The composer bar | The attach button, **Suffixes ▾**, **Stashed ▾**, model, effort and mode on the left; processes, **Agents**, running tasks, **Files**, context, the prompt cache, tokens and **ⓘ** on the right; the status line under the box, with the folder. Each links to its page. | [Composer](DESIGN.md#composer) |
 | Slash commands and mentions | `/` commands; `@` files and folders; `@` sessions, tabs and agents, which Threads explains. | [Autocomplete](DESIGN.md#autocomplete) |
 | Attachments and large pastes | Dropping, pasting and the paper clip; images and their limits; files and folders as `@` mentions; large pastes as a chip, and `Ctrl/Cmd+Shift+V`; long messages shown short. | [Attachments](DESIGN.md#attachments) |
 | Earlier prompts, drafts and the stash | `Up` and `Down`, drafts kept when Claudette closes, **Stash the message** (`Ctrl/Cmd+S`) and **Stashed ▾**. | [Composer](DESIGN.md#composer), [Drafts and the stash](DESIGN.md#drafts-and-the-stash) |
@@ -131,7 +127,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Permission modes | The mode picker, when Auto isn't offered, Bypass permissions and its warning, the mode a tab starts in. | [§7](DESIGN.md#7-permission-prompts), [Starting mode](DESIGN.md#starting-mode) |
 | Questions | The question card, **Send answers** and **Dismiss**. | [§7](DESIGN.md#7-permission-prompts) |
 | Approving a plan | The plan card, **Approve, auto mode** and the other approvals, **Keep planning…**, versions and **Changes from v1**. Following the plan is in Plans, tasks and agents. | [§7](DESIGN.md#7-permission-prompts), [Tasks](DESIGN.md#tasks) |
-| MCP servers asking for input | A server's form, **Send**, **Open link** and **Done**, **Decline**. | [§7](DESIGN.md#7-permission-prompts) |
+| MCP servers asking for input | A server's form, **Send**, **Open in browser** and **Done**, **Decline**. | [§7](DESIGN.md#7-permission-prompts) |
 | Folder trust | **Trust this folder?** and what it lists, **Start without it**, the tab menu's **Trust this folder**, **Ask before using a new folder's own configuration**. | [Folder trust](DESIGN.md#folder-trust) |
 
 ### Plans, tasks and agents (`plans/`)
@@ -147,7 +143,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Page | Covers | From |
 |---|---|---|
 | What threads are | A thread hands work to sub-threads in its folder group; what Claude is told; prompts stay yours; what threads don't do. | [Threads](DESIGN.md#threads) |
-| Making a thread | The **Thread ▸** menu (**Make this tab a thread**, **New sub-thread** and **New sub-thread in a worktree**, **Assign to thread ▸**, **Detach from thread**, **Stop being a thread**), threads in the sidebar, **Show with its sub-threads**. | [Threads](DESIGN.md#threads), [Split panes](DESIGN.md#split-panes) |
+| Making a thread | The **Thread** submenu (**Make this tab a thread**, **New sub-thread** and **New sub-thread in a worktree**, **Assign to thread**, **Detach from thread**, **Stop being a thread**), threads in the sidebar, **Show with its sub-threads**. | [Threads](DESIGN.md#threads), [Split panes](DESIGN.md#split-panes) |
 | Sending work and getting reports | **Ask before sending to sub-threads** and its question, *From the thread*, the *From the sub-threads* report and how a sub-thread's work can end. | [Threads](DESIGN.md#threads) |
 | Sub-threads waiting on you | The strip over the thread's composer: **Allow**, **Deny**, **Go to tab**. | [Threads](DESIGN.md#threads) |
 | Reaching other sessions | A session's name in Claude Code, **Reached as**, `@` sessions and tabs, **Copy session ID**, *From the session*. | [§13](DESIGN.md#13-architecture), [Autocomplete](DESIGN.md#autocomplete) |
@@ -215,7 +211,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 
 | Page | Covers | From |
 |---|---|---|
-| Project tools | The project row and its menu, the **Project** page and its log, runs under the tab's row, **Run the project's main action** (`Ctrl/Cmd+Shift+E`), **A project action finishes**, Settings → Project tools and the project's **Tools** page. | [Project tools](DESIGN.md#project-tools), [The project's pages](DESIGN.md#the-projects-pages) |
+| Using project tools | The project row and its menu, the **Project** page and its log, runs under the tab's row, **Run the project's main action** (`Ctrl/Cmd+Shift+E`), **A project action finishes**, Settings → Project tools and the project's **Tools** page. | [Project tools](DESIGN.md#project-tools), [The project's pages](DESIGN.md#the-projects-pages) |
 | Unreal Engine | Its actions, **Editor configuration**, finding the engine and **Choose engine folder…**, **Open solution** and **Open in Rider**, the ones that ask first. | [Project tools](DESIGN.md#project-tools) |
 | Unity | Its actions, **Code optimization**, **Choose Unity editor…**, what's refused while Unity has the project open. | [Project tools](DESIGN.md#project-tools) |
 | Godot | Its actions, the Godot executable, C# projects. | [Project tools](DESIGN.md#project-tools) |
@@ -255,7 +251,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Page | Covers | From |
 |---|---|---|
 | Claude Code's updates | The badge, what **Update now** does for each way of installing it, **Update on next launch**, **Dismiss**, tabs keeping their version until they restart, updates turned off. | [§12](DESIGN.md#12-claude-code-updates) |
-| Claudette's updates | **Check for Claudette updates automatically** and **Include pre-releases**, the badge, **Restart to update**, **Update when idle**, **Skip this version**, copies that can't update themselves, upgrading from 0.1.0; what's new in each version is on the Changelog page. | [Updating Claudette](DESIGN.md#updating-claudette) |
+| Claudette's updates | **Check for Claudette updates automatically** and **Include pre-releases**, the badge, **Restart to update**, **Update when idle**, **Skip this version**, copies that can't update themselves, upgrading from 0.1.0; what's new in each version is in the changelog. | [Updating Claudette](DESIGN.md#updating-claudette) |
 | When an update fails | What comes back, installing by hand, moving Claudette to Applications. | [Updating Claudette](DESIGN.md#updating-claudette) |
 
 ### Troubleshooting (`troubleshooting/`)
@@ -292,28 +288,28 @@ One page, second in the sidebar: the latest release's packages, the next version
 | `claudette.json` | The format of `claudette.json` and `claudette.local.json`: actions and their fields, links and their placeholders, comments, and what's skipped. | [Project tools](DESIGN.md#project-tools) |
 | Windows, macOS and Linux | What differs on each: installing, menus, notifications, the credential store, keeping awake, starting at login, what isn't tested yet. | [§2](DESIGN.md#2-platform--tech-stack), the pages' own notes |
 
-### Changelog (`docs/changelog.md`)
+### Changelog
 
-One page, last in the sidebar: what changed in each version, newest first, with what's on `main` and not yet released at the top. Made from `CHANGELOG.md` ([Downloads and the changelog](#5-downloads-and-the-changelog)).
+Last in the sidebar: a link to `CHANGELOG.md` on GitHub, which says what changed in each version, newest first, with what's on `main` and not yet released at the top ([The changelog](#the-changelog)).
 
 ## 5. Downloads and the changelog
 
-Two pages are made from data rather than written: the Downloads page from the repository's releases, and the Changelog page from `CHANGELOG.md`.
+The Downloads page is made from the repository's releases rather than written, and the changelog is `CHANGELOG.md` itself.
 
 ### The Downloads page
 
-- **The latest release** comes first: its version and date, links to what's new in it (its section of the Changelog page) and to its release on GitHub, and a download for each package.
+- **The latest release** comes first: its version and date, a link to its release on GitHub for what's new in it (its notes are its section of the changelog), a link to the changelog, and a download for each package.
   - **Windows**: **x64 (Intel or AMD)** and **Arm64**, the MSIX files.
   - **macOS**: **Apple silicon** and **Intel**, the `.dmg` files.
   - **Linux**: no package, and a link to Getting started → **Running from source**.
   - Each package shows its file's name and size, and its SHA-256 digest, for anyone who wants to check the file (`Get-FileHash` in PowerShell, `shasum -a 256` on a Mac). Claudette's own updates check it themselves ([Updating Claudette](DESIGN.md#updating-claudette)).
 - **Which one you need.** On Windows, Settings → System → About → **System type**. On a Mac, Apple menu → **About This Mac** → **Chip**: an Apple M-series chip is Apple silicon.
 - **The next version**, when a pre-release is newer than the latest release: in a box of its own, marked as a pre-release, saying that Claudette offers pre-releases only with Settings → General → **Include pre-releases**.
-- **Earlier releases**, newest first: each with its date, its packages, and links to its changelog section and its release. 0.1.0, from before the repository moved, says it can't update itself to a later version, which is installed by hand.
+- **Earlier releases**, newest first: each with its date, its packages, and a link to its release. 0.1.0, from before the repository moved, says it can't update itself to a later version, which is installed by hand.
 - Then links to Getting started → **What you need** and **Installing**, and to Updates → **Claudette's updates**: once installed, Claudette updates itself.
 - **Which file is which.** `package.yml` names the packages `Claudette-<version>-<x64|arm64>.<msix|dmg>` ([Packaging and signing](DESIGN.md#packaging-and-signing)), as the update check expects. The page reads the OS from the extension and the processor from the name, and lists anything else attached to a release under **Other files**.
-- **The data.** `docs/_scripts/prepare.sh` reads the repository's releases from the GitHub API and writes `docs/_data/releases.json`: the published releases (drafts never show), each with its tag, name, date, whether it's a pre-release, its page, and its packages' names, sizes, digests and download addresses. It also works out which is the latest release and whether a newer pre-release is the next version, by Semantic Versioning, so the page itself only lays them out.
-- **Without JavaScript.** The page is built with the site, which is rebuilt whenever a release is published, edited, unpublished or deleted ([The site](#1-the-site)). Without the data, as in a preview that skipped `prepare.sh`, it links to the Releases page on GitHub instead.
+- **The data.** `jekyll-github-metadata`, one of GitHub Pages' own plugins, gives the page the repository's releases as `site.github.releases` and the latest as `site.github.latest_release`, with each package's name, size, SHA-256 digest and download address. `_includes/release.html` lays out one release's packages. The next version is the newest pre-release published after the latest release. Drafts never show, and pre-releases older than the latest release are left out.
+- **When it changes.** The page is built with the site, by GitHub Pages, on a push to `main`, not when a release is published: the change that follows a release ([Releasing](#the-changelog), step 3) brings it up to date. Without the releases, as in a preview with no network, it links to the Releases page on GitHub instead. It needs no JavaScript.
 - The home page's download button goes here, and so does the README's link, once the page is published.
 
 ### The changelog
@@ -329,11 +325,11 @@ Two pages are made from data rather than written: the Downloads page from the re
 - **When.** In the same change as the code, as DESIGN.md is: a change people would notice adds its entry under **Unreleased**.
 - **Releasing.**
   1. One change turns `## [Unreleased]` into the version with the day's date, starts an empty `## [Unreleased]` above it, and updates the links at the bottom. The version follows Semantic Versioning: until 1.0.0, a section with **Added**, **Changed**, **Deprecated** or **Removed** raises the second number, and **Fixed** or **Security** alone the third. It's the version `Directory.Build.props` names ([Version](DESIGN.md#version)).
-  2. The tag `vX.Y.Z` goes on that change. `package.yml` drafts the release with the version's section as its notes, from `packaging/release-notes.sh` ([Packaging and signing](DESIGN.md#packaging-and-signing)), so the release on GitHub and Claudette's update dialog say what the Changelog page says. A tag whose version has no section fails before anything is built.
+  2. The tag `vX.Y.Z` goes on that change. `package.yml` drafts the release with the version's section as its notes, from `packaging/release-notes.sh` ([Packaging and signing](DESIGN.md#packaging-and-signing)), so the release on GitHub and Claudette's update dialog say what the changelog says. A tag whose version has no section fails before anything is built.
      - A pre-release (`v0.4.0-beta.1`) needs no section of its own: its notes are **Unreleased**'s, which stays as it is until the release.
-  3. Publishing the release rebuilds the site: the Downloads page lists it, and the guide's *New in the next release* notes for it are removed in a change of their own.
+  3. Once the release is published, a change of its own removes the guide's *New in the next release* notes for it. Pushing it to `main` rebuilds the site, so the Downloads page lists the release.
   4. `Directory.Build.props` moves to the next version to work on.
-- **The Changelog page** (`docs/changelog.md`) has its own title and introduction: what the version numbers mean, and that **Unreleased** is what's on `main` and in this guide, but not yet in a release. Under them it includes `docs/_includes/changelog.md`, which `prepare.sh` copies from `CHANGELOG.md` from its first version on, giving each version's heading an id (`v0.2.0`, and `unreleased`) for the Downloads page to link to. Without it, the page links to `CHANGELOG.md` on GitHub.
+- **On the site**, the sidebar's **Changelog** links to `CHANGELOG.md` on GitHub, which shows it as it is: GitHub Pages builds only `docs/`, so the site can't include a file from the root. The Downloads page links each release's notes, which are its section.
 
 ## 6. Coverage
 
@@ -344,30 +340,23 @@ The map covers every part of Claudette that DESIGN.md describes. When a chapter 
 
 ## 7. Keeping it current
 
-- A change people can see updates its guide page and retakes its pictures in the same change, as it updates DESIGN.md, once its chapter is written. CLAUDE.md says so.
-- A new part of Claudette in DESIGN.md gets its row in the map here in the same change, whether or not its chapter is written yet.
+- A change people can see updates its guide page and retakes its pictures in the same change, as it updates DESIGN.md (`guide-screenshots.ps1 -Only <chapter>/<picture>`). CLAUDE.md says so.
+- A new part of Claudette in DESIGN.md gets its row in the map here, and its page, in the same change.
 - A change people would notice adds its entry to `CHANGELOG.md`'s **Unreleased** section in the same change ([The changelog](#the-changelog)). CLAUDE.md says so too.
 - The `issues` skill's plans include the page, and what it builds includes the changelog's entry.
-- The README links to the guide at its top and under Getting started, once Getting started is published.
+- The README links to the guide at its top and under Getting started, and to the Downloads page for the packages.
 
 ## 8. Steps
 
-1. **DESIGN.md in line with the app**, since the pages are written from it.
-   - Mark what's built. These have no ✅ in DESIGN.md but are in the app, so check each and mark it: tab marks and the reviewed icon, worktree tabs, a group's name and color, extra folders, **Ultracode**, **Output style**, **Zoom**, **Motion**, the side panel's page order, Claudette on the composer, Claude Docs, folder trust, the starting mode, keeping the computer awake, sharing usage, several prompts waiting, History's project chips. Project files says "not built yet" at its top and in §17, but its steps are all ✅ and it's merged.
-   - Use the app's labels. Settings → Editor's (**The explorer is on the**, **Wrap long lines**, **Indent new lines with**, **Show a file clicked in a conversation**), **Reveal in file manager**, the banner for a file gone from disk (**Keep editing**), the indentation menu, General's **Name each tab's session in Claude Code after the tab** and Sessions' **Sync Claudette's settings through the library**.
-   - The end of a turn: [Changes per turn](DESIGN.md#changes-per-turn) still describes the turn's footer, which [Conversation cards](DESIGN.md#conversation-cards) replaced with the **Modified files** and **Turn** cards.
-   - The tab's menu in [Sidebar](DESIGN.md#sidebar) leaves out **Account ▸**, **Duplicate tab**, **Export conversation…** and **Close other tabs**, which other sections put in it.
-2. ✅ **The changelog's releases**, done 2026-10-16. `package.yml` drafts a release with its version's section of `CHANGELOG.md` as the notes, in place of notes generated from pull requests, and `Directory.Build.props` moved to 0.3.0.
-3. `guide-screenshots.ps1`, and what the demo needs for Getting started.
-4. **The site, Downloads, the Changelog and Getting started.**
-   - `_config.yml`, the theme in light and dark, the includes, and Settings → Pages → Source switched to **GitHub Actions**.
-   - `docs.yml` and `prepare.sh`.
-   - The home page, the Downloads page and the Changelog page.
-   - The Getting started chapter in full, with its pictures.
-   - The README's links, to the guide and to the Downloads page.
+All done 2026-10-16, in one change rather than a pull request a chapter.
 
-   Chapters join the sidebar once they're written, never as empty pages, since everything on `main` is published. The Downloads and Changelog pages can come before Getting started, since they need no pictures.
-5. The other chapters, in the map's order, a pull request each, with their pictures and what the demo and the script need for them.
+1. ✅ **DESIGN.md in line with the app**, since the pages are written from it: what's built marked ✅ (tab marks and the reviewed icon, worktree tabs, a group's name and color, extra folders, **Ultracode**, **Output style**, **Zoom**, **Motion**, the side panel's page order, Claudette on the composer, Claude Docs, folder trust, the starting mode, keeping the computer awake, sharing usage, several prompts waiting, History's project chips, Project files), the app's labels where the two differed, the end of a turn as the **Modified files** and **Turn** cards, and the tab's whole menu.
+2. ✅ **The changelog's releases.** `package.yml` drafts a release with its version's section of `CHANGELOG.md` as the notes, in place of notes generated from pull requests, and `Directory.Build.props` moved to 0.3.0.
+3. ✅ **The pictures.** `guide-screenshots.ps1` and `Screenshots.psm1`, which `screenshots.ps1` uses too, take the guide's 19 in light and dark. For them the demo lists the older projects as recent folders, and `fake-claude` learned `EDIT_FILE`, for a turn that ends with **Modified files**.
+4. ✅ **The site**: `_config.yml`, the theme in light and dark, the includes, the home page and the Downloads page, `docs.yml`'s check, and the README's links to the guide and to the Downloads page. GitHub Pages builds it from `docs/` on `main` (Settings → Pages → Source: **Deploy from a branch**).
+5. ✅ **Every chapter**, written from its DESIGN.md sections and checked against the app's source for labels.
+
+**Still to do:** the pictures the demo can't show yet ([Pictures](#3-pictures), "What the demo doesn't show yet"): a question, a plan to approve, an MCP server's form, a prompt suggestion and a Claude Doc; and what only macOS shows. And reading every chapter against the running app, which [Coverage](#6-coverage) asks for and the source can't replace.
 
 ## 9. To decide later
 
