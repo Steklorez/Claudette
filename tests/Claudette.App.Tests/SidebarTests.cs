@@ -27,6 +27,16 @@ public class SidebarTests
     }
 
     [Fact]
+    public async Task User_guide_under_Settings_opens_the_guide()
+    {
+        await using var h = new TabTestHarness();
+
+        await h.Shell.OpenGuideCommand.ExecuteAsync(null);
+
+        Assert.Equal("https://claudette.dotbunny.com/guide/", Assert.Single(h.Platform.OpenedUrls));
+    }
+
+    [Fact]
     public async Task A_narrow_window_shows_the_rail_without_changing_the_users_choice()
     {
         await using var h = new TabTestHarness();

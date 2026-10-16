@@ -6,11 +6,14 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// The foot of the Settings sidebar (DESIGN.md §14, "Version"): which Claudette this is, copied with a click, and
-/// <b>Report an issue</b>, which opens a new GitHub issue with the versions filled in.
+/// The foot of the Settings sidebar (DESIGN.md §14, "Version"): which Claudette this is, copied with a click, the
+/// <b>User guide</b>, and <b>Report an issue</b>, which opens a new GitHub issue with the versions filled in.
 /// </summary>
 public sealed partial class SettingsViewModel
 {
+    /// <summary>Claudette's user guide on the web (DESIGN.md §2, "User guide").</summary>
+    public const string GuideUrl = "https://claudette.dotbunny.com/guide/";
+
     private UiTimeout CopiedWait => field ??= new(_services.Time, _services.Dispatcher);
 
     /// <summary>The version details were just copied.</summary>
@@ -44,6 +47,10 @@ public sealed partial class SettingsViewModel
         VersionCopied = true;
         CopiedWait.Restart(TabViewModel.CopiedFor, () => VersionCopied = false);
     }
+
+    /// <summary>The user guide, in the browser.</summary>
+    [RelayCommand]
+    private Task OpenGuideAsync() => _services.Platform.OpenUrlAsync(GuideUrl);
 
     /// <summary>A new issue on Claudette's GitHub with the versions filled in. Nothing is sent until the user submits it.</summary>
     [RelayCommand]

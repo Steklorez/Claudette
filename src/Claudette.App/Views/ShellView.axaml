@@ -130,7 +130,7 @@
   </UserControl.Resources>
 
   <UserControl.Styles>
-    <!-- The sidebar's own rows: New tab, History, the update badge and Settings. The icon keeps its place when the
+    <!-- The sidebar's own rows: New tab, History, the update badge, Settings and User guide. The icon keeps its place when the
          sidebar collapses to its rail. -->
     <Style Selector="Button.side">
       <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -926,6 +926,14 @@
               <StackPanel Orientation="Horizontal" Spacing="10">
                 <Path Classes="icon" Data="{StaticResource IconSettings}" />
                 <TextBlock Text="Settings" VerticalAlignment="Center" IsVisible="{Binding Layout.IsSidebarExpanded}" />
+              </StackPanel>
+            </Button>
+            <!-- The user guide on the web (DESIGN.md §2, "User guide") -->
+            <Button Classes="flat side" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Claudette's user guide in your browser" ToolTip.Placement="Right"
+                    AutomationProperties.Name="User guide">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <Path Classes="icon" Data="{StaticResource IconGuide}" />
+                <TextBlock Text="User guide" VerticalAlignment="Center" IsVisible="{Binding Layout.IsSidebarExpanded}" />
               </StackPanel>
             </Button>
           </StackPanel>

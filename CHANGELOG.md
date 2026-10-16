@@ -16,6 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **The prompt cache's timer.** *Cache 52m* beside the context says how long your next message can read the conversation from Claude's cache, and turns amber in its last three minutes. Settings → Appearance → **Show when the prompt cache expires** turns it off.
 - **Games with Claudette.** Tic-tac-toe, Connect Four and hangman, from her right-click menu, the command palette, or **Play a game while you wait** when a usage limit stops a task. Settings → Appearance → **Games with Claudette** turns them off.
 - **Clear usage history on every machine…** in Settings → Usage, while **Share usage with my other machines** is on.
+- **User guide**, at the foot of the Settings sidebar, opens Claudette's guide in your browser.
 - A turn's changes to a file open in your diff tool too, from the diff window's **Open in diff tool**, and its menu has **Open in the OS's app**.
 
 ### Changed

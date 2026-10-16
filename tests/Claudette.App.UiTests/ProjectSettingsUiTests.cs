@@ -21,10 +21,10 @@ namespace Claudette.App.UiTests;
 /// </summary>
 public class ProjectSettingsUiTests
 {
-    private static SettingsWindow ShowSettings(TabTestHarness h, TabViewModel tab, string? category, out SettingsViewModel settings)
+    private static SettingsWindow ShowSettings(TabTestHarness h, TabViewModel tab, string? category, out SettingsViewModel settings, double height = 700)
     {
         settings = new SettingsViewModel(h.Services, "me@example.com", opening: new SettingsOpening(category, new ProjectSettingsViewModel(h.Services, tab, h.Shell)));
-        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = height };
         window.Show();
         UiText.Settle(window);
         return window;
@@ -47,7 +47,8 @@ public class ProjectSettingsUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         UnrealFixture.Write(h.Root, h.WorkFolder);
         var tab = await OpenTabAsync(h, project: true);
-        var window = ShowSettings(h, tab, null, out var settings);
+        // Tall enough for the whole list: one that scrolls realizes only the rows in view, in no particular order.
+        var window = ShowSettings(h, tab, null, out var settings, height: 1000);
 
         var list = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "SidebarList");
         var group = list.GetVisualDescendants().OfType<StackPanel>().Single(p => p.Name == "ProjectGroup");
@@ -97,7 +98,7 @@ public class ProjectSettingsUiTests
             UiText.Settle(window);
         }
 
-        // What the list holds; at this height it also scrolls, which the snapshot leaves out.
+        // What the list holds: every category, then the project's group.
         var shown = UiText.Describe(Assert.IsType<StackPanel>(list.Content));
         window.Close();
         await Verify(shown);

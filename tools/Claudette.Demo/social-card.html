@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+  The site's social card (GUIDE.md, "The site"): the picture a link to claudette.dotbunny.com shows where it's shared,
+  1280 by 640. social-card.ps1 draws it to docs/assets/social-card.png. It's the landing page's hero in dark: her and
+  her name, its title, and the README's main window (standard-dark.png) running off the edge.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --coral: #d97757;
+      --raspberry: #b8336a;
+      --amber: #f0a35e;
+      --gradient: linear-gradient(110deg, var(--amber), var(--coral) 42%, var(--raspberry));
+      --bg: #141413;
+      --surface: #1d1c1a;
+      --border-strong: rgba(255, 255, 255, 0.15);
+      --text: #e2ded5;
+      --muted: #a39e94;
+      --heading: #faf9f5;
+      --font: system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+      --mono: "Cascadia Mono", "SFMono-Regular", menlo, consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { width: 1280px; height: 640px; margin: 0; overflow: hidden; }
+
+    body {
+      position: relative;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Her colors across the top, and a warm glow over a field of pixels, as on the landing page. */
+    body::before { position: absolute; inset: 0 0 auto; z-index: 3; height: 5px; content: ""; background: var(--gradient); }
+    body::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      content: "";
+      background:
+        radial-gradient(closest-side at 22% 34%, rgba(217, 119, 87, 0.24), transparent),
+        radial-gradient(closest-side at 78% 70%, rgba(184, 51, 106, 0.2), transparent),
+        radial-gradient(rgba(255, 255, 255, 0.055) 1.2px, transparent 1.4px) 0 0 / 22px 22px;
+    }
+
+    .copy { position: absolute; z-index: 2; top: 62px; left: 64px; width: 540px; }
+
+    /* Whole pixels a cell, so she stays crisp: her sprite is 12 cells and her name 54 by 8. */
+    .mark { display: flex; align-items: center; gap: 26px; }
+    .sprite { width: 96px; height: 96px; image-rendering: pixelated; filter: drop-shadow(0 12px 22px rgba(217, 119, 87, 0.35)); }
+    .wordmark { width: 324px; height: 48px; image-rendering: pixelated; }
+
+    .kicker { margin: 40px 0 14px; font-size: 15px; font-weight: 750; letter-spacing: 0.16em; text-transform: uppercase; color: var(--coral); }
+    h1 { margin: 0; font-size: 52px; font-weight: 820; line-height: 1.12; letter-spacing: -0.035em; color: var(--heading); }
+    .gradient-text { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .features { margin: 22px 0 0; font-size: 22px; color: var(--muted); }
+    .features b { margin: 0 0.35em; font-weight: 400; color: var(--coral); }
+
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 30px;
+      padding: 16px 22px;
+      border: 1.5px solid transparent;
+      border-radius: 18px;
+      background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--gradient) border-box;
+      box-shadow: 0 16px 44px rgba(217, 119, 87, 0.18), 0 0 48px rgba(184, 51, 106, 0.1);
+    }
+    .card svg { width: 30px; height: 30px; flex: none; color: var(--coral); }
+    .card p { margin: 0; font-size: 19px; line-height: 1.35; color: var(--muted); }
+    .card strong { font-weight: 650; color: var(--heading); }
+    code { font-family: var(--mono); font-size: 0.92em; color: var(--heading); }
+
+    .site { position: absolute; z-index: 2; left: 64px; bottom: 50px; margin: 0; font-size: 22px; color: var(--muted); }
+
+    /* The README's main window, in a frame glowing a little, running off the right and the bottom. */
+    .frame {
+      position: absolute;
+      z-index: 1;
+      top: 78px;
+      left: 640px;
+      width: 1201px;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.55), 0 0 64px rgba(217, 119, 87, 0.14), 0 0 96px rgba(184, 51, 106, 0.12);
+    }
+    .frame img { display: block; width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="copy">
+    <div class="mark">
+      <img class="sprite" src="../../docs/assets/claudette.svg" alt="">
+      <img class="wordmark" src="../../docs/assets/wordmark.svg" alt="">
+    </div>
+    <p class="kicker">Claude Code, in a real desktop window</p>
+    <h1>Every session in a tab.<br><span class="gradient-text">Every change in sight.</span></h1>
+    <p class="features">Tabs<b>·</b>Agents<b>·</b>Usage<b>·</b>Review<b>·</b>Files</p>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>
+      <p><strong>Runs the real <code>claude</code></strong>, with your settings, <code>CLAUDE.md</code>, MCP servers and hooks</p>
+    </div>
+  </div>
+  <p class="site">claudette.dotbunny.com</p>
+  <div class="frame"><img src="../../docs/screenshots/standard-dark.png" alt=""></div>
+</body>
+</html>

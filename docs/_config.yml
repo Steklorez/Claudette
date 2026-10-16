@@ -19,6 +19,18 @@ logo: /assets/claudette.svg
 favicon_ico: /assets/favicon.ico
 color_scheme: claudette-light
 
+# The picture a link to any page shows where it's shared, which jekyll-seo-tag writes as og:image and twitter:image: the
+# social card, drawn by tools/Claudette.Demo/social-card.ps1 (GUIDE.md, "The site").
+defaults:
+  - scope:
+      path: ""
+    values:
+      image:
+        path: /assets/social-card.png
+        width: 1280
+        height: 640
+        alt: "Claudette: Claude Code in a real desktop window. Every session in a tab, every change in sight."
+
 search_enabled: true
 search:
   heading_level: 3

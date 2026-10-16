@@ -27,7 +27,6 @@
   --glow-a: rgba(217, 119, 87, 0.2);
   --glow-b: rgba(184, 51, 106, 0.12);
   --dots: rgba(20, 20, 19, 0.07);
-  --frame-bar: #f1eee6;
   --frame-shadow: 0 1.6rem 3.6rem rgba(90, 58, 32, 0.16), 0 0 3rem rgba(217, 119, 87, 0.1);
   --card-shadow: 0 0.8rem 2rem rgba(90, 58, 32, 0.12);
   --topbar: rgba(250, 249, 245, 0.82);
@@ -54,7 +53,6 @@
     --glow-a: rgba(217, 119, 87, 0.22);
     --glow-b: rgba(184, 51, 106, 0.18);
     --dots: rgba(255, 255, 255, 0.055);
-    --frame-bar: #22211e;
     --frame-shadow: 0 1.8rem 4.5rem rgba(0, 0, 0, 0.55), 0 0 4rem rgba(217, 119, 87, 0.12), 0 0 6rem rgba(184, 51, 106, 0.1);
     --card-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.4);
     --topbar: rgba(20, 20, 19, 0.78);
@@ -193,14 +191,9 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .trust .icon { color: var(--coral); }
 .trust strong { color: var(--text); font-weight: 650; }
 
-/* A screenshot in a window frame, glowing a little. */
+/* A screenshot, glowing a little. The window's own title bar is in the picture, so the frame draws none. */
 .frame { overflow: hidden; border: 1px solid var(--border-strong); border-radius: 1rem; background: var(--surface); box-shadow: var(--frame-shadow); }
 .frame img { display: block; width: 100%; }
-.frame-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border); background: var(--frame-bar); font-size: 0.8rem; font-weight: 600; color: var(--muted); }
-.frame-bar img { width: 16px; image-rendering: pixelated; }
-.frame-bar span { margin-right: auto; }
-.frame-bar i { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--border-strong); }
-.frame-bar i:last-child { background: var(--coral); }
 
 .hero-shot { max-width: 68rem; margin: 1rem auto 0; padding: 0 1.5rem; perspective: 2000px; }
 .frame-hero { border-radius: 1.2rem; }

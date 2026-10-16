@@ -4,7 +4,7 @@ using Claudette.Core.Updates;
 
 namespace Claudette.App.Tests;
 
-/// <summary>The version at the foot of the Settings sidebar, and Report an issue (DESIGN.md §14, "Version").</summary>
+/// <summary>The version at the foot of the Settings sidebar, the user guide and Report an issue (DESIGN.md §14, "Version").</summary>
 public class VersionFooterTests
 {
     [Fact]
@@ -78,6 +78,17 @@ public class VersionFooterTests
         h.Time.Advance(TabViewModel.CopiedFor);
 
         Assert.Equal("Claudette 0.1.0", settings.VersionLabel);
+    }
+
+    [Fact]
+    public async Task User_guide_opens_the_guide()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+
+        await settings.OpenGuideCommand.ExecuteAsync(null);
+
+        Assert.Equal("https://claudette.dotbunny.com/guide/", Assert.Single(h.Platform.OpenedUrls));
     }
 
     [Fact]

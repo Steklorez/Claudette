@@ -17,7 +17,8 @@ composer's right rather than being caught part-way through falling off it). Then
   the key's spend in the header and the account's tags, as accounts-<style>-<theme>.png;
 - selects Grappling hook, opens History, picks starfall's chip and captures the window as history-<style>-<theme>.png;
 and closes Claudette by its window, as a user would. Last, it has MascotPictureTests draw Claudette on the composer's
-animation from her art and steps, as claudette.gif.
+animation from her art and steps, as claudette.gif, and social-card.ps1 draw the site's social card with the new
+standard-dark.png.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
 CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view, and
@@ -139,4 +140,7 @@ try {
 finally {
     Remove-Item Env:CLAUDETTE_MASCOT_GIF
 }
+# The site's social card shows the main window, so it's drawn again with the new one.
+Write-Host 'The social card'
+& (Join-Path $PSScriptRoot 'social-card.ps1')
 Write-Host "Saved to $Out"
