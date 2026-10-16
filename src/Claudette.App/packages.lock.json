@@ -345,14 +345,14 @@
       "claudette.platform": {
         "type": "Project",
         "dependencies": {
-          "Claudette.Core": "[0.3.0, )",
+          "Claudette.Core": "[0.4.0, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.13, )"
         }
       },
       "claudette.usage": {
         "type": "Project",
         "dependencies": {
-          "Claudette.Core": "[0.3.0, )",
+          "Claudette.Core": "[0.4.0, )",
           "Microsoft.Data.Sqlite": "[10.0.13, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.13, )"
         }
