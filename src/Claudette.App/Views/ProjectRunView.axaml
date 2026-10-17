@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:aeEditing="using:AvaloniaEdit.Editing"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             x:Class="Claudette.App.Views.ProjectRunView"
+             x:DataType="vm:ProjectRunViewModel">
+  <!-- A project run's log in the main area (DESIGN.md §18, "Project tools", "A run's log"): a tab of the panes without a
+       composer. Its status, Stop, Copy and Close, then the log, which follows its newest line until it's scrolled up, with
+       its web addresses and the paths it names as links. The header's look is in Themes/ConversationStyles.axaml. -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
+    <!-- The log's text clear of the edges, and selected as the editor's is -->
+    <Style Selector="ae|TextEditor.runlog">
+      <Setter Property="Padding" Value="16,8,4,8" />
+    </Style>
+    <Style Selector="ae|TextEditor.runlog aeEditing|TextArea">
+      <Setter Property="SelectionBrush" Value="{DynamicResource EditorSelectionBrush}" />
+      <Setter Property="SelectionForeground" Value="{x:Null}" />
+      <Setter Property="SelectionBorder" Value="{x:Null}" />
+      <Setter Property="SelectionCornerRadius" Value="2" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*">
+    <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes") -->
+    <Border x:Name="PaneHeader" Classes="paneheader" Classes.focused="{Binding IsSelected}" IsVisible="{Binding IsInSplit}">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Classes="small" FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" MaxWidth="320" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding Folder}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ClosePaneCommand}"
+                ToolTip.Tip="Close pane: the run stays in the sidebar" AutomationProperties.Name="Close pane">
+          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- How it's going, and what can be done with it -->
+    <Border Grid.Row="1" Classes="runheader">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+        <TextBlock Classes="status runheaderglyph" Classes.busy="{Binding IsRunning}" Classes.ok="{Binding Succeeded}" Classes.failed="{Binding Failed}"
+                   Text="{Binding Glyph}" VerticalAlignment="Top" />
+        <StackPanel Grid.Column="1" Spacing="2">
+          <TextBlock x:Name="RunName" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+          <SelectableTextBlock x:Name="RunStatus" Classes="small" Classes.error="{Binding Failed}" Text="{Binding Status}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted small" Text="{Binding Timing}" IsVisible="{Binding Timing, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted small" Text="{Binding OutputNote}" IsVisible="{Binding OutputNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+          <Button Content="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsRunning}" ToolTip.Tip="Ends the job and every process it started" />
+          <Button Content="Copy" Command="{Binding CopyOutputCommand}" ToolTip.Tip="Copy the whole log" />
+          <Button Content="Close" Command="{Binding CloseCommand}" IsVisible="{Binding !IsRunning}" ToolTip.Tip="Close: its entry and its log go" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- The log: read-only, wrapping at the width shown, selectable, Ctrl/Cmd+F to find in it -->
+    <ae:TextEditor x:Name="Log" Grid.Row="2" Classes="runlog" IsReadOnly="True" WordWrap="True"
+                   FontFamily="{DynamicResource MonoFont}" FontSize="{DynamicResource CodeFontSize}"
+                   ShowLineNumbers="False" Background="Transparent"
+                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                   AutomationProperties.Name="Log" />
+  </Grid>
+</UserControl>

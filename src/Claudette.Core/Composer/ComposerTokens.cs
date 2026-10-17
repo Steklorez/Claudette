@@ -99,7 +99,7 @@ public static class ComposerTokens
     {
         var end = token.Start + token.Length;
         var isFolder = !isName && path.EndsWith('/');
-        var mention = isName ? (path.Any(char.IsWhiteSpace) ? $"@\"{path}\"" : "@" + path) : Mention(path, closeQuote: !isFolder);
+        var mention = isName ? NameMention(path) : Mention(path, closeQuote: !isFolder);
         var suffix = isFolder ? "" : " ";
         var rest = text[end..];
         if (!isFolder && rest.StartsWith(' '))
@@ -109,6 +109,9 @@ public static class ComposerTokens
         var before = text[..token.Start];
         return new ComposerEdit(before + mention + suffix + rest, before.Length + mention.Length + suffix.Length);
     }
+
+    /// <summary>A session's or agent's name (<see cref="SessionMentions"/>) as it's mentioned: <c>@name</c>, or <c>@"a name"</c>.</summary>
+    public static string NameMention(string name) => name.Any(char.IsWhiteSpace) ? $"@\"{name}\"" : "@" + name;
 
     /// <summary>
     /// <c>@path</c>, or <c>@"path"</c> when it has whitespace. Paths use forward slashes, which Claude Code accepts on

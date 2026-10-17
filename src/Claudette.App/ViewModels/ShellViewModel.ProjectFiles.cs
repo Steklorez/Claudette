@@ -227,12 +227,12 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// Shows a Files tab from the focused conversation: beside it, as <b>Open beside</b> does, or in its place, as Settings
-    /// → Editor says. One already on screen is only focused. True when it opened beside.
+    /// Shows a Files tab from the focused conversation, or run's log: beside it, as <b>Open beside</b> does, or in its
+    /// place, as Settings → Editor says. One already on screen is only focused. True when it opened beside.
     /// </summary>
     private bool ShowFromConversation(ProjectFilesViewModel files)
     {
-        if (files.IsShown || SelectedTab is null || _services.Settings.Editor.FilesFromConversation == FilesFromConversation.InPlace)
+        if (files.IsShown || Selected is not (TabViewModel or ProjectRunViewModel) || _services.Settings.Editor.FilesFromConversation == FilesFromConversation.InPlace)
         {
             Selected = files;
             return false;

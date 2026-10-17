@@ -13,7 +13,7 @@ namespace Claudette.App.Conversation;
 /// </summary>
 public sealed partial class ConversationSearch : ObservableObject
 {
-    private readonly ObservableCollection<ConversationItem> _items;
+    private ObservableCollection<ConversationItem> _items;
     private List<ConversationItem> _matches = [];
 
     // The Tool calls cards whose calls are watched: a call joining one is new to the conversation as an item would be.
@@ -24,6 +24,30 @@ public sealed partial class ConversationSearch : ObservableObject
         _items = items;
         // New items while the bar is open count too, without moving the current one.
         _items.CollectionChanged += OnItemsChanged;
+    }
+
+    /// <summary>
+    /// Looks through another list from now on, such as a subagent's work while its tab shows that in place of the
+    /// conversation (DESIGN.md §5, "Subagents"); an open search runs again there.
+    /// </summary>
+    public void SearchIn(ObservableCollection<ConversationItem> items)
+    {
+        if (ReferenceEquals(items, _items))
+        {
+            return;
+        }
+        _items.CollectionChanged -= OnItemsChanged;
+        foreach (var group in _watched)
+        {
+            group.Calls.CollectionChanged -= OnCallsChanged;
+        }
+        _watched.Clear();
+        _items = items;
+        _items.CollectionChanged += OnItemsChanged;
+        if (IsOpen)
+        {
+            Search(keepCurrent: false);
+        }
     }
 
     /// <summary>What's searched, in order: the top-level items, with each card of calls standing for its calls.</summary>

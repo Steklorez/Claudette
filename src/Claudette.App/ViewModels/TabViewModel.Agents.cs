@@ -65,6 +65,12 @@ public sealed partial class TabViewModel
             return;
         }
         SelectedAgent = node;
+        // In the sidebar mode its own work shows, with a prompt it waits on under it (DESIGN.md §5, "Subagents").
+        if (SubagentsInSidebar && node.Item is not null)
+        {
+            ViewAgent(node);
+            return;
+        }
         if (node.WaitingPrompt is { } prompt)
         {
             ScrollToRequested?.Invoke(prompt);
@@ -145,6 +151,7 @@ public sealed partial class TabViewModel
             SelectedAgent = null;
         }
         AgentTicker.Run(Agents.IsTicking);
+        OnSubagentsChanged();
         // Claudette on the composer juggles a ball for each subagent running (DESIGN.md §5).
         TellMascot();
     }

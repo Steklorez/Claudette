@@ -2099,9 +2099,9 @@ items:
   - id: "--append-system-prompt"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/PerforceViewModel.cs
+    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/PerforceViewModel.cs, src/Claudette.App/ViewModels/TabViewModel.Subagents.cs
     docs: https://code.claude.com/docs/en/cli-reference
-    test: HookCallbackTests, PerforceTabTests
+    test: HookCallbackTests, PerforceTabTests, SubagentTests, RealCliTests
   - id: "hooks"
     kind: field
     status: undocumented
@@ -2218,6 +2218,21 @@ items:
     docs: https://code.claude.com/docs/en/cross-session-messaging
     test: ThreadTests
     fallback: "A message another of the user's sessions sent a tab echoes (with --replay-user-messages) as a user message with origin {kind: peer, name, body, from, msg_id, fromMode}, and is kept in the transcript as an isMeta entry with the same origin (checked against 2.1.284). The tab shows it as its own card, from body and name. Without the origin, the echo would be taken for a waiting prompt's, as an echo with an id Claudette didn't send is."
+
+  # --- Subagents: discouraging or refusing them (DESIGN.md §5, "Subagents") ------------------------------
+  - id: "PreToolUse hook on Agent"
+    kind: behavior
+    status: documented
+    usedIn: src/Claudette.Core/Subagents/SubagentMessages.cs, src/Claudette.App/ViewModels/TabViewModel.Subagents.cs
+    docs: https://code.claude.com/docs/en/hooks
+    test: SubagentTests, RealCliTests
+    fallback: "Every tab registers a PreToolUse hook matched on Agent|Task (Task being the tool's older name); with Settings → Claude Code → Subagents on Don't allow it answers deny, and Claude Code doesn't start the subagent. In 2.1.284 the hook is called for a subagent's own Agent calls too. If Claude Code stopped calling it, subagents would run again; the note Claude starts with still asks it not to, and --disallowedTools Agent would remove the tool instead (applying only when a tab starts)."
+  - id: "PreToolUse:Agent hook error"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.Core/Subagents/SubagentMessages.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    test: SubagentTests, RealCliTests
+    fallback: "What Claude reads when the hook refuses an Agent call: Claude Code's \"PreToolUse:Agent hook error: \" and then the hook's reason, as the call's error result (checked against 2.1.284). The conversation finds a refused call by the reason's own text, wherever Claude Code puts it, and shows it as not started. If the reason were dropped, a refused call would show as a failed subagent."
 
   # --- Remote Control: the Claude app (DESIGN.md §18) ---------------------------------------------------
   - id: "remote_control"

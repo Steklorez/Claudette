@@ -43,6 +43,8 @@ public sealed partial class AgentNode : ObservableObject
         Parent = parent;
         Item = item;
         IsLive = !map.IsReplaying;
+        Exchange = map.Exchange;
+        Depth = parent is null || parent.IsRoot ? 0 : parent.Depth + 1;
         if (item is not null)
         {
             AgentType = item.AgentType;
@@ -76,6 +78,24 @@ public sealed partial class AgentNode : ObservableObject
     public bool IsRoot => Item is null;
 
     public ObservableCollection<AgentNode> Children { get; } = [];
+
+    /// <summary>How deep it's nested: 0 for one the main agent started.</summary>
+    public int Depth { get; }
+
+    /// <summary>The map's <see cref="AgentMap.Exchange"/> when it started: which message's work it was part of.</summary>
+    public int Exchange { get; }
+
+    /// <summary>
+    /// It's from an earlier exchange and it's finished, with nothing under it still going: no longer part of the work
+    /// under way, which its sidebar row shows (DESIGN.md §5, "Subagents").
+    /// </summary>
+    public bool IsEarlier => !IsRoot && Exchange < _map.Exchange && IsSettled;
+
+    /// <summary>It and everything it started have finished.</summary>
+    public bool IsSettled => !IsActive && !Descendants().Any(d => d.IsActive);
+
+    /// <summary>A newer message went to Claude: <see cref="IsEarlier"/> may have changed.</summary>
+    internal void OnExchangeChanged() => OnPropertyChanged(nameof(IsEarlier));
 
     /// <summary>The <c>Agent</c> tool call that started it.</summary>
     public string? ToolUseId => Item?.ToolUseId;
@@ -160,8 +180,16 @@ public sealed partial class AgentNode : ObservableObject
 
     public string StopText => TaskId is not null ? "Stop subagent" : "Stop turn";
 
-    /// <summary>What clicking it does.</summary>
-    public string ShowText => IsWaiting ? "Go to the prompt" : "Show in conversation";
+    /// <summary>
+    /// Claude can message it with <c>SendMessage</c>, which is how the user reaches it, through Claude (DESIGN.md §5,
+    /// "Subagents"): by its agent ID, while it runs, or once it's finished unless it's one of the built-in one-shot types
+    /// (Explore and Plan, which can't be resumed) or the user stopped it.
+    /// </summary>
+    public bool CanBeMessaged => !IsRoot && IsLive && AgentId is not null
+        && (IsActive || Status != AgentStatus.Stopped && AgentType is not ("Explore" or "Plan"));
+
+    /// <summary>What clicking it does: in the sidebar, its own view, where a prompt it waits on shows too.</summary>
+    public string ShowText => IsWaiting ? "Go to the prompt" : _map.OpensInSidebar ? "Show its work" : "Show in conversation";
 
     /// <summary>The permission prompt it's waiting on, if any: clicking the node goes there.</summary>
     public PromptItem? WaitingPrompt => _prompts.FirstOrDefault(p => p.IsPending);
@@ -540,6 +568,13 @@ public sealed partial class AgentNode : ObservableObject
         OnPropertyChanged(nameof(CanStop));
         OnPropertyChanged(nameof(StopText));
         OnPropertyChanged(nameof(ShowText));
+        OnPropertyChanged(nameof(CanBeMessaged));
+        // Whether it, and those above it, are settled goes with what's still going under them.
+        for (var node = this; node is { IsRoot: false }; node = node.Parent)
+        {
+            node.OnPropertyChanged(nameof(IsSettled));
+            node.OnPropertyChanged(nameof(IsEarlier));
+        }
         Tick();
         _map.Recount(this);
         _map.NotifyChanged();

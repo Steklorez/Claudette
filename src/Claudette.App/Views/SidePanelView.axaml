@@ -152,10 +152,10 @@
         <views:AgentDetails Grid.Row="3" IsVisible="{Binding HasAgents}" />
       </Grid>
 
-      <!-- Project (DESIGN.md §18, "Project tools"): the project's details and the selected run's log: the newest, or the
-           one clicked in the sidebar. The actions are in the project's menu at the sidebar's foot. -->
-      <DockPanel x:Name="ProjectPage" IsVisible="{Binding IsProjectPage}">
-        <StackPanel DockPanel.Dock="Top" Margin="12,0,12,6" Spacing="8">
+      <!-- Project (DESIGN.md §18, "Project tools"): the project's details. The actions are in the project's menu at the
+           sidebar's foot, and each run's log shows in the main area. -->
+      <ScrollViewer x:Name="ProjectPage" IsVisible="{Binding IsProjectPage}" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="12,0,16,12" Spacing="8">
           <TextBlock Text="{Binding ProjectTools.HeaderTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
           <ItemsControl ItemsSource="{Binding ProjectTools.FileProblems}" IsVisible="{Binding ProjectTools.HasFileProblems}">
             <ItemsControl.ItemTemplate>
@@ -174,27 +174,10 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" IsVisible="{Binding ProjectTools.Runs.HasSelectedRun}">
-            <TextBlock Classes="small" Classes.error="{Binding ProjectTools.Runs.SelectedRun.Failed, FallbackValue=False}" Text="{Binding ProjectTools.Runs.SelectedRun.Status, FallbackValue={x:Null}}"
-                       TextWrapping="Wrap" VerticalAlignment="Center" />
-            <Button Grid.Column="1" Content="Stop" Command="{Binding ProjectTools.Runs.SelectedRun.StopCommand, FallbackValue={x:Null}}"
-                    IsVisible="{Binding ProjectTools.Runs.SelectedRun.IsRunning, FallbackValue=False}" ToolTip.Tip="Ends the job and every process it started" />
-            <Button Grid.Column="2" Content="Copy" Command="{Binding ProjectTools.Runs.CopyOutputCommand}" ToolTip.Tip="Copy the output" />
-          </Grid>
-          <TextBlock Classes="muted small" Text="{Binding ProjectTools.Runs.SelectedRun.OutputNote, FallbackValue={x:Null}}" TextWrapping="Wrap"
-                     IsVisible="{Binding ProjectTools.Runs.SelectedRun.OutputNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" />
+          <TextBlock Classes="muted small" TextWrapping="Wrap" IsVisible="{Binding ProjectTools.Runs.HasRuns}"
+                     Text="Each action's log is under this tab in the sidebar: click one to show it." />
         </StackPanel>
-        <!-- Long log lines wrap; the item's padding keeps them clear of the scroll bar -->
-        <ListBox x:Name="ProjectOutputList" ItemsSource="{Binding ProjectTools.Runs.SelectedRun.Output, FallbackValue={x:Null}}" Background="Transparent" Margin="8,0,0,8"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 IsVisible="{Binding ProjectTools.Runs.HasSelectedRun}" AutomationProperties.Name="Output">
-          <ListBox.ItemTemplate>
-            <DataTemplate x:DataType="x:String">
-              <TextBlock Classes="mono small" Text="{Binding}" TextWrapping="Wrap" />
-            </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
-      </DockPanel>
+      </ScrollViewer>
 
       <!-- Tasks (DESIGN.md §5, "Tasks"): the Claude Docs the session made, the plan (its draft, a version put up for
            review, or a reply shown as the plan), then each task with its state, owner, what it waits on, times, files and tokens -->

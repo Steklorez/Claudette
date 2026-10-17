@@ -88,7 +88,9 @@ public sealed partial class ShellViewModel
             Layout.ResetPaneShares();
         }
         _paneCount = _panes.Count;
-        var ids = _panes.Count > 1 ? _panes.Select(t => t.Id).ToList() : null;
+        // A run's log keeps its tab's place: runs aren't saved (DESIGN.md §18, "Project tools").
+        var kept = _panes.Select(SavedId).OfType<string>().Distinct().ToList();
+        var ids = kept.Count > 1 ? kept : null;
         if (!(ids ?? []).SequenceEqual(_services.State.PaneTabIds ?? []))
         {
             _services.State.PaneTabIds = ids;

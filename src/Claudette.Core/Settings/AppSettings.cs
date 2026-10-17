@@ -357,6 +357,12 @@ public sealed class ClaudeCodeSettings
     public bool SubagentProgressSummaries { get; set; }
 
     /// <summary>
+    /// Whether Claude may hand work to subagents (DESIGN.md §5, "Subagents"): as it decides, discouraged, or not at all.
+    /// Each tab can override it.
+    /// </summary>
+    public SubagentUse Subagents { get; set; } = SubagentUse.ClaudeDecides;
+
+    /// <summary>
     /// After each turn, Claude Code predicts the user's next prompt, which the empty composer shows (DESIGN.md §5, "Prompt
     /// suggestions"). Each is a model call that counts toward usage, so it's off by default.
     /// </summary>
@@ -367,6 +373,29 @@ public sealed class ClaudeCodeSettings
     /// would run (DESIGN.md §7, "Folder trust"). On by default.
     /// </summary>
     public bool AskBeforeUsingFolderSettings { get; set; } = true;
+}
+
+/// <summary>Settings → Claude Code → Subagents (DESIGN.md §5, "Subagents").</summary>
+public enum SubagentUse
+{
+    /// <summary>Claude uses subagents when it judges they help, as Claude Code has it.</summary>
+    ClaudeDecides,
+
+    /// <summary>Claude is asked to do the work itself, and to use a subagent only when the user asks for one.</summary>
+    Discourage,
+
+    /// <summary>Claude is told it can't, and Claudette's hook refuses every Agent call, even in a running tab.</summary>
+    DontAllow,
+}
+
+/// <summary>Settings → Appearance → Show subagents' work (DESIGN.md §5, "Subagents").</summary>
+public enum SubagentDisplay
+{
+    /// <summary>Each subagent is a card in the conversation, whose line opens its own cards.</summary>
+    InConversation,
+
+    /// <summary>Each subagent has a row under its tab in the sidebar, which shows its cards in the tab, read-only.</summary>
+    InSidebar,
 }
 
 public sealed class NewTabSettings
@@ -416,6 +445,12 @@ public sealed class AppearanceSettings
     public string? CodeFont { get; set; }
 
     public bool ExpandThinking { get; set; }
+
+    /// <summary>
+    /// Where a subagent's work shows (DESIGN.md §5, "Subagents"): in the conversation (the default), or under its tab in
+    /// the sidebar. It changes only what's shown, so it applies at once, to every tab.
+    /// </summary>
+    public SubagentDisplay ShowSubagents { get; set; } = SubagentDisplay.InConversation;
 
     /// <summary>The working line's twinkling glyph and fun verbs (DESIGN.md §5, "Working line"); off shows "Working…".</summary>
     public bool FunWorkingWords { get; set; } = true;

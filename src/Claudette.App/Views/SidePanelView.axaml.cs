@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
@@ -7,7 +5,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Claudette.App.ViewModels;
 
@@ -15,17 +12,11 @@ namespace Claudette.App.Views;
 
 /// <summary>
 /// A tab's side panel (DESIGN.md §3): what its pages need beyond bindings, which is the pages' order and dragging their
-/// tabs, the menu of the pages that don't fit, opening a changed file and following a project job's output.
+/// tabs, the menu of the pages that don't fit, and opening a changed file.
 /// </summary>
 public partial class SidePanelView : UserControl
 {
     private TabViewModel? _tab;
-
-    /// <summary>The output of the run the Project page shows, which it follows.</summary>
-    private ObservableCollection<string>? _projectOutput;
-
-    /// <summary>A scroll to the newest line is on its way: batches until then go with it.</summary>
-    private bool _projectScrollPending;
 
     public SidePanelView()
     {
@@ -53,16 +44,13 @@ public partial class SidePanelView : UserControl
         if (_tab is not null)
         {
             _tab.PropertyChanged -= OnTabPropertyChanged;
-            _tab.ProjectTools.Runs.PropertyChanged -= OnProjectRunsPropertyChanged;
         }
         _tab = ViewModel;
         if (_tab is not null)
         {
             _tab.PropertyChanged += OnTabPropertyChanged;
-            _tab.ProjectTools.Runs.PropertyChanged += OnProjectRunsPropertyChanged;
         }
         OrderPageTabs();
-        WatchProjectOutput();
     }
 
     private void OnTabPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -316,58 +304,5 @@ public partial class SidePanelView : UserControl
             tab.ProcessMonitor.ToggleProcessAllLevels(row);
             e.Handled = true;
         }
-    }
-
-    // ---- A project job's output (DESIGN.md §18) --------------------------------------------------------------------
-
-    /// <summary>The Project page shows another run.</summary>
-    private void OnProjectRunsPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ProjectRunsViewModel.SelectedRun))
-        {
-            WatchProjectOutput();
-        }
-    }
-
-    /// <summary>Another run's log is showing: follow its lines instead, from its newest.</summary>
-    private void WatchProjectOutput()
-    {
-        if (_projectOutput is not null)
-        {
-            _projectOutput.CollectionChanged -= OnProjectOutputChanged;
-        }
-        _projectOutput = _tab?.ProjectTools.Runs.SelectedRun?.Output;
-        if (_projectOutput is not null)
-        {
-            _projectOutput.CollectionChanged += OnProjectOutputChanged;
-            ScrollProjectOutputToEnd();
-        }
-    }
-
-    /// <summary>A project job's output follows its newest line, as a terminal does.</summary>
-    private void OnProjectOutputChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        // A batch of lines is one Add (after a Remove when the oldest were dropped), or a Reset when it replaced them all.
-        if (e.Action is NotifyCollectionChangedAction.Add or NotifyCollectionChangedAction.Reset)
-        {
-            ScrollProjectOutputToEnd();
-        }
-    }
-
-    private void ScrollProjectOutputToEnd()
-    {
-        if (!ProjectOutputList.IsEffectivelyVisible || _projectScrollPending)
-        {
-            return;
-        }
-        _projectScrollPending = true;
-        Dispatcher.UIThread.Post(() =>
-        {
-            _projectScrollPending = false;
-            if (ProjectOutputList.ItemCount > 0)
-            {
-                ProjectOutputList.ScrollIntoView(ProjectOutputList.ItemCount - 1);
-            }
-        }, DispatcherPriority.Background);
     }
 }

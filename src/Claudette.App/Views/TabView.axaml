@@ -258,6 +258,8 @@
             <SelectableTextBlock Classes="muted small" Text="{Binding SuffixText}" TextWrapping="Wrap" IsVisible="{Binding HasSuffix}" />
             <!-- What Claude was told about its sub-threads with this message (DESIGN.md §18, "Threads") -->
             <TextBlock Classes="muted small" Text="{Binding ThreadNoteText}" ToolTip.Tip="{Binding ThreadNote}" IsVisible="{Binding HasThreadNote}" />
+            <!-- What Claude was told about subagents after the tab's setting changed (DESIGN.md §5, "Subagents") -->
+            <TextBlock Classes="muted small" Text="{Binding SubagentNoteText}" ToolTip.Tip="{Binding SubagentNote}" IsVisible="{Binding HasSubagentNote}" />
             <!-- What Claude was told about the sessions and agents it names (DESIGN.md §5, "Autocomplete") -->
             <TextBlock Classes="muted small" Text="{Binding MentionNoteText}" ToolTip.Tip="{Binding MentionNote}" IsVisible="{Binding HasMentionNote}" />
             <!-- Waiting its turn behind Claude's work (DESIGN.md §5, "Queued messages") -->
@@ -316,11 +318,14 @@
       </controls:Card>
     </DataTemplate>
 
-    <!-- Subagent: a card whose line opens the agent's own cards. Must come before ToolUseItem, which it derives from. -->
+    <!-- Subagent: a card whose line opens the agent's own cards. With their work under the tab in the sidebar, it's one
+         line, and the line shows its work in the tab instead (DESIGN.md §5, "Subagents"). Must come before ToolUseItem,
+         which it derives from. -->
     <DataTemplate DataType="conv:SubagentItem">
       <controls:Card Classes="agent quiet">
       <StackPanel Spacing="2">
-        <Button Classes="flat row" Command="{Binding ToggleCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+        <Button Classes="flat row" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenSubagentCommand}" CommandParameter="{Binding}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
           <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
             <TextBlock Classes="status small" Classes.busy="{Binding !IsComplete}" Classes.ok="{Binding IsSucceeded}" Classes.failed="{Binding IsError}" Text="●"
                        VerticalAlignment="Center" Margin="0,0,6,0" />
@@ -332,14 +337,31 @@
             <TextBlock Grid.Column="4" Classes="muted small" Text="{Binding TimeText}" ToolTip.Tip="{Binding TimeTip}" IsVisible="{Binding HasTime}"
                        VerticalAlignment="Center" Margin="8,0,0,0" Background="Transparent" />
             <Panel Grid.Column="5" Margin="6,0,0,0">
-              <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
-              <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+              <Panel IsVisible="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).SubagentsInConversation}">
+                <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
+                <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+              </Panel>
+              <!-- Its work shows in the tab, from its row under the tab's -->
+              <Path Classes="toolicon" Data="{StaticResource IconChevronRight}">
+                <Path.IsVisible>
+                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="$parent[UserControl].((vm:TabViewModel)DataContext).SubagentsInSidebar" />
+                    <Binding Path="IsStarted" />
+                  </MultiBinding>
+                </Path.IsVisible>
+              </Path>
             </Panel>
           </Grid>
         </Button>
         <TextBlock Classes="muted small" Text="{Binding ResultSummary}" Classes.error="{Binding IsError}" TextTrimming="CharacterEllipsis"
                    Margin="22,0,0,0" IsVisible="{Binding HasResultSummary}" ToolTip.Tip="{Binding ResultSummary}" />
-        <StackPanel Spacing="6" Margin="4,6,0,2" IsVisible="{Binding IsExpanded}">
+        <StackPanel Spacing="6" Margin="4,6,0,2">
+          <StackPanel.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="IsExpanded" />
+              <Binding Path="$parent[UserControl].((vm:TabViewModel)DataContext).SubagentsInConversation" />
+            </MultiBinding>
+          </StackPanel.IsVisible>
           <SelectableTextBlock Classes="muted small" Text="{Binding Detail}" TextWrapping="Wrap" MaxHeight="120" IsVisible="{Binding HasDetail}" />
           <!-- Virtualized like the conversation: a collapsed group builds nothing, an open one only what's in view. -->
           <ItemsControl Classes="subagentitems" ItemsSource="{Binding Items}" ClipToBounds="False">
@@ -870,10 +892,51 @@
           </StackPanel>
         </Border>
 
-        <Panel>
-        <ScrollViewer x:Name="ConversationScroll" HorizontalScrollBarVisibility="Disabled">
+        <!-- The subagent whose work the tab shows, over it (DESIGN.md §5, "Subagents"): back to the conversation, what it
+             is and how it's going, and the prompt it was given, one click away -->
+        <Border x:Name="AgentHeader" DockPanel.Dock="Top" Classes="agentheader" IsVisible="{Binding IsViewingAgent}">
+          <StackPanel Classes="column" Spacing="4">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+              <Button Classes="flat" Padding="4,2" VerticalAlignment="Center" Command="{Binding ShowConversationCommand}"
+                      ToolTip.Tip="Back to the conversation (Esc)" AutomationProperties.Name="Back to the conversation">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Path Classes="toolicon" Data="{StaticResource IconChevronLeft}" VerticalAlignment="Center" />
+                  <TextBlock Classes="small" Text="{Binding DisplayName}" MaxWidth="200" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <TextBlock Grid.Column="1" Classes="status" Classes.busy="{Binding ViewedAgent.IsRunning, FallbackValue=False}" Classes.alert="{Binding ViewedAgent.IsWaiting, FallbackValue=False}"
+                         Classes.ok="{Binding ViewedAgent.IsDone, FallbackValue=False}" Classes.failed="{Binding ViewedAgent.IsFailed, FallbackValue=False}"
+                         Text="{Binding ViewedAgent.StatusGlyph, FallbackValue=''}" VerticalAlignment="Center" ToolTip.Tip="{Binding ViewedAgent.StatusText, FallbackValue=''}" />
+              <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="{Binding ViewedAgent.Title, FallbackValue=''}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              <Border Grid.Column="3" Classes="agenttype" VerticalAlignment="Center" ToolTip.Tip="A subagent: Claude handed it this part of the work">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Path Classes="agentrowicon" Data="{StaticResource IconToolAgent}" Margin="0" />
+                  <TextBlock Classes="small" Text="{Binding ViewedAgent.AgentType, FallbackValue=''}" />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <TextBlock Classes="muted small" Text="{Binding ViewedAgent.Meta, FallbackValue=''}" TextWrapping="Wrap"
+                       ToolTip.Tip="Tokens as Claude Code reports them: the subagent's latest request, not a running total" />
+            <Button Classes="flat row" Padding="0,2" HorizontalAlignment="Left" Command="{Binding ToggleViewedPromptCommand}"
+                    IsVisible="{Binding ViewedAgent.HasPrompt, FallbackValue=False}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !ShowsViewedPrompt}" />
+                <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding ShowsViewedPrompt}" />
+                <TextBlock Classes="muted small" FontWeight="SemiBold" Text="The prompt it was given" />
+              </StackPanel>
+            </Button>
+            <Border Classes="agentprompt" IsVisible="{Binding ShowsViewedPrompt}">
+              <ScrollViewer MaxHeight="200" HorizontalScrollBarVisibility="Disabled">
+                <md:MarkdownRenderer MarkdownBuilder="{Binding ViewedAgent.PromptMarkdown, FallbackValue={x:Null}}" LinkCommand="{Binding OpenLinkCommand}" />
+              </ScrollViewer>
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <Panel x:Name="ConversationLists">
+        <ScrollViewer x:Name="ConversationScroll" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding !IsViewingAgent}">
           <!-- Not clipped, so the first message's time and Copy chip can sit above it (DESIGN.md §5). -->
-          <ItemsControl x:Name="ConversationItems" ItemsSource="{Binding Items}" ClipToBounds="False">
+          <ItemsControl x:Name="ConversationItems" Classes="conversationlist" ItemsSource="{Binding Items}" ClipToBounds="False">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <!-- The messages a screen above and below the view stay built (CacheLength), not only those in it, so
@@ -887,7 +950,25 @@
         </ScrollViewer>
         <!-- Marks beside the scroll bar where your messages, waiting prompts, errors and changed files are; a click goes
              there (DESIGN.md §18, "Conversation cards"). Clear of the scroll bar, which Fluent draws over the content. -->
-        <controls:ScrollMarks x:Name="ScrollMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" />
+        <controls:ScrollMarks x:Name="ScrollMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" IsVisible="{Binding !IsViewingAgent}" />
+        <!-- A subagent's work, read-only, in place of the conversation (DESIGN.md §5, "Subagents"): its cards, as its
+             group in the conversation would hold them, then what it handed back. The conversation keeps its place
+             under it. -->
+        <ScrollViewer x:Name="AgentScroll" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding IsViewingAgent}">
+          <StackPanel>
+            <ItemsControl x:Name="AgentItems" Classes="conversationlist" ItemsSource="{Binding ViewedItems}" ClipToBounds="False">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <controls:ConversationPanel Classes="conversation" CacheLength="1" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <controls:Card x:Name="AgentReport" Classes="agentreport" Label="Handed back to Claude" IsVisible="{Binding ViewedAgent.HasResult, FallbackValue=False}">
+              <md:MarkdownRenderer MarkdownBuilder="{Binding ViewedAgent.ResultMarkdown, FallbackValue={x:Null}}" LinkCommand="{Binding OpenLinkCommand}" />
+            </controls:Card>
+          </StackPanel>
+        </ScrollViewer>
+        <controls:ScrollMarks x:Name="AgentMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" IsVisible="{Binding IsViewingAgent}" />
         </Panel>
       </DockPanel>
 
@@ -951,6 +1032,24 @@
     </Grid>
 
     <!-- Composer (DESIGN.md §5) -->
-    <views:ComposerView x:Name="ComposerPanel" Grid.Row="2" />
+    <views:ComposerView x:Name="ComposerPanel" Grid.Row="2" IsVisible="{Binding !IsViewingAgent}" />
+
+    <!-- In its place under a subagent's work, which can't be written to (DESIGN.md §5, "Subagents"): a prompt it waits
+         on, answered here as in the conversation, and what can be done instead -->
+    <Border x:Name="AgentBar" Grid.Row="2" Classes="agentbar" IsVisible="{Binding IsViewingAgent}">
+      <StackPanel Classes="column" Spacing="8">
+        <ContentControl Content="{Binding ViewedAgent.WaitingPrompt, FallbackValue={x:Null}}" IsVisible="{Binding ViewedAgent.IsWaiting, FallbackValue=False}" />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+          <TextBlock Classes="muted small" Text="{Binding ViewedAgentNote}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <WrapPanel Grid.Column="1" ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
+            <Button Content="Message it through Claude" Command="{Binding MessageViewedAgentCommand}" IsVisible="{Binding ViewedAgent.CanBeMessaged, FallbackValue=False}"
+                    ToolTip.Tip="Back to the conversation, with the subagent named in the message box: Claude passes on what you write" />
+            <Button Content="{Binding ViewedAgent.StopText, StringFormat='{}{0}…', FallbackValue=''}" Command="{Binding StopAgentCommand}" CommandParameter="{Binding ViewedAgent}"
+                    IsVisible="{Binding ViewedAgent.CanStop, FallbackValue=False}" />
+            <Button Classes="accent" Content="Back to the conversation" Command="{Binding ShowConversationCommand}" />
+          </WrapPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
   </Grid>
 </UserControl>

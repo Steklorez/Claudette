@@ -26,6 +26,9 @@
 "The conversation and the message box fill the tab's width. Off, they stop at a width that's easy to read, in the middle of a wide window."
 [x] Quieter in-between steps
 "Tool calls, thinking, hooks, notes and the replies Claude carried on after are drawn without their card's tint and outline, so your prompts, Claude's answers and the files it changed stand out. Pointing at one brings it back."
+"Show subagents' work"
+[choice] "In the conversation"
+"In the conversation, each subagent Claude starts is a card that opens to show what it did. Under the tab, each has a row of its own under its tab in the sidebar, and selecting it shows its work in the tab, read-only: Claude Code doesn't let you write to a subagent. The Agents page lists them either way."
 [ ] Show thinking expanded
 [x] Show fun words while Claude works
 "A twinkling line above the message box, such as “Noodling… 42s · 3.1k tokens”. Off, it says “Working…”. Verbs added to spinnerVerbs in Claude Code's settings show here too."

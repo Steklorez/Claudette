@@ -61,6 +61,11 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         MonitorChoices = [new Choice(null, $"Default ({(defaults.Processes.ShowMonitor ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
         AutoContinueChoices = [new Choice(null, $"Default ({(defaults.Usage.ContinueAfterLimitReset ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
         UsageCreditsChoices = [new Choice(null, $"Default ({(defaults.Usage.UseUsageCredits ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
+        SubagentChoices =
+        [
+            new Choice(null, $"Default ({Settings.SubagentUseChoice.Label(defaults.ClaudeCode.Subagents).ToLowerInvariant()})"),
+            .. Enum.GetValues<SubagentUse>().Select(use => new Choice(use.ToString(), Settings.SubagentUseChoice.Label(use))),
+        ];
         ShowsUsageCredits = tab.HasUsageCreditsMenu;
 
         SelectedModel = ModelChoices.First(c => c.Value == overrides.Model);
@@ -69,6 +74,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         SelectedMonitor = MonitorChoices.First(c => c.Value == overrides.ShowProcessMonitor switch { true => On, false => Off, null => null });
         SelectedAutoContinue = AutoContinueChoices.First(c => c.Value == overrides.ContinueAfterLimitReset switch { true => On, false => Off, null => null });
         SelectedUsageCredits = UsageCreditsChoices.First(c => c.Value == overrides.UseUsageCredits switch { true => On, false => Off, null => null });
+        SelectedSubagents = SubagentChoices.First(c => c.Value == overrides.Subagents?.ToString());
 
         var checkIns = overrides.CheckIns ?? defaults.CheckIns;
         UseCustomCheckIns = overrides.CheckIns is not null;
@@ -116,6 +122,12 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial Choice SelectedUsageCredits { get; set; }
+
+    /// <summary>Whether Claude may use subagents in this tab (DESIGN.md §5, "Subagents"). It applies at once.</summary>
+    public IReadOnlyList<Choice> SubagentChoices { get; }
+
+    [ObservableProperty]
+    public partial Choice SelectedSubagents { get; set; }
 
     [ObservableProperty]
     public partial Choice SelectedModel { get; set; }
@@ -218,6 +230,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
             ShowProcessMonitor = SelectedMonitor.Value switch { On => true, Off => false, _ => null },
             ContinueAfterLimitReset = SelectedAutoContinue.Value switch { On => true, Off => false, _ => null },
             UseUsageCredits = SelectedUsageCredits.Value switch { On => true, Off => false, _ => null },
+            Subagents = Enum.TryParse<SubagentUse>(SelectedSubagents.Value, out var subagents) ? subagents : null,
             CheckIns = UseCustomCheckIns
                 ? new CheckInSettings
                 {
@@ -245,6 +258,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         SelectedMonitor = MonitorChoices[0];
         SelectedAutoContinue = AutoContinueChoices[0];
         SelectedUsageCredits = UsageCreditsChoices[0];
+        SelectedSubagents = SubagentChoices[0];
         UseCustomCheckIns = false;
     }
 

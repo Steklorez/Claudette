@@ -15,20 +15,29 @@ internal interface IProjectToolsHost : ITabAreaHost
 {
     string FolderName { get; }
 
-    /// <summary>The Project page of the side panel shows, on the selected tab.</summary>
-    bool IsProjectPageShowing { get; }
+    /// <summary>The folder of the tab's group.</summary>
+    string GroupFolder { get; }
 
     /// <summary>The tab's Perforce changelist, for <c>{changelist}</c> in links (DESIGN.md §18, "Links").</summary>
     long? CurrentChangelist { get; }
 
-    /// <summary>Opens the side panel on the Project page.</summary>
-    void OpenProjectPage();
-
-    /// <summary>Makes the tab the selected one.</summary>
-    void SelectTab();
-
     /// <summary>Settings, on one of this tab's project pages (DESIGN.md §14).</summary>
     Task OpenProjectSettingsAsync(string page, bool startNew);
+
+    // A run's log is a tab of the panes (DESIGN.md §18, "Project tools", "A run's log"), which the shell keeps.
+
+    void RunAdded(ProjectRunViewModel run);
+
+    void RunRemoved(ProjectRunViewModel run);
+
+    void ShowRun(ProjectRunViewModel run);
+
+    void RunSelected(ProjectRunViewModel run);
+
+    void CloseRunPane(ProjectRunViewModel run);
+
+    /// <summary>Opens a file or folder, as the tab opens one a reply names.</summary>
+    Task<OpenedPath> OpenPathAsync(string path, int? line, int? column);
 }
 
 /// <summary>
@@ -137,7 +146,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     /// <summary>The project row's menu.</summary>
     public IReadOnlyList<ProjectMenuEntry> Menu => ProjectMenu.Build(
-        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools, Runs.ForJob, Folder,
+        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools, Runs.HasRuns, Runs.ForJob, Folder,
         _menuCommands ??= new ProjectMenuCommands(RunActionCommand, ChooseProjectCommand, ChooseOptionCommand, FixCommand, OpenLinkCommand,
             ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand));
 
@@ -581,7 +590,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
                 }
                 log(ok ? $"Deleted {folders.Count} folder{(folders.Count == 1 ? "" : "s")}." : "Some folders couldn't be deleted.");
                 return Task.FromResult(ok);
-            }), action, $"Deleting {folders.Count} folder{(folders.Count == 1 ? "" : "s")} ({FolderCleaner.FormatSize(size)})");
+            }), action, $"Deleting {folders.Count} folder{(folders.Count == 1 ? "" : "s")} ({FolderCleaner.FormatSize(size)})", root);
             return Task.CompletedTask;
         });
     }
@@ -625,14 +634,14 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             });
     }
 
-    // ---- Runs and the Project page ---------------------------------------------------------------------------------
+    // ---- Runs ------------------------------------------------------------------------------------------------------
 
-    /// <summary>The runs of the project's jobs, each with its log, listed under the tab's row and on the Project page.</summary>
+    /// <summary>The runs of the project's jobs, listed under the tab's row, each with its log, which shows in the main area.</summary>
     public ProjectRunsViewModel Runs { get; }
 
-    /// <summary><b>Show output…</b>: opens the side panel on the Project page.</summary>
+    /// <summary><b>Show output…</b>: the newest run's log, in the main area.</summary>
     [RelayCommand]
-    private void ShowOutput() => _host.OpenProjectPage();
+    private void ShowOutput() => Runs.ShowNewest();
 
     // What the runs need: the tab's, passed on, and the project's row, menu and actions, which change with them.
 
@@ -640,13 +649,32 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     string IProjectRunsHost.DisplayName => _host.DisplayName;
 
-    bool IProjectRunsHost.IsProjectPageShowing => _host.IsProjectPageShowing;
+    string IProjectRunsHost.Folder => _host.Folder;
+
+    string IProjectRunsHost.GroupFolder => _host.GroupFolder;
 
     void IProjectRunsHost.AddNote(string text, NoteKind kind) => _host.AddNote(text, kind);
 
-    void IProjectRunsHost.OpenProjectPage() => _host.OpenProjectPage();
+    void IProjectRunsHost.RunAdded(ProjectRunViewModel run)
+    {
+        _host.RunAdded(run);
+        // Show output… has a log to show now.
+        OnPropertyChanged(nameof(Menu));
+    }
 
-    void IProjectRunsHost.SelectTab() => _host.SelectTab();
+    void IProjectRunsHost.RunRemoved(ProjectRunViewModel run)
+    {
+        _host.RunRemoved(run);
+        OnPropertyChanged(nameof(Menu));
+    }
+
+    void IProjectRunsHost.ShowRun(ProjectRunViewModel run) => _host.ShowRun(run);
+
+    void IProjectRunsHost.RunSelected(ProjectRunViewModel run) => _host.RunSelected(run);
+
+    void IProjectRunsHost.CloseRunPane(ProjectRunViewModel run) => _host.CloseRunPane(run);
+
+    Task<OpenedPath> IProjectRunsHost.OpenPathAsync(string path, int? line, int? column) => _host.OpenPathAsync(path, line, column);
 
     void IProjectRunsHost.RunningRunChanged() => OnPropertyChanged(nameof(ButtonText));
 

@@ -8,6 +8,12 @@ public sealed record StyleOption(AppStyle Style, string Label)
     public override string ToString() => Label;
 }
 
+/// <summary>Settings → Appearance → Show subagents' work's choices (DESIGN.md §5, "Subagents").</summary>
+public sealed record SubagentDisplayChoice(SubagentDisplay Display)
+{
+    public override string ToString() => Display == SubagentDisplay.InSidebar ? "Under the tab in the sidebar" : "In the conversation";
+}
+
 /// <summary>Settings → Appearance → Motion's choices (DESIGN.md §3, "Accessibility").</summary>
 public sealed record MotionChoice(MotionSetting Setting)
 {
@@ -57,6 +63,7 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
         Entry("Code font"),
         Entry("Code font size"),
         Entry("Show thinking expanded"),
+        Entry("Show subagents' work"),
         Entry("Show fun words while Claude works"),
         Entry("Show what Claude is doing while it works"),
         Entry("Show when the prompt cache expires"),
@@ -176,6 +183,16 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     {
         get => Settings.Appearance.ExpandThinking;
         set => Set(value, v => Settings.Appearance.ExpandThinking = v);
+    }
+
+    public IReadOnlyList<SubagentDisplayChoice> SubagentDisplayChoices { get; } =
+        [new(SubagentDisplay.InConversation), new(SubagentDisplay.InSidebar)];
+
+    /// <summary>Where a subagent's work shows: its card in the conversation, or its row under the tab (DESIGN.md §5, "Subagents").</summary>
+    public SubagentDisplayChoice ShowSubagents
+    {
+        get => SubagentDisplayChoices.FirstOrDefault(c => c.Display == Settings.Appearance.ShowSubagents) ?? SubagentDisplayChoices[0];
+        set => Set(value?.Display ?? SubagentDisplay.InConversation, v => Settings.Appearance.ShowSubagents = v);
     }
 
     /// <summary>The working line's twinkling glyph and fun verbs (DESIGN.md §5, "Working line").</summary>

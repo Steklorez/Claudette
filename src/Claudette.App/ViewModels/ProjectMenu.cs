@@ -66,7 +66,7 @@ public sealed class ProjectMenuEntry
 /// <param name="ChooseOption">A per-project choice, with the <see cref="ProjectChoiceOption"/>.</param>
 /// <param name="Fix">The project's fix, such as <b>Choose engine folder…</b>.</param>
 /// <param name="OpenLink">A link, with the <see cref="ResolvedLink"/>.</param>
-/// <param name="ShowOutput"><b>Show output…</b>: the Project page of the side panel.</param>
+/// <param name="ShowOutput"><b>Show output…</b>: the newest run's log, in the main area.</param>
 /// <param name="AddAction"><b>Add an action…</b>.</param>
 /// <param name="AddLink"><b>Add a link…</b>.</param>
 /// <param name="Refresh"><b>Refresh</b>: look for the project and its files again.</param>
@@ -86,12 +86,13 @@ internal static class ProjectMenu
     /// <param name="candidates">Every project found for the folder: with more than one, the menu offers a choice.</param>
     /// <param name="customActions">The folder's own actions, from its project files.</param>
     /// <param name="links">The links of the folder's project files, filled in for the tab.</param>
-    /// <param name="hasTools">The tab has a Project page, so the menu offers <b>Show output…</b>.</param>
+    /// <param name="hasTools">The tab has project tools, so the menu offers <b>Show output…</b>.</param>
+    /// <param name="hasRuns">A job has run in the tab, so <b>Show output…</b> has a log to show.</param>
     /// <param name="forJob">How an action shows as things are: while a job runs, other jobs wait.</param>
     /// <param name="folder">The folder <b>Show in Explorer</b> opens: the project's, else the tab's.</param>
     public static IReadOnlyList<ProjectMenuEntry> Build(
         ProjectInfo? project, IReadOnlyList<ProjectCandidate> candidates, IReadOnlyList<ProjectAction> customActions,
-        IReadOnlyList<ResolvedLink> links, bool hasTools, Func<ProjectAction, ProjectAction> forJob, string folder, ProjectMenuCommands commands)
+        IReadOnlyList<ResolvedLink> links, bool hasTools, bool hasRuns, Func<ProjectAction, ProjectAction> forJob, string folder, ProjectMenuCommands commands)
     {
         var entries = new List<ProjectMenuEntry>();
         void Separator()
@@ -174,10 +175,17 @@ internal static class ProjectMenu
         }
         Separator();
         entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = ShowFolderLabel(ToolOSExtensions.Current), Tip = folder, Command = commands.ShowFolder });
-        // Without project tools there's no Project page to show, and no job to have output.
+        // Without project tools there's no job to have output; until one has run, there's none yet.
         if (hasTools)
         {
-            entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Show output…", Tip = "The Project page of the side panel", Command = commands.ShowOutput });
+            entries.Add(new ProjectMenuEntry
+            {
+                Kind = ProjectMenuKind.Command,
+                Label = "Show output…",
+                Tip = hasRuns ? "The newest action's log" : "No action has run in this tab yet",
+                IsEnabled = hasRuns,
+                Command = commands.ShowOutput,
+            });
         }
         entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Add an action…", Tip = "A command of your own for this folder", Command = commands.AddAction });
         entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Add a link…", Tip = "A web page of your own for this folder", Command = commands.AddLink });

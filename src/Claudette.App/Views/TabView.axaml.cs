@@ -21,14 +21,36 @@ namespace Claudette.App.Views;
 /// </summary>
 public partial class TabView : UserControl
 {
-    private bool _stickToBottom = true;
-
     /// <summary>
-    /// The reader is scrolling up (the wheel, a scroll bar, a key, a swipe): the next move up is theirs, even when the
-    /// content grows in the same layout pass. Without it, a move up is the list correcting its estimate of the
-    /// messages above, which keeps its place at the bottom.
+    /// One of the tab's lists: the conversation, or the work of a subagent the tab shows in its place (DESIGN.md §5,
+    /// "Subagents"). Each follows new output and keeps its own place, so going back to the conversation finds it as it was.
     /// </summary>
-    private bool _readerScrolling;
+    private sealed class ShownList(ScrollViewer scroll, ItemsControl items, ScrollMarks marks)
+    {
+        public ScrollViewer Scroll => scroll;
+
+        public ItemsControl Items => items;
+
+        public ScrollMarks Marks => marks;
+
+        public bool StickToBottom { get; set; } = true;
+
+        /// <summary>
+        /// The reader is scrolling up (the wheel, a scroll bar, a key, a swipe): the next move up is theirs, even when the
+        /// content grows in the same layout pass. Without it, a move up is the list correcting its estimate of the
+        /// messages above, which keeps its place at the bottom.
+        /// </summary>
+        public bool ReaderScrolling { get; set; }
+
+        /// <summary>The list's panel, once it has items: where each one is.</summary>
+        public ConversationPanel? Panel { get; set; }
+    }
+
+    private readonly ShownList _main;
+    private readonly ShownList _agent;
+
+    /// <summary>The list on screen: a subagent's work while the tab shows one, else the conversation.</summary>
+    private ShownList Active => _tab?.IsViewingAgent == true ? _agent : _main;
 
     /// <summary>Where a drag of the side panel's edge started, and the width then; null when not resizing.</summary>
     private double? _resizeFrom;
@@ -42,25 +64,31 @@ public partial class TabView : UserControl
         // With tabs side by side, a click or the focus in a pane makes it the focused one (DESIGN.md §18, "Split panes").
         AddHandler(PointerPressedEvent, (_, _) => ViewModel?.FocusPane(), RoutingStrategies.Tunnel, handledEventsToo: true);
         AddHandler(GotFocusEvent, (_, _) => ViewModel?.FocusPane(), RoutingStrategies.Bubble, handledEventsToo: true);
-        ComposerPanel.Sent += () => _stickToBottom = true;
+        _main = new ShownList(ConversationScroll, ConversationItems, ScrollMarks);
+        _agent = new ShownList(AgentScroll, AgentItems, AgentMarks);
+        ComposerPanel.Sent += () => _main.StickToBottom = true;
         // Claudette on the composer keeps clear of Jump to latest, and ducks while a thread's strip or a dialog sits over
         // the composer (DESIGN.md §5).
         ComposerPanel.KeepMascotClearOf([JumpToLatest, ThreadStrip, .. ConversationArea.Children.OfType<Border>().Where(b => b.Classes.Contains("overlay"))]);
-        ConversationScroll.ScrollChanged += OnConversationScrollChanged;
-        // Seen even when the scroll viewer handles them.
-        ConversationScroll.AddHandler(PointerWheelChangedEvent, (_, e) => _readerScrolling |= e.Delta.Y > 0, RoutingStrategies.Tunnel, handledEventsToo: true);
-        ConversationScroll.AddHandler(PointerPressedEvent, (_, e) => _readerScrolling |= IsOnScrollBar(e.Source), RoutingStrategies.Tunnel, handledEventsToo: true);
-        ConversationScroll.AddHandler(PointerMovedEvent, (_, e) => _readerScrolling |= IsOnScrollBar(e.Source) && e.GetCurrentPoint(ConversationScroll).Properties.IsLeftButtonPressed,
-            RoutingStrategies.Tunnel, handledEventsToo: true);
-        ConversationScroll.AddHandler(KeyDownEvent, (_, e) => _readerScrolling |= e.Key is Key.Up or Key.PageUp or Key.Home, RoutingStrategies.Tunnel, handledEventsToo: true);
-        ConversationScroll.AddHandler(InputElement.ScrollGestureEvent, (_, e) => _readerScrolling |= e.Delta.Y < 0, RoutingStrategies.Tunnel, handledEventsToo: true);
-        ConversationItems.ContainerPrepared += OnConversationContainerPrepared;
-        ScrollMarks.MarkClicked += mark => ScrollItemToTop(mark.Index);
-        ActualThemeVariantChanged += (_, _) => UpdateMarks();
+        foreach (var list in new[] { _main, _agent })
+        {
+            var scroll = list.Scroll;
+            scroll.ScrollChanged += (_, e) => OnConversationScrollChanged(list, e);
+            // Seen even when the scroll viewer handles them.
+            scroll.AddHandler(PointerWheelChangedEvent, (_, e) => list.ReaderScrolling |= e.Delta.Y > 0, RoutingStrategies.Tunnel, handledEventsToo: true);
+            scroll.AddHandler(PointerPressedEvent, (_, e) => list.ReaderScrolling |= IsOnScrollBar(e.Source), RoutingStrategies.Tunnel, handledEventsToo: true);
+            scroll.AddHandler(PointerMovedEvent, (_, e) => list.ReaderScrolling |= IsOnScrollBar(e.Source) && e.GetCurrentPoint(scroll).Properties.IsLeftButtonPressed,
+                RoutingStrategies.Tunnel, handledEventsToo: true);
+            scroll.AddHandler(KeyDownEvent, (_, e) => list.ReaderScrolling |= e.Key is Key.Up or Key.PageUp or Key.Home, RoutingStrategies.Tunnel, handledEventsToo: true);
+            scroll.AddHandler(InputElement.ScrollGestureEvent, (_, e) => list.ReaderScrolling |= e.Delta.Y < 0, RoutingStrategies.Tunnel, handledEventsToo: true);
+            list.Items.ContainerPrepared += (_, e) => OnConversationContainerPrepared(list, e);
+            list.Marks.MarkClicked += mark => ScrollItemToTop(list, mark.Index);
+        }
+        ActualThemeVariantChanged += (_, _) => UpdateMarks(Active);
         // Copy on a code block goes through the tab and says "Copied" (DESIGN.md §5, "Copy and times").
         CodeBlockCopy.Attach(this);
         // Add to scratch pad: a code block's button, and the menu of text selected in the conversation (DESIGN.md §18).
-        ScratchPadAdd.Attach(this, ConversationScroll);
+        ScratchPadAdd.Attach(this, ConversationLists);
         SidePanelEdge.PointerPressed += OnSidePanelEdgePressed;
         SidePanelEdge.PointerMoved += OnSidePanelEdgeMoved;
         SidePanelEdge.PointerReleased += (_, e) => EndSidePanelResize(e.Pointer);
@@ -128,7 +156,13 @@ public partial class TabView : UserControl
             tab.StopCommand.Execute(null);
             e.Handled = true;
         }
-        else if (Shortcuts.Matches(tab.Keyboard, KeyboardShortcuts.Suffixes, e.Key, e.KeyModifiers))
+        else if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && tab.IsViewingAgent)
+        {
+            // Back from a subagent's work to the conversation (DESIGN.md §5, "Subagents").
+            tab.ShowConversationCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (Shortcuts.Matches(tab.Keyboard, KeyboardShortcuts.Suffixes, e.Key, e.KeyModifiers) && !tab.IsViewingAgent)
         {
             ComposerPanel.ShowSuffixes();
             e.Handled = true;
@@ -173,21 +207,25 @@ public partial class TabView : UserControl
     }
 
     /// <summary>Follows new output unless the user has scrolled up; then offers "Jump to latest" (DESIGN.md §5).</summary>
-    private void OnConversationScrollChanged(object? sender, ScrollChangedEventArgs e)
+    private void OnConversationScrollChanged(ShownList list, ScrollChangedEventArgs e)
     {
-        var scroll = ConversationScroll;
+        var scroll = list.Scroll;
         var distanceFromBottom = scroll.Extent.Height - scroll.Viewport.Height - scroll.Offset.Y;
-        (_stickToBottom, var scrollToEnd) = FollowOutput.Update(_stickToBottom, _readerScrolling, e.OffsetDelta.Y, e.ExtentDelta.Y, distanceFromBottom);
-        _readerScrolling = false;
+        (var stick, var scrollToEnd) = FollowOutput.Update(list.StickToBottom, list.ReaderScrolling, e.OffsetDelta.Y, e.ExtentDelta.Y, distanceFromBottom);
+        list.StickToBottom = stick;
+        list.ReaderScrolling = false;
         if (scrollToEnd)
         {
-            ScrollToEnd();
+            ScrollToEnd(list);
         }
-        JumpToLatest.IsVisible = !_stickToBottom && distanceFromBottom > FollowOutput.Threshold;
+        if (ReferenceEquals(list, Active))
+        {
+            JumpToLatest.IsVisible = !list.StickToBottom && distanceFromBottom > FollowOutput.Threshold;
+        }
         // The panel's arrange places the marks before the scroll viewer takes in its new height: they follow that too.
         if (e.ExtentDelta.Y != 0 || e.ViewportDelta.Y != 0)
         {
-            UpdateMarks();
+            UpdateMarks(list);
         }
     }
 
@@ -195,15 +233,42 @@ public partial class TabView : UserControl
 
     private void OnJumpToLatest(object? sender, RoutedEventArgs e)
     {
-        _stickToBottom = true;
-        ScrollToEnd();
+        var list = Active;
+        list.StickToBottom = true;
+        ScrollToEnd(list);
         JumpToLatest.IsVisible = false;
     }
 
-    private void ScrollToEnd()
+    private static void ScrollToEnd(ShownList list)
     {
-        var scroll = ConversationScroll;
+        var scroll = list.Scroll;
         scroll.Offset = new Vector(scroll.Offset.X, Math.Max(0, scroll.Extent.Height - scroll.Viewport.Height));
+    }
+
+    /// <summary>
+    /// The tab shows a subagent's work or goes back to its conversation (DESIGN.md §5, "Subagents"): a subagent's work
+    /// opens at its latest, following it as it goes; the conversation is where it was left.
+    /// </summary>
+    private void OnShownListChanged()
+    {
+        if (_tab?.IsViewingAgent == true)
+        {
+            _agent.StickToBottom = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => ScrollToEnd(_agent), Avalonia.Threading.DispatcherPriority.Loaded);
+        }
+        var list = Active;
+        var scroll = list.Scroll;
+        JumpToLatest.IsVisible = !list.StickToBottom && scroll.Extent.Height - scroll.Viewport.Height - scroll.Offset.Y > FollowOutput.Threshold;
+        MarkFindCurrent();
+        UpdateMarks(list);
+    }
+
+    private void OnTabPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TabViewModel.ViewedAgent))
+        {
+            OnShownListChanged();
+        }
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -219,6 +284,7 @@ public partial class TabView : UserControl
             _tab.AgentWindowRequested -= OnAgentWindowRequested;
             _tab.FindFocusRequested -= OnFindFocusRequested;
             _tab.Find.PropertyChanged -= OnFindPropertyChanged;
+            _tab.PropertyChanged -= OnTabPropertyChanged;
         }
         _tab = ViewModel;
         if (_tab is not null)
@@ -231,6 +297,7 @@ public partial class TabView : UserControl
             _tab.AgentWindowRequested += OnAgentWindowRequested;
             _tab.FindFocusRequested += OnFindFocusRequested;
             _tab.Find.PropertyChanged += OnFindPropertyChanged;
+            _tab.PropertyChanged += OnTabPropertyChanged;
             if (_tab.TakePendingScroll() is { } pending)
             {
                 // Once the conversation's cards are laid out.
@@ -267,59 +334,64 @@ public partial class TabView : UserControl
     /// </summary>
     private void MarkFindCurrent()
     {
-        if (_findMarked is not null && ConversationItems.ContainerFromItem(_findMarked) is { } old)
+        foreach (var list in new[] { _main, _agent })
         {
-            old.Classes.Remove("findcurrent");
+            if (_findMarked is not null && list.Items.ContainerFromItem(_findMarked) is { } old)
+            {
+                old.Classes.Remove("findcurrent");
+            }
         }
         _findMarked = _tab?.Find.Current is { } match ? _tab.TopLevelItemOf(match) ?? match : null;
-        if (_findMarked is not null && ConversationItems.ContainerFromItem(_findMarked) is { } current)
+        if (_findMarked is not null && Active.Items.ContainerFromItem(_findMarked) is { } current)
         {
             current.Classes.Add("findcurrent");
         }
     }
 
-    private void OnConversationContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    private void OnConversationContainerPrepared(ShownList list, ContainerPreparedEventArgs e)
     {
-        e.Container.Classes.Set("findcurrent", _findMarked is not null && ReferenceEquals(ConversationItems.ItemFromContainer(e.Container), _findMarked));
-        if (ConversationItems.ItemsPanelRoot is ConversationPanel panel && !ReferenceEquals(panel, _panel))
+        e.Container.Classes.Set("findcurrent", _findMarked is not null && ReferenceEquals(list, Active) && ReferenceEquals(list.Items.ItemFromContainer(e.Container), _findMarked));
+        if (list.Items.ItemsPanelRoot is ConversationPanel panel && !ReferenceEquals(panel, list.Panel))
         {
-            if (_panel is not null)
+            if (list.Panel is not null)
             {
-                _panel.Arranged -= OnPanelArranged;
+                list.Panel.Arranged -= OnPanelArranged;
             }
-            _panel = panel;
-            _panel.Arranged += OnPanelArranged;
+            list.Panel = panel;
+            list.Panel.Arranged += OnPanelArranged;
         }
     }
 
     // ---- Marks beside the scroll bar, and going from message to message (DESIGN.md §18, "Conversation cards") ----
 
-    /// <summary>The conversation's panel, once it has items: where each one is.</summary>
-    private ConversationPanel? _panel;
-
-    private void OnPanelArranged(object? sender, EventArgs e) => UpdateMarks();
+    private void OnPanelArranged(object? sender, EventArgs e) => UpdateMarks(ReferenceEquals(sender, _agent.Panel) ? _agent : _main);
 
     /// <summary>Where the panel starts in the scroll viewer's content: below the list's margin.</summary>
-    private double PanelOrigin(ConversationPanel panel) =>
-        ConversationItems.Margin.Top + (panel.TranslatePoint(default, ConversationItems)?.Y ?? 0);
+    private static double PanelOrigin(ShownList list, ConversationPanel panel) =>
+        list.Items.Margin.Top + (panel.TranslatePoint(default, list.Items)?.Y ?? 0);
+
+    /// <summary>The items a list shows: the conversation's, or the subagent's the tab shows.</summary>
+    private IReadOnlyList<ConversationItem> ItemsOf(ShownList list) =>
+        ReferenceEquals(list, _agent) ? (IReadOnlyList<ConversationItem>?)_tab?.ViewedItems ?? [] : (IReadOnlyList<ConversationItem>?)_tab?.Items ?? [];
 
     /// <summary>The marks for the items worth finding again, where the panel last laid them out; none while all of it fits.</summary>
-    private void UpdateMarks()
+    private void UpdateMarks(ShownList list)
     {
-        if (_panel is not { } panel || _tab is not { } tab)
+        if (list.Panel is not { } panel || _tab is null)
         {
             return;
         }
-        var scroll = ConversationScroll;
+        var items = ItemsOf(list);
+        var scroll = list.Scroll;
         var extent = scroll.Extent.Height;
         List<ScrollMark> marks = [];
         if (extent > scroll.Viewport.Height + 1)
         {
-            var origin = PanelOrigin(panel);
+            var origin = PanelOrigin(list, panel);
             var brushes = new Dictionary<LandmarkKind, IBrush>();
-            for (var i = 0; i < tab.Items.Count; i++)
+            for (var i = 0; i < items.Count; i++)
             {
-                if (ConversationLandmarks.KindOf(tab.Items[i]) is not { } kind)
+                if (ConversationLandmarks.KindOf(items[i]) is not { } kind)
                 {
                     continue;
                 }
@@ -327,12 +399,12 @@ public partial class TabView : UserControl
                 {
                     brush = brushes[kind] = MarkBrush(kind);
                 }
-                marks.Add(new ScrollMark((origin + panel.TopOf(i)) / extent, brush, i, ConversationLandmarks.Describe(tab.Items[i])));
+                marks.Add(new ScrollMark((origin + panel.TopOf(i)) / extent, brush, i, ConversationLandmarks.Describe(items[i])));
             }
         }
-        if (!marks.SequenceEqual(ScrollMarks.Marks))
+        if (!marks.SequenceEqual(list.Marks.Marks))
         {
-            ScrollMarks.Marks = marks;
+            list.Marks.Marks = marks;
         }
     }
 
@@ -353,15 +425,16 @@ public partial class TabView : UserControl
             OnJumpToLatest(this, new RoutedEventArgs());
             return;
         }
-        if (_panel is not { } panel || _tab is not { } tab)
+        var list = Active;
+        if (list.Panel is not { } panel || _tab is null)
         {
             return;
         }
-        var items = tab.Items;
+        var items = ItemsOf(list);
         var target = ConversationLandmarks.First(items);
         if (jump != MessageJump.First)
         {
-            var viewTop = ConversationScroll.Offset.Y - PanelOrigin(panel);
+            var viewTop = list.Scroll.Offset.Y - PanelOrigin(list, panel);
             var at = panel.ItemAt(Math.Max(0, viewTop + 1));
             // A message the top of the view cuts off is the one before: going back starts with its own top.
             target = jump == MessageJump.Previous && at >= 0 && at < items.Count && panel.TopOf(at) < viewTop - 1 && ConversationLandmarks.IsMessage(items[at])
@@ -370,7 +443,7 @@ public partial class TabView : UserControl
         }
         if (target >= 0)
         {
-            ScrollItemToTop(target);
+            ScrollItemToTop(list, target);
         }
     }
 
@@ -378,26 +451,27 @@ public partial class TabView : UserControl
     /// Puts an item's top at the top of the view. The panel may only have estimated where it is, so once it's laid out
     /// the view lines it up again.
     /// </summary>
-    private void ScrollItemToTop(int index)
+    private static void ScrollItemToTop(ShownList list, int index)
     {
-        if (_panel is not { } panel)
+        if (list.Panel is not { } panel)
         {
             return;
         }
+        var scroll = list.Scroll;
         void Align(double top)
         {
             // The reader moved, so the conversation stops following new output (DESIGN.md §5).
-            _stickToBottom = false;
-            _readerScrolling = true;
-            var max = Math.Max(0, ConversationScroll.Extent.Height - ConversationScroll.Viewport.Height);
-            ConversationScroll.Offset = new Vector(ConversationScroll.Offset.X, Math.Clamp(top - 8, 0, max));
+            list.StickToBottom = false;
+            list.ReaderScrolling = true;
+            var max = Math.Max(0, scroll.Extent.Height - scroll.Viewport.Height);
+            scroll.Offset = new Vector(scroll.Offset.X, Math.Clamp(top - 8, 0, max));
         }
-        Align(PanelOrigin(panel) + panel.TopOf(index));
+        Align(PanelOrigin(list, panel) + panel.TopOf(index));
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (ConversationItems.ContainerFromIndex(index) is { } container && container.TranslatePoint(default, ConversationItems) is { } at)
+            if (list.Items.ContainerFromIndex(index) is { } container && container.TranslatePoint(default, list.Items) is { } at)
             {
-                Align(ConversationItems.Margin.Top + at.Y);
+                Align(list.Items.Margin.Top + at.Y);
             }
         }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
@@ -505,12 +579,16 @@ public partial class TabView : UserControl
     /// </summary>
     private void OnScrollToRequested(ConversationItem item)
     {
-        _stickToBottom = false;
-        if (item is ToolUseItem tool)
+        // In whichever list the tab shows: a subagent's work came up first if the item is in it (DESIGN.md §5, "Subagents").
+        var list = Active;
+        var items = list.Items;
+        list.StickToBottom = false;
+        // A subagent's card doesn't open in the conversation when its work shows under the tab.
+        if (item is ToolUseItem tool && !(item is SubagentItem && ViewModel?.SubagentsInSidebar == true))
         {
             tool.IsExpanded = true;
         }
-        if (ConversationItems.ContainerFromItem(item) is { } container)
+        if (items.ContainerFromItem(item) is { } container)
         {
             BringTopIntoView(container);
             return;
@@ -518,8 +596,8 @@ public partial class TabView : UserControl
         // The conversation is virtualized: bring the top-level item that holds it into view first, so it has controls.
         if (ViewModel?.TopLevelItemOf(item) is { } outer)
         {
-            ConversationItems.ScrollIntoView(outer);
-            if (ReferenceEquals(outer, item) && ConversationItems.ContainerFromItem(item) is { } realized)
+            items.ScrollIntoView(outer);
+            if (ReferenceEquals(outer, item) && items.ContainerFromItem(item) is { } realized)
             {
                 BringTopIntoView(realized);
                 return;
@@ -527,11 +605,11 @@ public partial class TabView : UserControl
         }
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (ConversationItems.ContainerFromItem(item) is { } top)
+            if (items.ContainerFromItem(item) is { } top)
             {
                 BringTopIntoView(top);
             }
-            else if (ConversationItems.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ContentPresenter>().FirstOrDefault(p => ReferenceEquals(p.Content, item)) is { } nested)
+            else if (items.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ContentPresenter>().FirstOrDefault(p => ReferenceEquals(p.Content, item)) is { } nested)
             {
                 BringTopIntoView(nested);
             }

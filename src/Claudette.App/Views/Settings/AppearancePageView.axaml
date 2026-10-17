@@ -46,6 +46,14 @@
     <CheckBox Content="Quieter in-between steps" IsChecked="{Binding QuietSteps}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="Tool calls, thinking, hooks, notes and the replies Claude carried on after are drawn without their card's tint and outline, so your prompts, Claude's answers and the files it changed stand out. Pointing at one brings it back." />
+    <!-- Where a subagent's work shows (DESIGN.md §5, "Subagents") -->
+    <Grid ColumnDefinitions="170,*">
+      <TextBlock Classes="label" Text="Show subagents' work" />
+      <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding SubagentDisplayChoices}" SelectedItem="{Binding ShowSubagents}"
+                AutomationProperties.Name="Show subagents' work" />
+    </Grid>
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="0,-8,0,0"
+               Text="In the conversation, each subagent Claude starts is a card that opens to show what it did. Under the tab, each has a row of its own under its tab in the sidebar, and selecting it shows its work in the tab, read-only: Claude Code doesn't let you write to a subagent. The Agents page lists them either way." />
     <CheckBox Content="Show thinking expanded" IsChecked="{Binding ExpandThinking}" />
     <CheckBox Content="Show fun words while Claude works" IsChecked="{Binding FunWorkingWords}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"

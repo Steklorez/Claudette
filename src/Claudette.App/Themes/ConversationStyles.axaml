@@ -18,7 +18,7 @@
   <!-- The conversation's column: 900 pixels at most, so its lines stay easy to read, as are the to-do list and a
        thread's strip over and under it, and the composer across the conversation's margins. Settings → Appearance →
        Full-width conversation (DESIGN.md §14): ShellView takes the "fullwidth" class, and they fill the tab. -->
-  <Style Selector="ItemsControl#ConversationItems, StackPanel.column">
+  <Style Selector="ItemsControl.conversationlist, StackPanel.column">
     <Setter Property="MaxWidth" Value="900" />
   </Style>
   <Style Selector="StackPanel.composerarea">
@@ -38,24 +38,24 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="BoxShadow" Value="0 1 6 0 #22000000" />
   </Style>
-  <Style Selector=".fullwidth ItemsControl#ConversationItems, .fullwidth StackPanel.column, .fullwidth StackPanel.composerarea">
+  <Style Selector=".fullwidth ItemsControl.conversationlist, .fullwidth StackPanel.column, .fullwidth StackPanel.composerarea">
     <Setter Property="MaxWidth" Value="Infinity" />
   </Style>
 
   <!-- Settings → Appearance → Density (DESIGN.md §14): ShellView takes the "compact" class. The top leaves room for
        the first message's chip, which sits above it. -->
-  <Style Selector="ItemsControl#ConversationItems">
+  <Style Selector="ItemsControl.conversationlist">
     <Setter Property="Margin" Value="24,20,24,24" />
   </Style>
-  <Style Selector=".compact ItemsControl#ConversationItems">
+  <Style Selector=".compact ItemsControl.conversationlist">
     <Setter Property="Margin" Value="20,20,20,14" />
   </Style>
   <!-- The conversation is virtualized (DESIGN.md §5): only the items in view have controls. The panel has no spacing
        of its own, so each item keeps its distance from the next. -->
-  <Style Selector="ItemsControl#ConversationItems > ContentPresenter">
+  <Style Selector="ItemsControl.conversationlist > ContentPresenter">
     <Setter Property="Margin" Value="0,0,0,8" />
   </Style>
-  <Style Selector=".compact ItemsControl#ConversationItems > ContentPresenter">
+  <Style Selector=".compact ItemsControl.conversationlist > ContentPresenter">
     <Setter Property="Margin" Value="0,0,0,3" />
   </Style>
   <!-- A subagent group's items, the same: the panel has no spacing of its own. -->
@@ -65,6 +65,57 @@
   <Style Selector=".compact ItemsControl.subagentitems > ContentPresenter">
     <Setter Property="Margin" Value="0,0,0,3" />
   </Style>
+  <!-- A subagent's work in place of the conversation (DESIGN.md §5, "Subagents"): a header over it, like the find bar,
+       with its type as a small badge; what it handed back as a card after its cards, in the conversation's column;
+       and a bar where the composer was. -->
+  <Style Selector="Border.agentheader">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,6" />
+  </Style>
+  <Style Selector=".compact Border.agentheader">
+    <Setter Property="Padding" Value="16,3" />
+  </Style>
+  <Style Selector="Border.agenttype">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="6,1" />
+  </Style>
+  <Style Selector=".claude Border.agenttype">
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <Style Selector="Border.agentprompt">
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,6" />
+  </Style>
+  <Style Selector=".claude Border.agentprompt">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <Style Selector="controls|Card.agentreport">
+    <Setter Property="MaxWidth" Value="900" />
+    <Setter Property="Margin" Value="24,0,24,24" />
+  </Style>
+  <Style Selector=".compact controls|Card.agentreport">
+    <Setter Property="Margin" Value="20,0,20,14" />
+  </Style>
+  <Style Selector=".fullwidth controls|Card.agentreport">
+    <Setter Property="MaxWidth" Value="Infinity" />
+  </Style>
+  <Style Selector="Border.agentbar">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="16,10" />
+  </Style>
+  <Style Selector=".compact Border.agentbar">
+    <Setter Property="Padding" Value="16,6" />
+  </Style>
+
   <!-- Find in the conversation (DESIGN.md §5, "Find"): a bar over the conversation, and the match it shows marked. -->
   <Style Selector="Border.findbar">
     <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
@@ -77,7 +128,7 @@
     <Setter Property="MinHeight" Value="26" />
     <Setter Property="Padding" Value="8,3" />
   </Style>
-  <Style Selector="ItemsControl#ConversationItems > ContentPresenter.findcurrent">
+  <Style Selector="ItemsControl.conversationlist > ContentPresenter.findcurrent">
     <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
     <Setter Property="CornerRadius" Value="6" />
   </Style>
@@ -287,6 +338,20 @@
     <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
     <Setter Property="BorderThickness" Value="0,0,0,2" />
     <Setter Property="Padding" Value="12,3,6,2" />
+  </Style>
+  <!-- A project run's log in the main area (DESIGN.md §18, "Project tools", "A run's log"): its status over a divider,
+       then the log, clear of the scroll bar on the right. -->
+  <Style Selector="Border.runheader">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,10,12,10" />
+  </Style>
+  <Style Selector=".compact Border.runheader">
+    <Setter Property="Padding" Value="16,6,12,6" />
+  </Style>
+  <Style Selector="TextBlock.runheaderglyph">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Margin" Value="0,1,0,0" />
   </Style>
   <!-- A turn's two footer cards, Modified files over Turn statistics, as far apart as any two items. -->
   <Style Selector="StackPanel.turnfooter">
@@ -654,11 +719,6 @@
   </Style>
   <Style Selector="Border.mcprow:pointerover">
     <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
-  </Style>
-  <!-- A project job's output (DESIGN.md §18): dense lines, like a terminal, wrapping clear of the scroll bar -->
-  <Style Selector="ListBox#ProjectOutputList ListBoxItem">
-    <Setter Property="Padding" Value="4,0,16,0" />
-    <Setter Property="MinHeight" Value="0" />
   </Style>
   <!-- The running tasks list (DESIGN.md §5, "Running tasks"), under the chip in the composer bar -->
   <Style Selector="StackPanel.tasklist">

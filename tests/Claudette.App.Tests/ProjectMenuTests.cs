@@ -45,8 +45,8 @@ public class ProjectMenuTests
 
     private static IReadOnlyList<ProjectMenuEntry> Menu(
         ProjectInfo? project = null, IReadOnlyList<ProjectCandidate>? candidates = null, IReadOnlyList<ProjectAction>? custom = null,
-        IReadOnlyList<ResolvedLink>? links = null, bool hasTools = false, Func<ProjectAction, ProjectAction>? forJob = null) =>
-        ProjectMenu.Build(project, candidates ?? [], custom ?? [], links ?? [], hasTools, forJob ?? (a => a), Folder, Commands);
+        IReadOnlyList<ResolvedLink>? links = null, bool hasTools = false, Func<ProjectAction, ProjectAction>? forJob = null, bool hasRuns = false) =>
+        ProjectMenu.Build(project, candidates ?? [], custom ?? [], links ?? [], hasTools, hasRuns, forJob ?? (a => a), Folder, Commands);
 
     private static string[] Labels(IEnumerable<ProjectMenuEntry> menu) => menu.Select(e => e.IsSeparator ? "-" : e.Label).ToArray();
 
@@ -112,6 +112,16 @@ public class ProjectMenuTests
         Assert.Equal("Only https, http and mailto links open.", localEntry.Tip);
 
         Assert.Same(Commands.ShowOutput, menu.Single(e => e.Label == "Show output…").Command);
+    }
+
+    [Fact]
+    public void Show_output_waits_for_something_to_have_run()
+    {
+        var before = Menu(Project(), hasTools: true).Single(e => e.Label == "Show output…");
+        var after = Menu(Project(), hasTools: true, hasRuns: true).Single(e => e.Label == "Show output…");
+
+        Assert.Equal((false, "No action has run in this tab yet"), (before.IsEnabled, before.Tip));
+        Assert.Equal((true, "The newest action's log"), (after.IsEnabled, after.Tip));
     }
 
     [Fact]

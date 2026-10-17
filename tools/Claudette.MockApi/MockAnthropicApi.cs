@@ -15,6 +15,7 @@ namespace Claudette.MockApi;
 /// <summary>A request the mock received, for tests to check what reached the API.</summary>
 /// <param name="LastUserImages">The images in the latest user message, in order.</param>
 /// <param name="ApiKey">The <c>x-api-key</c> the request came with: which key Claude Code used.</param>
+/// <param name="System">The text of the request's system prompt, so tests can see what Claude was told.</param>
 public sealed record RecordedRequest(
     string Method,
     string Path,
@@ -26,7 +27,8 @@ public sealed record RecordedRequest(
     string Reply,
     string LastToolResultText = "",
     IReadOnlyList<RecordedImage>? LastUserImages = null,
-    string? ApiKey = null);
+    string? ApiKey = null,
+    string System = "");
 
 /// <summary>An image that reached the API: its media type, size, and for a PNG its dimensions.</summary>
 public sealed record RecordedImage(string MediaType, int Bytes, int? Width, int? Height);
@@ -258,8 +260,17 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
             reply,
             LastToolResultText(body),
             LastUserImages(body),
-            request.Headers["x-api-key"].FirstOrDefault()));
+            request.Headers["x-api-key"].FirstOrDefault(),
+            SystemText(body)));
     }
+
+    /// <summary>The system prompt's text: its blocks' text, one after another, or the string it is.</summary>
+    private static string SystemText(JsonObject body) => body["system"] switch
+    {
+        JsonValue value when value.TryGetValue<string>(out var text) => text,
+        JsonArray blocks => string.Join("\n", blocks.OfType<JsonObject>().Select(b => b["text"]?.GetValue<string>())),
+        _ => "",
+    };
 
     private sealed record Plan(string Kind, List<JsonObject> Blocks, TimeSpan? ChunkDelay = null);
 

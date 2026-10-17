@@ -19,6 +19,7 @@ Show up to three tabs side by side, each pane with its own conversation, compose
   - Dropping a tab on its own pane does nothing. Dropping it back on the sidebar selects it, as a click would.
 - **A thread.** **Show with its sub-threads** in a thread's **Thread ▸** menu shows the thread with its first sub-threads, as many as fit. See [Making a thread](../threads/making-a-thread.md).
 - **The command palette** has **Show the thread with its sub-threads**.
+- **A project action's log.** Right-click a run under its tab's row and choose **Open beside**, or drag the run onto the conversation, to watch a build next to the conversation. See [A run's log](../project-tools/using-project-tools.md#a-runs-log).
 
 A pane needs at least 360 pixels, so how many fit depends on the window. Panes that don't fit fold away, keeping the focused one and its neighbors, and come back as the window widens. Panes sit side by side only: they can't be stacked.
 

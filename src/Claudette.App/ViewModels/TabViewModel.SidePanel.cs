@@ -56,7 +56,6 @@ public sealed partial class TabViewModel
                 _ = ScratchPad.SyncAsync();
             }
         }
-        ProjectTools.Runs.UpdateShownRun();
         ProcessMonitor.OnSidePanelOpenChanged();
         TellLayoutAboutSidePanel();
     }
@@ -79,7 +78,6 @@ public sealed partial class TabViewModel
     partial void OnPageChanged(SidePanelPage value)
     {
         ProcessMonitor.IsPanelVisible = value == SidePanelPage.Processes && IsSidePanelOpen;
-        ProjectTools.Runs.UpdateShownRun();
         if (value == SidePanelPage.Mcp && IsSidePanelOpen)
         {
             _ = McpServers.RefreshAsync();
@@ -274,11 +272,4 @@ public sealed partial class TabViewModel
 
     /// <summary>Every reply in the conversation, subagents' groups' too.</summary>
     private static IEnumerable<AssistantTextItem> Replies(IEnumerable<ConversationItem> items) => items.Descendants().OfType<AssistantTextItem>();
-
-    /// <summary>Opens the side panel on the Project page: <b>Show output…</b>, a run's entry, or its notification.</summary>
-    private void OpenProjectPage()
-    {
-        IsSidePanelOpen = true;
-        IsProjectPage = true;
-    }
 }

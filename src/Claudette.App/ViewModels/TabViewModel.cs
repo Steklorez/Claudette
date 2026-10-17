@@ -105,7 +105,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         Perforce = new PerforceViewModel(services, this);
         Context = new ContextViewModel(services, this);
         WatchForMascot();
-        Agents = new AgentMap(services.Time, ModelDisplayName);
+        Agents = new AgentMap(services.Time, ModelDisplayName) { OpensInSidebar = services.Settings.Appearance.ShowSubagents == SubagentDisplay.InSidebar };
         Agents.Changed += OnAgentsChanged;
         Tasks = new RunningTasks(services.Time, Agents);
         Tasks.Changed += OnTasksChanged;
@@ -175,6 +175,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// </summary>
     public void ScrollTo(ConversationItem item)
     {
+        // A card in a subagent's work, with its work under the tab in the sidebar: that's where it shows.
+        ShowListHolding(item);
         if (ScrollToRequested is { } scroll)
         {
             scroll(item);
@@ -198,7 +200,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// or the subagent group it's inside, however deep. Null when it isn't in the conversation. The view brings that into
     /// view first, since the conversation is virtualized and only items in view have controls.
     /// </summary>
-    public ConversationItem? TopLevelItemOf(ConversationItem item) => Items.TopLevelOf(item);
+    public ConversationItem? TopLevelItemOf(ConversationItem item) => ShownItems.TopLevelOf(item);
 
     /// <summary>The processes the tab started (DESIGN.md §4, "Process monitor").</summary>
     public ProcessMonitorViewModel ProcessMonitor { get; }
@@ -449,11 +451,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             IsShown = value;
         }
         TellLayoutAboutSidePanel();
+        SubagentRowsShowingChanged();
         if (value)
         {
             TellMascot();
         }
-        ProjectTools.Runs.UpdateShownRun();
     }
 
     /// <summary>
@@ -884,6 +886,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         Perforce.OnSettingsChanged();
         ProjectTools.OnSettingsChanged();
         OnGamesSettingsChanged();
+        OnSubagentDisplayChanged();
         OnBranchChanged();
         RefreshPromptCache();
         OnPropertyChanged(nameof(ShowTaskProgressBadge));
@@ -978,13 +981,16 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         // What a thread's Claude should know about its sub-threads goes after the message, not after a command
         // (DESIGN.md §18, "Threads").
         var threadNote = OutgoingMessages.IsSlashCommand(text) ? null : TakeThreadNote();
+        // So does what it should know about subagents, after the tab's setting for them changed (DESIGN.md §5, "Subagents").
+        var subagentNote = OutgoingMessages.IsSlashCommand(text) ? null : TakeSubagentNote();
         // A mention of another session or agent reaches Claude as its name, and a session's ID as it is, with how to
         // message it (DESIGN.md §5, "Autocomplete"); the card keeps what was typed.
         var mentions = OutgoingMessages.IsSlashCommand(text) ? null : ResolveMentions(text);
         var mentionNote = mentions is null ? null : SessionMentions.Note(mentions.Mentioned, mentions.ById);
         var card = _conversation.AddUserMessage(text, suffixText, images: images, threadNote: threadNote, mentionNote: mentionNote,
-            mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray());
-        foreach (var note in new[] { threadNote, mentionNote })
+            mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray(), subagentNote: subagentNote is { } told ? (told.Note, told.Line) : null);
+        card.SubagentsToldBefore = subagentNote?.Before;
+        foreach (var note in new[] { threadNote, subagentNote?.Note, mentionNote })
         {
             suffixText = note is null ? suffixText : suffixText is null ? note : $"{suffixText}\n\n{note}";
         }
@@ -1126,6 +1132,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             if (card.HasThreadNote)
             {
                 ThreadNoteTakenBack();
+            }
+            if (card.SubagentsToldBefore is { } before)
+            {
+                SubagentNoteTakenBack(before);
             }
             if (card.IsCheckIn || card.IsAutoContinue || card.IsFromThread)
             {
@@ -1480,8 +1490,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // The presence file, among others: no pushes to the phone while Claudette is in front (DESIGN.md §10).
                 EnvironmentOverrides = environment,
             }));
-            // Every tab has the threads' hook, so making it a thread later needs no restart (DESIGN.md §18, "Threads").
-            var options = withPerforce with { Hooks = [.. withPerforce.Hooks, ThreadHook()] };
+            // Every tab has the threads' hook, so making it a thread later needs no restart (DESIGN.md §18, "Threads"), and
+            // the subagents' one, so turning them off applies at once (DESIGN.md §5, "Subagents").
+            var withSubagents = WithSubagentNote(withPerforce);
+            var options = withSubagents with { Hooks = [.. withSubagents.Hooks, ThreadHook(), SubagentHook()] };
             // Closed while the start was under way: nothing is started for a tab that's gone.
             _closing.Token.ThrowIfCancellationRequested();
             var session = await sessions.StartAsync(options, _closing.Token);
@@ -1791,6 +1803,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         finally
         {
             Agents.FinishReplay();
+            // Rows under the tab come back only for the last turn's subagents (DESIGN.md §5, "Subagents").
+            ForgetRestoredSubagents();
         }
         return sessionId;
     }

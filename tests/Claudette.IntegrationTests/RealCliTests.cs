@@ -949,6 +949,67 @@ public sealed class RealCliTests : IAsyncLifetime
         Assert.False(done.Result.IsError);
     }
 
+    /// <summary>
+    /// The hook Settings → Claude Code → Subagents registers (DESIGN.md §5, "Subagents"): Claude Code calls it back
+    /// before every Agent call, a subagent's own included.
+    /// </summary>
+    [Fact]
+    public async Task A_PreToolUse_hook_on_Agent_is_called_for_nested_subagents_too()
+    {
+        var calls = new List<HookInput>();
+        var hook = new HookRegistration("PreToolUse", "Agent|Task", (input, _) =>
+        {
+            lock (calls)
+            {
+                calls.Add(input);
+            }
+            return Task.FromResult(HookOutputs.Continue());
+        });
+        await using var session = await StartAsync(hooks: [hook], environment: new() { ["CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH"] = "3" });
+
+        await session.SendUserMessageAsync("SUBAGENTS", TestContext.Current.CancellationToken);
+        var (requested, _) = await session.ReadUntilAsync<PermissionRequested>(timeout: TimeSpan.FromSeconds(30));
+        requested.Request.Allow();
+        await session.ReadUntilAsync<TurnCompleted>(timeout: TimeSpan.FromSeconds(30));
+
+        lock (calls)
+        {
+            Assert.Equal(["Delegate a deeper look", "Search deeper", "Touch a marker file"],
+                calls.Select(c => c.ToolInput?["description"]?.GetValue<string>()).Order(StringComparer.Ordinal));
+            Assert.All(calls, c => Assert.Equal("PreToolUse", c.EventName));
+        }
+    }
+
+    /// <summary>
+    /// Settings → Claude Code → Subagents → Don't allow (DESIGN.md §5, "Subagents"): the hook's refusal stops each
+    /// Agent call before a subagent starts, and Claude reads why as the call's result. The note goes in with
+    /// --append-system-prompt.
+    /// </summary>
+    [Fact]
+    public async Task A_PreToolUse_hook_refuses_subagents_and_Claude_reads_why()
+    {
+        const string reason = "Subagents are turned off in Claudette. Do this work yourself.";
+        var hook = new HookRegistration("PreToolUse", "Agent|Task", (_, _) => Task.FromResult(HookOutputs.Deny(reason)));
+        await using var session = await StartAsync(hooks: [hook], appendSystemPrompt: "Don't delegate to subagents.");
+
+        await session.SendUserMessageAsync("SUBAGENTS", TestContext.Current.CancellationToken);
+        var (done, seen) = await session.ReadUntilAsync<TurnCompleted>(timeout: TimeSpan.FromSeconds(30));
+
+        Assert.DoesNotContain(seen, e => e is PermissionRequested);
+        Assert.DoesNotContain(seen.OfType<SystemNotice>(), n => n.Message.Subtype == "task_started");
+        var results = seen.OfType<ToolResultsReceived>().SelectMany(r => r.Message.Content.OfType<Core.Protocol.ToolResultBlock>()).ToArray();
+        Assert.Equal(2, results.Length);
+        Assert.All(results, r =>
+        {
+            Assert.True(r.IsError);
+            Assert.Contains(reason, r.Text, StringComparison.Ordinal);
+        });
+        Assert.False(File.Exists(Path.Combine(Work, "agent-marker.txt")));
+        Assert.False(done.Result.IsError);
+        Assert.Contains(_api.Requests, r => r.LastToolResultText.Contains(reason, StringComparison.Ordinal));
+        Assert.Contains(_api.Requests, r => r.System.Contains("Don't delegate to subagents.", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task Stop_task_stops_one_foreground_subagent_and_the_turn_carries_on()
     {

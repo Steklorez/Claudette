@@ -1,0 +1,12 @@
+﻿[button] Back to the conversation: work
+"●"
+"Review the change"
+"general-purpose"
+"general-purpose · <1s · 1 tool call"
+[button] The prompt it was given
+
+---
+"A subagent's work, read-only. Claude Code doesn't let you write to a subagent, but Claude can pass it a message."
+[button] Message it through Claude
+[button] Stop subagent…
+[button] Back to the conversation

@@ -371,6 +371,12 @@ public sealed class TabState
     /// never told, or was told it's no longer a thread. The next message carries a note when they differ.
     /// </summary>
     public string? ThreadNote { get; set; }
+
+    /// <summary>
+    /// What the tab's Claude was last told about subagents (DESIGN.md §5, "Subagents"), by the note Claude Code starts
+    /// with or one on a message. The next message carries a note when the tab's setting no longer matches.
+    /// </summary>
+    public SubagentUse SubagentsTold { get; set; } = SubagentUse.ClaudeDecides;
 }
 
 /// <summary>A reply the user chose as a tab's plan (DESIGN.md §5, "Tasks").</summary>
@@ -412,8 +418,11 @@ public sealed class TabOverrides
     /// </summary>
     public bool? UseUsageCredits { get; set; }
 
+    /// <summary>Whether Claude may use subagents in this tab (DESIGN.md §5, "Subagents"), or null for Settings → Claude Code.</summary>
+    public SubagentUse? Subagents { get; set; }
+
     public bool HasAny => Model is not null || Effort is not null || PermissionMode is not null || CheckIns is not null || ShowProcessMonitor is not null
-        || ContinueAfterLimitReset is not null || UseUsageCredits is not null;
+        || ContinueAfterLimitReset is not null || UseUsageCredits is not null || Subagents is not null;
 }
 
 public sealed class RecentFolder

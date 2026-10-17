@@ -9,6 +9,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - **`@` completes any path.** Type a folder after `@` and the list shows what's in it, from `C:\`, `/`, `~/` or `../` too, folder by folder, and picks a file outside the project in full. A folder in the project shows the files git ignores as well, dimmed, and the tab's extra folders' files are in the list with the project's.
+- **Subagents under their tab.** Settings → Appearance → **Show subagents' work** → **Under the tab in the sidebar** gives each subagent Claude starts a row of its own under its tab, nested under the one that started it and dimmed once it's finished and from an earlier turn. Select one to see its work in the tab, with the prompt it was given and what it handed back; the conversation keeps a one-line card for it. You can't write to a subagent, so **Message it through Claude** names it in your next message instead, and a permission prompt it waits on is answered right there. The Agents page opens a subagent's work the same way.
+- **Discourage subagents, or turn them off.** Settings → Claude Code → **Subagents**, or one tab's **Tab settings…**: **Discourage them** asks Claude to do the work itself unless you ask for a subagent, and **Don't allow them** turns down any it starts, in tabs already open too. Claude hears about a change with your next message.
+
+### Changed
+
+- **A project action's log shows where the conversation is.** Clicking an action's entry under its tab shows its log in the main area, with room to read a build's errors, and the tab's own row takes you back to the conversation. **Open beside** in the entry's menu, or dragging it onto the conversation, puts the log beside it. Web addresses in the log open in your browser, and the files and folders it names open with a click, in Claudette's editor at the line an error points to. Select and copy any of it, and `Ctrl/Cmd+F` finds in it. **Show output…** in the project's menu and the *action finished* notification open it there too, and the side panel's **Project** page keeps the project's details.
 
 ### Fixed
 

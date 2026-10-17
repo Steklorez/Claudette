@@ -1,9 +1,9 @@
-﻿[button] (parts below)
+﻿[button] Generate project files
   "✕"
   "Generate project files"
   "Failed · exit code 6 · 12:00"
   [button] Close
-[button] (parts below)
+[button] Build editor
   "●"
   "Build editor"
   "Running · 0s"

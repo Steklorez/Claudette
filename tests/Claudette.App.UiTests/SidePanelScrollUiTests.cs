@@ -17,7 +17,7 @@ namespace Claudette.App.UiTests;
 
 /// <summary>
 /// Every page of the side panel wraps its text at the width shown, clear of the scroll bar (DESIGN.md §3, "Side panel"):
-/// a path, a process's name and a log line wrap, and a row's numbers line up at its right edge. Only a tree's row nested
+/// a path and a process's name wrap, and a row's numbers line up at its right edge. Only a tree's row nested
 /// past the edge scrolls sideways.
 /// </summary>
 public class SidePanelScrollUiTests
@@ -62,31 +62,6 @@ public class SidePanelScrollUiTests
         viewer.Offset = new Vector(70, 0);
         UiText.Settle(window);
         Assert.Equal(width, text.Bounds.Width, 1);
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task A_project_runs_long_log_lines_wrap()
-    {
-        var launcher = new FakeLauncher();
-        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: launcher);
-        UnrealFixture.Write(h.Root, h.WorkFolder);
-        var tab = await h.OpenTabAsync();
-        var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Project is not null, "the project");
-        await tab.ProjectTools.RunActionCommand.ExecuteAsync(tab.ProjectTools.Actions.Single(a => a.Id == "build-editor"));
-        var run = tab.ProjectTools.Runs.Items.Single();
-        run.OpenCommand.Execute(null);
-        launcher.Processes.Last().WriteOutput($"error C2065: {LongName}: undeclared identifier");
-        await UiText.SettleUntilAsync(window, () => run.Output.Count > 0, "the output");
-        UiText.Settle(window);
-
-        var output = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ProjectOutputList");
-        var viewer = Viewer(output);
-        var line = output.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text?.Contains(LongName, StringComparison.Ordinal) == true);
-        Assert.Equal(viewer.Viewport.Width, viewer.Extent.Width, 1);
-        Assert.True(line.Bounds.Height > line.FontSize * 3, "the log line wraps");
-        Assert.InRange(RightEdge(line, viewer), viewer.Viewport.Width - 24, viewer.Viewport.Width - 16);
         window.Close();
     }
 

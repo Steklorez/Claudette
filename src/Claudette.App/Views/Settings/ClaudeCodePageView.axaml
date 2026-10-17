@@ -124,6 +124,13 @@
     <CheckBox Content="Show every hook run in the conversation" IsChecked="{Binding ShowAllHookRuns}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                Text="Off, only hooks that fail, or print something while they run, get a row." />
+    <!-- DESIGN.md §5, "Subagents" -->
+    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+      <TextBlock Text="Subagents" VerticalAlignment="Center" />
+      <ComboBox Grid.Column="1" MinWidth="200" ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding Subagents}" AutomationProperties.Name="Subagents" />
+    </Grid>
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="0,-8,0,0"
+               Text="Whether Claude hands parts of its work to subagents. Discourage asks it to do the work itself, unless you ask for a subagent. Don't allow tells it it can't, and Claudette turns down any subagent it starts anyway, in tabs already open too. Tab settings… can give a tab its own." />
     <!-- DESIGN.md §18, "Agent map" -->
     <CheckBox Content="Summarize subagents' progress" IsChecked="{Binding SubagentProgressSummaries}" />
     <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"

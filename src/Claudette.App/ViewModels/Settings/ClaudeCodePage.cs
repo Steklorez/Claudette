@@ -4,6 +4,19 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels.Settings;
 
+/// <summary>Settings → Claude Code → Subagents' choices, and the tab's own in Tab settings… (DESIGN.md §5, "Subagents").</summary>
+public sealed record SubagentUseChoice(SubagentUse Use)
+{
+    public static string Label(SubagentUse use) => use switch
+    {
+        SubagentUse.Discourage => "Discourage them",
+        SubagentUse.DontAllow => "Don't allow them",
+        _ => "Claude decides",
+    };
+
+    public override string ToString() => Label(Use);
+}
+
 /// <summary>
 /// Settings → Claude Code (DESIGN.md §14): the installed version and its updates, the account, how tabs run (with
 /// folder trust), the login shell's environment, and the Claude app. Dispose it with the window.
@@ -37,6 +50,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         Entry("Keep copies of files Claude changes, so prompts can be rewound"),
         Entry("Give Claude a task list"),
         Entry("Show every hook run in the conversation"),
+        Entry("Subagents"),
         Entry("Summarize subagents' progress"),
         Entry("Suggest my next prompt"),
         Entry("Ask before using a new folder's own configuration (folder trust)", pageText: "Ask before using a new folder's own configuration"),
@@ -105,6 +119,19 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
     {
         get => Settings.ClaudeCode.ShowAllHookRuns;
         set => Set(value, v => Settings.ClaudeCode.ShowAllHookRuns = v);
+    }
+
+    public IReadOnlyList<SubagentUseChoice> SubagentChoices { get; } =
+        [new(SubagentUse.ClaudeDecides), new(SubagentUse.Discourage), new(SubagentUse.DontAllow)];
+
+    /// <summary>
+    /// <b>Subagents</b> (DESIGN.md §5, "Subagents"): whether Claude may hand work to them. Each tab can override it in Tab
+    /// settings….
+    /// </summary>
+    public SubagentUseChoice Subagents
+    {
+        get => SubagentChoices.FirstOrDefault(c => c.Use == Settings.ClaudeCode.Subagents) ?? SubagentChoices[0];
+        set => Set(value?.Use ?? SubagentUse.ClaudeDecides, v => Settings.ClaudeCode.Subagents = v);
     }
 
     /// <summary><b>Summarize subagents' progress</b> (DESIGN.md §18, "Agent map").</summary>

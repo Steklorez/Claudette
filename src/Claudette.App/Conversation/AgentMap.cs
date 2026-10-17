@@ -50,6 +50,45 @@ public sealed class AgentMap
     /// <summary>Replaying a transcript: new agents aren't live (DESIGN.md §18, "Restored tabs").</summary>
     public bool IsReplaying { get; set; }
 
+    /// <summary>
+    /// How many messages have started work in the tab: the user's own, a thread's and its sub-threads', not a check-in or
+    /// a continue. A subagent started before the latest is from an earlier one, which its sidebar row shows once it has
+    /// finished (DESIGN.md §5, "Subagents").
+    /// </summary>
+    public int Exchange { get; private set; }
+
+    /// <summary>
+    /// Settings → Appearance → Show subagents' work is <b>Under the tab in the sidebar</b>: a node opens its subagent's
+    /// own view rather than its group in the conversation (DESIGN.md §5, "Subagents").
+    /// </summary>
+    public bool OpensInSidebar
+    {
+        get;
+        set
+        {
+            if (field == value)
+            {
+                return;
+            }
+            field = value;
+            foreach (var node in _nodes)
+            {
+                node.Refresh();
+            }
+        }
+    }
+
+    /// <summary>A message that starts work went to Claude: the subagents before it are from an earlier exchange.</summary>
+    internal void BeginExchange()
+    {
+        Exchange++;
+        foreach (var node in _nodes)
+        {
+            node.OnExchangeChanged();
+        }
+        NotifyChanged();
+    }
+
     internal DateTimeOffset Now => _time.GetUtcNow();
 
     internal Func<string?, string?> ModelName { get; }
@@ -141,6 +180,32 @@ public sealed class AgentMap
             OnTask(started);
         }
         return node;
+    }
+
+    /// <summary>
+    /// Claudette's hook refused the subagent's <c>Agent</c> call, so it never started (DESIGN.md §5, "Subagents"): it
+    /// leaves the map, and nothing it might have done is counted.
+    /// </summary>
+    internal void Remove(AgentNode node)
+    {
+        if (!node.IsCounted || node.Parent is not { } parent)
+        {
+            return;
+        }
+        node.IsCounted = false;
+        _nodes.Remove(node);
+        if (node.CountedStatus is { } counted)
+        {
+            _counts[(int)counted]--;
+            node.CountedStatus = null;
+        }
+        _ticking.Remove(node);
+        if (node.ToolUseId is { } toolUseId)
+        {
+            _byToolUse.Remove(toolUseId);
+        }
+        parent.Children.Remove(node);
+        parent.Refresh();
     }
 
     internal void OnToolUse(AgentNode agent, string toolUseId, string name, JsonObject input)

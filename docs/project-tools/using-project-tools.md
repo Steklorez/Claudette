@@ -9,7 +9,7 @@ summary: "A tab can do things for the project in its folder: launch the editor, 
 
 A tab can do things for the project in its folder: launch the editor, generate project files, build, open the solution. Which things you get depends on the project. Claudette knows [Unreal Engine](unreal-engine.md), [Unity](unity.md) and [Godot](godot.md) projects, and a folder can have its own [actions and links](actions-and-links.md). [Perforce](perforce.md) has a page of its own.
 
-{% include shot.html name="guide/project-tools/project-page" alt="The Project page in the side panel for the Unreal project, with the project's details and the log of a build." %}
+{% include shot.html name="guide/project-tools/project-page" alt="The Project page in the side panel for the Unreal project, with the project's details." %}
 
 ## The project row
 
@@ -26,7 +26,7 @@ Click the row to open its menu. From the top, it has:
 - The project's choice, such as Unreal's **Editor configuration**.
 - The project's fix, such as **Choose engine folder…**.
 - Your own actions, then your **Links**. See [Actions and links](actions-and-links.md).
-- **Show in Explorer** (**Show in Finder** on macOS, **Show in File Manager** on Linux), which opens the project's folder, **Show output…**, **Add an action…**, **Add a link…** and **Refresh**.
+- **Show in Explorer** (**Show in Finder** on macOS, **Show in File Manager** on Linux), which opens the project's folder, **Show output…**, which shows the newest run's log once an action has run, **Add an action…**, **Add a link…** and **Refresh**.
 
 An item that's greyed out says why in its tooltip, for example "Generate project files first". The menu looks at the project's files again each time it opens, so it's current. **Refresh** does the same on demand.
 
@@ -49,18 +49,26 @@ One job runs at a time per tab. The other jobs stay greyed out until it ends. Jo
 
 Each job is a run. It shows under its tab's row in the sidebar, newest last, with a glyph for how it's going: the busy dot while it runs, a check mark when it succeeded, a red cross when it failed and a muted square when you stopped it. Under its name, it says how long it has run (*Running · 1m 05s*) or how it ended (*Failed · exit code 6 · 14:32*).
 
-- Click a run to select its tab and open the Project page on its log.
+- Click a run to show its log where the conversation is (below). Starting a run doesn't take you away from the conversation.
 - A running one has **Stop** in the place of the × button, so a stray click never ends a build. A finished one has ×, which takes the run and its log away.
+- Right-click a run for **Open beside**, **Close pane**, **Copy output**, **Stop** while it runs, and **Close** once it's done.
 - Runs stay until you close them, whatever the result. Closing the tab takes its runs away, and they aren't saved when Claudette quits or restarts.
 - Launch and Open actions start a program with no output, so they don't make runs.
 
+## A run's log
+
+A run's log shows in the main area, in the conversation's place, without the message box, so a build's errors have room. Click the tab's own row to go back to the conversation.
+
+- At the top: how the run went (running, succeeded, failed with its exit code, or stopped), when it started and how long it took, with **Stop**, which ends the job and every process it started, **Copy**, which copies the whole log, and **Close** once it's done.
+- Under it, the output, following the newest line until you scroll up, and again once you scroll back to the end. Long lines wrap. A run keeps its last 5,000 lines, and the log says how many older ones were dropped.
+- Select text and copy it as anywhere else, and `Ctrl/Cmd+F` finds in the log.
+- **Links.** Web addresses open in your browser. Files and folders the log names open with a click, as files Claude names do: in Claudette's [editor](../project-files/opening-files-from-the-conversation.md) at the line an error points to, such as `Source/Player.cpp(42,7)` or `src/main.rs:42:7`, or in the OS's app, as Settings → Editor says. A path is a link only once Claudette finds it, from the folder the action ran in or the tab's, so text that only looks like a path stays plain. A program or script shows in its folder rather than running.
+- To see the log and the conversation at once, right-click the run and pick **Open beside**, or drag the run onto the conversation. See [Split panes](../tabs/split-panes.md).
+- `Ctrl/Cmd+W` closes a finished run's log. On a running one, it goes back to the tab, so it never stops a build.
+
 ## The Project page
 
-The **Project** page of the side panel, beside Changed files, Agents and Processes, shows:
-
-- The project's details: its file, the engine's version, folder and kind, the editor target and the configuration. It also lists entries of your project files that were skipped.
-- The selected run's status (running, succeeded, failed with its exit code, or stopped), with **Stop**, which ends the job and every process it started, and **Copy**.
-- The run's output, following the newest line. A run keeps its last 5,000 lines, and the page says how many older ones were dropped.
+The **Project** page of the side panel, beside Changed files, Agents and Processes, shows the project's details: its file, the engine's version, folder and kind, the editor target and the configuration. It also lists entries of your project files that were skipped. The runs' logs are in the main area.
 
 The page's tab shows a busy dot while a job runs. It's there when the tab has project tools: a project, actions of your own, or skipped entries. A running job's processes also show on the [Processes](../tabs/processes.md) page when the process monitor is on. Closing the tab stops a running job along with its other processes.
 
@@ -74,7 +82,7 @@ For Unreal, Unity and Godot projects, Claudette adds a short note to the session
 
 ## A project action finishes
 
-When a job finishes or fails while Claudette isn't in front, a notification says so: *"Build editor failed (exit code 6)."* A job you stopped doesn't notify. Click it to select the tab and open the Project page on that run's log. The switch is Settings → Notifications → **A project action finishes**, on by default. See [Notifications](../away/notifications.md).
+When a job finishes or fails while Claudette isn't in front, a notification says so: *"Build editor failed (exit code 6)."* A job you stopped doesn't notify. Click it to see that run's log. The switch is Settings → Notifications → **A project action finishes**, on by default. See [Notifications](../away/notifications.md).
 
 ## Settings
 

@@ -304,7 +304,7 @@ public class ProjectToolsTests
         Assert.False(Entry(tab, "Generate project files").IsEnabled);
         Assert.Contains("Stop it first", Entry(tab, "Generate project files").Tip, StringComparison.Ordinal);
         var build = LastRun(tab)!;
-        Assert.Same(build, tab.ProjectTools.Runs.SelectedRun);
+        Assert.Same(build, tab.ProjectTools.Runs.RunningRun);
         process.WriteOutput("Building NightOwlEditor...");
         process.WriteError("warning: deprecated");
         await TabTestHarness.Eventually(() => build.Output.Contains("warning: deprecated"), "the output");
@@ -336,7 +336,7 @@ public class ProjectToolsTests
         await tab.ProjectTools.RunActionCommand.ExecuteAsync(Action(tab, "build-editor"));
         var process = launcher.Processes.Last();
 
-        var run = tab.ProjectTools.Runs.SelectedRun!;
+        var run = LastRun(tab)!;
 
         Assert.True(run.StopCommand.CanExecute(null));
         run.StopCommand.Execute(null);
@@ -412,7 +412,7 @@ public class ProjectToolsTests
         {
             process.WriteOutput($"line {i}");
         }
-        var run = tab.ProjectTools.Runs.SelectedRun!;
+        var run = LastRun(tab)!;
         await TabTestHarness.Eventually(() => run.Output.LastOrDefault() == "line 5200", "the output");
 
         // The oldest go 500 at a time: past 5,000, the first 500 (the command line and lines 1 to 499) went.
@@ -420,20 +420,20 @@ public class ProjectToolsTests
         Assert.Equal("line 500", run.Output[0]);
         Assert.Equal(500, run.OutputDropped);
         Assert.Contains("5,000", run.OutputNote!.Replace(".", ",", StringComparison.Ordinal).Replace(" ", ",", StringComparison.Ordinal), StringComparison.Ordinal);
-        await tab.ProjectTools.Runs.CopyOutputCommand.ExecuteAsync(null);
+        await run.CopyOutputCommand.ExecuteAsync(null);
         Assert.EndsWith("line 5200", h.Platform.Clipboard, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task Show_output_opens_the_Project_page_and_the_pages_take_turns()
+    public async Task The_Project_page_takes_turns_with_the_other_pages()
     {
         var (h, _, _) = UnrealHarness();
         await using var _h = h;
         var tab = await OpenWithProjectAsync(h);
 
-        Entry(tab, "Show output…").Command!.Execute(null);
+        tab.IsSidePanelOpen = true;
+        tab.ShowProjectPageCommand.Execute(null);
 
-        Assert.True(tab.IsSidePanelOpen);
         Assert.True(tab.IsProjectPage);
         Assert.False(tab.IsFilesPage);
         tab.ShowAgentsPageCommand.Execute(null);

@@ -121,7 +121,7 @@ public sealed class ConversationCardsUiTests
         UiText.Settle(window);
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
         var list = view.GetVisualDescendants().OfType<ItemsControl>().Single(c => c.Name == "ConversationItems");
-        var marks = view.GetVisualDescendants().OfType<ScrollMarks>().Single();
+        var marks = view.GetVisualDescendants().OfType<ScrollMarks>().Single(m => m.Name == "ScrollMarks");
         await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 2, "a mark for each message");
         Assert.Equal([0, 151], marks.Marks.Select(m => m.Index));
         Assert.Equal("Your message: The first question", marks.Marks[0].Tip);

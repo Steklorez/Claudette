@@ -47,7 +47,7 @@ A click brings Claudette to the front and goes to what the notification is about
 - A tab's notification selects the tab, and opens its group if it was collapsed.
 - A usage alert opens the [Usage window](../usage/the-usage-window.md).
 - An update opens its dialog, and the sign-in notification opens the sign-in dialog.
-- A project action's notification selects its tab and opens its Project page on the run's log.
+- A project action's notification selects its tab and shows the run's log where the conversation is.
 
 ## Notifications and your phone
 

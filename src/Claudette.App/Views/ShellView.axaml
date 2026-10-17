@@ -560,8 +560,60 @@
                                 </ContextMenu>
                               </Button.ContextMenu>
                             </Button>
-                            <!-- The tab's project runs, newest last, each with its log (DESIGN.md §4, §18). They stay until
-                                 closed: × on a finished one, and Stop in its place while one runs. -->
+                            <!-- The tab's subagents, when their work shows under the tab (DESIGN.md §5, "Subagents"): each
+                                 under the one that started it, with the agent icon and its type, dimmed once it's finished
+                                 and from an earlier turn. A click shows its work in the tab. They stay until dismissed. -->
+                            <ItemsControl Classes="subagents" ItemsSource="{Binding SubagentRows}" IsVisible="{Binding HasSubagentRows}">
+                              <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                  <StackPanel Spacing="1" />
+                                </ItemsPanelTemplate>
+                              </ItemsControl.ItemsPanel>
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:SubagentRowViewModel">
+                                  <Button Classes="flat agentrow" Classes.showing="{Binding IsShowing}" Classes.earlier="{Binding Node.IsEarlier}"
+                                          Margin="{Binding Indent, Converter={x:Static vm:Converters.LeftMargin}}" Command="{Binding OpenCommand}"
+                                          ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding Node.Title}">
+                                    <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
+                                      <TextBlock Classes="status runglyph" Classes.busy="{Binding Node.IsRunning}" Classes.alert="{Binding Node.IsWaiting}"
+                                                 Classes.ok="{Binding Node.IsDone}" Classes.failed="{Binding Node.IsFailed}"
+                                                 Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                                      <StackPanel Grid.Column="1">
+                                        <DockPanel>
+                                          <Path DockPanel.Dock="Left" Classes="agentrowicon" Data="{StaticResource IconToolAgent}" />
+                                          <TextBlock DockPanel.Dock="Right" Classes="muted rundetail" Text="{Binding Node.RunningText}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                          <TextBlock Classes="runname" Text="{Binding Node.Title}" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                        <TextBlock Classes="muted rundetail" Classes.warning="{Binding Node.IsWaiting}" Classes.error="{Binding Node.IsFailed}"
+                                                   Text="{Binding Node.Subtitle}" TextTrimming="CharacterEllipsis" />
+                                      </StackPanel>
+                                      <Panel Grid.Column="2" VerticalAlignment="Top">
+                                        <Button Classes="flat runclose" Padding="4" ToolTip.Tip="Dismiss: takes it off the sidebar. Its card in the conversation stays."
+                                                AutomationProperties.Name="Dismiss subagent" Command="{Binding DismissCommand}" IsVisible="{Binding CanDismiss}">
+                                          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+                                        </Button>
+                                        <Button Classes="flat runstop" Padding="4" ToolTip.Tip="Stop subagent…" AutomationProperties.Name="Stop subagent"
+                                                Command="{Binding StopCommand}" IsVisible="{Binding Node.CanStop}">
+                                          <Path Data="{StaticResource IconStop}" Fill="{DynamicResource MutedTextBrush}" Width="8" Height="8" Stretch="Uniform" />
+                                        </Button>
+                                      </Panel>
+                                    </Grid>
+                                    <Button.ContextMenu>
+                                      <ContextMenu>
+                                        <MenuItem Header="Show its work" Command="{Binding OpenCommand}" />
+                                        <MenuItem Header="Stop subagent…" Command="{Binding StopCommand}" IsVisible="{Binding Node.CanStop}" />
+                                        <MenuItem Header="Dismiss" Command="{Binding DismissCommand}" IsVisible="{Binding CanDismiss}" />
+                                        <MenuItem Header="Dismiss earlier subagents" Command="{Binding DismissEarlierCommand}" IsVisible="{Binding CanDismissEarlier}"
+                                                  ToolTip.Tip="Takes every finished subagent from an earlier turn off the sidebar" />
+                                      </ContextMenu>
+                                    </Button.ContextMenu>
+                                  </Button>
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <!-- The tab's project runs, newest last, each with its log, which a click shows in the main area
+                                 (DESIGN.md §4, §18). They stay until closed: × on a finished one, and Stop in its place while
+                                 one runs. Like a tab's row, one can be dragged onto a pane. -->
                             <ItemsControl Classes="runs" ItemsSource="{Binding ProjectTools.Runs.Items}" IsVisible="{Binding ProjectTools.Runs.HasRuns}">
                               <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -570,8 +622,8 @@
                               </ItemsControl.ItemsPanel>
                               <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="vm:ProjectRunViewModel">
-                                  <Button Classes="flat runrow" Classes.showing="{Binding IsShowing}" Command="{Binding OpenCommand}"
-                                          ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right">
+                                  <Button Classes="flat runrow" Classes.selected="{Binding IsSelected}" Classes.dragged="{Binding IsDragged}"
+                                          Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding Name}">
                                     <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
                                       <TextBlock Classes="status runglyph" Classes.busy="{Binding IsRunning}" Classes.ok="{Binding Succeeded}" Classes.failed="{Binding Failed}"
                                                  Text="{Binding Glyph}" HorizontalAlignment="Center" VerticalAlignment="Top" />
@@ -590,6 +642,18 @@
                                         </Button>
                                       </Panel>
                                     </Grid>
+                                    <Button.ContextMenu>
+                                      <ContextMenu>
+                                        <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                                                  IsVisible="{Binding !IsShown}" ToolTip.Tip="Shows its log beside the tab you're in" />
+                                        <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}"
+                                                  ToolTip.Tip="Takes its log off the screen; it stays in the sidebar" />
+                                        <MenuItem Header="Copy output" Command="{Binding CopyOutputCommand}" />
+                                        <MenuItem Header="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsRunning}" ToolTip.Tip="Ends the job and every process it started" />
+                                        <Separator IsVisible="{Binding !IsRunning}" />
+                                        <MenuItem Header="Close" Command="{Binding CloseCommand}" IsVisible="{Binding !IsRunning}" ToolTip.Tip="Its entry and its log go" />
+                                      </ContextMenu>
+                                    </Button.ContextMenu>
                                   </Button>
                                 </DataTemplate>
                               </ItemsControl.ItemTemplate>
@@ -975,6 +1039,10 @@
         </DataTemplate>
         <DataTemplate DataType="vm:ProjectFilesViewModel">
           <views:ProjectFilesView />
+        </DataTemplate>
+        <!-- A project run's log (DESIGN.md §18, "Project tools", "A run's log") -->
+        <DataTemplate DataType="vm:ProjectRunViewModel">
+          <views:ProjectRunView />
         </DataTemplate>
       </ItemsControl.DataTemplates>
     </ItemsControl>

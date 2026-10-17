@@ -4,6 +4,7 @@ using Claudette.Core.Diffs;
 using Claudette.Core.Docs;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
+using Claudette.Core.Subagents;
 using Claudette.Core.Threads;
 
 namespace Claudette.App.Conversation;
@@ -217,8 +218,10 @@ public sealed class ConversationBuilder
     /// <param name="threadNote">The note on threads sent after it, which the card mentions.</param>
     /// <param name="mentionNote">The note on the sessions and agents it names, sent after it, which the card mentions.</param>
     /// <param name="mentioned">Their names, for the card's line about the note.</param>
+    /// <param name="subagentNote">The note on subagents sent after it, and the card's line about it (DESIGN.md §5, "Subagents").</param>
     public UserMessageItem AddUserMessage(string text, string? suffixText = null, bool isCheckIn = false, IReadOnlyList<MessageImage>? images = null, bool isAutoContinue = false,
-        string? label = null, bool isFromThread = false, string? threadNote = null, string? mentionNote = null, IReadOnlyList<string>? mentioned = null) =>
+        string? label = null, bool isFromThread = false, string? threadNote = null, string? mentionNote = null, IReadOnlyList<string>? mentioned = null,
+        (string Note, string Line)? subagentNote = null) =>
         AddUser(new UserMessageItem(text, suffixText, isCheckIn, isAutoContinue)
         {
             Images = images ?? [],
@@ -228,6 +231,8 @@ public sealed class ConversationBuilder
             ThreadNote = threadNote,
             MentionNote = mentionNote,
             Mentioned = mentioned ?? [],
+            SubagentNote = subagentNote?.Note,
+            SubagentNoteText = subagentNote?.Line,
         }, Now());
 
     /// <summary>
@@ -247,6 +252,12 @@ public sealed class ConversationBuilder
         _blocks.ForgetLastText();
         Stamp(item, sentAt);
         Items.Add(item);
+        // A message that starts work: the subagents before it are from an earlier exchange (DESIGN.md §5, "Subagents").
+        // A check-in or a continue carries the same work on.
+        if (!item.IsCheckIn && !item.IsAutoContinue)
+        {
+            _agents?.BeginExchange();
+        }
         return item;
     }
 
@@ -761,7 +772,20 @@ public sealed class ConversationBuilder
             {
                 _todoList?.ApplyToolResult(result.ToolUseId, result.Text, message.ToolUseResult);
             }
-            else if (_toolUses.TryGetValue(result.ToolUseId, out var tool))
+            else if (_toolUses.TryGetValue(result.ToolUseId, out var tool) && tool is SubagentItem refused && result.IsError && SubagentMessages.IsRefusal(result.Text))
+            {
+                // Claudette's hook didn't let it start (DESIGN.md §5, "Subagents"): not a subagent that failed.
+                if (refused.StartedAt is not null)
+                {
+                    refused.CompletedAt = Now();
+                }
+                refused.ShowRefused();
+                if (_agents?.Find(result.ToolUseId) is { } node)
+                {
+                    _agents.Remove(node);
+                }
+            }
+            else if (_toolUses.TryGetValue(result.ToolUseId, out tool))
             {
                 // A thread's message Claudette delivered itself reads as a refusal to Claude Code, but it went
                 // (DESIGN.md §18, "Threads").

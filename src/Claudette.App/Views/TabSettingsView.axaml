@@ -9,7 +9,7 @@
       <TextBlock Classes="muted small" TextWrapping="Wrap"
                  Text="These replace the defaults from Settings for this tab only, and are saved with the tab." />
 
-      <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+      <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
         <TextBlock Text="Model" VerticalAlignment="Center" />
         <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
         <TextBlock Grid.Row="1" Text="Effort" VerticalAlignment="Center" />
@@ -25,6 +25,10 @@
         <TextBlock Grid.Row="5" Text="Usage credits" VerticalAlignment="Center" IsVisible="{Binding ShowsUsageCredits}" />
         <ComboBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding UsageCreditsChoices}" SelectedItem="{Binding SelectedUsageCredits}"
                   IsVisible="{Binding ShowsUsageCredits}" ToolTip.Tip="{x:Static vm:TabViewModel.UsageCreditsMenuTip}" />
+        <!-- DESIGN.md §5, "Subagents": applies at once, the note to Claude with the next message -->
+        <TextBlock Grid.Row="6" Text="Subagents" VerticalAlignment="Center" />
+        <ComboBox Grid.Row="6" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding SelectedSubagents}"
+                  ToolTip.Tip="Whether Claude hands parts of its work to subagents in this tab. Discourage asks it to do the work itself; Don't allow turns down any it starts." />
       </Grid>
 
       <CheckBox Content="Use different check-in settings for this tab" IsChecked="{Binding UseCustomCheckIns}" />

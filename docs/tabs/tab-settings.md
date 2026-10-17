@@ -25,11 +25,13 @@ Each one starts at **Default**, which says what the default is, such as *Default
 | **Process monitor** | Default, **On**, **Off** | Settings → Processes → **Show the process monitor** |
 | **Auto-continue** | Default, **On**, **Off** | Settings → Usage → **Continue tasks when a usage limit resets** |
 | **Usage credits** | Default, **On**, **Off** | Settings → Usage → **Use usage credits once a limit is used up** |
+| **Subagents** | Default, **Claude decides**, **Discourage them**, **Don't allow them** | Settings → Claude Code → **Subagents** |
 
 - **Model** and **Effort** are explained in [Model, effort and output style](../composer/model-effort-and-output-style.md), and **Permission mode** in [Permission modes](../permissions/permission-modes.md). A change reaches the running session as soon as you apply it.
 - **Process monitor** turns the [Processes](processes.md) page and the composer bar's summary on or off for this tab.
 - **Auto-continue** is whether Claude carries on a task by itself when a usage limit resets. See [When a limit stops a task](../usage/when-a-limit-stops-a-task.md).
 - **Usage credits** is whether the tab carries on with your plan's usage credits once a limit is used up, or stops and waits for the reset. The tab's menu has it too, as **Use usage credits**, and a tab on an API-key account doesn't have it. See [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md).
+- **Subagents** is whether Claude hands parts of its work to subagents in this tab. It applies as soon as you apply it, and Claude hears about it with your next message. New in the next release; see [Discouraging or turning off subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents).
 
 ### Check-ins
 

@@ -156,7 +156,7 @@ public class ConversationScrollUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1100, 800);
         var scroll = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "ConversationScroll");
         var items = window.GetVisualDescendants().OfType<ItemsControl>().Single(c => c.Name == "ConversationItems");
-        var marks = window.GetVisualDescendants().OfType<ScrollMarks>().Single();
+        var marks = window.GetVisualDescendants().OfType<ScrollMarks>().Single(m => m.Name == "ScrollMarks");
         // Replies from a line to a page long, as in a long session: far from the list's first guess at their heights.
         for (var i = 0; i < 30; i++)
         {

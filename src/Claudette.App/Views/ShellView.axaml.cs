@@ -126,8 +126,9 @@ public partial class ShellView : UserControl
         _dragItem = button switch
         {
             { DataContext: TabViewModel { IsRenaming: false } tab } when button.Classes.Contains("tab") => tab,
-            // A Project Files tab's row only goes out to the panes (DESIGN.md §18, "Project files").
+            // A Project Files tab's row, and a run's, only go out to the panes (DESIGN.md §18, "Project files", "Project tools").
             { DataContext: ProjectFilesViewModel files } when button.Classes.Contains("tab") => files,
+            { DataContext: ProjectRunViewModel run } when button.Classes.Contains("runrow") => run,
             { DataContext: TabGroupViewModel group } when button.Classes.Contains("grouplabel") => group,
             _ => null,
         };
@@ -527,6 +528,11 @@ public partial class ShellView : UserControl
         else if (Is(KeyboardShortcuts.Find) && shell.SelectedTab is { } findTab)
         {
             findTab.OpenFindCommand.Execute(null);
+        }
+        else if (Is(KeyboardShortcuts.Find) && shell.SelectedRun is { } findRun)
+        {
+            // Find in a run's log (DESIGN.md §18, "Project tools").
+            findRun.RequestFind();
         }
         else if (JumpFor(Is) is { } jump && shell.SelectedTab is { } jumpTab)
         {

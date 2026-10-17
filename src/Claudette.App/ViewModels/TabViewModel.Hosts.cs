@@ -56,15 +56,21 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     // ---- Project tools ---------------------------------------------------------------------------------------------
 
-    bool IProjectToolsHost.IsProjectPageShowing => IsSelected && IsSidePanelOpen && IsProjectPage;
-
     long? IProjectToolsHost.CurrentChangelist => Perforce.CurrentChangelist;
 
-    void IProjectToolsHost.OpenProjectPage() => OpenProjectPage();
-
-    void IProjectToolsHost.SelectTab() => _shell.SelectTab(Id);
-
     Task IProjectToolsHost.OpenProjectSettingsAsync(string page, bool startNew) => _shell.OpenProjectSettingsAsync(this, page, startNew);
+
+    void IProjectToolsHost.RunAdded(ProjectRunViewModel run) => _shell.AddRun(run);
+
+    void IProjectToolsHost.RunRemoved(ProjectRunViewModel run) => _shell.RemoveRun(run, this);
+
+    void IProjectToolsHost.ShowRun(ProjectRunViewModel run) => _shell.ShowRun(run);
+
+    void IProjectToolsHost.RunSelected(ProjectRunViewModel run) => _shell.OnRunSelected();
+
+    void IProjectToolsHost.CloseRunPane(ProjectRunViewModel run) => _shell.ClosePaneCommand.Execute(run);
+
+    Task<OpenedPath> IProjectToolsHost.OpenPathAsync(string path, int? line, int? column) => OpenPathAsync(path, line, column);
 
     // ---- Remote Control --------------------------------------------------------------------------------------------
 

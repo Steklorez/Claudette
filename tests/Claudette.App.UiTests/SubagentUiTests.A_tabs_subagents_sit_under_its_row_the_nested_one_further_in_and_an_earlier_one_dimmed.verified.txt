@@ -1,0 +1,18 @@
+﻿[button] Explore the auth code
+  "●"
+  "<1s"
+  "Explore the auth code"
+  "Explore · Tokens are checked in the middleware."
+  [button] Dismiss subagent
+[button] Fix the middleware
+  "●"
+  "<1s"
+  "Fix the middleware"
+  "general-purpose · Agent Check the tests"
+  [button] Stop subagent
+[button] Check the tests
+  "●"
+  "<1s"
+  "Check the tests"
+  "Explore · Grep auth  in tests/"
+  [button] Stop subagent

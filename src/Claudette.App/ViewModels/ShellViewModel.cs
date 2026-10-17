@@ -226,7 +226,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// (DESIGN.md §18, "Project files").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedAccount), nameof(ProjectTab))]
+    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedAccount), nameof(ProjectTab))]
     public partial IShellTab? Selected { get; set; }
 
     /// <summary>The focused tab when it's a session's; null while nothing, or a Project Files tab, has the focus.</summary>
@@ -240,10 +240,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public ProjectFilesViewModel? SelectedFiles => Selected as ProjectFilesViewModel;
 
     /// <summary>
-    /// The tab whose project the sidebar's foot and Settings' project pages show: the focused session's, or with a
-    /// Project Files tab focused, its group's first session's.
+    /// The tab whose project the sidebar's foot and Settings' project pages show: the focused session's, with a run's log
+    /// focused its tab's, or with a Project Files tab focused, its group's first session's.
     /// </summary>
-    public TabViewModel? ProjectTab => SelectedTab ?? SelectedFiles?.Group.Tabs.FirstOrDefault();
+    public TabViewModel? ProjectTab => SelectedTab ?? (SelectedRun is { } run ? TabOf(run) : null) ?? SelectedFiles?.Group.Tabs.FirstOrDefault();
 
     partial void OnSelectedChanged(IShellTab? oldValue, IShellTab? newValue)
     {
@@ -263,7 +263,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
                 _services.Notifications.ClearTab(newValue.Id);
             }
         }
-        _services.State.SelectedTabId = newValue?.Id;
+        _services.State.SelectedTabId = SavedId(newValue);
         _services.SaveState();
         UpdateGameCall();
     }
@@ -614,10 +614,23 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>
     /// <c>Ctrl/Cmd+W</c>, and the macOS menu's <b>Close Tab</b>: the selected tab, or with a Project Files tab focused, its
-    /// file showing, and the tab itself once none is open (DESIGN.md §18, "Project files", "Keyboard").
+    /// file showing, and the tab itself once none is open (DESIGN.md §18, "Project files", "Keyboard"). On a run's log, a
+    /// finished run closes, and a running one goes back to its tab (DESIGN.md §18, "Project tools").
     /// </summary>
     [RelayCommand(AllowConcurrentExecutions = true)]
-    private Task CloseSelectedTabAsync() => SelectedFiles is { } files ? files.CloseShowingOrTabAsync() : CloseTabAsync(SelectedTab);
+    private Task CloseSelectedTabAsync()
+    {
+        if (SelectedFiles is { } files)
+        {
+            return files.CloseShowingOrTabAsync();
+        }
+        if (SelectedRun is { } run)
+        {
+            CloseSelectedRun(run);
+            return Task.CompletedTask;
+        }
+        return CloseTabAsync(SelectedTab);
+    }
 
     private async Task RemoveTabAsync(TabViewModel tab, bool killProcesses = true)
     {
@@ -625,23 +638,27 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         var ordered = AllTabs.ToList();
         var index = ordered.IndexOf(tab);
         var group = Groups.FirstOrDefault(g => g.Tabs.Contains(tab));
+        // Its runs' logs go with it (DESIGN.md §18, "Project tools").
+        IShellTab[] going = [tab, .. tab.ProjectTools.Runs.Items];
+        var hadFocus = Selected is { } focused && going.Contains(focused);
         group?.Tabs.Remove(tab);
-        OpenTabs.Remove(tab);
+        foreach (var gone in going)
+        {
+            OpenTabs.Remove(gone);
+        }
         RemoveGroupIfEmpty(group);
         // A pane closes with its tab; the one beside it takes the focus if it had it (DESIGN.md §18, "Split panes").
-        var pane = _panes.IndexOf(tab);
-        if (pane >= 0)
-        {
-            _panes.RemoveAt(pane);
-        }
-        if (ReferenceEquals(Selected, tab))
+        var at = _panes.IndexOf(hadFocus ? Selected! : tab);
+        var pane = at < 0 ? -1 : at - _panes.Take(at).Count(going.Contains);
+        var closedPanes = _panes.RemoveAll(going.Contains);
+        if (hadFocus)
         {
             var remaining = AllTabs.ToList();
             Selected = _panes.Count > 0 ? _panes[Math.Min(pane, _panes.Count - 1)]
                 : remaining.Count > 0 ? remaining[Math.Clamp(index, 0, remaining.Count - 1)]
                 : group?.Files ?? Groups.Select(g => g.Files).FirstOrDefault(f => f is not null);
         }
-        else if (pane >= 0)
+        else if (closedPanes > 0)
         {
             UpdatePanes();
         }
@@ -662,6 +679,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         if (tab is not null)
         {
             SelectedTab = tab;
+            // Its own row shows its conversation, not a subagent's work (DESIGN.md §5, "Subagents").
+            tab.ShowOwnConversation();
         }
     }
 
@@ -682,8 +701,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     }
 
     /// <summary>
-    /// Ctrl+Tab and Ctrl+Shift+Tab: the session tabs, going round. Project Files tabs are skipped, so their numbers never
-    /// move (DESIGN.md §18, "Project files"); from one, the next tab is its group's first.
+    /// Ctrl+Tab and Ctrl+Shift+Tab: the session tabs, going round. Project Files tabs and runs' logs are skipped, so their
+    /// numbers never move (DESIGN.md §18, "Project files"); from a Files tab, the next tab is its group's first, and from a
+    /// run's log, the one after its tab, whose row it's under.
     /// </summary>
     private void SelectOffset(int offset)
     {
@@ -694,7 +714,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
         if (SelectedTab is null)
         {
-            var first = SelectedFiles?.Group.Tabs.FirstOrDefault() is { } groupFirst ? tabs.IndexOf(groupFirst) : 0;
+            var first = SelectedFiles?.Group.Tabs.FirstOrDefault() is { } groupFirst ? tabs.IndexOf(groupFirst)
+                : SelectedRun is { } run && TabOf(run) is { } owner ? tabs.IndexOf(owner) + 1
+                : 0;
             SelectedTab = tabs[(offset > 0 ? first : first - 1 + tabs.Count) % tabs.Count];
             return;
         }
@@ -901,7 +923,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public RestartSnapshot CaptureForRestart() => new()
     {
         Tabs = AllTabs.Select(t => t.State).ToList(),
-        SelectedTabId = Selected?.Id,
+        SelectedTabId = SavedId(Selected),
         PaneTabIds = _panes.Count > 1 ? [.. _panes.Select(t => t.Id)] : null,
         Drafts = AllTabs.Where(t => t.Draft is not null).ToDictionary(t => t.Id, t => t.Draft!),
         RunningTabIds = AllTabs.Where(t => t.IsProcessRunning).Select(t => t.Id).ToList(),

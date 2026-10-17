@@ -66,6 +66,7 @@ The page also shows Claudette's version and update status, with **Check now**, *
 | **Keep copies of files Claude changes, so prompts can be rewound** | On | No | No | [Rewind and branch](../conversation/rewind-and-branch.md) |
 | **Give Claude a task list** | On | No | No | [The Tasks page](../plans/the-tasks-page.md) |
 | **Show every hook run in the conversation** | Off | No | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
+| **Subagents** | Claude decides | No | Yes | [Subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents) |
 | **Summarize subagents' progress** | Off | No | No | [The agent map](../plans/the-agent-map.md) |
 | **Suggest my next prompt** | Off | No | No | [Prompt suggestions](../composer/prompt-suggestions.md) |
 | **Ask before using a new folder's own configuration** | On | No | No | [Folder trust](../permissions/folder-trust.md) |
@@ -116,6 +117,7 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 | **Full-width conversation** | Off | Yes | No | [Reading the conversation](../conversation/reading-the-conversation.md) |
 | **Quieter in-between steps** | On | Yes | No | [Reading the conversation](../conversation/reading-the-conversation.md) |
 | **Show thinking expanded** | Off | Yes | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
+| **Show subagents' work** | In the conversation | Yes | No | [Subagents](../conversation/subagents.md#subagents-under-their-tab) |
 | **Show fun words while Claude works** | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Show what Claude is doing while it works** | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Show when the prompt cache expires** | On | Yes | No | [The prompt cache](../usage/the-prompt-cache.md) |

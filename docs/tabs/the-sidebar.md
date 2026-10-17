@@ -71,11 +71,13 @@ The ring is hidden until the tab has context data, so a tab that hasn't started 
 
 Once you've added an API-key account, a folder group whose new tabs use an account other than Default has a small tag with the account's name beside its label, and a tab whose account differs from its group's has the tag on its row. See [A folder's account](../accounts/a-folders-account.md).
 
-## Threads and project runs
+## Threads, subagents and project runs
 
 A thread's sub-threads sit right under it, indented, and move with it.
 
-Each time one of a tab's project actions runs as a job, such as a build, a small entry appears under the tab's row with how it's going. See [Project tools](../project-tools/using-project-tools.md).
+With Settings → Appearance → **Show subagents' work** set to **Under the tab in the sidebar**, each subagent Claude starts has a small row under its tab, with the agents icon before its task. Click it to see its work in the tab. New in the next release; see [Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab).
+
+Each time one of a tab's project actions runs as a job, such as a build, a small entry appears under the tab's row with how it's going. Click it to show its log where the conversation is, and click the tab's row to go back. See [Project tools](../project-tools/using-project-tools.md).
 
 ## The top and the foot
 

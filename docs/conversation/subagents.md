@@ -21,9 +21,54 @@ A subagent Claude doesn't wait for runs in the background. Its group in the conv
 
 To stop a subagent, use the **■** on its row in [the agent map](../plans/the-agent-map.md). The running tasks chip leaves subagents out ([The working line and running tasks](the-working-line-and-running-tasks.md)).
 
+## Subagents under their tab
+
+{% include unreleased.html %}
+
+Rather than open each subagent's card in the conversation, you can give each one a row of its own under its tab in the sidebar, the way a thread's sub-threads sit under it. Set Settings → Appearance → **Show subagents' work** to **Under the tab in the sidebar**. It applies at once, to every tab.
+
+A subagent's row has the agents icon and its task, how long it has run, and under them its type and what it's doing, or how it ended. A subagent another one started sits under it, further in. Its status mark is the one [the agent map](../plans/the-agent-map.md) uses: a pulsing dot while it runs, `!` while it waits on you, and a dot, ✕ or ■ once it's done, failed or stopped.
+
+To see what a subagent did:
+
+1. Click its row. The tab shows the subagent's work in place of the conversation: its own tool calls, replies and thinking, then what it handed back to Claude.
+2. Over it are its task, its type, its model, how long it ran, and **The prompt it was given**, which opens the prompt Claude wrote for it.
+3. To go back, click **← ‹the tab's name›** over the work, **Back to the conversation** under it, the tab's own row, or press `Esc`. The conversation is where you left it.
+
+In the conversation, each subagent is then a one-line card, and clicking it shows its work the same way. So does clicking a subagent on the Agents page.
+
+### You can't write to a subagent
+
+Claude Code doesn't let you type to a subagent, so where the message box was there's a bar instead. Only Claude can reach a subagent. **Message it through Claude** takes you back to the conversation with the subagent named in the message box: write what you want it to know, and Claude passes it on. The button is there while the subagent runs, and afterwards for most kinds of subagent. Explore and Plan subagents can't be resumed once they've finished, and neither can one you stopped.
+
+While a subagent runs, **Stop subagent…** in the bar, or the **■** on its row, stops it, as on [the agent map](../plans/the-agent-map.md).
+
+### Rows from earlier turns
+
+A subagent's row stays until you dismiss it. Once it has finished, and you've sent a message since it started, it's dimmed: it's no longer part of the work under way. Its tip says *From an earlier turn*. A subagent still running in the background stays bright.
+
+- **×** on a finished row, or **Dismiss** in its right-click menu, takes it off the sidebar. Its card stays in the conversation, and it stays on the Agents page.
+- **Dismiss earlier subagents**, in a row's right-click menu, takes every dimmed row off at once.
+
+A tab that's restored when Claudette starts brings back rows only for its last turn's subagents.
+
+## Discouraging or turning off subagents
+
+{% include unreleased.html %}
+
+Settings → Claude Code → **Subagents** says whether Claude hands parts of its work to subagents:
+
+- **Claude decides** (the default): Claude uses them when it judges they help.
+- **Discourage them**: Claude is asked to do the work itself, in the conversation, and to use a subagent only when you ask for one.
+- **Don't allow them**: Claude is told it can't, and Claudette turns down any subagent Claude starts anyway. Its card says *Not started: subagents are turned off for this tab*, and Claude carries on by itself.
+
+It applies at once, in tabs already open too. Claude hears about the change with your next message, and the message's card says so under it, such as *Told Claude to avoid subagents*. One tab can have its own, from its [Tab settings…](../tabs/tab-settings.md).
+
+Workflows, and skills that run in a subagent of their own, aren't affected.
+
 ## Questions from a subagent
 
-When a subagent needs permission, the card that asks says who is asking: *Asked by the Explore subagent: Find the auth code*. You answer it like any other ([Permission cards](../permissions/permission-cards.md)).
+When a subagent needs permission, the card that asks says who is asking: *Asked by the Explore subagent: Find the auth code*. You answer it like any other ([Permission cards](../permissions/permission-cards.md)). With **Show subagents' work** under the tab, the subagent's row says it's waiting, and the question is under its work too, where you can answer it.
 
 ## In a restored tab
 
@@ -31,11 +76,17 @@ A restored tab shows each subagent's finished work, tool calls included, but no 
 
 ## Finding things in a subagent
 
-[Find](finding-your-way.md#find) looks inside subagents' groups, and a match there opens the group. Text you select inside a subagent can be added to the [scratch pad](the-scratch-pad.md), like any other.
+[Find](finding-your-way.md#find) looks inside subagents' groups, and a match there opens the group. While the tab shows a subagent's work, Find looks through that. Text you select inside a subagent can be added to the [scratch pad](the-scratch-pad.md), like any other.
 
 ## Settings
 
-**Summarize subagents' progress** (Settings → Claude Code, off by default) is explained with [the agent map](../plans/the-agent-map.md).
+- Settings → Appearance → **Show subagents' work**: **In the conversation** (the default) or **Under the tab in the sidebar**. See [Subagents under their tab](#subagents-under-their-tab).
+- Settings → Claude Code → **Subagents**: **Claude decides** (the default), **Discourage them** or **Don't allow them**, which a tab's **Tab settings…** can change for it. See [Discouraging or turning off subagents](#discouraging-or-turning-off-subagents).
+- **Summarize subagents' progress** (Settings → Claude Code, off by default) is explained with [the agent map](../plans/the-agent-map.md).
+
+## Shortcuts
+
+- `Esc` goes back from a subagent's work to the conversation.
 
 ## See also
 

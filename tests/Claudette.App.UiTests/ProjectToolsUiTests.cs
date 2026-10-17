@@ -1,9 +1,11 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using AvaloniaEdit;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.Views;
@@ -13,7 +15,7 @@ namespace Claudette.App.UiTests;
 
 /// <summary>
 /// Project tools rendered (DESIGN.md §18): the project's row at the sidebar's foot and its menu, with the folder's
-/// links, and the runs under a tab's row in the sidebar.
+/// links, the runs under a tab's row in the sidebar, and a run's log in the main area.
 /// </summary>
 public class ProjectToolsUiTests
 {
@@ -94,17 +96,28 @@ public class ProjectToolsUiTests
         Assert.Equal(((ISolidColorBrush)muted!).Color, ((ISolidColorBrush)Detail(rows[1]).Foreground!).Color);
         Assert.Equal(((ISolidColorBrush)error!).Color, ((ISolidColorBrush)Detail(rows[0]).Foreground!).Color);
 
-        // A click on an entry shows its log on the Project page.
+        // A click on an entry shows its log in the main area, in the conversation's place, with no composer.
         rows[0].Command!.Execute(null);
         UiText.Settle(window);
-        Assert.True(failed.IsShowing);
-        Assert.Contains("showing", rows[0].Classes);
-        var output = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ProjectOutputList");
-        Assert.True(output.IsEffectivelyVisible);
-        Assert.Same(failed.Output, output.ItemsSource);
-        // The actions are in the project's menu at the sidebar's foot, not on the page.
-        var page = window.GetVisualDescendants().OfType<DockPanel>().Single(p => p.Name == "ProjectPage");
+        Assert.True(failed.IsSelected);
+        Assert.Contains("selected", rows[0].Classes);
+        var view = Shown<ProjectRunView>(window);
+        Assert.Same(failed, view.DataContext);
+        Assert.Equal("Generate project files failed (exit code 6).", view.FindControl<SelectableTextBlock>("RunStatus")!.Text);
+        Assert.Contains("Generating...", Log(view).Document.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain(window.GetVisualDescendants().OfType<ComposerView>(), c => c.IsEffectivelyVisible);
+        // The tab's own row goes back to the conversation.
+        window.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("tab") && b.DataContext == tab).Command!.Execute(tab);
+        UiText.Settle(window);
+        Assert.False(view.IsEffectivelyVisible);
+        Assert.Contains(window.GetVisualDescendants().OfType<ComposerView>(), c => c.IsEffectivelyVisible);
+        // The actions are in the project's menu at the sidebar's foot, and the logs in the main area, not on the page.
+        tab.OpenSidePanelPage(ViewModels.SidePanelPage.Project);
+        UiText.Settle(window);
+        var page = window.GetVisualDescendants().OfType<ScrollViewer>().Single(p => p.Name == "ProjectPage");
+        Assert.True(page.IsEffectivelyVisible);
         Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), b => tab.ProjectTools.Actions.Any(a => Equals(b.Content, a.Label)));
+        Assert.Empty(page.GetVisualDescendants().OfType<TextEditor>());
 
         // Stop, and the running one becomes a closable entry; closing takes the entry away.
         Visible(rows[1], "Stop").Command!.Execute(null);
@@ -129,8 +142,7 @@ public class ProjectToolsUiTests
         var run = tab.ProjectTools.Runs.Items.Single();
         run.OpenCommand.Execute(null);
         UiText.Settle(window);
-        var output = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ProjectOutputList");
-        Assert.True(output.IsEffectivelyVisible);
+        var log = Log(Shown<ProjectRunView>(window));
 
         // In batches, as a busy build writes them, past the limit more than once.
         var process = launcher.Processes.Last();
@@ -145,11 +157,60 @@ public class ProjectToolsUiTests
         await UiText.SettleUntilAsync(window, () => run.Output[^1] == "line 6200", "the output");
         UiText.Settle(window);
 
+        // The editor keeps step with the run's lines, the oldest dropped from both.
         Assert.Equal(1500, run.OutputDropped);
-        var shown = output.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text).ToList();
-        Assert.Contains("line 6200", shown);
-        Assert.DoesNotContain("line 1", shown);
+        Assert.Equal(string.Join("\n", run.Output), log.Document.Text);
+        // It follows the newest line, as a terminal does.
+        var view = log.TextArea.TextView;
+        Assert.True(view.VisualLinesValid);
+        Assert.Equal(log.Document.LineCount, view.VisualLines[^1].FirstDocumentLine.LineNumber);
+        Assert.DoesNotContain(view.VisualLines, l => l.FirstDocumentLine.LineNumber == 1);
     }
+
+    [AvaloniaFact]
+    public async Task A_logs_long_lines_wrap_and_its_links_open_with_a_click()
+    {
+        var launcher = new FakeLauncher();
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: launcher);
+        UnrealFixture.Write(h.Root, h.WorkFolder);
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Project is not null, "the project");
+        await tab.ProjectTools.RunActionCommand.ExecuteAsync(tab.ProjectTools.Actions.Single(a => a.Id == "build-editor"));
+        var run = tab.ProjectTools.Runs.Items.Single();
+        run.OpenCommand.Execute(null);
+        var process = launcher.Processes.Last();
+        process.WriteOutput("See https://dev.epicgames.com/documentation for help.");
+        process.WriteOutput("error C2065: very_long_" + string.Concat(Enumerable.Repeat("unbreakable_", 30)) + ": undeclared identifier");
+        await UiText.SettleUntilAsync(window, () => run.Output.Count == 3, "the output");
+        var log = Log(Shown<ProjectRunView>(window));
+        var textView = log.TextArea.TextView;
+        await UiText.SettleUntilAsync(window, () => textView.VisualLinesValid && textView.VisualLines.Count == 3, "the lines");
+
+        // Long lines wrap at the width shown: nothing scrolls sideways.
+        Assert.True(textView.VisualLines[2].TextLines.Count > 1, "the long line wraps");
+        Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled, log.HorizontalScrollBarVisibility);
+
+        // The address is a link; a click on it opens it.
+        var line = textView.VisualLines[1];
+        Assert.Contains(line.Elements, e => e.GetType().Name == "LinkText");
+        var start = "See ".Length + 4;
+        var at = textView.GetVisualPosition(new AvaloniaEdit.TextViewPosition(2, start), AvaloniaEdit.Rendering.VisualYPosition.LineMiddle) - textView.ScrollOffset;
+        var point = textView.TranslatePoint(at, window)!.Value;
+        window.MouseMove(point);
+        window.MouseDown(point, Avalonia.Input.MouseButton.Left);
+        window.MouseUp(point, Avalonia.Input.MouseButton.Left);
+        await UiText.SettleUntilAsync(window, () => h.Platform.OpenedUrls.Count == 1, "the link to open");
+        Assert.Equal(["https://dev.epicgames.com/documentation"], h.Platform.OpenedUrls);
+        process.Exit(0);
+    }
+
+    /// <summary>The one <typeparamref name="T"/> on screen.</summary>
+    private static T Shown<T>(Window window) where T : Control =>
+        window.GetVisualDescendants().OfType<T>().Single(c => c.IsEffectivelyVisible);
+
+    /// <summary>A run's log, in its view.</summary>
+    private static TextEditor Log(ProjectRunView view) => view.FindControl<TextEditor>("Log")!;
 
     [AvaloniaFact]
     public async Task A_folder_with_no_project_has_the_row_named_after_it_and_its_menu_lists_the_links()

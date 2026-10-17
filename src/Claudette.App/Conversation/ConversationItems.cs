@@ -218,6 +218,20 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
         : "Told Claude about its sub-threads";
 
     /// <summary>
+    /// The note on subagents sent after the message, after the tab's setting for them changed (DESIGN.md §5,
+    /// "Subagents"): the card says so in a line, with the note as its tip.
+    /// </summary>
+    public string? SubagentNote { get; init; }
+
+    public bool HasSubagentNote => SubagentNote is not null;
+
+    /// <summary>The line under a message that carried a note on subagents: "Told Claude to avoid subagents".</summary>
+    public string? SubagentNoteText { get; init; }
+
+    /// <summary>What Claude had been told about subagents before this message's note, for when it's taken back.</summary>
+    internal Core.Settings.SubagentUse? SubagentsToldBefore { get; set; }
+
+    /// <summary>
     /// The note on the sessions and agents the message names, sent after it (DESIGN.md §5, "Autocomplete"): the card says
     /// so in a line, with the note as its tip.
     /// </summary>
@@ -794,6 +808,29 @@ public sealed partial class SubagentItem : ToolUseItem
 
     /// <summary>Finished and returned its report: the green dot.</summary>
     public bool IsSucceeded => IsComplete && !IsError && !IsStopped;
+
+    /// <summary>
+    /// Claudette's hook refused its <c>Agent</c> call, so it never started (DESIGN.md §5, "Subagents"): its dot is muted,
+    /// it has no cards, and it has no row in the sidebar or the agent map.
+    /// </summary>
+    public bool IsRefused { get; private set; }
+
+    /// <summary>It started, so it has work to show: every subagent but one Claudette's hook refused.</summary>
+    public bool IsStarted => !IsRefused;
+
+    /// <summary>The call came back refused by Claudette's hook, as Settings → Claude Code → Subagents says.</summary>
+    internal void ShowRefused()
+    {
+        IsComplete = true;
+        IsError = false;
+        IsStopped = true;
+        IsRefused = true;
+        ResultSummary = "Not started: subagents are turned off for this tab";
+        OnPropertyChanged(nameof(IsStopped));
+        OnPropertyChanged(nameof(IsSucceeded));
+        OnPropertyChanged(nameof(IsRefused));
+        OnPropertyChanged(nameof(IsStarted));
+    }
 
     public override void ApplyResult(string text, bool isError, JsonNode? toolUseResult)
     {
