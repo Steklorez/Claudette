@@ -567,14 +567,16 @@ public partial class ComposerTests
             ["sessionId"] = "img-1",
             ["timestamp"] = "2026-09-28T10:00:00Z",
         }.ToJsonString());
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
         await history.OpenCommand.ExecuteAsync(Assert.Single(Assert.Single(history.Groups).Entries));
 
         var tab = h.Shell.SelectedTab!;
-        await TabTestHarness.Eventually(() => tab.Items.OfType<UserMessageItem>().Any(), "the restored prompt");
+        // The conversation is read back as the tab starts, off the UI thread, and more follows the prompt: it's the start
+        // that's waited for.
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the restored prompt");
         var prompt = InlineDispatcher.Read(() => tab.Items.OfType<UserMessageItem>().Single());
         Assert.Equal("Match this design", prompt.Text);
         Assert.Equal(Png, Assert.Single(prompt.Images).Data);

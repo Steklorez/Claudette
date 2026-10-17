@@ -113,7 +113,7 @@ public class TabMarkTests
         await using var h = new TabTestHarness();
         h.WriteTranscript("old-1", UserLine("old-1", "Refactor the parser", h.WorkFolder));
         h.Services.State.SessionMarks["old-1"] = new SessionMark { Mark = "pause", At = h.Time.GetUtcNow() };
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -133,7 +133,7 @@ public class TabMarkTests
         await SaveToLibraryAsync(h, "lib-1", "DESKTOP-01", mark: "flag", lastUsed: h.Time.GetUtcNow().AddHours(-1));
         // Marked here before the other machine wrote the record: the record has the latest.
         h.Services.State.SessionMarks["lib-1"] = new SessionMark { Mark = "cross", At = h.Time.GetUtcNow().AddHours(-2) };
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         Assert.Equal(TabMark.Flag, history.Groups.SelectMany(g => g.Entries).Single().Mark);
@@ -157,7 +157,7 @@ public class TabMarkTests
         await SaveToLibraryAsync(h, "lib-2", "DESKTOP-01", mark: "flag");
         var lease = Path.Combine(h.Services.Library.Library.GetSessionFolder("lib-2"), LeaseManager.FileName);
         await File.WriteAllTextAsync(lease, new JsonObject { ["machine"] = "DESKTOP-01", ["owner"] = "other", ["updatedAt"] = h.Time.GetUtcNow().ToString("O") }.ToJsonString(), TestContext.Current.CancellationToken);
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -176,7 +176,10 @@ public class TabMarkTests
         var tab = await h.OpenTabAsync();
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120, "the turn to finish");
+        // Its tokens are counted as its result comes, and the tab stops working as the session goes idle just after,
+        // which can be applied separately: syncing turned on while the tab still works waits for a turn end it has
+        // already seen.
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && !tab.IsWorking, "the turn to finish");
         tab.SetSyncToLibrary(true);
         await TabTestHarness.Eventually(() =>
         {

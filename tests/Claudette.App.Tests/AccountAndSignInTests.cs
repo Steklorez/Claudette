@@ -282,7 +282,9 @@ public class AccountAndSignInTests
         var signIn = new SignInViewModel(h.Services, () => { signedIn++; return Task.CompletedTask; });
 
         var running = signIn.SignInCommand.ExecuteAsync(null);
-        await TabTestHarness.Eventually(() => h.Platform.OpenedUrls.Contains("https://claude.ai/automatic"), "the browser");
+        // The browser opens just before Claude Code is asked to wait for the sign-in: that request is answered below.
+        await TabTestHarness.Eventually(() => h.Platform.OpenedUrls.Contains("https://claude.ai/automatic")
+            && h.Transport.SentControlSubtypes.Contains("claude_oauth_wait_for_completion"), "the browser");
 
         Assert.True(signIn.IsWaiting);
         Assert.Equal("Finish signing in in your browser.", signIn.Status);
@@ -302,7 +304,10 @@ public class AccountAndSignInTests
         AnswerAuthenticate(h);
         var signIn = new SignInViewModel(h.Services, () => Task.CompletedTask);
         var running = signIn.SignInCommand.ExecuteAsync(null);
-        await TabTestHarness.Eventually(() => signIn.Status == "Finish signing in in your browser.", "waiting");
+        // The status changes before the browser opens and Claude Code is asked to wait for the sign-in: that request is
+        // answered below.
+        await TabTestHarness.Eventually(() => signIn.Status == "Finish signing in in your browser."
+            && h.Transport.SentControlSubtypes.Contains("claude_oauth_wait_for_completion"), "waiting");
 
         await signIn.EnterCodeInsteadCommand.ExecuteAsync(null);
         Assert.True(signIn.ShowCodeEntry);
@@ -409,7 +414,7 @@ public class AccountAndSignInTests
 
         signIn.Code = "abc123#s";
         await signIn.SubmitCodeCommand.ExecuteAsync(null);
-        var process = launcher.Processes[launcher.Started.IndexOf(login)];
+        var process = launcher.ProcessFor(login);
         Assert.Equal(["abc123#s"], process.Input);
 
         process.WriteOutput("Login successful.");

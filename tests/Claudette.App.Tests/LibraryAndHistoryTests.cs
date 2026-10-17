@@ -44,7 +44,7 @@ public class LibraryAndHistoryTests
     {
         await using var h = new TabTestHarness();
         h.WriteTranscript("old-1", UserLine("old-1", "Refactor the parser", h.WorkFolder), """{"type":"ai-title","aiTitle":"Parser refactor","sessionId":"old-1"}""");
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -74,7 +74,7 @@ public class LibraryAndHistoryTests
         h.WriteTranscript("s1", UserLine("s1", "Why does the build fail?", h.WorkFolder), ReplyLine("s1", "Set VULKAN_SDK before you build."));
         h.WriteTranscript("s2", UserLine("s2", "Add Vulkan support", h.WorkFolder), ReplyLine("s2", "Done."));
         h.WriteTranscript("s3", UserLine("s3", "Rename the parser", h.WorkFolder), ReplyLine("s3", "Renamed."));
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -110,7 +110,7 @@ public class LibraryAndHistoryTests
             WriteSession(h, "old", "2026-09-28T08:00:00Z");
             WriteSession(h, "newest", "2026-09-28T10:00:00Z");
             WriteSession(h, "middle", "2026-09-28T09:00:00Z");
-            h.Shell.OpenHistoryCommand.Execute(null);
+            h.OpenHistory();
             var history = h.Shell.History!;
 
             // The most recently written is read first, and shows while the rest are still to read.
@@ -136,7 +136,7 @@ public class LibraryAndHistoryTests
         dispatcher.Release();
         await using var h = new TabTestHarness(dispatcher: dispatcher);
         WriteSession(h, "s1", "2026-09-28T08:00:00Z");
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         var shown = dispatcher.HistoryPosts;
@@ -160,7 +160,7 @@ public class LibraryAndHistoryTests
         WriteSession(h, "a1", "2026-09-28T09:00:00Z", api, prompt: "Add retries");
         WriteSession(h, "a2", "2026-09-28T07:00:00Z", api, prompt: "Rename the parser");
         WriteSession(h, "wt", "2026-09-28T10:00:00Z", worktree, prompt: "Try a new parser", branch: "worktree-brisk-otter");
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -208,7 +208,7 @@ public class LibraryAndHistoryTests
         {
             WriteSession(h, $"s{i}", $"2026-09-28T{10 - i:00}:00:00Z", Path.Combine(parent, $"project{i}"));
         }
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -301,7 +301,7 @@ public class LibraryAndHistoryTests
     {
         await using var h = new TabTestHarness();
         await SaveToLibraryAsync(h, "lib-1", "DESKTOP-01");
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         var entry = history.Groups.SelectMany(g => g.Entries).Single();
@@ -326,7 +326,7 @@ public class LibraryAndHistoryTests
         await SaveToLibraryAsync(h, "lib-2", "DESKTOP-01");
         var lease = Path.Combine(h.Services.Library.Library.GetSessionFolder("lib-2"), LeaseManager.FileName);
         await File.WriteAllTextAsync(lease, new JsonObject { ["machine"] = "DESKTOP-01", ["owner"] = "other", ["updatedAt"] = h.Time.GetUtcNow().ToString("O") }.ToJsonString(), TestContext.Current.CancellationToken);
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -408,7 +408,7 @@ public class LibraryAndHistoryTests
     {
         await using var h = new TabTestHarness();
         await SaveToLibraryAsync(h, "lib-3", "DESKTOP-01");
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -426,7 +426,7 @@ public class LibraryAndHistoryTests
         await SaveToLibraryAsync(h, "both-1", "DESKTOP-01", lastUsed: DateTimeOffset.Parse("2026-09-28T09:00:00Z", CultureInfo.InvariantCulture));
         var lease = Path.Combine(h.Services.Library.Library.GetSessionFolder("both-1"), LeaseManager.FileName);
         await File.WriteAllTextAsync(lease, new JsonObject { ["machine"] = "DESKTOP-01", ["owner"] = "other", ["updatedAt"] = h.Time.GetUtcNow().ToString("O") }.ToJsonString(), TestContext.Current.CancellationToken);
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         var entry = history.Groups.SelectMany(g => g.Entries).Single();
@@ -452,7 +452,7 @@ public class LibraryAndHistoryTests
         await using var h = new TabTestHarness();
         h.WriteTranscript("both-2", UserLine("both-2", "Add the export button", h.WorkFolder));
         await SaveToLibraryAsync(h, "both-2", "DESKTOP-01", lastUsed: DateTimeOffset.Parse("2026-09-28T12:00:00Z", CultureInfo.InvariantCulture));
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         var entry = history.Groups.SelectMany(g => g.Entries).Single();
@@ -508,7 +508,7 @@ public class LibraryAndHistoryTests
     {
         await using var h = new TabTestHarness();
         await SaveToLibraryAsync(h, "lib-4", "DESKTOP-01", overrides: new TabOverrides { Model = "claude-sonnet-5-5", PermissionMode = "plan", ShowProcessMonitor = true });
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -544,7 +544,7 @@ public class LibraryAndHistoryTests
     {
         await using var h = new TabTestHarness();
         await SaveToLibraryAsync(h, "lib-5", "DESKTOP-01", reviewedFiles: [new ReviewedFile { Path = "src/auth.cs", Change = "e1" }]);
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
@@ -561,7 +561,9 @@ public class LibraryAndHistoryTests
         var tab = await h.OpenTabAsync();
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120, "the turn to finish");
+        // The tokens come with the result, and the tab is Idle again only with the event after it: sync turned on while
+        // the tab still works waits for a turn that won't come.
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && !tab.IsWorking, "the turn to finish");
         tab.SetSyncToLibrary(true);
         await TabTestHarness.Eventually(() =>
         {
@@ -610,7 +612,9 @@ public class LibraryAndHistoryTests
         var tab = await h.OpenTabAsync();
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120, "the turn to finish");
+        // Idle again too, which comes with the event after the result's: sync turned on while the tab works waits for
+        // the turn's end.
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && !tab.IsWorking, "the turn to finish");
 
         tab.ToggleSyncToLibraryCommand.Execute(null);
 
@@ -705,7 +709,7 @@ public class LibraryAndHistoryTests
         await using var h = new TabTestHarness();
         h.WriteTranscript("both-3", UserLine("both-3", "Add the export button", h.WorkFolder));
         await SaveToLibraryAsync(h, "both-3", h.Services.Library.MachineName, lastUsed: DateTimeOffset.Parse("2026-09-28T09:00:00Z", CultureInfo.InvariantCulture));
-        h.Shell.OpenHistoryCommand.Execute(null);
+        h.OpenHistory();
         var history = h.Shell.History!;
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         var entry = history.Groups.SelectMany(g => g.Entries).Single();
@@ -802,10 +806,11 @@ public class LibraryAndHistoryTests
         var tab = await h.OpenTabAsync();
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
+        // The copy starts with the result, and the tab is Idle again, which Sync now needs, only with the event after it.
         await TabTestHarness.Eventually(() =>
         {
             h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
+            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine && !tab.IsWorking;
         }, "the library copy");
         // Renamed since the turn, and the library's transcript changed without its size or time changing, so an
         // ordinary copy would skip it.

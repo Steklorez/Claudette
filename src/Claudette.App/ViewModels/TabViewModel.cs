@@ -1930,6 +1930,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 UpdateStatus();
                 break;
             case TurnStarted started:
+                // A turn Claude Code started by itself: the session is working by the time it's told, but its state change
+                // can come in the next batch. The tab works from the turn's start, so what happens in between (a message
+                // sent, Continue after a usage limit) sees a turn under way.
+                UpdateStatus();
                 _turnsStarted++;
                 HasMcpServers = started.Init.McpServerCount > 0;
                 if (State.SessionId != started.Init.SessionId)
@@ -2008,6 +2012,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 StopIfCreditsPay(rateLimit.Message.Info);
                 break;
             case TurnCompleted completed:
+                // The session is idle by the time its turn's end is told, but its state change can come in the next batch:
+                // the tab stops working with the turn's end, so what the user does in between doesn't wait for a turn end
+                // that has already gone by.
+                UpdateStatus();
                 _checkIns.TurnEnded();
                 _creditsAllowedThisTurn = false;
                 _stoppingForCredits = false;

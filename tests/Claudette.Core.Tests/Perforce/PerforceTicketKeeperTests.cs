@@ -309,6 +309,9 @@ public sealed class PerforceTicketKeeperTests : IDisposable
 
         _time.Advance(PerforceTicketKeeper.UserLoginCheckInterval);
         await WaitFor(() => _p4.StatusChecks > checks);
+        // The check is counted as p4 starts, and must finish before the next tick, or the next one shares it instead of
+        // checking again.
+        await keeper.CurrentCheck;
         _p4.LogInYourself();
         _time.Advance(PerforceTicketKeeper.UserLoginCheckInterval);
         await WaitFor(() => keeper.Status?.State == TicketState.Valid);

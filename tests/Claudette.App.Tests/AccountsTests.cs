@@ -112,7 +112,10 @@ public class AccountsTests
         var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
         var tab = await h.OpenTabAsync();
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.Context.Tokens == 150_000 && tab.IsSettled, "the turn");
+        // The whole turn, and the tab idle after it: the session's ID comes with the turn's first line, and the context
+        // with the tab's start. A move confirmed while the tab still says it's working waits for a turn end that's gone by.
+        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.Context.Tokens == 150_000 && tab.State.Tokens.Turns == 1
+            && tab.Status == TabStatus.Idle && tab.IsSettled, "the turn");
         Assert.Equal(["Default", "Work"], tab.AccountMenu.Select(m => m.Name));
 
         tab.SwitchAccountCommand.Execute(work.Id);
@@ -149,7 +152,10 @@ public class AccountsTests
         var tab = await h.OpenTabAsync();
         h.Transport.EmitTurn();
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.IsSettled && tab.State.Tokens.Turns == 2, "two turns on Default");
+        // Idle too: the second result is counted before the tab hears it's idle, and a move confirmed in between waits
+        // for a turn end that's gone by.
+        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.IsSettled && tab.State.Tokens.Turns == 2 && tab.Status == TabStatus.Idle,
+            "two turns on Default");
         // What Claude Code saves when the process exits: the two turns' totals.
         h.WriteTranscript("s1", """{"type":"cost-state","sessionId":"s1","totalCostUSD":0.02,"modelUsage":{"claude-opus-5-5":{"inputTokens":200,"outputTokens":40,"cacheReadInputTokens":0,"cacheCreationInputTokens":0,"costUSD":0.02}}}""");
 

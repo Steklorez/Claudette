@@ -52,7 +52,8 @@ public class NotifierTests
         notifier.Show(Sample);
         launcher.Started[0].WriteError("Unknown option --action=default=Open");
         launcher.Started[0].Exit(1);
-        await WaitFor(() => launcher.Started.Count == 2);
+        // The fallback starts on another thread, and the launcher lists the process before its spec, which is read here.
+        await WaitFor(() => launcher.Specs.Count == 2);
 
         Assert.DoesNotContain("--wait", launcher.Specs[1].Arguments);
         Assert.Contains("fix login bug", launcher.Specs[1].Arguments);

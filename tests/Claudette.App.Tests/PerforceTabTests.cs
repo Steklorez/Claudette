@@ -169,8 +169,9 @@ public class PerforceTabTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.Perforce.StatusText?.Contains("11h", StringComparison.Ordinal) == true, "the first check");
         h.Transport.Emit(Init());
-        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "the turn");
-        // Whether the turn's own check sees it or recovery does, there's one login and one retry message.
+        // The turn's own check has finished too before the ticket goes: one still under way could have found it valid,
+        // and recovery, sharing that check, would ask Claude to retry without logging in.
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working && !tab.Perforce.IsCheckingTicket, "the turn and its check");
         p4.TicketExpires = h.Time.GetUtcNow().AddMinutes(-1);
 
         EmitBash(h, "b1", "p4 sync //depot/...", "Your session has expired, please login again.", isError: true);
@@ -227,7 +228,8 @@ public class PerforceTabTests
         Assert.Equal("Save it in Test Keychain", prompt.SaveText);
 
         Answer(prompt, "s3cret");
-        await TabTestHarness.Eventually(() => store.Secrets.ContainsKey(StoredKey), "the saved password");
+        // The store writes the password, then its label.
+        await TabTestHarness.Eventually(() => store.Labels.ContainsKey(StoredKey), "the saved password");
 
         Assert.Equal("s3cret", store.Secrets[StoredKey]);
         Assert.Equal("Claudette: Perforce matt @ ssl:perforce:1666", store.Labels[StoredKey]);

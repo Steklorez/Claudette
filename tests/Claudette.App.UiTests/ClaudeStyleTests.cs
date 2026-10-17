@@ -81,7 +81,8 @@ public class ClaudeStyleTests
         tab.ComposerText = "Why does the parser drop the last line?";
         await tab.SendCommand.ExecuteAsync(null);
         h.Transport.EmitTurn("It stops at the last newline.");
-        await TabTestHarness.Eventually(() => !tab.IsWorking, "the reply");
+        // Not working until the send's Working is applied: the turn's footer is what says the reply is in.
+        await TabTestHarness.Eventually(() => !tab.IsWorking && tab.Items.OfType<Conversation.TurnSummaryItem>().Any(), "the reply");
         var window = new MainWindow { DataContext = new MainWindowViewModel(h.Services) { CurrentPage = h.Shell }, Width = 1000, Height = 700 };
         window.Show();
         await UiText.SettleUntilAsync(window, () => YourCard(window) is not null, "the message");

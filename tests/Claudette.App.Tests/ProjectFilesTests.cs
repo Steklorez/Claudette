@@ -29,7 +29,9 @@ public class ProjectFilesTests
         var group = h.Shell.Groups.Single();
         h.Shell.OpenProjectFilesCommand.Execute(group);
         var files = group.Files!;
-        await TabTestHarness.Eventually(() => files.Rows.Count > 0 || !Directory.EnumerateFileSystemEntries(h.WorkFolder).Any(), "the explorer");
+        // The explorer lists the folder off the test's thread, adding the rows one by one and then watching the folder,
+        // which a change on disk needs: the watch says the listing is done.
+        await TabTestHarness.Eventually(() => h.FolderWatcher.Folders.Contains(files.Folder), "the explorer");
         return (tab, files);
     }
 
@@ -645,7 +647,8 @@ public class ProjectFilesTests
         files.StartFindCommand.Execute(null);
         files.FindText = "playcon:42";
 
-        await TabTestHarness.Eventually(() => files.Found.Count > 0, "the matches");
+        // The search ends off the test's thread, adding the matches one by one and then choosing the first.
+        await TabTestHarness.Eventually(() => files.SelectedFound is not null, "the matches");
         var found = files.Found[0];
         Assert.Equal(("PlayerController.cpp", Path.Combine("Source", "Player"), 42), (found.Name, found.Folder, found.Line));
         Assert.Same(found, files.SelectedFound);
@@ -687,7 +690,10 @@ public class ProjectFilesTests
         Assert.Equal(["a.txt", "b.txt"], files.OpenFiles.Select(f => f.Name));
         Assert.True(files.OpenFiles[0].IsPinned);
         Assert.Equal(b, files.Showing?.Path);
-        await TabTestHarness.Eventually(() => files.Rows.Any(r => r.Name == "b.txt" && r.Depth == 1), "the folder expanded again");
+        // The explorer lists and expands off the test's thread, adding rows as it goes: watching the folder it expanded
+        // comes after its rows, so it's waited for before they're read.
+        await TabTestHarness.Eventually(() => h.FolderWatcher.Folders.Contains(Path.GetDirectoryName(b)), "the folder expanded again");
+        Assert.Contains(files.Rows, r => r.Name == "b.txt" && r.Depth == 1);
         await TabTestHarness.Eventually(() => files.OpenFiles.All(f => f.IsLoaded), "the files read");
     }
 

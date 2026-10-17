@@ -18,9 +18,30 @@ internal sealed class FakeProcessLauncher : IProcessLauncher
     /// </summary>
     public Func<ProcessStartSpec, ProcessResult?>? Respond { get; set; }
 
-    public IReadOnlyList<ProcessStartSpec> Started => _started;
+    // Processes start off the test's thread too: both lists change as one step, and are read as copies.
+    private readonly Lock _lock = new();
 
-    public IReadOnlyList<FakeRunningProcess> Processes => _processes;
+    public IReadOnlyList<ProcessStartSpec> Started
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _started];
+            }
+        }
+    }
+
+    public IReadOnlyList<FakeRunningProcess> Processes
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _processes];
+            }
+        }
+    }
 
     public IRunningProcess Start(ProcessStartSpec spec)
     {
@@ -28,9 +49,13 @@ internal sealed class FakeProcessLauncher : IProcessLauncher
         {
             throw StartFailure;
         }
-        _started.Add(spec);
-        var process = new FakeRunningProcess(1000 + _processes.Count);
-        _processes.Add(process);
+        FakeRunningProcess process;
+        lock (_lock)
+        {
+            _started.Add(spec);
+            process = new FakeRunningProcess(1000 + _processes.Count);
+            _processes.Add(process);
+        }
         if (Respond?.Invoke(spec) is { } result)
         {
             process.WriteOutput(result.StandardOutput);

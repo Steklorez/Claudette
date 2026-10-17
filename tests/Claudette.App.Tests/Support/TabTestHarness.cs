@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using System.Threading.Channels;
 using Claudette.App.Services;
@@ -15,7 +16,8 @@ namespace Claudette.App.Tests.Support;
 /// <summary>Plays Claude Code's side of one session for view model tests.</summary>
 internal sealed class ScriptedTransport : IClaudeTransport
 {
-    private ScriptedProcess _process;
+    // Switched as a session starts, off the test's thread, and written to by the test.
+    private volatile ScriptedProcess _process;
     private readonly List<JsonObject> _sent = [];
     private readonly List<(ScriptedProcess Process, JsonObject Message)> _sentBy = [];
 
@@ -66,8 +68,11 @@ internal sealed class ScriptedTransport : IClaudeTransport
     /// </summary>
     public IClaudeTransport ForSession() => new SessionTransport(this, _process);
 
-    /// <summary>Answers to control requests by subtype; null leaves the request unanswered, an exception answers with an error.</summary>
-    public Dictionary<string, Func<JsonObject, JsonObject?>> Answers { get; } = new()
+    /// <summary>
+    /// Answers to control requests by subtype; null leaves the request unanswered, an exception answers with an error.
+    /// Tests change them while sessions send requests on other threads.
+    /// </summary>
+    public ConcurrentDictionary<string, Func<JsonObject, JsonObject?>> Answers { get; } = new()
     {
         ["initialize"] = _ => new JsonObject
         {
@@ -282,7 +287,20 @@ internal sealed class ScriptedTransport : IClaudeTransport
 
 internal sealed class ScriptedSessionFactory(ScriptedTransport transport, TimeProvider time) : IClaudeSessionFactory
 {
-    public List<ClaudeLaunchOptions> Launches { get; } = [];
+    // Starts run off the test's thread: the lists are read as copies.
+    private readonly List<ClaudeLaunchOptions> _launches = [];
+    private readonly List<ClaudeSession> _sessions = [];
+
+    public IReadOnlyList<ClaudeLaunchOptions> Launches
+    {
+        get
+        {
+            lock (_launches)
+            {
+                return [.. _launches];
+            }
+        }
+    }
 
     /// <summary>While set, starts fail with this, as a <c>claude</c> that couldn't start would.</summary>
     public Exception? StartFailure { get; set; }
@@ -294,16 +312,27 @@ internal sealed class ScriptedSessionFactory(ScriptedTransport transport, TimePr
     public TaskCompletionSource? StartGate { get; set; }
 
     /// <summary>Every session started, including ones a start stopped before handing them over.</summary>
-    public List<ClaudeSession> Sessions { get; } = [];
+    public IReadOnlyList<ClaudeSession> Sessions
+    {
+        get
+        {
+            lock (_sessions)
+            {
+                return [.. _sessions];
+            }
+        }
+    }
 
     public async Task<ClaudeSession> StartAsync(ClaudeLaunchOptions options, CancellationToken cancellationToken = default)
     {
-        Launches.Add(options);
         if (StartFailure is { } failure)
         {
+            Launched(options);
             throw failure;
         }
-        if (ProcessPerSession && Launches.Count > 1)
+        // The new session's pretend process is in place before the launch is recorded: a test that waits for the launch
+        // and then emits writes to the process this session reads, not the one before.
+        if (ProcessPerSession && Launches.Count > 0)
         {
             transport.StartNextProcess();
         }
@@ -311,8 +340,12 @@ internal sealed class ScriptedSessionFactory(ScriptedTransport transport, TimePr
         {
             transport.RestartIfExited();
         }
+        Launched(options);
         var session = new ClaudeSession(transport.ForSession(), time, showsElicitations: options.ShowsElicitations, restoredUsage: options.RestoredUsage);
-        Sessions.Add(session);
+        lock (_sessions)
+        {
+            _sessions.Add(session);
+        }
         try
         {
             if (StartGate is { } gate)
@@ -328,6 +361,14 @@ internal sealed class ScriptedSessionFactory(ScriptedTransport transport, TimePr
             throw;
         }
         return session;
+    }
+
+    private void Launched(ClaudeLaunchOptions options)
+    {
+        lock (_launches)
+        {
+            _launches.Add(options);
+        }
     }
 }
 
@@ -359,6 +400,14 @@ internal sealed class InlineDispatcher : IUiDispatcher
         }
     }
 
+    /// <summary>
+    /// Runs <paramref name="action"/> as if on the UI thread, as a click would: under the lock, and with the UI thread's
+    /// synchronization context, so what it starts resumes there after each await, as it does in the app. Started from
+    /// the test's own thread instead, that work resumes on the thread pool, outside the lock, and a wait can see it
+    /// half done.
+    /// </summary>
+    public static void Run(Action action) => RunOnUiThread(action);
+
     /// <summary>Evaluates <paramref name="read"/> as if on the UI thread, so it can't see a collection mid-change.</summary>
     public static T Read<T>(Func<T> read)
     {
@@ -384,7 +433,13 @@ internal sealed class InlineDispatcher : IUiDispatcher
 
 internal sealed class NoPlatform : IPlatformServices
 {
-    public List<string> OpenedUrls { get; } = [];
+    // Work off the test's thread opens and shows things too: what's recorded is read as copies.
+    private readonly List<string> _openedUrls = [];
+    private readonly List<string> _revealedFolders = [];
+    private readonly List<string> _openedFiles = [];
+    private readonly List<IReadOnlyList<string>> _menus = [];
+
+    public IReadOnlyList<string> OpenedUrls => Copy(_openedUrls);
 
     public string? Clipboard { get; private set; }
 
@@ -419,16 +474,16 @@ internal sealed class NoPlatform : IPlatformServices
 
     public Task OpenUrlAsync(string url)
     {
-        OpenedUrls.Add(url);
+        Record(_openedUrls, url);
         return Task.CompletedTask;
     }
 
     /// <summary>The folders shown in Explorer or Finder, in order.</summary>
-    public List<string> RevealedFolders { get; } = [];
+    public IReadOnlyList<string> RevealedFolders => Copy(_revealedFolders);
 
     public Task RevealFolderAsync(string path)
     {
-        RevealedFolders.Add(path);
+        Record(_revealedFolders, path);
         return Task.CompletedTask;
     }
 
@@ -449,24 +504,40 @@ internal sealed class NoPlatform : IPlatformServices
 
     public Task<byte[]?> GetClipboardImageAsync() => Task.FromResult(ClipboardImage);
 
-    public List<string> OpenedFiles { get; } = [];
+    public IReadOnlyList<string> OpenedFiles => Copy(_openedFiles);
 
     public Task OpenFileAsync(string path)
     {
-        OpenedFiles.Add(path);
+        Record(_openedFiles, path);
         return Task.CompletedTask;
     }
 
     /// <summary>The menus shown, each with its choices, in order.</summary>
-    public List<IReadOnlyList<string>> Menus { get; } = [];
+    public IReadOnlyList<IReadOnlyList<string>> Menus => Copy(_menus);
 
     /// <summary>What a menu picks: an index, or null to close it without one.</summary>
     public int? ChoiceToPick { get; set; }
 
     public Task<int?> ChooseAsync(object? anchor, IReadOnlyList<string> choices)
     {
-        Menus.Add(choices);
+        Record(_menus, choices);
         return Task.FromResult(ChoiceToPick);
+    }
+
+    private static void Record<T>(List<T> list, T item)
+    {
+        lock (list)
+        {
+            list.Add(item);
+        }
+    }
+
+    private static IReadOnlyList<T> Copy<T>(List<T> list)
+    {
+        lock (list)
+        {
+            return [.. list];
+        }
     }
 }
 
@@ -634,6 +705,17 @@ internal sealed class TabTestHarness : IAsyncDisposable
         // Idle comes first; the start's own events and context usage request follow, and would undo a status a test sets.
         await Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the tab to start");
         return tab;
+    }
+
+    /// <summary>
+    /// Opens History as a click does, on the UI thread (<see cref="InlineDispatcher.Run"/>): its reading and filtering
+    /// finish there one step at a time, as in the app, so the sessions it shows as it reads them can't land between a
+    /// filtering's check and what it writes.
+    /// </summary>
+    public HistoryViewModel OpenHistory()
+    {
+        InlineDispatcher.Run(() => Shell.OpenHistoryCommand.Execute(null));
+        return Shell.History!;
     }
 
     /// <summary>

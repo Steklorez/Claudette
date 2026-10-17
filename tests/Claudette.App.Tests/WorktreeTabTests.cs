@@ -53,7 +53,8 @@ public class WorktreeTabTests
         await tab.SendCommand.ExecuteAsync(null);
         h.Transport.Emit(new JsonObject { ["type"] = "system", ["subtype"] = "init", ["session_id"] = "s1", ["model"] = "claude-opus-5-5", ["cwd"] = path });
         h.Transport.Emit("""{"type":"result","subtype":"success","is_error":false,"session_id":"s1"}""");
-        await TabTestHarness.Eventually(() => tab.Status != TabStatus.Working && tab.Folder == path, "the turn in the worktree");
+        // Settled too: the status follows the session, which can be idle before the tab has applied the turn's end.
+        await TabTestHarness.Eventually(() => tab.Status != TabStatus.Working && tab.Folder == path && tab.IsSettled, "the turn in the worktree");
         return (tab, path);
     }
 
@@ -325,7 +326,8 @@ public class WorktreeTabTests
 
         // The first turn ends, and the waiting message's turn is next: no restart takes it away.
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => tab.State.SessionId == "s1" && tab.IsSettled, "the first turn");
+        // The session id comes with the turn's start, before its result has been read, so it's the turn's end that's waited for.
+        await TabTestHarness.Eventually(() => !tab.IsWorking && tab.IsSettled, "the first turn");
         Assert.Equal(launches, h.Factory.Launches.Count);
         Assert.True(queued.IsQueued);
 

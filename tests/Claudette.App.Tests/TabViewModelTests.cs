@@ -128,7 +128,9 @@ public class TabViewModelTests
         Assert.Equal(120, tab.State.Tokens.Total);
         Assert.Equal("120 tok", tab.Context.TokensShort);
         Assert.Equal("s1", tab.State.SessionId);
-        tab.IsSelected = true;
+        // The session going idle can still be on its way after the turn's result, and it sets the status too: the tab is
+        // selected on the UI thread, as a click would select it.
+        InlineDispatcher.Read(() => tab.IsSelected = true);
         Assert.Equal(TabStatus.Idle, tab.Status);
     }
 

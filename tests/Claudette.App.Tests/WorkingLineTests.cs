@@ -12,12 +12,17 @@ public class WorkingLineTests
         var h = new TabTestHarness();
         h.Services.Random = new Random(7);
         before?.Invoke(h);
-        var tab = await h.OpenTabAsync();
         if (verbs is not null)
         {
+            // Before the tab opens: its start reads the verbs too, in the background, and a read from before the file was
+            // written could finish after the one below and put the built-in verbs back.
             var settings = Path.Combine(h.WorkFolder, ".claude", "settings.json");
             Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
             File.WriteAllText(settings, $$"""{ "spinnerVerbs": { "mode": "replace", "verbs": [{{string.Join(", ", verbs.Select(v => $"\"{v}\""))}}] } }""");
+        }
+        var tab = await h.OpenTabAsync();
+        if (verbs is not null)
+        {
             await tab.LoadSpinnerVerbsAsync();
         }
         tab.ComposerText = "go";

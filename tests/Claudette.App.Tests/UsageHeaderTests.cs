@@ -288,8 +288,10 @@ public class UsageHeaderTests
         firstTracker.OnRateLimitEvent(Event(0.62, first.Time.GetUtcNow().AddHours(2), 0.38));
         await TabTestHarness.Eventually(() => File.Exists(shared) && AtomicFile.ReadAllText(shared).Contains("\"session\":62", StringComparison.Ordinal), "the shared reading");
         Assert.Contains($"\"claudette\":\"{first.Services.AppVersion}\"", AtomicFile.ReadAllText(shared), StringComparison.Ordinal);
-        // Nothing of the first machine's still being written.
-        await firstTracker.ShareAsync();
+        // Nothing of the first machine's still being written. The share its tracker started as it was made can write the
+        // reading before the reading's own share has taken its turn, so one more share needn't come after that one:
+        // closed, the tracker writes nothing more.
+        await firstTracker.DisposeAsync();
 
         // The same file, as a later Claudette that changed what its fields mean would write it. The second machine
         // starts after that: a tracker reads the others' files as soon as it's made.
@@ -406,6 +408,9 @@ public class UsageHeaderTests
         var tab = await h.OpenTabAsync();
         h.Transport.EmitTurn();
         await Row("work", "the turn");
+        // The tab stops working as the session goes idle just after the turn's result, which can be applied separately:
+        // closing a tab that's still working asks first.
+        await TabTestHarness.Eventually(() => !tab.IsWorking, "the tab to stop working");
 
         // Renamed after its last turn, then closed: the panel still names it.
         tab.StartRenameCommand.Execute(null);

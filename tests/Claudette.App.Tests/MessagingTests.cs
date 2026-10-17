@@ -113,7 +113,9 @@ public class MessagingTests
 
         h.Transport.EmitTurn(sessionId: "s7");
 
-        await TabTestHarness.Eventually(() => tab.HasSessionId, "the session's ID");
+        // The ID comes with the turn's first line and again with its result: the whole turn, so a result applied after
+        // Start new session below doesn't put it back.
+        await TabTestHarness.Eventually(() => tab.HasSessionId && tab.State.Tokens.Turns == 1 && tab.Status == TabStatus.Idle && tab.IsSettled, "the session's ID");
         Assert.Contains(nameof(TabViewModel.HasSessionId), changes);
         await tab.CopySessionIdCommand.ExecuteAsync(null);
         Assert.Equal("s7", h.Platform.Clipboard);
@@ -251,7 +253,9 @@ public class MessagingTests
         h.Transport.EmitTo(0, Wire.Agent("a1", "Find the loader", "Find where the config loads", "Explore"));
         h.Transport.EmitTo(0, Wire.TaskStarted("task-a", "a1"));
         h.Transport.EmitTo(1, Init("s-art"));
-        await TabTestHarness.Eventually(() => plan.State.SessionId == "s-plan" && art.State.SessionId == "s-art" && plan.Agents.HasSubagents, "both sessions");
+        // The subagent's ID, from task_started: an @ names it only once it has one.
+        await TabTestHarness.Eventually(() => plan.State.SessionId == "s-plan" && art.State.SessionId == "s-art" && plan.Agents.Subagents.Any(a => a.AgentId is not null),
+            "both sessions");
         h.Services.LiveSessions.Refresh();
         await TabTestHarness.Eventually(() => art.ReachedAs == "Art page", "the sessions folder");
         return (plan, art);

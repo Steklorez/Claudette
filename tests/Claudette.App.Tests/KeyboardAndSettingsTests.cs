@@ -2,6 +2,7 @@ using Avalonia.Input;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.Core.Files;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
@@ -290,7 +291,8 @@ public class KeyboardAndSettingsTests
         first.Services.Settings.Sessions.SyncSettings = true;
         first.Services.Library.OnSettingsChanged();
         var syncFile = Path.Combine(library, "settings-sync.json");
-        await TabTestHarness.Eventually(() => File.Exists(syncFile) && File.ReadAllText(syncFile).Contains("keyboard.bindings", StringComparison.Ordinal), "the published settings");
+        // Read as the sync reads it, waiting out a write that has the file open on Windows.
+        await TabTestHarness.Eventually(() => File.Exists(syncFile) && AtomicFile.ReadAllText(syncFile).Contains("keyboard.bindings", StringComparison.Ordinal), "the published settings");
 
         // Another machine joins the same library and takes them.
         second.Services.Settings.Sessions.LibraryFolder = library;
@@ -316,7 +318,8 @@ public class KeyboardAndSettingsTests
         first.Services.Settings.Sessions.SyncSettings = true;
         first.Services.Library.OnSettingsChanged();
         var syncFile = Path.Combine(library, "settings-sync.json");
-        await TabTestHarness.Eventually(() => File.Exists(syncFile) && File.ReadAllText(syncFile).Contains("appearance.density", StringComparison.Ordinal), "the published settings");
+        // Read as the sync reads it, waiting out a write that has the file open on Windows.
+        await TabTestHarness.Eventually(() => File.Exists(syncFile) && AtomicFile.ReadAllText(syncFile).Contains("appearance.density", StringComparison.Ordinal), "the published settings");
 
         second.Services.Settings.Sessions.LibraryFolder = library;
         second.Services.Settings.Sessions.SyncSettings = true;
@@ -328,7 +331,7 @@ public class KeyboardAndSettingsTests
         Assert.Equal(Density.Compact, second.Services.Settings.Appearance.Density);
         Assert.False(second.Services.Settings.Appearance.ShowContextOnTabs);
         Assert.Equal(100, second.Services.Settings.Appearance.Zoom);
-        Assert.DoesNotContain("appearance.zoom", File.ReadAllText(syncFile), StringComparison.Ordinal);
+        Assert.DoesNotContain("appearance.zoom", AtomicFile.ReadAllText(syncFile), StringComparison.Ordinal);
         Assert.Equal(150, first.Services.Settings.Appearance.Zoom);
     }
 }

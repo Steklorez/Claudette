@@ -140,6 +140,8 @@ public class QueuedMessageTests
 
         h.Transport.Emit(Result);
         await TabTestHarness.Eventually(() => h.Transport.SentUserTexts.Contains("then the docs"), "the first held message");
+        // The tab works on it: it went as the session went idle, and its Working came after that Idle.
+        await TabTestHarness.Eventually(() => tab.IsSettled && tab.Status == TabStatus.Working, "the tab working on it");
         Assert.False(docs.IsHeld);
         Assert.True(docs.IsQueued);
         Assert.DoesNotContain("then the changelog", h.Transport.SentUserTexts);

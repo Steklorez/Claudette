@@ -476,8 +476,7 @@ public sealed class ClaudeSession : IAsyncDisposable
                 PermissionMode = init.PermissionMode ?? PermissionMode;
                 ClaudeCodeVersion = init.ClaudeCodeVersion ?? ClaudeCodeVersion;
                 Capabilities = init.Capabilities;
-                Publish(new TurnStarted(init));
-                TrySetState(SessionState.Idle, SessionState.Working);
+                StartTurn(new TurnStarted(init));
                 break;
 
             case SystemMessage system:
@@ -525,8 +524,7 @@ public sealed class ClaudeSession : IAsyncDisposable
             case ResultMessage result:
                 SessionId = result.SessionId ?? SessionId;
                 StartupFailure ??= StartupFailure.From(result);
-                Publish(new TurnCompleted(result, _usage.Turn(result)));
-                SetState(SessionState.Idle);
+                EndTurn(new TurnCompleted(result, _usage.Turn(result)));
                 break;
 
             case RateLimitEventMessage rateLimit:
@@ -734,6 +732,51 @@ public sealed class ClaudeSession : IAsyncDisposable
             }
             _state = state;
             Publish(new StateChanged(state));
+        }
+    }
+
+    /// <summary>
+    /// The turn's start, and the session working, as one step: a turn Claude Code starts by itself (a message it held,
+    /// one from the Claude app, a background task that finished) finds no message of Claudette's to have said so first.
+    /// The session is working before the turn's start is told, so whatever acts on it finds it working. The events
+    /// still come turn's start first, then Working.
+    /// </summary>
+    private void StartTurn(TurnStarted started)
+    {
+        lock (_stateLock)
+        {
+            var changed = _state == SessionState.Idle;
+            if (changed)
+            {
+                _state = SessionState.Working;
+            }
+            Publish(started);
+            if (changed)
+            {
+                Publish(new StateChanged(SessionState.Working));
+            }
+        }
+    }
+
+    /// <summary>
+    /// The turn's end, and the session idle again, as one step. The session is idle before the turn's end is told, so
+    /// whatever acts on it (the next message, a restart, Remote Control) finds it idle; and a message sent then says
+    /// Working after this Idle, which can't undo it. The events still come turn's end first, then Idle.
+    /// </summary>
+    private void EndTurn(TurnCompleted completed)
+    {
+        lock (_stateLock)
+        {
+            var changed = _state is not (SessionState.Idle or SessionState.Exited);
+            if (changed)
+            {
+                _state = SessionState.Idle;
+            }
+            Publish(completed);
+            if (changed)
+            {
+                Publish(new StateChanged(SessionState.Idle));
+            }
         }
     }
 

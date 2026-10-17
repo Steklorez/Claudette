@@ -63,7 +63,9 @@ public class MainWindowTests
         await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
         using var usage = new UsageViewModel(h.Services, tracker);
         tracker.OnRateLimitEvent(RateLimitEvent(0.62, h.Time.GetUtcNow().AddHours(2).AddMinutes(14), 0.38));
-        await TabTestHarness.Eventually(() => usage.HasData && h.Shell.SelectedTab!.Status != TabStatus.Working, "the meters and the reply");
+        // The tab is idle before the turn arrives too: its footer is what says it has, and then that it's idle again.
+        await TabTestHarness.Eventually(() => usage.HasData && h.Shell.SelectedTab!.Status != TabStatus.Working
+            && h.Shell.SelectedTab!.Items.OfType<Conversation.TurnSummaryItem>().Any(), "the meters and the reply");
         var main = new MainWindowViewModel(h.Services) { CurrentPage = h.Shell, Usage = usage };
         main.Account.Status = new AuthStatus(true, "claude.ai", null, "me@example.com", null, "max", null, null);
 
@@ -322,10 +324,12 @@ public class MainWindowTests
     public async Task While_Claude_works_a_twinkling_line_sits_above_the_composer()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
-        var tab = await h.OpenTabAsync();
+        // Before the tab opens: its start reads the verbs too, in the background, and a read from before the file was
+        // written could finish after the one below and put the built-in verbs back.
         var settings = Path.Combine(h.WorkFolder, ".claude", "settings.json");
         Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
         await File.WriteAllTextAsync(settings, """{ "spinnerVerbs": { "mode": "replace", "verbs": ["Noodling"] } }""", TestContext.Current.CancellationToken);
+        var tab = await h.OpenTabAsync();
         await tab.LoadSpinnerVerbsAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         var line = window.GetVisualDescendants().OfType<Panel>().Single(p => p.Name == "WorkingLine");

@@ -43,8 +43,13 @@ public sealed class ThreadRealCliTests
         plan.ComposerText = "SEND_MESSAGE Art page | AGENT_REPLY The art page is done.";
         await plan.SendCommand.ExecuteAsync(null);
 
+        // The sub-thread's turn runs beside the thread's own, in another claude: its report can come before the thread's
+        // claude has answered the SendMessage call and asked the API again, which are read below.
         await Claudette.Tests.Waiting.UntilAsync(
-            () => InlineDispatcher.Read(() => plan.Items.OfType<UserMessageItem>().Any(m => m.AutomaticLabel == "From the sub-threads")), "the report", TimeSpan.FromSeconds(90));
+            () => InlineDispatcher.Read(() => plan.Items.OfType<UserMessageItem>().Any(m => m.AutomaticLabel == "From the sub-threads")
+                && plan.Items.ToolCalls().Any(t => t is { Name: "SendMessage", IsComplete: true }))
+                && api.Requests.Any(r => r.LastToolResultText.StartsWith("Claudette delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal)),
+            "the report", TimeSpan.FromSeconds(90));
         var delivered = InlineDispatcher.Read(() => art.Items.OfType<UserMessageItem>().Single(m => m.IsFromThread));
         Assert.Equal("AGENT_REPLY The art page is done.", delivered.Text);
         Assert.Equal("From the thread Plan", delivered.AutomaticLabel);

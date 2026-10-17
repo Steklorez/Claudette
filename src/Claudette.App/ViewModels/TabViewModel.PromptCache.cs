@@ -25,6 +25,9 @@ public sealed partial class TabViewModel
     /// <summary>What Claude Code's configuration says about the cache for this tab's <c>claude</c>, read as it starts.</summary>
     private PromptCacheConfig _promptCacheConfig = PromptCacheConfig.None;
 
+    /// <summary>The reads of the configuration started, counted: only the latest one's is kept.</summary>
+    private int _promptCacheConfigReads;
+
     /// <summary>The variables the tab's <c>claude</c> started with over the user environment.</summary>
     private IReadOnlyDictionary<string, string?> _claudeVariables = new Dictionary<string, string?>();
 
@@ -113,11 +116,13 @@ public sealed partial class TabViewModel
     /// <summary>
     /// Reads what Claude Code's configuration says about the cache for this tab's <c>claude</c>, in the background, as
     /// the session starts: the environment it starts with, and its settings files' <c>env</c> and <c>promptCacheTtl</c>
-    /// (the project's files only when the tab uses them).
+    /// (the project's files only when the tab uses them). A read that finishes after a later one has started is dropped,
+    /// so it can't put back what the later one found.
     /// </summary>
     internal async Task LoadPromptCacheConfigAsync()
     {
         var files = ClaudeSettingsFiles.ForSession(_services.ClaudeConfigDirectory, State.WithoutProjectSettings ? null : Folder);
+        var read = Interlocked.Increment(ref _promptCacheConfigReads);
         PromptCacheConfig config;
         try
         {
@@ -130,6 +135,10 @@ public sealed partial class TabViewModel
         }
         _services.Dispatcher.Post(() =>
         {
+            if (read != Volatile.Read(ref _promptCacheConfigReads))
+            {
+                return;
+            }
             _promptCacheConfig = config;
             RefreshPromptCache();
         });

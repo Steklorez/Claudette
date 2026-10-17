@@ -78,7 +78,9 @@ public class AgentMapTests
         {
             h.Transport.Emit(line);
         }
-        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any(), "the end of the turn");
+        // The turn's result and the session going idle just after can be applied separately: the main agent stops with
+        // the second.
+        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any() && tab.Agents.Root.Status == AgentStatus.Idle, "the end of the turn");
         Assert.Equal(GroupTree(tab.Items), MapTree(tab.Agents.Root));
         var touch = tab.Agents.Find("toolu_mock_1")!;
         var deeper = tab.Agents.Find("toolu_mock_2")!;
@@ -259,7 +261,9 @@ public class AgentMapTests
         h.Transport.Emit(Wire.Result("stop", "[Request interrupted by user for tool use]", isError: true, interrupted: true));
         h.Transport.Emit(Wire.TurnResult());
 
-        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any(), "the turn to end");
+        // The turn's result and the session going idle just after can be applied separately: the main agent stops with
+        // the second.
+        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any() && tab.Agents.Root.Status == AgentStatus.Idle, "the turn to end");
         var failed = tab.Agents.Find("fail")!;
         Assert.Equal(AgentStatus.Failed, failed.Status);
         Assert.Equal("Agent type 'nope' not found", failed.ResultText);

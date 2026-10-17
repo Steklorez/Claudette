@@ -6,9 +6,41 @@ namespace Claudette.App.Tests.Support;
 /// <summary>Records what would be started, and hands back processes the test controls.</summary>
 internal sealed class FakeLauncher : IProcessLauncher
 {
-    public List<ProcessStartSpec> Started { get; } = [];
+    // Processes start off the test's thread too: both lists change as one step, and are read as copies.
+    private readonly Lock _lock = new();
+    private readonly List<ProcessStartSpec> _started = [];
+    private readonly List<FakeProcess> _processes = [];
 
-    public List<FakeProcess> Processes { get; } = [];
+    public IReadOnlyList<ProcessStartSpec> Started
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _started];
+            }
+        }
+    }
+
+    public IReadOnlyList<FakeProcess> Processes
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _processes];
+            }
+        }
+    }
+
+    /// <summary>The process started with <paramref name="spec"/>.</summary>
+    public FakeProcess ProcessFor(ProcessStartSpec spec)
+    {
+        lock (_lock)
+        {
+            return _processes[_started.IndexOf(spec)];
+        }
+    }
 
     /// <summary>Called as each process starts, for example to play a new build saying it's up.</summary>
     public Action<ProcessStartSpec, FakeProcess>? OnStart { get; set; }
@@ -16,8 +48,11 @@ internal sealed class FakeLauncher : IProcessLauncher
     public IRunningProcess Start(ProcessStartSpec spec)
     {
         var process = new FakeProcess();
-        Started.Add(spec);
-        Processes.Add(process);
+        lock (_lock)
+        {
+            _started.Add(spec);
+            _processes.Add(process);
+        }
         OnStart?.Invoke(spec, process);
         return process;
     }

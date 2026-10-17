@@ -59,15 +59,41 @@ internal sealed class FakeLauncher : IProcessLauncher
 {
     private int _nextId = 4000;
 
-    public List<FakeRunningProcess> Started { get; } = [];
+    // Processes start off the test's thread too: both lists change as one step, and are read as copies.
+    private readonly Lock _lock = new();
+    private readonly List<FakeRunningProcess> _started = [];
+    private readonly List<ProcessStartSpec> _specs = [];
 
-    public List<ProcessStartSpec> Specs { get; } = [];
+    public IReadOnlyList<FakeRunningProcess> Started
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _started];
+            }
+        }
+    }
+
+    public IReadOnlyList<ProcessStartSpec> Specs
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _specs];
+            }
+        }
+    }
 
     public IRunningProcess Start(ProcessStartSpec spec)
     {
         var process = new FakeRunningProcess(Interlocked.Increment(ref _nextId));
-        Started.Add(process);
-        Specs.Add(spec);
+        lock (_lock)
+        {
+            _started.Add(process);
+            _specs.Add(spec);
+        }
         return process;
     }
 }

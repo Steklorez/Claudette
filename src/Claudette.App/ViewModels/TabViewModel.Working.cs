@@ -11,6 +11,11 @@ public sealed partial class TabViewModel
 {
     private IReadOnlyList<string> _spinnerVerbs = SpinnerVerbs.BuiltIn;
 
+    /// <summary>The reads of the verbs started, counted: only the latest one's verbs are kept.</summary>
+    private int _spinnerVerbsReads;
+
+    private readonly Lock _spinnerVerbsLock = new();
+
     /// <summary>The glyph, verb, time and tokens of the turn in progress. It only ticks while this tab is selected.</summary>
     public WorkingLine Working => field ??= CreateWorkingLine();
 
@@ -96,11 +101,24 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// Reads the <c>spinnerVerbs</c> of Claude Code's settings for this folder, in the background, as the session
-    /// starts: a verb added for the terminal shows here from the next turn.
+    /// starts: a verb added for the terminal shows here from the next turn. A read that finishes after a later one has
+    /// started is dropped, so it can't put back what the later one found.
     /// </summary>
     internal Task LoadSpinnerVerbsAsync()
     {
         var files = SpinnerVerbs.SettingsFiles(_services.ClaudeConfigDirectory, Folder);
-        return Task.Run(() => _spinnerVerbs = SpinnerVerbs.Resolve(files));
+        var read = Interlocked.Increment(ref _spinnerVerbsReads);
+        return Task.Run(() =>
+        {
+            var verbs = SpinnerVerbs.Resolve(files);
+            // Checked and kept as one step: a later read that finishes meanwhile keeps its own after this.
+            lock (_spinnerVerbsLock)
+            {
+                if (read == Volatile.Read(ref _spinnerVerbsReads))
+                {
+                    _spinnerVerbs = verbs;
+                }
+            }
+        });
     }
 }

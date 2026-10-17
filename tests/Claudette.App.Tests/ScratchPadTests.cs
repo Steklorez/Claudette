@@ -60,6 +60,18 @@ public sealed class ScratchPadTests
 
     private static void Type(TabTestHarness h, ScratchPadViewModel pad, string text) => h.Services.Dispatcher.Post(() => pad.Text = text);
 
+    /// <summary>
+    /// Takes a pad on the UI thread, as the app does, so its first sync finishes there too. Taken on the test's own
+    /// thread, that sync finishes on a pool thread instead, where a save can find it still running and ask it to go round
+    /// again just after it last looked: then the save's sync never runs, and the library never gets it.
+    /// </summary>
+    private static ScratchPadViewModel OnUiThread(TabTestHarness h, Func<ScratchPadViewModel> take)
+    {
+        ScratchPadViewModel? pad = null;
+        h.Services.Dispatcher.Post(() => pad = take());
+        return pad!;
+    }
+
     [Fact]
     public async Task Tabs_in_a_project_share_its_pad_and_typing_saves_once_it_pauses()
     {
@@ -70,7 +82,7 @@ public sealed class ScratchPadTests
         await h.Shell.OpenFolderAsync(h.WorkFolder);
         var second = h.Shell.SelectedTab!;
         Assert.NotSame(first, second);
-        var pad = first.ScratchPad;
+        var pad = OnUiThread(h, () => first.ScratchPad);
 
         Assert.Same(pad, second.ScratchPad);
         Assert.Equal("Shared by the tabs in work", pad.Summary);
@@ -147,7 +159,7 @@ public sealed class ScratchPadTests
     public async Task Another_machines_change_shows_up_within_a_minute()
     {
         await using var h = Harness();
-        var pad = h.Services.ScratchPads.Acquire(MakeRepository(Path.Combine(h.Root, "api")), "api");
+        var pad = OnUiThread(h, () => h.Services.ScratchPads.Acquire(MakeRepository(Path.Combine(h.Root, "api")), "api"));
         Type(h, pad, "mine");
         h.Time.Advance(ScratchPadViewModel.SaveDelay);
         await TabTestHarness.Eventually(() => InLibrary(h, pad)?.Text == "mine", "the pad in the library");
@@ -167,7 +179,7 @@ public sealed class ScratchPadTests
     public async Task Both_machines_changing_it_asks_which_to_keep(string choice, string expected)
     {
         await using var h = Harness();
-        var pad = h.Services.ScratchPads.Acquire(MakeRepository(Path.Combine(h.Root, "api")), "api");
+        var pad = OnUiThread(h, () => h.Services.ScratchPads.Acquire(MakeRepository(Path.Combine(h.Root, "api")), "api"));
         Type(h, pad, "shared\n");
         h.Time.Advance(ScratchPadViewModel.SaveDelay);
         await TabTestHarness.Eventually(() => InLibrary(h, pad)?.Text == "shared\n", "the pad in the library");

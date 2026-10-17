@@ -144,6 +144,40 @@ public class ClaudeSessionTests
     }
 
     [Fact]
+    public async Task A_turn_Claude_Code_starts_by_itself_finds_the_session_working()
+    {
+        // A message from the Claude app, say: nothing of Claudette's said the session was working first.
+        await using var session = await StartAsync();
+        _transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-sonnet-5-5","permissionMode":"default"}""");
+
+        var (_, seen) = await session.ReadUntilAsync<TurnStarted>();
+
+        // Working already, as whatever acts on the turn's start finds it; the state change still follows the start.
+        Assert.Equal(SessionState.Working, session.State);
+        var (working, _) = await session.ReadUntilAsync<StateChanged>();
+        Assert.Equal(SessionState.Working, working.State);
+        Assert.DoesNotContain(seen, e => e is StateChanged { State: SessionState.Working });
+    }
+
+    [Fact]
+    public async Task A_turns_end_finds_the_session_idle_and_a_message_sent_on_it_starts_the_next_turn()
+    {
+        await using var session = await StartAsync();
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        _transport.Emit("""{"type":"result","subtype":"success","is_error":false,"result":"pong","terminal_reason":"completed","session_id":"s1"}""");
+
+        await session.ReadUntilAsync<TurnCompleted>();
+
+        // Idle already, as whatever acts on the turn's end finds it.
+        Assert.Equal(SessionState.Idle, session.State);
+        // The next message, sent as the turn ends, says Working after the turn's Idle, so it isn't undone by it.
+        await session.SendUserMessageAsync("and this", TestContext.Current.CancellationToken);
+        var (_, seen) = await session.ReadUntilAsync<StateChanged>(changed => changed.State == SessionState.Working);
+        Assert.Equal([SessionState.Idle, SessionState.Working], seen.OfType<StateChanged>().Select(changed => changed.State));
+        Assert.Equal(SessionState.Working, session.State);
+    }
+
+    [Fact]
     public async Task Allowing_a_permission_request_sends_the_answer()
     {
         await using var session = await StartAsync();

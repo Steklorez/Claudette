@@ -88,7 +88,9 @@ public class ThemeChangeUiTests
             await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
             using var usage = new UsageViewModel(h.Services, tracker);
             tracker.OnRateLimitEvent(RateLimitEvent(0.62, h.Time.GetUtcNow().AddHours(2), 0.38));
-            await TabTestHarness.Eventually(() => usage.HasData && h.Shell.SelectedTab!.Status != TabStatus.Working, "the meters and the reply");
+            // The tab is idle before the turn arrives too: its footer is what says it has, and then that it's idle again.
+            await TabTestHarness.Eventually(() => usage.HasData && h.Shell.SelectedTab!.Status != TabStatus.Working
+                && h.Shell.SelectedTab!.Items.OfType<Conversation.TurnSummaryItem>().Any(), "the meters and the reply");
             var main = new MainWindowViewModel(h.Services) { CurrentPage = h.Shell, Usage = usage };
             main.Account.Status = new AuthStatus(true, "claude.ai", null, "me@example.com", null, "max", null, null);
             var window = await ShowAsync(main);

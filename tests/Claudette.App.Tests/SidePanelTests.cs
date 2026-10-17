@@ -592,7 +592,9 @@ public class SidePanelTests
 
         tab.ChangedFiles.ShowGitChanges = true;
 
-        await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.Count == 2, "the working tree");
+        // Turned on from here, the listing finishes off the UI thread, adding the rows before it writes the summary that
+        // ticking below writes too: it's the summary that's waited for.
+        await TabTestHarness.Eventually(() => tab.ChangedFiles.Summary.StartsWith("2 files changed", StringComparison.Ordinal), "the working tree");
         Assert.Equal([("a.cs", true), ("notes.md", false)], tab.ChangedFiles.Files.Select(r => (r.FileName, r.IsReviewed)).OrderBy(r => r.FileName));
 
         // A file only you changed stays reviewed until Claude changes it.
@@ -639,7 +641,9 @@ public class SidePanelTests
         {
             EmitEdit(h, $"e{i}", Path.Combine(h.WorkFolder, $"f{i}.cs"));
         }
-        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Count() == 5 && tab.IsSettled, "the edits");
+        // Their results, not just the calls: the last result's line can still be on its way when the tab is settled, and
+        // it starts the wait for git again.
+        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Count(t => t.IsComplete) == 5 && tab.IsSettled, "the edits");
         Assert.Equal(1, Volatile.Read(ref statuses));
         h.Time.Advance(ChangedFilesViewModel.GitRefreshDelay);
         await TabTestHarness.Eventually(() => Volatile.Read(ref statuses) == 2, "one listing for the five");
@@ -647,7 +651,7 @@ public class SidePanelTests
         // In the background (another tab selected), it waits to be shown.
         tab.IsSelected = false;
         EmitEdit(h, "e9", Path.Combine(h.WorkFolder, "f9.cs"));
-        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Count() == 6 && tab.IsSettled, "the edit");
+        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Count(t => t.IsComplete) == 6 && tab.IsSettled, "the edit");
         h.Time.Advance(ChangedFilesViewModel.GitRefreshDelay * 4);
         Assert.Equal(2, Volatile.Read(ref statuses));
         tab.IsSelected = true;
@@ -1002,7 +1006,8 @@ public class SidePanelTests
         var tab = await h.OpenTabAsync();
         h.Transport.Emit("""{"type":"assistant","message":{"content":[{"type":"tool_use","id":"b1","name":"Bash","input":{"command":"npm run dev","run_in_background":true}}]}}""");
         h.Transport.Emit("""{"type":"system","subtype":"task_started","task_id":"task-9","tool_use_id":"b1","description":"npm run dev","task_type":"local_bash"}""");
-        await TabTestHarness.Eventually(() => Conversation.ConversationTree.ToolCalls(tab.Items).Any(), "the Bash card");
+        // The task, which came after the call: Stop goes through it.
+        await TabTestHarness.Eventually(() => tab.Tasks.TaskIdFor("b1") is not null, "the background task");
         h.Trees.Trees[4242].Children.Add((6001, "node"));
 
         h.Time.Advance(ProcessSampler.SummaryInterval);

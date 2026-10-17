@@ -174,11 +174,13 @@ public class PromptCacheTests
     {
         using var culture = new CultureScope(CultureInfo.InvariantCulture);
         await using var h = new TabTestHarness();
-        var tab = await h.OpenTabAsync();
+        // Before the tab opens: its start reads Claude Code's configuration in the background, and a read from before the
+        // file was written could finish after the ones below. It's the start's own read that's waited for.
         var settings = Path.Combine(h.WorkFolder, ".claude", "settings.json");
         Directory.CreateDirectory(Path.GetDirectoryName(settings)!);
         File.WriteAllText(settings, """{ "promptCacheTtl": "5m" }""");
-        await tab.LoadPromptCacheConfigAsync();
+        var tab = await h.OpenTabAsync();
+        await TabTestHarness.Eventually(() => tab.PromptCacheLifetime?.Source == Core.Sessions.PromptCacheTtlSource.Setting, "the start's read of the setting");
 
         // The setting outranks what the turn wrote.
         await SendAsync(tab);

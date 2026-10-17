@@ -10,6 +10,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **`@` completes any path.** Type a folder after `@` and the list shows what's in it, from `C:\`, `/`, `~/` or `../` too, folder by folder, and picks a file outside the project in full. A folder in the project shows the files git ignores as well, dimmed, and the tab's extra folders' files are in the list with the project's.
 
+### Fixed
+
+- Just as Claude finished a turn, turning Remote Control on or off, moving the tab to another account, changing its extra folders, ticking **Sync to other machines**, or sending a message with *Queue them* chosen could wait for a turn that had already ended. A queued message, or a sub-thread's report, that went as the turn ended could leave the tab saying Claude was idle while it worked.
+- When Claude Code started a turn by itself, such as for a message from the Claude app, a message sent with *Queue them* chosen, or **Auto-continue**'s message once a usage limit reset, could go in that moment as if Claude were idle.
+
 ## [0.3.0] - 2026-10-16
 
 ### Added
