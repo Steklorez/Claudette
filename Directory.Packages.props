@@ -18,6 +18,9 @@
     <!-- The Project Files tab's editor (DESIGN.md §18, "Project files"). AvaloniaEdit.TextMate takes TextMateSharp 2.0.3 or later. -->
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageVersion Include="AvaloniaEdit.TextMate" Version="12.0.0" />
+    <!-- The image window's animated GIFs and WebPs (DESIGN.md §18, "Opening images"): Skia's codec, which Avalonia renders
+         with. Keep it at the version Avalonia.Skia takes. -->
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />

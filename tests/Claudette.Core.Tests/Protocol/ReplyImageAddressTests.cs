@@ -34,7 +34,7 @@ public sealed class ReplyImageAddressTests : IDisposable
         var classified = ReplyImageAddress.Classify(address, Folder);
 
         Assert.Equal(ReplyImageKind.Refused, classified.Kind);
-        Assert.Equal("It isn't a PNG, JPEG, GIF or WebP image.", classified.Reason);
+        Assert.Equal("It isn't a PNG, JPEG, GIF, WebP or BMP image.", classified.Reason);
     }
 
     [Theory]

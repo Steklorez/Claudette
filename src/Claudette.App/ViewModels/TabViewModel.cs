@@ -1171,8 +1171,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <see cref="LinkClickedEventArgs"/>, the cards the address. Only https, http and mailto links open in the browser, as
     /// the project's links do (DESIGN.md §18, "Links"): a reply can't run a program through an app's own link. A link in
     /// Markdown to a file, or inline code that names one, opens the file, but never runs it (DESIGN.md §18, "Files named
-    /// in Claude's replies"). Clicks don't wait for each other: a file being looked for, or the menu of several, leaves
-    /// every other link working.
+    /// in Claude's replies"). A web link to an image shows it in the image window, as Settings → Editor → Open images in
+    /// says (DESIGN.md §18, "Opening images"). Clicks don't wait for each other: a file being looked for, an image
+    /// loading, or the menu of several, leaves every other link working.
     /// </summary>
     [RelayCommand(AllowConcurrentExecutions = true)]
     private Task OpenLinkAsync(object? link)
@@ -1183,26 +1184,50 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && ProjectLinks.AllowedSchemes.Contains(uri.Scheme))
         {
-            return _services.Platform.OpenUrlAsync(url);
+            return _shell.OpensImages && uri.Scheme is "http" or "https" && ViewerImages.HasExtension(uri.AbsolutePath)
+                ? OpenWebImageAsync(uri)
+                : _services.Platform.OpenUrlAsync(url);
         }
         return link is LinkClickedEventArgs markdown && ReplyFileReference.FromLink(url) is { } file
             ? OpenFileReferenceAsync(file, markdown.Source)
             : Task.CompletedTask;
     }
 
-    /// <summary>An image from a tool's result, to show full size in a window of its own (DESIGN.md §18, "Images from Claude's tools").</summary>
-    public event Action<ImageViewerViewModel>? ImageRequested;
+    /// <summary>
+    /// A web link whose address ends in an image's extension (DESIGN.md §18, "Opening images"): it loads as a reply's web
+    /// image does, through Claudette's own client, and remembered in the tab the same way, then shows in the image window.
+    /// What isn't an image there (a page, an error, more than 20 MB) opens in the browser, as any link does.
+    /// </summary>
+    private async Task OpenWebImageAsync(Uri uri)
+    {
+        var url = uri.OriginalString;
+        MessageImage image;
+        try
+        {
+            image = ReplyImages.Loaded(url) ?? await ReplyImages.LoadAsync(ReplyImages.Classify(url));
+        }
+        catch (ReplyImageException)
+        {
+            await _services.Platform.OpenUrlAsync(url);
+            return;
+        }
+        var name = Uri.UnescapeDataString(Path.GetFileName(uri.AbsolutePath));
+        _shell.ShowImage(new ToolImage(image, uri.Host, name, ToolImages.SaveName(name, image.MediaType), null, null, uri));
+    }
 
     /// <summary>The images in the tab's replies: which load at once, which the user let load (DESIGN.md §18, "Images in Claude's replies").</summary>
     public ReplyImages ReplyImages { get; }
 
-    /// <summary>A click on an image under a tool's card.</summary>
+    /// <summary>
+    /// A click on an image under a tool's card, or in a reply: full size in a window of its own (DESIGN.md §18, "Images
+    /// from Claude's tools"), whatever Settings → Editor → Open images in says, since many aren't files.
+    /// </summary>
     [RelayCommand]
     private void OpenImage(ToolImage? image)
     {
         if (image is not null)
         {
-            ImageRequested?.Invoke(new ImageViewerViewModel(image, _services));
+            _shell.ShowImage(image);
         }
     }
 

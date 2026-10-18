@@ -39,6 +39,7 @@ Close the file when you're done with it, and the Files tab closes too: the conve
 
 - A program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`) still shows in its folder, since opening it would run it.
 - Binary files, and files over 10 MB, open in the OS's app.
+- An image opens in Claudette's image window, as Settings → **Editor** → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
 - A folder in the project shows in the explorer, expanded and selected. One elsewhere opens in Explorer, Finder or your file manager.
 - A script (`.bat`, `.ps1`, `.sh`, `.py`, `.js`) opens in the editor as text, since showing its text doesn't run it.
 
@@ -52,6 +53,7 @@ Settings → **Editor** → **Open files in** has two choices, **Claudette's edi
 |---|---|---|
 | **Open files in** | **Claudette's editor, at the line named** | Settings → **Editor** |
 | **Show a file clicked in a conversation** | **Beside the conversation** (or **In its place**) | Settings → **Editor** |
+| **Open images in** | **Claudette's image viewer** (or **The app the OS uses for the file**) | Settings → **Editor**, explained in [Images](../conversation/images.md#settings) |
 
 ## Shortcuts
 

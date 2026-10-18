@@ -174,6 +174,9 @@ public sealed class EditorSettings
     /// <summary>Where a file named in a reply, or Changed files' <b>Open</b>, goes.</summary>
     public OpenFilesIn OpenFilesIn { get; set; } = OpenFilesIn.Editor;
 
+    /// <summary>Where an image file or a web image clicked in a conversation, or opened from the explorer, goes.</summary>
+    public OpenImagesIn OpenImagesIn { get; set; } = OpenImagesIn.Viewer;
+
     /// <summary>Where the Project Files tab shows a file clicked in a conversation.</summary>
     public FilesFromConversation FilesFromConversation { get; set; } = FilesFromConversation.Beside;
 
@@ -201,6 +204,15 @@ public enum OpenFilesIn
     Editor,
 
     /// <summary>The app the OS uses for the file, as before the editor.</summary>
+    System,
+}
+
+public enum OpenImagesIn
+{
+    /// <summary>Claudette's image window (DESIGN.md §18, "Images from Claude's tools").</summary>
+    Viewer,
+
+    /// <summary>The app the OS uses for the file, and the browser for a web image.</summary>
     System,
 }
 

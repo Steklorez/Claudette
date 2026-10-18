@@ -449,6 +449,27 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task OpenFileInSystemAsync(ProjectFileViewModel? file) => file is null ? Task.CompletedTask : OpenInSystemAsync(file.Path);
 
+    /// <summary>
+    /// <b>Open in Claudette's image viewer</b>, on an image's note that it isn't text (DESIGN.md §18, "Opening images"),
+    /// whatever Settings → Editor says. One the window can't show after all goes to the OS's app.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenFileInViewerAsync(ProjectFileViewModel? file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+        if (await Task.Run(() => ShellViewModel.ImageFile(file.Path, file.RelativePath)) is { } image)
+        {
+            _shell.ShowImage(image);
+        }
+        else
+        {
+            await OpenInSystemAsync(file.Path);
+        }
+    }
+
     [RelayCommand]
     private Task RevealFileAsync(ProjectFileViewModel? file) => file is null ? Task.CompletedTask : RevealAsync(file.Path);
 

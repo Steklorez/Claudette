@@ -4,7 +4,7 @@ namespace Claudette.App.ViewModels.Settings;
 
 /// <summary>
 /// Settings → Editor (DESIGN.md §18, "Project files"): which side the Project Files tab's explorer is on, where files
-/// open, where a file from a conversation shows, word wrap, and the indentation for files that have none.
+/// and images open, where a file from a conversation shows, word wrap, and the indentation for files that have none.
 /// </summary>
 public sealed class EditorPage(SettingsContext context) : SettingsPage(context, SettingsCategory.Editor)
 {
@@ -12,6 +12,7 @@ public sealed class EditorPage(SettingsContext context) : SettingsPage(context, 
     [
         Entry("Explorer side", pageText: "The explorer is on the"),
         Entry("Open files in Claudette's editor", pageText: "Open files in"),
+        Entry("Open images in Claudette's image viewer", pageText: "Open images in"),
         Entry("Show files from a conversation", pageText: "Show a file clicked in a conversation"),
         Entry("Open in the diff window", pageText: "Open in the diff window"),
         Entry("Word wrap", pageText: "Wrap long lines"),
@@ -81,6 +82,38 @@ public sealed class EditorPage(SettingsContext context) : SettingsPage(context, 
         Editor.OpenFilesIn = where;
         OnPropertyChanged(nameof(OpenInEditor));
         OnPropertyChanged(nameof(OpenInSystem));
+        Save();
+    }
+
+    public bool ImagesInViewer
+    {
+        get => Editor.OpenImagesIn == OpenImagesIn.Viewer;
+        set
+        {
+            if (value)
+            {
+                SetImagesIn(OpenImagesIn.Viewer);
+            }
+        }
+    }
+
+    public bool ImagesInSystem
+    {
+        get => Editor.OpenImagesIn == OpenImagesIn.System;
+        set
+        {
+            if (value)
+            {
+                SetImagesIn(OpenImagesIn.System);
+            }
+        }
+    }
+
+    private void SetImagesIn(OpenImagesIn where)
+    {
+        Editor.OpenImagesIn = where;
+        OnPropertyChanged(nameof(ImagesInViewer));
+        OnPropertyChanged(nameof(ImagesInSystem));
         Save();
     }
 

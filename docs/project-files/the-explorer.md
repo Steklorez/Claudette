@@ -28,7 +28,7 @@ The header has the group's name, then:
 
 ## Opening a file
 
-- A click opens the file in the preview tab, a double-click or `Enter` opens it to stay ([File tabs](file-tabs.md)).
+- A click opens the file in the preview tab, a double-click or `Enter` opens it to stay ([File tabs](file-tabs.md)). An image's double-click, `Enter` or **Open** shows it in Claudette's image window instead, as Settings → Editor → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
 - The arrow keys move without opening anything. `Right` and `Left` expand and collapse a folder.
 
 ## Claude's changes in the tree

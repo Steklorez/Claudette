@@ -147,7 +147,7 @@ public sealed partial class ReplyImageViewModel(string address, string altText) 
         };
         var filePath = Source.Kind is ReplyImageKind.InFolder or ReplyImageKind.LocalFile ? Source.Path : null;
         var from = Source.Kind == ReplyImageKind.Web ? Source.Origin : "In a reply";
-        _open?.Invoke(new ToolImage(image, from, Title, ToolImages.SaveName(name, image.MediaType), filePath, null));
+        _open?.Invoke(new ToolImage(image, from, Title, ToolImages.SaveName(name, image.MediaType), filePath, null, Source.Url));
     }
 
     private void Show(MessageImage image)

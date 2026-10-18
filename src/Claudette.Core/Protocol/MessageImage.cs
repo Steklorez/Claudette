@@ -7,7 +7,10 @@ namespace Claudette.Core.Protocol;
 /// transcript, or in a tool's result (DESIGN.md §18, "Images from Claude's tools"). Sent to Claude Code as a base64
 /// <c>image</c> content block.
 /// </summary>
-/// <param name="MediaType"><c>image/png</c>, <c>image/jpeg</c>, <c>image/gif</c> or <c>image/webp</c>.</param>
+/// <param name="MediaType">
+/// <c>image/png</c>, <c>image/jpeg</c>, <c>image/gif</c> or <c>image/webp</c>; or <c>image/bmp</c> for one only shown, never
+/// sent (<see cref="ViewerImages"/>).
+/// </param>
 public sealed record MessageImage(string MediaType, byte[] Data)
 {
     /// <summary>The media types the Messages API accepts.</summary>

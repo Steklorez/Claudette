@@ -37,7 +37,7 @@ public sealed class ReplyImageLoaderTests : IDisposable
         var http = new FakeHttpHandler()
             .On(Url, _ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("<html>Not an image</html>") });
 
-        Assert.Equal("It isn't a PNG, JPEG, GIF or WebP image.", await FailureAsync(Loader(http), Web()));
+        Assert.Equal("It isn't a PNG, JPEG, GIF, WebP or BMP image.", await FailureAsync(Loader(http), Web()));
         Assert.Equal("example.com answered 404 Not Found.", await FailureAsync(Loader(new FakeHttpHandler()), Web()));
         Assert.Equal("example.com couldn't be reached: offline", await FailureAsync(Loader(new ThrowingHandler()), Web()));
     }
@@ -76,8 +76,20 @@ public sealed class ReplyImageLoaderTests : IDisposable
         var image = await loader.LoadAsync(ReplyImageAddress.Classify("chart.png", _folder), TestContext.Current.CancellationToken);
 
         Assert.Equal(Png, image.Data);
-        Assert.Equal("It isn't a PNG, JPEG, GIF or WebP image.", await FailureAsync(loader, ReplyImageAddress.Classify("notes.png", _folder)));
+        Assert.Equal("It isn't a PNG, JPEG, GIF, WebP or BMP image.", await FailureAsync(loader, ReplyImageAddress.Classify("notes.png", _folder)));
         Assert.Equal("There's no such file.", await FailureAsync(loader, ReplyImageAddress.Classify("gone.png", _folder)));
+    }
+
+    [Fact]
+    public async Task A_BMP_loads_too_since_Claudette_shows_one_as_it_does_the_others()
+    {
+        var bmp = ViewerImagesTests.Bmp();
+        await File.WriteAllBytesAsync(Path.Combine(_folder, "icon.bmp"), bmp, TestContext.Current.CancellationToken);
+
+        var image = await Loader(new FakeHttpHandler()).LoadAsync(ReplyImageAddress.Classify("icon.bmp", _folder), TestContext.Current.CancellationToken);
+
+        Assert.Equal("image/bmp", image.MediaType);
+        Assert.Equal(bmp, image.Data);
     }
 
     [Fact]

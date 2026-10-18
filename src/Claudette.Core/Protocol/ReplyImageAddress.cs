@@ -113,11 +113,11 @@ public sealed record ReplyImageAddress(ReplyImageKind Kind, string Address, stri
         // Its bytes say what it is, whatever the header claims.
         if (header.EndsWith(Base64, StringComparison.OrdinalIgnoreCase)
             && MessageImage.FromBase64(null, text[(comma + 1)..]) is { } image
-            && MessageImage.DetectMediaType(image.Data) is { } mediaType)
+            && ViewerImages.DetectMediaType(image.Data) is { } mediaType)
         {
             return new ReplyImageAddress(ReplyImageKind.Inline, address, Image: image with { MediaType = mediaType });
         }
-        return Refused(address, "It isn't a PNG, JPEG, GIF or WebP image.");
+        return Refused(address, ViewerImages.NotAnImage);
     }
 
     /// <summary><c>\\server\share</c> or <c>//server/share</c>, which Windows reaches over the network.</summary>

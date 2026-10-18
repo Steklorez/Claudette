@@ -40,6 +40,14 @@ public partial class ProjectFileView : UserControl
         }
     }
 
+    private void OnOpenInViewer(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is ProjectFileViewModel file && this.FindAncestorOfType<ProjectFilesView>()?.DataContext is ProjectFilesViewModel files)
+        {
+            files.OpenFileInViewerCommand.Execute(file);
+        }
+    }
+
     /// <summary>A double-click on a line of the diff, not on its Revert: <b>Edit</b>, at that line.</summary>
     private void OnDiffDoubleTapped(object? sender, TappedEventArgs e)
     {

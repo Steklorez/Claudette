@@ -2,6 +2,7 @@ using Claudette.App.Diffs;
 using Claudette.App.Editor;
 using Claudette.App.Services;
 using Claudette.Core.ProjectFiles;
+using Claudette.Core.Protocol;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -87,11 +88,11 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
     // ---- Loading -------------------------------------------------------------------------------------------------------
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsText), nameof(HasProblem), nameof(ProblemText))]
+    [NotifyPropertyChangedFor(nameof(IsText), nameof(HasProblem), nameof(ProblemText), nameof(CanOpenInViewer))]
     public partial TextFileProblem Problem { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsText), nameof(HasProblem), nameof(ProblemText))]
+    [NotifyPropertyChangedFor(nameof(IsText), nameof(HasProblem), nameof(ProblemText), nameof(CanOpenInViewer))]
     public partial bool IsLoaded { get; private set; }
 
     public bool IsText => IsLoaded && Document is not null;
@@ -106,6 +107,12 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         TextFileProblem.Unreadable => "This file couldn't be read: another program may have it open, or Claudette isn't allowed to.",
         _ => "",
     };
+
+    /// <summary>
+    /// It didn't open here and is an image the image window may show, so the note offers <b>Open in Claudette's image
+    /// viewer</b> (DESIGN.md §18, "Opening images"). Its bytes are checked on the click.
+    /// </summary>
+    public bool CanOpenInViewer => HasProblem && Problem is TextFileProblem.Binary or TextFileProblem.TooLarge && ViewerImages.HasExtension(Path);
 
     /// <summary>The file's text, once it's read and is text.</summary>
     public IEditorDocument? Document { get; private set; }

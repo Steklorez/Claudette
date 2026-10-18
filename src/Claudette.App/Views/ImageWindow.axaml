@@ -7,12 +7,14 @@
         Title="{Binding Title}"
         SizeToContent="WidthAndHeight" MinWidth="420" MinHeight="240" MaxWidth="1400" MaxHeight="900"
         WindowStartupLocation="CenterOwner">
-  <!-- DESIGN.md §18, "Images from Claude's tools": an image from a tool's result, full size -->
+  <!-- DESIGN.md §18, "Images from Claude's tools", "Opening images": an image full size -->
   <DockPanel>
     <Border DockPanel.Dock="Top" Padding="14,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
         <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+          <Button Content="{Binding PlayText}" Command="{Binding PlayPauseCommand}" IsVisible="{Binding IsAnimated}"
+                  ToolTip.Tip="Play or pause the animation" />
           <Button Command="{Binding CopyCommand}" ToolTip.Tip="Copy the image to the clipboard">
             <Panel>
               <TextBlock Text="Copy image" IsVisible="{Binding !IsCopied}" />
@@ -20,8 +22,8 @@
             </Panel>
           </Button>
           <Button Content="Save as…" Command="{Binding SaveAsCommand}" />
-          <Button Content="Open" Command="{Binding OpenCommand}" IsVisible="{Binding CanOpen}"
-                  ToolTip.Tip="Open the file Claude read in the app your system uses for it" />
+          <Button Content="{Binding OpenText}" Command="{Binding OpenCommand}" IsVisible="{Binding CanOpen}"
+                  ToolTip.Tip="{Binding OpenTip}" />
         </StackPanel>
         <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="muted small" Text="{Binding Details}" TextTrimming="CharacterEllipsis" />
         <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Classes="small error" Text="{Binding Problem}" TextWrapping="Wrap" IsVisible="{Binding HasProblem}" />

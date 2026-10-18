@@ -19,7 +19,11 @@ public readonly record struct ImageSize(int Width, int Height)
 /// <param name="FileName">A name to save it as, with an extension that fits its media type.</param>
 /// <param name="FilePath">The image file a Read read it from, which can be opened; null for an image from anything else.</param>
 /// <param name="ScaledFrom">Its size before Claude Code scaled it down to send it, when it did and says so.</param>
-public sealed record ToolImage(MessageImage Image, string Tool, string Name, string FileName, string? FilePath, ImageSize? ScaledFrom);
+/// <param name="Url">
+/// The web address it came from, for an image in a reply or a link to one (DESIGN.md §18, "Opening images"), which can be
+/// opened in the browser.
+/// </param>
+public sealed record ToolImage(MessageImage Image, string Tool, string Name, string FileName, string? FilePath, ImageSize? ScaledFrom, Uri? Url = null);
 
 /// <summary>Names the images in a tool's result, from the call's input and Claude Code's <c>tool_use_result</c>.</summary>
 public static class ToolImages
@@ -96,6 +100,7 @@ public static class ToolImages
         "image/jpeg" => [".jpg", ".jpeg"],
         "image/gif" => [".gif"],
         "image/webp" => [".webp"],
+        "image/bmp" => [".bmp"],
         _ => [".png"],
     };
 }

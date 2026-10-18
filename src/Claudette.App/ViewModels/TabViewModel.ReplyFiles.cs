@@ -53,7 +53,8 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// Opens a file the session named (DESIGN.md §18, "Project files", "Opening files in the editor"): in the project's
-    /// Files tab at <paramref name="line"/>, as Settings → Editor says, or else in the app the OS uses. A program or
+    /// Files tab at <paramref name="line"/>, as Settings → Editor says, or else in the app the OS uses. An image shows in
+    /// the image window, as Settings → Editor → Open images in says (DESIGN.md §18, "Opening images"). A program or
     /// shortcut that isn't text shows in its folder rather than running, and a folder shows in the explorer when it's in
     /// the project, else in Finder or Explorer.
     /// </summary>
@@ -71,6 +72,11 @@ public sealed partial class TabViewModel
                 return OpenedPath.InClaudette;
             }
             await _services.Platform.RevealFolderAsync(path);
+        }
+        else if (ShownPath(path) is var shown && await Task.Run(() => _shell.ImageToView(path, shown)) is { } image)
+        {
+            _shell.ShowImage(image);
+            return OpenedPath.InClaudette;
         }
         else if (await Task.Run(() => _shell.OpensInEditor(path)))
         {

@@ -32,7 +32,7 @@ public class ToolImageTests
         Assert.False(card.HasOutput);
 
         ImageViewerViewModel? viewer = null;
-        tab.ImageRequested += v => viewer = v;
+        h.Shell.ShowImageWindow = v => viewer = v;
         tab.OpenImageCommand.Execute(image);
         Assert.NotNull(viewer);
         Assert.Equal("wide.png", viewer.Title);
@@ -77,7 +77,7 @@ public class ToolImageTests
         Assert.Equal("Took a screenshot of the page", card.Output);
         var image = Assert.Single(card.Images);
         ImageViewerViewModel? viewer = null;
-        tab.ImageRequested += v => viewer = v;
+        h.Shell.ShowImageWindow = v => viewer = v;
         tab.OpenImageCommand.Execute(image);
 
         Assert.Equal(("Image", "mcp__playwright__browser_take_screenshot · PNG 70 bytes"), (viewer!.Title, viewer.Details));
@@ -115,7 +115,7 @@ public class ToolImageTests
         h.Transport.Emit(Result("t1", [ImageBlock()], ReadImage(scaled: false)));
         var card = await CardAsync(tab);
         ImageViewerViewModel? viewer = null;
-        tab.ImageRequested += v => viewer = v;
+        h.Shell.ShowImageWindow = v => viewer = v;
         tab.OpenImageCommand.Execute(card.Images[0]);
         Assert.Equal("Read · PNG 70 bytes", viewer!.Details);
 

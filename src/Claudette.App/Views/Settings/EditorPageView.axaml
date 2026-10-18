@@ -36,6 +36,13 @@
       <RadioButton GroupName="FromConversation" Content="In its place" IsChecked="{Binding FilesInPlace}" />
     </StackPanel>
     <StackPanel Spacing="4">
+      <TextBlock Text="Open images in" />
+      <TextBlock Classes="muted small" TextWrapping="Wrap"
+                 Text="An image file named in Claude's replies, a link to an image on the web, Changed files' Open, the files on Claude's tool cards and the explorer. PNG, JPEG, GIF, WebP and BMP; other kinds go to the OS." />
+      <RadioButton GroupName="OpenImagesIn" Content="Claudette's image viewer" IsChecked="{Binding ImagesInViewer}" />
+      <RadioButton GroupName="OpenImagesIn" Content="The app the OS uses for the file" IsChecked="{Binding ImagesInSystem}" />
+    </StackPanel>
+    <StackPanel Spacing="4">
       <TextBlock Text="Open in the diff window" />
       <TextBlock Classes="muted small" TextWrapping="Wrap"
                  Text="The diff window closes when the file opens in Claudette's editor, so the editor isn't hidden behind it." />

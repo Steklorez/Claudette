@@ -46,7 +46,7 @@ A small rounded chip at the editor's bottom right says where the cursor is and w
 - A file that isn't valid text in one of those, such as Latin-1, opens read-only and says why. Saving a guess would change characters nobody touched.
 - A file Claudette isn't allowed to write opens read-only, and says so.
 - A file with a line over 1,000,000 characters opens read-only, since typing on a line that long takes about half a second a key.
-- A binary file, or one over 10 MB, doesn't open. The editor says so, with **Open in the OS's app**.
+- A binary file, or one over 10 MB, doesn't open. The editor says so, with **Open in the OS's app**, and for an image, **Open in Claudette's image viewer** ([Images](../conversation/images.md#opening-an-image-claude-names)).
 
 ## Screen readers and input methods
 

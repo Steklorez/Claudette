@@ -133,7 +133,7 @@ public class ReplyImageTests
         var tab = await h.OpenTabAsync();
         await File.WriteAllBytesAsync(Path.Combine(h.WorkFolder, "chart.png"), Png, TestContext.Current.CancellationToken);
         var opened = new List<ImageViewerViewModel>();
-        tab.ImageRequested += opened.Add;
+        h.Shell.ShowImageWindow = opened.Add;
         var web = Attached(tab, Url, "Sales by week");
         var local = Attached(tab, "chart.png", "");
         await web.LoadCommand.ExecuteAsync(null);
@@ -142,7 +142,11 @@ public class ReplyImageTests
         web.OpenCommand.Execute(null);
         local.OpenCommand.Execute(null);
 
-        Assert.Equal(("Sales by week", "example.com · PNG 70 bytes", "sales.png", false), (opened[0].Title, opened[0].Details, opened[0].Image.FileName, opened[0].CanOpen));
+        Assert.Equal(("Sales by week", "example.com · PNG 70 bytes", "sales.png", true), (opened[0].Title, opened[0].Details, opened[0].Image.FileName, opened[0].CanOpen));
+        // A web image opens in the browser, a file in the OS's app.
+        Assert.Equal(("Open in browser", "Open"), (opened[0].OpenText, opened[1].OpenText));
+        await opened[0].OpenCommand.ExecuteAsync(null);
+        Assert.Equal([Url], h.Platform.OpenedUrls);
         Assert.Equal(("Image", "In a reply · PNG 70 bytes", "chart.png", true), (opened[1].Title, opened[1].Details, opened[1].Image.FileName, opened[1].CanOpen));
         Assert.Equal(Path.Combine(h.WorkFolder, "chart.png"), opened[1].Image.FilePath);
         opened.ForEach(o => o.Dispose());

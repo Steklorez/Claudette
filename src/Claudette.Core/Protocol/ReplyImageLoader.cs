@@ -1,5 +1,4 @@
 using System.Buffers;
-using Claudette.Core.Composer;
 
 namespace Claudette.Core.Protocol;
 
@@ -9,12 +8,14 @@ public sealed class ReplyImageException(string message, Exception? inner = null)
 /// <summary>
 /// Loads an image in a reply (DESIGN.md §18, "Images in Claude's replies") once <see cref="ReplyImageAddress"/> says it
 /// may: a file from the disk, or a web image through Claudette's own client, never LiveMarkdown's. Either is at most
-/// <see cref="MaxBytes"/> and must be a PNG, JPEG, GIF or WebP by its first bytes, whatever its name or the server says.
+/// <see cref="MaxBytes"/> and must be a PNG, JPEG, GIF, WebP or BMP by its first bytes, whatever its name or the server
+/// says (<see cref="ViewerImages"/>). A web image link clicked in a reply loads through it too (DESIGN.md §18, "Opening
+/// images").
 /// </summary>
 public sealed class ReplyImageLoader(HttpClient http, TimeProvider time)
 {
     /// <summary>The largest image loaded, as for an attachment.</summary>
-    public const long MaxBytes = Attachments.MaxImageBytes;
+    public const long MaxBytes = ViewerImages.MaxBytes;
 
     /// <summary>How long a web image has to arrive.</summary>
     public static readonly TimeSpan WebTimeout = TimeSpan.FromSeconds(30);
@@ -106,7 +107,7 @@ public sealed class ReplyImageLoader(HttpClient http, TimeProvider time)
     }
 
     private static MessageImage Image(byte[] bytes) =>
-        MessageImage.DetectMediaType(bytes) is { } mediaType
+        ViewerImages.DetectMediaType(bytes) is { } mediaType
             ? new MessageImage(mediaType, bytes)
-            : throw new ReplyImageException("It isn't a PNG, JPEG, GIF or WebP image.");
+            : throw new ReplyImageException(ViewerImages.NotAnImage);
 }

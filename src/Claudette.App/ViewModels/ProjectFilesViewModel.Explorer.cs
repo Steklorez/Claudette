@@ -196,19 +196,34 @@ public sealed partial class ProjectFilesViewModel
         return row.IsDeleted ? OpenDeletedAsync(row) : OpenFileAsync(row.FullPath, preview: true);
     }
 
-    /// <summary>A double-click on a file, or Enter: it opens to stay.</summary>
+    /// <summary>
+    /// A double-click on a file, or Enter: it opens to stay. An image shows in the image window instead, as Settings →
+    /// Editor → Open images in says (DESIGN.md §18, "Opening images"); a single click leaves it in the preview tab, so
+    /// going down a folder of images doesn't open a window for each.
+    /// </summary>
     [RelayCommand]
-    private Task OpenRowToStayAsync(ExplorerRow? row)
+    private async Task OpenRowToStayAsync(ExplorerRow? row)
     {
         if (row is null or NewEntryRow)
         {
-            return Task.CompletedTask;
+            return;
         }
         if (row.IsFolder)
         {
-            return ToggleRowAsync(row);
+            await ToggleRowAsync(row);
         }
-        return row.IsDeleted ? OpenDeletedAsync(row) : OpenFileAsync(row.FullPath, preview: false, focus: true);
+        else if (row.IsDeleted)
+        {
+            await OpenDeletedAsync(row);
+        }
+        else if (await Task.Run(() => _shell.ImageToView(row.FullPath, row.RelativePath)) is { } image)
+        {
+            _shell.ShowImage(image);
+        }
+        else
+        {
+            await OpenFileAsync(row.FullPath, preview: false, focus: true);
+        }
     }
 
     internal async Task ExpandAsync(ExplorerRow row)

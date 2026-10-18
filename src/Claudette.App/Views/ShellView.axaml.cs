@@ -393,6 +393,7 @@ public partial class ShellView : UserControl
         if (_shell is not null)
         {
             _shell.ShowSettingsWindow = ShowSettingsAsync;
+            _shell.ShowImageWindow = viewer => ImageWindow.Open(viewer, TopLevel.GetTopLevel(this) as Window);
             _shell.PropertyChanged += OnShellChanged;
             if (Bounds.Width > 0)
             {
