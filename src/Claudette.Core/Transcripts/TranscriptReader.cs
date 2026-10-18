@@ -41,7 +41,8 @@ public sealed record TranscriptNote(string Text) : TranscriptItem;
 
 /// <summary>
 /// A background task ended, as Claude Code told the model (<c>&lt;task-notification&gt;</c>): for example a background
-/// subagent finishing, with the report it handed back (DESIGN.md §18, "Agent map").
+/// subagent finishing, with the report it handed back (DESIGN.md §18, "Agent map"). Read from a user turn when the model
+/// was idle, and from a queued command's attachment when it was mid-turn.
 /// </summary>
 public sealed record TranscriptTaskNotification(
     string? TaskId,
@@ -216,6 +217,14 @@ public static class TranscriptReader
                     break;
                 case "user" when entry.GetObject("message") is { } message:
                     ReadUser(entry, message, parentToolUseId, time, items);
+                    break;
+                // A background task that ends while the model is mid-turn reaches it as a queued command, recorded as an
+                // attachment rather than a user turn.
+                case "attachment" when entry.GetObject("attachment") is { } attachment
+                                       && attachment.GetString("type") == "queued_command"
+                                       && attachment.GetString("prompt")?.Trim() is { } prompt
+                                       && prompt.StartsWith(TaskNotificationStart, StringComparison.Ordinal):
+                    items.Add(new Entry(time, ParseTaskNotification(prompt)));
                     break;
             }
             if (items.Count > before && (entry.GetString("uuid") is not null || entry.GetString("parentUuid") is not null))

@@ -2606,7 +2606,7 @@ A live view of what a tab's subagents are doing. When Claude fans work out to se
 - **Tokens** are the numbers Claude Code reports: from `task_progress` while it runs, then from its result or task notification. They're the subagent's latest request (roughly its context), not a running total, and the details' tooltip says so.
 - **Restored tabs.** A transcript replay shows the finished tree, with no live status, running clock or Stop.
   - Claude Code keeps each subagent's own transcript in `<session-id>/subagents/agent-<id>.jsonl`, with a `.meta.json` naming the `Agent` call that started it (`toolUseId`). Claudette merges them into the replay in time order, so restored subagent groups get their tool calls back and nested subagents their place in the tree. The session library already copies that folder ([§9](#session-library-sync-across-machines)).
-  - A background subagent's result is read from the `<task-notification>` entry Claude Code recorded for the model. That entry isn't shown as something the user typed, in the tab or in History.
+  - A background subagent's result is read from the `<task-notification>` Claude Code recorded for the model: a user turn when the model was idle, or a queued command's attachment when it ended mid-turn. Neither is shown as something the user typed, in the tab or in History.
   - A subagent with no recorded result reads *"Didn't finish"*.
 - **Decisions.**
   - **A tree list, not a graph layout.** Compact indented rows fit the side panel and read like the rest of the app. The window gives wide fan-outs more room.

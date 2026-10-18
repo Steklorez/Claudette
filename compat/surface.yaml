@@ -1821,7 +1821,7 @@ items:
     status: undocumented
     usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.Core/Transcripts/TranscriptPrompts.cs
     test: TranscriptReaderTests
-    fallback: How a transcript records a background task ending, as a user turn with <task-id>, <tool-use-id>, <status>, <result> and <usage>. If it changes, a restored tab shows a background subagent as "Didn't finish" and the notification as a user message; the entry's origin.kind "task-notification" (documented on SDKUserMessage) still marks it.
+    fallback: How a transcript records a background task ending, with <task-id>, <tool-use-id>, <status>, <result> and <usage>. When the model was idle it's a user turn; when it was mid-turn, an entry of type "attachment" whose attachment has type "queued_command" and the notification as its prompt (commandMode "task-notification"; checked against 2.1.284 and 2.1.302). A subagent's report may come separately, as a peer message (<result> then only points to it), which Claudette doesn't need because it reads the subagent's own transcript. If either form changes, a restored tab shows a background subagent as "Didn't finish", and the user-turn form shows as a user message; the entry's origin.kind "task-notification" (documented on SDKUserMessage) still marks it.
   - id: "agent-<id>.meta.json"
     kind: file
     status: undocumented

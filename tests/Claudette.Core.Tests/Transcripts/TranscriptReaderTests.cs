@@ -149,6 +149,64 @@ public class TranscriptReaderTests
     }
 
     [Fact]
+    public void A_background_task_notification_that_came_mid_turn_is_read_from_its_attachment()
+    {
+        // As Claude Code 2.1.302 records a background subagent finishing while the model was working: no user turn, but
+        // a queued command's attachment, after the subagent's hand-back in one of its own. Other attachments show nothing.
+        var notification = """
+            <task-notification>
+            <task-id>a8981c</task-id>
+            <tool-use-id>toolu_2</tool-use-id>
+            <output-file>/tmp/tasks/a8981c.output</output-file>
+            <status>completed</status>
+            <summary>Agent "Survey the protocol" finished</summary>
+            <note>A task-notification fires each time this agent stops with no live background children of its own.</note>
+            <result>This agent's report was delivered to you as a message from "a8981c" (its SubagentHandback call). Read it there; it is not repeated here.
+            </result>
+            <usage><subagent_tokens>196141</subagent_tokens><tool_uses>80</tool_uses><duration_ms>323768</duration_ms></usage>
+            </task-notification>
+            """.ReplaceLineEndings("\n");
+        static string Attachment(System.Text.Json.Nodes.JsonObject attachment) => new System.Text.Json.Nodes.JsonObject
+        {
+            ["type"] = "attachment",
+            ["isSidechain"] = false,
+            ["timestamp"] = "2026-10-18T15:13:32.061Z",
+            ["attachment"] = attachment,
+        }.ToJsonString();
+
+        var transcript = TranscriptReader.Read(
+        [
+            """{"type":"queue-operation","operation":"enqueue","timestamp":"2026-10-18T15:13:32.061Z","content":"<task-notification>\n<task-id>a8981c</task-id>\n</task-notification>"}""",
+            Attachment(new System.Text.Json.Nodes.JsonObject
+            {
+                ["type"] = "queued_command",
+                ["prompt"] = "<agent-message from=\"a8981c\">\n[Subagent hand-back] The report.\n</agent-message>",
+                ["commandMode"] = "prompt",
+                ["origin"] = new System.Text.Json.Nodes.JsonObject { ["kind"] = "peer", ["from"] = "a8981c", ["handback"] = true },
+                ["isMeta"] = true,
+            }),
+            Attachment(new System.Text.Json.Nodes.JsonObject
+            {
+                ["type"] = "queued_command",
+                ["prompt"] = notification,
+                ["commandMode"] = "task-notification",
+                ["origin"] = new System.Text.Json.Nodes.JsonObject { ["kind"] = "task-notification", ["producer"] = "session-task" },
+                ["usage"] = new System.Text.Json.Nodes.JsonObject { ["totalTokens"] = 196141, ["toolUses"] = 80, ["durationMs"] = 323768 },
+            }),
+            Attachment(new System.Text.Json.Nodes.JsonObject { ["type"] = "total_tokens_reminder", ["text"] = "<total_tokens>14911646 tokens left</total_tokens>" }),
+        ]);
+
+        var item = Assert.IsType<TranscriptTaskNotification>(Assert.Single(transcript.Items));
+        Assert.Equal("a8981c", item.TaskId);
+        Assert.Equal("toolu_2", item.ToolUseId);
+        Assert.Equal("completed", item.Status);
+        Assert.Equal(196141, item.Tokens);
+        Assert.Equal(80, item.ToolUses);
+        Assert.Equal(323768, item.DurationMs);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-18T15:13:32.061Z", System.Globalization.CultureInfo.InvariantCulture), item.Time);
+    }
+
+    [Fact]
     public async Task Subagent_transcripts_are_merged_in_under_their_agent_call()
     {
         // The layout Claude Code 2.1.284 writes: <session>.jsonl, and <session>/subagents/agent-<id>.jsonl with a
