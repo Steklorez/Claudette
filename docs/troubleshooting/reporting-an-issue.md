@@ -11,7 +11,7 @@ Problems with Claudette go to its [GitHub issues](https://github.com/dotBunny/Cl
 
 ## The version
 
-The foot of the Settings sidebar shows which Claudette this is, on every page: *Claudette 0.3.0*. A copy run from source adds the commit it was built from, such as *Claudette 0.3.0 · 842169b*. See [Running from source](../getting-started/running-from-source.md).
+The foot of the Settings sidebar shows which Claudette this is, on every page: *Claudette 0.4.0*. A copy run from source adds the commit it was built from, such as *Claudette 0.4.0 · 842169b*. See [Running from source](../getting-started/running-from-source.md).
 
 Click it to copy the versions for a bug report, one per line. It says *Copied* for two seconds. The lines are:
 

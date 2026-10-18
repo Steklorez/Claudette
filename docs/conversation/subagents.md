@@ -25,8 +25,6 @@ To stop a subagent, use the **■** on its row in [the agent map](../plans/the-a
 
 ## Subagents under their tab
 
-{% include unreleased.html %}
-
 Each subagent Claude starts has a row of its own under its tab in the sidebar, the way a thread's sub-threads sit under it. To open subagents' cards in the conversation instead, with no rows, set Settings → Appearance → **Show subagents' work** to **In the conversation**. It applies at once, to every tab.
 
 A subagent's row has the agents icon and its task, how long it has run, and under them its type and what it's doing, or how it ended. A subagent another one started sits under it, further in. Its status mark is the one [the agent map](../plans/the-agent-map.md) uses: a pulsing dot while it runs, `!` while it waits on you, and a dot, ✕ or ■ once it's done, failed or stopped.
@@ -55,8 +53,6 @@ A subagent's row stays until you dismiss it. Once it has finished, and you've se
 A tab that's restored when Claudette starts brings back rows only for its last turn's subagents.
 
 ## Discouraging or turning off subagents
-
-{% include unreleased.html %}
 
 Settings → Claude Code → **Subagents** says whether Claude hands parts of its work to subagents:
 

@@ -34,8 +34,6 @@ When you send the message, Claude Code reads each mentioned file and gives Claud
 
 ## Typing a path
 
-{% include unreleased.html %}
-
 Type a folder after `@`, up to a slash, and the list shows what's in it: folders first, then files, narrowed to the names that start with what you type after the slash.
 
 - **Anywhere on this computer.** A path that starts with a drive or a share on Windows (`@C:\Work\`, `@D:/`, `@\\server\share\`), with `/` on macOS and Linux, with `~/` for your home folder, or with `../` lists that folder and nothing else, under the folder's own path, such as *D:/Work/Game/*. Picking a folder carries on into it. Picking a file inserts its full path, with forward slashes: `@C:/Users/sam/notes.md`. A folder that isn't there says *No such folder*, and an empty one *Nothing in this folder*.
@@ -43,8 +41,6 @@ Type a folder after `@`, up to a slash, and the list shows what's in it: folders
 - A folder is read once as you reach it, and kept for a few seconds, so typing in it is instant. A slow or network drive says *Listing D:/Work/…* while it's read, rather than holding up the message box.
 
 ## The tab's extra folders
-
-{% include unreleased.html %}
 
 The files in the tab's [extra folders](../tabs/tab-settings.md) are in the list too, matched with the working folder's, each with its folder's name before its path (*shared/lib/*). With nothing typed, each extra folder is listed after the top of the working folder, as *Extra folder*. Picking one of their files or folders inserts its full path, since it isn't in the working folder.
 

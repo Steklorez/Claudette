@@ -31,7 +31,7 @@ Each one starts at **Default**, which says what the default is, such as *Default
 - **Process monitor** turns the [Processes](processes.md) page and the composer bar's summary on or off for this tab.
 - **Auto-continue** is whether Claude carries on a task by itself when a usage limit resets. See [When a limit stops a task](../usage/when-a-limit-stops-a-task.md).
 - **Usage credits** is whether the tab carries on with your plan's usage credits once a limit is used up, or stops and waits for the reset. The tab's menu has it too, as **Use usage credits**, and a tab on an API-key account doesn't have it. See [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md).
-- **Subagents** is whether Claude hands parts of its work to subagents in this tab. It applies as soon as you apply it, and Claude hears about it with your next message. New in the next release; see [Discouraging or turning off subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents).
+- **Subagents** is whether Claude hands parts of its work to subagents in this tab. It applies as soon as you apply it, and Claude hears about it with your next message. See [Discouraging or turning off subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents).
 
 ### Check-ins
 

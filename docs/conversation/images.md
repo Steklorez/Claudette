@@ -29,8 +29,6 @@ Under the title are the tool, the type and size (*Read · PNG 245 KB*), and, whe
 
 ### Animated images
 
-{% include unreleased.html %}
-
 An animated GIF or WebP plays in the window, and only there: under a tool's tile and in a reply it stays on its first frame. Each frame shows for as long as the image says, and it plays as many times as the image says before stopping on its last frame. Under the title, the details count its frames (*loop.gif · GIF 2.4 MB · 48 frames*).
 
 - **Pause** stops it on the frame showing, and **Play** goes on from there, or from the beginning once it has stopped.
@@ -53,8 +51,6 @@ An address you loaded once loads by itself in that tab from then on, until you c
 This applies wherever Markdown shows: replies, plans, the Tasks page, and a subagent's prompt and report.
 
 ## Opening an image Claude names
-
-{% include unreleased.html %}
 
 An image file Claude names, and a link to an image on the web, open in the same window as above, rather than in another app. That's a PNG, JPEG, GIF, WebP or BMP of at most 20 MB. Anything else, such as an SVG or a PSD, opens in the app your OS uses for it, as before.
 

@@ -44,7 +44,7 @@ The main agent's row shows whether a turn is running and its latest tool call.
 
 ## Details
 
-Click a row, or press `Enter` on it, to see that subagent's work in the tab; the button below says **Show its work** ([Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab), new in the next release). With Settings → Appearance → **Show subagents' work** set to **In the conversation**, it scrolls the conversation to that subagent's group and opens it instead, along with any groups it's nested in, and the button says **Show in conversation**. Below the tree, the page shows:
+Click a row, or press `Enter` on it, to see that subagent's work in the tab; the button below says **Show its work** ([Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab)). With Settings → Appearance → **Show subagents' work** set to **In the conversation**, it scrolls the conversation to that subagent's group and opens it instead, along with any groups it's nested in, and the button says **Show in conversation**. Below the tree, the page shows:
 
 - Its status, type, model, running time, tool calls and tokens. The tokens are the subagent's latest request, roughly its context, not a running total.
 - **Prompt**: what it was given, with **Copy**.
