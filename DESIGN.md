@@ -34,7 +34,7 @@ Claudette does not replace Claude Code. It runs the real `claude` CLI as a child
 | Dependency | Claude Code CLI | Must already be installed. Claudette finds `claude` on `PATH` (on macOS and Linux, the login shell's `PATH`, [§13](#login-shell-environment)) or at a path set in Settings, checks its version on launch against a minimum supported version, and shows a setup screen if it is missing or too old. Sign-in is handled inside Claudette (see [§11](#11-sign-in)). |
 | Service status | Claude's public status page, status.claude.com | Read for the header's status dot and the incident banner: its Statuspage summary, with no sign-in. Settings → General turns it off. [§18](#service-status). |
 | Packaging | Windows: MSIX. macOS: signed, notarized `.app` in a `.dmg`. | [Below](#packaging-and-signing). |
-| User guide | Jekyll with Just the Docs, on GitHub Pages | https://claudette.dotbunny.com, built from `docs/` and `CHANGELOG.md` on `main` by a workflow. Planned ([below](#user-guide)). |
+| User Guide | Jekyll with Just the Docs, on GitHub Pages | https://claudette.dotbunny.com, built from `docs/` and `CHANGELOG.md` on `main` by a workflow. Planned ([below](#user-guide)). |
 
 ### Packaging and signing
 
@@ -143,7 +143,7 @@ Planned, not started. Tried on a branch on 2026-10-11 against .NET 11 RC1 (SDK `
 > - A signed, notarized `.dmg` and a signed MSIX from `package.yml`.
 > - Timers across sleep on Windows. .NET 11's timers there count only time awake, as they already do on macOS and Linux ([the breaking change](https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/11/environment-tickcount-windows-behavior)). The check-in and auto-continue monitors read the clock every 10 and 30 seconds, so they're unaffected; a usage poll can come up to 5 minutes after waking instead of at once.
 
-### User guide
+### User Guide
 
 ✅ Built 2026-10-16. A website at https://claudette.dotbunny.com that shows people how to use every part of Claudette, with pictures: what each part is for, how to do things with it, the settings that change it and its shortcuts. The README stays the repository's front page, and links to the guide. [GUIDE.md](GUIDE.md) is its plan: how the site is built, how a page is written and its pictures taken, and which page describes each part of Claudette.
 

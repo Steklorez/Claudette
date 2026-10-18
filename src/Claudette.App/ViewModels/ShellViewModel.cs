@@ -994,7 +994,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand]
     private Task OpenSettingsAsync() => ShowSettingsAsync(null, ProjectTab);
 
-    /// <summary>The user guide, in the browser: the sidebar's row under Settings (DESIGN.md §2, "User guide").</summary>
+    /// <summary>The user guide, in the browser: the sidebar's row under Settings (DESIGN.md §2, "User Guide").</summary>
     [RelayCommand]
     private Task OpenGuideAsync() => _services.Platform.OpenUrlAsync(SettingsViewModel.GuideUrl);
 

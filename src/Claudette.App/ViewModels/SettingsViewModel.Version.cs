@@ -11,7 +11,7 @@ namespace Claudette.App.ViewModels;
 /// </summary>
 public sealed partial class SettingsViewModel
 {
-    /// <summary>Claudette's user guide on the web (DESIGN.md §2, "User guide").</summary>
+    /// <summary>Claudette's user guide on the web (DESIGN.md §2, "User Guide").</summary>
     public const string GuideUrl = "https://claudette.dotbunny.com/guide/";
 
     private UiTimeout CopiedWait => field ??= new(_services.Time, _services.Dispatcher);
