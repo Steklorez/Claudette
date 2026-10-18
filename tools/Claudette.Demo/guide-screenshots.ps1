@@ -203,7 +203,7 @@ foreach ($theme in $Themes) {
             # From the top of the first group to Settings under the last.
             Shot 'tabs/sidebar' {
                 param($path)
-                Save-Elements $window $path ((Find-ByText $window 'New tab'), (Find-ById $window 'GroupList'), (Find-ByText $window 'User guide')) 10
+                Save-Elements $window $path ((Find-ByText $window 'New tab'), (Find-ById $window 'GroupList'), (Find-ByText $window 'User Guide')) 10
             }
 
             # The card has no control of its own: its tiles, with room around them for its header and edge.

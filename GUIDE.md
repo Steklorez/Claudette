@@ -1,6 +1,6 @@
 # Claudette User Guide
 
-The plan for Claudette's user guide, the website at https://claudette.dotbunny.com that shows people how to use every part of Claudette. [DESIGN.md](DESIGN.md) says what Claudette does; this file says how the guide is built, how a page is written, how its pictures are taken, which page describes each part of Claudette, and how `CHANGELOG.md` is kept. `§n` still means a section of DESIGN.md, whose [User guide](DESIGN.md#user-guide) section has the decisions behind the site.
+The plan for Claudette's user guide, the website at https://claudette.dotbunny.com that shows people how to use every part of Claudette. [DESIGN.md](DESIGN.md) says what Claudette does; this file says how the guide is built, how a page is written, how its pictures are taken, which page describes each part of Claudette, and how `CHANGELOG.md` is kept. `§n` still means a section of DESIGN.md, whose [User Guide](DESIGN.md#user-guide) section has the decisions behind the site.
 
 Planned 2026-10-15. Built 2026-10-16: the site, every chapter, and the pictures the demo can show ([Steps](#8-steps)).
 
@@ -92,7 +92,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Page | Covers | From |
 |---|---|---|
 | Opening tabs | The new tab picker (search, favorites then recent folders in one list, **Browse…**, **Open from History…**, `1`–`9`, its right-click menu), a group's **+**, dropping a folder on the sidebar, **File → Open Recent** and the Dock menu on macOS, the jump list on Windows, `--folder`, one Claudette at a time. | [Opening a tab](DESIGN.md#opening-a-tab) |
-| The sidebar | A tab's row: the status icons, the second line (*Needs your input*, *Possibly stuck*, the task in progress), the badges (pin, sync, phone, gear, running tasks, task progress, branch, changelist, account, context ring), the info card on hover, resizing, the rail and narrow windows. The foot, with **User guide**. | [Sidebar](DESIGN.md#sidebar), [§4](DESIGN.md#4-tabs--sessions) |
+| The sidebar | A tab's row: the status icons, the second line (*Needs your input*, *Possibly stuck*, the task in progress), the badges (pin, sync, phone, gear, running tasks, task progress, branch, changelist, account, context ring), the info card on hover, resizing, the rail and narrow windows. The foot, with **User Guide**. | [Sidebar](DESIGN.md#sidebar), [§4](DESIGN.md#4-tabs--sessions) |
 | Folder groups | Groups and their colors, **Rename…** and **Change color…**, collapsing, dragging tabs and groups, the group's menu (**New tab here**, **History for this folder**, **Account ▸**, **Close group**). | [§4](DESIGN.md#4-tabs--sessions) |
 | Names, marks and pins | Claude Code's titles and the folder name before one, **Rename** and **Reset name**, **Name each tab's session in Claude Code after the tab**, **Mark ▸** and **Clear mark**, the reviewed icon over a mark, **Pin tab**. | [§4](DESIGN.md#4-tabs--sessions), [§13](DESIGN.md#13-architecture) |
 | The tab's menu | Every item, each with a line and a link to its page; **Copy session ID**, **Duplicate tab**, **Move up** and **Move down** are explained here. | [Sidebar](DESIGN.md#sidebar) |
@@ -259,7 +259,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 
 | Page | Covers | From |
 |---|---|---|
-| The Settings window | Opening it, its search, changes applying at once, **Reset to defaults** and what it leaves alone, the project's pages, the version, **User guide** and **Report an issue**. | [§14](DESIGN.md#14-settings), [Version](DESIGN.md#version) |
+| The Settings window | Opening it, its search, changes applying at once, **Reset to defaults** and what it leaves alone, the project's pages, the version, **User Guide** and **Report an issue**. | [§14](DESIGN.md#14-settings), [Version](DESIGN.md#version) |
 | Every setting | A table per category: each setting's label, its default, whether it syncs, whether a tab can override it, and the page that explains it. | [Categories](DESIGN.md#categories), [Settings sync](DESIGN.md#settings-sync-optional) |
 | Styles and themes | **Theme**, **Style** (Standard and Claude, with pictures of both in light and dark), **Density**, the fonts, what the tab rows show. | [Visual style](DESIGN.md#visual-style) |
 | Accessibility | Screen readers and what they hear, **Zoom**, **Motion**, and what the editor can't do yet. | [Accessibility](DESIGN.md#accessibility) |
@@ -380,5 +380,5 @@ All done 2026-10-16, in one change rather than a pull request a chapter.
 
 ## 9. To decide later
 
-- Whether Claudette links to the guide anywhere besides **User guide** at the foot of the sidebar and of Settings' sidebar. It's what the user sees, so it's decided in DESIGN.md ([User guide](DESIGN.md#user-guide)).
+- Whether Claudette links to the guide anywhere besides **User Guide** at the foot of the sidebar and of Settings' sidebar. It's what the user sees, so it's decided in DESIGN.md ([User Guide](DESIGN.md#user-guide)).
 - A check that the guide names everything: a test that reads `docs/` and fails when a Settings search entry, a shortcut or a palette command appears on no page. It would make [Coverage](#6-coverage) automatic, at the cost of tying the guide's words to the app's.

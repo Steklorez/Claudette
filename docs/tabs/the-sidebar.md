@@ -81,7 +81,7 @@ Each time one of a tab's project actions runs as a job, such as a build, a small
 
 ## The top and the foot
 
-At the top, **New tab** opens the [picker](opening-tabs.md), and a button beside it collapses the sidebar. At the foot are the selected tab's project (a row that opens its menu of actions and links), **History**, the Claude Code and Claudette update badges when there's an update, **New build ready** for a source build, **Settings**, and **User guide**, which opens this guide in your browser.
+At the top, **New tab** opens the [picker](opening-tabs.md), and a button beside it collapses the sidebar. At the foot are the selected tab's project (a row that opens its menu of actions and links), **History**, the Claude Code and Claudette update badges when there's an update, **New build ready** for a source build, **Settings**, and **User Guide**, which opens this guide in your browser.
 
 ## Resizing and collapsing
 

@@ -24,7 +24,7 @@
 [button] Project tools: work
 [button] History
 [button] Settings
-[button] User guide
+[button] User Guide
 "Claude"
 [button] Copy message
 [button] Add to scratch pad

@@ -7,7 +7,7 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// The foot of the Settings sidebar (DESIGN.md §14, "Version"): which Claudette this is, copied with a click, the
-/// <b>User guide</b>, and <b>Report an issue</b>, which opens a new GitHub issue with the versions filled in.
+/// <b>User Guide</b>, and <b>Report an issue</b>, which opens a new GitHub issue with the versions filled in.
 /// </summary>
 public sealed partial class SettingsViewModel
 {

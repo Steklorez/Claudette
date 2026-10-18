@@ -6,4 +6,4 @@
 [button] Project tools
 [button] History
 [button] Settings
-[button] User guide
+[button] User Guide
