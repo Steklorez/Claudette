@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-18
+
 ### Added
 
 - **`@` completes any path.** Type a folder after `@` and the list shows what's in it, from `C:\`, `/`, `~/` or `../` too, folder by folder, and picks a file outside the project in full. A folder in the project shows the files git ignores as well, dimmed, and the tab's extra folders' files are in the list with the project's.
@@ -115,7 +117,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/dotBunny/Claudette/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dotBunny/Claudette/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dotBunny/Claudette/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dotBunny/Claudette/releases/tag/v0.1.0
