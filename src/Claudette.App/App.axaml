@@ -331,8 +331,11 @@
     </Style>
 
     <!-- The working line above the composer (DESIGN.md §5, "Working line") -->
+    <!-- Every frame from the one font where Windows has it: left to fallback, which tries the fonts already in use first,
+         ✶ came from Consolas once a code block had used it, smaller and thinner than the stars around it. -->
     <Style Selector="TextBlock.working-glyph">
       <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+      <Setter Property="FontFamily" Value="Segoe UI Symbol, $Default" />
       <Setter Property="FontSize" Value="14" />
     </Style>
     <Style Selector="TextBlock.working-verb">

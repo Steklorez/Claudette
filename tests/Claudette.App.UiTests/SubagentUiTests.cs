@@ -83,7 +83,7 @@ public class SubagentUiTests
     [AvaloniaFact]
     public async Task In_sidebar_mode_a_subagents_card_is_one_line_even_when_it_was_open()
     {
-        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await using var h = new TabTestHarness(InConversation, dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         h.Transport.Emit(Wire.Init());
@@ -105,6 +105,8 @@ public class SubagentUiTests
     }
 
     private static void InSidebar(AppSettings settings) => settings.Appearance.ShowSubagents = SubagentDisplay.InSidebar;
+
+    private static void InConversation(AppSettings settings) => settings.Appearance.ShowSubagents = SubagentDisplay.InConversation;
 
     private static Control? Visible(Window window, string name) =>
         window.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Name == name && c.IsEffectivelyVisible);

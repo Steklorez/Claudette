@@ -117,7 +117,7 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 | **Full-width conversation** | Off | Yes | No | [Reading the conversation](../conversation/reading-the-conversation.md) |
 | **Quieter in-between steps** | On | Yes | No | [Reading the conversation](../conversation/reading-the-conversation.md) |
 | **Show thinking expanded** | Off | Yes | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
-| **Show subagents' work** | In the conversation | Yes | No | [Subagents](../conversation/subagents.md#subagents-under-their-tab) |
+| **Show subagents' work** | Under the tab in the sidebar | Yes | No | [Subagents](../conversation/subagents.md#subagents-under-their-tab) |
 | **Show fun words while Claude works** | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Show what Claude is doing while it works** | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Show when the prompt cache expires** | On | Yes | No | [The prompt cache](../usage/the-prompt-cache.md) |

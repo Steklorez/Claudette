@@ -19,7 +19,8 @@ public class SubagentTests
     [Fact]
     public async Task Each_subagent_has_a_row_under_its_tab_nested_under_the_one_that_started_it()
     {
-        await using var h = new TabTestHarness(InSidebar);
+        // The default.
+        await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
 
         h.Transport.Emit(Wire.Init());
@@ -41,9 +42,9 @@ public class SubagentTests
     }
 
     [Fact]
-    public async Task Without_the_setting_subagents_have_no_rows()
+    public async Task In_the_conversation_subagents_have_no_rows()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(InConversation);
         var tab = await h.OpenTabAsync();
 
         h.Transport.Emit(Wire.Init());
@@ -232,7 +233,7 @@ public class SubagentTests
     [Fact]
     public async Task Switching_where_their_work_shows_applies_at_once()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(InConversation);
         var tab = await h.OpenTabAsync();
         h.Transport.Emit(Wire.Init());
         h.Transport.Emit(Wire.Agent("a1", "Explore", "Find it", "Explore"));
@@ -409,6 +410,8 @@ public class SubagentTests
     }
 
     private static void InSidebar(AppSettings settings) => settings.Appearance.ShowSubagents = SubagentDisplay.InSidebar;
+
+    private static void InConversation(AppSettings settings) => settings.Appearance.ShowSubagents = SubagentDisplay.InConversation;
 
     private static async Task SendAsync(TabViewModel tab, string text)
     {

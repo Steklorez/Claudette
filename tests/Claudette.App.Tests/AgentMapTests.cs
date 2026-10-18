@@ -100,6 +100,8 @@ public class AgentMapTests
         Assert.False(tab.Agents.IsTicking);
     }
 
+    private static void InConversation(AppSettings settings) => settings.Appearance.ShowSubagents = SubagentDisplay.InConversation;
+
     /// <summary>What Claude Code wrote in a recorded fixture, less the <c>initialize</c> reply the harness gives itself.</summary>
     private static List<string> RecordedOutput(string name) =>
         File.ReadLines(Path.Combine(AppContext.BaseDirectory, "Fixtures", "protocol", "2.1.284", $"{name}.jsonl"))
@@ -179,7 +181,7 @@ public class AgentMapTests
     [Fact]
     public async Task A_permission_prompt_from_a_subagent_marks_it_waiting()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(InConversation);
         var tab = await h.OpenTabAsync();
         h.Transport.Emit(Wire.Init());
         h.Transport.Emit(Wire.Agent("a1", "Touch a file", "Create the marker"));
@@ -409,9 +411,9 @@ public class AgentMapTests
     }
 
     [Fact]
-    public async Task Clicking_a_node_expands_its_group_and_the_groups_around_it()
+    public async Task In_the_conversation_clicking_a_node_expands_its_group_and_the_groups_around_it()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(InConversation);
         var tab = await h.OpenTabAsync();
         h.Transport.Emit(Wire.Init());
         h.Transport.Emit(Wire.Agent("a1", "Outer", "p"));

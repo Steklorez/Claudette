@@ -9,7 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - **`@` completes any path.** Type a folder after `@` and the list shows what's in it, from `C:\`, `/`, `~/` or `../` too, folder by folder, and picks a file outside the project in full. A folder in the project shows the files git ignores as well, dimmed, and the tab's extra folders' files are in the list with the project's.
-- **Subagents under their tab.** Settings → Appearance → **Show subagents' work** → **Under the tab in the sidebar** gives each subagent Claude starts a row of its own under its tab, nested under the one that started it and dimmed once it's finished and from an earlier turn. Select one to see its work in the tab, with the prompt it was given and what it handed back; the conversation keeps a one-line card for it. You can't write to a subagent, so **Message it through Claude** names it in your next message instead, and a permission prompt it waits on is answered right there. The Agents page opens a subagent's work the same way.
+- **Subagents under their tab.** Each subagent Claude starts has a row of its own under its tab, nested under the one that started it and dimmed once it's finished and from an earlier turn. Select one to see its work in the tab, with the prompt it was given and what it handed back; the conversation keeps a one-line card for it. You can't write to a subagent, so **Message it through Claude** names it in your next message instead, and a permission prompt it waits on is answered right there. The Agents page opens a subagent's work the same way. To open subagents' cards in the conversation as before, set Settings → Appearance → **Show subagents' work** to **In the conversation**.
 - **Discourage subagents, or turn them off.** Settings → Claude Code → **Subagents**, or one tab's **Tab settings…**: **Discourage them** asks Claude to do the work itself unless you ask for a subagent, and **Don't allow them** turns down any it starts, in tabs already open too. Claude hears about a change with your next message.
 
 ### Changed
@@ -20,6 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - Just as Claude finished a turn, turning Remote Control on or off, moving the tab to another account, changing its extra folders, ticking **Sync to other machines**, or sending a message with *Queue them* chosen could wait for a turn that had already ended. A queued message, or a sub-thread's report, that went as the turn ended could leave the tab saying Claude was idle while it worked.
 - When Claude Code started a turn by itself, such as for a message from the Claude app, a message sent with *Queue them* chosen, or **Auto-continue**'s message once a usage limit reset, could go in that moment as if Claude were idle.
+- As the working line's glyph twinkled, the line could nudge up and down, taking the conversation above it along. On Windows, one of its stars also came out smaller and thinner than the rest.
 - After Claudette restarted, such as for an update, a subagent Claude ran in the background could read *Didn't finish* when it had finished while Claude was still working.
 
 ## [0.3.0] - 2026-10-16

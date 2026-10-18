@@ -54,8 +54,8 @@ public sealed partial class TabViewModel
     private void OpenAgentWindow() => AgentWindowRequested?.Invoke();
 
     /// <summary>
-    /// Clicking a node: the permission prompt it's waiting on, else its group in the conversation, expanded along with
-    /// the groups it's nested in (DESIGN.md §18, "Interaction").
+    /// Clicking a node: its work in the tab; or, with subagents' work in the conversation, the permission prompt it's
+    /// waiting on, else its group, expanded along with the groups it's nested in (DESIGN.md §18, "Interaction").
     /// </summary>
     [RelayCommand]
     private void ShowAgent(AgentNode? node)

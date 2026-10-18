@@ -186,13 +186,13 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     }
 
     public IReadOnlyList<SubagentDisplayChoice> SubagentDisplayChoices { get; } =
-        [new(SubagentDisplay.InConversation), new(SubagentDisplay.InSidebar)];
+        [new(SubagentDisplay.InSidebar), new(SubagentDisplay.InConversation)];
 
-    /// <summary>Where a subagent's work shows: its card in the conversation, or its row under the tab (DESIGN.md §5, "Subagents").</summary>
+    /// <summary>Where a subagent's work shows: its row under the tab, or its card in the conversation (DESIGN.md §5, "Subagents").</summary>
     public SubagentDisplayChoice ShowSubagents
     {
         get => SubagentDisplayChoices.FirstOrDefault(c => c.Display == Settings.Appearance.ShowSubagents) ?? SubagentDisplayChoices[0];
-        set => Set(value?.Display ?? SubagentDisplay.InConversation, v => Settings.Appearance.ShowSubagents = v);
+        set => Set(value?.Display ?? SubagentDisplay.InSidebar, v => Settings.Appearance.ShowSubagents = v);
     }
 
     /// <summary>The working line's twinkling glyph and fun verbs (DESIGN.md §5, "Working line").</summary>

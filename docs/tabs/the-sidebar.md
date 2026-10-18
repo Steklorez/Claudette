@@ -75,7 +75,7 @@ Once you've added an API-key account, a folder group whose new tabs use an accou
 
 A thread's sub-threads sit right under it, indented, and move with it.
 
-With Settings → Appearance → **Show subagents' work** set to **Under the tab in the sidebar**, each subagent Claude starts has a small row under its tab, with the agents icon before its task. Click it to see its work in the tab. New in the next release; see [Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab).
+Each subagent Claude starts has a small row under its tab, with the agents icon before its task. Click it to see its work in the tab. Settings → Appearance → **Show subagents' work** → **In the conversation** leaves the rows out. New in the next release; see [Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab).
 
 Each time one of a tab's project actions runs as a job, such as a build, a small entry appears under the tab's row with how it's going. Click it to show its log where the conversation is, and click the tab's row to go back. See [Project tools](../project-tools/using-project-tools.md).
 

@@ -339,11 +339,17 @@ public class MainWindowTests
         await tab.SendCommand.ExecuteAsync(null);
         await UiText.SettleUntilAsync(window, () => line.IsEffectivelyVisible, "the working line");
 
-        // The Stop shortcut as it reads on this OS: "Esc", or "⎋" on macOS. Every frame sits unseen behind the glyph, so the
-        // line keeps the height of the tallest whichever shows.
+        // The Stop shortcut as it reads on this OS: "Esc", or "⎋" on macOS.
         var stop = h.Services.Tips.Text(KeyboardShortcuts.Stop);
-        Assert.Equal($"· Noodling… 0s · {stop} to stop", string.Join(' ', line.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Opacity > 0).Select(t => t.Text)));
-        Assert.Contains(line.GetVisualDescendants().OfType<TextBlock>(), t => t.Opacity == 0 && WorkingLine.Frames.All(t.Text!.Contains));
+        Assert.Equal($"· Noodling… 0s · {stop} to stop", string.Join(' ', line.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text)));
+
+        // A frame drawn in a taller font (✶ falls back to Consolas on Windows once a code block has used it) doesn't make
+        // the line taller, which would move the conversation above it as the glyph twinkles.
+        var height = line.Bounds.Height;
+        var glyph = line.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("working-glyph"));
+        glyph.FontSize = 40;
+        UiText.Settle(window);
+        Assert.Equal(height, line.Bounds.Height);
 
         h.Transport.Emit("""{"type":"result","subtype":"success","is_error":false,"session_id":"s1"}""");
         await UiText.SettleUntilAsync(window, () => !line.IsEffectivelyVisible, "the end of the turn");

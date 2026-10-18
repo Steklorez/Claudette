@@ -447,10 +447,10 @@ public sealed class AppearanceSettings
     public bool ExpandThinking { get; set; }
 
     /// <summary>
-    /// Where a subagent's work shows (DESIGN.md §5, "Subagents"): in the conversation (the default), or under its tab in
-    /// the sidebar. It changes only what's shown, so it applies at once, to every tab.
+    /// Where a subagent's work shows (DESIGN.md §5, "Subagents"): under its tab in the sidebar (the default), or in the
+    /// conversation. It changes only what's shown, so it applies at once, to every tab.
     /// </summary>
-    public SubagentDisplay ShowSubagents { get; set; } = SubagentDisplay.InConversation;
+    public SubagentDisplay ShowSubagents { get; set; } = SubagentDisplay.InSidebar;
 
     /// <summary>The working line's twinkling glyph and fun verbs (DESIGN.md §5, "Working line"); off shows "Working…".</summary>
     public bool FunWorkingWords { get; set; } = true;
