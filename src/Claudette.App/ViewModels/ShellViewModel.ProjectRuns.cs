@@ -13,8 +13,8 @@ public sealed partial class ShellViewModel
     /// <summary>The session tab <paramref name="run"/> belongs to.</summary>
     internal TabViewModel? TabOf(ProjectRunViewModel run) => AllTabs.FirstOrDefault(t => t.ProjectTools.Runs.Items.Contains(run));
 
-    /// <summary>What the app state keeps for <paramref name="tab"/>: its own id, or for a run's log, its tab's.</summary>
-    private string? SavedId(IShellTab? tab) => tab is ProjectRunViewModel run ? TabOf(run)?.Id : tab?.Id;
+    /// <summary>What the app state keeps for <paramref name="tab"/>: its own id, or for a run's or an editor's log, its tab's.</summary>
+    private string? SavedId(IShellTab? tab) => tab is LogTabViewModel log ? TabOf(log)?.Id : tab?.Id;
 
     /// <summary>A run began: its log can be shown from now on, but starting doesn't take the main area.</summary>
     internal void AddRun(ProjectRunViewModel run)

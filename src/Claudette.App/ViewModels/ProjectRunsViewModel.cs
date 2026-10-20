@@ -181,8 +181,7 @@ public sealed partial class ProjectRunsViewModel : ViewModelBase
     }
 
     /// <summary><b>Copy</b> over a run's log: all of it.</summary>
-    internal Task CopyOutputAsync(ProjectRunViewModel run) =>
-        _services.Platform.SetClipboardTextAsync(string.Join(Environment.NewLine, run.Output));
+    internal Task CopyAsync(string text) => _services.Platform.SetClipboardTextAsync(text);
 
     /// <summary>Where a path in <paramref name="run"/>'s log is: from the folder it ran in, then the tab's. Names alone aren't looked for.</summary>
     internal ReplyFileFinder FinderFor(ProjectRunViewModel run) =>

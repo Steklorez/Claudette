@@ -51,6 +51,10 @@
       <TextBox Classes="mono" Text="{Binding CustomIdePath, UpdateSourceTrigger=LostFocus}" PlaceholderText="The program's path; it's given the solution's path" />
       <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseCustomIdeCommand}" />
     </Grid>
+    <TextBlock Text="Editor logs" FontWeight="SemiBold" Margin="0,8,0,0" />
+    <CheckBox Content="Show editor logs under the tab" IsChecked="{Binding ShowEditorLogs}" />
+    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
+               Text="While the project's editor, a commandlet or a batch run is going, its log is a row under one of the project's tabs, read as it's written without holding the file open. The row stays after the editor closes." />
     <Button Content="Reset to defaults" Command="{Binding ResetCommand}" />
   </StackPanel>
 </UserControl>

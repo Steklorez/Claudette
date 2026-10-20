@@ -29,7 +29,7 @@ The menu's header says which engine it found, its version, folder and kind: laun
 | **Build editor** | A job that builds the project's editor target. |
 | **Build and launch** | Builds the editor, then launches it if the build succeeded. |
 | **Open solution** | Opens the project's solution. Greyed out with "Generate project files first" until it exists. With Rider chosen, it's **Open in Rider** instead (below). |
-| **Open latest log** | Opens the project's latest log, once the editor has made one. |
+| **Open latest log** | Opens the project's latest log in another app, once the editor has made one. While the editor runs, its log is also a row under the tab: see [Editor logs](editor-logs.md). |
 | **Clean intermediates…** | Deletes generated folders. It asks first. |
 | **Kill all Unreal editors…** | Ends every running Unreal editor. It asks first. |
 

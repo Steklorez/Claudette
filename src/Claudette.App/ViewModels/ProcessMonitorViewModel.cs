@@ -462,6 +462,23 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
             ? _services.Platform.RevealFolderAsync(folder)
             : Task.CompletedTask;
 
+    /// <summary>Whether the tab's <c>claude</c> started <paramref name="pid"/>, or something it started did. Safe off the UI thread.</summary>
+    internal bool Started(int pid)
+    {
+        if (Volatile.Read(ref _tree) is not { IsDisposed: false } tree)
+        {
+            return false;
+        }
+        try
+        {
+            return tree.DescendantIds().Contains(pid);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or ObjectDisposedException or System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+    }
+
     /// <summary>Processes the tab started that are still running, for the close confirmation.</summary>
     public IReadOnlyList<ProcessSnapshot> RunningChildProcesses()
     {

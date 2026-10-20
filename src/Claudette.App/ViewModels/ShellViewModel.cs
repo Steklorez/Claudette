@@ -69,6 +69,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             {
                 tab.OnSettingsChanged();
             }
+            // Settings → Project tools → Show editor logs (DESIGN.md §18, "Editor logs").
+            FollowEditorLogs();
         };
         // An account added, renamed or removed, or a folder's changed: the groups' and tabs' tags and menus follow.
         _services.Accounts.Changed += OnAccountsChanged;
@@ -230,7 +232,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// (DESIGN.md §18, "Project files").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedAccount), nameof(ProjectTab))]
+    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedEditorLog), nameof(SelectedLog), nameof(SelectedAccount), nameof(ProjectTab))]
     public partial IShellTab? Selected { get; set; }
 
     /// <summary>The focused tab when it's a session's; null while nothing, or a Project Files tab, has the focus.</summary>
@@ -244,10 +246,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public ProjectFilesViewModel? SelectedFiles => Selected as ProjectFilesViewModel;
 
     /// <summary>
-    /// The tab whose project the sidebar's foot and Settings' project pages show: the focused session's, with a run's log
-    /// focused its tab's, or with a Project Files tab focused, its group's first session's.
+    /// The tab whose project the sidebar's foot and Settings' project pages show: the focused session's, with a run's or an
+    /// editor's log focused its tab's, or with a Project Files tab focused, its group's first session's.
     /// </summary>
-    public TabViewModel? ProjectTab => SelectedTab ?? (SelectedRun is { } run ? TabOf(run) : null) ?? SelectedFiles?.Group.Tabs.FirstOrDefault();
+    public TabViewModel? ProjectTab => SelectedTab ?? (SelectedLog is { } log ? TabOf(log) : null) ?? SelectedFiles?.Group.Tabs.FirstOrDefault();
 
     partial void OnSelectedChanged(IShellTab? oldValue, IShellTab? newValue)
     {
@@ -619,7 +621,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>
     /// <c>Ctrl/Cmd+W</c>, and the macOS menu's <b>Close Tab</b>: the selected tab, or with a Project Files tab focused, its
     /// file showing, and the tab itself once none is open (DESIGN.md §18, "Project files", "Keyboard"). On a run's log, a
-    /// finished run closes, and a running one goes back to its tab (DESIGN.md §18, "Project tools").
+    /// finished run closes, and a running one goes back to its tab (DESIGN.md §18, "Project tools"); an editor's log
+    /// closes, as its × does (DESIGN.md §18, "Editor logs").
     /// </summary>
     [RelayCommand(AllowConcurrentExecutions = true)]
     private Task CloseSelectedTabAsync()
@@ -631,6 +634,11 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         if (SelectedRun is { } run)
         {
             CloseSelectedRun(run);
+            return Task.CompletedTask;
+        }
+        if (SelectedEditorLog is { } log)
+        {
+            log.CloseCommand.Execute(null);
             return Task.CompletedTask;
         }
         return CloseTabAsync(SelectedTab);
@@ -651,6 +659,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             OpenTabs.Remove(gone);
         }
         RemoveGroupIfEmpty(group);
+        // Its editor logs move to another of the project's tabs, or go (DESIGN.md §18, "Editor logs").
+        FollowEditorLogs();
         // A pane closes with its tab; the one beside it takes the focus if it had it (DESIGN.md §18, "Split panes").
         var at = _panes.IndexOf(hadFocus ? Selected! : tab);
         var pane = at < 0 ? -1 : at - _panes.Take(at).Count(going.Contains);
@@ -705,9 +715,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     }
 
     /// <summary>
-    /// Ctrl+Tab and Ctrl+Shift+Tab: the session tabs, going round. Project Files tabs and runs' logs are skipped, so their
+    /// Ctrl+Tab and Ctrl+Shift+Tab: the session tabs, going round. Project Files tabs and logs are skipped, so their
     /// numbers never move (DESIGN.md §18, "Project files"); from a Files tab, the next tab is its group's first, and from a
-    /// run's log, the one after its tab, whose row it's under.
+    /// run's or an editor's log, the one after its tab, whose row it's under.
     /// </summary>
     private void SelectOffset(int offset)
     {
@@ -719,7 +729,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         if (SelectedTab is null)
         {
             var first = SelectedFiles?.Group.Tabs.FirstOrDefault() is { } groupFirst ? tabs.IndexOf(groupFirst)
-                : SelectedRun is { } run && TabOf(run) is { } owner ? tabs.IndexOf(owner) + 1
+                : SelectedLog is { } log && TabOf(log) is { } owner ? tabs.IndexOf(owner) + 1
                 : 0;
             SelectedTab = tabs[(offset > 0 ? first : first - 1 + tabs.Count) % tabs.Count];
             return;
@@ -944,6 +954,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         var files = Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray();
         var selected = _services.State.SelectedTabId;
         var panes = _services.State.PaneTabIds;
+        _services.EditorLogs.Follow([], []);
         // The Project Files tabs' state, and their unsaved edits, for the new build (DESIGN.md §18, "Project files").
         SaveTabs();
         _panes.Clear();
@@ -1109,6 +1120,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         SaveTabs();
+        _services.EditorLogs.Follow([], []);
         await Task.WhenAll(Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray().Select(f => f.DisposeAsync().AsTask()));
         await Task.WhenAll(AllTabs.ToArray().Select(t => t.DisposeAsync().AsTask()));
     }

@@ -71,11 +71,13 @@ The ring is hidden until the tab has context data, so a tab that hasn't started 
 
 Once you've added an API-key account, a folder group whose new tabs use an account other than Default has a small tag with the account's name beside its label, and a tab whose account differs from its group's has the tag on its row. See [A folder's account](../accounts/a-folders-account.md).
 
-## Threads, subagents and project runs
+## Threads, subagents, editor logs and project runs
 
 A thread's sub-threads sit right under it, indented, and move with it.
 
 Each subagent Claude starts has a small row under its tab, with the agents icon before its task. Click it to see its work in the tab. Settings → Appearance → **Show subagents' work** → **In the conversation** leaves the rows out. See [Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab).
+
+While the project's editor runs, the log it writes has a row under one of the project's tabs, with its errors and warnings counted. Click it to read the log where the conversation is. See [Editor logs](../project-tools/editor-logs.md).
 
 Each time one of a tab's project actions runs as a job, such as a build, a small entry appears under the tab's row with how it's going. Click it to show its log where the conversation is, and click the tab's row to go back. See [Project tools](../project-tools/using-project-tools.md).
 
@@ -86,7 +88,7 @@ At the top, **New tab** opens the [picker](opening-tabs.md), and a button beside
 ## Resizing and collapsing
 
 - **Resize** the sidebar by dragging its edge. It's at least 180 pixels wide and 248 by default, and it always leaves the conversation room. Double-click the edge for the default width. The width is remembered.
-- **Collapse** it to a rail with the button at its top or `Ctrl/Cmd+B`. The rail shows each group's color, then a square per tab with the first letter of its name, a small status icon at its top right and the tab's mark at its bottom left. Hover a square for the info card. Right-click a group's color bar for the group's menu. The rail doesn't show the context ring or project runs. Whether the sidebar is collapsed is remembered.
+- **Collapse** it to a rail with the button at its top or `Ctrl/Cmd+B`. The rail shows each group's color, then a square per tab with the first letter of its name, a small status icon at its top right and the tab's mark at its bottom left. Hover a square for the info card. Right-click a group's color bar for the group's menu. The rail doesn't show the context ring, editor logs or project runs. Whether the sidebar is collapsed is remembered.
 - **Narrow windows.** Below 900 pixels wide the sidebar collapses to the rail by itself, and expands again when the window is wider. If you expand it by hand in a narrow window, it stays open until the window is widened.
 
 ## Settings

@@ -176,6 +176,7 @@ public sealed class UnrealProvider : IProjectToolProvider
             },
             Problem = problem,
             SystemPromptNote = context.Settings.TellClaudeAboutUnreal ? SystemPromptNote(project, engine, version, configuration, format, os) : null,
+            Logs = UnrealLogs.Source(project, os),
         };
     }
 

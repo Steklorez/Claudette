@@ -8,13 +8,13 @@ using Claudette.Core.ProjectTools;
 namespace Claudette.App.Views;
 
 /// <summary>
-/// Draws the links in a run's log (DESIGN.md §18, "Project tools", "A run's log"): each web address, and each path once
-/// it's found, in the accent, underlined, with the hand pointer. A click opens it; it doesn't start a selection.
+/// Draws the links in a log (DESIGN.md §18, "Project tools", "A run's log"): each web address, and each path once it's
+/// found, in the accent, underlined, with the hand pointer. A click opens it; it doesn't start a selection.
 /// </summary>
-/// <param name="run">The run whose log is showing, which says which parts of a line are links.</param>
+/// <param name="run">The log showing, a run's or an editor's, which says which parts of a line are links.</param>
 /// <param name="brush">The links' color, from the theme.</param>
 /// <param name="clicked">What a click on one does.</param>
-internal sealed class RunLogLinkGenerator(Func<ProjectRunViewModel?> run, Func<IBrush?> brush, Action<RunLogLink> clicked) : VisualLineElementGenerator
+internal sealed class RunLogLinkGenerator(Func<LogTabViewModel?> run, Func<IBrush?> brush, Action<RunLogLink> clicked) : VisualLineElementGenerator
 {
     private static Cursor Hand => field ??= new(StandardCursorType.Hand);
 

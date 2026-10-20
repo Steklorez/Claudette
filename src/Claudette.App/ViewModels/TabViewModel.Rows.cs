@@ -40,6 +40,9 @@ internal static class RowUrgencies
     public static RowUrgency Of(ProjectRunViewModel run) =>
         run.Failed ? RowUrgency.Error : run.IsRunning ? RowUrgency.Busy : RowUrgency.None;
 
+    /// <summary>An editor's log: an editor open for hours isn't work going on, so only a crash or errors not seen yet count.</summary>
+    public static RowUrgency Of(EditorLogViewModel log) => log.IsError ? RowUrgency.Error : RowUrgency.None;
+
     /// <summary>The status icon that stands for it, as a tab's row draws its own.</summary>
     public static string Glyph(RowUrgency urgency) => urgency switch
     {
@@ -53,8 +56,8 @@ internal static class RowUrgencies
 
 /// <summary>
 /// Collapsing a tab's row in the sidebar (DESIGN.md §4, "Sidebar"): the chevron beside its name folds away what's under
-/// it, its sub-threads with what's under them, its subagents' rows and its project runs, and the row's badge says how
-/// many and the most urgent of them. It opens again by itself when one of them is gone to, a sub-thread joins, or one
+/// it, its sub-threads with what's under them, its subagents' rows, its editor logs and its project runs, and the row's
+/// badge says how many and the most urgent of them. It opens again by itself when one of them is gone to, a sub-thread joins, or one
 /// starts waiting on the user.
 /// </summary>
 public sealed partial class TabViewModel
@@ -65,8 +68,8 @@ public sealed partial class TabViewModel
     /// <summary>The subagents waiting on the user when the rows were last looked at: a new one opens the fold.</summary>
     private readonly HashSet<AgentNode> _waitingSubagents = [];
 
-    /// <summary>Something is under the tab's row: a sub-thread, a subagent's row or a project run. Its chevron shows.</summary>
-    public bool HasRowsUnder => HasSubThreads || HasSubagentRows || ProjectTools.Runs.HasRuns;
+    /// <summary>Something is under the tab's row: a sub-thread, a subagent's row, an editor's log or a project run. Its chevron shows.</summary>
+    public bool HasRowsUnder => HasSubThreads || HasSubagentRows || ProjectTools.HasLogs || ProjectTools.Runs.HasRuns;
 
     /// <summary>What's under the row is folded away. Saved with the tab.</summary>
     public bool AreRowsCollapsed => State.RowsCollapsed && HasRowsUnder;
@@ -80,20 +83,24 @@ public sealed partial class TabViewModel
     /// <summary>The project runs are under the tab's row: there are some, and they aren't folded away.</summary>
     public bool ShowsRuns => ProjectTools.Runs.HasRuns && !AreRowsCollapsed;
 
+    /// <summary>The editor logs are under the tab's row: there are some, and they aren't folded away (DESIGN.md §18, "Editor logs").</summary>
+    public bool ShowsLogs => ProjectTools.HasLogs && !AreRowsCollapsed;
+
     /// <summary><b>Collapse tab</b> or <b>Expand tab</b>: the menu's item, the palette's and the chevron's name.</summary>
     public string CollapseMenuText => AreRowsCollapsed ? "Expand tab" : "Collapse tab";
 
     /// <summary>The chevron's tip: "Collapse: hides 2 sub-threads and 1 run".</summary>
     public string CollapseTip => AreRowsCollapsed ? $"Expand: shows {RowsUnderText}" : $"Collapse: hides {RowsUnderText}";
 
-    /// <summary>What's under the row: "2 sub-threads, 3 subagents and 1 run".</summary>
+    /// <summary>What's under the row: "2 sub-threads, 3 subagents, 1 log and 1 run".</summary>
     public string RowsUnderText
     {
         get
         {
-            var parts = new List<string>(3);
+            var parts = new List<string>(4);
             Add(SubThreads.Count, "sub-thread");
             Add(SubagentRows.Count, "subagent");
+            Add(ProjectTools.Logs.Count, "log");
             Add(ProjectTools.Runs.Items.Count, "run");
             return parts.Count switch
             {
@@ -113,7 +120,7 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>How many rows a collapsed tab hides, on its badge: a sub-thread counts once, with what's under it.</summary>
-    public int CollapsedRowCount => SubThreads.Count + SubagentRows.Count + ProjectTools.Runs.Items.Count;
+    public int CollapsedRowCount => SubThreads.Count + SubagentRows.Count + ProjectTools.Logs.Count + ProjectTools.Runs.Items.Count;
 
     /// <summary>The most urgent of what's under the row, a sub-thread's own rows included.</summary>
     public RowUrgency RowsUrgency
@@ -128,6 +135,10 @@ public sealed partial class TabViewModel
             foreach (var row in SubagentRows)
             {
                 most = Max(most, RowUrgencies.Of(row.Node));
+            }
+            foreach (var log in ProjectTools.Logs)
+            {
+                most = Max(most, RowUrgencies.Of(log));
             }
             foreach (var run in ProjectTools.Runs.Items)
             {
@@ -170,6 +181,13 @@ public sealed partial class TabViewModel
                     lines.Add($"{row.Node.Title} · {row.Node.StatusText}");
                 }
             }
+            foreach (var log in ProjectTools.Logs)
+            {
+                if (log.IsError)
+                {
+                    lines.Add($"{log.FileName} · {log.Detail}");
+                }
+            }
             foreach (var run in ProjectTools.Runs.Items)
             {
                 if (run.Failed)
@@ -210,8 +228,33 @@ public sealed partial class TabViewModel
     /// <summary>The thread this sub-thread is in collapsed or expanded.</summary>
     internal void ThreadFoldChanged() => OnPropertyChanged(nameof(IsFoldedAway));
 
-    /// <summary>The project runs come and go, and change how they're going, under the tab's row.</summary>
-    private void WatchRunsUnder() => ProjectTools.Runs.Items.CollectionChanged += OnRunsUnderChanged;
+    /// <summary>The project runs and editor logs come and go, and change how they're going, under the tab's row.</summary>
+    private void WatchRunsUnder()
+    {
+        ProjectTools.Runs.Items.CollectionChanged += OnRunsUnderChanged;
+        ProjectTools.Logs.CollectionChanged += OnLogsUnderChanged;
+    }
+
+    private void OnLogsUnderChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        foreach (var log in e.NewItems?.OfType<EditorLogViewModel>() ?? [])
+        {
+            log.PropertyChanged += OnLogUnderChanged;
+        }
+        foreach (var log in e.OldItems?.OfType<EditorLogViewModel>() ?? [])
+        {
+            log.PropertyChanged -= OnLogUnderChanged;
+        }
+        RowsUnderChanged();
+    }
+
+    private void OnLogUnderChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(EditorLogViewModel.IsError) or nameof(EditorLogViewModel.Detail))
+        {
+            RowsUnderChanged();
+        }
+    }
 
     private void OnRunsUnderChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -265,6 +308,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(AreRowsCollapsed));
         OnPropertyChanged(nameof(ShowsSubagentRows));
         OnPropertyChanged(nameof(ShowsRuns));
+        OnPropertyChanged(nameof(ShowsLogs));
         OnPropertyChanged(nameof(CollapseMenuText));
         OnPropertyChanged(nameof(CollapseTip));
         OnPropertyChanged(nameof(RowsUnderText));

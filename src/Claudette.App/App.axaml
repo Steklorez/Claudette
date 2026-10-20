@@ -294,6 +294,25 @@
     <Style Selector="TextBlock.rundetail">
       <Setter Property="FontSize" Value="11" />
     </Style>
+    <!-- A tab's editor logs, under its row before its runs (DESIGN.md §18, "Editor logs"): rows as runs have, with the log
+         icon in the accent while its process runs, and muted once it has ended. -->
+    <Style Selector="ItemsControl.logs">
+      <Setter Property="Margin" Value="20,0,0,1" />
+    </Style>
+    <Style Selector="Path.logicon">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="StrokeThickness" Value="1.1" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StrokeJoin" Value="Round" />
+      <Setter Property="Width" Value="10" />
+      <Setter Property="Height" Value="10" />
+      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,3,0,0" />
+    </Style>
+    <Style Selector="Path.logicon.live">
+      <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
     <!-- A tab's subagents, under its row when their work shows there (DESIGN.md §5, "Subagents"): sized as project runs
          are, with the agent icon before the task, picked out while the tab shows one's work, and dimmed once one has
          finished and is from an earlier turn. -->

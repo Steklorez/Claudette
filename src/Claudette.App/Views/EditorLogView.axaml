@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:aeEditing="using:AvaloniaEdit.Editing"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             x:Class="Claudette.App.Views.EditorLogView"
+             x:DataType="vm:EditorLogViewModel">
+  <!-- An editor's log in the main area (DESIGN.md §18, "Editor logs"): a tab of the panes without a composer, as a run's
+       log is. What writes it and how it's going, the counts and the file, Open file, Copy and Close, then the log, which
+       follows its newest line until it's scrolled up, with its errors and warnings colored and its paths as links. The
+       header's look is in Themes/ConversationStyles.axaml. -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
+    <!-- The log's text clear of the edges, and selected as the editor's is -->
+    <Style Selector="ae|TextEditor.runlog">
+      <Setter Property="Padding" Value="16,8,4,8" />
+    </Style>
+    <Style Selector="ae|TextEditor.runlog aeEditing|TextArea">
+      <Setter Property="SelectionBrush" Value="{DynamicResource EditorSelectionBrush}" />
+      <Setter Property="SelectionForeground" Value="{x:Null}" />
+      <Setter Property="SelectionBorder" Value="{x:Null}" />
+      <Setter Property="SelectionCornerRadius" Value="2" />
+    </Style>
+    <Style Selector="Path.logheadericon">
+      <Setter Property="Width" Value="13" />
+      <Setter Property="Height" Value="13" />
+      <Setter Property="Margin" Value="0,3,0,0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,*">
+    <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes") -->
+    <Border x:Name="PaneHeader" Classes="paneheader" Classes.focused="{Binding IsSelected}" IsVisible="{Binding IsInSplit}">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Classes="small" FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" MaxWidth="320" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding LogPath}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding ClosePaneCommand}"
+                ToolTip.Tip="Close pane: the log stays in the sidebar" AutomationProperties.Name="Close pane">
+          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- What writes it and how it's going, and what can be done with it -->
+    <Border Grid.Row="1" Classes="runheader">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+        <Panel VerticalAlignment="Top">
+          <Path Classes="logicon logheadericon" Classes.live="{Binding IsRunning}" Data="{StaticResource IconToolRead}" IsVisible="{Binding !IsCrashed}" />
+          <TextBlock Classes="status runheaderglyph failed" Text="✕" IsVisible="{Binding IsCrashed}" />
+        </Panel>
+        <StackPanel Grid.Column="1" Spacing="2">
+          <TextBlock x:Name="LogName" Text="{Binding FileName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+          <SelectableTextBlock x:Name="LogStatus" Classes="small" Classes.error="{Binding IsCrashed}" Text="{Binding Status}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted small" Text="{Binding Counts}" IsVisible="{Binding Counts, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted small" Text="{Binding Timing}" IsVisible="{Binding Timing, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
+          <SelectableTextBlock Classes="muted small" Text="{Binding LogPath}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted small" Text="{Binding OutputNote}" IsVisible="{Binding OutputNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+          <Button Content="Open file" Command="{Binding OpenFileCommand}" ToolTip.Tip="Opens the log's file, as Settings → Editor says" />
+          <Button Content="Copy" Command="{Binding CopyOutputCommand}" ToolTip.Tip="Copy the lines shown" />
+          <Button Content="Close" Command="{Binding CloseCommand}" ToolTip.Tip="{x:Static vm:EditorLogViewModel.CloseTip}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- The log: read-only, wrapping at the width shown, selectable, Ctrl/Cmd+F to find in it -->
+    <ae:TextEditor x:Name="Log" Grid.Row="2" Classes="runlog" IsReadOnly="True" WordWrap="True"
+                   FontFamily="{DynamicResource MonoFont}" FontSize="{DynamicResource CodeFontSize}"
+                   ShowLineNumbers="False" Background="Transparent"
+                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                   AutomationProperties.Name="Log" />
+  </Grid>
+</UserControl>

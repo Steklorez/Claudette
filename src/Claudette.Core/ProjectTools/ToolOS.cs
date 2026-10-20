@@ -26,6 +26,11 @@ public static class ToolOSExtensions
     public static StringComparer PathComparer(this ToolOS os) =>
         os == ToolOS.Linux ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
+    /// <summary>Whether <paramref name="path"/> is a full path on <paramref name="os"/>, whichever OS reads it: <c>C:\…</c> or <c>\\server\…</c> on Windows, <c>/…</c> elsewhere.</summary>
+    public static bool IsRooted(this ToolOS os, string path) => os == ToolOS.Windows
+        ? path.Length >= 3 && char.IsAsciiLetter(path[0]) && path[1] == ':' && path[2] is '\\' or '/' || path.StartsWith(@"\\", StringComparison.Ordinal)
+        : path.StartsWith('/');
+
     /// <summary>Joins path parts with the OS's separator, so a Windows path built on Linux still reads as one.</summary>
     public static string Join(this ToolOS os, string first, params string[] rest)
     {

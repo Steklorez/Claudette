@@ -660,6 +660,51 @@
                                 </DataTemplate>
                               </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <!-- The tab's editor logs (DESIGN.md §18, "Editor logs"): the log each of its project's engine
+                                 processes writes, which a click shows in the main area. Each stays after its process ends,
+                                 until it's closed; one closed while its process runs comes back when its log starts again.
+                                 Like a run's entry, one can be dragged onto a pane. -->
+                            <ItemsControl Classes="logs" ItemsSource="{Binding ProjectTools.Logs}" IsVisible="{Binding ShowsLogs}">
+                              <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                  <StackPanel Spacing="1" />
+                                </ItemsPanelTemplate>
+                              </ItemsControl.ItemsPanel>
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:EditorLogViewModel">
+                                  <Button Classes="flat runrow logrow" Classes.selected="{Binding IsSelected}" Classes.dragged="{Binding IsDragged}"
+                                          Command="{Binding OpenCommand}" ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding FileName}">
+                                    <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
+                                      <Panel VerticalAlignment="Top">
+                                        <Path Classes="logicon" Classes.live="{Binding IsRunning}" Data="{StaticResource IconToolRead}" IsVisible="{Binding !IsCrashed}" />
+                                        <TextBlock Classes="status runglyph failed" Text="✕" HorizontalAlignment="Center" IsVisible="{Binding IsCrashed}" />
+                                      </Panel>
+                                      <StackPanel Grid.Column="1">
+                                        <TextBlock Classes="runname" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Classes="muted rundetail" Classes.error="{Binding IsCrashed}" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                                      </StackPanel>
+                                      <Button Grid.Column="2" Classes="flat runclose" Padding="4" VerticalAlignment="Top" ToolTip.Tip="{x:Static vm:EditorLogViewModel.CloseTip}"
+                                              AutomationProperties.Name="Close" Command="{Binding CloseCommand}">
+                                        <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+                                      </Button>
+                                    </Grid>
+                                    <Button.ContextMenu>
+                                      <ContextMenu>
+                                        <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                                                  IsVisible="{Binding !IsShown}" ToolTip.Tip="Shows the log beside the tab you're in" />
+                                        <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}"
+                                                  ToolTip.Tip="Takes the log off the screen; it stays in the sidebar" />
+                                        <MenuItem Header="Copy log" Command="{Binding CopyOutputCommand}" ToolTip.Tip="Copies the lines shown" />
+                                        <MenuItem Header="Open file" Command="{Binding OpenFileCommand}" ToolTip.Tip="{Binding LogPath}" />
+                                        <MenuItem Header="{x:Static vm:EditorLogViewModel.ShowFolderLabel}" Command="{Binding ShowFolderCommand}" />
+                                        <Separator />
+                                        <MenuItem Header="Close" Command="{Binding CloseCommand}" ToolTip.Tip="{x:Static vm:EditorLogViewModel.CloseTip}" />
+                                      </ContextMenu>
+                                    </Button.ContextMenu>
+                                  </Button>
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <!-- The tab's project runs, newest last, each with its log, which a click shows in the main area
                                  (DESIGN.md §4, §18). They stay until closed: × on a finished one, and Stop in its place while
                                  one runs. Like a tab's row, one can be dragged onto a pane. -->
@@ -1096,6 +1141,10 @@
         <!-- A project run's log (DESIGN.md §18, "Project tools", "A run's log") -->
         <DataTemplate DataType="vm:ProjectRunViewModel">
           <views:ProjectRunView />
+        </DataTemplate>
+        <!-- An editor's log (DESIGN.md §18, "Editor logs") -->
+        <DataTemplate DataType="vm:EditorLogViewModel">
+          <views:EditorLogView />
         </DataTemplate>
       </ItemsControl.DataTemplates>
     </ItemsControl>

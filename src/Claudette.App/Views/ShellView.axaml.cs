@@ -129,6 +129,7 @@ public partial class ShellView : UserControl
             // A Project Files tab's row, and a run's, only go out to the panes (DESIGN.md §18, "Project files", "Project tools").
             { DataContext: ProjectFilesViewModel files } when button.Classes.Contains("tab") => files,
             { DataContext: ProjectRunViewModel run } when button.Classes.Contains("runrow") => run,
+            { DataContext: EditorLogViewModel log } when button.Classes.Contains("logrow") => log,
             { DataContext: TabGroupViewModel group } when button.Classes.Contains("grouplabel") => group,
             _ => null,
         };
@@ -531,10 +532,10 @@ public partial class ShellView : UserControl
         {
             findTab.OpenFindCommand.Execute(null);
         }
-        else if (Is(KeyboardShortcuts.Find) && shell.SelectedRun is { } findRun)
+        else if (Is(KeyboardShortcuts.Find) && shell.SelectedLog is { } findLog)
         {
-            // Find in a run's log (DESIGN.md §18, "Project tools").
-            findRun.RequestFind();
+            // Find in a run's log or an editor's (DESIGN.md §18, "Project tools", "Editor logs").
+            findLog.RequestFind();
         }
         else if (JumpFor(Is) is { } jump && shell.SelectedTab is { } jumpTab)
         {

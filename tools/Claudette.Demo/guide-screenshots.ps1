@@ -6,11 +6,13 @@ picture cropped to the part of Claudette the page describes.
 .DESCRIPTION
 GUIDE.md ("Pictures") says what the pictures are. Each shot is a name (<chapter>/<picture>), the steps to it and the part of the window
 to crop to, from the control's UI Automation bounds with a margin; it's saved as <Out>\<chapter>\<picture>-<theme>.png.
-For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so no account and no tokens) three times:
+For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so no account and no tokens) four times:
 - signed out (FAKE_CLAUDE_LOGGED_IN=0), for the sign-in screen;
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
   side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window and the Settings window;
+- with a stand-in for the Unreal editor open on starfall (claudette-demo --stand-in-editor, run as UnrealEditor.exe),
+  for its log under the tab and in the main area;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
   a permission waiting (ASK_PERMISSION) and a process for the process monitor (SPAWN).
 Claudette is closed by its window, as a user would, each time.
@@ -341,6 +343,32 @@ foreach ($theme in $Themes) {
                 Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
                 Start-Sleep -Seconds 3
                 Save-Window $window $path
+            }
+        }
+    }
+
+    # The Unreal editor open on starfall, for its log under the tab: a copy of claudette-demo named UnrealEditor stands in
+    # for it, writing the project's log, so Claudette sees an editor with the project on its command line.
+    if (Test-Wanted 'project-tools/editor-log') {
+        Use-Claudette @{} {
+            $standIn = Join-Path (Split-Path $build.Demo) 'UnrealEditor.exe'
+            Copy-Item $build.Demo $standIn -Force
+            $editor = Start-Process $standIn -ArgumentList '--stand-in-editor', ('"' + (Join-Path $Projects 'starfall\Starfall.uproject') + '"') -WindowStyle Hidden -PassThru
+            try {
+                Shot 'project-tools/editor-log' {
+                    param($path)
+                    Invoke-ByText $window 'Grappling hook'
+                    Wait-Until { Find-ByText $window 'Starfall.log' -Optional } "the editor's log under the tab" 30
+                    Invoke-ByText $window 'Starfall.log'
+                    Wait-Until { Find-ByText $window 'Open file' -Optional } 'the log in the main area' 20
+                    Start-Sleep -Seconds 2
+                    Save-Window $window $path
+                }
+            }
+            finally {
+                Stop-Process -Id $editor.Id -Force -ErrorAction SilentlyContinue
+                $editor.WaitForExit(10000) | Out-Null
+                Remove-Item $standIn -Force -ErrorAction SilentlyContinue
             }
         }
     }

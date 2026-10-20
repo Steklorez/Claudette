@@ -205,6 +205,65 @@ public class ProjectToolsUiTests
         process.Exit(0);
     }
 
+    [AvaloniaFact]
+    public async Task A_running_editors_log_is_a_row_under_the_tab_and_its_errors_and_warnings_are_colored()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: new FakeLauncher());
+        var uproject = UnrealFixture.Write(h.Root, h.WorkFolder);
+        var processes = new FakeSystemProcesses();
+        h.Services.ProjectTools.Processes = processes;
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Project is not null, "the project");
+        var list = window.GetVisualDescendants().OfType<ItemsControl>().Single(c => c.Classes.Contains("logs"));
+        Assert.False(list.IsEffectivelyVisible);
+
+        var logs = Path.Combine(h.WorkFolder, "Saved", "Logs");
+        Directory.CreateDirectory(logs);
+        File.WriteAllLines(Path.Combine(logs, "NightOwl.log"),
+        [
+            "Log file open, 09/28/26 12:00:01",
+            "LogInit: Display: Starting",
+            "[2026.09.28-12.00.02:000][  0]LogBlueprint: Error: Missing node",
+            "LogTemp: Warning: Slow frame",
+        ]);
+        processes.Start(new Core.ProjectTools.SystemProcess(4412, "UnrealEditor", $"UnrealEditor.exe \"{uproject}\"", h.Time.GetUtcNow()));
+        h.Time.Advance(TimeSpan.FromSeconds(EditorLogService.ReadsPerCheck));
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Logs.Count == 1 && tab.ProjectTools.Logs[0].Output.Count == 4, "the log");
+        var editorLog = tab.ProjectTools.Logs[0];
+
+        // A row under the tab's, with the log icon in the accent while the editor runs, and × at any time.
+        Assert.True(list.IsEffectivelyVisible);
+        var shown = UiText.Describe(list);
+        var row = list.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("logrow"));
+        Assert.Equal($"Unreal editor running since 12:00 (PID 4412).\n{Path.Combine(logs, "NightOwl.log")}", ToolTip.GetTip(row));
+        var close = row.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Close");
+        Assert.True(close.IsEffectivelyVisible);
+        Assert.Equal(ViewModels.EditorLogViewModel.CloseTip, ToolTip.GetTip(close));
+        Assert.True(Application.Current!.TryGetResource("AccentStatusBrush", window.ActualThemeVariant, out var accent));
+        var icon = row.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single(p => p.Classes.Contains("logicon"));
+        Assert.Equal(((ISolidColorBrush)accent!).Color, ((ISolidColorBrush)icon.Stroke!).Color);
+
+        // A click shows it in the main area, with no composer: its error line in the error color, its warning in the warning color.
+        row.Command!.Execute(null);
+        UiText.Settle(window);
+        var view = Shown<EditorLogView>(window);
+        Assert.Same(editorLog, view.DataContext);
+        Assert.Equal("NightOwl.log", view.FindControl<TextBlock>("LogName")!.Text);
+        Assert.Equal("Unreal editor running since 12:00 (PID 4412).", view.FindControl<SelectableTextBlock>("LogStatus")!.Text);
+        Assert.DoesNotContain(window.GetVisualDescendants().OfType<ComposerView>(), c => c.IsEffectivelyVisible);
+        var textView = view.FindControl<TextEditor>("Log")!.TextArea.TextView;
+        await UiText.SettleUntilAsync(window, () => textView.VisualLinesValid && textView.VisualLines.Count == 4, "the lines");
+        IBrush? Color(int line) => textView.VisualLines.Single(l => l.FirstDocumentLine.LineNumber == line).Elements[0].TextRunProperties.ForegroundBrush;
+        Assert.True(Application.Current.TryGetResource("ErrorTextBrush", window.ActualThemeVariant, out var error));
+        Assert.True(Application.Current.TryGetResource("WarningTextBrush", window.ActualThemeVariant, out var warning));
+        Assert.Equal(((ISolidColorBrush)error!).Color, ((ISolidColorBrush)Color(3)!).Color);
+        Assert.Equal(((ISolidColorBrush)warning!).Color, ((ISolidColorBrush)Color(4)!).Color);
+        Assert.NotEqual(((ISolidColorBrush)error).Color, (Color(2) as ISolidColorBrush)?.Color);
+
+        await Verify(shown);
+    }
+
     /// <summary>The one <typeparamref name="T"/> on screen.</summary>
     private static T Shown<T>(Window window) where T : Control =>
         window.GetVisualDescendants().OfType<T>().Single(c => c.IsEffectivelyVisible);
