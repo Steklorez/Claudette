@@ -197,6 +197,7 @@ These stay on this machine, since program paths and the editors you have install
 | **Godot executable**, with **Browse…** and **Detect** | Found automatically | No | No | [Godot](../project-tools/godot.md) |
 | **Tell Claude about Godot projects** | On | No | No | [Godot](../project-tools/godot.md) |
 | **Open solutions with** | The OS's default app (or Rider, Visual Studio, VS Code or another program) | No | No | [Unreal Engine](../project-tools/unreal-engine.md) |
+| **Show editor logs under the tab** | On | No | No | [Editor logs](../project-tools/editor-logs.md) |
 
 ## Notifications
 

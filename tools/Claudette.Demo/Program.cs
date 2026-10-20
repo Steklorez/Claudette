@@ -19,12 +19,22 @@
 //                   such as C:\Demo reads better.
 // then prints the environment to run Claudette with. A folder it would replace must be empty or one it made.
 //
+//   claudette-demo --stand-in-editor <uproject>
+//
+// stands in for the Unreal editor with <uproject> open, run as a copy named UnrealEditor: it writes the project's
+// Saved/Logs/<Name>.log and waits, for the guide's picture of an editor's log (StandInEditor.cs).
+//
 // tools/Claudette.Demo/screenshots.ps1 takes the README's screenshots with it, on Windows.
 using Claudette.Core;
 using Claudette.Core.Accounts;
 using Claudette.Core.Development;
 using Claudette.Core.Settings;
 using Claudette.Demo;
+
+if (args is ["--stand-in-editor", var standInProject])
+{
+    return StandInEditor.Run(standInProject);
+}
 
 const string Usage = "usage: claudette-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]";
 string? folder = null;

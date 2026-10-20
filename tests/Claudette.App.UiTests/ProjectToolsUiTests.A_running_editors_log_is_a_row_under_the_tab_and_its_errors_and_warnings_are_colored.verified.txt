@@ -1,0 +1,4 @@
+﻿[button] NightOwl.log
+  "NightOwl.log"
+  "Unreal editor · 1 error · 1 warning"
+  [button] Close

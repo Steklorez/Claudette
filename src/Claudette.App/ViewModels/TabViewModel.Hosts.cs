@@ -77,6 +77,16 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     Task<OpenedPath> IProjectToolsHost.OpenPathAsync(string path, int? line, int? column) => OpenPathAsync(path, line, column);
 
+    void IProjectToolsHost.ProjectChanged() => _shell.FollowEditorLogs();
+
+    void IProjectToolsHost.ProjectLaunched() => _shell.OnProjectLaunched(this);
+
+    /// <summary>
+    /// Whether this tab started <paramref name="pid"/>, through its <c>claude</c> (Claude running a commandlet) or its
+    /// project job, for which tab an editor's log goes under (DESIGN.md §18, "Editor logs"). Safe off the UI thread.
+    /// </summary>
+    internal bool StartedProcess(int pid) => ProcessMonitor.Started(pid) || ProjectTools.Runs.JobTreeHolding(pid) is not null;
+
     // ---- Remote Control --------------------------------------------------------------------------------------------
 
     void IRemoteControlHost.CommandTurnEnded() => _checkIns.TurnEnded();

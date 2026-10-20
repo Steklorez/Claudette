@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using Claudette.App.Conversation;
@@ -38,6 +39,12 @@ internal interface IProjectToolsHost : ITabAreaHost
 
     /// <summary>Opens a file or folder, as the tab opens one a reply names.</summary>
     Task<OpenedPath> OpenPathAsync(string path, int? line, int? column);
+
+    /// <summary>The project detected for the tab changed: its editor logs are followed, or not (DESIGN.md §18, "Editor logs").</summary>
+    void ProjectChanged();
+
+    /// <summary>One of the project's launch actions started a program, such as the editor: its log goes under this tab.</summary>
+    void ProjectLaunched();
 }
 
 /// <summary>
@@ -75,7 +82,11 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     [ObservableProperty]
     public partial ProjectInfo? Project { get; private set; }
 
-    partial void OnProjectChanged(ProjectInfo? value) => ToolsChanged();
+    partial void OnProjectChanged(ProjectInfo? value)
+    {
+        ToolsChanged();
+        _host.ProjectChanged();
+    }
 
     /// <summary>
     /// The side panel has a Project page, and the project's menu <b>Show output…</b>: a detected project, custom
@@ -477,6 +488,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
                 try
                 {
                     _services.ProjectTools.Launch(spec, action.ExtraEnvironment);
+                    _host.ProjectLaunched();
                 }
                 catch (Exception ex) when (IsStartFailure(ex))
                 {
@@ -632,6 +644,33 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
                 _host.AddNote($"Ended {count}.");
                 await RefreshAsync();
             });
+    }
+
+    // ---- Editor logs (DESIGN.md §18, "Editor logs") -------------------------------------------------------------------
+
+    /// <summary>
+    /// The logs of the project's engine processes that are under this tab's row, oldest first: the shell puts each under
+    /// one of its project's tabs.
+    /// </summary>
+    public ObservableCollection<EditorLogViewModel> Logs { get; } = [];
+
+    public bool HasLogs => Logs.Count > 0;
+
+    internal void AddLog(EditorLogViewModel log)
+    {
+        if (!Logs.Contains(log))
+        {
+            Logs.Add(log);
+            OnPropertyChanged(nameof(HasLogs));
+        }
+    }
+
+    internal void RemoveLog(EditorLogViewModel log)
+    {
+        if (Logs.Remove(log))
+        {
+            OnPropertyChanged(nameof(HasLogs));
+        }
     }
 
     // ---- Runs ------------------------------------------------------------------------------------------------------

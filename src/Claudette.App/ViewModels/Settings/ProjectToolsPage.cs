@@ -21,6 +21,7 @@ public sealed partial class ProjectToolsPage(SettingsContext context) : Settings
         Entry("Tell Claude about Unity projects"),
         Entry("Godot executable"),
         Entry("Tell Claude about Godot projects"),
+        Entry("Show editor logs under the tab"),
     ];
 
     // ---- Unreal Engine ---------------------------------------------------------------------------------------------
@@ -137,6 +138,14 @@ public sealed partial class ProjectToolsPage(SettingsContext context) : Settings
     {
         get => Settings.ProjectTools.TellClaudeAboutGodot;
         set => Set(value, v => Settings.ProjectTools.TellClaudeAboutGodot = v);
+    }
+
+    // ---- Editor logs (DESIGN.md §18, "Editor logs") -------------------------------------------------------------------
+
+    public bool ShowEditorLogs
+    {
+        get => Settings.ProjectTools.ShowEditorLogs;
+        set => Set(value, v => Settings.ProjectTools.ShowEditorLogs = v);
     }
 
     // ---- Solutions ---------------------------------------------------------------------------------------------------

@@ -150,6 +150,7 @@ public sealed class AppServices : IAsyncDisposable
         ProjectTools = new ProjectToolsService(this, systemProcesses, unrealRegistry ?? NoUnrealEngineRegistry.Instance, projectToolPaths ?? ProjectToolPaths.ForCurrentUser());
         ServiceStatus = new ServiceStatusService(this);
         LiveSessions = new LiveSessionsService(this, systemProcesses);
+        EditorLogs = new EditorLogService(this);
         UpdaterFactory = path => new ClaudeUpdater(path, Paths.UtilityDirectory, _launcher, Time, UserEnvironment.Probe,
             environmentOverrides: RemoteControl.ClaudeVariables, userEnvironment: UserEnvironment);
         SettingsChanged += (_, _) =>
@@ -346,6 +347,9 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>The Claude Code sessions running on this machine, and the names they're reached by (DESIGN.md §13).</summary>
     public LiveSessionsService LiveSessions { get; }
+
+    /// <summary>The logs the tabs' projects' editors write, read as they're written (DESIGN.md §18, "Editor logs").</summary>
+    public EditorLogService EditorLogs { get; }
 
     /// <summary>Makes the updater for a <c>claude</c> path (DESIGN.md §12). Tests replace it.</summary>
     internal Func<string, IClaudeUpdater> UpdaterFactory { get; set; }
@@ -710,6 +714,7 @@ public sealed class AppServices : IAsyncDisposable
         KeepAwake.Dispose();
         ServiceStatus.Dispose();
         LiveSessions.Dispose();
+        EditorLogs.Dispose();
         if (ClaudeUpdates is not null)
         {
             await ClaudeUpdates.DisposeAsync();

@@ -3,6 +3,7 @@ using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.Core;
 using Claudette.Core.ProjectTools;
+using Claudette.Core.Protocol;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -12,10 +13,9 @@ namespace Claudette.App.ViewModels;
 /// One run of a project action as a job (DESIGN.md §18, "Project tools"): a build, project file generation, a custom
 /// command, Clean's deletion, or one that couldn't start. It keeps its own log and stays in the sidebar under its tab,
 /// whatever the result, until the user closes it or the tab. Its log shows in the main area, as a tab of the panes
-/// without a composer, so it can sit beside the conversation (<see cref="IShellTab"/>); the links in it are in
-/// <c>.Links.cs</c>.
+/// without a composer, so it can sit beside the conversation (<see cref="LogTabViewModel"/>).
 /// </summary>
-public sealed partial class ProjectRunViewModel : ObservableObject, IShellTab
+public sealed partial class ProjectRunViewModel : LogTabViewModel
 {
     /// <summary>A run keeps at most this many lines of its output.</summary>
     public const int MaxOutputLines = 5000;
@@ -28,6 +28,7 @@ public sealed partial class ProjectRunViewModel : ObservableObject, IShellTab
     private bool _couldntStart;
 
     internal ProjectRunViewModel(ProjectRunsViewModel runs, string name, ProjectAction? action, string folder, TimeProvider time)
+        : base(MaxOutputLines, DroppedTogether, "run")
     {
         _runs = runs;
         _time = time;
@@ -42,66 +43,27 @@ public sealed partial class ProjectRunViewModel : ObservableObject, IShellTab
     public string Name { get; }
 
     /// <summary>The folder it ran in, which a relative path in its log is read against before the tab's.</summary>
-    public string Folder { get; }
+    public override string Folder { get; }
 
     // ---- In the panes (DESIGN.md §18, "Split panes") -----------------------------------------------------------------
 
-    /// <summary>Its own, for the panes; runs aren't saved, so the app state keeps its tab's instead.</summary>
-    public string Id { get; } = $"run-{Guid.NewGuid():N}";
+    public override string DisplayName => Name;
 
-    public string DisplayName => Name;
+    public override string GroupFolder => _runs.GroupFolder;
 
-    public string GroupFolder => _runs.GroupFolder;
+    protected override void OnSelected() => _runs.Selected(this);
 
-    /// <summary>Its log has the focus: the keyboard follows it, and its sidebar entry is picked out.</summary>
-    [ObservableProperty]
-    public partial bool IsSelected { get; set; }
+    protected override void Show() => _runs.Show(this);
 
-    partial void OnIsSelectedChanged(bool value)
-    {
-        if (!IsInSplit)
-        {
-            IsShown = value;
-        }
-        if (value)
-        {
-            _runs.Selected(this);
-        }
-    }
+    protected override void OnClosePane() => _runs.ClosePane(this);
 
-    /// <summary>Its log is on screen, in a pane.</summary>
-    [ObservableProperty]
-    public partial bool IsShown { get; set; }
+    protected override Task CopyAsync(string text) => _runs.CopyAsync(text);
 
-    [ObservableProperty]
-    public partial bool IsInSplit { get; set; }
+    protected override ReplyFileFinder CreateFinder() => _runs.FinderFor(this);
 
-    [ObservableProperty]
-    public partial int PaneIndex { get; set; } = -1;
+    protected override void Post(Action action) => _runs.Post(action);
 
-    [ObservableProperty]
-    public partial bool IsDragged { get; set; }
-
-    /// <summary>It has no side panel.</summary>
-    public bool ShowsSidePanel => false;
-
-    /// <summary>A click or the focus in its pane: the keyboard follows it now.</summary>
-    public void FocusPane()
-    {
-        if (IsShown && !IsSelected)
-        {
-            _runs.Show(this);
-        }
-    }
-
-    /// <summary><b>Close pane</b> on its pane's header, and in its entry's menu: the run stays in the sidebar.</summary>
-    [RelayCommand]
-    private void ClosePane() => _runs.ClosePane(this);
-
-    /// <summary>Find in the log (<c>Ctrl/Cmd+F</c>), for its view to open.</summary>
-    public event Action? FindRequested;
-
-    internal void RequestFind() => FindRequested?.Invoke();
+    protected override Task FollowLinkAsync(RunLogLink link) => _runs.OpenLinkAsync(this, link);
 
     public DateTimeOffset Started { get; }
 
@@ -172,27 +134,6 @@ public sealed partial class ProjectRunViewModel : ObservableObject, IShellTab
         _ => ExitCode is { } code ? $"Failed · exit code {code.ToString(CultureInfo.InvariantCulture)}" : "Failed",
     };
 
-    /// <summary>The run's output, at most <see cref="MaxOutputLines"/> lines.</summary>
-    public BatchedCollection<string> Output { get; } = [];
-
-    /// <summary>Lines dropped from the start of the output to keep it to the limit.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(OutputNote))]
-    public partial int OutputDropped { get; private set; }
-
-    public string? OutputNote => OutputDropped > 0
-        ? $"Keeping at most the last {MaxOutputLines.ToString("N0", CultureInfo.CurrentCulture)} lines; {OutputDropped.ToString("N0", CultureInfo.CurrentCulture)} earlier ones were dropped."
-        : null;
-
-    /// <summary>A batch of lines, with one change to the list for the whole batch.</summary>
-    internal void Append(IReadOnlyList<string> lines)
-    {
-        if (Output.AddAndTrim(lines, MaxOutputLines, DroppedTogether) is > 0 and var dropped)
-        {
-            OutputDropped += dropped;
-        }
-    }
-
     private readonly Lock _receivedLock = new();
 
     /// <summary>Lines from the job waiting for the UI thread; not null while they're on their way.</summary>
@@ -258,10 +199,6 @@ public sealed partial class ProjectRunViewModel : ObservableObject, IShellTab
     /// <summary>Ends the job's whole process tree, or its work.</summary>
     [RelayCommand(CanExecute = nameof(IsRunning))]
     private void Stop() => Job?.Stop();
-
-    /// <summary><b>Copy</b> over the log: all of it.</summary>
-    [RelayCommand]
-    private Task CopyOutputAsync() => _runs.CopyOutputAsync(this);
 
     private bool CanClose => !IsRunning;
 

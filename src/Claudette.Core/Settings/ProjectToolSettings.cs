@@ -68,6 +68,12 @@ public sealed class ProjectToolSettings
     /// <summary>Add a note about a detected Godot project to Claude's system prompt.</summary>
     public bool TellClaudeAboutGodot { get; set; } = true;
 
+    /// <summary>
+    /// While the project's editor, or another of its engine's processes, runs, its log shows under the tab (DESIGN.md §18,
+    /// "Editor logs").
+    /// </summary>
+    public bool ShowEditorLogs { get; set; } = true;
+
     /// <summary>The format in effect on <paramref name="os"/>.</summary>
     public ProjectFileFormat FormatFor(ToolOS os) => ProjectFileFormat ?? DefaultFormat(os);
 

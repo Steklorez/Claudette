@@ -232,7 +232,7 @@ public sealed partial class ShellViewModel
     /// </summary>
     private bool ShowFromConversation(ProjectFilesViewModel files)
     {
-        if (files.IsShown || Selected is not (TabViewModel or ProjectRunViewModel) || _services.Settings.Editor.FilesFromConversation == FilesFromConversation.InPlace)
+        if (files.IsShown || Selected is not (TabViewModel or LogTabViewModel) || _services.Settings.Editor.FilesFromConversation == FilesFromConversation.InPlace)
         {
             Selected = files;
             return false;

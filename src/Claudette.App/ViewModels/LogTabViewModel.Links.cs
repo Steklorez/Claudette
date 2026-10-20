@@ -5,10 +5,10 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// The links in a run's log (DESIGN.md §18, "Project tools", "A run's log"): web addresses, and paths once they're found
-/// to be there, and a click on one.
+/// The links in a log (DESIGN.md §18, "Project tools", "A run's log"): web addresses, and paths once they're found to be
+/// there, and a click on one.
 /// </summary>
-public sealed partial class ProjectRunViewModel
+public abstract partial class LogTabViewModel
 {
     /// <summary>At most this many paths are remembered as there or not, so a long log can't grow the list without end.</summary>
     private const int MaxRemembered = 2048;
@@ -20,10 +20,15 @@ public sealed partial class ProjectRunViewModel
     private readonly HashSet<string> _looking = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Where a path in the log is: read against the folder the job ran in, then the tab's. A path elsewhere is looked at
+    /// Where a path in the log is: read against <see cref="Folder"/>, then its tab's. A path elsewhere is looked at
     /// before a click only where looking can't reach another machine, as for a file a reply names.
     /// </summary>
-    internal ReplyFileFinder Finder => field ??= _runs.FinderFor(this);
+    internal ReplyFileFinder Finder => field ??= CreateFinder();
+
+    protected abstract ReplyFileFinder CreateFinder();
+
+    /// <summary>Runs <paramref name="action"/> on the UI thread, for what a lookup off it found.</summary>
+    protected abstract void Post(Action action);
 
     /// <summary>A path in the log turned out to be there: its view draws it as a link now.</summary>
     public event Action? LinksFound;
@@ -62,7 +67,7 @@ public sealed partial class ProjectRunViewModel
         {
             full = null;
         }
-        _runs.Post(() =>
+        Post(() =>
         {
             _looking.Remove(file.Path);
             if (_found.Count >= MaxRemembered)
@@ -83,5 +88,7 @@ public sealed partial class ProjectRunViewModel
     /// each other.
     /// </summary>
     [RelayCommand(AllowConcurrentExecutions = true)]
-    private Task OpenLinkAsync(RunLogLink? link) => link is null ? Task.CompletedTask : _runs.OpenLinkAsync(this, link);
+    private Task OpenLinkAsync(RunLogLink? link) => link is null ? Task.CompletedTask : FollowLinkAsync(link);
+
+    protected abstract Task FollowLinkAsync(RunLogLink link);
 }

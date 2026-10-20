@@ -159,6 +159,7 @@ public sealed class UnityProvider : IProjectToolProvider
             },
             Problem = problem,
             SystemPromptNote = context.Settings.TellClaudeAboutUnity ? SystemPromptNote(project, editor, os) : null,
+            Logs = UnityLogs.Source(project, context.Paths, os),
         };
     }
 

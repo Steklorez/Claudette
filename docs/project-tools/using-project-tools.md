@@ -91,6 +91,7 @@ Settings → Project tools holds the defaults every project starts with. They st
 - Unreal Engine: **Default editor configuration**, **Project files for**, **Open solutions with** and **Tell Claude about Unreal projects**. See [Unreal Engine](unreal-engine.md).
 - Unity: **Default code optimization** and **Tell Claude about Unity projects**. See [Unity](unity.md).
 - Godot: **Godot executable** and **Tell Claude about Godot projects**. See [Godot](godot.md).
+- **Show editor logs under the tab**: the rows for the logs the editor writes. See [Editor logs](editor-logs.md).
 
 Below the categories in the Settings window, a group headed by the selected tab's project has three pages: **Links**, **Actions** and **Tools**. The Settings window follows the tab that was selected when it opened, and each page says which in a line at the top.
 

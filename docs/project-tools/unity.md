@@ -28,7 +28,7 @@ When the version isn't installed, the menu's header says so and offers **Choose 
 | **Run EditMode tests** | A job that runs the project's EditMode tests in batch mode, and quits Unity when they're done. When it ends, its status adds the counts: *Run EditMode tests failed (exit code 2). 11 passed, 1 failed.* |
 | **Regenerate the C# solution** | A job that makes Unity write the C# solution again, through the project's Rider or Visual Studio package. Greyed out, with the reason, when the project has neither package. |
 | **Open solution** | Opens the project's solution with the IDE chosen in Settings. Greyed out when it's missing. |
-| **Open Editor log** | Opens Unity's editor log. |
+| **Open Editor log** | Opens Unity's editor log in another app. While Unity has the project open, its log is also a row under the tab: see [Editor logs](editor-logs.md). |
 | **Open Player log** | Opens the project's player log. Greyed out when there isn't one. |
 | **Clean Library…** | Deletes `Library`, `Temp` and `obj` in the project, and nothing else. It asks first, shows the size, and warns that Unity reimports every asset next time, which can take a long while. |
 | **Kill all Unity editors…** | Ends every running Unity editor and what it started. It asks first, lists each editor, and doesn't touch Unity Hub or Unity's own helpers. |

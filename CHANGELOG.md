@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Editor logs under the tab.** While the Unreal editor, a commandlet or a game run has the tab's project open, its log is a row under the tab, and a click shows it in the main area as a project run's log is, followed as it's written, with its errors and warnings colored and counted on the row. Unity's editor and batch runs, and Godot's editor and game, get theirs too. The row stays after the editor closes, says *Crashed* when its log ends in a crash, and comes back with the new log when the editor starts again. Claudette reads the file without keeping it open, so the editor can rename or delete it as it always does. **Show editor logs under the tab** in Settings → Project tools turns it off.
 - **Collapse a tab in the sidebar.** A tab with rows under it, a thread's sub-threads, subagents or a project action's runs, has a chevron beside its name that folds them away, as a project group's does; **Collapse tab** in its menu or the command palette does the same. The collapsed row says how many it hides and shows the most urgent of them, such as a sub-thread waiting on you or a failed build. It opens again when you go to one of them, when a sub-thread joins, or when one starts waiting on you, and it stays collapsed when Claudette restarts.
 
 ## [0.4.0] - 2026-10-18

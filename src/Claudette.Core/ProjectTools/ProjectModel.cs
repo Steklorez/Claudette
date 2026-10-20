@@ -167,6 +167,12 @@ public sealed record ProjectInfo
     /// <summary>The note added to Claude's system prompt, or null when Settings says not to (DESIGN.md §18).</summary>
     public string? SystemPromptNote { get; init; }
 
+    /// <summary>
+    /// The logs its engine's processes write, which show under a tab while one runs (DESIGN.md §18, "Editor logs"); null
+    /// for a project without them.
+    /// </summary>
+    public EditorLogs.EditorLogSource? Logs { get; init; }
+
     /// <summary>The action "Run the project's main action" runs.</summary>
     public ProjectAction? MainAction => Actions.FirstOrDefault(a => a.IsMain);
 }

@@ -34,6 +34,10 @@ public sealed partial record GodotProject(string File, string Root, string Name,
         string? name = null;
         int? configVersion = null;
         var features = new List<string>();
+        var customUserDir = false;
+        string? customUserDirName = null;
+        bool? fileLogging = null;
+        string? logPath = null;
         foreach (var raw in text.Split('\n'))
         {
             var line = raw.Trim();
@@ -66,6 +70,27 @@ public sealed partial record GodotProject(string File, string Root, string Name,
             {
                 features.AddRange(QuotedStrings().Matches(value).Select(m => m.Groups[1].Value));
             }
+            else if (section == "application" && key == "config/use_custom_user_dir")
+            {
+                customUserDir = value == "true";
+            }
+            else if (section == "application" && key == "config/custom_user_dir_name")
+            {
+                customUserDirName = Unquote(value);
+            }
+            else if (section is "debug" or "logging" && key == "file_logging/enable_file_logging.pc")
+            {
+                // Godot 4's [debug] section, Godot 3's [logging]; the .pc one is the desktop's, which wins.
+                fileLogging = value == "true";
+            }
+            else if (section is "debug" or "logging" && key == "file_logging/enable_file_logging")
+            {
+                fileLogging ??= value == "true" ? true : null;
+            }
+            else if (section is "debug" or "logging" && key == "file_logging/log_path")
+            {
+                logPath = Unquote(value);
+            }
         }
         var featureVersion = features.FirstOrDefault(f => VersionPattern().IsMatch(f));
         var inferred = configVersion switch
@@ -75,9 +100,29 @@ public sealed partial record GodotProject(string File, string Root, string Name,
             _ => null,
         };
         var isCSharp = features.Any(f => f.Equals("C#", StringComparison.OrdinalIgnoreCase)) || sections.Contains("dotnet") || sections.Contains("mono") || hasCSharpFiles;
-        return new GodotProject(file, root, string.IsNullOrWhiteSpace(name) ? Path.GetFileName(Path.TrimEndingDirectorySeparator(root)) : name,
-            configVersion, featureVersion ?? inferred, isCSharp, features);
+        var projectName = string.IsNullOrWhiteSpace(name) ? Path.GetFileName(Path.TrimEndingDirectorySeparator(root)) : name;
+        return new GodotProject(file, root, projectName, configVersion, featureVersion ?? inferred, isCSharp, features)
+        {
+            CustomUserDir = customUserDir ? string.IsNullOrWhiteSpace(customUserDirName) ? projectName : customUserDirName : null,
+            FileLogging = fileLogging ?? true,
+            LogPath = string.IsNullOrWhiteSpace(logPath) ? DefaultLogPath : logPath,
+        };
     }
+
+    /// <summary>Where Godot writes its log unless <c>file_logging/log_path</c> says otherwise.</summary>
+    public const string DefaultLogPath = "user://logs/godot.log";
+
+    /// <summary>
+    /// The folder <c>user://</c> is, by its own name rather than under Godot's <c>app_userdata</c>, when
+    /// <c>config/use_custom_user_dir</c> is on: <c>config/custom_user_dir_name</c>, else the project's name. Null when it's off.
+    /// </summary>
+    public string? CustomUserDir { get; init; }
+
+    /// <summary>Godot writes a log file: <c>file_logging/enable_file_logging.pc</c>, on by default.</summary>
+    public bool FileLogging { get; init; } = true;
+
+    /// <summary><c>file_logging/log_path</c>: where the log goes, <c>user://logs/godot.log</c> by default.</summary>
+    public string LogPath { get; init; } = DefaultLogPath;
 
     /// <summary>Godot 4 keeps its imports in <c>.godot/</c>; Godot 3 in <c>.import/</c>.</summary>
     public string ImportFolder => ConfigVersion is >= 5 || ConfigVersion is null && Version?.StartsWith('4') == true ? ".godot" : ".import";
@@ -349,6 +394,7 @@ public sealed class GodotProvider : IProjectToolProvider
             },
             Problem = problem,
             SystemPromptNote = context.Settings.TellClaudeAboutGodot ? SystemPromptNote(project, godot, solution ?? csharp.FirstOrDefault()) : null,
+            Logs = GodotLogs.Source(project, context.Paths, context.OS),
         };
     }
 

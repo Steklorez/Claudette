@@ -48,4 +48,5 @@ In Settings → Project tools, on this machine only. **Open solutions with**, wh
 ## See also
 
 - [Unreal Engine](unreal-engine.md) and [Unity](unity.md), for the other engines.
+- [Editor logs](editor-logs.md), for the log Godot writes, under the tab while it runs.
 - [Actions and links](actions-and-links.md), for commands of your own, such as an export script.
