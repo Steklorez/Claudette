@@ -186,7 +186,14 @@ public sealed class AvaloniaPlatformServices(Func<TopLevel?> topLevel) : IPlatfo
     }
 }
 
+/// <summary>
+/// Posts to the dispatcher of the UI thread it was made on. It's looked up once, there, so work posted from another
+/// thread never asks for <see cref="Dispatcher.UIThread"/> itself: the headless test session resets that between tests,
+/// and a late post from one test's background work would otherwise make it the posting thread's, failing the next test.
+/// </summary>
 public sealed class AvaloniaUiDispatcher : IUiDispatcher
 {
-    public void Post(Action action) => Dispatcher.UIThread.Post(action);
+    private readonly Dispatcher _dispatcher = Dispatcher.UIThread;
+
+    public void Post(Action action) => _dispatcher.Post(action);
 }

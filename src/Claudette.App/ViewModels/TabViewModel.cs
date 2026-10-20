@@ -101,6 +101,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         McpServers = new McpServersViewModel(() => _session, url => _services.Platform.OpenUrlAsync(url));
         ReplyImages = new ReplyImages(new ReplyImageLoader(services.Http, services.Time), () => Folder);
         ProjectTools = new ProjectToolsViewModel(services, this);
+        WatchRunsUnder();
         RemoteControl = new RemoteControlViewModel(services, this);
         Perforce = new PerforceViewModel(services, this);
         Context = new ContextViewModel(services, this);

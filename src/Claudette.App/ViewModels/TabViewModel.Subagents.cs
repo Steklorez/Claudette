@@ -189,6 +189,8 @@ public sealed partial class TabViewModel
         if (newValue is not null)
         {
             newValue.PropertyChanged += OnViewedAgentPropertyChanged;
+            // Its row comes out from under a collapsed tab (DESIGN.md §4, "Sidebar").
+            ExpandRows();
         }
         ShowsViewedPrompt = false;
         // Find looks through what's shown (DESIGN.md §5, "Find").
@@ -378,6 +380,7 @@ public sealed partial class TabViewModel
         {
             row.EarlierChanged();
         }
+        SubagentRowsUnderChanged();
 
         void Collect(AgentNode parent)
         {

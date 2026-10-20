@@ -367,6 +367,12 @@ public sealed class TabState
     public string? ThreadId { get; set; }
 
     /// <summary>
+    /// What's under the tab's row in the sidebar is folded away: its sub-threads, its subagents' rows and its project runs
+    /// (DESIGN.md §4, "Sidebar"). Cleared once nothing is left under it.
+    /// </summary>
+    public bool RowsCollapsed { get; set; }
+
+    /// <summary>
     /// For a thread, the sub-threads its Claude was last told about, one name per line ("" for none); null when it was
     /// never told, or was told it's no longer a thread. The next message carries a note when they differ.
     /// </summary>

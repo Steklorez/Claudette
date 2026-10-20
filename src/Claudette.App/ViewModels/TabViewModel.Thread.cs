@@ -138,6 +138,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(IsThread));
         OnPropertyChanged(nameof(ThreadHead));
         OnPropertyChanged(nameof(IsSubThread));
+        OnPropertyChanged(nameof(IsFoldedAway));
         OnPropertyChanged(nameof(CanMakeThread));
         OnPropertyChanged(nameof(AskBeforeSendingToSubThreads));
         SubThreadsChanged();
@@ -195,7 +196,12 @@ public sealed partial class TabViewModel
 
     private void OnSubThreadChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(Status) or nameof(DisplayName))
+        if (e.PropertyName == nameof(Status) && sender is TabViewModel { Status: TabStatus.NeedsInput })
+        {
+            // A sub-thread waiting on the user comes out from under its collapsed thread (DESIGN.md §4, "Sidebar").
+            ExpandRows();
+        }
+        if (e.PropertyName is nameof(Status) or nameof(DisplayName) or nameof(RowsUrgency))
         {
             SubThreadsChanged();
         }
@@ -208,6 +214,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(HasThreadStrip));
         OnPropertyChanged(nameof(ThreadTip));
         OnPropertyChanged(nameof(RowDetail));
+        RowsUnderChanged();
     }
 
     // ---- A thread's hook on SendMessage ---------------------------------------------------------------------------

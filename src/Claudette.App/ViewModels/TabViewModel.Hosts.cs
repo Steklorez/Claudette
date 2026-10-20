@@ -66,7 +66,12 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     void IProjectToolsHost.ShowRun(ProjectRunViewModel run) => _shell.ShowRun(run);
 
-    void IProjectToolsHost.RunSelected(ProjectRunViewModel run) => _shell.OnRunSelected();
+    void IProjectToolsHost.RunSelected(ProjectRunViewModel run)
+    {
+        // Its entry comes out from under a collapsed tab, and a collapsed thread (DESIGN.md §4, "Sidebar").
+        RevealRowsUnder();
+        _shell.OnRunSelected();
+    }
 
     void IProjectToolsHost.CloseRunPane(ProjectRunViewModel run) => _shell.ClosePaneCommand.Execute(run);
 

@@ -347,6 +347,123 @@ public class ThreadTests
         Assert.Null(waiting.Uuid);
     }
 
+    // ---- Collapsing under the thread (DESIGN.md §4, "Sidebar") --------------------------------------------------------
+
+    [Fact]
+    public async Task Collapsing_a_thread_folds_its_sub_threads_away_and_is_saved()
+    {
+        await using var h = new TabTestHarness();
+        var (plan, art) = await ThreadAsync(h);
+        var gallery = await ThreadScript.OpenAsync(h, "Gallery");
+        gallery.AssignToThreadCommand.Execute(plan);
+        var other = await ThreadScript.OpenAsync(h, "Other");
+        Assert.True(plan.HasRowsUnder);
+        Assert.False(other.HasRowsUnder);
+        Assert.Equal("Collapse tab", plan.CollapseMenuText);
+        Assert.Equal("Collapse: hides 2 sub-threads", plan.CollapseTip);
+        // The palette offers it for the selected tab, when it has something under it.
+        Assert.DoesNotContain(h.Shell.PaletteEntries(), e => e.Label == "Collapse tab");
+        h.Shell.SelectedTab = plan;
+        Assert.Contains(h.Shell.PaletteEntries(), e => e.Label == "Collapse tab");
+
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+
+        Assert.True(plan.AreRowsCollapsed);
+        Assert.True(plan.State.RowsCollapsed);
+        Assert.True(art.IsFoldedAway);
+        Assert.True(gallery.IsFoldedAway);
+        Assert.False(plan.IsFoldedAway);
+        Assert.False(other.IsFoldedAway);
+        Assert.Equal("Expand tab", plan.CollapseMenuText);
+        Assert.Equal(2, plan.CollapsedRowCount);
+        Assert.Equal("Collapsed: 2 sub-threads", plan.CollapsedTip);
+
+        // Moving the collapsed thread takes its sub-threads along.
+        h.Shell.MoveTabDownCommand.Execute(plan);
+        Assert.Equal(["Other", "Plan", "Art page", "Gallery"], h.Shell.Groups.Single().Tabs.Select(t => t.DisplayName));
+
+        // Ctrl+Tab still goes through a collapsed thread's sub-threads, and leaves it collapsed, as a collapsed group's tabs.
+        h.Shell.SelectedTab = plan;
+        h.Shell.SelectNextCommand.Execute(null);
+        Assert.Same(art, h.Shell.SelectedTab);
+        Assert.True(plan.AreRowsCollapsed);
+
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+        Assert.False(plan.State.RowsCollapsed);
+        Assert.False(art.IsFoldedAway);
+    }
+
+    [Fact]
+    public async Task A_collapsed_thread_shows_the_most_urgent_sub_thread_and_opens_when_one_waits_on_the_user()
+    {
+        await using var h = new TabTestHarness();
+        var (plan, art) = await ThreadAsync(h);
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+        Assert.Equal("", plan.CollapsedGlyph);
+
+        h.Transport.EmitTo(1, ThreadScript.Init());
+        h.Transport.EmitTo(1, ThreadScript.CanUseTool("req-1", "npm test"));
+        await TabTestHarness.Eventually(() => art.Status == TabStatus.NeedsInput, "the prompt");
+
+        Assert.False(plan.AreRowsCollapsed);
+        Assert.False(art.IsFoldedAway);
+
+        // Collapsed again while it waits, it stays collapsed, and its badge says so.
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+        Assert.True(plan.AreRowsCollapsed);
+        Assert.Equal("!", plan.CollapsedGlyph);
+        Assert.True(plan.CollapsedIsAlert);
+        Assert.Equal("Collapsed: 1 sub-thread\nArt page · Needs your input", plan.CollapsedTip);
+    }
+
+    [Fact]
+    public async Task Going_to_a_sub_thread_or_adding_one_opens_its_collapsed_thread()
+    {
+        await using var h = new TabTestHarness();
+        var (plan, art) = await ThreadAsync(h);
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+
+        // A clicked notification, or Go to tab in the thread's strip.
+        Assert.True(h.Shell.SelectTab(art.Id));
+        Assert.False(plan.AreRowsCollapsed);
+
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+        var gallery = await ThreadScript.OpenAsync(h, "Gallery");
+        gallery.AssignToThreadCommand.Execute(plan);
+        Assert.False(plan.AreRowsCollapsed);
+        Assert.False(gallery.IsFoldedAway);
+    }
+
+    [Fact]
+    public async Task A_thread_with_nothing_left_under_it_forgets_it_was_collapsed()
+    {
+        await using var h = new TabTestHarness();
+        var (plan, art) = await ThreadAsync(h);
+        plan.ToggleRowsCollapsedCommand.Execute(null);
+
+        h.Shell.DetachFromThreadCommand.Execute(art);
+
+        Assert.False(plan.HasRowsUnder);
+        Assert.False(plan.State.RowsCollapsed);
+        Assert.False(art.IsFoldedAway);
+    }
+
+    [Fact]
+    public async Task A_collapsed_thread_comes_back_collapsed_after_a_restore()
+    {
+        await using var h = new TabTestHarness();
+        var plan = new Core.Settings.TabState { Folder = h.WorkFolder, UserName = "Plan", IsThread = true, RowsCollapsed = true };
+        var art = new Core.Settings.TabState { Folder = h.WorkFolder, UserName = "Art page", ThreadId = plan.Id };
+        h.Services.State.Tabs = [plan, art];
+        h.Services.Settings.Sessions.RestoreUnpinnedTabs = true;
+
+        h.Shell.Restore(null);
+
+        var tabs = h.Shell.Groups.Single().Tabs;
+        Assert.True(tabs[0].AreRowsCollapsed);
+        Assert.True(tabs[1].IsFoldedAway);
+    }
+
     // ---- Helpers ------------------------------------------------------------------------------------------------------
 
     /// <summary>A thread "Plan" on process 0 and its sub-thread "Art page" on process 1, not asking before sending unless told to.</summary>

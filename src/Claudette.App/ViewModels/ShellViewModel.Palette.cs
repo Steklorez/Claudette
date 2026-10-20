@@ -160,6 +160,11 @@ public sealed partial class ShellViewModel
                 Command("Play hangman with Claudette", () => tab.PlayGame(GameKind.Hangman));
             }
             Command("Tab settings…", () => OpenTabSettingsCommand.Execute(tab));
+            // DESIGN.md §4, "Sidebar": what's under its row.
+            if (tab.HasRowsUnder)
+            {
+                Command(tab.CollapseMenuText, () => tab.ToggleRowsCollapsedCommand.Execute(null));
+            }
             AsyncCommand("Duplicate tab", () => DuplicateTabAsync(tab));
             if (CanOpenWorktreeTab(tab))
             {

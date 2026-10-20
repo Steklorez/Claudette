@@ -177,9 +177,28 @@
     <Style Selector="Button.side.update TextBlock.badge">
       <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
     </Style>
+    <!-- A tab's row with what's under it (DESIGN.md §4, "Sidebar"). The gap after it is its own, so a sub-thread folded
+         away under its thread leaves none. -->
+    <Style Selector="StackPanel.tabentry">
+      <Setter Property="Margin" Value="0,0,0,1" />
+    </Style>
     <!-- A thread's sub-threads sit indented under it (DESIGN.md §18, "Threads"). -->
-    <Style Selector="StackPanel.subthread">
-      <Setter Property="Margin" Value="12,0,0,0" />
+    <Style Selector="StackPanel.tabentry.subthread">
+      <Setter Property="Margin" Value="12,0,0,1" />
+    </Style>
+    <!-- The chevron beside a tab's name that collapses what's under its row (DESIGN.md §4, "Sidebar"), drawn as a group
+         label's is. -->
+    <Style Selector="Button.rowfold">
+      <Setter Property="Padding" Value="3,2" />
+      <Setter Property="Margin" Value="-3,0,2,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.rowfold Path">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="StrokeThickness" Value="1.4" />
+      <Setter Property="Width" Value="9" />
+      <Setter Property="Height" Value="9" />
+      <Setter Property="Stretch" Value="Uniform" />
     </Style>
     <Style Selector="Border#SidebarEdge:pointerover">
       <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
@@ -212,7 +231,7 @@
     </Style>
     <!-- How many tasks a tab still has running once its turn is over (DESIGN.md §4, "Sidebar"): no taller than the
          name beside it, so the row keeps its height. -->
-    <Style Selector="Border.taskbadge">
+    <Style Selector="Border.taskbadge, Border.foldbadge">
       <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
       <Setter Property="BorderThickness" Value="1" />
@@ -225,8 +244,17 @@
       <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
       <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
-    <Style Selector=".claude Border.taskbadge">
+    <Style Selector=".claude Border.taskbadge, .claude Border.foldbadge">
       <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <!-- What a collapsed tab hides (DESIGN.md §4, "Sidebar"): how many rows, then the most urgent of them in its status
+         color, as a collapsed group's label shows its tabs'. -->
+    <Style Selector="Border.foldbadge TextBlock">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.foldbadge TextBlock.count">
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
     </Style>
     <!-- Where a tab works, at the right of its row's second line (DESIGN.md §4, "Sidebar"): the git branch or worktree,
          and the Perforce changelist. A long branch name is cut short rather than squeezing the model out. -->
@@ -349,12 +377,13 @@
                     <ItemsControl ItemsSource="{Binding Tabs}">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                          <StackPanel Spacing="1" />
+                          <StackPanel />
                         </ItemsPanelTemplate>
                       </ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="vm:TabViewModel">
-                          <StackPanel Spacing="1" Classes.subthread="{Binding IsSubThread}">
+                          <!-- Out of the list while its thread is collapsed (DESIGN.md §4, "Sidebar") -->
+                          <StackPanel Classes="tabentry" Spacing="1" Classes.subthread="{Binding IsSubThread}" IsVisible="{Binding !IsFoldedAway}">
                             <Button Classes="tab tabrow" Classes.selected="{Binding IsSelected}" Classes.dragged="{Binding IsDragged}" Classes.bypass="{Binding IsBypassMode}"
                                     Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectCommand}" CommandParameter="{Binding}"
                                     DoubleTapped="OnTabDoubleTapped" ToolTip.ShowDelay="600" ToolTip.Placement="Right">
@@ -373,6 +402,14 @@
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1">
                                   <DockPanel>
+                                    <!-- Collapses what's under the row: its sub-threads, subagents and runs (DESIGN.md §4, "Sidebar") -->
+                                    <Button x:Name="RowFold" DockPanel.Dock="Left" Classes="flat rowfold" IsVisible="{Binding HasRowsUnder}"
+                                            Command="{Binding ToggleRowsCollapsedCommand}" ToolTip.Tip="{Binding CollapseTip}" AutomationProperties.Name="{Binding CollapseMenuText}">
+                                      <Panel>
+                                        <Path Data="{StaticResource IconChevronDown}" IsVisible="{Binding !AreRowsCollapsed}" />
+                                        <Path Data="{StaticResource IconChevronRight}" IsVisible="{Binding AreRowsCollapsed}" />
+                                      </Panel>
+                                    </Button>
                                     <Path DockPanel.Dock="Left" Data="{StaticResource IconPin}" Fill="{DynamicResource MutedTextBrush}" Width="8" Height="10" Stretch="Uniform"
                                           IsVisible="{Binding IsPinned}" VerticalAlignment="Center" Margin="0,0,5,0" />
                                     <!-- The tab copies its session to the session library (DESIGN.md §9); the border gives the tip somewhere to hover -->
@@ -403,6 +440,16 @@
                                     <Border x:Name="TaskBadge" DockPanel.Dock="Left" Classes="taskbadge" IsVisible="{Binding ShowTaskBadge}" VerticalAlignment="Center" Margin="0,0,5,0"
                                             ToolTip.Tip="{Binding TaskBadgeTip}" AutomationProperties.Name="{Binding TaskBadgeTip}">
                                       <TextBlock Text="{Binding RunningTaskCount}" />
+                                    </Border>
+                                    <!-- What the collapsed row hides: how many rows, and the most urgent of them (DESIGN.md §4, "Sidebar") -->
+                                    <Border x:Name="FoldBadge" DockPanel.Dock="Right" Classes="foldbadge" Margin="5,0,0,0" VerticalAlignment="Center" IsVisible="{Binding AreRowsCollapsed}"
+                                            ToolTip.Tip="{Binding CollapsedTip}" AutomationProperties.Name="{Binding CollapsedTip}">
+                                      <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+                                        <TextBlock Classes="count" Text="{Binding CollapsedRowCount}" />
+                                        <TextBlock Classes="status" Classes.busy="{Binding CollapsedIsBusy}" Classes.alert="{Binding CollapsedIsAlert}"
+                                                   Classes.failed="{Binding CollapsedIsError}" Classes.unread="{Binding CollapsedIsUnread}"
+                                                   Text="{Binding CollapsedGlyph}" IsVisible="{Binding CollapsedGlyph, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                      </StackPanel>
                                     </Border>
                                     <!-- The tab's account, while it isn't its group's (DESIGN.md §4, "Accounts") -->
                                     <Border x:Name="TabAccountTag" DockPanel.Dock="Right" Classes="accounttag" Classes.default="{Binding RowAccountTag.IsDefault, FallbackValue=False}"
@@ -554,6 +601,8 @@
                                   <Separator />
                                   <MenuItem Header="Move up" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).MoveTabUpCommand}" CommandParameter="{Binding}" />
                                   <MenuItem Header="Move down" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).MoveTabDownCommand}" CommandParameter="{Binding}" />
+                                  <!-- What's under the row (DESIGN.md §4, "Sidebar") -->
+                                  <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding ToggleRowsCollapsedCommand}" IsVisible="{Binding HasRowsUnder}" ToolTip.Tip="{Binding CollapseTip}" />
                                   <Separator />
                                   <MenuItem Header="Close" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseTabCommand}" CommandParameter="{Binding}" />
                                   <MenuItem Header="Close other tabs" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseOtherTabsCommand}" CommandParameter="{Binding}" />
@@ -563,7 +612,7 @@
                             <!-- The tab's subagents, when their work shows under the tab (DESIGN.md §5, "Subagents"): each
                                  under the one that started it, with the agent icon and its type, dimmed once it's finished
                                  and from an earlier turn. A click shows its work in the tab. They stay until dismissed. -->
-                            <ItemsControl Classes="subagents" ItemsSource="{Binding SubagentRows}" IsVisible="{Binding HasSubagentRows}">
+                            <ItemsControl Classes="subagents" ItemsSource="{Binding SubagentRows}" IsVisible="{Binding ShowsSubagentRows}">
                               <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                   <StackPanel Spacing="1" />
@@ -614,7 +663,7 @@
                             <!-- The tab's project runs, newest last, each with its log, which a click shows in the main area
                                  (DESIGN.md §4, §18). They stay until closed: × on a finished one, and Stop in its place while
                                  one runs. Like a tab's row, one can be dragged onto a pane. -->
-                            <ItemsControl Classes="runs" ItemsSource="{Binding ProjectTools.Runs.Items}" IsVisible="{Binding ProjectTools.Runs.HasRuns}">
+                            <ItemsControl Classes="runs" ItemsSource="{Binding ProjectTools.Runs.Items}" IsVisible="{Binding ShowsRuns}">
                               <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                   <StackPanel Spacing="1" />
@@ -708,12 +757,14 @@
                   <ItemsControl ItemsSource="{Binding Tabs}" IsVisible="{Binding IsExpanded}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
-                        <StackPanel Spacing="2" />
+                        <StackPanel />
                       </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate DataType="vm:TabViewModel">
-                        <Button Classes="tab" Classes.selected="{Binding IsSelected}" Classes.bypass="{Binding IsBypassMode}"
+                        <!-- The gap under it is its own, so a sub-thread out of the list while its thread is collapsed
+                             leaves none (DESIGN.md §4, "Sidebar") -->
+                        <Button Classes="tab" Classes.selected="{Binding IsSelected}" Classes.bypass="{Binding IsBypassMode}" IsVisible="{Binding !IsFoldedAway}" Margin="0,0,0,2"
                                 Width="38" Height="34" Padding="0" HorizontalAlignment="Center" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
                                 Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectCommand}" CommandParameter="{Binding}"
                                 ToolTip.ShowDelay="300" ToolTip.Placement="Right" AutomationProperties.Name="{Binding DisplayName}">
@@ -787,6 +838,8 @@
                               <!-- Started without the folder's own configuration (DESIGN.md §7, "Folder trust") -->
                               <MenuItem Header="Trust this folder" Command="{Binding TrustFolderCommand}" IsVisible="{Binding IsWithoutFolderSettings}"
                                         ToolTip.Tip="Start Claude Code again with this folder's own settings, MCP servers and CLAUDE.md" />
+                              <!-- The rail lists only sub-threads under a tab (DESIGN.md §4, "Sidebar") -->
+                              <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding ToggleRowsCollapsedCommand}" IsVisible="{Binding HasSubThreads}" ToolTip.Tip="{Binding CollapseTip}" />
                               <Separator />
                               <MenuItem Header="Close" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseTabCommand}" CommandParameter="{Binding}" />
                             </ContextMenu>

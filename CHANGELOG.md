@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Collapse a tab in the sidebar.** A tab with rows under it, a thread's sub-threads, subagents or a project action's runs, has a chevron beside its name that folds them away, as a project group's does; **Collapse tab** in its menu or the command palette does the same. The collapsed row says how many it hides and shows the most urgent of them, such as a sub-thread waiting on you or a failed build. It opens again when you go to one of them, when a sub-thread joins, or when one starts waiting on you, and it stays collapsed when Claudette restarts.
+
 ## [0.4.0] - 2026-10-18
 
 ### Added

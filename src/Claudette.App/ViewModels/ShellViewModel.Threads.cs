@@ -58,6 +58,8 @@ public sealed partial class ShellViewModel
         }
         tab.SetThreadHead(head);
         head.AttachSubThread(tab);
+        // The new sub-thread's row shows, under a collapsed thread too (DESIGN.md §4, "Sidebar").
+        head.ExpandRows();
         ThreadsChanged(tab);
     }
 

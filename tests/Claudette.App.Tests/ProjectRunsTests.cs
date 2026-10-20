@@ -454,6 +454,47 @@ public class ProjectRunsTests
     }
 
     [Fact]
+    public async Task Collapsing_the_tab_hides_its_runs_until_a_log_is_shown()
+    {
+        var (h, launcher, tab) = await OpenAsync();
+        await using var _h = h;
+        var build = await RunToEndAsync(tab, launcher, "build-editor", 6);
+        Assert.True(tab.ShowsRuns);
+        Assert.Equal("Collapse: hides 1 run", tab.CollapseTip);
+
+        tab.ToggleRowsCollapsedCommand.Execute(null);
+
+        // Out of the sidebar, with the failure on the tab's row (DESIGN.md §4, "Sidebar").
+        Assert.False(tab.ShowsRuns);
+        Assert.Equal("✕", tab.CollapsedGlyph);
+        Assert.True(tab.CollapsedIsError);
+        Assert.Equal($"Collapsed: 1 run\nBuild editor · {build.Detail}", tab.CollapsedTip);
+
+        // A run starting doesn't open it.
+        await tab.ProjectTools.RunActionCommand.ExecuteAsync(Action(tab, "generate-project-files"));
+        Assert.True(tab.AreRowsCollapsed);
+        Assert.Equal(2, tab.CollapsedRowCount);
+        launcher.Processes.Last().Exit(0);
+        await TabTestHarness.Eventually(() => !tab.ProjectTools.Runs.IsJobRunning, "the second run to end");
+
+        // A log shown, from Show output… or its notification, brings its entry out.
+        build.OpenCommand.Execute(null);
+
+        Assert.Same(build, h.Shell.Selected);
+        Assert.False(tab.AreRowsCollapsed);
+        Assert.True(tab.ShowsRuns);
+
+        // Once the last entry is closed, there's nothing to collapse: the next run shows.
+        tab.ToggleRowsCollapsedCommand.Execute(null);
+        foreach (var run in Runs(tab))
+        {
+            run.CloseCommand.Execute(null);
+        }
+        Assert.False(tab.HasRowsUnder);
+        Assert.False(tab.State.RowsCollapsed);
+    }
+
+    [Fact]
     public async Task Closing_the_tab_stops_a_running_job_and_drops_every_entry()
     {
         var (h, launcher, tab) = await OpenAsync();

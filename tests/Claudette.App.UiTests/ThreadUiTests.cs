@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
@@ -33,6 +34,44 @@ public class ThreadUiTests
         var icon = Assert.Single(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "ThreadIcon", IsEffectivelyVisible: true });
         Assert.Equal("A thread, with 1 sub-thread", ToolTip.GetTip(icon));
         Assert.Equal(plan, icon.DataContext);
+    }
+
+    [AvaloniaFact]
+    public async Task A_collapsed_thread_leaves_its_sub_threads_out_and_shows_its_badge()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        h.Factory.ProcessPerSession = true;
+        var plan = await ThreadScript.OpenAsync(h, "Plan");
+        await ThreadScript.OpenAsync(h, "Other");
+        var art = await ThreadScript.OpenAsync(h, "Art page");
+        var gallery = await ThreadScript.OpenAsync(h, "Gallery");
+        h.Shell.MakeThreadCommand.Execute(plan);
+        art.AssignToThreadCommand.Execute(plan);
+        gallery.AssignToThreadCommand.Execute(plan);
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        List<Button> Rows() => [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("tabrow") && b.IsEffectivelyVisible)];
+        double Top(Control c) => c.TranslatePoint(default, window)!.Value.Y;
+        var gap = Top(Rows()[1]) - (Top(Rows()[0]) + Rows()[0].Bounds.Height);
+
+        // The chevron is only on the row with something under it.
+        var fold = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => b is { Name: "RowFold", IsEffectivelyVisible: true });
+        Assert.Same(plan, fold.DataContext);
+        Assert.Equal("Collapse tab", AutomationProperties.GetName(fold));
+        Assert.Equal("Collapse: hides 2 sub-threads", ToolTip.GetTip(fold));
+        Assert.DoesNotContain(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "FoldBadge", IsEffectivelyVisible: true });
+
+        fold.Command!.Execute(null);
+        UiText.Settle(window);
+
+        var rows = Rows();
+        Assert.Equal(["Plan", "Other"], rows.Select(r => ((TabViewModel)r.DataContext!).DisplayName));
+        // The sub-threads folded away leave no gap behind.
+        Assert.Equal(gap, Top(rows[1]) - (Top(rows[0]) + rows[0].Bounds.Height), 3);
+        Assert.Equal("Expand tab", AutomationProperties.GetName(fold));
+        var badge = Assert.Single(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "FoldBadge", IsEffectivelyVisible: true });
+        Assert.Same(plan, badge.DataContext);
+        Assert.Equal("Collapsed: 2 sub-threads", ToolTip.GetTip(badge));
+        Assert.Contains(badge.GetVisualDescendants().OfType<TextBlock>(), t => t is { Text: "2", IsEffectivelyVisible: true });
     }
 
     [AvaloniaFact]

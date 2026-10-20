@@ -206,7 +206,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>Raised when a tab's status changes, for restarting into a new build once no tab is working.</summary>
     public event Action? TabStatusChanged;
 
-    /// <summary>Selects a tab by id, for a clicked notification. False when it has closed since.</summary>
+    /// <summary>
+    /// Selects a tab by id, for a clicked notification, opening its group and, for a sub-thread, its thread when they're
+    /// collapsed. False when it has closed since.
+    /// </summary>
     public bool SelectTab(string tabId)
     {
         if (AllTabs.FirstOrDefault(t => t.Id == tabId) is not { } tab)
@@ -217,6 +220,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         {
             ToggleGroupCollapsed(group);
         }
+        tab.ThreadHead?.ExpandRows();
         SelectedTab = tab;
         return true;
     }

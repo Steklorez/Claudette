@@ -204,6 +204,60 @@ public class SubagentTests
     }
 
     [Fact]
+    public async Task Collapsing_the_tab_hides_its_subagents_rows_until_one_waits_on_the_user()
+    {
+        await using var h = new TabTestHarness(InSidebar);
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Wire.Init());
+        h.Transport.Emit(Wire.Agent("a1", "Touch a marker file", "Create it"));
+        h.Transport.Emit(Wire.Agent("a2", "Explore the auth code", "Find it", "Explore"));
+        h.Transport.Emit(Wire.TaskStarted("task-a", "a1"));
+        await TabTestHarness.Eventually(() => tab.SubagentRows.Count == 2, "the rows");
+        Assert.True(tab.ShowsSubagentRows);
+
+        tab.ToggleRowsCollapsedCommand.Execute(null);
+
+        // Out of the sidebar, with how many and the most urgent of them on the tab's row (DESIGN.md §4, "Sidebar").
+        Assert.False(tab.ShowsSubagentRows);
+        Assert.Equal(2, tab.CollapsedRowCount);
+        Assert.Equal("Collapsed: 2 subagents", tab.CollapsedTip);
+        Assert.True(tab.CollapsedIsBusy);
+
+        h.Transport.Emit(Wire.Tool("a1", "b1", "Bash", new JsonObject { ["command"] = "touch marker" }));
+        h.Transport.Emit(Wire.CanUseTool("perm-1", "b1", "touch marker", agentId: "task-a"));
+        await TabTestHarness.Eventually(() => tab.Agents.Find("a1")?.IsWaiting == true, "the prompt");
+
+        Assert.False(tab.AreRowsCollapsed);
+        Assert.True(tab.ShowsSubagentRows);
+
+        // Collapsed again while it waits, it stays collapsed, and a subagent starting doesn't open it.
+        tab.ToggleRowsCollapsedCommand.Execute(null);
+        h.Transport.Emit(Wire.Agent("a3", "Write the fix", "Fix it"));
+        await TabTestHarness.Eventually(() => tab.SubagentRows.Count == 3, "the third row");
+        Assert.True(tab.AreRowsCollapsed);
+        Assert.Equal("!", tab.CollapsedGlyph);
+        Assert.Equal("Collapsed: 3 subagents\nTouch a marker file · Waiting on your permission", tab.CollapsedTip);
+    }
+
+    [Fact]
+    public async Task Showing_a_subagents_work_brings_its_row_out_from_under_the_collapsed_tab()
+    {
+        await using var h = new TabTestHarness(InSidebar);
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Wire.Init());
+        h.Transport.Emit(Wire.Agent("a1", "Explore the auth code", "Find it", "Explore"));
+        await TabTestHarness.Eventually(() => tab.SubagentRows.Count == 1, "the row");
+        tab.ToggleRowsCollapsedCommand.Execute(null);
+
+        // From the Agents page, or its card in the conversation.
+        tab.ShowAgentCommand.Execute(tab.Agents.Find("a1"));
+
+        Assert.True(tab.IsViewingAgent);
+        Assert.False(tab.AreRowsCollapsed);
+        Assert.True(tab.SubagentRows.Single().IsShowing);
+    }
+
+    [Fact]
     public async Task Message_it_through_Claude_names_it_in_the_composer()
     {
         await using var h = new TabTestHarness(InSidebar);

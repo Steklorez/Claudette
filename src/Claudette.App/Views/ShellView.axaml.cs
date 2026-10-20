@@ -170,8 +170,9 @@ public partial class ShellView : UserControl
         {
             case TabViewModel tab when shell.Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group:
                 {
+                    // Rows folded away under a collapsed thread aren't where anything can go (DESIGN.md §4, "Sidebar").
                     var buttons = GroupList.GetVisualDescendants().OfType<Button>()
-                        .Where(b => b.Classes.Contains("tab") && b.DataContext is TabViewModel t && group.Tabs.Contains(t));
+                        .Where(b => b.Classes.Contains("tab") && b.IsEffectivelyVisible && b.DataContext is TabViewModel t && group.Tabs.Contains(t));
                     if (TargetIndex(buttons, y, b => group.Tabs.IndexOf((TabViewModel)b.DataContext!), group.Tabs.IndexOf(tab)) is { } index)
                     {
                         shell.MoveTabTo(tab, index);

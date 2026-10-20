@@ -119,12 +119,7 @@ public sealed partial class TabGroupViewModel : ObservableObject
     public string CollapseMenuText => IsCollapsed ? "Expand group" : "Collapse group";
 
     /// <summary>The most urgent status among the group's tabs, shown when it's collapsed.</summary>
-    public string UrgentGlyph =>
-        Tabs.Any(t => t.Status == TabStatus.NeedsInput) ? "!"
-        : Tabs.Any(t => t.Status == TabStatus.Error) ? "✕"
-        : Tabs.Any(t => t.IsBusyStatus) ? "●"
-        : Tabs.Any(t => t.Status == TabStatus.Unread) ? "•"
-        : "";
+    public string UrgentGlyph => RowUrgencies.Glyph(Tabs.Select(t => RowUrgencies.Of(t.Status)).DefaultIfEmpty().Max());
 
     public string Summary => $"{Tabs.Count} tab{(Tabs.Count == 1 ? "" : "s")} in {Folder}";
 
