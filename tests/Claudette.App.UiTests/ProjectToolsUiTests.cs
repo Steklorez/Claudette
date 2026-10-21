@@ -151,10 +151,10 @@ public class ProjectToolsUiTests
             process.WriteOutput($"line {i}");
             if (i % 400 == 0)
             {
-                await UiText.SettleUntilAsync(window, () => run.Output[^1] == $"line {i}", "the batch");
+                await UiText.SettleUntilAsync(window, () => run.Lines()[^1] == $"line {i}", "the batch");
             }
         }
-        await UiText.SettleUntilAsync(window, () => run.Output[^1] == "line 6200", "the output");
+        await UiText.SettleUntilAsync(window, () => run.Lines()[^1] == "line 6200", "the output");
         UiText.Settle(window);
 
         // The editor keeps step with the run's lines, the oldest dropped from both.
@@ -165,6 +165,110 @@ public class ProjectToolsUiTests
         Assert.True(view.VisualLinesValid);
         Assert.Equal(log.Document.LineCount, view.VisualLines[^1].FirstDocumentLine.LineNumber);
         Assert.DoesNotContain(view.VisualLines, l => l.FirstDocumentLine.LineNumber == 1);
+        var stayCurrent = Shown<ProjectRunView>(window).FindControl<Avalonia.Controls.Primitives.ToggleButton>("StayCurrentToggle")!;
+        Assert.True(stayCurrent.IsChecked);
+
+        // Scrolled up, it stays where it was as lines come, and Stay current is off.
+        var scroller = log.GetVisualDescendants().OfType<ScrollViewer>().First();
+        scroller.Offset = new Vector(0, 0);
+        UiText.Settle(window);
+        Assert.False(run.StayCurrent);
+        Assert.False(stayCurrent.IsChecked);
+        process.WriteOutput("line 6201");
+        await UiText.SettleUntilAsync(window, () => run.Lines()[^1] == "line 6201", "the line");
+        UiText.Settle(window);
+        Assert.Equal(1, view.VisualLines[0].FirstDocumentLine.LineNumber);
+
+        // Turned on again, it goes to the newest line.
+        stayCurrent.IsChecked = true;
+        UiText.Settle(window);
+        Assert.True(run.StayCurrent);
+        Assert.Equal(log.Document.LineCount, view.VisualLines[^1].FirstDocumentLine.LineNumber);
+
+        // Scrolling back to the end turns it on too.
+        scroller.Offset = new Vector(0, 0);
+        UiText.Settle(window);
+        Assert.False(run.StayCurrent);
+        scroller.Offset = new Vector(0, scroller.Extent.Height);
+        UiText.Settle(window);
+        Assert.True(run.StayCurrent);
+        process.Exit(0);
+    }
+
+    [AvaloniaFact]
+    public async Task An_unreal_log_shows_its_lines_in_columns_and_its_filter_hides_lines()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: new FakeLauncher());
+        var uproject = UnrealFixture.Write(h.Root, h.WorkFolder);
+        var processes = new FakeSystemProcesses();
+        h.Services.ProjectTools.Processes = processes;
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Project is not null, "the project");
+        var logs = Path.Combine(h.WorkFolder, "Saved", "Logs");
+        Directory.CreateDirectory(logs);
+        File.WriteAllLines(Path.Combine(logs, "NightOwl.log"),
+        [
+            "Log file open, 09/28/26 12:00:01",
+            "LogInit: Display: Starting",
+            "[2026.09.28-12.00.02:000][  0]LogBlueprint: Error: Missing node",
+            "  on the graph's second line",
+            "[2026.09.28-12.00.02:100][  1]LogTemp: Loaded the map",
+            "[2026.09.28-12.00.02:200][  2]LogNet: Verbose: Tick",
+        ]);
+        processes.Start(new Core.ProjectTools.SystemProcess(4412, "UnrealEditor", $"UnrealEditor.exe \"{uproject}\"", h.Time.GetUtcNow()));
+        h.Time.Advance(TimeSpan.FromSeconds(EditorLogService.ReadsPerCheck));
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Logs.Count == 1 && tab.ProjectTools.Logs[0].Output.Count == 6, "the log");
+        var editorLog = tab.ProjectTools.Logs[0];
+        editorLog.OpenCommand.Execute(null);
+        UiText.Settle(window);
+        var view = Shown<EditorLogView>(window);
+        var editor = view.FindControl<TextEditor>("Log")!;
+        var textView = editor.TextArea.TextView;
+        await UiText.SettleUntilAsync(window, () => textView.VisualLinesValid && textView.VisualLines.Count == 6, "the lines");
+
+        // The filter: a chip for each level with its count, the categories, and the text filter.
+        var filter = view.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("logfilter"));
+        var described = UiText.Describe(filter);
+
+        // The time, category and verbosity in columns, the file's text underneath: each message starts in the same place.
+        AvaloniaEdit.Rendering.VisualLine Line(int number) => textView.VisualLines.Single(l => l.FirstDocumentLine.LineNumber == number);
+        double MessageX(int number, string message)
+        {
+            var text = editor.Document.GetText(editor.Document.GetLineByNumber(number));
+            return textView.GetVisualPosition(new TextViewPosition(number, text.IndexOf(message, StringComparison.Ordinal) + 1), AvaloniaEdit.Rendering.VisualYPosition.LineTop).X;
+        }
+        Assert.Equal(30, Line(3).Elements[0].DocumentLength);
+        Assert.Equal(0, Line(2).Elements[0].DocumentLength);
+        Assert.Equal(MessageX(3, "Missing node"), MessageX(2, "Starting"));
+        Assert.Equal(MessageX(3, "Missing node"), MessageX(5, "Loaded the map"));
+        // A line carrying the entry on starts there too, its own indent kept.
+        Assert.Equal(MessageX(3, "Missing node") + 2 * textView.WideSpaceWidth, MessageX(4, "on the graph's"), 3);
+        Assert.All(textView.VisualLines, l => Assert.Single(l.TextLines));
+        Assert.Equal("[2026.09.28-12.00.02:000][  0]LogBlueprint: Error: Missing node", editor.Document.GetText(editor.Document.GetLineByNumber(3)));
+        Assert.True(Application.Current!.TryGetResource("AccentStatusBrush", window.ActualThemeVariant, out var accent));
+        Assert.Equal(((ISolidColorBrush)accent!).Color, ((ISolidColorBrush)Line(3).Elements[1].TextRunProperties.ForegroundBrush!).Color);
+
+        // A level's chip hides its lines, and a line carrying an entry on goes with it.
+        var chips = filter.GetVisualDescendants().OfType<Avalonia.Controls.Primitives.ToggleButton>().Where(b => b.Classes.Contains("logchip")).ToArray();
+        chips.Single(c => c.DataContext is ViewModels.LogLevelChip { Name: "Errors" }).IsChecked = false;
+        UiText.Settle(window);
+        Assert.DoesNotContain("Missing node", editor.Document.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("second line", editor.Document.Text, StringComparison.Ordinal);
+        Assert.Equal("Showing 4 of 6 lines", view.FindControl<TextBlock>("ShownNote")!.Text);
+
+        // The text filter, as it's typed.
+        view.FindControl<TextBox>("TextFilterBox")!.Text = "tick";
+        UiText.Settle(window);
+        Assert.Equal("[2026.09.28-12.00.02:200][  2]LogNet: Verbose: Tick", editor.Document.Text);
+
+        // Wrap lines off: it scrolls sideways.
+        view.FindControl<Avalonia.Controls.Primitives.ToggleButton>("WrapToggle")!.IsChecked = false;
+        UiText.Settle(window);
+        Assert.False(editor.WordWrap);
+        Assert.Equal(Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, editor.HorizontalScrollBarVisibility);
+
+        await Verify(described);
     }
 
     [AvaloniaFact]
@@ -254,7 +358,8 @@ public class ProjectToolsUiTests
         Assert.DoesNotContain(window.GetVisualDescendants().OfType<ComposerView>(), c => c.IsEffectivelyVisible);
         var textView = view.FindControl<TextEditor>("Log")!.TextArea.TextView;
         await UiText.SettleUntilAsync(window, () => textView.VisualLinesValid && textView.VisualLines.Count == 4, "the lines");
-        IBrush? Color(int line) => textView.VisualLines.Single(l => l.FirstDocumentLine.LineNumber == line).Elements[0].TextRunProperties.ForegroundBrush;
+        // The message's, after Unreal's columns.
+        IBrush? Color(int line) => textView.VisualLines.Single(l => l.FirstDocumentLine.LineNumber == line).Elements[^1].TextRunProperties.ForegroundBrush;
         Assert.True(Application.Current.TryGetResource("ErrorTextBrush", window.ActualThemeVariant, out var error));
         Assert.True(Application.Current.TryGetResource("WarningTextBrush", window.ActualThemeVariant, out var warning));
         Assert.Equal(((ISolidColorBrush)error!).Color, ((ISolidColorBrush)Color(3)!).Color);

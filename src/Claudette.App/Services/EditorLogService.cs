@@ -12,11 +12,18 @@ public sealed record EditorLogTab(string TabId, string ProjectPath, Func<int, bo
 /// <param name="StartedBy">With <paramref name="NewWriters"/>, the tab one of them is a process of; null when none is.</param>
 public sealed record EditorLogCheck(LiveLog Log, bool NewWriters, string? StartedBy);
 
-/// <summary>What a read of a log found: its new lines, and how many of them, and of the lines passed over, are errors and warnings.</summary>
+/// <summary>What a read of a log found: its new lines, and what's counted of them and of the lines passed over.</summary>
 /// <param name="Fresh">The lines start the log afresh, in place of what was read before.</param>
-/// <param name="Crashed">One of them says its process crashed.</param>
+/// <param name="Counts">Its entries at each level and in each category, and whether one says its process crashed.</param>
 /// <param name="Skipped">The read passed over the start of a big file, which is in the file still.</param>
-public sealed record EditorLogRead(IReadOnlyList<string> Lines, bool Fresh, int Errors, int Warnings, bool Crashed, bool Skipped);
+public sealed record EditorLogRead(IReadOnlyList<LogLine> Lines, bool Fresh, LogCounts Counts, bool Skipped)
+{
+    public int Errors => Counts.Errors;
+
+    public int Warnings => Counts.Warnings;
+
+    public bool Crashed => Counts.Crashed;
+}
 
 /// <summary>
 /// Follows the logs of the tabs' projects' engines (DESIGN.md §18, "Editor logs"). Every second, off the UI thread, it
@@ -153,7 +160,7 @@ public sealed class EditorLogService : IDisposable
             if (followed is null || isNew)
             {
                 // A log starting, or starting again: read from its start, as a new file.
-                followed = new Followed(log.Path, log.Project.Source);
+                followed = new Followed(log.Path, log.Project.Source.NewParser(_services.Time.LocalTimeZone));
                 _logs[log.Path] = followed;
             }
             followed.IsLive = true;
@@ -230,22 +237,22 @@ public sealed class EditorLogService : IDisposable
         }
     }
 
-    /// <summary>One log being read, with what's counted of the lines its first read passed over.</summary>
+    /// <summary>One log being read, a line at a time as its entries, counting those its first read passes over.</summary>
     private sealed class Followed
     {
         private readonly LogTail _tail;
-        private readonly EditorLogSource _source;
-        private int _skippedErrors;
-        private int _skippedWarnings;
-        private bool _skippedCrash;
+        private readonly EditorLogParser _parser;
+        private bool _resetThisRead;
 
-        public Followed(string path, EditorLogSource source)
+        public Followed(string path, EditorLogParser parser)
         {
             Path = path;
-            _source = source;
+            _parser = parser;
             _tail = new LogTail(path, beforeWindow: line =>
             {
-                Count(line, ref _skippedErrors, ref _skippedWarnings, ref _skippedCrash);
+                // Only a fresh read passes lines over: the log starts afresh from its first.
+                StartAfresh();
+                _parser.Add(line, kept: false);
             });
         }
 
@@ -258,38 +265,33 @@ public sealed class EditorLogService : IDisposable
 
         public HashSet<(int Pid, DateTimeOffset? StartedAt)> Writers { get; set; } = [];
 
-        /// <summary>What's new, counted; null when there's nothing to say.</summary>
+        /// <summary>What's new, read as entries and counted; null when there's nothing to say.</summary>
         public EditorLogRead? Read(bool final)
         {
-            _skippedErrors = 0;
-            _skippedWarnings = 0;
-            _skippedCrash = false;
+            _resetThisRead = false;
             var read = _tail.Read(final);
             if (read.Lines.Count == 0 && !read.Fresh)
             {
                 return null;
             }
-            int errors = _skippedErrors, warnings = _skippedWarnings;
-            var crashed = _skippedCrash;
+            if (read.Fresh)
+            {
+                StartAfresh();
+            }
             foreach (var line in read.Lines)
             {
-                Count(line, ref errors, ref warnings, ref crashed);
+                _parser.Add(line);
             }
-            return new EditorLogRead(read.Lines, read.Fresh, errors, warnings, crashed, read.Skipped > 0);
+            return new EditorLogRead(_parser.TakeLines(), read.Fresh, _parser.TakeCounts(), read.Skipped > 0);
         }
 
-        private void Count(string line, ref int errors, ref int warnings, ref bool crashed)
+        private void StartAfresh()
         {
-            switch (_source.Classify(line))
+            if (!_resetThisRead)
             {
-                case LogLineLevel.Error:
-                    errors++;
-                    break;
-                case LogLineLevel.Warning:
-                    warnings++;
-                    break;
+                _resetThisRead = true;
+                _parser.Reset();
             }
-            crashed |= _source.IsCrash(line);
         }
     }
 }

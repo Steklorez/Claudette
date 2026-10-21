@@ -2,6 +2,7 @@
      they apply inside each tab, and the "compact" and "claude" classes on the shell change them. -->
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ae="using:AvaloniaEdit"
         xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
         xmlns:controls="using:Claudette.App.Controls">
   <!-- "Jump to latest" (DESIGN.md §5): an accent pill lifted off the conversation. A plain button's fill is see-through
@@ -352,6 +353,65 @@
   <Style Selector="TextBlock.runheaderglyph">
     <Setter Property="FontSize" Value="14" />
     <Setter Property="Margin" Value="0,1,0,0" />
+  </Style>
+  <!-- A log's switches, Stay current and Wrap lines, and an editor log's level chips: outlined, and picked out as a
+       selected row while they're on, rather than in the accent's fill. -->
+  <Style Selector="ToggleButton.logtoggle, :is(Button).logchip">
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="ToggleButton.logtoggle /template/ ContentPresenter#PART_ContentPresenter, :is(Button).logchip /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.logtoggle:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.logchip:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+    <!-- The view's own text color, not the accent's white -->
+    <Setter Property="Foreground" Value="{Binding $parent[UserControl].Foreground}" />
+  </Style>
+  <Style Selector="ToggleButton.logtoggle:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.logchip:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- A level hidden: its chip is muted, with nothing behind it -->
+  <Style Selector=":is(Button).logchip">
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector=".claude :is(Button).logchip, .claude ToggleButton.logtoggle">
+    <Setter Property="CornerRadius" Value="12" />
+  </Style>
+  <Style Selector=":is(Button).logchip TextBlock.count">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.logchip.error:checked TextBlock.count.some">
+    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.logchip.warning:checked TextBlock.count.some">
+    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <!-- An editor log's filter, under its header -->
+  <Style Selector="Border.logfilter">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,6,12,6" />
+  </Style>
+  <Style Selector=".compact Border.logfilter">
+    <Setter Property="Padding" Value="16,4,12,4" />
+  </Style>
+  <Style Selector="Border.logfilter TextBox.logsearch">
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="Width" Value="200" />
+  </Style>
+  <!-- A log wrapping at the width shown, or not, scrolling sideways -->
+  <Style Selector="ae|TextEditor.runlog">
+    <Setter Property="WordWrap" Value="True" />
+    <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+  </Style>
+  <Style Selector="ae|TextEditor.runlog.nowrap">
+    <Setter Property="WordWrap" Value="False" />
+    <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
   </Style>
   <!-- A turn's two footer cards, Modified files over Turn statistics, as far apart as any two items. -->
   <Style Selector="StackPanel.turnfooter">

@@ -6,9 +6,10 @@
              x:Class="Claudette.App.Views.EditorLogView"
              x:DataType="vm:EditorLogViewModel">
   <!-- An editor's log in the main area (DESIGN.md §18, "Editor logs"): a tab of the panes without a composer, as a run's
-       log is. What writes it and how it's going, the counts and the file, Open file, Copy and Close, then the log, which
-       follows its newest line until it's scrolled up, with its errors and warnings colored and its paths as links. The
-       header's look is in Themes/ConversationStyles.axaml. -->
+       log is. What writes it and how it's going, the counts and the file, Stay current, Wrap lines, Open file, Copy and
+       Close; its filter, a chip for each level, Unreal's categories and a text filter; then the log, which follows its
+       newest line while it stays current, with its errors and warnings colored, Unreal's lines in columns and its paths
+       as links. The header's and the filter's look is in Themes/ConversationStyles.axaml. -->
   <UserControl.Styles>
     <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
     <!-- The log's text clear of the edges, and selected as the editor's is -->
@@ -28,7 +29,7 @@
     </Style>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto,Auto,*">
+  <Grid RowDefinitions="Auto,Auto,Auto,*">
     <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes") -->
     <Border x:Name="PaneHeader" Classes="paneheader" Classes.focused="{Binding IsSelected}" IsVisible="{Binding IsInSplit}">
       <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
@@ -57,6 +58,10 @@
           <TextBlock Classes="muted small" Text="{Binding OutputNote}" IsVisible="{Binding OutputNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+          <ToggleButton x:Name="StayCurrentToggle" Classes="logtoggle" Content="Stay current" IsChecked="{Binding StayCurrent}"
+                        ToolTip.Tip="{x:Static vm:LogTabViewModel.StayCurrentTip}" />
+          <ToggleButton x:Name="WrapToggle" Classes="logtoggle" Content="Wrap lines" IsChecked="{Binding WordWrap}"
+                        ToolTip.Tip="{x:Static vm:LogTabViewModel.WordWrapTip}" />
           <Button Content="Open file" Command="{Binding OpenFileCommand}" ToolTip.Tip="Opens the log's file, as Settings → Editor says" />
           <Button Content="Copy" Command="{Binding CopyOutputCommand}" ToolTip.Tip="Copy the lines shown" />
           <Button Content="Close" Command="{Binding CloseCommand}" ToolTip.Tip="{x:Static vm:EditorLogViewModel.CloseTip}" />
@@ -64,11 +69,81 @@
       </Grid>
     </Border>
 
-    <!-- The log: read-only, wrapping at the width shown, selectable, Ctrl/Cmd+F to find in it -->
-    <ae:TextEditor x:Name="Log" Grid.Row="2" Classes="runlog" IsReadOnly="True" WordWrap="True"
+    <!-- Its filter: a chip for each level with its entries, Unreal's categories, and a text filter -->
+    <Border Grid.Row="2" Classes="logfilter">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <WrapPanel ItemSpacing="4" LineSpacing="4" VerticalAlignment="Center">
+          <ItemsControl x:Name="LevelChips" ItemsSource="{Binding Levels}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="4" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:LogLevelChip">
+                <ToggleButton Classes="logchip" Classes.error="{Binding IsError}" Classes.warning="{Binding IsWarning}" IsChecked="{Binding IsShown}"
+                              ToolTip.Tip="{Binding Tip}" AutomationProperties.Name="{Binding AccessibleName}">
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Classes="count small" Classes.some="{Binding HasAny}" Text="{Binding CountText}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </ToggleButton>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button x:Name="CategoriesButton" Classes="logchip" IsVisible="{Binding HasCategories}" AutomationProperties.Name="{Binding CategoriesLabel}"
+                  ToolTip.Tip="Show or hide Unreal's log categories">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="{Binding CategoriesLabel}" />
+              <Path Data="{StaticResource IconChevronDown}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="9" Height="9"
+                    Stretch="Uniform" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button.Flyout>
+              <Flyout Placement="BottomEdgeAlignedLeft">
+                <StackPanel Spacing="6" Width="300">
+                  <TextBox Text="{Binding CategorySearch}" PlaceholderText="Find a category" AutomationProperties.Name="Find a category" />
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Classes="flat" Content="Show all" Command="{Binding ShowAllCategoriesCommand}" ToolTip.Tip="Show the categories listed" />
+                    <Button Classes="flat" Content="Hide all" Command="{Binding HideAllCategoriesCommand}" ToolTip.Tip="Hide the categories listed, then tick those to show" />
+                  </StackPanel>
+                  <ScrollViewer MaxHeight="360">
+                    <ItemsControl ItemsSource="{Binding FoundCategories}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:LogCategoryChoice">
+                          <CheckBox IsChecked="{Binding IsShown}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                              <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                              <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding CountText}" VerticalAlignment="Center" />
+                            </Grid>
+                          </CheckBox>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </ScrollViewer>
+                  <TextBlock Classes="muted small" Text="No category has that in its name." IsVisible="{Binding NoCategoryFound}" />
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+          <TextBlock x:Name="ShownNote" Classes="muted small" Text="{Binding ShownNote}" VerticalAlignment="Center" Margin="4,0,0,0"
+                     IsVisible="{Binding ShownNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </WrapPanel>
+        <TextBox x:Name="TextFilterBox" Grid.Column="1" Classes="logsearch" Text="{Binding TextFilter}" PlaceholderText="Filter lines" VerticalAlignment="Center"
+                 AutomationProperties.Name="Filter lines" ToolTip.Tip="Show only the lines with this in them">
+          <TextBox.InnerRightContent>
+            <Button Classes="flat" Padding="6,2" Command="{Binding ClearTextFilterCommand}" ToolTip.Tip="Clear the filter" AutomationProperties.Name="Clear the filter"
+                    IsVisible="{Binding TextFilter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="7" Height="7" Stretch="Uniform" />
+            </Button>
+          </TextBox.InnerRightContent>
+        </TextBox>
+      </Grid>
+    </Border>
+
+    <!-- The log: read-only, wrapping at the width shown or not, selectable, Ctrl/Cmd+F to find in it -->
+    <ae:TextEditor x:Name="Log" Grid.Row="3" Classes="runlog" Classes.nowrap="{Binding !WordWrap}" IsReadOnly="True"
                    FontFamily="{DynamicResource MonoFont}" FontSize="{DynamicResource CodeFontSize}"
-                   ShowLineNumbers="False" Background="Transparent"
-                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                   ShowLineNumbers="False" Background="Transparent" VerticalScrollBarVisibility="Auto"
                    AutomationProperties.Name="Log" />
   </Grid>
 </UserControl>

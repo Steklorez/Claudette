@@ -6,8 +6,8 @@
              x:Class="Claudette.App.Views.ProjectRunView"
              x:DataType="vm:ProjectRunViewModel">
   <!-- A project run's log in the main area (DESIGN.md §18, "Project tools", "A run's log"): a tab of the panes without a
-       composer. Its status, Stop, Copy and Close, then the log, which follows its newest line until it's scrolled up, with
-       its web addresses and the paths it names as links. The header's look is in Themes/ConversationStyles.axaml. -->
+       composer. Its status, Stay current, Wrap lines, Stop, Copy and Close, then the log, which follows its newest line
+       while it stays current, with its web addresses and the paths it names as links. The header's look is in Themes/ConversationStyles.axaml. -->
   <UserControl.Styles>
     <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
     <!-- The log's text clear of the edges, and selected as the editor's is -->
@@ -47,6 +47,10 @@
           <TextBlock Classes="muted small" Text="{Binding OutputNote}" IsVisible="{Binding OutputNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextWrapping="Wrap" />
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+          <ToggleButton x:Name="StayCurrentToggle" Classes="logtoggle" Content="Stay current" IsChecked="{Binding StayCurrent}"
+                        ToolTip.Tip="{x:Static vm:LogTabViewModel.StayCurrentTip}" />
+          <ToggleButton x:Name="WrapToggle" Classes="logtoggle" Content="Wrap lines" IsChecked="{Binding WordWrap}"
+                        ToolTip.Tip="{x:Static vm:LogTabViewModel.WordWrapTip}" />
           <Button Content="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsRunning}" ToolTip.Tip="Ends the job and every process it started" />
           <Button Content="Copy" Command="{Binding CopyOutputCommand}" ToolTip.Tip="Copy the whole log" />
           <Button Content="Close" Command="{Binding CloseCommand}" IsVisible="{Binding !IsRunning}" ToolTip.Tip="Close: its entry and its log go" />
@@ -54,11 +58,10 @@
       </Grid>
     </Border>
 
-    <!-- The log: read-only, wrapping at the width shown, selectable, Ctrl/Cmd+F to find in it -->
-    <ae:TextEditor x:Name="Log" Grid.Row="2" Classes="runlog" IsReadOnly="True" WordWrap="True"
+    <!-- The log: read-only, wrapping at the width shown or not, selectable, Ctrl/Cmd+F to find in it -->
+    <ae:TextEditor x:Name="Log" Grid.Row="2" Classes="runlog" Classes.nowrap="{Binding !WordWrap}" IsReadOnly="True"
                    FontFamily="{DynamicResource MonoFont}" FontSize="{DynamicResource CodeFontSize}"
-                   ShowLineNumbers="False" Background="Transparent"
-                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                   ShowLineNumbers="False" Background="Transparent" VerticalScrollBarVisibility="Auto"
                    AutomationProperties.Name="Log" />
   </Grid>
 </UserControl>

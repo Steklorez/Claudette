@@ -106,6 +106,12 @@ public sealed class AppState
     public bool DetailedUsageHeader { get; set; }
 
     /// <summary>
+    /// Logs in the main area wrap their long lines (DESIGN.md §18, "Project tools", "A run's log"): each new one starts
+    /// with <b>Wrap lines</b> as the last one was left.
+    /// </summary>
+    public bool LogWordWrap { get; set; } = true;
+
+    /// <summary>
     /// This machine's id in the session library's shared usage (DESIGN.md §6, "Sharing across machines"): made up once, so
     /// its file keeps its name when the machine's is changed, and two machines with the same name don't share a file.
     /// </summary>

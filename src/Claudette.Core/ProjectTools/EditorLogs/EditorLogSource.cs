@@ -37,6 +37,19 @@ public sealed class EditorLogSource
     /// <summary>Whether a line says the process crashed, such as Unreal's <c>=== Critical error: ===</c>.</summary>
     public required Func<string, bool> IsCrash { get; init; }
 
+    /// <summary>A reader for one of its logs, as its entries, reading their times in the machine's time zone.</summary>
+    public required Func<TimeZoneInfo, EditorLogParser> NewParser { get; init; }
+
+    /// <summary>The levels its lines have, in the order its log's filter shows them.</summary>
+    public IReadOnlyList<EditorLogLevel> Levels { get; init; } = MessageLevels;
+
+    /// <summary>Its lines have Unreal's log categories, which the log can be filtered by.</summary>
+    public bool HasCategories { get; init; }
+
+    /// <summary>Errors, warnings and the rest, as Unity's and Godot's lines are.</summary>
+    public static IReadOnlyList<EditorLogLevel> MessageLevels { get; } =
+        [new(LogVerbosity.Error, "Errors"), new(LogVerbosity.Warning, "Warnings"), new(LogVerbosity.Log, "Messages")];
+
     /// <summary>
     /// When a log was opened, from its first line, read in the machine's time zone; null when it doesn't say. Only needed
     /// when a process's <see cref="EditorLogWriter.LogFiles"/> are several to choose from.

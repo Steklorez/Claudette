@@ -71,7 +71,7 @@ public class EditorLogsTests
         Assert.Equal(f.MainLog, log.LogPath);
         Assert.True(log.IsRunning);
         Assert.Equal("Unreal editor", log.Role);
-        Assert.Contains("LogTemp: Warning: Slow", log.Output);
+        Assert.Contains("LogTemp: Warning: Slow", log.Lines());
         Assert.Equal(1, log.Errors);
         Assert.Equal(1, log.Warnings);
         Assert.Equal("Unreal editor · 1 error · 1 warning", log.Detail);
@@ -87,8 +87,8 @@ public class EditorLogsTests
         // New lines come as they're written, each read once.
         Fixture.AppendLog(f.MainLog, "LogTemp: Display: Loaded");
         h.Time.Advance(TimeSpan.FromSeconds(1));
-        Assert.Equal("LogTemp: Display: Loaded", log.Output[^1]);
-        Assert.Single(log.Output, l => l == "LogTemp: Display: Loaded");
+        Assert.Equal("LogTemp: Display: Loaded", log.Lines()[^1]);
+        Assert.Single(log.Lines(), l => l == "LogTemp: Display: Loaded");
 
         // Shown, in the main area: its errors are seen.
         Assert.Equal(1, log.UnseenErrors);
@@ -104,7 +104,7 @@ public class EditorLogsTests
         f.Look();
         Assert.False(log.IsRunning);
         Assert.Same(log, Assert.Single(Logs(tab)));
-        Assert.Equal("Log file closed, 09/28/26 12:00:09", log.Output[^1]);
+        Assert.Equal("Log file closed, 09/28/26 12:00:09", log.Lines()[^1]);
         Assert.Equal($"Closed · {MessageTimes.Short(h.Time.GetUtcNow(), h.Time)} · 1 error · 1 warning", log.Detail);
         Assert.Equal($"Unreal editor closed at {MessageTimes.Short(h.Time.GetUtcNow(), h.Time)}.", log.Status);
         Assert.NotNull(log.Timing);
@@ -132,8 +132,8 @@ public class EditorLogsTests
 
         Assert.Same(log, Assert.Single(Logs(tab)));
         Assert.True(log.IsRunning);
-        Assert.Contains("LogInit: Display: Second session", log.Output);
-        Assert.DoesNotContain("LogTemp: Error: First session", log.Output);
+        Assert.Contains("LogInit: Display: Second session", log.Lines());
+        Assert.DoesNotContain("LogTemp: Error: First session", log.Lines());
         Assert.Equal(0, log.Errors);
         Assert.Contains("(PID 5120)", log.Status, StringComparison.Ordinal);
     }
@@ -167,7 +167,7 @@ public class EditorLogsTests
         f.WriteLog(f.MainLog, "LogInit: Display: Again");
         f.Look();
         var again = Assert.Single(Logs(tab));
-        Assert.Contains("LogInit: Display: Again", again.Output);
+        Assert.Contains("LogInit: Display: Again", again.Lines());
 
         // Closed once the editor has ended, it's gone; the next start is a log of its own.
         f.Processes.End(5120);
@@ -257,7 +257,7 @@ public class EditorLogsTests
 
         // It keeps its lines under the other tab of the project.
         Assert.Same(log, Assert.Single(Logs(first)));
-        Assert.Contains("LogInit: Display: Starting", log.Output);
+        Assert.Contains("LogInit: Display: Starting", log.Lines());
         Assert.Contains(log, h.Shell.OpenTabs);
 
         await h.Shell.CloseTabCommand.ExecuteAsync(first);
@@ -347,6 +347,189 @@ public class EditorLogsTests
         f.H.Services.SaveSettings();
         f.Look();
         Assert.Single(Logs(tab));
+    }
+
+    // ---- Filtering it (DESIGN.md §18, "Editor logs", "Filtering it") ----------------------------------------------------
+
+    private static readonly string[] UnrealLines =
+    [
+        "[2026.09.28-12.00.02:000][  0]LogInit: Display: Starting",
+        "[2026.09.28-12.00.02:001][  0]LogBlueprint: Error: Missing node",
+        "[2026.09.28-12.00.02:002][  0]LogNet: Verbose: Tick",
+        "[2026.09.28-12.00.02:003][  0]LogNet: Warning: Lag",
+        "[2026.09.28-12.00.02:004][  1]LogTemp: Loaded the map",
+    ];
+
+    [Fact]
+    public async Task The_log_has_a_chip_for_each_level_and_its_categories_with_their_counts()
+    {
+        var (f, tab) = await OpenAsync();
+        await using var _f = f;
+        f.WriteLog(f.MainLog, UnrealLines);
+        f.StartEditor(4412);
+        f.Look();
+        var log = Assert.Single(Logs(tab));
+
+        Assert.Equal(["Errors", "Warnings", "Display", "Log", "Verbose"], log.Levels.Select(l => l.Name));
+        // "Log file open" is a Log line too.
+        Assert.Equal([1, 1, 1, 2, 1], log.Levels.Select(l => l.Count));
+        Assert.All(log.Levels, l => Assert.True(l.IsShown));
+        Assert.True(log.HasCategories);
+        Assert.Equal(["LogBlueprint", "LogInit", "LogNet", "LogTemp"], log.Categories.Select(c => c.Name));
+        Assert.Equal(2, log.Categories.Single(c => c.Name == "LogNet").Count);
+        Assert.Equal("Categories", log.CategoriesLabel);
+        Assert.Equal("LogBlueprint".Length, log.CategoryColumn);
+        Assert.True(log.HasTimeColumn);
+        Assert.Equal("12:00:02.001", log.Output[2].Columns!.Time);
+        Assert.False(log.IsFiltered);
+        Assert.Null(log.ShownNote);
+        Assert.True(log.StayCurrent);
+
+        // A category that comes later takes its place by name, and counts go on.
+        Fixture.AppendLog(f.MainLog, "[2026.09.28-12.00.03:000][  2]LogAudio: Warning: No device");
+        f.H.Time.Advance(TimeSpan.FromSeconds(1));
+        Assert.Equal(["LogAudio", "LogBlueprint", "LogInit", "LogNet", "LogTemp"], log.Categories.Select(c => c.Name));
+        Assert.Equal(2, log.Levels[1].Count);
+    }
+
+    [Fact]
+    public async Task Hiding_a_level_a_category_or_lines_without_some_text_hides_their_lines()
+    {
+        var (f, tab) = await OpenAsync();
+        await using var _f = f;
+        f.WriteLog(f.MainLog, UnrealLines);
+        f.StartEditor(4412);
+        f.Look();
+        var log = Assert.Single(Logs(tab));
+        var changes = 0;
+        log.FilterChanged += () => changes++;
+        IEnumerable<string> Shown() => log.Output.Where(log.Shows).Select(l => l.Text[(l.Columns?.MessageStart ?? 0)..]);
+
+        log.Levels.Single(l => l.Name == "Verbose").IsShown = false;
+        Assert.Equal(1, changes);
+        Assert.DoesNotContain("Tick", Shown());
+        Assert.True(log.IsFiltered);
+        Assert.Equal("Showing 5 of 6 lines", log.ShownNote);
+        Assert.Equal("Verbose hidden: click to show them", log.Levels[^1].Tip);
+
+        log.Categories.Single(c => c.Name == "LogNet").IsShown = false;
+        Assert.Equal(2, changes);
+        Assert.DoesNotContain("Lag", Shown());
+        Assert.Equal("Categories (3 of 4)", log.CategoriesLabel);
+
+        log.TextFilter = "MAP";
+        Assert.Equal(3, changes);
+        Assert.Equal(["Loaded the map"], Shown());
+        Assert.Equal("Showing 1 of 6 lines", log.ShownNote);
+
+        // Copy takes the lines shown, as the file has them.
+        await log.CopyOutputCommand.ExecuteAsync(null);
+        Assert.Equal("[2026.09.28-12.00.02:004][  1]LogTemp: Loaded the map", f.H.Platform.Clipboard);
+
+        log.ClearTextFilterCommand.Execute(null);
+        Assert.Equal("", log.TextFilter);
+        Assert.Equal(4, Shown().Count());
+
+        // The menu's search, and Show all and Hide all for what it finds.
+        log.CategorySearch = "log";
+        Assert.Equal(4, log.FoundCategories.Count);
+        log.CategorySearch = "BLUE";
+        Assert.Equal(["LogBlueprint"], log.FoundCategories.Select(c => c.Name));
+        log.HideAllCategoriesCommand.Execute(null);
+        Assert.Equal(5, changes);
+        Assert.Equal("Categories (2 of 4)", log.CategoriesLabel);
+        log.CategorySearch = "nothing like it";
+        Assert.True(log.NoCategoryFound);
+        log.CategorySearch = "";
+        log.ShowAllCategoriesCommand.Execute(null);
+        Assert.All(log.Categories, c => Assert.True(c.IsShown));
+        log.Levels[^1].IsShown = true;
+        Assert.False(log.IsFiltered);
+    }
+
+    [Fact]
+    public async Task The_levels_and_categories_hidden_are_the_projects_and_its_next_log_starts_with_them()
+    {
+        var (f, tab) = await OpenAsync();
+        await using var _f = f;
+        f.WriteLog(f.MainLog, UnrealLines);
+        f.StartEditor(4412);
+        f.Look();
+        var log = Assert.Single(Logs(tab));
+        var state = f.H.Services.State.ProjectTools;
+
+        log.Levels.Single(l => l.Name == "Display").IsShown = false;
+        log.Levels.Single(l => l.Name == "Verbose").IsShown = false;
+        log.Categories.Single(c => c.Name == "LogNet").IsShown = false;
+        log.TextFilter = "only this log's";
+        Assert.Equal("Display,Verbose", state.Get(log.ProjectPath, EditorLogViewModel.HiddenLevelsKey));
+        Assert.Equal("LogNet", state.Get(log.ProjectPath, EditorLogViewModel.HiddenCategoriesKey));
+
+        // A commandlet's log, beside the editor's: the project's levels and categories, but not the text.
+        f.H.Time.Advance(TimeSpan.FromMinutes(1));
+        f.StartEditor(4500, "UnrealEditor-Cmd", "-run=ResavePackages");
+        f.WriteLog(Path.Combine(f.Logs, "NightOwl_2.log"), "[2026.09.28-12.01.02:000][  0]LogNet: Display: Resaving", "[2026.09.28-12.01.02:001][  0]LogTemp: Warning: Slow");
+        f.Look();
+        var commandlet = Logs(tab)[1];
+        Assert.Equal([true, true, false, true, false], commandlet.Levels.Select(l => l.IsShown));
+        Assert.False(commandlet.Categories.Single(c => c.Name == "LogNet").IsShown);
+        Assert.Equal("", commandlet.TextFilter);
+        Assert.Equal(["[2026.09.28-12.01.02:001][  0]LogTemp: Warning: Slow"], commandlet.Output.Where(commandlet.Shows).Select(l => l.Text).Skip(1));
+
+        // Showing them all again forgets them.
+        foreach (var level in log.Levels)
+        {
+            level.IsShown = true;
+        }
+        log.ShowAllCategoriesCommand.Execute(null);
+        Assert.Null(state.Get(log.ProjectPath, EditorLogViewModel.HiddenLevelsKey));
+        Assert.Null(state.Get(log.ProjectPath, EditorLogViewModel.HiddenCategoriesKey));
+    }
+
+    [Fact]
+    public async Task A_new_log_in_its_place_counts_afresh_and_keeps_its_filter()
+    {
+        var (f, tab) = await OpenAsync();
+        await using var _f = f;
+        f.WriteLog(f.MainLog, UnrealLines);
+        f.StartEditor(4412);
+        f.Look();
+        var log = Assert.Single(Logs(tab));
+        log.Categories.Single(c => c.Name == "LogNet").IsShown = false;
+        f.Processes.End(4412);
+        f.Look();
+
+        File.Move(f.MainLog, Path.Combine(f.Logs, "NightOwl-backup-2026.09.28-12.00.05.log"));
+        f.H.Time.Advance(TimeSpan.FromMinutes(5));
+        f.StartEditor(5120);
+        f.WriteLog(f.MainLog, "[2026.09.28-12.05.02:000][  0]LogNet: Warning: Again", "[2026.09.28-12.05.02:001][  0]LogInit: Display: Second session");
+        f.Look();
+
+        Assert.Equal([0, 1, 1, 1, 0], log.Levels.Select(l => l.Count));
+        Assert.Equal(["LogInit", "LogNet"], log.Categories.Select(c => c.Name));
+        Assert.False(log.Categories.Single(c => c.Name == "LogNet").IsShown);
+        Assert.DoesNotContain(log.Output, l => l.Text.EndsWith("Again", StringComparison.Ordinal) && log.Shows(l));
+    }
+
+    [Fact]
+    public async Task Each_log_wraps_its_lines_as_the_last_one_was_left()
+    {
+        var (f, tab) = await OpenAsync();
+        await using var _f = f;
+        f.WriteLog(f.MainLog, UnrealLines);
+        f.StartEditor(4412);
+        f.Look();
+        var log = Assert.Single(Logs(tab));
+        Assert.True(log.WordWrap);
+
+        log.WordWrap = false;
+        Assert.False(f.H.Services.State.LogWordWrap);
+
+        f.H.Time.Advance(TimeSpan.FromMinutes(1));
+        f.StartEditor(4500, "UnrealEditor-Cmd", "-run=ResavePackages");
+        f.WriteLog(Path.Combine(f.Logs, "NightOwl_2.log"), "LogResave: Display: Resaving");
+        f.Look();
+        Assert.False(Logs(tab)[1].WordWrap);
     }
 
     [Fact]

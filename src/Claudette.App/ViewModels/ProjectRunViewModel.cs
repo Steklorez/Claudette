@@ -3,6 +3,7 @@ using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.Core;
 using Claudette.Core.ProjectTools;
+using Claudette.Core.ProjectTools.EditorLogs;
 using Claudette.Core.Protocol;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -28,7 +29,7 @@ public sealed partial class ProjectRunViewModel : LogTabViewModel
     private bool _couldntStart;
 
     internal ProjectRunViewModel(ProjectRunsViewModel runs, string name, ProjectAction? action, string folder, TimeProvider time)
-        : base(MaxOutputLines, DroppedTogether, "run")
+        : base(MaxOutputLines, DroppedTogether, "run", runs.WordWrap)
     {
         _runs = runs;
         _time = time;
@@ -58,6 +59,11 @@ public sealed partial class ProjectRunViewModel : LogTabViewModel
     protected override void OnClosePane() => _runs.ClosePane(this);
 
     protected override Task CopyAsync(string text) => _runs.CopyAsync(text);
+
+    protected override void RememberWordWrap(bool wrap) => _runs.RememberWordWrap(wrap);
+
+    /// <summary>Lines of its output, which have nothing to say of them but their text.</summary>
+    internal void Append(IReadOnlyList<string> lines) => Append(lines.Select(LogLine.Plain).ToArray());
 
     protected override ReplyFileFinder CreateFinder() => _runs.FinderFor(this);
 

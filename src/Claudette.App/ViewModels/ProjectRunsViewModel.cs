@@ -183,6 +183,18 @@ public sealed partial class ProjectRunsViewModel : ViewModelBase
     /// <summary><b>Copy</b> over a run's log: all of it.</summary>
     internal Task CopyAsync(string text) => _services.Platform.SetClipboardTextAsync(text);
 
+    /// <summary>A new run's log wraps its long lines as the last log's <b>Wrap lines</b> was left.</summary>
+    internal bool WordWrap => _services.State.LogWordWrap;
+
+    internal void RememberWordWrap(bool wrap)
+    {
+        if (_services.State.LogWordWrap != wrap)
+        {
+            _services.State.LogWordWrap = wrap;
+            _services.SaveState();
+        }
+    }
+
     /// <summary>Where a path in <paramref name="run"/>'s log is: from the folder it ran in, then the tab's. Names alone aren't looked for.</summary>
     internal ReplyFileFinder FinderFor(ProjectRunViewModel run) =>
         new(() => run.Folder, () => [_host.Folder], Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), () => null);
