@@ -813,12 +813,22 @@
             </Button>
           </StackPanel>
         </Border>
-        <!-- Pinned to-do list (DESIGN.md §5, "Tasks"): a task that has started goes to where it started -->
-        <Border DockPanel.Dock="Top" IsVisible="{Binding TodoList.HasItems}" Background="{DynamicResource SubtleBrush}"
+        <!-- Pinned to-do list (DESIGN.md §5, "Tasks"): its line opens and closes it, and closed, names the task in
+             progress; a task that has started goes to where it started -->
+        <Border x:Name="PinnedTodoList" DockPanel.Dock="Top" IsVisible="{Binding TodoList.HasItems}" Background="{DynamicResource SubtleBrush}"
                 BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="16,4">
           <StackPanel Classes="column" HorizontalAlignment="Stretch">
-            <Button Classes="flat row" Command="{Binding TodoList.ToggleExpandedCommand}">
-              <TextBlock Classes="muted small" FontWeight="SemiBold" Text="{Binding TodoList.Summary}" />
+            <Button Classes="flat row" Command="{Binding TodoList.ToggleExpandedCommand}" ToolTip.Tip="{Binding TodoList.ToggleTip}"
+                    AutomationProperties.Name="{Binding TodoList.Summary}">
+              <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6">
+                <Panel>
+                  <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !TodoList.IsExpanded}" />
+                  <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding TodoList.IsExpanded}" />
+                </Panel>
+                <TextBlock Grid.Column="1" Classes="muted small" FontWeight="SemiBold" Text="{Binding TodoList.Summary}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Classes="muted small" Text="{Binding TodoList.ClosedLineTask, StringFormat='· {0}'}" TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center" IsVisible="{Binding TodoList.ClosedLineTask, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              </Grid>
             </Button>
             <!-- A reply that reads like the plan for the list Claude just started -->
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4" Margin="4,0,0,4" IsVisible="{Binding TodoList.HasSuggestion}">

@@ -1771,6 +1771,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             State.SessionStartedAt ??= transcript.StartedAt;
             // The agent map shows the finished tree, with no live status (DESIGN.md §18).
             Agents.IsReplaying = true;
+            // Reading the conversation back opens the pinned list; the user may have closed it.
+            var todoListClosed = State.TodoListClosed;
             // Read again after going back (DESIGN.md §5, "Rewind and branch"), the prompts are already there to recall.
             var recallPrompts = _recall.Count == 0;
             // The view hears of the earlier conversation once, as a whole, rather than once per item.
@@ -1806,6 +1808,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 }
             }
             RestoreChosenPlan();
+            RestoreTodoListClosed(todoListClosed);
             RefreshPromptCache();
             if (State.AutoName is null && transcript.Title is { } title)
             {

@@ -363,6 +363,12 @@ public sealed class TabState
     /// </summary>
     public ChosenPlan? Plan { get; set; }
 
+    /// <summary>
+    /// The user closed the to-do list pinned at the top of the conversation while it had tasks left (DESIGN.md §5,
+    /// "Tasks"), so a restored tab's stays closed. Cleared when it opens again, or its tasks are done.
+    /// </summary>
+    public bool TodoListClosed { get; set; }
+
     /// <summary>The tab is a thread: other tabs in its group are its sub-threads (DESIGN.md §18, "Threads").</summary>
     public bool IsThread { get; set; }
 

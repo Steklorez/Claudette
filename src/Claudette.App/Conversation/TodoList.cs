@@ -595,15 +595,28 @@ public sealed partial class TodoList : ObservableObject
     /// <summary>The one Claude is working on now, if any.</summary>
     public TodoItem? Current => Items.FirstOrDefault(i => i.IsActive);
 
+    /// <summary>
+    /// The pinned list shows its tasks, not just its line (DESIGN.md §5, "Tasks"). It opens when a list starts, or work on
+    /// a finished one starts again, and closes once every task is done; in between it stays as the user left it.
+    /// </summary>
     [ObservableProperty]
-    public partial bool IsExpanded { get; set; } = true;
+    [NotifyPropertyChangedFor(nameof(ClosedLineTask), nameof(ToggleTip))]
+    public partial bool IsExpanded { get; set; }
+
+    /// <summary>Whether the list had tasks left at its last change: it opens or closes by itself only when that changes.</summary>
+    private bool _hadTasksLeft;
 
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     private void ToggleExpanded() => IsExpanded = !IsExpanded;
 
+    public string ToggleTip => IsExpanded ? "Close the list" : "Open the list";
+
     public bool HasItems => Items.Count > 0;
 
     public string Summary => $"To-do · {DoneCount} of {Items.Count} done";
+
+    /// <summary>The task in progress, on the closed list's line; null while the list is open or no task is.</summary>
+    public string? ClosedLineTask => IsExpanded ? null : Current?.DisplayText;
 
     // ---- What each task did ----------------------------------------------------------------------------------------
 
@@ -855,14 +868,13 @@ public sealed partial class TodoList : ObservableObject
         OnPropertyChanged(nameof(InfoText));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(HasStatus));
-        // Collapse once everything is done, so a finished list doesn't take up room.
-        if (Items.Count > 0 && Items.All(i => i.IsDone))
+        OnPropertyChanged(nameof(ClosedLineTask));
+        // Open for a new list and closed once it's done, so a finished list doesn't take up room; a list the user closed
+        // stays closed as Claude works through it.
+        if (HasTasksLeft != _hadTasksLeft)
         {
-            IsExpanded = false;
-        }
-        else if (Items.Any(i => !i.IsDone))
-        {
-            IsExpanded = true;
+            _hadTasksLeft = HasTasksLeft;
+            IsExpanded = _hadTasksLeft;
         }
     }
 

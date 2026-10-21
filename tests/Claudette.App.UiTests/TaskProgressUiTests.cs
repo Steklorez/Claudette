@@ -146,4 +146,32 @@ public class TaskProgressUiTests
         Assert.Contains(texts, t => t?.StartsWith("Sent back ", StringComparison.Ordinal) == true);
         window.Close();
     }
+
+    [AvaloniaFact]
+    public async Task The_pinned_lists_line_closes_it_to_one_line_naming_the_task_in_progress()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 800);
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var pinned = view.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "PinnedTodoList");
+
+        h.Transport.Emit(Init);
+        Create(h, "c1", "1", "Fix the config");
+        Create(h, "c2", "2", "Write the docs");
+        Tool(h, "u1", "TaskUpdate", new JsonObject { ["taskId"] = "1", ["status"] = "in_progress" });
+        await UiText.SettleUntilAsync(window, () => Texts(pinned).Contains("Write the docs"), "the open list");
+        var line = pinned.GetVisualDescendants().OfType<Button>().First();
+        var height = pinned.Bounds.Height;
+        Assert.Equal("Close the list", ToolTip.GetTip(line));
+        Assert.Equal("To-do · 0 of 2 done", AutomationProperties.GetName(line));
+        Assert.DoesNotContain("· Doing Fix the config", Texts(pinned));
+
+        line.Command!.Execute(null);
+        await UiText.SettleUntilAsync(window, () => !Texts(pinned).Contains("Write the docs"), "the closed list");
+        Assert.Equal(["To-do · 0 of 2 done", "· Doing Fix the config"], Texts(line));
+        Assert.Equal("Open the list", ToolTip.GetTip(line));
+        Assert.True(pinned.Bounds.Height < height, "Closing the list didn't make it shorter.");
+        window.Close();
+    }
 }

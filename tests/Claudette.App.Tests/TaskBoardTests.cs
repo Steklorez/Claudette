@@ -191,4 +191,36 @@ public class TaskBoardTests
         Assert.Equal("Took 2m", _list.Items[0].TimeText);
         Assert.Equal(_time.GetUtcNow(), _list.Items[1].StartedAt);
     }
+
+    [Fact]
+    public void The_pinned_list_stays_closed_as_Claude_works_through_it_and_opens_for_a_new_one()
+    {
+        _list.ApplyToolUse("w1", "TodoWrite", Json("""{"todos":[{"content":"A","activeForm":"Doing A","status":"in_progress"},{"content":"B","activeForm":"Doing B","status":"pending"}]}"""));
+        Assert.True(_list.IsExpanded);
+        Assert.Null(_list.ClosedLineTask);
+
+        // Closed, its line names the task in progress, and Claude's changes leave it closed.
+        _list.ToggleExpandedCommand.Execute(null);
+        Assert.Equal("Doing A", _list.ClosedLineTask);
+        _list.ApplyToolUse("w2", "TodoWrite", Json("""{"todos":[{"content":"A","activeForm":"Doing A","status":"completed"},{"content":"B","activeForm":"Doing B","status":"in_progress"}]}"""));
+        Assert.False(_list.IsExpanded);
+        Assert.Equal("Doing B", _list.ClosedLineTask);
+
+        // Opened again: it stays open, until every task is done.
+        _list.ToggleExpandedCommand.Execute(null);
+        Assert.Null(_list.ClosedLineTask);
+        _list.ApplyToolUse("w3", "TodoWrite", Json("""{"todos":[{"content":"A","status":"completed"},{"content":"B","status":"completed"},{"content":"C","status":"pending"}]}"""));
+        Assert.True(_list.IsExpanded);
+        _list.ApplyToolUse("w4", "TodoWrite", Json("""{"todos":[{"content":"A","status":"completed"},{"content":"B","status":"completed"},{"content":"C","status":"completed"}]}"""));
+        Assert.False(_list.IsExpanded);
+
+        // A finished list the user opens stays open as Claude reads it; a new list opens.
+        _list.ToggleExpandedCommand.Execute(null);
+        _list.ApplyToolUse("l1", "TaskList", new JsonObject());
+        _list.ApplyToolResult("l1", "", new JsonObject { ["tasks"] = new JsonArray() });
+        Assert.True(_list.IsExpanded);
+        _list.ToggleExpandedCommand.Execute(null);
+        _list.ApplyToolUse("w5", "TodoWrite", Json("""{"todos":[{"content":"D","status":"pending"}]}"""));
+        Assert.True(_list.IsExpanded);
+    }
 }

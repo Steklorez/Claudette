@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- **Close the to-do list at the top of the conversation.** Its line has a chevron, and once you close it the list stays closed while Claude works through it, and when Claudette restarts, rather than opening again each time Claude changes it. Closed, the line names the task in progress, so a long list takes one line. It opens by itself when Claude starts a new list.
 - **Stay current and Wrap lines over a project action's log.** **Stay current** shows whether the log is following its newest line: scroll up and it turns off, so the log holds still while you read; scroll back to the end, or click it, and it follows again. Turn **Wrap lines** off and long lines stay on one line, scrolling sideways. Each new log starts as you left the last one.
 
 ## [0.4.0] - 2026-10-18

@@ -162,11 +162,38 @@ public sealed partial class TabViewModel
                 {
                     TellMascot(mascot => mascot.AllTasksDone());
                 }
+                SaveTodoListClosed();
+                break;
+            case nameof(Conversation.TodoList.IsExpanded):
+                SaveTodoListClosed();
                 break;
             case nameof(Conversation.TodoList.Current) or nameof(Conversation.TodoList.InfoText):
                 OnPropertyChanged(nameof(RowDetail));
                 OnPropertyChanged(nameof(InfoRows));
                 break;
+        }
+    }
+
+    /// <summary>The user closed the pinned list while it has tasks left: kept with the tab, so a restart leaves it closed.</summary>
+    private void SaveTodoListClosed()
+    {
+        var closed = !TodoList.IsExpanded && TodoList.HasTasksLeft;
+        if (State.TodoListClosed != closed)
+        {
+            State.TodoListClosed = closed;
+            _services.SaveState();
+        }
+    }
+
+    /// <summary>
+    /// The pinned list as the user left it, once a restored tab's conversation is read back: reading it opens a list with
+    /// tasks left, so one they'd closed closes again.
+    /// </summary>
+    private void RestoreTodoListClosed(bool closed)
+    {
+        if (closed && TodoList.HasTasksLeft)
+        {
+            TodoList.IsExpanded = false;
         }
     }
 

@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
 
@@ -294,5 +295,49 @@ public class TaskProgressTests
         Create(h, "c2", "2", "One");
         await TabTestHarness.Eventually(() => tab.TodoList.Items.Count == 2, "the new list");
         Assert.False(tab.TodoList.HasSuggestion);
+    }
+
+    [Fact]
+    public async Task Closing_the_pinned_list_is_kept_with_the_tab_until_its_tasks_are_done()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Init());
+        Create(h, "c1", "1", "Run the migration");
+        Update(h, "u1", "1", "in_progress");
+        await TabTestHarness.Eventually(() => tab.TodoList.Current is not null, "the task in progress");
+        Assert.True(tab.TodoList.IsExpanded);
+        Assert.False(tab.State.TodoListClosed);
+
+        tab.TodoList.ToggleExpandedCommand.Execute(null);
+        Assert.True(tab.State.TodoListClosed);
+
+        Update(h, "u2", "1", "completed");
+        await TabTestHarness.Eventually(() => tab.TodoList.AllDone, "the task done");
+        Assert.False(tab.State.TodoListClosed);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task A_restored_tab_keeps_its_pinned_list_as_the_user_left_it(bool closed, bool allDone)
+    {
+        await using var h = new TabTestHarness();
+        JsonObject Todo(string content, string status) => new() { ["content"] = content, ["activeForm"] = $"Doing {content}", ["status"] = status };
+        h.WriteTranscript("s1",
+            Wire.Entry("user", "2026-09-27T09:30:00Z", new JsonObject { ["role"] = "user", ["content"] = "Migrate" }),
+            Wire.Entry("assistant", "2026-09-27T09:31:00Z", Wire.Message(ToolBlock("w1", "TodoWrite", new JsonObject
+            {
+                ["todos"] = new JsonArray(Todo("Run the migration", allDone ? "completed" : "in_progress"), Todo("Run the tests", allDone ? "completed" : "pending")),
+            }))));
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "s1", TodoListClosed = closed }];
+        h.Shell.Restore(null);
+        var tab = h.Shell.AllTabs.Single();
+
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.TodoList.HasItems, "the restored list");
+        Assert.Equal(!closed && !allDone, tab.TodoList.IsExpanded);
+        // A finished list closes by itself: nothing to keep.
+        Assert.Equal(closed && !allDone, tab.State.TodoListClosed);
     }
 }
