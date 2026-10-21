@@ -34,6 +34,8 @@ A thread's row has a thread icon before its name. Its tip says how many sub-thre
 
 Reordering keeps them together: **Move up** and **Move down** on a thread move it, with its sub-threads, past the next tab or thread, and on a sub-thread move it among its thread's. A sub-thread dragged away comes back. When a thread's sub-threads are working and nothing else needs saying, its second line reads *Thread · 2 of 3 working*.
 
+The chevron before a thread's name folds its sub-threads away under it, with everything under them, and the thread's row then counts them and shows the most urgent, such as `!` for a sub-thread waiting on you. It's new in the next release. See [Collapsing a tab](../tabs/the-sidebar.md#collapsing-a-tab).
+
 ## Showing a thread with its sub-threads
 
 Choose **Thread** → **Show with its sub-threads** on a thread to see it beside its sub-threads: the thread and its first sub-threads, as many as fit, each with its own conversation and composer. The command palette has **Show the thread with its sub-threads**. [Split panes](../tabs/split-panes.md) explains the panes.

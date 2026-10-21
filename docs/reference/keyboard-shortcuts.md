@@ -109,6 +109,7 @@ These aren't in the list of rebindable shortcuts.
 | History | `Esc` | Closes it. `Enter` in the search box also searches Claude's replies. |
 | A tab's name, while renaming | `Enter`, `Esc` | Saves, or cancels. |
 | A window of its own (an image, a tool call) | `Esc` | Closes it. |
+| The image window | `+`, `-`, `0` | Zooms in, zooms out, and fits the whole image again ([Images](../conversation/images.md#zooming-in)). New in the next release. |
 | Settings, while recording a shortcut | `Esc` | Cancels the recording. |
 
 ### Games

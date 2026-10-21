@@ -81,6 +81,21 @@ While the project's editor runs, the log it writes has a row under one of the pr
 
 Each time one of a tab's project actions runs as a job, such as a build, a small entry appears under the tab's row with how it's going. Click it to show its log where the conversation is, and click the tab's row to go back. See [Project tools](../project-tools/using-project-tools.md).
 
+When a tab has a lot under it, collapse it to fold them away. See [Collapsing a tab](#collapsing-a-tab).
+
+## Collapsing a tab
+
+{% include unreleased.html %}
+
+A tab with rows under it, such as a thread's sub-threads, subagents, editor logs or project runs, has a chevron before its name, as a group's label does. Click the chevron, or choose **Collapse tab** in the [tab's menu](the-tabs-menu.md) or the [command palette](the-command-palette.md), to fold them all away under the tab's row. A sub-thread's own rows go with it. Click it again, or choose **Expand tab**, to bring them back.
+
+- **The collapsed row** keeps its two lines and adds a small badge to the first: how many rows it hides, then the most urgent of them in its own color. That's `!` for one waiting on you; `✕` for an error, a failed run, or an editor's log that crashed or has errors you haven't looked at; the busy dot while one works; and `•` for one that finished while you were elsewhere. Hover the badge to see what it hides, such as *Collapsed: 2 sub-threads, 1 log and 1 run*, with a line for each one waiting on you or failed.
+- **It opens again by itself** when you go to something under it: a sub-thread from its notification or **Go to tab** in the thread's strip, a log from **Show output…** or its notification, or a subagent's work from the Agents page or its card. It also opens when a sub-thread joins the thread, and when something under it starts waiting on you. A run, an editor's log or a subagent starting doesn't open it, so a big fan-out can stay folded.
+- Collapsing leaves the selection alone: a sub-thread or a log that's showing stays showing. `Ctrl+Tab` and `Ctrl/Cmd+1…9` still count a collapsed thread's sub-threads.
+- The tab stays collapsed when Claudette restarts. Once nothing is left under its row, it forgets, so the next row to come shows.
+
+On the rail, which lists only a thread's sub-threads under a tab, **Collapse tab** is in the menu of a thread with sub-threads.
+
 ## The top and the foot
 
 At the top, **New tab** opens the [picker](opening-tabs.md), and a button beside it collapses the sidebar. At the foot are the selected tab's project (a row that opens its menu of actions and links), **History**, the Claude Code and Claudette update badges when there's an update, **New build ready** for a source build, **Settings**, and **User Guide**, which opens this guide in your browser.

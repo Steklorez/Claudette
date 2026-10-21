@@ -80,7 +80,7 @@ A log is under one tab, even when several tabs have the project:
 
 If you close that tab, the log moves to the next of the project's tabs, keeping its lines. Once no tab has the project, it goes.
 
-When a tab is [collapsed](../tabs/the-sidebar.md), its logs fold away with its other rows. The collapsed row's badge shows a red ✕ when a log has crashed, or has errors you haven't looked at yet.
+When a tab is [collapsed](../tabs/the-sidebar.md#collapsing-a-tab), its logs fold away with its other rows. The collapsed row's badge shows a red ✕ when a log has crashed, or has errors you haven't looked at yet.
 
 ## Which logs
 

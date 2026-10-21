@@ -29,6 +29,8 @@ Under the title are the tool, the type and size (*Read · PNG 245 KB*), and, whe
 
 ### Zooming in
 
+{% include unreleased.html %}
+
 The window opens with the whole image in it. To look closer:
 
 - **The mouse wheel** over the image zooms in a step as you turn it up, and out as you turn it down, keeping the spot under the pointer where it is.

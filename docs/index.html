@@ -70,8 +70,9 @@ search_exclude: true
     <a href="#usage"><span>04</span> Usage</a>
     <a href="#review"><span>05</span> Review</a>
     <a href="#files"><span>06</span> Files</a>
-    <a href="#accounts"><span>07</span> Accounts</a>
-    <a href="#anywhere"><span>08</span> Anywhere</a>
+    <a href="#logs"><span>07</span> Logs</a>
+    <a href="#accounts"><span>08</span> Accounts</a>
+    <a href="#anywhere"><span>09</span> Anywhere</a>
   </nav>
 
   <div class="story">
@@ -79,7 +80,7 @@ search_exclude: true
       <div class="story-copy">
         <p class="kicker"><span>01</span> Tabs and sessions</p>
         <h3>A dozen sessions.<br>Not one lost.</h3>
-        <p>Every session gets a tab, grouped by project in a sidebar that shows each one's status, branch, model and context at a glance. Mark tabs your way, and press <kbd>Ctrl/Cmd+J</kbd> for the next one waiting for you.</p>
+        <p>Every session gets a tab, grouped by project in a sidebar that shows each one's status, branch, model and context at a glance. Mark tabs your way, and press <kbd>Ctrl/Cmd+J</kbd> for the next one waiting for you. Soon, fold a busy tab's sub-threads, subagents and logs away under it <em class="soon">Next release</em>.</p>
         <a class="more" href="{{ '/tabs/' | relative_url }}">Tabs and sessions {% include icon.html name="arrow-right" %}</a>
       </div>
       <div class="story-shot is-tall">
@@ -147,9 +148,21 @@ search_exclude: true
       </div>
     </section>
 
+    <section class="story-step" id="logs" data-reveal>
+      <div class="story-copy">
+        <p class="kicker"><span>07</span> Editor logs <em class="soon">Next release</em></p>
+        <h3>The editor's log.<br>Right under the tab.</h3>
+        <p>While Unreal, Unity or Godot has the project open, its log is a row under the tab, followed as it's written, with its errors and warnings counted. Filter it by level, category or text, click a file it names to open it, and when the editor crashes, the log stays to say why.</p>
+        <a class="more" href="{{ '/project-tools/editor-logs.html' | relative_url }}">Editor logs {% include icon.html name="arrow-right" %}</a>
+      </div>
+      <div class="story-shot">
+        <div class="frame">{% include picture.html name="guide/project-tools/editor-log" alt="The Unreal editor's log under the Grappling hook tab and shown in the main area: a chip for each level with its count, then the log in columns of time, category, verbosity and message, with an error in red and warnings in amber" width=2224 height=1427 %}</div>
+      </div>
+    </section>
+
     <section class="story-step" id="accounts" data-reveal>
       <div class="story-copy">
-        <p class="kicker"><span>07</span> Accounts</p>
+        <p class="kicker"><span>08</span> Accounts</p>
         <h3>Your plan for yours.<br>Their key for theirs.</h3>
         <p>Run a client's projects on their API key and everything else on your own plan. The key stays in your OS's credential store, and the header shows what it's spending today, this week and this month.</p>
         <a class="more" href="{{ '/accounts/' | relative_url }}">Accounts {% include icon.html name="arrow-right" %}</a>
@@ -161,7 +174,7 @@ search_exclude: true
 
     <section class="story-step" id="anywhere" data-reveal>
       <div class="story-copy">
-        <p class="kicker"><span>08</span> History and syncing</p>
+        <p class="kicker"><span>09</span> History and syncing</p>
         <h3>Pick up<br>anywhere.</h3>
         <p>Search every past session, Claude's replies too. Carry a conversation to your other computer through a folder Dropbox, Google Drive or OneDrive keeps in sync, or keep it going from your phone with the Claude app.</p>
         <a class="more" href="{{ '/history/' | relative_url }}">History and syncing {% include icon.html name="arrow-right" %}</a>

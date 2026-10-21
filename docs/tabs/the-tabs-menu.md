@@ -7,7 +7,7 @@ summary: "Right-click a tab's row in the sidebar for its menu."
 
 # The tab's menu
 
-Right-click a tab's row in the sidebar for its menu. Some items show only when they apply to the tab, such as **Reset name** or **Sync now**. A tab's square on the rail has the same menu, without **Move up**, **Move down** and **Close other tabs**.
+Right-click a tab's row in the sidebar for its menu. Some items show only when they apply to the tab, such as **Reset name** or **Sync now**. A tab's square on the rail has the same menu, without **Move up**, **Move down** and **Close other tabs**, and with **Collapse tab** only on a thread with sub-threads.
 
 The project's actions and links aren't in this menu. They're in the project row at the sidebar's foot, which is there for every tab. See [Project tools](../project-tools/using-project-tools.md).
 
@@ -37,6 +37,7 @@ In the order the menu has them:
 | **Copy session ID** | Copies the session's ID. Shown once the tab has a session. | [Below](#copy-session-id) |
 | **Trust this folder** | Starts Claude Code again with the folder's own settings, MCP servers and `CLAUDE.md`. Shown for a tab that started without them. | [Folder trust](../permissions/folder-trust.md) |
 | **Move up**, **Move down** | Move the tab one place in its group. | [Below](#move-up-and-move-down) |
+| **Collapse tab** or **Expand tab** | Folds away the rows under the tab, such as its sub-threads, subagents, editor logs and project runs, or brings them back. Shown while the tab has rows under it. It's new in the next release. | [Collapsing a tab](the-sidebar.md#collapsing-a-tab) |
 | **Close** | Closes the tab, asking first when something would be lost. | [Closing and restoring](closing-and-restoring.md) |
 | **Close other tabs** | Closes every other tab except pinned ones. | [Closing and restoring](closing-and-restoring.md) |
 

@@ -236,7 +236,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .more { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 700; }
 .more .icon { transition: transform 0.15s ease; }
 .more:hover .icon { transform: translateX(3px); }
-.soon { margin-left: 0.3rem; padding: 0.15rem 0.6rem; border-radius: 999px; font-style: normal; font-size: 0.68rem; letter-spacing: 0.08em; color: #fff; background: var(--gradient-deep); }
+.soon { margin-left: 0.3rem; padding: 0.15rem 0.6rem; border-radius: 999px; font-style: normal; font-size: 0.68rem; letter-spacing: 0.08em; color: #fff; background: var(--gradient-deep); white-space: nowrap; }
 
 /* Bands across the page. */
 .band { max-width: var(--width); margin: 0 auto; padding: 6rem 1.5rem; }
