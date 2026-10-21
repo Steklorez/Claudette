@@ -23,7 +23,7 @@ The text in a [Project Files](../project-files/index.md) editor can't be read by
 
 ## Zoom
 
-Zoom makes everything in the main window bigger or smaller, in steps of 80%, 90%, 100%, 110%, 125%, 150%, 175% and 200%. Menus, popups and tooltips, and the other windows, keep their size.
+Zoom makes everything in the main window bigger or smaller, in steps of 80%, 90%, 100%, 110%, 125%, 150%, 175% and 200%. Menus, popups and tooltips, and the other windows, keep their size. The image window zooms its picture on its own: see [Images](../conversation/images.md#zooming-in).
 
 To change it, any of these:
 

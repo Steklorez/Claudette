@@ -19,13 +19,23 @@ A whole PDF read without `pages` isn't images: the card says what was read.
 
 ### Showing one full size
 
-Click an image to open it in a window of its own beside the conversation, titled with its name. It opens at its own size, up to 1400 by 900 pixels and 90% of the screen, and from then on any size you drag it to, shrinking to fit but never growing past its own size. `Esc` closes it.
+Click an image to open it in a window of its own beside the conversation, titled with its name. It opens at its own size, up to 1400 by 900 pixels and 90% of the screen, and from then on any size you drag it to, shrinking to fit but never growing past its own size until you zoom in. `Esc` closes it.
 
 Under the title are the tool, the type and size (*Read · PNG 245 KB*), and, when Claude Code shrank the image before sending it, *scaled down from 3000 × 1000 to send*, since what you see is what Claude saw.
 
 - **Copy image** puts it on the clipboard and says *Copied* for a moment.
 - **Save as…** saves it under its name, with its type's extension. Claude Code may have sent a large PNG on as a JPEG, which then saves as `.jpg`. A save that fails says why under the title.
 - **Open**, for an image file Claude read, opens the file in the app your OS uses for it. A web image has **Open in browser** instead.
+
+### Zooming in
+
+The window opens with the whole image in it. To look closer:
+
+- **The mouse wheel** over the image zooms in a step as you turn it up, and out as you turn it down, keeping the spot under the pointer where it is.
+- **+** and **−**, under the buttons on either side of the percentage the image is shown at, zoom about the middle of the window, as do the `+` and `-` keys, with `Ctrl/Cmd` or without.
+- **Fit**, or `0`, shows the whole image again.
+
+It goes from 10% to 1600% of the image's own size, in steps. Once it's larger than the window, drag it around with the left mouse button, holding `Space` or not, or with the middle button; the scroll bars move it too. Each image opens fitting the window.
 
 ### Animated images
 

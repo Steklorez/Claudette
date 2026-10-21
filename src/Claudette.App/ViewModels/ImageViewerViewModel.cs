@@ -11,7 +11,8 @@ namespace Claudette.App.ViewModels;
 /// An image full size in a window of its own (DESIGN.md §18, "Images from Claude's tools", "Opening images"): from a
 /// tool's result, a reply, or an image file or web image clicked. It has <b>Copy image</b>, <b>Save as…</b> and, for a
 /// file, <b>Open</b> (<b>Open in browser</b> for a web image). An animated GIF or WebP plays, with <b>Pause</b> and
-/// <b>Play</b>; with motion reduced it opens on its first frame.
+/// <b>Play</b>; with motion reduced it opens on its first frame. It opens fitting the window, and zooms in and out in
+/// steps.
 /// </summary>
 public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
 {
@@ -91,6 +92,54 @@ public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
     public partial string? Problem { get; private set; }
 
     public bool HasProblem => Problem is not null;
+
+    /// <summary>The zoom's steps, as percentages of the image's own size.</summary>
+    public static IReadOnlyList<int> ZoomSteps { get; } = [10, 25, 33, 50, 67, 75, 100, 125, 150, 200, 300, 400, 600, 800, 1200, 1600];
+
+    /// <summary>The step it's zoomed to, as a percentage; null while it fits the window.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFit), nameof(ZoomPercent), nameof(ZoomText))]
+    [NotifyCanExecuteChangedFor(nameof(ZoomInCommand), nameof(ZoomOutCommand), nameof(FitCommand))]
+    public partial int? Zoom { get; private set; }
+
+    /// <summary>
+    /// The percentage the image fits the window at, never over 100 since it never grows past its own size. The view
+    /// says it as the window changes size.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ZoomPercent), nameof(ZoomText))]
+    [NotifyCanExecuteChangedFor(nameof(ZoomInCommand), nameof(ZoomOutCommand))]
+    public partial double FitPercent { get; set; } = 100;
+
+    /// <summary>It fits the window: the whole image, shrunk to fit but never grown.</summary>
+    public bool IsFit => Zoom is null;
+
+    /// <summary>The percentage of its own size it's shown at.</summary>
+    public double ZoomPercent => Zoom ?? FitPercent;
+
+    /// <summary>"45%", between <b>−</b> and <b>+</b>.</summary>
+    public string ZoomText => $"{Shown}%";
+
+    /// <summary>The percentage as it reads, which zooming steps on from: "50%" fitting goes in to 67%, not to 50%.</summary>
+    private int Shown => (int)Math.Round(ZoomPercent);
+
+    /// <summary><b>+</b>: the next step up.</summary>
+    [RelayCommand(CanExecute = nameof(CanZoomIn))]
+    private void ZoomIn() => Zoom = ZoomSteps.First(step => step > Shown);
+
+    private bool CanZoomIn() => Shown < ZoomSteps[^1];
+
+    /// <summary><b>−</b>: the next step down.</summary>
+    [RelayCommand(CanExecute = nameof(CanZoomOut))]
+    private void ZoomOut() => Zoom = ZoomSteps.Last(step => step < Shown);
+
+    private bool CanZoomOut() => Shown > ZoomSteps[0];
+
+    /// <summary><b>Fit</b>: the whole image in the window again.</summary>
+    [RelayCommand(CanExecute = nameof(CanFit))]
+    private void Fit() => Zoom = null;
+
+    private bool CanFit() => Zoom is not null;
 
     private string TypeName => Image.Image.MediaType switch
     {
