@@ -1,4 +1,5 @@
 using System.Globalization;
+using Claudette.Core.ProjectTools.EditorLogs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -12,14 +13,20 @@ namespace Claudette.App.ViewModels;
 /// </summary>
 public abstract partial class LogTabViewModel : ObservableObject, IShellTab
 {
+    /// <summary>Set once its constructor has given it its starting values, which aren't choices to remember.</summary>
+    private readonly bool _constructed;
+
     /// <param name="maxLines">It keeps at most this many lines.</param>
     /// <param name="droppedTogether">How many of the oldest go at a time once it's at <paramref name="maxLines"/>.</param>
     /// <param name="idPrefix">The start of its <see cref="Id"/>, "run" or "log".</param>
-    protected LogTabViewModel(int maxLines, int droppedTogether, string idPrefix)
+    /// <param name="wordWrap">It wraps its long lines, as the last log's <b>Wrap lines</b> was left.</param>
+    protected LogTabViewModel(int maxLines, int droppedTogether, string idPrefix, bool wordWrap)
     {
         MaxLines = maxLines;
         LinesDroppedAtATime = droppedTogether;
         Id = $"{idPrefix}-{Guid.NewGuid():N}";
+        WordWrap = wordWrap;
+        _constructed = true;
     }
 
     public int MaxLines { get; }
@@ -103,10 +110,49 @@ public abstract partial class LogTabViewModel : ObservableObject, IShellTab
 
     internal void RequestFind() => FindRequested?.Invoke();
 
+    // ---- How it's shown -----------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// <b>Stay current</b>: it follows its newest line, as a terminal does. Scrolling up from the end turns it off, and
+    /// scrolling back to the end, or turning it on, goes to the newest line again.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool StayCurrent { get; set; } = true;
+
+    /// <summary><b>Wrap lines</b>: its long lines wrap at the width shown; otherwise it scrolls sideways.</summary>
+    [ObservableProperty]
+    public partial bool WordWrap { get; set; }
+
+    partial void OnWordWrapChanged(bool value)
+    {
+        if (_constructed)
+        {
+            RememberWordWrap(value);
+        }
+    }
+
+    public static string StayCurrentTip => "Keep the newest line in view: scrolling up turns it off, and scrolling back to the end turns it on";
+
+    public static string WordWrapTip => "Wrap long lines at the width shown; off, the log scrolls sideways";
+
+    /// <summary>The line at the top of its view while it isn't staying current, for the view to come back to.</summary>
+    internal LogLine? TopLine { get; set; }
+
+    /// <summary>The next log starts with <b>Wrap lines</b> as this one was left.</summary>
+    protected abstract void RememberWordWrap(bool wrap);
+
+    /// <summary>The line is shown, as its filter says; a run's are all shown.</summary>
+    public virtual bool Shows(LogLine line) => true;
+
+    /// <summary>Its filter changed, so the lines shown are others.</summary>
+    public event Action? FilterChanged;
+
+    protected void OnFilterChanged() => FilterChanged?.Invoke();
+
     // ---- Its lines ---------------------------------------------------------------------------------------------------
 
     /// <summary>Its lines, at most <see cref="MaxLines"/>.</summary>
-    public BatchedCollection<string> Output { get; } = [];
+    public BatchedCollection<LogLine> Output { get; } = [];
 
     /// <summary>Lines dropped from the start to keep it to the limit.</summary>
     [ObservableProperty]
@@ -118,7 +164,7 @@ public abstract partial class LogTabViewModel : ObservableObject, IShellTab
         : null;
 
     /// <summary>A batch of lines, with one change to the list for the whole batch.</summary>
-    internal void Append(IReadOnlyList<string> lines)
+    internal void Append(IReadOnlyList<LogLine> lines)
     {
         if (Output.AddAndTrim(lines, MaxLines, LinesDroppedAtATime) is > 0 and var dropped)
         {
@@ -127,16 +173,16 @@ public abstract partial class LogTabViewModel : ObservableObject, IShellTab
     }
 
     /// <summary>Its lines afresh: <paramref name="lines"/> in place of all it had, as one change to the list.</summary>
-    internal void Replace(IReadOnlyList<string> lines)
+    internal void Replace(IReadOnlyList<LogLine> lines)
     {
         Output.Clear();
         OutputDropped = 0;
         Append(lines);
     }
 
-    /// <summary><b>Copy</b> over it: all of it.</summary>
+    /// <summary><b>Copy</b> over it: the lines shown, as the file has them.</summary>
     [RelayCommand]
-    private Task CopyOutputAsync() => CopyAsync(string.Join(Environment.NewLine, Output));
+    private Task CopyOutputAsync() => CopyAsync(string.Join(Environment.NewLine, Output.Where(Shows).Select(l => l.Text)));
 
     protected abstract Task CopyAsync(string text);
 }

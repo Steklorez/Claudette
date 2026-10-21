@@ -85,7 +85,7 @@ public class ProjectRunsTests
         Assert.Equal("Running · 1m 05s", build.Detail);
 
         launcher.Processes.Last().WriteOutput("Building NightOwlEditor...");
-        await TabTestHarness.Eventually(() => build.Output.Contains("Building NightOwlEditor..."), "the output");
+        await TabTestHarness.Eventually(() => build.Lines().Contains("Building NightOwlEditor..."), "the output");
         launcher.Processes.Last().Exit(0);
         await TabTestHarness.Eventually(() => build.Succeeded, "the end");
 
@@ -94,7 +94,7 @@ public class ProjectRunsTests
         Assert.Null(tab.ProjectTools.Runs.RunningRun);
         Assert.Equal("✓", build.Glyph);
         Assert.Equal($"Succeeded · {MessageTimes.Short(h.Time.GetUtcNow(), h.Time)}", build.Detail);
-        Assert.Equal("Build editor succeeded.", build.Output[^1]);
+        Assert.Equal("Build editor succeeded.", build.Lines()[^1]);
         Assert.Contains("took 1m 05s", build.Tip, StringComparison.Ordinal);
         Assert.Equal($"Started {MessageTimes.Short(build.Started, h.Time)} · took 1m 05s", build.Timing);
         Assert.True(build.CloseCommand.CanExecute(null));
@@ -105,9 +105,9 @@ public class ProjectRunsTests
 
         Assert.Equal([build, generate], Runs(tab));
         Assert.Same(tab, h.Shell.Selected);
-        Assert.Contains("Building NightOwlEditor...", build.Output);
-        Assert.DoesNotContain("Building NightOwlEditor...", generate.Output);
-        Assert.Contains("Generating...", generate.Output);
+        Assert.Contains("Building NightOwlEditor...", build.Lines());
+        Assert.DoesNotContain("Building NightOwlEditor...", generate.Lines());
+        Assert.Contains("Generating...", generate.Lines());
         Assert.Equal("✕", generate.Glyph);
         Assert.True(generate.Failed);
         Assert.Equal(6, generate.ExitCode);
@@ -194,8 +194,8 @@ public class ProjectRunsTests
         Assert.Null(run.ExitCode);
         Assert.Null(run.Timing);
         Assert.Equal("Build editor couldn't start: No such file or directory", run.Status);
-        Assert.Equal("Couldn't start it: No such file or directory", run.Output[^1]);
-        Assert.StartsWith("$ ", run.Output[0], StringComparison.Ordinal);
+        Assert.Equal("Couldn't start it: No such file or directory", run.Lines()[^1]);
+        Assert.StartsWith("$ ", run.Lines()[0], StringComparison.Ordinal);
         Assert.StartsWith("Couldn't start · ", run.Detail, StringComparison.Ordinal);
         Assert.True(run.CloseCommand.CanExecute(null));
         Assert.Contains(tab.Items, i => i is NoteItem note && note.Text.StartsWith("Couldn't start Build editor", StringComparison.Ordinal));
@@ -220,7 +220,7 @@ public class ProjectRunsTests
 
         var clean = Runs(tab).Single();
         Assert.Equal("Clean intermediates", clean.Name);
-        Assert.Contains("Deleted 1 folder.", clean.Output);
+        Assert.Contains("Deleted 1 folder.", clean.Lines());
         Assert.False(Directory.Exists(Path.Combine(h.WorkFolder, "Intermediate")));
     }
 

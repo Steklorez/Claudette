@@ -1,0 +1,17 @@
+﻿[toggle on] Errors, 1, shown
+  "Errors"
+  "1"
+[toggle on] Warnings, 0, shown
+  "Warnings"
+  "0"
+[toggle on] Display, 1, shown
+  "Display"
+  "1"
+[toggle on] Log, 2, shown
+  "Log"
+  "2"
+[toggle on] Verbose, 1, shown
+  "Verbose"
+  "1"
+[button] Categories
+[field] "Filter lines"

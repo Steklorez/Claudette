@@ -59,12 +59,19 @@ Each job is a run. It shows under its tab's row in the sidebar, newest last, wit
 
 A run's log shows in the main area, in the conversation's place, without the message box, so a build's errors have room. Click the tab's own row to go back to the conversation.
 
-- At the top: how the run went (running, succeeded, failed with its exit code, or stopped), when it started and how long it took, with **Stop**, which ends the job and every process it started, **Copy**, which copies the whole log, and **Close** once it's done.
-- Under it, the output, following the newest line until you scroll up, and again once you scroll back to the end. Long lines wrap. A run keeps its last 5,000 lines, and the log says how many older ones were dropped.
+- At the top: how the run went (running, succeeded, failed with its exit code, or stopped), when it started and how long it took, with **Stay current** and **Wrap lines** (below), **Stop**, which ends the job and every process it started, **Copy**, which copies the whole log, and **Close** once it's done.
+- Under it, the output, following the newest line as it comes. A run keeps its last 5,000 lines, and the log says how many older ones were dropped.
 - Select text and copy it as anywhere else, and `Ctrl/Cmd+F` finds in the log.
 - **Links.** Web addresses open in your browser. Files and folders the log names open with a click, as files Claude names do: in Claudette's [editor](../project-files/opening-files-from-the-conversation.md) at the line an error points to, such as `Source/Player.cpp(42,7)` or `src/main.rs:42:7`, or in the OS's app, as Settings → Editor says. A path is a link only once Claudette finds it, from the folder the action ran in or the tab's, so text that only looks like a path stays plain. A program or script shows in its folder rather than running.
 - To see the log and the conversation at once, right-click the run and pick **Open beside**, or drag the run onto the conversation. See [Split panes](../tabs/split-panes.md).
 - `Ctrl/Cmd+W` closes a finished run's log. On a running one, it goes back to the tab, so it never stops a build.
+
+### Stay current and Wrap lines
+
+{% include unreleased.html %}
+
+- **Stay current** keeps the newest line in view as the output comes. Scroll up to read something and it turns off, so the log holds still; scroll back to the end, or click it, and it follows again.
+- **Wrap lines** wraps long lines at the width of the pane. Turn it off and they stay on one line, and the log scrolls sideways. The next log you open, a run's or an [editor's](editor-logs.md), starts the way you left it.
 
 ## The Project page
 

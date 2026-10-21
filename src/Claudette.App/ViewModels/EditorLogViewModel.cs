@@ -48,7 +48,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     private bool _earlierInFile;
 
     internal EditorLogViewModel(AppServices services, IEditorLogHost host, string path, FollowedProject project)
-        : base(MaxLogLines, DroppedLogLines, "log")
+        : base(MaxLogLines, DroppedLogLines, "log", services.State.LogWordWrap)
     {
         _services = services;
         _host = host;
@@ -58,6 +58,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
         Root = project.Root;
         FileName = System.IO.Path.GetFileName(path);
         Started = services.Time.GetUtcNow();
+        CreateFilter();
     }
 
     /// <summary>The log's file.</summary>
@@ -203,9 +204,6 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
         ? $"Showing the last {Output.Count.ToString("N0", CultureInfo.CurrentCulture)} lines; the earlier ones are in the file."
         : null;
 
-    /// <summary>How bad a line is, for its color.</summary>
-    public LogLineLevel LevelOf(string line) => _source.Classify(line);
-
     // ---- What the logs' service found (DESIGN.md §18, "Editor logs") ------------------------------------------------
 
     /// <summary>A check found it being written by <paramref name="writers"/>; <paramref name="newWriters"/> when they've just started.</summary>
@@ -263,6 +261,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
         {
             IsCrashed = true;
         }
+        CountEntries(read);
         OnPropertyChanged(nameof(OutputNote));
     }
 
@@ -284,6 +283,15 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     protected override void OnClosePane() => _host.CloseLogPane(this);
 
     protected override Task CopyAsync(string text) => _services.Platform.SetClipboardTextAsync(text);
+
+    protected override void RememberWordWrap(bool wrap)
+    {
+        if (_services.State.LogWordWrap != wrap)
+        {
+            _services.State.LogWordWrap = wrap;
+            _services.SaveState();
+        }
+    }
 
     protected override ReplyFileFinder CreateFinder() =>
         new(() => Root, () => _host.OwnerOf(this) is { } tab ? [tab.Folder] : [], Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), () => null);

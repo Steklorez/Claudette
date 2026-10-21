@@ -17,7 +17,11 @@ public static partial class GodotLogs
         Match = process => Writer(process, project, LogFile(project, paths, os), os),
         Classify = Classify,
         IsCrash = IsCrash,
+        NewParser = _ => Parser(),
     };
+
+    /// <summary>A reader for one of Godot's logs.</summary>
+    public static EditorLogParser Parser() => new LineParser();
 
     /// <summary>What <paramref name="process"/> is and the log it writes, when it has <paramref name="project"/> open.</summary>
     public static EditorLogWriter? Writer(SystemProcess process, GodotProject project, string? projectLog, ToolOS os)
@@ -91,6 +95,19 @@ public static partial class GodotLogs
 
     private static bool SamePath(string a, string b, ToolOS os) =>
         string.Equals(a.Replace('\\', '/').TrimEnd('/'), b.Replace('\\', '/').TrimEnd('/'), os.PathComparison());
+
+    /// <summary>
+    /// Reads Godot's lines as entries (DESIGN.md §18, "Editor logs", "Its lines"): an error's or a warning's indented
+    /// lines under it, <c>   at: get_node (scene/main/node.cpp:1364)</c> and a GDScript backtrace's, carry it on, muted.
+    /// Every other line, what <c>print</c> writes among them, is one of its own.
+    /// </summary>
+    private sealed class LineParser() : EditorLogParser(Classify, IsCrash)
+    {
+        protected override LineRead Read(string line, LogVerbosity? open) =>
+            open is LogVerbosity.Error or LogVerbosity.Warning && line.Length > 0 && char.IsWhiteSpace(line[0])
+                ? new LineRead(Starts: false, IsTrace: true)
+                : new LineRead(Starts: true);
+    }
 
     [GeneratedRegex(@"^\s*(?:ERROR|SCRIPT ERROR|USER ERROR|SHADER ERROR|FATAL):")]
     private static partial Regex ErrorLine();

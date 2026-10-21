@@ -307,8 +307,8 @@ public class ProjectToolsTests
         Assert.Same(build, tab.ProjectTools.Runs.RunningRun);
         process.WriteOutput("Building NightOwlEditor...");
         process.WriteError("warning: deprecated");
-        await TabTestHarness.Eventually(() => build.Output.Contains("warning: deprecated"), "the output");
-        Assert.StartsWith("$ ", build.Output[0], StringComparison.Ordinal);
+        await TabTestHarness.Eventually(() => build.Lines().Contains("warning: deprecated"), "the output");
+        Assert.StartsWith("$ ", build.Lines()[0], StringComparison.Ordinal);
 
         process.Exit(0);
         await TabTestHarness.Eventually(() => !tab.ProjectTools.Runs.IsJobRunning, "the end");
@@ -324,7 +324,7 @@ public class ProjectToolsTests
 
         Assert.Equal("Generate project files failed (exit code 6).", generate.Status);
         Assert.True(generate.Failed);
-        Assert.DoesNotContain("Building NightOwlEditor...", generate.Output);
+        Assert.DoesNotContain("Building NightOwlEditor...", generate.Lines());
     }
 
     [Fact]
@@ -413,11 +413,11 @@ public class ProjectToolsTests
             process.WriteOutput($"line {i}");
         }
         var run = LastRun(tab)!;
-        await TabTestHarness.Eventually(() => run.Output.LastOrDefault() == "line 5200", "the output");
+        await TabTestHarness.Eventually(() => run.Lines().LastOrDefault() == "line 5200", "the output");
 
         // The oldest go 500 at a time: past 5,000, the first 500 (the command line and lines 1 to 499) went.
         Assert.Equal(4701, run.Output.Count);
-        Assert.Equal("line 500", run.Output[0]);
+        Assert.Equal("line 500", run.Lines()[0]);
         Assert.Equal(500, run.OutputDropped);
         Assert.Contains("5,000", run.OutputNote!.Replace(".", ",", StringComparison.Ordinal).Replace(" ", ",", StringComparison.Ordinal), StringComparison.Ordinal);
         await run.CopyOutputCommand.ExecuteAsync(null);
@@ -474,7 +474,7 @@ public class ProjectToolsTests
         Assert.False(Directory.Exists(Path.Combine(h.WorkFolder, "Plugins", "Owl", "Binaries")));
         Assert.True(File.Exists(Path.Combine(h.WorkFolder, "Saved", "Logs", "NightOwl.log")));
         Assert.True(File.Exists(Path.Combine(h.WorkFolder, "Plugins", "Owl", "Owl.uplugin")));
-        Assert.Contains("Deleted 2 folders.", LastRun(tab)!.Output);
+        Assert.Contains("Deleted 2 folders.", LastRun(tab)!.Lines());
         await TabTestHarness.Eventually(() => !Action(tab, "clean").IsEnabled, "nothing left to clean");
     }
 
@@ -596,7 +596,7 @@ public class ProjectToolsTests
         launcher.Processes.Last().WriteOutput("ok 12 tests");
         launcher.Processes.Last().Exit(0);
         await TabTestHarness.Eventually(() => LastRun(tab)!.Status == "Run tests succeeded.", "the end");
-        Assert.Contains("ok 12 tests", LastRun(tab)!.Output);
+        Assert.Contains("ok 12 tests", LastRun(tab)!.Lines());
     }
 
     [Fact]
