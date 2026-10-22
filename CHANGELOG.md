@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-22
+
 ### Added
 
 - **Editor logs under the tab.** While the Unreal editor, a commandlet or a game run has the tab's project open, its log is a row under the tab, and a click shows it in the main area as a project run's log is, followed as it's written, with its errors and warnings colored and counted on the row. Unreal's lines show in columns: the time in your computer's clock, the log category, the verbosity and the message. A filter over the log hides levels with a click on their chips, each with its count, Unreal's categories from a menu, or every line without some text; the levels and categories you hide are remembered for the project. Unity's editor and batch runs, and Godot's editor and game, get theirs too. The row stays after the editor closes, says *Crashed* when its log ends in a crash, and comes back with the new log when the editor starts again. Claudette reads the file without keeping it open, so the editor can rename or delete it as it always does. **Show editor logs under the tab** in Settings → Project tools turns it off.
@@ -132,7 +134,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/dotBunny/Claudette/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/dotBunny/Claudette/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dotBunny/Claudette/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dotBunny/Claudette/compare/v0.1.0...v0.2.0
