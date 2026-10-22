@@ -77,6 +77,60 @@ public class ConversationScrollUiTests
     }
 
     /// <summary>
+    /// A long conversation restored at once, as a resumed session's is, opens at its newest message, and that message
+    /// stays where it is on every layout pass while the list measures the messages above it: none of them puts it a
+    /// pixel off and the next pass back.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_restored_conversation_holds_its_newest_message_still_while_the_rest_are_measured()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1100, 800);
+        var scroll = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "ConversationScroll");
+        var items = window.GetVisualDescendants().OfType<ItemsControl>().Single(c => c.Name == "ConversationItems");
+        double? NewestBottom() => items.ContainerFromIndex(items.ItemCount - 1) is { IsVisible: true } last && last.TranslatePoint(new Point(0, last.Bounds.Height), scroll) is { } point
+            ? point.Y
+            : null;
+        // Where it is after each layout pass, from the first that builds it: each can be on screen.
+        var places = new List<double>();
+        window.LayoutUpdated += (_, _) =>
+        {
+            if (NewestBottom() is { } bottom && (places.Count > 0 || bottom <= scroll.Viewport.Height))
+            {
+                places.Add(bottom);
+            }
+        };
+
+        // Rows as a real session's differ: questions, thinking, Bash calls and replies from a line to a page long, far from
+        // the list's first guess at their heights, with an average height that isn't a whole pixel.
+        using (tab.Items.DeferNotifications())
+        {
+            for (var i = 0; i < 80; i++)
+            {
+                tab.Items.Add(new UserMessageItem($"Question {i}: " + string.Join(" ", Enumerable.Repeat("words", 1 + i % 9 * 6))));
+                var thinking = new ThinkingItem();
+                thinking.Append("Thinking it over.");
+                thinking.IsStreaming = false;
+                tab.Items.Add(thinking);
+                tab.Items.Add(new ToolUseItem($"tool{i}", "Bash", new JsonObject { ["command"] = $"ls docs/{i}" }) { IsComplete = true, ResultSummary = "ok" });
+                var reply = new AssistantTextItem();
+                reply.Append(string.Join("\n\n", Enumerable.Repeat($"Reply {i}: some text that wraps over a line or two in the conversation view, with a few more words.", 1 + i % 11 * 2)));
+                reply.IsStreaming = false;
+                tab.Items.Add(reply);
+            }
+            tab.Items.Add(new NoteItem("Resumed.", NoteKind.Info));
+        }
+        var panel = (ConversationPanel)items.ItemsPanelRoot!;
+        await UiText.SettleUntilAsync(window, () => panel.KnowsEveryHeight, "every message measured");
+        UiText.Settle(window);
+
+        Assert.True(places.Count > 10, $"Laid out {places.Count} times with the newest message built");
+        var moves = places.Zip(places.Skip(1), (from, to) => (from, to)).Select((move, pass) => (move.from, move.to, pass)).Where(m => Math.Abs(m.to - m.from) > 0.5).ToList();
+        Assert.True(moves.Count == 0, $"The newest message moved: {string.Join(", ", moves.Take(10).Select(m => $"pass {m.pass}: {m.from} → {m.to}"))} ({moves.Count} in all)");
+    }
+
+    /// <summary>
     /// A reply streaming in below a long conversation leaves every message above it as it was: none is built again, and
     /// no reply renders its Markdown again, which blanked it for a moment. The rows differ in height as a real
     /// session's do (replies, Bash calls, thinking), which is what made Avalonia's own panel lose its place.

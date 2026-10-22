@@ -198,8 +198,10 @@ public sealed class ConversationPanel : VirtualizingPanel
                 var rect = new Rect(0, _tops[_firstIndex + k], finalSize.Width, element.DesiredSize.Height);
                 element.Arrange(rect);
                 // The scroll viewer keeps the item nearest the top of the view where it is when items above it change
-                // height, as Avalonia's own panel has it do.
-                if (element.IsVisible && rect.Intersects(_viewport))
+                // height. Every built item is offered, and it picks from those in view as the view is now: _viewport
+                // hears of a jump only after the layout, so offering only the items in it left none to keep still on
+                // the pass after the conversation first went to its end, and what was in view slid down.
+                if (element.IsVisible)
                 {
                     _anchors?.RegisterAnchorCandidate(element);
                 }
@@ -269,7 +271,7 @@ public sealed class ConversationPanel : VirtualizingPanel
             _measuredCount++;
             if (estimate)
             {
-                _estimate = _measuredTotal / _measuredCount;
+                _estimate = Average();
             }
         }
         else
@@ -277,6 +279,14 @@ public sealed class ConversationPanel : VirtualizingPanel
             _measuredTotal += height - old;
         }
     }
+
+    /// <summary>
+    /// The measured items' average height, to the screen's pixel, as their own heights are, so every item starts on a
+    /// pixel. Starting between them, an item was placed a pixel off by the scroll viewer keeping the view still and then
+    /// put back by the conversation following its end: the newest message shook as each pass measured more.
+    /// </summary>
+    private double Average() =>
+        LayoutHelper.RoundLayoutValue(_measuredTotal / Math.Max(1, _measuredCount), LayoutHelper.GetLayoutScale(this));
 
     private void UpdateTops()
     {
@@ -372,7 +382,7 @@ public sealed class ConversationPanel : VirtualizingPanel
         if (KnowsEveryHeight)
         {
             // The last of them: an item added later, not measured yet, is taken to be the average of all of them.
-            _estimate = _measuredTotal / Math.Max(1, _measuredCount);
+            _estimate = Average();
         }
         InvalidateMeasure();
     }
