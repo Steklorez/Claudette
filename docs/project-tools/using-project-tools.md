@@ -68,8 +68,6 @@ A run's log shows in the main area, in the conversation's place, without the mes
 
 ### Stay current and Wrap lines
 
-{% include unreleased.html %}
-
 - **Stay current** keeps the newest line in view as the output comes. Scroll up to read something and it turns off, so the log holds still; scroll back to the end, or click it, and it follows again.
 - **Wrap lines** wraps long lines at the width of the pane. Turn it off and they stay on one line, and the log scrolls sideways. The next log you open, a run's or an [editor's](editor-logs.md), starts the way you left it.
 

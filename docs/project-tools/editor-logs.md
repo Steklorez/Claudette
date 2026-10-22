@@ -7,8 +7,6 @@ summary: "While the project's editor runs, its log is a row under the tab, read 
 
 # Editor logs
 
-{% include unreleased.html %}
-
 While the Unreal editor, Unity or Godot has a tab's project open, the log it writes is a row under the tab. Click the row to read the log where the conversation is, as it's written, with its errors and warnings colored, Unreal's lines in tidy columns, and a filter to show only the levels, categories or text you want. The row stays after the editor closes, so you can read what happened, and it picks up the new log when the editor starts again. Claudette only opens the file for a moment each time it reads, so the editor can write, rename or delete it as it always does.
 
 {% include shot.html name="guide/project-tools/editor-log" alt="The sidebar with Starfall.log under the Grappling hook tab, and the Unreal editor's log in the main area: Stay current and Wrap lines beside Open file, a chip for each level with its count, Categories and Filter lines, then the log in columns of time, category, verbosity and message, with an error in red and warnings in amber." %}

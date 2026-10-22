@@ -37,7 +37,7 @@ In the order the menu has them:
 | **Copy session ID** | Copies the session's ID. Shown once the tab has a session. | [Below](#copy-session-id) |
 | **Trust this folder** | Starts Claude Code again with the folder's own settings, MCP servers and `CLAUDE.md`. Shown for a tab that started without them. | [Folder trust](../permissions/folder-trust.md) |
 | **Move up**, **Move down** | Move the tab one place in its group. | [Below](#move-up-and-move-down) |
-| **Collapse tab** or **Expand tab** | Folds away the rows under the tab, such as its sub-threads, subagents, editor logs and project runs, or brings them back. Shown while the tab has rows under it. It's new in the next release. | [Collapsing a tab](the-sidebar.md#collapsing-a-tab) |
+| **Collapse tab** or **Expand tab** | Folds away the rows under the tab, such as its sub-threads, subagents, editor logs and project runs, or brings them back. Shown while the tab has rows under it. | [Collapsing a tab](the-sidebar.md#collapsing-a-tab) |
 | **Close** | Closes the tab, asking first when something would be lost. | [Closing and restoring](closing-and-restoring.md) |
 | **Close other tabs** | Closes every other tab except pinned ones. | [Closing and restoring](closing-and-restoring.md) |
 

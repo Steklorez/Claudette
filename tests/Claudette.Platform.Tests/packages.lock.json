@@ -177,7 +177,7 @@
       "claudette.platform": {
         "type": "Project",
         "dependencies": {
-          "Claudette.Core": "[0.5.0, )",
+          "Claudette.Core": "[0.6.0, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.13, )"
         }
       },

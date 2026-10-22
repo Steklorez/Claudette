@@ -85,8 +85,6 @@ When a tab has a lot under it, collapse it to fold them away. See [Collapsing a 
 
 ## Collapsing a tab
 
-{% include unreleased.html %}
-
 A tab with rows under it, such as a thread's sub-threads, subagents, editor logs or project runs, has a chevron before its name, as a group's label does. Click the chevron, or choose **Collapse tab** in the [tab's menu](the-tabs-menu.md) or the [command palette](the-command-palette.md), to fold them all away under the tab's row. A sub-thread's own rows go with it. Click it again, or choose **Expand tab**, to bring them back.
 
 - **The collapsed row** keeps its two lines and adds a small badge to the first: how many rows it hides, then the most urgent of them in its own color. That's `!` for one waiting on you; `✕` for an error, a failed run, or an editor's log that crashed or has errors you haven't looked at; the busy dot while one works; and `•` for one that finished while you were elsewhere. Hover the badge to see what it hides, such as *Collapsed: 2 sub-threads, 1 log and 1 run*, with a line for each one waiting on you or failed.

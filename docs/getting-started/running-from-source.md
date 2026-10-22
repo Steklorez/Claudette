@@ -49,7 +49,7 @@ Stop Claudette by closing its window, not by killing the process. Closing interr
 
 ## Which build is this
 
-The foot of the Settings sidebar shows the version and, for a source build, the commit it was built from, such as `Claudette 0.4.0 · 842169b`. Hover it to see which configuration it was built in. Click it to copy the versions for a bug report: see [Reporting an issue](../troubleshooting/reporting-an-issue.md).
+The foot of the Settings sidebar shows the version and, for a source build, the commit it was built from, such as `Claudette 0.5.0 · 842169b`. Hover it to see which configuration it was built in. Click it to copy the versions for a bug report: see [Reporting an issue](../troubleshooting/reporting-an-issue.md).
 
 ## Keeping it apart from your own Claudette
 
