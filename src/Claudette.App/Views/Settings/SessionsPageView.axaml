@@ -24,6 +24,9 @@
       <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseLibraryFolderCommand}" ToolTip.Tip="Use another folder from now on" />
       <Button Grid.Column="2" Content="Move library…" Command="{Binding MoveLibraryCommand}" ToolTip.Tip="Copy the existing sessions to another folder and use it" />
     </Grid>
+    <!-- What the library takes, measured as the page shows -->
+    <TextBlock Classes="muted small" Text="{Binding LibrarySizeText}" TextWrapping="Wrap" Margin="0,-6,0,0"
+               IsVisible="{Binding LibrarySizeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
     <Button Classes="flat" Content="Use the default folder" Command="{Binding UseDefaultLibraryFolderCommand}" IsVisible="{Binding !IsDefaultLibraryFolder}" HorizontalAlignment="Left" />
     <Border Classes="codeblock" IsVisible="{Binding LibraryFolderConfirmation.IsOpen}">
       <StackPanel Spacing="8">

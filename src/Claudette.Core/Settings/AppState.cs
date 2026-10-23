@@ -277,6 +277,13 @@ public sealed class TabState
     public bool SyncToLibrary { get; set; }
 
     /// <summary>
+    /// What the session took in the session library after the tab's last copy there (DESIGN.md §9, "Writing"), so the
+    /// info card, the row's sync icon and Tab settings have it from launch without reading the library's folder. Null
+    /// until the first copy.
+    /// </summary>
+    public SyncedSize? SyncedSize { get; set; }
+
+    /// <summary>
     /// Connect this tab to the Claude app with Remote Control whenever its session runs, so it reconnects by itself after
     /// a restart (DESIGN.md §18, "Remote Control"). Off unless the tab opted in: new tabs take Settings → Claude Code →
     /// Connect new tabs to the Claude app. The tab's own state, like <see cref="SyncToLibrary"/>, not an override.
@@ -401,6 +408,16 @@ public sealed class TabState
     /// with or one on a message. The next message carries a note when the tab's setting no longer matches.
     /// </summary>
     public SubagentUse SubagentsTold { get; set; } = SubagentUse.ClaudeDecides;
+}
+
+/// <summary>What a tab's session took in the session library after its last copy there (DESIGN.md §9, "Writing").</summary>
+public sealed class SyncedSize
+{
+    /// <summary>The session it was measured for: one the tab has left since, after <c>/clear</c> or a rewind, doesn't count.</summary>
+    public string SessionId { get; set; } = "";
+
+    /// <summary>Every file in the session's library folder, in bytes.</summary>
+    public long Bytes { get; set; }
 }
 
 /// <summary>A reply the user chose as a tab's plan (DESIGN.md §5, "Tasks").</summary>

@@ -21,7 +21,7 @@ History lists your past sessions, grouped by project, so you can pick one up aga
 
 ## What a row shows
 
-Each session shows its name (after its mark, if it has one), the first prompt, and a line of details: which machine used it last (**This machine**, or the other machine's name), how long ago, how many messages, its git branch, and *open in a tab* if it's open. Sessions are grouped under their project's folder, the one you used most recently first.
+Each session shows its name (after its mark, if it has one), the first prompt, and a line of details: which machine used it last (**This machine**, or the other machine's name), how long ago, how many messages, its git branch, how much it takes in the session library if it's there (*312 MB in the library*, see [Syncing a tab](syncing-a-tab.md#how-much-it-takes)), and *open in a tab* if it's open. Sessions are grouped under their project's folder, the one you used most recently first.
 
 A session that Claude Code ran in a [worktree](../tabs/worktree-tabs.md) is listed under its repository's folder, as its tab is in the sidebar. Its details say *worktree brisk-otter*, and show its branch too when the branch isn't the worktree's own.
 

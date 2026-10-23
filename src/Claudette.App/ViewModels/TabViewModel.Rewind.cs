@@ -262,6 +262,7 @@ public sealed partial class TabViewModel
         {
             State.SessionId = null;
             OnPropertyChanged(nameof(HasSessionId));
+            OnSyncSizeChanged();
             State.TranscriptPath = null;
             State.SessionStartedAt = null;
             State.ForkOnNextStart = false;

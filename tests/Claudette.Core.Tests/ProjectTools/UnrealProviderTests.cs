@@ -288,15 +288,6 @@ public sealed class UnrealProviderTests : IDisposable
         Assert.Single(delete.Folders());
     }
 
-    [Fact]
-    public void Sizes_read_as_people_say_them()
-    {
-        Assert.Equal("512 bytes", FolderCleaner.FormatSize(512));
-        Assert.Equal("12 KB", FolderCleaner.FormatSize(12 * 1024));
-        Assert.Equal("140 MB", FolderCleaner.FormatSize(140L * 1024 * 1024));
-        Assert.Equal("3.2 GB", FolderCleaner.FormatSize((long)(3.2 * 1024 * 1024 * 1024)));
-    }
-
     // ---- Kill all Unreal editors ---------------------------------------------------------------------------------------------
 
     [Fact]

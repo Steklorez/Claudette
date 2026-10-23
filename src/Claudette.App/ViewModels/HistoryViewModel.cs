@@ -587,7 +587,7 @@ public sealed partial class HistoryViewModel : ViewModelBase
         return Entry(summary.SessionId, record?.Name ?? summary.Title, summary.FirstPrompt ?? record?.FirstPrompt, summary.Folder ?? record?.Folder,
             lastUsedElsewhere ? record!.Machine : context.Machine, lastUsedElsewhere ? record!.LastUsed : summary.LastActivity,
             summary.MessageCount, summary.GitBranch, summary.TranscriptPath, record, libraryEntry?.TranscriptPath, isConflict: false, label: null,
-            context, continuedElsewhere: lastUsedElsewhere, prompts: summary.Prompts);
+            context, continuedElsewhere: lastUsedElsewhere, prompts: summary.Prompts, librarySize: libraryEntry?.Size);
     }
 
     /// <summary>A session only in the library, from another machine (or older than Claude Code's own cleanup).</summary>
@@ -598,12 +598,13 @@ public sealed partial class HistoryViewModel : ViewModelBase
         return Entry(record.SessionId, libraryEntry.IsConflictCopy ? $"{title} ({libraryEntry.ConflictLabel})" : title,
             summary?.FirstPrompt ?? record.FirstPrompt, record.Folder, record.Machine, record.LastUsed,
             summary?.MessageCount ?? 0, record.Project?.Branch, localTranscript: null, record, libraryEntry.TranscriptPath,
-            libraryEntry.IsConflictCopy, libraryEntry.ConflictLabel, context, prompts: summary?.Prompts);
+            libraryEntry.IsConflictCopy, libraryEntry.ConflictLabel, context, prompts: summary?.Prompts, librarySize: libraryEntry.Size);
     }
 
+    /// <param name="librarySize">What the session takes in the session library, for one that's there (DESIGN.md §9, "History").</param>
     private static HistoryEntry Entry(string id, string? title, string? prompt, string? folder, string lastMachine, DateTimeOffset last, int messages, string? branch,
         string? localTranscript, SessionRecord? record, string? libraryTranscript, bool isConflict, string? label, EntryContext context,
-        bool continuedElsewhere = false, string? prompts = null)
+        bool continuedElsewhere = false, string? prompts = null, long? librarySize = null)
     {
         var who = lastMachine == context.Machine ? "This machine" : lastMachine;
         var details = new List<string> { who, Formats.Ago(context.Now - last) };
@@ -620,6 +621,10 @@ public sealed partial class HistoryViewModel : ViewModelBase
         if (worktree is not null)
         {
             details.Add($"worktree {worktree}");
+        }
+        if (librarySize is { } size)
+        {
+            details.Add($"{Formats.Size(size)} in the library");
         }
         if (context.Open.Contains(id))
         {

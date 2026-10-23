@@ -277,6 +277,67 @@ public sealed class SessionLibraryTests : IDisposable
     }
 
     [Fact]
+    public async Task A_sessions_size_is_every_file_in_its_folder_but_ones_still_being_written()
+    {
+        var (transcript, subagents) = LocalSession();
+        await _library.SaveAsync(Record(), transcript, subagents, force: false, usageJson: "{\"turns\":[]}", Ct);
+        var folder = _library.GetSessionFolder(Id);
+        // A sync client's conflict copy takes room too; a file half written doesn't yet, nor does the lease, which only
+        // says who has the session open.
+        File.WriteAllText(Path.Combine(folder, $"{Id} (1).jsonl"), "{}");
+        File.WriteAllText(Path.Combine(folder, $"{Id}.jsonl.0123.tmp"), "half written");
+        File.WriteAllText(Path.Combine(folder, LeaseManager.FileName), "{\"machine\":\"DESKTOP-01\"}");
+
+        string[] counted = [$"{Id}.jsonl", $"{Id} (1).jsonl", "record.json", "usage.json", Path.Combine("subagents", "agent-a1.jsonl")];
+        Assert.Equal(counted.Sum(file => new FileInfo(Path.Combine(folder, file)).Length), _library.GetSessionSize(Id));
+
+        var before = _library.GetSessionSize(Id);
+        File.AppendAllText(transcript, "{\"type\":\"assistant\"}\n");
+        await _library.SaveAsync(Record(), transcript, subagents, Ct);
+        Assert.Equal(before + "{\"type\":\"assistant\"}\n".Length, _library.GetSessionSize(Id));
+
+        Assert.Null(_library.GetSessionSize("missing"));
+        Assert.Null(_library.GetSessionSize("../x"));
+    }
+
+    [Fact]
+    public async Task Listed_sessions_carry_their_size_and_a_conflict_copy_its_own()
+    {
+        var (transcript, subagents) = LocalSession("abc");
+        await _library.SaveAsync(Record("abc"), transcript, subagents, Ct);
+        var copy = Path.Combine(_library.GetSessionFolder("abc"), "abc (1).jsonl");
+        File.WriteAllText(copy, "{\"type\":\"user\"}\n{\"type\":\"assistant\"}\n");
+
+        var entries = _library.List();
+
+        Assert.Equal(_library.GetSessionSize("abc"), entries[0].Size);
+        Assert.Equal(new FileInfo(copy).Length, entries[1].Size);
+    }
+
+    [Fact]
+    public async Task The_librarys_size_is_every_file_in_it_with_how_many_sessions_it_holds()
+    {
+        Assert.Equal(new LibrarySize(0, 0), _library.Measure());
+
+        var (first, subagents) = LocalSession("first");
+        var (second, _) = LocalSession("second");
+        await _library.SaveAsync(Record("first"), first, subagents, Ct);
+        await _library.SaveAsync(Record("second"), second, null, Ct);
+        await _library.WriteSharedUsageAsync("machine1", "{\"windows\":[]}", Ct);
+        _root.Write("library/scratch/pad.json", "{\"text\":\"notes\"}");
+        _root.Write("library/settings-sync.json.0123.tmp", "half written");
+        _root.Write($"library/sessions/first/{LeaseManager.FileName}", "{\"machine\":\"DESKTOP-01\"}");
+
+        var size = _library.Measure();
+
+        Assert.Equal(2, size.Sessions);
+        var counted = Directory.GetFiles(_library.LibraryFolder, "*", SearchOption.AllDirectories)
+            .Where(file => !file.EndsWith(".tmp", StringComparison.Ordinal) && Path.GetFileName(file) != LeaseManager.FileName);
+        Assert.Equal(counted.Sum(file => new FileInfo(file).Length), size.Bytes);
+        Assert.Equal(_library.GetSessionSize("first") + _library.GetSessionSize("second") + "{\"windows\":[]}".Length + "{\"text\":\"notes\"}".Length, size.Bytes);
+    }
+
+    [Fact]
     public async Task Copy_to_local_puts_the_transcript_and_subagents_in_the_working_folder()
     {
         var (transcript, subagents) = LocalSession();

@@ -17,7 +17,8 @@ public abstract record LibraryCopyResult
     }
 
     /// <summary>The transcript, the subagent transcripts and the record are in the library.</summary>
-    public sealed record Copied : LibraryCopyResult;
+    /// <param name="Size">What the session takes in the library now, in bytes; null when its folder couldn't be measured.</param>
+    public sealed record Copied(long? Size) : LibraryCopyResult;
 
     /// <summary>The tab stopped syncing before the copy began, so nothing was written.</summary>
     public sealed record NotSyncing : LibraryCopyResult;
@@ -190,7 +191,8 @@ public sealed class LibraryService : IDisposable
             {
                 Leases.Renew(record.SessionId, sessionFolder);
             }
-            return new LibraryCopyResult.Copied();
+            // What the sync client has to keep, for the tab to show (DESIGN.md §9, "Writing").
+            return new LibraryCopyResult.Copied(Library.GetSessionSize(record.SessionId));
         }
         catch (Exception ex)
         {

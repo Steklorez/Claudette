@@ -54,7 +54,7 @@ Small icons before the name and bordered badges at the right of the second line 
 | Badge | Meaning | More |
 |---|---|---|
 | Pin | The tab is pinned. | [Names, marks and pins](names-marks-and-pins.md#pinning-a-tab) |
-| Sync arrows | The tab's session is copied to the session library. | [Syncing a tab](../history/syncing-a-tab.md) |
+| Sync arrows | The tab's session is copied to the session library. Its tip says how much the session takes there. | [Syncing a tab](../history/syncing-a-tab.md) |
 | Thread icon | The tab is a thread. Its sub-threads sit indented under it. | [Making a thread](../threads/making-a-thread.md) |
 | Branch icon | The tab works in a git worktree. | [Worktree tabs](worktree-tabs.md) |
 | Phone | The tab is connected to the Claude app. It dims while it connects. | [The Claude app](../away/the-claude-app.md) |

@@ -31,6 +31,7 @@ A row shows only when the tab has something to say. They come in this order:
 | **Started** | When the session started. For a resumed session, that's its transcript's first entry. |
 | **Session** | The session's ID, which `claude --resume` takes. Has **Copy** in the ⓘ card. |
 | **Reached as** | The name other Claude Code sessions message this one by. Has **Copy** in the ⓘ card. |
+| **Sync size** | For a tab that syncs: how much its session takes in the session library, *312 MB in the session library*, as of its last copy there. See [Syncing a tab](../history/syncing-a-tab.md#how-much-it-takes). |
 | **Tokens** | A short count of the tokens the tab has used and its number of turns. See [A tab's tokens](../usage/a-tabs-tokens.md). |
 | **Claude Code** | The Claude Code version this tab runs. When a newer one is installed, it says so: open tabs keep their version and new tabs use the newest. See [Claude Code's updates](../updates/claude-codes-updates.md). |
 | **Context** | How full the context window is. See [Context and compacting](../usage/context-and-compacting.md). |

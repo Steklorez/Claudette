@@ -19,6 +19,8 @@ By default it's the `library` folder inside [Claudette's data folder](../privacy
 2. Under **Session library folder**, choose **Browse…** to use another folder from now on, or **Move library…** to copy the sessions already in the library to the new folder and use that.
 3. Pick the folder.
 
+Under the folder, the page says how much the library holds: *The library holds 1.4 GB: 23 sessions.* That's everything in it, scratch pads and shared usage included, and it's measured each time you open the page. [Syncing a tab](syncing-a-tab.md#how-much-it-takes) shows what each session takes.
+
 **Browse…** leaves the existing sessions where they were. **Move library…** copies them and says *Copied the sessions to …. The old folder was left as it was.* Neither deletes anything. **Use the default folder** goes back to the folder inside the data folder.
 
 Use the same folder, as your sync client sees it, on every machine. The folder's path can differ from one machine to the next.

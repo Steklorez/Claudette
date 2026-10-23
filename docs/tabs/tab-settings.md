@@ -47,7 +47,7 @@ Tick **Use different check-in settings for this tab** to set its own: **Check-in
 
 These are in the same dialog, but they're the tab's own choices rather than replacements for a default. **Use defaults** leaves them as they are, and they don't count toward the dot.
 
-- **Sync to other machines** copies the tab's session to the session library after each turn. It's the same switch as the tab's menu. See [Syncing a tab](../history/syncing-a-tab.md).
+- **Sync to other machines** copies the tab's session to the session library after each turn. It's the same switch as the tab's menu. Once the session is there, the line under it says how much it takes: *This session takes 312 MB in the session library.* See [Syncing a tab](../history/syncing-a-tab.md).
 - **Connect to the Claude app** connects the tab to the Claude app on your phone or at claude.ai/code while it runs here, reconnecting whenever the tab starts. It's greyed out, with the reason under it, when the account can't use it. See [The Claude app](../away/the-claude-app.md).
 - **Extra folders** are folders Claude may also read and edit, besides the tab's own. Choose **Add folder…**, or the remove button beside a folder. Their own settings and `CLAUDE.md` aren't loaded, and a folder that's gone isn't passed on.
 

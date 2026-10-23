@@ -176,6 +176,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     /// <summary>The page the window shows: the selected category's, or one of the project's. Null for a page there isn't.</summary>
     public SettingsPage? CurrentPage => Pages.FirstOrDefault(p => p.Title == SelectedCategory);
 
+    partial void OnSelectedCategoryChanged(string value) => CurrentPage?.OnShown();
+
     // ---- Search (DESIGN.md §14: "A search box filters settings by name") -------------------------------------------
 
     [ObservableProperty]

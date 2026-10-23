@@ -10,6 +10,7 @@
 [field] "{root}/data/library"
 [button] Browse…
 [button] Move library…
+"The library is empty."
 [ ] Sync new tabs to the session library
 "Any tab can be switched on or off with Sync to other machines in its menu. Sessions opened from the library keep syncing."
 [ ] Sync Claudette's settings through the library

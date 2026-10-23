@@ -9,6 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - **Install Claude Code from Claudette.** When Claude Code isn't installed, the first screen now offers **Install Claude Code**. It shows the command from Claude Code's own setup page for your system, runs it there and then, shows what it prints, and carries on to signing in once Claude Code is installed. Nothing asks for an administrator's password, and no terminal is needed.
+- **See how much a synced session takes.** A long session can reach hundreds of megabytes, all of which your sync client uploads and keeps. A tab that syncs to the session library now says how much its session takes there: hover its sync icon (*Synced to the session library · 312 MB*), or see **Sync size** on its info card and the line under **Sync to other machines** in **Tab settings…**. It's measured each time the session is copied to the library. History shows how much each session in the library takes, and Settings → Sessions how much the whole library holds.
 
 ### Fixed
 

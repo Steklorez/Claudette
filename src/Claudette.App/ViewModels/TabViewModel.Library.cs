@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
+using Claudette.Core;
 using Claudette.Core.Diffs;
 using Claudette.Core.Library;
 using Claudette.Core.Sessions;
@@ -72,7 +73,39 @@ public sealed partial class TabViewModel
     {
         OnPropertyChanged(nameof(SyncToLibrary));
         OnSyncNowChanged();
+        OnSyncSizeChanged();
         _services.SaveState();
+    }
+
+    // ---- What it takes in the library (DESIGN.md §9, "Writing") ---------------------------------------------------
+
+    /// <summary>
+    /// What the session takes in the session library as of the tab's last copy there, "312 MB", while the tab syncs: on
+    /// the info card, the row's sync icon and in Tab settings. Null before the session's first copy.
+    /// </summary>
+    public string? SyncSize => State.SyncToLibrary && State.SyncedSize is { } size && size.SessionId == State.SessionId ? Formats.Size(size.Bytes) : null;
+
+    /// <summary>The tip of the row's sync icon, with the size once there is one.</summary>
+    public string SyncTip => SyncSize is { } size ? $"Synced to the session library · {size}" : "Synced to the session library";
+
+    /// <summary>Keeps what a copy found the session takes, saved with the tab so it shows from launch.</summary>
+    private void SetSyncedSize(string sessionId, long? bytes)
+    {
+        if (bytes is not { } size || State.SyncedSize is { } known && known.SessionId == sessionId && known.Bytes == size)
+        {
+            return;
+        }
+        State.SyncedSize = new SyncedSize { SessionId = sessionId, Bytes = size };
+        OnSyncSizeChanged();
+        _services.SaveState();
+    }
+
+    /// <summary>The size shows for the tab's session while it syncs: when either changes, so may what's shown.</summary>
+    private void OnSyncSizeChanged()
+    {
+        OnPropertyChanged(nameof(SyncSize));
+        OnPropertyChanged(nameof(SyncTip));
+        OnPropertyChanged(nameof(InfoRows));
     }
 
     /// <summary>
@@ -108,8 +141,9 @@ public sealed partial class TabViewModel
         var result = await library.CopyToLibraryAsync(LibraryRecord(), State.TranscriptPath, () => State.SyncToLibrary && !IsReadOnly, force: true);
         switch (result)
         {
-            case LibraryCopyResult.Copied:
+            case LibraryCopyResult.Copied copied:
                 _libraryCopyFailed = false;
+                SetSyncedSize(sessionId, copied.Size);
                 _conversation.AddNote("Copied this session to the session library.");
                 break;
             case LibraryCopyResult.NoTranscript:
@@ -155,9 +189,14 @@ public sealed partial class TabViewModel
     /// </summary>
     private async Task CopyToLibraryAsync()
     {
-        var result = await _services.Library.CopyToLibraryAsync(LibraryRecord(), State.TranscriptPath, () => State.SyncToLibrary);
+        var record = LibraryRecord();
+        var result = await _services.Library.CopyToLibraryAsync(record, State.TranscriptPath, () => State.SyncToLibrary);
         _services.Dispatcher.Post(() =>
         {
+            if (result is LibraryCopyResult.Copied copied)
+            {
+                SetSyncedSize(record.SessionId, copied.Size);
+            }
             switch (result)
             {
                 case LibraryCopyResult.Failed failed when !_libraryCopyFailed:
@@ -232,12 +271,16 @@ public sealed partial class TabViewModel
         var library = _services.Library;
         try
         {
-            // File reads on the library folder, which may be a slow or offline drive: not on the UI thread.
-            var status = await Task.Run(() => library.Library.GetTranscriptPath(sessionId) is null ? null : library.CheckLease(sessionId));
+            // File reads on the library folder, which may be a slow or offline drive: not on the UI thread. What the session
+            // takes there is read too, so a tab that hasn't copied it yet, opened from History, shows it from the start.
+            var (status, size) = await Task.Run(() => library.Library.GetTranscriptPath(sessionId) is null
+                ? ((LeaseStatus?)null, (long?)null)
+                : (library.CheckLease(sessionId), library.Library.GetSessionSize(sessionId)));
             if (status is null)
             {
                 return true;
             }
+            SetSyncedSize(sessionId, size);
             switch (status)
             {
                 case LeaseStatus.HeldByOther other:

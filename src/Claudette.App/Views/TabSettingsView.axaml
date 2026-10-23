@@ -48,6 +48,8 @@
       <CheckBox Content="Sync to other machines" IsChecked="{Binding SyncToLibrary}" />
       <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
                  Text="Copies this session to the session library after each turn, so another machine can open it from History." />
+      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding SyncSizeText}"
+                 IsVisible="{Binding SyncSizeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
       <!-- Remote Control (DESIGN.md §18): the tab's own choice too -->
       <CheckBox Content="Connect to the Claude app" IsChecked="{Binding RemoteControl}" IsEnabled="{Binding CanChangeRemoteControl}" />

@@ -51,6 +51,11 @@ public abstract partial class SettingsPage : ViewModelBase
     /// <summary>Puts the page's settings back to their defaults, and saves them.</summary>
     protected abstract void ResetSettings();
 
+    /// <summary>The window shows the page: one that shows something slow to read, such as the library's size, reads it now.</summary>
+    public virtual void OnShown()
+    {
+    }
+
     protected void Save() => Context.Save();
 
     /// <summary>Changes a setting from its property: applies it, says the property changed, and saves.</summary>

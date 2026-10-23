@@ -1,3 +1,4 @@
+using Claudette.Core;
 using Claudette.Core.Library;
 using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -70,6 +71,40 @@ public sealed partial class SessionsPage(SettingsContext context) : SettingsPage
     [ObservableProperty]
     public partial string? LibraryStatus { get; set; }
 
+    /// <summary>
+    /// What the library takes, under its folder (DESIGN.md §14, "Sessions"): "The library holds 1.4 GB: 23 sessions."
+    /// Null until it's been measured.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? LibrarySizeText { get; set; }
+
+    /// <summary>The latest measurement of the library, for tests to wait on.</summary>
+    internal Task Measuring { get; private set; } = Task.CompletedTask;
+
+    /// <summary>Measured each time the page shows, since sessions come and go with every tab that syncs.</summary>
+    public override void OnShown() => MeasureLibrary();
+
+    private void MeasureLibrary() => Measuring = MeasureLibraryAsync();
+
+    /// <summary>Walks the library's folder, which may be on a slow or offline drive: not on the UI thread.</summary>
+    private async Task MeasureLibraryAsync()
+    {
+        var folder = Services.Library.LibraryFolder;
+        var time = Services.Time;
+        var size = await Task.Run(() => new SessionLibrary(folder, time).Measure());
+        // The folder changed meanwhile: its own measurement follows.
+        if (folder != Services.Library.LibraryFolder)
+        {
+            return;
+        }
+        LibrarySizeText = size switch
+        {
+            { Bytes: 0, Sessions: 0 } => "The library is empty.",
+            { Sessions: 0 } => $"The library holds {Formats.Size(size.Bytes)}: no sessions.",
+            _ => $"The library holds {Formats.Size(size.Bytes)}: {size.Sessions} session{(size.Sessions == 1 ? "" : "s")}.",
+        };
+    }
+
     /// <summary>Browse…: use another folder from now on.</summary>
     [RelayCommand]
     private Task BrowseLibraryFolderAsync() => ChooseLibraryFolderAsync(move: false);
@@ -120,6 +155,8 @@ public sealed partial class SessionsPage(SettingsContext context) : SettingsPage
         _moveLibrary = false;
         OnPropertyChanged(nameof(LibraryFolder));
         OnPropertyChanged(nameof(IsDefaultLibraryFolder));
+        LibrarySizeText = null;
+        MeasureLibrary();
     }
 
     // ---- Settings sync (DESIGN.md §14) -------------------------------------------------------------------------------

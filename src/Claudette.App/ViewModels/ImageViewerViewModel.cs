@@ -1,6 +1,6 @@
 using Claudette.App.Services;
+using Claudette.Core;
 using Claudette.Core.Files;
-using Claudette.Core.ProjectTools;
 using Claudette.Core.Protocol;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -33,7 +33,7 @@ public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
         Details = string.Join(" · ", new[]
         {
             image.Tool,
-            $"{TypeName} {FolderCleaner.FormatSize(image.Image.Data.LongLength)}",
+            $"{TypeName} {Formats.Size(image.Image.Data.LongLength)}",
             Animation is { } animation ? $"{animation.FrameCount} frames" : null,
             image.ScaledFrom is { } original ? $"scaled down from {original} to send" : null,
         }.OfType<string>());

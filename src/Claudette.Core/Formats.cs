@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace Claudette.Core;
 
-/// <summary>How Claudette writes times, durations and names, the same wherever they show.</summary>
+/// <summary>How Claudette writes times, durations, sizes and names, the same wherever they show.</summary>
 public static class Formats
 {
     /// <summary>How long ago: "just now", "5 min ago", "2 h ago", "yesterday", "3 days ago".</summary>
@@ -51,6 +51,19 @@ public static class Formats
 
     /// <summary>An amount in US dollars, as the token counts' costs show: "$0.75", "$12.40".</summary>
     public static string Dollars(double usd) => $"${usd:0.00}";
+
+    /// <summary>A size on disk: "3.2 GB", "140 MB", "12 KB", "512 bytes".</summary>
+    public static string Size(long bytes)
+    {
+        const double kb = 1024, mb = kb * 1024, gb = mb * 1024;
+        return bytes switch
+        {
+            >= (long)gb => (bytes / gb).ToString("0.0", CultureInfo.InvariantCulture) + " GB",
+            >= (long)mb => Math.Round(bytes / mb).ToString("0", CultureInfo.InvariantCulture) + " MB",
+            >= (long)kb => Math.Round(bytes / kb).ToString("0", CultureInfo.InvariantCulture) + " KB",
+            _ => bytes.ToString(CultureInfo.InvariantCulture) + " bytes",
+        };
+    }
 
     /// <summary>"High" for "high".</summary>
     public static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];

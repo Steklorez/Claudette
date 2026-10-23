@@ -8,7 +8,14 @@ namespace Claudette.Core.Library;
 /// <param name="TranscriptPath">The transcript in the library.</param>
 /// <param name="IsConflictCopy">A copy a sync client made when two machines changed the transcript at once.</param>
 /// <param name="ConflictLabel">What tells the copy apart, for example <c>copy 1</c> or <c>DESKTOP-01's conflicted copy 2026-09-28</c>.</param>
-public sealed record LibraryEntry(SessionRecord Record, string TranscriptPath, bool IsConflictCopy, string? ConflictLabel);
+/// <param name="Size">
+/// What it takes in the library, in bytes (DESIGN.md §9, "History"): the session's whole folder, or a conflict copy's own
+/// transcript.
+/// </param>
+public sealed record LibraryEntry(SessionRecord Record, string TranscriptPath, bool IsConflictCopy, string? ConflictLabel, long Size);
+
+/// <summary>What the whole library takes (DESIGN.md §14, "Sessions"): every file in it, and how many sessions it holds.</summary>
+public sealed record LibrarySize(long Bytes, int Sessions);
 
 /// <summary>A synced session's usage file in the library, with what tells whether it changed since it was last read.</summary>
 public sealed record SessionUsageFileInfo(string SessionId, string Path, long Length, DateTime LastWriteUtc);
@@ -49,6 +56,14 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
     public const string UsageClearedFileName = "cleared.json";
 
     private const string TranscriptExtension = ".jsonl";
+
+    /// <summary>Every file, hidden ones too, without following a link out of the folder.</summary>
+    private static readonly EnumerationOptions AllFiles = new()
+    {
+        RecurseSubdirectories = true,
+        IgnoreInaccessible = true,
+        AttributesToSkip = FileAttributes.ReparsePoint,
+    };
 
     private static JsonSerializerOptions Json => JsonFileStore<SessionRecord>.Options;
 
@@ -288,6 +303,45 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
             .ToArray();
     }
 
+    /// <summary>
+    /// What a session takes in the library, in bytes (DESIGN.md §9, "Writing"): every file in its folder, the transcript,
+    /// its subagents', the usage file, the record and a sync client's conflict copies, which the sync client keeps too,
+    /// but not its lease. Null when the library has no folder for it, or it can't be read just now.
+    /// </summary>
+    public long? GetSessionSize(string sessionId)
+    {
+        if (!IsValidId(sessionId))
+        {
+            return null;
+        }
+        var folder = GetSessionFolder(sessionId);
+        try
+        {
+            return Directory.Exists(folder) ? FolderSize(folder) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// What the whole library takes (DESIGN.md §14, "Sessions"): every file in its folder but leases, scratch pads, usage
+    /// and settings sync included, and how many sessions it holds. Folders that can't be read count as far as they could be.
+    /// </summary>
+    public LibrarySize Measure()
+    {
+        try
+        {
+            var sessions = SessionFolders().Count(folder => IsValidId(Path.GetFileName(folder)));
+            return new LibrarySize(Directory.Exists(LibraryFolder) ? FolderSize(LibraryFolder) : 0, sessions);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return new LibrarySize(0, 0);
+        }
+    }
+
     /// <summary>The library's copy of a session's transcript, or null when there isn't one.</summary>
     public string? GetTranscriptPath(string sessionId)
     {
@@ -463,17 +517,26 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
         var main = Path.Combine(folder, mainName);
         if (File.Exists(main))
         {
-            entries.Add(new LibraryEntry(record, main, IsConflictCopy: false, ConflictLabel: null));
+            entries.Add(new LibraryEntry(record, main, IsConflictCopy: false, ConflictLabel: null, FolderSize(folder)));
         }
-        foreach (var file in Directory.EnumerateFiles(folder, "*" + TranscriptExtension))
+        foreach (var file in new DirectoryInfo(folder).EnumerateFiles("*" + TranscriptExtension))
         {
-            var name = Path.GetFileName(file);
-            if (IsTranscript(file) && !name.Equals(mainName, StringComparison.OrdinalIgnoreCase) && ConflictLabel(id, name) is { } label)
+            var name = file.Name;
+            if (IsTranscript(name) && !name.Equals(mainName, StringComparison.OrdinalIgnoreCase) && ConflictLabel(id, name) is { } label)
             {
-                entries.Add(new LibraryEntry(record, file, IsConflictCopy: true, label));
+                entries.Add(new LibraryEntry(record, file.FullName, IsConflictCopy: true, label, file.Length));
             }
         }
     }
+
+    /// <summary>
+    /// The size of the files in <paramref name="folder"/> and its subfolders, leaving out ones still being written, and
+    /// leases, which only say who has a session open and are written again every minute.
+    /// </summary>
+    private static long FolderSize(string folder) =>
+        new DirectoryInfo(folder).EnumerateFiles("*", AllFiles)
+            .Where(file => !LibraryFiles.IsTemp(file.Name) && !file.Name.Equals(LeaseManager.FileName, StringComparison.OrdinalIgnoreCase))
+            .Sum(file => file.Length);
 
     /// <summary>The folder's <c>record.json</c>; if that can't be read, the newest readable conflict copy of it.</summary>
     private static SessionRecord? ReadRecord(string folder)

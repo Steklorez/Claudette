@@ -9,7 +9,7 @@ summary: "Syncing is a choice each tab makes."
 
 Syncing is a choice each tab makes. A tab that syncs copies its session to the [session library](the-session-library.md) after every turn, so you can continue it on another machine. A tab that doesn't sync never writes to the library: no copy, no record and no claim on the session. That way you only bring over the work you know you'll pick up elsewhere.
 
-A tab that syncs has a small icon of two arrows chasing round a circle on its row, with the tip *Synced to the session library*.
+A tab that syncs has a small icon of two arrows chasing round a circle on its row, with the tip *Synced to the session library*, and once its session is there, how much it takes: *Synced to the session library · 312 MB*.
 
 ## Turning it on or off for a tab
 
@@ -42,6 +42,18 @@ It's disabled, with the reason in its tip, in these cases:
 - Claude is working. The copy follows when the turn ends.
 - The session has no message yet, or it's a copy that hasn't had its first message.
 - The tab is read-only because another machine took the session over.
+
+## How much it takes
+
+A long session can grow to hundreds of megabytes, with the images and command output in it, and your sync client uploads and keeps all of it. A tab that syncs says how much its session takes in the library:
+
+- The tip of its sync icon: *Synced to the session library · 312 MB*.
+- The **Sync size** row of its [info card](../tabs/the-tab-info-card.md): *312 MB in the session library*.
+- **Tab settings…**, under **Sync to other machines**: *This session takes 312 MB in the session library.*
+
+It counts the session's conversation, its subagents' conversations and its record, and any copies your sync client made when two machines changed the session at once. It's measured each time the tab copies the session there, after a turn or from **Sync now**, and when a session that's already in the library starts. Until the first copy, it doesn't show.
+
+[History](history.md) shows how much each session in the library takes, and Settings → Sessions how much the whole library holds; see [The session library](the-session-library.md).
 
 ## Settings
 

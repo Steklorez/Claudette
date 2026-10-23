@@ -1,6 +1,6 @@
 namespace Claudette.Core.Tests;
 
-/// <summary>Times, durations and names written the same everywhere they show.</summary>
+/// <summary>Times, durations, sizes and names written the same everywhere they show.</summary>
 public class FormatsTests
 {
     [Theory]
@@ -33,6 +33,15 @@ public class FormatsTests
         Assert.Equal("api", Formats.FolderName(folder + Path.DirectorySeparatorChar));
         var root = Path.GetPathRoot(Path.GetTempPath())!;
         Assert.Equal(root, Formats.FolderName(root));
+    }
+
+    [Fact]
+    public void Sizes_read_as_people_say_them()
+    {
+        Assert.Equal("512 bytes", Formats.Size(512));
+        Assert.Equal("12 KB", Formats.Size(12 * 1024));
+        Assert.Equal("140 MB", Formats.Size(140L * 1024 * 1024));
+        Assert.Equal("3.2 GB", Formats.Size((long)(3.2 * 1024 * 1024 * 1024)));
     }
 
     [Fact]

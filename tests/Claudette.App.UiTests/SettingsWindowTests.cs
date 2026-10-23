@@ -30,6 +30,8 @@ public class SettingsWindowTests
         var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = category };
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
+        // Sessions measures the library off the UI thread as it shows.
+        await Waiting.UntilAsync(() => settings.Sessions.Measuring.IsCompleted, "the library's size", poll: () => Dispatcher.UIThread.RunJobs());
         UiText.Settle(window);
 
         var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => Grid.GetColumn(s) == 1);

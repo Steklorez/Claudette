@@ -161,7 +161,14 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
     /// <b>Use defaults</b> leaves it as it is.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SyncSizeText))]
     public partial bool SyncToLibrary { get; set; }
+
+    /// <summary>
+    /// What the session takes in the session library, under <b>Sync to other machines</b> while it's ticked (DESIGN.md §9,
+    /// "Writing"); null before the tab's first copy there.
+    /// </summary>
+    public string? SyncSizeText => SyncToLibrary && _tab.SyncSize is { } size ? $"This session takes {size} in the session library." : null;
 
     /// <summary>
     /// <b>Connect to the Claude app</b> (DESIGN.md §18, "Remote Control"). The tab's own state like

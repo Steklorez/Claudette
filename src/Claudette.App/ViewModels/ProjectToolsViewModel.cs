@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
+using Claudette.Core;
 using Claudette.Core.ProjectTools;
 using Claudette.Core.Sessions;
 using Claudette.Core.Settings;
@@ -570,7 +571,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             return;
         }
         var list = string.Join("\n", folders.Select(f => "• " + Path.GetRelativePath(delete.Root, f)));
-        var message = $"This deletes {(folders.Count == 1 ? "1 folder" : $"{folders.Count} folders")}, {FolderCleaner.FormatSize(size)} in all:\n{list}";
+        var message = $"This deletes {(folders.Count == 1 ? "1 folder" : $"{folders.Count} folders")}, {Formats.Size(size)} in all:\n{list}";
         if (delete.Warning is { } warning)
         {
             message += $"\n\n{warning}";
@@ -602,7 +603,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
                 }
                 log(ok ? $"Deleted {folders.Count} folder{(folders.Count == 1 ? "" : "s")}." : "Some folders couldn't be deleted.");
                 return Task.FromResult(ok);
-            }), action, $"Deleting {folders.Count} folder{(folders.Count == 1 ? "" : "s")} ({FolderCleaner.FormatSize(size)})", root);
+            }), action, $"Deleting {folders.Count} folder{(folders.Count == 1 ? "" : "s")} ({Formats.Size(size)})", root);
             return Task.CompletedTask;
         });
     }

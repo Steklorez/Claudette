@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.Core;
 using Claudette.Core.Development;
 using Claudette.Core.Diffs;
 using Claudette.Core.Library;
@@ -940,6 +941,168 @@ public class LibraryAndHistoryTests
         await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 360 && tab.IsSettled, "the turn to finish");
         await CopyAfterTurnAsync(h, tab);
         Assert.Equal("Copied this session to the session library again.", Notes(tab)[^1].Text);
+    }
+
+    // ---- What it takes in the library (DESIGN.md §9, "Writing") -----------------------------------------------------
+
+    [Fact]
+    public async Task A_tab_that_syncs_shows_what_its_session_takes_in_the_library_after_each_copy()
+    {
+        await using var h = new TabTestHarness(s => s.Sessions.SyncNewTabs = true);
+        var tab = await h.OpenTabAsync();
+        var transcript = h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
+        // Nothing until the first copy.
+        Assert.Null(tab.SyncSize);
+        Assert.Equal("Synced to the session library", tab.SyncTip);
+        Assert.DoesNotContain(tab.InfoRows, r => r.Label == "Sync size");
+
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && tab.IsSettled, "the turn to finish");
+        await CopyAfterTurnAsync(h, tab);
+
+        var size = Formats.Size(h.Services.Library.Library.GetSessionSize("s1")!.Value);
+        await TabTestHarness.Eventually(() => tab.SyncSize == size, "the size");
+        Assert.Equal($"Synced to the session library · {size}", tab.SyncTip);
+        Assert.Contains(tab.InfoRows, r => r is { Label: "Sync size" } && r.Value == $"{size} in the session library");
+        // Saved with the tab, so it shows from launch.
+        await h.Services.FlushAsync();
+        var saved = Assert.Single(new JsonFileStore<AppState>(h.Services.Paths.StateFile).Load().Tabs).SyncedSize!;
+        Assert.Equal(("s1", h.Services.Library.Library.GetSessionSize("s1")), (saved.SessionId, (long?)saved.Bytes));
+
+        // A turn adds to the transcript, and so to what the library keeps.
+        await File.AppendAllTextAsync(transcript, UserLine("s1", new string('x', 200 * 1024), h.WorkFolder) + "\n", TestContext.Current.CancellationToken);
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 240 && tab.IsSettled, "the second turn");
+        await CopyAfterTurnAsync(h, tab);
+
+        var grown = Formats.Size(h.Services.Library.Library.GetSessionSize("s1")!.Value);
+        Assert.NotEqual(size, grown);
+        await TabTestHarness.Eventually(() => tab.SyncSize == grown, "the new size");
+    }
+
+    [Fact]
+    public async Task The_size_shows_only_while_the_tab_syncs_and_only_for_its_own_session()
+    {
+        await using var h = new TabTestHarness(s => s.Sessions.SyncNewTabs = true);
+        var tab = await h.OpenTabAsync();
+        h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && tab.IsSettled, "the turn to finish");
+        await CopyAfterTurnAsync(h, tab);
+        await TabTestHarness.Eventually(() => tab.SyncSize is not null, "the size");
+        var size = tab.SyncSize;
+
+        tab.ToggleSyncToLibraryCommand.Execute(null);
+
+        // Turned off, the library's copy stays as it was, but nothing here keeps it up.
+        Assert.Null(tab.SyncSize);
+        Assert.DoesNotContain(tab.InfoRows, r => r.Label == "Sync size");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Free, "the release");
+
+        // On again, the copy already there shows straight away.
+        tab.ToggleSyncToLibraryCommand.Execute(null);
+        Assert.Equal(size, tab.SyncSize);
+        await SettleAsync(h);
+
+        // After /clear the session is a new one, which the library doesn't have yet.
+        h.Transport.EmitTurn(sessionId: "s2");
+        await TabTestHarness.Eventually(() => tab.State.SessionId == "s2", "the new session");
+        Assert.Null(tab.SyncSize);
+        Assert.Equal("Synced to the session library", tab.SyncTip);
+        await SettleAsync(h);
+    }
+
+    [Fact]
+    public async Task A_restored_tab_shows_the_size_it_saved_for_its_own_session()
+    {
+        await using var h = new TabTestHarness(s => s.Sessions.RestoreUnpinnedTabs = true);
+        h.Services.State.Tabs =
+        [
+            new TabState { Folder = h.WorkFolder, UserName = "synced", SessionId = "s1", SyncToLibrary = true, SyncedSize = new SyncedSize { SessionId = "s1", Bytes = 312L * 1024 * 1024 } },
+            // Measured for the session it had before /clear.
+            new TabState { Folder = h.WorkFolder, UserName = "cleared", SessionId = "s2", SyncToLibrary = true, SyncedSize = new SyncedSize { SessionId = "s0", Bytes = 2048 } },
+        ];
+
+        h.Shell.Restore(null);
+
+        var tabs = h.Shell.AllTabs.ToArray();
+        Assert.Equal("312 MB", tabs[0].SyncSize);
+        Assert.Equal("Synced to the session library · 312 MB", tabs[0].SyncTip);
+        Assert.Contains(tabs[0].InfoRows, r => r is { Label: "Sync size", Value: "312 MB in the session library" });
+        Assert.Null(tabs[1].SyncSize);
+    }
+
+    [Fact]
+    public async Task A_library_session_shows_what_it_takes_there_as_it_starts()
+    {
+        await using var h = new TabTestHarness();
+        await SaveToLibraryAsync(h, "lib-4", "DESKTOP-01");
+        h.OpenHistory();
+        var history = h.Shell.History!;
+        await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
+
+        await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
+
+        // Before any turn: read with its lease as the tab starts.
+        var tab = h.Shell.SelectedTab!;
+        await TabTestHarness.Eventually(() => tab.SyncSize is not null, "the size");
+        Assert.Equal(Formats.Size(h.Services.Library.Library.GetSessionSize("lib-4")!.Value), tab.SyncSize);
+    }
+
+    [Fact]
+    public async Task Tab_settings_say_what_the_session_takes_in_the_library_while_sync_is_ticked()
+    {
+        await using var h = new TabTestHarness(s => s.Sessions.SyncNewTabs = true);
+        var tab = await h.OpenTabAsync();
+        Assert.Null(new TabSettingsViewModel(h.Services, tab, () => { }).SyncSizeText);
+        h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && tab.IsSettled, "the turn to finish");
+        await CopyAfterTurnAsync(h, tab);
+        await TabTestHarness.Eventually(() => tab.SyncSize is not null, "the size");
+
+        var settings = new TabSettingsViewModel(h.Services, tab, () => { });
+
+        Assert.Equal($"This session takes {tab.SyncSize} in the session library.", settings.SyncSizeText);
+        settings.SyncToLibrary = false;
+        Assert.Null(settings.SyncSizeText);
+    }
+
+    [Fact]
+    public async Task History_says_what_a_session_takes_in_the_library()
+    {
+        await using var h = new TabTestHarness();
+        await SaveToLibraryAsync(h, "lib-5", "DESKTOP-01");
+        h.WriteTranscript("local-1", UserLine("local-1", "Only here", h.WorkFolder));
+        h.OpenHistory();
+        var history = h.Shell.History!;
+        await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
+
+        var entries = history.Groups.SelectMany(g => g.Entries).ToDictionary(e => e.SessionId);
+
+        Assert.EndsWith($" · {Formats.Size(h.Services.Library.Library.GetSessionSize("lib-5")!.Value)} in the library", entries["lib-5"].Details, StringComparison.Ordinal);
+        // A session only on this machine takes nothing there.
+        Assert.DoesNotContain("in the library", entries["local-1"].Details, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Settings_say_what_the_whole_library_takes_each_time_the_page_shows()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null, opening: new SettingsOpening(SettingsCategory.Sessions));
+        await settings.Sessions.Measuring;
+        Assert.Equal("The library is empty.", settings.Sessions.LibrarySizeText);
+
+        await SaveToLibraryAsync(h, "lib-6", "DESKTOP-01");
+        await SaveToLibraryAsync(h, "lib-7", "DESKTOP-01");
+        // Measured again as the page shows, not as the library changes.
+        Assert.Equal("The library is empty.", settings.Sessions.LibrarySizeText);
+        settings.SelectedCategory = SettingsCategory.General;
+        settings.SelectedCategory = SettingsCategory.Sessions;
+        await settings.Sessions.Measuring;
+
+        var bytes = h.Services.Library.Library.GetSessionSize("lib-6")!.Value + h.Services.Library.Library.GetSessionSize("lib-7")!.Value;
+        Assert.Equal($"The library holds {Formats.Size(bytes)}: 2 sessions.", settings.Sessions.LibrarySizeText);
     }
 
     /// <summary>Types a search into History and waits for typing's pause and the filtering after it.</summary>

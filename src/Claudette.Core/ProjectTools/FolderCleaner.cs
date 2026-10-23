@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Claudette.Core.ProjectTools;
 
 /// <summary>
@@ -68,18 +66,5 @@ public static class FolderCleaner
             root.Attributes &= ~FileAttributes.ReadOnly;
         }
         root.Delete(recursive: true);
-    }
-
-    /// <summary>"3.2 GB", "140 MB", "12 KB".</summary>
-    public static string FormatSize(long bytes)
-    {
-        const double kb = 1024, mb = kb * 1024, gb = mb * 1024;
-        return bytes switch
-        {
-            >= (long)gb => (bytes / gb).ToString("0.0", CultureInfo.InvariantCulture) + " GB",
-            >= (long)mb => Math.Round(bytes / mb).ToString("0", CultureInfo.InvariantCulture) + " MB",
-            >= (long)kb => Math.Round(bytes / kb).ToString("0", CultureInfo.InvariantCulture) + " KB",
-            _ => bytes.ToString(CultureInfo.InvariantCulture) + " bytes",
-        };
     }
 }

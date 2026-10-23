@@ -388,6 +388,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             {
                 rows.Add(new InfoRow("Reached as", reachedAs, CanCopy: true));
             }
+            // What a sync client keeps of it, as of the last copy (DESIGN.md §9, "Writing").
+            if (SyncSize is { } syncSize)
+            {
+                rows.Add(new InfoRow("Sync size", $"{syncSize} in the session library"));
+            }
             rows.Add(new InfoRow("Tokens", $"{Context.TokensShort} · {State.Tokens.Turns} turns"));
             if (RunningVersion is { } running)
             {
@@ -1669,6 +1674,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         // The marks were for the old session's changes (DESIGN.md §8, "Reviewed").
         State.ReviewedFiles.Clear();
         OnPropertyChanged(nameof(HasSessionId));
+        OnSyncSizeChanged();
         _services.SaveState();
         await EnsureStartedAsync();
     }
@@ -1985,6 +1991,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                     State.SessionId = started.Init.SessionId;
                     OnPropertyChanged(nameof(InfoRows));
                     OnPropertyChanged(nameof(HasSessionId));
+                    // The size the library had of the session before is no longer this one's.
+                    OnSyncSizeChanged();
                     _services.LiveSessions.Refresh();
                 }
                 OnWorkingFolderReported(started.Init.Cwd);

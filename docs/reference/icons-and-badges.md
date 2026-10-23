@@ -34,7 +34,7 @@ A collapsed group shows only the most urgent status of its tabs.
 | A check mark, cross, question mark, star, flag or pause sign under the status icon | The mark you gave the tab, each in its own color | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
 | A green disc with a check cut out of it, in the mark's place | Every file Claude changed in this session is ticked as reviewed (*All changed files reviewed*) | [Reviewed files](../changes/reviewed-files.md) |
 | A pin | The tab is pinned, so it comes back every launch | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
-| A sync icon | *Synced to the session library* | [Syncing a tab](../history/syncing-a-tab.md) |
+| A sync icon | *Synced to the session library*, with how much the session takes there (*· 312 MB*) | [Syncing a tab](../history/syncing-a-tab.md) |
 | A thread icon before the name | A thread, or a sub-thread indented under it | [Making a thread](../threads/making-a-thread.md) |
 | A branch icon with a name | The tab works in a worktree of that name | [Worktree tabs](../tabs/worktree-tabs.md) |
 | A phone | *Connected to the Claude app*. It's dimmed while connecting or reconnecting | [The Claude app](../away/the-claude-app.md) |
