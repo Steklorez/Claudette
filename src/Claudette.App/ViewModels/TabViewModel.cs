@@ -1546,6 +1546,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             Tasks.Clear();
             _ = LoadSpinnerVerbsAsync();
             _ = LoadPromptCacheConfigAsync();
+            _ = LoadTaskListAsync();
             _services.RememberModels(session.Initialization?.Models);
             State.SessionStartedAt ??= _services.Time.GetUtcNow();
             // The installed version is what just started; system/init confirms it with the first turn.
@@ -1838,6 +1839,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         finally
         {
             Agents.FinishReplay();
+            // A call the transcript ends before the answer to won't be answered now.
+            TodoList.CallsEnded();
             // Rows under the tab come back only for the last turn's subagents (DESIGN.md §5, "Subagents").
             ForgetRestoredSubagents();
         }
@@ -2005,6 +2008,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                     State.ResumeDropsTurn = null;
                     State.TranscriptPath = null;
                 }
+                // Claude Code keeps the session's task list in a folder named for its id (DESIGN.md §5, "Tasks").
+                FollowTaskFolder();
                 // The session is the tab's own now (a new one, a copy's, or after /clear): it has the tab's mark.
                 RememberMark();
                 if (started.Init.ClaudeCodeVersion is { } reported && Version.TryParse(reported, out var version))
@@ -2122,6 +2127,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 State.SessionStartedAt = _services.Time.GetUtcNow();
                 OnPropertyChanged(nameof(InfoRows));
                 TodoList.Clear();
+                // The new session's list is followed once its id comes, with its first turn.
+                TaskFolder.Follow(null);
                 _tasksSummary = null;
                 State.Plan = null;
                 State.AutoName = null;
@@ -2138,6 +2145,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _claudeName = null;
                 RemoteControl.Reset();
                 SetRunningVersion(null);
+                FollowTaskFolder();
                 _checkIns.TurnEnded();
                 _waitingOnUser.Clear();
                 // Held messages can't go to a Claude Code that's gone: they come back to the composer.
@@ -2360,6 +2368,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ChangedFiles.StopReviewSync();
         MarkSync.Cancel();
         ReleaseScratchPad();
+        TaskFolder.Dispose();
         if (_starting is { } starting)
         {
             // A start under way stops at the cancellation, or finishes: either way, what it started is stopped next.

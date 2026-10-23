@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Claudette.Core;
@@ -25,6 +26,12 @@ public sealed partial class TodoItem(string content, string? activeForm, string 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NumberText), nameof(Title))]
     public partial string? Id { get; set; }
+
+    /// <summary>
+    /// When it got its number, by the list's <see cref="TodoList.Version"/>: a look at Claude Code's list from before
+    /// then can't have it.
+    /// </summary>
+    internal long NumberedAt { get; set; }
 
     /// <summary>"#3", the task's number as Claude refers to it; empty for a TodoWrite item, which has none.</summary>
     public string NumberText => Id is { Length: > 0 } id ? $"#{id}" : "";
@@ -277,10 +284,20 @@ public sealed partial class PlanVersion : ObservableObject
 /// </summary>
 public sealed partial class TodoList : ObservableObject
 {
-    private readonly Dictionary<string, TodoItem> _pendingCreates = [];
+    /// <summary><c>TaskCreate</c> calls whose results haven't come, with the list's <see cref="Version"/> as each was made.</summary>
+    private readonly Dictionary<string, (TodoItem Item, long MadeAt)> _pendingCreates = [];
 
-    /// <summary><c>TaskList</c> and <c>TaskGet</c> calls whose results haven't come.</summary>
-    private readonly HashSet<string> _pendingReads = [];
+    /// <summary><c>TaskList</c> and <c>TaskGet</c> calls whose results haven't come, with the list's <see cref="Version"/> as each was made.</summary>
+    private readonly Dictionary<string, long> _pendingReads = [];
+
+    /// <summary><c>TaskUpdate</c> calls whose results haven't come, with the task each changes.</summary>
+    private readonly Dictionary<string, string?> _pendingUpdates = [];
+
+    /// <summary>The newest task Claude made, once it has its number: Claude Code's list has it until it's deleted.</summary>
+    private TodoItem? _newestCreated;
+
+    /// <summary>The newest task Claude made that the tasks folder has shown: the folder has this session's list.</summary>
+    private TodoItem? _seenInFolder;
 
     /// <summary>The tasks the latest tool call put in progress.</summary>
     private readonly List<TodoItem> _started = [];
@@ -656,6 +673,21 @@ public sealed partial class TodoList : ObservableObject
     // ---- The calls ------------------------------------------------------------------------------------------------
 
     /// <summary>
+    /// Goes up with each change Claude's calls make to the list, and as each task gets its number: a task numbered at or
+    /// before a version was in the list then.
+    /// </summary>
+    internal long Version { get; private set; }
+
+    /// <summary>A result of one of the Task tools' calls came: Claude Code's list may have changed.</summary>
+    internal event Action? Answered;
+
+    /// <summary>
+    /// The task Claude means by a number: the newest that has it. A number comes round again when Claude Code starts its
+    /// list over, and the task that had it before isn't the one Claude means.
+    /// </summary>
+    private TodoItem? Numbered(string id) => Items.LastOrDefault(i => i.Id == id);
+
+    /// <summary>
     /// Applies a to-do tool call. Returns true if it was one, so it shows here rather than as a card. <c>TaskList</c> and
     /// <c>TaskGet</c> change nothing, but their results say how the tasks stand.
     /// </summary>
@@ -666,7 +698,7 @@ public sealed partial class TodoList : ObservableObject
         switch (name)
         {
             case "TaskList" or "TaskGet":
-                _pendingReads.Add(toolUseId);
+                _pendingReads[toolUseId] = Version;
                 return true;
             case "TodoWrite":
                 // The whole list again: items that read the same are the same item, keeping their times and rows.
@@ -697,10 +729,12 @@ public sealed partial class TodoList : ObservableObject
                     CreatedAt = Now(),
                 };
                 Items.Add(item);
-                _pendingCreates[toolUseId] = item;
+                _pendingCreates[toolUseId] = (item, Version);
                 break;
             case "TaskUpdate":
-                if (Text(input, "taskId") is { } id && Items.FirstOrDefault(i => i.Id == id) is { } existing)
+                var taskId = Text(input, "taskId");
+                _pendingUpdates[toolUseId] = taskId;
+                if (taskId is { } id && Numbered(id) is { } existing)
                 {
                     if (Text(input, "status") is { } status)
                     {
@@ -726,7 +760,7 @@ public sealed partial class TodoList : ObservableObject
                     }
                     foreach (var blocked in Ids(input, "addBlocks"))
                     {
-                        if (Items.FirstOrDefault(i => i.Id == blocked) is { } other && !other.BlockedBy.Contains(id))
+                        if (Numbered(blocked) is { } other && !other.BlockedBy.Contains(id))
                         {
                             other.BlockedBy.Add(id);
                         }
@@ -736,66 +770,162 @@ public sealed partial class TodoList : ObservableObject
             default:
                 return false;
         }
+        Version++;
         Changed();
         return true;
     }
 
     /// <summary>
     /// A <c>TaskCreate</c> result carries the new task's id, which later <c>TaskUpdate</c> calls use. A <c>TaskList</c>
-    /// result is the whole list as Claude Code has it: it fills in what the calls didn't show.
+    /// result is the whole list as Claude Code has it: it fills in what the calls didn't show, and a task it doesn't have
+    /// is gone.
     /// </summary>
     /// <param name="toolUseResult">The result's details; an error's is just its text, a string.</param>
     public void ApplyToolResult(string toolUseId, string resultText, JsonNode? toolUseResult)
     {
         var details = toolUseResult as JsonObject;
+        var read = _pendingReads.Remove(toolUseId, out var readAt);
         if (details?["tasks"] is JsonArray listed)
         {
-            ApplyTaskList(listed.OfType<JsonObject>());
-            return;
+            ApplyListed(Tasks(listed), wholeListAt: read ? readAt : Version);
         }
-        if (_pendingReads.Remove(toolUseId))
+        else if (read)
         {
-            if (details?["task"] is JsonObject task)
+            if (details?["task"] is JsonObject task && ClaudeTask.From(task) is { } one)
             {
-                ApplyTaskList([task]);
+                ApplyListed([one], wholeListAt: null);
             }
-            return;
         }
-        if (!_pendingCreates.Remove(toolUseId, out var item))
+        else if (_pendingCreates.Remove(toolUseId, out var create))
         {
+            var id = ((details?["task"] as JsonObject)?["id"] ?? details?["taskId"] ?? details?["id"]).AsStringOrNumber()
+                ?? (TaskNumber().Match(resultText) is { Success: true } m ? m.Groups[1].Value : null);
+            if (id is not null)
+            {
+                Number(create.Item, id, create.MadeAt);
+            }
+        }
+        else if (!_pendingUpdates.Remove(toolUseId))
+        {
+            // TodoWrite's, whose list Claude Code doesn't keep for Claudette to look at.
             return;
         }
-        item.Id = ((details?["task"] as JsonObject)?["id"] ?? details?["taskId"] ?? details?["id"]).AsStringOrNumber()
-            ?? (TaskNumber().Match(resultText) is { Success: true } m ? m.Groups[1].Value : null);
+        Answered?.Invoke();
     }
 
-    private void ApplyTaskList(IEnumerable<JsonObject> listed)
+    /// <summary>
+    /// A task Claude made gets its number. Claude Code numbers a new task above every task in its list, so a task that
+    /// was here when this one was made, with its number or a higher one, isn't in Claude Code's list any more: it started
+    /// the list over, as a new version or a copy of the session can, and those tasks go here too.
+    /// </summary>
+    private void Number(TodoItem item, string id, long madeAt)
     {
+        var gone = Items.Where(i => i != item && i.Id is { } other && i.NumberedAt <= madeAt && !IsBelow(other, id)).ToArray();
+        foreach (var old in gone)
+        {
+            Items.Remove(old);
+        }
+        item.Id = id;
+        item.NumberedAt = ++Version;
+        _newestCreated = item;
+        if (gone.Length > 0)
+        {
+            Changed();
+        }
+    }
+
+    /// <summary><paramref name="id"/> is a lower number than <paramref name="than"/>; ids that aren't numbers are only told apart.</summary>
+    private static bool IsBelow(string id, string than) =>
+        long.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out var number) && long.TryParse(than, NumberStyles.None, CultureInfo.InvariantCulture, out var other)
+            ? number < other
+            : id != than;
+
+    /// <summary>
+    /// The list as Claude Code keeps it in its tasks folder (<see cref="ClaudeTaskFolder"/>), read when the list's
+    /// <see cref="Version"/> was <paramref name="readAt"/>. A read from before Claude's latest change, or while a task it
+    /// made waits for its number, is left to the read that follows; a task whose change hasn't been answered keeps the
+    /// change. False, changing nothing, when the folder can't be where Claude Code keeps this list: the newest task Claude
+    /// made, which Claude Code wrote there before answering, isn't in it. Once the folder has shown it, it's gone only
+    /// because it was deleted, as another session sharing the list can.
+    /// </summary>
+    internal bool ApplyFolder(IReadOnlyList<ClaudeTask> tasks, long readAt)
+    {
+        if (readAt != Version || _pendingCreates.Count > 0)
+        {
+            return true;
+        }
+        if (_newestCreated is { Id: { } newest } created && created != _seenInFolder && Items.Contains(created))
+        {
+            if (!tasks.Any(t => t.Id == newest && t.Subject?.Trim() == created.Content.Trim()))
+            {
+                return false;
+            }
+            _seenInFolder = created;
+        }
+        var changing = _pendingUpdates.Values.OfType<string>().ToHashSet(StringComparer.Ordinal);
+        ApplyListed(tasks.Where(t => !changing.Contains(t.Id)), wholeListAt: readAt, keep: changing);
+        return true;
+    }
+
+    /// <summary>
+    /// Calls still waiting won't be answered: Claude Code stopped, or a restored tab's transcript ends before they were. A
+    /// task they made stays without its number.
+    /// </summary>
+    internal void CallsEnded()
+    {
+        _pendingCreates.Clear();
+        _pendingReads.Clear();
+        _pendingUpdates.Clear();
+    }
+
+    private static IEnumerable<ClaudeTask> Tasks(JsonArray listed) => listed.OfType<JsonObject>().Select(ClaudeTask.From).OfType<ClaudeTask>();
+
+    /// <summary>
+    /// Tasks as Claude Code has them, from a <c>TaskList</c> or <c>TaskGet</c> result or its tasks folder: they fill in
+    /// what the calls didn't show. With <paramref name="wholeListAt"/>, they're the whole list as it stood at that
+    /// <see cref="Version"/>: a task that was here then and isn't among them is gone, but for those numbered in
+    /// <paramref name="keep"/>.
+    /// </summary>
+    private void ApplyListed(IEnumerable<ClaudeTask> listed, long? wholeListAt, IReadOnlySet<string>? keep = null)
+    {
+        var seen = new HashSet<TodoItem>();
+        var changed = false;
         foreach (var task in listed)
         {
-            if (Text(task, "id") is not { } id)
-            {
-                continue;
-            }
-            var item = Items.FirstOrDefault(i => i.Id == id);
+            var item = Numbered(task.Id);
             if (item is null)
             {
-                item = new TodoItem(Text(task, "subject") ?? "", null, "pending") { Id = id, CreatedAt = Now() };
+                item = new TodoItem(task.Subject ?? "", task.ActiveForm, "pending") { Id = task.Id, NumberedAt = ++Version, CreatedAt = Now() };
                 Items.Add(item);
+                changed = true;
             }
-            item.Content = Text(task, "subject") ?? item.Content;
-            item.Description = Text(task, "description") ?? item.Description;
-            item.Owner = Text(task, "owner") ?? item.Owner;
-            if (Text(task, "status") is { } status)
+            seen.Add(item);
+            item.Content = task.Subject ?? item.Content;
+            item.ActiveForm = task.ActiveForm ?? item.ActiveForm;
+            item.Description = task.Description ?? item.Description;
+            item.Owner = task.Owner ?? item.Owner;
+            if (task.Status is { } status)
             {
-                SetStatus(item, status);
+                changed |= SetStatus(item, status);
             }
-            foreach (var blocker in Ids(task, "blockedBy").Where(b => !item.BlockedBy.Contains(b)))
+            foreach (var blocker in task.BlockedBy.Where(b => !item.BlockedBy.Contains(b)))
             {
                 item.BlockedBy.Add(blocker);
+                changed = true;
             }
         }
-        Changed();
+        if (wholeListAt is { } at)
+        {
+            foreach (var gone in Items.Where(i => i.Id is { } id && i.NumberedAt <= at && !seen.Contains(i) && keep?.Contains(id) != true).ToArray())
+            {
+                Items.Remove(gone);
+                changed = true;
+            }
+        }
+        if (changed)
+        {
+            Changed();
+        }
     }
 
     public void Clear()
@@ -803,6 +933,9 @@ public sealed partial class TodoList : ObservableObject
         Items.Clear();
         _pendingCreates.Clear();
         _pendingReads.Clear();
+        _pendingUpdates.Clear();
+        _newestCreated = null;
+        _seenInFolder = null;
         _started.Clear();
         _callTasks.Clear();
         Plans.Clear();
@@ -814,11 +947,12 @@ public sealed partial class TodoList : ObservableObject
         Changed();
     }
 
-    private void SetStatus(TodoItem item, string status, object? agent = null)
+    /// <summary>Puts <paramref name="item"/> in <paramref name="status"/>, dated. False when it was already.</summary>
+    private bool SetStatus(TodoItem item, string status, object? agent = null)
     {
         if (status == item.Status && item.CreatedAt is not null)
         {
-            return;
+            return false;
         }
         var now = Now();
         if (status == "in_progress")
@@ -836,6 +970,7 @@ public sealed partial class TodoList : ObservableObject
             item.CompletedAt ??= now;
         }
         item.Status = status;
+        return true;
     }
 
     /// <summary>
@@ -851,7 +986,7 @@ public sealed partial class TodoList : ObservableObject
         // Waiting on another task: shown while any it waits for isn't done.
         foreach (var item in Items)
         {
-            var waiting = item.IsDone ? [] : item.BlockedBy.Where(b => Items.FirstOrDefault(i => i.Id == b) is not { IsDone: true }).ToArray();
+            var waiting = item.IsDone ? [] : item.BlockedBy.Where(b => Numbered(b) is not { IsDone: true }).ToArray();
             item.BlockedText = waiting.Length == 0 ? null : $"Waiting on {string.Join(", ", waiting.Select(b => $"#{b}"))}";
         }
         OnPropertyChanged(nameof(HasItems));

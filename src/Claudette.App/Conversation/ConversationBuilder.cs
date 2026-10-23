@@ -539,6 +539,7 @@ public sealed class ConversationBuilder
                 }
                 _prompts.OnSessionExited();
                 _todoList?.EndWaitingPlans();
+                _todoList?.CallsEnded();
                 _tasksChangedThisTurn = false;
                 _turnDocs.Clear();
                 var code = exited.Exit.ExitCode?.ToString() ?? "unknown";

@@ -1,4 +1,6 @@
 using Claudette.App.Conversation;
+using Claudette.Core.Claude;
+using Claudette.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,7 +11,8 @@ namespace Claudette.App.ViewModels;
 /// backgrounded shell command, a background subagent, a Monitor watch or a remote agent. A chip in the composer bar
 /// lists them, but for subagents, which the Agents button and page have; the tab's row counts them all once the turn
 /// is over (DESIGN.md §4), and the info card has a row for those the chip lists. And how far Claude's own task list has
-/// got (DESIGN.md §5, "Tasks"): the row's badge and line, going to where a task started, and <b>Continue</b>.
+/// got (DESIGN.md §5, "Tasks"): the row's badge and line, going to where a task started, and <b>Continue</b>; and keeping
+/// that list in step with the one Claude Code keeps.
 /// </summary>
 public sealed partial class TabViewModel
 {
@@ -272,6 +275,56 @@ public sealed partial class TabViewModel
 
     [RelayCommand]
     private void DismissPlanSuggestion() => TodoList.DismissSuggestion();
+
+    // ---- The list Claude Code keeps (DESIGN.md §5, "Tasks") ---------------------------------------------------------
+
+    /// <summary>Keeps the task list in step with the folder Claude Code keeps it in, which is the list Claude sees.</summary>
+    private TodoListFolder TaskFolder => field ??= new(TodoList, _services.FolderWatcher, _services.Dispatcher);
+
+    /// <summary>The folder of Claude Code's task list the tab reads; null while it reads none, or it hasn't this session's list.</summary>
+    internal string? TaskFolderRead => TaskFolder.Following;
+
+    /// <summary><c>CLAUDE_CODE_TASK_LIST_ID</c> as the tab's <c>claude</c> has it, once read as it starts; null when it's unset.</summary>
+    private string? _taskListVariable;
+
+    /// <summary>The tab's <c>claude</c> has started, and which list it uses has been read.</summary>
+    private bool _taskListKnown;
+
+    /// <summary>
+    /// Reads, in the background as the session starts, which list it uses: <c>CLAUDE_CODE_TASK_LIST_ID</c> from the
+    /// environment it starts with and its settings files' <c>env</c>, else its own. Then follows that list's folder.
+    /// </summary>
+    private async Task LoadTaskListAsync()
+    {
+        _taskListKnown = false;
+        var files = ClaudeSettingsFiles.ForSession(_services.ClaudeConfigDirectory, State.WithoutProjectSettings ? null : Folder);
+        string? variable;
+        try
+        {
+            var environment = await _services.ClaudeEnvironmentFor(_claudeVariables, _closing.Token).ConfigureAwait(false);
+            variable = await Task.Run(() => ClaudeTaskFolder.ListVariableFor(environment, files), _closing.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        _services.Dispatcher.Post(() =>
+        {
+            _taskListVariable = variable;
+            _taskListKnown = true;
+            FollowTaskFolder();
+        });
+    }
+
+    /// <summary>
+    /// Follows the folder of the list the session uses, named for the session unless <c>CLAUDE_CODE_TASK_LIST_ID</c>
+    /// names another. None while Claude Code isn't running, before a copy has its own id, or before Claude Code's config
+    /// folder is known.
+    /// </summary>
+    private void FollowTaskFolder() =>
+        TaskFolder.Follow(_session is not null && _taskListKnown && !_forkAwaitingId && _services.ClaudeConfigDirectory is { } config && State.SessionId is { } sessionId
+            ? ClaudeTaskFolder.Folder(config, ClaudeTaskFolder.ListId(sessionId, _taskListVariable))
+            : null);
 
     /// <summary>The message <b>Continue</b> sends, as the user's own.</summary>
     internal const string ContinueTasksMessage = "Carry on with the tasks that are left.";

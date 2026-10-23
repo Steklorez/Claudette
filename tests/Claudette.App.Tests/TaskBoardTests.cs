@@ -105,6 +105,159 @@ public class TaskBoardTests
         Assert.Equal("Waiting on #1", _list.Items[1].BlockedText);
     }
 
+    private void Update(string toolUseId, string id, string status)
+    {
+        _list.ApplyToolUse(toolUseId, "TaskUpdate", new JsonObject { ["taskId"] = id, ["status"] = status });
+        _list.ApplyToolResult(toolUseId, $"Updated task #{id} status", new JsonObject { ["success"] = true, ["taskId"] = id });
+    }
+
+    private static ClaudeTask Listed(string id, string subject, string status = "pending") => new(id, subject, null, null, null, status, []);
+
+    [Fact]
+    public void A_number_Claude_Code_gives_again_means_it_started_its_list_over()
+    {
+        // Seen in a long session: a new version of Claude Code began a new list, numbered from #1 again.
+        Create("c1", "1", "Old first");
+        Create("c2", "2", "Old second");
+        Update("u1", "1", "completed");
+
+        Create("c3", "1", "New first");
+        Update("u2", "1", "in_progress");
+
+        // The tasks from before it are gone, and #1 is the new one.
+        var task = Assert.Single(_list.Items);
+        Assert.Equal("New first", task.Content);
+        Assert.True(task.IsActive);
+        Assert.Equal("0 of 1", _list.Badge);
+    }
+
+    [Fact]
+    public void A_list_started_over_by_calls_made_together_keeps_all_of_them_whatever_order_their_numbers_come_in()
+    {
+        Create("c1", "1", "Old first");
+        Create("c2", "2", "Old second");
+        Create("c3", "3", "Old third");
+
+        foreach (var (call, subject) in new[] { ("n1", "New first"), ("n2", "New second"), ("n3", "New third") })
+        {
+            _list.ApplyToolUse(call, "TaskCreate", new JsonObject { ["subject"] = subject });
+        }
+        foreach (var (call, id) in new[] { ("n2", "2"), ("n3", "3"), ("n1", "1") })
+        {
+            _list.ApplyToolResult(call, $"Task #{id} created", new JsonObject { ["task"] = new JsonObject { ["id"] = id } });
+        }
+
+        Assert.Equal(["#1 New first", "#2 New second", "#3 New third"], _list.Items.OrderBy(i => i.Id).Select(i => i.Title));
+    }
+
+    [Fact]
+    public void Numbers_that_carry_on_past_deleted_tasks_dont_start_the_list_over()
+    {
+        Create("c1", "1", "Done and deleted");
+        Create("c2", "2", "Still here");
+        Update("u1", "1", "deleted");
+
+        Create("c3", "3", "Next");
+
+        Assert.Equal(["#2 Still here", "#3 Next"], _list.Items.Select(i => i.Title));
+    }
+
+    [Fact]
+    public void A_task_list_result_is_the_whole_list_and_a_task_it_hasnt_got_is_gone()
+    {
+        Create("c1", "1", "Deleted where Claudette didn't see it");
+        Create("c2", "2", "Kept");
+        _list.ApplyToolUse("l1", "TaskList", new JsonObject());
+        // Made while the list was being read: the result can't have it yet.
+        Create("c3", "3", "Made meanwhile");
+
+        _list.ApplyToolResult("l1", "#2 [pending] Kept", Json("""{"tasks":[{"id":"2","subject":"Kept","status":"pending","blockedBy":[]}]}"""));
+
+        Assert.Equal(["#2 Kept", "#3 Made meanwhile"], _list.Items.Select(i => i.Title));
+    }
+
+    [Fact]
+    public void Claude_Codes_tasks_folder_is_the_whole_list_once_Claude_is_done_changing_it()
+    {
+        Create("c1", "1", "Read the build script");
+        Create("c2", "2", "Deleted elsewhere");
+        Create("c3", "3", "Fix the config");
+        var readAt = _list.Version;
+
+        Assert.True(_list.ApplyFolder([Listed("1", "Read the build script", "completed"), Listed("3", "Fix the config", "in_progress"), Listed("4", "From another session")], readAt));
+
+        Assert.Equal(["#1 Read the build script", "#3 Fix the config", "#4 From another session"], _list.Items.Select(i => i.Title));
+        Assert.True(_list.Items[0].IsDone);
+        Assert.Same(_list.Items[1], _list.Current);
+    }
+
+    [Fact]
+    public void A_folder_read_from_before_Claudes_latest_change_or_while_its_calls_wait_is_left_to_the_next()
+    {
+        Create("c1", "1", "Fix the config");
+        var readAt = _list.Version;
+        Update("u1", "1", "in_progress");
+
+        // Read before the update: it would put the task back.
+        Assert.True(_list.ApplyFolder([Listed("1", "Fix the config")], readAt));
+        Assert.True(_list.Items.Single().IsActive);
+
+        // A task still waiting for its number: the folder may have it under that number already.
+        _list.ApplyToolUse("c2", "TaskCreate", new JsonObject { ["subject"] = "Run the tests" });
+        Assert.True(_list.ApplyFolder([Listed("1", "Fix the config", "in_progress"), Listed("2", "Run the tests")], _list.Version));
+        Assert.Equal(2, _list.Items.Count);
+        Assert.Null(_list.Items[1].Id);
+
+        // A change not yet answered keeps its task as the call left it.
+        _list.ApplyToolResult("c2", "Task #2 created", new JsonObject { ["task"] = new JsonObject { ["id"] = "2" } });
+        _list.ApplyToolUse("u2", "TaskUpdate", new JsonObject { ["taskId"] = "1", ["status"] = "completed" });
+        Assert.True(_list.ApplyFolder([Listed("2", "Run the tests")], _list.Version));
+        Assert.Equal(["#1 Fix the config", "#2 Run the tests"], _list.Items.Select(i => i.Title));
+        Assert.True(_list.Items[0].IsDone);
+    }
+
+    [Fact]
+    public void A_folder_without_the_newest_task_Claude_made_isnt_where_Claude_Code_keeps_this_list()
+    {
+        Create("c1", "1", "Old");
+        Create("c2", "2", "Newest");
+
+        Assert.False(_list.ApplyFolder([Listed("1", "Old")], _list.Version));
+        // Nor is one whose task by that number is another.
+        Assert.False(_list.ApplyFolder([Listed("1", "Old"), Listed("2", "Someone else's")], _list.Version));
+        Assert.Equal(["#1 Old", "#2 Newest"], _list.Items.Select(i => i.Title));
+
+        // Once Claude deleted it, the folder is right not to have it.
+        Update("u1", "2", "deleted");
+        Assert.True(_list.ApplyFolder([], _list.Version));
+        Assert.Empty(_list.Items);
+    }
+
+    [Fact]
+    public void Once_the_folder_has_shown_the_newest_task_its_going_is_a_deletion()
+    {
+        Create("c1", "1", "Old");
+        Create("c2", "2", "Newest");
+        Assert.True(_list.ApplyFolder([Listed("1", "Old"), Listed("2", "Newest")], _list.Version));
+
+        // Another session sharing the list deleted it.
+        Assert.True(_list.ApplyFolder([Listed("1", "Old")], _list.Version));
+
+        Assert.Equal(["#1 Old"], _list.Items.Select(i => i.Title));
+    }
+
+    [Fact]
+    public void Calls_that_wont_be_answered_dont_hold_back_the_folder()
+    {
+        Create("c1", "1", "Fix the config");
+        _list.ApplyToolUse("c2", "TaskCreate", new JsonObject { ["subject"] = "Never numbered" });
+
+        _list.CallsEnded();
+
+        Assert.True(_list.ApplyFolder([Listed("1", "Fix the config", "completed")], _list.Version));
+        Assert.True(_list.Items[0].IsDone);
+    }
+
     [Fact]
     public void An_approved_plan_heads_the_list_until_its_cleared()
     {

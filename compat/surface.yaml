@@ -424,6 +424,20 @@ items:
     docs: https://code.claude.com/docs/en/tools-reference#task-tool-availability
     test: TasksPlanTests
     fallback: Settings → Claude Code → Give Claude a task list (on by default) sets it to 1, so models newer than Opus 4.7, Sonnet 4.6 and Haiku 4.5 get the Task tools too (Claude Code v2.1.233 and later; from v2.1.268 those models don't have them by default). If it stops working, those models make no task list and the status line says only "Following the plan" after a plan; --allowedTools TaskCreate does the same.
+  - id: "CLAUDE_CODE_TASK_LIST_ID"
+    kind: env
+    status: documented
+    usedIn: src/Claudette.Core/Sessions/ClaudeTasks.cs, src/Claudette.App/ViewModels/TabViewModel.Tasks.cs
+    docs: https://code.claude.com/docs/en/interactive-mode#task-list
+    test: ClaudeTaskFolderTests, TaskFolderTests
+    fallback: Read, never set. From the environment a tab's claude starts with and its settings files' env, it says which folder in tasks has the session's list (named for it, else for the session's id; DESIGN.md §5). User configuration, so it passes through to claude.
+  - id: "tasks/<list id>/<number>.json"
+    kind: file
+    status: undocumented
+    usedIn: src/Claudette.Core/Sessions/ClaudeTasks.cs, src/Claudette.App/Conversation/TodoListFolder.cs, src/Claudette.App/Conversation/TodoList.cs
+    docs: https://code.claude.com/docs/en/interactive-mode#task-list
+    test: ClaudeTaskFolderTests, TaskFolderTests, TaskBoardTests
+    fallback: "The docs name the folder (~/.claude/tasks/<name>, in the config folder) but not what's in it. Claude Code 2.1.301 keeps a <number>.json for each task, with the fields of a TaskList result (id, subject, description, activeForm, owner, status, blocks, blockedBy, and metadata, whose _internal marks one of its own), beside its own .lock and .highwatermark, which aren't read. Claudette reads the folder after each answer to a Task tool's call and whenever it changes, and the tab's list becomes it (DESIGN.md §5). Claude Code can also keep tasks elsewhere, behind a storage layer it has, and names an agent team's list for the team: a folder without the newest task Claude made is left alone. Without the folder the list follows the calls: a number means the newest task with it, a number given again means Claude Code started its list over, and a TaskList result is the whole list."
 
   # --- Control requests (wire names come from the Agent SDK sources) -----------------------------------
   - id: "control_request"
@@ -690,13 +704,13 @@ items:
     usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: TaskBoardTests, TasksPlanTests, RealCliTests
-    fallback: "An approved ExitPlanMode's tool_use_result (toolUseResult in transcripts) carries the plan as plan, which heads the Tasks page however it was approved: on its card, in the Claude app, or before a restore (DESIGN.md §5, \"Tasks\"). A denied one is an error result: that version of the plan was sent back, or, with tool_result_meta's interrupted, never answered. Without plan, the call's own input.plan is used (the model passed it before 2.1.285); without either, the plan shows only in the conversation."
+    fallback: "An approved ExitPlanMode's tool_use_result (toolUseResult in transcripts) carries the plan as plan, which heads the Tasks page however it was approved: on its card, in the Claude app, or before a restore (DESIGN.md §5). A denied one is an error result: that version of the plan was sent back, or, with tool_result_meta's interrupted, never answered. Without plan, the call's own input.plan is used (the model passed it before 2.1.285); without either, the plan shows only in the conversation."
   - id: "Plan mode allows edits only to the plan file"
     kind: behavior
     status: undocumented
     usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
     test: TasksPlanTests
-    fallback: "In Plan mode Claude writes its plan to a Markdown plan file with Write and Edit, the only file Claude Code lets it change, so the main agent's Write or Edit to a .md file in Plan mode is taken as the plan's draft and shown on the Tasks page as it's written (DESIGN.md §5, \"Tasks\"). If Plan mode starts allowing other edits, another Markdown file could show as the draft until the plan is put up for review, which replaces it with the plan Claude Code passes. If the plan stops being written with these tools, nothing shows until it's put up, as before."
+    fallback: "In Plan mode Claude writes its plan to a Markdown plan file with Write and Edit, the only file Claude Code lets it change, so the main agent's Write or Edit to a .md file in Plan mode is taken as the plan's draft and shown on the Tasks page as it's written (DESIGN.md §5). If Plan mode starts allowing other edits, another Markdown file could show as the draft until the plan is put up for review, which replaces it with the plan Claude Code passes. If the plan stops being written with these tools, nothing shows until it's put up, as before."
   - id: "permission_denied"
     kind: message
     status: documented

@@ -158,7 +158,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 
 | Page | Covers | From |
 |---|---|---|
-| The Tasks page | The task list, the plan and its versions, **Use as the plan** and **Show as the plan**, task rows in the conversation, **Continue**, progress on the row and the status line, **Give Claude a task list**. | [Tasks](DESIGN.md#tasks) |
+| The Tasks page | The task list, kept as Claude Code keeps it (a list shared with `CLAUDE_CODE_TASK_LIST_ID` too), the plan and its versions, **Use as the plan** and **Show as the plan**, task rows in the conversation, **Continue**, progress on the row and the status line, **Give Claude a task list**. | [Tasks](DESIGN.md#tasks) |
 | Claude Docs | Docs Claude writes with claude.ai's Docs connector: the link on the tile, the turn's rows, the Tasks page's **Docs**. | [Claude Docs](DESIGN.md#claude-docs) |
 | The agent map | The **Agents** page and its window, a subagent's details, stopping one, **Summarize subagents' progress**. | [Agent map](DESIGN.md#agent-map) |
 
