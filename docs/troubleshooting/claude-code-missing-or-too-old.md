@@ -11,7 +11,11 @@ Claudette runs your installed Claude Code, so without one it can't start a tab. 
 
 ## Claude Code isn't installed
 
-Claudette found no `claude` on your `PATH`, or no file at the path you gave it. The screen's text says which.
+Claudette found no `claude` on your `PATH` or where Claude Code installs to, or no file at the path you gave it. The screen's text says which.
+
+Choose **Install Claude Code**. It runs Claude Code's own installer and shows what it prints, and when it's done Claudette carries on by itself. [Installing Claude Code from the setup screen](../getting-started/the-first-launch.md#installing-claude-code-from-the-setup-screen) has the command it runs.
+
+Or install Claude Code yourself:
 
 1. Install Claude Code with [Claude Code's setup instructions](https://code.claude.com/docs/en/setup). **Install instructions** on the screen opens them.
 2. Choose **Check again**.
@@ -21,6 +25,24 @@ If Claude Code is installed but Claudette can't find it:
 - Choose **Choose claude…** and pick the `claude` program. Claudette remembers it in Settings → Claude Code → **Path to claude**.
 - On macOS and Linux, a Claudette started from the Dock or a launcher doesn't see the `PATH` your terminal does. It reads your login shell's, so check that your shell's startup files add the folder `claude` is in: see [Claude can't find a program](claude-cant-find-a-program.md).
 - If the screen says a path *doesn't exist*, the path in Settings points at a file that's gone. Choose **Choose claude…** and pick the right file.
+
+## Install Claude Code didn't work
+
+{% include unreleased.html %}
+
+The screen shows the installer's output, and its last lines under it.
+
+- **Nothing happens for a while.** The installer prints nothing while it downloads Claude Code. Wait a few minutes before deciding it's stuck.
+- **It failed.** The installer couldn't reach `downloads.claude.ai`, through a proxy or a firewall for example, or Claude Code isn't available where you are. On macOS and Linux it needs `curl`. Run the command the screen shows in a terminal to see more, and see Claude Code's [Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install).
+- **It finished, but Claudette still can't use Claude Code.** The screen says what Claudette found. Restart Claudette, or choose **Choose claude…** and pick `claude` in `~/.local/bin` (`claude.exe` in `.local\bin` in your user folder on Windows).
+
+## You have the Claude desktop app
+
+{% include unreleased.html %}
+
+The Claude desktop app isn't Claude Code. It keeps a copy of Claude Code for its own use, which it replaces whenever it updates, and Claudette doesn't run it. When Claude Code isn't installed and the desktop app is, the setup screen says so: choose **Install Claude Code**, which installs it beside the desktop app.
+
+If **Path to claude**, or a file you chose with **Choose claude…**, is one of the desktop app's, the screen says *That's the Claude desktop app, not Claude Code*, or *That's the copy of Claude Code the Claude desktop app keeps for its own use*, with the path. On Windows the app is `C:\Program Files\WindowsApps\Claude_…\app\claude.exe`, which is easy to find when you search for `claude.exe`. Choose **Install Claude Code**, or **Choose claude…** and pick Claude Code's own `claude`.
 
 ## Claude Code needs an update
 
@@ -35,7 +57,7 @@ Claudette runs `claude --version` to read the version. The screen says what went
 
 ## This Claude Code install isn't supported yet
 
-On Windows, Claude Code installed with npm can leave only a `claude.cmd` launcher, which Claudette can't start. Install the native build of Claude Code, or choose **Choose claude…** and pick `claude.exe`.
+On Windows, Claude Code installed with npm can leave only a `claude.cmd` launcher, which Claudette can't start. Choose **Install Claude Code** to install the native build of Claude Code, or choose **Choose claude…** and pick `claude.exe`.
 
 ## A version newer or older than the one Claudette was tested with
 

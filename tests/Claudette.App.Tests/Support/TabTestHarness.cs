@@ -633,6 +633,8 @@ internal sealed class TabTestHarness : IAsyncDisposable
             Services.EditorDocuments = text => new PlainEditorDocument(text);
         }
         configure?.Invoke(Services.Settings);
+        // Never the real installer: it would install Claude Code on the machine running the tests.
+        Services.InstallerFactory = () => Installer;
         if (updater is not null)
         {
             Services.UpdaterFactory = _ => updater;
@@ -643,6 +645,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.UseSessionFactory(Factory);
         Shell = new ShellViewModel(Services, () => OnAuthenticationRequired());
     }
+
+    /// <summary>Claude Code's installer, for the setup screen's Install Claude Code (DESIGN.md §12, "Installing Claude Code").</summary>
+    public FakeClaudeInstaller Installer { get; } = new();
 
     /// <summary>
     /// Stands in for the user environment each tab's <c>claude</c> starts from, as far as Claudette reads it (DESIGN.md

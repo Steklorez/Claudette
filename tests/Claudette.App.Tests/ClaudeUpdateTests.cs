@@ -278,7 +278,7 @@ public class ClaudeUpdateTests
 
         Assert.True(rechecked);
         Assert.Contains("Successfully updated", setup.Output);
-        Assert.Equal("Claude Code 2.1.290 is installed.", setup.UpdateResult);
+        Assert.Equal("Claude Code 2.1.290 is installed.", setup.ResultText);
     }
 
     [Fact]

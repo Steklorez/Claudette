@@ -140,15 +140,20 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         if (!result.IsUsable)
         {
             // Too old: the setup screen offers the same Update now as the header (DESIGN.md §12, "Minimum version").
-            var update = result is { Problem: Core.Installation.ClaudeInstallProblem.TooOld, Install: { } old }
+            var update = result is { Problem: ClaudeInstallProblem.TooOld, Install: { } old }
                 ? output => UpdateClaudeAsync(old.Path, output)
                 : (Func<Action<string>, Task<ClaudeUpdateResult>>?)null;
-            CurrentPage = new SetupViewModel(result, services.Platform, CheckInstallAsync, update, () => CheckInstallAsync(path));
+            // Missing, or only the desktop app's or npm's: Install Claude Code (DESIGN.md §12, "Installing Claude Code").
+            var install = result.Problem is ClaudeInstallProblem.NotFound or ClaudeInstallProblem.DesktopApp or ClaudeInstallProblem.UnsupportedLauncher
+                ? new SetupInstall(services.CreateInstaller().CommandText, InstallClaudeAsync)
+                : null;
+            CurrentPage = new SetupViewModel(result, services.Platform, CheckInstallAsync, update, () => CheckInstallAsync(path), install);
             return;
         }
-        if (path is not null && path != services.Settings.ClaudeCode.ClaudePath)
+        if (path != services.Settings.ClaudeCode.ClaudePath)
         {
-            // The user pointed Claudette at claude from the setup screen: remember it.
+            // The user pointed Claudette at claude from the setup screen: remember it. Or it was found by looking, from
+            // the setup screen after the path in Settings didn't work: forget that path, so the next launch looks too.
             services.Settings.ClaudeCode.ClaudePath = path;
             services.SaveSettings();
         }
@@ -159,6 +164,31 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             _launchUpdate = null;
         }
         await CheckSignInAsync();
+    }
+
+    /// <summary>
+    /// Runs Claude Code's installer, then makes sure Claudette can find what it installed, so the setup screen can say
+    /// why not before looking again.
+    /// </summary>
+    private async Task<ClaudeInstallResult> InstallClaudeAsync(Action<string> onOutput)
+    {
+        try
+        {
+            var installer = services.CreateInstaller();
+            var result = await Task.Run(() => installer.InstallAsync(line => services.Dispatcher.Post(() => onOutput(line))));
+            if (!result.Succeeded)
+            {
+                return result;
+            }
+            var located = await services.Locator.LocateAsync(null);
+            return located.IsUsable
+                ? result
+                : new ClaudeInstallResult(false, $"The installer finished, but Claudette still can't use Claude Code: {located.Detail} Restart Claudette, or choose Choose claude… and pick it.");
+        }
+        catch (Exception ex)
+        {
+            return new ClaudeInstallResult(false, $"The install failed: {ex.Message}");
+        }
     }
 
     /// <summary>Checks how <paramref name="claudePath"/> was installed, then runs its update command.</summary>

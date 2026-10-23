@@ -1,0 +1,12 @@
+﻿"Claude Code isn't installed"
+"Claude Code wasn't found."
+"The Claude desktop app is installed, but it isn't Claude Code. It keeps a copy of Claude Code for its own use, which Claudette doesn't run."
+"Claudette runs your installed Claude Code. Install it, or point Claudette at the claude executable."
+"Install Claude Code runs Claude Code's own installer, the command from its setup page, and shows what it prints:"
+"irm https://claude.ai/install.ps1 | iex"
+[button] Install Claude Code
+[button] Check again
+[button] Choose claude…
+[button] Install instructions
+"Setting up Claude Code...⏎✅ Installation complete!⏎"
+"Claude Code is installed."

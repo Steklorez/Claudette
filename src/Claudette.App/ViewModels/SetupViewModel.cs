@@ -6,18 +6,28 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels;
 
+/// <summary><b>Install Claude Code</b> on the setup screen (DESIGN.md §12, "Installing Claude Code").</summary>
+/// <param name="Command">The installer's command as Claude Code's setup page gives it, shown before it runs.</param>
+/// <param name="Run">Runs it, passing each line of output, and says whether Claude Code can now be found.</param>
+public sealed record SetupInstall(string Command, Func<Action<string>, Task<ClaudeInstallResult>> Run);
+
 /// <summary>Shown when Claude Code is missing, too old or unusable (DESIGN.md §2, "Dependency").</summary>
 /// <param name="update">
 /// <b>Update now</b> for a version below the minimum (DESIGN.md §12): runs the install method's update command,
 /// passing each line of output. Null when there's nothing to update.
 /// </param>
 /// <param name="recheck">Checks the same <c>claude</c> again after a successful update.</param>
+/// <param name="install">
+/// <b>Install Claude Code</b>, when it's missing (DESIGN.md §12, "Installing Claude Code"); after it works, Claudette looks
+/// for it again. Null when it isn't offered.
+/// </param>
 public sealed partial class SetupViewModel(
     ClaudeLocateResult result,
     IPlatformServices platform,
     Func<string?, Task> checkAgain,
     Func<Action<string>, Task<ClaudeUpdateResult>>? update = null,
-    Func<Task>? recheck = null) : ViewModelBase
+    Func<Task>? recheck = null,
+    SetupInstall? install = null) : ViewModelBase
 {
     public const string InstallDocsUrl = "https://code.claude.com/docs/en/setup";
 
@@ -37,11 +47,30 @@ public sealed partial class SetupViewModel(
 
     public bool HasFoundPath => FoundPath is not null;
 
+    /// <summary>
+    /// Claude Code wasn't found but the Claude desktop app is installed, which people take for it; said only when the
+    /// detail doesn't already say so.
+    /// </summary>
+    public bool ShowsDesktopNote { get; } = result is { DesktopInstalled: true, Problem: not ClaudeInstallProblem.DesktopApp };
+
     public bool CanUpdate => update is not null;
 
+    public bool CanInstall => install is not null;
+
+    /// <summary>What <b>Install Claude Code</b> runs, as the user would type it.</summary>
+    public string? InstallCommandText => install?.Command;
+
+    /// <summary><b>Check again</b> is the main action when there's nothing to update or install.</summary>
+    public bool ChecksFirst => !CanUpdate && !CanInstall;
+
+    /// <summary>Update now or Install Claude Code is running.</summary>
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(UpdateNowCommand))]
-    public partial bool IsUpdating { get; private set; }
+    [NotifyCanExecuteChangedFor(nameof(UpdateNowCommand), nameof(InstallCommand))]
+    public partial bool IsRunning { get; private set; }
+
+    /// <summary>Install Claude Code is running. The installer prints nothing while it downloads, so the screen says what's happening.</summary>
+    [ObservableProperty]
+    public partial bool IsInstalling { get; private set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasOutput))]
@@ -49,8 +78,9 @@ public sealed partial class SetupViewModel(
 
     public bool HasOutput => Output.Length > 0;
 
+    /// <summary>How Update now or Install Claude Code went.</summary>
     [ObservableProperty]
-    public partial string? UpdateResult { get; private set; }
+    public partial string? ResultText { get; private set; }
 
     [RelayCommand]
     private Task CheckAgainAsync() => checkAgain(null);
@@ -67,29 +97,64 @@ public sealed partial class SetupViewModel(
     [RelayCommand]
     private Task OpenInstallDocsAsync() => platform.OpenUrlAsync(InstallDocsUrl);
 
-    [RelayCommand(CanExecute = nameof(CanRunUpdate))]
+    [RelayCommand(CanExecute = nameof(CanRun))]
     private async Task UpdateNowAsync()
     {
         if (update is null)
         {
             return;
         }
-        IsUpdating = true;
-        _output.Clear();
-        Output = "";
-        UpdateResult = null;
-        var outcome = await update(line =>
-        {
-            _output.AppendLine(line);
-            Output = _output.ToString();
-        });
-        IsUpdating = false;
-        UpdateResult = outcome.Message;
+        var outcome = await RunAsync(update);
+        ResultText = outcome.Message;
         if (outcome.Succeeded)
         {
             await (recheck?.Invoke() ?? checkAgain(null));
         }
     }
 
-    private bool CanRunUpdate() => !IsUpdating;
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private async Task InstallAsync()
+    {
+        if (install is null)
+        {
+            return;
+        }
+        IsInstalling = true;
+        ClaudeInstallResult outcome;
+        try
+        {
+            outcome = await RunAsync(install.Run);
+        }
+        finally
+        {
+            IsInstalling = false;
+        }
+        ResultText = outcome.Message;
+        if (outcome.Succeeded)
+        {
+            await checkAgain(null);
+        }
+    }
+
+    private async Task<T> RunAsync<T>(Func<Action<string>, Task<T>> run)
+    {
+        IsRunning = true;
+        _output.Clear();
+        Output = "";
+        ResultText = null;
+        try
+        {
+            return await run(line =>
+            {
+                _output.AppendLine(line);
+                Output = _output.ToString();
+            });
+        }
+        finally
+        {
+            IsRunning = false;
+        }
+    }
+
+    private bool CanRun() => !IsRunning;
 }

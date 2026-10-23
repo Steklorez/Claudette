@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Install Claude Code from Claudette.** When Claude Code isn't installed, the first screen now offers **Install Claude Code**. It shows the command from Claude Code's own setup page for your system, runs it there and then, shows what it prints, and carries on to signing in once Claude Code is installed. Nothing asks for an administrator's password, and no terminal is needed.
+
+### Fixed
+
+- With the Claude desktop app installed, Claudette said Claude Code wasn't installed without saying why the desktop app didn't count. The desktop app isn't Claude Code: it keeps a copy of Claude Code for its own use, which it replaces as it updates. The first screen now says so, and offers to install Claude Code beside it. Pointing **Path to claude** or **Choose claude…** at the desktop app, or at its copy, now says whose it is, rather than trying to run it.
+
 ## [0.5.1] - 2026-10-23
 
 ### Added

@@ -72,7 +72,10 @@ public sealed class AppServices : IAsyncDisposable
     /// </param>
     /// <param name="systemProcesses">Every running process by name, for project tools (DESIGN.md §18). Null can't tell.</param>
     /// <param name="unrealRegistry">Unreal's Windows registry entries. Null has none.</param>
-    /// <param name="projectToolPaths">Where other programs keep their files; by default the current user's folders.</param>
+    /// <param name="projectToolPaths">
+    /// Where other programs keep their files, for project tools and the Claude desktop app; by default the current user's
+    /// folders.
+    /// </param>
     /// <param name="sleepBlocker">
     /// Keeps the computer awake, as Settings → General says, and while tabs are connected to the Claude app (DESIGN.md
     /// §9, "Keeping the computer awake"). Null keeps nothing awake: tests.
@@ -131,7 +134,8 @@ public sealed class AppServices : IAsyncDisposable
             ClaudeEnvironment.From(await UserEnvironment.GetAsync(cancellationToken).ConfigureAwait(false), overrides);
         KeepAwake = new KeepAwakeService(this, sleepBlocker ?? new NoSleepBlocker());
         RemoteControl = new RemoteControlService(this);
-        Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, RemoteControl.ClaudeVariables);
+        var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
+        Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, RemoteControl.ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment);
         MentionFolders = new MentionFolderReader(Git, timeProvider);
         Library = new LibraryService(this);
@@ -147,12 +151,14 @@ public sealed class AppServices : IAsyncDisposable
         Tips = new ShortcutTips(Settings);
         Perforce = new PerforceService(this, credentials ?? new UnavailableCredentialStore());
         Accounts = new AccountsService(this, credentials ?? new UnavailableCredentialStore());
-        ProjectTools = new ProjectToolsService(this, systemProcesses, unrealRegistry ?? NoUnrealEngineRegistry.Instance, projectToolPaths ?? ProjectToolPaths.ForCurrentUser());
+        ProjectTools = new ProjectToolsService(this, systemProcesses, unrealRegistry ?? NoUnrealEngineRegistry.Instance, otherPrograms);
         ServiceStatus = new ServiceStatusService(this);
         LiveSessions = new LiveSessionsService(this, systemProcesses);
         EditorLogs = new EditorLogService(this);
         UpdaterFactory = path => new ClaudeUpdater(path, Paths.UtilityDirectory, _launcher, Time, UserEnvironment.Probe,
             environmentOverrides: RemoteControl.ClaudeVariables, userEnvironment: UserEnvironment);
+        InstallerFactory = () => new ClaudeInstaller(ToolOSExtensions.Current, Paths.UtilityDirectory, _launcher, Time, UserEnvironment.Probe,
+            RemoteControl.ClaudeVariables, UserEnvironment);
         SettingsChanged += (_, _) =>
         {
             // Turning Use my login shell's environment on reads it now, if this run hasn't yet.
@@ -355,6 +361,11 @@ public sealed class AppServices : IAsyncDisposable
     internal Func<string, IClaudeUpdater> UpdaterFactory { get; set; }
 
     public IClaudeUpdater CreateUpdater(string claudePath) => UpdaterFactory(claudePath);
+
+    /// <summary>Makes Claude Code's installer for the setup screen (DESIGN.md §12, "Installing Claude Code"). Tests replace it.</summary>
+    internal Func<IClaudeInstaller> InstallerFactory { get; set; }
+
+    public IClaudeInstaller CreateInstaller() => InstallerFactory();
 
     /// <summary>Claude Code update checks and <b>Update now</b>, once Claude Code has been found.</summary>
     public ClaudeUpdateService? ClaudeUpdates { get; private set; }

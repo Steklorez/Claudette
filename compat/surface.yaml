@@ -2108,6 +2108,47 @@ items:
     test: ClaudeUpdateTests
     fallback: The update dialog's "What's new" link. If the file moves in the anthropics/claude-code repository, point the link at the repository's releases page.
 
+  # --- Installing Claude Code, and the Claude desktop app (DESIGN.md §12, "Installing Claude Code") -------
+  - id: "irm https://claude.ai/install.ps1 | iex"
+    kind: command
+    status: documented
+    usedIn: src/Claudette.Core/Installation/ClaudeInstaller.cs
+    docs: https://code.claude.com/docs/en/setup
+    test: ClaudeInstallerTests, SetupScreenTests
+  - id: "curl -fsSL https://claude.ai/install.sh | bash"
+    kind: command
+    status: documented
+    usedIn: src/Claudette.Core/Installation/ClaudeInstaller.cs
+    docs: https://code.claude.com/docs/en/setup
+    test: ClaudeInstallerTests
+  - id: "~/.local/bin/claude"
+    kind: file
+    status: documented
+    usedIn: src/Claudette.Core/Installation/ClaudeLocator.cs
+    docs: https://code.claude.com/docs/en/setup
+    test: none yet (the known locations are in the real home folder)
+    # The native installer's launcher, %USERPROFILE%\.local\bin\claude.exe on Windows. Looked in after PATH, so Claude
+    # Code installed from the setup screen is found although Claudette's PATH is from before the install.
+  - id: "claude-desktop"
+    kind: command
+    status: undocumented
+    usedIn: src/Claudette.Core/Installation/ClaudeDesktop.cs
+    docs: https://code.claude.com/docs/en/desktop-linux
+    test: ClaudeDesktopTests
+    fallback: "The Claude desktop app's command: documented on Linux; on Windows its app execution alias (claude-desktop.exe, seen with 3.6556.2). Only tells Claudette the app is installed. Without it, Windows still sees the app's package folder, and the setup screen at worst leaves out its note about the desktop app."
+  - id: "Claude_pzs8sxrjxfjjc"
+    kind: file
+    status: undocumented
+    usedIn: src/Claudette.Core/Installation/ClaudeDesktop.cs
+    test: ClaudeDesktopTests, SetupScreenTests
+    fallback: "The Claude desktop app's Windows package: its install folder (WindowsApps/Claude_<version>_x64__pzs8sxrjxfjjc, whose app/claude.exe is the app) and data folder (Packages/Claude_pzs8sxrjxfjjc), any publisher id matching. If it changes, a path to the app is run like any claude (its --version opens the app's window, and the setup screen says Claude Code didn't respond), and the setup screen leaves out its note about the desktop app."
+  - id: "claude-code"
+    kind: file
+    status: undocumented
+    usedIn: src/Claudette.Core/Installation/ClaudeDesktop.cs
+    test: ClaudeDesktopTests, SetupScreenTests
+    fallback: "Where the Claude desktop app keeps its copy of Claude Code: its data folder's Claude/claude-code/<version>/ (on Windows, %LOCALAPPDATA%/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/claude-code/<version>/<hash>/claude.exe with 3.6556.2; on macOS and Linux, ~/Library/Application Support and ~/.config, not yet seen). If it moves, a path to the copy works until the app replaces it, then says it doesn't exist."
+
   # --- Hook callbacks (DESIGN.md §13) and Perforce ticket handling (DESIGN.md §18) -----------------------
   - id: "--append-system-prompt"
     kind: flag

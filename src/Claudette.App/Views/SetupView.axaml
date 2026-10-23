@@ -12,24 +12,37 @@
                            IsVisible="{Binding HasFoundPath}"
                            FontFamily="{DynamicResource MonoFont}"
                            TextWrapping="Wrap" />
+      <!-- DESIGN.md §12, "Installing Claude Code": people take the desktop app for Claude Code -->
+      <TextBlock TextWrapping="Wrap" IsVisible="{Binding ShowsDesktopNote}"
+                 Text="The Claude desktop app is installed, but it isn't Claude Code. It keeps a copy of Claude Code for its own use, which Claudette doesn't run." />
       <TextBlock Classes="muted" TextWrapping="Wrap"
                  Text="Claudette runs your installed Claude Code. Install it, or point Claudette at the claude executable." />
+      <StackPanel Spacing="6" IsVisible="{Binding CanInstall}">
+        <TextBlock Classes="muted" TextWrapping="Wrap"
+                   Text="Install Claude Code runs Claude Code's own installer, the command from its setup page, and shows what it prints:" />
+        <Border Background="{DynamicResource SubtleBrush}" CornerRadius="6" Padding="10,8">
+          <SelectableTextBlock Text="{Binding InstallCommandText}" FontFamily="{DynamicResource MonoFont}" TextWrapping="Wrap" />
+        </Border>
+      </StackPanel>
       <WrapPanel ItemSpacing="8" LineSpacing="8">
         <!-- DESIGN.md §12, "Minimum version": the same Update now as the header badge -->
         <Button Classes="accent" Content="Update now" Command="{Binding UpdateNowCommand}" IsVisible="{Binding CanUpdate}" />
-        <Button Classes="accent" Content="Check again" Command="{Binding CheckAgainCommand}" IsVisible="{Binding !CanUpdate}" />
-        <Button Content="Check again" Command="{Binding CheckAgainCommand}" IsVisible="{Binding CanUpdate}" />
+        <Button Classes="accent" Content="Install Claude Code" Command="{Binding InstallCommand}" IsVisible="{Binding CanInstall}" />
+        <Button Classes="accent" Content="Check again" Command="{Binding CheckAgainCommand}" IsVisible="{Binding ChecksFirst}" />
+        <Button Content="Check again" Command="{Binding CheckAgainCommand}" IsVisible="{Binding !ChecksFirst}" />
         <Button Content="Choose claude…" Command="{Binding BrowseCommand}" />
         <Button Content="Install instructions" Command="{Binding OpenInstallDocsCommand}" />
       </WrapPanel>
-      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsUpdating}" />
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsRunning}" />
+      <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding IsInstalling}"
+                 Text="The installer prints nothing while it downloads Claude Code, which can take a few minutes." />
       <Border Background="{DynamicResource SubtleBrush}" CornerRadius="6" Padding="10,8" IsVisible="{Binding HasOutput}" MaxHeight="200">
         <ScrollViewer>
           <SelectableTextBlock Text="{Binding Output}" FontFamily="{DynamicResource MonoFont}" TextWrapping="Wrap" />
         </ScrollViewer>
       </Border>
-      <TextBlock Text="{Binding UpdateResult}" TextWrapping="Wrap"
-                 IsVisible="{Binding UpdateResult, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <TextBlock Text="{Binding ResultText}" TextWrapping="Wrap"
+                 IsVisible="{Binding ResultText, Converter={x:Static ObjectConverters.IsNotNull}}" />
     </StackPanel>
   </Border>
 </UserControl>

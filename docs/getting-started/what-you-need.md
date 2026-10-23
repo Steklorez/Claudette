@@ -29,8 +29,9 @@ Install [Claude Code](https://code.claude.com/docs/en/setup) before Claudette, a
 - It needs Claude Code {{ site.claude_code.minimum }} or later. It was last tested with {{ site.claude_code.tested }}, and newer versions are allowed.
 - On Windows, Claude Code itself needs Git for Windows to run commands. If it's missing, the tab tells you.
 - On Windows, a Claude Code installed with npm that only provides `claude.cmd` can't be started by Claudette yet. Install the native build, or point Claudette at `claude.exe`.
+- The Claude desktop app isn't Claude Code. It keeps a copy of Claude Code for its own use, which Claudette doesn't run, so install Claude Code too.
 
-If Claude Code is missing or too old, Claudette says so on its first screen: see [The first launch](the-first-launch.md).
+If Claude Code is missing or too old, Claudette says so on its first screen, and offers to install or update it: see [The first launch](the-first-launch.md).
 
 ## An account
 

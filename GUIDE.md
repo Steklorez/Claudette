@@ -82,9 +82,9 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 
 | Page | Covers | From |
 |---|---|---|
-| What you need | Windows (x64 and arm64), macOS 12 or later, Linux from source (built and tested with every change, but no package); Claude Code installed first, at its minimum version. | [§1](DESIGN.md#1-goals), [§2](DESIGN.md#2-platform--tech-stack) |
+| What you need | Windows (x64 and arm64), macOS 12 or later, Linux from source (built and tested with every change, but no package); Claude Code installed first, at its minimum version, which the Claude desktop app isn't. | [§1](DESIGN.md#1-goals), [§2](DESIGN.md#2-platform--tech-stack) |
 | Installing | Claude Code first. Which package to take from the Downloads page. The MSIX on Windows, which shares Claude Code's configuration with the terminal's `claude`. The `.dmg` on macOS, moving Claudette to Applications, and the privacy prompts that name Claudette when Claude reads a project in Documents or Downloads. | [Packaging and signing](DESIGN.md#packaging-and-signing) |
-| The first launch | *Looking for Claude Code…*, the setup screen (**Update now**, **Check again**, **Choose claude…**, **Install instructions**), Claude Code's minimum version. | [§2](DESIGN.md#2-platform--tech-stack), [§12](DESIGN.md#12-claude-code-updates) |
+| The first launch | *Looking for Claude Code…*, the setup screen (**Update now**, **Install Claude Code**, **Check again**, **Choose claude…**, **Install instructions**), its note that the Claude desktop app isn't Claude Code, Claude Code's minimum version. | [§2](DESIGN.md#2-platform--tech-stack), [§12](DESIGN.md#12-claude-code-updates), [Installing Claude Code](DESIGN.md#installing-claude-code) |
 | Signing in | The sign-in screen, finishing in the browser, **Enter a code instead**, **More options** (a Console account, SSO), **I've already signed in**. What can go wrong is in Troubleshooting. | [§11](DESIGN.md#11-sign-in) |
 | Your first tab | The new tab picker, choosing a folder, the folder trust question, sending a message, **Stop**. | [Opening a tab](DESIGN.md#opening-a-tab), [Folder trust](DESIGN.md#folder-trust), [Composer](DESIGN.md#composer) |
 | A tour of the window | The header (the usage meters, the cup, the service status dot, the account), the sidebar, the conversation, the side panel and the composer; on macOS the menu bar. Each part links to its chapter. | [§3](DESIGN.md#3-main-window) |
@@ -283,7 +283,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 
 | Page | Covers | From |
 |---|---|---|
-| Claude Code missing or too old | The setup screen, and the notes about a version newer or older than the one Claudette was tested with. | [§12](DESIGN.md#12-claude-code-updates), [Tested versions](DESIGN.md#tested-versions) |
+| Claude Code missing or too old | The setup screen, installing Claude Code from it, the Claude desktop app taken for Claude Code, and the notes about a version newer or older than the one Claudette was tested with. | [§12](DESIGN.md#12-claude-code-updates), [Installing Claude Code](DESIGN.md#installing-claude-code), [Tested versions](DESIGN.md#tested-versions) |
 | Signing in | When signing in fails, **Try again**, an organization that isn't allowed. | [§11](DESIGN.md#11-sign-in) |
 | A tab that won't start | The reasons a tab gives, **Restart**, **Choose folder…**, a folder or a session that's gone. | [§4](DESIGN.md#4-tabs--sessions), [§13](DESIGN.md#13-architecture), [Restore on launch](DESIGN.md#restore-on-launch) |
 | A tab that seems stuck | *Possibly stuck*, check-ins, **Stop**. | [Check-ins on long turns](DESIGN.md#check-ins-on-long-turns) |

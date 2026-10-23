@@ -31,7 +31,7 @@ Claudette does not replace Claude Code. It runs the real `claude` CLI as a child
 | Diffs | Claudette's own line diff and diff view, highlighted with TextMateSharp | The TextMate grammars and themes LiveMarkdown already ships for code blocks. AvaloniaEdit was the plan, but a read-only diff doesn't need an editor. |
 | Code editor | AvaloniaEdit, with AvaloniaEdit.TextMate | The Project Files tab's editor ([§18](#project-files)). It highlights with the same TextMate grammars and themes as the diff view. |
 | Usage history | SQLite (Microsoft.Data.Sqlite) | [§6](#usage-history) |
-| Dependency | Claude Code CLI | Must already be installed. Claudette finds `claude` on `PATH` (on macOS and Linux, the login shell's `PATH`, [§13](#login-shell-environment)) or at a path set in Settings, checks its version on launch against a minimum supported version, and shows a setup screen if it is missing or too old. Sign-in is handled inside Claudette (see [§11](#11-sign-in)). |
+| Dependency | Claude Code CLI | Not bundled: Claudette runs the user's own. It finds `claude` on `PATH` (on macOS and Linux, the login shell's `PATH`, [§13](#login-shell-environment)), in the usual install folders or at a path set in Settings, checks its version on launch against a minimum supported version, and shows a setup screen if it is missing or too old. When it's missing, the setup screen can install it with Claude Code's own installer, and says when the Claude desktop app, which isn't Claude Code, is installed ([§12](#installing-claude-code)). Sign-in is handled inside Claudette (see [§11](#11-sign-in)). |
 | Service status | Claude's public status page, status.claude.com | Read for the header's status dot and the incident banner: its Statuspage summary, with no sign-in. Settings → General turns it off. [§18](#service-status). |
 | Packaging | Windows: MSIX. macOS: signed, notarized `.app` in a `.dmg`. | [Below](#packaging-and-signing). |
 | User Guide | Jekyll with Just the Docs, on GitHub Pages | https://claudette.dotbunny.com, built from `docs/` and `CHANGELOG.md` on `main` by a workflow. Planned ([below](#user-guide)). |
@@ -1757,6 +1757,29 @@ What Claudette reads from it (the command is documented; the line format isn't, 
 | Homebrew | Doesn't update itself. | **Update now** runs `brew upgrade claude-code`, or `claude-code@latest` if that is the cask installed. |
 | WinGet | Doesn't update itself. | **Update now** runs `winget upgrade Anthropic.ClaudeCode`. Windows locks a running executable, so this fails while any tab is running. In that case Claudette offers **Update on next launch**, which runs the upgrade at the next start, before any tab starts its process. |
 | apt / dnf / apk | Needs admin rights. | Show the command to run; don't run it. |
+
+### Installing Claude Code
+
+✅ Built 2026-10-23, from [issue #66](https://github.com/dotBunny/Claudette/issues/66). When Claude Code is missing, the setup screen offers to install it.
+
+- **Install Claude Code** runs Claude Code's native installer, with the command its [setup page](https://code.claude.com/docs/en/setup) gives for the OS. The screen shows the command before it runs:
+  - Windows: `irm https://claude.ai/install.ps1 | iex`, in PowerShell (`-NoProfile -NonInteractive`, writing UTF-8).
+  - macOS and Linux: `curl -fsSL https://claude.ai/install.sh | bash`, in bash with `pipefail`, so a failed download fails the command rather than piping nothing into a `bash` that succeeds.
+- It needs no admin rights: the installer puts Claude Code in the user's home, with its launcher in `~/.local/bin`. Claudette looks there after `PATH`, so it finds the new install although its own `PATH` is from before it.
+- It runs in Claudette's utility folder with the cleaned environment ([§13](#13-architecture)), since the installer ends by running `claude install`. Its output shows on the setup screen, as **Update now**'s does. The installer prints nothing while it downloads, so the screen says so under the progress bar.
+- It runs in the setup screen, not a terminal window: one way on every OS (Linux has no standard terminal), and Claudette knows when it ends and whether it worked.
+- It's offered when Claude Code wasn't found, when the path given is the Claude desktop app's, and on Windows when only npm's `claude.cmd` was found. It isn't offered for a version that's too old, which gets **Update now**, or one that doesn't answer.
+- When it works, Claudette looks for Claude Code again, as **Check again** does. If it still can't use it, the screen says why and stays. Finding Claude Code by looking, from the setup screen, also clears a **Path to claude** in Settings that didn't work, so later launches look too.
+
+**The Claude desktop app.** People install the Claude desktop app and take it for Claude Code. It isn't Claude Code, and it puts no `claude` on `PATH`:
+
+- On Windows it's a package, `Claude_pzs8sxrjxfjjc`. Its `app\claude.exe` is the app itself, and its only command on `PATH` is the `claude-desktop.exe` alias. It keeps a copy of Claude Code for its own use, in a folder per version that it replaces as it updates: `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude-code\<version>\<hash>\claude.exe` (seen with 3.6556.2).
+- On macOS it's `Claude.app`, and on Linux the `claude-desktop` package. Their copies would be under the app's data folder's `Claude/claude-code` (`~/Library/Application Support`, `~/.config`).
+- Claudette never runs either. Not the app, whose `--version` would open its window. Not its copy, which the app deletes when it updates, and which **Update now** couldn't update.
+- Looking for Claude Code passes over them. A path to one, in Settings or from **Choose claude…**, gets the setup screen saying it's the desktop app's, without running it.
+- When Claude Code isn't found and the desktop app is installed (its `claude-desktop` command or package, or `Claude.app`), the setup screen says the desktop app isn't Claude Code, above **Install Claude Code**.
+
+> **Not yet tested on a real machine:** the installer on macOS and Linux, and the desktop app's files there. Windows's are covered with the paths of a real install, and the installer's commands and reporting by unit tests with a fake launcher.
 
 ### Detecting an update
 
