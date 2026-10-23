@@ -6,7 +6,7 @@
 
 It isn't a reimplementation. Each tab runs the real `claude` CLI, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions, and Claudette draws it as proper native UI instead of a terminal. It runs on Windows, macOS and Linux (from source for now), and every change is built and tested on all three. Built with .NET 10 and Avalonia.
 
-**[claudette.dotbunny.com](https://claudette.dotbunny.com)** · [Download](https://claudette.dotbunny.com/downloads.html) · [The user guide](https://claudette.dotbunny.com/guide/) · [Changelog](CHANGELOG.md)
+**[claudette.dotbunny.com](https://claudette.dotbunny.com)** · [Download](https://claudette.dotbunny.com/downloads/) · [The user guide](https://claudette.dotbunny.com/guide/) · [Changelog](CHANGELOG.md)
 
 ![Claudette: seven tabs over three game projects, a C++ conversation with tool calls and a code block, the Changed files panel, the plan usage header, and Claudette herself standing on the message box](docs/screenshots/standard-dark.png)
 
@@ -45,7 +45,7 @@ Changed files, live, a real diff view with **Revert** for a hunk or a file, tick
 - **A conversation built for code:** cards in their own colors, tool calls side by side as tiles, permission prompts and plans as cards, rewind and branch, find and export. [The conversation →](https://claudette.dotbunny.com/conversation/) · [The composer →](https://claudette.dotbunny.com/composer/)
 - **Pick up anywhere:** History searches Claude's replies too, the session library syncs sessions between your machines, and Remote Control carries a tab on in the Claude app on your phone. [History and syncing →](https://claudette.dotbunny.com/history/)
 - **It knows your project:** tools for Unreal Engine, Unity and Godot, the processes a tab started, MCP servers, and Perforce. [Project tools →](https://claudette.dotbunny.com/project-tools/)
-- **Two looks, light and dark:** Standard, dense and calm, and Claude, after the Claude apps. [Styles and themes →](https://claudette.dotbunny.com/settings/styles-and-themes.html)
+- **Two looks, light and dark:** Standard, dense and calm, and Claude, after the Claude apps. [Styles and themes →](https://claudette.dotbunny.com/settings/styles-and-themes/)
 
 <table>
   <tr>
@@ -68,8 +68,8 @@ Claudette, the app's pixel mascot, stands on the message box while you work: she
 
 You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds `claude` on your `PATH`, and can sign you in if you aren't already. The guide's [Getting started](https://claudette.dotbunny.com/getting-started/) takes you through it.
 
-- **Windows:** the MSIX from the [Downloads page](https://claudette.dotbunny.com/downloads.html).
-- **macOS:** the `.dmg` from the [Downloads page](https://claudette.dotbunny.com/downloads.html).
+- **Windows:** the MSIX from the [Downloads page](https://claudette.dotbunny.com/downloads/).
+- **macOS:** the `.dmg` from the [Downloads page](https://claudette.dotbunny.com/downloads/).
 - **From source** (Windows, macOS or Linux), with the .NET SDK that `global.json` names:
 
   ```sh

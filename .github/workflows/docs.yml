@@ -40,3 +40,7 @@ jobs:
         run: bundle exec jekyll build
       - name: Check links and pictures
         run: bundle exec htmlproofer _site --disable-external --no-enforce-https
+      # The Microsoft Store listing names the privacy policy's old address, which nothing on the site links to (GUIDE.md,
+      # "Privacy policy").
+      - name: Check the privacy policy's old address
+        run: grep -q 'url=https://claudette.dotbunny.com/privacy-policy/"' _site/privacy-policy.html

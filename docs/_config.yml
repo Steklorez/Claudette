@@ -5,12 +5,20 @@ description: How to use Claudette, the desktop app that puts Claude Code in a na
 url: https://claudette.dotbunny.com
 lang: en
 
+# A page's address is a folder, /tabs/opening-tabs/ rather than /tabs/opening-tabs.html (GUIDE.md, "The site").
+permalink: pretty
+
 remote_theme: just-the-docs/just-the-docs@v0.12.0
 plugins:
   - jekyll-remote-theme
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-github-metadata
+  - jekyll-redirect-from
+
+# A page's redirect_from leaves a page at its old address; nothing reads the list of them it would publish too.
+redirect_from:
+  json: false
 
 # The repository, for site.github: the Downloads page lists its releases.
 repository: dotBunny/Claudette
@@ -44,7 +52,7 @@ back_to_top_text: Back to top
 # The header of every guide page: back to the landing page, the downloads, and the repository.
 aux_links:
   Home: /
-  Downloads: /downloads.html
+  Downloads: /downloads/
   GitHub: https://github.com/dotBunny/Claudette
 
 # The changelog is CHANGELOG.md itself, last in the sidebar (GUIDE.md, "The changelog").
@@ -66,7 +74,7 @@ claude_code:
   minimum: 2.1.284
   tested: 2.1.308
 
-footer_content: 'Claudette is made by <a href="https://dotbunny.com">dotBunny</a> under the <a href="https://github.com/dotBunny/Claudette/blob/main/LICENSE">MIT license</a>. It isn''t made by Anthropic. <a href="/privacy-policy.html">Privacy policy</a>'
+footer_content: 'Claudette is made by <a href="https://dotbunny.com">dotBunny</a> under the <a href="https://github.com/dotBunny/Claudette/blob/main/LICENSE">MIT license</a>. It isn''t made by Anthropic. <a href="/privacy-policy/">Privacy policy</a>'
 
 exclude:
   - Gemfile

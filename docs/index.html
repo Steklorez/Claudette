@@ -29,11 +29,11 @@ search_exclude: true
     <div class="get-card">
       <p class="get-label">{% include icon.html name="download" %} Download Claudette{% if latest.tag_name %} {{ latest.tag_name | remove_first: "v" }}{% endif %}</p>
       <div class="get-buttons">
-        <a class="pill pill-primary" href="{% if windows %}{{ windows.browser_download_url }}{% else %}{{ '/downloads.html' | relative_url }}{% endif %}">{% include icon.html name="monitor" %}<span>Windows <small>x64</small></span></a>
-        <a class="pill pill-primary" href="{% if mac %}{{ mac.browser_download_url }}{% else %}{{ '/downloads.html' | relative_url }}{% endif %}">{% include icon.html name="laptop" %}<span>macOS <small>Apple silicon</small></span></a>
+        <a class="pill pill-primary" href="{% if windows %}{{ windows.browser_download_url }}{% else %}{{ '/downloads/' | relative_url }}{% endif %}">{% include icon.html name="monitor" %}<span>Windows <small>x64</small></span></a>
+        <a class="pill pill-primary" href="{% if mac %}{{ mac.browser_download_url }}{% else %}{{ '/downloads/' | relative_url }}{% endif %}">{% include icon.html name="laptop" %}<span>macOS <small>Apple silicon</small></span></a>
       </div>
     </div>
-    <p class="get-note">Needs <a href="https://code.claude.com/docs/en/setup">Claude Code</a> · Windows 10 and 11, macOS 12 or later · <a href="{{ '/downloads.html' | relative_url }}">Every package</a><br>On Linux, <a href="{{ '/getting-started/running-from-source.html' | relative_url }}">run it from source</a>: every change is built and tested there too.</p>
+    <p class="get-note">Needs <a href="https://code.claude.com/docs/en/setup">Claude Code</a> · Windows 10 and 11, macOS 12 or later · <a href="{{ '/downloads/' | relative_url }}">Every package</a><br>On Linux, <a href="{{ '/getting-started/running-from-source/' | relative_url }}">run it from source</a>: every change is built and tested there too.</p>
   </div>
 
   <div class="hero-actions">
@@ -105,7 +105,7 @@ search_exclude: true
         <p class="kicker"><span>03</span> The agent map</p>
         <h3>See every agent<br>at work.</h3>
         <p>The agent map draws Claude's subagents as a tree while they fan out, nested as they nest, with what each is doing right now. Select one for what it was asked and what it returned, or stop it.</p>
-        <a class="more" href="{{ '/plans/the-agent-map.html' | relative_url }}">The agent map {% include icon.html name="arrow-right" %}</a>
+        <a class="more" href="{{ '/plans/the-agent-map/' | relative_url }}">The agent map {% include icon.html name="arrow-right" %}</a>
       </div>
       <div class="story-shot">
         <div class="frame">{% include picture.html name="agents-standard" alt="The agent map: three Explore subagents that surveyed the project in parallel, the first selected with its prompt and its report" width=2224 height=1427 %}</div>
@@ -153,7 +153,7 @@ search_exclude: true
         <p class="kicker"><span>07</span> Editor logs</p>
         <h3>The editor's log.<br>Right under the tab.</h3>
         <p>While Unreal, Unity or Godot has the project open, its log is a row under the tab, followed as it's written, with its errors and warnings counted. Filter it by level, category or text, click a file it names to open it, and when the editor crashes, the log stays to say why.</p>
-        <a class="more" href="{{ '/project-tools/editor-logs.html' | relative_url }}">Editor logs {% include icon.html name="arrow-right" %}</a>
+        <a class="more" href="{{ '/project-tools/editor-logs/' | relative_url }}">Editor logs {% include icon.html name="arrow-right" %}</a>
       </div>
       <div class="story-shot">
         <div class="frame">{% include picture.html name="guide/project-tools/editor-log" alt="The Unreal editor's log under the Grappling hook tab and shown in the main area: a chip for each level with its count, then the log in columns of time, category, verbosity and message, with an error in red and warnings in amber" width=2224 height=1427 %}</div>
@@ -202,7 +202,7 @@ search_exclude: true
       <figcaption>Claude</figcaption>
     </figure>
   </div>
-  <p class="band-more" data-reveal><a class="more" href="{{ '/settings/styles-and-themes.html' | relative_url }}">Styles and themes {% include icon.html name="arrow-right" %}</a></p>
+  <p class="band-more" data-reveal><a class="more" href="{{ '/settings/styles-and-themes/' | relative_url }}">Styles and themes {% include icon.html name="arrow-right" %}</a></p>
 </section>
 
 <section class="band mascot" aria-labelledby="mascot-title">
@@ -228,14 +228,14 @@ search_exclude: true
     <h2 id="more-title">Made for the way you work.</h2>
   </div>
   <div class="cards">
-    <a class="card" href="{{ '/tabs/worktree-tabs.html' | relative_url }}" data-reveal>{% include icon.html name="branch" %}<strong>Worktree tabs</strong><span>Parallel tabs in one repository, each on its own branch.</span></a>
+    <a class="card" href="{{ '/tabs/worktree-tabs/' | relative_url }}" data-reveal>{% include icon.html name="branch" %}<strong>Worktree tabs</strong><span>Parallel tabs in one repository, each on its own branch.</span></a>
     <a class="card" href="{{ '/project-tools/' | relative_url }}" data-reveal>{% include icon.html name="gamepad" %}<strong>Project tools</strong><span>Unreal Engine, Unity and Godot: build, launch, open the solution.</span></a>
-    <a class="card" href="{{ '/away/the-claude-app.html' | relative_url }}" data-reveal>{% include icon.html name="phone" %}<strong>The Claude app</strong><span>Keep a conversation going from your phone.</span></a>
-    <a class="card" href="{{ '/tabs/the-command-palette.html' | relative_url }}" data-reveal>{% include icon.html name="command" %}<strong>Command palette</strong><span>Everything Claudette can do, a few keystrokes away.</span></a>
-    <a class="card" href="{{ '/conversation/the-scratch-pad.html' | relative_url }}" data-reveal>{% include icon.html name="note" %}<strong>Scratch pad</strong><span>A pad per project for commands, notes and snippets.</span></a>
-    <a class="card" href="{{ '/project-tools/perforce.html' | relative_url }}" data-reveal>{% include icon.html name="key" %}<strong>Perforce</strong><span>Tickets kept fresh, and each tab's changelist.</span></a>
-    <a class="card" href="{{ '/away/notifications.html' | relative_url }}" data-reveal>{% include icon.html name="bell" %}<strong>Notifications</strong><span>Know when a tab needs you, wherever you are.</span></a>
-    <a class="card" href="{{ '/settings/accessibility.html' | relative_url }}" data-reveal>{% include icon.html name="eye" %}<strong>Accessibility</strong><span>Zoom, reduced motion and screen readers.</span></a>
+    <a class="card" href="{{ '/away/the-claude-app/' | relative_url }}" data-reveal>{% include icon.html name="phone" %}<strong>The Claude app</strong><span>Keep a conversation going from your phone.</span></a>
+    <a class="card" href="{{ '/tabs/the-command-palette/' | relative_url }}" data-reveal>{% include icon.html name="command" %}<strong>Command palette</strong><span>Everything Claudette can do, a few keystrokes away.</span></a>
+    <a class="card" href="{{ '/conversation/the-scratch-pad/' | relative_url }}" data-reveal>{% include icon.html name="note" %}<strong>Scratch pad</strong><span>A pad per project for commands, notes and snippets.</span></a>
+    <a class="card" href="{{ '/project-tools/perforce/' | relative_url }}" data-reveal>{% include icon.html name="key" %}<strong>Perforce</strong><span>Tickets kept fresh, and each tab's changelist.</span></a>
+    <a class="card" href="{{ '/away/notifications/' | relative_url }}" data-reveal>{% include icon.html name="bell" %}<strong>Notifications</strong><span>Know when a tab needs you, wherever you are.</span></a>
+    <a class="card" href="{{ '/settings/accessibility/' | relative_url }}" data-reveal>{% include icon.html name="eye" %}<strong>Accessibility</strong><span>Zoom, reduced motion and screen readers.</span></a>
   </div>
 </section>
 

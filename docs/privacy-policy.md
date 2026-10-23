@@ -2,6 +2,8 @@
 title: Privacy policy
 nav_exclude: true
 description: Claudette's privacy policy. Claudette collects nothing about you, and this site doesn't either.
+# Its address before the site's were folders, which the Microsoft Store listing names (GUIDE.md, "Privacy policy").
+redirect_from: /privacy-policy.html
 ---
 
 # Privacy policy
