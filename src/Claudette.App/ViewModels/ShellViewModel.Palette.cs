@@ -1,4 +1,5 @@
 using Claudette.App.Games;
+using Claudette.App.Services;
 using Claudette.Core;
 using Claudette.Core.Accessibility;
 using Claudette.Core.Settings;
@@ -51,8 +52,8 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// Commands first (the selected tab's among them), then the open tabs, recent and favorite folders, and Settings'
-    /// categories. A command shows its shortcut, so the palette teaches them.
+    /// Commands first (the selected tab's among them), then the open tabs, recent and favorite folders, Settings'
+    /// categories, and the help. A command shows its shortcut, so the palette teaches them.
     /// </summary>
     internal List<PaletteEntry> PaletteEntries()
     {
@@ -231,6 +232,11 @@ public sealed partial class ShellViewModel
         {
             entries.Add(new PaletteEntry(category, "Settings", () => OpenSettingsAtAsync(category)));
         }
+
+        // DESIGN.md §14, "Version": the help at the foot of Settings' sidebar.
+        entries.Add(new PaletteEntry("User Guide", "Help", () => HelpLinks.OpenGuideAsync(_services)));
+        entries.Add(new PaletteEntry("Ask on Discord", "Help", () => HelpLinks.OpenDiscordAsync(_services)));
+        entries.Add(new PaletteEntry("Report an issue", "Help", () => HelpLinks.ReportIssueAsync(_services)));
         return entries;
     }
 }

@@ -49,10 +49,11 @@ heading_anchors: true
 back_to_top: true
 back_to_top_text: Back to top
 
-# The header of every guide page: back to the landing page, the downloads, and the repository.
+# The header of every guide page: back to the landing page, the downloads, dotBunny's Discord, and the repository.
 aux_links:
   Home: /
   Downloads: /downloads/
+  Discord: /discord/
   GitHub: https://github.com/dotBunny/Claudette
 
 # The changelog is CHANGELOG.md itself, last in the sidebar (GUIDE.md, "The changelog").

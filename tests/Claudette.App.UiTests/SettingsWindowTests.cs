@@ -167,7 +167,7 @@ public class SettingsWindowTests
     }
 
     [AvaloniaFact]
-    public async Task The_sidebar_ends_with_the_version_the_user_guide_and_Report_an_issue()
+    public async Task The_sidebar_ends_with_the_version_the_user_guide_Discord_and_Report_an_issue()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         h.Services.BuildCommit = "842169b";
@@ -183,15 +183,19 @@ public class SettingsWindowTests
         Assert.Equal("Claudette 0.1.0 · 842169b", version.GetVisualDescendants().OfType<TextBlock>().Single().Text);
         var guide = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.OpenGuideCommand);
         Assert.True(guide.IsEffectivelyVisible);
+        var discord = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.OpenDiscordCommand);
+        Assert.True(discord.IsEffectivelyVisible);
+        Assert.Equal("Ask on Discord", discord.GetVisualDescendants().OfType<TextBlock>().Single().Text);
         var report = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.ReportIssueCommand);
         Assert.True(report.IsEffectivelyVisible);
-        // The foot sits below the categories, not over them: the version, the user guide, then Report an issue. They
-        // scroll when they don't fit.
+        // The foot sits below the categories, not over them: the version, the user guide, Discord, then Report an
+        // issue. They scroll when they don't fit.
         var categories = sidebar.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "SidebarList");
         var categoriesBottom = categories.TranslatePoint(new Point(0, categories.Bounds.Height), sidebar)!.Value.Y;
         Assert.True(version.TranslatePoint(default, sidebar)!.Value.Y >= categoriesBottom);
         Assert.True(guide.TranslatePoint(default, sidebar)!.Value.Y >= version.TranslatePoint(new Point(0, version.Bounds.Height), sidebar)!.Value.Y);
-        Assert.True(report.TranslatePoint(default, sidebar)!.Value.Y >= guide.TranslatePoint(new Point(0, guide.Bounds.Height), sidebar)!.Value.Y);
+        Assert.True(discord.TranslatePoint(default, sidebar)!.Value.Y >= guide.TranslatePoint(new Point(0, guide.Bounds.Height), sidebar)!.Value.Y);
+        Assert.True(report.TranslatePoint(default, sidebar)!.Value.Y >= discord.TranslatePoint(new Point(0, discord.Bounds.Height), sidebar)!.Value.Y);
 
         version.Command!.Execute(null);
         UiText.Settle(window);

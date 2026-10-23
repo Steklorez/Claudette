@@ -4,8 +4,8 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels;
 
-/// <summary>One thing the command palette can do: a command, a tab to go to, a folder to open.</summary>
-/// <param name="Group">What kind it is, shown beside it: "Command", "Tab", "Folder" or "Settings".</param>
+/// <summary>One thing the command palette can do: a command, a tab to go to, a folder to open, a page of help.</summary>
+/// <param name="Group">What kind it is, shown beside it: "Command", "Tab", "Folder", "Settings" or "Help".</param>
 /// <param name="Shortcut">Its keyboard shortcut as this OS shows it, if it has one.</param>
 public sealed record PaletteEntry(string Label, string Group, Func<Task> Run, string? Shortcut = null, string? Detail = null)
 {

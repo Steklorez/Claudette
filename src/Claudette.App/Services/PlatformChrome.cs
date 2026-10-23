@@ -10,8 +10,9 @@ namespace Claudette.App.Services;
 
 /// <summary>
 /// The parts of the OS around the window (DESIGN.md §2, §4, §14). On macOS: <b>Settings…</b> in the app menu, a File
-/// menu with <b>Open Recent</b>, and recent folders in the Dock icon's menu. On Windows: recent folders in the taskbar
-/// jump list. Kept current as folders are opened and shortcuts rebound.
+/// menu with <b>Open Recent</b>, a Help menu with the user guide, dotBunny's Discord and <b>Report an Issue</b>, and
+/// recent folders in the Dock icon's menu. On Windows: recent folders in the taskbar jump list. Kept current as folders
+/// are opened and shortcuts rebound.
 /// </summary>
 public sealed class PlatformChrome : IDisposable
 {
@@ -51,6 +52,16 @@ public sealed class PlatformChrome : IDisposable
                         Item("Close Tab", KeyboardShortcuts.CloseTab, () => _main.Shell?.CloseSelectedTabCommand.Execute(null)),
                     ],
                 },
+                new NativeMenuItem("Help")
+                {
+                    Menu =
+                    [
+                        Link("User Guide", HelpLinks.OpenGuideAsync),
+                        Link("Ask on Discord", HelpLinks.OpenDiscordAsync),
+                        new NativeMenuItemSeparator(),
+                        Link("Report an Issue", HelpLinks.ReportIssueAsync),
+                    ],
+                },
             ]);
             NativeDock.SetMenu(app, _dock);
         }
@@ -68,6 +79,9 @@ public sealed class PlatformChrome : IDisposable
         _gestures.Add((item, commandId));
         return item;
     }
+
+    private NativeMenuItem Link(string header, Func<AppServices, Task> open) =>
+        new(header) { Command = new AsyncRelayCommand(() => open(_services)) };
 
     private void OnStateChanged(object? sender, EventArgs e) => Refresh();
 

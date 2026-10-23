@@ -86,6 +86,10 @@ dotnet run --project tools/Claudette.Demo -- <empty folder>
 
 It prints the environment variables to start Claudette with. On Windows, `tools/Claudette.Demo/screenshots.ps1 -Projects C:\Demo` takes these screenshots again.
 
+## Getting help
+
+The [user guide](https://claudette.dotbunny.com/guide/) shows how to use every part of Claudette. Ask questions on [dotBunny's Discord](https://claudette.dotbunny.com/discord/), and report problems in [GitHub issues](https://github.com/dotBunny/Claudette/issues): **Report an issue**, at the foot of Claudette's Settings, starts one with the versions filled in.
+
 ## Contributing
 
 [DESIGN.md](DESIGN.md) is the spec for every feature, and [CLAUDE.md](CLAUDE.md) covers the layout, rules and commands. The tests never touch a real account: they use a fake Claude Code, a mock Messages API and recorded protocol fixtures.

@@ -265,7 +265,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 
 | Page | Covers | From |
 |---|---|---|
-| The Settings window | Opening it, its search, changes applying at once, **Reset to defaults** and what it leaves alone, the project's pages, the version, **User Guide** and **Report an issue**. | [§14](DESIGN.md#14-settings), [Version](DESIGN.md#version) |
+| The Settings window | Opening it, its search, changes applying at once, **Reset to defaults** and what it leaves alone, the project's pages, the version, **User Guide**, **Ask on Discord** and **Report an issue**. | [§14](DESIGN.md#14-settings), [Version](DESIGN.md#version) |
 | Every setting | A table per category: each setting's label, its default, whether it syncs, whether a tab can override it, and the page that explains it. | [Categories](DESIGN.md#categories), [Settings sync](DESIGN.md#settings-sync-optional) |
 | Styles and themes | **Theme**, **Style** (Standard and Claude, with pictures of both in light and dark), **Density**, the fonts, what the tab rows show. | [Visual style](DESIGN.md#visual-style) |
 | Accessibility | Screen readers and what they hear, **Zoom**, **Motion**, and what the editor can't do yet. | [Accessibility](DESIGN.md#accessibility) |
@@ -292,7 +292,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Something missing on Linux | `notify-send` for notifications, `systemd-inhibit` for keeping awake, `secret-tool` for passwords and keys; and a `dotnet run` build's notifications on macOS. | [§10](DESIGN.md#10-notifications), [Keeping the computer awake](DESIGN.md#keeping-the-computer-awake), [Accounts](DESIGN.md#accounts) |
 | Claude is having problems | The service status dot and banner, and **Show Claude's service status**. | [Service status](DESIGN.md#service-status) |
 | Diagnostics and logs | **Diagnostics** and **Copy diagnostics**, `claudette.log`, the protocol log, the note when Claudette couldn't show part of a conversation. | [Staying tolerant at runtime](DESIGN.md#staying-tolerant-at-runtime), [§13](DESIGN.md#13-architecture) |
-| Reporting an issue | Copying the versions, **Report an issue**. | [Version](DESIGN.md#version) |
+| Reporting an issue | Asking a question on dotBunny's Discord (**Ask on Discord**), and what goes to GitHub instead; copying the versions, **Report an issue**. | [Version](DESIGN.md#version), [User Guide](DESIGN.md#user-guide) |
 | Settings back to their defaults | A settings file that isn't valid kept as `.bad`, and one that couldn't be read. | [Storage](DESIGN.md#storage) |
 
 ### Privacy and your data (`privacy/`)
@@ -386,5 +386,5 @@ All done 2026-10-16, in one change rather than a pull request a chapter.
 
 ## 9. To decide later
 
-- Whether Claudette links to the guide anywhere besides **User Guide** at the foot of the sidebar and of Settings' sidebar. It's what the user sees, so it's decided in DESIGN.md ([User Guide](DESIGN.md#user-guide)).
+- Whether Claudette links to the guide anywhere besides **User Guide** at the foot of the sidebar and of Settings' sidebar, the command palette and the macOS Help menu, such as through `F1` or from each Settings page. It's what the user sees, so it's decided in DESIGN.md ([User Guide](DESIGN.md#user-guide)).
 - A check that the guide names everything: a test that reads `docs/` and fails when a Settings search entry, a shortcut or a palette command appears on no page. It would make [Coverage](#6-coverage) automatic, at the cost of tying the guide's words to the app's.

@@ -61,7 +61,7 @@ Claudette herself, the pixel mascot, stands on the message box and reacts to wha
 
 ## On macOS and Windows
 
-- **macOS:** the menu bar has **Settings…** in the app menu, and **File** with **New Tab**, **Open Recent**, **History…** and **Close Tab**. The Dock icon's menu lists your recent folders, and its badge counts the tabs that need you.
+- **macOS:** the menu bar has **Settings…** in the app menu, **File** with **New Tab**, **Open Recent**, **History…** and **Close Tab**, and **Help** with **User Guide**, **Ask on Discord** and **Report an Issue**. The Dock icon's menu lists your recent folders, and its badge counts the tabs that need you.
 - **Windows:** the taskbar button's jump list lists your recent folders, and an overlay on the button counts the tabs that need you.
 
 See [Notifications](../away/notifications.md) for the rest of what Claudette does to get your attention.

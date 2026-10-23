@@ -4,7 +4,10 @@ using Claudette.Core.Updates;
 
 namespace Claudette.App.Tests;
 
-/// <summary>The version at the foot of the Settings sidebar, the user guide and Report an issue (DESIGN.md §14, "Version").</summary>
+/// <summary>
+/// The version at the foot of the Settings sidebar, the user guide, dotBunny's Discord and Report an issue, which the
+/// command palette has too (DESIGN.md §14, "Version").
+/// </summary>
 public class VersionFooterTests
 {
     [Fact]
@@ -89,6 +92,37 @@ public class VersionFooterTests
         await settings.OpenGuideCommand.ExecuteAsync(null);
 
         Assert.Equal("https://claudette.dotbunny.com/guide/", Assert.Single(h.Platform.OpenedUrls));
+    }
+
+    [Fact]
+    public async Task Ask_on_Discord_opens_dotBunnys_Discord_through_the_guides_site()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+
+        await settings.OpenDiscordCommand.ExecuteAsync(null);
+
+        // The site forwards it to the invite, so a new invite needs no new Claudette.
+        Assert.Equal("https://claudette.dotbunny.com/discord/", Assert.Single(h.Platform.OpenedUrls));
+    }
+
+    [Fact]
+    public async Task The_command_palette_has_the_same_help_last()
+    {
+        await using var h = new TabTestHarness(appInstaller: new NoAppInstaller(AppInstallKind.Msix));
+
+        var help = h.Shell.PaletteEntries().TakeLast(3).ToList();
+
+        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue"], help.Select(e => e.Label));
+        Assert.All(help, e => Assert.Equal("Help", e.Group));
+        foreach (var entry in help)
+        {
+            await entry.Run();
+        }
+        Assert.Equal("https://claudette.dotbunny.com/guide/", h.Platform.OpenedUrls[0]);
+        Assert.Equal("https://claudette.dotbunny.com/discord/", h.Platform.OpenedUrls[1]);
+        Assert.StartsWith("https://github.com/dotBunny/Claudette/issues/new?body=", h.Platform.OpenedUrls[2], StringComparison.Ordinal);
+        Assert.Contains("\nClaudette: 0.1.0 (MSIX)\n", Uri.UnescapeDataString(h.Platform.OpenedUrls[2]), StringComparison.Ordinal);
     }
 
     [Fact]

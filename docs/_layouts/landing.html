@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {%- comment -%}
   The landing page (index.html): a page of its own, outside the guide's theme, with a header for Home, the Docs and the
-  Downloads. Its look is assets/css/landing.css and its motion assets/js/landing.js. It follows the reader's system
+  Downloads, and dotBunny's Discord and the repository beside them. Its look is assets/css/landing.css and its motion assets/js/landing.js. It follows the reader's system
   between light and dark, as the guide does.
 {%- endcomment -%}
 <html lang="{{ site.lang | default: 'en' }}" class="no-js">
@@ -29,7 +29,10 @@
         <a href="{{ '/downloads/' | relative_url }}">{% include icon.html name="download" %}<span>Downloads</span></a>
         <a class="topnav-extra" href="https://github.com/dotBunny/Claudette/blob/main/CHANGELOG.md"><span>Changelog</span></a>
       </nav>
-      <a class="pill pill-ghost pill-small" href="https://github.com/dotBunny/Claudette">{% include icon.html name="github" %}<span>GitHub</span></a>
+      <div class="topbar-links">
+        <a class="pill pill-ghost pill-small" href="{{ '/discord/' | relative_url }}" aria-label="Discord">{% include icon.html name="discord" %}<span>Discord</span></a>
+        <a class="pill pill-ghost pill-small" href="https://github.com/dotBunny/Claudette" aria-label="GitHub">{% include icon.html name="github" %}<span>GitHub</span></a>
+      </div>
     </div>
   </header>
 
@@ -49,6 +52,7 @@
         <a href="https://github.com/dotBunny/Claudette/blob/main/CHANGELOG.md">Changelog</a>
         <a href="https://github.com/dotBunny/Claudette">GitHub</a>
         <a href="https://github.com/dotBunny/Claudette/issues">Report an issue</a>
+        <a href="{{ '/discord/' | relative_url }}">Discord</a>
         <a href="{{ '/privacy-policy/' | relative_url }}">Privacy</a>
       </nav>
       <p>Made by <a href="https://dotbunny.com">dotBunny</a>, open source under the <a href="https://github.com/dotBunny/Claudette/blob/main/LICENSE">MIT license</a>. Claudette isn't made by Anthropic.</p>

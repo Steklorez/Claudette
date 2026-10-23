@@ -22,12 +22,13 @@ While the palette is open, the window's other shortcuts are left to it.
 
 ## What it lists
 
-Before you type, the list has four kinds of entry, in this order. The kind shows beside each entry: **Command**, **Tab**, **Folder** or **Settings**.
+Before you type, the list has five kinds of entry, in this order. The kind shows beside each entry: **Command**, **Tab**, **Folder**, **Settings** or **Help**.
 
 - **Commands.** Each shows its shortcut, so the palette teaches them.
 - **Tabs**, by name with their folder. Picking one selects it.
 - **Folders**: your favorites, then recent folders. Picking one opens a new tab there.
 - **Settings** pages. Picking one opens Settings there.
+- **Help**: **User Guide** opens this guide, **Ask on Discord** opens dotBunny's Discord, where you can ask questions, and **Report an issue** opens a new issue on GitHub with the versions filled in. They open in your browser. See [Reporting an issue](../troubleshooting/reporting-an-issue.md).
 
 ### The commands
 

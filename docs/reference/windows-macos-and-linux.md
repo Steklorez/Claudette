@@ -29,7 +29,7 @@ Updating restarts Claudette with every tab as it was. See [Claudette's updates](
 ## Look and feel
 
 - **Windows 11** shows its Mica backdrop in the title bar, header and sidebar in the Standard style. The Claude style is solid.
-- **macOS** has the native title bar and traffic lights, and a menu bar with **File → New Tab**, **Open Recent**, **History…** and **Close Tab**, and **Settings…** in the app menu. Each shows its shortcut from Settings → Keyboard.
+- **macOS** has the native title bar and traffic lights, and a menu bar with **File → New Tab**, **Open Recent**, **History…** and **Close Tab**, **Help → User Guide**, **Ask on Discord** and **Report an Issue**, and **Settings…** in the app menu. Each command with a shortcut shows it, from Settings → Keyboard.
 - In the Claude style, Claude's replies are set in a serif: Charter on macOS, Georgia or Cambria on Windows, and Charter, Noto Serif or DejaVu Serif on Linux.
 
 See [Styles and themes](../settings/styles-and-themes.md).

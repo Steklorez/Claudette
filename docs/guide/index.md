@@ -18,6 +18,7 @@ Claudette puts [Claude Code](https://code.claude.com/docs) in a real desktop win
 - Want to know what Claude did? [The conversation](../conversation/) and [Reviewing changes](../changes/).
 - Watching your plan? [Usage and limits](../usage/).
 - Looking for a key or a setting? [Reference](../reference/) and [Every setting](../settings/every-setting.md).
+- Have a question? Ask on [dotBunny's Discord](../discord.md). Something wrong? [Reporting an issue](../troubleshooting/reporting-an-issue.md).
 
 ## What's in it
 

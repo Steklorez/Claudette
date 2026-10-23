@@ -1,0 +1,10 @@
+# GitHub's New issue page: questions go to dotBunny's Discord, through the guide's site, which forwards to the invite
+# (docs/discord.md). Blank issues stay on, since Claudette's Report an issue opens a blank issue with the versions in it.
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a question on Discord
+    url: https://claudette.dotbunny.com/discord/
+    about: Questions about using Claudette go to dotBunny's Discord. Report problems here.
+  - name: User guide
+    url: https://claudette.dotbunny.com/guide/
+    about: How to use every part of Claudette.

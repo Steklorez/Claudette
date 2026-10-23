@@ -30,8 +30,8 @@
         <!-- DESIGN.md §14: a search box filters settings by name -->
         <TextBox DockPanel.Dock="Top" Margin="8,8,8,2" Text="{Binding SearchText}" PlaceholderText="Search settings"
                  AutomationProperties.Name="Search settings" />
-        <!-- DESIGN.md §14, "Version": which Claudette this is, copied with a click, the user guide, and a bug report
-             with the version filled in -->
+        <!-- DESIGN.md §14, "Version": which Claudette this is, copied with a click, the user guide, dotBunny's Discord,
+             and a bug report with the version filled in -->
         <StackPanel DockPanel.Dock="Bottom" Margin="8,4,8,10" Spacing="0">
           <Button Classes="flat" Command="{Binding CopyVersionCommand}" ToolTip.Tip="{Binding VersionTip}"
                   AutomationProperties.Name="Copy version details">
@@ -39,6 +39,10 @@
           </Button>
           <Button Classes="flat" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Claudette's user guide in your browser.">
             <TextBlock Classes="muted small" Text="User Guide" />
+          </Button>
+          <Button Classes="flat" Command="{Binding OpenDiscordCommand}"
+                  ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Claudette.">
+            <TextBlock Classes="muted small" Text="Ask on Discord" />
           </Button>
           <Button Classes="flat" Command="{Binding ReportIssueCommand}"
                   ToolTip.Tip="Opens a new issue on Claudette's GitHub with the versions filled in. Nothing is sent until you submit it.">

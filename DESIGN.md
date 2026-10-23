@@ -155,8 +155,9 @@ Planned, not started. Tried on a branch on 2026-10-11 against .NET 11 RC1 (SDK `
 - **How it's built.** By GitHub Pages itself, from `docs/` on `main`, with Jekyll and the [Just the Docs](https://just-the-docs.com) theme, so nothing of ours has to run to publish it. A workflow of ours that built and published the site was the first plan, so that a Changelog page could be made from `CHANGELOG.md` at the repository's root and the Downloads page rebuilt whenever a release is published; GitHub Pages' own build reads only `docs/`, runs only its own plugins and only on a push. That wasn't worth keeping a workflow for: the changelog is a link, and the Downloads page catches up with the push that follows each release. A workflow, `docs.yml`, only checks each pull request's pages for broken links and pictures. MkDocs Material was the other choice of builder, for nothing the guide needs.
 - **Downloads and the changelog.** A Downloads page lists every release with its packages, the latest first. The sidebar's **Changelog** links to `CHANGELOG.md` on GitHub, which says what changed in each version for the people using Claudette, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with versions following Semantic Versioning. A change people would notice adds its entry in the same change; a release's notes are its section ([Packaging and signing](#packaging-and-signing)), so the release on GitHub and the update dialog ([Updating Claudette](#updating-claudette)) say the same.
 - **Keeping it current.** A change people can see updates its guide page in the same change as this document, once its chapter is written ([GUIDE.md](GUIDE.md#7-keeping-it-current)).
-- **Claudette links to it** as **User Guide**, which opens the guide's first page in the browser: at the foot of the main window's sidebar, under **Settings** ([Sidebar](#sidebar)), and at the foot of Settings' sidebar, above **Report an issue** ([Version](#version)).
-- **To decide later**, since it's what the user sees: whether Claudette links to the guide in other places too, through **Help** in the command palette, `F1`, or a link from each Settings page to its chapter; and whether the update dialog links to the version's section of the Changelog page, beside the release on GitHub.
+- **Claudette links to it** as **User Guide**, which opens the guide's first page in the browser: at the foot of the main window's sidebar, under **Settings** ([Sidebar](#sidebar)), at the foot of Settings' sidebar, above **Ask on Discord** and **Report an issue** ([Version](#version)), in the command palette's **Help** ([Command palette](#command-palette)), and in the macOS **Help** menu ([Opening a tab](#opening-a-tab)).
+- **dotBunny's Discord** is at `/discord/` on the site, a page that only forwards to the server's invite, so Claudette, the site, the README and GitHub's New issue page link there rather than to the invite. An invite can expire or be replaced, and a link in an installed Claudette can't change without a release; this way only `docs/discord.md` changes.
+- **To decide later**, since it's what the user sees: whether Claudette links to the guide in other places too, through `F1` or a link from each Settings page to its chapter; and whether the update dialog links to the version's section of the Changelog page, beside the release on GitHub.
 
 ## 3. Main Window
 
@@ -353,7 +354,8 @@ In both styles, text in a different font or size beside other text sits on its b
   - **Tabs**, by name with their folder: picking one selects it.
   - **Folders**: favorites, then recent folders. Picking one opens a new tab there.
   - **Settings** categories: picking one opens Settings there.
-- **Filtering.** An entry matches when the typed letters appear in its name in order, ignoring case; a match at the start of the name or of a word, or with the letters together, comes first. An entry also matches by its kind (shown beside it: *Command*, *Tab*, *Folder* or *Settings*), lower down.
+  - **Help**: **User Guide**, **Ask on Discord** and **Report an issue**, as at the foot of Settings' sidebar ([Version](#version)).
+- **Filtering.** An entry matches when the typed letters appear in its name in order, ignoring case; a match at the start of the name or of a word, or with the letters together, comes first. An entry also matches by its kind (shown beside it: *Command*, *Tab*, *Folder*, *Settings* or *Help*), lower down.
 - `Up` and `Down` choose, `Enter` runs the choice (as does a double click), `Esc`, a click outside or the shortcut again closes it. While it's open, the window's other shortcuts are left to it.
 
 ### Sidebar
@@ -443,7 +445,7 @@ Using the picker:
   - The running one holds a lock on `instance.lock` in the data folder, so two launches at the same moment can't both start: the one that doesn't get the lock hands its arguments to the one that did, waiting up to 10 seconds for it to listen. If it never does, the launch starts anyway rather than do nothing. The lock ends with the process, so a crash never leaves it held.
   - Only the same user's Claudette is handed arguments, and only the same user's launches are read (`CurrentUserOnly` on both ends).
   - A restart into a new build or version (§9, §2) lets go of the lock as it stops listening; the new one waits for the lock and hands nothing on. If it doesn't start, the old one takes the lock back.
-- The macOS menu bar also has **File → New Tab**, **History…** and **Close Tab**, and the app menu has **Settings…**. Each shows its shortcut from Settings → Keyboard ([§14](#keyboard-shortcuts)).
+- The macOS menu bar also has **File → New Tab**, **History…** and **Close Tab**, and the app menu has **Settings…**. Each shows its shortcut from Settings → Keyboard ([§14](#keyboard-shortcuts)). Its **Help** menu has **User Guide**, **Ask on Discord** and **Report an Issue**, as at the foot of Settings' sidebar ([Version](#version)).
 
 ### Process monitor
 
@@ -2031,7 +2033,7 @@ A **Settings** window opens with `Ctrl+,` on Windows or `Cmd+,` on macOS, where 
 - Changes apply immediately; there is no Save button.
 - Each category has **Reset to defaults**. In Sessions it leaves the library folder and settings sync as they are, since changing either moves where sessions and settings live; in New tabs it leaves favorite and recent folders, which are this machine's data rather than settings; in General it leaves **Start Claudette when I log in**, which the OS keeps; in Usage it leaves **Keep usage history**; in Accounts it resets only **New folders use**, leaving the accounts and their keys; in Perforce it leaves the per-folder servers and users. Appearance's also sets **Zoom** back to 100% and the detailed header off. No **Reset to defaults** touches a project's files or its remembered choices, and the project's pages have none.
 - A search box filters settings by name.
-- The foot of the sidebar shows Claudette's version, **User Guide** and **Report an issue** ([Version](#version)).
+- The foot of the sidebar shows Claudette's version, **User Guide**, **Ask on Discord** and **Report an issue** ([Version](#version)).
 
 ### Categories
 
@@ -2088,7 +2090,9 @@ The foot of the Settings sidebar shows which Claudette this is, on every page: "
 - **A source build** ([§9](#working-on-claudette)) adds the commit it was built from ("Claudette 0.1.0 · 842169b"), taken from the informational version the .NET SDK writes from the checkout, so a build of a checkout can be told from the release with the same version. Its tooltip also says which configuration it was built in, from the assembly's configuration attribute: "Claudette 0.1.0 (source build 842169b), a Debug build from this checkout." An installed Claudette shows only the version.
 - **Clicking it** copies the versions for a bug report, one per line, and it says "Copied" for two seconds: Claudette's version and how it was installed (MSIX, `.dmg`, source build and its commit), Claude Code's version, the OS and its runtime identifier, and the .NET runtime. Only versions: never paths, names or account details, since it's meant to be posted. **Copy diagnostics** ([§16](#staying-tolerant-at-runtime)) starts with the same Claudette line.
 - **User Guide** opens the user guide in the browser, at https://claudette.dotbunny.com/guide/ ([User Guide](#user-guide)).
+- **Ask on Discord** opens dotBunny's Discord in the browser, for questions about Claudette, through https://claudette.dotbunny.com/discord/, which forwards to the invite ([User Guide](#user-guide)). Bugs still go to GitHub, where they're tracked, and the guide's Reporting an issue page says which is for what.
 - **Report an issue** opens a new issue on Claudette's GitHub repository in the browser, with an outline (what happened, what you expected, steps to reproduce) and the same versions filled in. Nothing is sent until the user submits it there.
+- The command palette has the same three under **Help** ([Command palette](#command-palette)), and so does the macOS **Help** menu ([Opening a tab](#opening-a-tab)).
 
 ### Per-tab overrides
 

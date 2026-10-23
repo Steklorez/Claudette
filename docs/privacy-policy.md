@@ -41,11 +41,12 @@ Claudette runs Claude Code, which you install and sign in to yourself. Claude Co
 
 Claudette is made by dotBunny. It isn't made by, or affiliated with, Anthropic.
 
-## 04 The Microsoft Store and GitHub
+## 04 The Microsoft Store, GitHub and Discord
 
 - **The Microsoft Store** installs and updates Claudette under Microsoft's [privacy statement](https://privacy.microsoft.com/privacystatement). We don't see who installs it.
 - **GitHub** hosts Claudette's downloads, source and issues under GitHub's [privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement). An issue you open there is public.
 - **Reporting a problem.** **Report an issue** in Claudette's Settings opens a new GitHub issue in your browser, with Claudette's, Claude Code's, the operating system's and .NET's versions filled in: only versions, never paths, names or account details. Nothing is sent until you submit it on GitHub. See [Reporting an issue](troubleshooting/reporting-an-issue.md).
+- **Discord** hosts dotBunny's server, where people ask questions about Claudette, under Discord's [privacy policy](https://discord.com/privacy). **Ask on Discord** in Claudette, and the links on this site, only open it in your browser; Claudette sends it nothing. The server's members see what you post there.
 
 ## 05 This website
 
