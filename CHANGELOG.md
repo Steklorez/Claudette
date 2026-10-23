@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- A running task with a long name pushed **Stop** out of the composer's list of running tasks, which opened cut off at the right with a scroll bar under it. The list now has room for it, and a name longer still ends in "…". Other lists and cards that open from a button, such as the tab's info card and the stash, could be cut off the same way, and no longer are.
 - With the Claude desktop app installed, Claudette said Claude Code wasn't installed without saying why the desktop app didn't count. The desktop app isn't Claude Code: it keeps a copy of Claude Code for its own use, which it replaces as it updates. The first screen now says so, and offers to install Claude Code beside it. Pointing **Path to claude** or **Choose claude…** at the desktop app, or at its copy, now says whose it is, rather than trying to run it.
 
 ## [0.5.1] - 2026-10-23

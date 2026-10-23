@@ -53,6 +53,10 @@ public class RunningTasksUiTests
         var rows = list.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("taskrow")).ToList();
         Assert.Equal(["task-1", "task-m"], rows.Select(r => ((RunningTask)r.DataContext!).TaskId));
         Assert.Equal("Shell command: Start the dev server\nnpm run dev\nClick to show it in the conversation.", ToolTip.GetTip(rows[0]));
+        // The list fits its flyout, Stop and all: a long title trims rather than the list scrolling sideways.
+        var scroller = list.FindAncestorOfType<ScrollViewer>()!;
+        Assert.True(scroller.Extent.Width <= scroller.Viewport.Width, $"The list is {scroller.Extent.Width} px wide in {scroller.Viewport.Width}.");
+        Assert.Equal(480, list.Bounds.Width, precision: 3);
 
         // The running time ticks while the list is open.
         h.Time.Advance(TimeSpan.FromSeconds(2));
