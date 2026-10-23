@@ -35,6 +35,8 @@ A source build doesn't check for releases. It checks its checkout for new commit
 
 ## When there are new commits
 
+{% include unreleased.html %}
+
 A checkout of `main` can keep up with `main` as an installed Claudette keeps up with releases. At launch and every hour, Claudette fetches the branch the checkout tracks, such as `origin/main`, with your own git and its credentials. It never asks for a password: a remote that needs one fails the check, and Settings → General says what git said. When there are new commits, a badge at the foot of the sidebar says *3 new commits on origin/main*. Choose it to see them, newest first, with who made each and when, and these buttons:
 
 - **Pull, build and restart** pulls the commits, builds Claudette and restarts into the build, keeping every tab as below.

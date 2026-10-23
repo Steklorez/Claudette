@@ -90,7 +90,8 @@ public class SourceUpdateTests
         tab.ComposerText = "long job";
         await tab.SendCommand.ExecuteAsync(null);
         h.Transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5"}""");
-        await TabTestHarness.Eventually(() => tab.IsInTurn, "the turn");
+        // What waiting for idle reads: the tab's status, which follows the session's a moment after it's in the turn.
+        await TabTestHarness.Eventually(() => h.Shell.AnyTabWorking, "the tab working");
         using var source = await FakeCheckout.StartAsync(h, launcher);
         Assert.True(source.Badge.CanUpdateWhenIdle);
         Assert.NotNull(source.Badge.WorkingText);
