@@ -646,6 +646,8 @@
           <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0A000000" />
           <SolidColorBrush x:Key="EditorSelectionBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.25" />
           <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.14" />
+          <!-- Find's text in the card it brought into view (Controls/FindHighlights), drawn over the text: see-through. -->
+          <SolidColorBrush x:Key="FindHighlightBrush" Color="#F2C200" Opacity="0.45" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#C42B1C" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A000000" />
           <SolidColorBrush x:Key="MeterBrush" Color="{DynamicResource SystemAccentColor}" />
@@ -747,6 +749,7 @@
           <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0FFFFFFF" />
           <SolidColorBrush x:Key="EditorSelectionBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.3" />
           <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.22" />
+          <SolidColorBrush x:Key="FindHighlightBrush" Color="#F2B233" Opacity="0.4" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#E0605A" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FFFFFF" />
           <SolidColorBrush x:Key="MeterBrush" Color="{DynamicResource SystemAccentColorLight2}" />

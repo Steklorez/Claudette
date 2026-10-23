@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-23
+
 ### Added
 
 - **A source build keeps up with its branch.** Claudette built from a checkout, such as one of `main`, now checks the branch it tracks for new commits at launch and every hour, as an installed Claudette checks for releases. A badge at the foot of the sidebar says *3 new commits on origin/main* and lists them; **Pull, build and restart** pulls them, builds Claudette and restarts into it with every tab as it was, and **Update when idle** waits for your tabs to finish first. It only ever fast-forwards: with changes or commits of your own in the checkout, it tells you why it won't pull and leaves the checkout alone.
@@ -17,6 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- **Find in the conversation** brought the message into view but didn't show where in it the text was. The text you searched for is now highlighted in the message, whether it's in a reply, a code block, your prompt or a tool's output.
 - **Files** under the composer opened the side panel on whichever page it last showed, and closed it when it showed another. It now always opens it on Changed files, and closes it only from there.
 - The Windows package wasn't signed, so Windows wouldn't install it. It's now signed by dotBunny.
 - A long to-do list at the top of the conversation could fill a short window and push the conversation out of sight. Now it takes at most two fifths of the conversation's height and scrolls past that.
@@ -149,7 +152,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/dotBunny/Claudette/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/dotBunny/Claudette/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/dotBunny/Claudette/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/dotBunny/Claudette/compare/v0.2.0...v0.3.0

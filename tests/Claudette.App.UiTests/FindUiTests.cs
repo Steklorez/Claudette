@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
@@ -57,6 +58,59 @@ public class FindUiTests
         Assert.False(tab.Find.IsOpen);
         Assert.Empty(Marked(window));
         Assert.True(window.GetVisualDescendants().OfType<TextBox>().Single(b => b.Name == "Composer").IsFocused);
+    }
+
+    [AvaloniaFact]
+    public async Task The_text_found_is_marked_where_it_is_in_the_card_brought_into_view()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1100, 800);
+        foreach (var (prompt, reply) in new[] { ("Fix the parser", "The parser now reads **parser** directives, and the parser tests pass."), ("Thanks", "Done.") })
+        {
+            tab.ComposerText = prompt;
+            await tab.SendCommand.ExecuteAsync(null);
+            h.Transport.EmitTurn(reply);
+            await UiText.SettleUntilAsync(window, () => tab.Status == ViewModels.TabStatus.Idle && tab.IsSettled, "the turn");
+        }
+        var marks = window.GetVisualDescendants().OfType<Controls.FindHighlights>().Single(m => m.Name == "FindMarks");
+
+        tab.Find.IsOpen = true;
+        tab.Find.Query = "parser";
+
+        // The newest match is the reply: each of its three, the bold one included, marked where it is in the card.
+        Assert.IsType<AssistantTextItem>(tab.Find.Current);
+        await UiText.SettleUntilAsync(window, () => marks.Rects.Count == 3, "the reply's marks");
+        var card = window.GetVisualDescendants().OfType<ContentPresenter>().Single(p => p.Classes.Contains("findcurrent"));
+        var cardRect = new Rect(card.TranslatePoint(default, marks)!.Value, card.Bounds.Size);
+        Assert.All(marks.Rects, r => Assert.True(cardRect.Contains(r), $"A mark at {r} is outside the card at {cardRect}."));
+        Assert.All(marks.Rects, r => Assert.True(r.Width > 0 && r.Height > 0));
+
+        // The match before it is the prompt, with the text once.
+        tab.Find.PreviousCommand.Execute(null);
+        await UiText.SettleUntilAsync(window, () => marks.Rects.Count == 1 && tab.Find.Current is UserMessageItem, "the prompt's mark");
+
+        tab.Find.IsOpen = false;
+        await UiText.SettleUntilAsync(window, () => marks.Rects.Count == 0, "no marks once Find closes");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Text_scrolled_out_of_sight_in_its_own_box_isnt_marked()
+    {
+        // As a tool's output in its card: a box that scrolls, with the text once at its top and once below what the box
+        // shows, yet inside the window, so only the box's own clipping hides it.
+        var output = new SelectableTextBlock { Text = "needle at the top\n" + string.Concat(Enumerable.Repeat("filler\n", 8)) + "needle at the bottom" };
+        var box = new ScrollViewer { MaxHeight = 60, Content = output, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top };
+        var marks = new Controls.FindHighlights { Fill = Avalonia.Media.Brushes.Yellow };
+        var window = UiText.Show(new Panel { Children = { box, marks } }, 400, 300);
+
+        marks.Show(() => box, "needle");
+        UiText.Settle(window);
+
+        var mark = Assert.Single(marks.Rects);
+        Assert.True(mark.Bottom <= 60, $"The mark at {mark} is below the box.");
+        window.Close();
     }
 
     private static List<object?> Marked(Window window) =>

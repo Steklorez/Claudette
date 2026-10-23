@@ -325,7 +325,7 @@ public partial class TabView : UserControl
 
     private void OnFindPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ConversationSearch.Current))
+        if (e.PropertyName is nameof(ConversationSearch.Current) or nameof(ConversationSearch.Query))
         {
             MarkFindCurrent();
         }
@@ -349,6 +349,10 @@ public partial class TabView : UserControl
         {
             current.Classes.Add("findcurrent");
         }
+        // The text itself, in that card: its container is looked up each time, since one scrolled away is recycled.
+        var marked = _findMarked;
+        var shown = Active;
+        FindMarks.Show(marked is null ? null : () => shown.Items.ContainerFromItem(marked), _tab?.Find.Query.Trim() ?? "");
     }
 
     private void OnConversationContainerPrepared(ShownList list, ContainerPreparedEventArgs e)

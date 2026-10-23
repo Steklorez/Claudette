@@ -982,6 +982,9 @@
           </StackPanel>
         </ScrollViewer>
         <controls:ScrollMarks x:Name="AgentMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" IsVisible="{Binding IsViewingAgent}" />
+        <!-- Find's text in the card it brought into view, marked over the text (DESIGN.md §5, "Find"); TabView.axaml.cs
+             says which card and what text -->
+        <controls:FindHighlights x:Name="FindMarks" Fill="{DynamicResource FindHighlightBrush}" />
         </Panel>
       </DockPanel>
 

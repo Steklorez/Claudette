@@ -42,7 +42,7 @@ Find ignores case, and looks through:
 - the rows where tasks start and where a turn left them, and the links and rows that name Claude Docs;
 - subagents' groups, with everything in them.
 
-The match is brought into view and marked with the selected-row color. A match in something a collapsed card hides (a tool's output, a thought, a hook's output) opens the card, and one inside a subagent's work opens its group. A match in a card's header leaves it as it is. Each call in a Tool calls card is a match of its own: the card is marked and the call's tile opens.
+The match is brought into view and its card marked with the selected-row color, and the text you searched for is highlighted wherever it shows in that card: in a reply, a code block, a prompt or a tool's output. A match in something a collapsed card hides (a tool's output, a thought, a hook's output) opens the card, and one inside a subagent's work opens its group. A match in a card's header leaves it as it is. Each call in a Tool calls card is a match of its own: the card is marked and the call's tile opens.
 
 New output while the bar is open joins the matches without moving the current one. Pressing the shortcut again goes back to the box with its text selected.
 
