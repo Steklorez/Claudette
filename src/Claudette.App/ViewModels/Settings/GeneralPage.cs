@@ -339,7 +339,18 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
     /// <summary>Claudette's version, update status and actions, the same as the sidebar's badge. Null in some tests.</summary>
     public AppUpdateViewModel? AppUpdates { get; internal set; }
 
-    public bool HasAppUpdates => AppUpdates is not null;
+    public bool HasAppUpdates => AppUpdates is not null && SourceUpdates is null;
+
+    /// <summary>For a source build: its checkout's new commits upstream, in place of releases (DESIGN.md §9, "New commits upstream").</summary>
+    public SourceUpdateViewModel? SourceUpdates { get; internal set; }
+
+    public bool HasSourceUpdates => SourceUpdates is not null;
+
+    /// <summary>A copy from the Microsoft Store is the Store's to update, so the release settings don't apply to it.</summary>
+    public bool ShowsUpdateChecks => AppUpdates?.IsFromStore != true;
+
+    /// <summary>Pre-releases are GitHub's: not for a source build, which follows its checkout, or a copy from the Store.</summary>
+    public bool ShowsPrereleases => ShowsUpdateChecks && !HasSourceUpdates;
 
     /// <summary>Starting at login is the OS's, not a setting, so it stays as it is.</summary>
     protected override void ResetSettings()

@@ -27,7 +27,7 @@ public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
 
     private string NewVersion => Available?.Version.ToString() ?? "";
 
-    public bool HasBadge => !_updates.IsSourceBuild
+    public bool HasBadge => _updates.ChecksReleases
         && ((Available is not null && !_updates.IsSkipped) || _updates.LastError is not null || _updates.IsDownloading || _updates.IsInstalling);
 
     public string BadgeText =>
@@ -106,8 +106,15 @@ public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
 
     public bool IsSourceBuild => _updates.IsSourceBuild;
 
+    /// <summary>A copy from the Microsoft Store, which updates it: there's nothing to check or turn off here.</summary>
+    public bool IsFromStore => _updates.Kind == AppInstallKind.Store;
+
+    /// <summary>This copy checks GitHub's releases, so Check now is offered.</summary>
+    public bool ChecksReleases => _updates.ChecksReleases;
+
     public string CheckStatusText =>
         _updates.IsSourceBuild ? "This is a source build, so it doesn't check for releases: it restarts into each new build of its checkout instead."
+        : IsFromStore ? "This copy is from the Microsoft Store, which keeps it up to date."
         : _updates.IsChecking ? "Checking for updates…"
         : _updates.CheckError is { } error ? error
         : _updates.LastChecked is not { } at ? "Not checked yet."
@@ -115,7 +122,7 @@ public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
         : _updates.IsSkipped ? $"Claudette {NewVersion} is available; you skipped it."
         : $"Claudette {NewVersion} is available.";
 
-    public bool CanCheck => !_updates.IsSourceBuild && !_updates.IsChecking;
+    public bool CanCheck => _updates.ChecksReleases && !_updates.IsChecking;
 
     [RelayCommand]
     private Task CheckNowAsync() => _updates.CheckNowAsync();

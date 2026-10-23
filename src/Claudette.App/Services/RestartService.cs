@@ -49,6 +49,9 @@ public sealed class RestartService : IDisposable
     private BuildWatcher? _watcher;
     private DateTime? _failedStamp;
 
+    /// <summary>The next build is one Claudette made of new commits: restart into it, now (false) or once idle (true).</summary>
+    private bool? _restartIntoNext;
+
     /// <param name="stopListening">Stops taking later launches, so the new build can.</param>
     /// <param name="resumeListening">Takes them again, when the new build didn't start.</param>
     public RestartService(AppServices services, DevelopmentBuild build, IRestartHost host, Action? stopListening = null, Action? resumeListening = null)
@@ -109,12 +112,54 @@ public sealed class RestartService : IDisposable
     {
         ReadyStamp = stamp;
         LastError = null;
+        if (_restartIntoNext is { } whenIdle)
+        {
+            _restartIntoNext = null;
+            Restart(whenIdle);
+            return;
+        }
         if (RestartAutomatically)
         {
             IsWaitingForIdle = true;
         }
         Changed?.Invoke();
         RestartIfIdle();
+    }
+
+    /// <summary>
+    /// Restarts into the build Claudette just made of new commits upstream (DESIGN.md §9, "New commits upstream"), as
+    /// Restart now does, or Restart when idle. A finished build has stopped changing, so it's looked for now rather than
+    /// on the timer.
+    /// </summary>
+    public void RestartIntoNewBuild(bool whenIdle)
+    {
+        // Posted before the watcher's own news of the build, so that finds it waiting.
+        _services.Dispatcher.Post(() =>
+        {
+            if (ReadyStamp is null)
+            {
+                _restartIntoNext = whenIdle;
+            }
+            else
+            {
+                // Already seen: the timer got there first.
+                Restart(whenIdle);
+            }
+        });
+        _watcher?.Poll();
+        _watcher?.Poll();
+    }
+
+    private void Restart(bool whenIdle)
+    {
+        if (whenIdle)
+        {
+            RestartWhenIdle();
+        }
+        else
+        {
+            _ = RestartAsync();
+        }
     }
 
     /// <summary>Restarts once no tab is working: straight away if none is.</summary>

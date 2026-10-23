@@ -74,6 +74,10 @@ The landing page ([The site](#1-the-site)): what Claudette is, the latest releas
 
 One page, second in the sidebar: the latest release's packages, the next version when a pre-release is newer, and every earlier release. Made from the releases ([Downloads and the changelog](#5-downloads-and-the-changelog)).
 
+### Privacy policy (`docs/privacy-policy.md`)
+
+One page, out of the sidebar and linked from both footers and the privacy chapter, at `/privacy-policy.html`, which the Microsoft Store listing names. In dotBunny's way (dotbunny.com/legal): short numbered sections in plain English, its date at the top. It says Claudette and the site collect nothing, and sums up what the privacy chapter's pages say in detail, so when one of them changes what leaves the computer, the policy and its date change with it. From [§2](DESIGN.md#2-platform--tech-stack) and the privacy chapter.
+
 ### Getting started (`getting-started/`)
 
 | Page | Covers | From |
@@ -85,7 +89,7 @@ One page, second in the sidebar: the latest release's packages, the next version
 | Your first tab | The new tab picker, choosing a folder, the folder trust question, sending a message, **Stop**. | [Opening a tab](DESIGN.md#opening-a-tab), [Folder trust](DESIGN.md#folder-trust), [Composer](DESIGN.md#composer) |
 | A tour of the window | The header (the usage meters, the cup, the service status dot, the account), the sidebar, the conversation, the side panel and the composer; on macOS the menu bar. Each part links to its chapter. | [§3](DESIGN.md#3-main-window) |
 | How Claudette uses Claude Code | Each tab runs the real `claude`, so your `CLAUDE.md`, settings, hooks, MCP servers, skills and plugins load as in a terminal; a folder's own configuration once it's trusted; where Claude Code keeps sessions; starting Claudette from a terminal inside Claude Code; the helper `claude` in the process list. | [§13](DESIGN.md#13-architecture), [Integration with Claude Code](DESIGN.md#integration-with-claude-code) |
-| Running from source | Building and running Claudette from a checkout, running from a copy, **New build ready** and restarting into new builds, `CLAUDETTE_RUN_IN_PLACE`, the commit in the version, and trying Claudette on the demo. | [Working on Claudette](DESIGN.md#working-on-claudette), [Version](DESIGN.md#version) |
+| Running from source | Building and running Claudette from a checkout, running from a copy, new commits on the branch it tracks and pulling and building them, **New build ready** and restarting into new builds, `CLAUDETTE_RUN_IN_PLACE`, the commit in the version, and trying Claudette on the demo. | [Working on Claudette](DESIGN.md#working-on-claudette), [Version](DESIGN.md#version) |
 
 ### Tabs and sessions (`tabs/`)
 

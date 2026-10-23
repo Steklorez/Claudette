@@ -22,8 +22,10 @@
     <!-- The version being worked on, tagged vX.Y.Z when it's released. Releases pass it too: -p:Version=1.2.3 (packaging/).
          Source builds also show the commit they were built from (DESIGN.md §14, "Version"). -->
     <Version>0.6.0</Version>
-    <Authors>Matthew Davey</Authors>
+    <!-- The same organization the MSIX names, and the Store and the signing certificate do (DESIGN.md §2, "Packaging"). -->
+    <Authors>dotBunny</Authors>
+    <Company>dotBunny Inc.</Company>
     <Product>Claudette</Product>
-    <Copyright>Copyright (c) Matthew Davey</Copyright>
+    <Copyright>Copyright (c) 2026 dotBunny Inc.</Copyright>
   </PropertyGroup>
 </Project>

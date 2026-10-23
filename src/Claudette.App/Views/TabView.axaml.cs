@@ -46,6 +46,9 @@ public partial class TabView : UserControl
         public ConversationPanel? Panel { get; set; }
     }
 
+    /// <summary>The most of the conversation's height the pinned to-do list's tasks take before they scroll.</summary>
+    internal const double PinnedTodoShare = 0.4;
+
     private readonly ShownList _main;
     private readonly ShownList _agent;
 
@@ -96,6 +99,8 @@ public partial class TabView : UserControl
         SidePanelEdge.DoubleTapped += (_, _) => ViewModel?.ResetSidePanelWidth();
         // However wide it was dragged, the side panel leaves the conversation its least (DESIGN.md §3, "Side panel").
         SizeChanged += (_, e) => SidePanel.MaxWidth = Math.Max(ShellLayout.MinSidePanelWidth, e.NewSize.Width - ShellLayout.MinConversationWidth);
+        // An open to-do list takes at most two fifths of the conversation's height and scrolls past that (DESIGN.md §5, "Tasks").
+        ConversationArea.SizeChanged += (_, e) => PinnedTodoTasks.MaxHeight = e.NewSize.Height * PinnedTodoShare;
     }
 
     private TabViewModel? ViewModel => DataContext as TabViewModel;

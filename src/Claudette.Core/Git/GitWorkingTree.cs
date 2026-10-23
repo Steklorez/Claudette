@@ -225,7 +225,9 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
         RunAsync(workingDirectory, arguments, Timeout, cancellationToken);
 
     /// <param name="timeout">How long git may take, for a command that can take longer than most (deleting a worktree).</param>
-    internal async Task<ProcessResult?> RunAsync(string workingDirectory, IReadOnlyList<string> arguments, TimeSpan timeout, CancellationToken cancellationToken)
+    /// <param name="variables">Set over the user environment, such as to keep git from asking for a password.</param>
+    internal async Task<ProcessResult?> RunAsync(string workingDirectory, IReadOnlyList<string> arguments, TimeSpan timeout, CancellationToken cancellationToken,
+        IReadOnlyDictionary<string, string>? variables = null)
     {
         try
         {
@@ -237,6 +239,10 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
             if (environment is not null)
             {
                 spec = await environment.ApplyAsync(spec, cancellationToken).ConfigureAwait(false);
+            }
+            if (variables is not null)
+            {
+                spec = UserEnvironment.WithVariables(spec, variables);
             }
             return await ProcessRunner.RunAsync(launcher, spec, timeout, timeProvider, cancellationToken).ConfigureAwait(false);
         }

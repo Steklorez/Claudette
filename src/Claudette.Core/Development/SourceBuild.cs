@@ -35,6 +35,26 @@ public sealed record SourceBuild(string OutputDirectory, string RepositoryRoot)
         }
         return null;
     }
+
+    /// <summary>The app's project, the folder the <c>bin</c> folder is in, such as <c>src/Claudette.App</c>; null if there's no <c>bin</c>.</summary>
+    public string? ProjectDirectory => BinFolder() is { } bin ? Path.GetDirectoryName(bin) : null;
+
+    /// <summary>The configuration it was built in: the folder below <c>bin</c>, such as <c>Debug</c>.</summary>
+    public string? Configuration => BinFolder() is { } bin && Path.GetRelativePath(bin, OutputDirectory).Split(Path.DirectorySeparatorChar)[0] is { Length: > 0 } name and not "."
+        ? name
+        : null;
+
+    private string? BinFolder()
+    {
+        for (var folder = OutputDirectory; !string.IsNullOrEmpty(folder); folder = Path.GetDirectoryName(folder))
+        {
+            if (string.Equals(Path.GetFileName(folder), "bin", StringComparison.OrdinalIgnoreCase))
+            {
+                return folder;
+            }
+        }
+        return null;
+    }
 }
 
 /// <summary>A source build of Claudette that's running now, and where its new builds appear.</summary>

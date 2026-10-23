@@ -62,8 +62,25 @@
 
     <!-- Claudette's own updates, from its GitHub releases (DESIGN.md §2, "Updating Claudette") -->
     <TextBlock Text="Claudette updates" FontWeight="SemiBold" Margin="0,8,0,0" />
-    <CheckBox Content="Check for Claudette updates automatically" IsChecked="{Binding CheckForAppUpdates}" />
-    <CheckBox Content="Include pre-releases" IsChecked="{Binding IncludePrereleases}" />
+    <CheckBox Content="Check for Claudette updates automatically" IsChecked="{Binding CheckForAppUpdates}" IsVisible="{Binding ShowsUpdateChecks}" />
+    <CheckBox Content="Include pre-releases" IsChecked="{Binding IncludePrereleases}" IsVisible="{Binding ShowsPrereleases}" />
+    <!-- A source build checks its checkout's upstream instead (DESIGN.md §9, "New commits upstream") -->
+    <Panel IsVisible="{Binding HasSourceUpdates}">
+      <StackPanel Spacing="8" DataContext="{Binding SourceUpdates}" x:DataType="vm:SourceUpdateViewModel">
+        <TextBlock Text="{Binding SourceText, FallbackValue=''}" TextWrapping="Wrap" />
+        <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
+        <TextBlock Classes="muted small" Text="{Binding WhyNotText}" TextWrapping="Wrap" IsVisible="{Binding WhyNotText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
+        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
+          <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" />
+          <Button Classes="accent" Content="Pull, build and restart" Command="{Binding UpdateCommand}" IsVisible="{Binding CanUpdate}" />
+          <Button Content="Pull and build" Command="{Binding PullAndBuildCommand}" IsVisible="{Binding CanUpdate}" />
+          <Button Content="Pull" Command="{Binding PullCommand}" IsVisible="{Binding CanPullOnly}" />
+          <Button Content="Build again" Command="{Binding BuildAgainCommand}" IsVisible="{Binding CanBuildAgain}" />
+        </WrapPanel>
+      </StackPanel>
+    </Panel>
     <Panel IsVisible="{Binding HasAppUpdates}">
       <StackPanel Spacing="8" DataContext="{Binding AppUpdates}" x:DataType="vm:AppUpdateViewModel">
         <TextBlock Text="{Binding CurrentVersionText, FallbackValue=''}" TextWrapping="Wrap" />
@@ -72,7 +89,7 @@
         <ProgressBar Minimum="0" Maximum="100" Value="{Binding DownloadPercent}" IsVisible="{Binding IsDownloading}" />
         <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
         <WrapPanel ItemSpacing="8" LineSpacing="8">
-          <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" IsVisible="{Binding !IsSourceBuild}" />
+          <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" IsVisible="{Binding ChecksReleases}" />
           <Button Classes="accent" Content="{Binding RestartLabel}" Command="{Binding RestartToUpdateCommand}" IsVisible="{Binding CanRestartToUpdate}" />
           <Button Content="Download" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}" />
           <Button Content="Cancel download" Command="{Binding CancelDownloadCommand}" IsVisible="{Binding IsDownloading}" />

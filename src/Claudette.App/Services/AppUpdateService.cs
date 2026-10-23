@@ -58,6 +58,12 @@ public sealed class AppUpdateService : IDisposable
 
     public bool IsSourceBuild { get; }
 
+    /// <summary>
+    /// This copy checks GitHub's releases. A source build gets its new builds from its checkout, and the Microsoft Store
+    /// updates its own copies.
+    /// </summary>
+    public bool ChecksReleases => !IsSourceBuild && Kind != AppInstallKind.Store;
+
     public AppInstallKind Kind => _installer.Kind;
 
     /// <summary>This copy can download and install a release itself; otherwise releases are offered as a link.</summary>
@@ -108,7 +114,7 @@ public sealed class AppUpdateService : IDisposable
     /// <summary>Starts checking at launch and every few hours, if Settings allows it; and clears out old downloads.</summary>
     public void Start()
     {
-        if (IsSourceBuild)
+        if (!ChecksReleases)
         {
             return;
         }
@@ -119,7 +125,7 @@ public sealed class AppUpdateService : IDisposable
 
     public void OnSettingsChanged()
     {
-        if (!_disposed && !IsSourceBuild && _services.Settings.General.CheckForAppUpdates)
+        if (!_disposed && ChecksReleases && _services.Settings.General.CheckForAppUpdates)
         {
             _timer ??= _services.Time.CreateTimer(_ => _ = CheckNowAsync(), null, TimeSpan.Zero, CheckInterval);
         }
@@ -145,7 +151,7 @@ public sealed class AppUpdateService : IDisposable
     /// <summary>Checks now. A check already under way is shared rather than started twice.</summary>
     public Task CheckNowAsync()
     {
-        if (IsSourceBuild)
+        if (!ChecksReleases)
         {
             return Task.CompletedTask;
         }

@@ -842,20 +842,23 @@
                 <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
               </Button>
             </Grid>
-            <ItemsControl ItemsSource="{Binding TodoList.Items}" IsVisible="{Binding TodoList.IsExpanded}" Margin="4,0,0,4">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="conv:TodoItem">
-                  <Button Classes="flat taskrow" Padding="0" HorizontalAlignment="Left" IsHitTestVisible="{Binding HasStart}"
-                          Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).GoToTaskCommand}" CommandParameter="{Binding}"
-                          ToolTip.Tip="Go to where it started">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <TextBlock Text="{Binding Glyph}" Classes.status="{Binding IsActive}" Classes.busy="{Binding IsActive}" />
-                      <TextBlock Text="{Binding DisplayText}" Classes.done="{Binding IsDone}" FontWeight="{Binding IsActive, Converter={x:Static vm:Converters.BoldIfTrue}}" TextWrapping="Wrap" />
-                    </StackPanel>
-                  </Button>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <!-- A long list scrolls, so it never takes more than its share of the conversation's height (TabView.axaml.cs) -->
+            <ScrollViewer x:Name="PinnedTodoTasks" IsVisible="{Binding TodoList.IsExpanded}" HorizontalScrollBarVisibility="Disabled" Margin="4,0,0,4">
+              <ItemsControl ItemsSource="{Binding TodoList.Items}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="conv:TodoItem">
+                    <Button Classes="flat taskrow" Padding="0" HorizontalAlignment="Left" IsHitTestVisible="{Binding HasStart}"
+                            Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).GoToTaskCommand}" CommandParameter="{Binding}"
+                            ToolTip.Tip="Go to where it started">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Glyph}" Classes.status="{Binding IsActive}" Classes.busy="{Binding IsActive}" />
+                        <TextBlock Text="{Binding DisplayText}" Classes.done="{Binding IsDone}" FontWeight="{Binding IsActive, Converter={x:Static vm:Converters.BoldIfTrue}}" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
           </StackPanel>
         </Border>
 

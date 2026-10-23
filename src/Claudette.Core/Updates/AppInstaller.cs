@@ -16,6 +16,9 @@ public enum AppInstallKind
 
     /// <summary><c>Claudette.app</c> on macOS, from the <c>.dmg</c>.</summary>
     MacApp,
+
+    /// <summary>Installed from the Microsoft Store, which updates it: Claudette doesn't check GitHub's releases.</summary>
+    Store,
 }
 
 /// <summary>A downloaded package, checked and ready to install.</summary>
@@ -65,7 +68,7 @@ public interface IAppInstaller
     Task<InstallOutcome> InstallAsync(PreparedInstall prepared, IReadOnlyList<string> restartArguments, string readyFile, string nonce, CancellationToken cancellationToken = default);
 }
 
-/// <summary>For builds that can't install updates: Linux, unpackaged Windows builds, and source builds.</summary>
+/// <summary>For builds that don't install updates: Linux, unpackaged Windows builds, source builds and the Store's.</summary>
 public sealed class NoAppInstaller(AppInstallKind kind = AppInstallKind.Other) : IAppInstaller
 {
     public AppInstallKind Kind { get; } = kind;

@@ -1044,6 +1044,70 @@
                 </Flyout>
               </Button.Flyout>
             </Button>
+            <!-- New commits on the branch a source build's checkout tracks (DESIGN.md §9, "New commits upstream"), as releases are for an installed one -->
+            <Button x:Name="SourceUpdateBadge" Classes="flat side update" DataContext="{Binding SourceUpdate}" x:DataType="vm:SourceUpdateViewModel"
+                    IsVisible="{Binding HasBadge, FallbackValue=False}" ToolTip.Tip="{Binding BadgeText}" ToolTip.Placement="Right"
+                    AutomationProperties.Name="New commits for Claudette">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <Path Classes="icon" Data="{StaticResource IconUpdate}" />
+                <TextBlock Classes="badge" Text="{Binding BadgeText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).Layout.IsSidebarExpanded, FallbackValue=False}" />
+              </StackPanel>
+              <Button.Flyout>
+                <Flyout Placement="RightEdgeAlignedBottom">
+                  <StackPanel Spacing="10" Width="420" Margin="4">
+                    <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Classes="muted small" Text="{Binding DetailText}" TextWrapping="Wrap" />
+                    <Border Background="{DynamicResource SubtleBrush}" CornerRadius="6" Padding="8,6" MaxHeight="220" IsVisible="{Binding HasCommits}">
+                      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Spacing="6">
+                          <ItemsControl ItemsSource="{Binding Commits}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate DataType="vm:SourceCommitRow">
+                                <StackPanel Margin="0,0,0,6">
+                                  <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" FontSize="12" />
+                                  <TextBlock Classes="muted small">
+                                    <Run Text="{Binding Hash}" FontFamily="{DynamicResource MonoFont}" />
+                                    <Run Text="{Binding Detail, StringFormat='· {0}'}" />
+                                  </TextBlock>
+                                </StackPanel>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                          <TextBlock Classes="muted small" Text="{Binding MoreText}" IsVisible="{Binding MoreText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+                      </ScrollViewer>
+                    </Border>
+                    <TextBlock Classes="warning" Text="{Binding WhyNotText}" TextWrapping="Wrap"
+                               IsVisible="{Binding WhyNotText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <TextBlock Classes="muted small" Text="{Binding InPlaceText}" TextWrapping="Wrap"
+                               IsVisible="{Binding InPlaceText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <TextBlock Classes="warning" Text="{Binding WorkingText}" TextWrapping="Wrap"
+                               IsVisible="{Binding WorkingText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <Border Background="{DynamicResource CautionBackgroundBrush}" BorderBrush="{DynamicResource CautionBorderBrush}" BorderThickness="1"
+                            CornerRadius="6" Padding="8,6" MaxHeight="160" IsVisible="{Binding HasError}">
+                      <ScrollViewer>
+                        <SelectableTextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" FontSize="12" />
+                      </ScrollViewer>
+                    </Border>
+                    <Border Background="{DynamicResource SubtleBrush}" CornerRadius="6" Padding="8,6" MaxHeight="180" IsVisible="{Binding HasBuildOutput}">
+                      <ScrollViewer>
+                        <SelectableTextBlock Text="{Binding BuildOutput}" FontFamily="{DynamicResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+                      </ScrollViewer>
+                    </Border>
+                    <WrapPanel ItemSpacing="8" LineSpacing="8">
+                      <Button Classes="accent" Content="Pull, build and restart" Command="{Binding UpdateCommand}" IsVisible="{Binding CanUpdate}" />
+                      <Button Content="Update when idle" Command="{Binding UpdateWhenIdleCommand}" IsVisible="{Binding CanUpdateWhenIdle}" />
+                      <Button Content="Pull and build" Command="{Binding PullAndBuildCommand}" IsVisible="{Binding CanUpdate}" />
+                      <Button Classes="accent" Content="Pull" Command="{Binding PullCommand}" IsVisible="{Binding CanPullOnly}" />
+                      <Button Classes="accent" Content="Build again" Command="{Binding BuildAgainCommand}" IsVisible="{Binding CanBuildAgain}" />
+                      <Button Classes="flat" Content="Skip these commits" Command="{Binding SkipCommand}" IsVisible="{Binding CanSkip}" />
+                    </WrapPanel>
+                    <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
             <!-- A new release of Claudette (DESIGN.md §2, "Updating Claudette"): small and non-blocking, like Claude Code's -->
             <Button x:Name="AppUpdateBadge" Classes="flat side update" DataContext="{Binding AppUpdate}" x:DataType="vm:AppUpdateViewModel"
                     IsVisible="{Binding HasBadge, FallbackValue=False}" ToolTip.Tip="{Binding BadgeText}" ToolTip.Placement="Right"

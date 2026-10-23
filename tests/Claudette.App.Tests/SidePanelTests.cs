@@ -105,6 +105,30 @@ public class SidePanelTests
     }
 
     [Fact]
+    public async Task The_composer_bars_Files_opens_the_side_panel_on_Changed_files_whatever_page_it_showed()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        tab.OpenSidePanelPage(SidePanelPage.ScratchPad);
+        tab.IsSidePanelOpen = false;
+
+        // Closed on another page: it opens on Changed files.
+        tab.ToggleFilesPageCommand.Execute(null);
+        Assert.True(tab.IsSidePanelOpen);
+        Assert.True(tab.IsFilesPage);
+
+        // Open on another page: it goes to Changed files rather than closing.
+        tab.ShowScratchPadPageCommand.Execute(null);
+        tab.ToggleFilesPageCommand.Execute(null);
+        Assert.True(tab.IsSidePanelOpen);
+        Assert.True(tab.IsFilesPage);
+
+        // Already on Changed files: it closes.
+        tab.ToggleFilesPageCommand.Execute(null);
+        Assert.False(tab.IsSidePanelOpen);
+    }
+
+    [Fact]
     public async Task A_new_file_from_Write_shows_as_added()
     {
         await using var h = new TabTestHarness();

@@ -308,20 +308,40 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
                 return new Plan("tool-edit", [ToolUse("Edit", new JsonObject { ["file_path"] = filePath, ["old_string"] = "ORIGINAL LINE", ["new_string"] = "EDITED LINE" })]);
             }
         }
+        // Claude Code 2.1.308 holds some tools back, ExitPlanMode and SendMessage among them: the model loads one with
+        // ToolSearch ("select:<name>") before it can call it, and the next request offers it. The mock does the same for
+        // a tool it means to call. Each step is taken once, as the tool calls since the step's prompt show.
+        var deferred = DeferredTools(SystemText(body) + "\n" + string.Join("\n", messages.Select(MessageText)));
+        bool Reachable(string tool) => tools.Contains(tool) || (tools.Contains("ToolSearch") && deferred.Contains(tool));
+        Plan? CallOrLoad(string tool, IReadOnlyList<string> called, Func<Plan> call) =>
+            tools.Contains(tool) ? call()
+            : called.Contains($"ToolSearch:{tool}") ? null
+            : new Plan("tool-search", [ToolUse("ToolSearch", new JsonObject { ["query"] = $"select:{tool}", ["max_results"] = 1 })]);
+
         // EXIT_PLAN writes the plan to the file Claude Code's plan mode reminder names, as a model does, then calls
         // ExitPlanMode, which reads the plan from that file (2.1.285 drops a plan passed as input). With no plan file
         // named, the plan goes in the input.
-        if (prompt.Contains("EXIT_PLAN", StringComparison.Ordinal) && tools.Contains("ExitPlanMode"))
+        if (prompt.Contains("EXIT_PLAN", StringComparison.Ordinal) && Reachable("ExitPlanMode"))
         {
+            var called = ToolCallsSince(messages, promptIndex);
             var planFile = PlanFilePattern().Match(string.Join("\n", messages.Select(MessageText)));
-            if (planFile.Success && toolRounds == 0)
+            if (planFile.Success && !called.Contains("Write"))
             {
                 return new Plan("tool-plan-file", [ToolUse("Write", new JsonObject { ["file_path"] = planFile.Groups[1].Value, ["content"] = PlanText })]);
             }
-            if (toolRounds == (planFile.Success ? 1 : 0))
+            if (!called.Contains("ExitPlanMode")
+                && CallOrLoad("ExitPlanMode", called, () => new Plan("tool-plan", [ToolUse("ExitPlanMode", planFile.Success ? [] : new JsonObject { ["plan"] = PlanText })])) is { } exit)
             {
-                return new Plan("tool-plan", [ToolUse("ExitPlanMode", planFile.Success ? [] : new JsonObject { ["plan"] = PlanText })]);
+                return exit;
             }
+        }
+        // SEND_MESSAGE, a thread's SendMessage call (DESIGN.md §18).
+        var sendIndex = Array.FindLastIndex(messages, m => m["role"]?.GetValue<string>() == "user" && SendPattern().IsMatch(MessageText(m)));
+        if (sendIndex >= 0 && Reachable("SendMessage") && ToolCallsSince(messages, sendIndex) is var sent && !sent.Contains("SendMessage")
+            && SendPattern().Match(MessageText(messages[sendIndex])) is var send
+            && CallOrLoad("SendMessage", sent, () => new Plan("tool-send", [ToolUse("SendMessage", new JsonObject { ["to"] = send.Groups[1].Value.Trim(), ["message"] = send.Groups[2].Value.Trim() })])) is { } message)
+        {
+            return message;
         }
 
         if (hasToolResult)
@@ -349,10 +369,6 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
             {
                 return new Plan("long-agent", [ToolUse(agentTool, AgentInput("Long job", "general-purpose", "RUN_BASH sleep 30", background: text.Contains("BACKGROUND", StringComparison.Ordinal)))]);
             }
-        }
-        if (SendPattern().Match(text) is { Success: true } send && tools.Contains("SendMessage"))
-        {
-            return new Plan("tool-send", [ToolUse("SendMessage", new JsonObject { ["to"] = send.Groups[1].Value.Trim(), ["message"] = send.Groups[2].Value.Trim() })]);
         }
         if (AgentReplyPattern().Match(text) is { Success: true } reply)
         {
@@ -387,6 +403,30 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
         }
         return new Plan("text", [TextBlock("pong")]);
     }
+
+    /// <summary>
+    /// The tools the model called after <paramref name="index"/>'s message, by name, and each <c>ToolSearch</c> that
+    /// loaded one as <c>ToolSearch:&lt;name&gt;</c>.
+    /// </summary>
+    private static IReadOnlyList<string> ToolCallsSince(JsonObject[] messages, int index) =>
+    [
+        .. messages.Skip(index + 1)
+            .Where(m => m["role"]?.GetValue<string>() == "assistant" && m["content"] is JsonArray)
+            .SelectMany(m => ((JsonArray)m["content"]!).OfType<JsonObject>())
+            .Where(b => b["type"]?.GetValue<string>() == "tool_use")
+            .Select(b => b["name"]?.GetValue<string>() is "ToolSearch" && b["input"]?["query"]?.GetValue<string>() is { } query && query.StartsWith("select:", StringComparison.Ordinal)
+                ? $"ToolSearch:{query["select:".Length..]}"
+                : b["name"]?.GetValue<string>() ?? ""),
+    ];
+
+    /// <summary>
+    /// The tools Claude Code holds back for ToolSearch to load, from its reminder: "The following deferred tools are now
+    /// available via ToolSearch. … before calling them:" and a name a line, up to a blank line.
+    /// </summary>
+    private static IReadOnlySet<string> DeferredTools(string text) =>
+        DeferredPattern().Match(text) is { Success: true } list
+            ? list.Groups[1].Value.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet(StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
 
     private JsonObject ToolUse(string name, JsonObject input) =>
         new() { ["type"] = "tool_use", ["id"] = $"toolu_mock_{Interlocked.Increment(ref _counter)}", ["name"] = name, ["input"] = input };
@@ -491,4 +531,8 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
     /// <summary>Where the plan mode reminder asks for the plan: "You should create your plan at &lt;path&gt; using the Write tool."</summary>
     [GeneratedRegex(@"create your plan at (.+?\.md) using the Write tool")]
     private static partial Regex PlanFilePattern();
+
+    /// <summary>Claude Code's list of the tools it holds back for ToolSearch (2.1.308): a name a line, after its header.</summary>
+    [GeneratedRegex(@"deferred tools are now available via ToolSearch[^\n]*\n((?:[A-Za-z_][\w-]*\r?\n?)+)")]
+    private static partial Regex DeferredPattern();
 }

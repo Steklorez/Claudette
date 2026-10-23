@@ -19,8 +19,9 @@ What Claude Code sends is Claude Code's. Each tab runs the real `claude`, which 
 | Downloading an update | GitHub | Only when you choose to download. | Don't download |
 | Claude's status | status.claude.com | At launch, then every 5 minutes, and sooner when a tab's request fails on Anthropic's side. A plain request, with Claudette's name and version. | Settings → General → **Show Claude's service status** |
 | A web image in a reply | The image's own address | Only when you click **Load image**. | Don't click it |
+| A source build's check for new commits | The git remote its checkout tracks | At launch and every hour, instead of the update check. It's `git fetch`, with your git and its credentials. | Settings → General → **Check for Claudette updates automatically** |
 
-A source build never checks for updates. See [Claudette's updates](../updates/claudettes-updates.md), [Claude is having problems](../troubleshooting/claude-is-having-problems.md) and [Images](../conversation/images.md).
+A copy from the Microsoft Store doesn't check GitHub's releases: the Store updates it. A source build doesn't either: it fetches from its checkout's remote instead. See [Claudette's updates](../updates/claudettes-updates.md), [Running from source](../getting-started/running-from-source.md#when-there-are-new-commits), [Claude is having problems](../troubleshooting/claude-is-having-problems.md) and [Images](../conversation/images.md).
 
 Claudette also starts other programs for you, such as `git`, `p4`, diff tools and, to check for Claude Code updates, `claude` itself and Homebrew or WinGet, with the same environment `claude` has. They talk to whatever they'd talk to in your terminal, such as your git remote, your Perforce server or a package source.
 

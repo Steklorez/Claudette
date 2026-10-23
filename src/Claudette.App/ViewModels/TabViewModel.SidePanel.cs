@@ -225,6 +225,23 @@ public sealed partial class TabViewModel
         Page = page;
     }
 
+    /// <summary>
+    /// The composer bar's <b>Files (n)</b>: opens the side panel on Changed files, from another page too, and closes it
+    /// when that's already showing (DESIGN.md §3, "Side panel").
+    /// </summary>
+    [RelayCommand]
+    private void ToggleFilesPage()
+    {
+        if (IsSidePanelOpen && IsFilesPage)
+        {
+            IsSidePanelOpen = false;
+        }
+        else
+        {
+            OpenSidePanelPage(SidePanelPage.Files);
+        }
+    }
+
     /// <summary>The composer bar's way to the Tasks page: opens the side panel on it.</summary>
     [RelayCommand]
     private void OpenTasksPage()

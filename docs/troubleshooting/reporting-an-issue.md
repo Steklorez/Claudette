@@ -15,7 +15,7 @@ The foot of the Settings sidebar shows which Claudette this is, on every page: *
 
 Click it to copy the versions for a bug report, one per line. It says *Copied* for two seconds. The lines are:
 
-- Claudette's version and how it was installed: an MSIX, a `.dmg`, or a source build and its commit.
+- Claudette's version and how it was installed: an MSIX, the Microsoft Store, a `.dmg`, or a source build and its commit.
 - Claude Code's version.
 - The operating system and its identifier.
 - The .NET runtime.

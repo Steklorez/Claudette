@@ -33,6 +33,7 @@ public class AppBuildTests
     [InlineData(AppInstallKind.SourceBuild, null, "0.1.0 (source build)")]
     [InlineData(AppInstallKind.Msix, "842169b", "0.1.0 (MSIX)")]
     [InlineData(AppInstallKind.MacApp, null, "0.1.0 (.dmg)")]
+    [InlineData(AppInstallKind.Store, null, "0.1.0 (Microsoft Store)")]
     [InlineData(AppInstallKind.Other, "842169b", "0.1.0")]
     public void The_description_says_how_it_was_installed(AppInstallKind kind, string? commit, string expected) =>
         Assert.Equal(expected, new AppBuild(Version, kind, commit).Description);

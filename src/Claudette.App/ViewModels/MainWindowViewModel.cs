@@ -470,7 +470,18 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         shell.NewBuild = new NewBuildViewModel(Restarts);
         _ = Task.Run(() => new BuildCopies(services.Paths.BuildCopiesDirectory).CleanUp(build.RunningDirectory));
         Restarts.Start();
+        // New commits on the branch the checkout tracks, as an installed Claudette's releases (DESIGN.md §9, "New commits upstream").
+        var updates = SourceUpdates = new SourceUpdateService(services, Restarts);
+        SourceUpdate = shell.SourceUpdate = new SourceUpdateViewModel(updates, services.Time);
+        services.SettingsChanged += (_, _) => updates.OnSettingsChanged();
+        updates.Start();
     }
+
+    /// <summary>A source build's checks of its checkout for new commits, and their pulls and builds.</summary>
+    public SourceUpdateService? SourceUpdates { get; private set; }
+
+    /// <summary>The sidebar's badge for new commits, and Settings' section for them, for a source build.</summary>
+    public SourceUpdateViewModel? SourceUpdate { get; private set; }
 
     bool IRestartHost.AnyTabWorking => _shell?.AnyTabWorking == true;
 
@@ -515,6 +526,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         Spend?.Dispose();
         Updates?.Dispose();
         _shell?.NewBuild?.Dispose();
+        SourceUpdate?.Dispose();
+        SourceUpdates?.Dispose();
         Restarts?.Dispose();
         AppUpdate?.Dispose();
         AppUpdates?.Dispose();

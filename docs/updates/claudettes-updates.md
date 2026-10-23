@@ -14,7 +14,8 @@ An installed Claudette checks for a newer version, downloads it, installs it and
 At launch and every 6 hours, Claudette asks GitHub for Claudette's releases. It doesn't sign in, and the request carries nothing about you. It offers the newest release above the version you're running, once that release is published.
 
 - Pre-releases count only with **Include pre-releases** on.
-- A source build never checks. It restarts into each new build of its checkout instead: see [Running from source](../getting-started/running-from-source.md).
+- A copy installed from the Microsoft Store doesn't check either: the Store keeps it up to date, and Settings → General says so.
+- A source build doesn't check for releases. It checks the branch its checkout tracks for new commits, pulls and builds them, and restarts into each new build: see [Running from source](../getting-started/running-from-source.md#when-there-are-new-commits).
 
 ## The badge
 

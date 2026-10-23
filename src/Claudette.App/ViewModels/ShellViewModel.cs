@@ -893,6 +893,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [ObservableProperty]
     public partial NewBuildViewModel? NewBuild { get; set; }
 
+    /// <summary>The sidebar's entry for new commits on the branch a source build's checkout tracks (DESIGN.md §9, "New commits upstream").</summary>
+    [ObservableProperty]
+    public partial SourceUpdateViewModel? SourceUpdate { get; set; }
+
     /// <summary>The sidebar's entry for a new release of Claudette (DESIGN.md §2, "Updating Claudette").</summary>
     [ObservableProperty]
     public partial AppUpdateViewModel? AppUpdate { get; set; }

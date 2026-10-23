@@ -724,7 +724,7 @@ public partial class ShellView : UserControl
             opening.Project?.Dispose();
             return;
         }
-        var settings = new SettingsViewModel(main.Services, main.AccountText, main.Updates, opening) { Account = main.Account, AppUpdates = main.AppUpdate };
+        var settings = new SettingsViewModel(main.Services, main.AccountText, main.Updates, opening) { Account = main.Account, AppUpdates = main.AppUpdate, SourceUpdates = main.SourceUpdate };
         var window = new SettingsWindow { DataContext = settings };
         if (UnfocusedWindows.IsOn)
         {

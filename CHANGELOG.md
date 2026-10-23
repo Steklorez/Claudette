@@ -6,6 +6,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **A source build keeps up with its branch.** Claudette built from a checkout, such as one of `main`, now checks the branch it tracks for new commits at launch and every hour, as an installed Claudette checks for releases. A badge at the foot of the sidebar says *3 new commits on origin/main* and lists them; **Pull, build and restart** pulls them, builds Claudette and restarts into it with every tab as it was, and **Update when idle** waits for your tabs to finish first. It only ever fast-forwards: with changes or commits of your own in the checkout, it tells you why it won't pull and leaves the checkout alone.
+- **Claudette from the Microsoft Store.** A copy installed from the Store is kept up to date by the Store, so it doesn't look for releases on GitHub, and Settings → General says so.
+
+### Changed
+
+- Tested with Claude Code 2.1.308.
+
+### Fixed
+
+- **Files** under the composer opened the side panel on whichever page it last showed, and closed it when it showed another. It now always opens it on Changed files, and closes it only from there.
+- The Windows package wasn't signed, so Windows wouldn't install it. It's now signed by dotBunny.
+- A long to-do list at the top of the conversation could fill a short window and push the conversation out of sight. Now it takes at most two fifths of the conversation's height and scrolls past that.
+
 ## [0.5.0] - 2026-10-22
 
 ### Added

@@ -174,4 +174,26 @@ public class TaskProgressUiTests
         Assert.True(pinned.Bounds.Height < height, "Closing the list didn't make it shorter.");
         window.Close();
     }
+
+    [AvaloniaFact]
+    public async Task A_long_pinned_list_scrolls_rather_than_filling_a_short_window()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 600);
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var area = view.GetVisualDescendants().OfType<Grid>().Single(g => g.Name == "ConversationArea");
+        var tasks = view.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "PinnedTodoTasks");
+
+        h.Transport.Emit(Init);
+        for (var i = 1; i <= 40; i++)
+        {
+            Create(h, $"c{i}", $"{i}", $"Task number {i}");
+        }
+        await UiText.SettleUntilAsync(window, () => Texts(view).Contains("To-do · 0 of 40 done") && tasks.Extent.Height > tasks.Viewport.Height, "the list scrolling");
+
+        Assert.True(tasks.Bounds.Height <= area.Bounds.Height * TabView.PinnedTodoShare + 0.5,
+            $"The list is {tasks.Bounds.Height} high in a conversation {area.Bounds.Height} high.");
+        window.Close();
+    }
 }

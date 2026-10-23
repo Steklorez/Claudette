@@ -162,6 +162,13 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         init => General.AppUpdates = value;
     }
 
+    /// <summary>A source build's new commits upstream in General, the same as the sidebar's badge. Null for an installed Claudette.</summary>
+    public SourceUpdateViewModel? SourceUpdates
+    {
+        get => General.SourceUpdates;
+        init => General.SourceUpdates = value;
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(SelectedMainCategory), nameof(SelectedProjectPage))]
     public partial string SelectedCategory { get; set; }

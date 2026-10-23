@@ -6,8 +6,33 @@ using Claudette.Platform.Notifications.Windows;
 namespace Claudette.Platform.Updates.Windows;
 
 // The WinRT and shell interfaces an MSIX self-update needs, declared by hand like the ones in WinRtInterop.cs. Method
-// order is the vtable order from windows.management.deployment.h, windows.foundation.h, asyncinfo.h and
-// shobjidl_core.h; only the methods up to the last one used are declared.
+// order is the vtable order from windows.management.deployment.h, windows.applicationmodel.h, windows.foundation.h,
+// asyncinfo.h and shobjidl_core.h; only the methods up to the last one used are declared.
+
+/// <summary><c>Windows.ApplicationModel.Package</c>'s statics.</summary>
+[GeneratedComInterface]
+[Guid("4E534BDF-2960-4878-97A4-9624DEB72F2D")]
+internal partial interface IPackageStatics : IInspectable
+{
+    /// <summary>This process's package. Fails with <c>APPMODEL_ERROR_NO_PACKAGE</c> outside one.</summary>
+    IPackage GetCurrent();
+}
+
+/// <summary><c>Windows.ApplicationModel.Package</c>, only passed along to <see cref="IPackage4"/>.</summary>
+[GeneratedComInterface]
+[Guid("163C792F-BD75-413C-BF23-B1FE7B95D825")]
+internal partial interface IPackage : IInspectable
+{
+}
+
+/// <summary>A package's signature, from Windows 10 1607.</summary>
+[GeneratedComInterface]
+[Guid("65AED1AE-B95B-450C-882B-6255187F397E")]
+internal partial interface IPackage4 : IInspectable
+{
+    /// <summary><c>PackageSignatureKind</c>: None 0, Developer 1, Enterprise 2, Store 3, System 4.</summary>
+    int GetSignatureKind();
+}
 
 /// <summary><c>Windows.Foundation.Uri</c>'s factory.</summary>
 [GeneratedComInterface]
@@ -102,6 +127,27 @@ internal static unsafe partial class Deployment
         fixed (char* chars = buffer)
         {
             return GetCurrentPackageFamilyName(ref length, chars) == 0 ? new string(chars, 0, (int)length - 1) : null;
+        }
+    }
+
+    /// <summary><c>PackageSignatureKind.Store</c>: the Microsoft Store signed the package, and keeps it up to date.</summary>
+    public const int SignatureKindStore = 3;
+
+    /// <summary>
+    /// Whether this process's package came from the Microsoft Store, which signs what it delivers itself (DESIGN.md §2,
+    /// "Updating Claudette"). False outside a package, and when Windows can't say.
+    /// </summary>
+    [SupportedOSPlatform("windows10.0.14393")]
+    public static bool IsFromStore()
+    {
+        try
+        {
+            var package = WinRt.GetActivationFactory<IPackageStatics>("Windows.ApplicationModel.Package").GetCurrent();
+            return package is IPackage4 signed && signed.GetSignatureKind() == SignatureKindStore;
+        }
+        catch (Exception ex) when (ex is COMException or InvalidCastException)
+        {
+            return false;
         }
     }
 

@@ -119,6 +119,17 @@ public sealed class UserEnvironment
         return spec with { FileName = fileName, Environment = spec.Environment ?? environment };
     }
 
+    /// <summary><paramref name="spec"/> with <paramref name="variables"/> set over its environment, or over this process's when it has none.</summary>
+    public static ProcessStartSpec WithVariables(ProcessStartSpec spec, IReadOnlyDictionary<string, string> variables)
+    {
+        var result = new Dictionary<string, string>(spec.Environment ?? Snapshot(), Comparer);
+        foreach (var (key, value) in variables)
+        {
+            result[key] = value;
+        }
+        return spec with { Environment = result };
+    }
+
     /// <summary>
     /// Claudette's own environment with the login shell's on top: the shell's values win, except for Claudette's own
     /// variables (<see cref="ClaudettePrefix"/>), the session variables Claude Code sets for its children (removed for

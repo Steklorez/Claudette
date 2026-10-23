@@ -495,7 +495,7 @@
               </Button>
   
               <!-- Changed files (DESIGN.md §8) -->
-              <Button Classes="flat" ToolTip.Tip="Changed files" Command="{Binding ToggleSidePanelCommand}">
+              <Button Classes="flat" ToolTip.Tip="Changed files" Command="{Binding ToggleFilesPageCommand}">
                 <TextBlock Classes="muted small" Text="{Binding ChangedFiles.Count, StringFormat='Files ({0})'}" />
               </Button>
   

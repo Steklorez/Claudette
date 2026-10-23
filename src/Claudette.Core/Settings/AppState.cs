@@ -176,6 +176,12 @@ public sealed class AppState
     public string? SkippedAppUpdate { get; set; }
 
     /// <summary>
+    /// For a source build: the upstream commit whose new commits the user chose to skip, not offered again until more are
+    /// pushed (DESIGN.md §9, "New commits upstream").
+    /// </summary>
+    public string? SkippedSourceUpdate { get; set; }
+
+    /// <summary>
     /// The project each folder uses and each project's choices (DESIGN.md §18, "Project tools"). Per machine: paths
     /// differ between machines.
     /// </summary>

@@ -23,7 +23,7 @@ Each task shows its state (to do, in progress, done), its number as Claude refer
 
 Under a task, one line says who is working on it when Claude says (a subagent), how long it took and what it used: *Explore · Took 4m · 3 files · 120k tokens*, or *Started 14:05* while it's under way. **3 files** lists the files Claude changed while the task was in progress, and each opens in the diff view as [Changed files](../changes/changed-files.md) shows it. Work a subagent does counts toward its parent's task. Clicking a task that has started goes to where it started in the conversation.
 
-Claude's task list also shows pinned at the top of the conversation, under the line *To-do · 2 of 5 done*. Click that line to close the list when it's long: closed, it's the one line, naming the task in progress, such as *To-do · 2 of 5 done · Running the tests*. It stays closed as Claude works through the tasks, and when Claudette restarts, until you open it again. It opens by itself when Claude starts a new list, and closes once every task is done.
+Claude's task list also shows pinned at the top of the conversation, under the line *To-do · 2 of 5 done*. A long list scrolls once it takes two fifths of the conversation's height, so the conversation keeps room under it. Click that line to close the list when it's long: closed, it's the one line, naming the task in progress, such as *To-do · 2 of 5 done · Running the tests*. It stays closed as Claude works through the tasks, and when Claudette restarts, until you open it again. It opens by itself when Claude starts a new list, and closes once every task is done.
 
 ## Tasks in the conversation
 

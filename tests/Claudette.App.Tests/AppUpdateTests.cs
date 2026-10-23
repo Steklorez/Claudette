@@ -218,6 +218,27 @@ public class AppUpdateTests
     }
 
     [Fact]
+    public async Task A_copy_from_the_Store_leaves_its_updates_to_the_Store()
+    {
+        await using var s = Create(AppInstallKind.Store);
+
+        s.Updates.Start();
+        await s.Updates.CheckNowAsync();
+
+        Assert.Empty(s.GitHub.Requests);
+        Assert.False(s.Updates.ChecksReleases);
+        Assert.False(s.Badge.HasBadge);
+        Assert.False(s.Badge.CanCheck);
+        Assert.Equal("This copy is from the Microsoft Store, which keeps it up to date.", s.Badge.CheckStatusText);
+        Assert.Equal("1.2.0 (Microsoft Store)", s.H.Services.Build.Description);
+
+        // Settings has nothing to turn on or off for it.
+        using var settings = new SettingsViewModel(s.H.Services, "me@example.com") { AppUpdates = s.Badge };
+        Assert.False(settings.General.ShowsUpdateChecks);
+        Assert.False(settings.General.ShowsPrereleases);
+    }
+
+    [Fact]
     public async Task Checks_run_at_launch_only_while_the_setting_is_on()
     {
         await using var s = Create();

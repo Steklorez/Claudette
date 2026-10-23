@@ -70,6 +70,7 @@ The rail shows each group's color, then a square per tab with the first letter o
 | A Claude Code update badge | A newer Claude Code is available | [Claude Code's updates](../updates/claude-codes-updates.md) |
 | A Claudette update badge | A new Claudette release is available | [Claudette's updates](../updates/claudettes-updates.md) |
 | **New build ready** | A source build of Claudette has a new build to restart into | [Running from source](../getting-started/running-from-source.md) |
+| *3 new commits on origin/main* | A source build's checkout is behind the branch it tracks | [Running from source](../getting-started/running-from-source.md#when-there-are-new-commits) |
 
 ## The header
 

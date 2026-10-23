@@ -25,6 +25,7 @@ public sealed record AppBuild(AppVersion Version, AppInstallKind Kind, string? C
         AppInstallKind.SourceBuild => Commit is { } commit ? $"{Version} (source build {commit})" : $"{Version} (source build)",
         AppInstallKind.Msix => $"{Version} (MSIX)",
         AppInstallKind.MacApp => $"{Version} (.dmg)",
+        AppInstallKind.Store => $"{Version} (Microsoft Store)",
         _ => Version.ToString(),
     };
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Claudette's MSIX manifest (DESIGN.md §2, "Packaging"). build-msix.ps1 fills in $VERSION$, $PUBLISHER$ and
-  $ARCHITECTURE$. The Identity Name must stay in step with WindowsAppIdentity.AppUserModelId, and Publisher must match
-  the signing certificate's subject exactly.
+  Claudette's MSIX manifest (DESIGN.md §2, "Packaging"). build-msix.ps1 fills in the version, the publisher and the
+  architecture. The Identity Name must stay in step with WindowsAppIdentity.AppUserModelId, and Publisher must match
+  the signing certificate's subject exactly. PublisherDisplayName is the Store's publisher name.
 -->
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
@@ -14,7 +14,7 @@
 
   <Properties>
     <DisplayName>Claudette</DisplayName>
-    <PublisherDisplayName>Matthew Davey</PublisherDisplayName>
+    <PublisherDisplayName>dotBunny</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <Description>A native desktop app for Claude Code.</Description>
     <!--

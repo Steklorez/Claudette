@@ -8,7 +8,7 @@ namespace Claudette.Platform.Tests.Updates;
 /// <summary>Checking a downloaded MSIX before Windows installs it (DESIGN.md §2, "Updating Claudette").</summary>
 public sealed class MsixPackageTests : IDisposable
 {
-    private const string Publisher = "CN=Matthew Davey, O=Matthew Davey, C=GB";
+    private const string Publisher = "CN=dotBunny, O=dotBunny, C=CA";
 
     private readonly string _folder = Directory.CreateTempSubdirectory("claudette-msix-").FullName;
 
@@ -90,6 +90,21 @@ public sealed class MsixPackageTests : IDisposable
     [InlineData(unchecked((int)0x80073D06), "A newer version of Claudette is already installed.")]
     [InlineData(unchecked((int)0x80004005), "Windows couldn't install the update (error 0x80004005).")]
     public void Deployment_errors_are_put_in_words(int hresult, string expected) => Assert.Equal(expected, MsixPackage.DescribeError(hresult));
+
+    /// <summary>
+    /// A copy from the Microsoft Store leaves its updates to the Store. The test runs outside a package, where Windows has
+    /// no package to ask about: the answer is no, rather than an error.
+    /// </summary>
+    [Fact]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows10.0.14393")]
+    public void Outside_a_package_this_copy_isnt_the_Stores()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindowsVersionAtLeast(10, 0, 14393), "Windows only.");
+
+        Assert.False(Deployment.IsFromStore());
+        Assert.NotEqual(AppInstallKind.Store, Claudette.Platform.Updates.AppInstallers.CreateForCurrentOS(
+            new Claudette.Core.Processes.ProcessLauncher(), TimeProvider.System, _folder, Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance).Kind);
+    }
 
     public void Dispose() => Directory.Delete(_folder, recursive: true);
 }
