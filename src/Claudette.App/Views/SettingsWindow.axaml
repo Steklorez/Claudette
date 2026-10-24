@@ -136,8 +136,10 @@
     </Border>
 
     <ScrollViewer x:Name="PageScroller" Grid.Column="1">
-      <!-- The page shown: the selected category's, or one of the project's, under its title. Each is a view in Views/Settings. -->
-      <StackPanel MaxWidth="720" Margin="40,28,40,40" HorizontalAlignment="Left">
+      <!-- The page shown: the selected category's, or one of the project's, under its title. Each is a view in Views/Settings.
+           It fills the space up to 720 pixels, so a setting's control stays near its name, and is centred in a wider window
+           (a stretched control that its MaxWidth stops short is centred). -->
+      <StackPanel MaxWidth="720" Margin="40,28,40,40">
         <StackPanel Orientation="Horizontal" Spacing="10">
           <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
           <!-- Everything on the page is this computer's: said once, here -->

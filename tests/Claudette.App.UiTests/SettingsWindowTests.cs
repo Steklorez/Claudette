@@ -41,6 +41,38 @@ public class SettingsWindowTests
     }
 
     /// <summary>
+    /// A page is a column at most 720 pixels wide (DESIGN.md §14): it fills a window narrower than that, so its rows use
+    /// the room, and is centred in a wider one, so a control stays near its name.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_page_fills_a_narrow_window_and_is_centred_in_a_wide_one()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null);
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+        var scroller = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "PageScroller");
+        var page = Assert.IsAssignableFrom<Control>(scroller.Content);
+        (double Left, double Right) Gaps()
+        {
+            var room = page.GetVisualParent()!.Bounds.Width;
+            return (page.Bounds.X, room - page.Bounds.Right);
+        }
+
+        Assert.True(page.Bounds.Width < 720);
+        Assert.Equal((40d, 40d), Gaps());
+
+        window.Width = 1800;
+        UiText.Settle(window);
+        Assert.Equal(720, page.Bounds.Width);
+        var (left, right) = Gaps();
+        Assert.True(left > 40);
+        Assert.Equal(left, right, 1);
+        window.Close();
+    }
+
+    /// <summary>
     /// A setting that isn't at its default has a bar at its left (DESIGN.md §14), drawn in the room the row reaches out
     /// by; one at its default has none.
     /// </summary>
