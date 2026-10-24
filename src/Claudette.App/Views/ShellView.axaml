@@ -187,19 +187,44 @@
     <Style Selector="StackPanel.tabentry.subthread">
       <Setter Property="Margin" Value="12,0,0,1" />
     </Style>
-    <!-- The chevron beside a tab's name that collapses what's under its row (DESIGN.md §4, "Sidebar"), drawn as a group
-         label's is. -->
-    <Style Selector="Button.rowfold">
-      <Setter Property="Padding" Value="3,2" />
-      <Setter Property="Margin" Value="-3,0,2,0" />
+    <!-- The chevron that collapses what's under a tab's row (DESIGN.md §4, "Sidebar"): on the group's line, in its color,
+         level with the name, its background breaking the line around it. It takes no room in the name's line, so a name
+         stays where the other rows' are, and OnLine moves it across onto the line, a sub-thread's too. The row doesn't
+         clip, nor does the list of tabs, so it shows out there, and hovering it lights up its row. The gap is the same
+         height either way, with room above and below the collapsed chevron, the taller one; it reaches past the name's
+         line without making it taller. -->
+    <Style Selector="Button.tabrow">
+      <Setter Property="ClipToBounds" Value="False" />
+    </Style>
+    <Style Selector="Border.rowfold">
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="20" />
+      <Setter Property="Margin" Value="0,-4,-14,-4" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Background" Value="{DynamicResource SidebarBrush}" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+    <Style Selector="Button.rowfold">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <!-- Each sized to its own shape, so it's centered on the line rather than drawn at the top left of a square. -->
     <Style Selector="Button.rowfold Path">
-      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
-      <Setter Property="StrokeThickness" Value="1.4" />
-      <Setter Property="Width" Value="9" />
-      <Setter Property="Height" Value="9" />
+      <Setter Property="StrokeThickness" Value="1.5" />
       <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.rowfold Path.down">
+      <Setter Property="Width" Value="10" />
+      <Setter Property="Height" Value="5" />
+    </Style>
+    <Style Selector="Button.rowfold Path.right">
+      <Setter Property="Width" Value="5" />
+      <Setter Property="Height" Value="10" />
     </Style>
     <Style Selector="Border#SidebarEdge:pointerover">
       <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
@@ -372,10 +397,11 @@
                   </Grid>
 
                   <!-- Tabs, under a line in the group's color; its Project Files tab first (DESIGN.md §18, "Project files") -->
-                  <Border Margin="9,2,0,0" Padding="5,0,0,0" BorderBrush="{Binding Brush}" BorderThickness="2,0,0,0" IsVisible="{Binding IsExpanded}">
+                  <Border x:Name="GroupLine" Margin="9,2,0,0" Padding="5,0,0,0" BorderBrush="{Binding Brush}" BorderThickness="2,0,0,0" IsVisible="{Binding IsExpanded}">
                     <StackPanel Spacing="1">
                     <ContentControl Content="{Binding Files}" IsVisible="{Binding HasFiles}" ContentTemplate="{StaticResource ProjectFilesRow}" />
-                    <ItemsControl ItemsSource="{Binding Tabs}">
+                    <!-- Unclipped, as the rows are, so a row's chevron can sit out on the line -->
+                    <ItemsControl ItemsSource="{Binding Tabs}" ClipToBounds="False">
                       <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                           <StackPanel />
@@ -403,14 +429,19 @@
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="1">
                                   <DockPanel>
-                                    <!-- Collapses what's under the row: its sub-threads, subagents and runs (DESIGN.md §4, "Sidebar") -->
-                                    <Button x:Name="RowFold" DockPanel.Dock="Left" Classes="flat rowfold" IsVisible="{Binding HasRowsUnder}"
-                                            Command="{Binding ToggleRowsCollapsedCommand}" ToolTip.Tip="{Binding CollapseTip}" AutomationProperties.Name="{Binding CollapseMenuText}">
-                                      <Panel>
-                                        <Path Data="{StaticResource IconChevronDown}" IsVisible="{Binding !AreRowsCollapsed}" />
-                                        <Path Data="{StaticResource IconChevronRight}" IsVisible="{Binding AreRowsCollapsed}" />
-                                      </Panel>
-                                    </Button>
+                                    <!-- Collapses what's under the row: its sub-threads, subagents and runs (DESIGN.md §4, "Sidebar").
+                                         It sits on the group's line, level with the name, and takes no room before it. -->
+                                    <Border DockPanel.Dock="Left" Classes="rowfold" IsVisible="{Binding HasRowsUnder}" controls:OnLine.Line="GroupLine">
+                                      <Button x:Name="RowFold" Classes="flat rowfold"
+                                              Command="{Binding ToggleRowsCollapsedCommand}" ToolTip.Tip="{Binding CollapseTip}" AutomationProperties.Name="{Binding CollapseMenuText}">
+                                        <Panel>
+                                          <Path Classes="down" Data="{StaticResource IconChevronDown}" IsVisible="{Binding !AreRowsCollapsed}"
+                                                Stroke="{Binding $parent[ItemsControl].((vm:TabGroupViewModel)DataContext).Brush}" />
+                                          <Path Classes="right" Data="{StaticResource IconChevronRight}" IsVisible="{Binding AreRowsCollapsed}"
+                                                Stroke="{Binding $parent[ItemsControl].((vm:TabGroupViewModel)DataContext).Brush}" />
+                                        </Panel>
+                                      </Button>
+                                    </Border>
                                     <Path DockPanel.Dock="Left" Data="{StaticResource IconPin}" Fill="{DynamicResource MutedTextBrush}" Width="8" Height="10" Stretch="Uniform"
                                           IsVisible="{Binding IsPinned}" VerticalAlignment="Center" Margin="0,0,5,0" />
                                     <!-- The tab copies its session to the session library (DESIGN.md §9), with what it takes there as its tip; the border gives the tip somewhere to hover -->

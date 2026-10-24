@@ -2,11 +2,14 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 using Claudette.App.Services;
+using Claudette.App.Tests;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
 using Claudette.App.Views;
+using Claudette.Core.Settings;
 
 namespace Claudette.App.UiTests;
 
@@ -72,6 +75,48 @@ public class ThreadUiTests
         Assert.Same(plan, badge.DataContext);
         Assert.Equal("Collapsed: 2 sub-threads", ToolTip.GetTip(badge));
         Assert.Contains(badge.GetVisualDescendants().OfType<TextBlock>(), t => t is { Text: "2", IsEffectivelyVisible: true });
+    }
+
+    [AvaloniaFact]
+    public async Task The_chevron_sits_on_the_groups_line_level_with_the_name_and_takes_no_room_before_it()
+    {
+        await using var h = new TabTestHarness(s => s.Appearance.ShowSubagents = SubagentDisplay.InSidebar, dispatcher: new AvaloniaUiDispatcher());
+        h.Factory.ProcessPerSession = true;
+        var plan = await ThreadScript.OpenAsync(h, "Plan");
+        var other = await ThreadScript.OpenAsync(h, "Other");
+        var art = await ThreadScript.OpenAsync(h, "Art page");
+        h.Shell.MakeThreadCommand.Execute(plan);
+        art.AssignToThreadCommand.Execute(plan);
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        Point Middle(Control c) => c.TranslatePoint(new Point(c.Bounds.Width / 2, c.Bounds.Height / 2), window)!.Value;
+        double Left(Control c) => c.TranslatePoint(default, window)!.Value.X;
+        TextBlock Name(TabViewModel tab) => window.GetVisualDescendants().OfType<TextBlock>().First(t => t.DataContext == tab && t.Text == tab.DisplayName);
+        Button Fold(TabViewModel tab) => window.GetVisualDescendants().OfType<Button>().Single(b => b is { Name: "RowFold", IsEffectivelyVisible: true } && b.DataContext == tab);
+
+        var fold = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => b is { Name: "RowFold", IsEffectivelyVisible: true });
+        var line = Assert.Single(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "GroupLine", IsEffectivelyVisible: true });
+        var icon = Assert.Single(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "ThreadIcon", IsEffectivelyVisible: true });
+        var onLine = Left(line) + line.BorderThickness.Left / 2;
+
+        Assert.Same(plan, fold.DataContext);
+        Assert.Equal(onLine, Middle(fold).X, 0.01);
+        Assert.Equal(Middle(Name(plan)).Y, Middle(fold).Y, 0.5);
+        // What comes first in the thread's line, its thread icon, is where the other tab's name starts, and its gap in the
+        // line, taller than the name, leaves the row as tall as the others.
+        Assert.Equal(Left(Name(other)), Left(icon), 0.01);
+        Assert.True(fold.Bounds.Height > Name(plan).Bounds.Height, "The gap should reach past the name's line");
+        Button Row(TabViewModel tab) => window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("tabrow") && b.DataContext == tab);
+        Assert.Equal(Row(other).Bounds.Height, Row(plan).Bounds.Height);
+        // Clicking it reaches it, though it's outside the row.
+        Assert.Contains(fold, (window.InputHitTest(Middle(fold)) as Visual)?.GetSelfAndVisualAncestors() ?? []);
+
+        // A sub-thread's, 12 further in, is on the same line.
+        h.Transport.EmitTo(2, ThreadScript.Init());
+        h.Transport.EmitTo(2, Wire.Agent("a1", "Find the gallery's cards", "Find them", "Explore"));
+        await UiText.SettleUntilAsync(window, () => art.SubagentRows.Count == 1, "the sub-thread's subagent");
+        Assert.True(Left(Name(art)) > Left(Name(other)), "The sub-thread should be indented");
+        Assert.Equal(onLine, Middle(Fold(art)).X, 0.01);
+        Assert.Equal(Middle(Name(art)).Y, Middle(Fold(art)).Y, 0.5);
     }
 
     [AvaloniaFact]
