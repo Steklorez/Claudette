@@ -1313,6 +1313,13 @@ items:
     docs: https://code.claude.com/docs/en/sessions
     test: RealCliTests
     fallback: Copy the updated transcript from the projects folder back to the library after each turn.
+  - id: "a transcript resumed from a path is only added to"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.Core/Library/LibraryFiles.cs, src/Claudette.App/Services/LibraryService.cs, src/Claudette.App/ViewModels/TabViewModel.Library.cs
+    docs: https://code.claude.com/docs/en/sessions
+    test: RealCliTests
+    fallback: Claudette tells another machine's turns in the library from this machine's by whether one transcript is the start of the other (DESIGN.md §9, "One machine at a time"). If Claude Code wrote a resumed transcript again rather than adding to it, compare the transcripts by their lines' uuids instead of their bytes, or every copy after resuming would look like a session that went on in two places.
   - id: "HEAD /api/hello"
     kind: behavior
     status: undocumented

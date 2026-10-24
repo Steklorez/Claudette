@@ -30,7 +30,7 @@ Neither asks first, and both skip pinned tabs.
 
 ## Pinned tabs
 
-A pinned tab comes back every time Claudette starts and resumes its session. Pin one with **Pin tab** in its menu: see [Names, marks and pins](names-marks-and-pins.md#pinning-a-tab). Pinned tabs belong to this machine. On another machine, the same sessions appear in [History](../history/history.md) instead.
+A pinned tab comes back every time Claudette starts and resumes its session. Pin one with **Pin tab** in its menu: see [Names, marks and pins](names-marks-and-pins.md#pinning-a-tab). Pinned tabs belong to this machine. On another machine, the same sessions appear in [History](../history/history.md) instead. A pinned tab that syncs picks up where another machine left off with its session: see [Coming back to the first machine](../history/picking-up-on-another-machine.md#coming-back-to-the-first-machine).
 
 ## Unpinned tabs
 

@@ -44,9 +44,24 @@ A tab that was taken over stops its Claude Code, says *This session was taken ov
 
 A tab that doesn't sync ignores all of this.
 
+## Coming back to the first machine
+
+{% include unreleased.html %}
+
+A tab that syncs, such as a pinned one, can come back to a session you carried on elsewhere while Claudette was closed here. If the other machine has since closed Claudette, the tab picks up where it left off, from the library, rather than from this machine's older copy. The conversation ends with *Picked up where LAPTOP-02 left off at 12:04.*
+
+Your sync client may still be bringing the other machine's turns when Claudette starts, especially when it starts as you log in. So while the tab is open, it keeps looking:
+
+- **While Claude waits**, it checks the library once a minute. When the other machine's turns arrive, the tab starts Claude Code again from them and shows them in the conversation. What you're typing stays in the composer.
+- **When you send your first message** in the tab, it checks first. If the other machine's turns have arrived, your message isn't sent: the tab shows them and says *Your message wasn't sent, so you can read it again against what's new. It's still in the composer.* Send it again when you're ready.
+
+If the session went on in both places, with turns on this machine the library never got, neither machine's turns are written over. Claudette keeps this machine's in the library as a copy of their own, which History lists under this machine's name beside the other machine's (see [Conflict copies](#conflict-copies)), and the tab becomes read-only, saying *LAPTOP-02 carried this session on too, so copying this tab's turns to the session library would lose the ones made there.* Open whichever you want to go on with from History.
+
+Turning on **Sync to other machines** for a session in that state leaves it off, and says why, rather than making the tab read-only.
+
 ## Conflict copies
 
-Sync clients sometimes make a second copy of a file when two machines change it at once, such as `session (1).jsonl`. Claudette shows these in History as separate entries, with the copy's label after the name, and never merges them. Opening one starts it as its own session in a folder of its own, so it can't overwrite the original. It recognizes the copies Google Drive, OneDrive, Dropbox and Syncthing make.
+Sync clients sometimes make a second copy of a file when two machines change it at once, such as `session (1).jsonl`. Claudette shows these in History as separate entries, with the copy's label after the name, and never merges them. Opening one starts it as its own session in a folder of its own, so it can't overwrite the original. It recognizes the copies Google Drive, OneDrive, Dropbox and Syncthing make, and the ones Claudette makes itself when a session went on in two places ([above](#coming-back-to-the-first-machine)), labeled with this machine's name.
 
 {: .note }
 A transcript remembers file paths from the machine that wrote it. Continuing a session recorded on Windows on a Mac, or the other way round, hasn't been tried on real machines yet, so check what Claude does with the first file it touches.

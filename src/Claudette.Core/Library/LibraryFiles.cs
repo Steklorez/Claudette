@@ -38,6 +38,50 @@ internal static class LibraryFiles
     public static Task<bool> CopyIfNewerAsync(string source, string target, CancellationToken cancellationToken) =>
         CopyAsync(source, target, force: false, cancellationToken, keepNewerTarget: true, append: false, wholeLines: true);
 
+    /// <summary>
+    /// Copies a transcript from the session library over <paramref name="target"/>, Claude Code's working copy, whatever
+    /// their times say, and only whole lines, as <see cref="CopyIfNewerAsync"/> does. For when the library's copy was
+    /// found to hold all the working copy does and more (<see cref="CompareTranscriptsAsync"/>): the two files' times
+    /// come from two machines' clocks, which needn't agree.
+    /// </summary>
+    public static Task<bool> ReplaceTranscriptAsync(string source, string target, CancellationToken cancellationToken) =>
+        CopyAsync(source, target, force: true, cancellationToken, keepNewerTarget: false, append: false, wholeLines: true);
+
+    /// <summary>
+    /// How <paramref name="library"/>, a transcript's copy in the session library, stands to <paramref name="local"/>,
+    /// this machine's (DESIGN.md §9, "One machine at a time"). As for adding to a copy (<see cref="CopyTranscriptAsync"/>),
+    /// the shorter is the start of the longer when its first and last <see cref="AppendCheckLength"/> bytes are the
+    /// longer's there. A library copy that is longer only by a line still being written isn't ahead: there's nothing
+    /// whole to bring over yet.
+    /// </summary>
+    public static async Task<LibraryStanding> CompareTranscriptsAsync(string local, string library, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(library))
+        {
+            return LibraryStanding.Missing;
+        }
+        var mine = OpenSource(local);
+        await using (mine.ConfigureAwait(false))
+        {
+            var theirs = OpenSource(library);
+            await using (theirs.ConfigureAwait(false))
+            {
+                var (shorter, longer) = mine.Length <= theirs.Length ? (mine, theirs) : (theirs, mine);
+                if (!await IsStartOfAsync(shorter, longer, cancellationToken).ConfigureAwait(false))
+                {
+                    return LibraryStanding.Diverged;
+                }
+                if (theirs.Length > mine.Length && await WholeLinesLengthAsync(theirs, cancellationToken).ConfigureAwait(false) <= mine.Length)
+                {
+                    return LibraryStanding.Same;
+                }
+                return mine.Length == theirs.Length ? LibraryStanding.Same
+                    : theirs.Length < mine.Length ? LibraryStanding.Behind
+                    : LibraryStanding.Ahead;
+            }
+        }
+    }
+
     /// <inheritdoc cref="CopyIfChangedAsync"/>
     /// <param name="force">Copies the file even when the target looks unchanged (<b>Sync now</b>, DESIGN.md §9).</param>
     public static Task<bool> CopyAsync(string source, string target, bool force, CancellationToken cancellationToken) =>
@@ -126,9 +170,7 @@ internal static class LibraryFiles
                 await using (output.ConfigureAwait(false))
                 {
                     var length = output.Length;
-                    if (length == 0 || length >= input.Length
-                        || !await SameBytesAsync(input, output, 0, (int)Math.Min(length, AppendCheckLength), cancellationToken).ConfigureAwait(false)
-                        || !await SameBytesAsync(input, output, Math.Max(0, length - AppendCheckLength), (int)Math.Min(length, AppendCheckLength), cancellationToken).ConfigureAwait(false))
+                    if (length == 0 || length >= input.Length || !await IsStartOfAsync(output, input, cancellationToken).ConfigureAwait(false))
                     {
                         return false;
                     }
@@ -146,6 +188,19 @@ internal static class LibraryFiles
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Whether <paramref name="start"/>, no longer than <paramref name="whole"/>, is its start: its first and last
+    /// <see cref="AppendCheckLength"/> bytes are the same as <paramref name="whole"/>'s there. An empty file is anything's start.
+    /// </summary>
+    private static async Task<bool> IsStartOfAsync(FileStream start, FileStream whole, CancellationToken cancellationToken)
+    {
+        var length = start.Length;
+        var count = (int)Math.Min(length, AppendCheckLength);
+        return length == 0
+            || await SameBytesAsync(start, whole, 0, count, cancellationToken).ConfigureAwait(false)
+            && await SameBytesAsync(start, whole, length - count, count, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<bool> SameBytesAsync(FileStream a, FileStream b, long offset, int count, CancellationToken cancellationToken)

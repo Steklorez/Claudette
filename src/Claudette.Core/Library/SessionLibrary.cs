@@ -371,17 +371,102 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
             ?? throw new FileNotFoundException($"The session library has no transcript for session {sessionId}.", Path.Combine(folder, TranscriptName(sessionId)));
         var target = Path.Combine(localSessionsFolder, TranscriptName(sessionId));
         await LibraryFiles.CopyIfNewerAsync(source, target, cancellationToken).ConfigureAwait(false);
+        await CopySubagentsToLocalAsync(sessionId, localSessionsFolder, cancellationToken).ConfigureAwait(false);
+        return target;
+    }
 
-        var subagents = Path.Combine(folder, SubagentsFolderName);
-        if (Directory.Exists(subagents))
+    /// <summary>The session's record, or null when the library has none that can be read just now.</summary>
+    public SessionRecord? GetRecord(string sessionId)
+    {
+        if (!IsValidId(sessionId))
         {
-            var localSubagents = Path.Combine(localSessionsFolder, sessionId, SubagentsFolderName);
-            foreach (var file in Directory.GetFiles(subagents, "*" + TranscriptExtension).Where(IsTranscript))
+            return null;
+        }
+        var folder = GetSessionFolder(sessionId);
+        try
+        {
+            return Directory.Exists(folder) ? ReadRecord(folder) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// How the library's copy of a session's transcript stands to <paramref name="transcript"/>, this machine's (DESIGN.md
+    /// §9, "One machine at a time"): the same, behind it, ahead of it because another machine carried the session on, or
+    /// diverged from it because the session went on in both places.
+    /// </summary>
+    public Task<LibraryStanding> CompareAsync(string sessionId, string transcript, CancellationToken cancellationToken = default) =>
+        GetTranscriptPath(sessionId) is { } library
+            ? LibraryFiles.CompareTranscriptsAsync(transcript, library, cancellationToken)
+            : Task.FromResult(LibraryStanding.Missing);
+
+    /// <summary>
+    /// Brings another machine's later turns here: replaces <paramref name="workingCopy"/>, a working copy that
+    /// <see cref="CompareAsync"/> found the library's copy is ahead of, with the library's transcript, and copies its
+    /// subagents' transcripts beside it (DESIGN.md §9, "One machine at a time"). Unlike <see cref="CopyToLocalAsync"/> it
+    /// doesn't go by the files' times, which come from two machines' clocks.
+    /// </summary>
+    /// <exception cref="FileNotFoundException">The library has no transcript for the session.</exception>
+    public async Task PickUpAsync(string sessionId, string workingCopy, CancellationToken cancellationToken = default)
+    {
+        var source = GetTranscriptPath(sessionId)
+            ?? throw new FileNotFoundException($"The session library has no transcript for session {sessionId}.", Path.Combine(GetSessionFolder(sessionId), TranscriptName(sessionId)));
+        await LibraryFiles.ReplaceTranscriptAsync(source, workingCopy, cancellationToken).ConfigureAwait(false);
+        await CopySubagentsToLocalAsync(sessionId, Path.GetDirectoryName(workingCopy)!, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Keeps <paramref name="transcript"/>, this machine's, in the session's folder as a copy of its own,
+    /// <c>&lt;session-id&gt;-&lt;machine&gt;.jsonl</c>, when the session went on here and on another machine and the library's
+    /// copy has turns this machine's doesn't, so neither machine's turns are lost (DESIGN.md §9, "One machine at a time").
+    /// History lists it as it lists a sync client's conflict copies. A copy from this machine already there with the same
+    /// turns, or fewer, is brought up to date rather than another made beside it. Returns what History calls the copy.
+    /// </summary>
+    public async Task<string> SaveConflictCopyAsync(string sessionId, string transcript, string machine, CancellationToken cancellationToken = default)
+    {
+        var folder = GetSessionFolder(sessionId);
+        Directory.CreateDirectory(folder);
+        var stem = $"{sessionId}-{FileNamePart(machine)}";
+        for (var number = 1; ; number++)
+        {
+            var name = TranscriptName(number == 1 ? stem : string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{stem}-{number}"));
+            var path = Path.Combine(folder, name);
+            var standing = await LibraryFiles.CompareTranscriptsAsync(transcript, path, cancellationToken).ConfigureAwait(false);
+            if (standing is LibraryStanding.Missing or LibraryStanding.Same or LibraryStanding.Behind)
             {
-                await LibraryFiles.CopyIfNewerAsync(file, Path.Combine(localSubagents, Path.GetFileName(file)), cancellationToken).ConfigureAwait(false);
+                if (standing != LibraryStanding.Same)
+                {
+                    await LibraryFiles.CopyAsync(transcript, path, force: true, cancellationToken).ConfigureAwait(false);
+                }
+                return ConflictLabel(sessionId, name)!;
             }
         }
-        return target;
+    }
+
+    /// <summary>A machine's name as part of a file name: what a file name can't hold, and spaces, become dashes.</summary>
+    private static string FileNamePart(string machine)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var part = new string([.. machine.Trim().Select(c => char.IsWhiteSpace(c) || invalid.Contains(c) || c is '/' or '\\' or ':' ? '-' : c)]).Trim('-', '.');
+        return part.Length > 0 ? part : "machine";
+    }
+
+    /// <summary>Copies a library session's subagents' transcripts to <c>&lt;session-id&gt;/subagents/</c> in <paramref name="localFolder"/>, where Claude Code looks beside its transcript.</summary>
+    private async Task CopySubagentsToLocalAsync(string sessionId, string localFolder, CancellationToken cancellationToken)
+    {
+        var subagents = Path.Combine(GetSessionFolder(sessionId), SubagentsFolderName);
+        if (!Directory.Exists(subagents))
+        {
+            return;
+        }
+        var localSubagents = Path.Combine(localFolder, sessionId, SubagentsFolderName);
+        foreach (var file in Directory.GetFiles(subagents, "*" + TranscriptExtension).Where(IsTranscript))
+        {
+            await LibraryFiles.CopyIfNewerAsync(file, Path.Combine(localSubagents, Path.GetFileName(file)), cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>

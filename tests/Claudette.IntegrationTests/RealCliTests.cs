@@ -798,6 +798,35 @@ public sealed class RealCliTests : IAsyncLifetime
         Assert.True(File.Exists(Path.Combine(library, $"{sessionId}.jsonl")), "The continued transcript should be written next to the resumed file (DESIGN.md §9).");
     }
 
+    [Fact]
+    public async Task A_working_copy_resumed_from_only_grows()
+    {
+        // A copy to the library checks that the library's transcript is the start of this machine's before it writes, so
+        // it never writes over another machine's turns (DESIGN.md §9, "One machine at a time"). That holds only while Claude
+        // Code adds to the working copy it resumes, rather than writing it again.
+        string sessionId;
+        await using (var first = await StartAsync())
+        {
+            await first.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+            var (done, _) = await first.ReadUntilAsync<TurnCompleted>();
+            sessionId = done.Result.SessionId!;
+        }
+        var transcript = Directory.EnumerateFiles(Path.Combine(Config, "projects"), $"{sessionId}.jsonl", SearchOption.AllDirectories).Single();
+        var sessions = _root.Combine("sessions");
+        Directory.CreateDirectory(sessions);
+        var workingCopy = Path.Combine(sessions, $"{sessionId}.jsonl");
+        File.Copy(transcript, workingCopy);
+        var before = await File.ReadAllBytesAsync(workingCopy, TestContext.Current.CancellationToken);
+
+        await using var resumed = await StartAsync(resume: workingCopy);
+        await resumed.SendUserMessageAsync("hello again", TestContext.Current.CancellationToken);
+        await resumed.ReadUntilAsync<TurnCompleted>();
+
+        var after = await File.ReadAllBytesAsync(workingCopy, TestContext.Current.CancellationToken);
+        Assert.True(after.Length > before.Length, "The turn should be added to the working copy.");
+        Assert.True(after.AsSpan(0, before.Length).SequenceEqual(before), "The working copy's earlier lines should be left as they were.");
+    }
+
     /// <summary>
     /// An RGB PNG with a gradient, which compresses well, so a big one stays small. With <paramref name="noisy"/> each
     /// pixel is random instead, so it barely compresses, like a large photo-like screenshot.

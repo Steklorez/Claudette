@@ -971,12 +971,14 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [RelayCommand(CanExecute = nameof(CanSend))]
     private async Task SendAsync()
     {
-        var typed = ComposerText.Trim();
-        var suffixes = Chips.Select(c => c.Suffix.Text).ToArray();
-        if (typed.Length == 0 && suffixes.Length == 0 && Attachments.Count == 0 && PastedTexts.Count == 0)
+        if (ComposerText.Trim().Length == 0 && Chips.Count == 0 && Attachments.Count == 0 && PastedTexts.Count == 0
+            // Another machine's turns may have reached the library since Claude Code started here (DESIGN.md §9).
+            || await CheckLibraryBeforeSendingAsync())
         {
             return;
         }
+        var typed = ComposerText.Trim();
+        var suffixes = Chips.Select(c => c.Suffix.Text).ToArray();
         var suffixText = suffixes.Length > 0 ? string.Join("\n", suffixes) : null;
 
         ComposerText = "";
@@ -1067,6 +1069,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 return;
             }
             _awaitingReply.Add(pending);
+            _sentSinceStart = true;
             await _session.SendUserMessageAsync(message, pending.Images, suffix, stamp);
         }
         catch (Exception ex)
@@ -1424,11 +1427,29 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ErrorMessage = null;
         Status = TabStatus.Starting;
         var resume = State.SessionId;
+        // Started again (after an exit, say): another machine may have carried the session on since its conversation was
+        // read here, and then it's read again, from the library (DESIGN.md §9, "One machine at a time").
+        if (_restoredTranscript && await CompareWithLibraryAsync() is { Standing: LibraryStanding.Ahead or LibraryStanding.Diverged } since)
+        {
+            if (since.Standing == LibraryStanding.Diverged)
+            {
+                await KeepApartAsync(since.Machine);
+                return;
+            }
+            _conversation.Clear();
+            ChangedFiles.Reset();
+            _restoredTranscript = false;
+        }
         if (!_restoredTranscript)
         {
             _restoredTranscript = true;
             resume = await RestoreTranscriptAsync();
             ChangedFiles.ChangesRead();
+            if (IsReadOnly)
+            {
+                // The session went on here and on another machine: this machine's turns are kept apart.
+                return;
+            }
             if (IsSessionMissing)
             {
                 ErrorMessage = "Its earlier conversation is gone";
@@ -1541,6 +1562,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 return;
             }
             _session = session;
+            _sentSinceStart = false;
+            LibraryCheckTicker.Run(State.SyncToLibrary);
             _claudeName = options.Name;
             _claudeVariables = options.EnvironmentOverrides;
             _services.LiveSessions.Refresh();
@@ -1760,6 +1783,23 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             return null;
         }
         var path = _services.Library.FindTranscript(sessionId, State.TranscriptPath);
+        // Another machine may have carried the session on since this one last had it (DESIGN.md §9, "Restore on launch").
+        var comparison = path is null ? null : await CompareWithLibraryAsync();
+        string? pickUpFailed = null;
+        if (comparison is { Standing: LibraryStanding.Ahead })
+        {
+            try
+            {
+                path = State.TranscriptPath = await _services.Library.PickUpAsync(sessionId, State.TranscriptPath);
+                _services.SaveState();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // It goes on from this machine's; the copy after its next turn won't write over the other machine's.
+                pickUpFailed = ex.Message;
+                comparison = null;
+            }
+        }
         if (path is null && _services.Library.Library.GetTranscriptPath(sessionId) is not null)
         {
             // Claude Code cleans up old transcripts; the library copy isn't affected (DESIGN.md §9, "Old sessions").
@@ -1835,8 +1875,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _titleRequested = true;
                 if (_forkNote is null)
                 {
-                    _conversation.AddNote("Resumed.");
+                    _conversation.AddNote(comparison is { Standing: LibraryStanding.Ahead } ? PickedUpNote(comparison) : "Resumed.");
                 }
+            }
+            if (pickUpFailed is not null)
+            {
+                _conversation.AddNote($"Couldn't bring this session's later turns from the session library: {pickUpFailed}", NoteKind.Warning);
             }
         }
         catch (Exception ex)
@@ -1850,6 +1894,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             TodoList.CallsEnded();
             // Rows under the tab come back only for the last turn's subagents (DESIGN.md §5, "Subagents").
             ForgetRestoredSubagents();
+        }
+        if (comparison is { Standing: LibraryStanding.Diverged })
+        {
+            // With this machine's conversation shown, which is what's kept apart.
+            await KeepApartAsync(comparison.Machine);
         }
         return sessionId;
     }
@@ -2366,6 +2415,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         TaskTicker.Stop();
         CheckInTicker.Stop();
         PromptCacheTicker.Stop();
+        LibraryCheckTicker.Stop();
         // The session's last events aren't applied once it stops, so nothing else would end the turn's line, and its
         // timer would keep this tab alive.
         Working.Dispose();

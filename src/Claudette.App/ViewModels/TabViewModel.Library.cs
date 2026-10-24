@@ -65,7 +65,7 @@ public sealed partial class TabViewModel
         SyncChanged();
         if (!copyPending && !IsWorking)
         {
-            CopyToLibrary();
+            CopyToLibrary(turningOn: true);
         }
     }
 
@@ -74,6 +74,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(SyncToLibrary));
         OnSyncNowChanged();
         OnSyncSizeChanged();
+        LibraryCheckTicker.Run(State.SyncToLibrary && _session is not null);
         _services.SaveState();
     }
 
@@ -155,6 +156,12 @@ public sealed partial class TabViewModel
             case LibraryCopyResult.NotHeld when !IsReadOnly:
                 _conversation.AddNote("Didn't copy this session to the session library: its lease there couldn't be read, or another machine has it open. Try again in a moment.", NoteKind.Warning);
                 break;
+            case LibraryCopyResult.Ahead:
+                await PickUpFromLibraryAsync();
+                break;
+            case LibraryCopyResult.Diverged diverged:
+                await KeepApartAsync(diverged.Comparison.Machine);
+                break;
         }
     }
 
@@ -169,11 +176,12 @@ public sealed partial class TabViewModel
     /// Copies the session to the library in the background, and takes its lease with the copy, if the tab syncs. A tab
     /// that doesn't sync never writes to the library.
     /// </summary>
-    private void CopyToLibrary()
+    /// <param name="turningOn">The copy that turning sync on makes: if it can't be made, sync goes off again.</param>
+    private void CopyToLibrary(bool turningOn = false)
     {
         if (State.SessionId is not null && State.SyncToLibrary && !IsReadOnly)
         {
-            LibraryCopy = CopyToLibraryAsync();
+            LibraryCopy = CopyToLibraryAsync(turningOn);
         }
     }
 
@@ -185,30 +193,48 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// A copy that fails says so once, until one works again: the library is missing turns another machine would need,
-    /// and nothing else would show it (DESIGN.md §9, "Writing").
+    /// and nothing else would show it (DESIGN.md §9, "Writing"). One that finds another machine's turns there instead
+    /// brings them here, or keeps this machine's apart from them (DESIGN.md §9, "One machine at a time").
     /// </summary>
-    private async Task CopyToLibraryAsync()
+    private async Task CopyToLibraryAsync(bool turningOn)
     {
         var record = LibraryRecord();
         var result = await _services.Library.CopyToLibraryAsync(record, State.TranscriptPath, () => State.SyncToLibrary);
-        _services.Dispatcher.Post(() =>
+        var handled = new TaskCompletionSource<Task>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _services.Dispatcher.Post(() => handled.SetResult(OnCopiedToLibrary(record.SessionId, result, turningOn)));
+        // What the copy led to, so the copy ends once another machine's turns are here or this machine's are kept apart.
+        await await handled.Task;
+    }
+
+    /// <summary>Tells how a copy after a turn, or on turning sync on, went. Returns what it led to.</summary>
+    private Task OnCopiedToLibrary(string sessionId, LibraryCopyResult result, bool turningOn)
+    {
+        switch (result)
         {
-            if (result is LibraryCopyResult.Copied copied)
-            {
-                SetSyncedSize(record.SessionId, copied.Size);
-            }
-            switch (result)
-            {
-                case LibraryCopyResult.Failed failed when !_libraryCopyFailed:
-                    _libraryCopyFailed = true;
-                    _conversation.AddNote($"Couldn't copy this session to the session library: {failed.Reason} It's tried again after the next turn, or use Sync now.", NoteKind.Warning);
-                    break;
-                case LibraryCopyResult.Copied when _libraryCopyFailed:
+            case LibraryCopyResult.Copied copied:
+                SetSyncedSize(sessionId, copied.Size);
+                if (_libraryCopyFailed)
+                {
                     _libraryCopyFailed = false;
                     _conversation.AddNote("Copied this session to the session library again.");
-                    break;
-            }
-        });
+                }
+                break;
+            case LibraryCopyResult.Failed failed when !_libraryCopyFailed:
+                _libraryCopyFailed = true;
+                _conversation.AddNote($"Couldn't copy this session to the session library: {failed.Reason} It's tried again after the next turn, or use Sync now.", NoteKind.Warning);
+                break;
+            case LibraryCopyResult.Diverged diverged when turningOn:
+                // Nothing has gone to the library from here since: sync stays off, rather than the tab becoming read-only.
+                State.SyncToLibrary = false;
+                SyncChanged();
+                _conversation.AddNote($"{Formats.Capitalize(diverged.Comparison.Machine ?? "another machine")} carried this session on in the session library since this tab last synced it, so syncing it from here would lose those turns. Sync stays off; open the session from History to go on with them.", NoteKind.Warning);
+                break;
+            case LibraryCopyResult.Diverged diverged:
+                return KeepApartAsync(diverged.Comparison.Machine);
+            case LibraryCopyResult.Ahead when !IsWorking:
+                return PickUpFromLibraryAsync();
+        }
+        return Task.CompletedTask;
     }
 
     // ---- One machine at a time (DESIGN.md §9) ----------------------------------------------------------------------
@@ -226,14 +252,146 @@ public sealed partial class TabViewModel
 
     public string ReadOnlyText => $"This session continued on {TakenOverBy}. The tab is read-only here; open it again from History to continue on this machine.";
 
-    public async Task OnTakenOverAsync(string machine)
+    public Task OnTakenOverAsync(string machine) => BecomeReadOnlyAsync(machine, $"This session was taken over by {machine}.");
+
+    /// <summary>The session carries on on <paramref name="machine"/>: the tab stops its process and only shows the conversation.</summary>
+    private async Task BecomeReadOnlyAsync(string machine, string note)
     {
         TakenOverBy = machine;
         OnPropertyChanged(nameof(ReadOnlyText));
-        _conversation.AddNote($"This session was taken over by {machine}.", NoteKind.Warning);
+        LibraryCheckTicker.Stop();
+        _conversation.AddNote(note, NoteKind.Warning);
         await StopSessionAsync();
         Status = TabStatus.Exited;
     }
+
+    // ---- Another machine's turns (DESIGN.md §9, "One machine at a time") --------------------------------------------
+
+    /// <summary>How often a running tab that syncs looks for turns another machine added to the library since.</summary>
+    internal static readonly TimeSpan LibraryCheckInterval = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    /// Looks for another machine's turns while the tab's Claude Code runs: a sync client can bring them well after the
+    /// tab started, from a machine that has since closed Claudette and released its lease.
+    /// </summary>
+    private UiTicker LibraryCheckTicker => field ??= new(_services.Time, _services.Dispatcher, LibraryCheckInterval, () => _ = CheckLibraryAsync());
+
+    /// <summary>Something went to this tab's Claude Code since it started: the library is looked at before the first message only.</summary>
+    private bool _sentSinceStart;
+
+    private bool _checkingLibrary;
+
+    /// <summary>
+    /// How the library's copy of the session stands to this machine's, for a tab that syncs; null for one that doesn't,
+    /// a copy that hasn't its own id yet, or when there's nothing to compare.
+    /// </summary>
+    private async Task<LibraryComparison?> CompareWithLibraryAsync() =>
+        State.SyncToLibrary && !IsReadOnly && State.SessionId is { } sessionId && !State.ForkOnNextStart && !_forkAwaitingId
+            ? await _services.Library.CompareAsync(sessionId, State.TranscriptPath)
+            : null;
+
+    /// <summary>
+    /// Once a minute while Claude Code waits: another machine's turns that reached the library since are brought here,
+    /// and a session that went on in both places is kept apart.
+    /// </summary>
+    private async Task CheckLibraryAsync()
+    {
+        if (_checkingLibrary || _session is null || _starting is not null || IsWorking || IsReadOnly)
+        {
+            return;
+        }
+        _checkingLibrary = true;
+        try
+        {
+            await ActOnLibraryAsync(await CompareWithLibraryAsync());
+        }
+        finally
+        {
+            _checkingLibrary = false;
+        }
+    }
+
+    /// <summary>
+    /// Before the first message since Claude Code started, as for <see cref="CheckLibraryAsync"/>. When it brings another
+    /// machine's turns here, the message isn't sent but stays in the composer, to be read again against them. Returns
+    /// whether the message was held back.
+    /// </summary>
+    private async Task<bool> CheckLibraryBeforeSendingAsync()
+    {
+        if (_sentSinceStart || _session is null || IsWorking || !State.SyncToLibrary)
+        {
+            return false;
+        }
+        if (!await ActOnLibraryAsync(await CompareWithLibraryAsync()))
+        {
+            return false;
+        }
+        if (!IsReadOnly)
+        {
+            _conversation.AddNote("Your message wasn't sent, so you can read it again against what's new. It's still in the composer.");
+        }
+        return true;
+    }
+
+    /// <summary>Brings another machine's turns here, or keeps this machine's apart from them. Returns whether it did either.</summary>
+    private async Task<bool> ActOnLibraryAsync(LibraryComparison? comparison)
+    {
+        switch (comparison?.Standing)
+        {
+            case LibraryStanding.Ahead when !IsWorking && !IsReadOnly:
+                await PickUpFromLibraryAsync();
+                return true;
+            case LibraryStanding.Diverged when !IsReadOnly:
+                await KeepApartAsync(comparison.Machine);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Another machine carried the session on, and this machine has no turns the library lacks: Claude Code starts again
+    /// from the library's copy, and the conversation is read again from it. What's typed in the composer stays.
+    /// </summary>
+    private async Task PickUpFromLibraryAsync()
+    {
+        await StopSessionAsync();
+        _conversation.Clear();
+        ChangedFiles.Reset();
+        Status = TabStatus.NotStarted;
+        // Read again as it starts, which brings the library's copy here (RestoreTranscriptAsync).
+        _restoredTranscript = false;
+        await EnsureStartedAsync();
+    }
+
+    /// <summary>
+    /// The session went on here and on another machine, each with turns the other doesn't have. To lose neither, this
+    /// machine's are kept in the library as a copy of their own, which History lists, and the tab becomes read-only as
+    /// after a take-over: the session opens again from History, either machine's.
+    /// </summary>
+    private async Task KeepApartAsync(string? machine)
+    {
+        var where = machine ?? "another machine";
+        var why = $"{Formats.Capitalize(where)} carried this session on too, so copying this tab's turns to the session library would lose the ones made there.";
+        string note;
+        try
+        {
+            var copy = await _services.Library.SaveConflictCopyAsync(State.SessionId!, State.TranscriptPath);
+            note = $"{why} This tab's are kept there as a copy of their own, \"{copy}\" in History.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            note = $"{why} Keeping this tab's there as a copy of their own didn't work: {ex.Message} They're still on this machine.";
+        }
+        // While it's still this tab's to release: the other machine needn't wait for the lease to go stale.
+        ReleaseLease();
+        await BecomeReadOnlyAsync(where, note);
+    }
+
+    /// <summary>"Picked up where LAPTOP-02 left off at 12:04.": the note a tab that brought another machine's turns here reads them with.</summary>
+    private string PickedUpNote(LibraryComparison comparison) => comparison.Machine is { } machine
+        ? comparison.LastUsed is { } at ? $"Picked up where {machine} left off {Formats.When(at, _services.Time)}." : $"Picked up where {machine} left off."
+        : "Picked up this session's later turns from the session library.";
 
     /// <summary>What the library keeps about this session, as of now. Built on the UI thread, which owns the state.</summary>
     private SessionRecord LibraryRecord() => new()

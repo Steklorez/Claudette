@@ -229,7 +229,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | History | `Ctrl/Cmd+Shift+H`, the project chips, a row's details (with a library session's size), searching and **Search Claude's replies too**, opening a session, worktree sessions. | [History](DESIGN.md#history) |
 | The session library | What it is, its folder and **Move library…**, how much it holds, a cloud-synced folder and its warning, **Name for this machine**, **Delete sessions not used for a while** and its days, keeping sessions past Claude Code's 30 days. | [Session library](DESIGN.md#session-library-sync-across-machines) |
 | Syncing a tab | **Sync to other machines**, **Sync new tabs to the session library**, **Sync now** and its notes, how much a session takes in the library. | [Session library](DESIGN.md#session-library-sync-across-machines) |
-| Picking up on another machine | Finding the folder, the warning when the code may differ, one machine at a time (**Open a copy**, **Take over**, a read-only tab), conflict copies. | [Session library](DESIGN.md#session-library-sync-across-machines) |
+| Picking up on another machine | Finding the folder, the warning when the code may differ, one machine at a time (**Open a copy**, **Take over**, a read-only tab), coming back to a session another machine carried on (picking it up, the first message held back, a session that went on in both places), conflict copies. | [Session library](DESIGN.md#session-library-sync-across-machines) |
 | Settings sync | **Sync Claudette's settings through the library**, the first choice it asks, what syncs and what stays on this machine. | [Settings sync](DESIGN.md#settings-sync-optional) |
 
 ### Project tools (`project-tools/`)

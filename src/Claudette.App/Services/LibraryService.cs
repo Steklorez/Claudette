@@ -34,7 +34,28 @@ public abstract record LibraryCopyResult
     /// taken over from this machine, <see cref="LibraryService.LeaseLost"/> says so too.
     /// </summary>
     public sealed record NotHeld : LibraryCopyResult;
+
+    /// <summary>
+    /// The library's transcript has turns this machine's doesn't, and none of this machine's are missing from it: another
+    /// machine carried the session on. Nothing was written; the tab picks those turns up (DESIGN.md §9, "One machine at a
+    /// time").
+    /// </summary>
+    public sealed record Ahead(LibraryComparison Comparison) : LibraryCopyResult;
+
+    /// <summary>
+    /// The session went on here and on another machine, each with turns the other doesn't have. Nothing was written, so
+    /// the library keeps the other machine's.
+    /// </summary>
+    public sealed record Diverged(LibraryComparison Comparison) : LibraryCopyResult;
 }
+
+/// <summary>How the library's copy of a session stands to this machine's transcript (DESIGN.md §9, "One machine at a time").</summary>
+/// <param name="Machine">
+/// The machine the library's record names, when it isn't this one; null when it is, since a sync client can bring the
+/// transcript before the record.
+/// </param>
+/// <param name="LastUsed">When <paramref name="Machine"/> last used the session.</param>
+public sealed record LibraryComparison(LibraryStanding Standing, string? Machine, DateTimeOffset? LastUsed);
 
 /// <summary>
 /// The session library (DESIGN.md §9): copies the transcript and record of each tab that syncs into the library folder
@@ -130,6 +151,61 @@ public sealed class LibraryService : IDisposable
     public Task<string> CopyToLocalAsync(string sessionId) => Library.CopyToLocalAsync(sessionId, _services.Paths.LocalSessionsDirectory);
 
     /// <summary>
+    /// How the library's copy of a session stands to this machine's transcript, the local working copy
+    /// <paramref name="localCopy"/> or Claude Code's own (DESIGN.md §9, "One machine at a time"). Null when there's nothing
+    /// to compare, this machine having no transcript, or the library can't be read just now. Off the UI thread: the
+    /// library may be on a slow drive.
+    /// </summary>
+    public async Task<LibraryComparison?> CompareAsync(string sessionId, string? localCopy)
+    {
+        try
+        {
+            return await Task.Run(async () => FindTranscript(sessionId, localCopy) is { } transcript
+                ? await CompareTranscriptAsync(sessionId, transcript).ConfigureAwait(false)
+                : null).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private async Task<LibraryComparison> CompareTranscriptAsync(string sessionId, string transcript)
+    {
+        var standing = await Library.CompareAsync(sessionId, transcript).ConfigureAwait(false);
+        if (standing is not (LibraryStanding.Ahead or LibraryStanding.Diverged))
+        {
+            return new LibraryComparison(standing, null, null);
+        }
+        // Who carried it on, unless the record hasn't come yet and still names this machine.
+        return Library.GetRecord(sessionId) is { Machine: { Length: > 0 } machine } record && machine != MachineName
+            ? new LibraryComparison(standing, machine, record.LastUsed)
+            : new LibraryComparison(standing, null, null);
+    }
+
+    /// <summary>
+    /// Brings another machine's later turns here (DESIGN.md §9, "One machine at a time"): the library's transcript replaces
+    /// the tab's working copy, <paramref name="workingCopy"/> or one made in the local working folder, which it returns.
+    /// For a session <see cref="CompareAsync(string, string?)"/> found the library ahead of this machine in.
+    /// </summary>
+    public async Task<string> PickUpAsync(string sessionId, string? workingCopy)
+    {
+        var target = workingCopy ?? Path.Combine(_services.Paths.LocalSessionsDirectory, $"{sessionId}.jsonl");
+        await Task.Run(() => Library.PickUpAsync(sessionId, target)).ConfigureAwait(false);
+        return target;
+    }
+
+    /// <summary>
+    /// Keeps this machine's transcript of a session that went on here and on another machine in the library, as a copy of
+    /// its own beside the library's (DESIGN.md §9, "One machine at a time"). Returns what History calls the copy.
+    /// </summary>
+    /// <exception cref="FileNotFoundException">This machine no longer has the session's transcript.</exception>
+    public Task<string> SaveConflictCopyAsync(string sessionId, string? localCopy) => Task.Run(() =>
+        FindTranscript(sessionId, localCopy) is { } transcript
+            ? Library.SaveConflictCopyAsync(sessionId, transcript, MachineName)
+            : throw new FileNotFoundException("This machine no longer has the session's transcript."));
+
+    /// <summary>
     /// Copies a tab's session into the library in the background, and takes its lease (DESIGN.md §9, "Writing"): after
     /// each turn of a tab that syncs, when a tab starts syncing, and for <b>Sync now</b>. Never throws.
     /// </summary>
@@ -172,6 +248,16 @@ public sealed class LibraryService : IDisposable
             if (!Leases.MayWrite(record.SessionId, sessionFolder))
             {
                 return new LibraryCopyResult.NotHeld();
+            }
+            // Nor over turns another machine added: a sync client can bring them after this machine started the session,
+            // and the lease that machine released as Claudette closed there says nothing of them.
+            var comparison = await CompareTranscriptAsync(record.SessionId, transcript).ConfigureAwait(false);
+            switch (comparison.Standing)
+            {
+                case LibraryStanding.Ahead:
+                    return new LibraryCopyResult.Ahead(comparison);
+                case LibraryStanding.Diverged:
+                    return new LibraryCopyResult.Diverged(comparison);
             }
             // Every machine's turns in the session, while machines share their usage (DESIGN.md §6, "Sharing across machines").
             var usage = _services.Usage is { } tracker

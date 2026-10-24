@@ -557,6 +557,187 @@ public class LibraryAndHistoryTests
         Assert.Empty(h.Services.Library.Leases.HeldSessions);
     }
 
+    // ---- Another machine's turns (DESIGN.md §9, "One machine at a time") ---------------------------------------------
+
+    [Fact]
+    public async Task A_restored_tab_picks_up_where_another_machine_carried_its_session_on()
+    {
+        await using var h = new TabTestHarness();
+        var first = UserLine("pin-3", "Add the export button", h.WorkFolder);
+        h.WriteTranscript("pin-3", first);
+        // The laptop carried the session on, then quit Claudette, which released its lease.
+        var library = await CarriedOnElsewhereAsync(h, "pin-3", first, UserLine("pin-3", "Now the import", h.WorkFolder, "2026-09-28T12:00:00Z"));
+        var tab = RestorePinned(h, "pin-3");
+
+        await tab.EnsureStartedAsync();
+
+        // It resumes a working copy of the library's, with the laptop's turn in the conversation.
+        var resume = Assert.Single(h.Factory.Launches).Resume!;
+        Assert.StartsWith(h.Services.Paths.LocalSessionsDirectory, resume, StringComparison.Ordinal);
+        Assert.Equal(await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken), await File.ReadAllTextAsync(resume, TestContext.Current.CancellationToken));
+        Assert.Contains(tab.Items, i => i is Conversation.UserMessageItem { Text: "Now the import" });
+        Assert.Contains(Notes(tab), n => n.Text.StartsWith("Picked up where LAPTOP-02 left off", StringComparison.Ordinal));
+        Assert.IsType<LeaseStatus.Mine>(h.Services.Library.CheckLease("pin-3"));
+
+        // Its next turn goes into the library after the laptop's.
+        await File.AppendAllLinesAsync(resume, [ReplyLine("pin-3", "Done")], TestContext.Current.CancellationToken);
+        h.Transport.EmitTurn(sessionId: "pin-3");
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120, "the turn to finish");
+        await SettleAsync(h);
+        var lines = await File.ReadAllLinesAsync(library, TestContext.Current.CancellationToken);
+        Assert.Equal(3, lines.Length);
+        Assert.Contains("Now the import", lines[1], StringComparison.Ordinal);
+        Assert.Null(tab.TakenOverBy);
+    }
+
+    [Fact]
+    public async Task A_restored_tab_whose_session_went_on_in_both_places_keeps_this_machines_turns_apart()
+    {
+        await using var h = new TabTestHarness();
+        var first = UserLine("pin-4", "Add the export button", h.WorkFolder);
+        var local = h.WriteTranscript("pin-4", first, UserLine("pin-4", "Here, on the desktop", h.WorkFolder, "2026-09-28T11:00:00Z"));
+        var library = await CarriedOnElsewhereAsync(h, "pin-4", first, UserLine("pin-4", "There, on the laptop", h.WorkFolder, "2026-09-28T12:00:00Z"));
+        var laptops = await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken);
+        var tab = RestorePinned(h, "pin-4");
+
+        await tab.EnsureStartedAsync();
+
+        // Nothing starts, and nothing is lost: the library keeps the laptop's, beside a copy of this machine's.
+        Assert.Empty(h.Factory.Launches);
+        Assert.Equal("LAPTOP-02", tab.TakenOverBy);
+        Assert.Equal(laptops, await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken));
+        var copy = Assert.Single(h.Services.Library.Library.List(), e => e.IsConflictCopy);
+        Assert.Equal(await File.ReadAllTextAsync(local, TestContext.Current.CancellationToken), await File.ReadAllTextAsync(copy.TranscriptPath, TestContext.Current.CancellationToken));
+        Assert.Contains(Notes(tab), n => n.Text.Contains("LAPTOP-02 carried this session on too", StringComparison.Ordinal) && n.Text.Contains($"\"{copy.ConflictLabel}\" in History", StringComparison.Ordinal));
+        // The conversation shown is this machine's, and the lease is left for the laptop.
+        Assert.Contains(tab.Items, i => i is Conversation.UserMessageItem { Text: "Here, on the desktop" });
+        Assert.IsType<LeaseStatus.Free>(h.Services.Library.CheckLease("pin-4"));
+    }
+
+    [Fact]
+    public async Task Turns_that_reach_the_library_after_the_tab_started_are_picked_up_while_it_waits()
+    {
+        await using var h = new TabTestHarness();
+        var first = UserLine("pin-5", "Add the export button", h.WorkFolder);
+        h.WriteTranscript("pin-5", first);
+        await CarriedOnElsewhereAsync(h, "pin-5", first);
+        var tab = RestorePinned(h, "pin-5");
+        await tab.EnsureStartedAsync();
+        Assert.Equal("pin-5", Assert.Single(h.Factory.Launches).Resume);
+
+        // The sync client brings the laptop's turn only now.
+        await CarriedOnElsewhereAsync(h, "pin-5", first, UserLine("pin-5", "Now the import", h.WorkFolder, "2026-09-28T12:00:00Z"));
+        h.Time.Advance(TabViewModel.LibraryCheckInterval);
+
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.Status == TabStatus.Idle, "the tab to start again from the library's copy");
+        Assert.StartsWith(h.Services.Paths.LocalSessionsDirectory, h.Factory.Launches[1].Resume!, StringComparison.Ordinal);
+        Assert.Contains(tab.Items, i => i is Conversation.UserMessageItem { Text: "Now the import" });
+        Assert.Single(tab.Items, i => i is Conversation.UserMessageItem { Text: "Add the export button" });
+        Assert.Contains(Notes(tab), n => n.Text.StartsWith("Picked up where LAPTOP-02 left off", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task The_first_message_after_another_machine_carried_the_session_on_stays_in_the_composer()
+    {
+        await using var h = new TabTestHarness();
+        var first = UserLine("pin-6", "Add the export button", h.WorkFolder);
+        h.WriteTranscript("pin-6", first);
+        await CarriedOnElsewhereAsync(h, "pin-6", first);
+        var tab = RestorePinned(h, "pin-6");
+        await tab.EnsureStartedAsync();
+        await CarriedOnElsewhereAsync(h, "pin-6", first, UserLine("pin-6", "Now the import", h.WorkFolder, "2026-09-28T12:00:00Z"));
+
+        tab.ComposerText = "Ship it";
+        await tab.SendCommand.ExecuteAsync(null);
+
+        // Not sent: the laptop's turn is read first, and the message waits to be sent again.
+        Assert.Equal(2, h.Factory.Launches.Count);
+        Assert.Contains(tab.Items, i => i is Conversation.UserMessageItem { Text: "Now the import" });
+        Assert.Equal("Ship it", tab.ComposerText);
+        Assert.DoesNotContain("Ship it", h.Transport.SentUserTexts);
+        Assert.Contains(Notes(tab), n => n.Text.StartsWith("Your message wasn't sent", StringComparison.Ordinal));
+
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentUserTexts.Contains("Ship it"), "the message");
+    }
+
+    [Fact]
+    public async Task A_copy_after_a_turn_never_writes_over_turns_another_machine_added()
+    {
+        await using var h = new TabTestHarness(s => s.Sessions.SyncNewTabs = true);
+        var tab = await h.OpenTabAsync();
+        var first = UserLine("s1", "Add the export button", h.WorkFolder);
+        var local = h.WriteTranscript("s1", first);
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120, "the turn to finish");
+        await SettleAsync(h);
+        // The laptop carried it on from there, but its lease never reached this machine before the sync client brought
+        // its turn: a turn here meanwhile goes another way.
+        var library = await CarriedOnElsewhereAsync(h, "s1", first, UserLine("s1", "There, on the laptop", h.WorkFolder, "2026-09-28T12:00:00Z"));
+        var laptops = await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken);
+        await File.AppendAllLinesAsync(local, [UserLine("s1", "Here, on the desktop", h.WorkFolder, "2026-09-28T12:01:00Z")], TestContext.Current.CancellationToken);
+
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 240, "the turn to finish");
+        await SettleAsync(h);
+
+        Assert.Equal(laptops, await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken));
+        var copy = Assert.Single(h.Services.Library.Library.List(), e => e.IsConflictCopy);
+        Assert.Equal(await File.ReadAllTextAsync(local, TestContext.Current.CancellationToken), await File.ReadAllTextAsync(copy.TranscriptPath, TestContext.Current.CancellationToken));
+        Assert.Equal("LAPTOP-02", tab.TakenOverBy);
+        Assert.IsNotType<LeaseStatus.Mine>(h.Services.Library.CheckLease("s1"));
+    }
+
+    [Fact]
+    public async Task Turning_sync_on_for_a_session_that_went_on_elsewhere_too_leaves_it_off()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var first = UserLine("s1", "Add the export button", h.WorkFolder);
+        h.WriteTranscript("s1", first, UserLine("s1", "Here, on the desktop", h.WorkFolder, "2026-09-28T11:00:00Z"));
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120, "the turn to finish");
+        var library = await CarriedOnElsewhereAsync(h, "s1", first, UserLine("s1", "There, on the laptop", h.WorkFolder, "2026-09-28T12:00:00Z"));
+        var laptops = await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken);
+
+        tab.SetSyncToLibrary(true);
+        await SettleAsync(h);
+
+        Assert.False(tab.SyncToLibrary);
+        Assert.Null(tab.TakenOverBy);
+        Assert.Equal(laptops, await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken));
+        Assert.DoesNotContain(h.Services.Library.Library.List(), e => e.IsConflictCopy);
+        Assert.Contains(Notes(tab), n => n.Text.Contains("Sync stays off", StringComparison.Ordinal));
+    }
+
+    /// <summary>A pinned tab that syncs, restored as Claudette starts.</summary>
+    private static TabViewModel RestorePinned(TabTestHarness h, string sessionId)
+    {
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = sessionId, SyncToLibrary = true }];
+        h.Shell.Restore(null);
+        return h.Shell.AllTabs.Single();
+    }
+
+    /// <summary>The session's library copy as LAPTOP-02 left it, with no lease: that machine closed Claudette since. Returns the library's transcript.</summary>
+    private static async Task<string> CarriedOnElsewhereAsync(TabTestHarness h, string sessionId, params string[] lines)
+    {
+        var source = Path.Combine(h.Root, $"{sessionId}-laptop.jsonl");
+        await File.WriteAllLinesAsync(source, lines);
+        var record = new SessionRecord
+        {
+            SessionId = sessionId,
+            Name = "Export button",
+            Machine = "LAPTOP-02",
+            LastUsed = DateTimeOffset.Parse("2026-09-28T12:00:00Z", CultureInfo.InvariantCulture),
+            Folder = h.WorkFolder,
+            Tokens = new TokenTotals(),
+        };
+        // As the laptop wrote it: the whole file, whatever was there.
+        await h.Services.Library.Library.SaveAsync(record, source, subagentsDirectory: null, force: true);
+        File.Delete(Path.Combine(h.Services.Library.Library.GetSessionFolder(sessionId), LeaseManager.FileName));
+        return h.Services.Library.Library.GetTranscriptPath(sessionId)!;
+    }
+
     [Fact]
     public async Task A_library_session_opens_with_its_tab_overrides()
     {
@@ -858,7 +1039,10 @@ public class LibraryAndHistoryTests
     {
         await using var h = new TabTestHarness(s => s.Sessions.SyncNewTabs = true);
         var tab = await h.OpenTabAsync();
-        h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
+        var transcript = h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
+        var agent = Path.Combine(Path.GetDirectoryName(transcript)!, "s1", SessionLibrary.SubagentsFolderName, "agent-a1.jsonl");
+        Directory.CreateDirectory(Path.GetDirectoryName(agent)!);
+        await File.WriteAllLinesAsync(agent, [ReplyLine("s1", "Found it")], TestContext.Current.CancellationToken);
         h.Transport.EmitTurn();
         // The copy starts with the result, and the tab is Idle again, which Sync now needs, only with the event after it.
         await TabTestHarness.Eventually(() =>
@@ -866,10 +1050,10 @@ public class LibraryAndHistoryTests
             h.Time.Advance(TimeSpan.FromSeconds(1));
             return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine && !tab.IsWorking;
         }, "the library copy");
-        // Renamed since the turn, and the library's transcript changed without its size or time changing, so an
-        // ordinary copy would skip it.
+        // Renamed since the turn, and the library's copy of the subagent's transcript changed without its size or time
+        // changing, so an ordinary copy would skip it.
         tab.State.UserName = "Login fix";
-        var copy = h.Services.Library.Library.GetTranscriptPath("s1")!;
+        var copy = Path.Combine(h.Services.Library.Library.GetSessionFolder("s1"), SessionLibrary.SubagentsFolderName, "agent-a1.jsonl");
         var source = await File.ReadAllTextAsync(copy, TestContext.Current.CancellationToken);
         var copyTime = File.GetLastWriteTimeUtc(copy);
         await File.WriteAllTextAsync(copy, new string('x', source.Length), TestContext.Current.CancellationToken);

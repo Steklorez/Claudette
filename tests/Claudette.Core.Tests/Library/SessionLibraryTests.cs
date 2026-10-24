@@ -403,6 +403,94 @@ public sealed class SessionLibraryTests : IDisposable
     }
 
     [Fact]
+    public async Task Compare_says_how_the_library_copy_stands_to_this_machines_transcript()
+    {
+        var (transcript, subagents) = LocalSession(content: "{\"n\":1}\n");
+        Assert.Equal(LibraryStanding.Missing, await _library.CompareAsync(Id, transcript, Ct));
+        await _library.SaveAsync(Record(), transcript, subagents, Ct);
+        var libraryCopy = Path.Combine(_library.GetSessionFolder(Id), $"{Id}.jsonl");
+        Assert.Equal(LibraryStanding.Same, await _library.CompareAsync(Id, transcript, Ct));
+
+        // A turn here: this machine has lines to add.
+        File.AppendAllText(transcript, "{\"n\":2}\n");
+        Assert.Equal(LibraryStanding.Behind, await _library.CompareAsync(Id, transcript, Ct));
+
+        // Another machine carried it on from where this one was.
+        File.WriteAllText(libraryCopy, "{\"n\":1}\n{\"n\":2}\n{\"elsewhere\":3}\n");
+        Assert.Equal(LibraryStanding.Ahead, await _library.CompareAsync(Id, transcript, Ct));
+
+        // ...but only by a line still on its way, which isn't anything to bring over yet.
+        File.WriteAllText(libraryCopy, "{\"n\":1}\n{\"n\":2}\n{\"elsew");
+        Assert.Equal(LibraryStanding.Same, await _library.CompareAsync(Id, transcript, Ct));
+
+        // Both went on from the first line, each its own way.
+        File.WriteAllText(libraryCopy, "{\"n\":1}\n{\"elsewhere\":2}\n{\"elsewhere\":3}\n");
+        Assert.Equal(LibraryStanding.Diverged, await _library.CompareAsync(Id, transcript, Ct));
+        File.WriteAllText(libraryCopy, "{\"n\":1}\n{\"x\":9}\n");
+        Assert.Equal(LibraryStanding.Diverged, await _library.CompareAsync(Id, transcript, Ct));
+    }
+
+    [Fact]
+    public async Task Picking_up_replaces_the_working_copy_whatever_its_time()
+    {
+        var (transcript, subagents) = LocalSession();
+        await _library.SaveAsync(Record(), transcript, subagents, Ct);
+        var local = _root.Combine("app-data", "sessions");
+        var path = await _library.CopyToLocalAsync(Id, local, Ct);
+        var libraryCopy = Path.Combine(_library.GetSessionFolder(Id), $"{Id}.jsonl");
+
+        // The other machine's clock is behind this one's, so its later copy looks older than the working copy.
+        File.AppendAllText(libraryCopy, "{\"elsewhere\":1}\n{\"type\":\"assis");
+        File.SetLastWriteTimeUtc(path, File.GetLastWriteTimeUtc(libraryCopy).AddMinutes(5));
+        await _library.PickUpAsync(Id, path, Ct);
+
+        // Whole lines only, as from any copy to this machine.
+        Assert.Equal("{\"type\":\"user\"}\n{\"elsewhere\":1}\n", File.ReadAllText(path));
+        Assert.True(File.Exists(Path.Combine(local, Id, "subagents", "agent-a1.jsonl")));
+    }
+
+    [Fact]
+    public async Task A_conflict_copy_keeps_this_machines_transcript_beside_the_librarys()
+    {
+        var (transcript, subagents) = LocalSession(content: "{\"n\":1}\n{\"here\":2}\n");
+        await _library.SaveAsync(Record(), transcript, subagents, Ct);
+        var libraryCopy = Path.Combine(_library.GetSessionFolder(Id), $"{Id}.jsonl");
+        File.WriteAllText(libraryCopy, "{\"n\":1}\n{\"elsewhere\":2}\n");
+
+        var label = await _library.SaveConflictCopyAsync(Id, transcript, "DESKTOP 01", Ct);
+
+        Assert.Equal("DESKTOP-01", label);
+        var copy = Path.Combine(_library.GetSessionFolder(Id), $"{Id}-DESKTOP-01.jsonl");
+        Assert.Equal(File.ReadAllText(transcript), File.ReadAllText(copy));
+        Assert.Equal("{\"n\":1}\n{\"elsewhere\":2}\n", File.ReadAllText(libraryCopy));
+        var entries = _library.List();
+        Assert.Contains(entries, e => e is { IsConflictCopy: false } && e.TranscriptPath == libraryCopy);
+        Assert.Contains(entries, e => e is { IsConflictCopy: true, ConflictLabel: "DESKTOP-01" } && e.TranscriptPath == copy);
+
+        // Kept apart again, with the same turns or more: the same copy, brought up to date.
+        Assert.Equal("DESKTOP-01", await _library.SaveConflictCopyAsync(Id, transcript, "DESKTOP 01", Ct));
+        File.AppendAllText(transcript, "{\"here\":3}\n");
+        Assert.Equal("DESKTOP-01", await _library.SaveConflictCopyAsync(Id, transcript, "DESKTOP 01", Ct));
+        Assert.Equal(File.ReadAllText(transcript), File.ReadAllText(copy));
+
+        // Turns that went another way from the earlier copy's get a copy of their own.
+        File.WriteAllText(transcript, "{\"n\":1}\n{\"again\":2}\n");
+        Assert.Equal("DESKTOP-01-2", await _library.SaveConflictCopyAsync(Id, transcript, "DESKTOP 01", Ct));
+        Assert.Equal("{\"n\":1}\n{\"here\":2}\n{\"here\":3}\n", File.ReadAllText(copy));
+    }
+
+    [Fact]
+    public async Task A_session_record_is_read_by_its_id()
+    {
+        var (transcript, subagents) = LocalSession();
+        Assert.Null(_library.GetRecord(Id));
+        await _library.SaveAsync(Record(), transcript, subagents, Ct);
+
+        Assert.Equal("DESKTOP-01", _library.GetRecord(Id)?.Machine);
+        Assert.Null(_library.GetRecord("../escape"));
+    }
+
+    [Fact]
     public async Task Copy_to_local_throws_when_the_library_has_no_transcript()
     {
         await Assert.ThrowsAsync<FileNotFoundException>(() => _library.CopyToLocalAsync("missing", _root.Combine("local"), Ct));
