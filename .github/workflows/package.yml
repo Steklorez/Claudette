@@ -16,9 +16,10 @@ name: Package
 #            Artifact Signing. It has no secret: it trusts GitHub's OIDC token for this repository's release
 #            environment (a federated credential) and holds the Artifact Signing Certificate Profile Signer role on the
 #            dotbunny account. A tag or "Run workflow" without them fails rather than leave the package unsigned.
-#   macOS:   MACOS_CERTIFICATE_P12 (base64 Developer ID Application .p12), MACOS_CERTIFICATE_PASSWORD, MACOS_SIGNING_IDENTITY,
-#            and for notarization APPLE_API_KEY_P8 (base64 .p8), APPLE_API_KEY_ID, APPLE_API_ISSUER. Without them the
-#            .dmg is built unsigned.
+#   macOS:   MACOS_CERTIFICATE_P12 (base64 .p12: the Developer ID Application certificate and its private key) and
+#            MACOS_CERTIFICATE_PASSWORD, which sign; APPLE_API_KEY_P8 (base64 .p8), APPLE_API_KEY_ID and APPLE_API_ISSUER
+#            (an App Store Connect team key with the Developer role), which notarize. The identity is the certificate's.
+#            A tag or "Run workflow" without them fails, as on Windows.
 
 on:
   push:
@@ -180,25 +181,37 @@ jobs:
         env:
           P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
           P12_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
           API_KEY: ${{ secrets.APPLE_API_KEY_P8 }}
+          API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
-          if [[ -n "$P12" ]]; then
-            keychain="$RUNNER_TEMP/claudette.keychain-db"
-            password="$(uuidgen)"
-            security create-keychain -p "$password" "$keychain"
-            security set-keychain-settings -lut 3600 "$keychain"
-            security unlock-keychain -p "$password" "$keychain"
-            echo "$P12" | base64 --decode > "$RUNNER_TEMP/claudette.p12"
-            security import "$RUNNER_TEMP/claudette.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
-            security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain"
-            security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
-            echo "MACOS_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          # Signed and notarized, or not built: a signed Claudette refuses an update its team didn't sign (DESIGN.md §2,
+          # "Updating Claudette").
+          if [[ -z "$P12" || -z "$API_KEY" || -z "$API_KEY_ID" || -z "$API_ISSUER" ]]; then
+            echo "::error::The release environment needs MACOS_CERTIFICATE_P12, MACOS_CERTIFICATE_PASSWORD, APPLE_API_KEY_P8, APPLE_API_KEY_ID and APPLE_API_ISSUER to sign and notarize the .dmg."
+            exit 1
           fi
-          if [[ -n "$API_KEY" ]]; then
-            echo "$API_KEY" | base64 --decode > "$RUNNER_TEMP/claudette-api-key.p8"
-            echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/claudette-api-key.p8" >> "$GITHUB_ENV"
+          keychain="$RUNNER_TEMP/claudette.keychain-db"
+          password="$(uuidgen)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/claudette.p12"
+          security import "$RUNNER_TEMP/claudette.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/claudette.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          # The certificate's identity, named by its SHA-1 hash, which nothing else in the keychains can match.
+          identities="$(security find-identity -v -p codesigning "$keychain" | grep '"Developer ID Application: ' || true)"
+          if [[ "$(grep -c . <<< "$identities")" != 1 ]]; then
+            echo "::error::MACOS_CERTIFICATE_P12 should hold one valid Developer ID Application certificate, with its private key. It holds:"
+            security find-identity -p codesigning "$keychain"
+            exit 1
           fi
+          echo "Signing as $(cut -d '"' -f 2 <<< "$identities")"
+          echo "MACOS_SIGNING_IDENTITY=$(awk '{ print $2 }' <<< "$identities")" >> "$GITHUB_ENV"
+          echo "$API_KEY" | base64 --decode > "$RUNNER_TEMP/claudette-api-key.p8"
+          echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/claudette-api-key.p8" >> "$GITHUB_ENV"
       - name: Build .dmg
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
