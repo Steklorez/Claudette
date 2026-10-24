@@ -188,11 +188,12 @@
       <Setter Property="Margin" Value="12,0,0,1" />
     </Style>
     <!-- The chevron that collapses what's under a tab's row (DESIGN.md §4, "Sidebar"): on the group's line, in its color,
-         level with the name, its background breaking the line around it. It takes no room in the name's line, so a name
-         stays where the other rows' are, and OnLine moves it across onto the line, a sub-thread's too. The row doesn't
-         clip, nor does the list of tabs, so it shows out there, and hovering it lights up its row. The gap is the same
-         height either way, with room above and below the collapsed chevron, the taller one; it reaches past the name's
-         line without making it taller. -->
+         level with the name, in a gap in the line. It takes no room in the name's line, so a name stays where the other
+         rows' are, and OnLine moves it across onto the line, a sub-thread's too, and has the line leave out its gap: the
+         sidebar can be see-through, so a background painted over the line wouldn't hide it. The row doesn't clip, nor
+         does the list of tabs, so it shows out there, and hovering it lights up its row. The gap is the same height either
+         way, with room above and below the collapsed chevron, the taller one; it reaches past the name's line without
+         making it taller. -->
     <Style Selector="Button.tabrow">
       <Setter Property="ClipToBounds" Value="False" />
     </Style>
@@ -200,8 +201,6 @@
       <Setter Property="Width" Value="14" />
       <Setter Property="Height" Value="20" />
       <Setter Property="Margin" Value="0,-4,-14,-4" />
-      <Setter Property="CornerRadius" Value="4" />
-      <Setter Property="Background" Value="{DynamicResource SidebarBrush}" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.rowfold">
@@ -397,7 +396,7 @@
                   </Grid>
 
                   <!-- Tabs, under a line in the group's color; its Project Files tab first (DESIGN.md §18, "Project files") -->
-                  <Border x:Name="GroupLine" Margin="9,2,0,0" Padding="5,0,0,0" BorderBrush="{Binding Brush}" BorderThickness="2,0,0,0" IsVisible="{Binding IsExpanded}">
+                  <controls:SideLine x:Name="GroupLine" Margin="9,2,0,0" Padding="5,0,0,0" LineBrush="{Binding Brush}" LineThickness="2" IsVisible="{Binding IsExpanded}">
                     <StackPanel Spacing="1">
                     <ContentControl Content="{Binding Files}" IsVisible="{Binding HasFiles}" ContentTemplate="{StaticResource ProjectFilesRow}" />
                     <!-- Unclipped, as the rows are, so a row's chevron can sit out on the line -->
@@ -789,7 +788,7 @@
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     </StackPanel>
-                  </Border>
+                  </controls:SideLine>
                 </StackPanel>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

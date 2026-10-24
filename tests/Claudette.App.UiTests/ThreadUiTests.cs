@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Tests;
 using Claudette.App.Tests.Support;
@@ -91,16 +92,19 @@ public class ThreadUiTests
         Point Middle(Control c) => c.TranslatePoint(new Point(c.Bounds.Width / 2, c.Bounds.Height / 2), window)!.Value;
         double Left(Control c) => c.TranslatePoint(default, window)!.Value.X;
         TextBlock Name(TabViewModel tab) => window.GetVisualDescendants().OfType<TextBlock>().First(t => t.DataContext == tab && t.Text == tab.DisplayName);
-        Button Fold(TabViewModel tab) => window.GetVisualDescendants().OfType<Button>().Single(b => b is { Name: "RowFold", IsEffectivelyVisible: true } && b.DataContext == tab);
+        IEnumerable<Button> Folds() => window.GetVisualDescendants().OfType<Button>().Where(b => b is { Name: "RowFold", IsEffectivelyVisible: true });
+        Button Fold(TabViewModel tab) => Folds().Single(b => b.DataContext == tab);
 
-        var fold = Assert.Single(window.GetVisualDescendants().OfType<Button>(), b => b is { Name: "RowFold", IsEffectivelyVisible: true });
-        var line = Assert.Single(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "GroupLine", IsEffectivelyVisible: true });
+        var fold = Assert.Single(Folds());
+        var line = Assert.Single(window.GetVisualDescendants().OfType<SideLine>(), l => l is { Name: "GroupLine", IsEffectivelyVisible: true });
         var icon = Assert.Single(window.GetVisualDescendants().OfType<Border>(), b => b is { Name: "ThreadIcon", IsEffectivelyVisible: true });
-        var onLine = Left(line) + line.BorderThickness.Left / 2;
+        var onLine = Left(line) + line.DrawnThickness / 2;
 
         Assert.Same(plan, fold.DataContext);
         Assert.Equal(onLine, Middle(fold).X, 0.01);
         Assert.Equal(Middle(Name(plan)).Y, Middle(fold).Y, 0.5);
+        // The line leaves a gap for it rather than running under it: the sidebar can be see-through (Mica).
+        SideLineTests.AssertGaps(line, fold);
         // What comes first in the thread's line, its thread icon, is where the other tab's name starts, and its gap in the
         // line, taller than the name, leaves the row as tall as the others.
         Assert.Equal(Left(Name(other)), Left(icon), 0.01);
@@ -113,10 +117,19 @@ public class ThreadUiTests
         // A sub-thread's, 12 further in, is on the same line.
         h.Transport.EmitTo(2, ThreadScript.Init());
         h.Transport.EmitTo(2, Wire.Agent("a1", "Find the gallery's cards", "Find them", "Explore"));
-        await UiText.SettleUntilAsync(window, () => art.SubagentRows.Count == 1, "the sub-thread's subagent");
+        // The view model has the row before the window lays it out, so wait for the chevron itself.
+        await UiText.SettleUntilAsync(window, () => Folds().Any(b => b.DataContext == art), "the sub-thread's chevron");
+        UiText.Settle(window);
         Assert.True(Left(Name(art)) > Left(Name(other)), "The sub-thread should be indented");
         Assert.Equal(onLine, Middle(Fold(art)).X, 0.01);
         Assert.Equal(Middle(Name(art)).Y, Middle(Fold(art)).Y, 0.5);
+        SideLineTests.AssertGaps(line, Fold(plan), Fold(art));
+
+        // Out of the thread, the thread's chevron goes, and its gap with it.
+        h.Shell.DetachFromThreadCommand.Execute(art);
+        await UiText.SettleUntilAsync(window, () => Folds().Select(b => b.DataContext).SequenceEqual([art]), "the thread's chevron to go");
+        UiText.Settle(window);
+        SideLineTests.AssertGaps(line, Fold(art));
     }
 
     [AvaloniaFact]
