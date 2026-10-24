@@ -13,15 +13,15 @@ summary: "Changed files shows everything since the session started."
 
 ## The Modified files card
 
-After a turn that changed files, the conversation has a **Modified files** card with *"3 files changed"* in its header and a tile for each file: its name, its folder, and `+12 −3` for the lines added and removed. The counts are against the file as the turn left it.
+After a turn that changed files, the conversation has a **Modified files** card with *"3 files changed"* in its header and a tile for each file: its name, its folder, and `+12 −3` for the lines added and removed. The counts are from before the turn to how its last change left the file, so another tab editing the same file as the turn ends doesn't change them.
 
 The card counts changes Claude made with its file editing tools, subagents' included. Under it, the **Turn** card has the turn's duration, tokens and model ([The end of a turn](../conversation/the-end-of-a-turn.md)).
 
 ## Opening a turn's diff
 
-Click a tile. The [diff view](the-diff-view.md) opens with the file as it was before the turn's first change to it, against how the turn left it.
+Click a tile. The [diff view](the-diff-view.md) opens with the file as it was before the turn's first change to it, against how the turn's last change left it.
 
-If no later turn changed the file, the diff is against the file as it is now, and the line under the title says so: *"this turn's changes: before it, against the file now"*. Changes you made outside Claude between turns count toward the earlier turn.
+When Claudette can't tell how the turn left the file, the diff is against how the next turn that changed it found it, or the file as it is now, and the line under the title says so: *"this turn's changes: before it, against the file now"*. Changes you made outside Claude between turns then count toward the earlier turn.
 
 This view only shows the changes. It has no **Revert** or **Reviewed**, which belong to the file's changes as Changed files shows them. A file whose earlier contents aren't known is shown as it is, as in Changed files.
 

@@ -52,6 +52,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.Notifications.ShownTabIds = () => [.. Panes.Select(t => t.Id)];
         // The worktrees open tabs work in are never cleaned up (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
+        _services.Worktrees.ChangedWorktrees = () => [.. AllTabs.SelectMany(t => t.ChangedFiles.ChangedWorkTrees)];
         // Nor is an account an open tab runs under removed (DESIGN.md §4, "Accounts").
         _services.Accounts.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
         WatchGames();

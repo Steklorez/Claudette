@@ -742,6 +742,11 @@
   <Style Selector="Grid.changedfile.reviewed > TextBlock, Grid.changedfile.reviewed > StackPanel">
     <Setter Property="Opacity" Value="0.5" />
   </Style>
+  <!-- A working tree's heading, over the first of its files (DESIGN.md §8, "Working trees") -->
+  <Style Selector="TextBlock.changedgroup">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,0,0,6" />
+  </Style>
   <!-- Fluent's padding, with the right side wide enough to keep a row's counts clear of the scroll bar -->
   <Style Selector="ListBox#ChangedFilesList ListBoxItem">
     <Setter Property="Padding" Value="12,9,16,12" />

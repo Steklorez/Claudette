@@ -480,6 +480,103 @@ public sealed class RealCliTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// What an Edit left the file holding, worked out from its input and result, is what Claude Code wrote (DESIGN.md
+    /// §8, "This session's changes"). For a file with Windows line endings, <c>originalFile</c> comes with <c>\n</c>
+    /// (checked with 2.1.302 and 2.1.308), and so does what's worked out from it: the same file, line endings aside, as
+    /// Changed files and the diff view compare.
+    /// </summary>
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    public async Task What_an_edit_left_is_worked_out_as_Claude_Code_wrote_it(string newline)
+    {
+        await using var session = await StartAsync(permissionMode: "acceptEdits");
+        var file = Path.Combine(Work, "after.txt");
+        await File.WriteAllTextAsync(file, string.Join(newline, "first line", "ORIGINAL LINE", "last line", ""), TestContext.Current.CancellationToken);
+
+        await session.SendUserMessageAsync($"EDIT_FILE {file}", TestContext.Current.CancellationToken);
+        var (_, seen) = await session.ReadUntilAsync<TurnCompleted>();
+
+        var changes = new ChangedFiles(TimeProvider.System);
+        foreach (var e in seen)
+        {
+            if (e is AssistantMessageReceived assistant)
+            {
+                foreach (var use in assistant.Message.Content.OfType<Core.Protocol.ToolUseBlock>())
+                {
+                    changes.RecordToolUse(use.Id, use.Name, use.Input);
+                }
+            }
+            else if (e is ToolResultsReceived results)
+            {
+                foreach (var result in results.Message.Content.OfType<Core.Protocol.ToolResultBlock>())
+                {
+                    changes.RecordToolResult(result.ToolUseId, result.IsError, results.Message.ToolUseResult);
+                }
+            }
+        }
+        var changed = Assert.Single(changes.Files);
+        Assert.True(changed.AfterKnown);
+        var written = await File.ReadAllTextAsync(file, TestContext.Current.CancellationToken);
+        Assert.Equal(written.Replace("\r\n", "\n", StringComparison.Ordinal), changed.After);
+        Assert.Equal(written.Replace("\r\n", "\n", StringComparison.Ordinal), changed.Before!.Replace("ORIGINAL LINE", "EDITED LINE", StringComparison.Ordinal));
+        Assert.Null(changes.Inspect(changed).Since);
+    }
+
+    /// <summary>
+    /// A subagent's Edit comes without its structured result, so what the file held before comes from a PreToolUse hook
+    /// on the file tools, which reads it before the call runs (DESIGN.md §8, "Subagents' changes").
+    /// </summary>
+    [Fact]
+    public async Task A_subagents_edit_is_counted_from_what_the_hook_read_before_it()
+    {
+        var file = Path.Combine(Work, "sub.txt");
+        await File.WriteAllTextAsync(file, "first line\nORIGINAL LINE\nlast line\n", TestContext.Current.CancellationToken);
+        var changes = new ChangedFiles(TimeProvider.System);
+        var noted = new System.Collections.Concurrent.ConcurrentQueue<(string Id, string Path, string? Before, bool Known)>();
+        var hook = new HookRegistration("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", (input, _) =>
+        {
+            if (input.Raw["agent_id"] is not null && input.ToolUseId is { } id && input.ToolInput?["file_path"]?.GetValue<string>() is { } path)
+            {
+                var (before, known) = ChangedFiles.ReadFromDisk(path);
+                noted.Enqueue((id, path, before, known));
+            }
+            return Task.FromResult(HookOutputs.Continue());
+        });
+        await using var session = await StartAsync(permissionMode: "acceptEdits", hooks: [hook]);
+
+        await session.SendUserMessageAsync($"SUBAGENT_EDIT {file}", TestContext.Current.CancellationToken);
+        var (_, seen) = await session.ReadUntilAsync<TurnCompleted>();
+
+        foreach (var (id, path, before, known) in noted)
+        {
+            changes.NoteBefore(id, path, before, known);
+        }
+        foreach (var e in seen)
+        {
+            if (e is AssistantMessageReceived assistant)
+            {
+                foreach (var use in assistant.Message.Content.OfType<Core.Protocol.ToolUseBlock>())
+                {
+                    changes.RecordToolUse(use.Id, use.Name, use.Input);
+                }
+            }
+            else if (e is ToolResultsReceived results)
+            {
+                foreach (var result in results.Message.Content.OfType<Core.Protocol.ToolResultBlock>())
+                {
+                    changes.RecordToolResult(result.ToolUseId, result.IsError, results.Message.ToolUseResult);
+                }
+            }
+        }
+        var changed = Assert.Single(changes.Files);
+        Assert.Equal((true, "first line\nORIGINAL LINE\nlast line\n"), (changed.BeforeKnown, changed.Before));
+        Assert.True(changed.AfterKnown);
+        var state = changes.Inspect(changed);
+        Assert.Equal((ChangedFileStatus.Modified, 1, 1, null), (state.Status, state.Added, state.Removed, state.Since));
+    }
+
+    /// <summary>
     /// Claude Code sends a large file's whole <c>originalFile</c> live, but writes it to the transcript as null over
     /// 10,000 characters; the changed files keep it for the replay (DESIGN.md §8, "Before content").
     /// </summary>

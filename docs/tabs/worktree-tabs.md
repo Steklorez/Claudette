@@ -24,6 +24,14 @@ In the sidebar, a worktree tab stays in the main checkout's group. Its branch ba
 
 **Duplicate tab** and **Branch from here** copy a worktree tab into the same worktree. A session you open from [History](../history/history.md) whose folder is a worktree Claude Code made goes back in its checkout's group, and History names the worktree.
 
+## Claude moving into a worktree
+
+{% include unreleased.html %}
+
+Claude can move a session into a worktree of its own partway through, when you ask it to work in one, and back out again. The tab follows: from then on its folder is the worktree, as a worktree tab's is, it stays in its group, and a note says *Working in the worktree brisk-otter, on its own branch*. When Claude leaves the worktree, the tab goes back, with a note saying *Back in* and the folder.
+
+A session reopened in a worktree it moved into opens there too. A `cd` into one of the project's folders doesn't move the tab. The files Claude changed in each checkout are grouped in [Changed files](../changes/changed-files.md#several-working-trees).
+
 ## Closing the last tab in a worktree
 
 Claude Code leaves a worktree behind, locked, so closing the last tab that works in one asks what to do with it. It asks once that tab's Claude Code has stopped.
@@ -47,7 +55,7 @@ Kept worktrees pile up. Claudette can remove them on its own. Both rules are off
 - **Remove worktrees no tab has used for**: *Never* (the default), 7, 14, 30 or 90 days. The worktree goes, and its branch stays when it has commits on no other branch, so nothing committed is lost.
 - **Clean up now** runs a pass straight away. The settings say what the last pass removed and when (*Last removed brisk-otter and calm-heron, 2 h ago.*).
 
-A cleanup pass never removes a worktree an open tab works in, one with uncommitted changes or untracked files, or one Claude Code didn't make for a worktree tab. Files git ignores, such as build output, go with a removed worktree. The session stays in History, and opening it finds its folder gone: see [Closing and restoring](closing-and-restoring.md#a-folder-thats-gone).
+A cleanup pass never removes a worktree an open tab works in or its session changed files in, one with uncommitted changes or untracked files, or one Claude Code didn't make for a worktree tab. Files git ignores, such as build output, go with a removed worktree. The session stays in History, and opening it finds its folder gone: see [Closing and restoring](closing-and-restoring.md#a-folder-thats-gone).
 
 Claudette looks a minute after it starts and then every hour, while either rule is on.
 

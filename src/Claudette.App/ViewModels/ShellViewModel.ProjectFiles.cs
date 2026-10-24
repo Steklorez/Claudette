@@ -267,12 +267,19 @@ public sealed partial class ShellViewModel
         }
     }
 
-    /// <summary>Claudette came to the front: every Files tab looks at its open files again, as an editor does.</summary>
+    /// <summary>
+    /// Claudette came to the front: every Files tab looks at its open files again, as an editor does, and every tab's
+    /// Changed files at the disk (DESIGN.md §8), for what the user changed meanwhile.
+    /// </summary>
     internal void OnAppActivated()
     {
         foreach (var files in Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>())
         {
             _ = files.CheckOpenFilesOnDiskAsync();
+        }
+        foreach (var tab in AllTabs)
+        {
+            tab.ChangedFiles.CheckDisk();
         }
     }
 }

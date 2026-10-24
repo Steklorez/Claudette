@@ -106,7 +106,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | The side panel | Its pages and when each shows, opening and closing it, the page tabs' busy dots and **⋯**, **Move left**, **Move right** and **Reset order**, resizing it. | [§3](DESIGN.md#3-main-window) |
 | Split panes | **Open beside**, dragging a row onto a pane, the focused pane and what follows it, resizing and closing panes. | [Split panes](DESIGN.md#split-panes) |
 | The command palette | `Ctrl/Cmd+Shift+P`, its sections and filtering, and **Go to the next tab waiting for you** (`Ctrl/Cmd+J`). | [Command palette](DESIGN.md#command-palette) |
-| Worktree tabs | **New tab in a worktree**, how a worktree tab shows, duplicating and branching in one, closing its last tab (**Remove**, **Keep**, **Remove and discard**), Settings → General → **Worktrees** and **Clean up now**. Setup actions for a new worktree are in Project tools. | [Worktree tabs](DESIGN.md#worktree-tabs), [Cleaning up worktrees](DESIGN.md#cleaning-up-worktrees) |
+| Worktree tabs | **New tab in a worktree**, how a worktree tab shows, Claude moving a tab into a worktree and out again, duplicating and branching in one, closing its last tab (**Remove**, **Keep**, **Remove and discard**), Settings → General → **Worktrees** and **Clean up now**. Setup actions for a new worktree are in Project tools. | [Worktree tabs](DESIGN.md#worktree-tabs), [Cleaning up worktrees](DESIGN.md#cleaning-up-worktrees) |
 | Processes | The process monitor: turning it on, the composer bar's summary, the header's total, the **Processes** page and its menu, stopping a process. | [Process monitor](DESIGN.md#process-monitor) |
 | MCP servers | The **MCP** page: each server's status, **Reconnect**, **Turn off**, **Sign in** and **Sign out**. A server's form is in Permissions and prompts. | [MCP servers](DESIGN.md#mcp-servers) |
 | Closing and restoring | Closing a working tab and its confirmations (**Close and stop them**, **Close, leave running**), pinned tabs, restoring at launch and **Also restore unpinned tabs when Claudette starts**, tabs that start when selected, a folder that's gone, a session Claude Code deleted, **Restart** after `claude` stops. | [§4](DESIGN.md#4-tabs--sessions), [Restore on launch](DESIGN.md#restore-on-launch), [§13](DESIGN.md#13-architecture) |
@@ -176,8 +176,8 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 
 | Page | Covers | From |
 |---|---|---|
-| Changed files | The **Changed files** page and the **Files** count, the line counts, **Working tree vs HEAD**, a file whose earlier contents aren't known. | [§8](DESIGN.md#8-file-changes--diff-view) |
-| The diff view | Side by side or inline, **Whole file**, **Wrap lines**, the file's actions, **Open** and **Open in the OS's app**. | [§8](DESIGN.md#8-file-changes--diff-view) |
+| Changed files | The **Changed files** page and the **Files** count, the line counts as this session's own, *Changed since* and what it's by, keeping up with the disk, the groups for several working trees, **Working tree vs HEAD**, a file whose earlier contents aren't known (subagents' included). | [§8](DESIGN.md#8-file-changes--diff-view), [This session's changes](DESIGN.md#this-sessions-changes), [Working trees](DESIGN.md#working-trees), [Subagents' changes](DESIGN.md#subagents-changes) |
+| The diff view | Side by side or inline, **Whole file**, **Wrap lines**, **With later changes**, the file's actions, **Open** and **Open in the OS's app**. | [§8](DESIGN.md#8-file-changes--diff-view) |
 | Reviewed files | Ticking files, what unticks them, the diff view's **Reviewed**, the row's reviewed icon. | [§8](DESIGN.md#8-file-changes--diff-view) |
 | Reverting | **Revert** on a change, **Revert file**, and what can't be reverted. | [Reverting](DESIGN.md#reverting) |
 | Changes per turn | A turn's **Modified files** and its read-only diffs. | [Changes per turn](DESIGN.md#changes-per-turn) |

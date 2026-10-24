@@ -357,6 +357,56 @@ public class SidePanelUiTests
     }
 
     [AvaloniaFact]
+    public async Task A_file_changed_since_the_sessions_change_says_so_under_its_folder()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.IsSidePanelOpen = true;
+        UiText.Settle(window);
+        var path = Path.Combine(h.WorkFolder, "auth.cs");
+        // Claude's Edit leaves "b"; another line is on disk since.
+        await File.WriteAllTextAsync(path, "b\nyours\n", TestContext.Current.CancellationToken);
+        h.Transport.Emit(Edit("e1", path));
+        h.Transport.Emit(EditResult("e1", path));
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var list = view.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ChangedFilesList");
+        await UiText.SettleUntilAsync(window, () => list.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Changed since: +1 −0"), "the line for what changed since");
+
+        var since = list.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == "Changed since: +1 −0");
+        Assert.Contains("warning", since.Classes);
+        await Verify(UiText.Describe(list));
+    }
+
+    [AvaloniaFact]
+    public async Task Changed_files_in_another_working_tree_are_headed_by_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        FakeGitFolders.Repository(h.WorkFolder, "main");
+        var worktree = FakeGitFolders.Worktree(h.WorkFolder, "brisk-otter");
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.IsSidePanelOpen = true;
+        UiText.Settle(window);
+        var (home, there) = (Path.Combine(h.WorkFolder, "auth.cs"), Path.Combine(worktree, "login.cs"));
+        await File.WriteAllTextAsync(home, "b\n", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(there, "b\n", TestContext.Current.CancellationToken);
+        h.Transport.Emit(Edit("e1", home));
+        h.Transport.Emit(EditResult("e1", home));
+        h.Transport.Emit(Edit("e2", there));
+        h.Transport.Emit(EditResult("e2", there));
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var list = view.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ChangedFilesList");
+
+        await UiText.SettleUntilAsync(window, () => list.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "brisk-otter · worktree-brisk-otter" && t.IsEffectivelyVisible),
+            "the worktree's heading");
+
+        var heading = list.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == "brisk-otter · worktree-brisk-otter");
+        Assert.Contains("changedgroup", heading.Classes);
+        await Verify(UiText.Describe(list));
+    }
+
+    [AvaloniaFact]
     public async Task The_arrow_keys_move_through_changed_files_without_opening_them()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());

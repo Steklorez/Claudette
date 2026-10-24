@@ -43,6 +43,10 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     bool IChangedFilesHost.IsSelected => IsShown;
 
+    string? IChangedFilesHost.ChangedSinceBy(string path, DateTimeOffset since) => _shell.ChangedSinceBy(this, path, since);
+
+    void IChangedFilesHost.ClaudeChangedFile(string path) => _shell.OnClaudeChangedFile(this, path);
+
     void IChangedFilesHost.AllReviewedChanged()
     {
         MarkShownChanged();

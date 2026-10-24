@@ -174,7 +174,8 @@ public class SidePanelTests
         await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.Count == 2, "the second file");
 
         Assert.Same(kept, tab.ChangedFiles.Files[0]);
-        Assert.Equal("+2 −1", tab.ChangedFiles.Files[1].Stats);
+        // The Edit left "b"; the line after it is a change since.
+        Assert.Equal(("+1 −1", "Changed since: +1 −0"), (tab.ChangedFiles.Files[1].Stats, tab.ChangedFiles.Files[1].Since));
         Assert.Equal(2, tab.ChangedFiles.Count);
     }
 

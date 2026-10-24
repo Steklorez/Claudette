@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Claudette.Core.Files;
+using Claudette.Core.Git;
 using Claudette.Core.Installation;
 using Claudette.Core.Processes;
 using Claudette.Core.Sessions;
@@ -10,8 +12,9 @@ namespace Claudette.IntegrationTests;
 
 /// <summary>
 /// The protocol scenarios DESIGN.md §15 lists, run against the real <c>claude</c> and the mock Messages API: a denied
-/// permission, an interrupt, <c>/clear</c>, compaction and API retries. Each checks what Claudette sees, and with
-/// <c>CLAUDETTE_RECORD_FIXTURES=&lt;folder&gt;</c> set also writes the traffic there as a cleaned protocol fixture
+/// permission, an interrupt, <c>/clear</c>, compaction, API retries, a subagent's edits and Claude moving into a
+/// worktree. Each checks what Claudette sees, and with <c>CLAUDETTE_RECORD_FIXTURES=&lt;folder&gt;</c> set also
+/// writes the traffic there as a cleaned protocol fixture
 /// ("record mode"), to check in under <c>tests/Claudette.Core.Tests/Fixtures/protocol/&lt;version&gt;/</c>.
 /// </summary>
 [Trait("Category", "RealCli")]
@@ -134,7 +137,101 @@ public sealed class ProtocolRecordingTests : IAsyncLifetime
         Assert.Equal(2, _api.Requests.Count(r => r.Reply == "overloaded"));
     }
 
-    private async Task<ClaudeSession> StartAsync(string fixtureName)
+    /// <summary>
+    /// A subagent's Edit and Write come without their structured result, live and in its transcript, so what the file
+    /// held before isn't known from them; a PreToolUse hook sees each one first, with its real path (DESIGN.md §8,
+    /// "Subagents' changes"). One in a worktree of its own reports the worktree with its result (checked with 2.1.302).
+    /// </summary>
+    [Fact]
+    public async Task A_subagents_edits_come_without_their_results_but_the_hook_sees_them_first()
+    {
+        Commit();
+        var hooked = new System.Collections.Concurrent.ConcurrentQueue<HookInput>();
+        await using var session = await StartAsync("12-subagent-edits", "acceptEdits", [new HookRegistration("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", (input, _) =>
+        {
+            hooked.Enqueue(input);
+            return Task.FromResult(HookOutputs.Continue());
+        })]);
+        var existing = Path.Combine(Work, "existing.txt");
+        await File.WriteAllTextAsync(existing, "first line\nORIGINAL LINE\nlast line\n", TestContext.Current.CancellationToken);
+
+        var seen = await TurnAsync(session, $"SUBAGENT_WRITE {Path.Combine(Work, "new.txt")}");
+        seen.AddRange(await TurnAsync(session, $"SUBAGENT_EDIT {existing}"));
+        // A relative path: the model's own, which only the hook sees resolved, in the subagent's worktree.
+        seen.AddRange(await TurnAsync(session, "SUBAGENT_WRITE isolated.txt ISOLATED"));
+
+        Assert.Contains("EDITED LINE", await File.ReadAllTextAsync(existing, TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        var results = seen.OfType<ToolResultsReceived>().Select(r => r.Message).ToArray();
+        var fileCalls = seen.OfType<AssistantMessageReceived>().SelectMany(a => a.Message.Content.OfType<Core.Protocol.ToolUseBlock>())
+            .Where(t => t.Name is "Write" or "Edit").ToArray();
+        Assert.Equal(3, fileCalls.Length);
+        foreach (var call in fileCalls)
+        {
+            var result = results.Single(r => r.Content.OfType<Core.Protocol.ToolResultBlock>().Any(b => b.ToolUseId == call.Id));
+            Assert.NotNull(result.ParentToolUseId);
+            Assert.Null(result.ToolUseResult);
+            var hook = Assert.Single(hooked, h => h.ToolUseId == call.Id);
+            Assert.NotNull(hook.Raw["agent_id"]);
+            Assert.True(Path.IsPathFullyQualified(hook.ToolInput!["file_path"]!.GetValue<string>()));
+        }
+        var isolatedHook = hooked.Single(h => h.ToolInput?["file_path"]?.GetValue<string>().EndsWith("isolated.txt", StringComparison.Ordinal) == true);
+        var agentResult = results.Select(r => r.ToolUseResult).OfType<System.Text.Json.Nodes.JsonObject>().Single(r => r["worktreePath"] is not null);
+        var worktree = agentResult["worktreePath"]!.GetValue<string>();
+        Assert.True(RealPath.Same(Path.Combine(worktree, "isolated.txt"), isolatedHook.ToolInput!["file_path"]!.GetValue<string>()));
+        Assert.StartsWith("worktree-agent-", agentResult["worktreeBranch"]!.GetValue<string>(), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// EnterWorktree and ExitWorktree say where the session works from then on, and the next turn's <c>system/init</c>
+    /// names it (DESIGN.md §4, "Worktree tabs"; checked with 2.1.302).
+    /// </summary>
+    [Fact]
+    public async Task Claude_moves_into_a_worktree_and_out_again()
+    {
+        Commit();
+        await using var session = await StartAsync("13-worktree-moves", "acceptEdits");
+
+        var entered = await TurnAsync(session, "ENTER_WORKTREE move-check");
+        var inside = await TurnAsync(session, "hello");
+        var exited = await TurnAsync(session, "EXIT_WORKTREE keep");
+        var after = await TurnAsync(session, "hello");
+
+        // 2.1.308 has Claude load both tools with ToolSearch first, whose result comes before.
+        var enter = entered.OfType<ToolResultsReceived>().Select(r => r.Message.ToolUseResult).OfType<System.Text.Json.Nodes.JsonObject>().Single(r => r["worktreePath"] is not null);
+        var worktree = enter["worktreePath"]!.GetValue<string>();
+        Assert.True(RealPath.Same(GitWorktrees.PathFor(Work, "move-check"), worktree));
+        Assert.Equal("worktree-move-check", enter["worktreeBranch"]!.GetValue<string>());
+        Assert.True(RealPath.Same(worktree, inside.OfType<TurnStarted>().Single().Init.Cwd!));
+        var exit = exited.OfType<ToolResultsReceived>().Select(r => r.Message.ToolUseResult).OfType<System.Text.Json.Nodes.JsonObject>().Single(r => r["restoredCwd"] is not null);
+        Assert.Equal("keep", exit["action"]!.GetValue<string>());
+        Assert.True(RealPath.Same(Work, exit["restoredCwd"]!.GetValue<string>()));
+        Assert.True(RealPath.Same(Work, after.OfType<TurnStarted>().Single().Init.Cwd!));
+    }
+
+    /// <summary>Sends <paramref name="prompt"/> and reads its turn, allowing whatever asks for permission.</summary>
+    private static async Task<List<SessionEvent>> TurnAsync(ClaudeSession session, string prompt)
+    {
+        await session.SendUserMessageAsync(prompt, TestContext.Current.CancellationToken);
+        var seen = new List<SessionEvent>();
+        while (true)
+        {
+            var (match, events) = await session.ReadUntilAsync<SessionEvent>(e => e is TurnCompleted or PermissionRequested, TimeSpan.FromSeconds(90));
+            seen.AddRange(events);
+            if (match is PermissionRequested requested)
+            {
+                requested.Request.Allow();
+                continue;
+            }
+            return seen;
+        }
+    }
+
+    /// <summary>A first commit, which worktrees branch from.</summary>
+    private void Commit() =>
+        Process.Start(new ProcessStartInfo("git", ["-c", "user.email=t@example.com", "-c", "user.name=t", "-c", "commit.gpgsign=false", "commit", "-q", "--allow-empty", "-m", "init"])
+            { WorkingDirectory = Work, CreateNoWindow = true })?.WaitForExit(10_000);
+
+    private async Task<ClaudeSession> StartAsync(string fixtureName, string? permissionMode = null, IReadOnlyList<HookRegistration>? hooks = null)
     {
         RealCli.SkipUnlessInstalled(_factory is not null);
         _fixtureName = fixtureName;
@@ -142,6 +239,8 @@ public sealed class ProtocolRecordingTests : IAsyncLifetime
         {
             WorkingDirectory = Work,
             Model = "claude-haiku-4-5",
+            PermissionMode = permissionMode,
+            Hooks = hooks ?? [],
             ProtocolLogPath = LogPath,
             EnvironmentOverrides = new Dictionary<string, string?>
             {

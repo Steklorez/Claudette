@@ -1,10 +1,12 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Diffs;
 using Claudette.App.Services;
 using Claudette.Core.Diffs;
 using Claudette.Core.Git;
+using Claudette.Core.ProjectFiles;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
 using Claudette.Core.Settings;
@@ -33,6 +35,12 @@ public sealed partial class ChangedFileRow : ObservableObject
 
     public bool IsDeleted => Status == "D";
 
+    /// <summary>The file isn't there now: deleted, or gone since Claude's latest change, which left it there.</summary>
+    public bool IsMissing => IsDeleted || IsGone;
+
+    /// <summary>Gone since the session's latest change to it, which left it there (DESIGN.md §8, "This session's changes").</summary>
+    public bool IsGone { get; init; }
+
     /// <summary>
     /// The "before" side: the file before Claude's first change, or null for a new file or when it's unknown. Git rows
     /// load it from HEAD.
@@ -42,7 +50,30 @@ public sealed partial class ChangedFileRow : ObservableObject
     /// <summary>False when what the file held before Claude's first change isn't known (DESIGN.md §8, "Before content").</summary>
     public bool BeforeKnown { get; init; } = true;
 
+    /// <summary>
+    /// The file as the session's latest change left it, where its diff ends (DESIGN.md §8, "This session's changes"),
+    /// when <see cref="AfterKnown"/>; otherwise the diff ends at the file now.
+    /// </summary>
+    public string? After { get; init; }
+
+    public bool AfterKnown { get; init; }
+
+    /// <summary>
+    /// What changed in the file since the session's latest change, by whom when it was another tab's Claude, for the
+    /// line under the row's folder: <i>"Changed since: +3 −1 by Fix login"</i>. Null when nothing has.
+    /// </summary>
+    public string? Since { get; set; }
+
     public bool FromGit { get; init; }
+
+    /// <summary>
+    /// The top of the working tree the file is in, when it isn't the tab's own (DESIGN.md §8, "Working trees"): its
+    /// path is shown from there, and git is asked there.
+    /// </summary>
+    public string? WorkTree { get; init; }
+
+    /// <summary>On the first row of each working tree's group, when there's more than one: its heading.</summary>
+    public string? Group { get; set; }
 
     /// <summary>
     /// The id of Claude's latest change to the file when the row was made, or null when Claude hasn't changed it: what
@@ -58,7 +89,9 @@ public sealed partial class ChangedFileRow : ObservableObject
     public bool SameAs(ChangedFileRow other) =>
         Path == other.Path && DisplayPath == other.DisplayPath && Status == other.Status && StatusText == other.StatusText
         && Stats == other.Stats && ReferenceEquals(Before, other.Before) && BeforeKnown == other.BeforeKnown && FromGit == other.FromGit
-        && LatestChange == other.LatestChange && IsReviewed == other.IsReviewed;
+        && LatestChange == other.LatestChange && IsReviewed == other.IsReviewed
+        && ReferenceEquals(After, other.After) && AfterKnown == other.AfterKnown && Since == other.Since && IsGone == other.IsGone
+        && WorkTree == other.WorkTree && Group == other.Group;
 }
 
 /// <summary>What the changed files panel needs from its tab.</summary>
@@ -78,6 +111,15 @@ internal interface IChangedFilesHost : ITabAreaHost
 
     /// <summary>Opens a file, in the project's Files tab or the OS's app, as Settings → Files and diffs says (DESIGN.md §18, "Project files").</summary>
     Task<OpenedPath> OpenPathAsync(string path);
+
+    /// <summary>
+    /// The other tab whose Claude changed <paramref name="path"/> after <paramref name="since"/>, by name, or null
+    /// when none did (DESIGN.md §8, "This session's changes").
+    /// </summary>
+    string? ChangedSinceBy(string path, DateTimeOffset since);
+
+    /// <summary>The session's Claude changed <paramref name="path"/>: the other tabs listing it look again.</summary>
+    void ClaudeChangedFile(string path);
 }
 
 /// <summary>The tab's changed files and diffs (DESIGN.md §8).</summary>
@@ -94,8 +136,6 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     private UiTimeout ReviewSync => field ??= new(_services.Time, _services.Dispatcher);
     private bool _reviewSyncStopped;
     private bool _refreshQueued;
-    /// <summary>Changes came while the tab was in the background; the rows catch up when it's selected.</summary>
-    private bool _stale;
 
     /// <summary>
     /// Each changed file's inspection (reading it and diffing it against its "before"), kept until the file on disk or
@@ -103,7 +143,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// </summary>
     private readonly ConcurrentDictionary<string, (InspectionKey Key, ChangedFileState State)> _inspections = new(StringComparer.Ordinal);
 
-    private readonly record struct InspectionKey(bool Exists, long Length, DateTime LastWriteUtc, string? Before, bool BeforeKnown, bool IsNew);
+    private readonly record struct InspectionKey(bool Exists, long Length, DateTime LastWriteUtc, string? Before, bool BeforeKnown, bool IsNew, string? After, bool AfterKnown);
     /// <summary>Counts refreshes started, so one that finishes after a later one leaves that one's newer rows alone.</summary>
     private int _refreshGeneration;
 
@@ -157,6 +197,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary>Whether Claude changed <paramref name="path"/> in the session.</summary>
     internal bool HasClaudeChange(string path) => Changes.Find(path) is not null;
 
+    /// <summary>When Claude last changed <paramref name="path"/> in the session, or null when it hasn't.</summary>
+    internal DateTimeOffset? LastClaudeChange(string path) => _changes?.Find(path)?.LastChanged;
+
     /// <summary>Whether <paramref name="path"/> is ticked as reviewed, as of Claude's latest change to it.</summary>
     internal bool IsFileReviewed(string path) => Reviewed.IsReviewed(path, Changes.Find(path));
 
@@ -176,16 +219,50 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool ShowGitChanges { get; set; }
 
-    partial void OnShowGitChangesChanged(bool value) => _ = RefreshAsync();
+    partial void OnShowGitChangesChanged(bool value)
+    {
+        _ = RefreshAsync();
+        UpdateWatches();
+    }
 
     public bool IsGitRepository => GitInfo.TryGetBranch(_host.Folder) is not null;
 
-    /// <summary>The tab moved to another folder, which may or may not be a repository.</summary>
-    internal void OnFolderChanged() => OnPropertyChanged(nameof(IsGitRepository));
+    /// <summary>
+    /// The tab moved to another folder, which may or may not be a repository: the rows' paths are shown from there,
+    /// and the git view lists that folder's working tree, or goes back to the session's changes outside a repository.
+    /// </summary>
+    internal void OnFolderChanged()
+    {
+        OnPropertyChanged(nameof(IsGitRepository));
+        _inspections.Clear();
+        UpdateWatches();
+        if (ShowGitChanges && !IsGitRepository)
+        {
+            ShowGitChanges = false; // Refreshes.
+            return;
+        }
+        QueueRefresh();
+    }
+
+    /// <summary>
+    /// Something other than this tab's Claude may have changed the files: a turn ended (its commands, a commit),
+    /// Claudette came back to the front (the user's own edits), a watched folder changed, or another tab's Claude
+    /// changed a file listed here. The rows look at the disk again, or git again; a tab in the background does once
+    /// it's shown.
+    /// </summary>
+    internal void CheckDisk()
+    {
+        if (_changes is null && !ShowGitChanges)
+        {
+            return;
+        }
+        QueueRefresh();
+    }
 
     /// <summary>Follows the session's Edit and Write calls, live and from a restored transcript.</summary>
     /// <param name="live">From the running session, so its changes count toward the turn's footer; false for a transcript read back.</param>
-    internal void Record(SessionEvent sessionEvent, bool live = true)
+    /// <param name="at">When a transcript's entry was written, so a change read back keeps its time; null for a live change, which is stamped now.</param>
+    internal void Record(SessionEvent sessionEvent, bool live = true, DateTimeOffset? at = null)
     {
         switch (sessionEvent)
         {
@@ -196,12 +273,31 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 }
                 break;
             case ToolResultsReceived { Message: var results }:
+                // A message has one structured result; with several tool results in it, the changes use it only for
+                // the call whose file it names.
                 foreach (var result in results.Content.OfType<ToolResultBlock>())
                 {
-                    Changes.RecordToolResult(result.ToolUseId, result.IsError, results.ToolUseResult, inTurn: live);
+                    if (Changes.RecordToolResult(result.ToolUseId, result.IsError, results.ToolUseResult, at, inTurn: live) is { } file && live)
+                    {
+                        // The other tabs that changed the file look at it again (DESIGN.md §8, "This session's changes").
+                        _host.ClaudeChangedFile(file.Path);
+                    }
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// <c>/clear</c> started a new conversation (DESIGN.md §8): its changes start from nothing, and the marks, which were
+    /// for the old one's, go as <b>Start a new session</b>'s do.
+    /// </summary>
+    internal void Clear()
+    {
+        _host.State.ReviewedFiles.Clear();
+        _reviewed = null;
+        Reset();
+        _services.SaveState();
+        ReviewedChanged?.Invoke();
     }
 
     /// <summary>
@@ -236,6 +332,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// </summary>
     internal void EndTurn(TurnSummaryItem? summary)
     {
+        // The turn's commands may have changed the files too, or committed them.
+        CheckDisk();
         var changes = Changes.TakeTurn();
         if (summary is null || changes.Count == 0)
         {
@@ -253,7 +351,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     {
         var changes = Changes;
         var counted = await Task.Run(() => rows
-            .Select(row => changes.CountAgainstDisk(row.Change) is var (added, removed) ? $"+{added} −{removed}" : null)
+            .Select(row => changes.CountTurn(row.Change) is var (added, removed) ? $"+{added} −{removed}" : null)
             .ToArray());
         for (var i = 0; i < rows.Count; i++)
         {
@@ -275,8 +373,11 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         var change = row.Change;
         var later = _turns.SkipWhile(t => !ReferenceEquals(t, row.Turn)).Skip(1)
             .SelectMany(t => t.Files).FirstOrDefault(f => Changes.SamePath(f.Change.Path, change.Path));
-        // A later turn's "before" that isn't known leaves the file now as the best there is.
-        var after = later is { Change.BeforeKnown: true } ? new DiffAfter(later.Change.Before) : null;
+        // How the turn's last change left the file; failing that, how the next turn that changed it found it. A later
+        // turn's "before" that isn't known leaves the file now as the best there is.
+        var after = change.AfterKnown ? new DiffAfter(change.After)
+            : later is { Change.BeforeKnown: true } ? new DiffAfter(later.Change.Before) : null;
+        later = change.AfterKnown ? null : later;
         var label = !change.BeforeKnown ? "what it held before this turn isn't known, so there's nothing to compare it with"
             : after is not null ? (change.IsNew ? "this turn's changes: new in it, as it left it" : "this turn's changes: before it, against how it left it")
             : later is not null ? "this turn's changes, with a later turn's: before it, against the file now"
@@ -337,7 +438,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 await inDiffTool();
                 return false;
             default:
-                return !row.IsDeleted && await _host.OpenPathAsync(row.Path) == OpenedPath.InClaudette;
+                return !row.IsMissing && await _host.OpenPathAsync(row.Path) == OpenedPath.InClaudette;
         }
     }
 
@@ -346,7 +447,6 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         if (!_host.IsSelected)
         {
             // Nobody sees a background tab's rows: keep the count, and inspect the files (or ask git) once it's shown.
-            _stale = true;
             if (!ShowGitChanges)
             {
                 Count = Changes.Files.Count;
@@ -382,54 +482,57 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             GitRefreshWait.Cancel();
             var refresh = new CancellationTokenSource();
             Interlocked.Exchange(ref _gitRefresh, refresh)?.Cancel();
-            IReadOnlyList<GitChange> changes;
-            try
+            // The tab's working tree, and each other one Claude changed files in that's still there (DESIGN.md §8, "Working trees").
+            var files = _changes?.Files.ToArray() ?? [];
+            var (home, others) = await Task.Run(() =>
             {
-                changes = await _services.Git.GetChangesAsync(folder, refresh.Token);
-            }
-            catch (OperationCanceledException)
+                var home = GitInfo.TryGetWorkTree(folder)?.WorkTree;
+                var others = files.Select(f => WorkTreeOf(f.Path)).OfType<string>()
+                    .Where(tree => !IsHome(tree, home) && Directory.Exists(tree) && GitInfo.TryGetWorkTree(tree) is not null)
+                    .Distinct(ChangedFiles.PlatformPathComparer).ToArray();
+                return (home, others);
+            });
+            rows = [];
+            foreach (var tree in others.Prepend(null))
             {
-                // A newer refresh took over.
-                return;
-            }
-            rows = changes.Select(c => new ChangedFileRow
-            {
-                Path = c.Path,
-                DisplayPath = Relative(c.Path, folder),
-                Status = c.Kind switch { GitChangeKind.Added or GitChangeKind.Untracked => "A", GitChangeKind.Deleted => "D", GitChangeKind.Renamed => "R", _ => "M" },
-                StatusText = c.Kind switch
+                IReadOnlyList<GitChange> changes;
+                try
                 {
-                    GitChangeKind.Untracked => "Untracked",
-                    GitChangeKind.Renamed => $"Renamed from {Relative(c.OldPath ?? "", folder)}",
-                    _ => c.Kind.ToString(),
-                },
-                Stats = c.Added is { } a && c.Removed is { } r ? $"+{a} −{r}" : null,
-                FromGit = true,
-            }).ToList();
+                    changes = await _services.Git.GetChangesAsync(tree ?? folder, refresh.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // A newer refresh took over.
+                    return;
+                }
+                var from = tree ?? folder;
+                rows.AddRange(changes.Select(c => new ChangedFileRow
+                {
+                    Path = c.Path,
+                    DisplayPath = Relative(c.Path, from),
+                    Status = c.Kind switch { GitChangeKind.Added or GitChangeKind.Untracked => "A", GitChangeKind.Deleted => "D", GitChangeKind.Renamed => "R", _ => "M" },
+                    StatusText = c.Kind switch
+                    {
+                        GitChangeKind.Untracked => "Untracked",
+                        GitChangeKind.Renamed => $"Renamed from {Relative(c.OldPath ?? "", from)}",
+                        _ => c.Kind.ToString(),
+                    },
+                    Stats = c.Added is { } a && c.Removed is { } r ? $"+{a} −{r}" : null,
+                    FromGit = true,
+                    WorkTree = tree,
+                }));
+            }
+            rows = await Task.Run(() => InGroups(rows, home, folder));
         }
         else
         {
             var files = Changes.Files.ToArray();
             var changes = Changes;
-            rows = await Task.Run(() => files.Select(file =>
+            rows = await Task.Run(() =>
             {
-                var state = Inspect(changes, file);
-                return new ChangedFileRow
-                {
-                    Path = file.Path,
-                    DisplayPath = changes.DisplayPath(file, folder),
-                    Status = state.Status switch { ChangedFileStatus.Added => "A", ChangedFileStatus.Deleted => "D", ChangedFileStatus.Unchanged => "=", _ => "M" },
-                    StatusText = state.Status switch
-                    {
-                        ChangedFileStatus.Unchanged => "Back to how it was",
-                        _ when !file.BeforeKnown => $"{state.Status} (Claude Code didn't report the earlier content)",
-                        _ => state.Status.ToString(),
-                    },
-                    Stats = state.Added is { } a && state.Removed is { } r ? $"+{a} −{r}" : state.IsBinary ? "binary" : null,
-                    Before = file.Before,
-                    BeforeKnown = file.BeforeKnown,
-                };
-            }).ToList());
+                var home = GitInfo.TryGetWorkTree(folder)?.WorkTree;
+                return InGroups(files.Select(file => Row(changes, file, folder, home)).ToList(), home, folder);
+            });
         }
         if (generation != _refreshGeneration)
         {
@@ -445,25 +548,185 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             var claudeChanges = Changes.Find(row.Path);
             row.LatestChange = ReviewedFiles.LatestChange(claudeChanges);
             row.IsReviewed = Reviewed.IsReviewed(row.Path, claudeChanges);
+            // Changed since by another tab's Claude: which one.
+            if (row is { Since: { } since, IsGone: false } && claudeChanges is not null && _host.ChangedSinceBy(row.Path, claudeChanges.LastChanged) is { } by)
+            {
+                row.Since = $"{since} by {by}";
+            }
         }
-        _stale = false;
+        UpdateWatches();
         SyncRows(rows);
         Count = Files.Count;
         UpdateSummary();
         OnPropertyChanged(nameof(IsGitRepository));
     }
 
+    /// <summary>A changed file's row: its changes in the session, from the tab's folder or its own working tree's top. Reads the file, so off the UI thread.</summary>
+    private ChangedFileRow Row(ChangedFiles changes, ChangedFile file, string folder, string? home)
+    {
+        var state = Inspect(changes, file);
+        var tree = WorkTreeOf(file.Path);
+        var own = IsHome(tree, home);
+        // Its worktree is gone: removed, or merged and cleaned up.
+        var treeGone = !own && !Directory.Exists(tree);
+        return new ChangedFileRow
+        {
+            Path = file.Path,
+            DisplayPath = own ? changes.DisplayPath(file, folder) : changes.DisplayPath(file, tree!),
+            Status = state.Status switch { ChangedFileStatus.Added => "A", ChangedFileStatus.Deleted when !treeGone => "D", ChangedFileStatus.Unchanged => "=", _ => "M" },
+            StatusText = (state.Status switch
+            {
+                ChangedFileStatus.Unchanged => "Back to how it was",
+                _ when !file.BeforeKnown => $"{state.Status} (Claude Code didn't report the earlier content)",
+                _ => state.Status.ToString(),
+            }) + (file.ChangedBetween ? ", with changes made outside this session between its edits" : "")
+                + (treeGone ? ", in a worktree that's gone" : ""),
+            Stats = state.Added is { } a && state.Removed is { } r ? $"+{a} −{r}" : state.IsBinary ? "binary" : null,
+            Before = file.Before,
+            BeforeKnown = file.BeforeKnown,
+            After = file.After,
+            AfterKnown = file.AfterKnown,
+            IsGone = treeGone || file.AfterKnown && state.Since is { Deleted: true },
+            Since = treeGone ? null : SinceText(state.Since),
+            WorkTree = own ? null : tree,
+        };
+    }
+
+    /// <summary>The row's line for what changed since the session's latest change (DESIGN.md §8, "This session's changes").</summary>
+    private static string? SinceText(ChangedSince? since) => since switch
+    {
+        null => null,
+        { Deleted: true } => "Deleted since",
+        { Added: { } added, Removed: { } removed } => $"Changed since: +{added} −{removed}",
+        _ => "Changed since",
+    };
+
     /// <summary>"Files (n)" in the composer bar, kept up to date even while the rows wait for the tab to be shown.</summary>
     [ObservableProperty]
     public partial int Count { get; private set; }
 
-    /// <summary>The tab was selected: rows that waited while it was in the background catch up.</summary>
-    internal void RefreshIfStale()
+    // ---- Subagents' changes (DESIGN.md §8) ----------------------------------------------------------------------------
+
+    /// <summary>The tools whose calls change files, as a hook's matcher.</summary>
+    internal const string FileToolMatcher = "Edit|Write|MultiEdit|NotebookEdit";
+
+    /// <summary>
+    /// The PreToolUse hook every tab registers on the file tools: a subagent's Edit or Write comes without what the file
+    /// held before, live and in its transcript (checked with 2.1.302 and 2.1.308), so the hook reads it first.
+    /// </summary>
+    internal HookRegistration BeforeHook() => new("PreToolUse", FileToolMatcher, OnFileToolCallAsync);
+
+    /// <summary>
+    /// A file tool's call, before it runs: Claude Code waits for the answer, so the file is as the call found it. Only a
+    /// subagent's (<c>agent_id</c>), whose result won't say. Called off the UI thread.
+    /// </summary>
+    private Task<JsonObject> OnFileToolCallAsync(HookInput input, CancellationToken cancellationToken)
     {
-        if (_stale)
+        if (input.Raw["agent_id"] is not null && input.ToolUseId is { } id
+            && (input.ToolInput?.GetString("file_path") ?? input.ToolInput?.GetString("notebook_path")) is { Length: > 0 } path
+            && Path.IsPathFullyQualified(path))
         {
-            QueueRefresh();
+            var (before, known) = ChangedFiles.ReadFromDisk(path);
+            // Before the answer goes, so before the tool's result comes.
+            _services.Dispatcher.Post(() => Changes.NoteBefore(id, path, before, known));
         }
+        return Task.FromResult(HookOutputs.Continue());
+    }
+
+    // ---- Following the disk (DESIGN.md §8) ---------------------------------------------------------------------------
+
+    /// <summary>How long the rows wait after the disk changes before looking again: a build or a checkout writes many files at once.</summary>
+    internal static readonly TimeSpan DiskSettleDelay = TimeSpan.FromMilliseconds(300);
+
+    /// <summary>The most folders watched at once, so a session that changed files all over doesn't hold a watch on each.</summary>
+    internal const int MaxWatchedFolders = 64;
+
+    /// <summary>The folders watched while the tab is on screen, by path.</summary>
+    private readonly Dictionary<string, IDisposable> _watches = new(ChangedFiles.PlatformPathComparer);
+    private bool _watching;
+    private UiTimeout DiskSettle => field ??= new(_services.Time, _services.Dispatcher);
+
+    /// <summary>
+    /// The tab came on screen or went off it. On screen, the rows catch up with the disk, and the folders of the files
+    /// Claude changed are watched, and in the working tree view the working tree's git folder, so what anything else
+    /// does there shows; off it, nothing is watched, and the rows wait.
+    /// </summary>
+    internal void OnShownChanged(bool shown)
+    {
+        _watching = shown;
+        if (shown)
+        {
+            UpdateWatches();
+            CheckDisk();
+        }
+        else
+        {
+            StopWatching();
+        }
+    }
+
+    /// <summary>Another tab's Claude changed <paramref name="path"/>: a row for it, or the working tree view, looks again.</summary>
+    internal void OnOtherTabChanged(string path)
+    {
+        if (ShowGitChanges || _changes?.Find(path) is not null)
+        {
+            CheckDisk();
+        }
+    }
+
+    /// <summary>Watches the folders the rows need, and stops watching those they no longer do.</summary>
+    private void UpdateWatches()
+    {
+        if (!_watching)
+        {
+            return;
+        }
+        var folders = new HashSet<string>(ChangedFiles.PlatformPathComparer);
+        if (ShowGitChanges && GitInfo.TryGetWorkTree(_host.Folder) is { } tree)
+        {
+            // Its index and HEAD: staging, commits and checkouts.
+            folders.Add(tree.GitDir);
+        }
+        foreach (var file in _changes?.Files ?? [])
+        {
+            if (folders.Count >= MaxWatchedFolders)
+            {
+                break;
+            }
+            if (Path.GetDirectoryName(file.Path) is { Length: > 0 } folder && Path.IsPathFullyQualified(folder))
+            {
+                folders.Add(folder);
+            }
+        }
+        foreach (var folder in _watches.Keys.Where(f => !folders.Contains(f)).ToArray())
+        {
+            _watches[folder].Dispose();
+            _watches.Remove(folder);
+        }
+        foreach (var folder in folders.Where(f => !_watches.ContainsKey(f) && Directory.Exists(f)))
+        {
+            _watches[folder] = _services.FolderWatcher.Watch(folder, path => _services.Dispatcher.Post(() => OnDiskChanged(path)));
+        }
+    }
+
+    private void StopWatching()
+    {
+        foreach (var watch in _watches.Values)
+        {
+            watch.Dispose();
+        }
+        _watches.Clear();
+        DiskSettle.Cancel();
+    }
+
+    /// <summary>Something changed in a watched folder: a changed file, or in the working tree view anything, looks again once the writing pauses.</summary>
+    private void OnDiskChanged(string? path)
+    {
+        if (!_watching || !ShowGitChanges && path is not null && _changes?.Find(path) is null)
+        {
+            return;
+        }
+        DiskSettle.Restart(DiskSettleDelay, CheckDisk);
     }
 
     /// <summary>A file's inspection, from the cache while neither the file nor what's known of it has changed.</summary>
@@ -471,8 +734,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     {
         var info = new FileInfo(file.Path);
         var key = info.Exists
-            ? new InspectionKey(true, info.Length, info.LastWriteTimeUtc, file.Before, file.BeforeKnown, file.IsNew)
-            : new InspectionKey(false, 0, default, file.Before, file.BeforeKnown, file.IsNew);
+            ? new InspectionKey(true, info.Length, info.LastWriteTimeUtc, file.Before, file.BeforeKnown, file.IsNew, file.After, file.AfterKnown)
+            : new InspectionKey(false, 0, default, file.Before, file.BeforeKnown, file.IsNew, file.After, file.AfterKnown);
         if (_inspections.TryGetValue(file.Path, out var cached) && cached.Key == key)
         {
             return cached.State;
@@ -522,7 +785,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     private static string Relative(string path, string folder)
     {
         var relative = Path.GetRelativePath(folder, path);
-        return (relative.StartsWith("..", StringComparison.Ordinal) ? path : relative).Replace('\\', '/');
+        // A name such as ..data is inside the folder; .. and ../x lead out of it.
+        return (FolderListing.IsUp(relative) || Path.IsPathRooted(relative) ? path : relative).Replace('\\', '/');
     }
 
     // ---- Reviewed (DESIGN.md §8) -----------------------------------------------------------------------------------
@@ -643,6 +907,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         ReviewSync.Cancel();
         GitRefreshWait.Cancel();
         _gitRefresh?.Cancel();
+        _watching = false;
+        StopWatching();
     }
 
     // ---- Opening diffs (DESIGN.md §8) ------------------------------------------------------------------------------
@@ -677,29 +943,42 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         {
             return;
         }
-        var before = row.FromGit ? await _services.Git.GetHeadContentAsync(_host.Folder, row.Path) : row.Before;
+        var before = row.FromGit ? await _services.Git.GetHeadContentAsync(row.WorkTree ?? _host.Folder, row.Path) : row.Before;
         var beforeKnown = row.FromGit || row.BeforeKnown;
         Func<Task>? inDiffTool = HasDiffTool && beforeKnown ? () => OpenFileInDiffToolAsync(row) : null;
-        DiffRequested?.Invoke(new DiffSource(
+        var review = new DiffReview(
+            () => ReviewedFiles.LatestChange(Changes.Find(row.Path)),
+            () => Reviewed.IsReviewed(row.Path, Changes.Find(row.Path)),
+            change => SetFileReviewed(row.Path, reviewed: true, change));
+        var againstNow = new DiffSource(
             row.Path,
             row.DisplayPath,
             before,
             row.FromGit ? "compared with HEAD"
                 : !beforeKnown ? "what it held before Claude's first change isn't known, so there's nothing to compare it with"
-                : before is null ? "new in this session"
-                : "compared with before Claude's first change in this session",
+                : before is null ? row.Since is null ? "new in this session" : "new in this session, against the file now with what changed since"
+                : row.Since is null ? "compared with before Claude's first change in this session"
+                : "from before Claude's first change in this session, against the file now with what changed since",
             inDiffTool,
             () => OpenFromDiffAsync(row, inDiffTool),
             () => RevealFileAsync(row),
             () => CopyFilePathAsync(row),
             beforeKnown,
-            new DiffReview(
-                () => ReviewedFiles.LatestChange(Changes.Find(row.Path)),
-                () => Reviewed.IsReviewed(row.Path, Changes.Find(row.Path)),
-                change => SetFileReviewed(row.Path, reviewed: true, change)),
+            review,
             FromGit: row.FromGit,
             OpenInSystem: () => OpenFileInSystemAsync(row),
-            WordWrap: DiffWordWrap.From(_services)));
+            WordWrap: DiffWordWrap.From(_services));
+        // Changed since the session's latest change: the diff ends where that left it, with the file now to switch to
+        // (DESIGN.md §8, "This session's changes").
+        DiffRequested?.Invoke(row is { FromGit: false, AfterKnown: true, Since: not null } && beforeKnown
+            ? againstNow with
+            {
+                BeforeLabel = before is null ? "new in this session, as its last change left it" : "this session's changes: before its first, to as its last left it",
+                After = new DiffAfter(row.After),
+                AllowRevert = false,
+                AgainstNow = againstNow,
+            }
+            : againstNow);
     }
 
     /// <summary>
@@ -710,13 +989,16 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     private Task OpenToolDiffAsync(ToolUseItem? tool) => tool is null ? Task.CompletedTask : OpenChangeDiffAsync(tool.ToolUseId);
 
     /// <summary>The file a change (its tool call's id) was made to, in the diff view as Changed files shows it.</summary>
-    internal Task OpenChangeDiffAsync(string toolUseId)
+    internal async Task OpenChangeDiffAsync(string toolUseId)
     {
         if (Changes.Files.FirstOrDefault(f => f.ToolUseIds.Contains(toolUseId)) is not { } file)
         {
-            return Task.CompletedTask;
+            return;
         }
-        return OpenFileDiffAsync(new ChangedFileRow
+        // With what changed on disk since the session's latest change, as its row has it.
+        var changes = Changes;
+        var since = file.AfterKnown ? (await Task.Run(() => Inspect(changes, file))).Since : null;
+        await OpenFileDiffAsync(new ChangedFileRow
         {
             Path = file.Path,
             DisplayPath = Changes.DisplayPath(file, _host.Folder),
@@ -724,6 +1006,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             StatusText = file.IsNew ? "Added" : "Modified",
             Before = file.Before,
             BeforeKnown = file.BeforeKnown,
+            After = file.After,
+            AfterKnown = file.AfterKnown,
+            Since = SinceText(since),
         });
     }
 
@@ -746,7 +1031,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
         try
         {
-            var before = row.FromGit ? await _services.Git.GetHeadContentAsync(_host.Folder, row.Path) : row.Before;
+            var before = row.FromGit ? await _services.Git.GetHeadContentAsync(row.WorkTree ?? _host.Folder, row.Path) : row.Before;
             await new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment).LaunchAsync(DiffTool, before, row.Path, DiffTempDirectory);
         }
         catch (Exception ex)
@@ -758,12 +1043,12 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary><b>Open</b>: in the project's Files tab, or the OS's app, as Settings → Files and diffs says (DESIGN.md §18, "Project files").</summary>
     [RelayCommand]
     private Task OpenFileInEditorAsync(ChangedFileRow? row) =>
-        row is { IsDeleted: false } ? _host.OpenPathAsync(row.Path) : Task.CompletedTask;
+        row is { IsMissing: false } ? _host.OpenPathAsync(row.Path) : Task.CompletedTask;
 
     /// <summary><b>Open in the OS's app</b>, whatever Settings → Files and diffs says.</summary>
     [RelayCommand]
     private Task OpenFileInSystemAsync(ChangedFileRow? row) =>
-        row is { IsDeleted: false } ? _services.Platform.OpenFileAsync(row.Path) : Task.CompletedTask;
+        row is { IsMissing: false } ? _services.Platform.OpenFileAsync(row.Path) : Task.CompletedTask;
 
     [RelayCommand]
     private Task RevealFileAsync(ChangedFileRow? row) =>

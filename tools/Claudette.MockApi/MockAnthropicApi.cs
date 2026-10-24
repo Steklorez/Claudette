@@ -55,6 +55,14 @@ public sealed record RecordedImage(string MediaType, int Bytes, int? Width, int?
 /// a nested Explore subagent that replies "Found 3 matches in src/.". Then done.
 /// </item>
 /// <item><c>LONG_AGENT</c>: one subagent that runs <c>sleep 30</c>, for stopping it; in the background with <c>BACKGROUND</c>.</item>
+/// <item>
+/// <c>SUBAGENT_WRITE &lt;path&gt;</c> and <c>SUBAGENT_EDIT &lt;path&gt;</c>: one subagent that does <c>WRITE_FILE</c> or
+/// <c>EDIT_FILE</c> on the path, in a worktree of its own (<c>isolation: worktree</c>) with <c>ISOLATED</c> after it.
+/// </item>
+/// <item>
+/// <c>ENTER_WORKTREE &lt;name&gt;</c> and <c>EXIT_WORKTREE keep|remove</c>: an EnterWorktree or ExitWorktree tool call,
+/// then done.
+/// </item>
 /// <item><c>AGENT_REPLY &lt;text&gt;</c>: replies with the text (how the subagents above answer).</item>
 /// <item>
 /// <c>SEND_MESSAGE &lt;to&gt; | &lt;message&gt;</c>: a SendMessage tool call, then done, for threads (DESIGN.md §18). The
@@ -335,6 +343,18 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
                 return exit;
             }
         }
+        // ENTER_WORKTREE and EXIT_WORKTREE: Claude moving into a worktree of its own mid-session, and out again.
+        if (WorktreePattern().Match(prompt) is { Success: true } worktree)
+        {
+            var (tool, input) = worktree.Groups[1].Value == "ENTER"
+                ? ("EnterWorktree", new JsonObject { ["name"] = worktree.Groups[2].Value })
+                : ("ExitWorktree", new JsonObject { ["action"] = worktree.Groups[2].Value });
+            if (Reachable(tool) && ToolCallsSince(messages, promptIndex) is var called && !called.Contains(tool)
+                && CallOrLoad(tool, called, () => new Plan("tool-worktree", [ToolUse(tool, input)])) is { } move)
+            {
+                return move;
+            }
+        }
         // SEND_MESSAGE, a thread's SendMessage call (DESIGN.md §18).
         var sendIndex = Array.FindLastIndex(messages, m => m["role"]?.GetValue<string>() == "user" && SendPattern().IsMatch(MessageText(m)));
         if (sendIndex >= 0 && Reachable("SendMessage") && ToolCallsSince(messages, sendIndex) is var sent && !sent.Contains("SendMessage")
@@ -364,6 +384,16 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
             if (text.Contains("NESTED_AGENT", StringComparison.Ordinal))
             {
                 return new Plan("nested-agent", [ToolUse(agentTool, AgentInput("Search deeper", "Explore", "AGENT_REPLY Found 3 matches in src/."))]);
+            }
+            // SUBAGENT_WRITE and SUBAGENT_EDIT: one subagent that writes or edits the file, in a worktree of its own with ISOLATED.
+            if (SubagentFilePattern().Match(text) is { Success: true } file)
+            {
+                var input = AgentInput("Change a file", "general-purpose", $"{file.Groups[1].Value}_FILE {file.Groups[2].Value}");
+                if (file.Groups[3].Success)
+                {
+                    input["isolation"] = "worktree";
+                }
+                return new Plan("agent-file", [ToolUse(agentTool, input)]);
             }
             if (text.Contains("LONG_AGENT", StringComparison.Ordinal))
             {
@@ -507,7 +537,13 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
     [GeneratedRegex("title", RegexOptions.IgnoreCase)]
     private static partial Regex TitlePattern();
 
-    [GeneratedRegex("EDIT_FILE|WRITE_FILE|RUN_BASH|SLOW|ASK_QUESTION|EXIT_PLAN|hello")]
+    [GeneratedRegex(@"(ENTER|EXIT)_WORKTREE (\S+)")]
+    private static partial Regex WorktreePattern();
+
+    [GeneratedRegex(@"SUBAGENT_(WRITE|EDIT) (\S+)( ISOLATED)?")]
+    private static partial Regex SubagentFilePattern();
+
+    [GeneratedRegex("EDIT_FILE|WRITE_FILE|RUN_BASH|SLOW|ASK_QUESTION|EXIT_PLAN|_WORKTREE|hello")]
     private static partial Regex KeywordPattern();
 
     [GeneratedRegex(@"EDIT_FILE (\S+)")]

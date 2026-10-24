@@ -35,4 +35,12 @@ public static class GitInfo
             return null;
         }
     }
+
+    /// <summary>
+    /// The working tree containing <paramref name="folder"/>: its top folder, its own git folder, which holds its HEAD
+    /// and index (for a linked worktree, under the main checkout's <c>.git/worktrees</c>), and the git folder every
+    /// worktree of the repository shares, which tells two of them from two repositories. Null when it isn't in one.
+    /// </summary>
+    public static (string WorkTree, string GitDir, string CommonDir)? TryGetWorkTree(string folder) =>
+        GitDirectory.Find(folder) is { } found ? (found.WorkTree, found.GitDir, found.CommonDir) : null;
 }

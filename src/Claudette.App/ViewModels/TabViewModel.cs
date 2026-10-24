@@ -476,9 +476,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         Working.SetShown(value);
         // Only a tab on screen counts its prompt cache down; it catches up here (DESIGN.md §6, "Prompt cache").
         RefreshPromptCache();
+        ChangedFiles.OnShownChanged(value);
         if (value)
         {
-            ChangedFiles.RefreshIfStale();
             if (Status == TabStatus.Unread)
             {
                 Status = TabStatus.Idle;
@@ -1552,7 +1552,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             // Every tab has the threads' hook, so making it a thread later needs no restart (DESIGN.md §18, "Threads"), and
             // the subagents' one, so turning them off applies at once (DESIGN.md §5, "Subagents").
             var withSubagents = WithSubagentNote(withPerforce);
-            var options = withSubagents with { Hooks = [.. withSubagents.Hooks, ThreadHook(), SubagentHook()] };
+            var options = withSubagents with { Hooks = [.. withSubagents.Hooks, ThreadHook(), SubagentHook(), ChangedFiles.BeforeHook()] };
             // Closed while the start was under way: nothing is started for a tab that's gone.
             _closing.Token.ThrowIfCancellationRequested();
             var session = await sessions.StartAsync(options, _closing.Token);
@@ -1852,13 +1852,13 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                     case TranscriptMessage { Message: AssistantMessage assistant }:
                         var assistantEvent = new AssistantMessageReceived(assistant);
                         _conversation.Replay(assistantEvent, item.Time);
-                        ChangedFiles.Record(assistantEvent, live: false);
+                        ChangedFiles.Record(assistantEvent, live: false, item.Time);
                         ReplayForPromptCache(assistant, item.Time);
                         break;
                     case TranscriptMessage { Message: UserMessage results }:
                         var resultsEvent = new ToolResultsReceived(results);
                         _conversation.Replay(resultsEvent, item.Time);
-                        ChangedFiles.Record(resultsEvent, live: false);
+                        ChangedFiles.Record(resultsEvent, live: false, item.Time);
                         break;
                 }
             }
@@ -2021,6 +2021,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
         _conversation.Apply(sessionEvent);
         ChangedFiles.Record(sessionEvent);
+        FollowWorktreeMoves(sessionEvent);
         // A tool call's result: the project's Files tab looks at its open files again (DESIGN.md §18, "Project files").
         if (sessionEvent is ToolResultsReceived)
         {
@@ -2192,6 +2193,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 break;
             case ConversationReset:
                 State.SessionStartedAt = _services.Time.GetUtcNow();
+                // The new conversation's changes start from nothing (DESIGN.md §8).
+                ChangedFiles.Clear();
                 OnPropertyChanged(nameof(InfoRows));
                 TodoList.Clear();
                 // The new session's list is followed once its id comes, with its first turn.

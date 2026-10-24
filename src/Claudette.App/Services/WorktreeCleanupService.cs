@@ -33,6 +33,12 @@ public sealed class WorktreeCleanupService : IDisposable
     /// <summary>The open tabs' states, read on the UI thread: their worktrees are in use. The shell sets it.</summary>
     public Func<IReadOnlyList<TabState>> OpenTabs { get; set; } = () => [];
 
+    /// <summary>
+    /// The worktrees the open tabs' sessions changed files in, read on the UI thread: in use too, since their Changed
+    /// files list them (DESIGN.md §8, "Working trees"). The shell sets it.
+    /// </summary>
+    public Func<IReadOnlyList<string>> ChangedWorktrees { get; set; } = () => [];
+
     private AppState State => _services.State;
 
     private WorktreeCleanupRules Rules => new(_services.Settings.General.RemoveMergedWorktrees, _services.Settings.General.RemoveInactiveWorktreesAfterDays);
@@ -70,10 +76,15 @@ public sealed class WorktreeCleanupService : IDisposable
         {
             var now = _services.Time.GetUtcNow();
             var tabs = OpenTabs();
-            // The worktrees open tabs work in are in use now.
+            // The worktrees open tabs work in are in use now, and those their sessions changed files in.
             foreach (var tab in tabs.Where(WorksInWorktree))
             {
                 SetLastUsed(tab.Folder, now);
+            }
+            var changed = ChangedWorktrees();
+            foreach (var worktree in changed.Where(w => GitWorktrees.MainCheckoutOf(w) is not null && Directory.Exists(w)))
+            {
+                SetLastUsed(worktree, now);
             }
             var checkouts = tabs.Select(t => t.WorktreeOf ?? GitWorktrees.MainCheckoutOf(t.Folder) ?? t.Folder)
                 .Concat(State.RecentFolders.Select(r => r.Path))
@@ -97,7 +108,7 @@ public sealed class WorktreeCleanupService : IDisposable
                 }
                 foreach (var worktree in worktrees.Where(w => !w.IsMain && GitWorktrees.MainCheckoutOf(w.Path) is not null && Directory.Exists(w.Path)))
                 {
-                    if (InUse(OpenTabs(), root, worktree.Path))
+                    if (InUse(OpenTabs(), ChangedWorktrees(), root, worktree.Path))
                     {
                         continue;
                     }
@@ -105,7 +116,7 @@ public sealed class WorktreeCleanupService : IDisposable
                     var work = await git.InspectAsync(worktree).ConfigureAwait(true);
                     var verdict = WorktreeCleanup.Decide(worktree, work, lastUsed, rules, now);
                     // A tab may have opened in it while git looked.
-                    if (verdict == WorktreeVerdict.Keep || work is null || InUse(OpenTabs(), root, worktree.Path))
+                    if (verdict == WorktreeVerdict.Keep || work is null || InUse(OpenTabs(), ChangedWorktrees(), root, worktree.Path))
                     {
                         continue;
                     }
@@ -137,10 +148,14 @@ public sealed class WorktreeCleanupService : IDisposable
         return removed;
     }
 
-    /// <summary>A tab works in <paramref name="path"/>, or will: one waiting to make it with <c>--worktree</c>.</summary>
-    private static bool InUse(IEnumerable<TabState> tabs, string root, string path) => tabs.Any(t =>
+    /// <summary>
+    /// A tab works in <paramref name="path"/>, or will (one waiting to make it with <c>--worktree</c>), or its session
+    /// changed files there.
+    /// </summary>
+    private static bool InUse(IEnumerable<TabState> tabs, IEnumerable<string> changed, string root, string path) => tabs.Any(t =>
         RealPath.Same(t.Folder, path)
-        || t.NewWorktree is { } pending && RealPath.Same(GitWorktrees.PathFor(root, pending), path));
+        || t.NewWorktree is { } pending && RealPath.Same(GitWorktrees.PathFor(root, pending), path))
+        || changed.Any(worktree => RealPath.Same(worktree, path));
 
     /// <summary>When a tab last used the worktree: the latest time kept under any spelling of its path.</summary>
     private DateTimeOffset? LastUsed(string path)

@@ -22,7 +22,7 @@ The summary at the top of Changed files counts them: *"5 files changed · 2 revi
 
 ## What unticks a file
 
-A file stays reviewed until Claude changes it again, with a file edit. Changes you make, or that a command makes, don't untick it. So a file only you changed, seen with **Working tree vs HEAD** on, stays ticked until Claude changes it.
+A file stays reviewed until Claude changes it again, with a file edit. Changes you make, that a command makes or that another tab's Claude makes don't untick it. So a file only you changed, seen with **Working tree vs HEAD** on, stays ticked until Claude changes it.
 
 ## The reviewed icon
 

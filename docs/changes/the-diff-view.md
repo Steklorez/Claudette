@@ -15,6 +15,14 @@ The diff view shows what Claude changed in one file: the file as it was before C
 
 Click a file in [Changed files](changed-files.md), or select it and press `Enter`. The line under the title says what the file is compared with: its contents before Claude's first change in the session, or, with **Working tree vs HEAD** on, HEAD.
 
+## A file that changed since
+
+{% include unreleased.html %}
+
+When the file has changed since this session's last change to it, by another tab, you or a command ([Changed since](changed-files.md#changed-since)), the view shows this session's changes: from before Claude's first change to how its last one left the file. There's no **Revert** then, since that isn't the file as it is.
+
+**With later changes** shows the file as it is now instead, with what changed since, and **Revert** as usual. Click it again to go back.
+
 ## Reading it
 
 - The view shows the changes with a few lines of context between them. **Whole file** shows every line.
@@ -32,6 +40,7 @@ When Claude changes the file while the window is open, choose **Refresh** in the
 The buttons along the top:
 
 - **Side by side**, **Whole file** and **Wrap lines** switch how the changes show.
+- **With later changes**, for a file that changed since this session's last change to it ([above](#a-file-that-changed-since)).
 - **Open in diff tool** appears when you've set an [external diff tool](external-diff-tools.md).
 - **Open** opens the file, as described below.
 - **Revert file** puts the whole file back ([Reverting](reverting.md)). Each change has a **Revert** of its own on its header.

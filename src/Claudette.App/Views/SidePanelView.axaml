@@ -104,38 +104,45 @@
                  Tapped="OnChangedFileTapped" DoubleTapped="OnChangedFileDoubleTapped">
           <ListBox.ItemTemplate>
             <DataTemplate DataType="vm:ChangedFileRow">
-              <Grid Classes="changedfile" Classes.reviewed="{Binding IsReviewed}" ColumnDefinitions="Auto,Auto,*" ToolTip.Tip="{Binding StatusText}" Background="Transparent">
-                <!-- DESIGN.md §8, "Reviewed": unticks when Claude changes the file again -->
-                <CheckBox Classes="reviewed" IsChecked="{Binding IsReviewed, Mode=OneWay}"
-                          Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.ToggleFileReviewedCommand}" CommandParameter="{Binding}"
-                          AutomationProperties.Name="Reviewed" ToolTip.Tip="Reviewed. Unticks when Claude changes the file again." />
-                <!-- The letter and the counts are monospace, beside the name: on its baseline (Controls/Baseline). -->
-                <TextBlock Grid.Column="1" Classes="mono" FontWeight="SemiBold" Text="{Binding Status}" Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsDeleted}"
-                           controls:Baseline.AlignWith="{Binding #FileName}" />
-                <StackPanel Grid.Column="2">
-                  <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock x:Name="FileName" Text="{Binding FileName}" TextWrapping="Wrap" />
-                    <TextBlock Grid.Column="1" Classes="mono small muted" Text="{Binding Stats}" VerticalAlignment="Top" Margin="6,0,0,0"
-                               controls:Baseline.AlignWith="{Binding #FileName}" />
-                  </Grid>
-                  <TextBlock Classes="muted small" Text="{Binding DisplayPath}" TextWrapping="Wrap" />
-                </StackPanel>
-                <Grid.ContextMenu>
-                  <ContextMenu>
-                    <MenuItem Header="Open diff" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileDiffCommand}" CommandParameter="{Binding}" />
-                    <MenuItem Header="Open in diff tool" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInDiffToolCommand}" CommandParameter="{Binding}"
-                              IsVisible="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.HasDiffTool}" />
-                    <MenuItem Header="Open" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInEditorCommand}" CommandParameter="{Binding}" />
-                    <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInSystemCommand}" CommandParameter="{Binding}" />
-                    <MenuItem Header="Reveal in folder" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFileCommand}" CommandParameter="{Binding}" />
-                    <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.CopyFilePathCommand}" CommandParameter="{Binding}" />
-                    <Separator />
-                    <!-- Settings → Files and diffs, at the diff tool (DESIGN.md §14) -->
-                    <MenuItem Header="Diff tool settings…" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenSettingCommand}"
-                              CommandParameter="Files and diffs#diffTool" />
-                  </ContextMenu>
-                </Grid.ContextMenu>
-              </Grid>
+              <StackPanel>
+                <!-- DESIGN.md §8, "Working trees": each working tree's group, headed on its first row -->
+                <TextBlock Classes="small muted changedgroup" Text="{Binding Group}" IsVisible="{Binding Group, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Grid Classes="changedfile" Classes.reviewed="{Binding IsReviewed}" ColumnDefinitions="Auto,Auto,*" ToolTip.Tip="{Binding StatusText}" Background="Transparent">
+                  <!-- DESIGN.md §8, "Reviewed": unticks when Claude changes the file again -->
+                  <CheckBox Classes="reviewed" IsChecked="{Binding IsReviewed, Mode=OneWay}"
+                            Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.ToggleFileReviewedCommand}" CommandParameter="{Binding}"
+                            AutomationProperties.Name="Reviewed" ToolTip.Tip="Reviewed. Unticks when Claude changes the file again." />
+                  <!-- The letter and the counts are monospace, beside the name: on its baseline (Controls/Baseline). -->
+                  <TextBlock Grid.Column="1" Classes="mono" FontWeight="SemiBold" Text="{Binding Status}" Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsDeleted}"
+                             controls:Baseline.AlignWith="{Binding #FileName}" />
+                  <StackPanel Grid.Column="2">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock x:Name="FileName" Text="{Binding FileName}" TextWrapping="Wrap" />
+                      <TextBlock Grid.Column="1" Classes="mono small muted" Text="{Binding Stats}" VerticalAlignment="Top" Margin="6,0,0,0"
+                                 controls:Baseline.AlignWith="{Binding #FileName}" />
+                    </Grid>
+                    <TextBlock Classes="muted small" Text="{Binding DisplayPath}" TextWrapping="Wrap" />
+                    <!-- DESIGN.md §8, "This session's changes": the file changed on disk since the session's latest change to it -->
+                    <TextBlock Classes="small warning" Text="{Binding Since}" TextWrapping="Wrap"
+                               IsVisible="{Binding Since, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  </StackPanel>
+                  <Grid.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="Open diff" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileDiffCommand}" CommandParameter="{Binding}" />
+                      <MenuItem Header="Open in diff tool" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInDiffToolCommand}" CommandParameter="{Binding}"
+                                IsVisible="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.HasDiffTool}" />
+                      <MenuItem Header="Open" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInEditorCommand}" CommandParameter="{Binding}" />
+                      <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInSystemCommand}" CommandParameter="{Binding}" />
+                      <MenuItem Header="Reveal in folder" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFileCommand}" CommandParameter="{Binding}" />
+                      <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.CopyFilePathCommand}" CommandParameter="{Binding}" />
+                      <Separator />
+                      <!-- Settings → Files and diffs, at the diff tool (DESIGN.md §14) -->
+                      <MenuItem Header="Diff tool settings…" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenSettingCommand}"
+                                CommandParameter="Files and diffs#diffTool" />
+                    </ContextMenu>
+                  </Grid.ContextMenu>
+                </Grid>
+              </StackPanel>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>

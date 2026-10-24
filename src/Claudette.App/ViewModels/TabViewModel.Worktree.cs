@@ -1,4 +1,8 @@
 using Claudette.App.Conversation;
+using Claudette.Core.Files;
+using Claudette.Core.Git;
+using Claudette.Core.Protocol;
+using Claudette.Core.Sessions;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.ViewModels;
@@ -67,6 +71,11 @@ public sealed partial class TabViewModel
     {
         if (State.NewWorktree is null)
         {
+            // Resumed in a worktree Claude moved into, or back out of one, without its result seen.
+            if (cwd is { Length: > 0 } && IsAnotherWorkTree(cwd))
+            {
+                FollowClaudeTo(cwd);
+            }
             return;
         }
         State.NewWorktree = null;
@@ -92,6 +101,82 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(WorktreeTip));
         OnPropertyChanged(nameof(InfoRows));
         OnBranchFolderChanged();
+        _services.SaveState();
+    }
+
+    // ---- Claude moving between worktrees (DESIGN.md §4, "Worktree tabs") ----------------------------------------------
+
+    /// <summary>The session's EnterWorktree and ExitWorktree calls waiting for their results, by tool call id.</summary>
+    private readonly Dictionary<string, string> _worktreeCalls = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Claude moved the session into a worktree with EnterWorktree, or out of it with ExitWorktree: the tab follows, as
+    /// it does into the worktree Claude Code makes for <c>--worktree</c>. Only the session's own calls, not a subagent's.
+    /// </summary>
+    private void FollowWorktreeMoves(SessionEvent sessionEvent)
+    {
+        switch (sessionEvent)
+        {
+            case AssistantMessageReceived { Message: { ParentToolUseId: null } message }:
+                foreach (var call in message.Content.OfType<ToolUseBlock>().Where(t => WorktreeMove.IsWorktreeTool(t.Name)))
+                {
+                    _worktreeCalls[call.Id] = call.Name;
+                }
+                break;
+            case ToolResultsReceived { Message: { ParentToolUseId: null } results } when _worktreeCalls.Count > 0:
+                foreach (var result in results.Content.OfType<ToolResultBlock>())
+                {
+                    if (_worktreeCalls.Remove(result.ToolUseId, out var tool) && !result.IsError
+                        && WorktreeMove.From(tool, results.ToolUseResult) is { } move && Directory.Exists(move.Folder) && !RealPath.Same(move.Folder, State.Folder))
+                    {
+                        FollowClaudeTo(move.Folder);
+                    }
+                }
+                break;
+        }
+    }
+
+    /// <summary>
+    /// <paramref name="folder"/> is where the session works now, and isn't the tab's folder: its group's folder, or the
+    /// top of another working tree of the same repository. A <c>cd</c> into a subfolder isn't.
+    /// </summary>
+    private bool IsAnotherWorkTree(string folder)
+    {
+        if (!Directory.Exists(folder) || RealPath.Same(folder, State.Folder))
+        {
+            return false;
+        }
+        if (RealPath.Same(folder, GroupFolder))
+        {
+            return true;
+        }
+        return GitInfo.TryGetWorkTree(folder) is { } tree && RealPath.Same(tree.WorkTree, folder)
+            && GitInfo.TryGetWorkTree(GroupFolder) is { } home && RealPath.Same(tree.CommonDir, home.CommonDir);
+    }
+
+    /// <summary>
+    /// The tab works in <paramref name="folder"/> from now on, staying in its group: changed files and the git view,
+    /// <c>@</c> files, project tools and the info card follow, and later starts resume there.
+    /// </summary>
+    private void FollowClaudeTo(string folder)
+    {
+        var home = GroupFolder;
+        State.Folder = FolderHistory.Normalize(folder);
+        State.WorktreeOf = RealPath.Same(State.Folder, home) ? null : home;
+        OnPropertyChanged(nameof(Folder));
+        OnPropertyChanged(nameof(FolderName));
+        OnPropertyChanged(nameof(DisplayName));
+        OnPropertyChanged(nameof(IsInWorktree));
+        OnPropertyChanged(nameof(WorktreeName));
+        OnPropertyChanged(nameof(WorktreeTip));
+        OnPropertyChanged(nameof(InfoRows));
+        ChangedFiles.OnFolderChanged();
+        ProjectTools.ReloadCustomActions();
+        OnScratchPadFolderChanged();
+        OnBranchFolderChanged();
+        _conversation.AddNote(IsInWorktree
+            ? $"Working in the worktree {FolderName}, on its own branch: {State.Folder}."
+            : $"Back in {State.Folder}.");
         _services.SaveState();
     }
 

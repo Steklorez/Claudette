@@ -210,8 +210,32 @@ items:
     status: documented
     usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: WorktreeTabTests, RealCliTests
-    # Where a worktree tab's Claude Code works once --worktree made the worktree (DESIGN.md §4, "Worktree tabs").
+    test: WorktreeTabTests, ChangedFilesWorkTreesTests, ProtocolRecordingTests, RealCliTests
+    # Where a worktree tab's Claude Code works once --worktree made the worktree, and where the session works after
+    # EnterWorktree or ExitWorktree, which the next turn's init names (DESIGN.md §4, "Worktree tabs"; checked with 2.1.302
+    # and 2.1.308). The tab follows it only to the top of another working tree of the same repository, or back to its
+    # group's folder, not into a subfolder.
+  - id: "EnterWorktree"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Git/WorktreeMove.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ChangedFilesWorkTreesTests, ProtocolRecordingTests
+    # The tool's result, worktreePath and worktreeBranch: Claude moved the session into a worktree mid-session, and the
+    # tab follows (DESIGN.md §4, "Worktree tabs"). 2.1.308 has Claude load it with ToolSearch first.
+  - id: "ExitWorktree"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Git/WorktreeMove.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: ChangedFilesWorkTreesTests, ProtocolRecordingTests
+    # The tool's result, action and originalCwd: Claude moved the session back out of its worktree, and the tab follows.
+  - id: "restoredCwd"
+    kind: field
+    status: undocumented
+    usedIn: src/Claudette.Core/Git/WorktreeMove.cs
+    test: ProtocolRecordingTests
+    fallback: "ExitWorktree's result names the folder the session went back to as restoredCwd (2.1.302, 2.1.308), which the Agent SDK's ExitWorktreeOutput doesn't list. Without it, the documented originalCwd is used; and the next turn's system/init cwd says where the session works either way."
   - id: "capabilities"
     kind: field
     status: documented
@@ -358,9 +382,16 @@ items:
   - id: "structuredPatch"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/Diff.cs
-    test: DiffTests
-    fallback: See tool_use_result. Without it, the Edit card shows old_string/new_string as the diff.
+    usedIn: src/Claudette.App/Conversation/Diff.cs, src/Claudette.Core/Diffs/FileAfter.cs
+    test: DiffTests, FileAfterTests
+    fallback: See tool_use_result. Without it, the Edit card shows old_string/new_string as the diff. Changed files works out what an Edit left from its oldString and newString, and only falls back to the patch when they don't fit; without either, the file is counted against the disk (DESIGN.md §8, "This session's changes").
+  - id: "updated_file"
+    kind: field
+    status: documented
+    usedIn: src/Claudette.Core/Diffs/FileAfter.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: FileAfterTests
+    # NotebookEdit's whole notebook after the edit: how the session's change left it (DESIGN.md §8, "This session's changes").
   - id: "Agent"
     kind: field
     status: documented
@@ -1192,6 +1223,12 @@ items:
     usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs
     test: TranscriptReaderTests
     fallback: Restored tool cards show the tool result text without diffs.
+  - id: "a subagent's file tool results have no tool_use_result"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.App/ViewModels/ChangedFilesViewModel.cs, src/Claudette.Core/Diffs/ChangedFiles.cs
+    test: ProtocolRecordingTests, RealCliTests, ChangedFilesTests
+    fallback: "A subagent's Edit and Write come without tool_use_result, live and in its transcript (2.1.302, 2.1.308), and its file_path can be relative to its own folder, so Claudette's PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit reads the file before the call runs, for calls with agent_id (DESIGN.md §8, \"Subagents' changes\"). The hook input's tool_input has the real path. If results start carrying originalFile, it's used and the hook's read is ignored; if the hook stops being called for subagents, their files have an unknown \"before\" again."
   - id: "originalFile over 10,000 characters is null in transcripts"
     kind: behavior
     status: undocumented
@@ -1895,9 +1932,9 @@ items:
   - id: "agent_id"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.App/Conversation/AgentMap.cs
+    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.App/Conversation/AgentMap.cs, src/Claudette.App/ViewModels/ChangedFilesViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: AgentMapTests, RealCliTests
+    test: AgentMapTests, ChangedFilesTrackingTests, RealCliTests
     fallback: On can_use_tool it names the subagent asking (its task id); only the TypeScript option (agentID) and the matching field on permission_denied are documented. Without it, a prompt is matched to the subagent by its tool_use_id once the tool call arrives, else counted against the main agent.
   - id: "subagent_type"
     kind: field

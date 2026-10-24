@@ -151,6 +151,20 @@ public sealed class ChangedFilesTests : IDisposable
     }
 
     [Fact]
+    public void A_result_that_names_another_calls_file_is_not_this_ones()
+    {
+        // A message has one structured result: with two tool results in it, only the call whose file it names gets it.
+        Use("t1", "Edit", PathOf("a.cs"));
+        Use("t2", "Edit", PathOf("b.cs"));
+        var result = new JsonObject { ["filePath"] = PathOf("a.cs"), ["oldString"] = "a", ["newString"] = "b", ["originalFile"] = "a's\n" };
+        _files.RecordToolResult("t1", false, result);
+        _files.RecordToolResult("t2", false, result);
+
+        Assert.Equal([("a.cs", true, "a's\n"), ("b.cs", false, null)],
+            _files.Files.Select(f => (Path.GetFileName(f.Path), f.BeforeKnown, f.Before)));
+    }
+
+    [Fact]
     public void Replaying_the_same_events_does_not_count_twice()
     {
         var changed = 0;
@@ -251,13 +265,26 @@ public sealed class ChangedFilesTests : IDisposable
     [Fact]
     public void Inspect_reports_a_missing_file_as_deleted()
     {
-        Edit("t1", PathOf("gone.cs"), "a\nb\n");
+        // The helper's Edit replaces "a", which isn't in the file, so what it left isn't known: the disk is all there is.
+        Edit("t1", PathOf("gone.cs"), "x\ny\n");
 
         var state = _files.Inspect(Assert.Single(_files.Files));
 
         Assert.Equal(ChangedFileStatus.Deleted, state.Status);
         Assert.Equal((0, 2), (state.Added, state.Removed));
         Assert.Null(state.Current);
+    }
+
+    [Fact]
+    public void Inspect_keeps_the_sessions_change_to_a_file_deleted_since()
+    {
+        Edit("t1", PathOf("gone.cs"), "a\nb\n");
+
+        var state = _files.Inspect(Assert.Single(_files.Files));
+
+        Assert.Equal(ChangedFileStatus.Modified, state.Status);
+        Assert.Equal((1, 1), (state.Added, state.Removed));
+        Assert.Equal(new ChangedSince(true, null, null), state.Since);
     }
 
     [Fact]
@@ -368,18 +395,140 @@ public sealed class ChangedFilesTests : IDisposable
     }
 
     [Fact]
-    public void A_turns_change_is_counted_against_the_file_as_it_left_it()
+    public void A_turns_change_whose_after_isnt_known_is_counted_against_the_file_as_it_left_it()
     {
         var path = PathOf("count.cs");
         File.WriteAllText(path, "one\ntwo\nthree\n");
+        // The helper's Edit replaces "a", which isn't in the file, so what it left isn't known.
         Edit("t1", path, "one\n");
 
         var change = Assert.Single(_files.TakeTurn());
 
-        Assert.Equal((2, 0), _files.CountAgainstDisk(change));
-        Assert.Null(_files.CountAgainstDisk(change with { BeforeKnown = false, Before = null }));
+        Assert.Equal((2, 0), _files.CountTurn(change));
+        Assert.Null(_files.CountTurn(change with { BeforeKnown = false, Before = null }));
         File.Delete(path);
-        Assert.Equal((0, 1), _files.CountAgainstDisk(change));
+        Assert.Equal((0, 1), _files.CountTurn(change));
+    }
+
+    [Fact]
+    public void A_files_changes_end_where_the_sessions_latest_change_left_it()
+    {
+        var path = PathOf("own.cs");
+        EditTo("t1", path, "a\n", "a", "b");
+        EditTo("t2", path, "b\n", "b", "c");
+        // Another tab adds a line afterwards.
+        File.WriteAllText(path, "c\nanother tab's line\n");
+
+        var file = Assert.Single(_files.Files);
+        Assert.Equal(("c\n", true, false), (file.After, file.AfterKnown, file.ChangedBetween));
+        var state = _files.Inspect(file);
+        Assert.Equal((ChangedFileStatus.Modified, 1, 1), (state.Status, state.Added, state.Removed));
+        Assert.Equal(new ChangedSince(false, 1, 0), state.Since);
+    }
+
+    [Fact]
+    public void A_file_as_the_sessions_change_left_it_has_nothing_since()
+    {
+        var path = PathOf("same.cs");
+        EditTo("t1", path, "a\n", "a", "b");
+        File.WriteAllText(path, "b\r\n");
+
+        Assert.Null(_files.Inspect(Assert.Single(_files.Files)).Since);
+    }
+
+    [Fact]
+    public void A_change_that_finds_the_file_changed_since_the_one_before_notes_it()
+    {
+        var path = PathOf("between.cs");
+        EditTo("t1", path, "a\n", "a", "b");
+        // Something else added a line before the second edit found the file.
+        EditTo("t2", path, "b\nx\n", "b", "c");
+
+        var file = Assert.Single(_files.Files);
+        Assert.True(file.ChangedBetween);
+        Assert.Equal("c\nx\n", file.After);
+    }
+
+    [Fact]
+    public void A_large_file_read_back_is_followed_from_its_saved_before_through_each_edit()
+    {
+        var path = PathOf("large.cs");
+        var befores = new BeforeContentStore(Path.Combine(_root, "befores"), _time);
+        var files = new ChangedFiles(_time) { Befores = befores };
+        var large = string.Concat(Enumerable.Range(1, 400).Select(i => $"line {i:D4} of a large file\n"));
+        befores.Save("t1", large);
+
+        // As a transcript has them: originalFile left out, over 10,000 characters.
+        foreach (var (id, from, to) in new[] { ("t1", "line 0007", "line seven"), ("t2", "line 0008", "line eight") })
+        {
+            files.RecordToolUse(id, "Edit", new JsonObject { ["file_path"] = path, ["old_string"] = from, ["new_string"] = to });
+            files.RecordToolResult(id, false, new JsonObject { ["filePath"] = path, ["oldString"] = from, ["newString"] = to, ["originalFile"] = null }, inTurn: false);
+        }
+
+        var file = Assert.Single(files.Files);
+        Assert.True(file.AfterKnown);
+        Assert.Equal(large.Replace("line 0007", "line seven", StringComparison.Ordinal).Replace("line 0008", "line eight", StringComparison.Ordinal), file.After);
+    }
+
+    [Fact]
+    public void A_turn_is_counted_to_how_its_last_change_left_the_file_not_the_disk()
+    {
+        var path = PathOf("turn.cs");
+        File.WriteAllText(path, "b\nanother tab's line\n");
+        EditTo("t1", path, "a\n", "a", "b");
+
+        var change = Assert.Single(_files.TakeTurn());
+
+        Assert.Equal(("b\n", true), (change.After, change.AfterKnown));
+        Assert.Equal((1, 1), _files.CountTurn(change));
+    }
+
+    [Fact]
+    public void A_subagents_change_takes_its_before_and_real_path_from_the_hook()
+    {
+        var befores = new BeforeContentStore(Path.Combine(_root, "befores"), _time);
+        var files = new ChangedFiles(_time) { Befores = befores };
+        var (edited, created) = (PathOf("sub.cs"), PathOf("made.cs"));
+
+        // The hook reads each file before its call runs; the subagent's results say nothing of it.
+        files.NoteBefore("s1", edited, "a\n", known: true);
+        files.RecordToolUse("s1", "Edit", new JsonObject { ["file_path"] = edited, ["old_string"] = "a", ["new_string"] = "b" });
+        files.RecordToolResult("s1", false, null);
+        files.NoteBefore("s2", created, null, known: true);
+        // The model named it relative to the subagent's folder; the hook has its real path.
+        files.RecordToolUse("s2", "Write", new JsonObject { ["file_path"] = "made.cs", ["content"] = "new\n" });
+        files.RecordToolResult("s2", false, null);
+
+        Assert.Equal([(edited, "a\n", false, "b\n"), (created, null, true, "new\n")],
+            files.Files.Select(f => (f.Path, f.Before, f.IsNew, f.After)));
+        Assert.All(files.Files, f => Assert.True(f.BeforeKnown && f.AfterKnown));
+    }
+
+    [Fact]
+    public void A_subagents_first_change_is_found_again_when_its_transcript_is_read_back()
+    {
+        var befores = new BeforeContentStore(Path.Combine(_root, "befores"), _time);
+        var live = new ChangedFiles(_time) { Befores = befores };
+        var (edited, created) = (PathOf("sub.cs"), PathOf("made.cs"));
+        live.NoteBefore("s1", edited, "a\n", known: true);
+        live.NoteBefore("s2", created, null, known: true);
+
+        // Read back: no hook then, and the transcript has no result for a subagent's call either.
+        var replayed = new ChangedFiles(_time) { Befores = befores };
+        replayed.RecordToolUse("s1", "Edit", new JsonObject { ["file_path"] = edited, ["old_string"] = "a", ["new_string"] = "b" });
+        replayed.RecordToolResult("s1", false, null, inTurn: false);
+        replayed.RecordToolUse("s2", "Write", new JsonObject { ["file_path"] = created, ["content"] = "new\n" });
+        replayed.RecordToolResult("s2", false, null, inTurn: false);
+
+        Assert.Equal([("a\n", false, true, "b\n"), (null, true, true, "new\n")],
+            replayed.Files.Select(f => (f.Before, f.IsNew, f.BeforeKnown, f.After)));
+    }
+
+    /// <summary>An Edit of <paramref name="path"/> from <paramref name="originalFile"/>, replacing <paramref name="from"/> with <paramref name="to"/>.</summary>
+    private void EditTo(string id, string path, string originalFile, string from, string to)
+    {
+        _files.RecordToolUse(id, "Edit", new JsonObject { ["file_path"] = path, ["old_string"] = from, ["new_string"] = to });
+        _files.RecordToolResult(id, false, new JsonObject { ["filePath"] = path, ["oldString"] = from, ["newString"] = to, ["originalFile"] = originalFile });
     }
 
     private void Use(string id, string tool, string path) =>

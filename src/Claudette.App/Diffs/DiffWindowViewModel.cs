@@ -60,6 +60,10 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 /// "Project files"), which compares with its own text. False when it couldn't.
 /// </param>
 /// <param name="WordWrap"><b>Wrap lines</b> as the last diff was left, kept for the next; null starts it off.</param>
+/// <param name="AgainstNow">
+/// For a file that's changed since the session's latest change to it, which this diff ends at (DESIGN.md §8, "This
+/// session's changes"): the same "before" against the file now, which <b>With later changes</b> switches to.
+/// </param>
 public sealed record DiffSource(
     string Path,
     string DisplayPath,
@@ -76,7 +80,8 @@ public sealed record DiffSource(
     bool AllowRevert = true,
     Func<string?, bool>? RevertInto = null,
     Func<Task>? OpenInSystem = null,
-    DiffWordWrap? WordWrap = null);
+    DiffWordWrap? WordWrap = null,
+    DiffSource? AgainstNow = null);
 
 /// <summary>A diff's "after" side that isn't the file now; null text means the file didn't exist then.</summary>
 public sealed record DiffAfter(string? Text);
@@ -110,7 +115,7 @@ public sealed record DiffReview(Func<string?> LatestChange, Func<bool> IsReviewe
 /// </summary>
 public sealed partial class DiffWindowViewModel : ViewModelBase
 {
-    private readonly DiffSource _source;
+    private readonly DiffSource _original;
     private bool _dark;
     private string? _after;
     /// <summary>Claude's latest change to the file when it was read: what <b>Reviewed</b> marks.</summary>
@@ -121,22 +126,43 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
 
     public DiffWindowViewModel(DiffSource source, bool dark)
     {
-        _source = source;
+        _original = source;
         _dark = dark;
         ShowWholeFile = !source.BeforeKnown;
         WordWrap = source.WordWrap?.IsOn ?? false;
         _ = LoadAsync();
     }
 
-    public string Title => Path.GetFileName(_source.Path);
+    /// <summary>What's compared: the diff it was opened with, or with <b>With later changes</b>, the file now.</summary>
+    private DiffSource Source => ShowLaterChanges && _original.AgainstNow is { } now ? now : _original;
 
-    public string DisplayPath => _source.DisplayPath;
+    /// <summary>The file changed since the session's latest change to it, which the diff ends at: <b>With later changes</b> is offered.</summary>
+    public bool HasLaterChanges => _original.AgainstNow is not null;
 
-    public string BeforeLabel => _source.BeforeLabel;
+    /// <summary><b>With later changes</b>: the file now, with what changed since the session's latest change, instead of as that change left it.</summary>
+    [ObservableProperty]
+    public partial bool ShowLaterChanges { get; set; }
 
-    public bool CanOpenInDiffTool => _source.OpenInDiffTool is not null;
+    partial void OnShowLaterChangesChanged(bool value)
+    {
+        OnPropertyChanged(nameof(BeforeLabel));
+        OnPropertyChanged(nameof(CanOpenInDiffTool));
+        OnPropertyChanged(nameof(CanMarkReviewed));
+        OnPropertyChanged(nameof(CanOpenInSystem));
+        OnPropertyChanged(nameof(RevertFileTip));
+        RevertConfirmation.Cancel();
+        _ = LoadAsync();
+    }
 
-    public bool CanMarkReviewed => _source.Review is not null;
+    public string Title => Path.GetFileName(Source.Path);
+
+    public string DisplayPath => Source.DisplayPath;
+
+    public string BeforeLabel => Source.BeforeLabel;
+
+    public bool CanOpenInDiffTool => Source.OpenInDiffTool is not null;
+
+    public bool CanMarkReviewed => Source.Review is not null;
 
     /// <summary>The file is marked as reviewed: the <b>Reviewed</b> button shows a check.</summary>
     [ObservableProperty]
@@ -173,7 +199,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool WordWrap { get; set; }
 
-    partial void OnWordWrapChanged(bool value) => _source.WordWrap?.Remember(value);
+    partial void OnWordWrapChanged(bool value) => Source.WordWrap?.Remember(value);
 
     [ObservableProperty]
     public partial IReadOnlyList<InlineDiffRow> InlineRows { get; set; } = [];
@@ -182,28 +208,28 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     public partial IReadOnlyList<SideBySideDiffRow> SideRows { get; set; } = [];
 
     [RelayCommand]
-    private Task OpenInDiffToolAsync() => _source.OpenInDiffTool?.Invoke() ?? Task.CompletedTask;
+    private Task OpenInDiffToolAsync() => Source.OpenInDiffTool?.Invoke() ?? Task.CompletedTask;
 
     [RelayCommand]
     private async Task OpenInEditorAsync()
     {
-        if (await _source.OpenInEditor())
+        if (await Source.OpenInEditor())
         {
             // Claudette's window has the file now, and this one, which stays over it, would hide it.
             CloseRequested?.Invoke();
         }
     }
 
-    public bool CanOpenInSystem => _source.OpenInSystem is not null;
+    public bool CanOpenInSystem => Source.OpenInSystem is not null;
 
     [RelayCommand]
-    private Task OpenInSystemAsync() => _source.OpenInSystem?.Invoke() ?? Task.CompletedTask;
+    private Task OpenInSystemAsync() => Source.OpenInSystem?.Invoke() ?? Task.CompletedTask;
 
     [RelayCommand]
-    private Task RevealAsync() => _source.Reveal();
+    private Task RevealAsync() => Source.Reveal();
 
     [RelayCommand]
-    private Task CopyPathAsync() => _source.CopyPath();
+    private Task CopyPathAsync() => Source.CopyPath();
 
     [RelayCommand]
     private Task RefreshAsync() => LoadAsync();
@@ -214,13 +240,13 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     /// Claude's changes can be put back: the file as it was before is known, and the view isn't showing a file that's
     /// gone or binary.
     /// </summary>
-    public bool CanRevert => HasRevertTarget && !IsLoading && _after is not null && !_isBinary && !string.Equals(_after, _source.Before, StringComparison.Ordinal);
+    public bool CanRevert => HasRevertTarget && !IsLoading && _after is not null && !_isBinary && !string.Equals(_after, Source.Before, StringComparison.Ordinal);
 
     /// <summary>There's something to put back: what the file held is known, and from git, the file is at HEAD.</summary>
-    private bool HasRevertTarget => _source.AllowRevert && (_source.After is null || _source.RevertInto is not null) && _source.BeforeKnown && !(_source.FromGit && _source.Before is null);
+    private bool HasRevertTarget => Source.AllowRevert && (Source.After is null || Source.RevertInto is not null) && Source.BeforeKnown && !(Source.FromGit && Source.Before is null);
 
     /// <summary><b>Revert file</b>'s tip: what the file goes back to.</summary>
-    public string RevertFileTip => _source.FromGit ? "Put the whole file back as it is at HEAD" : "Put the whole file back as it was before Claude changed it";
+    public string RevertFileTip => Source.FromGit ? "Put the whole file back as it is at HEAD" : "Put the whole file back as it was before Claude changed it";
 
     /// <summary><b>Revert file</b> asks first: the second step shows in place.</summary>
     public InlineConfirmation RevertConfirmation => field ??= new(RevertFileAsync);
@@ -230,7 +256,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     /// the file at HEAD, in the line endings the file has now: git keeps its copy with the ones it was committed in.
     /// </summary>
     [RelayCommand]
-    private Task RevertFileAsync() => RevertAsync(_source.FromGit ? Revert.WithLineEndingsOf(_source.Before, _after) : _source.Before);
+    private Task RevertFileAsync() => RevertAsync(Source.FromGit ? Revert.WithLineEndingsOf(Source.Before, _after) : Source.Before);
 
     /// <summary>Undoes one hunk of the diff, leaving the rest of Claude's changes.</summary>
     [RelayCommand]
@@ -252,7 +278,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
         {
             return;
         }
-        if (_source.RevertInto is { } revertInto)
+        if (Source.RevertInto is { } revertInto)
         {
             if (!revertInto(text))
             {
@@ -260,7 +286,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
             }
             return;
         }
-        var path = _source.Path;
+        var path = Source.Path;
         var shown = _after;
         try
         {
@@ -285,7 +311,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     [RelayCommand]
     private void MarkReviewed()
     {
-        if (_source.Review is not { } review)
+        if (Source.Review is not { } review)
         {
             return;
         }
@@ -294,16 +320,20 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
         CloseRequested?.Invoke();
     }
 
+    /// <summary>Counts the loads started, so one that finishes after a later one (<b>With later changes</b> switched meanwhile) leaves the later one's.</summary>
+    private int _loads;
+
     private async Task LoadAsync()
     {
+        var load = ++_loads;
         IsLoading = true;
         // Before the file is read, so a change Claude makes meanwhile isn't counted as seen.
-        _shownChange = _source.Review?.LatestChange();
-        IsReviewed = _source.Review?.IsReviewed() ?? false;
-        var before = _source.Before;
-        var path = _source.Path;
+        _shownChange = Source.Review?.LatestChange();
+        IsReviewed = Source.Review?.IsReviewed() ?? false;
+        var before = Source.Before;
+        var path = Source.Path;
         var dark = _dark;
-        var fixedAfter = _source.After;
+        var fixedAfter = Source.After;
         var (after, beforeColors, afterColors, message) = await Task.Run(() =>
         {
             string? current = fixedAfter?.Text;
@@ -324,13 +354,17 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
             var (beforeColors, afterColors) = Highlight(before, current, path, dark);
             return (current, beforeColors, afterColors, current is not null ? null : fixedAfter is null ? "The file has been deleted." : "The file didn't exist after this turn.");
         });
+        if (load != _loads)
+        {
+            return;
+        }
         _after = after;
         _isBinary = IsBinary(before, after);
-        _beforeColors = _source.BeforeKnown ? beforeColors : afterColors;
+        _beforeColors = Source.BeforeKnown ? beforeColors : afterColors;
         _afterColors = afterColors;
         Message = message;
         var (added, removed) = LineDiff.Count(before, after);
-        Stats = _source.BeforeKnown ? $"+{added} −{removed}" : "";
+        Stats = Source.BeforeKnown ? $"+{added} −{removed}" : "";
         // Build the rows before saying it's loaded, so nothing sees "loaded" with no rows.
         BuildRows();
         IsLoading = false;
@@ -362,16 +396,16 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     private async Task RecolorAsync()
     {
         var dark = _dark;
-        var before = _source.Before;
+        var before = Source.Before;
         var after = _after;
-        var path = _source.Path;
+        var path = Source.Path;
         var (beforeColors, afterColors) = await Task.Run(() => IsBinary(before, after) ? (null, null) : Highlight(before, after, path, dark));
         // The theme changed again, or the file was read again, meanwhile: that colors it instead.
         if (dark != _dark || IsLoading || !ReferenceEquals(after, _after))
         {
             return;
         }
-        _beforeColors = _source.BeforeKnown ? beforeColors : afterColors;
+        _beforeColors = Source.BeforeKnown ? beforeColors : afterColors;
         _afterColors = afterColors;
         Build();
     }
@@ -388,7 +422,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     }
 
     /// <summary>With the "before" unknown, the file is compared with itself, so nothing shows as changed.</summary>
-    private string? Before => _source.BeforeKnown ? _source.Before : _after;
+    private string? Before => Source.BeforeKnown ? Source.Before : _after;
 
     private void Build()
     {
