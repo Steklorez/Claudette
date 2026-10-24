@@ -107,8 +107,9 @@ public class MessagingTests
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        var changes = new List<string?>();
-        tab.PropertyChanged += (_, e) => changes.Add(e.PropertyName);
+        // Work the turn's end starts (the context usage it asks for) can still be telling the tab off the test's thread.
+        var changes = new System.Collections.Concurrent.ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changes.Enqueue(e.PropertyName);
         Assert.False(tab.HasSessionId);
 
         h.Transport.EmitTurn(sessionId: "s7");
@@ -117,12 +118,12 @@ public class MessagingTests
         // Start new session below doesn't put it back.
         await TabTestHarness.Eventually(() => tab.HasSessionId && tab.State.Tokens.Turns == 1 && tab.Status == TabStatus.Idle && tab.IsSettled, "the session's ID");
         Assert.Contains(nameof(TabViewModel.HasSessionId), changes);
-        await tab.CopySessionIdCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.CopySessionIdCommand.ExecuteAsync(null));
         Assert.Equal("s7", h.Platform.Clipboard);
 
         // A new session in the same folder has no ID until its first turn.
         changes.Clear();
-        await tab.StartNewSessionCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.StartNewSessionCommand.ExecuteAsync(null));
         Assert.False(tab.HasSessionId);
         Assert.Contains(nameof(TabViewModel.HasSessionId), changes);
     }

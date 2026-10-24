@@ -1562,6 +1562,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 return;
             }
             _session = session;
+            _appliedState = SessionState.Starting;
             _sentSinceStart = false;
             LibraryCheckTicker.Run(State.SyncToLibrary);
             _claudeName = options.Name;
@@ -1963,15 +1964,21 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>The context usage asked for as the session started.</summary>
     private Task? _contextRefresh;
 
+    /// <summary>The session's state as its last state change applied here said: what it starts in until one is.</summary>
+    private SessionState _appliedState = SessionState.Starting;
+
     /// <summary>
     /// For tests: the start has finished, every session event so far is applied, and the start's context usage request
     /// has finished. A tab shows Idle as soon as its session starts, while the start's own events (its state changes)
-    /// are still queued and its context usage request hasn't gone out yet.
+    /// are still queued and its context usage request hasn't gone out yet. The session's state has to have been told
+    /// too: a turn's end and the Idle after it are written one after the other, and the end can be applied before the
+    /// Idle is written at all.
     /// </summary>
     internal bool IsSettled =>
         _starting is null or { IsCompleted: true }
         && Volatile.Read(ref _batchesInFlight) == 0
         && _session?.Events is not { CanCount: true, Count: > 0 }
+        && (_session is not { } session || session.State == _appliedState)
         && _contextRefresh is null or { IsCompleted: true };
 
     private void Apply(ClaudeSession session, IReadOnlyList<SessionEvent> events)
@@ -1982,6 +1989,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
         foreach (var sessionEvent in events)
         {
+            if (sessionEvent is StateChanged changed)
+            {
+                _appliedState = changed.State;
+            }
             try
             {
                 ApplyEvent(session, sessionEvent);
