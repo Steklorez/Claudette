@@ -46,6 +46,9 @@ public sealed class LibraryService : IDisposable
     /// <summary>Claude Code finishes writing the transcript around the result message; give it a moment.</summary>
     internal static readonly TimeSpan SettleDelay = TimeSpan.FromSeconds(1);
 
+    /// <summary>Library retention runs at launch, then this often while Claudette is open.</summary>
+    public static readonly TimeSpan PruneInterval = TimeSpan.FromDays(1);
+
     /// <summary>Copies to the library under way, waiting out <see cref="SettleDelay"/> or writing.</summary>
     private int _copying;
 
@@ -55,6 +58,7 @@ public sealed class LibraryService : IDisposable
     private readonly AppServices _services;
     private readonly ILogger _logger;
     private readonly ITimer _syncTimer;
+    private ITimer? _pruneTimer;
     private readonly SemaphoreSlim _syncLock = new(1, 1);
     private bool _applyingSync;
 
@@ -195,12 +199,30 @@ public sealed class LibraryService : IDisposable
 
     public LeaseStatus CheckLease(string sessionId) => Leases.Check(Library.GetSessionFolder(sessionId));
 
-    /// <summary>Settings → Sessions → Keep library sessions for. <paramref name="keep"/> is the sessions open here in tabs that sync.</summary>
+    /// <summary>The sessions open here in tabs that sync, read on the UI thread: library retention keeps them. The shell sets it.</summary>
+    public Func<IReadOnlySet<string>> OpenSessions { get; set; } = () => new HashSet<string>();
+
+    /// <summary>
+    /// Starts library retention (DESIGN.md §9, "Keeping sessions"): now, then every <see cref="PruneInterval"/>, so a
+    /// Claudette left open for weeks still deletes what's old. Each pass does nothing while the setting is off.
+    /// </summary>
+    public void StartPruning() =>
+        _pruneTimer ??= _services.Time.CreateTimer(_ => _services.Dispatcher.Post(() =>
+        {
+            var keep = OpenSessions();
+            // The library may be on a slow or offline drive: not on the UI thread.
+            _ = Task.Run(() => Prune(keep));
+        }), null, TimeSpan.Zero, PruneInterval);
+
+    /// <summary>
+    /// Settings → Sessions → Delete sessions not used for a while. <paramref name="keep"/> is the sessions open here in
+    /// tabs that sync.
+    /// </summary>
     public void Prune(IReadOnlySet<string> keep)
     {
         try
         {
-            Library.Prune(_services.Settings.Sessions.KeepLibrarySessions.ToTimeSpan(), keep);
+            Library.Prune(_services.Settings.Sessions.LibraryRetention(), keep);
         }
         catch (Exception ex)
         {
@@ -314,6 +336,7 @@ public sealed class LibraryService : IDisposable
     public void Dispose()
     {
         _syncTimer.Dispose();
+        _pruneTimer?.Dispose();
         Leases.Dispose();
         _syncLock.Dispose();
     }

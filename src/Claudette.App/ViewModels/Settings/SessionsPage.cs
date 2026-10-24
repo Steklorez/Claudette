@@ -12,6 +12,9 @@ namespace Claudette.App.ViewModels.Settings;
 /// </summary>
 public sealed partial class SessionsPage : SettingsPage
 {
+    /// <summary>The days box's top, ten years, as in the view.</summary>
+    private const int MaxLibrarySessionDays = 3650;
+
     private bool _moveLibrary;
 
     /// <summary>What each synced section of settings.json is called, for what settings sync says it syncs.</summary>
@@ -38,8 +41,12 @@ public sealed partial class SessionsPage : SettingsPage
                 "Sessions opened from the library keep syncing.", ["sync", "other machines"]),
             Setting("sessions.machineName", "Name for this machine", s => s.Sessions.MachineName, (s, v) => s.Sessions.MachineName = v,
                 "Shown in History and when a session is in use elsewhere. Empty uses the computer's name.", keywords: ["computer name", "hostname"]),
-            Setting("sessions.keepLibrarySessions", "Keep library sessions for", s => s.Sessions.KeepLibrarySessions, (s, v) => s.Sessions.KeepLibrarySessions = v,
-                keywords: ["retention", "delete old sessions"]),
+            Setting("sessions.deleteOldLibrarySessions", "Delete sessions not used for a while", s => s.Sessions.DeleteOldLibrarySessions, (s, v) => s.Sessions.DeleteOldLibrarySessions = v,
+                "Once no machine has used or opened a session for that long, it goes from the library, and from History on every machine.",
+                "Sessions open in a tab that syncs, or in use on another machine, are kept. Off keeps them for good.",
+                ["retention", "delete old sessions", "prune", "clean up", "keep library sessions"]),
+            Setting("sessions.keepLibrarySessionDays", "After going unused for (days)", s => s.Sessions.KeepLibrarySessionDays, (s, v) => s.Sessions.KeepLibrarySessionDays = v,
+                keywords: ["retention", "delete old sessions", "prune"]),
         ], description: "Tabs that sync copy their session here after every turn. In a folder Google Drive, Dropbox or OneDrive keeps in sync, your other machines can continue them from History.");
         Section("settingsSync", "Settings sync",
         [
@@ -61,13 +68,17 @@ public sealed partial class SessionsPage : SettingsPage
     /// <summary>Every synced section has a name to say it by: a test checks.</summary>
     internal static bool NamesEverySyncedSection => SyncedSettings.Sections.All(SyncedNames.ContainsKey);
 
-    public IReadOnlyList<RetentionChoice> LibraryRetentionChoices { get; } =
-        [.. new[] { RetentionPeriod.OneMonth, RetentionPeriod.OneYear, RetentionPeriod.Forever }.Select(p => new RetentionChoice(p))];
-
-    public RetentionChoice KeepLibrarySessions
+    /// <summary>Library retention (DESIGN.md §9, "Keeping sessions"): at launch, then once a day.</summary>
+    public bool DeleteOldLibrarySessions
     {
-        get => LibraryRetentionChoices.FirstOrDefault(c => c.Period == Settings.Sessions.KeepLibrarySessions) ?? LibraryRetentionChoices[^1];
-        set => Set(value?.Period ?? RetentionPeriod.Forever, v => Settings.Sessions.KeepLibrarySessions = v);
+        get => Settings.Sessions.DeleteOldLibrarySessions;
+        set => Set(value, v => Settings.Sessions.DeleteOldLibrarySessions = v);
+    }
+
+    public decimal? KeepLibrarySessionDays
+    {
+        get => Settings.Sessions.KeepLibrarySessionDays;
+        set => Set(value, v => Settings.Sessions.KeepLibrarySessionDays = Math.Clamp((int)(v ?? new SessionSettings().KeepLibrarySessionDays), 1, MaxLibrarySessionDays));
     }
 
     /// <summary>Shown in History and in "in use on …" notices. Empty uses the computer name.</summary>

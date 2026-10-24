@@ -420,6 +420,59 @@ public class LibraryAndHistoryTests
     }
 
     [Fact]
+    public async Task Opening_a_library_session_counts_as_using_it_for_retention_but_not_for_History()
+    {
+        await using var h = new TabTestHarness();
+        var lastUsed = h.Time.GetUtcNow().AddDays(-20);
+        await SaveToLibraryAsync(h, "lib-4", "DESKTOP-01", lastUsed);
+        h.OpenHistory();
+        var history = h.Shell.History!;
+        await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
+
+        await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
+
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
+        var record = h.Services.Library.Library.List().Single().Record;
+        Assert.Equal(h.Time.GetUtcNow(), record.LastOpened);
+        // History still says which machine last used it, and when.
+        Assert.Equal(("DESKTOP-01", lastUsed), (record.Machine, record.LastUsed));
+        // Not kept as an open tab here, but opened since its last turn: retention leaves it.
+        h.Services.Library.Prune(new HashSet<string>());
+        Assert.NotNull(h.Services.Library.Library.GetTranscriptPath("lib-4"));
+    }
+
+    [Fact]
+    public async Task Library_sessions_unused_for_the_days_chosen_go_at_launch_and_once_a_day_but_open_tabs_keep_theirs()
+    {
+        await using var h = new TabTestHarness();
+        var now = h.Time.GetUtcNow();
+        await SaveToLibraryAsync(h, "old", "DESKTOP-01", now.AddDays(-20));
+        await SaveToLibraryAsync(h, "recent", "DESKTOP-01", now.AddDays(-10));
+        await SaveToLibraryAsync(h, "open-1", "DESKTOP-01", now.AddDays(-20));
+        h.WriteTranscript("open-1", UserLine("open-1", "Add the export button", h.WorkFolder));
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "open-1", SyncToLibrary = true }];
+        bool InLibrary(string id) => h.Services.Library.Library.GetTranscriptPath(id) is not null;
+
+        h.Shell.Restore(null);
+
+        // 15 days by default.
+        await TabTestHarness.Eventually(() => !InLibrary("old"), "the pass at launch");
+        Assert.True(InLibrary("recent"));
+        Assert.True(InLibrary("open-1"));
+
+        // Claudette stays open: the next day's pass goes by the days chosen then.
+        h.Services.Settings.Sessions.KeepLibrarySessionDays = 7;
+        h.Time.Advance(LibraryService.PruneInterval);
+        await TabTestHarness.Eventually(() => !InLibrary("recent"), "the next day's pass");
+        Assert.True(InLibrary("open-1"));
+
+        // Off keeps everything.
+        h.Services.Settings.Sessions.DeleteOldLibrarySessions = false;
+        h.Services.Library.Prune(new HashSet<string>());
+        Assert.True(InLibrary("open-1"));
+    }
+
+    [Fact]
     public async Task A_session_on_this_machine_that_another_machine_has_open_asks_first()
     {
         await using var h = new TabTestHarness();

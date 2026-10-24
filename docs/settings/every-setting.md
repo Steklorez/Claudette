@@ -185,7 +185,7 @@ None of this page syncs.
 | **Folder**, with **Browse…**, **Move library…** and **Use the default folder** | Session library | A folder in Claudette's data folder | No | [The session library](../history/the-session-library.md) |
 | **Sync new tabs to the session library** | Session library | Off | Own switch (**Sync to other machines**) | [Syncing a tab](../history/syncing-a-tab.md) |
 | **Name for this machine** | Session library | The computer's name | No | [The session library](../history/the-session-library.md) |
-| **Keep library sessions for** | Session library | Forever (or 1 month or 1 year) | No | [The session library](../history/the-session-library.md) |
+| **Delete sessions not used for a while**, with **After going unused for (days)** | Session library | On, after 15 days | No | [The session library](../history/the-session-library.md#keeping-sessions) |
 | **Sync Claudette's settings through the library** | Settings sync | Off | No | [Settings sync](../history/settings-sync.md) |
 
 The library's **Folder** and **Sync Claudette's settings through the library** aren't put back by **Reset to defaults**.

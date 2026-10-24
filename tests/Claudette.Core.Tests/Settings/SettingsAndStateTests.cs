@@ -60,6 +60,34 @@ public sealed class SettingsAndStateTests : IDisposable
         Assert.Contains("\"theme\": \"dark\"", await File.ReadAllTextAsync(store.Path, TestContext.Current.CancellationToken), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(null, 15)]
+    [InlineData("forever", 15)]
+    [InlineData("oneMonth", 31)]
+    [InlineData("oneYear", 366)]
+    public async Task Library_retention_is_in_days_and_carries_on_from_the_choice_it_replaced(string? former, int days)
+    {
+        var path = Path.Combine(_root, "settings.json");
+        var formerJson = former is null ? "" : $"\"keepLibrarySessions\": \"{former}\", ";
+        File.WriteAllText(path, $"{{ \"sessions\": {{ {formerJson}\"machineName\": \"DESK\" }} }}");
+        var store = new JsonFileStore<AppSettings>(path);
+
+        var settings = store.Load();
+
+        // Forever was the default, written to every file: it becomes the new default, which deletes after 15 days.
+        Assert.True(settings.Sessions.DeleteOldLibrarySessions);
+        Assert.Equal(days, settings.Sessions.KeepLibrarySessionDays);
+        Assert.Equal(TimeSpan.FromDays(days), settings.Sessions.LibraryRetention());
+        Assert.Equal("DESK", settings.Sessions.MachineName);
+        await store.SaveAsync(settings, TestContext.Current.CancellationToken);
+        var saved = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
+        Assert.DoesNotContain("keepLibrarySessions\"", saved, StringComparison.Ordinal);
+        Assert.Contains($"\"keepLibrarySessionDays\": {days}", saved, StringComparison.Ordinal);
+
+        settings.Sessions.DeleteOldLibrarySessions = false;
+        Assert.Null(settings.Sessions.LibraryRetention());
+    }
+
     [Fact]
     public void A_corrupt_file_is_kept_aside_and_defaults_load()
     {

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Claudette.Core.Settings;
 
 /// <summary>
@@ -81,7 +83,7 @@ public sealed class NotificationSettings
     public bool AnimateIcon { get; set; } = true;
 }
 
-/// <summary>How long to keep something: usage history (DESIGN.md §6) or library sessions (§9).</summary>
+/// <summary>How long to keep usage history (DESIGN.md §6), and what library sessions were kept for before that was in days (§9).</summary>
 public enum RetentionPeriod
 {
     OneDay,
@@ -586,8 +588,36 @@ public sealed class SessionSettings
     /// <summary>This machine's name in History and leases. Null uses the computer name.</summary>
     public string? MachineName { get; set; }
 
-    /// <summary>How long sessions stay in the library after they were last used.</summary>
-    public RetentionPeriod KeepLibrarySessions { get; set; } = RetentionPeriod.Forever;
+    /// <summary>
+    /// Delete library sessions no machine has used or opened for <see cref="KeepLibrarySessionDays"/> (DESIGN.md §9,
+    /// "Keeping sessions"). On by default; off keeps them for good.
+    /// </summary>
+    public bool DeleteOldLibrarySessions { get; set; } = true;
+
+    /// <summary>How many days a library session stays after it was last used or opened.</summary>
+    public int KeepLibrarySessionDays { get; set; } = 15;
+
+    /// <summary>
+    /// Reads <c>keepLibrarySessions</c>, the choice these replaced: 1 month and 1 year carry on as 31 and 366 days, and
+    /// Forever, its default, becomes the new default. Never written.
+    /// </summary>
+    [JsonPropertyName("keepLibrarySessions")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public RetentionPeriod? FormerKeepLibrarySessions
+    {
+        get => null;
+        set
+        {
+            if (value?.ToTimeSpan() is { } period)
+            {
+                DeleteOldLibrarySessions = true;
+                KeepLibrarySessionDays = (int)period.TotalDays;
+            }
+        }
+    }
+
+    /// <summary>How long library sessions are kept, from the two settings above; null keeps them for good.</summary>
+    public TimeSpan? LibraryRetention() => DeleteOldLibrarySessions ? TimeSpan.FromDays(Math.Max(1, KeepLibrarySessionDays)) : null;
 
     /// <summary>
     /// New tabs start with <see cref="TabState.SyncToLibrary"/> on (DESIGN.md §9, "Session library"). Off by default,

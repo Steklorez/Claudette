@@ -260,7 +260,7 @@ public sealed partial class TabViewModel
     /// Takes the session's library lease as a tab that syncs starts it, so another machine sees it's in use from the
     /// start (DESIGN.md §9, "One machine at a time"). A session that isn't in the library yet gets its lease with its
     /// first copy. Returns false when another machine holds a live lease: the session carried on there, so the tab
-    /// becomes read-only instead of starting.
+    /// becomes read-only instead of starting. Taking the lease notes in the record that the session was opened.
     /// </summary>
     private async Task<bool> ClaimLeaseAsync()
     {
@@ -280,19 +280,27 @@ public sealed partial class TabViewModel
             {
                 return true;
             }
+            if (status is LeaseStatus.Free or LeaseStatus.Stale)
+            {
+                // Taken here. The record notes the session was opened, even if no turn follows, so library retention counts
+                // from now (DESIGN.md §9, "Keeping sessions"): as the lease is taken, not each time this run starts claude
+                // again. That makes the record longer, so what the session takes is read again.
+                size = await Task.Run(() =>
+                {
+                    library.Leases.TakeOver(sessionId, library.Library.GetSessionFolder(sessionId));
+                    library.Library.MarkOpened(sessionId);
+                    return library.Library.GetSessionSize(sessionId);
+                });
+            }
             SetSyncedSize(sessionId, size);
             switch (status)
             {
                 case LeaseStatus.HeldByOther other:
                     await OnTakenOverAsync(other.Machine);
                     return false;
-                case LeaseStatus.Mine:
-                case LeaseStatus.Unreadable:
-                    // Unreadable: perhaps a lease mid-sync. The session still works here; the copy after the next turn
-                    // takes the lease if it's free by then, and refuses if another machine has it.
-                    return true;
                 default:
-                    await Task.Run(() => library.Leases.TakeOver(sessionId, library.Library.GetSessionFolder(sessionId)));
+                    // Mine, or taken above. Unreadable: perhaps a lease mid-sync. The session still works here; the copy
+                    // after the next turn takes the lease if it's free by then, and refuses if another machine has it.
                     return true;
             }
         }

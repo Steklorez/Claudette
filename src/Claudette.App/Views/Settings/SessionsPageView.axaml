@@ -42,8 +42,15 @@
       <c:SettingRow Key="sessions.machineName">
         <TextBox Text="{Binding MachineName, UpdateSourceTrigger=LostFocus}" PlaceholderText="{Binding MachineNamePlaceholder}" />
       </c:SettingRow>
-      <c:SettingRow Key="sessions.keepLibrarySessions">
-        <ComboBox ItemsSource="{Binding LibraryRetentionChoices}" SelectedItem="{Binding KeepLibrarySessions}" />
+      <c:SettingRow Key="sessions.deleteOldLibrarySessions">
+        <ToggleSwitch IsChecked="{Binding DeleteOldLibrarySessions}" />
+        <c:SettingRow.Details>
+          <StackPanel IsEnabled="{Binding DeleteOldLibrarySessions}">
+            <c:SettingRow Key="sessions.keepLibrarySessionDays">
+              <NumericUpDown Minimum="1" Maximum="3650" Increment="1" FormatString="0" Value="{Binding KeepLibrarySessionDays}" />
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
       </c:SettingRow>
     </c:SettingsSection>
 

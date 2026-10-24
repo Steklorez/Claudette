@@ -348,14 +348,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             }
             _ = tab.EnsureStartedAsync();
         }
-        // Library retention and settings sync, at launch (DESIGN.md §9, §14). Retention keeps the sessions of open tabs
-        // that sync; a tab that doesn't sync has no part in the library.
-        var keep = state.Tabs.Where(t => t.SyncToLibrary).Select(t => t.SessionId).OfType<string>().ToHashSet();
-        _ = Task.Run(() => _services.Library.Prune(keep));
+        // Library retention, now and once a day (DESIGN.md §9, "Keeping sessions"). It keeps the sessions of open tabs that
+        // sync; a tab that doesn't sync has no part in the library.
+        _services.Library.OpenSessions = () => AllTabs.Where(t => t.State.SyncToLibrary).Select(t => t.State.SessionId).OfType<string>().ToHashSet();
+        _services.Library.StartPruning();
         // The drafts of tabs that weren't restored won't be needed.
         _ = _services.Drafts.KeepOnlyAsync(state.Tabs.Select(t => t.Id).ToHashSet(StringComparer.Ordinal));
         // Worktrees no tab needs any more go, as Settings → General says (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.Start();
+        // Settings changed on other machines (DESIGN.md §14, "Settings sync").
         _ = _services.Library.SyncSettingsAsync();
         if (initialFolder is not null)
         {

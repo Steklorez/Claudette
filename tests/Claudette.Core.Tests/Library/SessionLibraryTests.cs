@@ -440,6 +440,40 @@ public sealed class SessionLibraryTests : IDisposable
     }
 
     [Fact]
+    public async Task Opening_a_session_counts_for_retention_without_changing_when_it_was_last_used()
+    {
+        var now = _time.GetUtcNow();
+        foreach (var id in new[] { "opened", "not-opened" })
+        {
+            var (transcript, _) = LocalSession(id);
+            await _library.SaveAsync(Record(id, now - TimeSpan.FromDays(20)), transcript, null, Ct);
+        }
+        // A field from a later version of Claudette stays.
+        var recordPath = Path.Combine(_library.GetSessionFolder("opened"), "record.json");
+        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(recordPath))!.AsObject();
+        json["fromLater"] = "kept";
+        File.WriteAllText(recordPath, json.ToJsonString());
+        _time.Advance(TimeSpan.FromDays(10));
+
+        _library.MarkOpened("opened");
+        _library.MarkOpened("missing");
+
+        var record = _library.List().Single(e => e.Record.SessionId == "opened").Record;
+        Assert.Equal(_time.GetUtcNow(), record.LastOpened);
+        Assert.Equal(now - TimeSpan.FromDays(20), record.LastUsed);
+        Assert.Contains("\"fromLater\": \"kept\"", File.ReadAllText(recordPath), StringComparison.Ordinal);
+        Assert.False(Directory.Exists(_library.GetSessionFolder("missing")));
+
+        Assert.Equal(1, _library.Prune(TimeSpan.FromDays(15), new HashSet<string>()));
+        Assert.Equal(["opened"], Directory.GetDirectories(_library.SessionsFolder).Select(Path.GetFileName));
+
+        // The next copy leaves it out, since the copy is later.
+        var (local, _) = LocalSession("opened");
+        await _library.SaveAsync(Record("opened"), local, null, Ct);
+        Assert.Null(_library.List().Single().Record.LastOpened);
+    }
+
+    [Fact]
     public async Task Copy_library_copies_everything_and_keeps_the_old_folder()
     {
         var (transcript, subagents) = LocalSession();

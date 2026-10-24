@@ -36,7 +36,7 @@ Anyone who can read the synced folder can read your sessions. Keep it in an acco
 
 Each synced session has a folder of its own with:
 
-- A record: the tab's name and mark, its model, effort and per-tab choices, its token counts, which machine used it last and when, what project it belongs to (the git remote, the branch and the folder inside the repository), and which changed files you ticked as reviewed.
+- A record: the tab's name and mark, its model, effort and per-tab choices, its token counts, which machine used it last and when, when it was last opened, what project it belongs to (the git remote, the branch and the folder inside the repository), and which changed files you ticked as reviewed.
 - A copy of Claude Code's transcript, with the subagents' transcripts.
 - A usage file, while you [share usage](../usage/sharing-usage-across-machines.md): each machine's turns in the session, counts only.
 
@@ -54,9 +54,16 @@ Settings → Sessions → **Name for this machine** is the name History shows fo
 
 Claude Code deletes its own transcripts after 30 days by default. The library's copies aren't affected, so for the sessions that sync, the library is also a longer-term archive.
 
-Settings → Sessions → **Keep library sessions for** says how long: **1 month**, **1 year** or **Forever**. Forever is the default. Claudette removes older copies when it starts.
+Settings → Sessions → **Delete sessions not used for a while** says how long they stay. It's on to start with, and **After going unused for (days)**, under it, is 15. Once no machine has used or opened a session for that many days, Claudette deletes it from the library. Claudette checks when it starts, then once a day while it's open. Turn the switch off to keep sessions in the library for good.
 
-It never removes a session that's open in a tab that syncs, or one that another machine is using. A library copy of a tab that no longer syncs is removed like any other.
+- A session is used when a tab that syncs copies it to the library: after each turn, when you turn syncing on, with **Sync now**, and after you tick files as reviewed.
+- Opening a session from History counts too, even if you don't send anything. History still says which machine last used it.
+- Claudette never deletes a session that's open in a tab that syncs, or one that another machine is using. A library copy of a tab that no longer syncs is deleted like any other.
+
+{: .warning }
+The library is shared, but this setting is each machine's own. A machine set to fewer days deletes sessions from the library for all your machines, and they leave History on every one of them. Give each machine the same number of days, or the fewest you'd want anywhere.
+
+Up to version 0.5.1 this was **Keep library sessions for**, with the choices **1 month**, **1 year** and **Forever**. If you'd chosen 1 month or 1 year, it's now 31 or 366 days. Forever, the old default, became 15 days.
 
 ## Settings
 
@@ -64,7 +71,7 @@ It never removes a session that's open in a tab that syncs, or one that another 
 |---|---|---|
 | **Folder** | Inside the data folder | Settings → Sessions → Session library |
 | **Name for this machine** | The computer's name | Settings → Sessions |
-| **Keep library sessions for** | **Forever** | Settings → Sessions |
+| **Delete sessions not used for a while** | On, after 15 days | Settings → Sessions |
 | **Sync new tabs to the session library** | Off | Settings → Sessions, explained in [Syncing a tab](syncing-a-tab.md) |
 
 These settings, like the library's folder, stay on each machine. **Reset to defaults** leaves the library folder and settings sync as they are, since changing either moves where your sessions and settings live.

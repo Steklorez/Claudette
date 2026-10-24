@@ -48,6 +48,13 @@ public sealed class SessionRecord
 
     public DateTimeOffset LastUsed { get; set; }
 
+    /// <summary>
+    /// When a tab on any machine last opened the session, even without a turn since (DESIGN.md §9, "Keeping sessions").
+    /// Only library retention reads it; History goes by <see cref="LastUsed"/>. Null in records written before it was kept,
+    /// and a copy leaves it out, since the copy's <see cref="LastUsed"/> is later.
+    /// </summary>
+    public DateTimeOffset? LastOpened { get; set; }
+
     /// <summary>The session's folder on <see cref="Machine"/>. Paths differ between machines; see <see cref="Project"/>.</summary>
     public string? Folder { get; set; }
 

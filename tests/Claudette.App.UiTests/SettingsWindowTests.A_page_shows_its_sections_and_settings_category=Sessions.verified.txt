@@ -15,8 +15,13 @@
 "Name for this machine"
 "Shown in History and when a session is in use elsewhere. Empty uses the computer's name."
 [field] "{machine}"
-"Keep library sessions for"
-[choice] "Forever"
+"Delete sessions not used for a while"
+"Once no machine has used or opened a session for that long, it goes from the library, and from History on every machine.  "
+[toggle on] Delete sessions not used for a while
+"After going unused for (days)"
+[button] (icon)
+[button] (icon)
+[field] "15"
 "Settings sync"
 "Sync Claudette's settings through the library"
 "Syncs appearance (but the zoom), what new tabs start with, usage warnings and limits, check-ins, quick suffixes, the process monitor, notifications and keyboard shortcuts. Everything marked This computer stays on each machine."

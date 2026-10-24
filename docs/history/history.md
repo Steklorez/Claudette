@@ -52,7 +52,7 @@ Click a session to resume it in a new tab, with the earlier conversation loaded 
 
 ## Old sessions
 
-Claude Code deletes its own transcripts after 30 days by default, and History can only list what's left. The library's copies aren't affected by that cleanup, so a session that syncs stays in History for as long as [Keep library sessions for](the-session-library.md#keeping-sessions) allows. A tab that doesn't sync has no copy once Claude Code has cleaned up its transcript.
+Claude Code deletes its own transcripts after 30 days by default, and History can only list what's left. The library's copies aren't affected by that cleanup, so a session that syncs stays in History until it has gone unused for as long as [Delete sessions not used for a while](the-session-library.md#keeping-sessions) says: 15 days, unless you change it. A tab that doesn't sync has no copy once Claude Code has cleaned up its transcript.
 
 ## Shortcuts
 

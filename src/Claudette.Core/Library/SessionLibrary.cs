@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Claudette.Core.Settings;
 
 namespace Claudette.Core.Library;
@@ -64,6 +65,9 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
         IgnoreInaccessible = true,
         AttributesToSkip = FileAttributes.ReparsePoint,
     };
+
+    /// <summary><see cref="SessionRecord.LastOpened"/> in <c>record.json</c>, for <see cref="MarkOpened"/>.</summary>
+    private static readonly string LastOpenedName = JsonNamingPolicy.CamelCase.ConvertName(nameof(SessionRecord.LastOpened));
 
     private static JsonSerializerOptions Json => JsonFileStore<SessionRecord>.Options;
 
@@ -403,7 +407,32 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
     }
 
     /// <summary>
-    /// Library retention (Settings → Sessions): deletes session folders last used longer ago than
+    /// Notes in the session's record that a tab opened it (<see cref="SessionRecord.LastOpened"/>), so library retention
+    /// counts from now (DESIGN.md §9, "Keeping sessions"). The rest of the record stays as it was, fields this version
+    /// doesn't know included. A session without a readable record is left alone.
+    /// </summary>
+    public void MarkOpened(string sessionId)
+    {
+        var path = Path.Combine(GetSessionFolder(sessionId), RecordFileName);
+        JsonObject? record;
+        try
+        {
+            record = File.Exists(path) ? JsonNode.Parse(LibraryFiles.ReadText(path)) as JsonObject : null;
+        }
+        catch (JsonException)
+        {
+            return;
+        }
+        if (record is null)
+        {
+            return;
+        }
+        record[LastOpenedName] = JsonValue.Create(time.GetUtcNow());
+        LibraryFiles.WriteText(path, record.ToJsonString(Json));
+    }
+
+    /// <summary>
+    /// Library retention (Settings → Sessions): deletes session folders last used or opened longer ago than
     /// <paramref name="keepFor"/>. Kept regardless: the ids in <paramref name="keep"/>, folders with a live (not stale)
     /// lease, and folders whose record can't be read. A null <paramref name="keepFor"/> keeps everything.
     /// </summary>
@@ -426,6 +455,7 @@ public sealed class SessionLibrary(string libraryFolder, TimeProvider time)
                     || ReadRecord(folder) is not { } record
                     || keep.Contains(record.SessionId)
                     || record.LastUsed >= cutoff
+                    || record.LastOpened >= cutoff
                     || LeaseManager.Read(folder) is var lease && (lease.Unreadable || lease.Lease is { } held && now - held.UpdatedAt < LeaseManager.StaleAfter))
                 {
                     continue;
