@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
 Takes the README's screenshots (Windows): the demo from claudette-demo in each style and theme, with the main window,
-the diff view, the thread's Tasks page and agent map, the detailed usage header and History of each.
+the diff view, the thread's Tasks page and agent map, the detailed usage header, History and the Project Files tab of
+each.
 
 .DESCRIPTION
 For Standard and Claude, dark and light: makes the demo content afresh, starts the Debug build of Claudette on it
@@ -17,6 +18,8 @@ composer's right rather than being caught part-way through falling off it). Then
   the key's spend in the header and the account's tags, as accounts-<style>-<theme>.png;
 - opens Settings on Appearance, with its preview, and captures that window as settings-<style>-<theme>.png;
 - selects Grappling hook, opens History, picks starfall's chip and captures the window as history-<style>-<theme>.png;
+- closes History, opens starfall's Project Files tab, opens StarfallCharacter.cpp from its explorer and captures the
+  window, with Claude's changes marked in the explorer and the editor's gutter, as files-<style>-<theme>.png;
 and closes Claudette by its window, as a user would. Last, it has MascotPictureTests draw Claudette on the composer's
 animation from her art and steps, as claudette.gif, and social-card.ps1 draw the site's social card with the new
 standard-dark.png.
@@ -140,6 +143,28 @@ foreach ($style in 'standard', 'claude') {
             Start-Sleep -Seconds 2
             Save-Window $window (Join-Path $Out "history-$style-$theme.png")
 
+            # Last, as it takes the layout with it: starfall's Files tab, with a changed file open to show Claude's marks.
+            # History is over the window, so Esc closes it first. The file is opened by clicks down the explorer, which
+            # leave the focus with the user, as typing its name in the find box wouldn't.
+            Set-Step 'Project files'
+            Send-WindowKey $window 'Esc'
+            Wait-Until { -not (Find-ById $window 'SearchBox') } 'History to close' 20
+            Invoke-ByText $window 'Project files'
+            Wait-Until { Find-ById $window 'TreeList' } 'the explorer' 20
+            $explorer = Find-ById $window 'TreeList'
+            $path = 'Source', 'Starfall', 'Player', 'StarfallCharacter.cpp'
+            for ($i = 0; $i -lt $path.Count; $i++) {
+                $name = $path[$i]
+                Wait-Until { Find-ByText $explorer $name -Optional } "$name in the explorer" 20
+                # A folder already open stays open: a click would close it.
+                if ($i -eq $path.Count - 1 -or -not (Find-ByText $explorer $path[$i + 1] -Optional)) {
+                    Send-Click (Find-ByText $explorer $name)
+                    Start-Sleep -Milliseconds 500
+                }
+            }
+            Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
+            Start-Sleep -Seconds 3
+            Save-Window $window (Join-Path $Out "files-$style-$theme.png")
         }
         finally {
             Stop-Claudette $claudette

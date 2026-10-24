@@ -36,9 +36,15 @@ Run a project's tabs on an API key kept in your OS's credential store, and see w
 
 ### Review every change Claude makes
 
-Changed files, live, a real diff view with **Revert** for a hunk or a file, ticks for what you've reviewed, and a project's files in a tab of their own with Claude's changes in the gutter. Or send the diffs to your own tool. [Reviewing changes →](https://claudette.dotbunny.com/changes/) · [Project files →](https://claudette.dotbunny.com/project-files/)
+Changed files, live, a real diff view with **Revert** for a hunk or a file, and ticks for what you've reviewed. Or send the diffs to your own tool. [Reviewing changes →](https://claudette.dotbunny.com/changes/)
 
 ![The diff view of StarfallCharacter.cpp: the include, the air control change and the grappling hook's component and bindings Claude added](docs/screenshots/diff-standard-dark.png)
+
+### Your project's files, with Claude's changes marked
+
+Open a project's files in a tab beside its sessions: an explorer, and an editor with your language's colors, find and replace, and a bar in the gutter beside every line Claude changed. Click one for the lines it replaced and **Revert**, or switch the file to a diff and back. It's for reading what Claude wrote and fixing a line of it, not an IDE. [Project files →](https://claudette.dotbunny.com/project-files/)
+
+![starfall's Files tab: the explorer with the files Claude changed marked M, and StarfallCharacter.cpp open in the editor with bars in the gutter beside the include, the air control and the grappling hook's lines Claude added](docs/screenshots/files-standard-dark.png)
 
 ### Settings that say what they do
 
