@@ -160,7 +160,7 @@ public class ProjectMenuTests
     {
         Assert.Equal("Show in Explorer", ProjectMenu.ShowFolderLabel(ToolOS.Windows));
         Assert.Equal("Show in Finder", ProjectMenu.ShowFolderLabel(ToolOS.MacOS));
-        Assert.Equal("Show in File Manager", ProjectMenu.ShowFolderLabel(ToolOS.Linux));
+        Assert.Equal("Show in file manager", ProjectMenu.ShowFolderLabel(ToolOS.Linux));
     }
 
     [Fact]

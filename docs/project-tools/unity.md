@@ -31,7 +31,7 @@ When the version isn't installed, the menu's header says so and offers **Choose 
 | **Open Editor log** | Opens Unity's editor log in another app. While Unity has the project open, its log is also a row under the tab: see [Editor logs](editor-logs.md). |
 | **Open Player log** | Opens the project's player log. Greyed out when there isn't one. |
 | **Clean Library…** | Deletes `Library`, `Temp` and `obj` in the project, and nothing else. It asks first, shows the size, and warns that Unity reimports every asset next time, which can take a long while. |
-| **Kill all Unity editors…** | Ends every running Unity editor and what it started. It asks first, lists each editor, and doesn't touch Unity Hub or Unity's own helpers. |
+| **End all Unity editors…** | Ends every running Unity editor and what it started. It asks first, lists each editor, and doesn't touch Unity Hub or Unity's own helpers. |
 
 The project's menu also has **Code optimization**, with **Release** and **Debug** as radio items. Debug opens Unity with debug code optimization, for stepping through scripts, and the action reads **Open in Unity (Debug)**. The choice is remembered for the project on this machine.
 

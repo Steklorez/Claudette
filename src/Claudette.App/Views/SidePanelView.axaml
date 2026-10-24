@@ -23,7 +23,7 @@
       <Grid ColumnDefinitions="*,Auto">
         <controls:PageTabsPanel x:Name="PageTabs" LayoutUpdated="OnPageTabsLayoutUpdated">
           <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Files}" Classes.selected="{Binding IsFilesPage}" Command="{Binding ShowFilesPageCommand}">
-            <TextBlock Text="Changed Files" Classes.muted="{Binding !IsFilesPage}" />
+            <TextBlock Text="Changed files" Classes.muted="{Binding !IsFilesPage}" />
           </Button>
           <!-- Agents (DESIGN.md §18); a busy dot while a subagent runs -->
           <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Agents}" Classes.selected="{Binding IsAgentsPage}" Command="{Binding ShowAgentsPageCommand}" ToolTip.Tip="{Binding AgentsHeader}">
@@ -61,7 +61,7 @@
           </Button>
           <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad") -->
           <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.ScratchPad}" Classes.selected="{Binding IsScratchPadPage}" Command="{Binding ShowScratchPadPageCommand}" ToolTip.Tip="Notes shared by the tabs in this project">
-            <TextBlock Text="Scratch Pad" Classes.muted="{Binding !IsScratchPadPage}" />
+            <TextBlock Text="Scratch pad" Classes.muted="{Binding !IsScratchPadPage}" />
           </Button>
           <!-- A game against Claudette, while one is open (DESIGN.md §18, "Games with Claudette") -->
           <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Games}" Classes.selected="{Binding IsGamesPage}" Command="{Binding ShowGamesPageCommand}" IsVisible="{Binding Games.IsOpen}"
@@ -131,9 +131,12 @@
                       <MenuItem Header="Open diff" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileDiffCommand}" CommandParameter="{Binding}" />
                       <MenuItem Header="Open in diff tool" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInDiffToolCommand}" CommandParameter="{Binding}"
                                 IsVisible="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.HasDiffTool}" />
-                      <MenuItem Header="Open" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInEditorCommand}" CommandParameter="{Binding}" />
-                      <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInSystemCommand}" CommandParameter="{Binding}" />
-                      <MenuItem Header="Reveal in folder" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFileCommand}" CommandParameter="{Binding}" />
+                      <!-- Not for a file that isn't there: deleted, or in a worktree that's gone -->
+                      <MenuItem Header="Open" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInEditorCommand}" CommandParameter="{Binding}"
+                                IsVisible="{Binding !IsMissing}" />
+                      <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInSystemCommand}" CommandParameter="{Binding}"
+                                IsVisible="{Binding !IsMissing}" />
+                      <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFileCommand}" CommandParameter="{Binding}" />
                       <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.CopyFilePathCommand}" CommandParameter="{Binding}" />
                       <Separator />
                       <!-- Settings → Files and diffs, at the diff tool (DESIGN.md §14) -->

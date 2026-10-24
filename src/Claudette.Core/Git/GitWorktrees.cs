@@ -214,7 +214,7 @@ public sealed class GitWorktrees(GitWorkingTree git)
                 await git.RunAsync(mainFolder, ["worktree", "lock", "--reason", "Kept by Claudette: removing it didn't finish", worktree.Path], cancellationToken)
                     .ConfigureAwait(false);
             }
-            return removed is null ? "Git couldn't finish removing it." : FirstLine(removed.StandardError) ?? $"git worktree remove failed ({removed.ExitCode}).";
+            return removed is null ? "Git couldn't finish removing it." : FirstLine(removed.StandardError) ?? $"git worktree remove failed (exit code {removed.ExitCode}).";
         }
         if (worktree.Branch is { } branch && branch.StartsWith(BranchPrefix, StringComparison.Ordinal) && (discard || ownCommits == 0))
         {

@@ -9,7 +9,7 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// A project's scratch pad (DESIGN.md §18, "Scratch pad"): the text every tab in the project shows on the side panel's
-/// Scratch Pad page, one object for all of them (<see cref="ScratchPadService"/>). What's typed is saved to this
+/// Scratch pad page, one object for all of them (<see cref="ScratchPadService"/>). What's typed is saved to this
 /// machine's copy a second after typing stops, and a pad with a git remote then syncs with the session library. When
 /// another machine changed it too, <see cref="Conflict"/> asks what it should become.
 /// </summary>
@@ -134,7 +134,7 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
         var (text, detail) = _problem is not null ? (_problem, _problemDetail) : Project switch
         {
             { IsShared: true } when _services.Settings.Sessions.LibraryFolder is { Length: > 0 } =>
-                ("Synced to your other machines through the session library", _store.LibraryPath(Project.Id)),
+                ("Synced to your other machines through the session library.", _store.LibraryPath(Project.Id)),
             { IsShared: true } =>
                 ("On this machine. To see it on your other machines too, keep the session library in a synced folder (Settings → Sessions).", null),
             { IsInRepository: true } => ("On this machine only: the repository has no remote to know it by on another machine.", null),

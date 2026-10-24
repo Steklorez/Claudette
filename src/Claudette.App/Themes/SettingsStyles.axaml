@@ -32,7 +32,7 @@
             <Button Grid.Column="1" Name="PART_Reset" Classes="flat sectionreset" Content="{TemplateBinding ResetText}" VerticalAlignment="Center"
                     Command="{Binding Group.ResetCommand, RelativeSource={RelativeSource TemplatedParent}, FallbackValue={x:Null}}"
                     IsVisible="{Binding Group.CanReset, RelativeSource={RelativeSource TemplatedParent}, FallbackValue=False}"
-                    ToolTip.Tip="Puts this section's settings back as they were when Claudette was new" />
+                    ToolTip.Tip="{TemplateBinding ResetTip}" />
           </Grid>
           <TextBlock Name="PART_Description" Classes="muted small" Text="{TemplateBinding Description}" TextWrapping="Wrap"
                      IsVisible="{TemplateBinding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

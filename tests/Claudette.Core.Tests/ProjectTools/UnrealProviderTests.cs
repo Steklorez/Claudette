@@ -65,7 +65,7 @@ public sealed class UnrealProviderTests : IDisposable
         var settings = new ProjectToolSettings().With(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio));
         var (before, _, _) = NativeProject(settings);
         Assert.False(Action(before, "open-solution").IsEnabled);
-        Assert.Equal("Generate project files first", Action(before, "open-solution").Tip);
+        Assert.Equal("Generate project files first.", Action(before, "open-solution").Tip);
 
         var sln = _temp.Write("UE5/NightOwl/NightOwl.sln", "");
         var (after, _, _) = NativeProject(settings);
@@ -129,7 +129,7 @@ public sealed class UnrealProviderTests : IDisposable
         var (info, _, _) = NativeProject(settings, os: ToolOS.Windows, version: (4, 24, 3));
 
         Assert.Equal("Open solution", Action(info, "open-solution").Label);
-        Assert.Equal("Generate project files first", Action(info, "open-solution").Tip);
+        Assert.Equal("Generate project files first.", Action(info, "open-solution").Tip);
     }
 
     [Fact]
@@ -289,7 +289,7 @@ public sealed class UnrealProviderTests : IDisposable
         Assert.Single(delete.Folders());
     }
 
-    // ---- Kill all Unreal editors ---------------------------------------------------------------------------------------------
+    // ---- End all Unreal editors ----------------------------------------------------------------------------------------------
 
     [Fact]
     public void Kill_all_editors_is_disabled_when_none_is_running_and_names_every_editor()
@@ -301,7 +301,7 @@ public sealed class UnrealProviderTests : IDisposable
 
         var idle = Action(Describe(), "kill-editors");
         Assert.Equal(ProjectActionKind.Destructive, idle.Kind);
-        Assert.Equal("No Unreal editor is running", idle.DisabledReason);
+        Assert.Equal("No Unreal editor is running.", idle.DisabledReason);
 
         processes.Running.Add(new SystemProcess(10, "UnrealEditor", $"\"{engine}/Engine/Binaries/Linux/UnrealEditor\" \"{project}\" -debug"));
         processes.Running.Add(new SystemProcess(11, "UE4Editor-Cmd", @"C:\UE_4.27\UE4Editor-Cmd.exe D:\Old\Legacy.uproject -run=cook"));

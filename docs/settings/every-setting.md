@@ -144,14 +144,14 @@ What each new tab starts with, and the folders you open them in.
 | **Effort** | New tabs start with | The model's default | Yes | Yes (**Effort**) | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
 | **Permission mode** | New tabs start with | Claude Code's default, named with the mode it gives | Yes | Yes (**Permission mode**) | [Permission modes](../permissions/permission-modes.md) |
 | **Subagents** | New tabs start with | Claude decides | No | Yes (**Subagents**) | [Subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents) |
-| **Continue tasks when a usage limit resets** | At a usage limit | On | Yes | Yes (**Continue tasks when the limit resets**) | [When a limit stops a task](../usage/when-a-limit-stops-a-task.md) |
+| **Continue tasks when a usage limit resets** | At a usage limit | On | Yes | Yes | [When a limit stops a task](../usage/when-a-limit-stops-a-task.md) |
 | **Use usage credits once a limit is used up** | At a usage limit | On | Yes | Yes (**Use usage credits**, and the tab's menu) | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
 | **Check in on long turns** | Check-ins on long turns | On | Yes | Yes (**Use different check-ins for this tab**) | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
 | **After the turn has run (minutes)** | Check-ins on long turns | 15 (0 turns it off) | Yes | Yes | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
 | **After no output for (minutes)** | Check-ins on long turns | 5 (0 turns it off) | Yes | Yes | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
 | **Message** | Check-ins on long turns | "Everything OK? Give me a one or two sentence status update: what you're doing, and whether you're stuck or waiting on something." | Yes | Yes | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
 | **Notify me when a check-in is sent** | Check-ins on long turns | Off | Yes | Yes | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
-| **Show the process monitor** | Process monitor | Off | Yes | Yes (**Process monitor**) | [Processes](../tabs/processes.md) |
+| **Show the process monitor** | Process monitor | Off | Yes | Yes | [Processes](../tabs/processes.md) |
 | **Refresh every (seconds)** | Process monitor | 2 (from 1 to 60) | Yes | No | [Processes](../tabs/processes.md) |
 | **Show command lines** | Process monitor | On | Yes | No | [Processes](../tabs/processes.md) |
 | **Recent folders to keep** | New tab picker | 20 (from 1 to 100) | Yes | No | [Opening tabs](../tabs/opening-tabs.md) |
@@ -223,7 +223,7 @@ The first page under **Project tools**: what every kind of project shares. None 
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
-| **Open solutions with** | Solutions | The OS's default app (or Rider, Visual Studio, VS Code or another program) | [Unreal Engine](../project-tools/unreal-engine.md) |
+| **Open solutions with** | Solutions | The app the OS uses for it (or Rider, Visual Studio, VS Code or another program) | [Unreal Engine](../project-tools/unreal-engine.md) |
 | **Show editor logs under the tab** | Editor logs | On | [Editor logs](../project-tools/editor-logs.md) |
 
 ## Unreal Engine

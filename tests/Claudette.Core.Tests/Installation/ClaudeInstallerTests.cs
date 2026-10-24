@@ -71,7 +71,7 @@ public sealed class ClaudeInstallerTests : IDisposable
         var result = await Installer(ToolOS.Windows, launcher, new Probe()).InstallAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
-        Assert.StartsWith("'irm https://claude.ai/install.ps1 | iex' failed (exit 1). Failed to get a valid version", result.Message);
+        Assert.StartsWith("'irm https://claude.ai/install.ps1 | iex' failed (exit code 1). Failed to get a valid version", result.Message);
     }
 
     [Fact]

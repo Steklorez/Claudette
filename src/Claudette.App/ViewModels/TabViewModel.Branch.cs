@@ -42,7 +42,8 @@ public sealed partial class TabViewModel
             var tip = !IsInWorktree ? Formats.Capitalize(on)
                 : State.NewWorktree is not null ? WorktreeTip
                 : $"Works in the worktree {WorktreeName}, {on}";
-            return $"{tip}. Click to copy the branch's name.";
+            var copies = State.NewWorktree is null && head.Branch is null && head.Commit is not null ? "the commit" : "the branch's name";
+            return $"{tip}. Click to copy {copies}.";
         }
     }
 

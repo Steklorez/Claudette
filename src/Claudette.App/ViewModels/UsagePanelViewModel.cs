@@ -313,7 +313,9 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
 
     private static string MoreText(int left, int page) => left > page ? $"Show {page} more ({left} left)" : $"Show {left} more";
 
-    public string HistoryNote => $"Usage history is kept for {_services.Settings.Usage.KeepHistory.Label().ToLowerInvariant()} (Settings → Usage).";
+    public string HistoryNote => _services.Settings.Usage.KeepHistory is RetentionPeriod.Forever
+        ? "Usage history is kept forever (Settings → Usage)."
+        : $"Usage history is kept for {_services.Settings.Usage.KeepHistory.Label().ToLowerInvariant()} (Settings → Usage).";
 
     /// <summary>Reloads the panel from the usage history, in the background (after each turn and each import).</summary>
     public void Refresh() => _ = RefreshAsync();
@@ -375,7 +377,11 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
 
         // Past windows, as far back as the history goes; the lists show a page at a time.
         _pastSessions = data.Sessions
-            .Select(p => Row($"Session ending {p.ResetsAt.ToLocalTime():ddd MMM d, t}", p.PeakPercent))
+            .Select(p =>
+            {
+                var at = p.ResetsAt.ToLocalTime();
+                return Row($"Session ending {at:ddd MMM d}, {at:t}", p.PeakPercent);
+            })
             .ToArray();
         _pastWeeks = data.Weeks
             .Select(p => Row($"Week ending {p.ResetsAt.ToLocalTime():ddd MMM d}", p.PeakPercent))

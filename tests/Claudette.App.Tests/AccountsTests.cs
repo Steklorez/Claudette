@@ -264,7 +264,7 @@ public class AccountsTests
         var tab = await h.OpenTabAsync();
 
         Assert.False(tab.RemoteControl.CanToggle);
-        Assert.Equal("Work is an API key, and the Claude app needs a claude.ai sign-in", tab.RemoteControl.UnavailableReason);
+        Assert.Equal("Work uses an API key, and the Claude app needs a claude.ai sign-in", tab.RemoteControl.UnavailableReason);
         Assert.Equal(tab.RemoteControl.UnavailableReason, tab.RemoteControl.ToggleTip);
     }
 

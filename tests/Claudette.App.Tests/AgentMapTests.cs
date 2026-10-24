@@ -35,7 +35,7 @@ public class AgentMapTests
         Assert.Equal("Explore the auth code", explore.Title);
         Assert.Equal("Explore", explore.AgentType);
         Assert.Equal("Find where tokens are checked.\n\n- `src/auth`", explore.Prompt);
-        Assert.Equal("Grep auth  in src/", explore.Activity);
+        Assert.Equal("Grep auth in src/", explore.Activity);
         Assert.Equal(1, explore.ToolCalls);
         Assert.Equal("task-a", explore.TaskId);
         Assert.Equal(AgentStatus.Running, explore.Status);
@@ -164,7 +164,7 @@ public class AgentMapTests
         Assert.Equal("3s", top.RunningText);
         Assert.Equal("claude-haiku-4-5", top.Model);
         // The model as the tab names it.
-        Assert.Equal("general-purpose · Haiku · 3s · 5 tool calls · 4.3k tok", top.Meta);
+        Assert.Equal("general-purpose · Haiku · 3s · 5 tool calls · 4.3k tokens", top.Meta);
         var nested = tab.Agents.Find("a2")!;
         Assert.Equal(AgentStatus.Done, nested.Status);
         Assert.Equal("Nested done.\nSecond line.", nested.ResultText);

@@ -45,7 +45,7 @@ public sealed class ProjectFileTests : IDisposable
         [
             "claudette.json: actions[3] has no name, so it was skipped.",
             "claudette.json: actions[4] (\"No command\") has no command, so it was skipped.",
-            "claudette.json: actions[5] (\"Odd mode\") has mode \"background\"; it can be \"output\" or \"launch\", so it was skipped.",
+            "claudette.json: actions[5] (\"Odd mode\") has mode \"background\", which isn't \"output\" or \"launch\", so it was skipped.",
             "claudette.json: actions[6] isn't an object, so it was skipped.",
             "claudette.json: links[2] has no url, so it was skipped.",
         ], contents.Problems);
@@ -252,7 +252,7 @@ public sealed class ProjectFileTests : IDisposable
     [InlineData("file:///etc/passwd", "\"file:\" links don't open from Claudette; only https, http and mailto do.")]
     [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Claudette; only https, http and mailto do.")]
     [InlineData("example.com/{branch}", "example.com/{branch} isn't a full web address, such as https://example.com.")]
-    [InlineData("https://example.com/{user}", "Unknown placeholder {user}: use {branch}, {changelist} or {folderName}")]
+    [InlineData("https://example.com/{user}", "Unknown placeholder {user}: use {branch}, {changelist} or {folderName}.")]
     public void An_address_being_edited_is_checked_by_the_rules_links_open_by(string url, string? problem) =>
         Assert.Equal(problem, ProjectLinks.Validate(url));
 
@@ -274,7 +274,7 @@ public sealed class ProjectFileTests : IDisposable
     [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Claudette; only https, http and mailto do.")]
     [InlineData("vscode://file/{folderName}", "\"vscode:\" links don't open from Claudette; only https, http and mailto do.")]
     [InlineData("example.com/board", "example.com/board isn't a full web address, such as https://example.com.")]
-    [InlineData("https://example.com/{user}", "Unknown placeholder {user}: use {branch}, {changelist} or {folderName}")]
+    [InlineData("https://example.com/{user}", "Unknown placeholder {user}: use {branch}, {changelist} or {folderName}.")]
     public void Only_https_http_and_mailto_links_open(string url, string reason)
     {
         var link = ProjectLinks.Resolve(new ProjectLink("Link", url, ProjectFileScope.Shared), Values);
@@ -289,8 +289,8 @@ public sealed class ProjectFileTests : IDisposable
     {
         var none = new LinkValues(null, null, "game");
 
-        Assert.Equal("No git branch", ProjectLinks.Resolve(new ProjectLink("PR", "https://github.com/o/r/compare/{branch}", ProjectFileScope.Shared), none).Problem);
-        Assert.Equal("No Perforce changelist", ProjectLinks.Resolve(new ProjectLink("Swarm", "https://swarm/changes/{changelist}", ProjectFileScope.Shared), none).Problem);
+        Assert.Equal("No git branch.", ProjectLinks.Resolve(new ProjectLink("PR", "https://github.com/o/r/compare/{branch}", ProjectFileScope.Shared), none).Problem);
+        Assert.Equal("No Perforce changelist.", ProjectLinks.Resolve(new ProjectLink("Swarm", "https://swarm/changes/{changelist}", ProjectFileScope.Shared), none).Problem);
         Assert.True(ProjectLinks.Resolve(new ProjectLink("Board", "https://example.com/{folderName}", ProjectFileScope.Shared), none).IsEnabled);
     }
 }

@@ -14,7 +14,7 @@ The process monitor shows what each tab has started, such as test runs, dev serv
 ## Turning it on
 
 1. Turn on Settings → Tabs → **Show the process monitor**.
-2. Or turn it on for one tab only: right-click the tab, choose **Tab settings…**, and set **Process monitor** to **On**. The same setting can turn it off for one tab. See [Tab settings](tab-settings.md).
+2. Or turn it on for one tab only: right-click the tab, choose **Tab settings…**, and set **Show the process monitor** to **On**. The same setting can turn it off for one tab. See [Tab settings](tab-settings.md).
 
 ## What it shows
 

@@ -34,7 +34,8 @@
               </Grid>
               <TextBlock Classes="small" Text="{Binding StatusText}" TextWrapping="Wrap" Classes.warning="{Binding IsWaiting}" Classes.error="{Binding IsFailed}" />
               <TextBlock Classes="muted small" Text="{Binding Meta}" TextWrapping="Wrap"
-                         ToolTip.Tip="Tokens as Claude Code reports them: the subagent's latest request, not a running total" />
+                         ToolTip.Tip="Tokens as Claude Code reports them: the subagent's latest request, not a running total"
+                         ToolTip.ServiceEnabled="{Binding !IsRoot}" />
               <TextBlock Classes="muted small" Text="{Binding ActivityLine}" TextWrapping="Wrap" IsVisible="{Binding IsActive}" />
 
               <WrapPanel ItemSpacing="6" LineSpacing="6" IsVisible="{Binding !IsRoot}">
@@ -47,7 +48,7 @@
               <!-- The prompt -->
               <StackPanel Spacing="4" IsVisible="{Binding HasPrompt}">
                 <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Classes="muted small" FontWeight="SemiBold" Text="Prompt" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" FontWeight="SemiBold" Text="The prompt it was given" VerticalAlignment="Center" />
                   <Button Grid.Column="1" Classes="flat" ToolTip.Tip="Copy the prompt"
                           Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).CopyAgentPromptCommand}" CommandParameter="{Binding}">
                     <TextBlock Classes="small" Text="Copy" />
@@ -62,7 +63,7 @@
               <!-- What it handed back -->
               <StackPanel Spacing="4" IsVisible="{Binding HasResult}">
                 <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Classes="muted small" FontWeight="SemiBold" Text="Result" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" FontWeight="SemiBold" Text="What it returned" VerticalAlignment="Center" />
                   <Button Grid.Column="1" Classes="flat" ToolTip.Tip="Copy the result"
                           Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).CopyAgentResultCommand}" CommandParameter="{Binding}">
                     <TextBlock Classes="small" Text="Copy" />

@@ -541,7 +541,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
                         _host.AddNote($"Couldn't start {Path.GetFileName(spec.FileName)}: {ex.Message}", NoteKind.Error);
                         return;
                     }
-                    _host.AddNote($"Couldn't start {Path.GetFileName(spec.FileName)}: {ex.Message}. Opened it with the OS's app instead.", NoteKind.Warning);
+                    _host.AddNote($"Couldn't start {Path.GetFileName(spec.FileName)}: {ex.Message.TrimEnd('.')}. Opened it with the OS's app instead.", NoteKind.Warning);
                 }
             }
             else if (withoutIde is not null)

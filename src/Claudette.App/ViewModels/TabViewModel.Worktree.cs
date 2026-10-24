@@ -176,7 +176,7 @@ public sealed partial class TabViewModel
         OnBranchFolderChanged();
         _conversation.AddNote(IsInWorktree
             ? $"Working in the worktree {FolderName}, on its own branch: {State.Folder}."
-            : $"Back in {State.Folder}.");
+            : $"Out of the worktree, back in {State.Folder}.");
         _services.SaveState();
     }
 

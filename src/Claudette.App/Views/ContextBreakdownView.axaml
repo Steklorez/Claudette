@@ -88,8 +88,7 @@
                  IsVisible="{Binding Context.Breakdown.HasNote, FallbackValue=False}" />
     </StackPanel>
 
-    <TextBlock Classes="small warning" TextWrapping="Wrap" IsVisible="{Binding Context.IsHigh}"
-               Text="Nearly full. Claude Code will compact the conversation soon on its own." />
+    <TextBlock Classes="small warning" TextWrapping="Wrap" IsVisible="{Binding Context.IsHigh}" Text="{Binding Context.HighWarning}" />
     <Button Content="Compact now" Click="OnCompactClick" Command="{Binding CompactCommand}" HorizontalAlignment="Left"
             ToolTip.Tip="Summarize the conversation so far to free up context, like /compact" />
   </StackPanel>

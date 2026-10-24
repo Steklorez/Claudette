@@ -9,19 +9,19 @@ summary: "The scratch pad is a place for notes beside the conversation: what to 
 
 The scratch pad is a place for notes beside the conversation: what to check later, a command worth keeping, a piece of a reply. Each project has one pad, shared by every tab in that project, and by the same project on your other machines.
 
-{% include shot.html name="guide/conversation/scratch-pad" alt="The Scratch Pad page in the side panel, with notes and a command kept from a conversation." %}
+{% include shot.html name="guide/conversation/scratch-pad" alt="The Scratch pad page in the side panel, with notes and a command kept from a conversation." %}
 
 Nothing in it goes to Claude unless you paste it into a message.
 
 ## Opening it
 
-The **Scratch Pad** page is in the side panel, the last page until you move it, and it is always there ([The side panel](../tabs/the-side-panel.md)). The command palette's **Show scratch pad** opens it too.
+The **Scratch pad** page is in the side panel, the last page until you move it, and it is always there ([The side panel](../tabs/the-side-panel.md)). The command palette's **Show scratch pad** opens it too.
 
 Its first line says whose pad it is, named as the tab group is: *Shared by the tabs in api*. **Copy all** copies the whole pad. **Clear…** empties it, after asking, for every tab of the project and on your other machines.
 
 Under that, a line says where the pad is kept:
 
-- *Synced to your other machines through the session library*.
+- *Synced to your other machines through the session library.*
 - *On this machine. To see it on your other machines too, keep the session library in a synced folder (Settings → Sessions).*
 - *On this machine only: the repository has no remote to know it by on another machine.*
 - *On this machine only: the folder isn't in a git repository.*

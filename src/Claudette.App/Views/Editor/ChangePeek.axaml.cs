@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using Claudette.App.ViewModels;
@@ -60,6 +61,17 @@ public partial class ChangePeek : UserControl
         _coloring = TextMateColoring.Install(_old.TextArea.TextView, _old.Document, file.Language.Scope, ActualThemeVariant == ThemeVariant.Dark);
         // A scroll bar's room under the lines, for a line too long for the width.
         _old.Height = block.OldLines.Count * lineHeight + 6 + (block.OldLines.Any(l => l.Length > 200) ? 14 : 0);
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        // The arrows' keys can be rebound in Settings → Keyboard.
+        if (this.FindAncestorOfType<ShellView>()?.DataContext is ShellViewModel shell)
+        {
+            ToolTip.SetTip(PreviousChangeButton, shell.Tips.PreviousChange);
+            ToolTip.SetTip(NextChangeButton, shell.Tips.NextChange);
+        }
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

@@ -24,7 +24,7 @@ Claude Code takes everything after a command's name as its arguments, so a messa
 
 ## Keep a suffix on
 
-Right-click a chip and choose **Keep on this tab / stop keeping**. A kept suffix is added to every message in the tab until you turn it off, and its chip reads, for example, *Plan only (kept)*. Kept suffixes are saved with the tab.
+Right-click a chip and choose **Keep on this tab** (**Stop keeping on this tab** on a chip that's kept). A kept suffix is added to every message in the tab until you turn it off, and its chip reads, for example, *Plan only (kept)*. Kept suffixes are saved with the tab.
 
 ## Give a suffix its own shortcut
 

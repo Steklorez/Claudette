@@ -46,8 +46,8 @@ public sealed class NewEntryTests : IDisposable
     [Fact]
     public void A_name_leading_out_of_the_folder_is_refused()
     {
-        Assert.Equal("A name can't be . or ..", NewEntry.Check(Project, "../outside.txt").Problem);
-        Assert.Equal("A name can't be . or ..", NewEntry.Check(Project, "./here.txt").Problem);
+        Assert.Equal("A name can't be \".\" or \"..\".", NewEntry.Check(Project, "../outside.txt").Problem);
+        Assert.Equal("A name can't be \".\" or \"..\".", NewEntry.Check(Project, "./here.txt").Problem);
     }
 
     [Fact]

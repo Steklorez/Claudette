@@ -17,7 +17,7 @@ public sealed class UnrealProvider(IUnrealEngineRegistry? registry = null) : IPr
     /// <summary>Settings' key for the project files to generate.</summary>
     public const string ProjectFilesKey = "projectFiles";
 
-    /// <summary>The editor's process names, UE5's and UE4's, for the clean warning and Kill all editors.</summary>
+    /// <summary>The editor's process names, UE5's and UE4's, for the clean warning and End all editors.</summary>
     public static readonly IReadOnlyList<string> EditorProcessNames = ["UnrealEditor", "UnrealEditor-Cmd", "UE4Editor", "UE4Editor-Cmd"];
 
     /// <summary>The Windows registry's Unreal entries; nothing elsewhere.</summary>
@@ -155,7 +155,7 @@ public sealed class UnrealProvider(IUnrealEngineRegistry? registry = null) : IPr
                 OpenPath = project.Path,
                 OpenWithIde = true,
                 WithoutIde = "Rider wasn't found, so the project wasn't opened: the OS's app would start the Unreal editor instead. "
-                    + "If Rider is installed somewhere Claudette doesn't look, choose it with Another program… in Settings → Project tools → All tools.",
+                    + "If Rider is installed somewhere Claudette doesn't look, choose it with Another program… in Settings → Project tools → All tools → Open solutions with.",
             });
         }
         else
@@ -166,7 +166,7 @@ public sealed class UnrealProvider(IUnrealEngineRegistry? registry = null) : IPr
                 Description = solution is null ? null : $"Opens {Path.GetFileName(solution)}.",
                 OpenPath = solution,
                 OpenWithIde = true,
-                DisabledReason = solution is null ? "Generate project files first" : null,
+                DisabledReason = solution is null ? "Generate project files first." : null,
             });
         }
 
@@ -188,11 +188,11 @@ public sealed class UnrealProvider(IUnrealEngineRegistry? registry = null) : IPr
 
         // Every Unreal editor, not just this project's: a stuck one, or several, often need ending (DESIGN.md §18).
         var running = context.Processes?.Find(EditorProcessNames);
-        actions.Add(new ProjectAction("kill-editors", "Kill all Unreal editors…", ProjectActionKind.Destructive)
+        actions.Add(new ProjectAction("kill-editors", "End all Unreal editors…", ProjectActionKind.Destructive)
         {
             Description = "Ends every running Unreal editor, with ShaderCompileWorker and whatever else each started.",
             Destructive = new KillProcesses(EditorProcessNames, "Unreal editor", p => SystemProcessNames.FileArgument(p.CommandLine, ".uproject")),
-            DisabledReason = running is { Count: 0 } ? "No Unreal editor is running" : null,
+            DisabledReason = running is { Count: 0 } ? "No Unreal editor is running." : null,
         });
 
         var details = new List<ProjectDetail>

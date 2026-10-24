@@ -465,7 +465,7 @@ public sealed partial class QuestionItem : PromptItem
         var input = (JsonObject)Request.Input.DeepClone();
         input["answers"] = answers;
         Request.Allow(input);
-        Finish(PermissionState.Allowed, string.Join("  ·  ", Questions.Select(q => $"{q.Header ?? q.Text}: {q.Answer}")));
+        Finish(PermissionState.Allowed, string.Join(" · ", Questions.Select(q => $"{q.Header ?? q.Text}: {q.Answer}")));
     }
 
     [RelayCommand]

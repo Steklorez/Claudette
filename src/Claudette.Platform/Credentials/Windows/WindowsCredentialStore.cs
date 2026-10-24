@@ -37,7 +37,7 @@ public sealed class WindowsCredentialStore : ICredentialStore
         var error = Marshal.GetLastPInvokeError();
         return error == CredentialNative.ErrorNotFound
             ? Task.FromResult(false)
-            : Task.FromException<bool>(new CredentialStoreException($"Couldn't remove the password from Windows Credential Manager (error {error})."));
+            : Task.FromException<bool>(new CredentialStoreException($"Couldn't remove it from Windows Credential Manager (error {error})."));
     }
 
     private static unsafe string? Read(string key)
@@ -67,7 +67,7 @@ public sealed class WindowsCredentialStore : ICredentialStore
         var blob = Encoding.Unicode.GetBytes(secret);
         if (blob.Length > CredentialNative.MaxBlobSize)
         {
-            throw new CredentialStoreException("The password is too long for Windows Credential Manager.");
+            throw new CredentialStoreException("It's too long for Windows Credential Manager.");
         }
         fixed (char* target = TargetName(key))
         fixed (char* comment = label)
@@ -88,7 +88,7 @@ public sealed class WindowsCredentialStore : ICredentialStore
             {
                 if (!CredentialNative.CredWrite(&credential, 0))
                 {
-                    throw new CredentialStoreException($"Couldn't save the password in Windows Credential Manager (error {Marshal.GetLastPInvokeError()}).");
+                    throw new CredentialStoreException($"Couldn't save it in Windows Credential Manager (error {Marshal.GetLastPInvokeError()}).");
                 }
             }
             finally

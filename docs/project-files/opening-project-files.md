@@ -59,7 +59,7 @@ Settings → **Files and diffs** holds this tab's settings, each explained where
 
 | Key | Does |
 |---|---|
-| `Ctrl/Cmd+P` | Go to a file in the project, which you can rebind in Settings → **Keyboard** |
+| `Ctrl/Cmd+P` | Go to file, which you can rebind in Settings → **Keyboard** |
 
 The editor's own keys are on the pages that use them and in [Keyboard shortcuts](../reference/keyboard-shortcuts.md).
 

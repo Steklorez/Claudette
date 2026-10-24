@@ -217,7 +217,7 @@ public sealed class GodotProviderTests : IDisposable
     {
         var file = _temp.Write("game/project.godot", Godot4CSharp);
         var processes = new FakeSystemProcesses();
-        Assert.Equal("No Godot editor is running", Action(Describe(file, Context(processes: processes)), "kill-editors").DisabledReason);
+        Assert.Equal("No Godot editor is running.", Action(Describe(file, Context(processes: processes)), "kill-editors").DisabledReason);
 
         processes.Running.Add(new SystemProcess(4, "Godot_v4.3-stable_mono_win64", @"Godot_v4.3-stable_mono_win64.exe --editor --path ""D:\Games\Night Owl"""));
         processes.Running.Add(new SystemProcess(5, "godot", "godot --path /home/matt/owl"));

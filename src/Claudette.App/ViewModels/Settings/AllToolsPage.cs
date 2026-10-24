@@ -39,7 +39,7 @@ public sealed partial class AllToolsPage : SettingsPage
 
     public IReadOnlyList<SettingChoice<SolutionOpener>> SolutionOpenerChoices { get; } =
     [
-        new(SolutionOpener.System, "The OS's default app"),
+        new(SolutionOpener.System, "The app the OS uses for it"),
         new(SolutionOpener.Rider, "Rider"),
         new(SolutionOpener.VisualStudio, "Visual Studio"),
         new(SolutionOpener.VSCode, "VS Code"),

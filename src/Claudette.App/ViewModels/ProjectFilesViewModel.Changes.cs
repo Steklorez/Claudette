@@ -207,10 +207,10 @@ public sealed partial class ProjectFilesViewModel
 
     private static string Letter(GitChangeKind kind) => kind switch
     {
-        GitChangeKind.Added => "A",
+        // An untracked file counts as added, as in Changed files (DESIGN.md §8).
+        GitChangeKind.Added or GitChangeKind.Untracked => "A",
         GitChangeKind.Deleted => "D",
         GitChangeKind.Renamed => "R",
-        GitChangeKind.Untracked => "U",
         _ => "M",
     };
 

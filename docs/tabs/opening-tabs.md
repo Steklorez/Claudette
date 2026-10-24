@@ -19,7 +19,7 @@ Every tab has a working folder, which you pick when you open it. Several tabs ca
 
 A tab opens in the folder you picked, in that folder's group in the sidebar.
 
-Each entry shows the folder's name and its path (shortened with `~`), its current git branch when it's a repository, when you last used it, and how many tabs are open in it now (for example *2 h ago · 1 open*). A folder that no longer exists is dimmed and marked *not found*.
+Each entry shows the folder's name and its path (shortened with `~`), its current git branch when it's a repository, when you last used it, and how many tabs are open in it now (for example *2 h ago · 1 tab open*). A folder that no longer exists is dimmed and marked *not found*.
 
 Favorites are listed first, then recent folders, most recent first.
 
@@ -35,7 +35,7 @@ Right-click a folder in the picker for:
 
 - **Add to favorites** or **Remove from favorites**.
 - **Remove from recents**.
-- **Reveal in Finder/Explorer**.
+- **Reveal in file manager**.
 - **Copy path**.
 
 A folder is added to the recent list, or moved to the top, whenever a tab opens in it. Favorites never drop off the list. Both lists belong to this machine, because paths differ from one machine to the next, so they don't sync with your other machines.
@@ -69,7 +69,7 @@ The **Model**, **Effort** and **Permission mode** under **New tabs start with**,
 | Shortcut | What it does |
 |---|---|
 | `Ctrl/Cmd+T` | Open the new tab picker |
-| `Ctrl/Cmd+Shift+H` | Open History |
+| `Ctrl/Cmd+Shift+H` | Open from History |
 | `Up` and `Down`, `Enter` | Choose a folder in the picker, and open it |
 | `1` to `9` | Open one of the first nine folders in the picker |
 | `Esc` | Close the picker |

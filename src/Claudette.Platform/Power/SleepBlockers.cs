@@ -35,6 +35,6 @@ public static class SleepBlockers
             (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(typeof(SleepBlockers)).LogWarning(ex, "Keeping the computer awake isn't available.");
             return new NoSleepBlocker($"setting it up failed: {ex.Message}");
         }
-        return new NoSleepBlocker("Claudette can't keep this kind of computer awake.");
+        return new NoSleepBlocker("Claudette only knows how on Windows, macOS and Linux.");
     }
 }

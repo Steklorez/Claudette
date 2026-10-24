@@ -141,7 +141,7 @@ public class ConversationCardsTests
         var footer = Assert.IsType<TurnSummaryItem>(_items[^1]);
         Assert.Equal(3, footer.ToolCalls);
         Assert.Equal(62000, footer.CacheReadTokens);
-        Assert.Equal("1m 4s · 62.2k in · 904 out · 62k from cache · 3 tool calls", footer.StatsText);
+        Assert.Equal("1m 04s · 62.2k in · 904 out · 62k from cache · 3 tool calls", footer.StatsText);
         Assert.Equal(_time.GetUtcNow(), footer.EndedAt);
         Assert.NotNull(footer.TimeText);
 

@@ -221,7 +221,7 @@ public sealed partial class ProjectTypePathRow(ProjectTypePage page, SettingItem
         var found = await Task.Run(() => detect(context));
         if (found is null)
         {
-            DetectResult = $"{path.Title} wasn't found where it's usually installed. Browse to it instead.";
+            DetectResult = $"The {path.Title} wasn't found where it's usually installed. Browse to it instead.";
             return;
         }
         Value = found;

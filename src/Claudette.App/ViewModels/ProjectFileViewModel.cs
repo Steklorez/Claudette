@@ -1,3 +1,4 @@
+using Claudette.App.Conversation;
 using Claudette.App.Diffs;
 using Claudette.App.Editor;
 using Claudette.App.Services;
@@ -777,7 +778,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
 
     /// <summary>The peek's header: who changed the file, and when.</summary>
     public string PeekHeader => Change is { } change
-        ? $"Changed by Claude in {change.AuthorNames} · {change.LastChanged.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.CurrentCulture)}"
+        ? $"Changed by Claude in {change.AuthorNames} · {MessageTimes.Short(change.LastChanged, _services.Time)}"
         : _baselineLabel.Length > 0 ? $"Changed, {_baselineLabel}" : "Changed";
 
     /// <summary>The tab that changed the file last, which the peek's header goes to.</summary>

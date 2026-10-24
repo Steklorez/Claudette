@@ -11,7 +11,7 @@ public sealed record SystemProcess(int Pid, string Name, string? CommandLine, Da
 
 /// <summary>
 /// Every running process by name, for project tools (DESIGN.md §18): whether an editor has a project open, and
-/// <b>Kill all editors</b>. The implementations are in Claudette.Platform, with the process monitor's code.
+/// <b>End all editors</b>. The implementations are in Claudette.Platform, with the process monitor's code.
 /// </summary>
 public interface ISystemProcesses
 {

@@ -17,7 +17,7 @@ The list of models and each model's effort levels come from Claude Code, not fro
 2. Pick a different one. A question appears, **Switch model?**
 3. Choose **Switch model**, or **Cancel**.
 
-The question warns that *switching models resets this tab's cached context*: the new model has to read the whole conversation again, so your next message uses more of your limits. If the new model doesn't support the tab's current effort, the question says so, and the effort goes back to that model's default.
+The question warns, with the model's name, that *Switching to Haiku resets this tab's cached context*: the new model has to read the whole conversation again, so your next message uses more of your limits. If the new model doesn't support the tab's current effort, the question says so, and the effort goes back to that model's default.
 
 The conversation itself is kept. Claude Code switches the model in place, even in the middle of a turn.
 

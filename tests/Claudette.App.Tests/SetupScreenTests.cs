@@ -41,7 +41,7 @@ public class SetupScreenTests
 
         await setup.InstallCommand.ExecuteAsync(null);
 
-        Assert.Equal("'irm https://claude.ai/install.ps1 | iex' failed (exit 1). Failed to get latest version", setup.ResultText);
+        Assert.Equal("'irm https://claude.ai/install.ps1 | iex' failed (exit code 1). Failed to get latest version", setup.ResultText);
         Assert.Empty(checks);
         Assert.True(setup.InstallCommand.CanExecute(null));
     }

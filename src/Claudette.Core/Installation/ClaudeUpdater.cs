@@ -120,7 +120,7 @@ public sealed class ClaudeUpdater(
         if (result.ExitCode != 0)
         {
             var detail = LastLines(result.StandardError) ?? LastLines(result.StandardOutput) ?? "";
-            return new ClaudeUpdateResult(false, version, $"'{plan.CommandText}' failed (exit {result.ExitCode}). {detail}".Trim());
+            return new ClaudeUpdateResult(false, version, $"'{plan.CommandText}' failed (exit code {result.ExitCode}). {detail}".Trim());
         }
         return new ClaudeUpdateResult(true, version, version is null ? "The update finished." : $"Claude Code {version} is installed.");
     }

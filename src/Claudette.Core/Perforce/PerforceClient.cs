@@ -78,7 +78,7 @@ public sealed class PerforceClient(IProcessLauncher launcher, TimeProvider timeP
         {
             return new PerforceLoginResult(true, false, message);
         }
-        return new PerforceLoginResult(false, PerforceErrors.NeedsUserLogin(text), message.Length > 0 ? message : $"p4 login failed (exit {result.ExitCode}).");
+        return new PerforceLoginResult(false, PerforceErrors.NeedsUserLogin(text), message.Length > 0 ? message : $"p4 login failed (exit code {result.ExitCode}).");
     }
 
     /// <summary>

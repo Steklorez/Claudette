@@ -30,8 +30,8 @@ A command you've changed also has **Reset**, which puts its default back. **Remo
 
 When the keys you pressed can't be used, the row says why and the old shortcut stays. Press other keys, or `Esc` to give up:
 
-- **Another command already has them**, or a quick suffix does. The row names it: "Ctrl+T is already used by New tab."
-- **A letter, digit or punctuation key with no Ctrl, Alt or Cmd**, since it would get in the way of typing: "Add Ctrl, Alt or Cmd, so typing still works." Shift alone doesn't help. `Esc`, `Tab`, `Enter`, `Backspace`, `Delete` and the function keys are fine on their own.
+- **Another command already has them**, or a quick suffix does. The row names it: *Ctrl+T is already used by "New tab".*
+- **A letter, digit or punctuation key with no Ctrl, Alt or Cmd**, since it would get in the way of typing: "Add Ctrl or Alt, so typing still works." ("Add Cmd, Ctrl or Option, so typing still works." on a Mac). Shift alone doesn't help. `Esc`, `Tab`, `Enter`, `Backspace`, `Delete` and the function keys are fine on their own.
 
 ## Go to tab 1–9
 

@@ -30,7 +30,7 @@
       </StackPanel>
       <RadioButton GroupName="ProjectActionMode" Content="Run with output" IsChecked="{Binding RunWithOutput}" Margin="0,4,0,0" />
       <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-6,0,0"
-                 Text="The output shows on the Project page, with Stop, and a notification says when it ends." />
+                 Text="Its run shows under the tab in the sidebar, with its log and Stop, and a notification says when it ends." />
       <RadioButton GroupName="ProjectActionMode" Content="Launch and forget" IsChecked="{Binding LaunchAndForget}" />
       <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-6,0,0"
                  Text="For programs that keep running on their own, such as an editor or a server." />

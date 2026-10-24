@@ -19,7 +19,7 @@ The row sits under the tab's row, after its subagents and before its project run
 - The file's name, such as `NightOwl.log`.
 - Under it, what's writing it and how many errors and warnings it has so far, such as *Unreal editor · 2 errors · 14 warnings*. Once the editor has closed it says when: *Closed · 15:02 · 2 errors*, or *Crashed · 15:02* in red.
 
-Hover the row for its status and the file's path. Right-click it for **Open beside**, **Close pane**, **Copy log**, **Open file**, **Show in Explorer** (**Show in Finder** on macOS, **Show in File Manager** on Linux) and **Close**.
+Hover the row for its status and the file's path. Right-click it for **Open beside**, **Close pane**, **Copy log**, **Open file**, **Show in Explorer** (**Show in Finder** on macOS, **Show in file manager** on Linux) and **Close**.
 
 A commandlet, a game run with `-game`, or a Unity run in batch mode gets a row of its own too, for the log it writes. With the editor open, an Unreal commandlet writes `NightOwl_2.log`, so the tab has two rows.
 

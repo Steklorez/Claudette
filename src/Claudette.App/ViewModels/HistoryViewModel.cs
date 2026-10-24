@@ -61,6 +61,9 @@ public sealed class HistoryEntry
 
     public bool IsOpen { get; set; }
 
+    /// <summary>What a click does: a session open in a tab goes to that tab (a conflict copy still opens on its own).</summary>
+    public string OpenTip => IsOpen && !IsConflictCopy ? "Go to its tab" : "Resume in a new tab";
+
     /// <summary>
     /// The session's mark as stored (DESIGN.md §4, "Marks"): the library record's or this machine's, whichever is newer.
     /// Kept as written, so opening the session keeps a mark a later Claudette added.
@@ -245,7 +248,7 @@ public sealed partial class HistoryViewModel : ViewModelBase
             // A search that finished just as the words changed says nothing about the new ones.
             if (ReferenceEquals(_replySearch, search) && !search.IsCancellationRequested)
             {
-                ReplySearchText = found == 0 ? "Claude's replies in the other sessions don't mention that either." : $"Found {Sessions(found)} more in Claude's replies.";
+                ReplySearchText = found == 0 ? "Claude's replies in the other sessions don't mention that either." : $"Found {found} more session{(found == 1 ? "" : "s")} in Claude's replies.";
             }
         }
         catch (OperationCanceledException)

@@ -54,6 +54,7 @@ public class ConversationExportTests
         var html = ConversationExport.ToHtml("Docs", items);
 
         Assert.Contains(" → Created “Enemies”: https://claude.ai/code/artifact/d1", md, StringComparison.Ordinal);
+        Assert.DoesNotContain("``", md, StringComparison.Ordinal);
         Assert.DoesNotContain("verdict", md, StringComparison.Ordinal);
         Assert.Contains("https://claude.ai/code/artifact/d1", html, StringComparison.Ordinal);
     }

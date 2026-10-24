@@ -68,7 +68,7 @@ public sealed class BranchBadgeTests
         var tab = await h.OpenTabAsync();
 
         Assert.Equal("a1b2c3d", tab.BranchBadge);
-        Assert.Equal("At a1b2c3d, not on a branch. Click to copy the branch's name.", tab.BranchBadgeTip);
+        Assert.Equal("At a1b2c3d, not on a branch. Click to copy the commit.", tab.BranchBadgeTip);
     }
 
     [Fact]

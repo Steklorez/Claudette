@@ -61,7 +61,7 @@ public class SidePanelUiTests
         var close = view.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Close side panel");
 
         Assert.Empty(row.Overflow);
-        Assert.Equal(["Changed Files", "Agents", "Tasks", "MCP", "Scratch Pad"], PageTabs(row).Select(p => Label(p).Text));
+        Assert.Equal(["Changed files", "Agents", "Tasks", "MCP", "Scratch pad"], PageTabs(row).Select(p => Label(p).Text));
         AssertLaidOut(row);
         var last = PageTabs(row)[^1];
         Assert.True(InView(last, view).Right <= InView(close, view).Left, $"The last page ends at {InView(last, view).Right}, the close button starts at {InView(close, view).Left}");
@@ -142,7 +142,7 @@ public class SidePanelUiTests
 
         // Dropped on the left half of Agents, the scratch pad takes its place and shows.
         var agents = PageTab(row, "Agents");
-        var from = PageTab(row, "Scratch Pad").TranslatePoint(new Point(10, 10), window)!.Value;
+        var from = PageTab(row, "Scratch pad").TranslatePoint(new Point(10, 10), window)!.Value;
         var to = agents.TranslatePoint(new Point(agents.Bounds.Width / 4, 10), window)!.Value;
         window.MouseMove(from);
         window.MouseDown(from, MouseButton.Left);
@@ -150,16 +150,16 @@ public class SidePanelUiTests
         window.MouseUp(to, MouseButton.Left);
         UiText.Settle(window);
 
-        Assert.Equal(["Changed Files", "Scratch Pad", "Agents", "Tasks", "MCP"], PageTabs(row).Select(p => Label(p).Text));
+        Assert.Equal(["Changed files", "Scratch pad", "Agents", "Tasks", "MCP"], PageTabs(row).Select(p => Label(p).Text));
         Assert.True(tab.IsScratchPadPage);
         AssertLaidOut(row);
         Assert.Equal(["Files", "ScratchPad", "Agents", "Project", "Processes", "Tasks", "Mcp", "Games"], h.Services.State.SidePanelPages);
 
         // A tab's menu moves it too, past the next page the tab has.
-        var moveRight = PageTab(row, "Changed Files").ContextMenu!.Items.OfType<MenuItem>().Single(m => m.Header as string == "Move right");
+        var moveRight = PageTab(row, "Changed files").ContextMenu!.Items.OfType<MenuItem>().Single(m => m.Header as string == "Move right");
         moveRight.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         UiText.Settle(window);
-        Assert.Equal(["Scratch Pad", "Changed Files", "Agents", "Tasks", "MCP"], PageTabs(row).Select(p => Label(p).Text));
+        Assert.Equal(["Scratch pad", "Changed files", "Agents", "Tasks", "MCP"], PageTabs(row).Select(p => Label(p).Text));
         // Drawn, and reached with the Tab key, in the same order.
         Assert.Equal(row.Children, row.GetVisualChildren());
     }
@@ -176,11 +176,11 @@ public class SidePanelUiTests
         UiText.Settle(window);
         var row = window.GetVisualDescendants().OfType<TabView>().Single().GetVisualDescendants().OfType<PageTabsPanel>().Single();
 
-        Assert.Equal(["Scratch Pad", "Changed Files", "Agents"], PageTabs(row).Select(p => Label(p).Text));
+        Assert.Equal(["Scratch pad", "Changed files", "Agents"], PageTabs(row).Select(p => Label(p).Text));
         AssertLaidOut(row);
     }
 
-    /// <summary>A tab with the Tasks and MCP pages beside Changed Files and Agents, its side panel open at its width.</summary>
+    /// <summary>A tab with the Tasks and MCP pages beside Changed files and Agents, its side panel open at its width.</summary>
     private static async Task<(TabViewModel Tab, Window Window, TabView View)> ShowWithTasksAndMcpAsync(TabTestHarness h, string mcpStatus = "connected", double windowWidth = 1200)
     {
         h.Transport.Answers["mcp_status"] = _ => new JsonObject { ["mcpServers"] = new JsonArray(new JsonObject { ["name"] = "tickets", ["status"] = mcpStatus }) };

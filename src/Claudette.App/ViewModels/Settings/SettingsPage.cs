@@ -51,7 +51,7 @@ public abstract class SettingsPage : ViewModelBase, ISettingsSource
     /// Everything on the page is kept on this computer (General, Claude Code, Perforce…): the page says so once, by its
     /// title, rather than each section.
     /// </summary>
-    public bool IsMachineOnly => _groups.Count > 0 && _groups.Values.Where(g => g.Items.Any(i => i.IsSetting)).All(g => g.IsMachineOnly);
+    public bool IsMachineOnly => _items.Values.Any(i => i.IsSetting) && _groups.Values.Where(g => g.Items.Any(i => i.IsSetting)).All(g => g.IsMachineOnly);
 
     public IReadOnlyCollection<SettingItem> Items => _items.Values;
 
@@ -69,11 +69,13 @@ public abstract class SettingsPage : ViewModelBase, ISettingsSource
     /// <summary>
     /// The page's entries for the search box: each section and each setting, with the words they're found by. Each
     /// names a row or section of the page's view by its key, which the window scrolls to (SettingsWindowTests checks
-    /// that the view has one for each).
+    /// that the view has one for each). A section with a row of its own name, such as Quick suffixes, is found as the
+    /// row, which has more words to be found by, rather than twice.
     /// </summary>
     public virtual IEnumerable<SettingsSearchResult> SearchEntries =>
     [
-        .. _groups.Values.Select(g => Entry(g.Key, g.Title, g.Description, null, [g.Title, g.Description ?? ""])),
+        .. _groups.Values.Where(g => g.Items.All(i => i.Title != g.Title))
+            .Select(g => Entry(g.Key, g.Title, g.Description, null, [g.Title, g.Description ?? ""])),
         .. _items.Values.Select(i => Entry(i.Key, i.Title, i.Description, GroupOf(i)?.Title, i.SearchText)),
     ];
 

@@ -34,7 +34,7 @@ A project is a C# project when its features list `C#`, it has a `[dotnet]` or `[
 | **Build C#** | C# projects only. A job that runs `dotnet build` on the project's `.sln`, or its `.csproj` when there's no `.sln`. Greyed out until Godot has made them. |
 | **Open solution** | C# projects only. Opens the `.sln` with the IDE chosen in Settings, and is greyed out until Godot has made it. |
 | **Clean .godot…** | Godot 4. Deletes the `.godot` folder, after asking, and warns that Godot reimports every asset next time. Godot 3 has **Clean .import…** instead. |
-| **Kill all Godot editors…** | Ends every running Godot, whatever its build, and what each started. It asks first and lists each with its project. It never ends Claudette. |
+| **End all Godot editors…** | Ends every running Godot, whatever its build, and what each started. It asks first and lists each with its project. It never ends Claudette. |
 
 ## Settings
 

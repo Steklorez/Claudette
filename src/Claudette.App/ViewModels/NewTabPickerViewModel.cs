@@ -57,7 +57,7 @@ public sealed class FolderEntry(string path, string? branch, DateTimeOffset? las
             }
             if (OpenTabs > 0)
             {
-                parts.Add($"{OpenTabs} open");
+                parts.Add($"{OpenTabs} tab{(OpenTabs == 1 ? "" : "s")} open");
             }
             return string.Join(" · ", parts);
         }

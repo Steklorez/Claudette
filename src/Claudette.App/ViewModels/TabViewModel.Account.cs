@@ -33,7 +33,7 @@ public sealed partial class TabViewModel
 
     /// <summary>Why the Claude app isn't for this tab's account whatever the Default account can do: an API key can't.</summary>
     internal string? AccountRemoteControlReason => Account is { } account
-        ? $"{account.Name} is an API key, and the Claude app needs a claude.ai sign-in"
+        ? $"{account.Name} uses an API key, and the Claude app needs a claude.ai sign-in"
         : null;
 
     /// <summary>

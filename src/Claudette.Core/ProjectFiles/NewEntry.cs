@@ -60,7 +60,7 @@ public static class NewEntry
     {
         if (name is "." or "..")
         {
-            return "A name can't be . or ..";
+            return "A name can't be \".\" or \"..\".";
         }
         foreach (var c in name)
         {

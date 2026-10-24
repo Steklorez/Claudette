@@ -34,7 +34,7 @@ public sealed partial class KeyboardPage : SettingsPage
         Section("sending", "Sending",
         [
             Setting("keyboard.sendKey", "Send with", s => s.Keyboard.SendKey, (s, v) => s.Keyboard.SendKey = v,
-                more: "With Ctrl+Enter, it still answers a waiting prompt when nothing is typed, as Allow the waiting prompt does.",
+                more: $"With {PrimaryEnter}, it still answers a waiting prompt when nothing is typed, as Allow the waiting prompt does.",
                 keywords: ["enter", "new line", "submit"]),
         ]);
         Section("shortcuts", "Shortcuts",
@@ -89,7 +89,10 @@ public sealed partial class KeyboardPage : SettingsPage
         }
     }
 
-    public string PrimaryEnterLabel => $"{new KeyChord(ChordModifiers.Primary, "Enter").Display(Claudette.App.Services.Shortcuts.IsMac)}, with Enter for a new line";
+    public string PrimaryEnterLabel => $"{PrimaryEnter}, with Enter for a new line";
+
+    /// <summary>Ctrl+Enter, or ⌘↩ on a Mac.</summary>
+    private static string PrimaryEnter => new KeyChord(ChordModifiers.Primary, "Enter").Display(Claudette.App.Services.Shortcuts.IsMac);
 
     /// <summary>The keys that can't be rebound, behind More on their row.</summary>
     public string FixedKeysText =>

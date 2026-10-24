@@ -57,6 +57,8 @@ public static class ProjectFile
 
     public const string LocalName = "claudette.local.json";
 
+    private const string ObjectShape = "{ \"actions\": [ … ], \"links\": [ … ] }";
+
     /// <summary>Indented, and without escaping characters such as <c>&amp;</c> that commands are full of.</summary>
     private static readonly JsonSerializerOptions WriteOptions = new()
     {
@@ -95,7 +97,9 @@ public static class ProjectFile
         var problems = new List<string>();
         if (!TryParseRoot(text, out var root, out var error))
         {
-            return new ProjectFileContents([], [], [$"{file} isn't valid JSON, so it was skipped: {error}"]);
+            return new ProjectFileContents([], [], [error is null
+                ? $"{file} isn't a JSON object, so it was skipped. It should look like {ObjectShape}."
+                : $"{file} isn't valid JSON, so it was skipped: {error}"]);
         }
         var actions = new List<CustomProjectAction>();
         foreach (var entry in Entries(root, "actions", file, problems).Select((node, index) => ReadAction(node, index, scope, os)))
@@ -174,7 +178,9 @@ public static class ProjectFile
         }
         if (!TryParseRoot(text, out var root, out var parseError))
         {
-            throw new InvalidOperationException($"{FileName(scope)} isn't valid JSON ({parseError}), so Claudette won't rewrite it. Fix it by hand first.");
+            throw new InvalidOperationException(parseError is null
+                ? $"{FileName(scope)} isn't a JSON object, so Claudette won't rewrite it. Fix it by hand first."
+                : $"{FileName(scope)} isn't valid JSON ({parseError}), so Claudette won't rewrite it. Fix it by hand first.");
         }
         return root;
     }
@@ -283,7 +289,7 @@ public static class ProjectFile
         };
         if (mode is null)
         {
-            return new ProjectFileEntry(node, null, $"{where} (\"{name}\") has mode \"{modeText}\"; it can be \"output\" or \"launch\", so it was skipped.", forThisOS);
+            return new ProjectFileEntry(node, null, $"{where} (\"{name}\") has mode \"{modeText}\", which isn't \"output\" or \"launch\", so it was skipped.", forThisOS);
         }
         IReadOnlyList<string>? ifExists = null;
         if (entry["ifExists"] is JsonNode existsNode)
@@ -350,6 +356,7 @@ public static class ProjectFile
         return [];
     }
 
+    /// <summary>The file's object; when it has none, <paramref name="error"/> is the parser's reason, or null for JSON that isn't an object.</summary>
     private static bool TryParseRoot(string text, out JsonObject root, out string? error)
     {
         root = [];
@@ -366,7 +373,6 @@ public static class ProjectFile
                 root = obj;
                 return true;
             }
-            error = "it should be an object: { \"actions\": [ … ], \"links\": [ … ] }";
             return false;
         }
         catch (JsonException ex)

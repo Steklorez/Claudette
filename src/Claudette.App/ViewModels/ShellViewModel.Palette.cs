@@ -68,7 +68,7 @@ public sealed partial class ShellViewModel
             entries.Add(new PaletteEntry(label, "Command", run, shortcutId is null ? null : Tips.Text(shortcutId)));
 
         Command("New tab", NewTab, KeyboardShortcuts.NewTab);
-        Command("Open from History", OpenHistory, KeyboardShortcuts.History);
+        Command("Open from History…", OpenHistory, KeyboardShortcuts.History);
         AsyncCommand("Settings", OpenSettingsAsync, KeyboardShortcuts.Settings);
         Command(Layout.IsSidebarCollapsed ? "Expand the sidebar" : "Collapse the sidebar", () => Layout.ToggleSidebarCommand.Execute(null), KeyboardShortcuts.ToggleSidebar);
         var zoom = _services.Settings.Appearance.Zoom;
@@ -116,7 +116,7 @@ public sealed partial class ShellViewModel
             Command("Find in the conversation", () => tab.OpenFindCommand.Execute(null), KeyboardShortcuts.Find);
             // DESIGN.md §18, "Conversation cards": the messages, by the keys or from here.
             Command("Go to the first message", () => tab.JumpToMessage(MessageJump.First), KeyboardShortcuts.FirstMessage);
-            Command("Go to the latest", () => tab.JumpToMessage(MessageJump.Latest), KeyboardShortcuts.LatestMessage);
+            Command("Go to the latest message", () => tab.JumpToMessage(MessageJump.Latest), KeyboardShortcuts.LatestMessage);
             // DESIGN.md §18, "Split panes".
             if (IsSplit)
             {

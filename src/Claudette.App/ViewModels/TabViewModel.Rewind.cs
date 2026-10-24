@@ -227,7 +227,7 @@ public sealed partial class TabViewModel
 
     private static string NoCheckpointText(RewindResult result) =>
         $"Claude Code can't put files back to before that message: {result.Error ?? "it has no copies of them from then"}."
-        + " It keeps them while Settings → Claude Code → Keep copies of files Claude changes is on.";
+        + " It keeps them while Settings → Claude Code → Keep copies of files Claude changes, so prompts can be rewound is on.";
 
     /// <summary>"Program.cs", "Program.cs and App.cs", or "5 files".</summary>
     internal static string DescribeFiles(IReadOnlyList<string> files) => files.Count switch

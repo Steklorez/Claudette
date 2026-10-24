@@ -485,7 +485,7 @@ public class ClaudeSessionTests
 
     [Theory]
     [InlineData("cwd_unavailable", StartupFailureFix.ChooseFolder, "The tab's folder was deleted or moved, or can't be read.")]
-    [InlineData("bypass_root", StartupFailureFix.None, "Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings…, then restart the tab.")]
+    [InlineData("bypass_root", StartupFailureFix.None, "Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings, then restart the tab.")]
     [InlineData("org_config_refused", StartupFailureFix.None, "Anthropic refused your organization's policy and settings for this sign-in: it expired or was revoked, or your organization doesn't allow Claude Code for this account. Sign in again, or ask an admin.")]
     [InlineData("something_new", StartupFailureFix.None, "It went wrong")]
     public void Each_reason_is_explained(string reason, StartupFailureFix fix, string summary)

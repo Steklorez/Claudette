@@ -602,6 +602,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     internal void Confirm(string title, string message, string confirmText, Func<Task> onConfirm, string secondaryText, Func<Task> onSecondary) =>
         Confirmation = new ConfirmationViewModel(title, message, confirmText, onConfirm, () => Confirmation = null, secondaryText, onSecondary);
 
+    /// <summary>A notice over the whole window, with OK alone.</summary>
+    public void Notify(string title, string message) =>
+        Confirmation = new ConfirmationViewModel(title, message, "OK", () => Task.CompletedTask, () => Confirmation = null, cancelText: null);
+
     /// <summary>
     /// Closes them together: each tab leaves the sidebar at once, then they wait for their claude processes side by
     /// side rather than one after another (a few seconds each for a working tab).

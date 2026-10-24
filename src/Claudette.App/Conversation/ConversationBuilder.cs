@@ -416,7 +416,7 @@ public sealed class ConversationBuilder
                 // it, so it gets its own, as its sender wrote it.
                 AddUser(new UserMessageItem(origin.Body ?? peer.Message.PromptText ?? "")
                 {
-                    Label = $"From the session {origin.Name ?? "another session"}",
+                    Label = origin.Name is { Length: > 0 } sender ? $"From the session {sender}" : "From another session",
                     Uuid = peer.Message.Uuid,
                     ResumeAt = _lastEntryUuid,
                 }, Now());
@@ -542,9 +542,9 @@ public sealed class ConversationBuilder
                 _todoList?.CallsEnded();
                 _tasksChangedThisTurn = false;
                 _turnDocs.Clear();
-                var code = exited.Exit.ExitCode?.ToString() ?? "unknown";
+                var code = exited.Exit.ExitCode is { } exitCode ? $" (exit code {exitCode})" : "";
                 var detail = string.IsNullOrWhiteSpace(exited.Exit.StandardErrorTail) ? "" : $"\n{LastLines(exited.Exit.StandardErrorTail, 5)}";
-                AddNote($"Claude Code exited (code {code}).{detail}", exited.Exit.ExitCode == 0 ? NoteKind.Info : NoteKind.Error);
+                AddNote($"Claude Code exited{code}.{detail}", exited.Exit.ExitCode == 0 ? NoteKind.Info : NoteKind.Error);
                 _agents?.OnSessionExited();
                 _tasks?.Clear();
                 break;
@@ -862,7 +862,7 @@ public sealed class ConversationBuilder
         var (attempt, max, delay, reason) = (retry.Attempt, retry.MaxRetries, retry.RetryDelayMs, retry.Category);
         var text = $"The API returned an error{(reason is null ? "" : $" ({reason.Replace('_', ' ')})")}. Retrying"
             + (attempt is null ? "" : $" (attempt {attempt}{(max is null ? "" : $" of {max}")})")
-            + (delay is null ? "" : $" in {delay / 1000.0:0.#} s")
+            + (delay is null ? "" : $" in {delay / 1000.0:0.#}s")
             + "…";
         if (_retryNote is not null && Items.Count > 0 && ReferenceEquals(Items[^1], _retryNote))
         {

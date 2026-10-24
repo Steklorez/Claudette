@@ -18,7 +18,7 @@ Either of two things starts a check-in. Each can be changed or turned off:
 
 ## The countdown
 
-When a check-in is due, a bar over the message box counts down 30 seconds first: *Checking in with Claude in 30 s.* Hover it to see the message that will be sent.
+When a check-in is due, a bar over the message box counts down 30 seconds first: *Checking in with Claude in 30s.* Hover it to see the message that will be sent.
 
 - **Send now** sends it straight away.
 - The ✕ (**Don't check in**) skips it. The timers start again, so the next check-in is a whole interval away, as if Claude had just said something.

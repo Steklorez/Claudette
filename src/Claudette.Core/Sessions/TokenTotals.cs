@@ -59,7 +59,8 @@ public sealed class TokenTotals
     /// <summary>Short form for the composer bar, for example <c>1.2M tok</c>.</summary>
     public static string Short(long tokens) => tokens switch
     {
-        >= 1_000_000 => $"{tokens / 1_000_000.0:0.#}M tok",
+        // From 999,950, which would round to "1000k".
+        >= 999_950 => $"{tokens / 1_000_000.0:0.#}M tok",
         >= 1_000 => $"{tokens / 1_000.0:0.#}k tok",
         _ => $"{tokens} tok",
     };

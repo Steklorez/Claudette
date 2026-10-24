@@ -13,4 +13,4 @@
 [button] User Guide
 "Start a Claude Code session"
 "Pick the folder Claude should work in."
-[button] New tab…
+[button] New tab

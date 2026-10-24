@@ -19,7 +19,7 @@ public sealed partial class UsagePage : SettingsPage
             Setting("usage.criticalPercent", "Alert at (% of the session used)", s => s.Usage.CriticalPercent, (s, v) => s.Usage.CriticalPercent = v,
                 "The meter turns red, and a notification says so.", keywords: ["threshold", "warning", "limit"]),
             Setting("usage.burnRateWindowMinutes", "Burn rate window (minutes)", s => s.Usage.BurnRateWindowMinutes, (s, v) => s.Usage.BurnRateWindowMinutes = v,
-                "How far back the pace your usage is going at is measured over.", keywords: ["projection", "pace"]),
+                "How many minutes of recent usage the pace is worked out from.", keywords: ["projection", "pace"]),
         ]);
         Section("header", "The usage header",
         [

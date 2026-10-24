@@ -26,7 +26,7 @@
           <ContextMenu>
             <MenuItem Header="{Binding FavoriteMenuText}" Command="{Binding $parent[UserControl].((vm:NewTabPickerViewModel)DataContext).ToggleFavoriteCommand}" CommandParameter="{Binding}" />
             <MenuItem Header="Remove from recents" Command="{Binding $parent[UserControl].((vm:NewTabPickerViewModel)DataContext).RemoveRecentCommand}" CommandParameter="{Binding}" />
-            <MenuItem Header="Reveal in Finder/Explorer" Command="{Binding $parent[UserControl].((vm:NewTabPickerViewModel)DataContext).RevealCommand}" CommandParameter="{Binding}" />
+            <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:NewTabPickerViewModel)DataContext).RevealCommand}" CommandParameter="{Binding}" />
             <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:NewTabPickerViewModel)DataContext).CopyPathCommand}" CommandParameter="{Binding}" />
           </ContextMenu>
         </Grid.ContextMenu>

@@ -72,7 +72,7 @@ public class KeyboardShortcutsTests
         var settings = new AppSettings();
         settings.QuickSuffixes[0].Shortcut = "Primary+Alt+C";
 
-        Assert.Equal("Close tab", KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary, "W"), null, isMac: false));
+        Assert.Equal("\"Close tab\"", KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary, "W"), null, isMac: false));
         Assert.Null(KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary, "W"), KeyboardShortcuts.CloseTab, isMac: false));
         Assert.Equal("the quick suffix \"Clarify first\"", KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary | ChordModifiers.Alt, "C"), null, isMac: false));
         Assert.Null(KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary | ChordModifiers.Alt, "X"), null, isMac: false));
@@ -83,7 +83,7 @@ public class KeyboardShortcutsTests
     {
         var settings = new AppSettings();
 
-        Assert.Equal("Go to tab 1–9", KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary, "D4"), null, isMac: false));
+        Assert.Equal("\"Go to tab 1–9\"", KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Primary, "D4"), null, isMac: false));
         Assert.Null(KeyboardShortcuts.FindConflict(settings, new KeyChord(ChordModifiers.Alt, "D4"), null, isMac: false));
     }
 

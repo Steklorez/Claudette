@@ -32,7 +32,7 @@ A sent message shows its images as thumbnails above its text. They come back wit
 
 Files and folders aren't uploaded. They become `@path` mentions at the caret, relative to the working folder when they're inside it and a full path otherwise, and Claude Code reads them when the message is sent. Text files, PDFs and notebooks work. See [Slash commands and mentions](slash-commands-and-mentions.md).
 
-A file Claude can't read, such as an executable, and an image in another format, such as BMP, are refused with a note under the box: *Claude can't read app.exe. Attach text files, PDFs, folders, or PNG, JPEG, GIF or WebP images.*
+A file Claude can't read, such as an executable, and an image in another format, such as BMP, are refused with a note under the box: *Claude can't read app.exe. Attach text files, PDFs, folders or images (PNG, JPEG, GIF or WebP).*
 
 ## Paste
 

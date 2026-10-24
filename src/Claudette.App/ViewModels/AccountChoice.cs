@@ -51,5 +51,5 @@ public sealed record AccountTag(string Name, IBrush? Brush, IBrush? SoftBrush, b
         return new AccountTag(account.Name, new SolidColorBrush(color), new SolidColorBrush(color, 0.18), IsDefault: false);
     }
 
-    public string Tip => IsDefault ? "Runs under the Default account: Claude Code's own sign-in" : $"Runs under {Name}, an API key";
+    public string Tip => IsDefault ? "Runs under the Default account: Claude Code's own sign-in" : $"Runs under {Name}, an API-key account";
 }

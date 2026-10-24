@@ -237,7 +237,7 @@ public sealed class ScratchPadTests
         h.Services.Settings.Sessions.LibraryFolder = Path.Combine(h.Root, "Google Drive", "Claudette");
         h.Services.SaveSettings();
 
-        Assert.Equal("Synced to your other machines through the session library", pad.SyncText);
+        Assert.Equal("Synced to your other machines through the session library.", pad.SyncText);
     }
 
     [Fact]

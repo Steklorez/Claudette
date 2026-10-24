@@ -23,7 +23,7 @@ On Windows and Linux, `Ctrl` is the command key. On macOS the command key is `Cm
 | Go to the next tab waiting for you | `Ctrl+J` | `Cmd+J` | [The command palette](../tabs/the-command-palette.md) |
 | Command palette | `Ctrl+Shift+P` | `Cmd+Shift+P` | [The command palette](../tabs/the-command-palette.md) |
 | Collapse or expand the sidebar | `Ctrl+B` | `Cmd+B` | [The sidebar](../tabs/the-sidebar.md) |
-| History | `Ctrl+Shift+H` | `Cmd+Shift+H` | [History](../history/history.md) |
+| Open from History | `Ctrl+Shift+H` | `Cmd+Shift+H` | [History](../history/history.md) |
 | Settings | `Ctrl+,` | `Cmd+,` | [The Settings window](../settings/the-settings-window.md) |
 | Zoom in | `Ctrl++` | `Cmd++` | [Accessibility](../settings/accessibility.md) |
 | Zoom out | `Ctrl+-` | `Cmd+-` | |
@@ -62,8 +62,8 @@ They answer the oldest waiting prompt in the tab. With **Send with** set to `Ctr
 |---|---|---|---|
 | Previous message in the conversation | `F3` | `F3` | [Finding your way](../conversation/finding-your-way.md) |
 | Next message in the conversation | `F4` | `F4` | |
-| First message in the conversation | `Ctrl+F3` | `Cmd+F3` | |
-| Latest in the conversation | `Ctrl+F4` | `Cmd+F4` | |
+| Go to the first message | `Ctrl+F3` | `Cmd+F3` | |
+| Go to the latest message | `Ctrl+F4` | `Cmd+F4` | |
 
 ## Project tools
 
@@ -77,7 +77,7 @@ The shortcut that goes to a file is rebindable. The editor's own keys are fixed,
 
 | Command | Windows and Linux | macOS | More |
 |---|---|---|---|
-| Go to a file in the project | `Ctrl+P` | `Cmd+P` | [Finding a file by name](../project-files/finding-a-file-by-name.md) |
+| Go to file | `Ctrl+P` | `Cmd+P` | [Finding a file by name](../project-files/finding-a-file-by-name.md) |
 | Save | `Ctrl+S` | `Cmd+S` | [Saving](../project-files/saving.md) |
 | Save all | `Ctrl+Alt+S` | `Cmd+Option+S` | |
 | Replace | `Ctrl+H` | `Cmd+Option+F` | [Editing](../project-files/editing.md) |

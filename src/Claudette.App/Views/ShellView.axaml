@@ -817,6 +817,7 @@
                                   IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch" />
                         <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                         <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" />
                         <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}" />
                         <MenuItem Header="Rename…" Click="OnRenameGroup" />
                         <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
@@ -1263,7 +1264,7 @@
     <StackPanel Grid.Column="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasTabs}">
       <TextBlock Classes="title" Text="Start a Claude Code session" HorizontalAlignment="Center" />
       <TextBlock Classes="muted" Text="Pick the folder Claude should work in." HorizontalAlignment="Center" />
-      <Button Classes="accent" Content="New tab…" HorizontalAlignment="Center" Command="{Binding NewTabCommand}" />
+      <Button Classes="accent" Content="New tab" HorizontalAlignment="Center" Command="{Binding NewTabCommand}" />
     </StackPanel>
 
     <!-- New tab picker (DESIGN.md §4, "Opening a tab") -->

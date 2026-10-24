@@ -62,10 +62,10 @@ public static partial class ProjectLinks
         {
             var value = match.Groups[1].Value.ToLowerInvariant() switch
             {
-                "branch" => values.Branch ?? Missing("No git branch"),
-                "changelist" => values.Changelist ?? Missing("No Perforce changelist"),
+                "branch" => values.Branch ?? Missing("No git branch."),
+                "changelist" => values.Changelist ?? Missing("No Perforce changelist."),
                 "foldername" => values.FolderName,
-                _ => Missing($"Unknown placeholder {match.Value}: use {{branch}}, {{changelist}} or {{folderName}}"),
+                _ => Missing($"Unknown placeholder {match.Value}: use {{branch}}, {{changelist}} or {{folderName}}."),
             };
             return value is null ? match.Value : Uri.EscapeDataString(value);
         });

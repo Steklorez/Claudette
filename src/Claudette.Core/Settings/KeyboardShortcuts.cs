@@ -195,7 +195,7 @@ public static class KeyboardShortcuts
         new(NextTab, "Next tab", Chord("Ctrl+Tab")),
         new(PreviousTab, "Previous tab", Chord("Ctrl+Shift+Tab")),
         new(GoToTab, "Go to tab 1–9", Chord("Primary+D1")),
-        new(History, "History", Chord("Primary+Shift+H")),
+        new(History, "Open from History", Chord("Primary+Shift+H")),
         new(Settings, "Settings", Chord("Primary+OemComma")),
         new(ToggleSidebar, "Collapse or expand the sidebar", Chord("Primary+B")),
         new(Stop, "Stop Claude", Chord("Escape")),
@@ -209,12 +209,12 @@ public static class KeyboardShortcuts
         new(Find, "Find in the conversation", Chord("Primary+F")),
         new(PreviousMessage, "Previous message in the conversation", Chord("F3")),
         new(NextMessage, "Next message in the conversation", Chord("F4")),
-        new(FirstMessage, "First message in the conversation", Chord("Primary+F3")),
-        new(LatestMessage, "Latest in the conversation", Chord("Primary+F4")),
+        new(FirstMessage, "Go to the first message", Chord("Primary+F3")),
+        new(LatestMessage, "Go to the latest message", Chord("Primary+F4")),
         new(ZoomIn, "Zoom in", Chord("Primary+OemPlus")),
         new(ZoomOut, "Zoom out", Chord("Primary+OemMinus")),
         new(ResetZoom, "Reset zoom", Chord("Primary+D0")),
-        new(GoToFile, "Go to a file in the project", Chord("Primary+P")),
+        new(GoToFile, "Go to file", Chord("Primary+P")),
     ];
 
     public static ShortcutCommand Command(string id) => All.First(c => c.Id == id);
@@ -236,7 +236,7 @@ public static class KeyboardShortcuts
         {
             if (command.Id != exceptId && Resolve(settings.Keyboard, command.Id) is { } used && Collides(used, chord, isMac))
             {
-                return command.Label;
+                return $"\"{command.Label}\"";
             }
         }
         foreach (var suffix in settings.QuickSuffixes)

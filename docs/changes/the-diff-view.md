@@ -45,7 +45,7 @@ The buttons along the top:
 - **Open** opens the file, as described below.
 - **Revert file** puts the whole file back ([Reverting](reverting.md)). Each change has a **Revert** of its own on its header.
 - **Reviewed** ticks the file and closes the window ([Reviewed files](reviewed-files.md)).
-- **…** has **Open in the OS's app**, **Reveal in folder**, **Copy path** and **Refresh**.
+- **…** has **Open in the OS's app**, **Reveal in file manager**, **Copy path** and **Refresh**.
 
 The same actions are on the right-click menu of a row in Changed files.
 

@@ -38,7 +38,7 @@ public class LoginShellSettingsTests
 
         Assert.False(settings.ClaudeCode.UseLoginShellEnvironment);
         Assert.Equal(0, shell.Reads);
-        Assert.Equal("Not used: turned off in Settings → Claude Code.", settings.Advanced.LoginShellText);
+        Assert.Equal("Not used: turned off in Settings → Claude Code → Use my login shell's environment.", settings.Advanced.LoginShellText);
 
         settings.ClaudeCode.UseLoginShellEnvironment = true;
         var environment = await h.Services.UserEnvironment.GetAsync(TestContext.Current.CancellationToken);

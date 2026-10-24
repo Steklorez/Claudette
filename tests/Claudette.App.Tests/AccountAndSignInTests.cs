@@ -256,8 +256,8 @@ public class AccountAndSignInTests
         var tab = h.Shell.SelectedTab!;
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Error, "the error");
 
-        Assert.Equal("Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings…, then restart the tab.", tab.ErrorMessage);
-        Assert.Equal("Claude Code couldn't start: Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings…, then restart the tab.\nClaude Code said: --dangerously-skip-permissions cannot be used with root/sudo privileges for security reasons",
+        Assert.Equal("Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings, then restart the tab.", tab.ErrorMessage);
+        Assert.Equal("Claude Code couldn't start: Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings, then restart the tab.\nClaude Code said: --dangerously-skip-permissions cannot be used with root/sudo privileges for security reasons",
             InlineDispatcher.Read(() => tab.Items.OfType<NoteItem>().Last().Text));
         Assert.False(tab.IsFolderMissing);
         Assert.NotNull(h.Notifier.Last("ProcessError"));

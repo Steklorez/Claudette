@@ -151,7 +151,7 @@
 
             <!-- Click anywhere on the meters for the Usage panel -->
             <Button Classes="header" IsVisible="{Binding HasUsage}" Command="{Binding Usage.OpenPanelCommand}"
-                    ToolTip.Tip="Usage details (click)" AutomationProperties.Name="Usage details">
+                    ToolTip.Tip="Click for usage details" AutomationProperties.Name="Usage details">
               <Grid ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="14">
                 <!-- Session, the most prominent -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="8" ToolTip.Tip="{Binding Usage.Session.Tooltip}">
@@ -299,7 +299,7 @@
                  tabs. Narrow windows leave out the busiest tabs, then the weekly chart. Click for the Usage panel. -->
             <Button Name="UsageDetails" Grid.Row="1" Grid.ColumnSpan="2" Classes="header" Margin="0,6,0,2" HorizontalAlignment="Stretch"
                     IsVisible="{Binding ShowsUsageDetails}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
-                    ToolTip.Tip="Usage details (click)" AutomationProperties.Name="Usage charts">
+                    ToolTip.Tip="Click for usage details" AutomationProperties.Name="Usage charts">
               <Grid Height="150" ColumnDefinitions="3*,2*,Auto,Auto">
                 <!-- The session: usage from the window's start to its reset -->
                 <DockPanel Grid.ColumnSpan="{Binding Usage.SessionChartSpan, FallbackValue=1}" Margin="0,0,20,0">

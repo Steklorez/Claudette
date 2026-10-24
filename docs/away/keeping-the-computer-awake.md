@@ -27,7 +27,7 @@ Right-click the cup to choose between them. Choosing turns the setting on too. T
 
 ## The cup
 
-The cup sits in the usage header, after the processes' total. It takes the accent color while the setting is on, and steams while sleep is being held off, for any reason. Its tooltip says what's happening and why, for example *Keeping this computer awake. The screen can still turn off.* and *While Claude has work to finish: 2 tabs working, 1 waiting for a usage limit to reset.*
+The cup sits in the usage header, after the processes' total. It takes the accent color while the setting is on, and steams while sleep is being held off, for any reason. Its tooltip says what's happening and why, for example *Keeping this computer awake. The screen can still turn off.* and *While Claude has work to finish: 2 tabs working, 1 tab waiting for a usage limit to reset.*
 
 Tabs connected to the [Claude app](the-claude-app.md) also keep the computer awake while Settings → General → **Also while tabs are connected to the Claude app** is on, and the cup steams for that too. The tooltip names it.
 

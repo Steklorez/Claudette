@@ -1,3 +1,4 @@
+using System.Globalization;
 using Claudette.Core;
 using Claudette.Core.Sessions;
 
@@ -32,10 +33,10 @@ public sealed record UsageCredits(bool IsEnabled, double? Used, double? MonthlyL
         return code switch
         {
             "USD" => Formats.Dollars(value),
-            "EUR" => $"€{value:0.00}",
-            "GBP" => $"£{value:0.00}",
-            _ when zeroDecimal => $"{value:0} {code}",
-            _ => $"{value:0.00} {code}",
+            "EUR" => string.Create(CultureInfo.InvariantCulture, $"€{value:0.00}"),
+            "GBP" => string.Create(CultureInfo.InvariantCulture, $"£{value:0.00}"),
+            _ when zeroDecimal => string.Create(CultureInfo.InvariantCulture, $"{value:0} {code}"),
+            _ => string.Create(CultureInfo.InvariantCulture, $"{value:0.00} {code}"),
         };
     }
 }

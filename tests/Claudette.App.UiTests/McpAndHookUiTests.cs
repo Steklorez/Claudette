@@ -85,7 +85,7 @@ public class McpAndHookUiTests
         UiText.Settle(window);
 
         var texts = window.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text).ToList();
-        Assert.Contains("PreToolUse hook (PreToolUse:Bash)", texts);
+        Assert.Contains("PreToolUse hook (Bash)", texts);
         Assert.Contains("failed (exit code 2)", texts);
         Assert.Contains("Blocked: rm -rf", window.GetVisualDescendants().OfType<SelectableTextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text));
     }

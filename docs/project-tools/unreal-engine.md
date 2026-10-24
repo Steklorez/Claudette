@@ -18,7 +18,7 @@ Claudette looks for the engine the project uses, in this order:
 3. For a project that names a version such as `5.4`, the Epic Games Launcher's install of it. On Linux there's no launcher.
 4. For anything else, usually a long ID, a build registered with Unreal's version selector.
 
-The menu's header says which engine it found, its version, folder and kind: launcher install, source build, installed build, engine in a parent folder, or chosen by you. When none is found, it says so, the engine's actions are greyed out ("The engine wasn't found: choose its folder in this menu") and **Choose engine folder…** is offered.
+The menu's header says which engine it found, its version, folder and kind: launcher install, source build, installed build, engine in a parent folder, or chosen by you. When none is found, it says so, the engine's actions are greyed out ("The engine wasn't found: choose its folder in this menu.") and **Choose engine folder…** is offered.
 
 ## Actions
 
@@ -28,10 +28,10 @@ The menu's header says which engine it found, its version, folder and kind: laun
 | **Generate project files** | A job that makes the project files for the IDE you chose. Greyed out for a project with no C++ code. |
 | **Build editor** | A job that builds the project's editor target. |
 | **Build and launch** | Builds the editor, then launches it if the build succeeded. |
-| **Open solution** | Opens the project's solution. Greyed out with "Generate project files first" until it exists. With Rider chosen, it's **Open in Rider** instead (below). |
+| **Open solution** | Opens the project's solution. Greyed out with "Generate project files first." until it exists. With Rider chosen, it's **Open in Rider** instead (below). |
 | **Open latest log** | Opens the project's latest log in another app, once the editor has made one. While the editor runs, its log is also a row under the tab: see [Editor logs](editor-logs.md). |
 | **Clean intermediates…** | Deletes generated folders. It asks first. |
-| **Kill all Unreal editors…** | Ends every running Unreal editor. It asks first. |
+| **End all Unreal editors…** | Ends every running Unreal editor. It asks first. |
 
 The project's menu also has **Editor configuration**, with **Development** and **DebugGame** as radio items. DebugGame loads the project's DebugGame modules, and the labels say so: **Launch editor (DebugGame)**, **Build editor (DebugGame)**. A project's own choice is remembered on this machine, and the default for projects that haven't one is Settings → Project tools → Unreal Engine → **Default editor configuration**.
 
@@ -46,7 +46,7 @@ If Rider can't be found, a note says so instead of letting the OS open the proje
 ## The ones that ask first
 
 - **Clean intermediates…** deletes `Binaries` and `Intermediate` in the project and in each plugin under `Plugins/`, and nothing else: not `Saved`, `Content` or `Config`. The question lists the folders and their total size, and warns when an editor seems to have the project open. **Delete** runs it as a job with its own run and log.
-- **Kill all Unreal editors…** ends every Unreal editor running on this machine, not just this project's, along with the processes each started, such as shader compilers. The question lists each with its PID and, when it can tell, its project. **End it** or **End them** ends them at once, and unsaved work in them is lost. The action is greyed out with "No Unreal editor is running" when none is.
+- **End all Unreal editors…** ends every Unreal editor running on this machine, not just this project's, along with the processes each started, such as shader compilers. The question lists each with its PID and, when it can tell, its project. **End it** or **End them** ends them at once, and unsaved work in them is lost. The action is greyed out with "No Unreal editor is running." when none is.
 
 ## Settings
 
@@ -58,7 +58,7 @@ In Settings → Project tools, on this machine only: the **Unreal Engine** page,
 | **Tell Claude about Unreal Engine projects** | On | Adds a note to the session with the engine's version and folder and the commands to build the editor and regenerate project files, and asks Claude not to start the editor or packaging unless you ask. Applies to tabs started after the change. |
 | **Default editor configuration** | Development | The configuration for projects that haven't a choice of their own. |
 | **Project files for** | Visual Studio on Windows, Xcode on macOS, VS Code on Linux | Which project files **Generate project files** makes, and which solution **Open solution** opens. |
-| **Open solutions with** | The OS's default app | **The OS's default app**, **Rider**, **Visual Studio**, **VS Code** or **Another program…**, with **Browse…**. Unity and Godot solutions open the same way. |
+| **Open solutions with** | The app the OS uses for it | **The app the OS uses for it**, **Rider**, **Visual Studio**, **VS Code** or **Another program…**, with **Browse…**. Unity and Godot solutions open the same way. |
 
 ## See also
 

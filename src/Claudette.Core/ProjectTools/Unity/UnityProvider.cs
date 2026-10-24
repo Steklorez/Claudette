@@ -108,7 +108,7 @@ public sealed class UnityProvider : IProjectType
             Description = $"Opens {project.Name}.sln.",
             OpenPath = solution,
             OpenWithIde = true,
-            DisabledReason = File.Exists(solution) ? null : "Regenerate the C# solution first",
+            DisabledReason = File.Exists(solution) ? null : "Regenerate the C# solution first.",
         });
 
         var editorLog = UnityEditors.EditorLog(context.Paths, os);
@@ -137,11 +137,11 @@ public sealed class UnityProvider : IProjectType
         });
 
         var running = context.Processes?.Find(EditorProcessNames);
-        actions.Add(new ProjectAction("kill-editors", "Kill all Unity editors…", ProjectActionKind.Destructive)
+        actions.Add(new ProjectAction("kill-editors", "End all Unity editors…", ProjectActionKind.Destructive)
         {
             Description = "Ends every running Unity editor (not Unity Hub), with whatever each started.",
             Destructive = new KillProcesses(EditorProcessNames, "Unity editor", p => SystemProcessNames.FolderAfter(p.CommandLine, "-projectPath")),
-            DisabledReason = running is { Count: 0 } ? "No Unity editor is running" : null,
+            DisabledReason = running is { Count: 0 } ? "No Unity editor is running." : null,
         });
 
         var versionText = version is null ? "Unity" : $"Unity {version}";
@@ -176,7 +176,7 @@ public sealed class UnityProvider : IProjectType
                 [new(nameof(UnityCodeOptimization.Release), "Release"), new(nameof(UnityCodeOptimization.Debug), "Debug")],
                 optimization.ToString()),
             Fix = new ProjectFix(UnityEditors.EditorKey, editor is null ? "Choose Unity editor…" : "Choose another Unity editor…",
-                $"Choose the Unity {version} editor for {project.Name}", PickFolder: false, picked => UnityEditors.Validate(picked, os))
+                $"Choose the {versionText} editor for {project.Name}", PickFolder: false, picked => UnityEditors.Validate(picked, os))
             {
                 Name = "Unity editor",
                 Current = editor,

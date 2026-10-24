@@ -1,5 +1,6 @@
 using System.Text;
 using Claudette.App.Services;
+using Claudette.Core;
 using Claudette.Core.Installation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -256,7 +257,7 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
         var elapsed = _services.Time.GetUtcNow() - time;
         return elapsed < TimeSpan.FromMinutes(1) ? "just now"
             : elapsed < TimeSpan.FromHours(1) ? $"{(int)elapsed.TotalMinutes} min ago"
-            : $"at {time.ToLocalTime():t}";
+            : Formats.When(time, _services.Time);
     }
 
     public void Dispose() => _updates.Changed -= Refresh;

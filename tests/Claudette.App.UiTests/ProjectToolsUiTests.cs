@@ -44,7 +44,7 @@ public class ProjectToolsUiTests
         var shown = UiText.Describe(menu, (h.Root, "{root}"));
         var openSolution = menu.GetVisualDescendants().OfType<Button>().Single(b => UiText.Describe(b).Contains("Open solution", StringComparison.Ordinal));
         Assert.False(openSolution.IsEffectivelyEnabled);
-        Assert.Equal("Generate project files first", ToolTip.GetTip(openSolution));
+        Assert.Equal("Generate project files first.", ToolTip.GetTip(openSolution));
         flyout.Hide();
 
         // The tab's menu leaves the project to the row: it has no project entries.
@@ -410,7 +410,7 @@ public class ProjectToolsUiTests
         Assert.Equal("https://example.atlassian.net/jira/software/projects/ABC/boards/1", ToolTip.GetTip(board));
         var pullRequest = buttons.Single(b => UiText.Describe(b).Contains("Pull request", StringComparison.Ordinal));
         Assert.False(pullRequest.IsEffectivelyEnabled);
-        Assert.Equal("No git branch", ToolTip.GetTip(pullRequest));
+        Assert.Equal("No git branch.", ToolTip.GetTip(pullRequest));
         // No Project page without project tools, so nothing to show the output of.
         Assert.DoesNotContain(buttons, b => UiText.Describe(b).Contains("Show output…", StringComparison.Ordinal));
         flyout.Hide();

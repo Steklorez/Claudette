@@ -39,7 +39,7 @@ A session's ID, pasted into a message as a word of its own, names it too: a tab'
 
 ## Messages from other sessions
 
-When another session sends a tab a message, the tab shows it as a card labeled *From the session ‹name›*, and the tab's Claude reads it.
+When another session sends a tab a message, the tab shows it as a card labeled *From the session ‹name›* (*From another session* when the sender has no name), and the tab's Claude reads it.
 
 ## See also
 

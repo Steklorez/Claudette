@@ -50,16 +50,17 @@ public static class Formats
         Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) is { Length: > 0 } name ? name : path;
 
     /// <summary>An amount in US dollars, as the token counts' costs show: "$0.75", "$12.40".</summary>
-    public static string Dollars(double usd) => $"${usd:0.00}";
+    public static string Dollars(double usd) => string.Create(CultureInfo.InvariantCulture, $"${usd:0.00}");
 
     /// <summary>A size on disk: "3.2 GB", "140 MB", "12 KB", "512 bytes".</summary>
     public static string Size(long bytes)
     {
         const double kb = 1024, mb = kb * 1024, gb = mb * 1024;
+        // A figure that would round to 1024 moves up a unit: "1.0 GB", not "1024 MB".
         return bytes switch
         {
-            >= (long)gb => (bytes / gb).ToString("0.0", CultureInfo.InvariantCulture) + " GB",
-            >= (long)mb => Math.Round(bytes / mb).ToString("0", CultureInfo.InvariantCulture) + " MB",
+            >= (long)(gb - mb / 2) => (bytes / gb).ToString("0.0", CultureInfo.InvariantCulture) + " GB",
+            >= (long)(mb - kb / 2) => Math.Round(bytes / mb).ToString("0", CultureInfo.InvariantCulture) + " MB",
             >= (long)kb => Math.Round(bytes / kb).ToString("0", CultureInfo.InvariantCulture) + " KB",
             _ => bytes.ToString(CultureInfo.InvariantCulture) + " bytes",
         };

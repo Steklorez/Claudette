@@ -20,9 +20,16 @@ public sealed record CustomActionRow(JsonNode? Raw, CustomProjectAction? Action,
         ? Problem ?? ""
         : (action.Mode == CustomActionMode.LaunchAndForget ? "Launch and forget: " : "")
             + action.Command + (string.IsNullOrWhiteSpace(action.WorkingFolder) ? "" : $"  (in {action.WorkingFolder})")
-            + (ForThisOS ? "" : $"  · only on {string.Join(", ", action.Os ?? [])}")
+            + (ForThisOS ? "" : $"  · only on {string.Join(" or ", (action.Os ?? []).Select(OsName).Distinct())}")
             + (action.IfExists is { } paths ? $"  · only when {string.Join(" and ", paths)} {(paths.Count == 1 ? "exists" : "exist")}" : "")
             + (action.RunOnNewWorktree ? "  · runs in each new worktree" : "");
+
+    /// <summary>An <c>os</c> entry's proper name, "macOS" for <c>mac</c> or <c>darwin</c>; one it doesn't know as written.</summary>
+    private static string OsName(string name) =>
+        ProjectFile.AppliesTo([name], ToolOS.Windows) ? "Windows"
+        : ProjectFile.AppliesTo([name], ToolOS.MacOS) ? "macOS"
+        : ProjectFile.AppliesTo([name], ToolOS.Linux) ? "Linux"
+        : name.Trim();
 
     /// <summary>The entry to write back: its JSON with the edited fields over it.</summary>
     public JsonNode? ToJson() => Action is { } action ? ProjectFile.ToJson(action, Raw) : Raw?.DeepClone();

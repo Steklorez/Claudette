@@ -108,7 +108,9 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
                 var other = await TeamAsync(staged, cancellationToken) is TeamCheck.Signed { Team: var team } ? team : null;
                 if (other != own.Team)
                 {
-                    throw new AppInstallException($"The new version is signed by a different developer ({other ?? "none"}) than this one ({own.Team}), so it wasn't installed.");
+                    throw new AppInstallException(other is null
+                        ? $"The new version isn't signed by this Claudette's developer ({own.Team}), so it wasn't installed."
+                        : $"The new version is signed by a different developer ({other}) than this one ({own.Team}), so it wasn't installed.");
                 }
             }
             throw new AppInstallException($"The new version's signature didn't check out, so it wasn't installed: {Tail(signature)}");
@@ -121,7 +123,9 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
         var bundleVersion = AppVersion.TryParse(await PlistValueAsync(plist, "CFBundleShortVersionString", cancellationToken));
         if (bundleVersion != version)
         {
-            throw new AppInstallException($"The app in the disk image is version {bundleVersion?.ToString() ?? "unknown"}, not {version} as the release says.");
+            throw new AppInstallException(bundleVersion is null
+                ? "The version of the app in the disk image couldn't be read."
+                : $"The app in the disk image is version {bundleVersion}, not {version} as the release says.");
         }
     }
 

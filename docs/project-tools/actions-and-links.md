@@ -20,7 +20,7 @@ You can write the files by hand, which [Reference](../reference/claudette-json.m
 2. Fill in **Name** and **Command**. The command runs through your shell: `cmd.exe` on Windows, and your `$SHELL` (or `/bin/sh`) on macOS and Linux.
 3. Set **Working folder** if the command shouldn't run in the tab's folder. It's relative to that folder.
 4. Optionally, set **Only show when this exists** to a file or folder, relative to the tab's folder, such as the build the action runs. The action shows only while it exists. **Browse…** picks one, and several are separated by semicolons.
-5. Choose **Run with output**, which makes a run in the sidebar with its log on the Project page, **Stop** and a notification when it ends, or **Launch and forget**, for programs that keep running on their own.
+5. Choose **Run with output**, which makes a run under the tab in the sidebar, with its log, **Stop** and a notification when it ends, or **Launch and forget**, for programs that keep running on their own.
 6. Optionally, tick **Also run it in each new worktree a worktree tab makes** ([below](#setting-up-each-new-worktree)).
 7. Under **Save in**, choose **Just me (claudette.local.json)**, the default, or **Shared with the project (claudette.json)**, and then **Save**.
 
@@ -38,7 +38,7 @@ Actions run when you click them, without asking, whichever file they're in. A pr
 Links show under **Links** in the project's menu, each marked ↗, the shared file's first. Hovering one shows the address it opens, and a click opens it in your browser.
 
 - Only `https`, `http` and `mailto` links open. Anything else, such as a `file:` address, shows greyed out with the reason, and never opens.
-- An address can use placeholders, filled in from the selected tab and escaped for a web address: `{branch}` (the git branch), `{changelist}` (the Perforce changelist Claude is working in) and `{folderName}` (the tab's folder name). A link whose placeholder can't be filled right now is greyed out and says why, for example "No git branch". For example, `https://github.com/org/repo/compare/{branch}?expand=1` opens a pull request for the tab's branch.
+- An address can use placeholders, filled in from the selected tab and escaped for a web address: `{branch}` (the git branch), `{changelist}` (the Perforce changelist Claude is working in) and `{folderName}` (the tab's folder name). A link whose placeholder can't be filled right now is greyed out and says why, for example "No git branch." For example, `https://github.com/org/repo/compare/{branch}?expand=1` opens a pull request for the tab's branch.
 
 ## Edit them in Settings
 

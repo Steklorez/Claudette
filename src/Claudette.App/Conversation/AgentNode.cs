@@ -282,7 +282,7 @@ public sealed partial class AgentNode : ObservableObject
                 parts.Add(ToolCalls == 1 ? "1 tool call" : $"{ToolCalls} tool calls");
                 if (Tokens is { } tokens)
                 {
-                    parts.Add(TokenTotals.Short(tokens));
+                    parts.Add(TokenTotals.Short(tokens).Replace(" tok", " tokens", StringComparison.Ordinal));
                 }
             }
             else

@@ -284,7 +284,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         if (reading.ResetsAt is { } resets)
         {
             var local = resets.ToLocalTime();
-            meter.ResetText = weekly ? $"resets {local:ddd h:mm tt}" : $"resets in {BurnRate.FormatCountdown(resets - now)}";
+            meter.ResetText = weekly ? $"resets {local:ddd} {local:t}" : $"resets in {BurnRate.FormatCountdown(resets - now)}";
             meter.Tooltip = $"{meter.Label}: {reading.Percent:0}% used. Resets {local:dddd, MMM d} at {local:t}.";
         }
         else

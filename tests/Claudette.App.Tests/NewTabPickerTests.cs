@@ -121,7 +121,7 @@ public class NewTabPickerTests
         var entry = Assert.Single(Open(h).Recents);
 
         Assert.Equal(1, entry.OpenTabs);
-        Assert.EndsWith("1 open", entry.Details, StringComparison.Ordinal);
+        Assert.EndsWith("1 tab open", entry.Details, StringComparison.Ordinal);
     }
 
     [Fact]

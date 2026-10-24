@@ -146,9 +146,9 @@ public sealed partial class ProjectFilesViewModel
         FindSummary = matches.Count switch
         {
             0 => $"No file's name matches.{cut}",
-            1 => $"1 file{cut}",
+            1 => $"1 file{(cut.Length > 0 ? $".{cut}" : "")}",
             > MostFound => string.Create(CultureInfo.CurrentCulture, $"{MostFound} of {matches.Count:N0} files. Type more to narrow them.{cut}"),
-            _ => string.Create(CultureInfo.CurrentCulture, $"{matches.Count:N0} files{cut}"),
+            _ => string.Create(CultureInfo.CurrentCulture, $"{matches.Count:N0} files{(cut.Length > 0 ? $".{cut}" : "")}"),
         };
     }
 

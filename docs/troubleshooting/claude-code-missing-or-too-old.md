@@ -22,9 +22,9 @@ Or install Claude Code yourself:
 
 If Claude Code is installed but Claudette can't find it:
 
-- Choose **Choose claude…** and pick the `claude` program. Claudette remembers it in Settings → Claude Code → **Path to claude**.
+- Use **Choose claude…** to pick the `claude` program. Claudette remembers it in Settings → Claude Code → **Path to claude**.
 - On macOS and Linux, a Claudette started from the Dock or a launcher doesn't see the `PATH` your terminal does. It reads your login shell's, so check that your shell's startup files add the folder `claude` is in: see [Claude can't find a program](claude-cant-find-a-program.md).
-- If the screen says a path *doesn't exist*, the path in Settings points at a file that's gone. Choose **Choose claude…** and pick the right file.
+- If the screen says a path *doesn't exist*, the path in Settings points at a file that's gone. Use **Choose claude…** to pick the right file.
 
 ## Install Claude Code didn't work
 
@@ -34,7 +34,7 @@ The screen shows the installer's output, and its last lines under it.
 
 - **Nothing happens for a while.** The installer prints nothing while it downloads Claude Code. Wait a few minutes before deciding it's stuck.
 - **It failed.** The installer couldn't reach `downloads.claude.ai`, through a proxy or a firewall for example, or Claude Code isn't available where you are. On macOS and Linux it needs `curl`. Run the command the screen shows in a terminal to see more, and see Claude Code's [Troubleshoot installation](https://code.claude.com/docs/en/troubleshoot-install).
-- **It finished, but Claudette still can't use Claude Code.** The screen says what Claudette found. Restart Claudette, or choose **Choose claude…** and pick `claude` in `~/.local/bin` (`claude.exe` in `.local\bin` in your user folder on Windows).
+- **It finished, but Claudette still can't use Claude Code.** The screen says what Claudette found. Restart Claudette, or use **Choose claude…** to pick `claude` in `~/.local/bin` (`claude.exe` in `.local\bin` in your user folder on Windows).
 
 ## You have the Claude desktop app
 
@@ -42,7 +42,7 @@ The screen shows the installer's output, and its last lines under it.
 
 The Claude desktop app isn't Claude Code. It keeps a copy of Claude Code for its own use, which it replaces whenever it updates, and Claudette doesn't run it. When Claude Code isn't installed and the desktop app is, the setup screen says so: choose **Install Claude Code**, which installs it beside the desktop app.
 
-If **Path to claude**, or a file you chose with **Choose claude…**, is one of the desktop app's, the screen says *That's the Claude desktop app, not Claude Code*, or *That's the copy of Claude Code the Claude desktop app keeps for its own use*, with the path. On Windows the app is `C:\Program Files\WindowsApps\Claude_…\app\claude.exe`, which is easy to find when you search for `claude.exe`. Choose **Install Claude Code**, or **Choose claude…** and pick Claude Code's own `claude`.
+If **Path to claude**, or a file you chose with **Choose claude…**, is one of the desktop app's, the screen says *That's the Claude desktop app, not Claude Code*, or *That's the copy of Claude Code the Claude desktop app keeps for its own use*, with the path. On Windows the app is `C:\Program Files\WindowsApps\Claude_…\app\claude.exe`, which is easy to find when you search for `claude.exe`. Choose **Install Claude Code**, or use **Choose claude…** to pick Claude Code's own `claude`.
 
 ## Claude Code needs an update
 
@@ -57,7 +57,7 @@ Claudette runs `claude --version` to read the version. The screen says what went
 
 ## This Claude Code install isn't supported yet
 
-On Windows, Claude Code installed with npm can leave only a `claude.cmd` launcher, which Claudette can't start. Choose **Install Claude Code** to install the native build of Claude Code, or choose **Choose claude…** and pick `claude.exe`.
+On Windows, Claude Code installed with npm can leave only a `claude.cmd` launcher, which Claudette can't start. Choose **Install Claude Code** to install the native build of Claude Code, or use **Choose claude…** to pick `claude.exe`.
 
 ## A version newer or older than the one Claudette was tested with
 

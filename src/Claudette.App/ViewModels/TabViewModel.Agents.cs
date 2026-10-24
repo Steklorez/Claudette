@@ -124,7 +124,7 @@ public sealed partial class TabViewModel
         {
             _shell.Confirm(
                 "Stop the whole turn?",
-                "Claude Code hasn't given this subagent an id to stop it by, so Claudette can only stop the whole turn, like the Stop button.",
+                "Claude Code hasn't given this subagent an ID to stop it by, so Claudette can only stop the whole turn, like the Stop button.",
                 "Stop turn",
                 StopAsync);
         }

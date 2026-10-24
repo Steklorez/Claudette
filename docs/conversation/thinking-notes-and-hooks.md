@@ -30,7 +30,7 @@ Claude Code's own notices include a model fallback (and the context window shrin
 
 ### API retries
 
-When Claude's API answers with an error and Claude Code tries again, one warning says so and updates in place instead of adding a row for each attempt: *The API returned an error (overloaded). Retrying (attempt 2 of 10) in 4 s…*. When the service is having a bad day, [Claude is having problems](../troubleshooting/claude-is-having-problems.md) explains the dot in the header.
+When Claude's API answers with an error and Claude Code tries again, one warning says so and updates in place instead of adding a row for each attempt: *The API returned an error (overloaded). Retrying (attempt 2 of 10) in 4s…*. When the service is having a bad day, [Claude is having problems](../troubleshooting/claude-is-having-problems.md) explains the dot in the header.
 
 ## Hooks
 

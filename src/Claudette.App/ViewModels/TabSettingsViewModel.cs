@@ -46,7 +46,8 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
 
         // What the tab's Claude Code offers, else what Claude Code last offered on this machine (DESIGN.md §14).
         IReadOnlyList<ModelInfo> models = tab.Models.Count > 0 ? tab.Models : services.State.KnownModels;
-        ModelChoices = [new Choice(null, $"Default ({defaults.NewTabs.DefaultModel ?? "Claude Code's default"})"), .. models.Select(m => new Choice(m.Value, m.DisplayName))];
+        var defaultModel = defaults.NewTabs.DefaultModel is { } modelId ? models.FirstOrDefault(m => m.Value == modelId)?.DisplayName ?? modelId : "Claude Code's default";
+        ModelChoices = [new Choice(null, $"Default ({defaultModel})"), .. models.Select(m => new Choice(m.Value, m.DisplayName))];
         if (overrides.Model is { } model && ModelChoices.All(c => c.Value != model))
         {
             ModelChoices = [.. ModelChoices, new Choice(model, model)];
@@ -60,7 +61,8 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         {
             levels.Add(effort);
         }
-        EffortChoices = [new Choice(null, $"Default ({defaults.NewTabs.DefaultEffort ?? "model default"})"), .. levels.Select(e => new Choice(e, e))];
+        var defaultEffort = defaults.NewTabs.DefaultEffort is { } level ? Core.Formats.Capitalize(level) : "the model's default";
+        EffortChoices = [new Choice(null, $"Default ({defaultEffort})"), .. levels.Select(e => new Choice(e, Core.Formats.Capitalize(e)))];
         // Claude Code's default is known once the tab has started and read its settings files (DESIGN.md §7).
         var defaultMode = defaults.NewTabs.DefaultPermissionMode ?? tab.ClaudeCodeStartingMode;
         ModeChoices =
@@ -108,7 +110,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         ]);
         Section("limits", "At a usage limit",
         [
-            Override("tab.continueAfterLimitReset", "Continue tasks when the limit resets", () => SelectedAutoContinue.Value is null,
+            Override("tab.continueAfterLimitReset", "Continue tasks when a usage limit resets", () => SelectedAutoContinue.Value is null,
                 () => SelectedAutoContinue = AutoContinueChoices[0]),
             Override("tab.useUsageCredits", "Use usage credits", () => SelectedUsageCredits.Value is null, () => SelectedUsageCredits = UsageCreditsChoices[0],
                 TabViewModel.UsageCreditsMenuTip),
@@ -119,7 +121,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         ]);
         Section("monitor", "Process monitor",
         [
-            Override("tab.processMonitor", "Process monitor", () => SelectedMonitor.Value is null, () => SelectedMonitor = MonitorChoices[0],
+            Override("tab.processMonitor", "Show the process monitor", () => SelectedMonitor.Value is null, () => SelectedMonitor = MonitorChoices[0],
                 "The processes this tab starts, with their CPU and memory."),
         ]);
         // The tab's own switches, not overrides: no defaults to go back to.
@@ -127,7 +129,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         [
             Own("tab.syncToLibrary", "Sync to other machines", "Copies this session to the session library after each turn, so another machine can open it from History."),
             Own("tab.remoteControl", "Connect to the Claude app", "Continue this tab from your phone or claude.ai/code while it runs here."),
-            Own("tab.extraFolders", "Extra folders", "Claude can also read and edit files in these. Claude Code starts again with them when you close this.",
+            Own("tab.extraFolders", "Extra folders", "Claude can also read and edit files in these. Claude Code starts again with them when you click Done.",
                 "Their own settings and CLAUDE.md aren't loaded."),
             Own("tab.projectActions", "Project actions", ProjectActionsText),
         ]);

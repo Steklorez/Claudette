@@ -448,7 +448,9 @@
           <TextBlock Classes="muted small" Text="{Binding Reason}" TextWrapping="Wrap" IsVisible="{Binding HasReason}" />
 
           <WrapPanel ItemSpacing="8" LineSpacing="6" IsVisible="{Binding IsPending}">
-            <Button Classes="accent" Content="Allow" Command="{Binding AllowCommand}" ToolTip.Tip="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).Tips.Allow}" />
+            <!-- A request Claude Code marks default-to-no isn't answered by the shortcut, so its tooltip doesn't offer it -->
+            <Button Classes="accent" Content="Allow" Command="{Binding AllowCommand}" ToolTip.Tip="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).Tips.Allow}"
+                    ToolTip.ServiceEnabled="{Binding !Request.DefaultToNo}" />
             <SplitButton Content="Always allow…" Command="{Binding StartAlwaysAllowCommand}" IsVisible="{Binding CanAlwaysAllow}"
                          ToolTip.Tip="Save an allow rule to this folder's .claude/settings.local.json">
               <SplitButton.Flyout>
@@ -579,7 +581,8 @@
                     ToolTip.Tip="Start working in auto mode: a safety check reviews actions and blocks risky ones" />
             <Button Classes.accent="{Binding !$parent[UserControl].((vm:TabViewModel)DataContext).IsAutoModeAvailable}" Content="Approve, accept edits"
                     Command="{Binding ApproveAcceptingEditsCommand}" ToolTip.Tip="Start working, and edit files without asking" />
-            <Button Content="Approve, ask before edits" Command="{Binding ApproveAskingForEditsCommand}" ToolTip.Tip="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).Tips.Allow}" />
+            <Button Content="Approve, ask before edits" Command="{Binding ApproveAskingForEditsCommand}" ToolTip.Tip="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).Tips.Allow}"
+                    ToolTip.ServiceEnabled="{Binding !Request.DefaultToNo}" />
             <Button Content="Keep planning…" Command="{Binding StartFeedbackCommand}" />
           </WrapPanel>
           <StackPanel Spacing="6" IsVisible="{Binding IsWritingFeedback}">
@@ -645,8 +648,9 @@
       <controls:Card Classes="inline" Classes.quiet="{Binding !IsFailed}" Classes.error="{Binding IsFailed}" Label="Hook" Icon="{StaticResource IconCardHook}">
         <StackPanel Spacing="4">
           <ToggleButton Classes="flat row" Padding="0" IsChecked="{Binding IsExpanded}" IsHitTestVisible="{Binding HasOutput}" HorizontalAlignment="Left">
-            <StackPanel Orientation="Horizontal" Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="4">
               <TextBlock Classes="muted small" Text="{Binding Title}" />
+              <TextBlock Classes="muted small" Text="·" />
               <TextBlock Classes="muted small" Classes.error="{Binding IsFailed}" Text="{Binding StatusText}" />
             </StackPanel>
           </ToggleButton>

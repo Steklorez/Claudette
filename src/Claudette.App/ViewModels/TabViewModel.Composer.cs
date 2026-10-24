@@ -242,7 +242,7 @@ public sealed partial class TabViewModel
                 errors.Add(error);
             }
         }
-        AttachmentError = errors.Count > 0 ? string.Join(" ", errors) : null;
+        AttachmentError = errors.Count > 0 ? string.Join(" ", errors.Distinct(StringComparer.Ordinal)) : null;
         if (errors.Count < paths.Count)
         {
             // Claudette on the composer catches it (DESIGN.md §5).

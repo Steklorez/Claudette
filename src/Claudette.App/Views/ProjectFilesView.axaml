@@ -270,10 +270,10 @@
         </Border>
         <Panel>
           <StackPanel Classes="nofile" IsVisible="{Binding !HasShowing}">
-            <TextBlock Classes="muted" Text="No file open" HorizontalAlignment="Center" />
+            <TextBlock Classes="muted" Text="No files open" HorizontalAlignment="Center" />
             <TextBlock Classes="muted small" TextWrapping="Wrap" TextAlignment="Center"
                        Text="Pick a file in the explorer, or find one by name." />
-            <Button HorizontalAlignment="Center" Content="Find a file…" Command="{Binding StartFindCommand}" />
+            <Button HorizontalAlignment="Center" Content="Go to file…" Command="{Binding StartFindCommand}" />
           </StackPanel>
           <ItemsControl x:Name="OpenFileViews" ItemsSource="{Binding OpenFiles}">
             <ItemsControl.Styles>

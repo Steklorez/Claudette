@@ -177,7 +177,7 @@ public sealed class UserEnvironment
         }
         if (!_isEnabled())
         {
-            return "Not used: turned off in Settings → Claude Code.";
+            return "Not used: turned off in Settings → Claude Code → Use my login shell's environment.";
         }
         if (shell.NotNeeded is { } notNeeded)
         {

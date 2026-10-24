@@ -161,7 +161,7 @@ function Show-SidePanel {
     }
 }
 
-# Opens a page of the side panel, such as Scratch Pad, in the tab.
+# Opens a page of the side panel, such as Scratch pad, in the tab.
 function Show-SidePage([string] $tab, [string] $page) {
     Invoke-ByText $window $tab
     Start-Sleep -Seconds 2
@@ -232,7 +232,7 @@ foreach ($theme in $Themes) {
 
             Shot 'changes/changed-files' {
                 param($path)
-                Show-SidePage 'Grappling hook' 'Changed Files'
+                Show-SidePage 'Grappling hook' 'Changed files'
                 $rows = (Find-ById $window 'ChangedFilesList').FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
                 Save-Rect $window $path (Get-PanelRect $rows[$rows.Count - 1]) 0
             }
@@ -368,7 +368,7 @@ foreach ($theme in $Themes) {
             # The notes go in the project's pad, which every tab of it shares.
             Shot 'conversation/scratch-pad' {
                 param($path)
-                Show-SidePage 'Grappling hook' 'Scratch Pad'
+                Show-SidePage 'Grappling hook' 'Scratch pad'
                 Set-ElementText (Find-ByType $window 'Edit' 'Scratch pad') "- Let go when the player jumps, or past Range`n- Try AirControl 0.6 with a gamepad: does the swing feel right?`n- Create IA_Grapple in the editor and assign it to Grapple Action`n- Ask Claude about a cooldown"
                 Start-Sleep -Seconds 2
                 Save-Rect $window $path (Get-PanelRect -height 330) 0

@@ -108,7 +108,7 @@ public sealed partial class HangmanViewModel : GameViewModel
         var left = round.MissesLeft == 1 ? "One miss left" : $"{round.MissesLeft} misses left";
         if (found > 0)
         {
-            Status = found == 1 ? $"Yes, there's {Article(letter)} {letter}." : $"Yes, there are {found} {letter}s.";
+            Status = found == 1 ? $"Yes, there's {Article(letter)} {letter}." : $"Yes, there are {found} {letter}'s.";
         }
         else
         {

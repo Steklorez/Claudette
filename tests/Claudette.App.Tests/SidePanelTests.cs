@@ -76,7 +76,7 @@ public class SidePanelTests
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        // No project tools, monitor or MCP servers, and no tasks: Changed Files, Agents and Scratch Pad.
+        // No project tools, monitor or MCP servers, and no tasks: Changed files, Agents and Scratch pad.
         Assert.Equal([SidePanelPage.Files, SidePanelPage.Agents, SidePanelPage.ScratchPad], tab.SidePanelPages.Where(tab.HasSidePanelPage));
 
         tab.MoveSidePanelPage(SidePanelPage.ScratchPad, -1);

@@ -30,6 +30,9 @@ public sealed class SettingsSection : ItemsControl
 
     public static readonly StyledProperty<string> ResetTextProperty = AvaloniaProperty.Register<SettingsSection, string>(nameof(ResetText), "Reset to defaults");
 
+    public static readonly StyledProperty<string> ResetTipProperty =
+        AvaloniaProperty.Register<SettingsSection, string>(nameof(ResetTip), "Puts this section's settings back as they were when Claudette was new");
+
     static SettingsSection()
     {
         KeyProperty.Changed.AddClassHandler<SettingsSection>((section, _) => section.FindGroup());
@@ -73,6 +76,13 @@ public sealed class SettingsSection : ItemsControl
     {
         get => GetValue(ResetTextProperty);
         set => SetValue(ResetTextProperty, value);
+    }
+
+    /// <summary>Its reset's tip: what the section goes back to, which in Tab settings… is what Settings → Tabs says.</summary>
+    public string ResetTip
+    {
+        get => GetValue(ResetTipProperty);
+        set => SetValue(ResetTipProperty, value);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)

@@ -39,7 +39,7 @@ public sealed class ProjectActionsPage : ProjectPage
 
     public override string IconKey => "IconSettingsActions";
 
-    public override string Description => "Commands of your own for this folder, in the project's menu in the sidebar and on the Project page.";
+    public override string Description => "Commands of your own for this folder, in the project's menu in the sidebar.";
 }
 
 /// <summary>

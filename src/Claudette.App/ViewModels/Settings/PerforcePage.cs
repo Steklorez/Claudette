@@ -63,7 +63,7 @@ public sealed partial class PerforcePage : SettingsPage
             Setting("perforce.renewBeforeMinutes", "Renew the ticket when less is left than (minutes)", s => s.Perforce.RenewBeforeMinutes, (s, v) => s.Perforce.RenewBeforeMinutes = v,
                 keywords: ["ticket", "expire"]),
             Setting("perforce.allHostsTickets", "Request tickets valid on all hosts", s => s.Perforce.AllHostsTickets, (s, v) => s.Perforce.AllHostsTickets = v,
-                "p4 login -a.", keywords: ["ticket", "hosts"]),
+                "Logs in with p4 login -a.", keywords: ["ticket", "hosts"]),
             Setting("perforce.showChangelistOnTabs", "Show changelist on tabs", s => s.Perforce.ShowChangelistOnTabs, (s, v) => s.Perforce.ShowChangelistOnTabs = v,
                 "A CL 12345 badge at the right of a tab's second line, beside its git branch.",
                 "The tab info card always shows the changelist Claude is working in.", ["changelist", "cl", "tab rows"]),

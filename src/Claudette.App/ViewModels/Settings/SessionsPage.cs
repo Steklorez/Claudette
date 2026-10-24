@@ -20,7 +20,7 @@ public sealed partial class SessionsPage : SettingsPage
     /// <summary>What each synced section of settings.json is called, for what settings sync says it syncs.</summary>
     private static readonly IReadOnlyDictionary<string, string> SyncedNames = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["appearance"] = "appearance (but the zoom)",
+        ["appearance"] = "Appearance (not the zoom), most of Conversation",
         ["newTabs"] = "what new tabs start with",
         ["usage"] = "usage warnings and limits",
         ["checkIns"] = "check-ins",

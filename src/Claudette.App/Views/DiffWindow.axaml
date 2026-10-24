@@ -22,7 +22,7 @@
           <ToggleButton Content="Wrap lines" IsChecked="{Binding WordWrap}" ToolTip.Tip="Wrap long lines at the window's width, rather than scrolling sideways" />
           <!-- DESIGN.md §8, "This session's changes": the file changed since the session's last change to it -->
           <ToggleButton Content="With later changes" IsChecked="{Binding ShowLaterChanges}" IsVisible="{Binding HasLaterChanges}"
-                        ToolTip.Tip="The file has changed since this session's last change to it. Show the file as it is now, with those changes too" />
+                        ToolTip.Tip="The file has changed since this session's last change to it. Show it as it is now, with those changes too." />
           <Button Content="Open in diff tool" Command="{Binding OpenInDiffToolCommand}" IsVisible="{Binding CanOpenInDiffTool}" />
           <Button Content="Open" Command="{Binding OpenInEditorCommand}" ToolTip.Tip="As Settings → Files and diffs → Open in the diff window says: the file in Claudette's editor or the OS's app, or the changes in your diff tool" />
           <!-- DESIGN.md §8, "Reverting": asks first, in place -->
@@ -43,7 +43,7 @@
             <Button.Flyout>
               <MenuFlyout>
                 <MenuItem Header="Open in the OS's app" Command="{Binding OpenInSystemCommand}" IsVisible="{Binding CanOpenInSystem}" />
-                <MenuItem Header="Reveal in folder" Command="{Binding RevealCommand}" />
+                <MenuItem Header="Reveal in file manager" Command="{Binding RevealCommand}" />
                 <MenuItem Header="Copy path" Command="{Binding CopyPathCommand}" />
                 <MenuItem Header="Refresh" Command="{Binding RefreshCommand}" />
               </MenuFlyout>

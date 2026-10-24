@@ -27,15 +27,15 @@ Each one starts at **Default**, which says what the default is, such as *Default
 | | **Effort** | Default, or an effort level | Settings → Tabs → New tabs start with → **Effort** |
 | | **Permission mode** | Default, or a mode | Settings → Tabs → New tabs start with → **Permission mode** |
 | | **Subagents** | Default, **Claude decides**, **Discourage them**, **Don't allow them** | Settings → Tabs → **Subagents** |
-| **At a usage limit** | **Continue tasks when the limit resets** | Default, **On**, **Off** | Settings → Tabs → At a usage limit → **Continue tasks when a usage limit resets** |
+| **At a usage limit** | **Continue tasks when a usage limit resets** | Default, **On**, **Off** | Settings → Tabs → At a usage limit → **Continue tasks when a usage limit resets** |
 | | **Use usage credits** | Default, **On**, **Off** | Settings → Tabs → At a usage limit → **Use usage credits once a limit is used up** |
-| **Process monitor** | **Process monitor** | Default, **On**, **Off** | Settings → Tabs → Process monitor → **Show the process monitor** |
+| **Process monitor** | **Show the process monitor** | Default, **On**, **Off** | Settings → Tabs → Process monitor → **Show the process monitor** |
 
 - **Model** and **Effort** are explained in [Model, effort and output style](../composer/model-effort-and-output-style.md), and **Permission mode** in [Permission modes](../permissions/permission-modes.md). A change reaches the running session at once.
 - **Subagents** is whether Claude hands parts of its work to subagents in this tab. It applies at once, and Claude hears about it with your next message. See [Discouraging or turning off subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents).
-- **Continue tasks when the limit resets** is whether Claude carries on a task by itself when a usage limit resets. See [When a limit stops a task](../usage/when-a-limit-stops-a-task.md).
+- **Continue tasks when a usage limit resets** is whether Claude carries on a task by itself when a usage limit resets. See [When a limit stops a task](../usage/when-a-limit-stops-a-task.md).
 - **Use usage credits** is whether the tab carries on with your plan's usage credits once a limit is used up, or stops and waits for the reset. The tab's menu has it too, and a tab on an API-key account doesn't have it. See [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md).
-- **Process monitor** turns the [Processes](processes.md) page and the composer bar's summary on or off for this tab.
+- **Show the process monitor** turns the [Processes](processes.md) page and the composer bar's summary on or off for this tab.
 
 ### Check-ins on long turns
 
@@ -53,7 +53,7 @@ These are in the dialog's **This tab** section, but they're the tab's own choice
 - **Connect to the Claude app** connects the tab to the Claude app on your phone or at claude.ai/code while it runs here, reconnecting whenever the tab starts. It's greyed out, with the reason under it, when the account can't use it. See [The Claude app](../away/the-claude-app.md).
 - **Extra folders** are folders Claude may also read and edit, besides the tab's own. Choose **Add folder…**, or the remove button beside a folder. Their own settings and `CLAUDE.md` aren't loaded, and a folder that's gone isn't passed on.
 
-Claude Code takes extra folders when it starts, so changing them starts it again once you close the dialog, carrying the conversation on. When Claude is working, that waits until it has nothing left to do: the turn under way, and any messages you sent meanwhile, run first. Extra folders are saved with the tab, copied by **Duplicate tab**, and listed on the [info card](the-tab-info-card.md).
+Claude Code takes extra folders when it starts, so changing them starts it again once you click **Done**, carrying the conversation on. When Claude is working, that waits until it has nothing left to do: the turn under way, and any messages you sent meanwhile, run first. Extra folders are saved with the tab, copied by **Duplicate tab**, and listed on the [info card](the-tab-info-card.md).
 
 ## Project actions
 

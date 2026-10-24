@@ -102,7 +102,7 @@
             </StackPanel>
             <Border.ContextMenu>
               <ContextMenu>
-                <MenuItem Header="Keep on this tab / stop keeping" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleKeepCommand}" CommandParameter="{Binding}" />
+                <MenuItem Header="{Binding KeepMenuText}" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleKeepCommand}" CommandParameter="{Binding}" />
               </ContextMenu>
             </Border.ContextMenu>
           </Border>
@@ -375,7 +375,7 @@
                 </Button.Flyout>
               </Button>
   
-              <Button Classes="flat" ToolTip.Tip="Effort, ultracode and output style">
+              <Button Classes="flat" ToolTip.Tip="Effort, Ultracode and output style">
                 <TextBlock Classes="muted small" Text="{Binding EffortName, StringFormat='{}{0} ▾'}" />
                 <Button.Flyout>
                   <Flyout Placement="TopEdgeAlignedLeft">
@@ -383,9 +383,9 @@
                       <Button Classes="flat row" Content="Default" Click="OnFlyoutItemPicked" Command="{Binding ChooseEffortCommand}" CommandParameter="{x:Null}" />
                       <ItemsControl ItemsSource="{Binding EffortLevels}">
                         <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="x:String">
-                            <Button Classes="flat row" Content="{Binding}" Click="OnFlyoutItemPicked"
-                                    Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChooseEffortCommand}" CommandParameter="{Binding}" />
+                          <DataTemplate x:DataType="vm:EffortChoice">
+                            <Button Classes="flat row" Content="{Binding Label}" Click="OnFlyoutItemPicked"
+                                    Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChooseEffortCommand}" CommandParameter="{Binding Value}" />
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
@@ -500,7 +500,7 @@
               </Button>
   
               <!-- Context window (DESIGN.md §6, "Per-tab context"): what fills it, as the tab's context ring shows it -->
-              <Button x:Name="ContextButton" Classes="flat" ToolTip.Tip="{Binding Context.Detail}"
+              <Button x:Name="ContextButton" Classes="flat" ToolTip.Tip="{Binding ContextTip}"
                       IsVisible="{Binding Context.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <TextBlock Classes="muted small" Classes.warning="{Binding Context.IsHigh}" Text="{Binding Context.Text}" />
                 <Button.Flyout>
@@ -554,7 +554,7 @@
                 </Button.Flyout>
               </Button>
   
-              <Button Classes="flat" ToolTip.Tip="Tab info">
+              <Button Classes="flat" ToolTip.Tip="Tab info" AutomationProperties.Name="Tab info">
                 <TextBlock Classes="muted small" Text="ⓘ" />
                 <Button.Flyout>
                   <Flyout Placement="TopEdgeAlignedRight">
@@ -598,7 +598,7 @@
                 <Path Classes="sendarrow" Data="{StaticResource IconSendArrow}" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="1.8"
                       StrokeLineCap="Round" StrokeJoin="Round" Width="32" Height="32" Stretch="None" />
               </Button>
-              <Button x:Name="StopButton" Classes="stop" Margin="6,0,0,0" ToolTip.Tip="Stop (Esc)" AutomationProperties.Name="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsWorking}">
+              <Button x:Name="StopButton" Classes="stop" Margin="6,0,0,0" ToolTip.Tip="{Binding Tips.Stop}" AutomationProperties.Name="Stop" Command="{Binding StopCommand}" IsVisible="{Binding IsWorking}">
                 <Path Classes="stopsquare" Data="{StaticResource IconStopRound}" Fill="{Binding $parent[Button].Foreground}" Width="32" Height="32" Stretch="None" />
               </Button>
             </WrapPanel>

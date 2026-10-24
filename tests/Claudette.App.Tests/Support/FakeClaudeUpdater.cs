@@ -47,7 +47,7 @@ internal sealed class FakeClaudeUpdater(Version installed) : IClaudeUpdater
         }
         if (UpdateFails)
         {
-            return Task.FromResult(new ClaudeUpdateResult(false, Installed, "'claude update' failed (exit 1). Error: Failed to install native update"));
+            return Task.FromResult(new ClaudeUpdateResult(false, Installed, "'claude update' failed (exit code 1). Error: Failed to install native update"));
         }
         Installed = Available ?? new Version(2, 1, 290);
         Available = null;

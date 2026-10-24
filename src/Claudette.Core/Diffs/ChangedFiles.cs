@@ -376,6 +376,14 @@ public sealed class ChangedFiles
         return file.AfterKnown ? InspectOwn(file, read) : InspectAgainstDisk(file, read);
     }
 
+    /// <summary>
+    /// The session's own changes alone, from the file's "before" to how its latest change left it, whatever is on disk:
+    /// for a file in a worktree that's gone (DESIGN.md §8, "Working trees"). Without counts when that "after" isn't known.
+    /// </summary>
+    public ChangedFileState InspectOwn(ChangedFile file) => file.AfterKnown
+        ? InspectOwn(file, new TextFileRead(TextFileKind.Unreadable, null))
+        : new ChangedFileState(file.IsNew ? ChangedFileStatus.Added : ChangedFileStatus.Modified, null, null, null);
+
     /// <summary>The session's own changes, <see cref="ChangedFile.Before"/> to <see cref="ChangedFile.After"/>, and the disk since.</summary>
     private ChangedFileState InspectOwn(ChangedFile file, TextFileRead read)
     {

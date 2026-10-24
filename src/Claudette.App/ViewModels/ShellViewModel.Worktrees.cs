@@ -31,8 +31,7 @@ public sealed partial class ShellViewModel
         var root = await _services.Git.GetRepositoryRootAsync(main);
         if (root is null)
         {
-            Confirm($"{Path.GetFileName(main)} isn't in a git repository", "A worktree is a second checkout of a git repository, so a folder outside one can't have one.",
-                "OK", () => Task.CompletedTask);
+            Notify($"{Path.GetFileName(main)} isn't in a git repository", "A worktree is a second checkout of a git repository, so a folder outside one can't have one.");
             return;
         }
         // Not one a folder, another tab or a branch left behind already has: Claude Code would meet that branch.
@@ -180,7 +179,7 @@ public sealed partial class ShellViewModel
         }
         if (await worktrees.RemoveAsync(main, current, discard, work?.OwnCommits ?? 0) is { } error)
         {
-            Confirm($"Couldn't remove the worktree {Path.GetFileName(worktree.Path)}", error, "OK", () => Task.CompletedTask);
+            Notify($"Couldn't remove the worktree {Path.GetFileName(worktree.Path)}", error);
         }
     }
 }

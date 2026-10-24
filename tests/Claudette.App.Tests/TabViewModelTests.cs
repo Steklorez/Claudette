@@ -264,9 +264,9 @@ public class TabViewModelTests
 
         // It counts down first, in a bar over the composer.
         await TabTestHarness.Eventually(() => tab.HasCheckInCountdown, "the countdown");
-        Assert.Equal("Checking in with Claude in 30 s.", tab.CheckInCountdownText);
+        Assert.Equal("Checking in with Claude in 30s.", tab.CheckInCountdownText);
         Advance(h, TimeSpan.FromSeconds(10));
-        await TabTestHarness.Eventually(() => tab.CheckInCountdownText == "Checking in with Claude in 20 s.", "the countdown to go on");
+        await TabTestHarness.Eventually(() => tab.CheckInCountdownText == "Checking in with Claude in 20s.", "the countdown to go on");
         Assert.DoesNotContain("Status?", h.Transport.SentUserTexts);
 
         Advance(h, TimeSpan.FromSeconds(20));

@@ -57,6 +57,7 @@ public class ContextRingTests
         Assert.Equal(ContextLevel.High, tab.Context.Level);
         Assert.False(tab.Context.IsCritical);
         Assert.Equal("Context 75% (150,000 of 200,000 tokens · auto-compacts at 160,000)", tab.Context.Tip);
+        Assert.Equal("Nearly full. Claude Code will compact the conversation soon on its own.", tab.Context.HighWarning);
 
         // Nearly full: with auto-compact off, say.
         usage = new JsonObject { ["totalTokens"] = 192000, ["maxTokens"] = 200000, ["percentage"] = 96 };
@@ -64,6 +65,7 @@ public class ContextRingTests
         await TabTestHarness.Eventually(() => tab.Context.Percent == 96, "the last context usage");
         Assert.Equal(ContextLevel.Critical, tab.Context.Level);
         Assert.True(tab.Context.IsCritical);
+        Assert.Equal("Nearly full. Compact now to free up context.", tab.Context.HighWarning);
         Assert.Equal(96 * 3.6, tab.Context.Sweep, precision: 6);
     }
 

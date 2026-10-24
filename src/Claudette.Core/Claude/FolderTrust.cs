@@ -139,7 +139,7 @@ public static class FolderTrust
     {
         "command" or null => hook.GetString("command") ?? "a command",
         "http" => hook.GetString("url") is { } url ? $"sends to {url}" : "an HTTP request",
-        var other => $"a {other} hook",
+        var other => $"{(other is ['a' or 'e' or 'i' or 'o' or 'u', ..] ? "an" : "a")} {other} hook",
     };
 
     /// <summary>Project skills (<c>.claude/skills/&lt;name&gt;/SKILL.md</c>) with hooks in their frontmatter.</summary>

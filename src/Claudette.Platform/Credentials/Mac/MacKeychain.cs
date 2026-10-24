@@ -14,7 +14,7 @@ public sealed class MacKeychain : ICredentialStore
 {
     public const string Service = "Claudette";
 
-    public string Name => "macOS Keychain";
+    public string Name => "the macOS Keychain";
 
     public bool IsAvailable => true;
 
@@ -43,7 +43,7 @@ public sealed class MacKeychain : ICredentialStore
         {
             return null;
         }
-        Check(status, "read the password from the Keychain");
+        Check(status, "read it from the Keychain");
         try
         {
             var length = CF.CFDataGetLength(data);
@@ -74,7 +74,7 @@ public sealed class MacKeychain : ICredentialStore
             var status = Security.SecItemUpdate(query.Handle, changes.Handle);
             if (status != Security.ErrSecItemNotFound)
             {
-                Check(status, "save the password in the Keychain");
+                Check(status, "save it in the Keychain");
                 return;
             }
             using var attributes = CF.Dictionary(
@@ -83,7 +83,7 @@ public sealed class MacKeychain : ICredentialStore
                 (Security.AttrAccount, CF.String(key)),
                 (Security.AttrLabel, CF.String(label)),
                 (Security.ValueData, CF.Data(bytes)));
-            Check(Security.SecItemAdd(attributes.Handle, null), "save the password in the Keychain");
+            Check(Security.SecItemAdd(attributes.Handle, null), "save it in the Keychain");
         }
         finally
         {
@@ -102,7 +102,7 @@ public sealed class MacKeychain : ICredentialStore
         {
             return false;
         }
-        Check(status, "remove the password from the Keychain");
+        Check(status, "remove it from the Keychain");
         return true;
     }
 

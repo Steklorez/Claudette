@@ -16,10 +16,10 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
           <Button Classes="flat" Padding="8,2" Content="Revert" Command="{Binding RevertPeekCommand}" IsEnabled="{Binding !IsReadOnly}"
                   ToolTip.Tip="Put these lines back in place of the change. Undo takes it back; nothing is written until you save." />
-          <Button Classes="flat" Padding="6,4" Command="{Binding PreviousChangeCommand}" ToolTip.Tip="Previous change (F3)" AutomationProperties.Name="Previous change">
+          <Button x:Name="PreviousChangeButton" Classes="flat" Padding="6,4" Command="{Binding PreviousChangeCommand}" ToolTip.Tip="Previous change" AutomationProperties.Name="Previous change">
             <Path Data="{StaticResource IconChevronUp}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="10" Height="10" Stretch="Uniform" />
           </Button>
-          <Button Classes="flat" Padding="6,4" Command="{Binding NextChangeCommand}" ToolTip.Tip="Next change (F4)" AutomationProperties.Name="Next change">
+          <Button x:Name="NextChangeButton" Classes="flat" Padding="6,4" Command="{Binding NextChangeCommand}" ToolTip.Tip="Next change" AutomationProperties.Name="Next change">
             <Path Data="{StaticResource IconChevronDown}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="10" Height="10" Stretch="Uniform" />
           </Button>
           <Button Classes="flat" Padding="6,4" Command="{Binding ClosePeekCommand}" ToolTip.Tip="Close" AutomationProperties.Name="Close the peek">

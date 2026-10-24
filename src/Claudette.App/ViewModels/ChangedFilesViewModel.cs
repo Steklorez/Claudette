@@ -42,6 +42,12 @@ public sealed partial class ChangedFileRow : ObservableObject
     public bool IsGone { get; init; }
 
     /// <summary>
+    /// The working tree it's in is gone (DESIGN.md §8, "Working trees"): the row, and its diff, are the session's changes
+    /// as they were, from <see cref="Before"/> to <see cref="After"/>.
+    /// </summary>
+    public bool InGoneWorkTree { get; init; }
+
+    /// <summary>
     /// The "before" side: the file before Claude's first change, or null for a new file or when it's unknown. Git rows
     /// load it from HEAD.
     /// </summary>
@@ -60,7 +66,7 @@ public sealed partial class ChangedFileRow : ObservableObject
 
     /// <summary>
     /// What changed in the file since the session's latest change, by whom when it was another tab's Claude, for the
-    /// line under the row's folder: <i>"Changed since: +3 −1 by Fix login"</i>. Null when nothing has.
+    /// line under the row's folder: <i>"Changed since: +3 −1, by Claude in Fix login"</i>. Null when nothing has.
     /// </summary>
     public string? Since { get; set; }
 
@@ -91,7 +97,7 @@ public sealed partial class ChangedFileRow : ObservableObject
         && Stats == other.Stats && ReferenceEquals(Before, other.Before) && BeforeKnown == other.BeforeKnown && FromGit == other.FromGit
         && LatestChange == other.LatestChange && IsReviewed == other.IsReviewed
         && ReferenceEquals(After, other.After) && AfterKnown == other.AfterKnown && Since == other.Since && IsGone == other.IsGone
-        && WorkTree == other.WorkTree && Group == other.Group;
+        && InGoneWorkTree == other.InGoneWorkTree && WorkTree == other.WorkTree && Group == other.Group;
 }
 
 /// <summary>What the changed files panel needs from its tab.</summary>
@@ -143,7 +149,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// </summary>
     private readonly ConcurrentDictionary<string, (InspectionKey Key, ChangedFileState State)> _inspections = new(StringComparer.Ordinal);
 
-    private readonly record struct InspectionKey(bool Exists, long Length, DateTime LastWriteUtc, string? Before, bool BeforeKnown, bool IsNew, string? After, bool AfterKnown);
+    private readonly record struct InspectionKey(bool Exists, long Length, DateTime LastWriteUtc, string? Before, bool BeforeKnown, bool IsNew, string? After, bool AfterKnown, bool TreeGone);
     /// <summary>Counts refreshes started, so one that finishes after a later one leaves that one's newer rows alone.</summary>
     private int _refreshGeneration;
 
@@ -551,7 +557,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             // Changed since by another tab's Claude: which one.
             if (row is { Since: { } since, IsGone: false } && claudeChanges is not null && _host.ChangedSinceBy(row.Path, claudeChanges.LastChanged) is { } by)
             {
-                row.Since = $"{since} by {by}";
+                row.Since = $"{since}, by Claude in {by}";
             }
         }
         UpdateWatches();
@@ -564,16 +570,16 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary>A changed file's row: its changes in the session, from the tab's folder or its own working tree's top. Reads the file, so off the UI thread.</summary>
     private ChangedFileRow Row(ChangedFiles changes, ChangedFile file, string folder, string? home)
     {
-        var state = Inspect(changes, file);
         var tree = WorkTreeOf(file.Path);
         var own = IsHome(tree, home);
-        // Its worktree is gone: removed, or merged and cleaned up.
+        // Its worktree is gone: removed, or merged and cleaned up. Its changes are the session's, as they were.
         var treeGone = !own && !Directory.Exists(tree);
+        var state = Inspect(changes, file, treeGone);
         return new ChangedFileRow
         {
             Path = file.Path,
             DisplayPath = own ? changes.DisplayPath(file, folder) : changes.DisplayPath(file, tree!),
-            Status = state.Status switch { ChangedFileStatus.Added => "A", ChangedFileStatus.Deleted when !treeGone => "D", ChangedFileStatus.Unchanged => "=", _ => "M" },
+            Status = state.Status switch { ChangedFileStatus.Added => "A", ChangedFileStatus.Deleted => "D", ChangedFileStatus.Unchanged => "=", _ => "M" },
             StatusText = (state.Status switch
             {
                 ChangedFileStatus.Unchanged => "Back to how it was",
@@ -587,6 +593,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             After = file.After,
             AfterKnown = file.AfterKnown,
             IsGone = treeGone || file.AfterKnown && state.Since is { Deleted: true },
+            InGoneWorkTree = treeGone,
             Since = treeGone ? null : SinceText(state.Since),
             WorkTree = own ? null : tree,
         };
@@ -729,19 +736,22 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         DiskSettle.Restart(DiskSettleDelay, CheckDisk);
     }
 
-    /// <summary>A file's inspection, from the cache while neither the file nor what's known of it has changed.</summary>
-    private ChangedFileState Inspect(ChangedFiles changes, ChangedFile file)
+    /// <summary>
+    /// A file's inspection, from the cache while neither the file nor what's known of it has changed. In a worktree
+    /// that's gone (<paramref name="treeGone"/>), the session's own changes alone, whatever is on disk.
+    /// </summary>
+    private ChangedFileState Inspect(ChangedFiles changes, ChangedFile file, bool treeGone = false)
     {
         var info = new FileInfo(file.Path);
         var key = info.Exists
-            ? new InspectionKey(true, info.Length, info.LastWriteTimeUtc, file.Before, file.BeforeKnown, file.IsNew, file.After, file.AfterKnown)
-            : new InspectionKey(false, 0, default, file.Before, file.BeforeKnown, file.IsNew, file.After, file.AfterKnown);
+            ? new InspectionKey(true, info.Length, info.LastWriteTimeUtc, file.Before, file.BeforeKnown, file.IsNew, file.After, file.AfterKnown, treeGone)
+            : new InspectionKey(false, 0, default, file.Before, file.BeforeKnown, file.IsNew, file.After, file.AfterKnown, treeGone);
         if (_inspections.TryGetValue(file.Path, out var cached) && cached.Key == key)
         {
             return cached.State;
         }
         // The rows don't need the file's text, so the cache doesn't keep it.
-        var state = changes.Inspect(file) with { Current = null };
+        var state = (treeGone ? changes.InspectOwn(file) : changes.Inspect(file)) with { Current = null };
         _inspections[file.Path] = (key, state);
         return state;
     }
@@ -772,13 +782,15 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary>For example "5 files changed · 2 reviewed".</summary>
     private void UpdateSummary()
     {
-        var summary = Files.Count switch
+        // A file back to how it was isn't changed.
+        var summary = (Files.Count, Files.Count(r => r.Status != "=")) switch
         {
-            0 => ShowGitChanges ? "No changes in the working tree" : "No changes yet",
-            1 => "1 file changed",
-            var count => $"{count} files changed",
+            (0, _) => ShowGitChanges ? "No changes in the working tree" : "No changes yet",
+            (_, 0) => "No files changed",
+            (_, 1) => "1 file changed",
+            (_, var count) => $"{count} files changed",
         };
-        var reviewed = Files.Count(r => r.IsReviewed);
+        var reviewed = Files.Count(r => r.IsReviewed && r.Status != "=");
         Summary = reviewed > 0 ? $"{summary} · {reviewed} reviewed" : summary;
     }
 
@@ -956,9 +968,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             before,
             row.FromGit ? "compared with HEAD"
                 : !beforeKnown ? "what it held before Claude's first change isn't known, so there's nothing to compare it with"
-                : before is null ? row.Since is null ? "new in this session" : "new in this session, against the file now with what changed since"
+                : before is null ? row.Since is null ? "new in this session" : "new in this session, against the file now, with the changes since"
                 : row.Since is null ? "compared with before Claude's first change in this session"
-                : "from before Claude's first change in this session, against the file now with what changed since",
+                : "from before Claude's first change in this session to the file now, with the changes since",
             inDiffTool,
             () => OpenFromDiffAsync(row, inDiffTool),
             () => RevealFileAsync(row),
@@ -968,12 +980,21 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             FromGit: row.FromGit,
             OpenInSystem: () => OpenFileInSystemAsync(row),
             WordWrap: DiffWordWrap.From(_services));
-        // Changed since the session's latest change: the diff ends where that left it, with the file now to switch to
-        // (DESIGN.md §8, "This session's changes").
-        DiffRequested?.Invoke(row is { FromGit: false, AfterKnown: true, Since: not null } && beforeKnown
-            ? againstNow with
+        DiffRequested?.Invoke(
+            // In a worktree that's gone, the session's changes as they were (DESIGN.md §8, "Working trees").
+            row is { FromGit: false, AfterKnown: true, InGoneWorkTree: true } ? againstNow with
             {
-                BeforeLabel = before is null ? "new in this session, as its last change left it" : "this session's changes: before its first, to as its last left it",
+                BeforeLabel = !beforeKnown ? againstNow.BeforeLabel
+                    : before is null ? "new in this session, in a worktree that's gone"
+                    : "this session's changes, in a worktree that's gone",
+                After = new DiffAfter(row.After),
+                AllowRevert = false,
+            }
+            // Changed since the session's latest change: the diff ends where that left it, with the file now to switch to
+            // (DESIGN.md §8, "This session's changes").
+            : row is { FromGit: false, AfterKnown: true, Since: not null } && beforeKnown ? againstNow with
+            {
+                BeforeLabel = before is null ? "new in this session, as its last change left it" : "this session's changes: from before its first change to how its last change left the file",
                 After = new DiffAfter(row.After),
                 AllowRevert = false,
                 AgainstNow = againstNow,
@@ -1032,7 +1053,16 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         try
         {
             var before = row.FromGit ? await _services.Git.GetHeadContentAsync(row.WorkTree ?? _host.Folder, row.Path) : row.Before;
-            await new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment).LaunchAsync(DiffTool, before, row.Path, DiffTempDirectory);
+            var launcher = new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment);
+            if (row is { FromGit: false, AfterKnown: true, InGoneWorkTree: true })
+            {
+                // Its worktree is gone: the session's changes as they were.
+                await launcher.LaunchBetweenAsync(DiffTool, before, row.After, Path.GetFileName(row.Path), DiffTempDirectory);
+            }
+            else
+            {
+                await launcher.LaunchAsync(DiffTool, before, row.Path, DiffTempDirectory);
+            }
         }
         catch (Exception ex)
         {

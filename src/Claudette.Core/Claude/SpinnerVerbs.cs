@@ -19,7 +19,7 @@ public static class SpinnerVerbs
         "Marinating", "Meandering", "Moseying", "Mulling", "Musing", "Noodling", "Percolating", "Perusing",
         "Pondering", "Puttering", "Puzzling", "Reticulating", "Ruminating", "Schlepping", "Shimmying", "Simmering",
         "Smooshing", "Spelunking", "Stewing", "Synthesizing", "Thinking", "Tinkering", "Transmuting", "Unfurling",
-        "Unravelling", "Vibing", "Whatchamacalliting", "Whirring", "Wibbling", "Wrangling", "Zigzagging",
+        "Unraveling", "Vibing", "Whatchamacalliting", "Whirring", "Wibbling", "Wrangling", "Zigzagging",
     ];
 
     /// <summary>

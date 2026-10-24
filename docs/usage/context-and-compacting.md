@@ -33,7 +33,7 @@ If this version of Claude Code can't say what's in the window, Claudette shows a
 
 ## Compacting
 
-When the window is nearly full, the breakdown says *Nearly full. Claude Code will compact the conversation soon on its own.*
+When the window is nearly full, the breakdown says *Nearly full. Claude Code will compact the conversation soon on its own.* With auto-compact off, it says *Nearly full. Compact now to free up context.*
 
 **Compact now** summarizes the conversation so far to free up context, like `/compact`. It's at the foot of the breakdown. The conversation gets a note when it's done: *Conversation compacted.* When Claude Code compacts it by itself, the note says so: *Claude Code compacted the conversation to free up context.*
 

@@ -126,7 +126,7 @@ public class UserEnvironmentTests
         environment.Start();
         Assert.Null(await environment.GetAsync(TestContext.Current.CancellationToken));
         Assert.Equal(0, shell.Reads);
-        Assert.Equal("Not used: turned off in Settings → Claude Code.", environment.Describe());
+        Assert.Equal("Not used: turned off in Settings → Claude Code → Use my login shell's environment.", environment.Describe());
 
         // Turning it on reads it then; turning it off again goes back to Claudette's own for new processes.
         enabled = true;

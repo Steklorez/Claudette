@@ -27,7 +27,10 @@ public sealed partial class CloseQuestion : ObservableObject
 
     public string Text => Unsaved.Count == 1
         ? $"Save {Unsaved[0].Name}?"
-        : $"Save {Unsaved.Count} files? {string.Join(", ", Unsaved.Take(4).Select(f => f.Name))}{(Unsaved.Count > 4 ? $" and {Unsaved.Count - 4} more" : "")} have unsaved edits.";
+        : $"Save {Unsaved.Count} files? {Core.Formats.List(UnsavedNames)} have unsaved edits.";
+
+    /// <summary>The first four files' names, then how many more.</summary>
+    private string[] UnsavedNames => Unsaved.Count > 4 ? [.. Unsaved.Take(4).Select(f => f.Name), $"{Unsaved.Count - 4} more"] : [.. Unsaved.Select(f => f.Name)];
 
     public string SaveText => Unsaved.Count == 1 ? "Save" : "Save all";
 

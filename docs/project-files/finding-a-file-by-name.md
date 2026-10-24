@@ -13,7 +13,7 @@ Type part of a file's name and the explorer swaps its tree for a list of the fil
 
 - Click **Find file** (the magnifier) in the explorer's header.
 - Or press `Ctrl/Cmd+P`, which works from anywhere, or choose **Go to file…** in the [command palette](../tabs/the-command-palette.md). From a conversation, it first opens the project's Files tab, beside the conversation or in its place, as **Show a file clicked in a conversation** says ([Opening files from the conversation](opening-files-from-the-conversation.md)).
-- With no file open, the empty Files tab has a **Find a file…** button.
+- With no file open, the empty Files tab has a **Go to file…** button.
 
 A box, **Find a file by name**, appears at the top of the explorer with the keyboard in it.
 
@@ -47,7 +47,7 @@ Each result is one line: the name, with the letters that matched in bold, then, 
 
 | Key | Does |
 |---|---|
-| `Ctrl/Cmd+P` | Start a search. You can rebind it in Settings → **Keyboard** (**Go to a file in the project**). |
+| `Ctrl/Cmd+P` | Start a search. You can rebind it in Settings → **Keyboard** (**Go to file**). |
 | `Up`, `Down` | Choose a result |
 | `Enter` | Open it to stay |
 | `Esc` | Back to the tree |

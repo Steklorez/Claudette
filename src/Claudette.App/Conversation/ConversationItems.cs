@@ -729,7 +729,7 @@ public partial class ToolUseItem : ConversationItem
             "Read" when Str(input, "file_path") is { } path && input["offset"] is not null
                 => $"{path} (from line {input["offset"]})",
             "Grep" when Str(input, "pattern") is { } pattern
-                => Str(input, "path") is { } where ? $"{pattern}  in {where}" : pattern,
+                => Str(input, "path") is { } where ? $"{pattern} in {where}" : pattern,
             "Agent" or "Task" => Str(input, "description"),
             "AskUserQuestion" => (input["questions"] as JsonArray)?.OfType<JsonObject>().Select(q => Str(q, "question")).FirstOrDefault(q => q is not null),
             "ExitPlanMode" => "Plan ready for review",
@@ -997,7 +997,15 @@ public sealed partial class HookRunItem(string hookId, string hookName, string h
     public bool HasOutput => Output.Length > 0;
 
     /// <summary>"PreToolUse hook" or "PreToolUse hook (Bash)", for the row.</summary>
-    public string Title => HookName.Length > 0 && HookName != HookEvent ? $"{HookEvent} hook ({HookName})" : $"{HookEvent} hook";
+    public string Title
+    {
+        get
+        {
+            // Claude Code names a hook after its event and matcher, "PreToolUse:Bash": the event is in the title already.
+            var name = HookName.StartsWith(HookEvent + ":", StringComparison.Ordinal) ? HookName[(HookEvent.Length + 1)..] : HookName;
+            return name.Length > 0 && name != HookEvent ? $"{HookEvent} hook ({name})" : $"{HookEvent} hook";
+        }
+    }
 
     public string StatusText => State switch
     {
@@ -1072,7 +1080,7 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
 
     /// <summary>
     /// What the Turn statistics card says: <see cref="Text"/>, then how much came from the prompt cache and the tool
-    /// calls: "1m 4s · 75.2k in · 904 out · Opus 5.5 · 62k from cache · 7 tool calls".
+    /// calls: "1m 04s · 75.2k in · 904 out · Opus 5.5 · 62k from cache · 7 tool calls".
     /// </summary>
     public string StatsText
     {
@@ -1130,7 +1138,7 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
         var parts = new List<string>();
         if (result.DurationMs is { } ms)
         {
-            parts.Add(ms >= 60_000 ? $"{(int)(ms / 60_000)}m {ms % 60_000 / 1000:0}s" : $"{ms / 1000:0.#}s");
+            parts.Add(ms >= 60_000 ? Formats.Elapsed(TimeSpan.FromMilliseconds(ms)) : $"{ms / 1000:0.#}s");
         }
         if (result.Usage is { } usage)
         {

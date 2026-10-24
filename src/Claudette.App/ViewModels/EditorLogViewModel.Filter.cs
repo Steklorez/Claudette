@@ -265,7 +265,7 @@ public sealed partial class LogLevelChip(LogVerbosity verbosity, string name, bo
 
     public bool IsWarning => Verbosity == LogVerbosity.Warning;
 
-    public string Tip => IsShown ? $"Showing {Name}: click to hide them" : $"{Name} hidden: click to show them";
+    public string Tip => IsShown ? $"Showing {Name} lines: click to hide them" : $"Hiding {Name} lines: click to show them";
 
     public string AccessibleName => $"{Name}, {CountText}, {(IsShown ? "shown" : "hidden")}";
 }

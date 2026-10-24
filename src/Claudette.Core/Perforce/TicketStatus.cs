@@ -69,10 +69,10 @@ public sealed partial record TicketStatus(TicketState State, TimeSpan? ExpiresIn
         }
         return result.ExitCode == 0
             ? new TicketStatus(TicketState.Valid, null, message)
-            : new TicketStatus(TicketState.Unknown, null, message.Length > 0 ? message : $"p4 login -s failed (exit {result.ExitCode}).");
+            : new TicketStatus(TicketState.Unknown, null, message.Length > 0 ? message : $"p4 login -s failed (exit code {result.ExitCode}).");
     }
 
-    /// <summary>"11h", "45m", "2h 5m": short, for the info card.</summary>
+    /// <summary>"11h", "45m", "2h 05m": short, for the info card.</summary>
     public static string Duration(TimeSpan span)
     {
         if (span < TimeSpan.Zero)
@@ -81,7 +81,7 @@ public sealed partial record TicketStatus(TicketState State, TimeSpan? ExpiresIn
         }
         var hours = (int)span.TotalHours;
         return hours >= 10 || hours > 0 && span.Minutes == 0 ? $"{hours}h"
-            : hours > 0 ? $"{hours}h {span.Minutes}m"
+            : hours > 0 ? $"{hours}h {span.Minutes:00}m"
             : $"{Math.Max(span.Minutes, span > TimeSpan.Zero ? 1 : 0)}m";
     }
 

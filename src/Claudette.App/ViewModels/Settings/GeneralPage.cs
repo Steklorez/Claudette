@@ -306,7 +306,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
             {
                 0 => "Nothing to remove right now.",
                 1 => $"Removed {Path.GetFileName(removed[0])}.",
-                _ => $"Removed {removed.Count} worktrees: {string.Join(", ", removed.Select(Path.GetFileName))}.",
+                _ => $"Removed {removed.Count} worktrees: {Core.Formats.List(removed.Select(p => Path.GetFileName(Path.TrimEndingDirectorySeparator(p))).ToList())}.",
             };
         }
         finally

@@ -197,7 +197,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     /// <summary>The × button's tip, on its row and over its log.</summary>
     public static string CloseTip => "Close: it comes back when its log starts again, as when the editor does";
 
-    /// <summary><b>Show in Explorer</b>, <b>Show in Finder</b> or <b>Show in File Manager</b>.</summary>
+    /// <summary><b>Show in Explorer</b>, <b>Show in Finder</b> or <b>Show in file manager</b>.</summary>
     public static string ShowFolderLabel => ProjectMenu.ShowFolderLabel(ToolOSExtensions.Current);
 
     public override string? OutputNote => _earlierInFile || OutputDropped > 0

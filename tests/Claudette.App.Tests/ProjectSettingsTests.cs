@@ -216,7 +216,7 @@ public class ProjectSettingsTests
         Assert.DoesNotContain("The team's links", File.ReadAllText(shared), StringComparison.Ordinal);
         // The project's menu picks it up, as it does after the actions editor saves.
         await TabTestHarness.Eventually(() => tab.ProjectTools.Links.Select(l => l.Name).SequenceEqual(["Board", "Pull request", "https://mine.example"]), "the new link in the menu");
-        Assert.Equal("No git branch", InlineDispatcher.Read(() => tab.ProjectTools.Links[1].Problem));
+        Assert.Equal("No git branch.", InlineDispatcher.Read(() => tab.ProjectTools.Links[1].Problem));
 
         // Edit: the entry's other fields are kept, and it stays in its file.
         project.SelectedLink = project.Links[0];
@@ -255,7 +255,7 @@ public class ProjectSettingsTests
     [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Claudette; only https, http and mailto do.")]
     [InlineData("vscode://file/x", "\"vscode:\" links don't open from Claudette; only https, http and mailto do.")]
     [InlineData("example.com/board", "example.com/board isn't a full web address, such as https://example.com.")]
-    [InlineData("https://example.com/{ticket}", "Unknown placeholder {ticket}: use {branch}, {changelist} or {folderName}")]
+    [InlineData("https://example.com/{ticket}", "Unknown placeholder {ticket}: use {branch}, {changelist} or {folderName}.")]
     [InlineData("https://github.com/org/repo/compare/{branch}?expand=1", null)]
     [InlineData("https://swarm.example/changes/{changelist}", null)]
     [InlineData("http://docs.example/{folderName}/", null)]

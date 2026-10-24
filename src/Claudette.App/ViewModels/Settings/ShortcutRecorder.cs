@@ -91,7 +91,7 @@ public sealed class ShortcutRecorder(AppSettings settings, Action save)
         }
         if (!AllowedWhileTyping(chord))
         {
-            editor.Error = "Add Ctrl, Alt or Cmd, so typing still works.";
+            editor.Error = Shortcuts.IsMac ? "Add Cmd, Ctrl or Option, so typing still works." : "Add Ctrl or Alt, so typing still works.";
             return;
         }
         var id = editor switch

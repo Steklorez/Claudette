@@ -125,7 +125,8 @@ public sealed record DiffView(IReadOnlyList<DiffLine> Lines, int Added, int Remo
             return lines;
         }
         var capped = lines.Take(MaxLines).ToList();
-        capped.Add(new DiffLine(DiffLineKind.Note, $"… {lines.Count - MaxLines} more lines", null, null));
+        var more = lines.Count - MaxLines;
+        capped.Add(new DiffLine(DiffLineKind.Note, more == 1 ? "… 1 more line" : $"… {more} more lines", null, null));
         return capped;
     }
 

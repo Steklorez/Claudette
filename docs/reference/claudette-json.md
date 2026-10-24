@@ -45,7 +45,7 @@ Each entry of `actions` is an object. It shows in the project's menu after the p
 | `name` | Yes | The label in the menu. |
 | `command` | Yes | The command line. It runs through your shell: `cmd.exe` on Windows, and your `$SHELL` (or `/bin/sh`) on macOS and Linux. |
 | `folder` | No | The folder to run in, relative to the tab's folder. The tab's folder by default. If it doesn't exist, the action is greyed out and says so. |
-| `mode` | No | `"output"`, the default, makes a run with its log on the Project page, **Stop** and a notification when it ends. `"launch"` starts the command and leaves it alone. |
+| `mode` | No | `"output"`, the default, makes a run under the tab in the sidebar, with its log, **Stop** and a notification when it ends. `"launch"` starts the command and leaves it alone. |
 | `os` | No | `"windows"`, `"macos"` or `"linux"`, or a list of them. The action shows only on those systems, with no reason given elsewhere. `win`, `win64`, `mac`, `osx` and `darwin` also work, in any case. |
 | `ifExists` | No | A path, or a list of paths, relative to the tab's folder. The action shows only while every one exists, as a file or a folder, and is left out without a reason otherwise. Empty paths are ignored. |
 | `runOnNewWorktree` | No | `true` also runs the action on its own in each new worktree a worktree tab makes. Anything but the value `true`, a quoted `"true"` included, leaves it to a click. |
@@ -69,11 +69,11 @@ An address can have these placeholders. They're filled in from the selected tab 
 
 | Placeholder | Filled with | When it can't be filled |
 |---|---|---|
-| `{branch}` | The tab's git branch | The link is greyed out: "No git branch" |
-| `{changelist}` | The Perforce changelist Claude is working in | "No Perforce changelist" |
+| `{branch}` | The tab's git branch | The link is greyed out: "No git branch." |
+| `{changelist}` | The Perforce changelist Claude is working in | "No Perforce changelist." |
 | `{folderName}` | The name of the tab's folder | It's always there |
 
-Any other word in braces makes the link greyed out: "Unknown placeholder … : use {branch}, {changelist} or {folderName}".
+Any other word in braces makes the link greyed out: "Unknown placeholder …: use {branch}, {changelist} or {folderName}."
 
 ## What's skipped
 
@@ -82,7 +82,7 @@ Claudette reads both files tolerantly:
 - Comments (`//` and `/* … */`) and trailing commas are fine, and so is a byte order mark at the start.
 - Unknown fields are ignored.
 - An entry it can't use is skipped on its own, with a reason that the project's menu and the Project page show, such as "claudette.json: actions[2] has no command, so it was skipped." The rest of the file still works.
-- A file that isn't JSON, or whose top level isn't an object, is skipped whole, with the parser's reason: "claudette.json isn't valid JSON, so it was skipped: …". A file that can't be read at all, because it's locked or you can't open it, says so too.
+- A file that isn't JSON is skipped whole, with the parser's reason: "claudette.json isn't valid JSON, so it was skipped: …". So is one whose top level isn't an object: "claudette.json isn't a JSON object, so it was skipped. It should look like { "actions": [ … ], "links": [ … ] }." A file that can't be read at all, because it's locked or you can't open it, says so too.
 
 These skip an entry:
 

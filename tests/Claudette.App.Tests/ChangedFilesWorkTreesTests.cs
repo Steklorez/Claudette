@@ -31,7 +31,7 @@ public class ChangedFilesWorkTreesTests
 
         await TabTestHarness.Eventually(() => !tab.IsInWorktree, "the tab back in its folder");
         Assert.Equal(h.WorkFolder, tab.Folder);
-        Assert.Contains(tab.Items.OfType<Conversation.NoteItem>(), n => n.Text.StartsWith("Back in ", StringComparison.Ordinal));
+        Assert.Contains(tab.Items.OfType<Conversation.NoteItem>(), n => n.Text.StartsWith("Out of the worktree, back in ", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -96,20 +96,35 @@ public class ChangedFilesWorkTreesTests
         FakeGitFolders.Repository(h.WorkFolder, "main");
         var worktree = FakeGitFolders.Worktree(h.WorkFolder, "brisk-otter");
         var tab = await h.OpenTabAsync();
-        var (home, there) = (Path.Combine(h.WorkFolder, "a.cs"), Path.Combine(worktree, "b.cs"));
+        var (home, there, created) = (Path.Combine(h.WorkFolder, "a.cs"), Path.Combine(worktree, "b.cs"), Path.Combine(worktree, "c.cs"));
         await File.WriteAllTextAsync(home, "b\n", TestContext.Current.CancellationToken);
         await File.WriteAllTextAsync(there, "b\n", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(created, "new\n", TestContext.Current.CancellationToken);
         EmitEdit(h, "e1", home);
         EmitEdit(h, "e2", there);
-        await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.Count == 2, "the changed files");
+        Call(h, "w1", "Write", new JsonObject { ["file_path"] = created, ["content"] = "new\n" },
+            new JsonObject { ["type"] = "create", ["filePath"] = created, ["content"] = "new\n", ["originalFile"] = null });
+        await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.Count == 3, "the changed files");
 
         Directory.Delete(worktree, recursive: true);
         await tab.ChangedFiles.RefreshCommand.ExecuteAsync(null);
 
+        // Claude's changes as they were, not as deleted, nor a created file as back to how it was.
         var row = tab.ChangedFiles.Files.Single(r => r.FileName == "b.cs");
         Assert.Equal(("brisk-otter · removed", "M", "+1 −1", null), (row.Group, row.Status, row.Stats, row.Since));
         Assert.True(row.IsMissing);
-        Assert.EndsWith("in a worktree that's gone", row.StatusText, StringComparison.Ordinal);
+        Assert.Equal("Modified, in a worktree that's gone", row.StatusText);
+        var added = tab.ChangedFiles.Files.Single(r => r.FileName == "c.cs");
+        Assert.Equal(("A", "+1 −0", "Added, in a worktree that's gone"), (added.Status, added.Stats, added.StatusText));
+        Assert.Equal("3 files changed", tab.ChangedFiles.Summary);
+
+        // Its diff is the session's changes too.
+        Diffs.DiffSource? requested = null;
+        tab.ChangedFiles.DiffRequested += source => requested = source;
+        await tab.ChangedFiles.OpenFileDiffCommand.ExecuteAsync(row);
+        var view = new Diffs.DiffWindowViewModel(requested!, dark: false);
+        await TabTestHarness.Eventually(() => !view.IsLoading, "the diff");
+        Assert.Equal(("+1 −1", null, false, false), (view.Stats, view.Message, view.CanRevert, view.HasLaterChanges));
     }
 
     [Fact]

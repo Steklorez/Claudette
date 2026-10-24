@@ -44,7 +44,7 @@
 [button] Context 1%
 "Cache 60m"
 [button] 120 tok
-[button] ⓘ
+[button] Tab info: ⓘ
 [button] Send
 "{root}/work"
 "Idle"

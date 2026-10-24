@@ -266,12 +266,12 @@ public sealed class RestartService : IDisposable
             catch (TimeoutException)
             {
             }
-            return Recover(snapshot, outcome + Tail(errors), stamp);
+            return Recover(snapshot, outcome, Tail(errors), stamp);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             process?.Kill();
-            return Recover(snapshot, $"The new build couldn't be started: {ex.Message}", stamp);
+            return Recover(snapshot, $"The new build couldn't be started: {ex.Message}", "", stamp);
         }
     }
 
@@ -298,14 +298,14 @@ public sealed class RestartService : IDisposable
         }
     }
 
-    private bool Recover(RestartSnapshot snapshot, string error, DateTime? stamp)
+    private bool Recover(RestartSnapshot snapshot, string error, string errors, DateTime? stamp)
     {
-        _logger.LogWarning("Restart into the new build failed: {Error}", error);
+        _logger.LogWarning("Restart into the new build failed: {Error}", error + errors);
         RestartSnapshot.Delete(_services.Paths.RestartFile);
         _services.SuspendSaving = false;
         _resumeListening?.Invoke();
         _host.Recover(snapshot);
-        return Fail(error + " Still running the earlier build.", stamp);
+        return Fail(error + " Still running the earlier build." + errors, stamp);
     }
 
     /// <summary>Records why the restart didn't happen. A build that failed isn't restarted into automatically again.</summary>

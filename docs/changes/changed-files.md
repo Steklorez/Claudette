@@ -2,19 +2,19 @@
 title: Changed files
 parent: Reviewing changes
 nav_order: 1
-summary: "The Changed Files page of a tab's side panel lists the files Claude changed in that tab's session, each added, modified or deleted, with how many lines changed."
+summary: "The Changed files page of a tab's side panel lists the files Claude changed in that tab's session, each added, modified or deleted, with how many lines changed."
 ---
 
 # Changed files
 
-The **Changed Files** page of a tab's side panel lists the files Claude changed in that tab's session, each added, modified or deleted, with how many lines changed. It's built from Claude's file edits, live while the tab works and again when a conversation is restored.
+The **Changed files** page of a tab's side panel lists the files Claude changed in that tab's session, each added, modified or deleted, with how many lines changed. It's built from Claude's file edits, live while the tab works and again when a conversation is restored.
 
-{% include shot.html name="guide/changes/changed-files" alt="The Changed Files page in the side panel: a summary of five files changed with two reviewed, a Working tree vs HEAD box, and a row for each file with its status letter, name, line counts and folder." %}
+{% include shot.html name="guide/changes/changed-files" alt="The Changed files page in the side panel: a summary of five files changed with two reviewed, a Working tree vs HEAD box, and a row for each file with its status letter, name, line counts and folder." %}
 
 ## Opening the page
 
 - Click **Files (n)** in the composer bar, where n is how many files are listed.
-- Or open the side panel and pick the **Changed Files** page ([The side panel](../tabs/the-side-panel.md)).
+- Or open the side panel and pick the **Changed files** page ([The side panel](../tabs/the-side-panel.md)).
 - Or choose **Show changed files** in the [command palette](../tabs/the-command-palette.md).
 
 Each tab has its own list. A tab in the background only keeps its count, and lists its files once you select it. `/clear` starts a new conversation, and the list starts again with it.
@@ -45,7 +45,7 @@ The counts are this tab's own: from what the file held before Claude's first cha
 When a file on disk isn't as this session's last change left it, its row says so under its folder:
 
 - *"Changed since: +3 −1"*: lines added and removed since, by you, a command or something else.
-- *"Changed since: +3 −1 by Fix login"*: another tab's Claude changed it after this one, named by the tab (*"by Fix login and 1 other tab"* when more did).
+- *"Changed since: +3 −1, by Claude in Fix login"*: another tab's Claude changed it after this one, named by the tab (*"by Claude in Fix login and 1 other tab"* when more did).
 - *"Deleted since"*: the file's gone. A file Claude created that's gone again counts as back to how it was.
 
 A row whose tip adds *"with changes made outside this session between its edits"* was changed by something else between two of this session's edits, so its counts have that change in them too.
@@ -89,7 +89,7 @@ Claude Code doesn't report the earlier contents of a file a subagent changes at 
 
 ## Opening a file's changes
 
-Click a row, or press `Enter` on it, to open its [diff view](the-diff-view.md). The arrow keys move through the list without opening anything. Right-click a row for **Open diff**, **Open in diff tool**, **Open**, **Open in the OS's app**, **Reveal in folder** and **Copy path**, which [The diff view](the-diff-view.md#the-files-actions) explains, and **Diff tool settings…**, which opens Settings → **Files and diffs** at the [diff tool](external-diff-tools.md).
+Click a row, or press `Enter` on it, to open its [diff view](the-diff-view.md). The arrow keys move through the list without opening anything. Right-click a row for **Open diff**, **Open in diff tool**, **Open**, **Open in the OS's app**, **Reveal in file manager** and **Copy path**, which [The diff view](the-diff-view.md#the-files-actions) explains, and **Diff tool settings…**, which opens Settings → **Files and diffs** at the [diff tool](external-diff-tools.md).
 
 With an [external diff tool](external-diff-tools.md) set, a single click only selects the row, and a double-click opens the tool.
 

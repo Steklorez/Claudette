@@ -39,7 +39,7 @@ public sealed class ClaudeAuth(
         // Exits 1 when signed out, but still prints the JSON.
         return TryParseStatus(result.StandardOutput, out var status)
             ? status
-            : throw new InvalidOperationException($"Couldn't read 'claude auth status' (exit {result.ExitCode}): {result.StandardError.Trim()}");
+            : throw new InvalidOperationException($"Couldn't read 'claude auth status' (exit code {result.ExitCode}): {result.StandardError.Trim()}");
     }
 
     /// <summary>

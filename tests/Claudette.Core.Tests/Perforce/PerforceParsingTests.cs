@@ -155,7 +155,7 @@ public class PerforceParsingTests
     [Theory]
     [InlineData(11 * 60 + 59, "11h")]
     [InlineData(3 * 60, "3h")]
-    [InlineData(2 * 60 + 5, "2h 5m")]
+    [InlineData(2 * 60 + 5, "2h 05m")]
     [InlineData(45, "45m")]
     [InlineData(0, "0m")]
     public void Durations_are_short(int minutes, string expected) =>

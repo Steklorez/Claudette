@@ -419,7 +419,7 @@ public class EditorLogsTests
         Assert.DoesNotContain("Tick", Shown());
         Assert.True(log.IsFiltered);
         Assert.Equal("Showing 5 of 6 lines", log.ShownNote);
-        Assert.Equal("Verbose hidden: click to show them", log.Levels[^1].Tip);
+        Assert.Equal("Hiding Verbose lines: click to show them", log.Levels[^1].Tip);
 
         log.Categories.Single(c => c.Name == "LogNet").IsShown = false;
         Assert.Equal(2, changes);

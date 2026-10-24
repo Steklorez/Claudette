@@ -121,7 +121,7 @@ public class ProjectToolsTests
 
         Assert.Equal(
         [
-            "Launch editor", "Generate project files", "Build editor", "Build and launch", "Open solution", "Open latest log", "Clean intermediates…", "Kill all Unreal editors…",
+            "Launch editor", "Generate project files", "Build editor", "Build and launch", "Open solution", "Open latest log", "Clean intermediates…", "End all Unreal editors…",
             "-", "Editor configuration", "Development", "DebugGame",
             "-", "Choose another engine folder…",
             "-", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh",
@@ -142,7 +142,7 @@ public class ProjectToolsTests
         var tab = await OpenWithProjectAsync(h);
 
         Assert.False(Entry(tab, "Open solution").IsEnabled);
-        Assert.Equal("Generate project files first", Entry(tab, "Open solution").Tip);
+        Assert.Equal("Generate project files first.", Entry(tab, "Open solution").Tip);
 
         File.WriteAllText(Path.Combine(h.WorkFolder, "NightOwl.sln"), "");
         await tab.ProjectTools.RefreshCommand.ExecuteAsync(null);
@@ -523,12 +523,12 @@ public class ProjectToolsTests
         var processes = new FakeSystemProcesses();
         h.Services.ProjectTools.Processes = processes;
         var tab = await OpenWithProjectAsync(h);
-        Assert.Equal("No Unreal editor is running", Entry(tab, "Kill all Unreal editors…").Tip);
+        Assert.Equal("No Unreal editor is running.", Entry(tab, "End all Unreal editors…").Tip);
 
         processes.Running.Add(new SystemProcess(501, "UnrealEditor", $"UnrealEditor \"{uproject}\""));
         processes.Running.Add(new SystemProcess(502, "UnrealEditor-Cmd", "UnrealEditor-Cmd /g/Other.uproject -run=cook"));
         await tab.ProjectTools.RefreshCommand.ExecuteAsync(null);
-        Assert.True(Entry(tab, "Kill all Unreal editors…").IsEnabled);
+        Assert.True(Entry(tab, "End all Unreal editors…").IsEnabled);
         await tab.ProjectTools.RunActionCommand.ExecuteAsync(Action(tab, "kill-editors"));
 
         var confirmation = h.Shell.Confirmation!;
@@ -541,7 +541,7 @@ public class ProjectToolsTests
 
         Assert.Equal([501, 502], processes.Killed);
         Assert.Contains(tab.Items, i => i is Conversation.NoteItem { Text: "Ended 2 Unreal editors." });
-        await TabTestHarness.Eventually(() => !Entry(tab, "Kill all Unreal editors…").IsEnabled, "none left");
+        await TabTestHarness.Eventually(() => !Entry(tab, "End all Unreal editors…").IsEnabled, "none left");
     }
 
     // ---- Unity ---------------------------------------------------------------------------------------------------------------
@@ -678,7 +678,7 @@ public class ProjectToolsTests
         var links = menu.Where(e => e.IsLink).ToArray();
         Assert.Equal("https://github.com/org/repo/compare/owl%2Feyes?expand=1", Assert.IsType<ResolvedLink>(links[0].Parameter).Url);
         Assert.Equal(("↗", true), (links[0].Mark, links[0].IsEnabled));
-        Assert.Equal("No Perforce changelist", Assert.IsType<ResolvedLink>(links[1].Parameter).Problem);
+        Assert.Equal("No Perforce changelist.", Assert.IsType<ResolvedLink>(links[1].Parameter).Problem);
         Assert.False(links[1].IsEnabled);
         Assert.False(links[2].IsEnabled);
 

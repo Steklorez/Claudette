@@ -15,11 +15,11 @@ Claudette shows notifications through `notify-send`, which also reports a click 
 
 ## Keeping the computer awake: `systemd-inhibit`
 
-**Keep this computer awake** and the header's cup hold off sleep with `systemd-inhibit`. Without it, the cup is disabled and says *systemd-inhibit wasn't found, so Claudette can't keep this computer awake.* The setting is disabled too, and so is keeping it awake for tabs connected to the Claude app. Settings → Advanced → **Diagnostics** says whether the computer is being kept awake, or why not. See [Keeping the computer awake](../away/keeping-the-computer-awake.md).
+**Keep this computer awake** and the header's cup hold off sleep with `systemd-inhibit`. Without it, the cup is disabled and says *Claudette can't keep this computer awake here: systemd-inhibit wasn't found.* The setting is disabled too, and so is keeping it awake for tabs connected to the Claude app. Settings → Advanced → **Diagnostics** says whether the computer is being kept awake, or why not. See [Keeping the computer awake](../away/keeping-the-computer-awake.md).
 
 ## Passwords: `secret-tool`
 
-Claudette keeps a Perforce password in the desktop's Secret Service, through `secret-tool`. Without it, Settings says *Install secret-tool (the libsecret-tools package) to store passwords in the Secret Service*, and Perforce passwords can only be asked for each time. See [Perforce](../project-tools/perforce.md).
+Claudette keeps a Perforce password in the desktop's Secret Service, through `secret-tool`. Without it, Settings says *Install secret-tool (the libsecret-tools package) to keep passwords and API keys in the Secret Service*, and Perforce passwords can only be asked for each time. See [Perforce](../project-tools/perforce.md).
 
 Install the `libsecret-tools` package, then restart Claudette.
 

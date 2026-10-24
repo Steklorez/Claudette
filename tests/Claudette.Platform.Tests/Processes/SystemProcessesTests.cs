@@ -4,7 +4,7 @@ using Claudette.Platform.Processes.Unix;
 
 namespace Claudette.Platform.Tests.Processes;
 
-/// <summary>Finding processes by name for project tools (DESIGN.md §18): an editor with a project open, Kill all editors.</summary>
+/// <summary>Finding processes by name for project tools (DESIGN.md §18): an editor with a project open, End all editors.</summary>
 public sealed class SystemProcessesTests
 {
     private const string Editor = "/Users/Shared/Epic Games/UE_5.4/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor";

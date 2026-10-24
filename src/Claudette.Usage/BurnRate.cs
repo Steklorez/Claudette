@@ -57,7 +57,7 @@ public sealed record BurnProjection
         }
         if (PercentAtReset is { } atReset)
         {
-            return string.Create(CultureInfo.InvariantCulture, $"On track: about {Math.Round(atReset):0}% used when the session resets.");
+            return string.Create(CultureInfo.InvariantCulture, $"On track: about {Math.Min(Math.Round(atReset), 99):0}% used when the session resets.");
         }
         return TimeToLimit is { } time ? $"At this rate you'll hit the limit in {BurnRate.FormatDuration(time)}." : "Not enough data yet.";
     }

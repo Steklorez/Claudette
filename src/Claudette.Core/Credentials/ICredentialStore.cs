@@ -10,7 +10,7 @@ public sealed class CredentialStoreException(string message, Exception? inner = 
 /// </summary>
 public interface ICredentialStore
 {
-    /// <summary>The store's name as the user knows it, such as "macOS Keychain".</summary>
+    /// <summary>The store's name as the user knows it, written to go mid-sentence, such as "the macOS Keychain".</summary>
     string Name { get; }
 
     /// <summary>False when this machine has no store Claudette can use, for example Linux without <c>secret-tool</c>.</summary>
@@ -34,7 +34,7 @@ public interface ICredentialStore
 }
 
 /// <summary>No credential store: tests, and machines without one.</summary>
-public sealed class UnavailableCredentialStore(string name = "Credential store", string reason = "No credential store is available on this machine.") : ICredentialStore
+public sealed class UnavailableCredentialStore(string name = "the credential store", string reason = "No credential store is available on this machine.") : ICredentialStore
 {
     public string Name => name;
 

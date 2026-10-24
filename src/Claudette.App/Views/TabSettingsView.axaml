@@ -18,7 +18,7 @@
       </Border>
       <ScrollViewer MaxHeight="560">
         <StackPanel Spacing="24" Margin="24,8,24,16">
-          <c:SettingsSection Key="model" ResetText="Use defaults">
+          <c:SettingsSection Key="model" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
             <c:SettingRow Key="tab.model">
               <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
             </c:SettingRow>
@@ -34,7 +34,7 @@
             </c:SettingRow>
           </c:SettingsSection>
 
-          <c:SettingsSection Key="limits" ResetText="Use defaults">
+          <c:SettingsSection Key="limits" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
             <c:SettingRow Key="tab.continueAfterLimitReset">
               <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedItem="{Binding SelectedAutoContinue}" />
             </c:SettingRow>
@@ -43,7 +43,7 @@
             </c:SettingRow>
           </c:SettingsSection>
 
-          <c:SettingsSection Key="checkIns" ResetText="Use defaults">
+          <c:SettingsSection Key="checkIns" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
             <c:SettingRow Key="tab.checkIns">
               <ToggleSwitch IsChecked="{Binding UseCustomCheckIns}" />
               <c:SettingRow.Details>
@@ -68,7 +68,7 @@
             </c:SettingRow>
           </c:SettingsSection>
 
-          <c:SettingsSection Key="monitor" ResetText="Use defaults">
+          <c:SettingsSection Key="monitor" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
             <c:SettingRow Key="tab.processMonitor">
               <ComboBox ItemsSource="{Binding MonitorChoices}" SelectedItem="{Binding SelectedMonitor}" />
             </c:SettingRow>

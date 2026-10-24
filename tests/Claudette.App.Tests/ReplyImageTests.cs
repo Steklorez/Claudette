@@ -118,7 +118,7 @@ public class ReplyImageTests
         await image.LoadCommand.ExecuteAsync(null);
 
         Assert.Equal(ReplyImageState.Failed, image.State);
-        Assert.Equal("Couldn't load it: example.com answered 404 Not Found.", image.Caption);
+        Assert.Equal("example.com answered 404 Not Found.", image.Caption);
         http.OnBytes(Url, Png);
         Assert.True(image.LoadCommand.CanExecute(null));
         await image.LoadCommand.ExecuteAsync(null);

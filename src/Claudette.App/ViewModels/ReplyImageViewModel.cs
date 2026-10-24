@@ -64,7 +64,7 @@ public sealed partial class ReplyImageViewModel(string address, string altText) 
         ReplyImageState.Waiting when Source is { } file => $"Image at {file.Origin}, outside the tab's folder.",
         ReplyImageState.Waiting => "",
         ReplyImageState.Loading => "Loading…",
-        ReplyImageState.Failed => $"Couldn't load it: {Problem}",
+        ReplyImageState.Failed => Problem ?? "Couldn't load it.",
         _ => Problem ?? "",
     };
 

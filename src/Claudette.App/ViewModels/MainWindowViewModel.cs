@@ -183,7 +183,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             var located = await services.Locator.LocateAsync(null);
             return located.IsUsable
                 ? result
-                : new ClaudeInstallResult(false, $"The installer finished, but Claudette still can't use Claude Code: {located.Detail} Restart Claudette, or choose Choose claude… and pick it.");
+                : new ClaudeInstallResult(false, $"The installer finished, but Claudette still can't use Claude Code: {located.Detail} Restart Claudette, or use Choose claude… to point Claudette at the new claude.");
         }
         catch (Exception ex)
         {

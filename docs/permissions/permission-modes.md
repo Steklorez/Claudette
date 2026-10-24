@@ -19,7 +19,7 @@ The mode is on the left of the [composer bar](../composer/the-composer-bar.md), 
 | **Accept edits** | Edit files without asking; still ask before commands. |
 | **Plan** | Look around and plan; don't change anything. |
 | **Auto** | Don't ask; a safety check reviews actions and blocks risky ones. |
-| **Bypass permissions** | Never ask. Claude Code's own deny rules still apply. |
+| **Bypass permissions** | Skip permission prompts; Claude Code's own deny and ask rules still apply. |
 
 Picking a mode changes it for this session only. The picker always shows the mode Claude Code reports, including changes Claude Code makes itself, such as leaving Plan mode when you [approve a plan](approving-a-plan.md).
 
@@ -32,7 +32,7 @@ Auto is in the picker only while the tab's model supports it (Claude Code leaves
 Choosing it asks first, in a **Bypass permissions?** box: *For the rest of this session, Claude will run commands and change files without asking.* Choose **Cancel** or **Bypass permissions**. While a tab is in this mode it's hard to miss: a red border on its row and its composer, the mode's name in red, and a line above the composer saying Claude won't ask before running commands or changing files.
 
 {: .note }
-Claude Code only lets a session switch into Bypass permissions when it was started in that mode. If the tab wasn't, the switch is refused and a note in the conversation says how to fix it: set the mode in the tab's **Tab settings…**, or Settings → Tabs, and open the tab again.
+Claude Code only lets a session switch into Bypass permissions when it was started in that mode. If the tab wasn't, the switch is refused and a note in the conversation says how to fix it: set the mode in the tab's **Tab settings…**, or Settings → Tabs, then restart the tab.
 
 ## The mode a tab starts in
 

@@ -98,7 +98,7 @@ public class CredentialStoreTests
     [Fact]
     public async Task An_unavailable_store_reads_nothing_and_refuses_to_save()
     {
-        var store = new UnavailableCredentialStore("Secret Service", SecretToolCredentialStore.MissingReason);
+        var store = new UnavailableCredentialStore("the Secret Service", SecretToolCredentialStore.MissingReason);
 
         Assert.Null(await store.ReadAsync(Key, TestContext.Current.CancellationToken));
         await Assert.ThrowsAsync<CredentialStoreException>(() => store.WriteAsync(Key, "label", "s3cret", TestContext.Current.CancellationToken));

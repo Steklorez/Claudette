@@ -327,13 +327,13 @@ public sealed class GodotProvider : IProjectType
         string? problem = null;
         if (godot is null)
         {
-            problem = "Godot wasn't found. Set its path in Settings → Project tools → Godot, or choose it in this menu.";
+            problem = "Godot wasn't found. Set its path in Settings → Project tools → Godot → Godot executable, or choose it in this menu.";
         }
         else if (project.IsCSharp && !GodotExecutables.IsDotNetBuild(godot))
         {
             problem = $"This is a C# project, but {godot} isn't the .NET build of Godot, which C# needs. Get the .NET build (its name has \"mono\" in it), or choose it in this menu.";
         }
-        var noGodot = godot is null ? "Godot wasn't found: choose it in this menu, or set it in Settings." : null;
+        var noGodot = godot is null ? problem : null;
 
         var actions = new List<ProjectAction>
         {
@@ -382,11 +382,11 @@ public sealed class GodotProvider : IProjectType
         });
 
         var running = context.Processes?.Find(EditorProcessNames);
-        actions.Add(new ProjectAction("kill-editors", "Kill all Godot editors…", ProjectActionKind.Destructive)
+        actions.Add(new ProjectAction("kill-editors", "End all Godot editors…", ProjectActionKind.Destructive)
         {
             Description = "Ends every running Godot, with whatever each started.",
             Destructive = new KillProcesses(EditorProcessNames, "Godot editor", p => SystemProcessNames.FolderAfter(p.CommandLine, "--path")),
-            DisabledReason = running is { Count: 0 } ? "No Godot editor is running" : null,
+            DisabledReason = running is { Count: 0 } ? "No Godot editor is running." : null,
         });
 
         var details = new List<ProjectDetail>

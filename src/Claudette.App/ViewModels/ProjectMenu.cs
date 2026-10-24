@@ -198,6 +198,6 @@ internal static class ProjectMenu
     {
         ToolOS.Windows => "Show in Explorer",
         ToolOS.MacOS => "Show in Finder",
-        _ => "Show in File Manager",
+        _ => "Show in file manager",
     };
 }

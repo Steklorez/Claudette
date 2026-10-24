@@ -76,7 +76,7 @@ public sealed partial class ClaudeInstaller(
         if (result.ExitCode != 0)
         {
             var detail = LastLines(result.StandardError) ?? LastLines(result.StandardOutput) ?? "";
-            return new ClaudeInstallResult(false, $"'{CommandText}' failed (exit {result.ExitCode}). {detail}".Trim());
+            return new ClaudeInstallResult(false, $"'{CommandText}' failed (exit code {result.ExitCode}). {detail}".Trim());
         }
         return new ClaudeInstallResult(true, "Claude Code is installed.");
     }

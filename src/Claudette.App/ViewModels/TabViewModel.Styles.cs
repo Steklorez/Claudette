@@ -44,7 +44,7 @@ public sealed partial class TabViewModel
         }
         catch (Exception ex)
         {
-            _conversation.AddNote($"Couldn't turn ultracode {(on ? "on" : "off")}: {ex.Message}", NoteKind.Error);
+            _conversation.AddNote($"Couldn't turn Ultracode {(on ? "on" : "off")}: {ex.Message}", NoteKind.Error);
             return false;
         }
     }
@@ -80,7 +80,7 @@ public sealed partial class TabViewModel
         {
             await session.SetOutputStyleAsync(choice.Name);
             UpdateOutputStyles(session.Initialization, choice.Name);
-            _conversation.AddNote($"Output style: {choice.Label}. Kept in this folder's .claude/settings.local.json, from the next reply.");
+            _conversation.AddNote($"Output style: {choice.Label}, from the next reply. It's kept in this folder's .claude/settings.local.json.");
         }
         catch (Exception ex)
         {

@@ -144,7 +144,7 @@ public class ChangedFilesTrackingTests
         EmitEditTo(h, 1, "e2", path, "b\n", "b\n", "b\nc\n");
 
         // Alpha's change is its own, a to b; Beta's line came after it.
-        await TabTestHarness.Eventually(() => alpha.ChangedFiles.Files is [{ Stats: "+1 −1", Since: "Changed since: +1 −0 by Beta" }], "Beta's line, since");
+        await TabTestHarness.Eventually(() => alpha.ChangedFiles.Files is [{ Stats: "+1 −1", Since: "Changed since: +1 −0, by Claude in Beta" }], "Beta's line, since");
         h.Shell.SelectedTab = beta;
         await TabTestHarness.Eventually(() => beta.ChangedFiles.Files is [{ Stats: "+1 −0", Since: null }], "Beta's own change");
     }
@@ -172,7 +172,7 @@ public class ChangedFilesTrackingTests
         view.ShowLaterChanges = true;
         await TabTestHarness.Eventually(() => !view.IsLoading && view.Stats == "+2 −1", "the file now");
         Assert.True(view.CanRevert);
-        Assert.Contains("with what changed since", view.BeforeLabel, StringComparison.Ordinal);
+        Assert.Contains("with the changes since", view.BeforeLabel, StringComparison.Ordinal);
     }
 
     [Fact]

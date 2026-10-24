@@ -22,7 +22,7 @@ Each mark sits where its card is in the conversation's height. Hover one to see 
 ## From message to message
 - `F3` goes to the previous message, and `F4` to the next. They count your messages and Claude's replies, starting from the one at the top of the view. One the top of the view cuts off counts as the previous, so going back begins at its own top.
 - `Ctrl/Cmd+F3` goes to the first message, and `Ctrl/Cmd+F4` to the latest, as **Jump to latest** does.
-- The [command palette](../tabs/the-command-palette.md) has **Go to the first message** and **Go to the latest**.
+- The [command palette](../tabs/the-command-palette.md) has **Go to the first message** and **Go to the latest message**.
 
 You can change all four in Settings → Keyboard ([Keyboard](../settings/keyboard.md)).
 
@@ -57,8 +57,8 @@ To search across sessions, use [History](../history/history.md).
 | Close find | `Esc` |
 | Previous message in the conversation | `F3` |
 | Next message in the conversation | `F4` |
-| First message in the conversation | `Ctrl/Cmd+F3` |
-| Latest in the conversation | `Ctrl/Cmd+F4` |
+| Go to the first message | `Ctrl/Cmd+F3` |
+| Go to the latest message | `Ctrl/Cmd+F4` |
 
 [Keyboard shortcuts](../reference/keyboard-shortcuts.md) lists them all.
 

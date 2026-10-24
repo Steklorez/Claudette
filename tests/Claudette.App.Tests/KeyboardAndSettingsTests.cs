@@ -90,7 +90,7 @@ public class KeyboardAndSettingsTests
         settings.RecordShortcut(Chord("Primary+W"));
 
         Assert.True(settings.IsRecordingShortcut);
-        Assert.Equal($"{Chord("Primary+W").Display(Shortcuts.IsMac)} is already used by Close tab.", newTab.Error);
+        Assert.Equal($"{Chord("Primary+W").Display(Shortcuts.IsMac)} is already used by \"Close tab\".", newTab.Error);
         Assert.Empty(h.Services.Settings.Keyboard.Bindings);
     }
 
@@ -103,7 +103,7 @@ public class KeyboardAndSettingsTests
 
         settings.Keyboard.StartRecordingCommand.Execute(history);
         settings.RecordShortcut(Chord("Shift+H"));
-        Assert.Equal("Add Ctrl, Alt or Cmd, so typing still works.", history.Error);
+        Assert.Equal(Shortcuts.IsMac ? "Add Cmd, Ctrl or Option, so typing still works." : "Add Ctrl or Alt, so typing still works.", history.Error);
 
         settings.RecordShortcut(Chord("F2"));
         Assert.Equal("F2", h.Services.Settings.Keyboard.Bindings[KeyboardShortcuts.History]);

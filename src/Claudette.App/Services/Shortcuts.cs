@@ -111,12 +111,19 @@ public sealed class ShortcutTips(AppSettings settings) : ObservableObject
 
     public string Suffixes => Tip("Quick suffixes", KeyboardShortcuts.Suffixes);
 
+    public string Stop => Tip("Stop", KeyboardShortcuts.Stop);
+
     public string Stash => Text(KeyboardShortcuts.Stash) is { } shortcut
         ? $"Messages put aside with Stash ({shortcut}), which every tab shares"
         : "Messages put aside with Stash, which every tab shares";
 
     /// <summary>The Project Files tab's <b>Find file</b> (DESIGN.md §18, "Project files").</summary>
     public string GoToFile => Tip("Find a file by name", KeyboardShortcuts.GoToFile);
+
+    /// <summary>The peek's arrows: in a Files tab, the previous and next message keys go from change to change.</summary>
+    public string PreviousChange => Tip("Previous change", KeyboardShortcuts.PreviousMessage);
+
+    public string NextChange => Tip("Next change", KeyboardShortcuts.NextMessage);
 
     public string CollapseSidebar => Tip("Collapse the sidebar", KeyboardShortcuts.ToggleSidebar);
 

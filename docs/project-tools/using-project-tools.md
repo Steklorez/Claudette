@@ -26,9 +26,9 @@ Click the row to open its menu. From the top, it has:
 - The project's choice, such as Unreal's **Editor configuration**.
 - The project's fix, such as **Choose engine folder…**.
 - Your own actions, then your **Links**. See [Actions and links](actions-and-links.md).
-- **Show in Explorer** (**Show in Finder** on macOS, **Show in File Manager** on Linux), which opens the project's folder, **Show output…**, which shows the newest run's log once an action has run, **Add an action…**, **Add a link…** and **Refresh**.
+- **Show in Explorer** (**Show in Finder** on macOS, **Show in file manager** on Linux), which opens the project's folder, **Show output…**, which shows the newest run's log once an action has run, **Add an action…**, **Add a link…** and **Refresh**.
 
-An item that's greyed out says why in its tooltip, for example "Generate project files first". The menu looks at the project's files again each time it opens, so it's current. **Refresh** does the same on demand.
+An item that's greyed out says why in its tooltip, for example "Generate project files first." The menu looks at the project's files again each time it opens, so it's current. **Refresh** does the same on demand.
 
 ## How a project is found
 
@@ -112,7 +112,7 @@ The **Tools** page shows this machine's choices for the tab's project, the same 
 - The project's own choice: Unreal's editor configuration, or Unity's code optimization.
 - What you picked with **Choose…**: Unreal's engine folder, the Unity editor or the Godot executable. It shows what's in use now, and whether you chose it or Claudette found it. **Clear** forgets your pick so Claudette looks again.
 
-At its foot, **Open Unreal Engine** (or Unity, or Godot) shows the defaults on that engine's page in Project tools. Without a project, the page says "No Unreal, Unity or Godot project in this folder" and links to **All tools**. These choices are remembered on this machine, keyed by the project, and don't sync. No **Reset to defaults** in Project tools touches them.
+At its foot, **Open Unreal Engine** (or Unity, or Godot) shows the defaults on that engine's page in Project tools. Without a project, the page says "No project Claudette knows in this folder" and links to **All tools**. These choices are remembered on this machine, keyed by the project, and don't sync. No **Reset to defaults** in Project tools touches them.
 
 ## See also
 

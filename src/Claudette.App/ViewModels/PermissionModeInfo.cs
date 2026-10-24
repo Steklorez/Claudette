@@ -26,7 +26,7 @@ public static class PermissionModeInfo
         new("acceptEdits", "Accept edits", "Edit files without asking; still ask before commands"),
         new("plan", "Plan", "Look around and plan; don't change anything"),
         new(Auto, "Auto", "Don't ask; a safety check reviews actions and blocks risky ones"),
-        new(Bypass, "Bypass permissions", "Never ask. Claude Code's own deny rules still apply"),
+        new(Bypass, "Bypass permissions", "Skip permission prompts; Claude Code's own deny and ask rules still apply"),
     ];
 
     /// <summary>"Accept edits" for <c>acceptEdits</c>; modes Claudette doesn't offer (such as <c>dontAsk</c>) keep their name.</summary>

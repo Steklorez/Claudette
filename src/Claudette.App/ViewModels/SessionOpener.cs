@@ -23,6 +23,9 @@ internal interface ISessionOpenerHost
 
     /// <summary>A confirmation with a second choice besides the main one.</summary>
     void Confirm(string title, string message, string confirmText, Func<Task> onConfirm, string secondaryText, Func<Task> onSecondary);
+
+    /// <summary>A notice over the whole window, with OK alone.</summary>
+    void Notify(string title, string message);
 }
 
 /// <summary>
@@ -149,7 +152,7 @@ internal sealed class SessionOpener
         }
         catch (Exception ex)
         {
-            _host.Confirm("Couldn't open the session", ex.Message, "OK", () => Task.CompletedTask);
+            _host.Notify("Couldn't open the session", ex.Message);
             return;
         }
         if (takeOver)

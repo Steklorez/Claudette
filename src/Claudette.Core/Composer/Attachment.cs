@@ -95,7 +95,7 @@ public static class Attachments
             }
             if (Array.IndexOf(head, (byte)0) >= 0 && !ReadableBinaryExtensions.Contains(Path.GetExtension(path)))
             {
-                return Attachment.Failed(name, $"Claude can't read {name}. Attach text files, PDFs, folders, or {SupportedImagesText} images.");
+                return Attachment.Failed(name, $"Claude can't read {name}. Attach text files, PDFs, folders or images ({SupportedImagesText}).");
             }
             return new Attachment { Name = name, Mention = ComposerTokens.Mention(MentionPath(path, workingFolder)) };
         }

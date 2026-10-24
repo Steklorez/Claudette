@@ -93,21 +93,21 @@ public static class ConversationExport
                     }
                     break;
                 case ToolUseItem tool:
-                    Block($"- **{tool.Name}** {Inline(tool.FullSummary)}{Result(tool)}");
+                    Block($"- **{tool.Name}**{Inline(tool.FullSummary)}{Result(tool)}");
                     if (tool.IsBash && tool.HasOutput)
                     {
                         Block(Fence(Cut(tool.Output!), "text"));
                     }
                     break;
                 case PromptItem prompt when prompt.HasOutcome:
-                    Block($"*{PromptTitle(prompt)}: {OneLine(prompt.Outcome)}*");
+                    Block($"*{PromptOutcome(prompt)}*");
                     if (prompt is PlanItem { HasPlan: true } plan)
                     {
                         Block(plan.Plan.ToString());
                     }
                     break;
                 case HookRunItem { IsFailed: true } hook:
-                    Block($"*{hook.Title} {hook.StatusText}*");
+                    Block($"*{hook.Title} · {hook.StatusText}*");
                     break;
                 case NoteItem { IsError: true } note:
                     Block($"*{OneLine(note.Text)}*");
@@ -163,14 +163,14 @@ public static class ConversationExport
                     html.AppendLine("</div>");
                     break;
                 case PromptItem prompt when prompt.HasOutcome:
-                    html.Append("<p class=\"note\">").Append(Encode($"{PromptTitle(prompt)}: {OneLine(prompt.Outcome)}")).AppendLine("</p>");
+                    html.Append("<p class=\"note\">").Append(Encode(PromptOutcome(prompt))).AppendLine("</p>");
                     if (prompt is PlanItem { HasPlan: true } plan)
                     {
                         html.Append("<div class=\"md plan\">").Append(Encode(plan.Plan.ToString().TrimEnd())).AppendLine("</div>");
                     }
                     break;
                 case HookRunItem { IsFailed: true } hook:
-                    html.Append("<p class=\"note error\">").Append(Encode($"{hook.Title} {hook.StatusText}")).AppendLine("</p>");
+                    html.Append("<p class=\"note error\">").Append(Encode($"{hook.Title} · {hook.StatusText}")).AppendLine("</p>");
                     break;
                 case NoteItem { IsError: true } note:
                     html.Append("<p class=\"note error\">").Append(Encode(note.Text)).AppendLine("</p>");
@@ -188,6 +188,13 @@ public static class ConversationExport
     /// <summary>"Started task #3: Run the migration" (DESIGN.md §5, "Export").</summary>
     private static string StartedTask(TaskStartItem start) =>
         start.Todo.NumberText.Length > 0 ? $"Started task {start.Todo.NumberText}: {start.Todo.Content}" : $"Started task: {start.Todo.Content}";
+
+    /// <summary>"Plan: Approved", or after a question, "Allow this command? Allowed".</summary>
+    private static string PromptOutcome(PromptItem prompt)
+    {
+        var title = PromptTitle(prompt);
+        return $"{title}{(title.EndsWith('?') ? " " : ": ")}{OneLine(prompt.Outcome)}";
+    }
 
     private static string PromptTitle(PromptItem prompt) => prompt switch
     {
@@ -208,7 +215,8 @@ public static class ConversationExport
 
     private static string OneLine(string text) => string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
-    private static string Inline(string text) => $"`{OneLine(text).Replace("`", "'", StringComparison.Ordinal)}`";
+    /// <summary>A space and the text as code, after a tool's name; nothing when there's no text, as for a Claude Docs call.</summary>
+    private static string Inline(string text) => OneLine(text) is { Length: > 0 } line ? $" `{line.Replace("`", "'", StringComparison.Ordinal)}`" : "";
 
     private static string Cut(string output) => output.Length > OutputLimit ? output[..OutputLimit].TrimEnd() + "\n…" : output.TrimEnd();
 

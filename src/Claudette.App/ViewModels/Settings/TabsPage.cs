@@ -110,7 +110,7 @@ public sealed partial class TabsPage : SettingsPage
         [
             Setting("processes.showMonitor", "Show the process monitor", s => s.Processes.ShowMonitor, (s, v) => s.Processes.ShowMonitor = v,
                 "The processes each tab starts, with their CPU and memory.",
-                "Test runs, dev servers, builds and MCP servers, in the message box's bar and on the side panel. When a tab closes, the processes it started are stopped too.",
+                "Test runs, dev servers, builds and MCP servers, in the message box's bar and on the side panel. Closing a tab stops the processes it started, unless you choose to leave them running.",
                 ["processes", "cpu", "memory"], TabOverrideKeys.ProcessMonitor),
             Setting("processes.refreshSeconds", "Refresh every (seconds)", s => s.Processes.RefreshSeconds, (s, v) => s.Processes.RefreshSeconds = v,
                 keywords: ["process monitor", "interval"]),
@@ -189,10 +189,10 @@ public sealed partial class TabsPage : SettingsPage
             levels = [.. FallbackEffortLevels];
         }
         var choices = new List<Choice> { new(null, "The model's default") };
-        choices.AddRange(levels.Select(l => new Choice(l, l)));
+        choices.AddRange(levels.Select(l => new Choice(l, Formats.Capitalize(l))));
         if (Settings.NewTabs.DefaultEffort is { } current && choices.All(c => c.Value != current))
         {
-            choices.Add(new Choice(current, current));
+            choices.Add(new Choice(current, Formats.Capitalize(current)));
         }
         return choices;
     }

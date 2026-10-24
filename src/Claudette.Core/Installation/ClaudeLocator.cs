@@ -64,7 +64,7 @@ public sealed partial class ClaudeLocator(
         {
             return OperatingSystem.IsWindows() && FileProbe.FindIn(searchPath, "claude.cmd") is { } cmd
                 ? new ClaudeLocateResult(null, ClaudeInstallProblem.UnsupportedLauncher,
-                    "Claude Code was installed with npm, which Claudette can't start directly yet. Install the native build, or set the path to claude.exe in Settings.", cmd)
+                    "Claude Code was installed with npm, which Claudette can't start directly yet. Use Install Claude Code to install the native build, or Choose claude… to pick a claude.exe.", cmd)
                 : new ClaudeLocateResult(null, ClaudeInstallProblem.NotFound, "Claude Code wasn't found.", DesktopInstalled: desktop?.IsInstalled(searchPath) == true);
         }
         // Never run, not even for its version: the app itself would open a window. Checked before the file is, since the
@@ -97,7 +97,9 @@ public sealed partial class ClaudeLocator(
         if (!TryParseVersion(result.StandardOutput, out var version))
         {
             return new ClaudeLocateResult(null, ClaudeInstallProblem.VersionUnreadable,
-                $"Couldn't read the version from '{result.StandardOutput.Trim()}'.", path);
+                result.StandardOutput.Trim() is { Length: > 0 } output
+                    ? $"Couldn't read the version from '{output}'."
+                    : $"'{path} --version' printed no version.", path);
         }
         var install = new ClaudeInstall(path, version);
         return version < MinimumVersion

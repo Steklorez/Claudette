@@ -14,5 +14,5 @@
   "●"
   "<1s"
   "Check the tests"
-  "Explore · Grep auth  in tests/"
+  "Explore · Grep auth in tests/"
   [button] Stop subagent

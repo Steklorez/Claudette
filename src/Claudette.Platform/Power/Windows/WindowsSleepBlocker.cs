@@ -49,7 +49,7 @@ public sealed partial class WindowsSleepBlocker : ISleepBlocker
 
     public string Describe() =>
         _error is { } error ? $"Windows refused to keep the computer awake ({error})."
-        : _blocking ? "Keeping the computer awake (SetThreadExecutionState). The display can still sleep."
+        : _blocking ? "Keeping the computer awake (SetThreadExecutionState). The screen can still turn off."
         : "Not keeping the computer awake now.";
 
     public void Dispose()

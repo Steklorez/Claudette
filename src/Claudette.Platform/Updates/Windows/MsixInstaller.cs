@@ -81,7 +81,7 @@ public sealed class MsixInstaller(TimeProvider timeProvider, ILogger logger) : I
         if (status != Deployment.AsyncCompleted)
         {
             Deployment.UnregisterApplicationRestart();
-            throw new AppInstallException(status == Deployment.AsyncCanceled ? "The update was canceled." : MsixPackage.DescribeError(error), canOpenPackage: true);
+            throw new AppInstallException(status == Deployment.AsyncCanceled ? "The update was cancelled." : MsixPackage.DescribeError(error), canOpenPackage: true);
         }
 
         // Installed without closing Claudette (no running files were in use): start the new version ourselves.

@@ -28,7 +28,7 @@ internal sealed class FakeClaudeInstaller : IClaudeInstaller
         }
         if (Fails)
         {
-            return Task.FromResult(new ClaudeInstallResult(false, $"'{CommandText}' failed (exit 1). Failed to get latest version"));
+            return Task.FromResult(new ClaudeInstallResult(false, $"'{CommandText}' failed (exit code 1). Failed to get latest version"));
         }
         OnInstall?.Invoke();
         return Task.FromResult(new ClaudeInstallResult(true, "Claude Code is installed."));

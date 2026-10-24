@@ -14,7 +14,7 @@ History lists your past sessions, grouped by project, so you can pick one up aga
 ## Opening History
 
 - Press `Ctrl/Cmd+Shift+H`.
-- Choose **Open from History** in the command palette, or **Open from History…** in the new tab picker.
+- Choose **Open from History…** in the command palette or the new tab picker.
 - Choose **History for this folder** in a folder group's menu. History opens on that project's sessions only.
 
 **Close**, `Esc` or a click outside History closes it without opening anything.
@@ -58,7 +58,7 @@ Claude Code deletes its own transcripts after 30 days by default, and History ca
 
 | Action | Shortcut |
 |---|---|
-| Open History | `Ctrl/Cmd+Shift+H` |
+| Open from History | `Ctrl/Cmd+Shift+H` |
 | Close History | `Esc` |
 | Search Claude's replies too | `Enter` in the search box |
 

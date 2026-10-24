@@ -28,7 +28,8 @@ public sealed record TokenRow(string Model, string Input, string Output, string 
 /// <param name="Text">"Context 42%".</param>
 /// <param name="Detail">"84,000 of 200,000 tokens · auto-compacts at 160,000".</param>
 /// <param name="IsHigh">Near the point where Claude Code compacts by itself, or past 80% without auto-compact.</param>
-public sealed record ContextIndicator(string Text, string Detail, bool IsHigh, double Percent)
+/// <param name="AutoCompacts">Claude Code said where it compacts by itself; false when it's off, or not known.</param>
+public sealed record ContextIndicator(string Text, string Detail, bool IsHigh, double Percent, bool AutoCompacts)
 {
     /// <summary>How close to the auto-compact point counts as near it.</summary>
     public const double NearAutoCompact = 0.9;
@@ -43,7 +44,7 @@ public sealed record ContextIndicator(string Text, string Detail, bool IsHigh, d
             ? $"about {tokens:N0} of {window:N0} tokens, estimated from the last call{compacts}"
             : $"{tokens:N0} of {window:N0} tokens{compacts}";
         var high = autoCompactAt is { } limit ? tokens >= limit * NearAutoCompact : percent >= HighPercent;
-        return new ContextIndicator($"Context {percent:0}%", detail, high, percent);
+        return new ContextIndicator($"Context {percent:0}%", detail, high, percent, autoCompactAt is not null);
     }
 }
 
@@ -97,6 +98,10 @@ public sealed partial class ContextViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(Level))]
     public partial bool IsHigh { get; set; }
 
+    /// <summary>What the breakdown says while <see cref="IsHigh"/>: that Claude Code will compact by itself, only when it will.</summary>
+    [ObservableProperty]
+    public partial string HighWarning { get; set; } = "";
+
     /// <summary>How full the context window is, 0–100. Null until the tab has context data (it hasn't started yet).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Level), nameof(IsCritical), nameof(Sweep), nameof(ShowRing))]
@@ -143,6 +148,9 @@ public sealed partial class ContextViewModel : ObservableObject
         Text = indicator.Text;
         Detail = indicator.Detail;
         IsHigh = indicator.IsHigh;
+        HighWarning = indicator.AutoCompacts
+            ? "Nearly full. Claude Code will compact the conversation soon on its own."
+            : "Nearly full. Compact now to free up context.";
         Percent = indicator.Percent;
         Breakdown = breakdown.KeepingExpanded(Breakdown);
     }

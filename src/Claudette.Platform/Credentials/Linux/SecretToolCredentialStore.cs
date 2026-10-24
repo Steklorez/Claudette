@@ -18,9 +18,9 @@ public sealed class SecretToolCredentialStore(string secretTool, IProcessLaunche
 
     public const string Application = "claudette";
 
-    public const string MissingReason = "Install secret-tool (the libsecret-tools package) to store passwords in the Secret Service.";
+    public const string MissingReason = "Install secret-tool (the libsecret-tools package) to keep passwords and API keys in the Secret Service.";
 
-    public string Name => "Secret Service";
+    public string Name => "the Secret Service";
 
     public bool IsAvailable => true;
 
@@ -38,7 +38,7 @@ public sealed class SecretToolCredentialStore(string secretTool, IProcessLaunche
         if (result.ExitCode != 0)
         {
             // Not found is exit 1 with nothing on standard error.
-            return result.StandardError.Trim() is { Length: > 0 } error ? throw new CredentialStoreException($"secret-tool couldn't read the password: {error}") : null;
+            return result.StandardError.Trim() is { Length: > 0 } error ? throw new CredentialStoreException($"secret-tool couldn't read it: {error}") : null;
         }
         // The secret is printed as stored; a password is one line.
         return result.StandardOutput.Split('\n')[0].TrimEnd('\r');
@@ -49,7 +49,7 @@ public sealed class SecretToolCredentialStore(string secretTool, IProcessLaunche
         var result = await RunAsync(["store", $"--label={label}", .. Attributes(key)], secret, cancellationToken).ConfigureAwait(false);
         if (result.ExitCode != 0)
         {
-            throw new CredentialStoreException($"secret-tool couldn't save the password: {Detail(result)}");
+            throw new CredentialStoreException($"secret-tool couldn't save it: {Detail(result)}");
         }
     }
 
@@ -59,7 +59,7 @@ public sealed class SecretToolCredentialStore(string secretTool, IProcessLaunche
         var result = await RunAsync(["clear", .. Attributes(key)], null, cancellationToken).ConfigureAwait(false);
         if (result.ExitCode != 0 && result.StandardError.Trim().Length > 0)
         {
-            throw new CredentialStoreException($"secret-tool couldn't remove the password: {Detail(result)}");
+            throw new CredentialStoreException($"secret-tool couldn't remove it: {Detail(result)}");
         }
         return existed;
     }

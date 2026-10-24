@@ -43,13 +43,13 @@ The side panel has pages along its top, and each tab has its own. You can drag t
 
 | Page | What it shows | Where to read more |
 |---|---|---|
-| **Changed Files** | The files this tab changed, with their diffs | [Changed files](../changes/changed-files.md) |
+| **Changed files** | The files this tab changed, with their diffs | [Changed files](../changes/changed-files.md) |
 | **Agents** | Claude's subagents as a tree | [The agent map](../plans/the-agent-map.md) |
 | **Project** | The project's tools, actions and their output, when the folder has any | [Project tools](../project-tools/using-project-tools.md) |
 | **Processes** | The tab's processes, when the monitor is on | [Processes](../tabs/processes.md) |
 | **Tasks** | Claude's plan and task list, while it keeps one | [The Tasks page](../plans/the-tasks-page.md) |
 | **MCP** | The session's MCP servers, when it has any | [MCP servers](../tabs/mcp-servers.md) |
-| **Scratch Pad** | Your notes for the project | [The scratch pad](../conversation/the-scratch-pad.md) |
+| **Scratch pad** | Your notes for the project | [The scratch pad](../conversation/the-scratch-pad.md) |
 
 [The side panel](../tabs/the-side-panel.md) covers resizing, reordering and the **⋯** menu for pages that don't fit.
 

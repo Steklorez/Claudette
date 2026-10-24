@@ -215,7 +215,7 @@ public sealed class UnityProviderTests : IDisposable
         HubEditor(ToolOS.Linux);
         var root = Project();
         var before = Describe(root, Context());
-        Assert.Equal("Regenerate the C# solution first", Action(before, "open-solution").DisabledReason);
+        Assert.Equal("Regenerate the C# solution first.", Action(before, "open-solution").DisabledReason);
         Assert.False(Action(before, "open-editor-log").IsEnabled);
         Assert.False(Action(before, "open-player-log").IsEnabled);
 
@@ -310,7 +310,7 @@ public sealed class UnityProviderTests : IDisposable
         HubEditor(ToolOS.Linux);
         var processes = new FakeSystemProcesses();
         var root = Project();
-        Assert.Equal("No Unity editor is running", Action(Describe(root, Context(processes: processes)), "kill-editors").DisabledReason);
+        Assert.Equal("No Unity editor is running.", Action(Describe(root, Context(processes: processes)), "kill-editors").DisabledReason);
 
         processes.Running.Add(new SystemProcess(1, "Unity Hub", "Unity Hub"));
         processes.Running.Add(new SystemProcess(2, "UnityShaderCompiler", "UnityShaderCompiler"));

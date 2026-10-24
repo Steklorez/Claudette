@@ -29,7 +29,7 @@ public static class CredentialStores
             if (OperatingSystem.IsLinux())
             {
                 return SecretToolCredentialStore.TryCreate(launcher, timeProvider)
-                    ?? (ICredentialStore)new UnavailableCredentialStore("Secret Service", SecretToolCredentialStore.MissingReason);
+                    ?? (ICredentialStore)new UnavailableCredentialStore("the Secret Service", SecretToolCredentialStore.MissingReason);
             }
         }
         catch (Exception ex)

@@ -43,10 +43,12 @@ public sealed partial class SuffixChip(QuickSuffix suffix, bool isKept) : Observ
     public QuickSuffix Suffix { get; } = suffix;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Label))]
+    [NotifyPropertyChangedFor(nameof(Label), nameof(KeepMenuText))]
     public partial bool IsKept { get; set; } = isKept;
 
     public string Label => IsKept ? $"{Suffix.Label} (kept)" : Suffix.Label;
+
+    public string KeepMenuText => IsKept ? "Stop keeping on this tab" : "Keep on this tab";
 }
 
 /// <summary>An entry of the quick suffix menu (DESIGN.md §5).</summary>
@@ -54,6 +56,12 @@ public sealed partial class SuffixChip(QuickSuffix suffix, bool isKept) : Observ
 /// <param name="Shortcut">The suffix's own shortcut, as it reads on this OS.</param>
 /// <param name="IsOn">The suffix is on the message, as a chip: the menu shows a check mark, and picking it takes it off.</param>
 public sealed record SuffixMenuItem(QuickSuffix Suffix, int? Number, string? Shortcut, bool IsOn);
+
+/// <summary>An effort level of the composer's menu: Claude Code's value, and how the menu writes it.</summary>
+public sealed record EffortChoice(string Value)
+{
+    public string Label => Formats.Capitalize(Value);
+}
 
 /// <summary>One row of the tab info card (DESIGN.md §4).</summary>
 /// <param name="CanCopy">The tab info's card has <b>Copy</b> for it: an ID or name to paste elsewhere.</param>
@@ -105,6 +113,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         RemoteControl = new RemoteControlViewModel(services, this);
         Perforce = new PerforceViewModel(services, this);
         Context = new ContextViewModel(services, this);
+        Context.PropertyChanged += OnContextChanged;
         WatchForMascot();
         Agents = new AgentMap(services.Time, ModelDisplayName) { OpensInSidebar = services.Settings.Appearance.ShowSubagents == SubagentDisplay.InSidebar };
         Agents.Changed += OnAgentsChanged;
@@ -131,6 +140,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             countdown => _services.Dispatcher.Post(() => CheckInCountdown = countdown));
         _autoContinue = CreateAutoContinue();
         Status = TabStatus.NotStarted;
+        ShowStartingModel();
         _restoredTranscript = !isRestored;
         // The suffix menu checks the suffixes on the message.
         Chips.CollectionChanged += (_, _) => OnPropertyChanged(nameof(SuffixMenu));
@@ -289,7 +299,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>What pinning does, for the menu item's tip. True whichever way Also restore unpinned tabs is set.</summary>
     public static string PinMenuTip =>
         "A pinned tab comes back every time Claudette starts, sits at the start of its group, and stays open on Close group and Close other tabs. "
-        + "Unpinned tabs come back only while Also restore unpinned tabs is on in Settings → General.";
+        + "Unpinned tabs come back only while Settings → General → Also restore unpinned tabs when Claudette starts is on.";
 
     [RelayCommand]
     private void TogglePin()
@@ -393,7 +403,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             {
                 rows.Add(new InfoRow("Sync size", $"{syncSize} in the session library"));
             }
-            rows.Add(new InfoRow("Tokens", $"{Context.TokensShort} · {State.Tokens.Turns} turns"));
+            rows.Add(new InfoRow("Tokens", $"{Context.TokensShort} · {TabBurnRow.TurnsText(State.Tokens.Turns)}"));
             if (RunningVersion is { } running)
             {
                 // DESIGN.md §12: open tabs keep the version they started with.
@@ -548,6 +558,15 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     public string ModelBadge => $"{ShortModel(ModelName)} · {(Effort is null ? "Default" : Formats.Capitalize(Effort))}";
 
+    /// <summary>Until its claude starts, the row and the info card show the model and effort it will start with.</summary>
+    private void ShowStartingModel()
+    {
+        var defaults = _services.Settings.NewTabs;
+        Effort = State.Overrides.Effort ?? defaults.DefaultEffort;
+        var model = State.Overrides.Model ?? defaults.DefaultModel;
+        ModelName = model is null ? null : _services.State.KnownModels.FirstOrDefault(m => m.Value == model)?.DisplayName ?? model;
+    }
+
     /// <summary>
     /// The second line of the tab's row in the sidebar (DESIGN.md §4): the model and effort, or what needs attention
     /// when the tab is waiting on the user or has failed, or when it continues after a usage limit resets, or the task
@@ -569,7 +588,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         return lastLine ?? $"Claude Code stopped unexpectedly (exit code {exit.ExitCode?.ToString(CultureInfo.InvariantCulture) ?? "unknown"})";
     }
 
-    public IReadOnlyList<string> EffortLevels => CurrentModelInfo?.SupportedEffortLevels ?? [];
+    public IReadOnlyList<EffortChoice> EffortLevels => [.. (CurrentModelInfo?.SupportedEffortLevels ?? []).Select(level => new EffortChoice(level))];
 
     private ModelInfo? CurrentModelInfo => FindModel(_modelId) ?? _session?.Initialization?.Models.FirstOrDefault(m => m.Value == "default");
 
@@ -638,7 +657,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         catch (Exception ex)
         {
             var hint = mode == PermissionModeInfo.Bypass
-                ? " Claude Code only allows this in a session that started in Bypass permissions mode; set that in Tab settings and reopen the tab."
+                ? " Claude Code only allows this in a session that started in Bypass permissions mode; set that in Tab settings, then restart the tab."
                 : "";
             _conversation.AddNote($"Couldn't switch to {PermissionModeInfo.Label(mode)} mode: {ex.Message}.{hint}", NoteKind.Error);
         }
@@ -715,7 +734,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             return;
         }
-        var message = $"Switch to {model.DisplayName}? Switching models resets this tab's cached context. The new model has to re-read the whole conversation, so your next message will use more of your limits.";
+        var message = $"Switching to {model.DisplayName} resets this tab's cached context. The new model has to re-read the whole conversation, so your next message will use more of your limits.";
         if (Effort is { } effort && !model.SupportedEffortLevels.Contains(effort))
         {
             message += $" {model.DisplayName} doesn't support {effort} effort, so effort goes back to the model's default.";
@@ -777,6 +796,17 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>The context indicator and ring, what fills the context window, and the token counts.</summary>
     public ContextViewModel Context { get; }
+
+    /// <summary>The composer bar's context tip: the detail the info card writes in parentheses, as a sentence.</summary>
+    public string? ContextTip => Context.Detail is { } detail ? Formats.Capitalize(detail) : null;
+
+    private void OnContextChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ContextViewModel.Detail))
+        {
+            OnPropertyChanged(nameof(ContextTip));
+        }
+    }
 
     /// <summary>Summarizes the conversation to free context, like <c>/compact</c> in the terminal (DESIGN.md §6).</summary>
     [RelayCommand(CanExecute = nameof(CanCompact))]
@@ -1362,7 +1392,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>What the bar says, counting down each second.</summary>
     public string? CheckInCountdownText => CheckInCountdown is { } countdown
-        ? $"Checking in with Claude in {Math.Max(0, (int)Math.Ceiling((countdown.SendsAt - _services.Time.GetUtcNow()).TotalSeconds))} s."
+        ? $"Checking in with Claude in {Math.Max(0, (int)Math.Ceiling((countdown.SendsAt - _services.Time.GetUtcNow()).TotalSeconds))}s."
         : null;
 
     partial void OnCheckInCountdownChanged(CheckInCountdown? value) => CheckInTicker.Run(value is not null);
@@ -1594,7 +1624,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             Effort = State.Overrides.Effort ?? settings.NewTabs.DefaultEffort;
             PermissionMode = session.PermissionMode;
             _modelId = session.Model ?? State.Overrides.Model;
-            ModelName = ModelDisplayName(_modelId) ?? CurrentModelInfo?.DisplayName;
+            ModelName = ModelDisplayName(_modelId ?? settings.NewTabs.DefaultModel) ?? CurrentModelInfo?.DisplayName;
             OnPropertyChanged(nameof(Models));
             OnPropertyChanged(nameof(EffortLevels));
             OnPropertyChanged(nameof(PermissionModeChoices));
@@ -2004,7 +2034,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _services.Loggers.CreateLogger("Tab").LogError(ex, "Couldn't apply a {Event} event.", sessionEvent.GetType().Name);
                 if (_failedEvents.Add(sessionEvent.GetType().Name))
                 {
-                    _conversation.AddNote($"Claudette couldn't show part of this conversation ({sessionEvent.GetType().Name}: {ex.Message}). The session carries on.", NoteKind.Warning);
+                    _conversation.AddNote($"Claudette couldn't show part of this conversation ({ex.Message}). The session carries on.", NoteKind.Warning);
                 }
             }
         }
@@ -2229,7 +2259,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _services.Notifications.ClearTab(Id, NotificationKind.NeedsInput);
                 if (exited.Exit.ExitCode != 0)
                 {
-                    NotifyProcessError($"Claude Code stopped unexpectedly (exit code {exited.Exit.ExitCode}).");
+                    NotifyProcessError(exited.Exit.ExitCode is { } code
+                        ? $"Claude Code stopped unexpectedly (exit code {code.ToString(CultureInfo.InvariantCulture)})."
+                        : "Claude Code stopped unexpectedly.");
                 }
                 break;
         }
@@ -2325,6 +2357,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnUsageCreditsChoiceChanged();
         if (_session is null)
         {
+            ShowStartingModel();
             return;
         }
         try

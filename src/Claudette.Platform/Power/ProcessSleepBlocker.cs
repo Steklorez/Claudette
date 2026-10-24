@@ -14,7 +14,7 @@ namespace Claudette.Platform.Power;
 /// </summary>
 public sealed class ProcessSleepBlocker : ISleepBlocker
 {
-    public const string SystemdInhibitMissing = "systemd-inhibit wasn't found, so Claudette can't keep this computer awake.";
+    public const string SystemdInhibitMissing = "systemd-inhibit wasn't found.";
 
     private readonly IProcessLauncher _launcher;
     private readonly ProcessStartSpec _spec;
@@ -103,7 +103,7 @@ public sealed class ProcessSleepBlocker : ISleepBlocker
     {
         lock (_lock)
         {
-            return _process is not null ? $"Keeping the computer awake with {_name}. The display can still sleep."
+            return _process is not null ? $"Keeping the computer awake with {_name}. The screen can still turn off."
                 : _lastError is { } error ? $"Not keeping the computer awake: {error}"
                 : "Not keeping the computer awake now.";
         }

@@ -54,7 +54,7 @@ A reply's Markdown can include an image. A reply can be steered by anything Clau
 - **When you click.** An image from the web, or a file anywhere else, shows a placeholder: *Image from example.com, which loads only when you ask.* or *Image at /tmp/chart.png, outside the tab's folder.* Its button is **Load image** for the web and **Show image** for a file. The address is the placeholder's tooltip.
 - **Never.** An image on a network path (`\\server\share\…`, `//server/…`), which would hand your credentials to that server, and any address that isn't a web address or a file. The placeholder says why, with no button.
 
-An image comes through if it arrives within 30 seconds, is at most 20 MB and really is a PNG, JPEG, GIF, WebP or BMP, whatever its name says. If it fails, the placeholder says why (*Couldn't load it: example.com answered 404 Not Found.*) and the button stays, so you can try again.
+An image comes through if it arrives within 30 seconds, is at most 20 MB and really is a PNG, JPEG, GIF, WebP or BMP, whatever its name says. If it fails, the placeholder says why (*example.com answered 404 Not Found.*) and the button stays, so you can try again.
 
 An address you loaded once loads by itself in that tab from then on, until you close it. A loaded image is shown at most 480 pixels high and as wide as the conversation, never larger than it is. Click it to open it full size, in the same window as above.
 

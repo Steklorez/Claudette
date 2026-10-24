@@ -52,7 +52,7 @@ public class UltracodeAndStyleTests
         Assert.Equal("localSettings", request["source"]!.GetValue<string>());
         Assert.Equal("Explanatory", request["settings"]!["outputStyle"]!.GetValue<string>());
         Assert.True(tab.OutputStyleChoices[1].IsCurrent);
-        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text.StartsWith("Output style: Explanatory.", StringComparison.Ordinal));
+        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text.StartsWith("Output style: Explanatory, from the next reply.", StringComparison.Ordinal));
 
         // The current one is no change.
         await tab.ChooseOutputStyleCommand.ExecuteAsync(tab.OutputStyleChoices[1]);

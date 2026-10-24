@@ -21,7 +21,7 @@ A tab is one Claude Code session, run as its own `claude` in a folder you pick. 
 
 {% include shot.html name="guide/getting-started/new-tab" alt="The New tab picker open over the window, listing recent project folders with their branches and paths" %}
 
-Right-click a folder in the list to add it to your favorites, remove it from the recents, reveal it in Finder or Explorer, or copy its path. A folder that no longer exists is dimmed. **Open from History…** resumes a past session instead of starting a new one: see [History](../history/history.md).
+Right-click a folder in the list to add it to your favorites, remove it from the recents, reveal it in your file manager, or copy its path. A folder that no longer exists is dimmed. **Open from History…** resumes a past session instead of starting a new one: see [History](../history/history.md).
 
 A group's own **+** in the sidebar opens a tab in that group's folder without the picker. [Opening tabs](../tabs/opening-tabs.md) lists the other ways in, such as dragging a folder onto the sidebar, and `--folder` on the command line.
 

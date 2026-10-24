@@ -90,7 +90,7 @@ public class LibraryAndHistoryTests
         var fromReply = history.Groups.SelectMany(g => g.Entries).Single(e => e.SessionId == "s1");
         Assert.Equal("Set VULKAN_SDK before you build.", fromReply.MatchedReply);
         Assert.Null(history.Groups.SelectMany(g => g.Entries).Single(e => e.SessionId == "s2").MatchedReply);
-        Assert.Equal("Found 1 session more in Claude's replies.", history.ReplySearchText);
+        Assert.Equal("Found 1 more session in Claude's replies.", history.ReplySearchText);
 
         // A new search starts again from the prompts.
         history.Search = "vulkan rename";

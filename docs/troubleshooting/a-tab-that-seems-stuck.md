@@ -13,7 +13,7 @@ A turn can run a long time without being stuck: a test run or a build may take m
 
 When a turn has run for a long time, or has produced no output for a while, Claudette asks Claude how it's going.
 
-1. A bar over the message box counts down: *Checking in with Claude in 30 s.* **Send now** sends the question straight away. The ✕ (**Don't check in**) skips it, and the timers start again.
+1. A bar over the message box counts down: *Checking in with Claude in 30s.* **Send now** sends the question straight away. The ✕ (**Don't check in**) skips it, and the timers start again.
 2. Claude's reply to the check-in appears in the conversation, and the turn carries on.
 3. If two check-ins in a row get no reply, Claudette stops asking for that turn. The tab's row says *Possibly stuck*, and a bar over the message box says *Claude hasn't answered two check-ins. It may be stuck.* with **Stop**.
 

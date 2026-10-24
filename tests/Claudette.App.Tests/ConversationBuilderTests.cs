@@ -156,7 +156,7 @@ public class ConversationBuilderTests
         Apply(Hook("hook_response", "h1", "error", 2, stdout: "", stderr: "lint failed: 3 errors\n"));
 
         var run = Assert.IsType<HookRunItem>(Assert.Single(_items));
-        Assert.Equal("PreToolUse hook (PreToolUse:Bash)", run.Title);
+        Assert.Equal("PreToolUse hook (Bash)", run.Title);
         Assert.True(run.IsFailed);
         Assert.Equal("failed (exit code 2)", run.StatusText);
         Assert.Equal("lint failed: 3 errors", run.Output);

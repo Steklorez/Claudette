@@ -34,7 +34,7 @@ Before you type, the list has five kinds of entry, in this order. The kind shows
 
 For the whole window:
 
-- **New tab**, **Open from History**, **Settings**
+- **New tab**, **Open from History…**, **Settings**
 - **Collapse the sidebar** or **Expand the sidebar**
 - **Zoom in**, **Zoom out**, and **Reset zoom** while zoomed
 - **Go to the next tab waiting for you**, when another tab is waiting
@@ -51,7 +51,7 @@ While a project's Files tab has the focus:
 For the selected tab:
 
 - **Find in the conversation**
-- **Go to the first message** and **Go to the latest**, which jump through the conversation. See [Finding your way](../conversation/finding-your-way.md).
+- **Go to the first message** and **Go to the latest message**, which jump through the conversation. See [Finding your way](../conversation/finding-your-way.md).
 - **Close this pane** and **Close the other panes**, with tabs [side by side](split-panes.md)
 - **Show the thread with its sub-threads**, on a thread or one of its sub-threads
 - **Stop Claude**, while Claude works
