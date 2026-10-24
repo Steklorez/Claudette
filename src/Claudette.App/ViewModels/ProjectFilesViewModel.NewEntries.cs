@@ -30,6 +30,9 @@ public sealed partial class NewEntryRow : ExplorerRow
     /// <summary>The box's placeholder, and its name for screen readers.</summary>
     public string Placeholder => IsNewFolder ? "Folder name" : "File name";
 
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => IsNewFolder ? "New folder" : "New file";
+
     /// <summary>The name typed.</summary>
     [ObservableProperty]
     public partial string NameText { get; set; } = "";

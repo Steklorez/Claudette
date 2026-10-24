@@ -23,6 +23,9 @@ public sealed record InlineDiffRow(string OldNumber, string NewNumber, string Ma
     public bool IsAdded => Op == DiffOp.Added && !IsHeader;
 
     public bool IsRemoved => Op == DiffOp.Removed && !IsHeader;
+
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => IsHeader || string.IsNullOrWhiteSpace(Marker) ? Text : $"{Marker} {Text}";
 }
 
 /// <summary>A row of the side-by-side diff; an empty cell is a line only the other side has.</summary>
@@ -33,6 +36,15 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
     public bool HasLeft => Left is not null;
 
     public bool HasRight => Right is not null;
+
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => IsHeader ? HeaderText : (Left, Right) switch
+    {
+        ({ } left, { } right) when left.Text != right.Text => $"{left.Text} → {right.Text}",
+        ({ } left, _) => left.Text,
+        (_, { } right) => right.Text,
+        _ => "",
+    };
 }
 
 /// <summary>What the diff view compares, and what it can do with the file.</summary>

@@ -32,7 +32,11 @@ public enum ToolCallView
 }
 
 /// <summary>A line of a file a Read read, with its number and syntax colors.</summary>
-public sealed record CodeLine(string Number, string Text, IReadOnlyList<ColoredRun>? Runs);
+public sealed record CodeLine(string Number, string Text, IReadOnlyList<ColoredRun>? Runs)
+{
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Text;
+}
 
 /// <summary>A file a search found, with the lines that matched, when it says which.</summary>
 public sealed record SearchFile(string Path, IReadOnlyList<SearchMatch> Matches)

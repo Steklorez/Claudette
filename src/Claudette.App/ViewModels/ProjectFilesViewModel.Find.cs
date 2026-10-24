@@ -19,6 +19,9 @@ public sealed record FoundFile(string Name, string Folder, string FullPath, IRea
 
     /// <summary>Its path from the project's folder, whole, for the tip.</summary>
     public string RelativePath => Folder.Length > 0 ? Path.Combine(Folder, Name) : Name;
+
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => HasFolder ? $"{Name}, in {Folder}" : Name;
 }
 
 /// <summary>

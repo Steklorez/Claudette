@@ -15,6 +15,9 @@ public sealed class FolderEntry(string path, string? branch, DateTimeOffset? las
 
     public string Name => Formats.FolderName(Path);
 
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Path;
+
     /// <summary>The path with the home folder shortened to <c>~</c>.</summary>
     public string ShortPath
     {

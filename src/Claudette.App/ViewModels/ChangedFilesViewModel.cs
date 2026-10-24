@@ -24,6 +24,9 @@ public sealed partial class ChangedFileRow : ObservableObject
 
     public string FileName => System.IO.Path.GetFileName(Path);
 
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Stats is null ? $"{DisplayPath}: {StatusText}" : $"{DisplayPath}: {StatusText}, {Stats}";
+
     /// <summary>A, M, D or R.</summary>
     public required string Status { get; init; }
 

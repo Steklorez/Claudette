@@ -34,6 +34,9 @@ public partial class ExplorerRow : ObservableObject
 
     public bool IsFile => !Entry.IsFolder;
 
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Name;
+
     public bool IsLink => Entry.IsLink;
 
     /// <summary>A link back up the tree, which isn't expanded.</summary>

@@ -49,6 +49,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - With auto-compact off, the context breakdown said Claude Code would compact the conversation on its own once it was nearly full. It now says to compact it.
 - The **Stop** button's tooltip, and the arrows in a Files tab's change peek, kept showing their usual keys after you'd changed them in Settings → Keyboard.
 - Search in Settings listed **Quick suffixes**, **Diff tool** and **Add an API key** twice, and a project's Links and Actions pages were marked *This computer*, though `claudette.json` goes with the project.
+- A screen reader read the rows of Changed files, the command palette, the new tab picker, a Files tab's explorer and file finder, the diff view and a project's links and actions by Claudette's internal names for them. It now reads each by what it shows, such as a file's name and how it changed.
 - The group menu in the collapsed sidebar didn't have **Open project files**.
 - Messages that only tell you something, such as a worktree that couldn't be removed, offered **Cancel** beside **OK**.
 - Many smaller slips in Claudette's wording: plurals such as *1 turns*, *From the session another session*, a turn that took *1m 60s*, the header's cup saying twice that it can't keep the computer awake, exit codes written three ways, and settings named by labels they no longer have.

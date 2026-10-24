@@ -16,6 +16,9 @@ public sealed record ProjectLinkRow(JsonNode? Raw, ProjectLink? Link, string? Pr
 {
     public string Name => Link?.Name ?? "(can't be read)";
 
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Name;
+
     /// <summary>The name as written: empty when the entry has none, and the project's menu shows the address.</summary>
     public string GivenName => LenientJson.String(Raw, "name")?.Trim() ?? "";
 

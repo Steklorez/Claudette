@@ -14,6 +14,9 @@ public sealed record CustomActionRow(JsonNode? Raw, CustomProjectAction? Action,
 {
     public string Name => Action?.Name ?? "(can't be read)";
 
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Name;
+
     public bool CanEdit => Action is not null;
 
     public string Detail => Action is not { } action

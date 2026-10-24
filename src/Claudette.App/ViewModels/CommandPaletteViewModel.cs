@@ -12,6 +12,9 @@ public sealed record PaletteEntry(string Label, string Group, Func<Task> Run, st
     public bool HasShortcut => !string.IsNullOrEmpty(Shortcut);
 
     public bool HasDetail => !string.IsNullOrEmpty(Detail);
+
+    /// <summary>What a screen reader reads for its row.</summary>
+    public override string ToString() => Label;
 }
 
 /// <summary>

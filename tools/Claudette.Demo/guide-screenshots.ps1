@@ -383,7 +383,9 @@ foreach ($theme in $Themes) {
                 Wait-Until { Find-ById $window 'FindBox' } 'the file finder' 20
                 Set-ElementText (Find-ById $window 'FindBox') 'StarfallCharacter.cpp'
                 Start-Sleep -Seconds 2
-                Send-WindowKey $window 'Enter'
+                # A click on what it found opens it, as Enter does; a posted Enter can miss the box once Claudette has
+                # come to the front.
+                Send-Click (Find-ByText $window 'StarfallCharacter.cpp, in Source\Starfall\Player')
                 Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
                 Start-Sleep -Seconds 3
                 Save-Window $window $path
