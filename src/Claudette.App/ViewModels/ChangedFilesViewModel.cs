@@ -296,7 +296,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             change.BeforeKnown,
             After: after,
             AllowRevert: false,
-            OpenInSystem: () => OpenFileInSystemAsync(file)));
+            OpenInSystem: () => OpenFileInSystemAsync(file),
+            WordWrap: DiffWordWrap.From(_services)));
     }
 
     /// <summary>A turn's changes in the external diff tool: before the turn, against how it left the file, or the file now.</summary>
@@ -697,7 +698,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 () => Reviewed.IsReviewed(row.Path, Changes.Find(row.Path)),
                 change => SetFileReviewed(row.Path, reviewed: true, change)),
             FromGit: row.FromGit,
-            OpenInSystem: () => OpenFileInSystemAsync(row)));
+            OpenInSystem: () => OpenFileInSystemAsync(row),
+            WordWrap: DiffWordWrap.From(_services)));
     }
 
     /// <summary>

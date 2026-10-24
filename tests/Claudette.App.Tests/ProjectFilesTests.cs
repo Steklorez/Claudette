@@ -617,6 +617,44 @@ public class ProjectFilesTests
     }
 
     [Fact]
+    public async Task Each_diff_starts_with_Wrap_lines_as_the_last_one_was_left_in_a_Files_tab_or_the_diff_window()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "a.txt"), "b\n");
+        var (tab, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(path, preview: false);
+        EmitEdit(h, "e1", path, before: "a\n");
+        await TabTestHarness.Eventually(() => tab.ChangedFiles.HasClaudeChange(path), "the change recorded");
+        h.Time.Advance(ProjectFilesViewModel.ChangesDelay);
+        await TabTestHarness.Eventually(() => file.HasChanges, "the change in the Files tab");
+        file.Mode = FileViewMode.Inline;
+        await TabTestHarness.Eventually(() => file.Diff is { IsLoading: false }, "the diff");
+        Assert.False(file.Diff!.WordWrap);
+
+        file.Diff.WordWrap = true;
+
+        Assert.True(h.Services.State.DiffWordWrap);
+        file.Mode = FileViewMode.SideBySide;
+        Assert.True(file.Diff!.WordWrap);
+        await TabTestHarness.Eventually(() => file.Diff is { IsLoading: false }, "the diff side by side");
+
+        // The diff window, from Changed files, starts wrapped too, and turning it off there carries back.
+        Diffs.DiffSource? requested = null;
+        tab.ChangedFiles.DiffRequested += source => requested = source;
+        await tab.ChangedFiles.OpenFileCommand.ExecuteAsync(new ChangedFileRow { Path = path, DisplayPath = "a.txt", Status = "M", StatusText = "Modified", Before = "a\n" });
+        var window = new Diffs.DiffWindowViewModel(requested!, dark: false);
+        await TabTestHarness.Eventually(() => !window.IsLoading, "the diff window");
+        Assert.True(window.WordWrap);
+
+        window.WordWrap = false;
+
+        Assert.False(h.Services.State.DiffWordWrap);
+        file.Mode = FileViewMode.Inline;
+        Assert.False(file.Diff!.WordWrap);
+        await TabTestHarness.Eventually(() => file.Diff is { IsLoading: false }, "the diff inline again");
+    }
+
+    [Fact]
     public async Task Show_only_changed_files_lists_Claudes_changes_by_path()
     {
         await using var h = new TabTestHarness();

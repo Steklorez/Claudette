@@ -19,6 +19,7 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
           <ToggleButton Content="Side by side" IsChecked="{Binding IsSideBySide}" />
           <ToggleButton Content="Whole file" IsChecked="{Binding ShowWholeFile}" />
+          <ToggleButton Content="Wrap lines" IsChecked="{Binding WordWrap}" ToolTip.Tip="Wrap long lines at the window's width, rather than scrolling sideways" />
           <Button Content="Open in diff tool" Command="{Binding OpenInDiffToolCommand}" IsVisible="{Binding CanOpenInDiffTool}" />
           <Button Content="Open" Command="{Binding OpenInEditorCommand}" ToolTip.Tip="As Settings → Files and diffs → Open in the diff window says: the file in Claudette's editor or the OS's app, or the changes in your diff tool" />
           <!-- DESIGN.md §8, "Reverting": asks first, in place -->

@@ -6,7 +6,7 @@ namespace Claudette.App.Controls;
 
 /// <summary>
 /// A line of code in a <see cref="LineScroller"/>: laid out at its full width, however narrow the space it has, and moved
-/// sideways as the scroller scrolls. What doesn't fit is cut off.
+/// sideways as the scroller scrolls. What doesn't fit is cut off. When the scroller wraps, it has just the space it has.
 /// </summary>
 public sealed class ScrollingLine : Decorator
 {
@@ -37,13 +37,17 @@ public sealed class ScrollingLine : Decorator
         {
             return default;
         }
-        Child.Measure(availableSize.WithWidth(double.PositiveInfinity));
+        Child.Measure(Wraps ? availableSize : availableSize.WithWidth(double.PositiveInfinity));
         return new Size(Math.Min(Child.DesiredSize.Width, availableSize.Width), Child.DesiredSize.Height);
     }
 
     protected override Size ArrangeOverride(Size finalSize)
     {
-        if (Child is not null)
+        if (Wraps)
+        {
+            Child?.Arrange(new Rect(finalSize));
+        }
+        else if (Child is not null)
         {
             var width = Child.DesiredSize.Width;
             var offset = _scroller?.Arranged(width, finalSize.Width) ?? 0;
@@ -51,4 +55,6 @@ public sealed class ScrollingLine : Decorator
         }
         return finalSize;
     }
+
+    private bool Wraps => _scroller?.WordWrap == true;
 }

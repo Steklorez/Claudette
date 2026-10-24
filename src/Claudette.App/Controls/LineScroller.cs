@@ -23,6 +23,9 @@ public sealed class LineScroller : DockPanel
     public static readonly StyledProperty<IEnumerable?> LinesProperty =
         AvaloniaProperty.Register<LineScroller, IEnumerable?>(nameof(Lines));
 
+    public static readonly StyledProperty<bool> WordWrapProperty =
+        AvaloniaProperty.Register<LineScroller, bool>(nameof(WordWrap));
+
     /// <summary>How far a notch of the mouse wheel scrolls, as it does in a ScrollViewer.</summary>
     private const double WheelStep = 50;
 
@@ -44,6 +47,16 @@ public sealed class LineScroller : DockPanel
     {
         get => GetValue(LinesProperty);
         set => SetValue(LinesProperty, value);
+    }
+
+    /// <summary>
+    /// The lines are laid out in the width there is, and nothing scrolls sideways. The text in them wraps by a style on
+    /// <c>LineScroller[WordWrap=True]</c>.
+    /// </summary>
+    public bool WordWrap
+    {
+        get => GetValue(WordWrapProperty);
+        set => SetValue(WordWrapProperty, value);
     }
 
     /// <summary>How far the code is scrolled from the start of the lines.</summary>
@@ -80,11 +93,25 @@ public sealed class LineScroller : DockPanel
         base.OnPropertyChanged(change);
         if (change.Property == LinesProperty)
         {
-            _widest = 0;
-            _bar.Value = 0;
-            Update();
+            Reset();
             ArrangeLines();
         }
+        else if (change.Property == WordWrapProperty)
+        {
+            // Wrapped, a line is measured in the width it has; unwrapped, at its full width again.
+            Reset();
+            foreach (var line in _lines)
+            {
+                line.InvalidateMeasure();
+            }
+        }
+    }
+
+    private void Reset()
+    {
+        _widest = 0;
+        _bar.Value = 0;
+        Update();
     }
 
     private void Update()

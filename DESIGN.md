@@ -1350,6 +1350,7 @@ Even **Forever** stays small: roughly tens of megabytes a year of heavy use.
   - The view is a window of its own, so it can stay open beside the conversation.
   - It shows the changes with a few lines of context, or the **Whole file**.
   - Long lines scroll sideways with a scroll bar along the bottom, Shift and the mouse wheel, or a touchpad. Every line scrolls together, both sides at once when they're side by side, and the line numbers stay where they are. The rows scroll up and down as usual.
+  - **Wrap lines.** ✅ Built 2026-10-24. A switch in the header beside **Whole file**, off to begin with: on, long lines wrap at the width shown, each side in its half when they're side by side, a line with nowhere to break (a minified file's) too, and nothing scrolls sideways. Each diff, in its window or a Files tab ([Project files](#project-files)), starts as the last one was left (the app state's `DiffWordWrap`).
   - Highlighting uses TextMate grammars, by file extension, with the dark or light theme to match the app. Files over 20,000 lines, and binary files, are shown without it. A line over 1,000 characters, as a minified file's, gets 50 ms and shows the rest in the default color; a shorter line is tokenized whole, since with a budget the first line of a freshly loaded grammar, or any line on a busy machine, could come back half colored.
   - A leading byte order mark isn't counted as a change.
 - Actions: open in external diff tool, open in external editor (the app the OS uses for that file type), copy path and **Reveal in folder**, in the Changed files rows' menu and the diff window's. **Open** goes to Claudette's own editor ([Project files](#project-files)) unless Settings → Files and diffs says otherwise, and **Open in the OS's app** stays.
@@ -3581,8 +3582,8 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - Under the header are the lines the change replaced, highlighted, in the removed color.
     - **Revert** puts them back in the editor's text as one step, which Undo takes back. The file then has unsaved edits: nothing is written until it's saved.
     - `F3` and `F4`, the conversation's previous and next message ([§14](#keyboard-shortcuts)), go to the previous and next change and open its peek.
-  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**. In a pane too narrow for the bar's one row, **Whole file** and **Reviewed** go onto a second.
-    - The last two are §8's diff view inside the tab, read-only, with **Whole file**, the highlighting, and **Revert** on each change.
+  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**. In a pane too narrow for the bar's one row, **Whole file**, **Wrap lines** and **Reviewed** go onto a second.
+    - The last two are §8's diff view inside the tab, read-only, with **Whole file**, **Wrap lines**, the highlighting, and **Revert** on each change.
     - **Revert** there changes the editor's text, as the peek's does.
     - A double-click on a line goes back to **Edit** at that line.
     - Each open file keeps its own choice.

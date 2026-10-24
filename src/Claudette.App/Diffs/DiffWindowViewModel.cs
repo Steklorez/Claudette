@@ -1,3 +1,4 @@
+using Claudette.App.Services;
 using Claudette.App.ViewModels;
 using Claudette.Core.Diffs;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -58,6 +59,7 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 /// Where <b>Revert</b> puts the text back instead of writing the file: the Project Files tab's editor (DESIGN.md §18,
 /// "Project files"), which compares with its own text. False when it couldn't.
 /// </param>
+/// <param name="WordWrap"><b>Wrap lines</b> as the last diff was left, kept for the next; null starts it off.</param>
 public sealed record DiffSource(
     string Path,
     string DisplayPath,
@@ -73,10 +75,28 @@ public sealed record DiffSource(
     DiffAfter? After = null,
     bool AllowRevert = true,
     Func<string?, bool>? RevertInto = null,
-    Func<Task>? OpenInSystem = null);
+    Func<Task>? OpenInSystem = null,
+    DiffWordWrap? WordWrap = null);
 
 /// <summary>A diff's "after" side that isn't the file now; null text means the file didn't exist then.</summary>
 public sealed record DiffAfter(string? Text);
+
+/// <summary>
+/// The diff view's <b>Wrap lines</b> (DESIGN.md §8): on to begin with when the last diff, in its window or a Files tab,
+/// was left with it on, and remembering how this one is left.
+/// </summary>
+public sealed record DiffWordWrap(bool IsOn, Action<bool> Remember)
+{
+    /// <summary>As the app state keeps it.</summary>
+    public static DiffWordWrap From(AppServices services) => new(services.State.DiffWordWrap, wrap =>
+    {
+        if (services.State.DiffWordWrap != wrap)
+        {
+            services.State.DiffWordWrap = wrap;
+            services.SaveState();
+        }
+    });
+}
 
 /// <summary>The diff view's <b>Reviewed</b> button (DESIGN.md §8, "Reviewed"). Called on the UI thread.</summary>
 /// <param name="LatestChange">The id of Claude's latest change to the file, or null when it hasn't changed it.</param>
@@ -104,6 +124,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
         _source = source;
         _dark = dark;
         ShowWholeFile = !source.BeforeKnown;
+        WordWrap = source.WordWrap?.IsOn ?? false;
         _ = LoadAsync();
     }
 
@@ -147,6 +168,12 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     public partial bool ShowWholeFile { get; set; }
 
     partial void OnShowWholeFileChanged(bool value) => Build();
+
+    /// <summary><b>Wrap lines</b>: long lines wrap at the width shown, rather than scrolling sideways.</summary>
+    [ObservableProperty]
+    public partial bool WordWrap { get; set; }
+
+    partial void OnWordWrapChanged(bool value) => _source.WordWrap?.Remember(value);
 
     [ObservableProperty]
     public partial IReadOnlyList<InlineDiffRow> InlineRows { get; set; } = [];

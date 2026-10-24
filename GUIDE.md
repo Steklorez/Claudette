@@ -177,7 +177,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Page | Covers | From |
 |---|---|---|
 | Changed files | The **Changed files** page and the **Files** count, the line counts, **Working tree vs HEAD**, a file whose earlier contents aren't known. | [§8](DESIGN.md#8-file-changes--diff-view) |
-| The diff view | Side by side or inline, **Whole file**, the file's actions, **Open** and **Open in the OS's app**. | [§8](DESIGN.md#8-file-changes--diff-view) |
+| The diff view | Side by side or inline, **Whole file**, **Wrap lines**, the file's actions, **Open** and **Open in the OS's app**. | [§8](DESIGN.md#8-file-changes--diff-view) |
 | Reviewed files | Ticking files, what unticks them, the diff view's **Reviewed**, the row's reviewed icon. | [§8](DESIGN.md#8-file-changes--diff-view) |
 | Reverting | **Revert** on a change, **Revert file**, and what can't be reverted. | [Reverting](DESIGN.md#reverting) |
 | Changes per turn | A turn's **Modified files** and its read-only diffs. | [Changes per turn](DESIGN.md#changes-per-turn) |

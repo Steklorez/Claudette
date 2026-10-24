@@ -688,7 +688,8 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
                 return false;
             },
             () => _owner.RevealAsync(Path), () => _owner.CopyPathAsync(Path), known,
-            After: new DiffAfter(text), AllowRevert: !IsReadOnly && !_comparingDisk, RevertInto: RevertInto), _owner.IsDarkTheme)
+            After: new DiffAfter(text), AllowRevert: !IsReadOnly && !_comparingDisk, RevertInto: RevertInto,
+            WordWrap: DiffWordWrap.From(_services)), _owner.IsDarkTheme)
         {
             IsSideBySide = Mode == FileViewMode.SideBySide,
         };

@@ -2,6 +2,7 @@
 "+1 −0"
 [toggle] Side by side
 [toggle] Whole file
+[toggle] Wrap lines
 [button] Open
 [button] Revert file
 [button] More actions: …

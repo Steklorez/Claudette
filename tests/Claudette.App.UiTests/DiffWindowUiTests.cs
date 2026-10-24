@@ -57,6 +57,49 @@ public class DiffWindowUiTests
     }
 
     [AvaloniaFact]
+    public async Task Wrap_lines_wraps_long_lines_at_the_width_shown_with_nothing_to_scroll_sideways()
+    {
+        var words = string.Join(' ', Enumerable.Repeat("word", 100));
+        await using var file = await DiffFile.CreateAsync("one\ntwo\n", $"one\n{words}\n{new string('x', 400)}\ntwo\n");
+        var (window, viewModel) = await ShowAsync(file);
+        var scroller = Shown<LineScroller>(window);
+        var lineHeight = Code(scroller).Single(c => c.Code == "one").Bounds.Height;
+        var toggle = window.GetVisualDescendants().OfType<ToggleButton>().Single(b => b.Content is "Wrap lines");
+
+        toggle.IsChecked = true;
+        UiText.Settle(window);
+
+        Assert.True(viewModel.WordWrap);
+        Assert.False(Bar(scroller).IsVisible);
+        Assert.Equal(0, scroller.ScrollableWidth);
+        // A line with nowhere to break, as a minified file's, wraps too.
+        var longLines = Code(scroller).Where(c => c.Code!.Length > 100).ToList();
+        Assert.Equal(2, longLines.Count);
+        Assert.All(longLines, code =>
+        {
+            Assert.True(code.Bounds.Height > lineHeight * 2);
+            Assert.Equal(0, code.Bounds.X);
+            Assert.True(code.Bounds.Width <= code.FindAncestorOfType<ScrollingLine>()!.Bounds.Width);
+        });
+
+        // Side by side, each side wraps in its half.
+        viewModel.IsSideBySide = true;
+        UiText.Settle(window);
+        var sides = Shown<LineScroller>(window);
+
+        Assert.False(Bar(sides).IsVisible);
+        Assert.Contains(Code(sides), code => code.Code == words && IsOnTheRight(code, sides) && code.Bounds.Height > lineHeight * 2);
+
+        // Off again: one line each, scrolling sideways.
+        toggle.IsChecked = false;
+        UiText.Settle(window);
+
+        Assert.True(Bar(sides).IsVisible);
+        Assert.True(sides.ScrollableWidth > 0);
+        Assert.All(Code(sides), code => Assert.Equal(lineHeight, code.Bounds.Height));
+    }
+
+    [AvaloniaFact]
     public async Task Lines_that_fit_have_no_sideways_scroll_bar()
     {
         await using var file = await DiffFile.CreateAsync("one\ntwo\n", "one\nthree\n");

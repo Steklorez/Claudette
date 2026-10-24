@@ -10,7 +10,8 @@
     <Style Selector="ListBox.diff">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="Padding" Value="0" />
-      <!-- The rows stay the width of the window; the LineScroller around the list scrolls the code in them sideways -->
+      <!-- The rows stay the width of the window; the LineScroller around the list scrolls the code in them sideways, or
+           wraps it -->
       <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
     </Style>
     <Style Selector="ListBox.diff ListBoxItem">
@@ -32,6 +33,10 @@
     <Style Selector="Border.line.empty">
       <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
     </Style>
+    <!-- Wrap lines: the code wraps at the width it has, rather than scrolling sideways -->
+    <Style Selector="controls|LineScroller[WordWrap=True] controls|ScrollingLine > :is(TextBlock)">
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
   </UserControl.Styles>
 
   <Panel>
@@ -39,7 +44,7 @@
     <TextBlock Classes="muted" Margin="16" Text="{Binding Message}" IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
     <!-- Inline -->
-    <controls:LineScroller Lines="{Binding InlineRows}" IsVisible="{Binding IsInline}">
+    <controls:LineScroller Lines="{Binding InlineRows}" IsVisible="{Binding IsInline}" WordWrap="{Binding WordWrap}">
       <ListBox Classes="diff" ItemsSource="{Binding InlineRows}">
         <ListBox.ItemTemplate>
           <DataTemplate DataType="diffs:InlineDiffRow">
@@ -61,8 +66,8 @@
       </ListBox>
     </controls:LineScroller>
 
-    <!-- Side by side: both sides scroll sideways together -->
-    <controls:LineScroller Lines="{Binding SideRows}" IsVisible="{Binding IsSideBySide}">
+    <!-- Side by side: both sides scroll sideways together, or each wraps in its half -->
+    <controls:LineScroller Lines="{Binding SideRows}" IsVisible="{Binding IsSideBySide}" WordWrap="{Binding WordWrap}">
       <ListBox Classes="diff" ItemsSource="{Binding SideRows}">
         <ListBox.ItemTemplate>
           <DataTemplate DataType="diffs:SideBySideDiffRow">

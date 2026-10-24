@@ -21,6 +21,7 @@ Click a file in [Changed files](changed-files.md), or select it and press `Enter
 - Inline shows one column of lines with the old ones marked `−` and the new ones `+`. **Side by side** puts the old file on the left and the new one on the right.
 - Lines are colored by the file's language, in the app's light or dark theme. Files over 20,000 lines and binary files are shown without colors.
 - Long lines scroll sideways, with the scroll bar along the bottom, `Shift` and the mouse wheel, or a touchpad. Both sides scroll together, and the line numbers stay where they are.
+- **Wrap lines** wraps long lines at the width of the window instead, each side in its half when they're side by side, so there's nothing to scroll sideways. The next diff you open, in its window or a [Files tab](../project-files/claudes-changes-in-the-editor.md), starts the way you left it.
 - A byte order mark at the start of a file isn't counted as a change.
 - A binary file says there's nothing to show line by line, and a file that's gone says it has been deleted.
 
@@ -30,7 +31,7 @@ When Claude changes the file while the window is open, choose **Refresh** in the
 
 The buttons along the top:
 
-- **Side by side** and **Whole file** switch how the changes show.
+- **Side by side**, **Whole file** and **Wrap lines** switch how the changes show.
 - **Open in diff tool** appears when you've set an [external diff tool](external-diff-tools.md).
 - **Open** opens the file, as described below.
 - **Revert file** puts the whole file back ([Reverting](reverting.md)). Each change has a **Revert** of its own on its header.
