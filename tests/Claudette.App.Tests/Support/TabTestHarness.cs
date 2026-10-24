@@ -9,7 +9,6 @@ using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
 using Claudette.Core.Settings;
 using Claudette.Platform.Processes;
-using Microsoft.Extensions.Time.Testing;
 
 namespace Claudette.App.Tests.Support;
 
@@ -408,6 +407,22 @@ internal sealed class InlineDispatcher : IUiDispatcher
     /// </summary>
     public static void Run(Action action) => RunOnUiThread(action);
 
+    /// <summary><see cref="Run"/> for a command that goes on after it returns: its task, for the test to wait on.</summary>
+    public static Task RunAsync(Func<Task> work)
+    {
+        var task = Task.CompletedTask;
+        RunOnUiThread(() => task = work());
+        return task;
+    }
+
+    /// <inheritdoc cref="RunAsync(Func{Task})"/>
+    public static Task<T> RunAsync<T>(Func<Task<T>> work)
+    {
+        Task<T>? task = null;
+        RunOnUiThread(() => task = work());
+        return task!;
+    }
+
     /// <summary>Evaluates <paramref name="read"/> as if on the UI thread, so it can't see a collection mid-change.</summary>
     public static T Read<T>(Func<T> read)
     {
@@ -691,7 +706,7 @@ internal sealed class TabTestHarness : IAsyncDisposable
         return path;
     }
 
-    public FakeTimeProvider Time { get; } = new(DateTimeOffset.Parse("2026-09-28T12:00:00Z"));
+    public HarnessClock Time { get; } = new(DateTimeOffset.Parse("2026-09-28T12:00:00Z"));
 
     public ScriptedTransport Transport { get; } = new();
 
@@ -732,7 +747,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await Shell.DisposeAsync();
+        // Closed on the UI thread, as the window closes in the app: work still finishing there, such as a Files tab's
+        // explorer listing its folder, can't be caught halfway by the tabs being saved and stopped.
+        await InlineDispatcher.RunAsync(() => Shell.DisposeAsync().AsTask());
         await Services.DisposeAsync();
         try
         {
