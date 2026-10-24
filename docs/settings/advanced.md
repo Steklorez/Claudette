@@ -33,7 +33,7 @@ A protocol log holds your prompts and the contents of files Claude read. Claudet
 
 ## Diagnostics
 
-The lower half of the page shows how Claudette is getting on with the Claude Code it found:
+The page's **Diagnostics** section shows how Claudette is getting on with the Claude Code it found:
 
 - **Claude Code** is the installed version, or "Not found".
 - **Minimum supported Claude Code version** is the oldest one Claudette works with.
@@ -45,7 +45,7 @@ The lower half of the page shows how Claudette is getting on with the Claude Cod
 
 ## Settings
 
-All of these are in Settings → Advanced, stay on this machine, and can't be overridden per tab. **Reset to defaults** puts the first two back.
+All of these are in Settings → Advanced, stay on this machine, and can't be overridden per tab. **Reset to defaults** by the **Running claude** heading puts both back.
 
 | Setting | Default |
 |---|---|
@@ -54,5 +54,5 @@ All of these are in Settings → Advanced, stay on this machine, and can't be ov
 
 ## See also
 
-- [Every setting](every-setting.md) for the other categories.
+- [Every setting](every-setting.md) for the other pages.
 - [Claude Code's updates](../updates/claude-codes-updates.md) for the version Claudette found.

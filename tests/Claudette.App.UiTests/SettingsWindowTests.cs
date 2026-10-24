@@ -6,6 +6,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
@@ -14,15 +15,15 @@ using Claudette.Core.Settings;
 
 namespace Claudette.App.UiTests;
 
-/// <summary>The Settings window rendered headlessly, a category at a time (DESIGN.md §14).</summary>
+/// <summary>The Settings window rendered headlessly, a page at a time (DESIGN.md §14).</summary>
 public class SettingsWindowTests
 {
     [AvaloniaTheory]
     [InlineData("General")]
-    [InlineData("New tabs")]
+    [InlineData("Tabs")]
     [InlineData("Appearance")]
     [InlineData("Sessions")]
-    public async Task A_category_shows_its_settings_and_Reset_to_defaults(string category)
+    public async Task A_page_shows_its_sections_and_settings(string category)
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var favorite = Directory.CreateDirectory(Path.Combine(h.Root, "projects-favorite", "api")).FullName;
@@ -34,19 +35,47 @@ public class SettingsWindowTests
         await Waiting.UntilAsync(() => settings.Sessions.Measuring.IsCompleted, "the library's size", poll: () => Dispatcher.UIThread.RunJobs());
         UiText.Settle(window);
 
-        var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => Grid.GetColumn(s) == 1);
+        var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Name == "PageScroller");
 
         await Verify(UiText.Describe(page, (h.Root, "{root}"), (Environment.MachineName, "{machine}"))).UseParameters(category);
     }
 
     /// <summary>
-    /// The search box's entries name what their pages show (DESIGN.md §14): each page, rendered, has the words of each
-    /// of its entries (<see cref="SettingsSearchResult.PageText"/>, or else the label), so a setting reworded or removed
-    /// on its page can't leave the index pointing at nothing. Text a page holds while hidden counts, since some settings
-    /// only show in some states, such as a custom diff tool's command or an update to install.
+    /// A setting that isn't at its default has a bar at its left (DESIGN.md §14), drawn in the room the row reaches out
+    /// by; one at its default has none.
     /// </summary>
     [AvaloniaFact]
-    public async Task Every_search_entry_names_something_its_page_shows()
+    public async Task A_changed_setting_has_its_bar_and_one_at_its_default_none()
+    {
+        await using var h = new TabTestHarness(s => s.Appearance.Theme = ThemeChoice.Dark, dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null, host: h.Shell) { SelectedCategory = SettingsCategory.Appearance };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+
+        Border Bar(string key) => window.GetVisualDescendants().OfType<SettingRow>().Single(r => r.Key == key)
+            .GetVisualDescendants().OfType<Border>().Single(b => b.Name == "PART_ChangedBar");
+        var theme = Bar("appearance.theme");
+        Assert.True(theme.IsEffectivelyVisible);
+        Assert.True(theme.Bounds.Width > 0 && theme.Bounds.Height > 0);
+        // Avalonia clips a templated control to its bounds: nothing around the bar may cut it off.
+        foreach (var clipping in theme.GetVisualAncestors().Where(v => v.ClipToBounds))
+        {
+            var at = theme.TranslatePoint(default, clipping)!.Value;
+            Assert.True(at.X >= 0 && at.Y >= 0, $"{clipping.GetType().Name} {(clipping as Control)?.Name} cuts off the changed bar");
+        }
+        Assert.False(Bar("appearance.density").IsEffectivelyVisible);
+        window.Close();
+    }
+
+    /// <summary>
+    /// The search box's entries go somewhere (DESIGN.md §14, "Search"): each page, rendered, has a row or section for the
+    /// key of each of its entries, which picking the entry scrolls to. And each row with a key finds its setting, so its
+    /// words, its marks and its Reset come from the page. Rows a page holds while hidden count, since some only show in
+    /// some states, such as a custom diff tool's command or an update to install.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Every_search_entry_has_its_row_and_every_row_its_setting()
     {
         await using var h = new TabTestHarness(updater: new FakeClaudeUpdater(new Version(2, 1, 284)), dispatcher: new AvaloniaUiDispatcher());
         UnrealFixture.Write(h.Root, h.WorkFolder);
@@ -59,43 +88,58 @@ public class SettingsWindowTests
         window.Show();
 
         var missing = new List<string>();
+        var lost = new List<string>();
         foreach (var page in settings.Pages)
         {
             settings.SelectedCategory = page.Title;
             UiText.Settle(window);
-            var view = window.GetVisualDescendants().OfType<UserControl>().First(v => ReferenceEquals(v.DataContext, page));
-            var shown = TextsOf(view);
-            missing.AddRange(page.SearchEntries
-                .Where(entry => !shown.Any(text => text.Contains(entry.PageText ?? entry.Label, StringComparison.OrdinalIgnoreCase)))
-                .Select(entry => $"{entry.Where}: {entry.Label}"));
+            var host = window.GetVisualDescendants().OfType<ContentControl>().Single(c => c.Name == "PageHost");
+            var rows = host.GetVisualDescendants().OfType<SettingRow>().ToList();
+            // A row hidden in another's details isn't drawn, so look through the page's logical tree.
+            var keys = host.GetLogicalDescendants().OfType<SettingRow>().Select(r => r.Key).Concat(host.GetLogicalDescendants().OfType<SettingsSection>().Select(s => s.Key)).OfType<string>().ToHashSet();
+            missing.AddRange(page.SearchEntries.Where(entry => entry.Key is null || !keys.Contains(entry.Key)).Select(entry => $"{entry.Where}: {entry.Label} ({entry.Key})"));
+            lost.AddRange(rows.Where(r => r.Key is not null && r.IsVisible && r.Setting is null).Select(r => $"{page.Title}: {r.Key}"));
         }
         window.Close();
 
         Assert.Equal([.. SettingsViewModel.AllCategories, .. SettingsViewModel.ProjectPages], settings.Pages.Select(p => p.Title));
         Assert.Empty(missing);
+        Assert.Empty(lost);
     }
 
-    /// <summary>The words in a view, shown or hidden: its text blocks', and its buttons' and check boxes' labels.</summary>
-    private static List<string> TextsOf(Control view) =>
-    [
-        .. view.GetLogicalDescendants().Cast<object>().Concat(view.GetVisualDescendants()).Distinct().Select(element => element switch
-        {
-            TextBlock block => block.Text,
-            ContentControl { Content: string content } => content,
-            _ => null,
-        }).OfType<string>(),
-    ];
-
     /// <summary>
-    /// Typing in a text setting doesn't save and apply it on every keystroke, which refreshed every tab each time; it
-    /// takes effect when the box loses focus.
-    /// </summary>
-    /// <summary>
-    /// A page's view is made when its category is picked and dropped when another is: none of its dropdowns or boxes
-    /// writes a setting back as it goes.
+    /// A screen reader names every setting's control (DESIGN.md §3, "Accessibility"): a switch or a dropdown beside a
+    /// title is named by the row's title, unless it has a name of its own.
     /// </summary>
     [AvaloniaFact]
-    public async Task Going_through_every_category_changes_no_setting()
+    public async Task Every_settings_control_has_a_name()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null);
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+
+        var nameless = new List<string>();
+        foreach (var category in SettingsViewModel.AllCategories)
+        {
+            settings.SelectedCategory = category;
+            UiText.Settle(window);
+            nameless.AddRange(window.GetVisualDescendants().OfType<SettingRow>()
+                .Where(r => r.IsEffectivelyVisible && r.Content is Control control && control is not Panel && control is not Button)
+                .Where(r => AutomationProperties.GetName((Control)r.Content!) is not { Length: > 0 })
+                .Select(r => $"{category}: {r.Key ?? r.Title}"));
+        }
+        window.Close();
+
+        Assert.Empty(nameless);
+    }
+
+    /// <summary>
+    /// A page's view is made when its page is picked and dropped when another is: none of its dropdowns or boxes writes a
+    /// setting back as it goes.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Going_through_every_page_changes_no_setting()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var appearance = h.Services.Settings.Appearance;
@@ -118,6 +162,10 @@ public class SettingsWindowTests
         window.Close();
     }
 
+    /// <summary>
+    /// Typing in a text setting doesn't save and apply it on every keystroke, which refreshed every tab each time; it
+    /// takes effect when the box loses focus.
+    /// </summary>
     [AvaloniaFact]
     public async Task A_text_setting_takes_effect_when_the_box_loses_focus_not_on_each_keystroke()
     {
@@ -142,32 +190,39 @@ public class SettingsWindowTests
     }
 
     /// <summary>
-    /// A setting's label beside its control is never cut off at the window's usual size: a long one wraps (GitHub issue
-    /// #7, "Refresh the panel every (seconds)").
+    /// Picking a search result shows its page and brings its row into view, picked out for a moment (DESIGN.md §14,
+    /// "Search"): here a setting on the long Keyboard page, far below the top.
     /// </summary>
     [AvaloniaFact]
-    public async Task No_settings_label_is_cut_off()
+    public async Task Picking_a_search_result_scrolls_to_its_row_and_picks_it_out()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
-        var settings = new SettingsViewModel(h.Services, null);
-        var window = new SettingsWindow { DataContext = settings };
+        using var settings = new SettingsViewModel(h.Services, null);
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 500 };
         window.Show();
-        var cut = new List<string>();
-        foreach (var category in SettingsViewModel.AllCategories)
-        {
-            settings.SelectedCategory = category;
-            UiText.Settle(window);
-            cut.AddRange(window.GetVisualDescendants().OfType<TextBlock>()
-                .Where(t => t.Classes.Contains("label") && t.IsEffectivelyVisible)
-                .Where(t => t.TextLayout.Width > t.Bounds.Width + 0.5)
-                .Select(t => $"{category}: {t.Text}"));
-        }
+        UiText.Settle(window);
 
-        Assert.Empty(cut);
+        settings.SearchText = "snippets";
+        settings.SelectedSearchResult = settings.SearchResults.First(r => r.Key == "quickSuffixes");
+        await Waiting.UntilAsync(() => settings.ScrollToKey is null, "the window to scroll", poll: () => UiText.Settle(window));
+        UiText.Settle(window);
+
+        var scroller = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "PageScroller");
+        var row = window.GetVisualDescendants().OfType<SettingRow>().First(r => r.Key == "quickSuffixes");
+        Assert.Same(settings.Keyboard, settings.CurrentPage);
+        Assert.True(scroller.Offset.Y > 0);
+        var top = row.TranslatePoint(default, scroller)!.Value.Y;
+        Assert.InRange(top, -1, scroller.Viewport.Height);
+        Assert.Contains(":highlighted", row.Classes);
+
+        h.Time.Advance(SettingsViewModel.HighlightFor);
+        UiText.Settle(window);
+        Assert.DoesNotContain(":highlighted", row.Classes);
+        window.Close();
     }
 
     [AvaloniaFact]
-    public async Task The_sidebar_ends_with_the_version_the_user_guide_Discord_and_Report_an_issue()
+    public async Task The_sidebar_ends_with_the_version_and_Help_with_the_guide_Discord_and_Report_an_issue()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         h.Services.BuildCommit = "842169b";
@@ -178,24 +233,21 @@ public class SettingsWindowTests
         UiText.Settle(window);
 
         var version = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Copy version details");
-        var sidebar = version.FindAncestorOfType<DockPanel>()!;
+        var help = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Help");
+        var sidebar = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
         Assert.True(version.IsEffectivelyVisible);
+        Assert.True(help.IsEffectivelyVisible);
         Assert.Equal("Claudette 0.1.0 · 842169b", version.GetVisualDescendants().OfType<TextBlock>().Single().Text);
-        var guide = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.OpenGuideCommand);
-        Assert.True(guide.IsEffectivelyVisible);
-        var discord = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.OpenDiscordCommand);
-        Assert.True(discord.IsEffectivelyVisible);
-        Assert.Equal("Ask on Discord", discord.GetVisualDescendants().OfType<TextBlock>().Single().Text);
-        var report = sidebar.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.ReportIssueCommand);
-        Assert.True(report.IsEffectivelyVisible);
-        // The foot sits below the categories, not over them: the version, the user guide, Discord, then Report an
-        // issue. They scroll when they don't fit.
-        var categories = sidebar.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "SidebarList");
-        var categoriesBottom = categories.TranslatePoint(new Point(0, categories.Bounds.Height), sidebar)!.Value.Y;
-        Assert.True(version.TranslatePoint(default, sidebar)!.Value.Y >= categoriesBottom);
-        Assert.True(guide.TranslatePoint(default, sidebar)!.Value.Y >= version.TranslatePoint(new Point(0, version.Bounds.Height), sidebar)!.Value.Y);
-        Assert.True(discord.TranslatePoint(default, sidebar)!.Value.Y >= guide.TranslatePoint(new Point(0, guide.Bounds.Height), sidebar)!.Value.Y);
-        Assert.True(report.TranslatePoint(default, sidebar)!.Value.Y >= discord.TranslatePoint(new Point(0, discord.Bounds.Height), sidebar)!.Value.Y);
+        // The foot sits below the pages, not over them.
+        var pagesBottom = sidebar.TranslatePoint(new Point(0, sidebar.Bounds.Height), window)!.Value.Y;
+        Assert.True(version.TranslatePoint(default, window)!.Value.Y >= pagesBottom);
+        // Help's menu: the guide, Discord, and a bug report.
+        var menu = Assert.IsType<MenuFlyout>(help.Flyout);
+        menu.ShowAt(help);
+        UiText.Settle(window);
+        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue"], menu.Items.OfType<MenuItem>().Select(i => i.Header as string));
+        Assert.Equal([settings.OpenGuideCommand, settings.OpenDiscordCommand, settings.ReportIssueCommand], menu.Items.OfType<MenuItem>().Select(i => i.Command));
+        menu.Hide();
 
         version.Command!.Execute(null);
         UiText.Settle(window);

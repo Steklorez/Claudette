@@ -29,7 +29,7 @@ Each alert comes once per window. The first reading after Claudette starts doesn
 
 Settings → Notifications has a switch, **Usage crosses a warning level, is on pace to run out, or resets**, that controls the OS notification. The line under the header still shows.
 
-The levels themselves are **Warn at (% of session used)** and **Alert at (% of session used)** in Settings → Usage. They also set when the meters turn amber and red.
+The levels themselves are **Warn at (% of the session used)** and **Alert at (% of the session used)** in Settings → Usage. They also set when the meters turn amber and red.
 
 ## Spend warnings
 
@@ -40,8 +40,8 @@ An API-key account can warn when its estimated spend passes an amount you set. T
 | Setting | Default | Where |
 |---|---|---|
 | **Usage crosses a warning level, is on pace to run out, or resets** | On | Settings → Notifications |
-| **Warn at (% of session used)** | 75 | Settings → Usage |
-| **Alert at (% of session used)** | 90 | Settings → Usage |
+| **Warn at (% of the session used)** | 75 | Settings → Usage |
+| **Alert at (% of the session used)** | 90 | Settings → Usage |
 
 ## See also
 

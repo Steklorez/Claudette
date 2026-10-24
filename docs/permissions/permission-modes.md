@@ -32,15 +32,15 @@ Auto is in the picker only while the tab's model supports it (Claude Code leaves
 Choosing it asks first, in a **Bypass permissions?** box: *For the rest of this session, Claude will run commands and change files without asking.* Choose **Cancel** or **Bypass permissions**. While a tab is in this mode it's hard to miss: a red border on its row and its composer, the mode's name in red, and a line above the composer saying Claude won't ask before running commands or changing files.
 
 {: .note }
-Claude Code only lets a session switch into Bypass permissions when it was started in that mode. If the tab wasn't, the switch is refused and a note in the conversation says how to fix it: set the mode in the tab's **Tab settings…**, or Settings → New tabs, and open the tab again.
+Claude Code only lets a session switch into Bypass permissions when it was started in that mode. If the tab wasn't, the switch is refused and a note in the conversation says how to fix it: set the mode in the tab's **Tab settings…**, or Settings → Tabs, and open the tab again.
 
 ## The mode a tab starts in
 
 A tab starts in Auto, as a Claude Code session in a terminal does, unless something chooses otherwise. In order:
 
 1. The tab's own **Permission mode** in [Tab settings](../tabs/tab-settings.md). Its first choice is named for what you'd get otherwise, such as **Default (Auto)**.
-2. Settings → New tabs → **Default permission mode**.
-3. **Claude Code's default**, the choice Settings → New tabs starts with, shown as **Claude Code's default (Auto)** once it's known. Claudette reads the settings files Claude Code would: managed settings, the project's `.claude/settings.local.json` and `.claude/settings.json`, then your own `settings.json`. A file that sets `permissions.defaultMode` decides the mode. With none, the tab starts in Auto. If a file turns Auto off, or the model can't use it, the tab starts in Manual.
+2. Settings → Tabs → New tabs start with → **Permission mode**.
+3. **Claude Code's default**, the choice that setting starts at, shown as **Claude Code's default (Auto)** once it's known. Claudette reads the settings files Claude Code would: managed settings, the project's `.claude/settings.local.json` and `.claude/settings.json`, then your own `settings.json`. A file that sets `permissions.defaultMode` decides the mode. With none, the tab starts in Auto. If a file turns Auto off, or the model can't use it, the tab starts in Manual.
 
 As in a terminal, a project's own files can't make a tab start in Bypass permissions.
 
@@ -50,7 +50,7 @@ Settings that come only from an organization's managed settings through MDM, the
 
 ## Settings
 
-- Settings → New tabs → **Default permission mode**: **Claude Code's default**, or one of the modes above.
+- Settings → Tabs → New tabs start with → **Permission mode**: **Claude Code's default**, or one of the modes above.
 - A tab's **Tab settings…** → **Permission mode**: the same choices, for this tab only.
 
 ## See also

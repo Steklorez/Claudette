@@ -408,14 +408,14 @@ public class ImageOpeningTests
     {
         await using var h = new TabTestHarness();
         var settings = new SettingsViewModel(h.Services, null);
-        Assert.True(settings.Editor.ImagesInViewer);
+        Assert.True(settings.Files.ImagesInViewer);
 
-        settings.Editor.ImagesInSystem = true;
+        settings.Files.ImagesInSystem = true;
         Assert.Equal(OpenImagesIn.System, h.Services.Settings.Editor.OpenImagesIn);
-        Assert.False(settings.Editor.ImagesInViewer);
+        Assert.False(settings.Files.ImagesInViewer);
 
-        settings.Editor.ResetCommand.Execute(null);
+        settings.Files.ResetAllSections();
         Assert.Equal(OpenImagesIn.Viewer, h.Services.Settings.Editor.OpenImagesIn);
-        Assert.True(settings.Editor.ImagesInViewer);
+        Assert.True(settings.Files.ImagesInViewer);
     }
 }

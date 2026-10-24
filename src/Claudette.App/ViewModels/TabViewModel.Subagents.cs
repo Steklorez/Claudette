@@ -12,7 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// One of a tab's subagents under its row in the sidebar (DESIGN.md §5, "Subagents"), with Settings → Appearance → Show
+/// One of a tab's subagents under its row in the sidebar (DESIGN.md §5, "Subagents"), with Settings → Conversation → Show
 /// subagents' work on <b>Under the tab in the sidebar</b>. Selecting it shows its work in the tab, read-only.
 /// </summary>
 public sealed partial class SubagentRowViewModel : ObservableObject
@@ -71,8 +71,8 @@ public sealed partial class SubagentRowViewModel : ObservableObject
 }
 
 /// <summary>
-/// Subagents (DESIGN.md §5, "Subagents"): whether Claude may use them, as Settings → Claude Code → Subagents or the tab's
-/// own setting says, and where their work shows. With Settings → Appearance → Show subagents' work on <b>Under the tab
+/// Subagents (DESIGN.md §5, "Subagents"): whether Claude may use them, as Settings → Tabs → Subagents or the tab's
+/// own setting says, and where their work shows. With Settings → Conversation → Show subagents' work on <b>Under the tab
 /// in the sidebar</b>, each has a row under the tab's, and the tab shows one's work in place of its conversation,
 /// read-only: Claude Code has no way for the user to write to a subagent, only for Claude to.
 /// </summary>
@@ -132,7 +132,7 @@ public sealed partial class TabViewModel
 
     // ---- Where their work shows -------------------------------------------------------------------------------------
 
-    /// <summary>Settings → Appearance → Show subagents' work is <b>Under the tab in the sidebar</b>.</summary>
+    /// <summary>Settings → Conversation → Show subagents' work is <b>Under the tab in the sidebar</b>.</summary>
     public bool SubagentsInSidebar => _services.Settings.Appearance.ShowSubagents == SubagentDisplay.InSidebar;
 
     /// <summary>Each subagent's card opens its work in the conversation, as it always has.</summary>
@@ -326,7 +326,7 @@ public sealed partial class TabViewModel
         SyncSubagentRows();
     }
 
-    /// <summary>Settings → Appearance → Show subagents' work changed: it applies at once.</summary>
+    /// <summary>Settings → Conversation → Show subagents' work changed: it applies at once.</summary>
     private void OnSubagentDisplayChanged()
     {
         Agents.OpensInSidebar = SubagentsInSidebar;

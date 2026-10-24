@@ -461,8 +461,8 @@ public class RemoteControlTests
         Assert.True(settings.CanChangeRemoteControl);
 
         settings.RemoteControl = true;
-        settings.UseDefaultsCommand.Execute(null);
-        await settings.ApplyCommand.ExecuteAsync(null);
+        settings.UseAllDefaults();
+        await settings.DoneCommand.ExecuteAsync(null);
 
         Assert.True(tab.RemoteControl.IsOn);
         Assert.False(tab.HasOverrides);
@@ -689,12 +689,12 @@ public class RemoteControlTests
         Assert.False(h.Services.KeepAwake.IsOn);
 
         using var settings = new SettingsViewModel(h.Services, null);
-        settings.ClaudeCode.KeepAwakeWhileConnected = false;
+        settings.General.KeepAwakeWhileConnected = false;
         Assert.False(h.SleepBlocker.IsBlocking);
         Assert.Contains("turned off in Settings", settings.Advanced.KeepAwakeText, StringComparison.Ordinal);
         Assert.Contains("Keeping the computer awake:", settings.Advanced.DiagnosticsReport(includeHeader: true), StringComparison.Ordinal);
 
-        settings.ClaudeCode.KeepAwakeWhileConnected = true;
+        settings.General.KeepAwakeWhileConnected = true;
         Assert.True(h.SleepBlocker.IsBlocking);
 
         // Closing the tab disconnects it.
@@ -718,14 +718,15 @@ public class RemoteControlTests
         using var settings = new SettingsViewModel(h.Services, null);
         Assert.True(settings.ClaudeCode.CanUseRemoteControl);
 
-        settings.ClaudeCode.ResetCommand.Execute(null);
+        settings.ClaudeCode.ResetAllSections();
+        settings.General.ResetAllSections();
 
         Assert.False(h.Services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp);
         Assert.True(h.Services.Settings.ClaudeCode.KeepAwakeWhileConnected);
         Assert.False(settings.ClaudeCode.ConnectNewTabsToClaudeApp);
-        Assert.True(settings.ClaudeCode.KeepAwakeWhileConnected);
-        Assert.Contains(settings.SearchResultsFor("claude app"), r => r is { Category: "Claude Code", Label: "Connect new tabs to the Claude app (Remote Control)" });
-        Assert.Single(settings.SearchResultsFor("keep awake"), r => r.Category == "Claude Code");
+        Assert.True(settings.General.KeepAwakeWhileConnected);
+        Assert.Contains(settings.SearchResultsFor("claude app"), r => r is { Category: "Claude Code", Key: "claudeCode.connectNewTabsToClaudeApp" });
+        Assert.Contains(settings.SearchResultsFor("keep awake"), r => r is { Category: "General", Key: "claudeCode.keepAwakeWhileConnected" });
         Assert.Single(settings.SearchResultsFor("push notifications"));
 
         await settings.ClaudeCode.OpenPushNotificationsDocsCommand.ExecuteAsync(null);

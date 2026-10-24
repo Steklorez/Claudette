@@ -11,7 +11,7 @@ Claude Code sessions can message each other by name with `SendMessage`, which is
 
 ## A session's name
 
-A tab's session goes by the tab's name in Claude Code, as long as Settings → General → **Name each tab's session in Claude Code after the tab** is on ([Names, marks and pins](../tabs/names-marks-and-pins.md) explains it). Without it, Claude Code names a session after its folder with two characters added, like `claudette-3f`, so every tab in a folder looks alike to the others' Claude.
+A tab's session goes by the tab's name in Claude Code, as long as Settings → Claude Code → **Name each tab's session in Claude Code after the tab** is on ([Names, marks and pins](../tabs/names-marks-and-pins.md) explains it). Without it, Claude Code names a session after its folder with two characters added, like `claudette-3f`, so every tab in a folder looks alike to the others' Claude.
 
 The name a session is reached by can differ from the tab's. Claude Code adds a word to a name another session already has, such as `Art page-joyful-stearns`. The tab's info card shows what it really is:
 

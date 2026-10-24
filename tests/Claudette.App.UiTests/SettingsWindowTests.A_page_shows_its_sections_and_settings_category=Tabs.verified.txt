@@ -1,0 +1,79 @@
+﻿"Tabs"
+"What each new tab starts with, and the folders you open them in."
+"New tabs start with"
+[button] Reset to defaults
+"Each tab can change these for itself, from Tab settings… in its menu."
+"Model"
+[choice] "Claude Code's default"
+"Effort"
+"How hard the model thinks before it answers."
+[choice] "The model's default"
+"Permission mode"
+"What Claude may do without asking first.  "
+[choice] "Claude Code's default (Auto)"
+"Subagents"
+"This computer"
+"Whether Claude hands parts of its work to subagents.  "
+[choice] "Claude decides"
+"At a usage limit"
+[button] Reset to defaults
+"Continue tasks when a usage limit resets"
+"The tab waits for the limit to reset, then asks Claude to carry on.  "
+[toggle on] Continue tasks when a usage limit resets
+"Use usage credits once a limit is used up"
+"Off, tabs stop at the limit instead, and wait for it to reset.  "
+[toggle on] Use usage credits once a limit is used up
+"Check-ins on long turns"
+[button] Reset to defaults
+"Check in on long turns"
+"Claudette asks Claude how it's going, so a stuck tab doesn't burn usage unnoticed."
+[toggle on] Check in on long turns
+"After the turn has run (minutes)"
+"0 turns this off."
+[button] (icon)
+[button] (icon)
+[field] "15"
+"After no output for (minutes)"
+"0 turns this off."
+[button] (icon)
+[button] (icon)
+[field] "5"
+"Message"
+"What Claudette sends Claude."
+[field] "Everything OK? Give me a one or two sentence status update: what you're doing, and whether you're stuck or waiting on something."
+"Notify me when a check-in is sent"
+[toggle] Notify me when a check-in is sent
+"Process monitor"
+[button] Reset to defaults
+"Show the process monitor"
+"The processes each tab starts, with their CPU and memory.  "
+[toggle] Show the process monitor
+"Refresh every (seconds)"
+[button] (icon)
+[button] (icon)
+[field] "2"
+"Show command lines"
+"They sometimes hold tokens or passwords: turn this off if others can see your screen."
+[toggle on] Show command lines
+"New tab picker"
+[button] Reset to defaults
+"Recent folders to keep"
+[button] (icon)
+[button] (icon)
+[field] "20"
+"Clear recent folders"
+"Favorites are kept."
+[button] Clear recent folders
+"Favorite folders"
+"This computer"
+"Always at the top of the new tab picker."
+[button] Favorite folders: Add folder…
+"api"
+"{root}/projects-favorite/api"
+[button] Move api up
+[button] Move api down
+[button] Remove api from favorites
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

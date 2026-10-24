@@ -64,11 +64,11 @@ After the turn is over, the tab's row in the sidebar counts every kind of backgr
 
 | Setting | Default | Where |
 |---|---|---|
-| **Show fun words while Claude works** | On | Settings → Appearance |
-| **Show what Claude is doing while it works** | On | Settings → Appearance |
+| **Show fun words** | On | Settings → Conversation → While Claude works |
+| **Show what Claude is doing** | On | Settings → Conversation → While Claude works |
 | **Motion** | Follow the system | Settings → Appearance |
 
-With **Show fun words while Claude works** off, the line says *Working…*. With **Show what Claude is doing while it works** off, the verb stays and the tool's name doesn't replace it. **Motion** can stop the twinkling glyph and the pulsing dot ([Accessibility](../settings/accessibility.md)).
+With **Show fun words** off, the line says *Working…*. With **Show what Claude is doing** off, the verb stays and the tool's name doesn't replace it. **Motion** can stop the twinkling glyph and the pulsing dot ([Accessibility](../settings/accessibility.md)).
 
 ## Shortcuts
 

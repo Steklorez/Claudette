@@ -21,7 +21,8 @@ public sealed class UnrealProviderTests : IDisposable
         var engine = ProjectToolFixtures.Engine(_temp, "UE5", major, minor, patch, installed: false);
         var project = ProjectToolFixtures.UProject(_temp, "UE5/NightOwl/NightOwl.uproject", association: "", code: code);
         var context = ProjectToolFixtures.Context(_temp, os: os, settings: settings, memory: memory);
-        var info = _unreal.Describe(new ProjectCandidate(UnrealProvider.KindId, project, "NightOwl"), context);
+        // Through the detector, as the app reads a project: it leaves the note out when Settings says not to tell Claude.
+        var info = new ProjectToolDetector([_unreal]).Describe(new ProjectCandidate(UnrealProvider.KindId, project, "NightOwl"), context);
         return (info, engine, project);
     }
 
@@ -61,7 +62,7 @@ public sealed class UnrealProviderTests : IDisposable
     [Fact]
     public void Open_solution_is_disabled_until_project_files_are_generated()
     {
-        var settings = new ProjectToolSettings { ProjectFileFormat = ProjectFileFormat.VisualStudio };
+        var settings = new ProjectToolSettings().With(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio));
         var (before, _, _) = NativeProject(settings);
         Assert.False(Action(before, "open-solution").IsEnabled);
         Assert.Equal("Generate project files first", Action(before, "open-solution").Tip);
@@ -99,7 +100,7 @@ public sealed class UnrealProviderTests : IDisposable
     [Fact]
     public void Other_IDEs_open_the_generated_solution_and_fall_back_to_the_OSs_app()
     {
-        var (info, _, _) = NativeProject(new ProjectToolSettings { OpenSolutionsWith = SolutionOpener.VisualStudio, ProjectFileFormat = ProjectFileFormat.VisualStudio });
+        var (info, _, _) = NativeProject(new ProjectToolSettings { OpenSolutionsWith = SolutionOpener.VisualStudio }.With(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio)));
 
         var open = Action(info, "open-solution");
         Assert.Equal("Open solution", open.Label);
@@ -124,7 +125,7 @@ public sealed class UnrealProviderTests : IDisposable
     [Fact]
     public void With_Rider_and_an_engine_too_old_for_its_uproject_model_the_solution_opens_as_before()
     {
-        var settings = new ProjectToolSettings { OpenSolutionsWith = SolutionOpener.Rider, ProjectFileFormat = ProjectFileFormat.VisualStudio };
+        var settings = new ProjectToolSettings { OpenSolutionsWith = SolutionOpener.Rider }.With(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio));
         var (info, _, _) = NativeProject(settings, os: ToolOS.Windows, version: (4, 24, 3));
 
         Assert.Equal("Open solution", Action(info, "open-solution").Label);
@@ -136,7 +137,7 @@ public sealed class UnrealProviderTests : IDisposable
     {
         _temp.CreateFolder("UE5/NightOwl/NightOwl (Mac).xcworkspace/contents");
 
-        var (info, _, _) = NativeProject(new ProjectToolSettings { ProjectFileFormat = ProjectFileFormat.Xcode });
+        var (info, _, _) = NativeProject(new ProjectToolSettings().With(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.Xcode)));
 
         Assert.Equal(_temp.Combine("UE5", "NightOwl", "NightOwl (Mac).xcworkspace"), Action(info, "open-solution").OpenPath);
     }
@@ -187,7 +188,7 @@ public sealed class UnrealProviderTests : IDisposable
     [Fact]
     public void The_default_configuration_comes_from_Settings()
     {
-        var (info, _, _) = NativeProject(new ProjectToolSettings { UnrealConfiguration = UnrealConfiguration.DebugGame });
+        var (info, _, _) = NativeProject(new ProjectToolSettings().With(UnrealProvider.KindId, UnrealProvider.ConfigurationKey, nameof(UnrealConfiguration.DebugGame)));
 
         Assert.Equal("DebugGame", info.Choice!.Selected);
         Assert.Equal("Launch editor (DebugGame)", Action(info, "launch-editor").Label);
@@ -364,6 +365,6 @@ public sealed class UnrealProviderTests : IDisposable
     public void The_note_is_left_out_when_Settings_says_so()
     {
         Assert.NotNull(NativeProject().Info.SystemPromptNote);
-        Assert.Null(NativeProject(new ProjectToolSettings { TellClaudeAboutUnreal = false }).Info.SystemPromptNote);
+        Assert.Null(NativeProject(new ProjectToolSettings().Quiet(UnrealProvider.KindId)).Info.SystemPromptNote);
     }
 }

@@ -490,6 +490,8 @@
       <Setter Property="Padding" Value="20" />
       <Setter Property="BoxShadow" Value="0 8 32 0 #40000000" />
     </Style>
+    <!-- Settings and Tab settings…: sections, rows and switches (DESIGN.md §14). -->
+    <StyleInclude Source="avares://Claudette/Themes/SettingsStyles.axaml" />
     <!-- Flyouts: room for the 480 the widest ask for (Fluent's 456 holds 430 inside its padding and border), and never
          scrolled sideways, so what's wider wraps or trims and a row's buttons stay in view. -->
     <Style Selector="FlyoutPresenter">
@@ -612,6 +614,21 @@
       <StreamGeometry x:Key="IconMarkPause">M3,2 L5,2 L5,10 L3,10 Z M7,2 L9,2 L9,10 L7,10 Z</StreamGeometry>
       <!-- Not a mark: what covers it while every changed file is reviewed. Filled even-odd, so the check is a hole. -->
       <StreamGeometry x:Key="IconMarkReviewed">F0 M0.5,6 A5.5,5.5 0 1 1 11.5,6 A5.5,5.5 0 1 1 0.5,6 Z M2.5,6.6 L5.2,9.3 L9.5,4.65 L7.9,3.15 L5.2,6.1 L4.1,5 Z</StreamGeometry>
+      <!-- The Settings sidebar's pages (DESIGN.md §14), with IconSettings, IconCardClaude, IconCardYou, IconCardStats,
+           IconFiles, IconProject and IconToolBash. 12×12 strokes. -->
+      <StreamGeometry x:Key="IconSettingsAppearance">M6,3.6 A2.4,2.4 0 1 1 6,8.4 A2.4,2.4 0 1 1 6,3.6 M6,0.8 L6,1.8 M6,10.2 L6,11.2 M0.8,6 L1.8,6 M10.2,6 L11.2,6 M2.3,2.3 L3,3 M9,9 L9.7,9.7 M2.3,9.7 L3,9 M9,3 L9.7,2.3</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsConversation">M1.5,2 L10.5,2 L10.5,8 L5.2,8 L2.8,10.4 L2.8,8 L1.5,8 Z M3.8,4.4 L8.2,4.4 M3.8,6 L6.6,6</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsNotifications">M3,8.4 L3,5.6 A3,3 0 0 1 9,5.6 L9,8.4 L10.2,9.6 L1.8,9.6 Z M5,11 L7,11 M6,1.2 L6,2.6</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsKeyboard">M1,3 L11,3 L11,9.5 L1,9.5 Z M3,5 L3.1,5 M5,5 L5.1,5 M7,5 L7.1,5 M9,5 L9.1,5 M3.6,7.4 L8.4,7.4</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsTabs">M1.5,4.2 L10.5,4.2 L10.5,10.5 L1.5,10.5 Z M1.5,4.2 L1.5,2 L5.6,2 L5.6,4.2 M6.6,4.2 L6.6,2.6 L10.5,2.6 L10.5,4.2</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsSessions">M2,1.5 L4,1.5 L4,10.5 L2,10.5 Z M5,1.5 L7,1.5 L7,10.5 L5,10.5 Z M8,2.2 L9.9,1.7 L11.2,10 L9.3,10.5 Z</StreamGeometry>
+      <!-- A drum of tapes: Perforce's depot. -->
+      <StreamGeometry x:Key="IconSettingsPerforce">M2,3 A4,1.5 0 1 0 10,3 A4,1.5 0 1 0 2,3 M2,3 L2,9 A4,1.5 0 0 0 10,9 L10,3 M2,6 A4,1.5 0 0 0 10,6</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsLinks">M5,7 L7,5 M4.4,5.6 L3,7 A1.7,1.7 0 0 0 5,9 L6.4,7.6 M7.6,6.4 L9,5 A1.7,1.7 0 0 0 7,3 L5.6,4.4</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsActions">M3.5,2 L10,6 L3.5,10 Z</StreamGeometry>
+      <StreamGeometry x:Key="IconSettingsTools">M10.6,3.4 A2.6,2.6 0 0 1 7,6.2 L2.7,10.5 A0.9,0.9 0 0 1 1.5,9.3 L5.8,5 A2.6,2.6 0 0 1 8.6,1.4 L7.3,2.7 L7.6,4.4 L9.3,4.7 Z</StreamGeometry>
+      <!-- A circle with a question mark: Help, at the foot of the Settings sidebar. -->
+      <StreamGeometry x:Key="IconHelp">M6,1 A5,5 0 1 1 6,11 A5,5 0 1 1 6,1 M4.4,4.6 A1.6,1.6 0 1 1 6.6,6.1 C6.1,6.4 6,6.8 6,7.3 M6,8.7 L6,9.1</StreamGeometry>
 
       <!-- Claudette's color tokens, per theme. Views use only these, never Fluent's internal resource names. -->
       <ResourceDictionary.ThemeDictionaries>

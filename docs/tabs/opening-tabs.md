@@ -56,13 +56,13 @@ Starting Claudette while it's already running doesn't open a second window. The 
 
 ## Settings
 
-All in Settings → New tabs:
+All in Settings → Tabs → New tab picker:
 
 - **Recent folders to keep**: how many recent folders the picker remembers. The default is 20.
 - **Clear recent folders**: empties the recent list. Favorites are kept.
 - **Favorite folders**: your favorites in order, with **Add folder…**, a move up and move down arrow and **Remove** for each.
 
-The **Default model**, **Default effort** and **Default permission mode** on the same page are what a new tab starts with. A tab can have its own: see [Tab settings](tab-settings.md).
+The **Model**, **Effort** and **Permission mode** under **New tabs start with**, on the same page, are what a new tab starts with. A tab can have its own: see [Tab settings](tab-settings.md).
 
 ## Shortcuts
 

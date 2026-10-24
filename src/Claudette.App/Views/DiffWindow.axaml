@@ -20,7 +20,7 @@
           <ToggleButton Content="Side by side" IsChecked="{Binding IsSideBySide}" />
           <ToggleButton Content="Whole file" IsChecked="{Binding ShowWholeFile}" />
           <Button Content="Open in diff tool" Command="{Binding OpenInDiffToolCommand}" IsVisible="{Binding CanOpenInDiffTool}" />
-          <Button Content="Open" Command="{Binding OpenInEditorCommand}" ToolTip.Tip="As Settings → Editor → Open in the diff window says: the file in Claudette's editor or the OS's app, or the changes in your diff tool" />
+          <Button Content="Open" Command="{Binding OpenInEditorCommand}" ToolTip.Tip="As Settings → Files and diffs → Open in the diff window says: the file in Claudette's editor or the OS's app, or the changes in your diff tool" />
           <!-- DESIGN.md §8, "Reverting": asks first, in place -->
           <Button Content="Revert file" Command="{Binding RevertConfirmation.AskCommand}" ToolTip.Tip="{Binding RevertFileTip}">
             <Button.IsVisible>

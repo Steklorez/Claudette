@@ -1,64 +1,86 @@
 using Claudette.Core.Installation;
-using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels.Settings;
 
-/// <summary>Settings → Claude Code → Subagents' choices, and the tab's own in Tab settings… (DESIGN.md §5, "Subagents").</summary>
-public sealed record SubagentUseChoice(SubagentUse Use)
-{
-    public static string Label(SubagentUse use) => use switch
-    {
-        SubagentUse.Discourage => "Discourage them",
-        SubagentUse.DontAllow => "Don't allow them",
-        _ => "Claude decides",
-    };
-
-    public override string ToString() => Label(Use);
-}
-
 /// <summary>
-/// Settings → Claude Code (DESIGN.md §14): the installed version and its updates, the account, how tabs run (with
-/// folder trust), the login shell's environment, and the Claude app. Dispose it with the window.
+/// Settings → Claude Code (DESIGN.md §14): the installed version and its updates, the path to it, the account, how a
+/// session starts (its name, folder trust, the login shell's environment, checkpoints, the task list, the fallback model),
+/// and the Claude app. Dispose it with the window.
 /// </summary>
 public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
 {
-    private readonly NewTabsPage _newTabs;
+    private readonly TabsPage _tabs;
 
-    /// <param name="newTabs">New tabs, whose model list <b>Fallback model</b> offers too.</param>
-    public ClaudeCodePage(SettingsContext context, string? accountText, ClaudeUpdateViewModel? updates, NewTabsPage newTabs) : base(context, SettingsCategory.ClaudeCode)
+    /// <param name="tabs">Tabs, whose model list <b>Fallback model</b> offers too.</param>
+    public ClaudeCodePage(SettingsContext context, string? accountText, ClaudeUpdateViewModel? updates, TabsPage tabs) : base(context, SettingsCategory.ClaudeCode)
     {
-        _newTabs = newTabs;
+        _tabs = tabs;
         AccountText = accountText ?? "Not signed in";
         Updates = updates;
+        Section("installed", "Claude Code",
+        [
+            Info("claudeCode.version", "Installed version", keywords: ["installed with", "update now", "claude doctor", "what's new"]),
+            Setting("claudeCode.checkForUpdates", "Check for Claude Code updates automatically", s => s.ClaudeCode.CheckForUpdates, (s, v) => s.ClaudeCode.CheckForUpdates = v,
+                "At launch and every few hours. Open tabs keep the version they started with.", keywords: ["update claude code", "version"]),
+            Setting("claudeCode.claudePath", "Path to claude", s => s.ClaudeCode.ClaudePath, (s, v) => s.ClaudeCode.ClaudePath = v,
+                "Empty finds Claude Code by itself. A change takes effect the next time Claudette starts.", keywords: ["executable", "binary", "location"]),
+        ]);
+        Section("account", "Account",
+        [
+            Info("claudeCode.account", "Signed-in account", keywords: ["sign in", "sign out", "login", "logout", "email", "plan"]),
+        ]);
+        Section("sessions", "Starting a session",
+        [
+            Setting("general.renameInClaudeCode", "Name each tab's session in Claude Code after the tab", s => s.General.RenameInClaudeCode, (s, v) => s.General.RenameInClaudeCode = v,
+                "So other sessions, and claude --resume <name> in a terminal, find it by name.",
+                "Otherwise Claude Code names it after its folder, such as claudette-3f.", ["session name", "resume"]),
+            Setting("claudeCode.askBeforeUsingFolderSettings", "Ask before using a new folder's own configuration", s => s.ClaudeCode.AskBeforeUsingFolderSettings,
+                (s, v) => s.ClaudeCode.AskBeforeUsingFolderSettings = v,
+                "Before Claude Code first starts in a folder you haven't trusted, see what it would run.",
+                "Lists the hooks, commands and MCP servers the folder's configuration would run. Started by Claudette, Claude Code doesn't ask itself.",
+                ["folder trust", "hooks", "security"]),
+            .. ShowLoginShellSetting
+                ? [Setting("claudeCode.useLoginShellEnvironment", "Use my login shell's environment", s => s.ClaudeCode.UseLoginShellEnvironment, (s, v) => s.ClaudeCode.UseLoginShellEnvironment = v,
+                    "Claude and the tools Claudette runs get the PATH your shell profile sets up, as in a terminal.",
+                    "And the other variables it sets. Not needed when Claudette is started from a terminal.", ["path", "zshrc", "bashrc", "environment variables"])]
+                : Array.Empty<SettingItem>(),
+            Setting("claudeCode.keepFileCheckpoints", "Keep copies of files Claude changes, so prompts can be rewound", s => s.ClaudeCode.KeepFileCheckpoints,
+                (s, v) => s.ClaudeCode.KeepFileCheckpoints = v,
+                "Restore files and Edit and resend put files back as they were before a prompt.",
+                "Claude Code keeps the copies with the session, as its terminal does.", ["checkpoints", "rewind", "undo"]),
+            Setting("claudeCode.giveClaudeTaskList", "Give Claude a task list", s => s.ClaudeCode.GiveClaudeTaskList, (s, v) => s.ClaudeCode.GiveClaudeTaskList = v,
+                "Claude writes down its steps and ticks them off, so you can see how far it's got.",
+                "On the to-do list over the conversation, the status line and the tab's row. Claude Code leaves the list out for newer models, to save room in the context.",
+                ["todo", "tasks", "plan"]),
+            Setting("claudeCode.subagentProgressSummaries", "Summarize subagents' progress", s => s.ClaudeCode.SubagentProgressSummaries,
+                (s, v) => s.ClaudeCode.SubagentProgressSummaries = v,
+                "A line about what each subagent has got to, for the Agents page.",
+                "Each summary is a small extra model call, which counts toward your usage.", ["agents", "agent map"]),
+            Setting("claudeCode.fallbackModel", "Fallback model", s => s.ClaudeCode.FallbackModel, (s, v) => s.ClaudeCode.FallbackModel = v,
+                "When a tab's model is overloaded, Claude Code switches to this one rather than wait.", keywords: ["overloaded", "529"]),
+        ], description: "These apply to tabs started after a change.");
+        Section("claudeApp", "Claude app",
+        [
+            Setting("claudeCode.connectNewTabsToClaudeApp", "Connect new tabs to the Claude app", s => s.ClaudeCode.ConnectNewTabsToClaudeApp,
+                (s, v) => s.ClaudeCode.ConnectNewTabsToClaudeApp = v,
+                "Continue a tab from your phone or claude.ai/code while it runs here.",
+                "Each tab has Connect to the Claude app in its menu; this sets it for tabs opened from now on. While a tab is connected, its transcript is stored on Anthropic's servers. Needs a claude.ai subscription sign-in. General keeps the computer awake while tabs are connected.",
+                ["remote control", "phone", "mobile"]),
+            Info("claudeCode.pushNotifications", "Push notifications on your phone",
+                "Turn them on in Claude Code's /config: none arrive while Claudette is in front.",
+                "Push when actions required sends one when a tab needs an answer; Push when Claude decides adds the ones Claude chooses to send.",
+                ["mobile", "remote control"]),
+        ], description: "Remote Control: a tab here, continued from the Claude app.");
         // Signing in from this window can make the Claude app available, or not (DESIGN.md §18).
         Services.RemoteControl.AvailabilityChanged += OnRemoteControlAvailabilityChanged;
     }
 
     public void Dispose() => Services.RemoteControl.AvailabilityChanged -= OnRemoteControlAvailabilityChanged;
 
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Installed version and install method", pageText: "installed with"),
-        Entry("Check for Claude Code updates automatically"),
-        Entry("Update Claude Code", pageText: "Update now"),
-        Entry("Signed-in account", pageText: "Signed in as"),
-        Entry("Sign in"),
-        Entry("Sign out"),
-        Entry("Path to claude"),
-        Entry("Fallback model"),
-        Entry("Keep copies of files Claude changes, so prompts can be rewound"),
-        Entry("Give Claude a task list"),
-        Entry("Show every hook run in the conversation"),
-        Entry("Subagents"),
-        Entry("Summarize subagents' progress"),
-        Entry("Suggest my next prompt"),
-        Entry("Ask before using a new folder's own configuration (folder trust)", pageText: "Ask before using a new folder's own configuration"),
-        .. ShowLoginShellSetting ? [Entry("Use my login shell's environment")] : Array.Empty<SettingsSearchResult>(),
-        Entry("Connect new tabs to the Claude app (Remote Control)", pageText: "Connect new tabs to the Claude app"),
-        Entry("Push notifications on your phone", pageText: "push notification on your phone"),
-        Entry("Keep this computer awake while tabs are connected"),
-    ];
+    public override string IconKey => "IconCardClaude";
+
+    public override string Description => "The Claude Code Claudette runs, your account, and how each session starts.";
 
     // ---- The installed version and the account ----------------------------------------------------------------------
 
@@ -87,11 +109,34 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
                 : ".")
         : "Claude Code wasn't found.";
 
-    // ---- How tabs run (DESIGN.md §5, "Rewind and branch", "Hook runs"; §13, "Launch") ----------------------------
+    /// <summary>Null (empty) finds Claude Code automatically. Takes effect the next time Claudette starts.</summary>
+    public string ClaudePath
+    {
+        get => Settings.ClaudeCode.ClaudePath ?? "";
+        set => Set(value, v => Settings.ClaudeCode.ClaudePath = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
+    }
 
-    /// <summary><b>Fallback model</b>: none, or one of the models New tabs offers.</summary>
+    [RelayCommand]
+    private async Task BrowseClaudePathAsync()
+    {
+        if (await Services.Platform.PickFileAsync("Choose the claude executable") is { } path)
+        {
+            ClaudePath = path;
+            OnPropertyChanged(nameof(ClaudePath));
+        }
+    }
+
+    // ---- Starting a session (DESIGN.md §5, "Rewind and branch"; §7, "Folder trust"; §13) ---------------------------
+
+    public bool RenameInClaudeCode
+    {
+        get => Settings.General.RenameInClaudeCode;
+        set => Set(value, v => Settings.General.RenameInClaudeCode = v);
+    }
+
+    /// <summary><b>Fallback model</b>: none, or one of the models Tabs offers.</summary>
     public IReadOnlyList<Choice> FallbackModelChoices => field ??=
-        [new(null, "None"), .. _newTabs.ModelChoices.Where(c => c.Value is not null)];
+        [new(null, "None"), .. _tabs.ModelChoices.Where(c => c.Value is not null)];
 
     public Choice FallbackModel
     {
@@ -114,38 +159,11 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         set => Set(value, v => Settings.ClaudeCode.GiveClaudeTaskList = v);
     }
 
-    /// <summary><b>Show every hook run in the conversation</b>.</summary>
-    public bool ShowAllHookRuns
-    {
-        get => Settings.ClaudeCode.ShowAllHookRuns;
-        set => Set(value, v => Settings.ClaudeCode.ShowAllHookRuns = v);
-    }
-
-    public IReadOnlyList<SubagentUseChoice> SubagentChoices { get; } =
-        [new(SubagentUse.ClaudeDecides), new(SubagentUse.Discourage), new(SubagentUse.DontAllow)];
-
-    /// <summary>
-    /// <b>Subagents</b> (DESIGN.md §5, "Subagents"): whether Claude may hand work to them. Each tab can override it in Tab
-    /// settings….
-    /// </summary>
-    public SubagentUseChoice Subagents
-    {
-        get => SubagentChoices.FirstOrDefault(c => c.Use == Settings.ClaudeCode.Subagents) ?? SubagentChoices[0];
-        set => Set(value?.Use ?? SubagentUse.ClaudeDecides, v => Settings.ClaudeCode.Subagents = v);
-    }
-
     /// <summary><b>Summarize subagents' progress</b> (DESIGN.md §18, "Agent map").</summary>
     public bool SubagentProgressSummaries
     {
         get => Settings.ClaudeCode.SubagentProgressSummaries;
         set => Set(value, v => Settings.ClaudeCode.SubagentProgressSummaries = v);
-    }
-
-    /// <summary><b>Suggest my next prompt</b> (DESIGN.md §5, "Prompt suggestions").</summary>
-    public bool PromptSuggestions
-    {
-        get => Settings.ClaudeCode.PromptSuggestions;
-        set => Set(value, v => Settings.ClaudeCode.PromptSuggestions = v);
     }
 
     /// <summary><b>Ask before using a new folder's own configuration</b> (DESIGN.md §7, "Folder trust").</summary>
@@ -168,23 +186,6 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
     /// <summary>Only macOS and Linux have the setting: on Windows, apps get the user's full environment.</summary>
     public static bool ShowLoginShellSetting => !OperatingSystem.IsWindows();
 
-    /// <summary>Null (empty) finds Claude Code automatically. Takes effect the next time Claudette starts.</summary>
-    public string ClaudePath
-    {
-        get => Settings.ClaudeCode.ClaudePath ?? "";
-        set => Set(value, v => Settings.ClaudeCode.ClaudePath = string.IsNullOrWhiteSpace(v) ? null : v.Trim());
-    }
-
-    [RelayCommand]
-    private async Task BrowseClaudePathAsync()
-    {
-        if (await Services.Platform.PickFileAsync("Choose the claude executable") is { } path)
-        {
-            ClaudePath = path;
-            OnPropertyChanged(nameof(ClaudePath));
-        }
-    }
-
     // ---- The Claude app (DESIGN.md §18, "Remote Control") --------------------------------------------------------
 
     /// <summary>The docs' steps for pushes to the phone. Claudette doesn't change Claude Code's settings for them.</summary>
@@ -198,13 +199,6 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
     {
         get => Settings.ClaudeCode.ConnectNewTabsToClaudeApp;
         set => Set(value, v => Settings.ClaudeCode.ConnectNewTabsToClaudeApp = v);
-    }
-
-    /// <summary><b>Keep this computer awake while tabs are connected</b>: system sleep only; the display can still sleep.</summary>
-    public bool KeepAwakeWhileConnected
-    {
-        get => Settings.ClaudeCode.KeepAwakeWhileConnected;
-        set => Set(value, v => Settings.ClaudeCode.KeepAwakeWhileConnected = v);
     }
 
     /// <summary>The account can use Remote Control. When it can't, the setting and the tabs' switches are disabled.</summary>
@@ -223,11 +217,5 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         OnPropertyChanged(nameof(CanUseRemoteControl));
         OnPropertyChanged(nameof(RemoteControlUnavailableText));
         OnPropertyChanged(nameof(HasRemoteControlUnavailableText));
-    }
-
-    protected override void ResetSettings()
-    {
-        Settings.ClaudeCode = new ClaudeCodeSettings();
-        Save();
     }
 }

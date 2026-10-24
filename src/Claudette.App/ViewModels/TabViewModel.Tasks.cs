@@ -142,7 +142,7 @@ public sealed partial class TabViewModel
 
     // ---- Claude's task list and plan (DESIGN.md §5, "Tasks") ---------------------------------------------------------
 
-    /// <summary>Settings → Appearance → Show task progress on tab rows.</summary>
+    /// <summary>Settings → Conversation → Show task progress.</summary>
     private bool TaskProgressOnRows => _services.Settings.Appearance.ShowTaskProgressOnTabs;
 
     /// <summary>The row's "3/7" badge: Claude's tasks aren't all done, and Settings shows it.</summary>

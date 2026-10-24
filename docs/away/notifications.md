@@ -27,7 +27,7 @@ Every switch is on by default. They're under **Notify me when** in Settings → 
 
 A tab's notification carries the tab's name as its title.
 
-**Check-ins** have their switch on another page: Settings → Check-ins → **Notify me when a check-in is sent**, off by default, which a tab can override in [Tab settings](../tabs/tab-settings.md). See [Check-ins on long turns](../composer/check-ins-on-long-turns.md).
+**Check-ins** have their switch on another page: Settings → Tabs → Check-ins on long turns → **Notify me when a check-in is sent**, off by default, which a tab can override in [Tab settings](../tabs/tab-settings.md). See [Check-ins on long turns](../composer/check-ins-on-long-turns.md).
 
 ## When they're skipped
 
@@ -64,9 +64,9 @@ These are the notifications on this computer. Pushes to a phone are separate: th
 | **Claude Code needs me to sign in** | On | Settings → Notifications |
 | **A Claude Code update is ready** | On | Settings → Notifications |
 | **A project action finishes** | On | Settings → Notifications |
-| **Notify me when a check-in is sent** | Off | Settings → Check-ins |
+| **Notify me when a check-in is sent** | Off | Settings → Tabs → Check-ins on long turns |
 
-The badge and the icon's animation are in [The Dock and taskbar icon](the-dock-and-taskbar-icon.md). **Reset to defaults** on the page turns every one back on. Notification settings [sync](../history/settings-sync.md) between your machines.
+The badge and the icon's animation are in [The Dock and taskbar icon](the-dock-and-taskbar-icon.md). **Reset to defaults** in the **Notify me when** section turns every one back on. Notification settings [sync](../history/settings-sync.md) between your machines.
 
 ## See also
 

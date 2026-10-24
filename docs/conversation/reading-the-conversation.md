@@ -57,9 +57,9 @@ A long conversation, such as a restored session with thousands of tool calls, co
 
 | Setting | Default | Where |
 |---|---|---|
-| **Quieter in-between steps** | On | Settings → Appearance |
+| **Quieter in-between steps** | On | Settings → Conversation |
 | **Full-width conversation** | Off | Settings → Appearance |
-| **Show thinking expanded** | Off | Settings → Appearance ([Thinking, notes and hooks](thinking-notes-and-hooks.md)) |
+| **Show thinking expanded** | Off | Settings → Conversation ([Thinking, notes and hooks](thinking-notes-and-hooks.md)) |
 | **Conversation font**, **Conversation font size**, **Code font**, **Code font size** | The defaults | Settings → Appearance ([Styles and themes](../settings/styles-and-themes.md)) |
 
 ## Shortcuts

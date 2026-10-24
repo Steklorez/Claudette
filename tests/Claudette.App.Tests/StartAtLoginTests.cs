@@ -95,7 +95,7 @@ public sealed class StartAtLoginTests
         var settings = new SettingsViewModel(h.Services, null);
         settings.General.StartsAtLogin = true;
 
-        settings.General.ResetCommand.Execute(null);
+        settings.General.ResetAllSections();
 
         Assert.True(settings.General.StartsAtLogin);
         Assert.Equal(LoginEntryState.Enabled, h.LoginItems.Entry);

@@ -380,12 +380,12 @@ public class WorktreeTabTests
         await settings.AddExtraFolderCommand.ExecuteAsync(null);
         Assert.Equal([extra], settings.ExtraFolders);
 
-        await settings.ApplyCommand.ExecuteAsync(null);
+        await settings.DoneCommand.ExecuteAsync(null);
         Assert.Equal([extra], tab.State.ExtraFolders);
 
         settings = new TabSettingsViewModel(h.Services, tab, () => { });
         settings.RemoveExtraFolderCommand.Execute(extra);
-        await settings.ApplyCommand.ExecuteAsync(null);
+        await settings.DoneCommand.ExecuteAsync(null);
         Assert.Empty(tab.State.ExtraFolders);
     }
 }

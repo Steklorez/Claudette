@@ -2,102 +2,122 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Claudette.App.ViewModels"
              xmlns:settings="using:Claudette.App.ViewModels.Settings"
-             x:Class="Claudette.App.Views.Settings.GeneralPageView"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.GeneralPageView" ClipToBounds="False"
              x:DataType="settings:GeneralPage">
-  <!-- General -->
-  <StackPanel Spacing="12">
-    <TextBlock Classes="section" Text="General" />
-    <!-- Starting at login (DESIGN.md §9, "Starting at login"): the OS's entry, so it's not reset with the rest -->
-    <CheckBox Content="Start Claudette when I log in" IsChecked="{Binding StartsAtLogin}" IsEnabled="{Binding CanChangeStartAtLogin}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding StartAtLoginText}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding StartAtLoginNote}" IsVisible="{Binding HasStartAtLoginNote}" />
-    <TextBlock Classes="small warning" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding StartAtLoginError}" IsVisible="{Binding HasStartAtLoginError}" />
-    <CheckBox Content="Confirm before closing a tab where Claude is working" IsChecked="{Binding ConfirmCloseWorkingTab}" />
-    <!-- Session naming (DESIGN.md §13): what other sessions message a tab's session by -->
-    <CheckBox Content="Name each tab's session in Claude Code after the tab" IsChecked="{Binding RenameInClaudeCode}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-               Text="Other Claude Code sessions message it by that name, and claude --resume &lt;name&gt; in a terminal finds it. Otherwise Claude Code names it after its folder, such as claudette-3f." />
-    <!-- Claude's service status (DESIGN.md §18, "Service status") -->
-    <CheckBox Content="Show Claude's service status" IsChecked="{Binding ShowServiceStatus}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-               Text="A dot in the header, and a banner while Claude Code, the Claude API or claude.ai has an incident. Read from status.claude.com every 5 minutes." />
+  <!-- General (DESIGN.md §14) -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="starting">
+      <!-- Starting at login (DESIGN.md §9, "Starting at login"): the OS's entry, so it's not reset with the rest -->
+      <c:SettingRow Key="state.startAtLogin" Description="{Binding StartAtLoginText}">
+        <ToggleSwitch IsChecked="{Binding StartsAtLogin}" IsEnabled="{Binding CanChangeStartAtLogin}" />
+        <c:SettingRow.Details>
+          <StackPanel Spacing="4">
+            <StackPanel.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                <Binding Path="HasStartAtLoginNote" />
+                <Binding Path="HasStartAtLoginError" />
+              </MultiBinding>
+            </StackPanel.IsVisible>
+            <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding StartAtLoginNote}" IsVisible="{Binding HasStartAtLoginNote}" />
+            <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding StartAtLoginError}" IsVisible="{Binding HasStartAtLoginError}" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="sessions.restoreUnpinnedTabs">
+        <ToggleSwitch IsChecked="{Binding RestoreUnpinnedTabs}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.confirmCloseWorkingTab">
+        <ToggleSwitch IsChecked="{Binding ConfirmCloseWorkingTab}" />
+      </c:SettingRow>
+    </c:SettingsSection>
 
-    <!-- Messages sent while Claude works (DESIGN.md §5, "Queued messages") -->
-    <TextBlock Text="Messages sent while Claude works" FontWeight="SemiBold" Margin="0,8,0,0" />
-    <RadioButton GroupName="WhileWorking" Content="Send them into the turn: Claude reads each at its next step" IsChecked="{Binding SteerWhileWorking}" />
-    <RadioButton GroupName="WhileWorking" Content="Queue them: each is sent as the next turn, once this one ends" IsChecked="{Binding QueueWhileWorking}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-               Text="A queued message has Send now, to send it into the turn after all, and Cancel. Stop takes queued messages back to the composer." />
-
-    <!-- Keeping the computer awake (DESIGN.md §9, "Keeping the computer awake"): the header's cup is the same switch -->
-    <CheckBox Content="Keep this computer awake" IsChecked="{Binding KeepAwake}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-               Text="So a task a usage limit stopped can carry on by itself when the limit resets, hours later. Only sleep is held off: the screen can still turn off, and the screensaver can still start. Closing a laptop's lid may still put it to sleep. The cup in the header turns this on and off, and steams while the computer is kept awake." />
-    <TextBlock Classes="small warning" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding KeepAwakeUnavailableText}"
-               IsVisible="{Binding KeepAwakeUnavailableText, Converter={x:Static ObjectConverters.IsNotNull}}" />
-    <StackPanel Spacing="4" Margin="28,-4,0,0" IsEnabled="{Binding KeepAwake}">
-      <RadioButton GroupName="KeepAwakeWhen" Content="Only while Claude has work to finish" IsChecked="{Binding KeepAwakeWhileClaudeHasWork}" />
-      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-4,0,0"
-                 Text="A turn running, tasks Claude Code keeps running in the background, or a task waiting for a usage limit to reset so it can carry on. Once there's none, the computer can sleep again a couple of minutes later." />
-      <RadioButton GroupName="KeepAwakeWhen" Content="Whenever Claudette is running" IsChecked="{Binding KeepAwakeWhileClaudetteRuns}" />
-    </StackPanel>
+    <!-- Keeping the computer awake (DESIGN.md §9): the header's cup is the same switch -->
+    <c:SettingsSection Key="keepAwake">
+      <c:SettingRow Key="general.keepAwake">
+        <ToggleSwitch IsChecked="{Binding KeepAwake}" />
+        <c:SettingRow.Details>
+          <StackPanel Spacing="4">
+            <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding KeepAwakeUnavailableText}"
+                       IsVisible="{Binding KeepAwakeUnavailableText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <c:SettingRow Key="general.keepAwakeWhen" IsEnabled="{Binding KeepAwake}">
+              <c:SettingRow.Details>
+                <StackPanel Classes="options">
+                  <RadioButton GroupName="KeepAwakeWhen" Content="Only while Claude has work to finish" IsChecked="{Binding KeepAwakeWhileClaudeHasWork}" />
+                  <RadioButton GroupName="KeepAwakeWhen" Content="Whenever Claudette is running" IsChecked="{Binding KeepAwakeWhileClaudetteRuns}" />
+                </StackPanel>
+              </c:SettingRow.Details>
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="claudeCode.keepAwakeWhileConnected">
+        <ToggleSwitch IsChecked="{Binding KeepAwakeWhileConnected}" />
+      </c:SettingRow>
+    </c:SettingsSection>
 
     <!-- Cleaning up worktrees (DESIGN.md §4, "Cleaning up worktrees") -->
-    <TextBlock Text="Worktrees" FontWeight="SemiBold" Margin="0,8,0,0" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap"
-               Text="The worktrees of worktree tabs that no open tab works in. One with uncommitted changes is always kept. Files git ignores there, such as build output, go with a removed worktree." />
-    <CheckBox Content="Remove worktrees once everything in them is merged" IsChecked="{Binding RemoveMergedWorktrees}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-               Text="Every commit is on another branch, so nothing is lost. The worktree and its branch go a day after a tab last used it." />
-    <Grid ColumnDefinitions="Auto,160" ColumnSpacing="8">
-      <TextBlock Classes="label" Text="Remove worktrees no tab has used for" VerticalAlignment="Center" />
-      <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding InactiveDaysChoices}" SelectedItem="{Binding RemoveInactiveWorktreesAfter}" />
-    </Grid>
-    <TextBlock Classes="muted small" TextWrapping="Wrap"
-               Text="The worktree goes, and its branch stays when it has commits on no other branch, so a new worktree tab can carry on from it." />
-    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-      <TextBlock Classes="muted small" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding WorktreeCleanupText}" />
-      <Button Grid.Column="1" Content="Clean up now" Command="{Binding CleanUpWorktreesCommand}" IsEnabled="{Binding CanCleanUpWorktrees}" />
-    </Grid>
+    <c:SettingsSection Key="worktrees">
+      <c:SettingRow Key="general.removeMergedWorktrees">
+        <ToggleSwitch IsChecked="{Binding RemoveMergedWorktrees}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.removeInactiveWorktreesAfterDays">
+        <ComboBox ItemsSource="{Binding InactiveDaysChoices}" SelectedItem="{Binding RemoveInactiveWorktreesAfter}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.cleanUpWorktrees" Description="{Binding WorktreeCleanupText}">
+        <Button Content="Clean up now" Command="{Binding CleanUpWorktreesCommand}" IsEnabled="{Binding CanCleanUpWorktrees}" />
+      </c:SettingRow>
+    </c:SettingsSection>
 
-    <!-- Claudette's own updates, from its GitHub releases (DESIGN.md §2, "Updating Claudette") -->
-    <TextBlock Text="Claudette updates" FontWeight="SemiBold" Margin="0,8,0,0" />
-    <CheckBox Content="Check for Claudette updates automatically" IsChecked="{Binding CheckForAppUpdates}" IsVisible="{Binding ShowsUpdateChecks}" />
-    <CheckBox Content="Include pre-releases" IsChecked="{Binding IncludePrereleases}" IsVisible="{Binding ShowsPrereleases}" />
-    <!-- A source build checks its checkout's upstream instead (DESIGN.md §9, "New commits upstream") -->
-    <Panel IsVisible="{Binding HasSourceUpdates}">
-      <StackPanel Spacing="8" DataContext="{Binding SourceUpdates}" x:DataType="vm:SourceUpdateViewModel">
-        <TextBlock Text="{Binding SourceText, FallbackValue=''}" TextWrapping="Wrap" />
-        <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
-        <TextBlock Classes="muted small" Text="{Binding WhyNotText}" TextWrapping="Wrap" IsVisible="{Binding WhyNotText, Converter={x:Static ObjectConverters.IsNotNull}}" />
-        <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
-        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
-        <WrapPanel ItemSpacing="8" LineSpacing="8">
-          <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" />
-          <Button Classes="accent" Content="Pull, build and restart" Command="{Binding UpdateCommand}" IsVisible="{Binding CanUpdate}" />
-          <Button Content="Pull and build" Command="{Binding PullAndBuildCommand}" IsVisible="{Binding CanUpdate}" />
-          <Button Content="Pull" Command="{Binding PullCommand}" IsVisible="{Binding CanPullOnly}" />
-          <Button Content="Build again" Command="{Binding BuildAgainCommand}" IsVisible="{Binding CanBuildAgain}" />
-        </WrapPanel>
-      </StackPanel>
-    </Panel>
-    <Panel IsVisible="{Binding HasAppUpdates}">
-      <StackPanel Spacing="8" DataContext="{Binding AppUpdates}" x:DataType="vm:AppUpdateViewModel">
-        <TextBlock Text="{Binding CurrentVersionText, FallbackValue=''}" TextWrapping="Wrap" />
-        <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
-        <TextBlock Classes="muted small" Text="{Binding ManualText}" TextWrapping="Wrap" IsVisible="{Binding HasManualText}" />
-        <ProgressBar Minimum="0" Maximum="100" Value="{Binding DownloadPercent}" IsVisible="{Binding IsDownloading}" />
-        <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
-        <WrapPanel ItemSpacing="8" LineSpacing="8">
-          <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" IsVisible="{Binding ChecksReleases}" />
-          <Button Classes="accent" Content="{Binding RestartLabel}" Command="{Binding RestartToUpdateCommand}" IsVisible="{Binding CanRestartToUpdate}" />
-          <Button Content="Download" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}" />
-          <Button Content="Cancel download" Command="{Binding CancelDownloadCommand}" IsVisible="{Binding IsDownloading}" />
-          <Button Content="{Binding OpenPackageLabel}" Command="{Binding OpenPackageCommand}" IsVisible="{Binding CanOpenPackage}" />
-          <Button Classes="flat" Content="Release notes" Command="{Binding OpenReleasePageCommand}" IsVisible="{Binding HasRelease}" />
-        </WrapPanel>
-      </StackPanel>
-    </Panel>
-    <Button Content="Reset to defaults" Command="{Binding ResetCommand}" />
+    <!-- Claude's service status (DESIGN.md §18) and Claudette's own updates (DESIGN.md §2, "Updating Claudette") -->
+    <c:SettingsSection Key="updates">
+      <c:SettingRow Key="general.showServiceStatus">
+        <ToggleSwitch IsChecked="{Binding ShowServiceStatus}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.checkForAppUpdates" IsVisible="{Binding ShowsUpdateChecks}">
+        <ToggleSwitch IsChecked="{Binding CheckForAppUpdates}" />
+        <c:SettingRow.Details>
+          <c:SettingRow Key="general.includePrereleases" IsVisible="{Binding ShowsPrereleases}">
+            <ToggleSwitch IsChecked="{Binding IncludePrereleases}" />
+          </c:SettingRow>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <!-- A source build checks its checkout's upstream instead (DESIGN.md §9, "New commits upstream") -->
+      <c:SettingRow Key="general.version" Title="{Binding SourceUpdates.SourceText, FallbackValue=''}" IsVisible="{Binding HasSourceUpdates}">
+        <c:SettingRow.Details>
+          <StackPanel Spacing="8" DataContext="{Binding SourceUpdates}" x:DataType="vm:SourceUpdateViewModel">
+            <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
+            <TextBlock Classes="muted small" Text="{Binding WhyNotText}" TextWrapping="Wrap" IsVisible="{Binding WhyNotText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+            <WrapPanel ItemSpacing="8" LineSpacing="8">
+              <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" />
+              <Button Classes="accent" Content="Pull, build and restart" Command="{Binding UpdateCommand}" IsVisible="{Binding CanUpdate}" />
+              <Button Content="Pull and build" Command="{Binding PullAndBuildCommand}" IsVisible="{Binding CanUpdate}" />
+              <Button Content="Pull" Command="{Binding PullCommand}" IsVisible="{Binding CanPullOnly}" />
+              <Button Content="Build again" Command="{Binding BuildAgainCommand}" IsVisible="{Binding CanBuildAgain}" />
+            </WrapPanel>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="general.version" Title="{Binding AppUpdates.CurrentVersionText, FallbackValue=''}" IsVisible="{Binding HasAppUpdates}">
+        <c:SettingRow.Details>
+          <StackPanel Spacing="8" DataContext="{Binding AppUpdates}" x:DataType="vm:AppUpdateViewModel">
+            <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
+            <TextBlock Classes="muted small" Text="{Binding ManualText}" TextWrapping="Wrap" IsVisible="{Binding HasManualText}" />
+            <ProgressBar Minimum="0" Maximum="100" Value="{Binding DownloadPercent}" IsVisible="{Binding IsDownloading}" />
+            <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
+            <WrapPanel ItemSpacing="8" LineSpacing="8">
+              <Button Content="Check now" Command="{Binding CheckNowCommand}" IsEnabled="{Binding CanCheck}" IsVisible="{Binding ChecksReleases}" />
+              <Button Classes="accent" Content="{Binding RestartLabel}" Command="{Binding RestartToUpdateCommand}" IsVisible="{Binding CanRestartToUpdate}" />
+              <Button Content="Download" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}" />
+              <Button Content="Cancel download" Command="{Binding CancelDownloadCommand}" IsVisible="{Binding IsDownloading}" />
+              <Button Content="{Binding OpenPackageLabel}" Command="{Binding OpenPackageCommand}" IsVisible="{Binding CanOpenPackage}" />
+              <Button Classes="flat" Content="Release notes" Command="{Binding OpenReleasePageCommand}" IsVisible="{Binding HasRelease}" />
+            </WrapPanel>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
   </StackPanel>
 </UserControl>

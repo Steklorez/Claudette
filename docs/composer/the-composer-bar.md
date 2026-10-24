@@ -45,7 +45,7 @@ Most of these show only when they apply to the tab.
 
 After the context, a chip such as *Cache 52m* says how long your next message can read the conversation from the prompt cache, which costs much less than Claude reading it all again. In its last three minutes it turns the caution color, then reads *Cache <1m* and *Cache expired*. It shows only between turns, once the conversation has made its first request.
 
-Settings → Appearance → **Show when the prompt cache expires** turns it off. [The prompt cache](../usage/the-prompt-cache.md) explains it.
+Settings → Conversation → **Show when the prompt cache expires** turns it off. [The prompt cache](../usage/the-prompt-cache.md) explains it.
 
 ## The status line
 
@@ -57,8 +57,8 @@ Under the box, left to right:
 
 ## Settings
 
-- Settings → Appearance → **Show when the prompt cache expires**, on by default, for the Cache chip.
-- Settings → Appearance → **Show context on tab rows** is for the ring on the sidebar's rows, not the bar. See [The sidebar](../tabs/the-sidebar.md).
+- Settings → Conversation → **Show when the prompt cache expires**, on by default, for the Cache chip.
+- Settings → Conversation → Tab rows → **Show context** is for the ring on the sidebar's rows, not the bar. See [The sidebar](../tabs/the-sidebar.md).
 
 ## See also
 

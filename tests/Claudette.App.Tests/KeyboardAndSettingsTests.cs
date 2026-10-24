@@ -73,7 +73,8 @@ public class KeyboardAndSettingsTests
         Assert.True(newTab.IsCustomized);
         Assert.Equal($"New tab ({Chord("Primary+Shift+N").Display(Shortcuts.IsMac)})", h.Services.Tips.NewTab);
 
-        settings.Keyboard.ResetShortcutCommand.Execute(newTab);
+        // Its row's Reset: the shortcut is a setting of its own, and goes back to its default.
+        settings.Keyboard.FindSetting(newTab.Key)!.ResetCommand.Execute(null);
         Assert.False(newTab.IsCustomized);
         Assert.Empty(h.Services.Settings.Keyboard.Bindings);
     }
@@ -135,7 +136,7 @@ public class KeyboardAndSettingsTests
         Assert.Equal("None", stop.ShortcutText);
         Assert.False(Shortcuts.Matches(h.Services.Settings.Keyboard, KeyboardShortcuts.Stop, Key.Escape, KeyModifiers.None));
 
-        settings.Keyboard.ResetCommand.Execute(null);
+        settings.Keyboard.ResetAllSections();
         Assert.True(Shortcuts.Matches(h.Services.Settings.Keyboard, KeyboardShortcuts.Stop, Key.Escape, KeyModifiers.None));
     }
 
@@ -146,9 +147,9 @@ public class KeyboardAndSettingsTests
     {
         await using var h = new TabTestHarness();
         var settings = new SettingsViewModel(h.Services, null);
-        var clarify = settings.QuickSuffixes.Suffixes.First();
+        var clarify = settings.Keyboard.Suffixes.First();
 
-        settings.QuickSuffixes.StartRecordingCommand.Execute(clarify);
+        settings.Keyboard.StartRecordingCommand.Execute(clarify);
         settings.RecordShortcut(Chord("Primary+Shift+H"));
         Assert.Contains("History", clarify.Error);
 
@@ -156,7 +157,7 @@ public class KeyboardAndSettingsTests
         Assert.Equal("Primary+Alt+C", clarify.Suffix.Shortcut);
         Assert.True(clarify.HasShortcut);
 
-        settings.QuickSuffixes.ClearShortcutCommand.Execute(clarify);
+        settings.Keyboard.ClearShortcutCommand.Execute(clarify);
         Assert.Null(clarify.Suffix.Shortcut);
     }
 
@@ -220,14 +221,14 @@ public class KeyboardAndSettingsTests
         Assert.Equal("Appearance", settings.SelectedCategory);
 
         settings.SearchText = "badge";
-        settings.SelectedSearchResult = settings.SearchResults.Single();
+        settings.SelectedSearchResult = settings.SearchResults.First();
         Assert.Equal("Notifications", settings.SelectedCategory);
 
         settings.SearchText = "usage history";
-        Assert.All(settings.SearchResults, r => Assert.Equal("Usage", r.Category));
+        Assert.Equal("Usage", settings.SearchResults[0].Category);
 
         settings.SearchText = "sync new tabs";
-        Assert.Equal(new SettingsSearchResult("Sessions", "Sync new tabs to the session library"), Assert.Single(settings.SearchResults));
+        Assert.Equal(("Sessions", "sessions.syncNewTabs"), (settings.SearchResults[0].Category, settings.SearchResults[0].Key));
 
         settings.SearchText = "xyzzy";
         Assert.Empty(settings.SearchResults);

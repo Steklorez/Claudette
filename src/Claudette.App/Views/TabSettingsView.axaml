@@ -1,97 +1,124 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:c="using:Claudette.App.Controls"
              x:Class="Claudette.App.Views.TabSettingsView"
              x:DataType="vm:TabSettingsViewModel">
-  <Border Classes="dialog" Width="480">
-    <StackPanel Spacing="12">
-      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis" />
-      <TextBlock Classes="muted small" TextWrapping="Wrap"
-                 Text="These replace the defaults from Settings for this tab only, and are saved with the tab." />
+  <!-- Tab settings… (DESIGN.md §14, "Per-tab overrides"): Settings' rows and sections, each change applied as it's made,
+       each section with Use defaults. Done (or Esc) closes it. -->
+  <Border Classes="dialog" Width="600" Padding="0">
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="24,20,24,8">
+        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap"
+                   Text="These replace the defaults from Settings → Tabs for this tab only. Each change applies at once." />
+      </StackPanel>
+      <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="24,12">
+        <Button Classes="accent" Content="Done" Command="{Binding DoneCommand}" HorizontalAlignment="Right" IsDefault="True" />
+      </Border>
+      <ScrollViewer MaxHeight="560">
+        <StackPanel Spacing="24" Margin="24,8,24,16">
+          <c:SettingsSection Key="model" ResetText="Use defaults">
+            <c:SettingRow Key="tab.model">
+              <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
+            </c:SettingRow>
+            <c:SettingRow Key="tab.effort">
+              <ComboBox ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding SelectedEffort}" />
+            </c:SettingRow>
+            <c:SettingRow Key="tab.permissionMode">
+              <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding SelectedMode}" />
+            </c:SettingRow>
+            <!-- DESIGN.md §5, "Subagents": applies at once, the note to Claude with the next message -->
+            <c:SettingRow Key="tab.subagents">
+              <ComboBox ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding SelectedSubagents}" />
+            </c:SettingRow>
+          </c:SettingsSection>
 
-      <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
-        <TextBlock Text="Model" VerticalAlignment="Center" />
-        <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
-        <TextBlock Grid.Row="1" Text="Effort" VerticalAlignment="Center" />
-        <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding SelectedEffort}" />
-        <TextBlock Grid.Row="2" Text="Permission mode" VerticalAlignment="Center" />
-        <ComboBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding SelectedMode}" />
-        <TextBlock Grid.Row="3" Text="Process monitor" VerticalAlignment="Center" />
-        <ComboBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding MonitorChoices}" SelectedItem="{Binding SelectedMonitor}"
-                  ToolTip.Tip="The processes this tab starts, with their CPU and memory, in the composer bar and the side panel" />
-        <TextBlock Grid.Row="4" Text="Auto-continue" VerticalAlignment="Center" />
-        <ComboBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding AutoContinueChoices}" SelectedItem="{Binding SelectedAutoContinue}"
-                  ToolTip.Tip="When a usage limit stops Claude mid-task, continue the task once the limit resets" />
-        <TextBlock Grid.Row="5" Text="Usage credits" VerticalAlignment="Center" IsVisible="{Binding ShowsUsageCredits}" />
-        <ComboBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding UsageCreditsChoices}" SelectedItem="{Binding SelectedUsageCredits}"
-                  IsVisible="{Binding ShowsUsageCredits}" ToolTip.Tip="{x:Static vm:TabViewModel.UsageCreditsMenuTip}" />
-        <!-- DESIGN.md §5, "Subagents": applies at once, the note to Claude with the next message -->
-        <TextBlock Grid.Row="6" Text="Subagents" VerticalAlignment="Center" />
-        <ComboBox Grid.Row="6" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding SelectedSubagents}"
-                  ToolTip.Tip="Whether Claude hands parts of its work to subagents in this tab. Discourage asks it to do the work itself; Don't allow turns down any it starts." />
-      </Grid>
+          <c:SettingsSection Key="limits" ResetText="Use defaults">
+            <c:SettingRow Key="tab.continueAfterLimitReset">
+              <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedItem="{Binding SelectedAutoContinue}" />
+            </c:SettingRow>
+            <c:SettingRow Key="tab.useUsageCredits" IsVisible="{Binding ShowsUsageCredits}">
+              <ComboBox ItemsSource="{Binding UsageCreditsChoices}" SelectedItem="{Binding SelectedUsageCredits}" />
+            </c:SettingRow>
+          </c:SettingsSection>
 
-      <CheckBox Content="Use different check-in settings for this tab" IsChecked="{Binding UseCustomCheckIns}" />
-      <Grid ColumnDefinitions="130,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8" IsVisible="{Binding UseCustomCheckIns}">
-        <TextBlock Text="Check-ins" VerticalAlignment="Center" />
-        <CheckBox Grid.Column="1" Content="On" IsChecked="{Binding CheckInsEnabled}" />
-        <TextBlock Grid.Row="1" Text="Run time (min)" VerticalAlignment="Center" />
-        <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding RunTimeMinutes}" />
-        <TextBlock Grid.Row="2" Text="Quiet time (min)" VerticalAlignment="Center" />
-        <NumericUpDown Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding QuietTimeMinutes}" />
-        <TextBlock Grid.Row="3" Text="Message" VerticalAlignment="Top" Margin="0,6,0,0" />
-        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CheckInMessage}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
-        <CheckBox Grid.Row="4" Grid.Column="1" Content="Notify me when a check-in is sent" IsChecked="{Binding NotifyOnCheckIn}" />
-      </Grid>
+          <c:SettingsSection Key="checkIns" ResetText="Use defaults">
+            <c:SettingRow Key="tab.checkIns">
+              <ToggleSwitch IsChecked="{Binding UseCustomCheckIns}" />
+              <c:SettingRow.Details>
+                <StackPanel IsVisible="{Binding UseCustomCheckIns}">
+                  <c:SettingRow Title="Check in on long turns">
+                    <ToggleSwitch IsChecked="{Binding CheckInsEnabled}" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="After the turn has run (minutes)" IsEnabled="{Binding CheckInsEnabled}">
+                    <NumericUpDown Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding RunTimeMinutes}" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="After no output for (minutes)" IsEnabled="{Binding CheckInsEnabled}">
+                    <NumericUpDown Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding QuietTimeMinutes}" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="Message" IsStacked="True" IsEnabled="{Binding CheckInsEnabled}">
+                    <TextBox Text="{Binding CheckInMessage, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="Notify me when a check-in is sent" IsEnabled="{Binding CheckInsEnabled}">
+                    <ToggleSwitch IsChecked="{Binding NotifyOnCheckIn}" />
+                  </c:SettingRow>
+                </StackPanel>
+              </c:SettingRow.Details>
+            </c:SettingRow>
+          </c:SettingsSection>
 
-      <!-- The session library (DESIGN.md §9): the tab's own choice, not an override, so Use defaults leaves it -->
-      <CheckBox Content="Sync to other machines" IsChecked="{Binding SyncToLibrary}" />
-      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-                 Text="Copies this session to the session library after each turn, so another machine can open it from History." />
-      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding SyncSizeText}"
-                 IsVisible="{Binding SyncSizeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          <c:SettingsSection Key="monitor" ResetText="Use defaults">
+            <c:SettingRow Key="tab.processMonitor">
+              <ComboBox ItemsSource="{Binding MonitorChoices}" SelectedItem="{Binding SelectedMonitor}" />
+            </c:SettingRow>
+          </c:SettingsSection>
 
-      <!-- Remote Control (DESIGN.md §18): the tab's own choice too -->
-      <CheckBox Content="Connect to the Claude app" IsChecked="{Binding RemoteControl}" IsEnabled="{Binding CanChangeRemoteControl}" />
-      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-                 Text="Continue this tab from the Claude app on your phone or at claude.ai/code while it runs here. It reconnects whenever the tab starts." />
-      <TextBlock Classes="small warning" TextWrapping="Wrap" Margin="28,-8,0,0" Text="{Binding RemoteControlUnavailableText}"
-                 IsVisible="{Binding HasRemoteControlUnavailableText}" />
-
-      <!-- Extra folders (DESIGN.md §4): the tab's own like Sync, so Use defaults leaves them -->
-      <TextBlock Text="Extra folders" FontWeight="SemiBold" Margin="0,4,0,0" />
-      <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="0,-8,0,0"
-                 Text="Claude can also read and edit files in these folders. Their own settings and CLAUDE.md aren't loaded. Claude Code starts again to use them." />
-      <ItemsControl ItemsSource="{Binding ExtraFolders}" IsVisible="{Binding HasExtraFolders}" Margin="0,-4,0,0">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="x:String">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <TextBlock Classes="small mono" Text="{Binding}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding}" />
-              <Button Grid.Column="1" Classes="flat" Padding="4" ToolTip.Tip="Remove" AutomationProperties.Name="Remove extra folder"
-                      Command="{Binding $parent[UserControl].((vm:TabSettingsViewModel)DataContext).RemoveExtraFolderCommand}" CommandParameter="{Binding}">
-                <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
-              </Button>
-            </Grid>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-      <Button Content="Add folder…" Command="{Binding AddExtraFolderCommand}" Margin="0,-4,0,0" />
-
-      <!-- The folder's custom project actions moved to Settings, on the tab's Actions page (DESIGN.md §14, §18) -->
-      <TextBlock Text="Project actions" FontWeight="SemiBold" Margin="0,4,0,0" />
-      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,-4,0,0">
-        <TextBlock Classes="muted small" Text="{Binding ProjectActionsText}" TextWrapping="Wrap" VerticalAlignment="Center" />
-        <Button Grid.Column="1" Content="Open" Command="{Binding OpenProjectActionsCommand}"
-                ToolTip.Tip="Open Settings on this folder's actions, from its claudette.json files" />
-      </Grid>
-
-      <Grid ColumnDefinitions="*,Auto">
-        <Button Content="Use defaults" Command="{Binding UseDefaultsCommand}" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-          <Button Content="Cancel" Command="{Binding CancelCommand}" />
-          <Button Classes="accent" Content="Apply" Command="{Binding ApplyCommand}" />
+          <!-- The tab's own: not overrides, so this section has no Use defaults -->
+          <c:SettingsSection Key="thisTab">
+            <!-- The session library (DESIGN.md §9) -->
+            <c:SettingRow Key="tab.syncToLibrary">
+              <ToggleSwitch IsChecked="{Binding SyncToLibrary}" />
+              <c:SettingRow.Details>
+                <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding SyncSizeText}"
+                           IsVisible="{Binding SyncSizeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <!-- Remote Control (DESIGN.md §18) -->
+            <c:SettingRow Key="tab.remoteControl">
+              <ToggleSwitch IsChecked="{Binding RemoteControl}" IsEnabled="{Binding CanChangeRemoteControl}" />
+              <c:SettingRow.Details>
+                <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding RemoteControlUnavailableText}"
+                           IsVisible="{Binding HasRemoteControlUnavailableText}" />
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <!-- Extra folders (DESIGN.md §4): applied as the dialog closes, since Claude Code starts again to use them -->
+            <c:SettingRow Key="tab.extraFolders">
+              <Button Content="Add folder…" Command="{Binding AddExtraFolderCommand}" />
+              <c:SettingRow.Details>
+                <ItemsControl ItemsSource="{Binding ExtraFolders}" IsVisible="{Binding HasExtraFolders}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Classes="small mono" Text="{Binding}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding}" />
+                        <Button Grid.Column="1" Classes="flat" Padding="8" ToolTip.Tip="Remove" AutomationProperties.Name="{Binding StringFormat='Remove {0}'}"
+                                Command="{Binding $parent[UserControl].((vm:TabSettingsViewModel)DataContext).RemoveExtraFolderCommand}" CommandParameter="{Binding}">
+                          <Path Classes="rowicon" Data="{DynamicResource IconClose}" />
+                        </Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <!-- The folder's custom project actions are in Settings, on the tab's Actions page (DESIGN.md §14, §18) -->
+            <c:SettingRow Key="tab.projectActions">
+              <Button Content="Open" Command="{Binding OpenProjectActionsCommand}"
+                      ToolTip.Tip="Open Settings on this folder's actions, from its claudette.json files" />
+            </c:SettingRow>
+          </c:SettingsSection>
         </StackPanel>
-      </Grid>
-    </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
   </Border>
 </UserControl>

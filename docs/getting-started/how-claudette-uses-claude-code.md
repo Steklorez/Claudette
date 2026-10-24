@@ -25,7 +25,7 @@ Claudette keeps its own settings in its own folder, separate from Claude Code's,
 - **A folder's own configuration.** A terminal `claude` asks before it works in a new folder. A tab doesn't get that question from Claude Code, so Claudette asks first, before Claude Code starts there: see [Folder trust](../permissions/folder-trust.md). A tab started without the folder's configuration leaves out the folder's settings, its `.mcp.json` servers and its `CLAUDE.md`.
 - **Allow rules in a project's shared settings.** Claude Code holds these back in this mode until you've trusted the folder in Claude Code itself. Trusting a folder in Claudette doesn't change that.
 - **Prompts.** Claude Code's permission questions arrive in Claudette, which shows them as cards: see [Permission cards](../permissions/permission-cards.md).
-- **The session's name.** Claudette gives each session the tab's name in Claude Code, so other sessions can message it by name and `claude --resume <name>` finds it. Settings → General → **Name each tab's session in Claude Code after the tab** turns that off. See [Reaching other sessions](../threads/reaching-other-sessions.md).
+- **The session's name.** Claudette gives each session the tab's name in Claude Code, so other sessions can message it by name and `claude --resume <name>` finds it. Settings → Claude Code → **Name each tab's session in Claude Code after the tab** turns that off. See [Reaching other sessions](../threads/reaching-other-sessions.md).
 
 ## Where Claude Code keeps sessions
 

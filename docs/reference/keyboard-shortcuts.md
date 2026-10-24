@@ -39,7 +39,7 @@ On macOS, **File → New Tab**, **History…** and **Close Tab**, and **Settings
 | Stash the message | `Ctrl+S` | `Cmd+S` | [Earlier prompts, drafts and the stash](../composer/earlier-prompts-drafts-and-the-stash.md) |
 | Quick suffixes menu | `Ctrl+Shift+S` | `Cmd+Shift+S` | [Quick suffixes](../composer/quick-suffixes.md) |
 
-Each quick suffix can also have a shortcut of its own, in Settings → Quick suffixes.
+Each quick suffix can also have a shortcut of its own, in Settings → Keyboard → **Quick suffixes**.
 
 ## Prompts
 
@@ -110,6 +110,8 @@ These aren't in the list of rebindable shortcuts.
 | A tab's name, while renaming | `Enter`, `Esc` | Saves, or cancels. |
 | A window of its own (an image, a tool call) | `Esc` | Closes it. |
 | The image window | `+`, `-`, `0` | Zooms in, zooms out, and fits the whole image again ([Images](../conversation/images.md#zooming-in)). |
+| Settings | `Ctrl/Cmd+F` | Goes to **Search settings**. |
+| Settings | `Esc`, `Ctrl/Cmd+W` | Closes the window ([The Settings window](../settings/the-settings-window.md)). |
 | Settings, while recording a shortcut | `Esc` | Cancels the recording. |
 
 ### Games

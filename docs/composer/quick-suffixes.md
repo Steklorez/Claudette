@@ -28,16 +28,16 @@ Right-click a chip and choose **Keep on this tab / stop keeping**. A kept suffix
 
 ## Give a suffix its own shortcut
 
-A suffix can have a shortcut of its own that adds it directly. Set it in Settings → Quick suffixes, below.
+A suffix can have a shortcut of its own that adds it directly. Set it in Settings → Keyboard → **Quick suffixes**, below.
 
 ## Manage your suffixes
 
-Settings → Quick suffixes lists them. **Edit suffixes…** at the foot of the **Suffixes ▾** menu opens it.
+Settings → Keyboard → **Quick suffixes** lists them. **Edit suffixes…** at the foot of the **Suffixes ▾** menu opens it.
 
 - **Add suffix** adds one. Give it a label, which shows in the menu and on the chip, and the text that's added to the message.
 - The arrows ↑ and ↓ move a suffix, which also sets its number in the menu. **Delete** removes it.
 - **Shortcut**: click the button, then press the keys. **Remove** clears it. Claudette refuses a shortcut another command or suffix already uses.
-- **Reset to defaults** replaces the list with the five built-in suffixes. Your own are removed.
+- The section's **Reset to defaults** replaces the list with the five built-in suffixes. Your own are removed.
 
 ### The built-in suffixes
 
@@ -55,7 +55,7 @@ You can edit or delete these too.
 
 | Setting | Default | Where |
 |---|---|---|
-| The suffixes, their labels, texts and shortcuts | The five above | Settings → Quick suffixes |
+| The suffixes, their labels, texts and shortcuts | The five above | Settings → Keyboard → **Quick suffixes** |
 | **Quick suffixes menu** | `Ctrl/Cmd+Shift+S` | Settings → Keyboard |
 
 ## Shortcuts

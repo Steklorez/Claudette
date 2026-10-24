@@ -12,9 +12,8 @@ public sealed record InactiveDaysChoice(int Days)
 }
 
 /// <summary>
-/// Settings → General (DESIGN.md §14): starting at login, closing and renaming tabs, Claude's service status, messages
-/// sent while Claude works, keeping the computer awake, cleaning up worktrees, and Claudette's own updates. Dispose it
-/// with the window.
+/// Settings → General (DESIGN.md §14): starting at login and restoring tabs, closing a working tab, keeping the computer
+/// awake, cleaning up worktrees, Claude's service status and Claudette's own updates. Dispose it with the window.
 /// </summary>
 public sealed partial class GeneralPage : SettingsPage, IDisposable
 {
@@ -23,25 +22,61 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
 
     public GeneralPage(SettingsContext context) : base(context, SettingsCategory.General)
     {
+        Section("starting", "Starting and closing",
+        [
+            // The OS's entry, not settings.json: never reset, and never synced.
+            Setting("state.startAtLogin", "Start Claudette when I log in", null, null, keywords: ["login item", "startup", "launch at login"], machineOnly: true),
+            Setting("sessions.restoreUnpinnedTabs", "Also restore unpinned tabs when Claudette starts", s => s.Sessions.RestoreUnpinnedTabs, (s, v) => s.Sessions.RestoreUnpinnedTabs = v,
+                "Pinned tabs always come back.", keywords: ["reopen", "session restore"]),
+            Setting("general.confirmCloseWorkingTab", "Confirm before closing a tab where Claude is working",
+                s => s.General.ConfirmCloseWorkingTab, (s, v) => s.General.ConfirmCloseWorkingTab = v,
+                "Closing one stops Claude mid-turn."),
+        ]);
+        Section("keepAwake", "Keeping the computer awake",
+        [
+            Setting("general.keepAwake", "Keep this computer awake", s => s.General.KeepAwake, (s, v) => s.General.KeepAwake = v,
+                "So a task a usage limit stopped can carry on by itself when the limit resets.",
+                "Only sleep is held off: the screen can still turn off, and the screensaver can still start. Closing a laptop's lid may still put it to sleep. The cup in the header turns this on and off, and steams while the computer is kept awake.",
+                ["sleep", "caffeinate", "cup", "insomnia"]),
+            Setting("general.keepAwakeWhen", "When", s => s.General.KeepAwakeWhen, (s, v) => s.General.KeepAwakeWhen = v,
+                more: "Claude has work to finish while a turn runs, while Claude Code keeps tasks running in the background, or while a task waits for a usage limit to reset so it can carry on. Once there's none, the computer can sleep again a couple of minutes later."),
+            Setting("claudeCode.keepAwakeWhileConnected", "Also while tabs are connected to the Claude app",
+                s => s.ClaudeCode.KeepAwakeWhileConnected, (s, v) => s.ClaudeCode.KeepAwakeWhileConnected = v,
+                "So the Claude app can still reach them. The screen can still turn off.", keywords: ["remote control", "phone"]),
+        ]);
+        Section("worktrees", "Worktrees",
+        [
+            Setting("general.removeMergedWorktrees", "Remove worktrees once everything in them is merged",
+                s => s.General.RemoveMergedWorktrees, (s, v) => s.General.RemoveMergedWorktrees = v,
+                "Every commit is on another branch, so nothing is lost.",
+                "The worktree and its branch go a day after a tab last used it. One with uncommitted changes is always kept, and files git ignores there, such as build output, go with it.",
+                ["clean up", "git"]),
+            Setting("general.removeInactiveWorktreesAfterDays", "Remove worktrees no tab has used for",
+                s => s.General.RemoveInactiveWorktreesAfterDays, (s, v) => s.General.RemoveInactiveWorktreesAfterDays = v,
+                "Its branch stays when it has commits on no other branch.",
+                "So a new worktree tab can carry on from the branch. One with uncommitted changes is always kept.",
+                ["clean up", "stale", "git"]),
+            Info("general.cleanUpWorktrees", "Last cleanup", keywords: ["clean up now", "worktrees"]),
+        ], description: "The worktrees of worktree tabs that no open tab works in.");
+        Section("updates", "Updates and status",
+        [
+            Setting("general.showServiceStatus", "Show Claude's service status", s => s.General.ShowServiceStatus, (s, v) => s.General.ShowServiceStatus = v,
+                "A dot in the header, and a banner while Claude has an incident.",
+                "Read from status.claude.com every 5 minutes: Claude Code, the Claude API and claude.ai. Off, it isn't checked at all.",
+                ["outage", "incident", "status page"]),
+            Setting("general.checkForAppUpdates", "Check for Claudette updates automatically", s => s.General.CheckForAppUpdates, (s, v) => s.General.CheckForAppUpdates = v,
+                "From Claudette's releases on GitHub, at launch and every few hours.", keywords: ["version", "upgrade"]),
+            Setting("general.includePrereleases", "Include pre-releases", s => s.General.IncludePrereleases, (s, v) => s.General.IncludePrereleases = v,
+                "Try new versions before they're released.", keywords: ["beta", "preview"]),
+            Info("general.version", "Claudette version", keywords: ["update now", "check now", "release notes"]),
+        ]);
         _ = RefreshStartAtLoginAsync();
         Services.KeepAwake.PropertyChanged += OnKeepAwakeChanged;
     }
 
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Start Claudette when I log in"),
-        Entry("Confirm before closing a tab where Claude is working"),
-        Entry("Name each tab's session in Claude Code after the tab"),
-        Entry("Show Claude's service status"),
-        Entry("Messages sent while Claude works", pageText: "Messages sent while Claude works"),
-        Entry("Keep this computer awake"),
-        Entry("Remove worktrees once their work is merged", pageText: "Remove worktrees once everything in them is merged"),
-        Entry("Remove worktrees no tab has used", pageText: "Remove worktrees no tab has used for"),
-        Entry("Claudette version", pageText: "Claudette updates"),
-        Entry("Check for Claudette updates automatically"),
-        Entry("Include pre-releases"),
-        Entry("Check for Claudette updates now", pageText: "Check now"),
-    ];
+    public override string IconKey => "IconSettings";
+
+    public override string Description => "Starting Claudette, keeping the computer awake, worktrees and updates.";
 
     // ---- Starting at login (DESIGN.md §9, "Starting at login") ----------------------------------------------------
 
@@ -116,18 +151,18 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         OnPropertyChanged(string.Empty);
     }
 
-    // ---- Tabs and service status ------------------------------------------------------------------------------------
+    // ---- Tabs ----------------------------------------------------------------------------------------------------------
+
+    public bool RestoreUnpinnedTabs
+    {
+        get => Settings.Sessions.RestoreUnpinnedTabs;
+        set => Set(value, v => Settings.Sessions.RestoreUnpinnedTabs = v);
+    }
 
     public bool ConfirmCloseWorkingTab
     {
         get => Settings.General.ConfirmCloseWorkingTab;
         set => Set(value, v => Settings.General.ConfirmCloseWorkingTab = v);
-    }
-
-    public bool RenameInClaudeCode
-    {
-        get => Settings.General.RenameInClaudeCode;
-        set => Set(value, v => Settings.General.RenameInClaudeCode = v);
     }
 
     /// <summary>
@@ -137,46 +172,6 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
     {
         get => Settings.General.ShowServiceStatus;
         set => Set(value, v => Settings.General.ShowServiceStatus = v);
-    }
-
-    // ---- Messages sent while Claude works (DESIGN.md §5, "Queued messages") --------------------------------------
-
-    /// <summary>Sent at once, for Claude to read at its next step.</summary>
-    public bool SteerWhileWorking
-    {
-        get => Settings.General.MessagesWhileWorking == WhileWorking.Steer;
-        set
-        {
-            if (value)
-            {
-                SetWhileWorking(WhileWorking.Steer);
-            }
-        }
-    }
-
-    /// <summary>Held until the turn ends, then sent as the next turn.</summary>
-    public bool QueueWhileWorking
-    {
-        get => Settings.General.MessagesWhileWorking == WhileWorking.Queue;
-        set
-        {
-            if (value)
-            {
-                SetWhileWorking(WhileWorking.Queue);
-            }
-        }
-    }
-
-    private void SetWhileWorking(WhileWorking choice)
-    {
-        if (Settings.General.MessagesWhileWorking == choice)
-        {
-            return;
-        }
-        Settings.General.MessagesWhileWorking = choice;
-        OnPropertyChanged(nameof(SteerWhileWorking));
-        OnPropertyChanged(nameof(QueueWhileWorking));
-        Save();
     }
 
     // ---- Keeping the computer awake (DESIGN.md §9, "Keeping the computer awake") ----------------------------------
@@ -224,6 +219,13 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         OnPropertyChanged(nameof(KeepAwakeWhileClaudeHasWork));
         OnPropertyChanged(nameof(KeepAwakeWhileClaudetteRuns));
         Save();
+    }
+
+    /// <summary><b>Also while tabs are connected to the Claude app</b>: system sleep only; the display can still sleep.</summary>
+    public bool KeepAwakeWhileConnected
+    {
+        get => Settings.ClaudeCode.KeepAwakeWhileConnected;
+        set => Set(value, v => Settings.ClaudeCode.KeepAwakeWhileConnected = v);
     }
 
     /// <summary>Why this computer can't be kept awake, or null when it can.</summary>
@@ -282,8 +284,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
                 return "Nothing removed yet. Claudette looks a minute after it starts, then every hour.";
             }
             var names = last.Removed.Select(p => Path.GetFileName(Path.TrimEndingDirectorySeparator(p))).ToList();
-            var list = names.Count == 1 ? names[0] : $"{string.Join(", ", names[..^1])} and {names[^1]}";
-            return $"Last removed {list}, {Core.Formats.Ago(Services.Time.GetUtcNow() - last.At)}.";
+            return $"Last removed {Core.Formats.List(names)}, {Core.Formats.Ago(Services.Time.GetUtcNow() - last.At)}.";
         }
     }
 
@@ -351,11 +352,4 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
 
     /// <summary>Pre-releases are GitHub's: not for a source build, which follows its checkout, or a copy from the Store.</summary>
     public bool ShowsPrereleases => ShowsUpdateChecks && !HasSourceUpdates;
-
-    /// <summary>Starting at login is the OS's, not a setting, so it stays as it is.</summary>
-    protected override void ResetSettings()
-    {
-        Settings.General = new GeneralSettings();
-        Save();
-    }
 }

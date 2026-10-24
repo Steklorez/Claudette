@@ -53,7 +53,7 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 /// reads the file.
 /// </param>
 /// <param name="AllowRevert">Whether <b>Revert</b> is offered; a turn's changes are only shown.</param>
-/// <param name="OpenInSystem"><b>Open in the OS's app</b>, whatever Settings → Editor says; null leaves it out.</param>
+/// <param name="OpenInSystem"><b>Open in the OS's app</b>, whatever Settings → Files and diffs says; null leaves it out.</param>
 /// <param name="RevertInto">
 /// Where <b>Revert</b> puts the text back instead of writing the file: the Project Files tab's editor (DESIGN.md §18,
 /// "Project files"), which compares with its own text. False when it couldn't.

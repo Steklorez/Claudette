@@ -181,7 +181,7 @@ public class KeepAwakeTests
         Assert.Contains(nameof(general.KeepAwake), changed);
 
         general.KeepAwake = true;
-        general.ResetCommand.Execute(null);
+        general.ResetAllSections();
         Assert.False(h.Services.Settings.General.KeepAwake);
         Assert.Equal(KeepAwakeWhen.ClaudeHasWork, h.Services.Settings.General.KeepAwakeWhen);
         Assert.False(h.SleepBlocker.IsBlocking);

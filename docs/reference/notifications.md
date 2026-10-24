@@ -9,7 +9,7 @@ summary: "Every kind of notification Claudette sends, the switch that turns it o
 
 Every kind of notification Claudette sends, the switch that turns it off, what it says and where a click goes. [Notifications](../away/notifications.md) explains how they work.
 
-The switches are in Settings → Notifications, except check-ins, which are in Settings → Check-ins. All but check-ins are on by default. A notification about a tab has the tab's name as its title.
+The switches are in Settings → Notifications, except check-ins, which are in Settings → Tabs → Check-ins on long turns. All but check-ins are on by default. A notification about a tab has the tab's name as its title.
 
 | Kind | Switch | What it says | A click goes to |
 |---|---|---|---|
@@ -20,9 +20,9 @@ The switches are in Settings → Notifications, except check-ins, which are in S
 | Sign-in | **Claude Code needs me to sign in** | *"Claude Code needs you to sign in"*: *"Your tabs are waiting until you sign in again."* | The sign-in dialog |
 | A Claude Code update | **A Claude Code update is ready** | That the update is ready, and that new tabs use it while open tabs keep their version until they close. Once per version. | The update dialog |
 | A project action | **A project action finishes** | The job's result: *"Build editor failed (exit code 6)."* Only while Claudette isn't in front. A job you stopped doesn't notify. | The tab, with the Project page on that run's log |
-| A check-in | **Notify me when a check-in is sent**, in Settings → Check-ins, off by default | *"Claude has been at this a while, so Claudette asked how it's going."* A tab can override the switch. | The tab |
+| A check-in | **Notify me when a check-in is sent**, in Settings → Tabs, off by default | *"Claude has been at this a while, so Claudette asked how it's going."* A tab can override the switch. | The tab |
 
-Two more switches in Settings → Notifications are about the icon, not notifications: **Show the number of tabs needing input on the Dock or taskbar icon** and **Animate the Dock or taskbar icon while tabs are working or waiting**. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).
+Two more switches in Settings → Notifications, under **The Dock or taskbar icon**, are about the icon, not notifications: **Show how many tabs need you** and **Animate it while tabs work or wait**. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).
 
 ## Skipped notifications
 

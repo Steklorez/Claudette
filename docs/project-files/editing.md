@@ -29,7 +29,7 @@ Colors come from the file's language, picked by its extension. A file with no ex
 
 ## Wrapping long lines
 
-Settings → **Editor** → **Wrap long lines** wraps lines at the editor's width. It's off by default. `Alt+Z` (`Option+Z`) turns it on or off for the file showing.
+Settings → **Files and diffs** → **Wrap long lines** wraps lines at the editor's width. It's off by default. `Alt+Z` (`Option+Z`) turns it on or off for the file showing.
 
 ## The chip
 
@@ -37,7 +37,7 @@ A small rounded chip at the editor's bottom right says where the cursor is and w
 
 - **Line endings** are *CRLF* or *LF*, whichever the file mostly has, or *Mixed* while it has both. New lines take the file's. Click to choose **LF** or **CRLF**, which changes every line's. That's an edit like any other: Undo takes it back, and saving writes it.
 - **The encoding** is *UTF-8*, *UTF-8 with BOM*, *UTF-16 LE* and so on. Saving keeps it.
-- **Indentation** is *4 spaces* or *Tabs*, found from the file's indented lines. A file with none gets Settings → **Editor** → **Indent new lines with**, which is 4 spaces unless you change it. Click to choose **Indent with 2 spaces**, **4 spaces** or **8 spaces**, or **Indent with tabs** and a width of 2, 4 or 8. The choice is for `Tab` and new lines in this file while it's open. The lines already there stay as they are.
+- **Indentation** is *4 spaces* or *Tabs*, found from the file's indented lines. A file with none gets Settings → **Files and diffs** → **Indent new lines with**, which is 4 spaces unless you change it. Click to choose **Indent with 2 spaces**, **4 spaces** or **8 spaces**, or **Indent with tabs** and a width of 2, 4 or 8. The choice is for `Tab` and new lines in this file while it's open. The lines already there stay as they are.
 - The position, the language and the encoding are only shown. Clicking them does nothing.
 
 ## Files that open read-only, or not at all
@@ -58,11 +58,11 @@ An input method that composes text, such as for Japanese or Korean, does it in i
 
 | Setting | Default | Where |
 |---|---|---|
-| **Wrap long lines** | off | Settings → **Editor** |
-| **Indent new lines with** | 4 spaces (**2 spaces**, **4 spaces**, **8 spaces** or **Tabs**) | Settings → **Editor** |
+| **Wrap long lines** | off | Settings → **Files and diffs** |
+| **Indent new lines with** | 4 spaces (**2 spaces**, **4 spaces**, **8 spaces** or **Tabs**) | Settings → **Files and diffs** |
 | **Code font**, **Code font size** | | Settings → **Appearance** |
 
-**Reset to defaults** at the bottom of Settings → **Editor** puts all the Editor settings back.
+**Reset to defaults** in the **Project Files tab** section of Settings → **Files and diffs** puts both back, with **The explorer is on the**.
 
 ## Shortcuts
 

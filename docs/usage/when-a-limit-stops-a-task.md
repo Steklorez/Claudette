@@ -45,8 +45,8 @@ The wait is saved with the tab, so a restart, including one into a new build of 
 
 ## Turning it off
 
-- Everywhere: Settings → Usage → **Continue tasks when a usage limit resets**.
-- For one tab: **Tab settings…** in the tab's menu, **Auto-continue**, set to **On** or **Off**. The default choice reads *Default (on)* or *Default (off)*, following the setting above. See [Tab settings](../tabs/tab-settings.md).
+- Everywhere: Settings → Tabs → **Continue tasks when a usage limit resets**.
+- For one tab: **Tab settings…** in the tab's menu, **Continue tasks when the limit resets**, set to **On** or **Off**. The default choice reads *Default (on)* or *Default (off)*, following the setting above. See [Tab settings](../tabs/tab-settings.md).
 
 ## Play a game while you wait
 
@@ -56,8 +56,8 @@ While a limit holds a task, the bar has **Play a game while you wait** with a me
 
 | Setting | Default | Where |
 |---|---|---|
-| **Continue tasks when a usage limit resets** | On | Settings → Usage |
-| **Auto-continue** | Default | **Tab settings…** |
+| **Continue tasks when a usage limit resets** | On | Settings → Tabs → At a usage limit |
+| **Continue tasks when the limit resets** | Default | **Tab settings…** |
 
 ## See also
 

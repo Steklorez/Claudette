@@ -20,15 +20,13 @@ public static class ProjectSearch
     public const int MaxFolders = 2000;
 
     /// <summary>
-    /// Folders never looked into: engines' and IDEs' output and caches, and the engine itself (a project is never inside
-    /// <c>Engine/</c>, and <c>Templates/</c> holds template projects, not the user's).
+    /// Folders never looked into, whatever the project: build output, packages, version control and IDEs' own. Each
+    /// project type adds its own, such as Unreal's <c>Intermediate</c> (<see cref="IProjectType.SkippedFolders"/>), and the
+    /// search uses them all (<see cref="ProjectToolContext.SkippedFolders"/>).
     /// </summary>
     public static readonly IReadOnlySet<string> SkippedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "Intermediate", "Saved", "DerivedDataCache", "Binaries", "Content", "Plugins", "Source", "Config",
-        "Engine", "Templates", "FeaturePacks",
-        "Library", "Temp", "Logs", "obj", "bin", "Packages",
-        "node_modules", ".git", ".hg", ".svn", ".vs", ".vscode", ".idea", ".godot", ".import",
+        "obj", "bin", "node_modules", ".git", ".hg", ".svn", ".vs", ".vscode", ".idea",
     };
 
     /// <summary>
@@ -56,7 +54,7 @@ public static class ProjectSearch
             return found;
         }
         Add(Safe(matchesIn, folder));
-        foreach (var child in Children(folder))
+        foreach (var child in Children(folder, context.SkippedFolders))
         {
             Add(Safe(matchesIn, child));
         }
@@ -67,8 +65,8 @@ public static class ProjectSearch
         return found;
     }
 
-    /// <summary>The subfolders of <paramref name="folder"/>, level by level, skipping hidden and skipped ones.</summary>
-    public static IEnumerable<string> Children(string folder, int levels = ChildLevels)
+    /// <summary>The subfolders of <paramref name="folder"/>, level by level, skipping hidden ones and <paramref name="skipped"/>.</summary>
+    public static IEnumerable<string> Children(string folder, IReadOnlySet<string> skipped, int levels = ChildLevels)
     {
         var level = new List<string> { folder };
         var visited = 0;
@@ -77,7 +75,7 @@ public static class ProjectSearch
             var next = new List<string>();
             foreach (var parent in level)
             {
-                foreach (var child in SubfoldersOf(parent))
+                foreach (var child in SubfoldersOf(parent, skipped))
                 {
                     if (++visited > MaxFolders)
                     {
@@ -143,7 +141,7 @@ public static class ProjectSearch
         }
     }
 
-    private static IEnumerable<string> SubfoldersOf(string folder)
+    private static IEnumerable<string> SubfoldersOf(string folder, IReadOnlySet<string> skipped)
     {
         string[] children;
         try
@@ -152,7 +150,7 @@ public static class ProjectSearch
                 .Where(d =>
                 {
                     var name = Path.GetFileName(d);
-                    return name.Length > 0 && name[0] != '.' && !SkippedFolders.Contains(name) && !IsLink(d);
+                    return name.Length > 0 && name[0] != '.' && !skipped.Contains(name) && !IsLink(d);
                 })
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .ToArray();

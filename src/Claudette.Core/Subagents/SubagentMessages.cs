@@ -3,7 +3,7 @@ using Claudette.Core.Settings;
 namespace Claudette.Core.Subagents;
 
 /// <summary>
-/// What Claudette tells Claude about subagents, as Settings → Claude Code → Subagents or the tab's own setting says
+/// What Claudette tells Claude about subagents, as Settings → Tabs → Subagents or the tab's own setting says
 /// (DESIGN.md §5, "Subagents"): the note Claude Code starts with, the note on the next message when the setting changes
 /// in a running tab, and the answer to an <c>Agent</c> call Claudette's hook refuses.
 /// </summary>

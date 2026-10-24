@@ -210,6 +210,17 @@ public static class WindowShot
         PostMessage(hwnd, 0x02A3 /* WM_MOUSELEAVE */, IntPtr.Zero, IntPtr.Zero);
     }
 
+    /// <summary>A right-click, as <see cref="PostClick"/> posts a click: for a control's context menu.</summary>
+    public static void PostRightClick(IntPtr hwnd, int x, int y)
+    {
+        var point = new POINT { X = x, Y = y };
+        ScreenToClient(hwnd, ref point);
+        var at = new IntPtr((point.Y << 16) | (point.X & 0xFFFF));
+        PostMessage(hwnd, 0x0200 /* WM_MOUSEMOVE */, IntPtr.Zero, at);
+        PostMessage(hwnd, 0x0204 /* WM_RBUTTONDOWN */, new IntPtr(2) /* MK_RBUTTON */, at);
+        PostMessage(hwnd, 0x0205 /* WM_RBUTTONUP */, IntPtr.Zero, at);
+    }
+
     /// <summary>Brings the window back from being minimized, and to the front; whether it got there.</summary>
     public static bool Restore(IntPtr hwnd)
     {
@@ -567,9 +578,19 @@ function Close-Window([IntPtr] $hwnd) {
     $ae::FromHandle($hwnd).GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
 }
 
-# Turns the check box named $text on or off.
+# Right-clicks the middle of $element, for its context menu, as Send-Click clicks it.
+function Send-RightClick($element) {
+    $rect = $element.Current.BoundingRectangle
+    if ($rect.IsEmpty) { throw "'$($element.Current.Name)' isn't on screen to right-click." }
+    [WindowShot]::PostRightClick((Get-ElementWindow $element), [int] ($rect.Left + $rect.Width / 2), [int] ($rect.Top + $rect.Height / 2))
+}
+
+# Turns the switch or check box named $text on or off: the control itself, not a title beside it named the same.
 function Set-Toggle($from, [string] $text, [bool] $on) {
-    $box = Find-ByText $from $text
+    $named = New-Object System.Windows.Automation.PropertyCondition($ae::NameProperty, $text)
+    $togglable = New-Object System.Windows.Automation.PropertyCondition($ae::IsTogglePatternAvailableProperty, $true)
+    $box = (Get-Root $from).FindFirst($descendants, (New-Object System.Windows.Automation.AndCondition($named, $togglable)))
+    if (-not $box) { throw "Found no switch named '$text'." }
     $toggle = $box.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
     if (($toggle.Current.ToggleState -eq 'On') -ne $on) {
         Send-Click $box
@@ -577,7 +598,7 @@ function Set-Toggle($from, [string] $text, [bool] $on) {
     }
 }
 
-# Selects the list item named $text, such as one of Settings' categories.
+# Selects the list item named $text, such as one of Settings' pages or a search result.
 function Select-ListItem($from, [string] $text) {
     $item = Find-ByType $from 'ListItem' $text
     if (-not $item) { throw "Found no list item named '$text'." }
@@ -642,6 +663,6 @@ function Stop-Claudette($claudette) {
 }
 
 Export-ModuleMember -Function Get-Root, Get-Parent, Find-ByText, Find-ByPrefix, Find-ByType, Find-ById, Find-Lowest, Show-Tree, Invoke-ByText, Invoke-Element,
-    Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Message, Enter-Input, Exit-Input, Move-PointerTo, Send-Keys,
+    Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Click, Send-RightClick, Send-Message, Enter-Input, Exit-Input, Move-PointerTo, Send-Keys,
     Send-WindowKey, Set-Step, Get-OtherWindow, Wait-PointerAway, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
     Wait-Until, Build-Claudette, New-DemoContent, Start-Claudette, Stop-Claudette

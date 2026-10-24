@@ -444,7 +444,7 @@ public sealed class TabOverrides
 
     public CheckInSettings? CheckIns { get; set; }
 
-    /// <summary>The process monitor for this tab (DESIGN.md §4), or null for Settings → Processes.</summary>
+    /// <summary>The process monitor for this tab (DESIGN.md §4), or null for Settings → Tabs.</summary>
     public bool? ShowProcessMonitor { get; set; }
 
     /// <summary>

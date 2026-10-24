@@ -95,7 +95,7 @@ public class ProjectToolsTests
     [Fact]
     public async Task The_menu_lists_the_actions_then_the_configuration_then_the_menus_own_commands()
     {
-        var (h, _, _) = UnrealHarness(s => s.ProjectTools.ProjectFileFormat = ProjectFileFormat.VisualStudio);
+        var (h, _, _) = UnrealHarness(s => s.ProjectTools.SetValue(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio)));
         await using var _h = h;
         var tab = await OpenWithProjectAsync(h);
 
@@ -119,7 +119,7 @@ public class ProjectToolsTests
     [Fact]
     public async Task Open_solution_is_disabled_until_there_is_a_solution()
     {
-        var (h, _, _) = UnrealHarness(s => s.ProjectTools.ProjectFileFormat = ProjectFileFormat.VisualStudio);
+        var (h, _, _) = UnrealHarness(s => s.ProjectTools.SetValue(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio)));
         await using var _h = h;
         var tab = await OpenWithProjectAsync(h);
 
@@ -205,7 +205,7 @@ public class ProjectToolsTests
         var other = new TabViewModel(h.Services, h.Shell, new TabState { Folder = h.WorkFolder }, isRestored: false);
         await other.ProjectTools.RefreshAsync();
         Assert.Equal("DebugGame", other.ProjectTools.Project!.Choice!.Selected);
-        Assert.Equal(UnrealConfiguration.Development, h.Services.Settings.ProjectTools.UnrealConfiguration);
+        Assert.Equal(UnrealConfiguration.Development, UnrealProvider.DefaultConfiguration(h.Services.Settings.ProjectTools));
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public class ProjectToolsTests
     [Fact]
     public async Task No_note_when_Settings_turns_it_off()
     {
-        var (h, _, _) = UnrealHarness(s => s.ProjectTools.TellClaudeAboutUnreal = false);
+        var (h, _, _) = UnrealHarness(s => s.ProjectTools.Type(UnrealProvider.KindId).TellClaude = false);
         await using var _h = h;
 
         var tab = await OpenWithProjectAsync(h);

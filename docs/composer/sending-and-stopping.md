@@ -39,7 +39,7 @@ If the `/` or `@` list is open, `Esc` closes the list and doesn't stop Claude.
 
 ## Messages sent while Claude works
 
-Settings → General → **Messages sent while Claude works** chooses what happens to a message you send mid-turn.
+Settings → Conversation → **Messages sent while Claude works** chooses what happens to a message you send mid-turn.
 
 **Send them into the turn: Claude reads each at its next step** is the default. Claude Code reads the message at its next tool call, or after the reply it's writing. Until it does, the message's card says *Queued: sent when Claude can take it*, with **Cancel**.
 
@@ -63,7 +63,7 @@ Some things about queued messages:
 |---|---|---|
 | **Send with** | **Enter, with Shift+Enter for a new line** | Settings → Keyboard |
 | **Stop Claude** | `Esc` | Settings → Keyboard, in the list of shortcuts |
-| **Messages sent while Claude works** | **Send them into the turn** | Settings → General |
+| **Messages sent while Claude works** | **Send them into the turn** | Settings → Conversation |
 
 ## Shortcuts
 

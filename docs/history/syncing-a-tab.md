@@ -14,12 +14,12 @@ A tab that syncs has a small icon of two arrows chasing round a circle on its ro
 ## Turning it on or off for a tab
 
 1. Open the tab's menu, or **Tab settings…**.
-2. Check or uncheck **Sync to other machines**.
+2. Check or uncheck **Sync to other machines** in the menu, or turn it on or off in Tab settings.
 
 - **Turning it on** copies the session to the library straight away, or when the turn ends if Claude is working. If another machine has the session open, sync stays off and the tab says so, because copying from here would overwrite what the other machine wrote.
 - **Turning it off** stops the copying and lets go of this tab's claim on the session. The copy already in the library stays as it was, so other machines can still open it.
 
-The choice is saved with the tab. It's the tab's own, not one of the per-tab overrides, so **Use defaults** in Tab settings leaves it alone.
+The choice is saved with the tab. It's the tab's own, not one of the per-tab overrides, so no **Use defaults** in Tab settings changes it.
 
 ## New tabs
 

@@ -46,26 +46,14 @@ public sealed partial class QuickSuffixEditor(QuickSuffix suffix, Action changed
 }
 
 /// <summary>
-/// Settings → Quick suffixes (DESIGN.md §5, "Quick suffixes"): each one's label, text and own shortcut, added, moved
-/// and deleted here.
+/// Settings → Keyboard → Quick suffixes (DESIGN.md §5, "Quick suffixes"): each one's label, text and own shortcut,
+/// added, moved and deleted here. Their shortcuts are checked against the commands' as the commands' are against theirs.
 /// </summary>
-public sealed partial class QuickSuffixesPage : SettingsPage
+public sealed partial class KeyboardPage
 {
-    public QuickSuffixesPage(SettingsContext context) : base(context, SettingsCategory.QuickSuffixes)
-    {
-        LoadSuffixes();
-        context.Shortcuts.Saved += OnShortcutsSaved;
-    }
-
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Add suffix"),
-        Entry("Suffix shortcuts", pageText: "Shortcut"),
-    ];
-
     public ObservableCollection<QuickSuffixEditor> Suffixes { get; } = [];
 
-    /// <summary>The Suffixes menu's own shortcut, which the page's introduction names.</summary>
+    /// <summary>The Suffixes menu's own shortcut, which the section's line names.</summary>
     public string SuffixesShortcutText => Services.Tips.Text(KeyboardShortcuts.Suffixes) ?? "no shortcut";
 
     private void LoadSuffixes()
@@ -117,30 +105,6 @@ public sealed partial class QuickSuffixesPage : SettingsPage
         }
         Suffixes.Move(from, to);
         Settings.QuickSuffixes = Suffixes.Select(e => e.Suffix).ToList();
-        Save();
-    }
-
-    // ---- Each suffix's own shortcut, checked against the commands' (DESIGN.md §14, "Keyboard shortcuts") ----------
-
-    [RelayCommand]
-    private void StartRecording(ShortcutEditor? editor) => Context.Shortcuts.Start(editor);
-
-    [RelayCommand]
-    private void ClearShortcut(ShortcutEditor? editor) => Context.Shortcuts.Clear(editor);
-
-    private void OnShortcutsSaved()
-    {
-        foreach (var suffix in Suffixes)
-        {
-            suffix.Refresh();
-        }
-        OnPropertyChanged(nameof(SuffixesShortcutText));
-    }
-
-    protected override void ResetSettings()
-    {
-        Settings.QuickSuffixes = QuickSuffix.Defaults();
-        LoadSuffixes();
         Save();
     }
 }

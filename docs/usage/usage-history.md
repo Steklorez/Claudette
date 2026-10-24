@@ -36,7 +36,7 @@ It deletes every stored reading, turn record and tab name. The header's meters f
 | **Keep usage history** | 1 month | Settings → Usage |
 | **Clear usage history…** | | Settings → Usage |
 
-**Reset to defaults** on that page leaves **Keep usage history** as it is.
+The **History** section's **Reset to defaults** leaves **Keep usage history** as it is, since going back to a month would delete anything older. Only the setting's own **Reset** puts it back.
 
 ## See also
 

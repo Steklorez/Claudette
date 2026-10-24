@@ -54,8 +54,7 @@ public class ProjectSettingsTests
         using (var none = await OpenSettingsAsync(h))
         {
             Assert.False(none.HasProject);
-            Assert.Null(none.SelectedProjectPage);
-            none.SelectedProjectPage = SettingsViewModel.LinksPage;
+            Assert.DoesNotContain(none.NavEntries, e => e.Title == SettingsViewModel.LinksPage);
             Assert.Equal("General", none.SelectedCategory);
             Assert.Same(none.General, none.CurrentPage);
         }
@@ -68,15 +67,15 @@ public class ProjectSettingsTests
         Assert.Equal(h.WorkFolder, project.Folder);
         Assert.Equal($"For the tab in {h.WorkFolder}", project.ForTabText);
 
-        // Picking a page selects it in the project group, and nothing in the categories.
-        settings.SelectedProjectPage = SettingsViewModel.ToolsPage;
+        // The project's pages are in the sidebar's one list, under a heading named after it; a heading isn't a page.
+        Assert.Contains(settings.NavEntries, e => e.IsHeading && e.Title == "work");
+        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == SettingsViewModel.ToolsPage);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        Assert.Null(settings.SelectedMainCategory);
-        settings.SelectedMainCategory = null;
+        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.IsHeading && e.Title == "work");
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        settings.SelectedMainCategory = "Appearance";
+        Assert.Equal(SettingsViewModel.ToolsPage, settings.SelectedNavEntry?.Title);
+        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == "Appearance");
         Assert.Same(settings.Appearance, settings.CurrentPage);
-        Assert.Null(settings.SelectedProjectPage);
 
         // A provider finds a project: the group is named after it, in this window and the next.
         UnrealFixture.Write(h.Root, h.WorkFolder);
@@ -114,7 +113,8 @@ public class ProjectSettingsTests
         Assert.All(settings.SearchResults, r => Assert.Equal(SettingsViewModel.LinksPage, r.Category));
 
         settings.SearchText = "add an action";
-        Assert.Equal(SettingsViewModel.ActionsPage, Assert.Single(settings.SearchResults).Category);
+        // The entry with the words together comes first, before one that only has each of them.
+        Assert.Equal(SettingsViewModel.ActionsPage, settings.SearchResults[0].Category);
 
         settings.SearchText = "engine";
         Assert.Contains(settings.SearchResults, r => r is { Category: SettingsViewModel.ToolsPage, Label: "Engine folder" });
@@ -129,7 +129,7 @@ public class ProjectSettingsTests
         settings.SearchText = "nightowl actions";
         Assert.All(settings.SearchResults, r => Assert.Equal(SettingsViewModel.ActionsPage, r.Category));
         settings.SearchText = "theme";
-        Assert.Equal("Appearance", Assert.Single(settings.SearchResults).Where);
+        Assert.Equal("Appearance → Look", settings.SearchResults[0].Where);
 
         // No tab, no project pages to find.
         await using var empty = new TabTestHarness();
@@ -148,15 +148,15 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         h.Services.ProjectTools.Remember(uproject, UnrealProvider.ConfigurationKey, "DebugGame");
-        h.Services.Settings.ProjectTools.UnrealConfiguration = UnrealConfiguration.DebugGame;
+        h.Services.Settings.ProjectTools.SetValue(UnrealProvider.KindId, UnrealProvider.ConfigurationKey, nameof(UnrealConfiguration.DebugGame));
         using var settings = await OpenSettingsAsync(h);
         var before = File.ReadAllText(shared);
 
-        settings.ProjectTools.ResetCommand.Execute(null);
-        settings.General.ResetCommand.Execute(null);
-        settings.Advanced.ResetCommand.Execute(null);
+        settings.ProjectTools.ResetAllSections();
+        settings.General.ResetAllSections();
+        settings.Advanced.ResetAllSections();
 
-        Assert.Equal(UnrealConfiguration.Development, h.Services.Settings.ProjectTools.UnrealConfiguration);
+        Assert.Equal(UnrealConfiguration.Development, UnrealProvider.DefaultConfiguration(h.Services.Settings.ProjectTools));
         Assert.Equal(before, File.ReadAllText(shared));
         Assert.False(File.Exists(Path.Combine(h.WorkFolder, ProjectFile.LocalName)));
         Assert.Equal("DebugGame", h.Services.State.ProjectTools.Get(uproject, UnrealProvider.ConfigurationKey));
@@ -365,7 +365,7 @@ public class ProjectSettingsTests
             """);
         var tab = await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedProjectPage = SettingsViewModel.ActionsPage;
+        settings.SelectedCategory = SettingsViewModel.ActionsPage;
         var project = settings.Project!;
         Assert.IsType<ProjectActionsPage>(settings.CurrentPage);
         Assert.Equal(ProjectFileScope.Local, project.SelectedProjectActionFile.Value);
@@ -426,7 +426,7 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Actions.Select(a => a.Label).SequenceEqual(["Build"]), "the tab's actions");
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedProjectPage = SettingsViewModel.ActionsPage;
+        settings.SelectedCategory = SettingsViewModel.ActionsPage;
         var project = settings.Project!;
         Assert.Equal(["Build", "Play"], project.ProjectActions.Select(r => r.Name));
         Assert.EndsWith("  · only when Build/Game exists", project.ProjectActions[1].Detail, StringComparison.Ordinal);
@@ -569,7 +569,7 @@ public class ProjectSettingsTests
         h.Shell.OpenTabSettingsCommand.Execute(tab);
         var tabSettings = h.Shell.TabSettings!;
 
-        Assert.Equal("Project actions are in Settings → NightOwl → Actions.", tabSettings.ProjectActionsText);
+        Assert.Equal("In Settings → NightOwl → Actions.", tabSettings.ProjectActionsText);
         await tabSettings.OpenProjectActionsCommand.ExecuteAsync(null);
 
         Assert.Equal((SettingsViewModel.ActionsPage, false), (opening!.Category, opening.StartNew));
@@ -741,7 +741,7 @@ public class ProjectSettingsTests
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedProjectPage = SettingsViewModel.ToolsPage;
+        settings.SelectedCategory = SettingsViewModel.ToolsPage;
 
         Assert.False(settings.Project!.HasToolsProject);
         Assert.False(settings.Project.HasToolsFix);
@@ -750,6 +750,6 @@ public class ProjectSettingsTests
         settings.ShowProjectToolsDefaultsCommand.Execute(null);
 
         Assert.Same(settings.ProjectTools, settings.CurrentPage);
-        Assert.Equal("Project tools", settings.SelectedMainCategory);
+        Assert.Equal("Project tools", settings.SelectedNavEntry?.Title);
     }
 }

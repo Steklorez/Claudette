@@ -7,9 +7,9 @@ summary: "Claudette has two looks, Standard and Claude, and each comes in light 
 
 # Styles and themes
 
-Claudette has two looks, Standard and Claude, and each comes in light and dark. You pick the look with **Style** and the light or dark with **Theme**, in Settings → Appearance. Both change at once, with no restart.
+Claudette has two looks, Standard and Claude, and each comes in light and dark. You pick the look with **Style** and the light or dark with **Theme**, in Settings → Appearance. Both change at once, with no restart. The preview at the top of the page, a little of a tab with Claudette on its message box, follows each choice as you make it.
 
-{% include shot.html name="guide/settings/appearance" alt="Settings, Appearance: the theme, style and density, the conversation and code fonts with their sizes, zoom and motion, and the switches for what the conversation, the tab rows and Claudette show" %}
+{% include shot.html name="guide/settings/appearance" alt="Settings, Appearance: the preview of a tab at the top, then the theme, style, density and full-width conversation, the conversation and code fonts with their sizes, zoom and motion, and Claudette's settings" %}
 
 ## Theme
 
@@ -70,33 +70,33 @@ Pick a font from the list of the ones installed, or type a name. Leave a font em
 
 ## What the tab rows show
 
-Three switches in Settings → Appearance decide what a tab's row in the sidebar carries, beside its status icon. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
+Three switches in Settings → Conversation → Tab rows decide what a tab's row in the sidebar carries, beside its status icon. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
 
-- **Show context on tab rows** puts a small ring on the row that fills as the tab's context window does. It turns amber when Claude Code is about to compact the conversation, and red when it's nearly full ([Context and compacting](../usage/context-and-compacting.md)).
-- **Show git branch on tab rows** shows the branch the tab's folder has checked out, such as `main`, at the right of the row's second line. A tab in a worktree shows the worktree's name instead.
-- **Show task progress on tab rows** shows how many of Claude's tasks are done, such as `3/7`, at the right of the second line, and the task Claude is working on in place of the model while it works ([The Tasks page](../plans/the-tasks-page.md)).
+- **Show context** puts a small ring on the row that fills as the tab's context window does. It turns amber when Claude Code is about to compact the conversation, and red when it's nearly full ([Context and compacting](../usage/context-and-compacting.md)).
+- **Show git branch** shows the branch the tab's folder has checked out, such as `main`, at the right of the row's second line. A tab in a worktree shows the worktree's name instead.
+- **Show task progress** shows how many of Claude's tasks are done, such as `3/7`, at the right of the second line, and the task Claude is working on in place of the model while it works ([The Tasks page](../plans/the-tasks-page.md)).
 
 All three are on by default.
 
 ## Settings
 
-All of these are in Settings → Appearance, and all of them sync to your other machines when [settings sync](../history/settings-sync.md) is on.
+All of these sync to your other machines when [settings sync](../history/settings-sync.md) is on.
 
-| Setting | Default |
-|---|---|
-| **Theme** | System |
-| **Style** | Standard |
-| **Density** | Comfortable |
-| **Conversation font** | Claudette's default |
-| **Conversation font size** | 14 |
-| **Code font** | Cascadia Mono, Consolas or Menlo |
-| **Code font size** | 13 |
-| **Show context on tab rows** | On |
-| **Show git branch on tab rows** | On |
-| **Show task progress on tab rows** | On |
+| Setting | Default | Where |
+|---|---|---|
+| **Theme** | System | Settings → Appearance |
+| **Style** | Standard | Settings → Appearance |
+| **Density** | Comfortable | Settings → Appearance |
+| **Conversation font** | Claudette's default | Settings → Appearance |
+| **Conversation font size** | 14 | Settings → Appearance |
+| **Code font** | Cascadia Mono, Consolas or Menlo | Settings → Appearance |
+| **Code font size** | 13 | Settings → Appearance |
+| **Show context** | On | Settings → Conversation → Tab rows |
+| **Show git branch** | On | Settings → Conversation → Tab rows |
+| **Show task progress** | On | Settings → Conversation → Tab rows |
 
 ## See also
 
 - [Accessibility](accessibility.md) for **Zoom** and **Motion**, which are on the same page of Settings.
-- [Reading the conversation](../conversation/reading-the-conversation.md) for **Full-width conversation** and **Quieter in-between steps**.
+- [Reading the conversation](../conversation/reading-the-conversation.md) for **Full-width conversation**, in Appearance, and **Quieter in-between steps**, in Conversation.
 - [Claudette on the composer](../claudette/claudette-on-the-composer.md) for her settings, which are in Appearance too.

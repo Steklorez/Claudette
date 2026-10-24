@@ -51,14 +51,14 @@ Claude Code leaves a file's earlier contents out of a saved conversation when th
 
 ## Opening a file's changes
 
-Click a row, or press `Enter` on it, to open its [diff view](the-diff-view.md). The arrow keys move through the list without opening anything. Right-click a row for **Open diff**, **Open in diff tool**, **Open**, **Open in the OS's app**, **Reveal in folder** and **Copy path**, which [The diff view](the-diff-view.md#the-files-actions) explains.
+Click a row, or press `Enter` on it, to open its [diff view](the-diff-view.md). The arrow keys move through the list without opening anything. Right-click a row for **Open diff**, **Open in diff tool**, **Open**, **Open in the OS's app**, **Reveal in folder** and **Copy path**, which [The diff view](the-diff-view.md#the-files-actions) explains, and **Diff tool settings…**, which opens Settings → **Files and diffs** at the [diff tool](external-diff-tools.md).
 
 With an [external diff tool](external-diff-tools.md) set, a single click only selects the row, and a double-click opens the tool.
 
 ## Settings
 
-- Settings → **Diff tool**: how a double-click opens a file ([External diff tools](external-diff-tools.md)).
-- Settings → **Editor** → **Open files in**: where **Open** goes ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md)).
+- Settings → **Files and diffs** → **Diff tool**: how a double-click opens a file ([External diff tools](external-diff-tools.md)).
+- Settings → **Files and diffs** → **Open files in**: where **Open** goes ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md)).
 
 ## See also
 

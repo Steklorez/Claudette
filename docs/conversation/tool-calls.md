@@ -54,7 +54,7 @@ An output over 20,000 characters shows its start, with **Show all (n KB)** to sh
 
 ## Settings
 
-Tool calls are one of the in-between steps that **Quieter in-between steps** (Settings → Appearance, on by default) draws without a tint and outline until you point at them. See [Reading the conversation](reading-the-conversation.md#quieter-in-between-steps).
+Tool calls are one of the in-between steps that **Quieter in-between steps** (Settings → Conversation, on by default) draws without a tint and outline until you point at them. See [Reading the conversation](reading-the-conversation.md#quieter-in-between-steps).
 
 ## See also
 

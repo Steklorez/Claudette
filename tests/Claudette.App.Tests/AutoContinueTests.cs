@@ -75,7 +75,7 @@ public class AutoContinueTests
         var settings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.Equal("Default (off)", settings.SelectedAutoContinue.Label);
         settings.SelectedAutoContinue = settings.AutoContinueChoices.Single(c => c.Label == "On");
-        await settings.ApplyCommand.ExecuteAsync(null);
+        await settings.DoneCommand.ExecuteAsync(null);
 
         Assert.True(tab.State.Overrides.ContinueAfterLimitReset);
         Assert.True(tab.HasOverrides);
@@ -86,8 +86,8 @@ public class AutoContinueTests
         // Use defaults goes back to Settings → Usage.
         settings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.Equal("On", settings.SelectedAutoContinue.Label);
-        settings.UseDefaultsCommand.Execute(null);
-        await settings.ApplyCommand.ExecuteAsync(null);
+        settings.UseAllDefaults();
+        await settings.DoneCommand.ExecuteAsync(null);
         Assert.Null(tab.State.Overrides.ContinueAfterLimitReset);
     }
 
@@ -100,7 +100,7 @@ public class AutoContinueTests
         await HitLimitAsync(h, tab, reset);
 
         var settings = new SettingsViewModel(h.Services, null);
-        settings.Usage.ContinueAfterLimitReset = false;
+        settings.Tabs.ContinueAfterLimitReset = false;
 
         await TabTestHarness.Eventually(() => !tab.WillContinueAfterLimit, "the wait to follow the setting");
         await AdvanceToAsync(h, reset + AutoContinueMonitor.Grace);

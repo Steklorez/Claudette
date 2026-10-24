@@ -5,7 +5,7 @@ using Claudette.Core.Processes;
 
 namespace Claudette.Core.Diffs;
 
-/// <summary>The diff tool chosen in Settings → Diff tool (DESIGN.md §8, §14).</summary>
+/// <summary>The diff tool chosen in Settings → Files and diffs → Diff tool (DESIGN.md §8, §14).</summary>
 /// <param name="PresetId">One of the <see cref="DiffToolPresets"/> ids, for <see cref="DiffToolKind.Preset"/>.</param>
 /// <param name="CustomCommand">The command line the user typed, for <see cref="DiffToolKind.Custom"/>.</param>
 public sealed record DiffToolChoice(DiffToolKind Kind, string? PresetId = null, string? CustomCommand = null)

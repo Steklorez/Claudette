@@ -272,6 +272,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.State.SelectedTabId = SavedId(newValue);
         _services.SaveState();
         UpdateGameCall();
+        TellSettingsOfProjectTab();
     }
 
     [ObservableProperty]
@@ -997,7 +998,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public partial bool IsFullWidth { get; private set; }
 
     /// <summary>
-    /// Settings → Appearance → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): the view takes the
+    /// Settings → Conversation → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): the view takes the
     /// <c>quietsteps</c> class, whose styles draw the cards of steps on the way without their tint and outline.
     /// </summary>
     [ObservableProperty]
@@ -1010,6 +1011,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     // ---- Settings -------------------------------------------------------------------------------------------
 
+    /// <summary>Opens Settings where it was last left, or brings it to the front if it's open.</summary>
     [RelayCommand]
     private Task OpenSettingsAsync() => ShowSettingsAsync(null, ProjectTab);
 
@@ -1017,8 +1019,23 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand]
     private Task OpenGuideAsync() => HelpLinks.OpenGuideAsync(_services);
 
-    /// <summary>Opens Settings at a category, for example Quick suffixes from the suffix menu's <b>Edit suffixes…</b>.</summary>
-    internal Task OpenSettingsAtAsync(string category) => ShowSettingsAsync(category, ProjectTab);
+    /// <summary>
+    /// Opens Settings at a category, and brings the setting or section with <paramref name="key"/> into view: the quick
+    /// suffixes from the suffix menu's <b>Edit suffixes…</b>, say.
+    /// </summary>
+    internal Task OpenSettingsAtAsync(string category, string? key = null) => ShowSettingsAsync(category, ProjectTab, key: key);
+
+    /// <summary>A feature's own "…settings" entry (DESIGN.md §14): Settings at the category and setting it names.</summary>
+    [RelayCommand]
+    private Task OpenSettingAsync(string? where)
+    {
+        if (where is null)
+        {
+            return Task.CompletedTask;
+        }
+        var parts = where.Split('#', 2);
+        return OpenSettingsAtAsync(parts[0], parts.Length > 1 ? parts[1] : null);
+    }
 
     /// <summary>
     /// Opens Settings at one of <paramref name="tab"/>'s project pages (DESIGN.md §14, "The project's pages"): Actions for
@@ -1035,10 +1052,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     }
 
     /// <summary>The window gets the project pages of the tab selected as it opens; with no tab, there are none.</summary>
-    private Task ShowSettingsAsync(string? category, TabViewModel? tab, bool startNew = false) =>
-        ShowSettingsWindow is { } show
-            ? show(new SettingsOpening(category, tab is null ? null : new ProjectSettingsViewModel(_services, tab, this), startNew))
+    private Task ShowSettingsAsync(string? category, TabViewModel? tab, bool startNew = false, string? key = null)
+    {
+        _settingsProjectTab = tab;
+        return ShowSettingsWindow is { } show
+            ? show(new SettingsOpening(category, tab is null ? null : new ProjectSettingsViewModel(_services, tab, this), startNew, key))
             : Task.CompletedTask;
+    }
 
     [RelayCommand]
     private void OpenTabSettings(TabViewModel? tab)

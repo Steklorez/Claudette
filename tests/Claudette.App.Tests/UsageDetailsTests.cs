@@ -195,18 +195,19 @@ public class UsageDetailsTests
             Assert.True(again.IsDetailed);
         }
 
-        // Settings → Appearance is the same switch, and Reset to defaults turns it off.
+        // Settings → Usage is the same switch, and its section's Reset to defaults turns it off.
         var settings = new SettingsViewModel(h.Services, null);
-        Assert.True(settings.Appearance.DetailedUsageHeader);
-        settings.Appearance.DetailedUsageHeader = false;
+        Assert.True(settings.Usage.DetailedUsageHeader);
+        settings.Usage.DetailedUsageHeader = false;
         Assert.False(header.IsDetailed);
-        settings.Appearance.DetailedUsageHeader = true;
+        settings.Usage.DetailedUsageHeader = true;
         Assert.True(header.IsDetailed);
-        settings.Appearance.ResetCommand.Execute(null);
-        Assert.False(settings.Appearance.DetailedUsageHeader);
+        settings.Usage.FindGroup("header")!.ResetCommand.Execute(null);
+        Assert.False(settings.Usage.DetailedUsageHeader);
         Assert.False(h.Services.State.DetailedUsageHeader);
         Assert.False(header.IsDetailed);
-        Assert.Equal(new SettingsSearchResult("Appearance", "Detailed usage header"), Assert.Single(settings.SearchResultsFor("detailed usage")));
+        var found = Assert.Single(settings.SearchResultsFor("detailed usage"));
+        Assert.Equal(("Usage", "state.detailedUsageHeader"), (found.Category, found.Key));
     }
 
     [Fact]

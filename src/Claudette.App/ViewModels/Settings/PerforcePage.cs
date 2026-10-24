@@ -50,19 +50,38 @@ public sealed class PerforceOverrideEditor(PerforceFolderOverride entry, Action 
 /// </summary>
 public sealed partial class PerforcePage : SettingsPage
 {
-    public PerforcePage(SettingsContext context) : base(context, SettingsCategory.Perforce) => FillPerforceLogin();
+    public PerforcePage(SettingsContext context) : base(context, SettingsCategory.Perforce)
+    {
+        Section("logins", "Logins",
+        [
+            Setting("perforce.enabled", "Keep Perforce logins fresh", s => s.Perforce.Enabled, (s, v) => s.Perforce.Enabled = v,
+                "In a workspace, log in again before the ticket expires, so p4 commands keep working.",
+                "Claudette tells Claude the tab is in a Perforce workspace. Claude never sees the password. Applies to tabs started after the change.",
+                ["p4", "ticket", "login"]),
+            Setting("perforce.passwordSource", "Password source", s => s.Perforce.PasswordSource, (s, v) => s.Perforce.PasswordSource = v,
+                keywords: ["p4passwd", "password"]),
+            Setting("perforce.renewBeforeMinutes", "Renew the ticket when less is left than (minutes)", s => s.Perforce.RenewBeforeMinutes, (s, v) => s.Perforce.RenewBeforeMinutes = v,
+                keywords: ["ticket", "expire"]),
+            Setting("perforce.allHostsTickets", "Request tickets valid on all hosts", s => s.Perforce.AllHostsTickets, (s, v) => s.Perforce.AllHostsTickets = v,
+                "p4 login -a.", keywords: ["ticket", "hosts"]),
+            Setting("perforce.showChangelistOnTabs", "Show changelist on tabs", s => s.Perforce.ShowChangelistOnTabs, (s, v) => s.Perforce.ShowChangelistOnTabs = v,
+                "A CL 12345 badge at the right of a tab's second line, beside its git branch.",
+                "The tab info card always shows the changelist Claude is working in.", ["changelist", "cl", "tab rows"]),
+        ]);
+        Section("password", "Stored password",
+        [
+            Info("perforce.storedPassword", "Save a Perforce password", keywords: ["forget password", "credential manager", "keychain"]),
+        ]);
+        Section("folders", "Per-folder server and user",
+        [
+            Info("perforce.folderOverrides", "Folders", keywords: ["p4port", "p4user", "server", "user", "override"]),
+        ], description: "Perforce finds the server and user itself, as Claude's p4 commands do. Set them here for a folder when that isn't right.");
+        FillPerforceLogin();
+    }
 
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Keep Perforce logins fresh"),
-        Entry("Password source"),
-        Entry("Renew the ticket when less than this is left (minutes)"),
-        Entry("Request tickets valid on all hosts"),
-        Entry("Show changelist on tabs"),
-        Entry("Save a Perforce password", pageText: "Save password"),
-        Entry("Forget the Perforce password", pageText: "Forget password"),
-        Entry("Per-folder server and user"),
-    ];
+    public override string IconKey => "IconSettingsPerforce";
+
+    public override string Description => "Keeping Perforce logins fresh, so Claude's p4 commands keep working.";
 
     private PerforceSettings Perforce => Settings.Perforce;
 
@@ -111,13 +130,6 @@ public sealed partial class PerforcePage : SettingsPage
     {
         get => Perforce.ShowChangelistOnTabs;
         set => Set(value, v => Perforce.ShowChangelistOnTabs = v);
-    }
-
-    /// <summary>The per-folder overrides are the user's data, like favorite folders; stored passwords are untouched too.</summary>
-    protected override void ResetSettings()
-    {
-        Settings.Perforce = new PerforceSettings { FolderOverrides = Perforce.FolderOverrides };
-        Save();
     }
 
     // ---- Per-folder overrides ---------------------------------------------------------------------------------------

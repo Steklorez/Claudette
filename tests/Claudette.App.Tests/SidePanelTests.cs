@@ -996,7 +996,7 @@ public class SidePanelTests
         var settings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.Equal("Default (off)", settings.SelectedMonitor.Label);
         settings.SelectedMonitor = settings.MonitorChoices.Single(c => c.Label == "On");
-        await settings.ApplyCommand.ExecuteAsync(null);
+        await settings.DoneCommand.ExecuteAsync(null);
 
         Assert.True(tab.ProcessMonitor.IsOn);
         Assert.True(tab.State.Overrides.ShowProcessMonitor);
@@ -1009,7 +1009,7 @@ public class SidePanelTests
         settings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.Equal("On", settings.SelectedMonitor.Label);
         settings.SelectedMonitor = settings.MonitorChoices.Single(c => c.Label == "Off");
-        await settings.ApplyCommand.ExecuteAsync(null);
+        await settings.DoneCommand.ExecuteAsync(null);
 
         Assert.False(tab.ProcessMonitor.IsOn);
         Assert.Null(tab.ProcessMonitor.SummaryText);
@@ -1017,8 +1017,8 @@ public class SidePanelTests
 
         // Use defaults follows Settings again.
         settings = new TabSettingsViewModel(h.Services, tab, () => { });
-        settings.UseDefaultsCommand.Execute(null);
-        await settings.ApplyCommand.ExecuteAsync(null);
+        settings.UseAllDefaults();
+        await settings.DoneCommand.ExecuteAsync(null);
         Assert.Null(tab.State.Overrides.ShowProcessMonitor);
         Assert.True(tab.ProcessMonitor.IsOn);
     }

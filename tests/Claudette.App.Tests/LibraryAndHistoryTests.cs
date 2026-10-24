@@ -755,8 +755,8 @@ public class LibraryAndHistoryTests
         Assert.False(settings.SyncToLibrary);
 
         settings.SyncToLibrary = true;
-        settings.UseDefaultsCommand.Execute(null);
-        await settings.ApplyCommand.ExecuteAsync(null);
+        settings.UseAllDefaults();
+        await settings.DoneCommand.ExecuteAsync(null);
 
         // It's the tab's own state, not an override.
         Assert.True(tab.SyncToLibrary);

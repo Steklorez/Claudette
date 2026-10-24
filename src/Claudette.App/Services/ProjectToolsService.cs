@@ -12,14 +12,23 @@ namespace Claudette.App.Services;
 /// </summary>
 public sealed class ProjectToolsService(AppServices services, ISystemProcesses? processes, IUnrealEngineRegistry registry, ProjectToolPaths paths)
 {
-    public ProjectToolDetector Detector { get; } = new([new UnrealProvider(), new Core.ProjectTools.Unity.UnityProvider(), new Core.ProjectTools.Godot.GodotProvider()]);
+    /// <summary>
+    /// The project types Claudette knows, in the order Settings shows them (DESIGN.md §18, "Project types"). A new one is
+    /// a line here, with what it needs given to it.
+    /// </summary>
+    public static IReadOnlyList<IProjectType> AllTypes(IUnrealEngineRegistry registry) =>
+    [
+        new UnrealProvider(registry),
+        new Core.ProjectTools.Unity.UnityProvider(),
+        new Core.ProjectTools.Godot.GodotProvider(),
+    ];
+
+    public ProjectToolDetector Detector { get; } = new(AllTypes(registry));
 
     /// <summary>Running processes by name; null when this machine can't tell.</summary>
     public ISystemProcesses? Processes { get; internal set; } = processes;
 
     public ProjectToolPaths Paths { get; internal set; } = paths;
-
-    public IUnrealEngineRegistry Registry { get; internal set; } = registry;
 
     /// <summary>The OS actions are built for. Tests can build another OS's actions.</summary>
     public ToolOS OS { get; internal set; } = ToolOSExtensions.Current;
@@ -41,7 +50,7 @@ public sealed class ProjectToolsService(AppServices services, ISystemProcesses? 
         Settings = Settings,
         Paths = Paths,
         Memory = State.Snapshot(),
-        UnrealRegistry = Registry,
+        SkippedFolders = Detector.SkippedFolders,
         Processes = Processes,
         Probe = Probe,
         Shell = Shell,

@@ -1,25 +1,7 @@
 using Claudette.Core.Diffs;
-using Claudette.Core.ProjectTools.Unreal;
 using Claudette.Core.Settings;
 
 namespace Claudette.Core.ProjectTools;
-
-/// <summary>
-/// Finds one kind of project for a tab's folder, and says what can be done with it (DESIGN.md §18, "Project tools").
-/// Unreal Engine is the first provider. Both methods run off the UI thread and must be cheap: bounded walks, small
-/// files, nothing started.
-/// </summary>
-public interface IProjectToolProvider
-{
-    /// <summary>A stable id, such as <c>unreal</c>.</summary>
-    string Kind { get; }
-
-    /// <summary>The projects this provider finds for <paramref name="folder"/>, nearest first.</summary>
-    IReadOnlyList<ProjectCandidate> Find(string folder, ProjectToolContext context);
-
-    /// <summary>Reads a project and builds its actions. Never throws for a broken project: <see cref="ProjectInfo.Problem"/> says what's wrong.</summary>
-    ProjectInfo Describe(ProjectCandidate candidate, ProjectToolContext context);
-}
 
 /// <summary>Where other programs keep their files, injected so tests use temporary folders (DESIGN.md §15).</summary>
 /// <param name="Home">The user's home folder: <c>~</c>.</param>
@@ -61,7 +43,10 @@ public sealed class NoProjectMemory : IProjectMemory
     public string? Get(string projectPath, string key) => null;
 }
 
-/// <summary>Everything a provider needs besides the folder: the OS, the settings, other programs' files, the machine's memory.</summary>
+/// <summary>
+/// Everything a project type needs besides the folder: the OS, the settings, other programs' files, the machine's
+/// memory. A type's own services, such as Unreal's registry entries, are its own, given to it when it's made.
+/// </summary>
 public sealed class ProjectToolContext
 {
     public required ToolOS OS { get; init; }
@@ -72,8 +57,8 @@ public sealed class ProjectToolContext
 
     public IProjectMemory Memory { get; init; } = NoProjectMemory.Instance;
 
-    /// <summary>The Windows registry's Unreal entries; nothing elsewhere.</summary>
-    public IUnrealEngineRegistry UnrealRegistry { get; init; } = NoUnrealEngineRegistry.Instance;
+    /// <summary>Folders the search for projects never looks into: every type's, and the shared ones (<see cref="ProjectSearch"/>).</summary>
+    public IReadOnlySet<string> SkippedFolders { get; init; } = ProjectSearch.SkippedFolders;
 
     /// <summary>Running processes, to tell whether an editor has the project open. Null can't tell, and doesn't guess.</summary>
     public ISystemProcesses? Processes { get; init; }

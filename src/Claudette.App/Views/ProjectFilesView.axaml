@@ -25,7 +25,7 @@
     </Border>
 
     <Grid x:Name="Body" Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
-      <!-- The explorer ("The explorer"); its column is the first or the last, as Settings → Editor says -->
+      <!-- The explorer ("The explorer"); its column is the first or the last, as Settings → Files and diffs says -->
       <Border x:Name="Explorer" Classes="explorer" Classes.right="{Binding IsExplorerOnRight}" Width="{Binding ExplorerWidth}" IsVisible="{Binding IsExplorerShown}">
         <DockPanel>
           <Border DockPanel.Dock="Top" Classes="explorerheader">

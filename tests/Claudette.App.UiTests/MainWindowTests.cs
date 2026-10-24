@@ -148,8 +148,9 @@ public class MainWindowTests
         menu.Open(cup);
         UiText.Settle(window);
         var items = menu.Items.OfType<MenuItem>().ToArray();
-        Assert.Equal(["Only while Claude has work to finish", "Whenever Claudette is running"], items.Select(i => i.Header as string));
-        Assert.Equal([false, true], items.Select(i => i.IsChecked));
+        Assert.Equal(["Only while Claude has work to finish", "Whenever Claudette is running", "Keep-awake settings…"], items.Select(i => i.Header as string));
+        Assert.Equal([false, true, false], items.Select(i => i.IsChecked));
+        Assert.Equal("General#keepAwake", items[2].CommandParameter);
         ClickMenuItem(window, items[0]);
         menu.Close();
 

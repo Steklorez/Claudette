@@ -33,7 +33,7 @@ The menu's header says which engine it found, its version, folder and kind: laun
 | **Clean intermediates…** | Deletes generated folders. It asks first. |
 | **Kill all Unreal editors…** | Ends every running Unreal editor. It asks first. |
 
-The project's menu also has **Editor configuration**, with **Development** and **DebugGame** as radio items. DebugGame loads the project's DebugGame modules, and the labels say so: **Launch editor (DebugGame)**, **Build editor (DebugGame)**. A project's own choice is remembered on this machine, and the default for projects that haven't one is Settings → Project tools → **Default editor configuration**.
+The project's menu also has **Editor configuration**, with **Development** and **DebugGame** as radio items. DebugGame loads the project's DebugGame modules, and the labels say so: **Launch editor (DebugGame)**, **Build editor (DebugGame)**. A project's own choice is remembered on this machine, and the default for projects that haven't one is Settings → Project tools → Unreal Engine → **Default editor configuration**.
 
 ## Open solution and Open in Rider
 
@@ -41,7 +41,7 @@ The project's menu also has **Editor configuration**, with **Development** and *
 
 With **Open solutions with** set to Rider, the action reads **Open in Rider** and opens the `.uproject` itself, on every OS. Rider has its own Unreal project model, so there are no project files to generate first, and none to regenerate when you add source files. Rider reads a `.uproject` from Unreal Engine 4.25.4 on Windows and 4.26 on macOS and Linux. With an older engine, the action stays **Open solution**.
 
-If Rider can't be found, a note says so instead of letting the OS open the project in the Unreal editor. Choose **Another program…** in Settings → Project tools to point at it.
+If Rider can't be found, a note says so instead of letting the OS open the project in the Unreal editor. Choose **Another program…** in Settings → Project tools → Solutions → **Open solutions with** to point at it.
 
 ## The ones that ask first
 
@@ -50,14 +50,15 @@ If Rider can't be found, a note says so instead of letting the OS open the proje
 
 ## Settings
 
-All in Settings → Project tools, on this machine only.
+All in Settings → Project tools, on this machine only: the **Unreal Engine** section, and **Solutions** for **Open solutions with**.
 
 | Setting | Default | What it does |
 |---|---|---|
+| **Recognize Unreal Engine projects** | On | Off, Claudette treats an Unreal project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
+| **Tell Claude about Unreal Engine projects** | On | Adds a note to the session with the engine's version and folder and the commands to build the editor and regenerate project files, and asks Claude not to start the editor or packaging unless you ask. Applies to tabs started after the change. |
 | **Default editor configuration** | Development | The configuration for projects that haven't a choice of their own. |
 | **Project files for** | Visual Studio on Windows, Xcode on macOS, VS Code on Linux | Which project files **Generate project files** makes, and which solution **Open solution** opens. |
 | **Open solutions with** | The OS's default app | **The OS's default app**, **Rider**, **Visual Studio**, **VS Code** or **Another program…**, with **Browse…**. Unity and Godot solutions open the same way. |
-| **Tell Claude about Unreal projects** | On | Adds a note to the session with the engine's version and folder and the commands to build the editor and regenerate project files, and asks Claude not to start the editor or packaging unless you ask. Applies to tabs started after the change. |
 
 ## See also
 

@@ -38,7 +38,7 @@ macOS runs an app opened from Downloads from a temporary, read-only copy, and th
 3. On Windows, open the `.msix` and follow App Installer's prompts. It replaces your installed Claudette. On macOS, open the `.dmg` and drag `Claudette.app` onto the Applications link, replacing the one there.
 4. Start Claudette.
 
-Your settings, saved tabs and history are in Claudette's own folders, so they're still there. Pinned tabs come back, and so do unpinned ones when Settings → Sessions → **Also restore unpinned tabs when Claudette starts** is on: see [Closing and restoring](../tabs/closing-and-restoring.md).
+Your settings, saved tabs and history are in Claudette's own folders, so they're still there. Pinned tabs come back, and so do unpinned ones when Settings → General → **Also restore unpinned tabs when Claudette starts** is on: see [Closing and restoring](../tabs/closing-and-restoring.md).
 
 ## Other causes
 

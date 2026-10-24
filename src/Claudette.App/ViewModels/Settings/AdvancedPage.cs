@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using Claudette.Core.Installation;
-using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels.Settings;
@@ -9,19 +8,35 @@ namespace Claudette.App.ViewModels.Settings;
 /// Settings → Advanced (DESIGN.md §14): extra arguments for <c>claude</c>, protocol logging (DESIGN.md §13, "Logging"),
 /// the data folder, and Diagnostics (DESIGN.md §16, "Staying tolerant at runtime").
 /// </summary>
-/// <param name="claudeCode">Claude Code, whose Claude app settings the copied diagnostics report.</param>
-public sealed partial class AdvancedPage(SettingsContext context, ClaudeCodePage claudeCode) : SettingsPage(context, SettingsCategory.Advanced)
+public sealed partial class AdvancedPage : SettingsPage
 {
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Extra arguments for every claude process"),
-        Entry("Log protocol traffic"),
-        Entry("Open log folder"),
-        Entry("Diagnostics"),
-        Entry("Copy diagnostics"),
-        Entry("Minimum supported Claude Code version"),
-        Entry("Open data folder"),
-    ];
+    private readonly ClaudeCodePage _claudeCode;
+
+    /// <param name="claudeCode">Claude Code, whose Claude app settings the copied diagnostics report.</param>
+    public AdvancedPage(SettingsContext context, ClaudeCodePage claudeCode) : base(context, SettingsCategory.Advanced)
+    {
+        _claudeCode = claudeCode;
+        Section("claude", "Running claude",
+        [
+            Setting("advanced.extraArguments", "Extra arguments for every claude process", s => s.Advanced.ExtraArguments, (s, v) => s.Advanced.ExtraArguments = v,
+                "Split on spaces and added after Claudette's own. Applies to tabs started after the change.", keywords: ["command line", "flags", "cli"]),
+            Setting("advanced.logProtocol", "Log protocol traffic", s => s.Advanced.LogProtocol, (s, v) => s.Advanced.LogProtocol = v,
+                "Everything each session sends and receives, to help with a bug report. Kept 7 days.",
+                "Logs hold your prompts and file contents. Messages Claudette skips also show in the conversation. Applies to tabs started after the change.",
+                ["debug", "logging", "open log folder"]),
+            Info("advanced.dataFolder", "Claudette's data folder", "Saved tabs, usage history and logs.", keywords: ["open data folder", "files"]),
+        ]);
+        Section("diagnostics", "Diagnostics",
+        [
+            Info("advanced.diagnostics", "What Claude Code sent that Claudette doesn't know",
+                "Skipped safely; a count here after a Claude Code update is worth a bug report.",
+                keywords: ["copy diagnostics", "unknown messages", "minimum supported claude code version", "bug report", .. ClaudeCodePage.ShowLoginShellSetting ? ["login shell"] : (string[])[]]),
+        ]);
+    }
+
+    public override string IconKey => "IconToolBash";
+
+    public override string Description => "How Claudette runs claude, its logs and its files, and what it has noticed this run.";
 
     public string ExtraArguments
     {
@@ -44,12 +59,6 @@ public sealed partial class AdvancedPage(SettingsContext context, ClaudeCodePage
     {
         Directory.CreateDirectory(Services.Paths.ProtocolLogDirectory);
         return Services.Platform.RevealFolderAsync(Services.Paths.ProtocolLogDirectory);
-    }
-
-    protected override void ResetSettings()
-    {
-        Settings.Advanced = new AdvancedSettings();
-        Save();
     }
 
     // ---- Diagnostics (DESIGN.md §16, "Staying tolerant at runtime") -------------------------------------------------
@@ -92,8 +101,8 @@ public sealed partial class AdvancedPage(SettingsContext context, ClaudeCodePage
             lines.Add($"Claude Code: {InstalledVersionText}{(Services.Install is { } install ? $" at {install.Path}" : "")}");
             lines.Add($"Minimum supported Claude Code: {MinimumVersionText}");
             lines.Add($"Login shell environment: {LoginShellText}");
-            lines.Add($"Claude app (Remote Control): new tabs {(claudeCode.ConnectNewTabsToClaudeApp ? "connect" : "don't connect")}; "
-                + (claudeCode.RemoteControlUnavailableText ?? "available for this account") + ".");
+            lines.Add($"Claude app (Remote Control): new tabs {(_claudeCode.ConnectNewTabsToClaudeApp ? "connect" : "don't connect")}; "
+                + (_claudeCode.RemoteControlUnavailableText ?? "available for this account") + ".");
             lines.Add($"Keeping the computer awake: {KeepAwakeText}");
             lines.Add($"Protocol logging: {(LogProtocol ? "on" : "off")}");
             lines.Add("");

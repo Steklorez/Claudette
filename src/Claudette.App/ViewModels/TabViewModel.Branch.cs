@@ -21,7 +21,7 @@ public sealed partial class TabViewModel
         : IsInWorktree ? WorktreeName
         : head.Branch ?? (head.Commit is { } commit ? ProjectIdentity.ShortCommit(commit) : null);
 
-    /// <summary>Settings → Appearance → Show git branch on tab rows, and something to show.</summary>
+    /// <summary>Settings → Conversation → Show git branch, and something to show.</summary>
     public bool ShowBranchBadge => _services.Settings.Appearance.ShowBranchOnTabs && BranchBadge is not null;
 
     /// <summary>The worktree's branch icon is in the badge; without the badge, it's on the name line.</summary>

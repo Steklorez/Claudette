@@ -1,22 +1,39 @@
-using Claudette.Core.Settings;
-
 namespace Claudette.App.ViewModels.Settings;
 
 /// <summary>Settings → Notifications (DESIGN.md §10): each kind on or off, the Dock or taskbar badge and the icon.</summary>
-public sealed class NotificationsPage(SettingsContext context) : SettingsPage(context, SettingsCategory.Notifications)
+public sealed class NotificationsPage : SettingsPage
 {
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("A tab finishes its turn"),
-        Entry("A tab needs permission or an answer"),
-        Entry("A tab's Claude Code stops with an error"),
-        Entry("Usage alerts", pageText: "Usage crosses a warning level"),
-        Entry("Claude Code needs me to sign in"),
-        Entry("A Claude Code update is ready"),
-        Entry("A project action finishes"),
-        Entry("Dock or taskbar badge", pageText: "Show the number of tabs needing input on the Dock or taskbar icon"),
-        Entry("Animate the Dock or taskbar icon"),
-    ];
+    public NotificationsPage(SettingsContext context) : base(context, SettingsCategory.Notifications)
+    {
+        Section("notify", "Notify me when",
+        [
+            Setting("notifications.turnFinished", "A tab finishes its turn", s => s.Notifications.TurnFinished, (s, v) => s.Notifications.TurnFinished = v,
+                keywords: ["done", "complete"]),
+            Setting("notifications.needsInput", "A tab needs permission or an answer", s => s.Notifications.NeedsInput, (s, v) => s.Notifications.NeedsInput = v,
+                keywords: ["prompt", "question", "waiting"]),
+            Setting("notifications.processErrors", "A tab's Claude Code stops with an error", s => s.Notifications.ProcessErrors, (s, v) => s.Notifications.ProcessErrors = v,
+                keywords: ["crash"]),
+            Setting("notifications.usageAlerts", "Usage crosses a warning level, is on pace to run out, or resets", s => s.Notifications.UsageAlerts, (s, v) => s.Notifications.UsageAlerts = v,
+                keywords: ["usage alerts", "limit"]),
+            Setting("notifications.signIn", "Claude Code needs me to sign in", s => s.Notifications.SignIn, (s, v) => s.Notifications.SignIn = v,
+                keywords: ["login", "account"]),
+            Setting("notifications.updateReady", "A Claude Code update is ready", s => s.Notifications.UpdateReady, (s, v) => s.Notifications.UpdateReady = v,
+                keywords: ["version"]),
+            Setting("notifications.projectActions", "A project action finishes", s => s.Notifications.ProjectActions, (s, v) => s.Notifications.ProjectActions = v,
+                keywords: ["build", "job", "run"]),
+        ], description: "Only when Claudette isn't in front. Clicking one brings it to the front, on that tab. Check-ins have their own, in Tabs.");
+        Section("icon", "The Dock or taskbar icon",
+        [
+            Setting("notifications.badge", "Show how many tabs need you", s => s.Notifications.Badge, (s, v) => s.Notifications.Badge = v,
+                "A number on the icon.", keywords: ["badge", "count", "dock", "taskbar"]),
+            Setting("notifications.animateIcon", "Animate it while tabs work or wait", s => s.Notifications.AnimateIcon, (s, v) => s.Notifications.AnimateIcon = v,
+                "With motion reduced, it shows what the tabs are doing without moving.", keywords: ["dock", "taskbar", "animation"]),
+        ]);
+    }
+
+    public override string IconKey => "IconSettingsNotifications";
+
+    public override string Description => "When Claudette tells you something needs you.";
 
     /// <summary>False when this machine can't show OS notifications, for example a macOS build run outside its app bundle.</summary>
     public bool NotificationsAvailable => Services.Notifications.IsAvailable;
@@ -74,11 +91,5 @@ public sealed class NotificationsPage(SettingsContext context) : SettingsPage(co
     {
         get => Settings.Notifications.AnimateIcon;
         set => Set(value, v => Settings.Notifications.AnimateIcon = v);
-    }
-
-    protected override void ResetSettings()
-    {
-        Settings.Notifications = new NotificationSettings();
-        Save();
     }
 }

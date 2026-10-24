@@ -371,11 +371,11 @@ public class ServiceStatusTests
         Assert.True(settings.General.ShowServiceStatus);
         settings.General.ShowServiceStatus = false;
 
-        settings.General.ResetCommand.Execute(null);
+        settings.General.ResetAllSections();
 
         Assert.True(settings.General.ShowServiceStatus);
         Assert.True(s.H.Services.Settings.General.ShowServiceStatus);
         settings.SearchText = "service status";
-        Assert.Equal([new SettingsSearchResult("General", "Show Claude's service status")], settings.SearchResults);
+        Assert.Equal("general.showServiceStatus", Assert.Single(settings.SearchResults).Key);
     }
 }

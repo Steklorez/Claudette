@@ -142,9 +142,10 @@ public sealed class UnrealCommandTests
     [Fact]
     public void Each_OS_has_its_default_project_file_format()
     {
-        Assert.Equal(ProjectFileFormat.VisualStudio, new ProjectToolSettings().FormatFor(ToolOS.Windows));
-        Assert.Equal(ProjectFileFormat.Xcode, new ProjectToolSettings().FormatFor(ToolOS.MacOS));
-        Assert.Equal(ProjectFileFormat.VSCode, new ProjectToolSettings().FormatFor(ToolOS.Linux));
-        Assert.Equal(ProjectFileFormat.VSCode, new ProjectToolSettings { ProjectFileFormat = ProjectFileFormat.VSCode }.FormatFor(ToolOS.Windows));
+        Assert.Equal(ProjectFileFormat.VisualStudio, UnrealProvider.FormatFor(new ProjectToolSettings(), ToolOS.Windows));
+        Assert.Equal(ProjectFileFormat.Xcode, UnrealProvider.FormatFor(new ProjectToolSettings(), ToolOS.MacOS));
+        Assert.Equal(ProjectFileFormat.VSCode, UnrealProvider.FormatFor(new ProjectToolSettings(), ToolOS.Linux));
+        // An older settings.json's choice, kept by Unreal's project type from then on.
+        Assert.Equal(ProjectFileFormat.VSCode, UnrealProvider.FormatFor(new ProjectToolSettings { ProjectFileFormat = ProjectFileFormat.VSCode }, ToolOS.Windows));
     }
 }

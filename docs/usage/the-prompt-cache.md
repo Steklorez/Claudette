@@ -40,7 +40,7 @@ Claude Code decides how long its cache lasts, and Claudette follows what Claude 
 
 | Setting | Default | Where |
 |---|---|---|
-| **Show when the prompt cache expires** | On | Settings → Appearance |
+| **Show when the prompt cache expires** | On | Settings → Conversation |
 
 ## See also
 

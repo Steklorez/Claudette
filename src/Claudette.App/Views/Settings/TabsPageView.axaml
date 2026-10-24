@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Claudette.App.ViewModels.Settings"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.TabsPageView" ClipToBounds="False"
+             x:DataType="settings:TabsPage">
+  <!-- Tabs (DESIGN.md §14): what each new tab starts with, which its Tab settings… can change; the new tab picker -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="newTabs">
+      <c:SettingRow Key="newTabs.defaultModel">
+        <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding DefaultModel}" />
+      </c:SettingRow>
+      <c:SettingRow Key="newTabs.defaultEffort">
+        <ComboBox ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding DefaultEffort}" />
+      </c:SettingRow>
+      <c:SettingRow Key="newTabs.defaultPermissionMode">
+        <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding DefaultMode}" />
+      </c:SettingRow>
+      <!-- DESIGN.md §5, "Subagents": applies at once, in tabs already open too -->
+      <c:SettingRow Key="claudeCode.subagents">
+        <ComboBox ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding Subagents}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- DESIGN.md §6, "Continuing after a limit resets" and "Tabs that don't use usage credits" -->
+    <c:SettingsSection Key="usageLimits">
+      <c:SettingRow Key="usage.continueAfterLimitReset">
+        <ToggleSwitch IsChecked="{Binding ContinueAfterLimitReset}" />
+      </c:SettingRow>
+      <c:SettingRow Key="usage.useUsageCredits">
+        <ToggleSwitch IsChecked="{Binding UseUsageCredits}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- DESIGN.md §5, "Check-ins on long turns" -->
+    <c:SettingsSection Key="checkIns">
+      <c:SettingRow Key="checkIns.enabled">
+        <ToggleSwitch IsChecked="{Binding CheckInsEnabled}" />
+        <c:SettingRow.Details>
+          <StackPanel IsEnabled="{Binding CheckInsEnabled}">
+            <c:SettingRow Key="checkIns.runTimeMinutes">
+              <NumericUpDown Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding CheckInRunTime}" />
+            </c:SettingRow>
+            <c:SettingRow Key="checkIns.quietTimeMinutes">
+              <NumericUpDown Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding CheckInQuietTime}" />
+            </c:SettingRow>
+            <c:SettingRow Key="checkIns.message" IsStacked="True">
+              <TextBox Text="{Binding CheckInMessage, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" />
+            </c:SettingRow>
+            <c:SettingRow Key="checkIns.notify">
+              <ToggleSwitch IsChecked="{Binding NotifyOnCheckIn}" />
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- DESIGN.md §4, "Process monitor" -->
+    <c:SettingsSection Key="processMonitor">
+      <c:SettingRow Key="processes.showMonitor">
+        <ToggleSwitch IsChecked="{Binding ShowProcessMonitor}" />
+        <c:SettingRow.Details>
+          <StackPanel IsEnabled="{Binding ShowProcessMonitor}">
+            <c:SettingRow Key="processes.refreshSeconds">
+              <NumericUpDown Minimum="1" Maximum="60" Increment="1" FormatString="0" Value="{Binding ProcessRefreshSeconds}" />
+            </c:SettingRow>
+            <c:SettingRow Key="processes.showCommandLines">
+              <ToggleSwitch IsChecked="{Binding ShowCommandLines}" />
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- The new tab picker's folders (DESIGN.md §4, "Opening a tab") -->
+    <c:SettingsSection Key="picker">
+      <c:SettingRow Key="newTabs.recentFolderLimit">
+        <NumericUpDown Minimum="1" Maximum="100" Increment="1" FormatString="0" Value="{Binding RecentFolderLimit}" />
+      </c:SettingRow>
+      <c:SettingRow Key="state.clearRecentFolders">
+        <Button Content="Clear recent folders" Command="{Binding ClearRecentFoldersCommand}" />
+      </c:SettingRow>
+      <c:SettingRow Key="state.favoriteFolders">
+        <Button Content="Add folder…" Command="{Binding AddFavoriteCommand}" />
+        <c:SettingRow.Details>
+          <StackPanel Spacing="2">
+            <TextBlock Classes="muted small" Text="None yet. Add one here, or right-click a folder in the new tab picker." IsVisible="{Binding !HasFavorites}" TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding Favorites}" IsVisible="{Binding HasFavorites}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="settings:FavoriteFolderRow">
+                  <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="2" Margin="0,2">
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" />
+                      <TextBlock Classes="muted small" Text="{Binding Path}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="flat" ToolTip.Tip="Move up" AutomationProperties.Name="{Binding Name, StringFormat='Move {0} up'}"
+                            Command="{Binding $parent[UserControl].((settings:TabsPage)DataContext).MoveFavoriteUpCommand}" CommandParameter="{Binding}">
+                      <Path Classes="rowicon" Data="{DynamicResource IconChevronUp}" />
+                    </Button>
+                    <Button Grid.Column="2" Classes="flat" ToolTip.Tip="Move down" AutomationProperties.Name="{Binding Name, StringFormat='Move {0} down'}"
+                            Command="{Binding $parent[UserControl].((settings:TabsPage)DataContext).MoveFavoriteDownCommand}" CommandParameter="{Binding}">
+                      <Path Classes="rowicon" Data="{DynamicResource IconChevronDown}" />
+                    </Button>
+                    <Button Grid.Column="3" Classes="flat" ToolTip.Tip="Remove" AutomationProperties.Name="{Binding Name, StringFormat='Remove {0} from favorites'}"
+                            Command="{Binding $parent[UserControl].((settings:TabsPage)DataContext).RemoveFavoriteCommand}" CommandParameter="{Binding}">
+                      <Path Classes="rowicon" Data="{DynamicResource IconClose}" />
+                    </Button>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

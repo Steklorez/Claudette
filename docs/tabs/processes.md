@@ -13,7 +13,7 @@ The process monitor shows what each tab has started, such as test runs, dev serv
 
 ## Turning it on
 
-1. Open Settings → Processes and tick **Show the process monitor**.
+1. Turn on Settings → Tabs → **Show the process monitor**.
 2. Or turn it on for one tab only: right-click the tab, choose **Tab settings…**, and set **Process monitor** to **On**. The same setting can turn it off for one tab. See [Tab settings](tab-settings.md).
 
 ## What it shows
@@ -59,10 +59,10 @@ Claudette tracks each tab's processes even with the monitor off, so closing a ta
 
 ## Settings
 
-All in Settings → Processes:
+All in Settings → Tabs → Process monitor:
 
 - **Show the process monitor**: off by default.
-- **Refresh the panel every (seconds)**: how often the page updates while it's showing. The default is 2. The composer bar's summary updates every 10 seconds.
+- **Refresh every (seconds)**: how often the page updates while it's showing. The default is 2. The composer bar's summary updates every 10 seconds.
 - **Show command lines**: on by default. Command lines sometimes contain tokens or passwords, so turn it off if others can see your screen. Then Claudette doesn't read them, so the rows and their tips don't show them.
 
 ## See also

@@ -11,7 +11,7 @@ Claudette can start by itself when you log in to your computer, with your tabs b
 
 ## Turning it on
 
-Check Settings → General → **Start Claudette when I log in**. It's off by default.
+Turn on Settings → General → **Start Claudette when I log in**. It's off by default.
 
 It lives in the operating system rather than in Claudette's settings, so it's for this machine alone, it doesn't [sync](../history/settings-sync.md), and **Reset to defaults** leaves it.
 

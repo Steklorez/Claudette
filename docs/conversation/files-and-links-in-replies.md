@@ -27,8 +27,8 @@ A path is read from the tab's folder (the worktree, for a tab in one), then its 
 
 ### What a click does
 
-1. A file opens in the app your OS uses for it. With Project files, it opens in Claudette's own editor instead, at the line named. Settings → Editor → **Open files in** chooses: **Claudette's editor, at the line named** or **The app the OS uses for the file**. The OS's apps have no common way to take a line, so none is passed to them. ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) has which tab it opens in.)
-2. An image (a PNG, JPEG, GIF, WebP or BMP) opens in Claudette's image window, unless Settings → Editor → **Open images in** says to use your OS's app ([Images](images.md#opening-an-image-claude-names)).
+1. A file opens in the app your OS uses for it. With Project files, it opens in Claudette's own editor instead, at the line named. Settings → Files and diffs → **Open files in** chooses: **Claudette's editor, at the line named** or **The app the OS uses for the file**. The OS's apps have no common way to take a line, so none is passed to them. ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) has which tab it opens in.)
+2. An image (a PNG, JPEG, GIF, WebP or BMP) opens in Claudette's image window, unless Settings → Files and diffs → **Open images in** says to use your OS's app ([Images](images.md#opening-an-image-claude-names)).
 3. A folder opens in Finder, Explorer or your file manager.
 4. A program, script, shortcut or installer (`.exe`, `.bat`, `.ps1`, `.js`, `.sh`, `.py`, `.lnk`, `.app`, `.desktop` and the like, or on macOS and Linux a file with no extension whose execute bit is set) is shown in its folder instead of opening, since opening one would run it, and a reply can be misled into pointing at one under an innocent name. Scripts open as text in Claudette's editor, where nothing runs.
 5. A name that matches several files offers them in a menu at the click, with their folders (`docs/weapons.md`, `Plugins/Combat/weapons.md`). Pick one to open it; close the menu to open none.
@@ -39,7 +39,7 @@ A path is read from the tab's folder (the worktree, for a tab in one), then its 
 Inline code is looked for as the reply shows, before you click, and some paths reach the network just by being looked up (`/net/<host>` on macOS). So that lookup touches only the tab's folders, your home folder and, on Windows, the computer's own drives, not a mapped network drive. A file elsewhere becomes a link only when Claude's tools named it. A click looks wherever its path points. A network path (`\\server\share\…`, `//server/…`, `file://server/…`) is never looked at, since Windows would hand its server your credentials.
 
 ## Settings
-Where a clicked file opens is set in Settings → Editor: **Open files in**, and **Show a file clicked in a conversation** (**Beside the conversation** or **In its place**). [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) explains both.
+Where a clicked file opens is set in Settings → Files and diffs: **Open files in**, and **Show a file clicked in a conversation** (**Beside the conversation** or **In its place**). [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) explains both.
 
 ## See also
 

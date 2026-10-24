@@ -51,7 +51,7 @@ An OS notification tells you when credits start paying: see [Alerts](alerts.md).
 
 ## Model meters
 
-**Show model-specific weekly limits** (Settings → Usage, on by default) shows the model meters. Claude Code reports them. If a version of Claude Code stops reporting them, the model meters go away and the rest of the header carries on, unless **If Claude Code stops reporting them, read model limits from /usage** is on. Then Claudette reads the text Claude Code prints for `/usage` instead. That costs nothing, but it can break when Claude Code changes the wording, so it's off by default.
+**Show model-specific weekly limits** (Settings → Usage, on by default) shows the model meters. Claude Code reports them. If a version of Claude Code stops reporting them, the model meters go away and the rest of the header carries on, unless **If Claude Code stops reporting them, read them from /usage** is on. Then Claudette reads the text Claude Code prints for `/usage` instead. That costs nothing, but it can break when Claude Code changes the wording, so it's off by default.
 
 ## How current the numbers are
 
@@ -73,11 +73,11 @@ All in Settings → Usage.
 
 | Setting | Default |
 |---|---|
-| **Warn at (% of session used)** | 75 |
-| **Alert at (% of session used)** | 90 |
+| **Warn at (% of the session used)** | 75 |
+| **Alert at (% of the session used)** | 90 |
 | **Burn rate window (minutes)** | 30 (from 5 to 300) |
 | **Show model-specific weekly limits** | On |
-| **If Claude Code stops reporting them, read model limits from /usage** | Off |
+| **If Claude Code stops reporting them, read them from /usage** | Off |
 
 ## See also
 

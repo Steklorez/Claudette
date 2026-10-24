@@ -12,7 +12,7 @@ Settings sync keeps Claudette's settings the same on every machine that uses the
 ## Turning it on
 
 1. Open Settings → Sessions.
-2. Check **Sync Claudette's settings through the library**. It's off by default.
+2. Turn on **Sync Claudette's settings through the library**. It's off by default.
 
 If the library already holds settings from another machine, Claudette asks: *The library already has settings from another machine. Which should this machine use?*
 
@@ -20,25 +20,23 @@ If the library already holds settings from another machine, Claudette asks: *The
 - **Replace them with this machine's** publishes this machine's settings to the library instead.
 - **Cancel** leaves sync off.
 
-Unchecking it keeps the settings as they are on this machine and stops syncing.
+Turning it off keeps the settings as they are on this machine and stops syncing.
 
 ## What syncs
 
 - Appearance, except **Zoom**, which suits each machine's screen.
-- New-tab defaults.
-- Usage settings: the warning levels, continuing when a limit resets, and **Share usage with my other machines**.
-- Check-ins.
-- Quick suffixes.
+- Conversation, except **Show every hook run**, **Messages sent while Claude works** and **Suggest my next prompt**.
 - Notifications.
-- Keyboard shortcuts, and **Send with**.
-- Process monitor options.
+- Keyboard: the shortcuts, **Send with** and the quick suffixes.
+- Tabs, except **Subagents** and your favorite folders: what new tabs start with, what they do at a usage limit, check-ins and the process monitor.
+- Usage, except **Detailed usage header**: the warning levels, usage history and **Share usage with my other machines**.
 
 ## What stays on each machine
 
 - Whether Claudette starts at login, and the rest of Settings → General.
 - The path to `claude`, the login shell setting, and the Claude app settings (Settings → Claude Code).
 - This page's own settings: the machine's name, the library folder, how long library sessions are kept, and whether new tabs sync.
-- The diff tool, Settings → Editor, Settings → Project tools, and Perforce settings. Program paths and installed tools differ between machines, and a Perforce server, workspace and stored password belong to the machine.
+- Settings → Files and diffs, Settings → Project tools, and Perforce settings. Program paths and installed tools differ between machines, and a Perforce server, workspace and stored password belong to the machine.
 - Accounts and their keys.
 - Recent and favorite folders, folder mappings, pinned tabs, and window sizes and positions.
 
@@ -58,7 +56,7 @@ The synced settings are one file in the library, `settings-sync.json`.
 |---|---|---|
 | **Sync Claudette's settings through the library** | Off | Settings → Sessions |
 
-**Reset to defaults** on the Sessions page leaves it as it is.
+No **Reset to defaults** changes it.
 
 ## See also
 

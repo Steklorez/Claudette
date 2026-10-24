@@ -25,7 +25,7 @@ A copy of a tab ([Duplicate tab](the-tabs-menu.md#duplicate-tab)) doesn't take y
 
 ## The name in Claude Code
 
-Other Claude Code sessions message a session by its name, and `claude --resume <name>` in a terminal finds it. With Settings → General → **Name each tab's session in Claude Code after the tab** on, the tab's name, yours or the generated one, is the session's name there too. It follows a rename, and it's on by default for a new install. A settings file saved by an earlier version keeps the choice it had.
+Other Claude Code sessions message a session by its name, and `claude --resume <name>` in a terminal finds it. With Settings → Claude Code → **Name each tab's session in Claude Code after the tab** on, the tab's name, yours or the generated one, is the session's name there too. It follows a rename, and it's on by default for a new install. A settings file saved by an earlier version keeps the choice it had.
 
 Without it, Claude Code names a session after its folder with two characters added (`claudette-3f`), so every tab in a folder looks alike to the others' Claude.
 
@@ -61,8 +61,8 @@ A pinned tab shows a pin icon and sits at the start of its folder group. It come
 
 ## Settings
 
-- Settings → General → **Name each tab's session in Claude Code after the tab**: on by default for a new install.
-- Settings → Sessions → **Also restore unpinned tabs when Claudette starts**, which decides whether tabs you haven't pinned come back too. See [Closing and restoring](closing-and-restoring.md#unpinned-tabs).
+- Settings → Claude Code → **Name each tab's session in Claude Code after the tab**: on by default for a new install.
+- Settings → General → **Also restore unpinned tabs when Claudette starts**, which decides whether tabs you haven't pinned come back too. See [Closing and restoring](closing-and-restoring.md#unpinned-tabs).
 
 ## See also
 

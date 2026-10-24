@@ -2,95 +2,98 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Claudette.App.ViewModels"
              xmlns:settings="using:Claudette.App.ViewModels.Settings"
-             x:Class="Claudette.App.Views.Settings.AccountsPageView"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.AccountsPageView" ClipToBounds="False"
              x:DataType="settings:AccountsPage">
   <!-- Accounts (DESIGN.md §4, "Accounts"): API keys besides Claude Code's own sign-in, and which one new folders use -->
-  <StackPanel Spacing="12">
-    <TextBlock Classes="section" Text="Accounts" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap"
-               Text="Tabs run under the Default account, Claude Code's own sign-in (Settings → Claude Code), unless their folder group's Account menu, or the tab's own, picks another. Each machine sets up its own accounts." />
-    <Grid ColumnDefinitions="200,*">
-      <TextBlock Classes="label" Text="New folders use" />
-      <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding NewFolderChoices}" SelectedItem="{Binding NewFolderAccount}" />
-    </Grid>
-
-    <!-- The accounts besides Default -->
-    <ItemsControl ItemsSource="{Binding Editors}" IsVisible="{Binding HasAccounts}">
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel Spacing="10" />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate DataType="settings:AccountEditor">
-          <Border Classes="codeblock">
-            <StackPanel Spacing="8">
-              <Grid ColumnDefinitions="Auto,*,140,Auto" ColumnSpacing="8">
-                <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
-                <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Account name" />
-                <ComboBox Grid.Column="2" HorizontalAlignment="Stretch" ItemsSource="{x:Static settings:AccountEditor.Colors}" SelectedItem="{Binding Color}"
-                          AutomationProperties.Name="Tag color">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="vm:NamedColor">
-                      <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Ellipse Width="10" Height="10" VerticalAlignment="Center">
-                          <Ellipse.Fill>
-                            <SolidColorBrush Color="{Binding Color}" />
-                          </Ellipse.Fill>
-                        </Ellipse>
-                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                      </StackPanel>
-                    </DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
-                <TextBlock Grid.Column="3" Classes="muted small" Text="API key" VerticalAlignment="Center" />
-              </Grid>
-              <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto" RowSpacing="8">
-                <TextBlock Classes="label" Text="Warn when today's estimated spend passes ($)" TextWrapping="Wrap" />
-                <NumericUpDown Grid.Column="1" Minimum="0" Increment="5" FormatString="0.##" Value="{Binding DailySpendAlert}"
-                               AutomationProperties.Name="Daily spend warning in dollars" />
-                <TextBlock Grid.Row="1" Classes="label" Text="Warn when this month's estimated spend passes ($)" TextWrapping="Wrap" />
-                <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Increment="10" FormatString="0.##" Value="{Binding MonthlySpendAlert}"
-                               AutomationProperties.Name="Monthly spend warning in dollars" />
-              </Grid>
-              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !IsChangingKey}">
-                <Button Content="Change key…" Command="{Binding ChangeKeyCommand}" />
-                <Button Content="Remove…" Command="{Binding Removal.AskCommand}" IsEnabled="{Binding CanRemove}"
-                        ToolTip.Tip="{Binding RemoveTip}" ToolTip.ShowOnDisabled="True" />
-              </StackPanel>
-              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding IsChangingKey}">
-                <TextBox Text="{Binding NewKey}" PasswordChar="•" PlaceholderText="sk-ant-…" AutomationProperties.Name="New API key" />
-                <Button Grid.Column="1" Classes="accent" Content="Save key" Command="{Binding SaveKeyCommand}" />
-                <Button Grid.Column="2" Content="Cancel" Command="{Binding CancelKeyCommand}" />
-              </Grid>
-              <StackPanel Spacing="8" IsVisible="{Binding Removal.IsOpen}">
-                <TextBlock TextWrapping="Wrap" Text="{Binding RemoveTip}" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Button Classes="accent" Content="Remove" Command="{Binding Removal.ConfirmCommand}" />
-                  <Button Content="Cancel" Command="{Binding Removal.CancelCommand}" />
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="accounts">
+      <c:SettingRow Key="state.newFolderAccount">
+        <ComboBox ItemsSource="{Binding NewFolderChoices}" SelectedItem="{Binding NewFolderAccount}" />
+      </c:SettingRow>
+      <!-- The accounts besides Default, each in a box of its own -->
+      <c:SettingRow Key="state.accounts" Title="" IsVisible="{Binding HasAccounts}" IsStacked="True">
+        <ItemsControl ItemsSource="{Binding Editors}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="10" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="settings:AccountEditor">
+              <Border Classes="settingsnote">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="Auto,*,150,Auto" ColumnSpacing="8">
+                    <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Account name" />
+                    <ComboBox Grid.Column="2" HorizontalAlignment="Stretch" ItemsSource="{x:Static settings:AccountEditor.Colors}" SelectedItem="{Binding Color}"
+                              AutomationProperties.Name="Tag color">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="vm:NamedColor">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse Width="10" Height="10" VerticalAlignment="Center">
+                              <Ellipse.Fill>
+                                <SolidColorBrush Color="{Binding Color}" />
+                              </Ellipse.Fill>
+                            </Ellipse>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Column="3" Classes="muted small" Text="API key" VerticalAlignment="Center" />
+                  </Grid>
+                  <c:SettingRow Title="Warn when today's estimated spend passes ($)" Padding="8,4">
+                    <NumericUpDown Minimum="0" Increment="5" FormatString="0.##" Value="{Binding DailySpendAlert}" Width="140"
+                                   AutomationProperties.Name="Daily spend warning in dollars" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="Warn when this month's estimated spend passes ($)" Padding="8,4">
+                    <NumericUpDown Minimum="0" Increment="10" FormatString="0.##" Value="{Binding MonthlySpendAlert}" Width="140"
+                                   AutomationProperties.Name="Monthly spend warning in dollars" />
+                  </c:SettingRow>
+                  <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !IsChangingKey}">
+                    <Button Content="Change key…" Command="{Binding ChangeKeyCommand}" />
+                    <Button Content="Remove…" Command="{Binding Removal.AskCommand}" IsEnabled="{Binding CanRemove}"
+                            ToolTip.Tip="{Binding RemoveTip}" ToolTip.ShowOnDisabled="True" />
+                  </StackPanel>
+                  <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding IsChangingKey}">
+                    <TextBox Text="{Binding NewKey}" PasswordChar="•" PlaceholderText="sk-ant-…" AutomationProperties.Name="New API key" />
+                    <Button Grid.Column="1" Classes="accent" Content="Save key" Command="{Binding SaveKeyCommand}" />
+                    <Button Grid.Column="2" Content="Cancel" Command="{Binding CancelKeyCommand}" />
+                  </Grid>
+                  <StackPanel Spacing="8" IsVisible="{Binding Removal.IsOpen}">
+                    <TextBlock TextWrapping="Wrap" Text="{Binding RemoveTip}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button Classes="accent" Content="Remove" Command="{Binding Removal.ConfirmCommand}" />
+                      <Button Content="Cancel" Command="{Binding Removal.CancelCommand}" />
+                    </StackPanel>
+                  </StackPanel>
+                  <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding Status}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 </StackPanel>
-              </StackPanel>
-              <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding Status}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}" />
-            </StackPanel>
-          </Border>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </c:SettingRow>
+    </c:SettingsSection>
 
     <!-- Adding one: the key goes only to the OS credential store -->
-    <TextBlock Text="Add an API key" FontWeight="SemiBold" Margin="0,8,0,0" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding KeyNote}" />
-    <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding CredentialStoreUnavailableText}" IsVisible="{Binding !IsCredentialStoreAvailable}" />
-    <Grid ColumnDefinitions="200,*" RowDefinitions="Auto,Auto" RowSpacing="8" IsEnabled="{Binding IsCredentialStoreAvailable}">
-      <TextBlock Classes="label" Text="Name" />
-      <TextBox Grid.Column="1" Text="{Binding NewName}" PlaceholderText="for example: Work" AutomationProperties.Name="New account's name" />
-      <TextBlock Grid.Row="1" Classes="label" Text="API key" />
-      <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewKey}" PasswordChar="•" PlaceholderText="sk-ant-…" AutomationProperties.Name="New account's API key" />
-    </Grid>
-    <StackPanel Orientation="Horizontal" Spacing="8" IsEnabled="{Binding IsCredentialStoreAvailable}">
-      <Button Classes="accent" Content="Add account" Command="{Binding AddCommand}" />
-      <Button Content="Reset to defaults" Command="{Binding ResetCommand}" />
-    </StackPanel>
-    <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding AddStatus}" IsVisible="{Binding AddStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+    <c:SettingsSection Key="addKey" Description="{Binding KeyNote}">
+      <c:SettingRow Key="state.addAccount" Title="" IsStacked="True">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding CredentialStoreUnavailableText}" IsVisible="{Binding !IsCredentialStoreAvailable}" />
+          <StackPanel Spacing="8" IsEnabled="{Binding IsCredentialStoreAvailable}">
+            <c:SettingRow Title="Name" Padding="8,4">
+              <TextBox Text="{Binding NewName}" PlaceholderText="for example: Work" AutomationProperties.Name="New account's name" />
+            </c:SettingRow>
+            <c:SettingRow Title="API key" Padding="8,4">
+              <TextBox Text="{Binding NewKey}" PasswordChar="•" PlaceholderText="sk-ant-…" AutomationProperties.Name="New account's API key" />
+            </c:SettingRow>
+            <Button Classes="accent" Content="Add account" Command="{Binding AddCommand}" HorizontalAlignment="Left" />
+          </StackPanel>
+          <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding AddStatus}" IsVisible="{Binding AddStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
   </StackPanel>
 </UserControl>

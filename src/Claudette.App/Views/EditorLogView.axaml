@@ -62,7 +62,7 @@
                         ToolTip.Tip="{x:Static vm:LogTabViewModel.StayCurrentTip}" />
           <ToggleButton x:Name="WrapToggle" Classes="logtoggle" Content="Wrap lines" IsChecked="{Binding WordWrap}"
                         ToolTip.Tip="{x:Static vm:LogTabViewModel.WordWrapTip}" />
-          <Button Content="Open file" Command="{Binding OpenFileCommand}" ToolTip.Tip="Opens the log's file, as Settings → Editor says" />
+          <Button Content="Open file" Command="{Binding OpenFileCommand}" ToolTip.Tip="Opens the log's file, as Settings → Files and diffs says" />
           <Button Content="Copy" Command="{Binding CopyOutputCommand}" ToolTip.Tip="Copy the lines shown" />
           <Button Content="Close" Command="{Binding CloseCommand}" ToolTip.Tip="{x:Static vm:EditorLogViewModel.CloseTip}" />
         </StackPanel>

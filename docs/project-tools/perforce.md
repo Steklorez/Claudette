@@ -26,7 +26,7 @@ In a workspace:
 
 ## How the ticket is kept fresh
 
-- **Ahead of time.** Claudette checks the ticket when the tab's session starts, when each turn starts and every 15 minutes. When it has expired, doesn't exist or has less than 30 minutes left, Claudette logs in again. The 30 is Settings → Perforce → **Renew the ticket when less than this is left (minutes)**.
+- **Ahead of time.** Claudette checks the ticket when the tab's session starts, when each turn starts and every 15 minutes. When it has expired, doesn't exist or has less than 30 minutes left, Claudette logs in again. The 30 is Settings → Perforce → **Renew the ticket when less is left than (minutes)**.
 - **Just in time.** Before each Bash command that runs `p4`, Claudette checks the ticket, and never changes the command or skips a permission prompt.
 - **Recovery.** If a `p4` command still fails because the session expired, or with *"Perforce password (P4PASSWD) invalid or unset."*, Claudette logs in again, tells Claude *"Perforce login renewed. Retry the last p4 command."* and adds a note to the conversation. It does this at most once per turn, so a command that fails for another reason can't loop.
 - **After a failure.** When a login fails or you cancel the password prompt, Claudette doesn't try again for 5 minutes. A new turn does.
@@ -69,8 +69,8 @@ All in Settings → Perforce. None of it syncs between machines. **Reset to defa
 |---|---|---|
 | **Keep Perforce logins fresh** | Off | Detects workspaces, tells Claude, and renews tickets. |
 | **Password source** | **Stored by Claudette (recommended)** | Where the password comes from. |
-| **Renew the ticket when less than this is left (minutes)** | 30 | When Claudette logs in again. |
-| **Request tickets valid on all hosts (p4 login -a)** | Off | Asks Perforce for a ticket valid on every host. |
+| **Renew the ticket when less is left than (minutes)** | 30 | When Claudette logs in again. |
+| **Request tickets valid on all hosts** | Off | Asks Perforce for a ticket valid on every host (`p4 login -a`). |
 | **Show changelist on tabs** | Off | The `CL 12345` badge on a tab's row. |
 | **Stored password** | None | **Save password** and **Forget password**, for a server and user. |
 | **Per-folder server and user** | None | **Add folder…** sets a server or user for tabs in a folder, when Perforce's own answer isn't right. The deepest folder that holds the tab's wins. |

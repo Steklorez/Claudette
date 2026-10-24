@@ -14,7 +14,7 @@ When a tab's folder holds a Godot project (a folder with `project.godot`), the [
 There's no standard place to install Godot, so Claudette looks in this order:
 
 1. The executable you picked for the project with **Choose Godot executable…** (**Choose another Godot executable…** once one is found).
-2. The path in Settings → Project tools → **Godot executable**.
+2. The path in Settings → Project tools → Godot → **Godot executable**.
 3. `godot`, `godot4`, `Godot` or `godot-mono` on your `PATH`.
 4. On macOS, `Godot.app` or `Godot_mono.app` in Applications.
 5. On Windows, Scoop's and WinGet's places.
@@ -38,12 +38,13 @@ A project is a C# project when its features list `C#`, it has a `[dotnet]` or `[
 
 ## Settings
 
-In Settings → Project tools, on this machine only. **Open solutions with**, which also applies here, is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
+In Settings → Project tools → Godot, on this machine only. **Open solutions with**, under **Solutions**, also applies here, and is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Godot executable** | Empty, so Claudette finds it | The path to Godot, with **Browse…** and **Detect**. |
+| **Recognize Godot projects** | On | Off, Claudette treats a Godot project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
 | **Tell Claude about Godot projects** | On | Adds a note to the session with the Godot version, whether it's GDScript or C#, how to check the project and its scripts without the editor, how to build the C# code, and not to open the editor unless asked. Applies to tabs started after the change. |
+| **Godot executable** | Empty, so Claudette finds it | The path to Godot, with **Browse…** and **Detect**. |
 
 ## See also
 

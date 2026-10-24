@@ -13,7 +13,7 @@ After Claude replies, Claude Code can guess what you'll send next. Claudette sho
 
 Prompt suggestions are off by default. Each one is a short extra model call on the conversation, mostly reads from the prompt cache, and it counts toward your usage.
 
-1. Open Settings → Claude Code.
+1. Open Settings → Conversation.
 2. Turn on **Suggest my next prompt**.
 
 It applies to tabs started after the change. If you turn it off, no suggestion shows, but a session that's running keeps making them until it restarts.
@@ -38,7 +38,7 @@ Claude Code has its own switches too. **Prompt suggestions** in its `/config`, o
 
 | Setting | Default | Where |
 |---|---|---|
-| **Suggest my next prompt** | Off | Settings → Claude Code |
+| **Suggest my next prompt** | Off | Settings → Conversation |
 
 ## Shortcuts
 

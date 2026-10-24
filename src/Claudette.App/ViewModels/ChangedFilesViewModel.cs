@@ -76,7 +76,7 @@ internal interface IChangedFilesHost : ITabAreaHost
     /// <summary><see cref="ChangedFilesViewModel.AllReviewed"/> changed: the tab's row shows the reviewed icon, or its mark again.</summary>
     void AllReviewedChanged();
 
-    /// <summary>Opens a file, in the project's Files tab or the OS's app, as Settings → Editor says (DESIGN.md §18, "Project files").</summary>
+    /// <summary>Opens a file, in the project's Files tab or the OS's app, as Settings → Files and diffs says (DESIGN.md §18, "Project files").</summary>
     Task<OpenedPath> OpenPathAsync(string path);
 }
 
@@ -321,7 +321,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// The diff window's <b>Open</b>, as Settings → Editor → <b>Open in the diff window</b> says (DESIGN.md §8): the file
+    /// The diff window's <b>Open</b>, as Settings → Files and diffs → <b>Open in the diff window</b> says (DESIGN.md §8): the file
     /// as <b>Open files in</b> says, the file in the OS's app, or the changes in the diff tool when there's one for them.
     /// True when the file opened in Claudette's window, which the diff window stays over.
     /// </summary>
@@ -649,7 +649,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary>Asks the view to show the built-in diff view.</summary>
     public event Action<DiffSource>? DiffRequested;
 
-    /// <summary>Whether an external diff tool is set in Settings → Diff tool.</summary>
+    /// <summary>Whether an external diff tool is set in Settings → Files and diffs → Diff tool.</summary>
     public bool HasDiffTool => DiffTool.Kind != DiffToolKind.BuiltIn;
 
     private DiffToolChoice DiffTool
@@ -753,12 +753,12 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
     }
 
-    /// <summary><b>Open</b>: in the project's Files tab, or the OS's app, as Settings → Editor says (DESIGN.md §18, "Project files").</summary>
+    /// <summary><b>Open</b>: in the project's Files tab, or the OS's app, as Settings → Files and diffs says (DESIGN.md §18, "Project files").</summary>
     [RelayCommand]
     private Task OpenFileInEditorAsync(ChangedFileRow? row) =>
         row is { IsDeleted: false } ? _host.OpenPathAsync(row.Path) : Task.CompletedTask;
 
-    /// <summary><b>Open in the OS's app</b>, whatever Settings → Editor says.</summary>
+    /// <summary><b>Open in the OS's app</b>, whatever Settings → Files and diffs says.</summary>
     [RelayCommand]
     private Task OpenFileInSystemAsync(ChangedFileRow? row) =>
         row is { IsDeleted: false } ? _services.Platform.OpenFileAsync(row.Path) : Task.CompletedTask;

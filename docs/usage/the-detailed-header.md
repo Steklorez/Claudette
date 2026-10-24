@@ -13,7 +13,7 @@ The header can be drawn taller, with charts, so you can keep an eye on usage wit
 
 ## Turning it on
 
-Click the chevron at the header's right (its tip says **Expand the usage header**), and click it again to collapse it. Settings → Appearance → **Detailed usage header** is the same switch. It's off by default, and the choice is remembered on this machine, not synced.
+Click the chevron at the header's right (its tip says **Expand the usage header**), and click it again to collapse it. Settings → Usage → **Detailed usage header** is the same switch. It's off by default, and the choice is remembered on this machine, not synced.
 
 Collapsed, the header is as described in [The usage header](the-usage-header.md). Under it, about 150 pixels high, the detailed header has the session chart, the weekly chart, two numbers and the busiest tabs, left to right. Click any of them to open the Usage window.
 
@@ -54,9 +54,9 @@ A sign-in with no plan limits gets no charts, as it gets no meters.
 
 | Setting | Default | Where |
 |---|---|---|
-| **Detailed usage header** | Off | Settings → Appearance |
+| **Detailed usage header** | Off | Settings → Usage |
 | **Burn rate window (minutes)** | 30 | Settings → Usage |
-| **Warn at (% of session used)** and **Alert at (% of session used)** | 75 and 90 | Settings → Usage |
+| **Warn at (% of the session used)** and **Alert at (% of the session used)** | 75 and 90 | Settings → Usage |
 
 ## See also
 

@@ -1,5 +1,4 @@
 using Claudette.Core.Diffs;
-using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -11,16 +10,9 @@ public sealed record DiffToolOption(string Kind, string? PresetId, string Label)
     public override string ToString() => Label;
 }
 
-/// <summary>Settings → Diff tool (DESIGN.md §8, "External diff tool"): how changed files open, with <b>Test</b>.</summary>
-public sealed partial class DiffToolPage(SettingsContext context) : SettingsPage(context, SettingsCategory.DiffTool)
+/// <summary>Settings → Files and diffs → Diff tool (DESIGN.md §8, "External diff tool"): how changed files open, with <b>Test</b>.</summary>
+public sealed partial class FilesPage
 {
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Diff tool"),
-        Entry("Custom diff command", pageText: "Command"),
-        Entry("Test the diff tool", pageText: "Test"),
-    ];
-
     /// <summary>Built-in, each preset whose tool is installed here, and a custom command.</summary>
     public IReadOnlyList<DiffToolOption> DiffToolOptions => field ??=
     [
@@ -49,6 +41,7 @@ public sealed partial class DiffToolPage(SettingsContext context) : SettingsPage
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsCustomDiffTool));
             OnPropertyChanged(nameof(CanTestDiffTool));
+            OnPropertyChanged(nameof(HasDiffTool));
             DiffToolTestResult = null;
         }
     }
@@ -92,11 +85,5 @@ public sealed partial class DiffToolPage(SettingsContext context) : SettingsPage
         {
             DiffToolTestResult = $"Couldn't open it: {ex.Message}";
         }
-    }
-
-    protected override void ResetSettings()
-    {
-        Settings.DiffTool = new DiffToolSettings();
-        Save();
     }
 }

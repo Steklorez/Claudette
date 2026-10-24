@@ -1,0 +1,70 @@
+﻿"Appearance"
+"How Claudette looks: in every tab, and on this computer's screen."
+"You"
+"9:41"
+"Make the grapple let go more gently, so I keep my swing."
+"Thinking"
+"The pull stops dead on release. Easing it off would keep the swing."
+"Claude"
+"9:42"
+"Done. The pull now eases off over ReleaseTime (0.2 s) once you let go, so you keep your momentum."
+"Message Claude…"
+"Look"
+[button] Reset to defaults
+"Theme"
+"Light, dark, or as your computer is."
+[choice] "System"
+"Style"
+"Claudette's own look, or the Claude apps'.  "
+[choice] "Standard"
+"Density"
+"Compact tightens the conversation, the sidebar's rows and the message box."
+[choice] "Comfortable"
+"Full-width conversation"
+"Fill the tab's width, rather than stopping at a width that's easy to read."
+[toggle] Full-width conversation
+"Text"
+[button] Reset to defaults
+"Conversation font"
+"Empty uses Claudette's own; one that isn't installed falls back to it."
+[field] "Claudette's default"
+"Conversation font size"
+[button] (icon)
+[button] (icon)
+[field] "14"
+"Code font"
+"Empty uses Cascadia Mono, Consolas or Menlo."
+[field] "Cascadia Mono, Consolas or Menlo"
+"Code font size"
+[button] (icon)
+[button] (icon)
+[field] "13"
+"Accessibility"
+[button] Reset to defaults
+"Zoom"
+"This computer"
+"Everything in the main window, bigger or smaller.  "
+[choice] "100%"
+"Motion"
+"Whether the busy dots pulse, the working line twinkles and the icon moves.  "
+[choice] "Follow the system"
+"Claudette"
+[button] Reset to defaults
+"Show Claudette on the composer"
+"She stands on the message box and does little things every so often.  "
+[toggle on] Show Claudette on the composer
+"Size"
+[choice] "Medium"
+"How often"
+"How often she does something."
+[choice] "Lively: every 10 to 30 seconds"
+"Shares tips"
+"Now and then she holds up a tip, such as a shortcut you might not know.  "
+[toggle on] Shares tips
+"Games with Claudette"
+"Tic-tac-toe, Connect Four or hangman against her while Claude works.  "
+[toggle on] Games with Claudette
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

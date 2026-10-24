@@ -17,7 +17,7 @@ The composer bar shows *Context 42%* for the selected tab. Hover over it for the
 
 Each tab's row in the sidebar has a small ring at its end that fills with the same percentage, so a tab nearing its limit stands out without being selected. It's muted, amber when the indicator warns, and red from 95%. It's hidden until the tab has context data, and the narrow rail doesn't show it. Click it to open the breakdown below without selecting the tab.
 
-Settings → Appearance → **Show context on tab rows** (on by default) turns the rings off.
+Settings → Conversation → Tab rows → **Show context** (on by default) turns the rings off.
 
 ## What fills the window
 
@@ -43,7 +43,7 @@ What `/compact` and auto-compact do is Claude Code's own, and its [docs](https:/
 
 | Setting | Default | Where |
 |---|---|---|
-| **Show context on tab rows** | On | Settings → Appearance |
+| **Show context** | On | Settings → Conversation → Tab rows |
 
 ## See also
 

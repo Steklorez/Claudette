@@ -129,6 +129,10 @@
                     <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenFileInSystemCommand}" CommandParameter="{Binding}" />
                     <MenuItem Header="Reveal in folder" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFileCommand}" CommandParameter="{Binding}" />
                     <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.CopyFilePathCommand}" CommandParameter="{Binding}" />
+                    <Separator />
+                    <!-- Settings → Files and diffs, at the diff tool (DESIGN.md §14) -->
+                    <MenuItem Header="Diff tool settings…" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenSettingCommand}"
+                              CommandParameter="Files and diffs#diffTool" />
                   </ContextMenu>
                 </Grid.ContextMenu>
               </Grid>

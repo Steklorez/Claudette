@@ -16,7 +16,7 @@ Claudette doesn't talk to Google Drive or any other cloud service. It reads and 
 By default it's the `library` folder inside [Claudette's data folder](../privacy/where-claudette-keeps-things.md), where no other machine sees it. To share it, point it at a folder your sync client keeps in sync.
 
 1. Open Settings → Sessions.
-2. Under **Session library folder**, choose **Browse…** to use another folder from now on, or **Move library…** to copy the sessions already in the library to the new folder and use that.
+2. Under **Session library**, beside **Folder**, choose **Browse…** to use another folder from now on, or **Move library…** to copy the sessions already in the library to the new folder and use that.
 3. Pick the folder.
 
 Under the folder, the page says how much the library holds: *The library holds 1.4 GB: 23 sessions.* That's everything in it, scratch pads and shared usage included, and it's measured each time you open the page. [Syncing a tab](syncing-a-tab.md#how-much-it-takes) shows what each session takes.
@@ -62,12 +62,12 @@ It never removes a session that's open in a tab that syncs, or one that another 
 
 | Setting | Default | Where |
 |---|---|---|
-| Session library folder | Inside the data folder | Settings → Sessions → **Session library folder** |
+| **Folder** | Inside the data folder | Settings → Sessions → Session library |
 | **Name for this machine** | The computer's name | Settings → Sessions |
 | **Keep library sessions for** | **Forever** | Settings → Sessions |
 | **Sync new tabs to the session library** | Off | Settings → Sessions, explained in [Syncing a tab](syncing-a-tab.md) |
 
-These settings, like the library's folder, stay on each machine. **Reset to defaults** on the page leaves the library folder and settings sync as they are, since changing either moves where your sessions and settings live.
+These settings, like the library's folder, stay on each machine. **Reset to defaults** leaves the library folder and settings sync as they are, since changing either moves where your sessions and settings live.
 
 ## See also
 

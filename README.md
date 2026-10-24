@@ -40,6 +40,12 @@ Changed files, live, a real diff view with **Revert** for a hunk or a file, tick
 
 ![The diff view of StarfallCharacter.cpp: the include, the air control change and the grappling hook's component and bindings Claude added](docs/screenshots/diff-standard-dark.png)
 
+### Settings that say what they do
+
+Each setting has a line saying what it does, and the search finds it by what you'd call it: "dark mode" finds **Theme**. Changes apply as you make them, each section has its own **Reset to defaults**, and Appearance shows your choices in a preview as you pick them. The window stays open beside your work, so you can see what a change does. [The Settings window →](https://claudette.dotbunny.com/settings/the-settings-window/)
+
+![Settings on Appearance: its pages in groups down the left, and a preview of a message, thinking and a reply in the chosen style above the Look, Text, Accessibility and Claudette sections](docs/screenshots/settings-standard-dark.png)
+
 ### And the rest
 
 - **A conversation built for code:** cards in their own colors, tool calls side by side as tiles, permission prompts and plans as cards, rewind and branch, find and export. [The conversation →](https://claudette.dotbunny.com/conversation/) · [The composer →](https://claudette.dotbunny.com/composer/)

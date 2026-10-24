@@ -5,7 +5,7 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// The image window (DESIGN.md §18, "Images from Claude's tools", "Opening images"), for every tab and Files tab: an
-/// image from a tool's result or a reply, and an image file or web image clicked, as Settings → Editor → Open images in
+/// image from a tool's result or a reply, and an image file or web image clicked, as Settings → Files and diffs → Open images in
 /// says.
 /// </summary>
 public sealed partial class ShellViewModel
@@ -13,7 +13,7 @@ public sealed partial class ShellViewModel
     /// <summary>Set by the view: shows an image in a window of its own, which disposes the viewer when it closes.</summary>
     public Action<ImageViewerViewModel>? ShowImageWindow { get; set; }
 
-    /// <summary>Settings → Editor → Open images in is Claudette's image viewer.</summary>
+    /// <summary>Settings → Files and diffs → Open images in is Claudette's image viewer.</summary>
     internal bool OpensImages => _services.Settings.Editor.OpenImagesIn == OpenImagesIn.Viewer;
 
     /// <summary>Shows <paramref name="image"/> in a window of its own.</summary>

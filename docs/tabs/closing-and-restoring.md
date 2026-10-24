@@ -34,7 +34,7 @@ A pinned tab comes back every time Claudette starts and resumes its session. Pin
 
 ## Unpinned tabs
 
-Unpinned tabs that were open when Claudette quit come back only while Settings → Sessions → **Also restore unpinned tabs when Claudette starts** is on. It's on by default for a new install, so every tab comes back at launch. Settings saved by 0.2.0 or earlier had it off and keep it off until you turn it on, or use Sessions' **Reset to defaults**.
+Unpinned tabs that were open when Claudette quit come back only while Settings → General → **Also restore unpinned tabs when Claudette starts** is on. It's on by default for a new install, so every tab comes back at launch. Settings saved by 0.2.0 or earlier had it off and keep it off until you turn it on, or use **Reset to defaults** in its section, **Starting and closing**.
 
 ## What comes back
 
@@ -75,7 +75,7 @@ Closing the Claudette window interrupts running turns and stops each tab's `clau
 
 ## Settings
 
-- Settings → Sessions → **Also restore unpinned tabs when Claudette starts**: see above.
+- Settings → General → **Also restore unpinned tabs when Claudette starts**: see above.
 - Settings → General → **Confirm before closing a tab where Claude is working**: on by default.
 
 ## Shortcuts

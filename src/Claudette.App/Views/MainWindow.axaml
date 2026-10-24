@@ -240,6 +240,9 @@
                               Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.ClaudeHasWork}" />
                     <MenuItem Header="Whenever Claudette is running" ToggleType="Radio" IsChecked="{Binding KeepAwake.WhileClaudetteRuns, Mode=OneWay}"
                               Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.ClaudetteRuns}" />
+                    <Separator />
+                    <!-- Settings → General, at keeping the computer awake (DESIGN.md §14) -->
+                    <MenuItem Header="Keep-awake settings…" Command="{Binding Shell.OpenSettingCommand, FallbackValue={x:Null}}" CommandParameter="General#keepAwake" />
                   </ContextMenu>
                 </ToggleButton.ContextMenu>
               </ToggleButton>

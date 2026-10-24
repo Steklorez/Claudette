@@ -7,29 +7,59 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels.Settings;
 
 /// <summary>
-/// Settings → Sessions (DESIGN.md §14): restoring tabs, this machine's name, the session library (DESIGN.md §9) and
-/// syncing Claudette's settings through it.
+/// Settings → Sessions (DESIGN.md §14): the session library (DESIGN.md §9), this machine's name in it, and syncing
+/// Claudette's settings through it.
 /// </summary>
-public sealed partial class SessionsPage(SettingsContext context) : SettingsPage(context, SettingsCategory.Sessions)
+public sealed partial class SessionsPage : SettingsPage
 {
     private bool _moveLibrary;
 
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Also restore unpinned tabs when Claudette starts"),
-        Entry("Name for this machine"),
-        Entry("Keep library sessions for"),
-        Entry("Session library folder"),
-        Entry("Move library"),
-        Entry("Sync new tabs to the session library"),
-        Entry("Sync Claudette's settings through the library"),
-    ];
-
-    public bool RestoreUnpinnedTabs
+    /// <summary>What each synced section of settings.json is called, for what settings sync says it syncs.</summary>
+    private static readonly IReadOnlyDictionary<string, string> SyncedNames = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        get => Settings.Sessions.RestoreUnpinnedTabs;
-        set => Set(value, v => Settings.Sessions.RestoreUnpinnedTabs = v);
+        ["appearance"] = "appearance (but the zoom)",
+        ["newTabs"] = "what new tabs start with",
+        ["usage"] = "usage warnings and limits",
+        ["checkIns"] = "check-ins",
+        ["quickSuffixes"] = "quick suffixes",
+        ["processes"] = "the process monitor",
+        ["notifications"] = "notifications",
+        ["keyboard"] = "keyboard shortcuts",
+    };
+
+    public SessionsPage(SettingsContext context) : base(context, SettingsCategory.Sessions)
+    {
+        Section("library", "Session library",
+        [
+            // Where sessions live is its own decision, with its own buttons: never reset.
+            Setting("sessions.libraryFolder", "Folder", null, null, keywords: ["session library folder", "move library", "dropbox", "onedrive", "google drive"]),
+            Setting("sessions.syncNewTabs", "Sync new tabs to the session library", s => s.Sessions.SyncNewTabs, (s, v) => s.Sessions.SyncNewTabs = v,
+                "Each tab can be switched with Sync to other machines in its menu.",
+                "Sessions opened from the library keep syncing.", ["sync", "other machines"]),
+            Setting("sessions.machineName", "Name for this machine", s => s.Sessions.MachineName, (s, v) => s.Sessions.MachineName = v,
+                "Shown in History and when a session is in use elsewhere. Empty uses the computer's name.", keywords: ["computer name", "hostname"]),
+            Setting("sessions.keepLibrarySessions", "Keep library sessions for", s => s.Sessions.KeepLibrarySessions, (s, v) => s.Sessions.KeepLibrarySessions = v,
+                keywords: ["retention", "delete old sessions"]),
+        ], description: "Tabs that sync copy their session here after every turn. In a folder Google Drive, Dropbox or OneDrive keeps in sync, your other machines can continue them from History.");
+        Section("settingsSync", "Settings sync",
+        [
+            // Turning it on can ask whose settings win: its own decision, never a reset.
+            Setting("sessions.syncSettings", "Sync Claudette's settings through the library", null, null,
+                keywords: ["settings sync", "other machines", "roaming"]),
+        ]);
     }
+
+    public override string IconKey => "IconSettingsSessions";
+
+    public override string Description => "The session library, which lets your other machines continue your sessions.";
+
+    /// <summary>What settings sync copies, from what it syncs, and that what's marked "This computer" stays here.</summary>
+    public static string SyncedText =>
+        $"Syncs {Core.Formats.List([.. SyncedSettings.Sections.Select(s => SyncedNames.TryGetValue(s, out var name) ? name : s)])}. "
+        + "Everything marked This computer stays on each machine.";
+
+    /// <summary>Every synced section has a name to say it by: a test checks.</summary>
+    internal static bool NamesEverySyncedSection => SyncedSettings.Sections.All(SyncedNames.ContainsKey);
 
     public IReadOnlyList<RetentionChoice> LibraryRetentionChoices { get; } =
         [.. new[] { RetentionPeriod.OneMonth, RetentionPeriod.OneYear, RetentionPeriod.Forever }.Select(p => new RetentionChoice(p))];
@@ -219,17 +249,4 @@ public sealed partial class SessionsPage(SettingsContext context) : SettingsPage
         OnPropertyChanged(nameof(SyncSettings));
     }
 
-    /// <summary>
-    /// The library folder and settings sync are left as they are: changing either moves where sessions and settings
-    /// live, which is its own decision with its own buttons.
-    /// </summary>
-    protected override void ResetSettings()
-    {
-        var defaults = new SessionSettings();
-        Settings.Sessions.RestoreUnpinnedTabs = defaults.RestoreUnpinnedTabs;
-        Settings.Sessions.MachineName = defaults.MachineName;
-        Settings.Sessions.KeepLibrarySessions = defaults.KeepLibrarySessions;
-        Settings.Sessions.SyncNewTabs = defaults.SyncNewTabs;
-        Save();
-    }
 }

@@ -56,7 +56,7 @@ While another tab waits on you and this one doesn't, she turns toward the sideba
 
 ### Tips
 
-Now and then she holds up a tip in a bubble: a shortcut as it's bound now, or one of *Up brings back your earlier prompts*, *Drop a file on the message box to attach it*, *Right-click me if you'd like me to go*. It's at most every ten minutes and never within half a minute of you typing. Settings → Appearance → **Claudette shares tips** turns them off.
+Now and then she holds up a tip in a bubble: a shortcut as it's bound now, or one of *Up brings back your earlier prompts*, *Drop a file on the message box to attach it*, *Right-click me if you'd like me to go*. It's at most every ten minutes and never within half a minute of you typing. Settings → Appearance → **Shares tips** turns them off.
 
 ### Noticing you
 
@@ -71,7 +71,7 @@ Now and then she holds up a tip in a bubble: a shortcut as it's bound now, or on
 - **Click** her and she's startled, with a "!" over her head. Click again within a second and a half and she's tipped off the edge, and climbs back up.
 - Poke her ten times within a minute and she turns her back under a storm cloud for a few seconds. Clicks do nothing until she's come round.
 - **Press and drag** to pick her up: she hangs from the pointer, arms up. Let go above the edge and she falls onto it where she is, then walks home. Let go below it and she falls behind the box and climbs back up.
-- **Right-click** her for a menu: the games, below, and **Hide Claudette**.
+- **Right-click** her for a menu: the games, below, **Hide Claudette**, and **Claudette settings…**, which opens her settings in Settings → Appearance.
 
 Only her figure takes clicks. The rest of her layer lets them through to the conversation.
 
@@ -102,11 +102,11 @@ All of them are in Settings → Appearance.
 | **Show Claudette on the composer** | On | Shows her, or hides her. |
 | **Size** | Medium | **Small**, **Medium** or **Large**: 24, 36 or 48 pixels tall. |
 | **How often** | **Lively: every 10 to 30 seconds** | Or **Calm: every 30 to 90 seconds**. |
-| **Claudette shares tips** | On | Lets her hold up tips. |
+| **Shares tips** | On | Lets her hold up tips. |
 | **Games with Claudette** | On | See [Games with Claudette](games-with-claudette.md). |
 | **Motion** | **Follow the system** | **Reduce motion** stops her. |
 
-**Size**, **How often** and **Claudette shares tips** work while she's shown. These settings sync with the other Appearance settings if you [sync your settings](../history/settings-sync.md).
+**Size**, **How often** and **Shares tips** work while she's shown. These settings sync with the other Appearance settings if you [sync your settings](../history/settings-sync.md).
 
 ## See also
 

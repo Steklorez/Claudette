@@ -30,7 +30,7 @@ public sealed class AppSettings
 
     public DiffToolSettings DiffTool { get; set; } = new();
 
-    /// <summary>Settings → Editor: the Project Files tab, and where files open (DESIGN.md §18, "Project files").</summary>
+    /// <summary>Settings → Files and diffs: the Project Files tab, and where files open (DESIGN.md §18, "Project files").</summary>
     public EditorSettings Editor { get; set; } = new();
 
     /// <summary>Settings → Project tools (DESIGN.md §18). Per machine, like the diff tool.</summary>
@@ -165,7 +165,7 @@ public sealed class ProcessSettings
 }
 
 /// <summary>How changed files open (DESIGN.md §8, "External diff tool"). Per machine: program paths differ.</summary>
-/// <summary>Settings → Editor (DESIGN.md §18, "Project files").</summary>
+/// <summary>Settings → Files and diffs (DESIGN.md §18, "Project files").</summary>
 public sealed class EditorSettings
 {
     /// <summary>Which side of the Project Files tab the explorer is on.</summary>
@@ -387,7 +387,7 @@ public sealed class ClaudeCodeSettings
     public bool AskBeforeUsingFolderSettings { get; set; } = true;
 }
 
-/// <summary>Settings → Claude Code → Subagents (DESIGN.md §5, "Subagents").</summary>
+/// <summary>Settings → Tabs → Subagents (DESIGN.md §5, "Subagents").</summary>
 public enum SubagentUse
 {
     /// <summary>Claude uses subagents when it judges they help, as Claude Code has it.</summary>
@@ -400,7 +400,7 @@ public enum SubagentUse
     DontAllow,
 }
 
-/// <summary>Settings → Appearance → Show subagents' work (DESIGN.md §5, "Subagents").</summary>
+/// <summary>Settings → Conversation → Show subagents' work (DESIGN.md §5, "Subagents").</summary>
 public enum SubagentDisplay
 {
     /// <summary>Each subagent is a card in the conversation, whose line opens its own cards.</summary>

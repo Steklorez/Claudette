@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Claudette.App.ViewModels.Settings"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.FilesPageView" ClipToBounds="False"
+             x:DataType="settings:FilesPage">
+  <!-- Files and diffs (DESIGN.md §18, "Project files"; §8, "External diff tool") -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="opening">
+      <c:SettingRow Key="editor.openFilesIn">
+        <c:SettingRow.Details>
+          <StackPanel>
+            <StackPanel Classes="options">
+              <RadioButton GroupName="OpenFilesIn" Content="Claudette's editor, at the line named" IsChecked="{Binding OpenInEditor}" />
+              <RadioButton GroupName="OpenFilesIn" Content="The app the OS uses for the file" IsChecked="{Binding OpenInSystem}" />
+            </StackPanel>
+            <c:SettingRow Key="editor.filesFromConversation" IsEnabled="{Binding OpenInEditor}">
+              <c:SettingRow.Details>
+                <StackPanel Classes="options">
+                  <RadioButton GroupName="FromConversation" Content="Beside the conversation" IsChecked="{Binding FilesBeside}" />
+                  <RadioButton GroupName="FromConversation" Content="In its place" IsChecked="{Binding FilesInPlace}" />
+                </StackPanel>
+              </c:SettingRow.Details>
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="editor.openImagesIn">
+        <c:SettingRow.Details>
+          <StackPanel Classes="options">
+            <RadioButton GroupName="OpenImagesIn" Content="Claudette's image viewer" IsChecked="{Binding ImagesInViewer}" />
+            <RadioButton GroupName="OpenImagesIn" Content="The app the OS uses for the file" IsChecked="{Binding ImagesInSystem}" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="projectFiles">
+      <c:SettingRow Key="editor.explorerSide">
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <RadioButton GroupName="ExplorerSide" Content="Left" IsChecked="{Binding ExplorerOnLeft}" />
+          <RadioButton GroupName="ExplorerSide" Content="Right" IsChecked="{Binding ExplorerOnRight}" />
+        </StackPanel>
+      </c:SettingRow>
+      <c:SettingRow Key="editor.wordWrap">
+        <ToggleSwitch IsChecked="{Binding WordWrap}" />
+      </c:SettingRow>
+      <c:SettingRow Key="editor.indent">
+        <ComboBox ItemsSource="{Binding IndentChoices}" SelectedItem="{Binding SelectedIndent}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="diffTool">
+      <c:SettingRow Key="diffTool.kind">
+        <ComboBox ItemsSource="{Binding DiffToolOptions}" SelectedItem="{Binding SelectedDiffTool}" />
+        <c:SettingRow.Details>
+          <StackPanel Spacing="8" IsVisible="{Binding CanTestDiffTool}">
+            <c:SettingRow Key="diffTool.customCommand" IsStacked="True" IsVisible="{Binding IsCustomDiffTool}">
+              <TextBox Classes="mono" Text="{Binding CustomDiffCommand, UpdateSourceTrigger=LostFocus}"
+                       PlaceholderText="&quot;C:\Program Files\Beyond Compare 5\BCompare.exe&quot; &quot;{left}&quot; &quot;{right}&quot; /title1=&quot;{leftTitle}&quot; /title2=&quot;{rightTitle}&quot;" />
+              <c:SettingRow.Details>
+                <TextBlock Classes="small error" Text="{Binding CustomDiffCommandError}" TextWrapping="Wrap"
+                           IsVisible="{Binding CustomDiffCommandError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Test" Command="{Binding TestDiffToolCommand}" ToolTip.Tip="Open a sample diff with it" />
+              <TextBlock Classes="muted small" Text="{Binding DiffToolTestResult}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="editor.diffWindowOpen">
+        <c:SettingRow.Details>
+          <StackPanel Classes="options">
+            <RadioButton GroupName="DiffWindowOpen" Content="Opens the file, as Open files in says" IsChecked="{Binding DiffOpensAsAbove}" />
+            <RadioButton GroupName="DiffWindowOpen" Content="Opens the file in the app the OS uses for it" IsChecked="{Binding DiffOpensInSystem}" />
+            <RadioButton GroupName="DiffWindowOpen" Content="Opens the changes in the diff tool" IsChecked="{Binding DiffOpensInDiffTool}" IsEnabled="{Binding HasDiffTool}"
+                         ToolTip.Tip="Choose a diff tool above to use it here" ToolTip.ShowOnDisabled="True" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

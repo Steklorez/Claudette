@@ -11,8 +11,8 @@ If your plan has usage credits turned on, they pay for Claude once your session 
 
 ## Choosing
 
-- **For every tab:** Settings → Usage → **Use usage credits once a limit is used up**. It's on by default.
-- **For one tab:** **Use usage credits** in the tab's menu, a check item. Untick it on the tabs that can wait, or turn the setting off and tick it on the ones that can't. **Tab settings…** has the same choice as **Usage credits**: see [Tab settings](../tabs/tab-settings.md).
+- **For every tab:** Settings → Tabs → **Use usage credits once a limit is used up**. It's on by default.
+- **For one tab:** **Use usage credits** in the tab's menu, a check item. Untick it on the tabs that can wait, or turn the setting off and tick it on the ones that can't. **Tab settings…** has the same choice, also named **Use usage credits**: see [Tab settings](../tabs/tab-settings.md).
 
 The menu keeps the tab's own choice only while it differs from Settings, so ticking it back to what Settings says leaves the tab following Settings again, and the dot beside **Tab settings…** goes.
 
@@ -39,9 +39,8 @@ Either way, the tab waits for the limit to reset exactly as it does after a usag
 
 | Setting | Default | Where |
 |---|---|---|
-| **Use usage credits once a limit is used up** | On | Settings → Usage |
-| **Use usage credits** | Follows the setting | The tab's menu |
-| **Usage credits** | Default | **Tab settings…** |
+| **Use usage credits once a limit is used up** | On | Settings → Tabs → At a usage limit |
+| **Use usage credits** | Follows the setting | The tab's menu, or **Tab settings…** |
 
 ## See also
 

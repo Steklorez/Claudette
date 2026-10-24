@@ -273,7 +273,7 @@
     <Setter Property="CornerRadius" Value="10" />
     <Setter Property="Padding" Value="12,5,12,6" />
   </Style>
-  <!-- Settings → Appearance → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): a step on the way loses
+  <!-- Settings → Conversation → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): a step on the way loses
        its tint and outline, keeping its stripe, until it's pointed at or has the focus. In the Standard style its text
        is a little softer too, still at least 4.5:1; the Claude style's muted text is already as soft as it can be. -->
   <Style Selector=".quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Border#PART_Card">

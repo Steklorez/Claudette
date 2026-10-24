@@ -9,7 +9,7 @@ summary: "A session that syncs shows up in History on your other machines, where
 
 A session that [syncs](syncing-a-tab.md) shows up in History on your other machines, where you can continue it. The library moves the conversation, not your code, so Claudette checks the folder and the code on this machine before it starts.
 
-You need Settings → Sessions → **Session library folder** to be the same synced folder on both machines ([the session library](the-session-library.md)).
+You need Settings → Sessions → Session library → **Folder** to be the same synced folder on both machines ([the session library](the-session-library.md)).
 
 ## Continuing a session
 

@@ -7,7 +7,7 @@ summary: "Claudette keeps its settings in a file, and its tabs and other state i
 
 # Settings back to their defaults
 
-Claudette keeps its settings in a file, and its tabs and other state in another. If Claudette starts with every setting at its default, one of them couldn't be read. This page says what happens and how to get your settings back. To reset settings on purpose, see [Resetting a page](#resetting-a-page) below.
+Claudette keeps its settings in a file, and its tabs and other state in another. If Claudette starts with every setting at its default, one of them couldn't be read. This page says what happens and how to get your settings back. To reset settings on purpose, see [Resetting a section](#resetting-a-section) below.
 
 ## Where the files are
 
@@ -40,12 +40,12 @@ If a file can't be read at all, because something else still has it open after C
 
 Close whatever holds the file, or fix its permissions, then restart Claudette.
 
-## Resetting a page
+## Resetting a section
 
-Each Settings category has **Reset to defaults**. It returns that page's settings to their defaults and nothing else. A few things stay as they are on purpose:
+Each section of a Settings page has its own **Reset to defaults**. It returns that section's settings to their defaults and nothing else. A few things stay as they are on purpose:
 
 - **Sessions** keeps the library folder and settings sync, since changing either moves where sessions and settings live.
-- **New tabs** keeps your favorite and recent folders, which are data for this computer rather than settings.
+- **Tabs** keeps your favorite and recent folders, which are data for this computer rather than settings.
 - **General** keeps **Start Claudette when I log in**, which the OS holds.
 - **Accounts** only sets **New folders use** back to Default. Your accounts stay.
 

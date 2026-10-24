@@ -32,6 +32,9 @@ public sealed class MascotLayer : Control
     /// <summary>Her menu's <b>Hide Claudette</b>.</summary>
     public static readonly StyledProperty<ICommand?> HideCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(HideCommand));
 
+    /// <summary>Her menu's <b>Claudette settings…</b>, given where in Settings to open.</summary>
+    public static readonly StyledProperty<ICommand?> SettingsCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(SettingsCommand));
+
     /// <summary>Her menu's games (DESIGN.md §18, "Games with Claudette"), given the <see cref="GameKind"/> to play.</summary>
     public static readonly StyledProperty<ICommand?> PlayCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(PlayCommand));
 
@@ -96,6 +99,12 @@ public sealed class MascotLayer : Control
     {
         get => GetValue(HideCommandProperty);
         set => SetValue(HideCommandProperty, value);
+    }
+
+    public ICommand? SettingsCommand
+    {
+        get => GetValue(SettingsCommandProperty);
+        set => SetValue(SettingsCommandProperty, value);
     }
 
     public ICommand? PlayCommand
@@ -181,6 +190,10 @@ public sealed class MascotLayer : Control
             var hide = new MenuItem { Header = "Hide Claudette" };
             hide.Bind(MenuItem.CommandProperty, this.GetObservable(HideCommandProperty));
             menu.Items.Add(hide);
+            // Her size, how often she does something and her tips, in Settings → Appearance (DESIGN.md §14).
+            var settings = new MenuItem { Header = "Claudette settings…", CommandParameter = $"{ViewModels.SettingsCategory.Appearance}#claudette" };
+            settings.Bind(MenuItem.CommandProperty, this.GetObservable(SettingsCommandProperty));
+            menu.Items.Add(settings);
             figure.ContextMenu = menu;
             // Drawn in the window rather than a window of its own (DESIGN.md §3), whose size can fall short of the menu.
             figure.Styles.Add(new Style(x => x.OfType<Popup>()) { Setters = { new Setter(Popup.ShouldUseOverlayLayerProperty, true) } });

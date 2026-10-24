@@ -38,7 +38,7 @@ These cards come from live turns. A restored tab shows none for its earlier turn
 
 ## Settings
 
-The **Turn** card is an in-between step, so **Quieter in-between steps** (Settings → Appearance, on by default) draws it without a tint and outline until you point at it. **Modified files** always keeps its look.
+The **Turn** card is an in-between step, so **Quieter in-between steps** (Settings → Conversation, on by default) draws it without a tint and outline until you point at it. **Modified files** always keeps its look.
 
 ## See also
 

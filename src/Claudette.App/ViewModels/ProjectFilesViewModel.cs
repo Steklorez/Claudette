@@ -158,7 +158,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
 
     // ---- The layout (DESIGN.md §18, "Project files", "The layout") -------------------------------------------------
 
-    /// <summary>Settings → Editor → Explorer side is Right.</summary>
+    /// <summary>Settings → Files and diffs → Explorer side is Right.</summary>
     public bool IsExplorerOnRight => _services.Settings.Editor.ExplorerSide == ExplorerSide.Right;
 
     public string MoveExplorerText => IsExplorerOnRight ? "Move to the left" : "Move to the right";
@@ -279,7 +279,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         }
     }
 
-    /// <summary>Settings → Editor → Word wrap, unless the file showing has its own (<c>Alt+Z</c>).</summary>
+    /// <summary>Settings → Files and diffs → Word wrap, unless the file showing has its own (<c>Alt+Z</c>).</summary>
     public bool WordWrap => _services.Settings.Editor.WordWrap;
 
     // ---- Kept with the app state -----------------------------------------------------------------------------------

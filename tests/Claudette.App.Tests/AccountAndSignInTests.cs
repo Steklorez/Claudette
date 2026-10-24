@@ -668,12 +668,12 @@ public class AccountAndSignInTests
 
         settings.SearchText = "sign out";
 
-        Assert.Contains(settings.SearchResults, r => r is { Category: "Claude Code", Label: "Sign out" });
+        Assert.Contains(settings.SearchResults, r => r is { Category: "Claude Code", Key: "claudeCode.account" });
         Assert.Equal("Claude Code", settings.SelectedCategory);
         Assert.True(settings.ClaudeCode.HasAccount);
 
         settings.SearchText = "sign in";
-        Assert.Contains(settings.SearchResults, r => r is { Category: "Claude Code", Label: "Sign in" });
+        Assert.Contains(settings.SearchResults, r => r is { Category: "Claude Code", Key: "claudeCode.account" });
     }
 
     // ---- Helpers -------------------------------------------------------------------------------------------------

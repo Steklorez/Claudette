@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
@@ -98,7 +99,7 @@ public class RemoteControlUiTests
         var tab = await h.OpenTabAsync();
         var view = new TabSettingsView { DataContext = new TabSettingsViewModel(h.Services, tab, () => { }) };
         var window = UiText.Show(view);
-        var box = view.GetVisualDescendants().OfType<CheckBox>().Single(c => c.Content as string == "Connect to the Claude app");
+        var box = view.GetVisualDescendants().OfType<SettingRow>().Single(r => r.Key == "tab.remoteControl").GetVisualDescendants().OfType<ToggleSwitch>().Single();
 
         Assert.True(box.IsChecked);
         Assert.True(box.IsEnabled);
@@ -123,7 +124,7 @@ public class RemoteControlUiTests
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
         UiText.Settle(window);
-        var block = window.GetVisualDescendants().OfType<StackPanel>().Single(p => p.Name == "RemoteControlSettings");
+        var block = window.GetVisualDescendants().OfType<SettingsSection>().Single(p => p.Name == "RemoteControlSettings");
         Assert.True(block.IsEffectivelyVisible);
         var link = block.GetVisualDescendants().OfType<Button>().Single(b => b.Command == settings.ClaudeCode.OpenPushNotificationsDocsCommand);
         link.Command!.Execute(null);

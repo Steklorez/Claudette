@@ -23,7 +23,7 @@ Press `Up` on the message box's first line to bring back the tab's previous prom
 Each tab's unsent message is written to disk a second after you last changed it, and again when the tab closes. It holds your text, any [quick suffixes](quick-suffixes.md) you added for this one message, and attached images and large pastes ([Attachments and large pastes](attachments-and-large-pastes.md)). When Claudette starts again, a restored tab has its draft back in the box.
 
 - Sending empties the draft. Closing a tab, rather than quitting, deletes it.
-- A tab that isn't restored at launch loses its draft. That's the case for unpinned tabs when Settings → Sessions → **Also restore unpinned tabs when Claudette starts** is off ([Closing and restoring](../tabs/closing-and-restoring.md)).
+- A tab that isn't restored at launch loses its draft. That's the case for unpinned tabs when Settings → General → **Also restore unpinned tabs when Claudette starts** is off ([Closing and restoring](../tabs/closing-and-restoring.md)).
 
 ## The stash
 

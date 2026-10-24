@@ -152,7 +152,7 @@ public static class GodotExecutables
 
     public static string? Find(GodotProject project, ProjectToolContext context) =>
         (context.Memory.Get(project.File, ExecutableKey) is { Length: > 0 } picked ? Executable(picked, context.OS) : null)
-        ?? (context.Settings.GodotPath is { Length: > 0 } setting ? Executable(setting, context.OS) : null)
+        ?? (context.Settings.Value(GodotProvider.KindId, GodotProvider.PathKey) is { Length: > 0 } setting ? Executable(setting, context.OS) : null)
         ?? Detect(context);
 
     /// <summary>Godot where it's usually found, ignoring Settings and picks: for <b>Detect</b> in Settings too.</summary>
@@ -278,14 +278,39 @@ public static class GodotExecutables
 }
 
 /// <summary>Godot projects (DESIGN.md §18, "Godot").</summary>
-public sealed class GodotProvider : IProjectToolProvider
+public sealed class GodotProvider : IProjectType
 {
     public const string KindId = "godot";
+
+    /// <summary>Settings' key for the Godot executable.</summary>
+    public const string PathKey = "path";
 
     /// <summary>Every running Godot, whatever its build is called: <c>godot</c>, <c>Godot_v4.3-stable_mono_win64</c>.</summary>
     public static readonly IReadOnlyList<string> EditorProcessNames = ["godot*"];
 
     public string Kind => KindId;
+
+    public string Name => "Godot";
+
+    public string Description => "Folders with project.godot: open the editor, run the project, build its C#, clean its imports.";
+
+    public string NoteDescription => "The Godot version, GDScript or C#, and how to check the project and build its C# without the editor.";
+
+    public IReadOnlyList<ProjectTypeSetting> Settings { get; } =
+    [
+        new ProjectTypePath(PathKey, "Godot executable")
+        {
+            Description = "Empty finds it. C# projects need the .NET build of Godot.",
+            More = "Claudette looks for godot, godot4, Godot or godot-mono on the PATH, then Godot.app on macOS, or WinGet's and Scoop's places on Windows.",
+            Keywords = ["godot path", "detect"],
+            Placeholder = "Found automatically",
+            BrowseTitle = "Choose the Godot executable",
+            Detect = GodotExecutables.Detect,
+        },
+    ];
+
+    /// <summary>Its hidden imports, <c>.godot</c> and <c>.import</c>, are skipped as every hidden folder is.</summary>
+    public IReadOnlySet<string> SkippedFolders { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyList<ProjectCandidate> Find(string folder, ProjectToolContext context) =>
         ProjectSearch.Find(folder, dir => File.Exists(Path.Combine(dir, "project.godot")) ? [Path.Combine(dir, "project.godot")] : [], context)
@@ -378,7 +403,7 @@ public sealed class GodotProvider : IProjectToolProvider
         return new ProjectInfo
         {
             Kind = KindId,
-            KindName = "Godot",
+            KindName = Name,
             Name = project.Name,
             Root = project.Root,
             ProjectPath = project.File,
@@ -393,7 +418,7 @@ public sealed class GodotProvider : IProjectToolProvider
                 Current = godot,
             },
             Problem = problem,
-            SystemPromptNote = context.Settings.TellClaudeAboutGodot ? SystemPromptNote(project, godot, solution ?? csharp.FirstOrDefault()) : null,
+            SystemPromptNote = SystemPromptNote(project, godot, solution ?? csharp.FirstOrDefault()),
             Logs = GodotLogs.Source(project, context.Paths, context.OS),
         };
     }

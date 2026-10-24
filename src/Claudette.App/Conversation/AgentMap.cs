@@ -58,7 +58,7 @@ public sealed class AgentMap
     public int Exchange { get; private set; }
 
     /// <summary>
-    /// Settings → Appearance → Show subagents' work is <b>Under the tab in the sidebar</b>: a node opens its subagent's
+    /// Settings → Conversation → Show subagents' work is <b>Under the tab in the sidebar</b>: a node opens its subagent's
     /// own view rather than its group in the conversation (DESIGN.md §5, "Subagents").
     /// </summary>
     public bool OpensInSidebar

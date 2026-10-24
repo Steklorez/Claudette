@@ -67,4 +67,12 @@ public static class Formats
 
     /// <summary>"High" for "high".</summary>
     public static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+
+    /// <summary>"a", "a and b", "a, b and c": names in a sentence.</summary>
+    public static string List(IReadOnlyList<string> names) => names.Count switch
+    {
+        0 => "",
+        1 => names[0],
+        _ => $"{string.Join(", ", names.Take(names.Count - 1))} and {names[^1]}",
+    };
 }

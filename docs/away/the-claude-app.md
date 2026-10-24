@@ -14,11 +14,11 @@ Each tab is its own session in the app, and each tab chooses for itself. It's of
 ## Connecting a tab
 
 1. Open the tab's menu, or **Tab settings…**.
-2. Check **Connect to the Claude app**.
+2. Check **Connect to the Claude app** in the menu, or turn it on in Tab settings.
 
 The tab connects straight away, or when the running turn ends. It says *Connected to the Claude app.* in the conversation, with a link to the session. While it's connected, its row has a phone icon, dimmed while it connects or reconnects. The tab's [info card](../tabs/the-tab-info-card.md) has a **Claude app** row that says where it stands.
 
-The switch is saved with the tab, so a connected tab connects again whenever its session starts: after you restore it, resume it or restart it. It's the tab's own choice, so **Use defaults** in Tab settings leaves it alone.
+The switch is saved with the tab, so a connected tab connects again whenever its session starts: after you restore it, resume it or restart it. It's the tab's own choice, so no **Use defaults** in Tab settings changes it.
 
 To connect every new tab, turn on Settings → Claude Code → **Connect new tabs to the Claude app**. It only sets the switch for tabs you open from then on; open tabs keep theirs.
 
@@ -38,7 +38,7 @@ Pushes don't arrive while Claudette's window is in front. Claudette tells Claude
 
 ## Disconnecting
 
-Uncheck **Connect to the Claude app**. If Claude is working, the tab says *Disconnecting from the Claude app when Claude finishes this turn.* and its phone icon fades until the connection has closed. Turn it back on before the turn ends and it stays connected, saying *Staying connected to the Claude app.*
+Uncheck **Connect to the Claude app** in the tab's menu, or turn it off in Tab settings. If Claude is working, the tab says *Disconnecting from the Claude app when Claude finishes this turn.* and its phone icon fades until the connection has closed. Turn it back on before the turn ends and it stays connected, saying *Staying connected to the Claude app.*
 
 ## Who can't use it
 
@@ -59,15 +59,15 @@ While a tab is connected, its transcript, with your messages, Claude's replies a
 
 ## Keeping the computer awake
 
-A sleeping computer can't be reached from your phone. While at least one tab is connected, Claudette keeps the computer from sleeping, as long as Settings → Claude Code → **Keep this computer awake while tabs are connected** is on (the default). The screen can still turn off. See [Keeping the computer awake](keeping-the-computer-awake.md).
+A sleeping computer can't be reached from your phone. While at least one tab is connected, Claudette keeps the computer from sleeping, as long as Settings → General → **Also while tabs are connected to the Claude app** is on (the default). The screen can still turn off. See [Keeping the computer awake](keeping-the-computer-awake.md).
 
 ## Settings
 
 | Setting | Default | Where |
 |---|---|---|
 | **Connect to the Claude app** | Off, for each tab | The tab's menu, or **Tab settings…** |
-| **Connect new tabs to the Claude app** | Off | Settings → Claude Code → Claude app (Remote Control) |
-| **Keep this computer awake while tabs are connected** | On | Settings → Claude Code → Claude app (Remote Control) |
+| **Connect new tabs to the Claude app** | Off | Settings → Claude Code → Claude app |
+| **Also while tabs are connected to the Claude app** | On | Settings → General → Keeping the computer awake |
 
 These stay on this machine.
 

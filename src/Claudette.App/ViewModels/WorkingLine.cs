@@ -11,10 +11,10 @@ namespace Claudette.App.ViewModels;
 /// changes every few seconds, how long the turn has run, its tokens so far, and how to stop it.
 /// </summary>
 /// <param name="verbs">The verbs to pick from: <see cref="SpinnerVerbs"/>, with the user's <c>spinnerVerbs</c>.</param>
-/// <param name="isFun">Settings → Appearance → Show fun words while Claude works. Off shows a still "Working…".</param>
+/// <param name="isFun">Settings → Conversation → Show fun words. Off shows a still "Working…".</param>
 /// <param name="turnTokens">The turn's tokens so far.</param>
 /// <param name="stopShortcut">The Stop shortcut as it reads now, or null when it has been removed.</param>
-/// <param name="showActivity">Settings → Appearance → Show what Claude is doing: the running tool instead of the verb.</param>
+/// <param name="showActivity">Settings → Conversation → Show what Claude is doing: the running tool instead of the verb.</param>
 /// <param name="isStill">Motion is reduced (DESIGN.md §3, "Accessibility"): the glyph stays still.</param>
 public sealed partial class WorkingLine(
     TimeProvider timeProvider,

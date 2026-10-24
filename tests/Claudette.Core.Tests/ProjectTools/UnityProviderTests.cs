@@ -52,7 +52,8 @@ public sealed class UnityProviderTests : IDisposable
     };
 
     private ProjectInfo Describe(string root, ProjectToolContext context) =>
-        _unity.Describe(new ProjectCandidate(UnityProvider.KindId, root, Path.GetFileName(root)), context);
+        // Through the detector, as the app reads a project: it leaves the note out when Settings says not to tell Claude.
+        new ProjectToolDetector([_unity]).Describe(new ProjectCandidate(UnityProvider.KindId, root, Path.GetFileName(root)), context);
 
     private static ProjectAction Action(ProjectInfo info, string id) => info.Actions.Single(a => a.Id == id);
 
@@ -160,7 +161,7 @@ public sealed class UnityProviderTests : IDisposable
         Assert.Equal(["-projectPath", root, "-debugCodeOptimization"], Action(debug, "open-in-unity").Process!.Arguments);
         Assert.Equal("Open in Unity (Debug)", Action(debug, "open-in-unity").Label);
         Assert.Equal("Debug", debug.Choice!.Selected);
-        Assert.Equal("Debug", Describe(root, Context(settings: new ProjectToolSettings { UnityCodeOptimization = UnityCodeOptimization.Debug })).Choice!.Selected);
+        Assert.Equal("Debug", Describe(root, Context(settings: new ProjectToolSettings().With(UnityProvider.KindId, UnityProvider.OptimizationKey, nameof(UnityCodeOptimization.Debug)))).Choice!.Selected);
     }
 
     [Fact]
@@ -341,6 +342,6 @@ public sealed class UnityProviderTests : IDisposable
             Don't open the editor unless asked.
             """.ReplaceLineEndings("\n"), note);
         HubEditor(ToolOS.Linux);
-        Assert.Null(Describe(Project(), Context(settings: new ProjectToolSettings { TellClaudeAboutUnity = false })).SystemPromptNote);
+        Assert.Null(Describe(Project(), Context(settings: new ProjectToolSettings().Quiet(UnityProvider.KindId))).SystemPromptNote);
     }
 }

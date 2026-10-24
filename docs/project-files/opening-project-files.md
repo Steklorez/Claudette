@@ -45,7 +45,7 @@ It has no completion, errors or going to a definition, no search through what's 
 
 ## Settings
 
-Settings → **Editor** holds this tab's settings, each explained where it applies:
+Settings → **Files and diffs** holds this tab's settings, each explained where it applies:
 
 | Setting | Default | Page |
 |---|---|---|

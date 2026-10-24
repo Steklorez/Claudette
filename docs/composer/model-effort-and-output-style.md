@@ -43,14 +43,14 @@ Settings → Claude Code → **Fallback model** is none by default. Choose one a
 
 ## What new tabs start with
 
-Settings → New tabs → **Default model** and **Default effort** set what a new tab starts with. For one tab, **Tab settings…** has **Model** and **Effort** ([Tab settings](../tabs/tab-settings.md)).
+Settings → Tabs → New tabs start with → **Model** and **Effort** set what a new tab starts with. For one tab, **Tab settings…** has **Model** and **Effort** ([Tab settings](../tabs/tab-settings.md)).
 
 ## Settings
 
 | Setting | Default | Where |
 |---|---|---|
-| **Default model** | Default | Settings → New tabs |
-| **Default effort** | Default | Settings → New tabs |
+| **Model** | Default | Settings → Tabs → New tabs start with |
+| **Effort** | Default | Settings → Tabs → New tabs start with |
 | **Fallback model** | None | Settings → Claude Code |
 
 The tab's own model and effort, and **Ultracode** and **Output style**, are on the tab, as above.

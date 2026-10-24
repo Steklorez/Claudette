@@ -8,17 +8,41 @@ namespace Claudette.Core.ProjectTools.Unity;
 /// Unity projects (DESIGN.md §18, "Unity"): the editor for the project's version, opening it, EditMode tests and
 /// regenerating the C# solution in batch mode, the solution and logs, cleaning <c>Library</c>, and ending editors.
 /// </summary>
-public sealed class UnityProvider : IProjectToolProvider
+public sealed class UnityProvider : IProjectType
 {
     public const string KindId = "unity";
 
-    /// <summary>Where a project's code optimization is kept in its memory.</summary>
+    /// <summary>Where a project's code optimization is kept in its memory, and the default for every project in Settings.</summary>
     public const string OptimizationKey = "codeOptimization";
 
     /// <summary>The editor's process name (<c>Unity.exe</c> on Windows); Unity Hub is another process and isn't counted.</summary>
     public static readonly IReadOnlyList<string> EditorProcessNames = ["Unity"];
 
     public string Kind => KindId;
+
+    public string Name => "Unity";
+
+    public string Description => "Folders with ProjectSettings and Assets: open the editor, run EditMode tests, regenerate the solution, clean Library.";
+
+    public string NoteDescription => "The Unity version and editor, how to run the EditMode tests, which folders are generated, and that .meta files move with their assets.";
+
+    public IReadOnlyList<ProjectTypeSetting> Settings { get; } =
+    [
+        new ProjectTypeChoice(OptimizationKey, "Default code optimization",
+            [new(nameof(UnityCodeOptimization.Release), "Release"), new(nameof(UnityCodeOptimization.Debug), "Debug (-debugCodeOptimization, for stepping through scripts)")],
+            nameof(UnityCodeOptimization.Release))
+        {
+            Description = "For projects that haven't been given their own in the project's menu.",
+            Keywords = ["release", "debug"],
+        },
+    ];
+
+    /// <summary>What the editor makes and keeps: the imported assets, its scratch, its logs, the package cache.</summary>
+    public IReadOnlySet<string> SkippedFolders { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Library", "Temp", "Logs", "Packages" };
+
+    /// <summary>The code optimization a project opens with until it's given its own, as Settings says.</summary>
+    public static UnityCodeOptimization DefaultOptimization(ProjectToolSettings settings) =>
+        Enum.TryParse<UnityCodeOptimization>(settings.Value(KindId, OptimizationKey), out var optimization) ? optimization : UnityCodeOptimization.Release;
 
     public IReadOnlyList<ProjectCandidate> Find(string folder, ProjectToolContext context) =>
         ProjectSearch.Find(folder, dir => UnityProject.IsProject(dir) ? [dir] : [], context)
@@ -32,7 +56,7 @@ public sealed class UnityProvider : IProjectToolProvider
         var editor = UnityEditors.Find(project, context);
         var optimization = Enum.TryParse<UnityCodeOptimization>(context.Memory.Get(project.Root, OptimizationKey), out var remembered)
             ? remembered
-            : context.Settings.UnityCodeOptimization;
+            : DefaultOptimization(context.Settings);
         var version = project.EditorVersion;
 
         string? problem = null;
@@ -140,7 +164,7 @@ public sealed class UnityProvider : IProjectToolProvider
         return new ProjectInfo
         {
             Kind = KindId,
-            KindName = "Unity",
+            KindName = Name,
             Name = project.Name,
             Root = project.Root,
             ProjectPath = project.Root,
@@ -158,7 +182,7 @@ public sealed class UnityProvider : IProjectToolProvider
                 Current = editor,
             },
             Problem = problem,
-            SystemPromptNote = context.Settings.TellClaudeAboutUnity ? SystemPromptNote(project, editor, os) : null,
+            SystemPromptNote = SystemPromptNote(project, editor, os),
             Logs = UnityLogs.Source(project, context.Paths, os),
         };
     }

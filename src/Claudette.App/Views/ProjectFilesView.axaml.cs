@@ -78,7 +78,7 @@ public partial class ProjectFilesView : UserControl
         }
     }
 
-    /// <summary>The explorer on the left or the right, as Settings → Editor says, with its edge on the editor's side.</summary>
+    /// <summary>The explorer on the left or the right, as Settings → Files and diffs says, with its edge on the editor's side.</summary>
     private void PlaceExplorer()
     {
         var right = _files?.IsExplorerOnRight == true;

@@ -42,7 +42,7 @@ Links show under **Links** in the project's menu, each marked ↗, the shared fi
 
 ## Edit them in Settings
 
-Below the categories in the Settings window, a group headed by the project's name has **Actions** and **Links** pages.
+After the pages in the Settings window's sidebar, a group headed by the project's name has **Actions** and **Links** pages.
 
 - **Actions**: choose which file to work on, then use **Add…**, **Edit…**, **Remove**, **Move up**, **Move down** and **Open file**, which opens the file in your editor for anything the page doesn't cover. Entries for other operating systems are listed and marked "only on …", entries with a file they wait for are marked "only when … exists", and entries for new worktrees are marked "runs in each new worktree". An entry that can't be read is listed with its reason, and can only be removed.
 - **Links**: the links of both files in the order the menu shows them, each with its address and its file. **Add…**, **Edit…**, **Remove**, **Move up** and **Move down** work as for actions, and a link moves within its own file. A link the menu won't open is listed with the reason.

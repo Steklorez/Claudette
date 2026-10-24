@@ -243,7 +243,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
     /// <summary>Typing stopped for a moment, for what the view works out again then (the folds).</summary>
     public event Action? TextSettled;
 
-    /// <summary>Settings → Editor → Word wrap; <c>Alt+Z</c> changes it for the file in the view.</summary>
+    /// <summary>Settings → Files and diffs → Word wrap; <c>Alt+Z</c> changes it for the file in the view.</summary>
     public bool WordWrap => _owner.WordWrap;
 
     internal void OnWordWrapChanged() => OnPropertyChanged(nameof(WordWrap));

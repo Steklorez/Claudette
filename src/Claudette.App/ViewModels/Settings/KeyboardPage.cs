@@ -11,6 +11,9 @@ public sealed class ShortcutRow(ShortcutCommand command, KeyboardSettings settin
 
     public string Label => Command.Label;
 
+    /// <summary>Its row's key: its setting, a binding in <c>keyboard.bindings</c>.</summary>
+    public string Key => KeyboardPage.KeyOf(Command);
+
     public override KeyChord? Shortcut => KeyboardShortcuts.Resolve(settings, Command.Id);
 
     /// <summary>Changed from the default, so <b>Reset</b> applies.</summary>
@@ -20,19 +23,43 @@ public sealed class ShortcutRow(ShortcutCommand command, KeyboardSettings settin
 }
 
 /// <summary>
-/// Settings → Keyboard (DESIGN.md §14, "Keyboard shortcuts"): every command's shortcut, each rebindable. Click one and
-/// press the new keys; the window passes them to the <see cref="ShortcutRecorder"/>.
+/// Settings → Keyboard (DESIGN.md §14, "Keyboard shortcuts"): the key that sends a message, every command's shortcut,
+/// each rebindable, and the quick suffixes with theirs. Click a shortcut and press the new keys; the window passes them
+/// to the <see cref="ShortcutRecorder"/>.
 /// </summary>
 public sealed partial class KeyboardPage : SettingsPage
 {
     public KeyboardPage(SettingsContext context) : base(context, SettingsCategory.Keyboard)
     {
+        Section("sending", "Sending",
+        [
+            Setting("keyboard.sendKey", "Send with", s => s.Keyboard.SendKey, (s, v) => s.Keyboard.SendKey = v,
+                more: "With Ctrl+Enter, it still answers a waiting prompt when nothing is typed, as Allow the waiting prompt does.",
+                keywords: ["enter", "new line", "submit"]),
+        ]);
+        Section("shortcuts", "Shortcuts",
+        [
+            .. KeyboardShortcuts.All.Select(command => Setting(KeyOf(command), command.Label,
+                () => !Settings.Keyboard.Bindings.ContainsKey(command.Id), () => Settings.Keyboard.Bindings.Remove(command.Id),
+                keywords: ["shortcut", "keys", "hotkey"])),
+            Info("keyboard.fixedKeys", "Keys that can't be changed", keywords: ["paste as text", "1–9"]),
+        ], description: "Click a shortcut, then press the keys you want; Esc cancels.");
+        Section("quickSuffixes", "Quick suffixes",
+        [
+            Setting("quickSuffixes", "Quick suffixes", s => s.QuickSuffixes, (s, v) => s.QuickSuffixes = v,
+                keywords: ["snippets", "add suffix", "suffix shortcuts", "append"]),
+        ], confirm: "Put back the built-in suffixes? Your own are deleted.");
         LoadRows();
+        LoadSuffixes();
         context.Shortcuts.Saved += OnShortcutsSaved;
     }
 
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-        [Entry("Send with", pageText: "Send with"), .. KeyboardShortcuts.All.Select(c => Entry($"{c.Label} shortcut", pageText: c.Label))];
+    public override string IconKey => "IconSettingsKeyboard";
+
+    public override string Description => "Sending a message, every shortcut, and the snippets you add to messages.";
+
+    /// <summary>A command's setting: its binding in <c>keyboard.bindings</c>.</summary>
+    internal static string KeyOf(ShortcutCommand command) => $"keyboard.bindings.{command.Id}";
 
     // ---- Send with (DESIGN.md §14, "Keyboard shortcuts") ----------------------------------------------------------
 
@@ -64,7 +91,7 @@ public sealed partial class KeyboardPage : SettingsPage
 
     public string PrimaryEnterLabel => $"{new KeyChord(ChordModifiers.Primary, "Enter").Display(Claudette.App.Services.Shortcuts.IsMac)}, with Enter for a new line";
 
-    /// <summary>The keys that can't be rebound, listed under the shortcuts.</summary>
+    /// <summary>The keys that can't be rebound, behind More on their row.</summary>
     public string FixedKeysText =>
         $"In the message box, {new KeyChord(ChordModifiers.Primary | ChordModifiers.Shift, "V").Display(Claudette.App.Services.Shortcuts.IsMac)} pastes text as it is, however long. "
         + "In the new tab picker, 1–9 pick a folder; in the quick suffixes menu, 1–9 pick a suffix. "
@@ -96,6 +123,8 @@ public sealed partial class KeyboardPage : SettingsPage
         Save();
     }
 
+    // ---- Shortcuts ---------------------------------------------------------------------------------------------------
+
     public ObservableCollection<ShortcutRow> ShortcutRows { get; } = [];
 
     private void LoadRows()
@@ -110,15 +139,6 @@ public sealed partial class KeyboardPage : SettingsPage
     [RelayCommand]
     private void StartRecording(ShortcutEditor? editor) => Context.Shortcuts.Start(editor);
 
-    [RelayCommand]
-    private void ResetShortcut(ShortcutRow? row)
-    {
-        if (row is not null && Settings.Keyboard.Bindings.Remove(row.Command.Id))
-        {
-            Context.Shortcuts.Save();
-        }
-    }
-
     /// <summary>Removes a shortcut: the command is then only in menus and buttons.</summary>
     [RelayCommand]
     private void ClearShortcut(ShortcutEditor? editor) => Context.Shortcuts.Clear(editor);
@@ -129,13 +149,18 @@ public sealed partial class KeyboardPage : SettingsPage
         {
             row.Refresh();
         }
+        foreach (var suffix in Suffixes)
+        {
+            suffix.Refresh();
+        }
+        OnPropertyChanged(nameof(SuffixesShortcutText));
     }
 
-    protected override void ResetSettings()
+    /// <summary>A shortcut being recorded stops, and the rows and suffixes show what they are now.</summary>
+    protected override void OnReset()
     {
         Context.Shortcuts.Cancel();
-        Settings.Keyboard = new KeyboardSettings();
-        LoadRows();
-        Context.Shortcuts.Save();
+        LoadSuffixes();
+        OnShortcutsSaved();
     }
 }

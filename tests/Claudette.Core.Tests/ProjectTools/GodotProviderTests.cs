@@ -52,7 +52,8 @@ public sealed class GodotProviderTests : IDisposable
     };
 
     private ProjectInfo Describe(string file, ProjectToolContext context) =>
-        _godot.Describe(new ProjectCandidate(GodotProvider.KindId, file, "x"), context);
+        // Through the detector, as the app reads a project: it leaves the note out when Settings says not to tell Claude.
+        new ProjectToolDetector([_godot]).Describe(new ProjectCandidate(GodotProvider.KindId, file, "x"), context);
 
     private static ProjectAction Action(ProjectInfo info, string id) => info.Actions.Single(a => a.Id == id);
 
@@ -124,9 +125,9 @@ public sealed class GodotProviderTests : IDisposable
         var picked = _temp.Write("picked/godot-custom", "");
         var probe = new Probe { OnPath = { ["godot"] = "/usr/bin/godot" } };
 
-        Assert.Equal(setting, GodotExecutables.Find(GodotProject.Read(file), Context(probe: probe, settings: new ProjectToolSettings { GodotPath = setting })));
+        Assert.Equal(setting, GodotExecutables.Find(GodotProject.Read(file), Context(probe: probe, settings: new ProjectToolSettings().With(GodotProvider.KindId, GodotProvider.PathKey, setting))));
         var memory = new DictionaryMemory { Values = { [(file, GodotExecutables.ExecutableKey)] = picked } };
-        Assert.Equal(picked, GodotExecutables.Find(GodotProject.Read(file), Context(probe: probe, settings: new ProjectToolSettings { GodotPath = setting }, memory: memory)));
+        Assert.Equal(picked, GodotExecutables.Find(GodotProject.Read(file), Context(probe: probe, settings: new ProjectToolSettings().With(GodotProvider.KindId, GodotProvider.PathKey, setting), memory: memory)));
         Assert.Equal((picked, null), GodotExecutables.Validate(picked, ToolOS.Linux));
         Assert.Null(GodotExecutables.Validate(_temp.Write("notes.txt", ""), ToolOS.Linux).Path);
     }
@@ -142,11 +143,11 @@ public sealed class GodotProviderTests : IDisposable
         Assert.False(Action(missing, "open-in-godot").IsEnabled);
 
         var plain = _temp.Write("bin/godot", "");
-        var wrongBuild = Describe(file, Context(settings: new ProjectToolSettings { GodotPath = plain }));
+        var wrongBuild = Describe(file, Context(settings: new ProjectToolSettings().With(GodotProvider.KindId, GodotProvider.PathKey, plain)));
         Assert.Contains("isn't the .NET build of Godot", wrongBuild.Problem, StringComparison.Ordinal);
 
         _temp.CreateFolder("bin/GodotSharp");
-        Assert.Null(Describe(file, Context(settings: new ProjectToolSettings { GodotPath = plain })).Problem);
+        Assert.Null(Describe(file, Context(settings: new ProjectToolSettings().With(GodotProvider.KindId, GodotProvider.PathKey, plain))).Problem);
         Assert.True(GodotExecutables.IsDotNetBuild("/opt/Godot_v4.3-stable_mono_linux.x86_64"));
         var mac = _temp.Write("Mac.app/Contents/MacOS/Godot", "");
         Assert.False(GodotExecutables.IsDotNetBuild(mac));
@@ -162,7 +163,7 @@ public sealed class GodotProviderTests : IDisposable
         var godot = _temp.Write("bin/godot-mono", "");
         var file = _temp.Write("game/project.godot", Godot4CSharp);
         var root = _temp.Combine("game");
-        var context = Context(settings: new ProjectToolSettings { GodotPath = godot });
+        var context = Context(settings: new ProjectToolSettings().With(GodotProvider.KindId, GodotProvider.PathKey, godot));
 
         var before = Describe(file, context);
         Assert.Equal(["open-in-godot", "run-project", "build-csharp", "open-solution", "clean", "kill-editors"], before.Actions.Select(a => a.Id));
@@ -242,7 +243,7 @@ public sealed class GodotProviderTests : IDisposable
             """.ReplaceLineEndings("\n"), note);
         Assert.StartsWith("This is a Godot 3 project (GDScript)", GodotProvider.SystemPromptNote(GodotProject.Parse(Godot3, "/g/project.godot", "/g", false), null, null), StringComparison.Ordinal);
         var file = _temp.Write("game/project.godot", Godot4CSharp);
-        Assert.Null(Describe(file, Context(settings: new ProjectToolSettings { TellClaudeAboutGodot = false })).SystemPromptNote);
+        Assert.Null(Describe(file, Context(settings: new ProjectToolSettings().Quiet(GodotProvider.KindId))).SystemPromptNote);
     }
 
     private sealed class Probe : IFileProbe

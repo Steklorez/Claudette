@@ -1,0 +1,27 @@
+﻿"Sessions"
+"This computer"
+"The session library, which lets your other machines continue your sessions."
+"Session library"
+[button] Reset to defaults
+"Tabs that sync copy their session here after every turn. In a folder Google Drive, Dropbox or OneDrive keeps in sync, your other machines can continue them from History."
+"Folder"
+"The library is empty."
+[field] "{root}/data/library"
+[button] Browse…
+[button] Move library…
+"Sync new tabs to the session library"
+"Each tab can be switched with Sync to other machines in its menu.  "
+[toggle] Sync new tabs to the session library
+"Name for this machine"
+"Shown in History and when a session is in use elsewhere. Empty uses the computer's name."
+[field] "{machine}"
+"Keep library sessions for"
+[choice] "Forever"
+"Settings sync"
+"Sync Claudette's settings through the library"
+"Syncs appearance (but the zoom), what new tabs start with, usage warnings and limits, check-ins, quick suffixes, the process monitor, notifications and keyboard shortcuts. Everything marked This computer stays on each machine."
+[toggle] Sync Claudette's settings through the library
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

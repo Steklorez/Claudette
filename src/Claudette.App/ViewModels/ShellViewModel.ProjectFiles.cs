@@ -123,7 +123,7 @@ public sealed partial class ShellViewModel
 
     /// <summary>
     /// <c>Ctrl/Cmd+P</c>: the focused tab's project's Files tab, with its explorer's box up to find a file by name. From a
-    /// conversation, it opens beside it or in its place, as Settings → Editor says.
+    /// conversation, it opens beside it or in its place, as Settings → Files and diffs says.
     /// </summary>
     [RelayCommand]
     private void GoToFile()
@@ -139,7 +139,7 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// Settings → Editor → Open files in is Claudette's editor, and <paramref name="path"/> is a file it opens: text, not
+    /// Settings → Files and diffs → Open files in is Claudette's editor, and <paramref name="path"/> is a file it opens: text, not
     /// over 10 MB. A program or shortcut that isn't text still shows in its folder, and a script opens as text.
     /// </summary>
     internal bool OpensInEditor(string path)
@@ -174,7 +174,7 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// A folder a reply names, in a group's folder, with Settings → Editor → Open files in Claudette's editor: it shows in
+    /// A folder a reply names, in a group's folder, with Settings → Files and diffs → Open files in Claudette's editor: it shows in
     /// that project's explorer, expanded and selected. False when it isn't in one, or files open in the OS's app.
     /// </summary>
     internal async Task<bool> RevealInProjectFilesAsync(string folder)
@@ -228,7 +228,7 @@ public sealed partial class ShellViewModel
 
     /// <summary>
     /// Shows a Files tab from the focused conversation, or run's log: beside it, as <b>Open beside</b> does, or in its
-    /// place, as Settings → Editor says. One already on screen is only focused. True when it opened beside.
+    /// place, as Settings → Files and diffs says. One already on screen is only focused. True when it opened beside.
     /// </summary>
     private bool ShowFromConversation(ProjectFilesViewModel files)
     {

@@ -52,18 +52,6 @@ public sealed class LibraryService : IDisposable
     /// <summary>No copy to the library is under way: for tests, which can't await the copies turns start.</summary>
     internal bool IsIdle => Volatile.Read(ref _copying) == 0;
 
-    /// <summary>
-    /// What syncs (DESIGN.md §14), by section; <see cref="ApplySettings"/> copies each of them back. The path to claude,
-    /// the machine name, the library folder, the diff tool, folders and tabs stay per machine.
-    /// </summary>
-    private static readonly string[] SyncedSettings = ["appearance", "newTabs", "usage", "checkIns", "quickSuffixes", "processes", "notifications", "keyboard"];
-
-    /// <summary>Within the synced sections, what stays per machine: the zoom suits this machine's screen.</summary>
-    private static readonly string[] PerMachine = ["appearance.zoom"];
-
-    /// <summary>Synced as one value each: the shortcut overrides come and go by command id.</summary>
-    private static readonly string[] SyncedLeaves = ["keyboard.bindings"];
-
     private readonly AppServices _services;
     private readonly ILogger _logger;
     private readonly ITimer _syncTimer;
@@ -276,8 +264,9 @@ public sealed class LibraryService : IDisposable
 
     private Dictionary<string, JsonNode?> FlattenSettings()
     {
-        var values = SettingsSync.Flatten(SettingsJson(_services.Settings), SyncedSettings, SyncedLeaves);
-        foreach (var path in PerMachine)
+        // What syncs (DESIGN.md §14), by section; ApplySettings copies each of them back.
+        var values = SettingsSync.Flatten(SettingsJson(_services.Settings), SyncedSettings.Sections, SyncedSettings.Leaves);
+        foreach (var path in SyncedSettings.PerMachine)
         {
             values.Remove(path);
         }
@@ -292,7 +281,7 @@ public sealed class LibraryService : IDisposable
         var json = SettingsJson(_services.Settings);
         foreach (var (path, value) in values)
         {
-            if (!PerMachine.Contains(path, StringComparer.Ordinal))
+            if (!SyncedSettings.PerMachine.Contains(path, StringComparer.Ordinal))
             {
                 SettingsSync.Apply(json, path, value);
             }

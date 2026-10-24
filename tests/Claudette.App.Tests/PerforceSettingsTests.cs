@@ -14,7 +14,7 @@ public class PerforceSettingsTests
         await using var h = new TabTestHarness();
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Contains("Perforce", settings.Categories);
+        Assert.Contains("Perforce", SettingsViewModel.AllCategories);
         settings.SearchText = "changelist";
 
         Assert.Equal([("Perforce", "Show changelist on tabs")], settings.SearchResults.Select(r => (r.Category, r.Label)));
@@ -51,7 +51,7 @@ public class PerforceSettingsTests
         Assert.Same(perforce.FolderOverrides.Single(), perforce.OverrideFor(Path.Combine(h.WorkFolder, "sub")));
         Assert.Equal(new PerforceTarget(h.WorkFolder, "other:1666", "build"), h.Services.Perforce.TargetFor(h.WorkFolder));
 
-        settings.Perforce.ResetCommand.Execute(null);
+        settings.Perforce.ResetAllSections();
 
         perforce = h.Services.Settings.Perforce;
         Assert.False(perforce.Enabled);

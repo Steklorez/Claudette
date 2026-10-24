@@ -8,16 +8,35 @@ namespace Claudette.Core.Tests.ProjectTools;
 /// <summary>Builds pretend projects and engines in a temporary folder. No real engine is ever used.</summary>
 internal static class ProjectToolFixtures
 {
+    /// <summary>The built-in project types, as the app has them, with no registry entries.</summary>
+    public static ProjectToolDetector Detector(IUnrealEngineRegistry? registry = null) =>
+        new([new UnrealProvider(registry), new Core.ProjectTools.Unity.UnityProvider(), new Core.ProjectTools.Godot.GodotProvider()]);
+
+    /// <summary>A context as the app makes one: the search skips every built-in type's folders.</summary>
     public static ProjectToolContext Context(TempFolder temp, ToolOS? os = null, ProjectToolSettings? settings = null, IProjectMemory? memory = null,
-        IUnrealEngineRegistry? registry = null, ISystemProcesses? processes = null) => new()
+        ISystemProcesses? processes = null) => new()
     {
         OS = os ?? ToolOSExtensions.Current,
         Settings = settings ?? new ProjectToolSettings(),
         Paths = new ProjectToolPaths(temp.Combine("home"), temp.Combine("appdata"), temp.Combine("localappdata"), temp.Combine("programdata"), temp.Combine("programfiles")),
         Memory = memory ?? NoProjectMemory.Instance,
-        UnrealRegistry = registry ?? NoUnrealEngineRegistry.Instance,
         Processes = processes,
+        SkippedFolders = Detector().SkippedFolders,
     };
+
+    /// <summary>The settings with one of a project type's own settings changed, as Settings → Project tools changes it.</summary>
+    public static ProjectToolSettings With(this ProjectToolSettings settings, string kind, string key, string? value)
+    {
+        settings.SetValue(kind, key, value);
+        return settings;
+    }
+
+    /// <summary>The settings with <b>Tell Claude about …</b> off for a project type.</summary>
+    public static ProjectToolSettings Quiet(this ProjectToolSettings settings, string kind)
+    {
+        settings.Type(kind).TellClaude = false;
+        return settings;
+    }
 
     /// <summary>A <c>.uproject</c> written the way people edit them: a comment, a trailing comma, a field Claudette doesn't know.</summary>
     public static string UProject(TempFolder temp, string relativePath, string? association = "5.4", bool code = true)

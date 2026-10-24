@@ -24,7 +24,7 @@ The composer's placeholder says which is in use. `Ctrl/Cmd+Enter` also answers a
 2. Click the shortcut you want to change. It says "Press keys…".
 3. Press the new keys. `Esc` cancels.
 
-A command you've changed also has **Reset**, which puts its default back. **Remove** clears a command's shortcut, so it's reachable only from menus and buttons, and the page says "None". **Reset to defaults** at the foot of the page puts back every shortcut and **Send with**. Tooltips and the composer's placeholder always show the shortcuts in use.
+A command you've changed also has **Reset**, which puts its default back. **Remove** clears a command's shortcut, so it's reachable only from menus and buttons, and the page says "None". **Reset to defaults** by the **Shortcuts** heading puts back every shortcut, and the one by **Sending** puts back **Send with**. Tooltips and the composer's placeholder always show the shortcuts in use.
 
 ## Shortcuts Claudette refuses
 
@@ -43,7 +43,7 @@ Claudette stores a shortcut with a primary modifier, which is Ctrl on Windows an
 
 ## Quick suffixes
 
-Each quick suffix can have its own shortcut, set in Settings → Quick suffixes and checked for conflicts the same way. [Quick suffixes](../composer/quick-suffixes.md) explains them.
+Each quick suffix can have its own shortcut, set in the page's **Quick suffixes** section and checked for conflicts the same way. [Quick suffixes](../composer/quick-suffixes.md) explains them.
 
 ## Keys that can't be changed
 
@@ -77,5 +77,5 @@ Both of these are in Settings → Keyboard, and both sync to your other machines
 
 ## See also
 
-- [Quick suffixes](../composer/quick-suffixes.md), whose shortcuts are set in their own page of Settings.
+- [Quick suffixes](../composer/quick-suffixes.md), whose shortcuts are set in this page's **Quick suffixes** section.
 - [The command palette](../tabs/the-command-palette.md), which shows each command's shortcut beside it.

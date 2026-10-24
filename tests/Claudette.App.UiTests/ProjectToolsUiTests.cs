@@ -9,6 +9,7 @@ using AvaloniaEdit;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.Views;
+using Claudette.Core.ProjectTools.Unreal;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.UiTests;
@@ -22,7 +23,7 @@ public class ProjectToolsUiTests
     [AvaloniaFact]
     public async Task A_tab_in_an_Unreal_project_shows_the_project_at_the_sidebars_foot_and_its_menu_lists_the_actions()
     {
-        await using var h = new TabTestHarness(settings => settings.ProjectTools.ProjectFileFormat = ProjectFileFormat.VisualStudio, dispatcher: new AvaloniaUiDispatcher());
+        await using var h = new TabTestHarness(settings => settings.ProjectTools.SetValue(UnrealProvider.KindId, UnrealProvider.ProjectFilesKey, nameof(ProjectFileFormat.VisualStudio)), dispatcher: new AvaloniaUiDispatcher());
         UnrealFixture.Write(h.Root, h.WorkFolder);
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });

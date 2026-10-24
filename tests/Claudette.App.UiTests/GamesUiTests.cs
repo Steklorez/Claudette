@@ -137,7 +137,7 @@ public class GamesUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         var layer = window.GetVisualDescendants().OfType<MascotLayer>().Single(l => !l.IsFront);
         var menu = layer.Figure.ContextMenu!;
-        Assert.Equal(["Play tic-tac-toe", "Play Connect Four", "Play hangman", "Hide Claudette"],
+        Assert.Equal(["Play tic-tac-toe", "Play Connect Four", "Play hangman", "Hide Claudette", "Claudette settings…"],
             menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));
 
         menu.Items.OfType<MenuItem>().Single(i => i.Header as string == "Play Connect Four").Command!.Execute(GameKind.ConnectFour);
@@ -148,7 +148,7 @@ public class GamesUiTests
         h.Services.Settings.Appearance.GamesWithClaudette = false;
         h.Services.SaveSettings();
         UiText.Settle(window);
-        Assert.Equal(["Hide Claudette"], menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));
+        Assert.Equal(["Hide Claudette", "Claudette settings…"], menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));
         Assert.DoesNotContain(menu.Items.OfType<Separator>(), s => s.IsVisible);
         Assert.Empty(window.GetVisualDescendants().OfType<GamesView>());
         window.Close();

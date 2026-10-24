@@ -217,7 +217,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
             1 => "1 tab is connected to the Claude app.",
             var n => $"{n} tabs are connected to the Claude app.",
         };
-        var connected = _services.Settings.ClaudeCode.KeepAwakeWhileConnected ? "" : " Keeping the computer awake for them is turned off in Settings → Claude Code.";
+        var connected = _services.Settings.ClaudeCode.KeepAwakeWhileConnected ? "" : " Keeping the computer awake for them is turned off in Settings → General.";
         return $"{setting} {tabs}{connected} {_sleep.Describe()}";
     }
 

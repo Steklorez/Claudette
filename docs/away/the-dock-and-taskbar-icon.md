@@ -16,11 +16,11 @@ The icon shows the number of tabs that need your input: a waiting permission pro
 - On Windows it's an overlay on the taskbar button.
 - On macOS it's the Dock icon's badge.
 
-Turn it off with Settings → Notifications → **Show the number of tabs needing input on the Dock or taskbar icon** (on by default).
+Turn it off with Settings → Notifications → The Dock or taskbar icon → **Show how many tabs need you** (on by default).
 
 ## The animation
 
-While tabs work or wait, the icon moves. Settings → Notifications → **Animate the Dock or taskbar icon while tabs are working or waiting** (on by default) turns it off.
+While tabs work or wait, the icon moves. Settings → Notifications → The Dock or taskbar icon → **Animate it while tabs work or wait** (on by default) turns it off.
 
 What it shows, most important first:
 
@@ -44,8 +44,8 @@ On Windows, when a tab starts needing input while Claudette isn't in front, the 
 
 | Setting | Default | Where |
 |---|---|---|
-| **Show the number of tabs needing input on the Dock or taskbar icon** | On | Settings → Notifications |
-| **Animate the Dock or taskbar icon while tabs are working or waiting** | On | Settings → Notifications |
+| **Show how many tabs need you** | On | Settings → Notifications → The Dock or taskbar icon |
+| **Animate it while tabs work or wait** | On | Settings → Notifications → The Dock or taskbar icon |
 | **A tab needs permission or an answer** (flashing) | On | Settings → Notifications |
 
 ## See also

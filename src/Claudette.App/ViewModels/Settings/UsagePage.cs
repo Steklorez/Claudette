@@ -5,25 +5,75 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels.Settings;
 
 /// <summary>
-/// Settings → Usage (DESIGN.md §6): the warning levels, the burn rate, the model meters, continuing after a limit
-/// resets, usage credits, the usage history and sharing usage with other machines.
+/// Settings → Usage (DESIGN.md §6): the warning levels and the burn rate, what the usage header shows, the usage history
+/// and sharing usage with other machines. What a tab does at a usage limit is in Tabs, since each tab can change it.
 /// </summary>
-public sealed partial class UsagePage(SettingsContext context) : SettingsPage(context, SettingsCategory.Usage)
+public sealed partial class UsagePage : SettingsPage
 {
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Warn at (% of session used)"),
-        Entry("Alert at (% of session used)"),
-        Entry("Burn rate window (minutes)"),
-        Entry("Show model-specific weekly limits"),
-        Entry("Read model limits from /usage"),
-        Entry("Continue tasks when a usage limit resets"),
-        Entry("Use usage credits once a limit is used up"),
-        Entry("Keep usage history"),
-        Entry("Clear usage history"),
-        Entry("Share usage with my other machines"),
-        Entry("Clear usage history on every machine"),
-    ];
+    public UsagePage(SettingsContext context) : base(context, SettingsCategory.Usage)
+    {
+        Section("warnings", "Warnings",
+        [
+            Setting("usage.warnPercent", "Warn at (% of the session used)", s => s.Usage.WarnPercent, (s, v) => s.Usage.WarnPercent = v,
+                "The header's meter turns amber.", keywords: ["threshold", "alert", "limit"]),
+            Setting("usage.criticalPercent", "Alert at (% of the session used)", s => s.Usage.CriticalPercent, (s, v) => s.Usage.CriticalPercent = v,
+                "The meter turns red, and a notification says so.", keywords: ["threshold", "warning", "limit"]),
+            Setting("usage.burnRateWindowMinutes", "Burn rate window (minutes)", s => s.Usage.BurnRateWindowMinutes, (s, v) => s.Usage.BurnRateWindowMinutes = v,
+                "How far back the pace your usage is going at is measured over.", keywords: ["projection", "pace"]),
+        ]);
+        Section("header", "The usage header",
+        [
+            Setting("usage.showModelMeters", "Show model-specific weekly limits", s => s.Usage.ShowModelMeters, (s, v) => s.Usage.ShowModelMeters = v,
+                "A meter for each model with a weekly limit of its own.", keywords: ["opus", "fable", "weekly"]),
+            Setting("usage.useUsageCommandFallback", "If Claude Code stops reporting them, read them from /usage", s => s.Usage.UseUsageCommandFallback,
+                (s, v) => s.Usage.UseUsageCommandFallback = v,
+                "Free, but can break when Claude Code changes its wording.", keywords: ["model limits", "fallback"]),
+            Setting("state.detailedUsageHeader", "Detailed usage header", () => !Services.State.DetailedUsageHeader, () => Services.State.DetailedUsageHeader = false,
+                "Taller, with charts of the session and the week, the burn rate and the busiest tabs.",
+                "The chevron at the header's right does the same.", ["charts", "sparkline"]),
+        ]);
+        Section("history", "History",
+        [
+            // Going back to a month would delete what's older: only its own Reset does that, never the section's.
+            Setting("usage.keepHistory", "Keep usage history", s => s.Usage.KeepHistory, (s, v) => s.Usage.KeepHistory = v,
+                "Usage percentages and token counts, never your prompts, replies or code.", keywords: ["retention", "clear usage history"],
+                resetsWithSection: false),
+            Setting("usage.shareThroughLibrary", "Share usage with my other machines", s => s.Usage.ShareThroughLibrary, (s, v) => s.Usage.ShareThroughLibrary = v,
+                "Through the session library, so the charts add up every machine's.",
+                "Each machine that shares keeps its last week of session and weekly readings in the session library (Settings → Sessions), and the charts take in the readings of the others signed in to the same account. Tabs that sync to the library also keep each turn's token counts, estimated cost, project and tab name there, so the Usage window adds up every machine's. Tabs that don't sync keep theirs on this machine.",
+                ["sync", "library", "other computers"]),
+            Info("usage.clearEverywhere", "Clear usage history on every machine", keywords: ["shared usage", "reset"]),
+        ]);
+    }
+
+    public override string IconKey => "IconCardStats";
+
+    public override string Description => "Warnings, the usage header, and the history the charts are drawn from.";
+
+    /// <summary>
+    /// The usage header drawn taller with charts (DESIGN.md §6, "Detailed header"), the same switch as its chevron. It's
+    /// this machine's state rather than a setting, like the sidebar's collapsed state, so it doesn't sync.
+    /// </summary>
+    public bool DetailedUsageHeader
+    {
+        get => Services.State.DetailedUsageHeader;
+        set
+        {
+            if (Services.State.DetailedUsageHeader != value)
+            {
+                Services.State.DetailedUsageHeader = value;
+                SaveState();
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>The detailed header is kept with the state, so that's saved too; sharing may have gone back to off.</summary>
+    protected override void OnReset()
+    {
+        Services.SaveState();
+        ClearEverywhereCommand.NotifyCanExecuteChanged();
+    }
 
     public decimal? WarnPercent
     {
@@ -53,20 +103,6 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
     {
         get => Settings.Usage.UseUsageCommandFallback;
         set => Set(value, v => Settings.Usage.UseUsageCommandFallback = v);
-    }
-
-    /// <summary>DESIGN.md §6, "Continuing after a limit resets". Each tab can override it in Tab settings.</summary>
-    public bool ContinueAfterLimitReset
-    {
-        get => Settings.Usage.ContinueAfterLimitReset;
-        set => Set(value, v => Settings.Usage.ContinueAfterLimitReset = v);
-    }
-
-    /// <summary>DESIGN.md §6, "Tabs that don't use usage credits". Each tab can override it from its menu or Tab settings.</summary>
-    public bool UseUsageCredits
-    {
-        get => Settings.Usage.UseUsageCredits;
-        set => Set(value, v => Settings.Usage.UseUsageCredits = v);
     }
 
     /// <summary>DESIGN.md §6, "Sharing across machines".</summary>
@@ -147,12 +183,4 @@ public sealed partial class UsagePage(SettingsContext context) : SettingsPage(co
             : "Usage history cleared here, but the session library couldn't be reached to clear the shared usage. Try again once it's available.";
     }
 
-    /// <summary><b>Keep usage history</b> stays as it is.</summary>
-    protected override void ResetSettings()
-    {
-        var keep = Settings.Usage.KeepHistory;
-        Settings.Usage = new UsageSettings { KeepHistory = keep };
-        Save();
-        ClearEverywhereCommand.NotifyCanExecuteChanged();
-    }
 }

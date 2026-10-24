@@ -29,7 +29,7 @@ Click the row to show the log in the focused pane, as a project run's log is. Ov
 
 - **Stay current** keeps the newest line in view as the editor writes. Scroll up to read something and it turns off, so the log holds still; scroll back to the end, or click it, and it follows again.
 - **Wrap lines** wraps long lines at the width of the pane. Turn it off and they stay on one line, and the log scrolls sideways. The next log you open starts the way you left it.
-- **Open file** opens the log in Claudette's editor or the OS's app, as Settings → Editor says.
+- **Open file** opens the log in Claudette's editor or the OS's app, as Settings → Files and diffs says.
 - **Copy** copies the lines the filter shows, as the file has them.
 - **Close** closes it. See [below](#closing-it).
 

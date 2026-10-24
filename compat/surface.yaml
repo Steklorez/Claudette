@@ -1550,7 +1550,7 @@ items:
   - id: "supportedEffortLevels"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Services/AppServices.cs, src/Claudette.App/ViewModels/Settings/NewTabsPage.cs, src/Claudette.App/ViewModels/TabSettingsViewModel.cs
+    usedIn: src/Claudette.App/Services/AppServices.cs, src/Claudette.App/ViewModels/Settings/TabsPage.cs, src/Claudette.App/ViewModels/TabSettingsViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SettingsDefaultsTests
     # The models (and their effort levels) in the initialize reply, kept per machine for the lists in Settings.

@@ -59,4 +59,4 @@ Claudette never runs the Claude desktop app's files, even when **Path to claude*
 
 With Claude Code found, Claudette checks whether it's signed in. If it isn't, you see the [sign-in screen](signing-in.md). Once you're signed in, the window opens with no tabs on a first launch, and [Your first tab](your-first-tab.md) takes it from there.
 
-On later launches, tabs you pinned come back where they left off. Unpinned tabs come back too when Settings → Sessions → **Also restore unpinned tabs when Claudette starts** is on. [Closing and restoring](../tabs/closing-and-restoring.md) has the details.
+On later launches, tabs you pinned come back where they left off. Unpinned tabs come back too when Settings → General → **Also restore unpinned tabs when Claudette starts** is on. [Closing and restoring](../tabs/closing-and-restoring.md) has the details.

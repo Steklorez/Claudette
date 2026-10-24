@@ -6,17 +6,70 @@ namespace Claudette.Core.ProjectTools.Unreal;
 /// Unreal Engine projects (DESIGN.md §18, "Project tools"): finds <c>*.uproject</c> files for a tab's folder, the
 /// engine each uses, and builds the editor, project file, build, open and clean actions.
 /// </summary>
-public sealed class UnrealProvider : IProjectToolProvider
+/// <param name="registry">The Windows registry's Unreal entries, where launcher installs and source builds are listed; none elsewhere.</param>
+public sealed class UnrealProvider(IUnrealEngineRegistry? registry = null) : IProjectType
 {
     public const string KindId = "unreal";
 
-    /// <summary>Where a project's editor configuration is kept in its memory.</summary>
+    /// <summary>Where a project's editor configuration is kept in its memory, and the default for every project in Settings.</summary>
     public const string ConfigurationKey = "configuration";
+
+    /// <summary>Settings' key for the project files to generate.</summary>
+    public const string ProjectFilesKey = "projectFiles";
 
     /// <summary>The editor's process names, UE5's and UE4's, for the clean warning and Kill all editors.</summary>
     public static readonly IReadOnlyList<string> EditorProcessNames = ["UnrealEditor", "UnrealEditor-Cmd", "UE4Editor", "UE4Editor-Cmd"];
 
+    /// <summary>The Windows registry's Unreal entries; nothing elsewhere.</summary>
+    public IUnrealEngineRegistry Registry { get; } = registry ?? NoUnrealEngineRegistry.Instance;
+
     public string Kind => KindId;
+
+    public string Name => "Unreal Engine";
+
+    public string Description => "Projects with a .uproject: launch the editor, generate project files, build, clean.";
+
+    public string NoteDescription => "The engine's version and folder, and the commands to build the editor and regenerate project files.";
+
+    public IReadOnlyList<ProjectTypeSetting> Settings { get; } =
+    [
+        new ProjectTypeChoice(ConfigurationKey, "Default editor configuration",
+            [new(nameof(UnrealConfiguration.Development), "Development"), new(nameof(UnrealConfiguration.DebugGame), "DebugGame (loads the DebugGame modules)")],
+            nameof(UnrealConfiguration.Development))
+        {
+            Description = "For projects that haven't been given their own in the project's menu.",
+            Keywords = ["development", "debuggame"],
+        },
+        new ProjectTypeChoice(ProjectFilesKey, "Project files for",
+            [.. Enum.GetValues<ProjectFileFormat>().Select(f => new ProjectChoiceOption(f.ToString(), FormatName(f) + (f == DefaultFormat(ToolOSExtensions.Current) ? " (the default here)" : "")))],
+            DefaultFormat(ToolOSExtensions.Current).ToString())
+        {
+            More = "Rider opens the .uproject itself, so it needs no project files (Unreal Engine 4.25.4 or later on Windows, 4.26 on macOS and Linux).",
+            Keywords = ["generate project files", "visual studio", "xcode", "vs code"],
+        },
+    ];
+
+    /// <summary>Its builds, caches and content, and the engine's own folders: a project is never inside <c>Engine/</c>, and <c>Templates/</c> holds template projects.</summary>
+    public IReadOnlySet<string> SkippedFolders { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Intermediate", "Saved", "DerivedDataCache", "Binaries", "Content", "Plugins", "Source", "Config", "Engine", "Templates", "FeaturePacks",
+    };
+
+    /// <summary>The project files a machine generates until Settings says otherwise: Visual Studio on Windows, Xcode on macOS, VS Code on Linux.</summary>
+    public static ProjectFileFormat DefaultFormat(ToolOS os) => os switch
+    {
+        ToolOS.Windows => ProjectFileFormat.VisualStudio,
+        ToolOS.MacOS => ProjectFileFormat.Xcode,
+        _ => ProjectFileFormat.VSCode,
+    };
+
+    /// <summary>The project files to generate on <paramref name="os"/>, as Settings says.</summary>
+    public static ProjectFileFormat FormatFor(ProjectToolSettings settings, ToolOS os) =>
+        Enum.TryParse<ProjectFileFormat>(settings.Value(KindId, ProjectFilesKey), out var format) ? format : DefaultFormat(os);
+
+    /// <summary>The editor configuration a project uses until it's given its own, as Settings says.</summary>
+    public static UnrealConfiguration DefaultConfiguration(ProjectToolSettings settings) =>
+        Enum.TryParse<UnrealConfiguration>(settings.Value(KindId, ConfigurationKey), out var configuration) ? configuration : UnrealConfiguration.Development;
 
     public IReadOnlyList<ProjectCandidate> Find(string folder, ProjectToolContext context) =>
         ProjectSearch.Find(folder, dir => ProjectSearch.FilesIn(dir, "*.uproject"), context)
@@ -27,11 +80,11 @@ public sealed class UnrealProvider : IProjectToolProvider
     {
         var os = context.OS;
         var project = UnrealProject.Read(candidate.Path);
-        var engine = UnrealEngineLocator.Find(project, context);
+        var engine = UnrealEngineLocator.Find(project, context, Registry);
         var configuration = Enum.TryParse<UnrealConfiguration>(context.Memory.Get(project.Path, ConfigurationKey), out var remembered)
             ? remembered
-            : context.Settings.UnrealConfiguration;
-        var format = context.Settings.FormatFor(os);
+            : DefaultConfiguration(context.Settings);
+        var format = FormatFor(context.Settings, os);
         var version = engine?.Version?.Short ?? (project.EngineAssociation is { } association && UnrealAssociation.IsVersion(association) ? association : null);
         var debugGame = configuration == UnrealConfiguration.DebugGame;
         var suffix = debugGame ? " (DebugGame)" : "";
@@ -157,7 +210,7 @@ public sealed class UnrealProvider : IProjectToolProvider
         return new ProjectInfo
         {
             Kind = KindId,
-            KindName = "Unreal Engine",
+            KindName = Name,
             Name = project.Name,
             Root = project.Root,
             ProjectPath = project.Path,
@@ -175,7 +228,7 @@ public sealed class UnrealProvider : IProjectToolProvider
                 Current = engine?.Root,
             },
             Problem = problem,
-            SystemPromptNote = context.Settings.TellClaudeAboutUnreal ? SystemPromptNote(project, engine, version, configuration, format, os) : null,
+            SystemPromptNote = SystemPromptNote(project, engine, version, configuration, format, os),
             Logs = UnrealLogs.Source(project, os),
         };
     }

@@ -58,7 +58,7 @@ When Claude starts a new task list and its latest reply looks like the plan, wit
 ## Settings
 
 - Settings → Claude Code → **Give Claude a task list** (on by default). Claude Code gives its task-keeping tools only to some models; newer ones keep track of their work without a written list, so they'd make no tasks and only the plan would show. This gives every model the tools, at the cost of the room their definitions take in the context. Off, Claudette leaves it as your environment has it. It applies to tabs started after the change.
-- Settings → Appearance → **Show task progress on tab rows** (on by default) shows the *3/7* badge and the task on the row's second line.
+- Settings → Conversation → Tab rows → **Show task progress** (on by default) shows the *3/7* badge and the task on the row's second line.
 
 ## See also
 

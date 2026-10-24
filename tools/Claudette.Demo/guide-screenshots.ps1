@@ -10,7 +10,8 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
 - signed out (FAKE_CLAUDE_LOGGED_IN=0), for the sign-in screen;
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
-  side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window and the Settings window;
+  side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window, the Settings window on General,
+  Appearance, a search, Project tools and Accounts, and a tab's Tab settings;
 - with a stand-in for the Unreal editor open on starfall (claudette-demo --stand-in-editor, run as UnrealEditor.exe),
   for its log under the tab and in the main area;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
@@ -187,7 +188,8 @@ foreach ($theme in $Themes) {
     # As the demo is.
     if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
         'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'usage/usage-window',
-        'settings/settings-window', 'settings/appearance', 'accounts/settings-accounts', 'project-files/files-tab') {
+        'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'accounts/settings-accounts',
+        'tabs/tab-settings', 'project-files/files-tab') {
         Use-Claudette @{} {
             Show-Tabs
 
@@ -271,6 +273,30 @@ foreach ($theme in $Themes) {
                 Start-Sleep -Seconds 1
             }
 
+            # What a search finds, with the page of the first result beside it.
+            Shot 'settings/search' {
+                param($path)
+                $settings = Open-Settings
+                Set-ElementText (Find-ById $settings 'SearchBox') 'font'
+                Wait-Until { Find-ByType $settings 'ListItem' 'Code font' } 'the search results' 10
+                Start-Sleep -Seconds 1
+                Save-Window $settings $path
+                Set-ElementText (Find-ById $settings 'SearchBox') ''
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+            }
+
+            # A section for each kind of project, drawn from what it declares.
+            Shot 'settings/project-tools' {
+                param($path)
+                $settings = Open-Settings
+                Select-ListItem $settings 'Project tools'
+                Start-Sleep -Seconds 1
+                Save-Window $settings $path
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+            }
+
             Shot 'accounts/settings-accounts' {
                 param($path)
                 $settings = Open-Settings
@@ -279,6 +305,24 @@ foreach ($theme in $Themes) {
                 Save-Window $settings $path
                 Close-Window $settings
                 Start-Sleep -Seconds 1
+            }
+
+            # From the tab's menu: the dialog over the main window, the demo's model and effort its own. Avalonia's menu doesn't
+            # take a posted click, so its item is chosen through UI Automation's Invoke.
+            Shot 'tabs/tab-settings' {
+                param($path)
+                Invoke-ByText $window 'Grappling hook'
+                Start-Sleep -Seconds 2
+                Send-RightClick (Find-ByText $window 'Grappling hook')
+                $menu = Get-OtherWindow $claudette $window 'the tab menu'
+                Start-Sleep -Seconds 1
+                (Find-ByText $menu "Tab settings$([char] 0x2026)").GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+                Wait-Until { Find-ByPrefix $window 'Settings for ' } 'Tab settings' 20
+                Start-Sleep -Seconds 1
+                # The dialog has no control of its own: its title and Done, with room for its padding and edge.
+                Save-Elements $window $path ((Find-ByPrefix $window 'Settings for '), (Find-ByText $window 'Done')) @(25, 21, 25, 13)
+                Invoke-ByText $window 'Done'
+                Wait-Until { -not (Find-ByPrefix $window 'Settings for ') } 'Tab settings to close' 20
             }
 
             # The two that borrow the keyboard and pointer (-WithInput), one after the other.
@@ -420,8 +464,11 @@ foreach ($theme in $Themes) {
                 Invoke-ByText $window 'Inventory loses items on save'
                 Start-Sleep -Seconds 2
                 $settings = Open-Settings
-                Select-ListItem $settings 'Processes'
-                Start-Sleep -Seconds 1
+                # Found by search, which scrolls Settings to it on the Tabs page.
+                Set-ElementText (Find-ById $settings 'SearchBox') 'process monitor'
+                Wait-Until { Find-ByType $settings 'ListItem' 'Show the process monitor' } 'the search result' 10
+                Select-ListItem $settings 'Show the process monitor'
+                Start-Sleep -Seconds 2
                 Set-Toggle $settings 'Show the process monitor' $true
                 Close-Window $settings
                 Start-Sleep -Seconds 1

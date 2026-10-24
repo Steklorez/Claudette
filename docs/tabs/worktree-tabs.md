@@ -20,7 +20,7 @@ Claudette picks the name, two words such as `brisk-otter`, that no other folder,
 
 From the first turn, the tab's folder is the worktree. Changed files, the git view, `@` files, project tools and the [info card](the-tab-info-card.md) all follow it, and a note says *Working in the worktree brisk-otter, on its own branch*. Later starts resume the session in it.
 
-In the sidebar, a worktree tab stays in the main checkout's group. Its branch badge shows the worktree's name with a branch icon, and its tip names the worktree and its branch. With **Show git branch on tab rows** turned off, the branch icon sits before the tab's name instead. The info card has a **Worktree** row. See [The sidebar](the-sidebar.md#badges).
+In the sidebar, a worktree tab stays in the main checkout's group. Its branch badge shows the worktree's name with a branch icon, and its tip names the worktree and its branch. With Settings → Conversation → Tab rows → **Show git branch** turned off, the branch icon sits before the tab's name instead. The info card has a **Worktree** row. See [The sidebar](the-sidebar.md#badges).
 
 **Duplicate tab** and **Branch from here** copy a worktree tab into the same worktree. A session you open from [History](../history/history.md) whose folder is a worktree Claude Code made goes back in its checkout's group, and History names the worktree.
 
@@ -54,7 +54,7 @@ Claudette looks a minute after it starts and then every hour, while either rule 
 ## Settings
 
 - Settings → General → **Worktrees**: the two rules above, and **Clean up now**.
-- Settings → Appearance → **Show git branch on tab rows**: whether the branch badge shows.
+- Settings → Conversation → Tab rows → **Show git branch**: whether the branch badge shows.
 
 ## See also
 

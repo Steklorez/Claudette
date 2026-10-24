@@ -15,7 +15,7 @@ A subagent is a card of its own, in the quiet neutral color. Its line shows a st
 
 Click the line to see what the subagent did: the tab shows its work in place of the conversation ([Subagents under their tab](#subagents-under-their-tab)). The agent map's details show the whole prompt and the whole report, each with **Copy**.
 
-With Settings → Appearance → **Show subagents' work** set to **In the conversation**, clicking the line opens the card instead. Inside is the start of the prompt Claude gave the subagent, then everything that subagent did: its own **Tool calls** cards, its replies and its thinking, as the main conversation shows them. A subagent can start subagents of its own, which nest inside it.
+With Settings → Conversation → **Show subagents' work** set to **In the conversation**, clicking the line opens the card instead. Inside is the start of the prompt Claude gave the subagent, then everything that subagent did: its own **Tool calls** cards, its replies and its thinking, as the main conversation shows them. A subagent can start subagents of its own, which nest inside it.
 
 ## Subagents that run in the background
 
@@ -25,7 +25,7 @@ To stop a subagent, use the **■** on its row in [the agent map](../plans/the-a
 
 ## Subagents under their tab
 
-Each subagent Claude starts has a row of its own under its tab in the sidebar, the way a thread's sub-threads sit under it. To open subagents' cards in the conversation instead, with no rows, set Settings → Appearance → **Show subagents' work** to **In the conversation**. It applies at once, to every tab.
+Each subagent Claude starts has a row of its own under its tab in the sidebar, the way a thread's sub-threads sit under it. To open subagents' cards in the conversation instead, with no rows, set Settings → Conversation → **Show subagents' work** to **In the conversation**. It applies at once, to every tab.
 
 A subagent's row has the agents icon and its task, how long it has run, and under them its type and what it's doing, or how it ended. A subagent another one started sits under it, further in. Its status mark is the one [the agent map](../plans/the-agent-map.md) uses: a pulsing dot while it runs, `!` while it waits on you, and a dot, ✕ or ■ once it's done, failed or stopped.
 
@@ -54,7 +54,7 @@ A tab that's restored when Claudette starts brings back rows only for its last t
 
 ## Discouraging or turning off subagents
 
-Settings → Claude Code → **Subagents** says whether Claude hands parts of its work to subagents:
+Settings → Tabs → **Subagents** says whether Claude hands parts of its work to subagents:
 
 - **Claude decides** (the default): Claude uses them when it judges they help.
 - **Discourage them**: Claude is asked to do the work itself, in the conversation, and to use a subagent only when you ask for one.
@@ -78,8 +78,8 @@ A restored tab shows each subagent's finished work, tool calls included, but no 
 
 ## Settings
 
-- Settings → Appearance → **Show subagents' work**: **Under the tab in the sidebar** (the default) or **In the conversation**. See [Subagents under their tab](#subagents-under-their-tab).
-- Settings → Claude Code → **Subagents**: **Claude decides** (the default), **Discourage them** or **Don't allow them**, which a tab's **Tab settings…** can change for it. See [Discouraging or turning off subagents](#discouraging-or-turning-off-subagents).
+- Settings → Conversation → **Show subagents' work**: **Under the tab in the sidebar** (the default) or **In the conversation**. See [Subagents under their tab](#subagents-under-their-tab).
+- Settings → Tabs → **Subagents**: **Claude decides** (the default), **Discourage them** or **Don't allow them**, which a tab's **Tab settings…** can change for it. See [Discouraging or turning off subagents](#discouraging-or-turning-off-subagents).
 - **Summarize subagents' progress** (Settings → Claude Code, off by default) is explained with [the agent map](../plans/the-agent-map.md).
 
 ## Shortcuts

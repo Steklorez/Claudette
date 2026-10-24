@@ -716,25 +716,41 @@ public partial class ShellView : UserControl
         }
     }
 
-    /// <summary>The Settings window, modal, where <paramref name="opening"/> says, with the selected tab's project pages.</summary>
-    private async Task ShowSettingsAsync(SettingsOpening opening)
+    /// <summary>The open Settings window; null while it's closed.</summary>
+    private SettingsWindow? _settingsWindow;
+
+    /// <summary>
+    /// The Settings window where <paramref name="opening"/> says, with the selected tab's project pages (DESIGN.md §14).
+    /// It isn't modal: it stays open beside this window and follows its selected tab, and asked for again, it comes to
+    /// the front at the page and setting asked for. It closes with this window.
+    /// </summary>
+    private Task ShowSettingsAsync(SettingsOpening opening)
     {
+        if (_settingsWindow is { DataContext: SettingsViewModel open } existing)
+        {
+            open.Open(opening);
+            // Coming to the front takes the focus, which a screenshot run leaves alone (DESIGN.md §9, "Working on Claudette").
+            if (!UnfocusedWindows.IsOn)
+            {
+                existing.Activate();
+            }
+            return Task.CompletedTask;
+        }
         if (this.FindAncestorOfType<Window>() is not { } owner || owner.DataContext is not MainWindowViewModel main)
         {
             opening.Project?.Dispose();
-            return;
+            return Task.CompletedTask;
         }
-        var settings = new SettingsViewModel(main.Services, main.AccountText, main.Updates, opening) { Account = main.Account, AppUpdates = main.AppUpdate, SourceUpdates = main.SourceUpdate };
-        var window = new SettingsWindow { DataContext = settings };
-        if (UnfocusedWindows.IsOn)
+        var settings = new SettingsViewModel(main.Services, main.AccountText, main.Updates, opening, _shell)
         {
-            // A modal window activates its owner as it closes, which would take the focus (DESIGN.md §9, "Working on Claudette").
-            var closed = new TaskCompletionSource();
-            window.Closed += (_, _) => closed.TrySetResult();
-            window.Show(owner);
-            await closed.Task;
-            return;
-        }
-        await window.ShowDialog(owner);
+            Account = main.Account,
+            AppUpdates = main.AppUpdate,
+            SourceUpdates = main.SourceUpdate,
+        };
+        var window = new SettingsWindow { DataContext = settings };
+        _settingsWindow = window;
+        window.Closed += (_, _) => _settingsWindow = null;
+        window.Show(owner);
+        return Task.CompletedTask;
     }
 }

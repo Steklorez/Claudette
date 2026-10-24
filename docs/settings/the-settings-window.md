@@ -2,14 +2,14 @@
 title: The Settings window
 parent: Settings
 nav_order: 1
-summary: "Everything you can change in Claudette is in the Settings window: a list of categories down the left, and the one you pick on the right."
+summary: "Everything you can change in Claudette is in the Settings window: its pages down the left, in groups, and the one you pick on the right, in sections."
 ---
 
 # The Settings window
 
-Everything you can change in Claudette is in the Settings window: a list of categories down the left, and the one you pick on the right.
+Everything you can change in Claudette is in the Settings window: its pages down the left, in groups, and the one you pick on the right, in sections.
 
-{% include shot.html name="guide/settings/settings-window" alt="The Settings window on General: the categories and a search box down the left with the version, User Guide, Ask on Discord and Report an issue at its foot, and General's settings on the right" %}
+{% include shot.html name="guide/settings/settings-window" alt="The Settings window on General: the pages in their groups and a search box down the left, with the version and Help at its foot, and General's sections on the right, each with its settings and Reset to defaults" %}
 
 ## Opening it
 
@@ -17,40 +17,58 @@ Any of these opens Settings:
 
 - The **Settings** button at the foot of the sidebar.
 - `Ctrl/Cmd+,`.
-- **Settings** in the [command palette](../tabs/the-command-palette.md) (`Ctrl/Cmd+Shift+P`). The palette also lists each category by name, so typing "keyboard" there opens Settings on Keyboard.
+- **Settings** in the [command palette](../tabs/the-command-palette.md) (`Ctrl/Cmd+Shift+P`). The palette also lists each page by name, so typing "keyboard" there opens Settings on Keyboard.
 - On macOS, **Settings…** in the app menu.
+- A feature's own menu, which opens Settings at that feature's settings and picks them out for a moment: **Claudette settings…** in [Claudette](../claudette/claudette-on-the-composer.md)'s right-click menu, **Keep-awake settings…** in the right-click menu of the header's cup, **Diff tool settings…** in a changed file's, and **Edit suffixes…** in **Suffixes ▾**.
 
-Settings is a window of its own. While it's open you can't use the main window, so close it when you're done.
+Settings opens on the page you left it on. It's a window of its own that stays open beside the main window, so you can change a setting and see what it does as you work. Asking for it again while it's open brings it to the front. Esc or `Ctrl/Cmd+W` closes it, and `Ctrl/Cmd+F` goes to the search box.
 
-## The categories
+## The pages
 
-The sidebar lists the categories in this order: General, Sessions, Processes, Claude Code, Accounts, New tabs, Appearance, Usage, Quick suffixes, Check-ins, Diff tool, Editor, Project tools, Notifications, Keyboard, Perforce and Advanced. [Every setting](every-setting.md) has a table for each.
+The sidebar lists the pages in groups:
 
-Changes apply as you make them. There's no **Save** button and nothing to restart, except where a setting says it applies to tabs started after the change.
+- **Claudette**: General, Appearance, Conversation, Notifications and Keyboard.
+- **Claude**: Claude Code, Accounts, Tabs and Usage.
+- **Your work**: Sessions, Files and diffs, Project tools and Perforce.
+- Then Advanced, and after it the [selected tab's project](#the-projects-pages).
+
+The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.
+
+Each page starts with a line saying what's on it, then its sections. In the Claude style each section is a card.
+
+## A setting
+
+Each setting is a row: its name, a line saying what it does, and **More** when there's more to say. Its switch, list or box is beside it, or under it when it needs the width.
+
+- **Changes apply as you make them.** There's no **Save** button, and nothing to restart, except where a setting says it applies to tabs started after the change. A box you type in takes effect when you leave it.
+- **A changed setting** has a short colored bar at its left. Point at it, or move to it with Tab, for its **Reset**, which puts just that setting back.
+- **This computer** by a setting means [settings sync](../history/settings-sync.md) leaves it as it is on each machine. When a whole section or page stays on this machine, it says so once, by the section's heading or the page's title.
+- **1 tab has its own** by a setting means a tab changed it for itself in its [Tab settings…](../tabs/tab-settings.md). Point at it for which tabs.
 
 ## Searching
 
-Type in **Search settings** above the categories. The list shows each setting that matches, with its category under it. Pick one to open that category. If nothing matches, the list says "No settings match."
+{% include shot.html name="guide/settings/search" alt="Settings searched for font: the four font settings and others that mention fonts, each with its page and section under it, and Appearance's Text section on the right" %}
+
+Type in **Search settings** above the pages. The list shows each setting and section that matches, with where it is under it: *Appearance → Text*. It finds a setting by its name, by what it does, and by other words for it, so "dark mode" finds **Theme** and "caffeinate" finds **Keep this computer awake**. Pick one to open its page there: Settings scrolls to it and picks it out for a moment. If nothing matches, the list says "No settings match."
 
 The search also finds the selected tab's project pages (below), named with the project: "NightOwl → Links". It matches what's on them, such as "web links", "add an action", "engine" or "editor configuration", and the project's name.
 
 ## Reset to defaults
 
-Each category ends with **Reset to defaults**, which puts that category's settings back and nothing else. A few things are left alone, because changing them moves where your data lives or because they're yours rather than settings:
+Each section has **Reset to defaults** by its heading, which puts that section's settings back and nothing else. It's only there to click while something in the section has changed. A few things are left alone, because changing them moves where your data lives or because they're yours rather than settings:
 
-- **General** leaves **Start Claudette when I log in**, which your OS keeps.
-- **Sessions** leaves the **Session library folder** and **Sync Claudette's settings through the library**. Use **Use the default folder**, or turn the switch off, when you mean to change them.
-- **New tabs** leaves your favorite folders and recent folders.
+- **Sessions** leaves the library's **Folder** and **Sync Claudette's settings through the library**. Use **Use the default folder**, or turn the switch off, when you mean to change them.
 - **Usage** leaves **Keep usage history**.
+- **Tabs** leaves your favorite and recent folders.
 - **Accounts** only puts **New folders use** back to Default. Your accounts and their keys stay.
-- **Perforce** leaves its per-folder servers and users and any stored password.
-- **Appearance** also puts **Zoom** back to 100% and turns **Detailed usage header** off.
+- **Perforce** leaves its stored password and its per-folder servers and users.
+- **Keyboard**'s **Quick suffixes** puts the five built-in suffixes back, which deletes your own, so it asks first.
 
 No **Reset to defaults** touches a project's files or the choices Claudette remembers for a project, and the project's pages have none.
 
 ## The project's pages
 
-Below the categories, after a divider, is a group named for the project of the tab that was selected when you opened Settings: its name when Claudette found one ("NightOwl"), otherwise the folder's name. Hover it for the folder's path. With no tab open, the group isn't there. Each page begins with a line saying which tab it's for.
+After the pages is a group named for the project of the tab selected in the main window: its name when Claudette found one ("NightOwl"), otherwise the folder's name. Hover it for the folder's path. Select another tab while Settings is open and the group follows it. With no tab open, the group isn't there. Each page begins with a line saying which tab it's for.
 
 - **Links** lists the project's web links, from `claudette.json` and `claudette.local.json`, with **Add…**, **Edit…**, **Remove**, **Move up** and **Move down**.
 - **Actions** is the same for the project's own actions, with **Open file**.
@@ -58,14 +76,15 @@ Below the categories, after a divider, is a group named for the project of the t
 
 Each change is saved as you make it, to the file it belongs to, and the project's menu follows at once. Saving rewrites the file, so comments in it are dropped. A file that isn't valid JSON is never rewritten: the page shows why, and you fix the file by hand. [Actions and links](../project-tools/actions-and-links.md) explains what they do. The project's menu has **Add a link…** and **Add an action…**, which open Settings on these pages with a new entry started.
 
-## The version
+## The version and Help
 
 The foot of the sidebar shows which Claudette this is, such as "Claudette 0.5.1". A copy built from a source checkout adds the commit it was built from.
 
 - **Click the version** to copy the versions for a bug report: Claudette's, and how it was installed, Claude Code's, your OS and the .NET runtime it runs on. It says "Copied" for two seconds. It holds only versions, never paths, names or account details, so it's safe to post.
-- **User Guide** opens this guide in your browser.
-- **Ask on Discord** opens dotBunny's Discord in your browser, where you can ask questions about Claudette.
-- **Report an issue** opens a new issue on Claudette's GitHub page in your browser, with an outline to fill in and the same versions already there. Nothing is sent until you submit it. [Reporting an issue](../troubleshooting/reporting-an-issue.md) has more.
+- **Help**, the question mark beside it, has:
+  - **User Guide**, which opens this guide in your browser.
+  - **Ask on Discord**, which opens dotBunny's Discord in your browser, where you can ask questions about Claudette.
+  - **Report an issue**, which opens a new issue on Claudette's GitHub page in your browser, with an outline to fill in and the same versions already there. Nothing is sent until you submit it. [Reporting an issue](../troubleshooting/reporting-an-issue.md) has more.
 
 ## Where the settings are kept
 
@@ -78,10 +97,12 @@ To keep the same settings on every machine that shares your session library, tur
 | Action | Shortcut |
 |---|---|
 | Open Settings | `Ctrl/Cmd+,` |
+| Search settings, while Settings is open | `Ctrl/Cmd+F` |
+| Close Settings | Esc, or `Ctrl/Cmd+W` |
 
-You can change this one in Settings → [Keyboard](keyboard.md).
+You can change the first in Settings → [Keyboard](keyboard.md).
 
 ## See also
 
-- [Every setting](every-setting.md), a table for each category.
+- [Every setting](every-setting.md), a table for each page.
 - [Tab settings](../tabs/tab-settings.md), the few settings one tab can change for itself.

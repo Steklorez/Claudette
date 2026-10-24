@@ -51,10 +51,11 @@ public class LoginShellSettingsTests
     [Fact]
     public async Task Reset_to_defaults_turns_it_back_on()
     {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "Windows has no login shell to read, so Settings doesn't show it.");
         await using var h = new TabTestHarness(s => s.ClaudeCode.UseLoginShellEnvironment = false);
         var settings = new SettingsViewModel(h.Services, null);
 
-        settings.ClaudeCode.ResetCommand.Execute(null);
+        settings.ClaudeCode.ResetAllSections();
 
         Assert.True(h.Services.Settings.ClaudeCode.UseLoginShellEnvironment);
         Assert.True(settings.ClaudeCode.UseLoginShellEnvironment);
@@ -74,7 +75,7 @@ public class LoginShellSettingsTests
         }
         else
         {
-            Assert.Equal([new SettingsSearchResult("Claude Code", "Use my login shell's environment")], found);
+            Assert.Equal("claudeCode.useLoginShellEnvironment", found[0].Key);
         }
     }
 

@@ -21,7 +21,7 @@ By default a check-in starts after 15 minutes of running or 5 minutes without ou
 
 ## What to try
 
-1. **Look before you stop it.** Claude sees a check-in only between steps. If a single command is running, such as a long test run, the check-in is delivered when that command finishes. Open the **Processes** page of the side panel (turned on in Settings → Processes) to see whether the command is still busy, and read the conversation's last tool call.
+1. **Look before you stop it.** Claude sees a check-in only between steps. If a single command is running, such as a long test run, the check-in is delivered when that command finishes. Open the **Processes** page of the side panel (turned on in Settings → Tabs → **Show the process monitor**) to see whether the command is still busy, and read the conversation's last tool call.
 2. **Choose Stop**, or press `Esc`. It interrupts the turn but doesn't close the session. Then tell Claude what to do next, or what it was stuck on.
 3. **Restart the tab** if its Claude Code has exited: **Restart** in the status line resumes the same session. See [A tab that won't start](a-tab-that-wont-start.md).
 
@@ -34,7 +34,7 @@ By default a check-in starts after 15 minutes of running or 5 minutes without ou
 
 ## Settings
 
-Settings → Check-ins:
+Settings → Tabs → Check-ins on long turns:
 
 - **Check in on long turns**, on by default.
 - **After the turn has run (minutes)** and **After no output for (minutes)**. Set a time to 0 to turn that trigger off.

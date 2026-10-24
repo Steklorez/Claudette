@@ -28,7 +28,7 @@ The header has the group's name, then:
 
 ## Opening a file
 
-- A click opens the file in the preview tab, a double-click or `Enter` opens it to stay ([File tabs](file-tabs.md)). An image's double-click, `Enter` or **Open** shows it in Claudette's image window instead, as Settings → Editor → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
+- A click opens the file in the preview tab, a double-click or `Enter` opens it to stay ([File tabs](file-tabs.md)). An image's double-click, `Enter` or **Open** shows it in Claudette's image window instead, as Settings → Files and diffs → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
 - The arrow keys move without opening anything. `Right` and `Left` expand and collapse a folder.
 
 ## Claude's changes in the tree
@@ -71,7 +71,7 @@ Right-click the empty space under the tree for **New file** and **New folder**, 
 
 ## Its side and its width
 
-- The explorer is on the left by default. Settings → **Editor** → **The explorer is on the** has **Left** and **Right**, and **Move to the right** (or **Move to the left**) in the explorer's **⋯** menu changes the same setting.
+- The explorer is on the left by default. Settings → **Files and diffs** → **The explorer is on the** has **Left** and **Right**, and **Move to the right** (or **Move to the left**) in the explorer's **⋯** menu changes the same setting.
 - Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default. A double-click on the edge goes back to that. The width is the same for every Files tab, and Claudette remembers it.
 - In a narrow pane, the explorer narrows first, to leave the editor 360 pixels, down to its own least. Only then does the editor narrow.
 
@@ -87,7 +87,7 @@ Opening the Files tab from its group, with the **Project files** button or **Ope
 
 | Setting | Default | Where |
 |---|---|---|
-| **The explorer is on the** | Left | Settings → **Editor** |
+| **The explorer is on the** | Left | Settings → **Files and diffs** |
 
 ## Shortcuts
 

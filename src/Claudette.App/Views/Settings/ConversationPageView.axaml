@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Claudette.App.ViewModels.Settings"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.ConversationPageView" ClipToBounds="False"
+             x:DataType="settings:ConversationPage">
+  <!-- Conversation (DESIGN.md §14; §5, §18 "Conversation cards"; §4 "Sidebar") -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="steps">
+      <c:SettingRow Key="appearance.quietSteps">
+        <ToggleSwitch IsChecked="{Binding QuietSteps}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.expandThinking">
+        <ToggleSwitch IsChecked="{Binding ExpandThinking}" />
+      </c:SettingRow>
+      <!-- Where a subagent's work shows (DESIGN.md §5, "Subagents") -->
+      <c:SettingRow Key="appearance.showSubagents">
+        <ComboBox ItemsSource="{Binding SubagentDisplayChoices}" SelectedItem="{Binding ShowSubagents}" />
+      </c:SettingRow>
+      <c:SettingRow Key="claudeCode.showAllHookRuns">
+        <ToggleSwitch IsChecked="{Binding ShowAllHookRuns}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- The working line (DESIGN.md §5, "Working line") and queued messages (DESIGN.md §5, "Queued messages") -->
+    <c:SettingsSection Key="working">
+      <c:SettingRow Key="appearance.funWorkingWords">
+        <ToggleSwitch IsChecked="{Binding FunWorkingWords}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.showToolInWorkingLine">
+        <ToggleSwitch IsChecked="{Binding ShowToolInWorkingLine}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.messagesWhileWorking">
+        <c:SettingRow.Details>
+          <StackPanel Classes="options">
+            <RadioButton GroupName="WhileWorking" Content="Send them into the turn: Claude reads each at its next step" IsChecked="{Binding SteerWhileWorking}" />
+            <RadioButton GroupName="WhileWorking" Content="Queue them: each is sent as the next turn, once this one ends" IsChecked="{Binding QueueWhileWorking}" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="messageBox">
+      <c:SettingRow Key="appearance.showPromptCacheExpiry">
+        <ToggleSwitch IsChecked="{Binding ShowPromptCacheExpiry}" />
+      </c:SettingRow>
+      <c:SettingRow Key="claudeCode.promptSuggestions">
+        <ToggleSwitch IsChecked="{Binding PromptSuggestions}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="tabRows">
+      <c:SettingRow Key="appearance.showContextOnTabs">
+        <ToggleSwitch IsChecked="{Binding ShowContextOnTabs}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.showBranchOnTabs">
+        <ToggleSwitch IsChecked="{Binding ShowBranchOnTabs}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.showTaskProgressOnTabs">
+        <ToggleSwitch IsChecked="{Binding ShowTaskProgressOnTabs}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

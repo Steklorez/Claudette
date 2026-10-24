@@ -1,6 +1,11 @@
 ﻿"Accounts"
-"Tabs run under the Default account, Claude Code's own sign-in (Settings → Claude Code), unless their folder group's Account menu, or the tab's own, picks another. Each machine sets up its own accounts."
+"This computer"
+"Accounts tabs can run under besides Claude Code's own sign-in."
+"Accounts"
+[button] Reset to defaults
+"Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another."
 "New folders use"
+"Which account a folder opened for the first time runs under."
 [choice] "Default"
 [field] "Work"
 [choice] "Blue"
@@ -22,4 +27,7 @@
 "API key"
 [field] "sk-ant-…"
 [button] Add account
-[button] Reset to defaults
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

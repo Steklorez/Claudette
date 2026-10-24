@@ -47,7 +47,7 @@ If two check-ins in a row get no reply, Claudette stops sending them for that tu
 
 ## Settings
 
-Settings → Check-ins:
+Settings → Tabs → Check-ins on long turns:
 
 | Setting | Default |
 |---|---|
@@ -59,7 +59,7 @@ Settings → Check-ins:
 
 Set either time to 0 to turn that trigger off. **Notify me when a check-in is sent** also sends a system notification ([Notifications](../away/notifications.md)).
 
-A tab can have its own: **Tab settings…** → **Use different check-in settings for this tab**, with **On**, **Run time (min)**, **Quiet time (min)**, **Message** and the notification switch. See [Tab settings](../tabs/tab-settings.md).
+A tab can have its own: **Tab settings…** → **Use different check-ins for this tab**, with the same settings. See [Tab settings](../tabs/tab-settings.md).
 
 ## See also
 

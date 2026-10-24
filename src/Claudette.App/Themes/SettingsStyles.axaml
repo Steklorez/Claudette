@@ -1,0 +1,323 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Claudette.App.Controls">
+  <!-- The Settings window's and Tab settings…' look (DESIGN.md §14): sections of rows, each a setting's title, one line of
+       what it does and its control at the right. Standard takes VS Code's settings editor as its reference: flat rows
+       under headings, a changed setting marked by a bar at its left. The Claude style ("claude", which both windows take)
+       puts a section's rows in a rounded box, as the Claude apps' settings do. -->
+  <Styles.Resources>
+    <!-- Fluent's switch keeps room for "On" and "Off" beside it; a row's switch has its title instead. -->
+    <x:Double x:Key="ToggleSwitchThemeMinWidth">0</x:Double>
+  </Styles.Resources>
+
+  <!-- ==== A section =================================================================================================== -->
+  <Style Selector="controls|SettingsSection">
+    <Setter Property="ClipToBounds" Value="False" />
+    <Setter Property="ItemsPanel">
+      <ItemsPanelTemplate>
+        <controls:DividedPanel />
+      </ItemsPanelTemplate>
+    </Setter>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <StackPanel Spacing="2">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,2">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Name="PART_Header" Classes="settingsheader" Text="{TemplateBinding Header}" TextWrapping="Wrap" VerticalAlignment="Center" />
+              <Border Classes="settingchip" IsVisible="{TemplateBinding IsMachineOnly}" VerticalAlignment="Center"
+                      ToolTip.Tip="Kept on this computer: settings sync leaves these as they are">
+                <TextBlock Text="This computer" />
+              </Border>
+            </StackPanel>
+            <Button Grid.Column="1" Name="PART_Reset" Classes="flat sectionreset" Content="{TemplateBinding ResetText}" VerticalAlignment="Center"
+                    Command="{Binding Group.ResetCommand, RelativeSource={RelativeSource TemplatedParent}, FallbackValue={x:Null}}"
+                    IsVisible="{Binding Group.CanReset, RelativeSource={RelativeSource TemplatedParent}, FallbackValue=False}"
+                    ToolTip.Tip="Puts this section's settings back as they were when Claudette was new" />
+          </Grid>
+          <TextBlock Name="PART_Description" Classes="muted small" Text="{TemplateBinding Description}" TextWrapping="Wrap"
+                     IsVisible="{TemplateBinding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <!-- A reset that loses your own entries asks first, in place -->
+          <Border Classes="settingsnote" Margin="0,6,0,0" IsVisible="{Binding Group.Confirmation.IsOpen, RelativeSource={RelativeSource TemplatedParent}, FallbackValue=False}">
+            <StackPanel Spacing="8">
+              <TextBlock TextWrapping="Wrap" Text="{Binding Group.ConfirmText, RelativeSource={RelativeSource TemplatedParent}, FallbackValue=''}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Classes="accent" Content="{TemplateBinding ResetText}"
+                        Command="{Binding Group.Confirmation.ConfirmCommand, RelativeSource={RelativeSource TemplatedParent}, FallbackValue={x:Null}}" />
+                <Button Content="Cancel" Command="{Binding Group.Confirmation.CancelCommand, RelativeSource={RelativeSource TemplatedParent}, FallbackValue={x:Null}}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <Border Name="PART_Box" Margin="0,6,0,0">
+            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+          </Border>
+        </StackPanel>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="TextBlock.settingsheader">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.sectionreset">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+  <!-- Nothing to put back: the reset stays, greyed, so where it is doesn't move. -->
+  <Style Selector="Button.sectionreset:disabled">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+  <!-- Picked out for a moment when search or a link brings it into view. -->
+  <Style Selector="controls|SettingsSection:highlighted /template/ TextBlock#PART_Header">
+    <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- The Claude style: the section's rows in a rounded box, the lines between them inset. -->
+  <Style Selector=".claude controls|SettingsSection /template/ Border#PART_Box">
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="16,0" />
+  </Style>
+
+  <!-- ==== A row ======================================================================================================= -->
+  <!-- A row reaches 8 pixels out to each side of its words, so its highlight and its changed bar have room without
+       moving them. -->
+  <Style Selector="controls|SettingRow">
+    <!-- Avalonia clips a templated control to its bounds: a row and its section draw past theirs, into the room the row
+         reaches out by. -->
+    <Setter Property="ClipToBounds" Value="False" />
+    <Setter Property="Margin" Value="-8,0" />
+    <Setter Property="Padding" Value="8,12" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Panel>
+        <!-- The line between it and the row above, in a section (DividedPanel says which rows have one) -->
+        <Border Name="PART_Divider" Classes="rowdivider" />
+        <Border Name="PART_Row" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="6" ClipToBounds="False">
+          <Panel ClipToBounds="False">
+            <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ClipToBounds="False">
+              <!-- Its words: the title (with its marks) and one line, centred against a taller control -->
+              <Panel VerticalAlignment="Center" ClipToBounds="False">
+                <!-- Changed from its default, as VS Code marks a modified setting: just left of its title and line -->
+                <Border Name="PART_ChangedBar" Classes="changedbar" IsVisible="{TemplateBinding IsChanged}" />
+                <StackPanel Spacing="2">
+                  <WrapPanel Name="PART_TitleLine" Orientation="Horizontal" ItemSpacing="8" LineSpacing="2"
+                             IsVisible="{TemplateBinding Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Name="PART_Title" Classes="settingtitle" Text="{TemplateBinding Title}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    <Border Classes="settingchip" IsVisible="{TemplateBinding ShowsMachineMark}" VerticalAlignment="Center"
+                            ToolTip.Tip="Kept on this computer: settings sync leaves it as it is">
+                      <TextBlock Text="This computer" />
+                    </Border>
+                    <TextBlock Classes="muted small" Text="{TemplateBinding TabsNote}" ToolTip.Tip="{TemplateBinding TabsTip}" VerticalAlignment="Center"
+                               Background="Transparent" IsVisible="{TemplateBinding TabsNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <!-- With no line under the title, More follows the title -->
+                    <ToggleButton Name="PART_MoreAfterTitle" Classes="morelink" IsChecked="{TemplateBinding IsMoreOpen, Mode=TwoWay}" VerticalAlignment="Center"
+                                  IsVisible="{TemplateBinding ShowsMoreAfterTitle}" />
+                  </WrapPanel>
+                  <!-- The line, with More at its end (SettingRow writes it, More and all) -->
+                  <TextBlock Name="PART_Description" Classes="muted small" TextWrapping="Wrap"
+                             IsVisible="{TemplateBinding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </StackPanel>
+              </Panel>
+              <SelectableTextBlock Grid.Row="1" Name="PART_MoreText" Classes="muted small" Text="{TemplateBinding More}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   IsVisible="{TemplateBinding IsMoreOpen}" />
+              <!-- Reset, while it's changed and pointed at or focused -->
+              <Button Grid.Column="1" Name="PART_Reset" Classes="flat settingreset" Command="{TemplateBinding ResetCommand}"
+                      ToolTip.Tip="Reset to default" AutomationProperties.Name="{TemplateBinding ResetName}" VerticalAlignment="Center">
+                <Path Data="{DynamicResource IconRestart}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" StrokeLineCap="Round" StrokeJoin="Round"
+                      Width="12" Height="12" Stretch="None" />
+              </Button>
+              <ContentPresenter Grid.Column="2" Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="16,0,0,0"
+                                IsVisible="{TemplateBinding Content, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <ContentPresenter Grid.Row="3" Grid.ColumnSpan="3" Name="PART_Details" Content="{TemplateBinding Details}" Margin="0,8,0,0"
+                                IsVisible="{TemplateBinding ShowsDetails}" />
+            </Grid>
+          </Panel>
+        </Border>
+        </Panel>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <!-- At the top edge of the row, across its words' width (inside the room it reaches out by), so it sits between rows. -->
+  <Style Selector="Border.rowdivider">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="Margin" Value="8,0" />
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+  <Style Selector="controls|SettingRow:divided /template/ Border.rowdivider">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="TextBlock.settingtitle">
+    <Setter Property="FontSize" Value="14" />
+  </Style>
+  <!-- The control under the words, at full width: a path, a message, a list. -->
+  <Style Selector="controls|SettingRow:stacked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Grid.Row" Value="2" />
+    <Setter Property="Grid.Column" Value="0" />
+    <Setter Property="Grid.ColumnSpan" Value="3" />
+    <Setter Property="Grid.RowSpan" Value="1" />
+    <Setter Property="Margin" Value="0,8,0,0" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+  </Style>
+  <!-- A setting that depends on the one above it, in its Details: indented, closer together. -->
+  <Style Selector="controls|SettingRow:nested">
+    <Setter Property="Padding" Value="32,6,8,6" />
+  </Style>
+  <!-- Just left of the row's words, in the room it reaches out by. -->
+  <Style Selector="Border.changedbar">
+    <Setter Property="Width" Value="2" />
+    <Setter Property="CornerRadius" Value="1" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="Margin" Value="-6,1,0,1" />
+    <Setter Property="Background" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="controls|SettingRow Button.settingreset">
+    <Setter Property="Padding" Value="6" />
+    <Setter Property="Margin" Value="8,0,0,0" />
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="controls|SettingRow:changed:pointerover /template/ Button.settingreset, controls|SettingRow:changed:focus-within /template/ Button.settingreset">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <!-- A nested row's own reset, not its parent's, shows while it's pointed at. -->
+  <Style Selector="controls|SettingRow:changed:pointerover controls|SettingRow:not(:pointerover) /template/ Button.settingreset">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <!-- Picked out for a moment when search or a link brings it into view. -->
+  <Style Selector="controls|SettingRow:highlighted /template/ Border#PART_Row">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+  </Style>
+  <Style Selector=":is(Window):not(.reducemotion) controls|SettingRow /template/ Border#PART_Row">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.6" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Controls at a row's right: a dropdown or a box wide enough for its longest choice, a number narrower. -->
+  <Style Selector="controls|SettingRow:not(:stacked) > ComboBox">
+    <Setter Property="MinWidth" Value="220" />
+    <Setter Property="MaxWidth" Value="300" />
+  </Style>
+  <Style Selector="controls|SettingRow:not(:stacked) > AutoCompleteBox">
+    <Setter Property="Width" Value="220" />
+  </Style>
+  <Style Selector="controls|SettingRow:not(:stacked) > TextBox">
+    <Setter Property="Width" Value="220" />
+  </Style>
+  <Style Selector="controls|SettingRow:not(:stacked) > NumericUpDown">
+    <Setter Property="Width" Value="140" />
+  </Style>
+  <Style Selector="controls|SettingRow ToggleSwitch">
+    <Setter Property="OnContent" Value="{x:Null}" />
+    <Setter Property="OffContent" Value="{x:Null}" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- A choice's options under its row's words. -->
+  <Style Selector="controls|SettingRow StackPanel.options">
+    <Setter Property="Spacing" Value="2" />
+  </Style>
+  <Style Selector="controls|SettingRow StackPanel.options > RadioButton">
+    <Setter Property="MinHeight" Value="28" />
+  </Style>
+
+  <!-- More, after a row's line: a link that shows the rest, and Less once it does. -->
+  <Style Selector="ToggleButton.morelink">
+    <Setter Property="Content" Value="More" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="VerticalAlignment" Value="Bottom" />
+  </Style>
+  <Style Selector="ToggleButton.morelink:checked">
+    <Setter Property="Content" Value="Less" />
+  </Style>
+  <Style Selector="ToggleButton.morelink /template/ ContentPresenter#PART_ContentPresenter,
+                   ToggleButton.morelink:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                   ToggleButton.morelink:pressed /template/ ContentPresenter#PART_ContentPresenter,
+                   ToggleButton.morelink:checked /template/ ContentPresenter#PART_ContentPresenter,
+                   ToggleButton.morelink:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.morelink:pointerover /template/ ContentPresenter#PART_ContentPresenter TextBlock">
+    <Setter Property="TextDecorations" Value="Underline" />
+  </Style>
+  <!-- A link in a row's words, such as Open Settings → Project tools. -->
+  <Style Selector="Button.settingslink">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+  <Style Selector="Button.settingslink /template/ ContentPresenter#PART_ContentPresenter,
+                   Button.settingslink:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                   Button.settingslink:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="Button.settingslink:pointerover /template/ ContentPresenter#PART_ContentPresenter TextBlock">
+    <Setter Property="TextDecorations" Value="Underline" />
+  </Style>
+
+  <!-- "This computer": a setting settings sync leaves as it is. -->
+  <Style Selector="Border.settingchip">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="6,0,6,1" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector=".claude Border.settingchip">
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <Style Selector="Border.settingchip > TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+
+  <!-- What's going on now, a question asked in place, or the details of one thing in a list: a quiet box. -->
+  <Style Selector="Border.settingsnote">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="12,10" />
+  </Style>
+  <Style Selector=".claude Border.settingsnote">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <!-- A command's output or a version report: monospace, scrolling once it's long. -->
+  <Style Selector="SelectableTextBlock.output">
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <!-- A list's own buttons on each entry (move up, move down, remove): one icon each, muted, as every list in Settings has them. -->
+  <Style Selector="Path.rowicon">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="1.3" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Width" Value="10" />
+    <Setter Property="Height" Value="10" />
+    <Setter Property="Stretch" Value="Uniform" />
+  </Style>
+  <!-- A text box for a path or a command. -->
+  <Style Selector="TextBox.mono">
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+  </Style>
+</Styles>

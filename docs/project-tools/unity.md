@@ -41,12 +41,13 @@ Unity locks a project while its editor has it open. Claudette notices, and the m
 
 ## Settings
 
-In Settings → Project tools, on this machine only. **Open solutions with**, which also applies here, is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
+In Settings → Project tools → Unity, on this machine only. **Open solutions with**, under **Solutions**, also applies here, and is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Default code optimization** | Release | The optimization for projects that haven't a choice of their own. A project's own choice wins. |
+| **Recognize Unity projects** | On | Off, Claudette treats a Unity project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
 | **Tell Claude about Unity projects** | On | Adds a note to the session with the Unity version and editor, how to run the EditMode tests in batch mode, that `Library`, `Temp` and `obj` are generated and shouldn't be edited, that a `.meta` file moves with its asset, and not to open the editor unless asked. Applies to tabs started after the change. |
+| **Default code optimization** | Release | The optimization for projects that haven't a choice of their own. A project's own choice wins. |
 
 ## See also
 

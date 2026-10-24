@@ -53,7 +53,7 @@ Click the message box, which says *Message Claude…*, and type. `Enter` sends t
 
 ## Settings
 
-- Settings → New tabs: the default model, effort and permission mode of a new tab, how many recent folders to keep, **Clear recent folders**, and your favorite folders.
+- Settings → Tabs: the **Model**, **Effort** and **Permission mode** a new tab starts with, **Recent folders to keep**, **Clear recent folders**, and your **Favorite folders**.
 - Settings → Claude Code → **Ask before using a new folder's own configuration** turns the trust question off.
 
 ## See also

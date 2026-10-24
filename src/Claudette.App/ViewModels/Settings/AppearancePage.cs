@@ -8,12 +8,6 @@ public sealed record StyleOption(AppStyle Style, string Label)
     public override string ToString() => Label;
 }
 
-/// <summary>Settings → Appearance → Show subagents' work's choices (DESIGN.md §5, "Subagents").</summary>
-public sealed record SubagentDisplayChoice(SubagentDisplay Display)
-{
-    public override string ToString() => Display == SubagentDisplay.InSidebar ? "Under the tab in the sidebar" : "In the conversation";
-}
-
 /// <summary>Settings → Appearance → Motion's choices (DESIGN.md §3, "Accessibility").</summary>
 public sealed record MotionChoice(MotionSetting Setting)
 {
@@ -49,40 +43,100 @@ public sealed record ZoomChoice(int Percent)
 }
 
 /// <summary>
-/// Settings → Appearance (DESIGN.md §14): theme, style and density, the fonts, zoom and motion, and what the
-/// conversation, the working line, the usage header and the tab rows show.
+/// Settings → Appearance (DESIGN.md §14): the preview, theme, style, density and width, the fonts, zoom and motion, and
+/// Claudette on the composer with her games.
 /// </summary>
-public sealed class AppearancePage(SettingsContext context) : SettingsPage(context, SettingsCategory.Appearance)
+public sealed class AppearancePage : SettingsPage
 {
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Theme"),
-        Entry("Style"),
-        Entry("Conversation font"),
-        Entry("Conversation font size"),
-        Entry("Code font"),
-        Entry("Code font size"),
-        Entry("Show thinking expanded"),
-        Entry("Show subagents' work"),
-        Entry("Show fun words while Claude works"),
-        Entry("Show what Claude is doing while it works"),
-        Entry("Show when the prompt cache expires"),
-        Entry("Detailed usage header"),
-        Entry("Show context on tab rows"),
-        Entry("Show git branch on tab rows"),
-        Entry("Show task progress on tab rows"),
-        Entry("Show Claudette on the composer"),
-        Entry("Claudette's size", pageText: "Size"),
-        Entry("How often Claudette does something", pageText: "How often"),
-        Entry("Claudette shares tips"),
-        Entry("Games with Claudette"),
-        Entry("Density"),
-        Entry("Full-width conversation"),
-        Entry("Quieter in-between steps"),
-        Entry("Zoom"),
-        Entry("Motion"),
-        Entry("Reduce motion", pageText: "Motion"),
-    ];
+    public AppearancePage(SettingsContext context) : base(context, SettingsCategory.Appearance)
+    {
+        Section("look", "Look",
+        [
+            Setting("appearance.theme", "Theme", s => s.Appearance.Theme, (s, v) => s.Appearance.Theme = v,
+                "Light, dark, or as your computer is.", keywords: ["dark mode", "light mode", "colors"]),
+            Setting("appearance.style", "Style", s => s.Appearance.Style, (s, v) => s.Appearance.Style = v,
+                "Claudette's own look, or the Claude apps'.",
+                "Claude looks like the Claude apps: ivory and warm greys, Claude's orange, rounder cards and serif replies. Standard uses neutral greys and your computer's accent color.",
+                ["claude style", "standard", "look", "theme"]),
+            Setting("appearance.density", "Density", s => s.Appearance.Density, (s, v) => s.Appearance.Density = v,
+                "Compact tightens the conversation, the sidebar's rows and the message box.", keywords: ["compact", "comfortable", "spacing"]),
+            Setting("appearance.fullWidthConversation", "Full-width conversation", s => s.Appearance.FullWidthConversation, (s, v) => s.Appearance.FullWidthConversation = v,
+                "Fill the tab's width, rather than stopping at a width that's easy to read.", keywords: ["wide", "narrow", "max width"]),
+        ]);
+        Section("text", "Text",
+        [
+            Setting("appearance.conversationFont", "Conversation font", s => s.Appearance.ConversationFont, (s, v) => s.Appearance.ConversationFont = v,
+                "Empty uses Claudette's own; one that isn't installed falls back to it.", keywords: ["typeface", "font family"]),
+            Setting("appearance.conversationFontSize", "Conversation font size", s => s.Appearance.ConversationFontSize, (s, v) => s.Appearance.ConversationFontSize = v,
+                keywords: ["text size", "bigger", "smaller"]),
+            Setting("appearance.codeFont", "Code font", s => s.Appearance.CodeFont, (s, v) => s.Appearance.CodeFont = v,
+                "Empty uses Cascadia Mono, Consolas or Menlo.", keywords: ["monospace", "typeface"]),
+            Setting("appearance.codeFontSize", "Code font size", s => s.Appearance.CodeFontSize, (s, v) => s.Appearance.CodeFontSize = v,
+                keywords: ["monospace", "text size"]),
+        ]);
+        Section("accessibility", "Accessibility",
+        [
+            Setting("appearance.zoom", "Zoom", s => s.Appearance.Zoom, (s, v) => s.Appearance.Zoom = v,
+                "Everything in the main window, bigger or smaller.",
+                "Ctrl and + or −, or Ctrl+0, change it too (Cmd on a Mac). Each computer keeps its own, to suit its screen.",
+                ["scale", "bigger", "magnify"]),
+            Setting("appearance.motion", "Motion", s => s.Appearance.Motion, (s, v) => s.Appearance.Motion = v,
+                "Whether the busy dots pulse, the working line twinkles and the icon moves.",
+                "Following the system, motion is reduced when your computer's settings, or Claude Code's prefersReducedMotion, ask for it. Claudette on the composer stands still then too.",
+                ["reduce motion", "animation", "accessibility"]),
+        ]);
+        Section("claudette", "Claudette",
+        [
+            Setting("appearance.showClaudette", "Show Claudette on the composer", s => s.Appearance.ShowClaudette, (s, v) => s.Appearance.ShowClaudette = v,
+                "She stands on the message box and does little things every so often.",
+                "She walks about, dances, juggles, sits on the edge, and sometimes falls off behind it. While Claude works she works too, with whatever suits what it's doing, and she points out other tabs that need you. Click her to startle her, drag her about, or right-click to hide her. She stands still when motion is reduced.",
+                ["mascot", "character"]),
+            Setting("appearance.claudetteSize", "Size", s => s.Appearance.ClaudetteSize, (s, v) => s.Appearance.ClaudetteSize = v, keywords: ["claudette", "mascot"]),
+            Setting("appearance.claudetteLiveliness", "How often", s => s.Appearance.ClaudetteLiveliness, (s, v) => s.Appearance.ClaudetteLiveliness = v,
+                "How often she does something.", keywords: ["claudette", "mascot", "calm", "lively"]),
+            Setting("appearance.claudetteTips", "Shares tips", s => s.Appearance.ClaudetteTips, (s, v) => s.Appearance.ClaudetteTips = v,
+                "Now and then she holds up a tip, such as a shortcut you might not know.",
+                "At most every ten minutes, and never while you're typing.", ["claudette", "hints"]),
+            Setting("appearance.gamesWithClaudette", "Games with Claudette", s => s.Appearance.GamesWithClaudette, (s, v) => s.Appearance.GamesWithClaudette = v,
+                "Tic-tac-toe, Connect Four or hangman against her while Claude works.",
+                "Or while a usage limit holds a task. Start one by right-clicking her, from the command palette, or from the usage limit bar; it opens on the side panel's Games page. She plays whether or not she's on the composer.",
+                ["play", "tic-tac-toe", "connect four", "hangman"]),
+        ]);
+        context.SettingsSaved += OnPreviewSettingsSaved;
+        context.AllPagesChanged += OnPreviewSettingsSaved;
+    }
+
+    public override string IconKey => "IconSettingsAppearance";
+
+    // ---- The preview (DESIGN.md §14, "Appearance"): a little of a tab, as these settings draw it ------------------------
+
+    /// <summary>The preview's cards and message box are drawn compact.</summary>
+    public bool IsCompact => Settings.Appearance.Density == Density.Compact;
+
+    /// <summary>The preview's in-between steps are quieter, as Settings → Conversation says.</summary>
+    public bool QuietSteps => Settings.Appearance.QuietSteps;
+
+    /// <summary>The preview drawn at the main window's zoom.</summary>
+    public double ZoomScale => Settings.Appearance.Zoom / 100.0;
+
+    /// <summary>Screen pixels in a cell of Claudette's sprite, for her size in the preview.</summary>
+    public double ClaudetteCell => Settings.Appearance.ClaudetteSize switch
+    {
+        Core.Settings.ClaudetteSize.Small => 2,
+        Core.Settings.ClaudetteSize.Large => 4,
+        _ => 3,
+    };
+
+    /// <summary>A setting saved anywhere (Conversation's quieter steps, the zoom keys) shows in the preview.</summary>
+    private void OnPreviewSettingsSaved()
+    {
+        OnPropertyChanged(nameof(IsCompact));
+        OnPropertyChanged(nameof(QuietSteps));
+        OnPropertyChanged(nameof(ZoomScale));
+        OnPropertyChanged(nameof(ClaudetteCell));
+    }
+
+    public override string Description => "How Claudette looks: in every tab, and on this computer's screen.";
 
     public IReadOnlyList<ThemeChoice> Themes { get; } = [ThemeChoice.System, ThemeChoice.Light, ThemeChoice.Dark];
 
@@ -116,13 +170,6 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     {
         get => Settings.Appearance.FullWidthConversation;
         set => Set(value, v => Settings.Appearance.FullWidthConversation = v);
-    }
-
-    /// <summary>Steps on the way are drawn quieter than prompts, answers and changes (DESIGN.md §18, "Conversation cards").</summary>
-    public bool QuietSteps
-    {
-        get => Settings.Appearance.QuietSteps;
-        set => Set(value, v => Settings.Appearance.QuietSteps = v);
     }
 
     // ---- Fonts (DESIGN.md §14, "Appearance") ----------------------------------------------------------------------
@@ -177,83 +224,7 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
         set => Set(value?.Setting ?? MotionSetting.System, v => Settings.Appearance.Motion = v);
     }
 
-    // ---- What shows ------------------------------------------------------------------------------------------------
-
-    public bool ExpandThinking
-    {
-        get => Settings.Appearance.ExpandThinking;
-        set => Set(value, v => Settings.Appearance.ExpandThinking = v);
-    }
-
-    public IReadOnlyList<SubagentDisplayChoice> SubagentDisplayChoices { get; } =
-        [new(SubagentDisplay.InSidebar), new(SubagentDisplay.InConversation)];
-
-    /// <summary>Where a subagent's work shows: its row under the tab, or its card in the conversation (DESIGN.md §5, "Subagents").</summary>
-    public SubagentDisplayChoice ShowSubagents
-    {
-        get => SubagentDisplayChoices.FirstOrDefault(c => c.Display == Settings.Appearance.ShowSubagents) ?? SubagentDisplayChoices[0];
-        set => Set(value?.Display ?? SubagentDisplay.InSidebar, v => Settings.Appearance.ShowSubagents = v);
-    }
-
-    /// <summary>The working line's twinkling glyph and fun verbs (DESIGN.md §5, "Working line").</summary>
-    public bool FunWorkingWords
-    {
-        get => Settings.Appearance.FunWorkingWords;
-        set => Set(value, v => Settings.Appearance.FunWorkingWords = v);
-    }
-
-    /// <summary>The working line says what the running tool is doing (DESIGN.md §5, "Working line").</summary>
-    public bool ShowToolInWorkingLine
-    {
-        get => Settings.Appearance.ShowToolInWorkingLine;
-        set => Set(value, v => Settings.Appearance.ShowToolInWorkingLine = v);
-    }
-
-    /// <summary>The composer's chip with how long the prompt cache has left (DESIGN.md §6, "Prompt cache").</summary>
-    public bool ShowPromptCacheExpiry
-    {
-        get => Settings.Appearance.ShowPromptCacheExpiry;
-        set => Set(value, v => Settings.Appearance.ShowPromptCacheExpiry = v);
-    }
-
-    /// <summary>
-    /// The usage header drawn taller with charts (DESIGN.md §6, "Detailed header"), the same switch as its chevron. It's
-    /// this machine's state rather than a setting, like the sidebar's collapsed state, so it doesn't sync.
-    /// </summary>
-    public bool DetailedUsageHeader
-    {
-        get => Services.State.DetailedUsageHeader;
-        set
-        {
-            if (Services.State.DetailedUsageHeader != value)
-            {
-                Services.State.DetailedUsageHeader = value;
-                Services.SaveState();
-                OnPropertyChanged();
-            }
-        }
-    }
-
-    /// <summary>The context ring on each tab's row (DESIGN.md §4, "Sidebar").</summary>
-    public bool ShowContextOnTabs
-    {
-        get => Settings.Appearance.ShowContextOnTabs;
-        set => Set(value, v => Settings.Appearance.ShowContextOnTabs = v);
-    }
-
-    /// <summary>The git branch, or worktree, on each tab's row (DESIGN.md §4, "Sidebar").</summary>
-    public bool ShowBranchOnTabs
-    {
-        get => Settings.Appearance.ShowBranchOnTabs;
-        set => Set(value, v => Settings.Appearance.ShowBranchOnTabs = v);
-    }
-
-    /// <summary>How far Claude's tasks have got on each tab's row (DESIGN.md §5, "Tasks").</summary>
-    public bool ShowTaskProgressOnTabs
-    {
-        get => Settings.Appearance.ShowTaskProgressOnTabs;
-        set => Set(value, v => Settings.Appearance.ShowTaskProgressOnTabs = v);
-    }
+    // ---- Claudette on the composer (DESIGN.md §5) -----------------------------------------------------------------
 
     /// <summary>Claudette standing on the composer, doing little things now and then (DESIGN.md §5, "Claudette on the composer").</summary>
     public bool ShowClaudette
@@ -294,13 +265,5 @@ public sealed class AppearancePage(SettingsContext context) : SettingsPage(conte
     {
         get => Settings.Appearance.GamesWithClaudette;
         set => Set(value, v => Settings.Appearance.GamesWithClaudette = v);
-    }
-
-    /// <summary>The detailed usage header goes back to its default too, though it's kept with the machine's state.</summary>
-    protected override void ResetSettings()
-    {
-        Settings.Appearance = new AppearanceSettings();
-        Save();
-        DetailedUsageHeader = false;
     }
 }

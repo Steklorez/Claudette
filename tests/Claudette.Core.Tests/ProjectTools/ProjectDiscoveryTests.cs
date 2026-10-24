@@ -22,6 +22,7 @@ public sealed class ProjectDiscoveryTests : IDisposable
             Settings = context.Settings,
             Paths = context.Paths,
             P4ConfigName = p4Config,
+            SkippedFolders = context.SkippedFolders,
         };
         return _unreal.Find(_temp.Combine(relativeFolder.Split('/')), context).Select(c => Path.GetRelativePath(_temp.Path, c.Path).Replace('\\', '/')).ToArray();
     }

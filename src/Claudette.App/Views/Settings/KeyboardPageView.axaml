@@ -1,47 +1,106 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:settings="using:Claudette.App.ViewModels.Settings"
-             x:Class="Claudette.App.Views.Settings.KeyboardPageView"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.KeyboardPageView" ClipToBounds="False"
              x:DataType="settings:KeyboardPage">
-  <!-- Keyboard (DESIGN.md §14) -->
-  <StackPanel Spacing="12">
-    <TextBlock Classes="section" Text="Keyboard" />
-    <!-- Which key sends the message (DESIGN.md §14, "Keyboard shortcuts") -->
-    <TextBlock Text="Send with" FontWeight="SemiBold" />
-    <RadioButton GroupName="SendKey" Content="Enter, with Shift+Enter for a new line" IsChecked="{Binding SendWithEnter}" />
-    <RadioButton GroupName="SendKey" Content="{Binding PrimaryEnterLabel}" IsChecked="{Binding SendWithPrimaryEnter}" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="28,-8,0,0"
-               Text="With nothing typed, it still answers a waiting prompt, as Allow the waiting prompt does." IsVisible="{Binding SendWithPrimaryEnter}" />
-    <TextBlock Text="Shortcuts" FontWeight="SemiBold" Margin="0,8,0,0" />
-    <TextBlock Classes="muted small" TextWrapping="Wrap"
-               Text="Click a shortcut, then press the keys you want. Esc cancels. Quick suffix shortcuts are set in Quick suffixes." />
-    <ItemsControl ItemsSource="{Binding ShortcutRows}">
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel Spacing="6" />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate DataType="settings:ShortcutRow">
-          <StackPanel Spacing="2">
-            <Grid ColumnDefinitions="220,190,Auto,Auto" ColumnSpacing="8">
-              <TextBlock Classes="label" Text="{Binding Label}" VerticalAlignment="Center" />
-              <Button Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Content="{Binding ShortcutText}"
-                      FontFamily="{DynamicResource MonoFont}" Classes.accent="{Binding IsRecording}"
-                      Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).StartRecordingCommand}" CommandParameter="{Binding}"
-                      ToolTip.Tip="Click, then press the new shortcut" />
-              <Button Grid.Column="2" Classes="flat" Content="Reset" IsVisible="{Binding IsCustomized}"
-                      Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).ResetShortcutCommand}" CommandParameter="{Binding}" />
-              <Button Grid.Column="3" Classes="flat" Content="Remove" IsVisible="{Binding Shortcut, Converter={x:Static ObjectConverters.IsNotNull}}"
-                      Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).ClearShortcutCommand}" CommandParameter="{Binding}" />
-            </Grid>
-            <TextBlock Classes="small error" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap" Margin="228,0,0,0" />
+  <!-- Keyboard (DESIGN.md §14, "Keyboard shortcuts"; §5, "Quick suffixes") -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="sending">
+      <c:SettingRow Key="keyboard.sendKey">
+        <c:SettingRow.Details>
+          <StackPanel Classes="options">
+            <RadioButton GroupName="SendKey" Content="Enter, with Shift+Enter for a new line" IsChecked="{Binding SendWithEnter}" />
+            <RadioButton GroupName="SendKey" Content="{Binding PrimaryEnterLabel}" IsChecked="{Binding SendWithPrimaryEnter}" />
           </StackPanel>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
-    <TextBlock Classes="muted small" TextWrapping="Wrap"
-               Text="{Binding FixedKeysText}" />
-    <Button Content="Reset to defaults" Command="{Binding ResetCommand}" />
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="shortcuts">
+      <ItemsControl ItemsSource="{Binding ShortcutRows}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="settings:ShortcutRow">
+            <c:SettingRow Key="{Binding Key}" Padding="8,6">
+              <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button Width="190" HorizontalContentAlignment="Left" Content="{Binding ShortcutText}" FontFamily="{DynamicResource MonoFont}"
+                        Classes.accent="{Binding IsRecording}" ToolTip.Tip="Click, then press the new shortcut"
+                        AutomationProperties.Name="{Binding Label, StringFormat='Change the shortcut for {0}'}"
+                        Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).StartRecordingCommand}" CommandParameter="{Binding}" />
+                <Button Classes="flat" Padding="8" ToolTip.Tip="Remove the shortcut" IsVisible="{Binding Shortcut, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        AutomationProperties.Name="{Binding Label, StringFormat='Remove the shortcut for {0}'}"
+                        Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).ClearShortcutCommand}" CommandParameter="{Binding}">
+                  <Path Classes="rowicon" Data="{DynamicResource IconClose}" />
+                </Button>
+              </StackPanel>
+              <c:SettingRow.Details>
+                <TextBlock Classes="small error" Text="{Binding Error}" IsVisible="{Binding HasError}" TextWrapping="Wrap" />
+              </c:SettingRow.Details>
+            </c:SettingRow>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <c:SettingRow Key="keyboard.fixedKeys" More="{Binding FixedKeysText}" />
+    </c:SettingsSection>
+
+    <!-- Quick suffixes (DESIGN.md §5): each with its own shortcut, checked against the commands' -->
+    <c:SettingsSection Key="quickSuffixes"
+                       Description="{Binding SuffixesShortcutText, StringFormat='Snippets added to the end of a message from the Suffixes menu ({0}), or with their own shortcut. The label shows on the chip; the text is sent.'}">
+      <c:SettingRow Key="quickSuffixes" Title="" IsStacked="True">
+        <StackPanel Spacing="8">
+          <ItemsControl ItemsSource="{Binding Suffixes}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="8" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="settings:QuickSuffixEditor">
+                <Border Classes="settingsnote">
+                  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+                    <TextBox Text="{Binding Label, UpdateSourceTrigger=LostFocus}" PlaceholderText="Label" AutomationProperties.Name="Suffix label" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                      <Button Classes="flat" Padding="8" ToolTip.Tip="Move up" AutomationProperties.Name="{Binding Label, StringFormat='Move {0} up'}"
+                              Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).MoveSuffixUpCommand}" CommandParameter="{Binding}">
+                        <Path Classes="rowicon" Data="{DynamicResource IconChevronUp}" />
+                      </Button>
+                      <Button Classes="flat" Padding="8" ToolTip.Tip="Move down" AutomationProperties.Name="{Binding Label, StringFormat='Move {0} down'}"
+                              Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).MoveSuffixDownCommand}" CommandParameter="{Binding}">
+                        <Path Classes="rowicon" Data="{DynamicResource IconChevronDown}" />
+                      </Button>
+                      <Button Classes="flat" Padding="8" ToolTip.Tip="Delete the suffix" AutomationProperties.Name="{Binding Label, StringFormat='Delete {0}'}"
+                              Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).RemoveSuffixCommand}" CommandParameter="{Binding}">
+                        <Path Classes="rowicon" Data="{DynamicResource IconClose}" />
+                      </Button>
+                    </StackPanel>
+                    <TextBox Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Text, UpdateSourceTrigger=LostFocus}" PlaceholderText="Text added to the message"
+                             AcceptsReturn="True" TextWrapping="Wrap" AutomationProperties.Name="Suffix text" />
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
+                      <TextBlock Classes="small" Text="Shortcut" VerticalAlignment="Center" />
+                      <Button Content="{Binding ShortcutText}" FontFamily="{DynamicResource MonoFont}" MinWidth="150" HorizontalContentAlignment="Left"
+                              Classes.accent="{Binding IsRecording}" ToolTip.Tip="Click, then press the keys that add this suffix"
+                              AutomationProperties.Name="{Binding Label, StringFormat='Change the shortcut for {0}'}"
+                              Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).StartRecordingCommand}" CommandParameter="{Binding}" />
+                      <Button Classes="flat" Padding="8" ToolTip.Tip="Remove the shortcut" IsVisible="{Binding HasShortcut}"
+                              AutomationProperties.Name="{Binding Label, StringFormat='Remove the shortcut for {0}'}"
+                              Command="{Binding $parent[UserControl].((settings:KeyboardPage)DataContext).ClearShortcutCommand}" CommandParameter="{Binding}">
+                        <Path Classes="rowicon" Data="{DynamicResource IconClose}" />
+                      </Button>
+                      <TextBlock Classes="small error" Text="{Binding Error}" IsVisible="{Binding HasError}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Content="Add suffix" Command="{Binding AddSuffixCommand}" HorizontalAlignment="Left" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
   </StackPanel>
 </UserControl>

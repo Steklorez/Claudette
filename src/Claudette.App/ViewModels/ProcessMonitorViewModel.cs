@@ -154,7 +154,7 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
         _host = host;
     }
 
-    /// <summary>The monitor is on for this tab: its own setting in Tab settings…, or Settings → Processes.</summary>
+    /// <summary>The monitor is on for this tab: its own setting in Tab settings…, or Settings → Tabs.</summary>
     public bool IsOn => (_host.State.Overrides.ShowProcessMonitor ?? _services.Settings.Processes.ShowMonitor) && _tree is not null;
 
     /// <summary>For example <c>3 procs · 42% CPU · 1.1 GB</c>, in the composer bar.</summary>

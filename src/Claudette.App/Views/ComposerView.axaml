@@ -185,7 +185,7 @@
          composer doesn't clip what it draws. -->
     <Panel x:Name="ComposerStage">
       <views:MascotLayer x:Name="MascotLayer" Director="{Binding Mascot.Director}" Box="{Binding #ComposerBox}"
-                         HideCommand="{Binding Mascot.HideCommand}" PlayCommand="{Binding PlayGameCommand}" CanPlay="{Binding Games.IsEnabled}"
+                         HideCommand="{Binding Mascot.HideCommand}" SettingsCommand="{Binding OpenSettingCommand}" PlayCommand="{Binding PlayGameCommand}" CanPlay="{Binding Games.IsEnabled}"
                          ThemeBrush="{DynamicResource MutedTextBrush}"
                          HairTie="{Binding GroupColor}" PixelsPerCell="{Binding Mascot.PixelsPerCell}" />
       <Border x:Name="ComposerBox" Classes="composer" Classes.bypass="{Binding IsBypassMode}" DragDrop.AllowDrop="True">

@@ -1,7 +1,9 @@
-﻿"Claude app (Remote Control)"
-[ ] Connect new tabs to the Claude app
-"Continue a tab from the Claude app on your phone, or at claude.ai/code, while Claudette keeps running here. Each tab has Connect to the Claude app in its menu; this only sets it for tabs opened from now on. While a tab is connected, its transcript is stored on Anthropic's servers. Needs a claude.ai subscription sign-in."
-"For a push notification on your phone when a tab needs an answer, turn on Push when actions required in Claude Code's /config; Push when Claude decides adds the ones Claude chooses to send. None arrive while Claudette is in front."
-[button] How to set up push notifications
-[x] Keep this computer awake while tabs are connected
-"So the Claude app can still reach them. The screen can still turn off."
+﻿"Claude app"
+[button] Reset to defaults
+"Remote Control: a tab here, continued from the Claude app."
+"Connect new tabs to the Claude app"
+"Continue a tab from your phone or claude.ai/code while it runs here.  "
+[toggle] Connect new tabs to the Claude app
+"Push notifications on your phone"
+"Turn them on in Claude Code's /config: none arrive while Claudette is in front.  "
+[button] Push notifications on your phone: How to set them up

@@ -332,7 +332,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     [RelayCommand]
     private void Close() => _host.DismissLog(this);
 
-    /// <summary><b>Open file</b>: the log in Claudette's editor or the OS's app, as Settings → Editor says.</summary>
+    /// <summary><b>Open file</b>: the log in Claudette's editor or the OS's app, as Settings → Files and diffs says.</summary>
     [RelayCommand]
     private async Task OpenFileAsync()
     {

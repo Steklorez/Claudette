@@ -173,24 +173,25 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
     {
         Editors = [.. Accounts.All.Select(a => new AccountEditor(Accounts, a))];
         NewFolderChoices = AccountChoice.All(Accounts, Accounts.NewFolderAccount);
+        Section("accounts", "Accounts",
+        [
+            // The accounts themselves are the user's, like Perforce's per-folder overrides: only this goes back to Default.
+            Setting("state.newFolderAccount", "New folders use", () => Accounts.NewFolderAccount is null, () => Accounts.NewFolderAccount = null,
+                "Which account a folder opened for the first time runs under.", keywords: ["default account", "api key"]),
+            Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend"]),
+        ], description: "Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");
+        Section("addKey", "Add an API key",
+        [
+            Info("state.addAccount", "Add an API key", keywords: ["new account", "api key account", "console"]),
+        ]);
         Accounts.Changed += OnAccountsChanged;
     }
 
     public void Dispose() => Accounts.Changed -= OnAccountsChanged;
 
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        Entry("Add an API key account", pageText: "Add an API key"),
-        Entry("New folders use"),
-        // Each account's own settings, while there are accounts to show them.
-        .. HasAccounts
-            ? [
-                Entry("Warn when today's estimated spend passes"),
-                Entry("Warn when this month's estimated spend passes"),
-                Entry("Change an API key", pageText: "Change key"),
-            ]
-            : Array.Empty<SettingsSearchResult>(),
-    ];
+    public override string IconKey => "IconCardYou";
+
+    public override string Description => "Accounts tabs can run under besides Claude Code's own sign-in.";
 
     private AccountsService Accounts => Services.Accounts;
 
@@ -261,9 +262,6 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         }
     }
 
-    /// <summary>The accounts are the user's, like Perforce's per-folder overrides: only <b>New folders use</b> goes back to Default.</summary>
-    protected override void ResetSettings() => Accounts.NewFolderAccount = null;
-
     private void OnAccountsChanged()
     {
         var all = Accounts.All;
@@ -282,5 +280,6 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         NewFolderChoices = AccountChoice.All(Accounts, Accounts.NewFolderAccount);
         OnPropertyChanged(nameof(NewFolderAccount));
         OnPropertyChanged(nameof(HasAccounts));
+        RefreshItems();
     }
 }

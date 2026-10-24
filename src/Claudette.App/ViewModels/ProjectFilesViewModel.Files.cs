@@ -451,7 +451,7 @@ public sealed partial class ProjectFilesViewModel
 
     /// <summary>
     /// <b>Open in Claudette's image viewer</b>, on an image's note that it isn't text (DESIGN.md §18, "Opening images"),
-    /// whatever Settings → Editor says. One the window can't show after all goes to the OS's app.
+    /// whatever Settings → Files and diffs says. One the window can't show after all goes to the OS's app.
     /// </summary>
     [RelayCommand]
     private async Task OpenFileInViewerAsync(ProjectFileViewModel? file)

@@ -75,7 +75,7 @@ An image under a tool's tile or shown in a reply opens in the window whatever th
 
 ## Settings
 
-- Settings → Editor → **Open images in**: **Claudette's image viewer** (the default) opens the images above in Claudette's window. **The app the OS uses for the file** opens image files there, and links to images in the browser, as before. See [Every setting](../settings/every-setting.md#editor).
+- Settings → Files and diffs → **Open images in**: **Claudette's image viewer** (the default) opens the images above in Claudette's window. **The app the OS uses for the file** opens image files there, and links to images in the browser, as before. See [Every setting](../settings/every-setting.md#files-and-diffs).
 - Settings → Appearance → **Motion**: with motion reduced, an animated image opens still.
 
 ## Not in find or an export

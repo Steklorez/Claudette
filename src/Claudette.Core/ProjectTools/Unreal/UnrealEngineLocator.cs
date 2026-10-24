@@ -44,7 +44,8 @@ public static class UnrealEngineLocator
     /// <summary>How far up a parent-folder engine is looked for.</summary>
     public const int ParentLevels = 10;
 
-    public static UnrealEngine? Find(UnrealProject project, ProjectToolContext context)
+    /// <param name="registry">The Windows registry's Unreal entries; none elsewhere, and none in tests that don't give it.</param>
+    public static UnrealEngine? Find(UnrealProject project, ProjectToolContext context, IUnrealEngineRegistry? registry = null)
     {
         if (context.Memory.Get(project.Path, EngineKey) is { Length: > 0 } chosen && Engine(chosen, UnrealEngineKind.Chosen) is { } picked)
         {
@@ -57,9 +58,9 @@ public static class UnrealEngineLocator
         }
         if (UnrealAssociation.IsVersion(association))
         {
-            return LauncherInstall(association, context);
+            return LauncherInstall(association, context, registry ?? NoUnrealEngineRegistry.Instance);
         }
-        return SourceBuild(association, context);
+        return SourceBuild(association, context, registry ?? NoUnrealEngineRegistry.Instance);
     }
 
     /// <summary>The folder above <paramref name="projectRoot"/> (or the folder itself) that has <c>Engine/Build/Build.version</c>.</summary>
@@ -77,7 +78,7 @@ public static class UnrealEngineLocator
         return null;
     }
 
-    public static UnrealEngine? LauncherInstall(string version, ProjectToolContext context)
+    public static UnrealEngine? LauncherInstall(string version, ProjectToolContext context, IUnrealEngineRegistry registry)
     {
         var dat = context.OS switch
         {
@@ -90,18 +91,18 @@ public static class UnrealEngineLocator
         {
             return listed;
         }
-        if (context.OS == ToolOS.Windows && context.UnrealRegistry.FindLauncherInstall(version) is { } fromRegistry)
+        if (context.OS == ToolOS.Windows && registry.FindLauncherInstall(version) is { } fromRegistry)
         {
             return Engine(fromRegistry, UnrealEngineKind.Launcher);
         }
         return null;
     }
 
-    public static UnrealEngine? SourceBuild(string id, ProjectToolContext context)
+    public static UnrealEngine? SourceBuild(string id, ProjectToolContext context, IUnrealEngineRegistry registry)
     {
         IReadOnlyDictionary<string, string> builds = context.OS switch
         {
-            ToolOS.Windows => context.UnrealRegistry.SourceBuilds(),
+            ToolOS.Windows => registry.SourceBuilds(),
             ToolOS.MacOS => ReadInstallIni(Path.Combine(context.Paths.Home, "Library", "Application Support", "Epic", "UnrealEngine", "Install.ini")),
             _ => ReadInstallIni(Path.Combine(context.Paths.Home, ".config", "Epic", "UnrealEngine", "Install.ini")),
         };

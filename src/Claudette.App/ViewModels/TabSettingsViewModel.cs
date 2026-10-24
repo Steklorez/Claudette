@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Claudette.App.Services;
+using Claudette.App.ViewModels.Settings;
 using Claudette.Core.Sessions;
 using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,16 +15,25 @@ public sealed record Choice(string? Value, string Label)
 }
 
 /// <summary>
-/// "Tab settings…": settings for one tab that replace the defaults (DESIGN.md §14, "Per-tab overrides"). The folder's
+/// "Tab settings…": settings for one tab that replace the defaults from Settings → Tabs (DESIGN.md §14, "Per-tab
+/// overrides"), and the tab's own switches. Each change applies as it's made, as in Settings, and each section has
+/// <b>Use defaults</b>. The extra folders apply when it closes, since Claude Code starts again to use them. The folder's
 /// custom project actions are in Settings, on the tab's Actions page, which a button here opens.
 /// </summary>
-public sealed partial class TabSettingsViewModel : ViewModelBase
+public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSource
 {
+    private const string On = "on";
+    private const string Off = "off";
+
     private readonly AppServices _services;
     private readonly TabViewModel _tab;
     private readonly Action _close;
-
     private readonly ShellViewModel? _shell;
+    private readonly Dictionary<string, SettingItem> _items = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, SettingsGroup> _groups = new(StringComparer.Ordinal);
+
+    /// <summary>While the dialog fills itself in, or resets several at once: nothing applies until it's done.</summary>
+    private bool _holding = true;
 
     public TabSettingsViewModel(AppServices services, TabViewModel tab, Action close, ShellViewModel? shell = null)
     {
@@ -63,17 +73,17 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         UsageCreditsChoices = [new Choice(null, $"Default ({(defaults.Usage.UseUsageCredits ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
         SubagentChoices =
         [
-            new Choice(null, $"Default ({Settings.SubagentUseChoice.Label(defaults.ClaudeCode.Subagents).ToLowerInvariant()})"),
-            .. Enum.GetValues<SubagentUse>().Select(use => new Choice(use.ToString(), Settings.SubagentUseChoice.Label(use))),
+            new Choice(null, $"Default ({InSentence(SubagentUseChoice.Label(defaults.ClaudeCode.Subagents))})"),
+            .. Enum.GetValues<SubagentUse>().Select(use => new Choice(use.ToString(), SubagentUseChoice.Label(use))),
         ];
         ShowsUsageCredits = tab.HasUsageCreditsMenu;
 
         SelectedModel = ModelChoices.First(c => c.Value == overrides.Model);
         SelectedEffort = EffortChoices.FirstOrDefault(c => c.Value == overrides.Effort) ?? EffortChoices[0];
         SelectedMode = ModeChoices.FirstOrDefault(c => c.Value == overrides.PermissionMode) ?? ModeChoices[0];
-        SelectedMonitor = MonitorChoices.First(c => c.Value == overrides.ShowProcessMonitor switch { true => On, false => Off, null => null });
-        SelectedAutoContinue = AutoContinueChoices.First(c => c.Value == overrides.ContinueAfterLimitReset switch { true => On, false => Off, null => null });
-        SelectedUsageCredits = UsageCreditsChoices.First(c => c.Value == overrides.UseUsageCredits switch { true => On, false => Off, null => null });
+        SelectedMonitor = MonitorChoices.First(c => c.Value == OnOff(overrides.ShowProcessMonitor));
+        SelectedAutoContinue = AutoContinueChoices.First(c => c.Value == OnOff(overrides.ContinueAfterLimitReset));
+        SelectedUsageCredits = UsageCreditsChoices.First(c => c.Value == OnOff(overrides.UseUsageCredits));
         SelectedSubagents = SubagentChoices.First(c => c.Value == overrides.Subagents?.ToString());
 
         var checkIns = overrides.CheckIns ?? defaults.CheckIns;
@@ -87,18 +97,55 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
         RemoteControl = tab.State.RemoteControl;
         ExtraFolders = [.. tab.State.ExtraFolders];
         ExtraFolders.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasExtraFolders));
+
+        Section("model", "Model and mode",
+        [
+            Override("tab.model", "Model", () => SelectedModel.Value is null, () => SelectedModel = ModelChoices[0]),
+            Override("tab.effort", "Effort", () => SelectedEffort.Value is null, () => SelectedEffort = EffortChoices[0]),
+            Override("tab.permissionMode", "Permission mode", () => SelectedMode.Value is null, () => SelectedMode = ModeChoices[0]),
+            Override("tab.subagents", "Subagents", () => SelectedSubagents.Value is null, () => SelectedSubagents = SubagentChoices[0],
+                "Applies at once; Claude is told with the next message."),
+        ]);
+        Section("limits", "At a usage limit",
+        [
+            Override("tab.continueAfterLimitReset", "Continue tasks when the limit resets", () => SelectedAutoContinue.Value is null,
+                () => SelectedAutoContinue = AutoContinueChoices[0]),
+            Override("tab.useUsageCredits", "Use usage credits", () => SelectedUsageCredits.Value is null, () => SelectedUsageCredits = UsageCreditsChoices[0],
+                TabViewModel.UsageCreditsMenuTip),
+        ]);
+        Section("checkIns", "Check-ins on long turns",
+        [
+            Override("tab.checkIns", "Use different check-ins for this tab", () => !UseCustomCheckIns, () => UseCustomCheckIns = false),
+        ]);
+        Section("monitor", "Process monitor",
+        [
+            Override("tab.processMonitor", "Process monitor", () => SelectedMonitor.Value is null, () => SelectedMonitor = MonitorChoices[0],
+                "The processes this tab starts, with their CPU and memory."),
+        ]);
+        // The tab's own switches, not overrides: no defaults to go back to.
+        Section("thisTab", "This tab",
+        [
+            Own("tab.syncToLibrary", "Sync to other machines", "Copies this session to the session library after each turn, so another machine can open it from History."),
+            Own("tab.remoteControl", "Connect to the Claude app", "Continue this tab from your phone or claude.ai/code while it runs here."),
+            Own("tab.extraFolders", "Extra folders", "Claude can also read and edit files in these. Claude Code starts again with them when you close this.",
+                "Their own settings and CLAUDE.md aren't loaded."),
+            Own("tab.projectActions", "Project actions", ProjectActionsText),
+        ]);
+        _holding = false;
+        RefreshItems();
     }
 
     public string Title => $"Settings for \"{_tab.DisplayName}\"";
+
+    /// <summary>A choice's label inside a sentence, "Default (discourage them)": lowercase, but Claude keeps its capital.</summary>
+    private static string InSentence(string label) =>
+        label.StartsWith("Claude", StringComparison.Ordinal) ? label : char.ToLowerInvariant(label[0]) + label[1..];
 
     public IReadOnlyList<Choice> ModelChoices { get; }
 
     public IReadOnlyList<Choice> EffortChoices { get; }
 
     public IReadOnlyList<Choice> ModeChoices { get; }
-
-    private const string On = "on";
-    private const string Off = "off";
 
     /// <summary>The process monitor for this tab (DESIGN.md §4, "Process monitor").</summary>
     public IReadOnlyList<Choice> MonitorChoices { get; }
@@ -156,26 +203,65 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool NotifyOnCheckIn { get; set; }
 
+    partial void OnSelectedModelChanged(Choice value) => OverridesChanged();
+
+    partial void OnSelectedEffortChanged(Choice value) => OverridesChanged();
+
+    partial void OnSelectedModeChanged(Choice value) => OverridesChanged();
+
+    partial void OnSelectedMonitorChanged(Choice value) => OverridesChanged();
+
+    partial void OnSelectedAutoContinueChanged(Choice value) => OverridesChanged();
+
+    partial void OnSelectedUsageCreditsChanged(Choice value) => OverridesChanged();
+
+    partial void OnSelectedSubagentsChanged(Choice value) => OverridesChanged();
+
+    partial void OnUseCustomCheckInsChanged(bool value) => OverridesChanged();
+
+    partial void OnCheckInsEnabledChanged(bool value) => OverridesChanged();
+
+    partial void OnRunTimeMinutesChanged(decimal? value) => OverridesChanged();
+
+    partial void OnQuietTimeMinutesChanged(decimal? value) => OverridesChanged();
+
+    partial void OnCheckInMessageChanged(string value) => OverridesChanged();
+
+    partial void OnNotifyOnCheckInChanged(bool value) => OverridesChanged();
+
     /// <summary>
     /// <b>Sync to other machines</b> (DESIGN.md §9, "Session library"). The tab's own state rather than an override, so
-    /// <b>Use defaults</b> leaves it as it is.
+    /// its section has no <b>Use defaults</b>.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SyncSizeText))]
     public partial bool SyncToLibrary { get; set; }
 
+    partial void OnSyncToLibraryChanged(bool value)
+    {
+        if (!_holding)
+        {
+            _tab.SetSyncToLibrary(value);
+        }
+    }
+
     /// <summary>
-    /// What the session takes in the session library, under <b>Sync to other machines</b> while it's ticked (DESIGN.md §9,
+    /// What the session takes in the session library, under <b>Sync to other machines</b> while it's on (DESIGN.md §9,
     /// "Writing"); null before the tab's first copy there.
     /// </summary>
     public string? SyncSizeText => SyncToLibrary && _tab.SyncSize is { } size ? $"This session takes {size} in the session library." : null;
 
-    /// <summary>
-    /// <b>Connect to the Claude app</b> (DESIGN.md §18, "Remote Control"). The tab's own state like
-    /// <see cref="SyncToLibrary"/>, so <b>Use defaults</b> leaves it as it is.
-    /// </summary>
+    /// <summary><b>Connect to the Claude app</b> (DESIGN.md §18, "Remote Control"). The tab's own state, like <see cref="SyncToLibrary"/>.</summary>
     [ObservableProperty]
     public partial bool RemoteControl { get; set; }
+
+    partial void OnRemoteControlChanged(bool value)
+    {
+        if (!_holding)
+        {
+            Applying = After(Applying, () => _tab.RemoteControl.SetAsync(value));
+        }
+    }
 
     /// <summary>The account can use Remote Control, or the tab is on and can be turned off.</summary>
     public bool CanChangeRemoteControl => _tab.RemoteControl.CanToggle;
@@ -185,9 +271,59 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
 
     public bool HasRemoteControlUnavailableText => RemoteControlUnavailableText is not null;
 
+    // ---- Applying as each change is made ---------------------------------------------------------------------------
+
+    /// <summary>What applying the changes made so far is doing, for <see cref="DoneAsync"/> and tests to wait on.</summary>
+    public Task Applying { get; private set; } = Task.CompletedTask;
+
+    private static string? OnOff(bool? value) => value switch { true => On, false => Off, null => null };
+
+    private static bool? OnOff(string? value) => value switch { On => true, Off => false, _ => null };
+
+    /// <summary>The overrides as the dialog shows them.</summary>
+    private TabOverrides Overrides() => new()
+    {
+        Model = SelectedModel.Value,
+        Effort = SelectedEffort.Value,
+        PermissionMode = SelectedMode.Value,
+        ShowProcessMonitor = OnOff(SelectedMonitor.Value),
+        ContinueAfterLimitReset = OnOff(SelectedAutoContinue.Value),
+        UseUsageCredits = OnOff(SelectedUsageCredits.Value),
+        Subagents = Enum.TryParse<SubagentUse>(SelectedSubagents.Value, out var subagents) ? subagents : null,
+        CheckIns = UseCustomCheckIns
+            ? new CheckInSettings
+            {
+                Enabled = CheckInsEnabled,
+                RunTimeMinutes = (int)(RunTimeMinutes ?? 0),
+                QuietTimeMinutes = (int)(QuietTimeMinutes ?? 0),
+                Message = string.IsNullOrWhiteSpace(CheckInMessage) ? CheckInSettings.DefaultMessage : CheckInMessage,
+                Notify = NotifyOnCheckIn,
+            }
+            : null,
+    };
+
+    /// <summary>An override changed: the tab takes it now, in the order the changes were made.</summary>
+    private void OverridesChanged()
+    {
+        if (_holding)
+        {
+            return;
+        }
+        var previous = _tab.State.Overrides;
+        _tab.State.Overrides = Overrides();
+        Applying = After(Applying, () => _tab.ApplyOverridesAsync(previous));
+        RefreshItems();
+    }
+
+    private static async Task After(Task before, Func<Task> then)
+    {
+        await before;
+        await then();
+    }
+
     // ---- Extra folders (DESIGN.md §4, "Extra folders"): the tab's own, like SyncToLibrary --------------------------
 
-    /// <summary>Folders Claude may also read and edit, besides the tab's own (<c>--add-dir</c>).</summary>
+    /// <summary>Folders Claude may also read and edit, besides the tab's own (<c>--add-dir</c>). They apply when the dialog closes.</summary>
     public ObservableCollection<string> ExtraFolders { get; }
 
     public bool HasExtraFolders => ExtraFolders.Count > 0;
@@ -217,58 +353,78 @@ public sealed partial class TabSettingsViewModel : ViewModelBase
 
     // ---- Project actions (DESIGN.md §18, "Custom actions"): in Settings, on the tab's Actions page --------------------
 
-    /// <summary>"Project actions are in Settings → NightOwl → Actions": the group is named after the tab's project.</summary>
-    public string ProjectActionsText => $"Project actions are in Settings → {ProjectSettingsViewModel.GroupName(_tab)} → Actions.";
+    /// <summary>"In Settings → NightOwl → Actions": the group is named after the tab's project.</summary>
+    public string ProjectActionsText => $"In Settings → {ProjectSettingsViewModel.GroupName(_tab)} → Actions.";
 
-    /// <summary>Opens Settings on the tab's Actions page. This dialog stays open behind it, with nothing applied yet.</summary>
+    /// <summary>Opens Settings on the tab's Actions page. This dialog stays open behind it.</summary>
     [RelayCommand]
     private Task OpenProjectActionsAsync() =>
         _shell?.OpenProjectSettingsAsync(_tab, SettingsViewModel.ActionsPage) ?? Task.CompletedTask;
 
+    /// <summary><b>Done</b> (or Esc): the changes have applied already; the extra folders apply now, then it closes.</summary>
     [RelayCommand]
-    private async Task ApplyAsync()
+    private async Task DoneAsync()
     {
-        var previous = _tab.State.Overrides;
-        _tab.State.Overrides = new TabOverrides
-        {
-            Model = SelectedModel.Value,
-            Effort = SelectedEffort.Value,
-            PermissionMode = SelectedMode.Value,
-            ShowProcessMonitor = SelectedMonitor.Value switch { On => true, Off => false, _ => null },
-            ContinueAfterLimitReset = SelectedAutoContinue.Value switch { On => true, Off => false, _ => null },
-            UseUsageCredits = SelectedUsageCredits.Value switch { On => true, Off => false, _ => null },
-            Subagents = Enum.TryParse<SubagentUse>(SelectedSubagents.Value, out var subagents) ? subagents : null,
-            CheckIns = UseCustomCheckIns
-                ? new CheckInSettings
-                {
-                    Enabled = CheckInsEnabled,
-                    RunTimeMinutes = (int)(RunTimeMinutes ?? 0),
-                    QuietTimeMinutes = (int)(QuietTimeMinutes ?? 0),
-                    Message = string.IsNullOrWhiteSpace(CheckInMessage) ? CheckInSettings.DefaultMessage : CheckInMessage,
-                    Notify = NotifyOnCheckIn,
-                }
-                : null,
-        };
         _close();
-        _tab.SetSyncToLibrary(SyncToLibrary);
-        await _tab.RemoteControl.SetAsync(RemoteControl);
-        await _tab.ApplyOverridesAsync(previous);
+        await Applying;
         await _tab.SetExtraFoldersAsync([.. ExtraFolders]);
     }
 
-    [RelayCommand]
-    private void UseDefaults()
+    // ---- Its sections and settings, as Settings' pages have them (DESIGN.md §14) --------------------------------------
+
+    public SettingItem? FindSetting(string key) => _items.GetValueOrDefault(key);
+
+    public SettingsGroup? FindGroup(string key) => _groups.GetValueOrDefault(key);
+
+    /// <summary>Each section's <b>Use defaults</b>, and a row's <b>Reset</b>: the tab goes back to Settings' defaults, applied once.</summary>
+    public void Reset(IReadOnlyList<SettingItem> items, Action? also = null)
     {
-        SelectedModel = ModelChoices[0];
-        SelectedEffort = EffortChoices[0];
-        SelectedMode = ModeChoices[0];
-        SelectedMonitor = MonitorChoices[0];
-        SelectedAutoContinue = AutoContinueChoices[0];
-        SelectedUsageCredits = UsageCreditsChoices[0];
-        SelectedSubagents = SubagentChoices[0];
-        UseCustomCheckIns = false;
+        _holding = true;
+        try
+        {
+            foreach (var item in items)
+            {
+                item.ResetValue?.Invoke();
+            }
+            also?.Invoke();
+        }
+        finally
+        {
+            _holding = false;
+        }
+        OverridesChanged();
     }
 
-    [RelayCommand]
-    private void Cancel() => _close();
+    /// <summary>Every section's <b>Use defaults</b> at once: for tests.</summary>
+    internal void UseAllDefaults() => Reset([.. _items.Values.Where(i => i.CanReset && i.IsChanged)]);
+
+    private void RefreshItems()
+    {
+        foreach (var item in _items.Values)
+        {
+            item.Refresh(null);
+        }
+        foreach (var group in _groups.Values)
+        {
+            group.Refresh();
+        }
+    }
+
+    /// <summary>An override: changed while the tab has its own, and reset by going back to the default.</summary>
+    private SettingItem Override(string key, string title, Func<bool> isDefault, Action reset, string? description = null) =>
+        Add(new SettingItem(key, title, isDefault, reset) { Description = description, IsMachineOnly = false });
+
+    /// <summary>The tab's own switch or list: nothing to go back to.</summary>
+    private SettingItem Own(string key, string title, string? description = null, string? more = null) =>
+        Add(new SettingItem(key, title) { Description = description, More = more, IsMachineOnly = false });
+
+    private SettingItem Add(SettingItem item)
+    {
+        _items.Add(item.Key, item);
+        item.AttachTo(this);
+        return item;
+    }
+
+    private void Section(string key, string title, IReadOnlyList<SettingItem> items) =>
+        _groups.Add(key, new SettingsGroup(this, key, title, items));
 }

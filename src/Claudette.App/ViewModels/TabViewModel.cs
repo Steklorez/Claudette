@@ -289,7 +289,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>What pinning does, for the menu item's tip. True whichever way Also restore unpinned tabs is set.</summary>
     public static string PinMenuTip =>
         "A pinned tab comes back every time Claudette starts, sits at the start of its group, and stays open on Close group and Close other tabs. "
-        + "Unpinned tabs come back only while Also restore unpinned tabs is on in Settings → Sessions.";
+        + "Unpinned tabs come back only while Also restore unpinned tabs is on in Settings → General.";
 
     [RelayCommand]
     private void TogglePin()
@@ -835,9 +835,16 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
     }
 
-    /// <summary><b>Edit suffixes…</b> in the suffix menu opens Settings → Quick suffixes.</summary>
+    /// <summary><b>Edit suffixes…</b> in the suffix menu opens Settings → Keyboard, at the quick suffixes.</summary>
     [RelayCommand]
-    private Task EditSuffixesAsync() => _shell.OpenSettingsAtAsync(SettingsCategory.QuickSuffixes);
+    private Task EditSuffixesAsync() => _shell.OpenSettingsAtAsync(SettingsCategory.Keyboard, "quickSuffixes");
+
+    /// <summary>
+    /// A feature's own "…settings" entry in the tab (DESIGN.md §14): Settings at the page and setting it names, as
+    /// "Files and diffs#diffTool".
+    /// </summary>
+    [RelayCommand]
+    private Task OpenSettingAsync(string? where) => _shell.OpenSettingCommand.ExecuteAsync(where);
 
     /// <summary>Settings → Keyboard, for the tab's own shortcuts (Stop, the suffix menu, answering prompts).</summary>
     public KeyboardSettings Keyboard => _services.Settings.Keyboard;
@@ -1177,7 +1184,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <see cref="LinkClickedEventArgs"/>, the cards the address. Only https, http and mailto links open in the browser, as
     /// the project's links do (DESIGN.md §18, "Links"): a reply can't run a program through an app's own link. A link in
     /// Markdown to a file, or inline code that names one, opens the file, but never runs it (DESIGN.md §18, "Files named
-    /// in Claude's replies"). A web link to an image shows it in the image window, as Settings → Editor → Open images in
+    /// in Claude's replies"). A web link to an image shows it in the image window, as Settings → Files and diffs → Open images in
     /// says (DESIGN.md §18, "Opening images"). Clicks don't wait for each other: a file being looked for, an image
     /// loading, or the menu of several, leaves every other link working.
     /// </summary>
@@ -1226,7 +1233,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>
     /// A click on an image under a tool's card, or in a reply: full size in a window of its own (DESIGN.md §18, "Images
-    /// from Claude's tools"), whatever Settings → Editor → Open images in says, since many aren't files.
+    /// from Claude's tools"), whatever Settings → Files and diffs → Open images in says, since many aren't files.
     /// </summary>
     [RelayCommand]
     private void OpenImage(ToolImage? image)

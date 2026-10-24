@@ -135,9 +135,9 @@ public sealed class UnrealEngineTests : IDisposable
         var registry = new FakeUnrealRegistry { LauncherInstalls = { ["5.4"] = engine } };
         var project = UnrealProject.Read(ProjectToolFixtures.UProject(_temp, "Game/Game.uproject", association: "5.4"));
 
-        Assert.Equal(engine, UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.Windows, registry: registry))!.Root);
+        Assert.Equal(engine, UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.Windows), registry)!.Root);
         // Only Windows has a registry.
-        Assert.Null(UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.MacOS, registry: registry)));
+        Assert.Null(UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.MacOS), registry));
     }
 
     [Theory]
@@ -151,7 +151,7 @@ public sealed class UnrealEngineTests : IDisposable
         var registry = new FakeUnrealRegistry { Builds = { ["{00000000-0000-0000-0000-000000000000}"] = _temp.Combine("elsewhere"), [registered] = engine } };
         var project = UnrealProject.Read(ProjectToolFixtures.UProject(_temp, "Game/Game.uproject", association: association));
 
-        var found = UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.Windows, registry: registry));
+        var found = UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.Windows), registry);
 
         Assert.Equal(engine, found!.Root);
         Assert.Equal(UnrealEngineKind.SourceBuild, found.Kind);
@@ -206,7 +206,7 @@ public sealed class UnrealEngineTests : IDisposable
         foreach (var association in (string?[])["5.4", "{AAAA}", "", "SomethingElse"])
         {
             var project = UnrealProject.Read(ProjectToolFixtures.UProject(_temp, "Game/Game.uproject", association: association));
-            Assert.Null(UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.Windows, registry: registry)));
+            Assert.Null(UnrealEngineLocator.Find(project, ProjectToolFixtures.Context(_temp, ToolOS.Windows), registry));
         }
     }
 
@@ -219,7 +219,7 @@ public sealed class UnrealEngineTests : IDisposable
         var path = ProjectToolFixtures.UProject(_temp, "Game/Game.uproject", association: "5.4");
         var memory = new DictionaryMemory { Values = { [(path, UnrealEngineLocator.EngineKey)] = Path.Combine(chosen, "Engine") } };
 
-        var found = UnrealEngineLocator.Find(UnrealProject.Read(path), ProjectToolFixtures.Context(_temp, ToolOS.Windows, memory: memory, registry: registry));
+        var found = UnrealEngineLocator.Find(UnrealProject.Read(path), ProjectToolFixtures.Context(_temp, ToolOS.Windows, memory: memory), registry);
 
         Assert.Equal(chosen, found!.Root);
         Assert.Equal(UnrealEngineKind.Chosen, found.Kind);

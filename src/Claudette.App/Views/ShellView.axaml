@@ -12,7 +12,7 @@
   <!-- Settings → Appearance → Density (DESIGN.md §14): "compact" tightens the rows, the conversation and the composer,
        through the styles in App.axaml and TabView. Settings → Appearance → Style (DESIGN.md §3): "claude" gives them
        the Claude apps' shapes. Settings → Appearance → Full-width conversation (DESIGN.md §14): "fullwidth" lets the
-       conversation and the composer fill the tab. Settings → Appearance → Quieter in-between steps (DESIGN.md §18,
+       conversation and the composer fill the tab. Settings → Conversation → Quieter in-between steps (DESIGN.md §18,
        "Conversation cards"): "quietsteps" draws the steps on the way without their cards' tint and outline. -->
 
   <UserControl.Resources>

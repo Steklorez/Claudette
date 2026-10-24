@@ -32,12 +32,14 @@ public class SettingsDefaultsTests
         s.Advanced.LogProtocol = true;
         var settings = new SettingsViewModel(h.Services, null);
 
-        settings.Sessions.ResetCommand.Execute(null);
-        settings.ClaudeCode.ResetCommand.Execute(null);
-        settings.NewTabs.ResetCommand.Execute(null);
-        settings.Appearance.ResetCommand.Execute(null);
-        settings.DiffTool.ResetCommand.Execute(null);
-        settings.Advanced.ResetCommand.Execute(null);
+        settings.General.ResetAllSections();
+        settings.Sessions.ResetAllSections();
+        settings.ClaudeCode.ResetAllSections();
+        settings.Tabs.ResetAllSections();
+        settings.Appearance.ResetAllSections();
+        settings.Conversation.ResetAllSections();
+        settings.Files.ResetAllSections();
+        settings.Advanced.ResetAllSections();
 
         Assert.True(s.Sessions.RestoreUnpinnedTabs);
         Assert.Null(s.Sessions.MachineName);
@@ -54,7 +56,7 @@ public class SettingsDefaultsTests
         Assert.Equal("Standard", settings.Appearance.Style.Label);
         Assert.Null(s.Appearance.CodeFont);
         Assert.True(s.Appearance.ShowContextOnTabs);
-        Assert.True(settings.Appearance.ShowContextOnTabs);
+        Assert.True(settings.Conversation.ShowContextOnTabs);
         Assert.Equal(Density.Comfortable, s.Appearance.Density);
         Assert.Equal(Density.Comfortable, settings.Appearance.Density);
         Assert.False(s.Appearance.FullWidthConversation);
@@ -72,16 +74,17 @@ public class SettingsDefaultsTests
         Assert.Equal("None", settings.ClaudeCode.FallbackModel.Label);
         Assert.True(settings.ClaudeCode.KeepFileCheckpoints);
         Assert.True(settings.ClaudeCode.GiveClaudeTaskList);
-        Assert.False(settings.ClaudeCode.ShowAllHookRuns);
+        Assert.False(settings.Conversation.ShowAllHookRuns);
 
         settings.ClaudeCode.FallbackModel = settings.ClaudeCode.FallbackModelChoices.Single(c => c.Value == "sonnet");
         settings.ClaudeCode.KeepFileCheckpoints = false;
         settings.ClaudeCode.GiveClaudeTaskList = false;
-        settings.ClaudeCode.ShowAllHookRuns = true;
+        settings.Conversation.ShowAllHookRuns = true;
 
         var claudeCode = h.Services.Settings.ClaudeCode;
         Assert.Equal(("sonnet", false, false, true), (claudeCode.FallbackModel, claudeCode.KeepFileCheckpoints, claudeCode.GiveClaudeTaskList, claudeCode.ShowAllHookRuns));
-        settings.ClaudeCode.ResetCommand.Execute(null);
+        settings.ClaudeCode.ResetAllSections();
+        settings.Conversation.ResetAllSections();
         claudeCode = h.Services.Settings.ClaudeCode;
         Assert.Equal((null, true, true, false), (claudeCode.FallbackModel, claudeCode.KeepFileCheckpoints, claudeCode.GiveClaudeTaskList, claudeCode.ShowAllHookRuns));
     }
@@ -100,7 +103,7 @@ public class SettingsDefaultsTests
         Assert.Equal(Density.Compact, h.Services.Settings.Appearance.Density);
         Assert.True(h.Shell.IsCompact);
 
-        settings.Appearance.ResetCommand.Execute(null);
+        settings.Appearance.ResetAllSections();
 
         Assert.False(h.Shell.IsCompact);
     }
@@ -120,7 +123,7 @@ public class SettingsDefaultsTests
         // The shell takes the "fullwidth" class, whose styles lift the conversation's and the composer's widest.
         Assert.True(h.Shell.IsFullWidth);
 
-        settings.Appearance.ResetCommand.Execute(null);
+        settings.Appearance.ResetAllSections();
 
         Assert.False(h.Shell.IsFullWidth);
     }
@@ -132,23 +135,23 @@ public class SettingsDefaultsTests
         var a = Directory.CreateDirectory(Path.Combine(h.Root, "a")).FullName;
         var b = Directory.CreateDirectory(Path.Combine(h.Root, "b")).FullName;
         var settings = new SettingsViewModel(h.Services, null);
-        Assert.False(settings.NewTabs.HasFavorites);
+        Assert.False(settings.Tabs.HasFavorites);
 
         h.Platform.FolderToPick = a;
-        await settings.NewTabs.AddFavoriteCommand.ExecuteAsync(null);
+        await settings.Tabs.AddFavoriteCommand.ExecuteAsync(null);
         h.Platform.FolderToPick = b;
-        await settings.NewTabs.AddFavoriteCommand.ExecuteAsync(null);
-        Assert.Equal(["a", "b"], settings.NewTabs.Favorites.Select(f => f.Name));
+        await settings.Tabs.AddFavoriteCommand.ExecuteAsync(null);
+        Assert.Equal(["a", "b"], settings.Tabs.Favorites.Select(f => f.Name));
 
-        settings.NewTabs.MoveFavoriteUpCommand.Execute(settings.NewTabs.Favorites[1]);
-        Assert.Equal(["b", "a"], settings.NewTabs.Favorites.Select(f => f.Name));
+        settings.Tabs.MoveFavoriteUpCommand.Execute(settings.Tabs.Favorites[1]);
+        Assert.Equal(["b", "a"], settings.Tabs.Favorites.Select(f => f.Name));
         Assert.Equal(["b", "a"], h.Services.State.FavoriteFolders.Select(Path.GetFileName));
         // The ends don't move further.
-        settings.NewTabs.MoveFavoriteUpCommand.Execute(settings.NewTabs.Favorites[0]);
-        Assert.Equal(["b", "a"], settings.NewTabs.Favorites.Select(f => f.Name));
+        settings.Tabs.MoveFavoriteUpCommand.Execute(settings.Tabs.Favorites[0]);
+        Assert.Equal(["b", "a"], settings.Tabs.Favorites.Select(f => f.Name));
 
-        settings.NewTabs.RemoveFavoriteCommand.Execute(settings.NewTabs.Favorites[0]);
-        Assert.Equal(["a"], settings.NewTabs.Favorites.Select(f => f.Name));
+        settings.Tabs.RemoveFavoriteCommand.Execute(settings.Tabs.Favorites[0]);
+        Assert.Equal(["a"], settings.Tabs.Favorites.Select(f => f.Name));
         Assert.False(FolderHistory.IsFavorite(h.Services.State, b));
     }
 
@@ -173,13 +176,13 @@ public class SettingsDefaultsTests
         await using var h = new TabTestHarness();
         var before = new SettingsViewModel(h.Services, null);
         // Nothing offered yet on this machine: the built-in list.
-        Assert.Contains(before.NewTabs.ModelChoices, c => c.Value == "sonnet");
+        Assert.Contains(before.Tabs.ModelChoices, c => c.Value == "sonnet");
 
         var tab = await h.OpenTabAsync();
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal([null, "opus", "haiku"], settings.NewTabs.ModelChoices.Select(c => c.Value));
-        Assert.Equal([null, "low", "high"], settings.NewTabs.EffortChoices.Select(c => c.Value));
+        Assert.Equal([null, "opus", "haiku"], settings.Tabs.ModelChoices.Select(c => c.Value));
+        Assert.Equal([null, "low", "high"], settings.Tabs.EffortChoices.Select(c => c.Value));
         Assert.Equal(["opus", "haiku"], h.Services.State.KnownModels.Select(m => m.Value));
         var tabSettings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.Equal([null, "low", "high"], tabSettings.EffortChoices.Select(c => c.Value));

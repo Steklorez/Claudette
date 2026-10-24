@@ -4,78 +4,126 @@
         xmlns:views="using:Claudette.App.Views"
         xmlns:settings="using:Claudette.App.ViewModels.Settings"
         xmlns:pages="using:Claudette.App.Views.Settings"
+        xmlns:conversation="using:Claudette.App.Conversation"
         x:Class="Claudette.App.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
-        Width="820" Height="650" MinWidth="620" MinHeight="420"
-        WindowStartupLocation="CenterOwner">
+        Width="920" Height="720" MinWidth="680" MinHeight="460"
+        WindowStartupLocation="CenterOwner"
+        Classes.claude="{Binding IsClaudeStyle}">
   <Window.Styles>
-    <Style Selector="TextBlock.section">
-      <Setter Property="FontSize" Value="18" />
+    <Style Selector="TextBlock.pagetitle">
+      <Setter Property="FontSize" Value="22" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
-    <!-- A setting's name beside its control: a long one wraps rather than being cut off, whatever the OS's font -->
-    <Style Selector="TextBlock.label">
+    <!-- The sidebar: each group's heading, then its pages, each with its icon; one list, so the arrow keys go through
+         them all. A heading isn't a page: it can't be picked or focused. -->
+    <Style Selector="ListBox.settingsnav">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="8,0,8,8" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem" x:DataType="vm:SettingsNavEntry">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Focusable" Value="{Binding !IsHeading}" />
+      <Setter Property="IsHitTestVisible" Value="{Binding !IsHeading}" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+    </Style>
+    <Style Selector=".claude ListBox.settingsnav ListBoxItem">
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <!-- A search result is named by the setting it finds, as a screen reader reads it. -->
+    <Style Selector="ListBox#SearchResultsList ListBoxItem" x:DataType="vm:SettingsSearchResult">
+      <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <!-- The page showing, picked out as the main window's selected tab is. -->
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter,
+                     ListBox.settingsnav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ListBox.settingsnav ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.navheading">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="Margin" Value="0,10,0,0" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Path.navicon">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="StrokeThickness" Value="1.15" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StrokeJoin" Value="Round" />
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
+      <Setter Property="Stretch" Value="Uniform" />
       <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="TextWrapping" Value="Wrap" />
-      <Setter Property="Margin" Value="0,0,12,0" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon">
+      <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
     </Style>
   </Window.Styles>
 
-  <!-- DESIGN.md §14: a sidebar of categories; changes apply immediately. -->
-  <Grid ColumnDefinitions="190,*">
+  <!-- DESIGN.md §14: a sidebar of pages in groups; changes apply immediately; the window isn't modal. -->
+  <Grid ColumnDefinitions="220,*">
     <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
       <DockPanel>
-        <!-- DESIGN.md §14: a search box filters settings by name -->
-        <TextBox DockPanel.Dock="Top" Margin="8,8,8,2" Text="{Binding SearchText}" PlaceholderText="Search settings"
+        <!-- DESIGN.md §14, "Search": settings by name, what they do, or other words for them -->
+        <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="10,10,10,4" Text="{Binding SearchText}" PlaceholderText="Search settings"
                  AutomationProperties.Name="Search settings" />
-        <!-- DESIGN.md §14, "Version": which Claudette this is, copied with a click, the user guide, dotBunny's Discord,
-             and a bug report with the version filled in -->
-        <StackPanel DockPanel.Dock="Bottom" Margin="8,4,8,10" Spacing="0">
-          <Button Classes="flat" Command="{Binding CopyVersionCommand}" ToolTip.Tip="{Binding VersionTip}"
+        <!-- DESIGN.md §14, "Version": which Claudette this is, copied with a click, and Help: the user guide, dotBunny's
+             Discord, and a bug report with the version filled in -->
+        <Grid x:Name="SidebarFoot" DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="8,4,8,8">
+          <Button Classes="flat" Command="{Binding CopyVersionCommand}" ToolTip.Tip="{Binding VersionTip}" HorizontalAlignment="Left"
                   AutomationProperties.Name="Copy version details">
             <TextBlock Classes="muted small" Text="{Binding VersionLabel}" TextTrimming="CharacterEllipsis" />
           </Button>
-          <Button Classes="flat" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Claudette's user guide in your browser.">
-            <TextBlock Classes="muted small" Text="User Guide" />
+          <Button x:Name="HelpButton" Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="Help: the user guide, Discord, and reporting an issue"
+                  AutomationProperties.Name="Help">
+            <Path Classes="navicon" Data="{DynamicResource IconHelp}" />
+            <Button.Flyout>
+              <MenuFlyout Placement="TopEdgeAlignedRight">
+                <MenuItem Header="User Guide" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Claudette's user guide in your browser." />
+                <MenuItem Header="Ask on Discord" Command="{Binding OpenDiscordCommand}"
+                          ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Claudette." />
+                <MenuItem Header="Report an issue" Command="{Binding ReportIssueCommand}"
+                          ToolTip.Tip="Opens a new issue on Claudette's GitHub with the versions filled in. Nothing is sent until you submit it." />
+              </MenuFlyout>
+            </Button.Flyout>
           </Button>
-          <Button Classes="flat" Command="{Binding OpenDiscordCommand}"
-                  ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Claudette.">
-            <TextBlock Classes="muted small" Text="Ask on Discord" />
-          </Button>
-          <Button Classes="flat" Command="{Binding ReportIssueCommand}"
-                  ToolTip.Tip="Opens a new issue on Claudette's GitHub with the versions filled in. Nothing is sent until you submit it.">
-            <TextBlock Classes="muted small" Text="Report an issue" />
-          </Button>
-        </StackPanel>
+        </Grid>
         <Panel>
-          <ScrollViewer x:Name="SidebarList" IsVisible="{Binding !IsSearching}">
-            <StackPanel>
-              <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedMainCategory}" Background="Transparent" Margin="6,6,6,0"
-                       ScrollViewer.VerticalScrollBarVisibility="Disabled" AutomationProperties.Name="Categories" />
-              <!-- DESIGN.md §14, "The project's pages": the selected tab's project, below a divider; hidden with no tab open -->
-              <StackPanel x:Name="ProjectGroup" IsVisible="{Binding HasProject}">
-                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="12,6,12,4" />
-                <TextBlock Classes="muted small" Text="{Binding Project.Heading, FallbackValue=''}" ToolTip.Tip="{Binding Project.Folder, FallbackValue=''}"
-                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="18,4,12,0" />
-                <ListBox ItemsSource="{x:Static vm:SettingsViewModel.ProjectPages}" SelectedItem="{Binding SelectedProjectPage}" Background="Transparent" Margin="6,2,6,6"
-                         ScrollViewer.VerticalScrollBarVisibility="Disabled" AutomationProperties.Name="Project pages" />
-              </StackPanel>
-            </StackPanel>
-          </ScrollViewer>
-          <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}" Background="Transparent" Margin="6"
-                   IsVisible="{Binding IsSearching}">
+          <ListBox x:Name="SidebarList" Classes="settingsnav" ItemsSource="{Binding NavEntries}" SelectedItem="{Binding SelectedNavEntry}"
+                   IsVisible="{Binding !IsSearching}" AutomationProperties.Name="Settings pages">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="vm:SettingsNavEntry">
+                <Panel>
+                  <TextBlock Classes="navheading" Text="{Binding Title}" ToolTip.Tip="{Binding Tip}" IsVisible="{Binding IsHeading}" />
+                  <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
+                    <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}" />
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </Panel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <ListBox x:Name="SearchResultsList" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}" Background="Transparent" Padding="8,0"
+                   IsVisible="{Binding IsSearching}" AutomationProperties.Name="Search results">
             <ListBox.ItemTemplate>
               <DataTemplate DataType="vm:SettingsSearchResult">
-                <StackPanel>
+                <StackPanel Spacing="1">
                   <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
                   <TextBlock Classes="muted small" Text="{Binding Where}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
-          <TextBlock Classes="muted small" Text="No settings match." Margin="14,10" TextWrapping="Wrap" VerticalAlignment="Top">
+          <TextBlock Classes="muted small" Text="No settings match." Margin="18,10" TextWrapping="Wrap" VerticalAlignment="Top">
             <TextBlock.IsVisible>
               <MultiBinding Converter="{x:Static BoolConverters.And}">
                 <Binding Path="IsSearching" />
@@ -87,72 +135,77 @@
       </DockPanel>
     </Border>
 
-    <ScrollViewer Grid.Column="1" Padding="24,20">
-      <!-- The page shown: the selected category's, or one of the project's. Each is a view in Views/Settings. -->
-      <ContentControl Content="{Binding CurrentPage}" MaxWidth="620" HorizontalAlignment="Left">
-        <ContentControl.DataTemplates>
-          <DataTemplate DataType="settings:GeneralPage">
-            <pages:GeneralPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:ClaudeCodePage">
-            <pages:ClaudeCodePageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:AccountsPage">
-            <pages:AccountsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:NewTabsPage">
-            <pages:NewTabsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:AppearancePage">
-            <pages:AppearancePageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:SessionsPage">
-            <pages:SessionsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:DiffToolPage">
-            <pages:DiffToolPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:EditorPage">
-            <pages:EditorPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:ProjectToolsPage">
-            <pages:ProjectToolsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:ProcessesPage">
-            <pages:ProcessesPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:UsagePage">
-            <pages:UsagePageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:CheckInsPage">
-            <pages:CheckInsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:QuickSuffixesPage">
-            <pages:QuickSuffixesPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:NotificationsPage">
-            <pages:NotificationsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:KeyboardPage">
-            <pages:KeyboardPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:PerforcePage">
-            <pages:PerforcePageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:AdvancedPage">
-            <pages:AdvancedPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:ProjectLinksPage">
-            <pages:ProjectLinksPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:ProjectActionsPage">
-            <pages:ProjectActionsPageView />
-          </DataTemplate>
-          <DataTemplate DataType="settings:ProjectToolChoicesPage">
-            <pages:ProjectToolChoicesPageView />
-          </DataTemplate>
-        </ContentControl.DataTemplates>
-      </ContentControl>
+    <ScrollViewer x:Name="PageScroller" Grid.Column="1">
+      <!-- The page shown: the selected category's, or one of the project's, under its title. Each is a view in Views/Settings. -->
+      <StackPanel MaxWidth="720" Margin="40,28,40,40" HorizontalAlignment="Left">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
+          <!-- Everything on the page is this computer's: said once, here -->
+          <Border Classes="settingchip" VerticalAlignment="Center" IsVisible="{Binding CurrentPage.IsMachineOnly, FallbackValue=False}"
+                  ToolTip.Tip="Kept on this computer: settings sync leaves everything on this page as it is">
+            <TextBlock Text="This computer" />
+          </Border>
+        </StackPanel>
+        <TextBlock Classes="muted" Text="{Binding CurrentPage.Description, FallbackValue=''}" TextWrapping="Wrap" Margin="0,4,0,0"
+                   IsVisible="{Binding CurrentPage.Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" />
+        <!-- Neither it nor the page views (ClipToBounds="False" on each) cut off the rows, which reach 8 pixels past the page
+             for their changed bars and highlight. -->
+        <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Margin="0,24,0,0" ClipToBounds="False">
+          <ContentControl.DataTemplates>
+            <DataTemplate DataType="settings:GeneralPage">
+              <pages:GeneralPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:AppearancePage">
+              <pages:AppearancePageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ConversationPage">
+              <pages:ConversationPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:NotificationsPage">
+              <pages:NotificationsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:KeyboardPage">
+              <pages:KeyboardPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ClaudeCodePage">
+              <pages:ClaudeCodePageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:AccountsPage">
+              <pages:AccountsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:TabsPage">
+              <pages:TabsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:UsagePage">
+              <pages:UsagePageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:SessionsPage">
+              <pages:SessionsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:FilesPage">
+              <pages:FilesPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ProjectToolsPage">
+              <pages:ProjectToolsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:PerforcePage">
+              <pages:PerforcePageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:AdvancedPage">
+              <pages:AdvancedPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ProjectLinksPage">
+              <pages:ProjectLinksPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ProjectActionsPage">
+              <pages:ProjectActionsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ProjectToolChoicesPage">
+              <pages:ProjectToolChoicesPageView />
+            </DataTemplate>
+          </ContentControl.DataTemplates>
+        </ContentControl>
+      </StackPanel>
     </ScrollViewer>
 
     <!-- The project pages' small dialogs: a link, or an action (DESIGN.md §18). The action's is taller than the

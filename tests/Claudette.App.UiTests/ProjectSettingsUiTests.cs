@@ -50,29 +50,23 @@ public class ProjectSettingsUiTests
         // Tall enough for the whole list: one that scrolls realizes only the rows in view, in no particular order.
         var window = ShowSettings(h, tab, null, out var settings, height: 1000);
 
-        var list = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "SidebarList");
-        var group = list.GetVisualDescendants().OfType<StackPanel>().Single(p => p.Name == "ProjectGroup");
-        Assert.True(group.IsEffectivelyVisible);
-        var heading = group.GetVisualDescendants().OfType<TextBlock>().First();
-        Assert.Equal(("NightOwl", h.WorkFolder), (heading.Text, ToolTip.GetTip(heading) as string));
+        var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        var heading = list.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible && t.Text == "NightOwl");
+        Assert.Equal(h.WorkFolder, ToolTip.GetTip(heading) as string);
+        // A heading isn't a page: it can't be picked or focused.
+        Assert.False(heading.FindAncestorOfType<ListBoxItem>()!.Focusable);
+        Assert.Equal("General", settings.SelectedNavEntry!.Title);
 
-        // One selection between the two lists: a project page, or a category.
-        var categories = list.GetVisualDescendants().OfType<ListBox>().Single(l => AutomationProperties.GetName(l) == "Categories");
-        var pages = group.GetVisualDescendants().OfType<ListBox>().Single();
-        Assert.Equal("General", categories.SelectedItem);
-        Assert.Null(pages.SelectedItem);
-        pages.SelectedItem = SettingsViewModel.ToolsPage;
+        list.SelectedItem = settings.NavEntries.Single(e => !e.IsHeading && e.Title == SettingsViewModel.ToolsPage);
         UiText.Settle(window);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        Assert.Null(categories.SelectedItem);
         var tools = window.GetVisualDescendants().OfType<StackPanel>().Single(p => p.Name == "ToolsPage");
         var toolsText = UiText.Describe(tools, (h.Root, "{root}"));
         Assert.Contains("\"Engine folder\"", toolsText, StringComparison.Ordinal);
         Assert.Contains("[choice] \"Development\"", toolsText, StringComparison.Ordinal);
-        categories.SelectedItem = "Appearance";
+        list.SelectedItem = settings.NavEntries.Single(e => e.Title == "Appearance");
         UiText.Settle(window);
         Assert.Same(settings.Appearance, settings.CurrentPage);
-        Assert.Null(pages.SelectedItem);
 
         // The version foot stays at the bottom, below the list.
         var version = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Copy version details");
@@ -87,8 +81,6 @@ public class ProjectSettingsUiTests
             app.Colors.Apply(AppStyle.Claude);
             app.RequestedThemeVariant = ThemeVariant.Dark;
             UiText.Settle(window);
-            var divider = group.GetVisualDescendants().OfType<Border>().First();
-            Assert.Equal(((ISolidColorBrush)window.FindResource(ThemeVariant.Dark, "DividerBrush")!).Color, Assert.IsAssignableFrom<ISolidColorBrush>(divider.Background).Color);
             Assert.Equal(((ISolidColorBrush)window.FindResource(ThemeVariant.Dark, "MutedTextBrush")!).Color, Assert.IsAssignableFrom<ISolidColorBrush>(heading.Foreground).Color);
         }
         finally
@@ -98,8 +90,8 @@ public class ProjectSettingsUiTests
             UiText.Settle(window);
         }
 
-        // What the list holds: every category, then the project's group.
-        var shown = UiText.Describe(Assert.IsType<StackPanel>(list.Content));
+        // What the list holds: every group's pages, then the project's.
+        var shown = UiText.Describe(list);
         window.Close();
         await Verify(shown);
     }
@@ -113,8 +105,9 @@ public class ProjectSettingsUiTests
         window.Show();
         UiText.Settle(window);
 
-        var group = window.GetVisualDescendants().OfType<StackPanel>().Single(p => p.Name == "ProjectGroup");
-        Assert.False(group.IsEffectivelyVisible);
+        Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage);
+        var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        Assert.Equal(["Claudette", "Claude", "Your work"], list.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible).Select(t => t.Text));
         window.Close();
     }
 

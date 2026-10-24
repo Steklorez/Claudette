@@ -15,6 +15,7 @@ composer's right rather than being caught part-way through falling off it). Then
 - expands the usage header and captures the top of the window as header-<style>-<theme>.png;
 - collapses it again, selects Pool particle emitters, which runs on the Studio API key, and captures the window, with
   the key's spend in the header and the account's tags, as accounts-<style>-<theme>.png;
+- opens Settings on Appearance, with its preview, and captures that window as settings-<style>-<theme>.png;
 - selects Grappling hook, opens History, picks starfall's chip and captures the window as history-<style>-<theme>.png;
 and closes Claudette by its window, as a user would. Last, it has MascotPictureTests draw Claudette on the composer's
 animation from her art and steps, as claudette.gif, and social-card.ps1 draw the site's social card with the new
@@ -81,6 +82,9 @@ foreach ($style in 'standard', 'claude') {
             [WindowShot]::Resize($diff, 1000, 470)
             Start-Sleep -Seconds 2
             Save-Window $diff (Join-Path $Out "diff-$style-$theme.png")
+            # Closed, so the next window of Claudette's found is Settings.
+            Close-Window $diff
+            Start-Sleep -Seconds 1
 
             # The thread: its plan and tasks, then its subagents with the first one's details.
             Set-Step 'the thread'
@@ -114,6 +118,17 @@ foreach ($style in 'standard', 'claude') {
             Start-Sleep -Seconds 2
             Save-Window $window (Join-Path $Out "accounts-$style-$theme.png")
 
+            # Settings on Appearance, whose preview shows the style and theme.
+            Set-Step 'Settings'
+            Invoke-ByText $window 'Settings'
+            $settings = Get-OtherWindow $claudette $window 'the Settings window'
+            Start-Sleep -Seconds 2
+            Select-ListItem $settings 'Appearance'
+            Start-Sleep -Seconds 2
+            Save-Window $settings (Join-Path $Out "settings-$style-$theme.png")
+            Close-Window $settings
+            Start-Sleep -Seconds 1
+
             # History from a starfall tab, narrowed to starfall by its chip: its tabs' sessions and older ones, one in a worktree.
             Set-Step 'History'
             Invoke-ByText $window 'Grappling hook'
@@ -124,6 +139,7 @@ foreach ($style in 'standard', 'claude') {
             Invoke-Element (Find-ByPrefix $window 'starfall, ') 'starfall'
             Start-Sleep -Seconds 2
             Save-Window $window (Join-Path $Out "history-$style-$theme.png")
+
         }
         finally {
             Stop-Claudette $claudette

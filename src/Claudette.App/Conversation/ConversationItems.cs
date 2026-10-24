@@ -818,7 +818,7 @@ public sealed partial class SubagentItem : ToolUseItem
     /// <summary>It started, so it has work to show: every subagent but one Claudette's hook refused.</summary>
     public bool IsStarted => !IsRefused;
 
-    /// <summary>The call came back refused by Claudette's hook, as Settings → Claude Code → Subagents says.</summary>
+    /// <summary>The call came back refused by Claudette's hook, as Settings → Tabs → Subagents says.</summary>
     internal void ShowRefused()
     {
         IsComplete = true;

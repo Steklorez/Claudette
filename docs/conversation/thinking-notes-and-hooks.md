@@ -13,7 +13,7 @@ Between your messages and Claude's replies, the conversation shows Claude's thin
 
 A **Thinking** card holds what Claude thought before it replied. It starts collapsed, and says *Thinking…* while Claude is still at it. Click its line to open it.
 
-- **Show thinking expanded** (Settings → Appearance, off by default) starts new thinking cards open.
+- **Show thinking expanded** (Settings → Conversation, off by default) starts new thinking cards open.
 - Right-click a thinking card for **Collapse all thinking** and **Expand all thinking**. They apply to every thinking card in this tab, the ones in subagents' groups too, and new ones start the same way from then on, whatever Settings says. The tab keeps the choice, and a copy of the tab (**Duplicate tab**, **Branch from here**) takes it.
 
 [Find](finding-your-way.md#find) looks through thinking. [Exporting](exporting.md) leaves it out.
@@ -43,14 +43,14 @@ Hook names and output are shown as text, whatever they contain.
 
 ### Showing every hook run
 
-Turn on **Show every hook run in the conversation** (Settings → Claude Code, off by default) to give every run a row, from its start (*running…*) to how it ended (*done*, *failed* or *cancelled*).
+Turn on **Show every hook run** (Settings → Conversation, off by default) to give every run a row, from its start (*running…*) to how it ended (*done*, *failed* or *cancelled*).
 
 ## Settings
 
 | Setting | Default | Where |
 |---|---|---|
-| **Show thinking expanded** | Off | Settings → Appearance |
-| **Show every hook run in the conversation** | Off | Settings → Claude Code |
+| **Show thinking expanded** | Off | Settings → Conversation |
+| **Show every hook run** | Off | Settings → Conversation |
 
 ## See also
 

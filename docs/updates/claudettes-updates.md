@@ -28,7 +28,7 @@ A badge at the foot of the sidebar says *Claudette 1.3.0 is available*. It chang
 - **Release notes on GitHub** opens the release's page.
 - **Open the installer** (Windows) or **Open the disk image** (macOS) appears when Claudette can't install the package itself: see [When an update fails](when-an-update-fails.md).
 
-Settings → General has the same actions under **Claudette updates**.
+Settings → General has the same actions under **Updates and status**.
 
 ## What an update does
 
@@ -55,7 +55,7 @@ Downloaded packages are kept in the `updates` folder in Claudette's data folder,
 
 ## Settings
 
-All in Settings → General, under **Claudette updates**:
+All in Settings → General, under **Updates and status**:
 
 - **Check for Claudette updates automatically**: on by default.
 - **Include pre-releases**: off by default.

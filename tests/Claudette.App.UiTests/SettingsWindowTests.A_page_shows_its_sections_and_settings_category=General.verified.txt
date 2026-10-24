@@ -1,0 +1,53 @@
+﻿"General"
+"This computer"
+"Starting Claudette, keeping the computer awake, worktrees and updates."
+"Starting and closing"
+[button] Reset to defaults
+"Start Claudette when I log in"
+"Claudette opens minimized when you log in to this computer."
+[toggle] Start Claudette when I log in
+"Also restore unpinned tabs when Claudette starts"
+"Pinned tabs always come back."
+[toggle on] Also restore unpinned tabs when Claudette starts
+"Confirm before closing a tab where Claude is working"
+"Closing one stops Claude mid-turn."
+[toggle on] Confirm before closing a tab where Claude is working
+"Keeping the computer awake"
+[button] Reset to defaults
+"Keep this computer awake"
+"So a task a usage limit stopped can carry on by itself when the limit resets.  "
+[toggle] Keep this computer awake
+"When"
+[toggle] More
+[toggle on] Only while Claude has work to finish
+[toggle] Whenever Claudette is running
+"Also while tabs are connected to the Claude app"
+"So the Claude app can still reach them. The screen can still turn off."
+[toggle on] Also while tabs are connected to the Claude app
+"Worktrees"
+[button] Reset to defaults
+"The worktrees of worktree tabs that no open tab works in."
+"Remove worktrees once everything in them is merged"
+"Every commit is on another branch, so nothing is lost.  "
+[toggle] Remove worktrees once everything in them is merged
+"Remove worktrees no tab has used for"
+"Its branch stays when it has commits on no other branch.  "
+[choice] "Never"
+"Last cleanup"
+"Nothing removed yet. Claudette looks a minute after it starts, then every hour."
+[button] Last cleanup: Clean up now
+"Updates and status"
+[button] Reset to defaults
+"Show Claude's service status"
+"A dot in the header, and a banner while Claude has an incident.  "
+[toggle on] Show Claude's service status
+"Check for Claudette updates automatically"
+"From Claudette's releases on GitHub, at launch and every few hours."
+[toggle on] Check for Claudette updates automatically
+"Include pre-releases"
+"Try new versions before they're released."
+[toggle] Include pre-releases
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

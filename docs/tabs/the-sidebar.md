@@ -75,7 +75,7 @@ Once you've added an API-key account, a folder group whose new tabs use an accou
 
 A thread's sub-threads sit right under it, indented, and move with it.
 
-Each subagent Claude starts has a small row under its tab, with the agents icon before its task. Click it to see its work in the tab. Settings → Appearance → **Show subagents' work** → **In the conversation** leaves the rows out. See [Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab).
+Each subagent Claude starts has a small row under its tab, with the agents icon before its task. Click it to see its work in the tab. Settings → Conversation → **Show subagents' work** → **In the conversation** leaves the rows out. See [Subagents under their tab](../conversation/subagents.md#subagents-under-their-tab).
 
 While the project's editor runs, the log it writes has a row under one of the project's tabs, with its errors and warnings counted. Click it to read the log where the conversation is. See [Editor logs](../project-tools/editor-logs.md).
 
@@ -106,11 +106,11 @@ At the top, **New tab** opens the [picker](opening-tabs.md), and a button beside
 
 ## Settings
 
-Settings → Appearance:
+Settings → Conversation → Tab rows:
 
-- **Show context on tab rows**: the ring. On by default.
-- **Show git branch on tab rows**: the branch badge. On by default. With it off, a worktree tab shows a branch icon before its name instead.
-- **Show task progress on tab rows**: `3/7`, and the task Claude is working on in place of the model while it works. On by default.
+- **Show context**: the ring. On by default.
+- **Show git branch**: the branch badge. On by default. With it off, a worktree tab shows a branch icon before its name instead.
+- **Show task progress**: `3/7`, and the task Claude is working on in place of the model while it works. On by default.
 
 Settings → Perforce → **Show changelist on tabs** shows the changelist badge.
 
