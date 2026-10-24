@@ -67,7 +67,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     private readonly AppServices _services;
     private readonly SettingsContext _context;
     private readonly ISettingsHost? _host;
-    private readonly IReadOnlyList<(string? Heading, IReadOnlyList<string> Categories)> _groups;
+    private readonly IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> _groups;
     private readonly List<SettingsPage> _categoryPages;
     private UiTimeout HighlightWait => field ??= new(_services.Time, _services.Dispatcher);
 
@@ -99,7 +99,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Advanced = new AdvancedPage(_context, ClaudeCode);
         _groups = SettingsSidebar.Groups(types);
         Categories = [.. _groups.SelectMany(g => g.Categories)];
-        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Sessions, Files, AllTools, .. ProjectTypes, Perforce, Advanced];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, AllTools, .. ProjectTypes, Perforce];
         _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
@@ -268,10 +268,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         NavEntries.Clear();
         foreach (var (heading, categories) in _groups)
         {
-            if (heading is not null)
-            {
-                NavEntries.Add(SettingsNavEntry.Heading(heading));
-            }
+            NavEntries.Add(SettingsNavEntry.Heading(heading));
             foreach (var page in categories.Select(category => _categoryPages.First(p => p.Title == category)))
             {
                 NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey, page.NavTag));

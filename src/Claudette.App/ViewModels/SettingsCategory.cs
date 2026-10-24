@@ -41,20 +41,20 @@ public static class SettingsCategory
 }
 
 /// <summary>
-/// The Settings sidebar's groups (DESIGN.md §14), in order: a heading and its categories. The last has no heading.
-/// Project tools has All tools, a page for each project type Claudette knows, in its order, then Perforce.
+/// The Settings sidebar's groups (DESIGN.md §14), in order: a heading and its categories. Claude ends with Advanced, which
+/// is mostly about running Claude Code; Project tools has All tools, a page for each project type Claudette knows, in its
+/// order, then Perforce.
 /// </summary>
 public static class SettingsSidebar
 {
     public const string ProjectTools = "Project tools";
 
-    public static IReadOnlyList<(string? Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types) =>
+    public static IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types) =>
     [
         ("Claudette", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard]),
-        ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage]),
+        ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
         ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files]),
         (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name), SettingsCategory.Perforce]),
-        (null, [SettingsCategory.Advanced]),
     ];
 
     /// <summary>Every category, in the sidebar's order.</summary>

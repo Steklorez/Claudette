@@ -28,10 +28,10 @@ Settings opens on the page you left it on. It's a window of its own that stays o
 The sidebar lists the pages in groups:
 
 - **Claudette**: General, Appearance, Conversation, Notifications and Keyboard.
-- **Claude**: Claude Code, Accounts, Tabs and Usage.
+- **Claude**: Claude Code, Accounts, Tabs, Usage and Advanced.
 - **Your work**: Sessions, and Files and diffs.
 - **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon, then Perforce. A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
-- Then Advanced, and after it the [selected tab's project](#the-projects-pages).
+- Then the [selected tab's project](#the-projects-pages).
 
 The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.
 

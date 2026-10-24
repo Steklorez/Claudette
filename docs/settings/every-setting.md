@@ -176,6 +176,17 @@ Your favorite and recent folders belong to this machine. They stay put when sett
 
 **Keep usage history** isn't put back by **Reset to defaults**.
 
+## Advanced
+
+None of this page syncs.
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Extra arguments for every claude process** | Running claude | Empty | [Advanced](advanced.md#extra-arguments-for-claude) |
+| **Log protocol traffic**, with **Open log folder** | Running claude | Off | [Advanced](advanced.md#log-protocol-traffic) |
+| **Claudette's data folder**, with **Open data folder** | Running claude | | [Advanced](advanced.md#the-log-and-data-folders) |
+| What Claude Code sent that Claudette doesn't know, with **Copy diagnostics** | Diagnostics | | [Advanced](advanced.md#diagnostics) |
+
 ## Sessions
 
 None of this page syncs.
@@ -256,17 +267,6 @@ None of this page syncs.
 | A password for a server and user, with **Save password** and **Forget password** | Stored password | None | [Perforce](../project-tools/perforce.md) |
 | Each folder's server and user, with **Add folder…** | Per-folder server and user | None | [Perforce](../project-tools/perforce.md) |
 
-## Advanced
-
-None of this page syncs.
-
-| Setting | Section | Default | Explained in |
-|---|---|---|---|
-| **Extra arguments for every claude process** | Running claude | Empty | [Advanced](advanced.md#extra-arguments-for-claude) |
-| **Log protocol traffic**, with **Open log folder** | Running claude | Off | [Advanced](advanced.md#log-protocol-traffic) |
-| **Claudette's data folder**, with **Open data folder** | Running claude | | [Advanced](advanced.md#the-log-and-data-folders) |
-| What Claude Code sent that Claudette doesn't know, with **Copy diagnostics** | Diagnostics | | [Advanced](advanced.md#diagnostics) |
-
 ## The project's pages
 
-The **Links**, **Actions** and **Tools** pages after Advanced aren't in this list. They belong to a project rather than to Claudette: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.
+The **Links**, **Actions** and **Tools** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Claudette: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.

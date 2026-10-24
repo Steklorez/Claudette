@@ -787,9 +787,10 @@ public class ProjectSettingsTests
         using var settings = new SettingsViewModel(h.Services, null);
 
         Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
+        // Advanced is the last of Claude's pages: it's mostly about running Claude Code.
+        Assert.Equal(["Claude Code", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, "Claude"));
         Assert.Equal(["Sessions", "Files and diffs"], PagesUnder(settings, "Your work"));
-        // Advanced, the group without a heading, follows the last group's pages.
-        Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot", "Perforce", "Advanced"], PagesUnder(settings, SettingsSidebar.ProjectTools));
+        Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot", "Perforce"], PagesUnder(settings, SettingsSidebar.ProjectTools));
         Assert.Equal(h.Services.ProjectTools.Detector.Types.Select(t => t.Name), settings.ProjectTypes.Select(p => p.Title));
 
         // Every page has an icon of its own; each project type's is its kind's.
