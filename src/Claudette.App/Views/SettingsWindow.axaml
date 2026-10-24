@@ -30,6 +30,7 @@
       <Setter Property="Focusable" Value="{Binding !IsHeading}" />
       <Setter Property="IsHitTestVisible" Value="{Binding !IsHeading}" />
       <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+      <Setter Property="AutomationProperties.ItemStatus" Value="{Binding Tag}" />
     </Style>
     <Style Selector=".claude ListBox.settingsnav ListBoxItem">
       <Setter Property="CornerRadius" Value="10" />
@@ -107,6 +108,12 @@
                   <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
                     <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}" />
                     <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <!-- A word about the page after its name, such as Off for a project type switched off: the page can
+                         still be picked -->
+                    <Border Classes="settingchip" Margin="-4,0,0,0" VerticalAlignment="Center"
+                            IsVisible="{Binding Tag, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                      <TextBlock Text="{Binding Tag}" />
+                    </Border>
                   </StackPanel>
                 </Panel>
               </DataTemplate>
@@ -187,8 +194,11 @@
             <DataTemplate DataType="settings:FilesPage">
               <pages:FilesPageView />
             </DataTemplate>
-            <DataTemplate DataType="settings:ProjectToolsPage">
-              <pages:ProjectToolsPageView />
+            <DataTemplate DataType="settings:AllToolsPage">
+              <pages:AllToolsPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:ProjectTypePage">
+              <pages:ProjectTypePageView />
             </DataTemplate>
             <DataTemplate DataType="settings:PerforcePage">
               <pages:PerforcePageView />

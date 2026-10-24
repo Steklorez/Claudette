@@ -327,7 +327,7 @@ public sealed class GodotProvider : IProjectType
         string? problem = null;
         if (godot is null)
         {
-            problem = "Godot wasn't found. Set its path in Settings → Project tools, or choose it in this menu.";
+            problem = "Godot wasn't found. Set its path in Settings → Project tools → Godot, or choose it in this menu.";
         }
         else if (project.IsCSharp && !GodotExecutables.IsDotNetBuild(godot))
         {

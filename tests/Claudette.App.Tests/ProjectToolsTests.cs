@@ -67,6 +67,24 @@ public class ProjectToolsTests
     }
 
     [Fact]
+    public async Task The_project_rows_icon_is_its_kinds_or_a_folders_without_a_project()
+    {
+        await using (var plain = new TabTestHarness())
+        {
+            var folder = await plain.OpenTabAsync();
+            await folder.ProjectTools.RefreshAsync();
+            Assert.Null(folder.ProjectTools.Project);
+            Assert.Equal(ProjectTypeIcons.Folder, folder.ProjectTools.IconKey);
+        }
+
+        var (h, _, _) = UnrealHarness();
+        await using var _h = h;
+        var tab = await OpenWithProjectAsync(h);
+        Assert.Equal(ProjectTypeIcons.For(UnrealProvider.KindId), tab.ProjectTools.IconKey);
+        Assert.Equal("IconProjectUnreal", tab.ProjectTools.IconKey);
+    }
+
+    [Fact]
     public async Task Without_a_project_or_actions_the_row_is_named_after_the_folder_and_offers_the_first_action_and_link()
     {
         await using var h = new TabTestHarness();

@@ -58,7 +58,7 @@ public sealed partial class SettingsViewModel
         // A project page showing becomes the same page of the new tab's project, or General without one.
         if (ProjectPages.Contains(SelectedCategory) && project is null)
         {
-            SelectedCategory = AllCategories[0];
+            SelectedCategory = Categories[0];
         }
         OnPropertyChanged(nameof(Pages));
         OnPropertyChanged(nameof(CurrentPage));
@@ -68,7 +68,11 @@ public sealed partial class SettingsViewModel
     /// <summary>Another tab was selected in the main window: the project pages are its project's.</summary>
     private void OnSelectedTabChanged() => UseProject(_host?.SelectedTabProject());
 
-    /// <summary>From the Tools page: the app-wide defaults are in Settings → Project tools.</summary>
+    /// <summary>
+    /// From the Tools page: the defaults every project of its kind starts with are on its type's page in Project tools,
+    /// or, without a project, All tools.
+    /// </summary>
     [RelayCommand]
-    private void ShowProjectToolsDefaults() => SelectedCategory = SettingsCategory.ProjectTools;
+    private void ShowProjectToolsDefaults() =>
+        Show(ProjectTypes.FirstOrDefault(p => p.Kind == Project?.ToolsKind)?.Title ?? SettingsCategory.AllTools);
 }

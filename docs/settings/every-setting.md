@@ -206,24 +206,41 @@ None of this page syncs, and a tab can't change it for itself.
 | **Command** (for a custom command), with **Test** | Diff tool | Empty | [External diff tools](../changes/external-diff-tools.md) |
 | **Open in the diff window** | Diff tool | Opens the file, as Open files in says (or in the app the OS uses, or the changes in the diff tool) | [The diff view](../changes/the-diff-view.md#opening-the-file) |
 
-## Project tools
+## All tools
 
-None of this page syncs, since program paths and the editors you have installed differ from one machine to the next. Each kind of project Claudette knows has a section, which starts with two switches: **Recognize … projects** (off, Claudette treats its projects as plain folders, and their own actions and links still work) and **Tell Claude about … projects**.
+The first page under **Project tools**: what every kind of project shares. None of this page syncs, nor do the project types' pages after it, since program paths and the editors you have installed differ from one machine to the next.
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
-| **Recognize Unreal Engine projects** | Unreal Engine | On | [Unreal Engine](../project-tools/unreal-engine.md) |
-| **Tell Claude about Unreal Engine projects** | Unreal Engine | On | [Unreal Engine](../project-tools/unreal-engine.md) |
-| **Default editor configuration** | Unreal Engine | Development (or DebugGame) | [Unreal Engine](../project-tools/unreal-engine.md) |
-| **Project files for** | Unreal Engine | The OS's own: Visual Studio on Windows, Xcode on macOS, VS Code on Linux | [Unreal Engine](../project-tools/unreal-engine.md) |
-| **Recognize Unity projects** | Unity | On | [Unity](../project-tools/unity.md) |
-| **Tell Claude about Unity projects** | Unity | On | [Unity](../project-tools/unity.md) |
-| **Default code optimization** | Unity | Release (or Debug) | [Unity](../project-tools/unity.md) |
-| **Recognize Godot projects** | Godot | On | [Godot](../project-tools/godot.md) |
-| **Tell Claude about Godot projects** | Godot | On | [Godot](../project-tools/godot.md) |
-| **Godot executable**, with **Browse…** and **Detect** | Godot | Found automatically | [Godot](../project-tools/godot.md) |
 | **Open solutions with** | Solutions | The OS's default app (or Rider, Visual Studio, VS Code or another program) | [Unreal Engine](../project-tools/unreal-engine.md) |
 | **Show editor logs under the tab** | Editor logs | On | [Editor logs](../project-tools/editor-logs.md) |
+
+## Unreal Engine
+
+Each kind of project Claudette knows has a page, which starts with two switches under **Projects**: **Recognize … projects** (off, Claudette treats its projects as plain folders, and their own actions and links still work; the sidebar says *Off* beside the page) and **Tell Claude about … projects**. Its own settings are under **Defaults**. None of them syncs.
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Recognize Unreal Engine projects** | Projects | On | [Unreal Engine](../project-tools/unreal-engine.md) |
+| **Tell Claude about Unreal Engine projects** | Projects | On | [Unreal Engine](../project-tools/unreal-engine.md) |
+| **Default editor configuration** | Defaults | Development (or DebugGame) | [Unreal Engine](../project-tools/unreal-engine.md) |
+| **Project files for** | Defaults | The OS's own: Visual Studio on Windows, Xcode on macOS, VS Code on Linux | [Unreal Engine](../project-tools/unreal-engine.md) |
+
+## Unity
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Recognize Unity projects** | Projects | On | [Unity](../project-tools/unity.md) |
+| **Tell Claude about Unity projects** | Projects | On | [Unity](../project-tools/unity.md) |
+| **Default code optimization** | Defaults | Release (or Debug) | [Unity](../project-tools/unity.md) |
+
+## Godot
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Recognize Godot projects** | Projects | On | [Godot](../project-tools/godot.md) |
+| **Tell Claude about Godot projects** | Projects | On | [Godot](../project-tools/godot.md) |
+| **Godot executable**, with **Browse…** and **Detect** | Defaults | Found automatically | [Godot](../project-tools/godot.md) |
 
 ## Perforce
 

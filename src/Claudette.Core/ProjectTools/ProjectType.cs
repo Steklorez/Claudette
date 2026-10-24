@@ -2,9 +2,9 @@ namespace Claudette.Core.ProjectTools;
 
 /// <summary>
 /// A kind of project Claudette knows (DESIGN.md §18, "Project types"): it finds its projects for a tab's folder, says
-/// what can be done with one, and declares its settings, which Settings → Project tools draws in its section with its
+/// what can be done with one, and declares its settings, which its page in Settings → Project tools draws with its
 /// on and off switch and <b>Tell Claude about …</b>. Unreal Engine, Unity and Godot are the first. Adding one is a class
-/// that implements this and a line in the app's list of them (DESIGN.md §18, "Adding a project type").
+/// that implements this, a line in the app's list of them, and its icon (DESIGN.md §18, "Adding a project type").
 /// </summary>
 /// <remarks>
 /// <see cref="Find"/> and <see cref="Describe"/> run off the UI thread and must be cheap: bounded walks, small files,
@@ -44,7 +44,7 @@ public interface IProjectType
     ProjectInfo Describe(ProjectCandidate candidate, ProjectToolContext context);
 }
 
-/// <summary>A setting a project type has, which Settings → Project tools shows in the type's section.</summary>
+/// <summary>A setting a project type has, which the type's page in Settings → Project tools shows under Defaults.</summary>
 /// <param name="Key">Where its value is kept, in the type's <see cref="Settings.ProjectTypeSettings.Values"/>.</param>
 public abstract record ProjectTypeSetting(string Key, string Title)
 {

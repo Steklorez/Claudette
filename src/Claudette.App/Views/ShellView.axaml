@@ -3,6 +3,7 @@
              xmlns:vm="using:Claudette.App.ViewModels"
              xmlns:views="using:Claudette.App.Views"
              xmlns:controls="using:Claudette.App.Controls"
+             xmlns:conversation="using:Claudette.App.Conversation"
              x:Class="Claudette.App.Views.ShellView"
              x:DataType="vm:ShellViewModel"
              Classes.compact="{Binding IsCompact}"
@@ -902,15 +903,17 @@
         <!-- The selected tab's project, History, the Claude Code update badge (DESIGN.md §12) and Settings -->
         <Border Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="6">
           <StackPanel Spacing="2">
-            <!-- The selected tab's project tools and links (DESIGN.md §18, "Project tools"): the project's name and version,
-                 else the folder's name, or while a job runs, its name; a click opens the project's menu -->
+            <!-- The selected tab's project tools and links (DESIGN.md §18, "Project tools"): its kind's icon, or a folder's
+                 without a project; the project's name and version, else the folder's name, or while a job runs, its name;
+                 a click opens the project's menu -->
             <Button x:Name="ProjectButton" Classes="flat side" HorizontalContentAlignment="Stretch"
                     IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{Binding ProjectTab.ProjectTools.ButtonTip}" ToolTip.Placement="Right" AutomationProperties.Name="Project tools">
               <DockPanel>
                 <!-- As wide as the other icons, so the busy dot lines up with them -->
                 <Panel DockPanel.Dock="Left" Width="13" VerticalAlignment="Center">
-                  <Path Classes="icon" Data="{StaticResource IconProject}" IsVisible="{Binding !ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=True}" />
+                  <Path Classes="icon" Data="{Binding ProjectTab.ProjectTools.IconKey, Converter={x:Static conversation:ToolIcons.Geometry}, FallbackValue={x:Null}}"
+                        IsVisible="{Binding !ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=True}" />
                   <TextBlock Classes="status busy" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
                              IsVisible="{Binding ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=False}" />
                 </Panel>

@@ -13,7 +13,7 @@ A tab can do things for the project in its folder: launch the editor, generate p
 
 ## The project row
 
-At the foot of the sidebar, above **History**, a row shows the selected tab's project: a cube icon, its name and its version, such as `NightOwl · UE 5.4 ›`. It's there for every tab, whatever the folder holds, so you can add a first action or link from it. When no project is recognized, the row shows the folder's name, and its tooltip has the folder's path.
+At the foot of the sidebar, above **History**, a row shows the selected tab's project: its kind's icon (a gear for Unreal Engine, a cube for Unity, a robot's head for Godot), its name and its version, such as `NightOwl · UE 5.4 ›`. It's there for every tab, whatever the folder holds, so you can add a first action or link from it. When no project is recognized, the row shows a folder icon and the folder's name, and its tooltip has the folder's path.
 
 While a job runs, a busy dot replaces the icon and the job's name replaces the project's. When the sidebar is collapsed to its rail, the row is the icon alone.
 
@@ -83,7 +83,7 @@ The page's tab shows a busy dot while a job runs. It's there when the tab has pr
 
 ## Telling Claude about the project
 
-For Unreal, Unity and Godot projects, Claudette adds a short note to the session when a tab starts: the engine's version and folder, how to build or check the project without the editor, and not to open the editor unless asked. Each engine has its own switch in Settings → Project tools, in its section, such as **Tell Claude about Unreal Engine projects**. The tab's [info card](../tabs/the-tab-info-card.md) has a **Project** row that says whether Claude was told.
+For Unreal, Unity and Godot projects, Claudette adds a short note to the session when a tab starts: the engine's version and folder, how to build or check the project without the editor, and not to open the editor unless asked. Each engine has its own switch on its page in Settings → Project tools, such as **Tell Claude about Unreal Engine projects**. The tab's [info card](../tabs/the-tab-info-card.md) has a **Project** row that says whether Claude was told.
 
 ## A project action finishes
 
@@ -91,15 +91,18 @@ When a job finishes or fails while Claudette isn't in front, a notification says
 
 ## Settings
 
-Settings → Project tools holds the defaults every project starts with. They stay on this machine and don't sync. Each engine has a section of its own, which starts with **Recognize Unreal Engine projects** (or Unity, or Godot), on by default. Turn it off and Claudette treats that engine's projects as plain folders: the project row shows the folder, with no engine actions, editor logs or note to Claude, though the folder's own actions and links still work. The rest is explained on each engine's page:
+**Project tools**, a group of pages in the Settings sidebar, holds the defaults every project starts with. They stay on this machine and don't sync.
 
-{% include shot.html name="guide/settings/project-tools" alt="Settings on Project tools: a section each for Unreal Engine, Unity and Godot, each starting with its Recognize and Tell Claude switches, then its own settings" %}
+{% include shot.html name="guide/settings/project-tools" alt="Settings on Unreal Engine's page in the Project tools group, under All tools: its Recognize and Tell Claude switches under Projects, then its default editor configuration and project files under Defaults" %}
 
-- **Unreal Engine**: **Tell Claude about Unreal Engine projects**, **Default editor configuration** and **Project files for**. See [Unreal Engine](unreal-engine.md).
-- **Unity**: **Tell Claude about Unity projects** and **Default code optimization**. See [Unity](unity.md).
-- **Godot**: **Tell Claude about Godot projects** and **Godot executable**. See [Godot](godot.md).
-- **Solutions** → **Open solutions with**: the IDE a solution opens in. See [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider).
-- **Editor logs** → **Show editor logs under the tab**: the rows for the logs the editor writes. See [Editor logs](editor-logs.md).
+- **All tools** has what every kind of project shares:
+  - **Solutions** → **Open solutions with**: the IDE a solution opens in. See [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider).
+  - **Editor logs** → **Show editor logs under the tab**: the rows for the logs the editor writes. See [Editor logs](editor-logs.md).
+- **Unreal Engine**, **Unity** and **Godot** have a page each, with the engine's icon. Each starts with **Recognize Unreal Engine projects** (or Unity, or Godot), on by default. Turn it off and Claudette treats that engine's projects as plain folders: the project row shows the folder, with no engine actions, editor logs or note to Claude, though the folder's own actions and links still work. The sidebar then says *Off* beside the engine's page, which you can still open to switch it back on. The rest of each page is explained on its engine's page in this guide:
+  - **Unreal Engine**: **Tell Claude about Unreal Engine projects**, then under **Defaults**, **Default editor configuration** and **Project files for**. See [Unreal Engine](unreal-engine.md).
+  - **Unity**: **Tell Claude about Unity projects**, then **Default code optimization**. See [Unity](unity.md).
+  - **Godot**: **Tell Claude about Godot projects**, then **Godot executable**. See [Godot](godot.md).
+- **Perforce** is the last page in the group. See [Perforce](perforce.md).
 
 After the pages in the Settings window, a group headed by the selected tab's project has three pages: **Links**, **Actions** and **Tools**. The group follows the tab selected in the main window, even while Settings stays open, and each page says which tab in a line at the top.
 
@@ -109,7 +112,7 @@ The **Tools** page shows this machine's choices for the tab's project, the same 
 - The project's own choice: Unreal's editor configuration, or Unity's code optimization.
 - What you picked with **Choose…**: Unreal's engine folder, the Unity editor or the Godot executable. It shows what's in use now, and whether you chose it or Claudette found it. **Clear** forgets your pick so Claudette looks again.
 
-Without a project, the page says "No Unreal, Unity or Godot project in this folder" and links to Settings → Project tools. These choices are remembered on this machine, keyed by the project, and don't sync. No **Reset to defaults** on the Project tools page touches them.
+At its foot, **Open Unreal Engine** (or Unity, or Godot) shows the defaults on that engine's page in Project tools. Without a project, the page says "No Unreal, Unity or Godot project in this folder" and links to **All tools**. These choices are remembered on this machine, keyed by the project, and don't sync. No **Reset to defaults** in Project tools touches them.
 
 ## See also
 

@@ -14,7 +14,7 @@ public class PerforceSettingsTests
         await using var h = new TabTestHarness();
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Contains("Perforce", SettingsViewModel.AllCategories);
+        Assert.Contains("Perforce", settings.Categories);
         settings.SearchText = "changelist";
 
         Assert.Equal([("Perforce", "Show changelist on tabs")], settings.SearchResults.Select(r => (r.Category, r.Label)));

@@ -29,7 +29,8 @@ The sidebar lists the pages in groups:
 
 - **Claudette**: General, Appearance, Conversation, Notifications and Keyboard.
 - **Claude**: Claude Code, Accounts, Tabs and Usage.
-- **Your work**: Sessions, Files and diffs, Project tools and Perforce.
+- **Your work**: Sessions, and Files and diffs.
+- **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon, then Perforce. A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
 - Then Advanced, and after it the [selected tab's project](#the-projects-pages).
 
 The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.
@@ -72,7 +73,7 @@ After the pages is a group named for the project of the tab selected in the main
 
 - **Links** lists the project's web links, from `claudette.json` and `claudette.local.json`, with **Add…**, **Edit…**, **Remove**, **Move up** and **Move down**.
 - **Actions** is the same for the project's own actions, with **Open file**.
-- **Tools** holds this machine's choices for the project: which project file when the folder has several, its editor configuration or code optimization, and the engine folder, Unity editor or Godot executable you picked, each with **Clear** to forget the pick. Without a project it says "No Unreal, Unity or Godot project in this folder". The defaults every project starts with are in Settings → Project tools.
+- **Tools** holds this machine's choices for the project: which project file when the folder has several, its editor configuration or code optimization, and the engine folder, Unity editor or Godot executable you picked, each with **Clear** to forget the pick. Without a project it says "No Unreal, Unity or Godot project in this folder". The defaults every project starts with are on its kind's page in Project tools, which **Open Unreal Engine** (or Unity, or Godot) at the foot of the page shows; without a project, **Open All tools**.
 
 Each change is saved as you make it, to the file it belongs to, and the project's menu follows at once. Saving rewrites the file, so comments in it are dropped. A file that isn't valid JSON is never rewritten: the page shows why, and you fix the file by hand. [Actions and links](../project-tools/actions-and-links.md) explains what they do. The project's menu has **Add a link…** and **Add an action…**, which open Settings on these pages with a new entry started.
 

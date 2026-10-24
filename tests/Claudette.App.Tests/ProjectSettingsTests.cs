@@ -3,6 +3,7 @@ using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
 using Claudette.App.ViewModels.Settings;
 using Claudette.Core.ProjectTools;
+using Claudette.Core.ProjectTools.Godot;
 using Claudette.Core.ProjectTools.Unity;
 using Claudette.Core.ProjectTools.Unreal;
 using Claudette.Core.Settings;
@@ -123,7 +124,7 @@ public class ProjectSettingsTests
 
         settings.SearchText = "editor configuration";
         Assert.Contains(settings.SearchResults, r => r.Category == SettingsViewModel.ToolsPage);
-        Assert.Contains(settings.SearchResults, r => r.Category == "Project tools");
+        Assert.Contains(settings.SearchResults, r => r is { Category: "Unreal Engine", Where: "Unreal Engine → Defaults" });
 
         // The project's name finds its pages too; the categories read as before.
         settings.SearchText = "nightowl actions";
@@ -152,7 +153,8 @@ public class ProjectSettingsTests
         using var settings = await OpenSettingsAsync(h);
         var before = File.ReadAllText(shared);
 
-        settings.ProjectTools.ResetAllSections();
+        settings.ProjectType(UnrealProvider.KindId).ResetAllSections();
+        settings.AllTools.ResetAllSections();
         settings.General.ResetAllSections();
         settings.Advanced.ResetAllSections();
 
@@ -746,10 +748,103 @@ public class ProjectSettingsTests
         Assert.False(settings.Project!.HasToolsProject);
         Assert.False(settings.Project.HasToolsFix);
         Assert.Empty(settings.Project.ToolsSearchLabels);
+        Assert.Equal("Open All tools", settings.Project.DefaultsLinkText);
 
         settings.ShowProjectToolsDefaultsCommand.Execute(null);
 
-        Assert.Same(settings.ProjectTools, settings.CurrentPage);
-        Assert.Equal("Project tools", settings.SelectedNavEntry?.Title);
+        Assert.Same(settings.AllTools, settings.CurrentPage);
+        Assert.Equal(SettingsCategory.AllTools, settings.SelectedNavEntry?.Title);
+    }
+
+    [Fact]
+    public async Task The_Tools_page_points_to_its_project_types_page_for_the_defaults()
+    {
+        var (h, _, _) = ProjectToolsTests.UnrealHarness();
+        await using var _h = h;
+        var tab = await h.OpenTabAsync();
+        await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
+        using var settings = await OpenSettingsAsync(h);
+        settings.SelectedCategory = SettingsViewModel.ToolsPage;
+
+        Assert.Equal("The defaults every Unreal Engine project starts with are on its page in Project tools.", settings.Project!.DefaultsText);
+        Assert.Equal("Open Unreal Engine", settings.Project.DefaultsLinkText);
+        settings.ShowProjectToolsDefaultsCommand.Execute(null);
+
+        Assert.Same(settings.ProjectType(UnrealProvider.KindId), settings.CurrentPage);
+        Assert.Equal("Unreal Engine", settings.SelectedNavEntry?.Title);
+    }
+
+    // ---- Project tools in the sidebar (DESIGN.md §14, §18 "Project types") ------------------------------------------
+
+    /// <summary>The pages under a heading in the sidebar, up to the next heading.</summary>
+    private static string[] PagesUnder(SettingsViewModel settings, string heading) =>
+        [.. settings.NavEntries.SkipWhile(e => !(e.IsHeading && e.Title == heading)).Skip(1).TakeWhile(e => !e.IsHeading).Select(e => e.Title)];
+
+    [Fact]
+    public async Task Project_tools_is_a_group_with_All_tools_a_page_for_each_project_type_and_Perforce()
+    {
+        await using var h = new TabTestHarness();
+        using var settings = new SettingsViewModel(h.Services, null);
+
+        Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
+        Assert.Equal(["Sessions", "Files and diffs"], PagesUnder(settings, "Your work"));
+        // Advanced, the group without a heading, follows the last group's pages.
+        Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot", "Perforce", "Advanced"], PagesUnder(settings, SettingsSidebar.ProjectTools));
+        Assert.Equal(h.Services.ProjectTools.Detector.Types.Select(t => t.Name), settings.ProjectTypes.Select(p => p.Title));
+
+        // Every page has an icon of its own; each project type's is its kind's.
+        var pages = settings.NavEntries.Where(e => !e.IsHeading).ToList();
+        Assert.Equal(pages.Count, pages.Select(e => e.IconKey).Distinct().Count());
+        Assert.All(settings.ProjectTypes, page => Assert.Equal(ProjectTypeIcons.For(page.Kind), pages.Single(e => e.Title == page.Title).IconKey));
+        Assert.DoesNotContain(settings.ProjectTypes, page => page.IconKey == ProjectTypeIcons.Other);
+
+        // A type's page: its switches, then the defaults it declares, under its own line.
+        var unreal = settings.ProjectType(UnrealProvider.KindId);
+        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == "Unreal Engine");
+        Assert.Same(unreal, settings.CurrentPage);
+        Assert.Equal(h.Services.ProjectTools.Detector.Types.Single(t => t.Kind == UnrealProvider.KindId).Description, unreal.Description);
+        Assert.Equal(["projectTools.types.unreal.enabled", "projectTools.types.unreal.tellClaude"], unreal.Switches.Select(r => r.Key));
+        Assert.Equal(["projectTools.types.unreal.values.configuration", "projectTools.types.unreal.values.projectFiles"], unreal.Defaults.Select(r => r.Key));
+        Assert.Equal(["Projects", "Defaults"], unreal.Groups.Select(g => g.Title));
+        Assert.True(unreal.IsMachineOnly);
+
+        // Search names the type's page, and the group's name still finds them all.
+        settings.SearchText = "default editor configuration";
+        Assert.Equal("Unreal Engine → Defaults", settings.SearchResults[0].Where);
+        settings.SearchText = "project tools";
+        Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot"], settings.SearchResults.Select(r => r.Category).Distinct());
+    }
+
+    [Fact]
+    public async Task A_project_type_switched_off_says_Off_in_the_sidebar_and_its_page_can_still_be_picked()
+    {
+        await using var h = new TabTestHarness(s => s.ProjectTools.Type(GodotProvider.KindId).Enabled = false);
+        using var settings = new SettingsViewModel(h.Services, null);
+        SettingsNavEntry Entry(string title) => settings.NavEntries.Single(e => !e.IsHeading && e.Title == title);
+
+        // Off as the window opens.
+        Assert.Equal("Off", Entry("Godot").Tag);
+        Assert.Null(Entry("Unity").Tag);
+        Assert.Null(Entry("All tools").Tag);
+
+        // Switched off on its page: the tag comes at once, and the rest of the page is disabled.
+        var unity = settings.ProjectType(UnityProvider.KindId);
+        settings.SelectedNavEntry = Entry("Unity");
+        unity.Switches[0].IsOn = false;
+        Assert.False(h.Services.Settings.ProjectTools.IsEnabled(UnityProvider.KindId));
+        Assert.Equal("Off", Entry("Unity").Tag);
+        Assert.True(unity.Switches[0].IsAvailable);
+        Assert.False(unity.Switches[1].IsAvailable);
+        Assert.All(unity.Defaults, row => Assert.False(row.IsAvailable));
+
+        // An Off page is still a page to pick.
+        settings.SelectedNavEntry = Entry("Godot");
+        Assert.Same(settings.ProjectType(GodotProvider.KindId), settings.CurrentPage);
+
+        // Back on, by its switch or its section's Reset to defaults: the tag goes.
+        unity.Switches[0].IsOn = true;
+        Assert.Null(Entry("Unity").Tag);
+        settings.ProjectType(GodotProvider.KindId).ResetAllSections();
+        Assert.Null(Entry("Godot").Tag);
     }
 }

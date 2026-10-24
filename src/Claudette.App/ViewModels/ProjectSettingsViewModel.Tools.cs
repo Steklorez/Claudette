@@ -27,6 +27,17 @@ public sealed partial class ProjectSettingsViewModel
     /// <summary>What the choices are kept by: the project's file (a <c>.uproject</c>, <c>project.godot</c>) or folder.</summary>
     public string ToolsKeyText => ToolsProject is { } project ? $"Remembered on this machine for {project.ProjectPath}." : "";
 
+    /// <summary>The project's kind, such as <c>unreal</c>, whose page in Project tools has the defaults; null without a project.</summary>
+    public string? ToolsKind => ToolsProject?.Kind;
+
+    /// <summary>Under the choices: where the defaults every project starts with are.</summary>
+    public string DefaultsText => ToolsProject is { } project
+        ? $"The defaults every {project.KindName} project starts with are on its page in Project tools."
+        : "The defaults each kind of project starts with are in Project tools.";
+
+    /// <summary>The link to them: the project's kind's page, or All tools without a project.</summary>
+    public string DefaultsLinkText => ToolsProject is { } project ? $"Open {project.KindName}" : $"Open {SettingsCategory.AllTools}";
+
     // ---- The project, when the folder has several --------------------------------------------------------------------
 
     public bool HasSeveralProjects => _projectChoices.Count > 1;
@@ -59,7 +70,7 @@ public sealed partial class ProjectSettingsViewModel
 
     public IReadOnlyList<SettingChoice<string>> ToolsChoiceOptions => _choiceOptions;
 
-    /// <summary>The project's own choice, or Settings → Project tools' default until it has one.</summary>
+    /// <summary>The project's own choice, or its type's page's default in Project tools until it has one.</summary>
     public SettingChoice<string>? SelectedToolsChoice
     {
         get => ToolsProject?.Choice is { } choice ? _choiceOptions.FirstOrDefault(o => o.Value == choice.Selected) : null;
@@ -166,6 +177,9 @@ public sealed partial class ProjectSettingsViewModel
         OnPropertyChanged(nameof(HasToolsProject));
         OnPropertyChanged(nameof(ToolsTitle));
         OnPropertyChanged(nameof(ToolsKeyText));
+        OnPropertyChanged(nameof(ToolsKind));
+        OnPropertyChanged(nameof(DefaultsText));
+        OnPropertyChanged(nameof(DefaultsLinkText));
         OnPropertyChanged(nameof(HasSeveralProjects));
         OnPropertyChanged(nameof(ProjectChoices));
         OnPropertyChanged(nameof(SelectedProjectChoice));

@@ -33,7 +33,7 @@ public sealed record ProjectAction(string Id, string Label, ProjectActionKind Ki
     /// <summary>The file or folder for <see cref="ProjectActionKind.Open"/>.</summary>
     public string? OpenPath { get; init; }
 
-    /// <summary>Open with the IDE chosen in Settings → Project tools → Open solutions with, rather than the OS's app.</summary>
+    /// <summary>Open with the IDE chosen in Settings → Project tools → All tools → Open solutions with, rather than the OS's app.</summary>
     public bool OpenWithIde { get; init; }
 
     /// <summary>

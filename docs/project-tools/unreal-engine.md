@@ -41,7 +41,7 @@ The project's menu also has **Editor configuration**, with **Development** and *
 
 With **Open solutions with** set to Rider, the action reads **Open in Rider** and opens the `.uproject` itself, on every OS. Rider has its own Unreal project model, so there are no project files to generate first, and none to regenerate when you add source files. Rider reads a `.uproject` from Unreal Engine 4.25.4 on Windows and 4.26 on macOS and Linux. With an older engine, the action stays **Open solution**.
 
-If Rider can't be found, a note says so instead of letting the OS open the project in the Unreal editor. Choose **Another program…** in Settings → Project tools → Solutions → **Open solutions with** to point at it.
+If Rider can't be found, a note says so instead of letting the OS open the project in the Unreal editor. Choose **Another program…** in Settings → Project tools → All tools → **Open solutions with** to point at it.
 
 ## The ones that ask first
 
@@ -50,7 +50,7 @@ If Rider can't be found, a note says so instead of letting the OS open the proje
 
 ## Settings
 
-All in Settings → Project tools, on this machine only: the **Unreal Engine** section, and **Solutions** for **Open solutions with**.
+In Settings → Project tools, on this machine only: the **Unreal Engine** page, and **All tools** for **Open solutions with**.
 
 | Setting | Default | What it does |
 |---|---|---|

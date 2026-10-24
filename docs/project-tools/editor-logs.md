@@ -92,7 +92,7 @@ Claudette looks at which programs are running every couple of seconds (every fiv
 
 ## Settings
 
-In Settings → Project tools, on this machine only.
+In Settings → Project tools → All tools, on this machine only.
 
 | Setting | Default | What it does |
 |---|---|---|

@@ -2,9 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:settings="using:Claudette.App.ViewModels.Settings"
              xmlns:c="using:Claudette.App.Controls"
-             x:Class="Claudette.App.Views.Settings.ProjectToolsPageView" ClipToBounds="False"
-             x:DataType="settings:ProjectToolsPage">
-  <!-- Project tools (DESIGN.md §18): a section for each project type, drawn from what it declares -->
+             x:Class="Claudette.App.Views.Settings.ProjectTypePageView" ClipToBounds="False"
+             x:DataType="settings:ProjectTypePage">
+  <!-- A project type's page in Project tools (DESIGN.md §18, "Project types"): its switches, then its defaults, each row
+       drawn from what the type declares, so a type needs no view of its own -->
   <UserControl.DataTemplates>
     <DataTemplate DataType="settings:ProjectTypeSwitchRow">
       <c:SettingRow Key="{Binding Key}" IsEnabled="{Binding IsAvailable}">
@@ -34,38 +35,7 @@
   </UserControl.DataTemplates>
 
   <StackPanel Spacing="32">
-    <ItemsControl ItemsSource="{Binding Types}">
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel Spacing="32" />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate DataType="settings:ProjectTypeSection">
-          <c:SettingsSection Key="{Binding Kind}" ItemsSource="{Binding Rows}" />
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
-
-    <c:SettingsSection Key="solutions">
-      <c:SettingRow Key="projectTools.openSolutionsWith">
-        <ComboBox ItemsSource="{Binding SolutionOpenerChoices}" SelectedItem="{Binding OpenSolutionsWith}" />
-        <c:SettingRow.Details>
-          <c:SettingRow Key="projectTools.customIdePath" IsStacked="True" IsVisible="{Binding IsCustomIde}">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <TextBox Classes="mono" Text="{Binding CustomIdePath, UpdateSourceTrigger=LostFocus}" PlaceholderText="The program's path"
-                       AutomationProperties.Name="Program to open solutions with" />
-              <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseCustomIdeCommand}" />
-            </Grid>
-          </c:SettingRow>
-        </c:SettingRow.Details>
-      </c:SettingRow>
-    </c:SettingsSection>
-
-    <c:SettingsSection Key="editorLogs">
-      <c:SettingRow Key="projectTools.showEditorLogs">
-        <ToggleSwitch IsChecked="{Binding ShowEditorLogs}" />
-      </c:SettingRow>
-    </c:SettingsSection>
+    <c:SettingsSection Key="{Binding Kind}" ItemsSource="{Binding Switches}" />
+    <c:SettingsSection Key="{Binding DefaultsKey}" ItemsSource="{Binding Defaults}" IsVisible="{Binding HasDefaults}" />
   </StackPanel>
 </UserControl>

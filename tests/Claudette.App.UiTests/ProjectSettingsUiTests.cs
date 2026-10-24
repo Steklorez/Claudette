@@ -96,6 +96,52 @@ public class ProjectSettingsUiTests
         await Verify(shown);
     }
 
+    /// <summary>
+    /// Each kind of project has an icon of its own among the app's (DESIGN.md §18, "Project types"), for its page in
+    /// Project tools and the sidebar's project row, and so do All tools and a folder without a project.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Each_project_type_has_an_icon_of_its_own_in_the_apps_resources()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null);
+        List<string> keys = [.. settings.ProjectTypes.Select(p => p.IconKey), ProjectTypeIcons.Folder, ProjectTypeIcons.Other, settings.AllTools.IconKey];
+
+        Assert.Equal(keys.Count, keys.Distinct().Count());
+        Assert.All(keys, key => Assert.True(Application.Current!.TryFindResource(key, out var icon) && icon is Geometry, key));
+    }
+
+    /// <summary>
+    /// A project type switched off says <i>Off</i> after its name in the sidebar (DESIGN.md §14), which a screen reader
+    /// reads as its status; its page can still be picked.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_project_type_switched_off_has_Off_after_its_name_and_can_still_be_picked()
+    {
+        await using var h = new TabTestHarness(s => s.ProjectTools.Type(Core.ProjectTools.Godot.GodotProvider.KindId).Enabled = false, dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null);
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 1000 };
+        window.Show();
+        UiText.Settle(window);
+        var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        ListBoxItem Item(string title) => list.GetVisualDescendants().OfType<ListBoxItem>().Single(i => AutomationProperties.GetName(i) == title);
+
+        var godot = Item("Godot");
+        var tag = godot.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("settingchip"));
+        Assert.True(tag.IsEffectivelyVisible);
+        Assert.Equal("Off", tag.GetVisualDescendants().OfType<TextBlock>().Single().Text);
+        Assert.Equal("Off", AutomationProperties.GetItemStatus(godot));
+        Assert.True(godot.Focusable);
+        var title = godot.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == "Godot" && t.IsEffectivelyVisible);
+        Assert.True(tag.TranslatePoint(default, godot)!.Value.X > title.TranslatePoint(new Point(title.Bounds.Width, 0), godot)!.Value.X);
+        Assert.False(Item("Unity").GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("settingchip")).IsEffectivelyVisible);
+
+        list.SelectedItem = settings.NavEntries.Single(e => e.Title == "Godot");
+        UiText.Settle(window);
+        Assert.Same(settings.ProjectType(Core.ProjectTools.Godot.GodotProvider.KindId), settings.CurrentPage);
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task With_no_tab_the_sidebar_has_no_project_group()
     {
@@ -107,7 +153,7 @@ public class ProjectSettingsUiTests
 
         Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage);
         var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
-        Assert.Equal(["Claudette", "Claude", "Your work"], list.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible).Select(t => t.Text));
+        Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], list.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible).Select(t => t.Text));
         window.Close();
     }
 

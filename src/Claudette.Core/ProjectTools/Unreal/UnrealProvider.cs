@@ -155,7 +155,7 @@ public sealed class UnrealProvider(IUnrealEngineRegistry? registry = null) : IPr
                 OpenPath = project.Path,
                 OpenWithIde = true,
                 WithoutIde = "Rider wasn't found, so the project wasn't opened: the OS's app would start the Unreal editor instead. "
-                    + "If Rider is installed somewhere Claudette doesn't look, choose it with Another program… in Settings → Project tools.",
+                    + "If Rider is installed somewhere Claudette doesn't look, choose it with Another program… in Settings → Project tools → All tools.",
             });
         }
         else

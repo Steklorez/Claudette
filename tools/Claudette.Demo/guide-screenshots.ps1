@@ -11,7 +11,7 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
   side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window, the Settings window on General,
-  Appearance, a search, Project tools and Accounts, and a tab's Tab settings;
+  Appearance, a search, Unreal Engine's page in Project tools and Accounts, and a tab's Tab settings;
 - with a stand-in for the Unreal editor open on starfall (claudette-demo --stand-in-editor, run as UnrealEditor.exe),
   for its log under the tab and in the main area;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
@@ -286,11 +286,11 @@ foreach ($theme in $Themes) {
                 Start-Sleep -Seconds 1
             }
 
-            # A section for each kind of project, drawn from what it declares.
+            # Project tools' group in the sidebar, on Unreal Engine's page: its switches, then the defaults it declares.
             Shot 'settings/project-tools' {
                 param($path)
                 $settings = Open-Settings
-                Select-ListItem $settings 'Project tools'
+                Select-ListItem $settings 'Unreal Engine'
                 Start-Sleep -Seconds 1
                 Save-Window $settings $path
                 Close-Window $settings

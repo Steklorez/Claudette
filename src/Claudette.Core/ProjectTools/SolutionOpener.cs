@@ -23,7 +23,7 @@ public static class SolutionOpeners
             case SolutionOpener.Custom:
                 if (string.IsNullOrWhiteSpace(customPath))
                 {
-                    return new SolutionOpening(null, "No program is set for opening solutions; used the OS's app. Choose one in Settings → Project tools.");
+                    return new SolutionOpening(null, "No program is set for opening solutions; used the OS's app. Choose one in Settings → Project tools → All tools.");
                 }
                 return new SolutionOpening(Program(customPath.Trim(), path, os));
             case SolutionOpener.Rider:
@@ -60,7 +60,7 @@ public static class SolutionOpeners
     {
         ProcessStartSpec spec => new SolutionOpening(spec),
         string program => new SolutionOpening(Program(program, path, os)),
-        _ => new SolutionOpening(null, $"{name} wasn't found, so the OS's app opened it. Choose another in Settings → Project tools."),
+        _ => new SolutionOpening(null, $"{name} wasn't found, so the OS's app opened it. Choose another in Settings → Project tools → All tools."),
     };
 
     /// <summary><c>open -a "Rider" &lt;path&gt;</c>: macOS finds the app wherever it's installed.</summary>

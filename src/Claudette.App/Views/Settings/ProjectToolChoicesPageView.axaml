@@ -36,10 +36,10 @@
         </StackPanel>
       </c:SettingRow>
     </c:SettingsSection>
+    <!-- The defaults: the project's kind's page in Project tools, or All tools without a project -->
     <StackPanel Spacing="2">
-      <TextBlock Classes="muted small" TextWrapping="Wrap"
-                 Text="The defaults every project starts with, and the Godot executable when a project hasn't got its own, are in Project tools." />
-      <Button Classes="settingslink" Content="Open Project tools"
+      <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Project.DefaultsText, FallbackValue=''}" />
+      <Button Classes="settingslink" Content="{Binding Project.DefaultsLinkText, FallbackValue=''}"
               Command="{Binding $parent[Window].((vm:SettingsViewModel)DataContext).ShowProjectToolsDefaultsCommand}" />
     </StackPanel>
   </StackPanel>

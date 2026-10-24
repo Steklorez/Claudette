@@ -573,8 +573,14 @@
       <StreamGeometry x:Key="IconToolWrite">M2.5,1 L7,1 L9.5,3.5 L9.5,11 L2.5,11 Z M7,1 L7,3.5 L9.5,3.5 M6,5.5 L6,9 M4.25,7.25 L7.75,7.25</StreamGeometry>
       <StreamGeometry x:Key="IconToolBash">M1.5,2.5 L5,6 L1.5,9.5 M6,10 L10.5,10</StreamGeometry>
       <StreamGeometry x:Key="IconToolSearch">M5,1.5 A3.5,3.5 0 1 1 5,8.5 A3.5,3.5 0 1 1 5,1.5 M7.5,7.5 L10.5,10.5</StreamGeometry>
-      <!-- A project (DESIGN.md §18, "Project tools"): a cube, for the sidebar's project row -->
-      <StreamGeometry x:Key="IconProject">M6,1 L10.5,3.5 L10.5,8.5 L6,11 L1.5,8.5 L1.5,3.5 Z M1.5,3.5 L6,6 L10.5,3.5 M6,6 L6,11</StreamGeometry>
+      <!-- Each kind of project (DESIGN.md §18, "Project types"), for its Settings page and the sidebar's project row, which
+           ProjectTypeIcons names. Drawn for what each is known by, never its logo. 12×12 strokes. -->
+      <!-- Unreal Engine: an engine's gear -->
+      <StreamGeometry x:Key="IconProjectUnreal">M4.73,2.31 L5.01,0.9 L6.99,0.9 L7.27,2.31 L8.56,3.06 L9.92,2.59 L10.92,4.31 L9.83,5.26 L9.83,6.74 L10.92,7.69 L9.92,9.41 L8.56,8.94 L7.27,9.69 L6.99,11.1 L5.01,11.1 L4.73,9.69 L3.44,8.94 L2.08,9.41 L1.08,7.69 L2.17,6.74 L2.17,5.26 L1.08,4.31 L2.08,2.59 L3.44,3.06 Z M6,4.3 A1.7,1.7 0 1 1 6,7.7 A1.7,1.7 0 1 1 6,4.3</StreamGeometry>
+      <!-- Unity: a cube -->
+      <StreamGeometry x:Key="IconProjectUnity">M6,1 L10.5,3.5 L10.5,8.5 L6,11 L1.5,8.5 L1.5,3.5 Z M1.5,3.5 L6,6 L10.5,3.5 M6,6 L6,11</StreamGeometry>
+      <!-- Godot: a robot's head, with its eyes, its mouth and two antennae -->
+      <StreamGeometry x:Key="IconProjectGodot">M3,3.5 L9,3.5 A1.5,1.5 0 0 1 10.5,5 L10.5,8.5 A1.5,1.5 0 0 1 9,10 L3,10 A1.5,1.5 0 0 1 1.5,8.5 L1.5,5 A1.5,1.5 0 0 1 3,3.5 Z M3.6,3.5 L3,1.5 M8.4,3.5 L9,1.5 M3.3,6.3 A1.05,1.05 0 1 1 5.4,6.3 A1.05,1.05 0 1 1 3.3,6.3 M6.6,6.3 A1.05,1.05 0 1 1 8.7,6.3 A1.05,1.05 0 1 1 6.6,6.3 M4.6,8.4 L7.4,8.4</StreamGeometry>
       <!-- A folder tree: a group's Project files button and its Project Files tab (DESIGN.md §18, "Project files"). 12×12. -->
       <StreamGeometry x:Key="IconFiles">M1.5,1.5 L4.5,1.5 L5.5,2.8 L10.5,2.8 L10.5,6 L1.5,6 Z M3,6 L3,10 L6,10 M3,8 L6,8 M6.5,7 L10.5,7 L10.5,9 L6.5,9 Z M6.5,9.2 L10.5,9.2 L10.5,11 L6.5,11 Z</StreamGeometry>
       <!-- Lines folding up: the explorer's Collapse all. 12×12. -->
@@ -615,7 +621,7 @@
       <!-- Not a mark: what covers it while every changed file is reviewed. Filled even-odd, so the check is a hole. -->
       <StreamGeometry x:Key="IconMarkReviewed">F0 M0.5,6 A5.5,5.5 0 1 1 11.5,6 A5.5,5.5 0 1 1 0.5,6 Z M2.5,6.6 L5.2,9.3 L9.5,4.65 L7.9,3.15 L5.2,6.1 L4.1,5 Z</StreamGeometry>
       <!-- The Settings sidebar's pages (DESIGN.md §14), with IconSettings, IconCardClaude, IconCardYou, IconCardStats,
-           IconFiles, IconProject and IconToolBash. 12×12 strokes. -->
+           IconFiles, the project types' (IconProjectUnreal…) and IconToolBash. 12×12 strokes. -->
       <StreamGeometry x:Key="IconSettingsAppearance">M6,3.6 A2.4,2.4 0 1 1 6,8.4 A2.4,2.4 0 1 1 6,3.6 M6,0.8 L6,1.8 M6,10.2 L6,11.2 M0.8,6 L1.8,6 M10.2,6 L11.2,6 M2.3,2.3 L3,3 M9,9 L9.7,9.7 M2.3,9.7 L3,9 M9,3 L9.7,2.3</StreamGeometry>
       <StreamGeometry x:Key="IconSettingsConversation">M1.5,2 L10.5,2 L10.5,8 L5.2,8 L2.8,10.4 L2.8,8 L1.5,8 Z M3.8,4.4 L8.2,4.4 M3.8,6 L6.6,6</StreamGeometry>
       <StreamGeometry x:Key="IconSettingsNotifications">M3,8.4 L3,5.6 A3,3 0 0 1 9,5.6 L9,8.4 L10.2,9.6 L1.8,9.6 Z M5,11 L7,11 M6,1.2 L6,2.6</StreamGeometry>
@@ -626,6 +632,8 @@
       <StreamGeometry x:Key="IconSettingsPerforce">M2,3 A4,1.5 0 1 0 10,3 A4,1.5 0 1 0 2,3 M2,3 L2,9 A4,1.5 0 0 0 10,9 L10,3 M2,6 A4,1.5 0 0 0 10,6</StreamGeometry>
       <StreamGeometry x:Key="IconSettingsLinks">M5,7 L7,5 M4.4,5.6 L3,7 A1.7,1.7 0 0 0 5,9 L6.4,7.6 M7.6,6.4 L9,5 A1.7,1.7 0 0 0 7,3 L5.6,4.4</StreamGeometry>
       <StreamGeometry x:Key="IconSettingsActions">M3.5,2 L10,6 L3.5,10 Z</StreamGeometry>
+      <!-- A toolbox: All tools, what every kind of project shares. -->
+      <StreamGeometry x:Key="IconSettingsAllTools">M1.5,4.5 L10.5,4.5 L10.5,10.5 L1.5,10.5 Z M4.5,4.5 L4.5,2.5 L7.5,2.5 L7.5,4.5 M1.5,7.25 L4.75,7.25 M7.25,7.25 L10.5,7.25 M4.75,6.5 L7.25,6.5 L7.25,8 L4.75,8 Z</StreamGeometry>
       <StreamGeometry x:Key="IconSettingsTools">M10.6,3.4 A2.6,2.6 0 0 1 7,6.2 L2.7,10.5 A0.9,0.9 0 0 1 1.5,9.3 L5.8,5 A2.6,2.6 0 0 1 8.6,1.4 L7.3,2.7 L7.6,4.4 L9.3,4.7 Z</StreamGeometry>
       <!-- A circle with a question mark: Help, at the foot of the Settings sidebar. -->
       <StreamGeometry x:Key="IconHelp">M6,1 A5,5 0 1 1 6,11 A5,5 0 1 1 6,1 M4.4,4.6 A1.6,1.6 0 1 1 6.6,6.1 C6.1,6.4 6,6.8 6,7.3 M6,8.7 L6,9.1</StreamGeometry>

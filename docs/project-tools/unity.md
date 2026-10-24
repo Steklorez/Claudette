@@ -41,7 +41,7 @@ Unity locks a project while its editor has it open. Claudette notices, and the m
 
 ## Settings
 
-In Settings → Project tools → Unity, on this machine only. **Open solutions with**, under **Solutions**, also applies here, and is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
+On Unity's page in Settings → Project tools, on this machine only. **Open solutions with**, on All tools, also applies here, and is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
 
 | Setting | Default | What it does |
 |---|---|---|

@@ -69,7 +69,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             {
                 tab.OnSettingsChanged();
             }
-            // Settings → Project tools → Show editor logs (DESIGN.md §18, "Editor logs").
+            // Settings → Project tools → All tools → Show editor logs (DESIGN.md §18, "Editor logs").
             FollowEditorLogs();
         };
         // An account added, renamed or removed, or a folder's changed: the groups' and tabs' tags and menus follow.

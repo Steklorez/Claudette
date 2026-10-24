@@ -61,15 +61,13 @@ public interface ISettingsHost
 /// </summary>
 public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 {
-    /// <summary>The categories, in the sidebar's order.</summary>
-    public static IReadOnlyList<string> AllCategories { get; } = [.. SettingsSidebar.Groups.SelectMany(g => g.Categories)];
-
     /// <summary>How long a setting that search or a link brought into view stays picked out.</summary>
     internal static readonly TimeSpan HighlightFor = TimeSpan.FromSeconds(2);
 
     private readonly AppServices _services;
     private readonly SettingsContext _context;
     private readonly ISettingsHost? _host;
+    private readonly IReadOnlyList<(string? Heading, IReadOnlyList<string> Categories)> _groups;
     private readonly List<SettingsPage> _categoryPages;
     private UiTimeout HighlightWait => field ??= new(_services.Time, _services.Dispatcher);
 
@@ -94,10 +92,15 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Usage = new UsagePage(_context);
         Sessions = new SessionsPage(_context);
         Files = new FilesPage(_context);
-        ProjectTools = new ProjectToolsPage(_context);
+        AllTools = new AllToolsPage(_context);
+        var types = services.ProjectTools.Detector.Types;
+        ProjectTypes = [.. types.Select(type => new ProjectTypePage(_context, type))];
         Perforce = new PerforcePage(_context);
         Advanced = new AdvancedPage(_context, ClaudeCode);
-        _categoryPages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Sessions, Files, ProjectTools, Perforce, Advanced];
+        _groups = SettingsSidebar.Groups(types);
+        Categories = [.. _groups.SelectMany(g => g.Categories)];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Sessions, Files, AllTools, .. ProjectTypes, Perforce, Advanced];
+        _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
             page.RefreshItems();
@@ -171,14 +174,23 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     public FilesPage Files { get; }
 
-    public ProjectToolsPage ProjectTools { get; }
+    public AllToolsPage AllTools { get; }
+
+    /// <summary>A page for each project type Claudette knows, in its order, after All tools (DESIGN.md §18, "Project types").</summary>
+    public IReadOnlyList<ProjectTypePage> ProjectTypes { get; }
+
+    /// <summary>The project type's page for projects of <paramref name="kind"/>, such as <c>unreal</c>.</summary>
+    public ProjectTypePage ProjectType(string kind) => ProjectTypes.Single(p => p.Kind == kind);
 
     public PerforcePage Perforce { get; }
 
     public AdvancedPage Advanced { get; }
 
+    /// <summary>The categories, in the sidebar's order, with a page for each project type Claudette knows.</summary>
+    public IReadOnlyList<string> Categories { get; }
+
     /// <summary>
-    /// Every page, in the sidebar's order: the categories' (<see cref="AllCategories"/>), then the selected tab's project
+    /// Every page, in the sidebar's order: the categories' (<see cref="Categories"/>), then the selected tab's project
     /// pages (<see cref="ProjectPages"/>), which there are none of with no tab open.
     /// </summary>
     public IReadOnlyList<SettingsPage> Pages { get; private set; } = [];
@@ -210,7 +222,20 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     /// <summary>The window takes the Claude style's shapes (DESIGN.md §3, "Visual style"), as the main window does.</summary>
     public bool IsClaudeStyle => _services.Settings.Appearance.Style == AppStyle.Claude;
 
-    private void OnSettingsChanged() => OnPropertyChanged(nameof(IsClaudeStyle));
+    private void OnSettingsChanged()
+    {
+        OnPropertyChanged(nameof(IsClaudeStyle));
+        RefreshNavTags();
+    }
+
+    /// <summary>Each page's entry says what its page's <see cref="SettingsPage.NavTag"/> says now, such as <i>Off</i>.</summary>
+    private void RefreshNavTags()
+    {
+        foreach (var entry in NavEntries.Where(e => !e.IsHeading))
+        {
+            entry.Tag = Pages.FirstOrDefault(p => p.Title == entry.Category)?.NavTag;
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(SelectedNavEntry))]
@@ -241,15 +266,15 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     private void BuildNav()
     {
         NavEntries.Clear();
-        foreach (var (heading, categories) in SettingsSidebar.Groups)
+        foreach (var (heading, categories) in _groups)
         {
             if (heading is not null)
             {
                 NavEntries.Add(SettingsNavEntry.Heading(heading));
             }
-            foreach (var category in categories)
+            foreach (var page in categories.Select(category => _categoryPages.First(p => p.Title == category)))
             {
-                NavEntries.Add(SettingsNavEntry.Page(category, _categoryPages.First(p => p.Title == category).IconKey));
+                NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey, page.NavTag));
             }
         }
         if (Project is { } project)

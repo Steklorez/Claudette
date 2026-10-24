@@ -134,7 +134,7 @@ public class SettingsWindowTests
         }
         window.Close();
 
-        Assert.Equal([.. SettingsViewModel.AllCategories, .. SettingsViewModel.ProjectPages], settings.Pages.Select(p => p.Title));
+        Assert.Equal([.. settings.Categories, .. SettingsViewModel.ProjectPages], settings.Pages.Select(p => p.Title));
         Assert.Empty(missing);
         Assert.Empty(lost);
     }
@@ -152,7 +152,7 @@ public class SettingsWindowTests
         window.Show();
 
         var nameless = new List<string>();
-        foreach (var category in SettingsViewModel.AllCategories)
+        foreach (var category in settings.Categories)
         {
             settings.SelectedCategory = category;
             UiText.Settle(window);
@@ -184,7 +184,7 @@ public class SettingsWindowTests
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
 
-        foreach (var category in SettingsViewModel.AllCategories.Concat(SettingsViewModel.AllCategories.Reverse()))
+        foreach (var category in settings.Categories.Concat(settings.Categories.Reverse()))
         {
             settings.SelectedCategory = category;
             UiText.Settle(window);

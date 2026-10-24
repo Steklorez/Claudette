@@ -14,7 +14,7 @@ When a tab's folder holds a Godot project (a folder with `project.godot`), the [
 There's no standard place to install Godot, so Claudette looks in this order:
 
 1. The executable you picked for the project with **Choose Godot executable…** (**Choose another Godot executable…** once one is found).
-2. The path in Settings → Project tools → Godot → **Godot executable**.
+2. The path on Godot's page in Settings → Project tools: **Godot executable**.
 3. `godot`, `godot4`, `Godot` or `godot-mono` on your `PATH`.
 4. On macOS, `Godot.app` or `Godot_mono.app` in Applications.
 5. On Windows, Scoop's and WinGet's places.
@@ -38,7 +38,7 @@ A project is a C# project when its features list `C#`, it has a `[dotnet]` or `[
 
 ## Settings
 
-In Settings → Project tools → Godot, on this machine only. **Open solutions with**, under **Solutions**, also applies here, and is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
+On Godot's page in Settings → Project tools, on this machine only. **Open solutions with**, on All tools, also applies here, and is explained on the [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider) page.
 
 | Setting | Default | What it does |
 |---|---|---|

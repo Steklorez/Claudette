@@ -81,7 +81,11 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     /// <summary>The project detected for the tab's folder, or null.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IconKey))]
     public partial ProjectInfo? Project { get; private set; }
+
+    /// <summary>The sidebar's project row's icon: the project's kind's, or a folder's without one.</summary>
+    public string IconKey => ProjectTypeIcons.For(Project?.Kind);
 
     partial void OnProjectChanged(ProjectInfo? value)
     {

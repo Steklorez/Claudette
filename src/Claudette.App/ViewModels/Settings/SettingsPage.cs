@@ -38,6 +38,9 @@ public abstract class SettingsPage : ViewModelBase, ISettingsSource
     /// <summary>Its icon in the sidebar: the key of one of App.axaml's small vector icons.</summary>
     public abstract string IconKey { get; }
 
+    /// <summary>A word after its name in the sidebar, such as <i>Off</i> for a project type switched off; null for none.</summary>
+    public virtual string? NavTag => null;
+
     protected SettingsContext Context { get; }
 
     protected AppServices Services => Context.Services;
