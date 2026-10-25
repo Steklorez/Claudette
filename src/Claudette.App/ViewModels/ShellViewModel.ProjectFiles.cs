@@ -1,4 +1,5 @@
 using Claudette.Core.ProjectFiles;
+using Claudette.Core.Protocol;
 using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.Input;
 
@@ -6,7 +7,8 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// The folder groups' Project Files tabs (DESIGN.md §18, "Project files"): opening one from its group, closing it,
-/// bringing them back at launch, <b>Go to file</b>, and opening a file in the editor from a reply or Changed files.
+/// bringing them back at launch, <b>Go to file</b>, and opening a file in the editor from a reply, Changed files or a
+/// Markdown file's link.
 /// </summary>
 public sealed partial class ShellViewModel
 {
@@ -224,6 +226,83 @@ public sealed partial class ShellViewModel
             Selected = files;
         }
         await files.OpenFileAsync(path, preview: false, line, column, endLine, focus: true);
+    }
+
+    /// <summary>
+    /// Opens a file named in a reply, or linked from a Markdown file's preview (DESIGN.md §18, "Project files", "Opening
+    /// files in the editor"; "Markdown preview"): in the project's Files tab at <paramref name="line"/>, as Settings →
+    /// Files and diffs says, or else in the app the OS uses. An image shows in the image window, as Settings → Files and
+    /// diffs → Open images in says (DESIGN.md §18, "Opening images"). A program or shortcut that isn't text shows in its
+    /// folder rather than running, and a folder shows in the explorer when it's in a project, else in Finder or Explorer.
+    /// The image window says where it is from <paramref name="folder"/>; <paramref name="from"/> is the tab whose
+    /// conversation named it.
+    /// </summary>
+    internal async Task<OpenedPath> OpenPathAsync(string path, string folder, TabViewModel? from, int? line = null, int? column = null, int? endLine = null)
+    {
+        var (exists, isFolder, isExecutable) = await Task.Run(() => Inspect(path));
+        if (!exists)
+        {
+            return OpenedPath.NotFound;
+        }
+        if (isFolder)
+        {
+            if (await RevealInProjectFilesAsync(path))
+            {
+                return OpenedPath.InClaudette;
+            }
+            await _services.Platform.RevealFolderAsync(path);
+        }
+        else if (ShownPath(path, folder) is var shown && await Task.Run(() => ImageToView(path, shown)) is { } image)
+        {
+            ShowImage(image);
+            return OpenedPath.InClaudette;
+        }
+        else if (await Task.Run(() => OpensInEditor(path)))
+        {
+            await OpenInEditorAsync(path, line, column, endLine, from);
+            return OpenedPath.InClaudette;
+        }
+        else if (ReplyFileReference.IsProgram(path, isExecutable))
+        {
+            if (Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(path)) is { Length: > 0 } parent)
+            {
+                await _services.Platform.RevealFolderAsync(parent);
+            }
+        }
+        else
+        {
+            await _services.Platform.OpenFileAsync(path);
+        }
+        return OpenedPath.Elsewhere;
+    }
+
+    /// <summary>A path as it's shown: inside <paramref name="folder"/> from there, else in full.</summary>
+    internal static string ShownPath(string path, string folder)
+    {
+        var relative = Path.GetRelativePath(folder, path);
+        return relative == "." || relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative;
+    }
+
+    /// <summary>Whether it's there, a folder, and (on macOS and Linux) a file with its execute bit set.</summary>
+    private static (bool Exists, bool IsFolder, bool IsExecutable) Inspect(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                return (true, true, false);
+            }
+            if (!File.Exists(path))
+            {
+                return (false, false, false);
+            }
+            const UnixFileMode Execute = UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
+            return (true, false, !OperatingSystem.IsWindows() && (File.GetUnixFileMode(path) & Execute) != 0);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return (false, false, false);
+        }
     }
 
     /// <summary>

@@ -476,6 +476,17 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task RevealFileAsync(ProjectFileViewModel? file) => file is null ? Task.CompletedTask : RevealAsync(file.Path);
 
+    // ---- A Markdown file's links and images (DESIGN.md §18, "Markdown preview") -------------------------------------
+
+    /// <summary>A file linked from a preview: as a file named in a reply opens, in this project's Files tab or the one holding it.</summary>
+    internal Task<OpenedPath> OpenPathAsync(string path, int? line, int? column, int? endLine) => _shell.OpenPathAsync(path, Folder, null, line, column, endLine);
+
+    /// <summary>A web link in a preview: the browser, or the image window for an image.</summary>
+    internal Task OpenWebLinkAsync(Uri uri, Conversation.ReplyImages images) => _shell.OpenWebLinkAsync(uri, images);
+
+    /// <summary>An image clicked in a preview, full size.</summary>
+    internal void ShowImage(ToolImage image) => _shell.ShowImage(image);
+
     [RelayCommand]
     private Task CopyFilePathAsync(ProjectFileViewModel? file) => file is null ? Task.CompletedTask : CopyPathAsync(file.Path);
 

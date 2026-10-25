@@ -189,7 +189,7 @@ foreach ($theme in $Themes) {
     if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
         'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'usage/usage-window',
         'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'accounts/settings-accounts',
-        'tabs/tab-settings', 'project-files/files-tab') {
+        'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
         Use-Claudette @{} {
             Show-Tabs
 
@@ -387,6 +387,23 @@ foreach ($theme in $Themes) {
                 # come to the front.
                 Send-Click (Find-ByText $window 'StarfallCharacter.cpp, in Source\Starfall\Player')
                 Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
+                Start-Sleep -Seconds 3
+                Save-Window $window $path
+            }
+
+            # Starfall's README with its preview beside it (DESIGN.md §18, "Markdown preview").
+            Shot 'project-files/markdown-preview' {
+                param($path)
+                Invoke-ByText $window 'Project files'
+                Start-Sleep -Seconds 3
+                Invoke-ByText $window 'Find a file by name'
+                Wait-Until { Find-ById $window 'FindBox' } 'the file finder' 20
+                Set-ElementText (Find-ById $window 'FindBox') 'README.md'
+                Start-Sleep -Seconds 2
+                Send-Click (Find-ByText $window 'README.md')
+                Wait-Until { Find-ByText $window 'Edit and preview' -Optional } 'the README to open' 20
+                # A mode is a radio button, which has no Invoke for Invoke-ByText to find.
+                Send-Click (Find-ByText $window 'Edit and preview')
                 Start-Sleep -Seconds 3
                 Save-Window $window $path
             }

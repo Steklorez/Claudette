@@ -5,9 +5,10 @@ namespace Claudette.App.Conversation;
 /// <summary>
 /// A tab's images in replies (DESIGN.md §18, "Images in Claude's replies"): where each points, read against the folder
 /// Claude works in, which ones the user let load, and the last ones loaded, so a reply built again as it scrolls back into
-/// view shows them at once rather than asking again.
+/// view shows them at once rather than asking again. A Markdown file's preview reads a relative path against the file's
+/// own folder, <paramref name="relativeTo"/> (DESIGN.md §18, "Markdown preview").
 /// </summary>
-public sealed class ReplyImages(ReplyImageLoader loader, Func<string> folder)
+public sealed class ReplyImages(ReplyImageLoader loader, Func<string> folder, string? relativeTo = null)
 {
     /// <summary>How many loaded images are kept.</summary>
     internal const int Kept = 32;
@@ -17,7 +18,7 @@ public sealed class ReplyImages(ReplyImageLoader loader, Func<string> folder)
     private readonly Dictionary<string, MessageImage> _loaded = new(StringComparer.Ordinal);
     private readonly Queue<string> _order = new();
 
-    public ReplyImageAddress Classify(string address) => ReplyImageAddress.Classify(address, folder());
+    public ReplyImageAddress Classify(string address) => ReplyImageAddress.Classify(address, folder(), relativeTo);
 
     /// <summary>The user loaded it once already in this tab, so it loads by itself from now on.</summary>
     public bool IsAllowed(string address)

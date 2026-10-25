@@ -101,6 +101,22 @@ public sealed partial class ShellViewModel
             {
                 AsyncCommand("Close the file", () => files.CloseShowingOrTabAsync(), KeyboardShortcuts.CloseTab);
                 Command("Go to line…", showing.RequestGoToLine);
+                // DESIGN.md §18, "Markdown preview": the modes that aren't showing.
+                if (showing.IsMarkdown)
+                {
+                    if (!showing.IsPreviewMode)
+                    {
+                        Command("Preview the file", () => showing.IsPreviewMode = true);
+                    }
+                    if (!showing.IsEditAndPreviewMode)
+                    {
+                        Command("Edit and preview the file", () => showing.IsEditAndPreviewMode = true);
+                    }
+                    if (!showing.IsEditMode)
+                    {
+                        Command("Edit the file", () => showing.IsEditMode = true);
+                    }
+                }
             }
             Command(files.ShowOnlyChanged ? "Show every file in the explorer" : "Show only changed files", () => files.ShowOnlyChanged = !files.ShowOnlyChanged);
             Command(files.ToggleExplorerText, () => files.ToggleExplorerCommand.Execute(null));

@@ -1230,35 +1230,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && ProjectLinks.AllowedSchemes.Contains(uri.Scheme))
         {
-            return _shell.OpensImages && uri.Scheme is "http" or "https" && ViewerImages.HasExtension(uri.AbsolutePath)
-                ? OpenWebImageAsync(uri)
-                : _services.Platform.OpenUrlAsync(url);
+            return _shell.OpenWebLinkAsync(uri, ReplyImages);
         }
         return link is LinkClickedEventArgs markdown && ReplyFileReference.FromLink(url) is { } file
             ? OpenFileReferenceAsync(file, markdown.Source)
             : Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// A web link whose address ends in an image's extension (DESIGN.md §18, "Opening images"): it loads as a reply's web
-    /// image does, through Claudette's own client, and remembered in the tab the same way, then shows in the image window.
-    /// What isn't an image there (a page, an error, more than 20 MB) opens in the browser, as any link does.
-    /// </summary>
-    private async Task OpenWebImageAsync(Uri uri)
-    {
-        var url = uri.OriginalString;
-        MessageImage image;
-        try
-        {
-            image = ReplyImages.Loaded(url) ?? await ReplyImages.LoadAsync(ReplyImages.Classify(url));
-        }
-        catch (ReplyImageException)
-        {
-            await _services.Platform.OpenUrlAsync(url);
-            return;
-        }
-        var name = Uri.UnescapeDataString(Path.GetFileName(uri.AbsolutePath));
-        _shell.ShowImage(new ToolImage(image, uri.Host, name, ToolImages.SaveName(name, image.MediaType), null, null, uri));
     }
 
     /// <summary>The images in the tab's replies: which load at once, which the user let load (DESIGN.md §18, "Images in Claude's replies").</summary>
@@ -1297,10 +1273,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     // ---- Copy and times (DESIGN.md §5, "Copy and times") ---------------------------------------------------
 
     /// <summary>How long a Copy button says "Copied", here and in Settings.</summary>
-    public static readonly TimeSpan CopiedFor = TimeSpan.FromSeconds(1.5);
+    public static readonly TimeSpan CopiedFor = CopiedMarks.For;
 
-    /// <summary>What says "Copied" now, and the timeout that puts it back.</summary>
-    private readonly Dictionary<object, UiTimeout> _copied = [];
+    /// <summary>What says "Copied" now.</summary>
+    private CopiedMarks? _copied;
 
     /// <summary><b>Copy message</b> on a user message or a reply: its text, as Markdown for a reply.</summary>
     [RelayCommand]
@@ -1311,7 +1287,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             return;
         }
         await _services.Platform.SetClipboardTextAsync(message.CopyText);
-        ShowCopied(message, copied => message.IsCopied = copied);
+        Copied.Show(message, copied => message.IsCopied = copied);
     }
 
     /// <summary>
@@ -1321,23 +1297,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public async Task CopyCodeAsync(string code, object block, Action<bool> showCopied)
     {
         await _services.Platform.SetClipboardTextAsync(code.TrimEnd('\r', '\n'));
-        ShowCopied(block, showCopied);
+        Copied.Show(block, showCopied);
     }
 
-    /// <summary>Says "Copied" on <paramref name="target"/> for <see cref="CopiedFor"/>, timed by the tab's clock.</summary>
-    private void ShowCopied(object target, Action<bool> show)
-    {
-        if (!_copied.TryGetValue(target, out var timeout))
-        {
-            _copied[target] = timeout = new UiTimeout(_services.Time, _services.Dispatcher);
-        }
-        show(true);
-        timeout.Restart(CopiedFor, () =>
-        {
-            _copied.Remove(target);
-            show(false);
-        });
-    }
+    private CopiedMarks Copied => _copied ??= new CopiedMarks(_services.Time, _services.Dispatcher);
 
     /// <summary>A message's short time says "today" only on the day it was sent; looking at the tab again catches up.</summary>
     private void RefreshMessageTimes()
@@ -2453,11 +2416,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _services.LiveSessions.Changed -= OnLiveSessionsChanged;
         _checkIns.Dispose();
         _autoContinue.Dispose();
-        foreach (var timer in _copied.Values)
-        {
-            timer.Dispose();
-        }
-        _copied.Clear();
+        _copied?.Dispose();
         AgentTicker.Stop();
         TaskTicker.Stop();
         CheckInTicker.Stop();

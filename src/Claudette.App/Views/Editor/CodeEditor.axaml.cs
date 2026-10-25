@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.Rendering;
@@ -71,6 +72,18 @@ public partial class CodeEditor : UserControl
 
     /// <summary>The editor itself, for the view that hosts it.</summary>
     internal TextEditor TextEditor => Editor;
+
+    /// <summary>
+    /// Scrolls to <paramref name="offset"/> pixels down the text. AvaloniaEdit 12's own <c>ScrollToVerticalOffset</c> does
+    /// nothing (its body is commented out), so this sets its scroller's offset.
+    /// </summary>
+    internal void ScrollToVerticalOffset(double offset)
+    {
+        if (Editor.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault() is { } scroller)
+        {
+            scroller.Offset = scroller.Offset.WithY(Math.Max(0, offset));
+        }
+    }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -147,7 +160,7 @@ public partial class CodeEditor : UserControl
             Later(() =>
             {
                 Editor.TextArea.Caret.Position = new TextViewPosition(line, column);
-                Editor.ScrollToVerticalOffset(scroll);
+                ScrollToVerticalOffset(scroll);
             });
         }
     }

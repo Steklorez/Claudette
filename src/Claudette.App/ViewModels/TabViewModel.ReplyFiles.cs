@@ -52,50 +52,11 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>
-    /// Opens a file the session named (DESIGN.md §18, "Project files", "Opening files in the editor"): in the project's
-    /// Files tab at <paramref name="line"/>, as Settings → Files and diffs says, or else in the app the OS uses. An image shows in
-    /// the image window, as Settings → Files and diffs → Open images in says (DESIGN.md §18, "Opening images"). A program or
-    /// shortcut that isn't text shows in its folder rather than running, and a folder shows in the explorer when it's in
-    /// the project, else in Finder or Explorer.
+    /// Opens a file the session named (DESIGN.md §18, "Project files", "Opening files in the editor"), as
+    /// <see cref="ShellViewModel.OpenPathAsync"/> does, from this tab's conversation.
     /// </summary>
-    internal async Task<OpenedPath> OpenPathAsync(string path, int? line = null, int? column = null, int? endLine = null)
-    {
-        var (exists, isFolder, isExecutable) = await Task.Run(() => Inspect(path));
-        if (!exists)
-        {
-            return OpenedPath.NotFound;
-        }
-        if (isFolder)
-        {
-            if (await _shell.RevealInProjectFilesAsync(path))
-            {
-                return OpenedPath.InClaudette;
-            }
-            await _services.Platform.RevealFolderAsync(path);
-        }
-        else if (ShownPath(path) is var shown && await Task.Run(() => _shell.ImageToView(path, shown)) is { } image)
-        {
-            _shell.ShowImage(image);
-            return OpenedPath.InClaudette;
-        }
-        else if (await Task.Run(() => _shell.OpensInEditor(path)))
-        {
-            await _shell.OpenInEditorAsync(path, line, column, endLine, this);
-            return OpenedPath.InClaudette;
-        }
-        else if (ReplyFileReference.IsProgram(path, isExecutable))
-        {
-            if (Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(path)) is { Length: > 0 } parent)
-            {
-                await _services.Platform.RevealFolderAsync(parent);
-            }
-        }
-        else
-        {
-            await _services.Platform.OpenFileAsync(path);
-        }
-        return OpenedPath.Elsewhere;
-    }
+    internal Task<OpenedPath> OpenPathAsync(string path, int? line = null, int? column = null, int? endLine = null) =>
+        _shell.OpenPathAsync(path, Folder, this, line, column, endLine);
 
     /// <summary>A tool card's <b>Open</b>: the file it worked on, at the first line an edit changed or where a read started.</summary>
     [RelayCommand]
@@ -130,36 +91,10 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>A file in the menu of several: inside the tab's folder from there, else in full.</summary>
-    private string ShownPath(string path)
-    {
-        var relative = Path.GetRelativePath(Folder, path);
-        return relative == "." || relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? path : relative;
-    }
-
-    /// <summary>Whether it's there, a folder, and (on macOS and Linux) a file with its execute bit set.</summary>
-    private static (bool Exists, bool IsFolder, bool IsExecutable) Inspect(string path)
-    {
-        try
-        {
-            if (Directory.Exists(path))
-            {
-                return (true, true, false);
-            }
-            if (!File.Exists(path))
-            {
-                return (false, false, false);
-            }
-            const UnixFileMode Execute = UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
-            return (true, false, !OperatingSystem.IsWindows() && (File.GetUnixFileMode(path) & Execute) != 0);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return (false, false, false);
-        }
-    }
+    private string ShownPath(string path) => ShellViewModel.ShownPath(path, Folder);
 }
 
-/// <summary>Where <see cref="TabViewModel.OpenPathAsync"/> opened a path.</summary>
+/// <summary>Where <see cref="ShellViewModel.OpenPathAsync"/> opened a path.</summary>
 internal enum OpenedPath
 {
     /// <summary>It isn't there.</summary>

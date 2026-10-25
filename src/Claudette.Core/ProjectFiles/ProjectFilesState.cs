@@ -55,10 +55,15 @@ public sealed class OpenFileState
     public FileViewMode Mode { get; set; } = FileViewMode.Edit;
 }
 
-/// <summary>What an open file shows: the editor, or its changes as §8's diff view does.</summary>
+/// <summary>
+/// What an open file shows: the editor, its changes as §8's diff view does, or for a Markdown file, the file rendered in
+/// the editor's place or beside it (DESIGN.md §18, "Markdown preview").
+/// </summary>
 public enum FileViewMode
 {
     Edit,
     Inline,
     SideBySide,
+    Preview,
+    EditAndPreview,
 }

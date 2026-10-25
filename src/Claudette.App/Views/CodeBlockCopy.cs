@@ -7,17 +7,18 @@ namespace Claudette.App.Views;
 
 /// <summary>
 /// <b>Copy</b> on a code block in Markdown (DESIGN.md §5, "Copy and times"). LiveMarkdown's button raises
-/// <see cref="CodeBlock.CopyingToClipboardEvent"/> first; the tab takes it from there, so the code goes through
-/// <c>IPlatformServices</c> and the block says "Copied" for a moment (its <c>copied</c> class, styled in App.axaml).
+/// <see cref="CodeBlock.CopyingToClipboardEvent"/> first; the tab, or the file whose preview it's in, takes it from
+/// there, so the code goes through <c>IPlatformServices</c> and the block says "Copied" for a moment (its <c>copied</c>
+/// class, styled in App.axaml).
 /// </summary>
 internal static class CodeBlockCopy
 {
-    /// <summary>Handles Copy for the code blocks in <paramref name="host"/>, whose data context is the tab.</summary>
+    /// <summary>Handles Copy for the code blocks in <paramref name="host"/>, whose data context is an <see cref="IMarkdownHost"/>.</summary>
     public static void Attach(Control host) => host.AddHandler(CodeBlock.CopyingToClipboardEvent, OnCopying);
 
     private static async void OnCopying(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Control { DataContext: TabViewModel tab } || e.Source is not CodeBlock block)
+        if (sender is not Control { DataContext: IMarkdownHost tab } || e.Source is not CodeBlock block)
         {
             return;
         }

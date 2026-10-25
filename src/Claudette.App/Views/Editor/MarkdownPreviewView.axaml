@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
+             x:Class="Claudette.App.Views.Editor.MarkdownPreviewView"
+             x:DataType="vm:ProjectFileViewModel"
+             FontSize="{DynamicResource ConversationFontSize}"
+             FontFamily="{DynamicResource ConversationFont}">
+  <!-- A Markdown file rendered (DESIGN.md §18, "Markdown preview"), as Claude's replies are; its look is in
+       Themes/ProjectFilesStyles.axaml. -->
+  <Panel>
+    <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding !Markdown.IsTooLarge}">
+      <Border x:Name="Page" Classes="markdownpage">
+        <!-- A paragraph's lines wrapped in the file are joined, as VS Code and GitHub show it (Views/SoftBreakInlineNode) -->
+        <md:MarkdownRenderer x:Name="Renderer" Classes="joinsoftbreaks" UpdateProducer="{Binding Markdown}" LinkCommand="{Binding OpenLinkCommand}" />
+      </Border>
+    </ScrollViewer>
+    <TextBlock Classes="muted" Margin="16" TextWrapping="Wrap" IsVisible="{Binding Markdown.IsTooLarge}"
+               Text="This file is over 1 MB, too large to preview." />
+  </Panel>
+</UserControl>

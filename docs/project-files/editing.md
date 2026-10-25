@@ -78,3 +78,4 @@ An input method that composes text, such as for Japanese or Korean, does it in i
 ## See also
 
 - [Claude's changes in the editor](claudes-changes-in-the-editor.md) for the bars in the gutter.
+- [Markdown files](markdown-files.md) for reading a Markdown file rendered, beside the editor or in its place.

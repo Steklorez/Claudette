@@ -594,7 +594,7 @@ public partial class ShellView : UserControl
         }
         if (@is(KeyboardShortcuts.Find))
         {
-            if (files.Showing is { IsText: true, IsEditMode: true } showing)
+            if (files.Showing is { ShowsEditor: true } showing)
             {
                 showing.RequestFind(replace: false);
             }

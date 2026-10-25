@@ -69,6 +69,21 @@ public sealed class ReplyImageAddressTests : IDisposable
     }
 
     [Fact]
+    public void A_markdown_files_image_is_read_against_its_own_folder_and_loads_at_once_only_inside_the_project()
+    {
+        // DESIGN.md §18, "Markdown preview": docs/index.md's screenshots/menu.png is docs/screenshots/menu.png.
+        var docs = Directory.CreateDirectory(Path.Combine(Folder, "docs")).FullName;
+
+        var inside = ReplyImageAddress.Classify("screenshots/menu.png", Folder, docs);
+        Assert.Equal((ReplyImageKind.InFolder, Path.Combine(docs, "screenshots", "menu.png")), (inside.Kind, inside.Path));
+        var up = ReplyImageAddress.Classify("../logo.png", Folder, docs);
+        Assert.Equal((ReplyImageKind.InFolder, Path.Combine(Folder, "logo.png")), (up.Kind, up.Path));
+        // Out of the project, it waits for a click as from a reply.
+        var outside = ReplyImageAddress.Classify("../../elsewhere.png", Folder, docs);
+        Assert.Equal((ReplyImageKind.LocalFile, Path.Combine(_root, "elsewhere.png")), (outside.Kind, outside.Path));
+    }
+
+    [Fact]
     public void A_file_outside_the_tabs_folder_waits_for_a_click()
     {
         var outside = Path.Combine(_root, "elsewhere.png");

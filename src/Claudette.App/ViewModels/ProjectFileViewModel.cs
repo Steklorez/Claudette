@@ -3,9 +3,11 @@ using Claudette.App.Diffs;
 using Claudette.App.Editor;
 using Claudette.App.Services;
 using Claudette.Core.ProjectFiles;
+using Claudette.Core.ProjectTools;
 using Claudette.Core.Protocol;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LiveMarkdown.Avalonia;
 
 namespace Claudette.App.ViewModels;
 
@@ -26,9 +28,10 @@ public sealed record IndentChoice(string Label, bool UseTabs, int Size, bool IsC
 
 /// <summary>
 /// One open file in a Project Files tab (DESIGN.md §18, "Project files"): its text and how it's encoded, its tab, the
-/// chip, saving, changes on disk, and Claude's changes to it with the peek and the diff modes.
+/// chip, saving, changes on disk, Claude's changes to it with the peek and the diff modes, and for a Markdown file, its
+/// preview (DESIGN.md §18, "Markdown preview").
 /// </summary>
-public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
+public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost, IDisposable
 {
     /// <summary>How long after typing stops the changes are worked out again.</summary>
     internal static readonly TimeSpan MarkersDelay = TimeSpan.FromMilliseconds(300);
@@ -41,6 +44,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
     private readonly UiTimeout _markersWait;
     private readonly UiTimeout _backupWait;
     private readonly UiTimeout _diffWait;
+    private readonly UiTimeout _previewWait;
     private int _markersGeneration;
 
     /// <summary>The file as last read or saved: what the disk is compared with, and what a save expects to find.</summary>
@@ -62,10 +66,11 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         CaretLine = Math.Max(1, state.Line);
         CaretColumn = Math.Max(1, state.Column);
         Scroll = state.Scroll;
-        Mode = state.Mode;
         _markersWait = new UiTimeout(services.Time, services.Dispatcher);
         _backupWait = new UiTimeout(services.Time, services.Dispatcher);
         _diffWait = new UiTimeout(services.Time, services.Dispatcher);
+        _previewWait = new UiTimeout(services.Time, services.Dispatcher);
+        Mode = state.Mode;
         TabLabel = Name;
     }
 
@@ -93,7 +98,8 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
     public partial TextFileProblem Problem { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsText), nameof(HasProblem), nameof(ProblemText), nameof(CanOpenInViewer))]
+    [NotifyPropertyChangedFor(nameof(IsText), nameof(HasProblem), nameof(ProblemText), nameof(CanOpenInViewer), nameof(IsMarkdown), nameof(ShowsModeBar),
+        nameof(ShowsEditor), nameof(ShowsPreview))]
     public partial bool IsLoaded { get; private set; }
 
     public bool IsText => IsLoaded && Document is not null;
@@ -131,6 +137,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
 
     /// <summary>The grammar that colors it, and its name on the chip.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMarkdown), nameof(ShowsModeBar), nameof(ShowsPreview))]
     public partial EditorLanguage Language { get; private set; } = EditorLanguage.PlainText;
 
     /// <summary>Reads the file, and its unsaved edits from before, if any. Called once, when it's opened.</summary>
@@ -152,6 +159,10 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         var document = _services.EditorDocuments(content.Text);
         Document = document;
         Language = EditorLanguages.For(path, document.LineCount > 0 ? document.GetLineText(1) : null);
+        if (Mode is FileViewMode.Preview or FileViewMode.EditAndPreview && Language.Scope != MarkdownPreview.Scope)
+        {
+            Mode = FileViewMode.Edit;
+        }
         LineEnding = LineEndings.Majority(content.Text);
         LineEndingIsMixed = LineEndings.Detect(content.Text) == LineEndingKind.Mixed;
         var settings = _services.Settings.Editor;
@@ -174,6 +185,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsModified));
         _owner.OnFileLoaded(this);
         RefreshMarkers();
+        UpdatePreview();
     }
 
     private static IEnumerable<string> Lines(IEditorDocument document)
@@ -208,6 +220,10 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
             _pendingReveal = null;
             RevealRequested(pending.Line, pending.Column, pending.EndLine);
         }
+        if (value)
+        {
+            UpdatePreview();
+        }
     }
 
     /// <summary>Edits not saved yet: the tab's dot.</summary>
@@ -228,9 +244,14 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         }
         _markersWait.Restart(MarkersDelay, OnTextSettled);
         _backupWait.Restart(BackupDelay, KeepBackup);
-        if (Mode != FileViewMode.Edit)
+        if (IsDiffMode)
         {
             _diffWait.Restart(MarkersDelay, BuildDiff);
+        }
+        // The preview catches up every so often while typing goes on, rather than waiting for it to stop.
+        if (ShowsPreview && !_previewWait.IsPending)
+        {
+            _previewWait.Restart(MarkersDelay, UpdatePreview);
         }
     }
 
@@ -519,7 +540,8 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
 
     /// <summary>Who changed the file and when, from the project's open tabs; null when none of them did.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Tip), nameof(BannerText), nameof(PeekHeader), nameof(CanReview), nameof(CanShowChange), nameof(ShowChangeTip))]
+    [NotifyPropertyChangedFor(nameof(Tip), nameof(BannerText), nameof(PeekHeader), nameof(CanReview), nameof(CanShowChange), nameof(ShowChangeTip),
+        nameof(ShowsDiffModes), nameof(ShowsModeBar))]
     public partial ProjectFileChange? Change { get; private set; }
 
     /// <summary>What the file is compared with: before Claude's first change, or at HEAD.</summary>
@@ -541,7 +563,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         if (changed)
         {
             RefreshMarkers();
-            if (Mode != FileViewMode.Edit)
+            if (IsDiffMode)
             {
                 BuildDiff();
             }
@@ -550,7 +572,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
 
     /// <summary>The gutter's bars, worked out again after each pause in typing; empty with nothing to compare with.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasChanges), nameof(ShowsModeBar), nameof(MarkersTip))]
+    [NotifyPropertyChangedFor(nameof(HasChanges), nameof(ShowsModeBar), nameof(ShowsDiffModes), nameof(MarkersTip))]
     public partial ChangeMarkers Markers { get; private set; } = ChangeMarkers.None;
 
     /// <summary>The file is too long to compare: its tab's tip says why there are no marks.</summary>
@@ -562,8 +584,14 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
 
     public bool HasChanges => !Markers.IsEmpty;
 
-    /// <summary>The bar for Edit, Inline changes, Side by side and Reviewed: while it has changes, or shows them.</summary>
-    public bool ShowsModeBar => HasChanges || Mode != FileViewMode.Edit || Change is not null;
+    /// <summary>
+    /// The bar for Edit, Inline changes, Side by side and Reviewed: while it has changes, or shows them; always for a
+    /// Markdown file, for Preview and Edit and preview.
+    /// </summary>
+    public bool ShowsModeBar => ShowsDiffModes || IsMarkdown;
+
+    /// <summary>The bar has Inline changes and Side by side: while the file has changes, or shows them.</summary>
+    public bool ShowsDiffModes => HasChanges || IsDiffMode || Change is not null;
 
     private void RefreshMarkers() => _ = RefreshMarkersAsync();
 
@@ -608,9 +636,10 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         }
     }
 
-    /// <summary>What the file shows: the editor, or its changes inline or side by side.</summary>
+    /// <summary>What the file shows: the editor, its changes inline or side by side, or a Markdown file's preview.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEditMode), nameof(IsInlineMode), nameof(IsSideBySideMode), nameof(ShowsModeBar), nameof(IsDiffMode))]
+    [NotifyPropertyChangedFor(nameof(IsEditMode), nameof(IsInlineMode), nameof(IsSideBySideMode), nameof(IsPreviewMode), nameof(IsEditAndPreviewMode),
+        nameof(ShowsModeBar), nameof(ShowsDiffModes), nameof(IsDiffMode), nameof(ShowsEditor), nameof(ShowsPreview))]
     public partial FileViewMode Mode { get; set; }
 
     public bool IsEditMode
@@ -652,18 +681,53 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public bool IsDiffMode => Mode != FileViewMode.Edit;
+    public bool IsPreviewMode
+    {
+        get => Mode == FileViewMode.Preview;
+        set
+        {
+            if (value)
+            {
+                _comparingDisk = false;
+                Mode = FileViewMode.Preview;
+            }
+        }
+    }
+
+    public bool IsEditAndPreviewMode
+    {
+        get => Mode == FileViewMode.EditAndPreview;
+        set
+        {
+            if (value)
+            {
+                _comparingDisk = false;
+                Mode = FileViewMode.EditAndPreview;
+            }
+        }
+    }
+
+    /// <summary>Its changes show, inline or side by side.</summary>
+    public bool IsDiffMode => Mode is FileViewMode.Inline or FileViewMode.SideBySide;
+
+    /// <summary>The editor shows: in Edit, or beside the preview.</summary>
+    public bool ShowsEditor => IsText && Mode is FileViewMode.Edit or FileViewMode.EditAndPreview;
+
+    /// <summary>The preview shows: in Preview, or beside the editor.</summary>
+    public bool ShowsPreview => IsMarkdown && Mode is FileViewMode.Preview or FileViewMode.EditAndPreview;
 
     partial void OnModeChanged(FileViewMode value)
     {
-        if (value == FileViewMode.Edit)
-        {
-            Diff = null;
-        }
-        else
+        LinkProblem = null;
+        if (IsDiffMode)
         {
             BuildDiff();
         }
+        else
+        {
+            Diff = null;
+        }
+        UpdatePreview();
         _owner.OnFileStateChanged();
     }
 
@@ -673,7 +737,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
 
     private void BuildDiff()
     {
-        if (Mode == FileViewMode.Edit || Document is not { } document)
+        if (!IsDiffMode || Document is not { } document)
         {
             return;
         }
@@ -844,6 +908,93 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         Peek = null;
     }
 
+    // ---- The Markdown preview (DESIGN.md §18, "Markdown preview") -----------------------------------------------------
+
+    /// <summary>The editor colors it as Markdown, so it can be previewed.</summary>
+    public bool IsMarkdown => IsText && Language.Scope == MarkdownPreview.Scope;
+
+    /// <summary>What the preview's renderer shows: the editor's text, parsed.</summary>
+    public MarkdownPreview Markdown { get; } = new();
+
+    /// <summary>The preview shows the editor's text now, while it's on screen; out of sight, it waits until it is.</summary>
+    private void UpdatePreview()
+    {
+        _previewWait.Cancel();
+        if (ShowsPreview && IsShowing && Document is { } document)
+        {
+            _ = Markdown.ShowAsync(document.Text);
+        }
+    }
+
+    private ReplyImages? _replyImages;
+
+    /// <summary>
+    /// The preview's images, read against the file's own folder; only a file in the project's folder loads at once. What
+    /// was let load is remembered while the file is open.
+    /// </summary>
+    public ReplyImages ReplyImages => _replyImages ??= new ReplyImages(new ReplyImageLoader(_services.Http, _services.Time), () => _owner.Folder,
+        System.IO.Path.GetDirectoryName(Path));
+
+    void IMarkdownHost.ShowImage(ToolImage image) => _owner.ShowImage(image);
+
+    private CopiedMarks? _copied;
+
+    /// <summary><b>Copy</b> on a code block in the preview, as on one in a reply.</summary>
+    public async Task CopyCodeAsync(string code, object block, Action<bool> showCopied)
+    {
+        await _services.Platform.SetClipboardTextAsync(code.TrimEnd('\r', '\n'));
+        (_copied ??= new CopiedMarks(_services.Time, _services.Dispatcher)).Show(block, showCopied);
+    }
+
+    /// <summary>A link to a file that isn't there, which says so over the file until the next link or mode.</summary>
+    [ObservableProperty]
+    public partial string? LinkProblem { get; private set; }
+
+    /// <summary>Scroll the preview to the heading with this id, which a link in the file named.</summary>
+    public event Action<string>? HeadingRequested;
+
+    /// <summary>
+    /// A link clicked in the preview: a heading in the file scrolls the preview to it; a web link opens in the browser, or
+    /// the image window for an image; a file, read against the file's own folder, opens as a file named in a reply does.
+    /// </summary>
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task OpenLinkAsync(object? link)
+    {
+        if ((link is LinkClickedEventArgs clicked ? clicked.HRef?.OriginalString : link?.ToString()) is not { Length: > 0 } url)
+        {
+            return;
+        }
+        LinkProblem = null;
+        if (url.StartsWith('#'))
+        {
+            HeadingRequested?.Invoke(Uri.UnescapeDataString(url[1..]));
+            return;
+        }
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && ProjectLinks.AllowedSchemes.Contains(uri.Scheme))
+        {
+            await _owner.OpenWebLinkAsync(uri, ReplyImages);
+            return;
+        }
+        if (ReplyFileReference.FromLink(url) is not { } reference)
+        {
+            return;
+        }
+        string target;
+        try
+        {
+            target = System.IO.Path.GetFullPath(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path) ?? _owner.Folder, reference.Path));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            LinkProblem = $"Couldn't find {reference.Path}.";
+            return;
+        }
+        if (await _owner.OpenPathAsync(target, reference.Line, reference.Column, reference.EndLine) == OpenedPath.NotFound)
+        {
+            LinkProblem = $"Couldn't find {reference.Path}.";
+        }
+    }
+
     // ---- What the view is asked to do --------------------------------------------------------------------------------
 
     /// <summary>Go to a line and column, and select to the end of <c>EndLine</c> when there's one.</summary>
@@ -905,6 +1056,8 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IDisposable
         _markersWait.Dispose();
         _backupWait.Dispose();
         _diffWait.Dispose();
+        _previewWait.Dispose();
+        _copied?.Dispose();
         if (Document is { } document)
         {
             document.Changed -= OnTextChanged;

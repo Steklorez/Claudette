@@ -81,3 +81,40 @@ internal sealed class UiTimeout(TimeProvider time, IUiDispatcher dispatcher) : I
 
     public void Dispose() => Cancel();
 }
+
+/// <summary>
+/// "Copied" on what was just copied, each for <see cref="For"/> on its own clock (DESIGN.md §5, "Copy and times"): a
+/// message, or a code block's button.
+/// </summary>
+internal sealed class CopiedMarks(TimeProvider time, IUiDispatcher dispatcher) : IDisposable
+{
+    /// <summary>How long a Copy button says "Copied".</summary>
+    public static readonly TimeSpan For = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>What says "Copied" now, and the timeout that puts it back.</summary>
+    private readonly Dictionary<object, UiTimeout> _marks = [];
+
+    /// <summary>Says "Copied" on <paramref name="target"/> through <paramref name="show"/>, and puts it back after <see cref="For"/>.</summary>
+    public void Show(object target, Action<bool> show)
+    {
+        if (!_marks.TryGetValue(target, out var timeout))
+        {
+            _marks[target] = timeout = new UiTimeout(time, dispatcher);
+        }
+        show(true);
+        timeout.Restart(For, () =>
+        {
+            _marks.Remove(target);
+            show(false);
+        });
+    }
+
+    public void Dispose()
+    {
+        foreach (var timeout in _marks.Values)
+        {
+            timeout.Dispose();
+        }
+        _marks.Clear();
+    }
+}

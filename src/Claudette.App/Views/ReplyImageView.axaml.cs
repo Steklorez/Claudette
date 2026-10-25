@@ -9,7 +9,8 @@ namespace Claudette.App.Views;
 /// <summary>
 /// An image in a reply's Markdown (DESIGN.md §18, "Images in Claude's replies"), which <see cref="ReplyLinkInlineNode"/>
 /// puts where LiveMarkdown would have put its own. It learns which tab it's in once it's shown, from the first ancestor
-/// whose data is a tab (the conversation, the side panel, the agent map's window).
+/// whose data is a tab (the conversation, the side panel, the agent map's window), or a Markdown file previewed in a
+/// Files tab (DESIGN.md §18, "Markdown preview").
 /// </summary>
 public partial class ReplyImageView : UserControl
 {
@@ -47,7 +48,7 @@ public partial class ReplyImageView : UserControl
 
     private void AttachToTab()
     {
-        var tab = this.GetVisualAncestors().OfType<StyledElement>().Select(a => a.DataContext).OfType<TabViewModel>().FirstOrDefault();
-        ViewModel?.Attach(tab?.ReplyImages, tab is null ? null : image => tab.OpenImageCommand.Execute(image));
+        var host = this.GetVisualAncestors().OfType<StyledElement>().Select(a => a.DataContext).OfType<IMarkdownHost>().FirstOrDefault();
+        ViewModel?.Attach(host?.ReplyImages, host is null ? null : host.ShowImage);
     }
 }

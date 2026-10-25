@@ -1,4 +1,5 @@
 using Claudette.App.Conversation;
+using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
 using Claudette.Platform.Processes;
 
@@ -7,9 +8,9 @@ namespace Claudette.App.ViewModels;
 /// <summary>
 /// What the tab gives its child view models: the process monitor, changed files, project tools, Remote Control,
 /// Perforce and the context indicator. Each sees only its own host interface, over the <see cref="ITabAreaHost"/> they share; where one area needs
-/// another, it goes through the tab.
+/// another, it goes through the tab. Its replies, plans and agents' Markdown get their images and Copy from it too.
 /// </summary>
-public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHost, IProjectToolsHost, IRemoteControlHost, IPerforceHost, IContextHost
+public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHost, IProjectToolsHost, IRemoteControlHost, IPerforceHost, IContextHost, IMarkdownHost
 {
     // ---- Every area ------------------------------------------------------------------------------------------------
 
@@ -123,4 +124,8 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
     string? IContextHost.ModelDisplayName(string? id) => ModelDisplayName(id);
 
     void IContextHost.TurnTokensChanged() => Working.Refresh();
+
+    // ---- Markdown --------------------------------------------------------------------------------------------------
+
+    void IMarkdownHost.ShowImage(ToolImage image) => OpenImage(image);
 }

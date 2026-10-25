@@ -42,8 +42,12 @@ public sealed record ReplyImageAddress(ReplyImageKind Kind, string Address, stri
 
     private static readonly StringComparison PathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-    /// <summary>Where <paramref name="address"/> points, read against the tab's <paramref name="folder"/>.</summary>
-    public static ReplyImageAddress Classify(string address, string folder)
+    /// <summary>
+    /// Where <paramref name="address"/> points, read against the tab's <paramref name="folder"/>, or for a Markdown file
+    /// previewed, against <paramref name="relativeTo"/>, the file's own folder (DESIGN.md §18, "Markdown preview"). Only a
+    /// file in <paramref name="folder"/> loads at once either way.
+    /// </summary>
+    public static ReplyImageAddress Classify(string address, string folder, string? relativeTo = null)
     {
         var text = address.Trim();
         if (text.Length == 0)
@@ -83,7 +87,7 @@ public sealed record ReplyImageAddress(ReplyImageKind Kind, string Address, stri
         string full;
         try
         {
-            full = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, path));
+            full = System.IO.Path.GetFullPath(System.IO.Path.Combine(relativeTo ?? folder, path));
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {

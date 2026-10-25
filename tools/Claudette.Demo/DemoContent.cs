@@ -74,6 +74,46 @@ internal static class DemoContent
 
     // ---- starfall (Unreal Engine, C++): the grappling hook ---------------------------------------------------------
 
+    /// <summary>Starfall's README, for the guide's picture of a Markdown file's preview (DESIGN.md §18, "Markdown preview").</summary>
+    private const string Readme = """
+        # Starfall
+
+        A third-person action game in Unreal Engine 5.6: climb, dash and grapple across the floating ruins of a fallen
+        city.
+
+        ## Building
+
+        1. Open `Starfall.uproject` in Unreal Engine 5.6.
+        2. Build **Development Editor** for Win64.
+        3. Press **Play** in the editor.
+
+        ## Controls
+
+        | Action | Keyboard | Gamepad |
+        |---|---|---|
+        | Move | WASD | Left stick |
+        | Jump | Space | A |
+        | Dash | Shift | B |
+        | Grapple | E | Right trigger |
+
+        ## Abilities
+
+        - **Dash** spends stamina from the player's `StaminaComponent`.
+        - **Grapple** fires along the camera's aim and pulls you toward where it hits. Jump to let go.
+
+        > [!NOTE]
+        > The grapple is new on `feature/grapple`. Its code is in `Source/Starfall/Abilities`.
+
+        ## Tests
+
+        Run the automation tests from the editor's Session Frontend, or from a terminal:
+
+        ```bash
+        UnrealEditor-Cmd Starfall.uproject -ExecCmds="Automation RunTests Starfall" -unattended
+        ```
+
+        """;
+
     private const string UProject = """
         {
             "FileVersion": 3,
@@ -408,6 +448,7 @@ internal static class DemoContent
             new()
             {
                 ["Starfall.uproject"] = UProject,
+                ["README.md"] = Readme,
                 ["Source/Starfall/Starfall.Build.cs"] = BuildRules,
                 [player + "StarfallCharacter.h"] = CharacterHeader,
                 [player + "StarfallCharacter.cpp"] = Character,

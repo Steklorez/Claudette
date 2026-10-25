@@ -3644,7 +3644,7 @@ A code editor for the project's files, in a tab of the project's own: a tree of 
     - Under the header are the lines the change replaced, highlighted, in the removed color.
     - **Revert** puts them back in the editor's text as one step, which Undo takes back. The file then has unsaved edits: nothing is written until it's saved.
     - `F3` and `F4`, the conversation's previous and next message ([§14](#keyboard-shortcuts)), go to the previous and next change and open its peek.
-  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**. In a pane too narrow for the bar's one row, **Whole file**, **Wrap lines** and **Reviewed** go onto a second.
+  - **Inline and side by side.** For a file with changes, a bar under the tabs switches between **Edit**, **Inline changes** and **Side by side**. In a pane too narrow for the bar's one row, **Whole file**, **Wrap lines** and **Reviewed** go onto a second. A Markdown file's bar always shows, with **Preview** and **Edit and preview** too ([Markdown preview](#markdown-preview)).
     - The last two are §8's diff view inside the tab, read-only, with **Whole file**, **Wrap lines**, the highlighting, and **Revert** on each change.
     - **Revert** there changes the editor's text, as the peek's does.
     - A double-click on a line goes back to **Edit** at that line.
@@ -3873,6 +3873,79 @@ How it was tested:
   - `ProjectFilesTests`: the group's button, the keyboard skipping the tab, the group outliving its last session tab, `Ctrl/Cmd+W`; the explorer and the disk; new files and folders, where they go and the names refused; previews, pins, tab labels, files that aren't text, the chip; saving, **Don't save**, **Save** on the question, and a file changed under a save; Claude's edit with and without unsaved edits, the marks, the peek's link to the tab, a double-click in the diff, **Reviewed** and **Show only changed files**; finding a file by name; and what comes back at launch and after a restart.
   - `ProjectFilesOpeningTests`: a reply's file opening at its line beside the conversation or, with the setting, in its place; what still goes to the OS; a folder in the explorer; the group's button bringing the explorer back; **Go to file**; the tab in panes.
 - **`ProjectFilesUiTests`:** the tab rendered with the explorer on each side, in both styles and themes; the chip; the bars and the peek; the banner; the list of files found by name; and the new row's box with the keyboard: what it refuses, `Enter`, `Esc` and a click elsewhere.
+
+### Markdown preview
+
+✅ Built 2026-10-24.
+
+A Markdown file in a [Project Files](#project-files) tab shows rendered as well as as text: the README or plan Claude wrote, with its headings, lists, tables, code blocks and images, in the editor's place or beside it, as VS Code's Markdown preview does. Until now it showed only as text, so reading one meant reading its marks.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ README.md ● │ Player.cpp │                                                       │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ Edit · Preview · Edit and preview   Inline changes · Side by side   ✓ Reviewed   │
+│  1  # Starfall                         ┆  Starfall                                │
+│  2                                     ┆                                          │
+│  3  A space shooter for **two**        ┆  A space shooter for two players.        │
+│  4  players.                           ┆                                          │
+│  5                                     ┆  Building                                │
+│  6  ## Building                        ┆  1. Open Starfall.uproject.              │
+│  7  1. Open `Starfall.uproject`.       ┆  2. Build the Development Editor.        │
+│                  ╭──────────────────╮  ┆                                          │
+│                  │ Ln 3 · Markdown… │  ┆                                          │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Which files.** The ones the editor colors as Markdown, by their extension: `.md`, `.markdown`, and the others the Markdown grammar takes (`.mkd`, `.mdown` and the like). The chip says *Markdown* for them ([Project files](#project-files), "The chip").
+- **The bar.** A Markdown file's bar under the file tabs always shows, changes or not.
+  - Its first part is **Edit**, **Preview** and **Edit and preview**. While the file has Claude's changes, **Inline changes** and **Side by side** follow as a second part, then **Reviewed**, as for any file ([Project files](#project-files), "Claude's changes"). The five are one choice: picking **Preview** leaves **Side by side**, and the other way round.
+  - Any other file's bar is as before: one part with **Edit**, **Inline changes** and **Side by side**.
+  - **Edit** is the editor. **Preview** is the file rendered, in the editor's place. **Edit and preview** has the editor on the left and the preview on the right.
+  - In **Edit and preview**, the line between them drags to give either side more, down to 240 pixels each; a double-click on it shares the width evenly again, as it is each time the mode is picked.
+  - Each open file keeps its own choice, kept with its tab and restored at launch, as the diff modes are. A Markdown file opens in **Edit**.
+- **The preview.**
+  - **What it shows** is the editor's text, unsaved edits and all, rendered as Claude's replies are ([§5](#5-conversation-view)): the same fonts and sizes, headings, lists and task lists, tables, quotes and alerts, and code blocks colored as a reply's, with **Wrap** and **Copy**. Text in it selects and copies as a reply's does.
+  - **A paragraph wrapped in the file** reads as one: a line break inside it is a space, as VS Code and GitHub show a file. A reply keeps its line breaks, since Claude's are meant; two spaces or a `\` at a line's end still break it in the preview.
+  - **It follows the typing**: 300 ms after a change it shows it, and while typing goes on it catches up every 300 ms.
+  - **Front matter** (a `---` block of YAML at the top, as Jekyll's pages have) isn't shown, as in VS Code.
+  - HTML in the file isn't shown, and neither are Mermaid diagrams or math, which stay code: Claudette's Markdown doesn't draw them.
+  - Inline code that names a file stays code, unlike in a reply ([Files named in Claude's replies](#files-named-in-claudes-replies)): the preview has no session whose files a name could be.
+  - **Too large.** A file over 1 MB isn't previewed. The preview says *"This file is over 1 MB, too large to preview."* Rendering takes about two seconds for 700 KB (DESIGN.md), all of it on the UI thread, which can't be made smaller: Avalonia's controls are made and measured there.
+  - The first time a file is previewed it's rendered whole; after that only what changed is.
+- **Images** load as a reply's do ([Images in Claude's replies](#images-in-claudes-replies)), with a relative path read against the file's own folder, as GitHub reads it: `screenshots/menu.png` in `docs/index.md` is `docs/screenshots/menu.png`.
+  - A file in the project's folder loads at once; a web image, or a file outside the project's folder, waits for a click; a network path never loads. A file can be prompt-injected as a reply can: Claude may have written it from a page it read.
+  - What's let load and what loaded are remembered in the file's tab while it's open, as in a session's tab. A click opens an image in the image window.
+- **Links.**
+  - **A heading in the file** (`[Saving](#saving)`) scrolls the preview to it. The heading's name is made as Markdig makes it: lowercase, with dashes for spaces, as GitHub does for plain words.
+  - **A web link** (`https`, `http`, `mailto`) opens in the browser, or for an image's address in the image window, as Settings → Files and diffs → **Open images in** says, as a reply's does ([Opening images](#opening-images)).
+  - **A file**, read against the file's own folder (`[the spec](specs/weapons.md)`, `#L42` for a line), opens as a file named in a reply does: text in a file tab of the Files tab whose project holds it, at the line; an image in the image window; a folder in the explorer; a program or shortcut in its folder, never run ([Files named in Claude's replies](#files-named-in-claudes-replies)).
+  - A link to a file that isn't there says so over the file: *"Couldn't find specs/shots.md."* It goes at the next link clicked, or when the mode changes.
+- **Scrolling together.** In **Edit and preview**, scrolling either side scrolls the other to the same place: the line at the top of the editor is the one at the top of the preview. Switching between **Edit** and **Preview** keeps the place too.
+  - Each paragraph, heading, list item, table cell and code block in the preview knows the lines it came from. Within one, and between two, the place goes in proportion.
+  - A double-click in the preview selects a word, as in a reply, rather than going to the line in the editor as VS Code's does.
+- **Keys.**
+  - In **Edit and preview**, find (`Ctrl/Cmd+F`), **Go to line** and the editor's keys work in the editor. In **Preview**, `Ctrl/Cmd+F` finds a file by name, as in the diff modes.
+  - The command palette has **Preview the file**, **Edit and preview the file** and **Edit the file**, the ones that aren't showing, while a Markdown file shows.
+- **Accessibility.** The modes are radio buttons a screen reader names, and the preview's text is the same control a reply's is.
+- **Not covered:**
+  - finding text in the preview;
+  - going from a place in the preview to its line in the editor;
+  - the preview in a tab or window of its own;
+  - HTML, Mermaid diagrams and math.
+
+**How it's built.**
+
+- **Core.** `FileViewMode` gains `Preview` and `EditAndPreview`, saved with the file's tab. `ReplyImageAddress.Classify` takes the folder a relative path is read against apart from the folder that loads at once, and `ReplyImages` passes it on.
+- **The text.** `Editor/MarkdownPreview` is the preview's `IMarkdownUpdateProducer`, as `KeptMarkdown` is a reply's. It parses the editor's text away from the UI thread, with LiveMarkdown's pipeline and Markdig's YAML front matter, and hands the renderer each parse as a change from the one before (where the two texts start and stop differing), so LiveMarkdown builds again only the blocks after it. It keeps the parsed text's line starts, for scrolling together. It parses only while the preview shows.
+- **Scrolling together.** `Editor/PreviewScroll` maps a line to a place in the preview and back, from the preview's text blocks: their lines, from LiveMarkdown's `MarkdownTextBlock.SourceSpan`, and their tops and heights. It's pure, so the view model tests cover it.
+- **The file.** `ProjectFileViewModel` has `IsMarkdown`, the two modes, the preview, its `ReplyImages`, and the links' `OpenLinkCommand`. `IMarkdownHost` is what Markdown shown in Claudette needs from where it's shown (its images, and Copy on its code blocks), which `TabViewModel` and `ProjectFileViewModel` both are; `Views/ReplyImageView` and `Views/CodeBlockCopy` look for it rather than for a tab. Opening a path, and a web image link, move from `TabViewModel` to the shell (`ShellViewModel.OpenPathAsync`, `OpenWebImageAsync`), so the tab and the preview share them.
+- **The view.** `Views/Editor/MarkdownPreviewView` is the preview: a `ScrollViewer` around LiveMarkdown's renderer, with the note for a file too large. It keeps the line at its top there as what it shows changes (an edit above it, an image loading, a narrower pane), goes to a heading a link names, and says when the user scrolls it. `Views/ProjectFileView` lays the editor, the line between them and the preview out by the mode, and scrolls each with the other. The bar's two parts are styled as one outline for a file that isn't Markdown, in `Themes/ProjectFilesStyles.axaml`.
+- **Line breaks.** LiveMarkdown makes every line break one, soft or hard. `Views/SoftBreakInlineNode` takes its line break node's place in the pipeline, and makes a soft break a space only in a renderer with the `joinsoftbreaks` class, which the preview's has.
+- **Scrolling the editor.** AvaloniaEdit 12's `TextEditor.ScrollToVerticalOffset` does nothing (its body is commented out), so `CodeEditor.ScrollToVerticalOffset` sets its scroller's offset. That also brings an open file back scrolled where it was at launch, which it hadn't been.
+- **Claude Code:** nothing new.
+
+**Tests.** `ReplyImageAddressTests` (a relative path read against another folder), `PreviewScrollTests`, `MarkdownPreviewTests` (the modes and what's saved, the text parsed only while shown and as a change, front matter, the size limit, links to headings, files and the web, a missing file's note, images read against the file's folder, Copy) and `MarkdownPreviewUiTests` (the bar, the preview rendered, **Edit and preview** side by side and following typing, scrolling together both ways and between the modes, a heading link, an image read against the file's folder); `ProjectFilesUiTests` has a file coming back scrolled where it was.
 
 ## 19. Open Questions
 

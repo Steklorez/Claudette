@@ -1,3 +1,4 @@
+using Claudette.App.Conversation;
 using Claudette.Core.Protocol;
 using Claudette.Core.Settings;
 
@@ -15,6 +16,34 @@ public sealed partial class ShellViewModel
 
     /// <summary>Settings → Files and diffs → Open images in is Claudette's image viewer.</summary>
     internal bool OpensImages => _services.Settings.Editor.OpenImagesIn == OpenImagesIn.Viewer;
+
+    /// <summary>
+    /// A web link clicked in Markdown (DESIGN.md §18, "Opening images"). One whose address ends in an image's extension,
+    /// while Settings → Files and diffs → Open images in is the viewer, loads as a web image in Markdown does, through
+    /// Claudette's own client and remembered in <paramref name="images"/>, then shows in the image window. What isn't an
+    /// image there (a page, an error, more than 20 MB), and any other link, opens in the browser.
+    /// </summary>
+    internal async Task OpenWebLinkAsync(Uri uri, ReplyImages images)
+    {
+        var url = uri.OriginalString;
+        if (!OpensImages || uri.Scheme is not ("http" or "https") || !ViewerImages.HasExtension(uri.AbsolutePath))
+        {
+            await _services.Platform.OpenUrlAsync(url);
+            return;
+        }
+        MessageImage image;
+        try
+        {
+            image = images.Loaded(url) ?? await images.LoadAsync(images.Classify(url));
+        }
+        catch (ReplyImageException)
+        {
+            await _services.Platform.OpenUrlAsync(url);
+            return;
+        }
+        var name = Uri.UnescapeDataString(Path.GetFileName(uri.AbsolutePath));
+        ShowImage(new ToolImage(image, uri.Host, name, ToolImages.SaveName(name, image.MediaType), null, null, uri));
+    }
 
     /// <summary>Shows <paramref name="image"/> in a window of its own.</summary>
     internal void ShowImage(ToolImage image)

@@ -49,10 +49,12 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
         Colors = new AppColors(this);
         // Images in Markdown load only what may, through Claudette's own client (DESIGN.md §18, "Images in Claude's replies"),
-        // and inline code that names a file links to it ("Files named in Claude's replies").
+        // inline code that names a file links to it ("Files named in Claude's replies"), and a file's preview joins the
+        // lines of a paragraph wrapped in the file ("Markdown preview").
         MarkdownNode.Edit(pipeline => pipeline
             .Unregister<LinkInlineNode>().Register<ReplyLinkInlineNode>()
-            .Unregister<CodeInlineNode>().Register<ReplyCodeInlineNode>());
+            .Unregister<CodeInlineNode>().Register<ReplyCodeInlineNode>()
+            .Unregister<LineBreakInlineNode>().Register<SoftBreakInlineNode>());
         // Right-click menus as wide as their longest entry (DESIGN.md §3).
         ContextMenuPlacement.Use();
     }

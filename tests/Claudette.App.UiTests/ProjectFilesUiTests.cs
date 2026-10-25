@@ -140,6 +140,29 @@ public sealed class ProjectFilesUiTests
     }
 
     [AvaloniaFact]
+    public async Task A_file_comes_back_scrolled_where_it_was_left()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var path = Write(Path.Combine(h.WorkFolder, "long.txt"), string.Concat(Enumerable.Range(1, 300).Select(i => $"line {i}\n")));
+        var saved = new Core.ProjectFiles.ProjectFilesState
+        {
+            Folder = h.WorkFolder,
+            Files = [new Core.ProjectFiles.OpenFileState { Path = path, Line = 150, Scroll = 1000 }],
+            ShowingPath = path,
+        };
+        h.Services.State.ProjectFiles = [saved];
+        h.Services.State.SelectedTabId = saved.Id;
+
+        h.Shell.Restore(null);
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1400, 800);
+
+        var files = Assert.IsType<ProjectFilesViewModel>(h.Shell.Selected);
+        await UiText.SettleUntilAsync(window, () => files.Showing is { IsLoaded: true } && Editor(window).TextArea.TextView.ScrollOffset.Y > 990,
+            "the file scrolled where it was");
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public async Task With_Settings_so_the_explorer_is_on_the_right()
     {
         await using var h = new TabTestHarness(s => s.Editor.ExplorerSide = ExplorerSide.Right, dispatcher: new AvaloniaUiDispatcher());

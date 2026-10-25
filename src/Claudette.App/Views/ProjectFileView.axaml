@@ -6,8 +6,9 @@
              xmlns:pf="using:Claudette.Core.ProjectFiles"
              x:Class="Claudette.App.Views.ProjectFileView"
              x:DataType="vm:ProjectFileViewModel">
-  <!-- One open file in a Project Files tab (DESIGN.md §18, "Project files"): its banners, the bar for its changes, the
-       editor or its changes inline or side by side, and the chip. Its look is in Themes/ProjectFilesStyles.axaml. -->
+  <!-- One open file in a Project Files tab (DESIGN.md §18, "Project files"): its banners, the bar for its changes and,
+       for a Markdown file, its preview ("Markdown preview"), the editor, its changes inline or side by side or its
+       preview, and the chip. Its look is in Themes/ProjectFilesStyles.axaml. -->
   <DockPanel>
     <!-- It changed, or went, on disk under unsaved edits ("When a file changes on disk") -->
     <Border DockPanel.Dock="Top" Classes="filebanner" IsVisible="{Binding HasBanner}">
@@ -33,18 +34,30 @@
     <Border DockPanel.Dock="Top" Classes="filenote" IsVisible="{Binding IsReadOnly}">
       <TextBlock Classes="muted small" Text="{Binding ReadOnlyReason}" TextWrapping="Wrap" />
     </Border>
-    <!-- Claude's changes: the editor, or them inline or side by side, and Reviewed ("Claude's changes"). A narrow pane
-         wraps Whole file, Wrap lines and Reviewed onto a second line. -->
+    <!-- Claude's changes: the editor, or them inline or side by side, and Reviewed ("Claude's changes"); for a Markdown
+         file, its preview too ("Markdown preview"). A narrow pane wraps Whole file, Wrap lines and Reviewed onto a second
+         line. -->
     <Border DockPanel.Dock="Top" Classes="modebar" IsVisible="{Binding ShowsModeBar}">
       <WrapPanel ItemSpacing="8" LineSpacing="4">
-        <!-- The modes, as one control in three parts -->
-        <Border Classes="modes">
-          <StackPanel Orientation="Horizontal">
-            <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Edit" IsChecked="{Binding IsEditMode}" />
-            <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Inline changes" IsChecked="{Binding IsInlineMode}" />
-            <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Side by side" IsChecked="{Binding IsSideBySideMode}" />
-          </StackPanel>
-        </Border>
+        <!-- The modes, one choice in two parts: Edit, with Preview and Edit and preview for a Markdown file; then Inline
+             changes and Side by side while it has changes. For any other file the two parts join into one outline. -->
+        <StackPanel Classes="modegroups" Classes.joined="{Binding !IsMarkdown}" Orientation="Horizontal">
+          <Border Classes="modes first">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Edit" IsChecked="{Binding IsEditMode}" />
+              <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Preview" IsChecked="{Binding IsPreviewMode}"
+                           IsVisible="{Binding IsMarkdown}" />
+              <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Edit and preview" IsChecked="{Binding IsEditAndPreviewMode}"
+                           IsVisible="{Binding IsMarkdown}" />
+            </StackPanel>
+          </Border>
+          <Border Classes="modes second" IsVisible="{Binding ShowsDiffModes}">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Inline changes" IsChecked="{Binding IsInlineMode}" />
+              <RadioButton Theme="{StaticResource {x:Type ToggleButton}}" GroupName="{Binding Path}" Content="Side by side" IsChecked="{Binding IsSideBySideMode}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
         <ToggleButton Content="Whole file" IsVisible="{Binding IsDiffMode}"
                       IsChecked="{Binding Diff.ShowWholeFile, FallbackValue=False}" ToolTip.Tip="The whole file, not just its changes" />
         <ToggleButton Content="Wrap lines" IsVisible="{Binding IsDiffMode}"
@@ -60,6 +73,10 @@
         </ToggleButton>
       </WrapPanel>
     </Border>
+    <!-- A link in the preview to a file that isn't there ("Markdown preview", "Links") -->
+    <Border DockPanel.Dock="Top" Classes="filenote" IsVisible="{Binding LinkProblem, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Classes="small error" Text="{Binding LinkProblem}" TextWrapping="Wrap" />
+    </Border>
 
     <Panel x:Name="FileContent">
       <TextBlock Classes="muted" Margin="16" Text="Reading…" IsVisible="{Binding !IsLoaded}" />
@@ -69,58 +86,55 @@
         <Button HorizontalAlignment="Center" Content="Open in Claudette's image viewer" Click="OnOpenInViewer" IsVisible="{Binding CanOpenInViewer}" />
         <Button HorizontalAlignment="Center" Content="Open in the OS's app" Click="OnOpenInSystem" />
       </StackPanel>
-      <editor:CodeEditor x:Name="CodeEditor">
-        <editor:CodeEditor.IsVisible>
-          <MultiBinding Converter="{x:Static BoolConverters.And}">
-            <Binding Path="IsText" />
-            <Binding Path="IsEditMode" />
-          </MultiBinding>
-        </editor:CodeEditor.IsVisible>
-      </editor:CodeEditor>
+      <!-- The editor, its preview beside it, or the preview alone ("Markdown preview"); the code-behind sizes the columns
+           for the mode. -->
+      <Grid x:Name="TextPanes" ColumnDefinitions="*,Auto,0">
+        <Panel x:Name="EditorPane" IsVisible="{Binding ShowsEditor}">
+          <editor:CodeEditor x:Name="CodeEditor" />
+          <!-- The chip ("The chip"): where the cursor is and what the file is; line endings and indentation change from it -->
+          <Border x:Name="Chip" Classes="chip">
+            <WrapPanel ItemSpacing="4">
+              <TextBlock Text="{Binding PositionText}" />
+              <TextBlock Text="·" />
+              <TextBlock Text="{Binding Language.Name}" />
+              <TextBlock Text="·" />
+              <Button Classes="flat chippart" ToolTip.Tip="Line endings: change every line's" AutomationProperties.Name="Line endings">
+                <TextBlock Text="{Binding LineEndingLabel}" />
+                <Button.Flyout>
+                  <MenuFlyout>
+                    <MenuItem Header="LF" Command="{Binding SetLineEndingsCommand}" CommandParameter="{x:Static pf:LineEndingKind.Lf}" />
+                    <MenuItem Header="CRLF" Command="{Binding SetLineEndingsCommand}" CommandParameter="{x:Static pf:LineEndingKind.Crlf}" />
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
+              <TextBlock Text="·" />
+              <TextBlock Text="{Binding EncodingLabel}" />
+              <TextBlock Text="·" />
+              <Button x:Name="IndentButton" Classes="flat chippart" ToolTip.Tip="Indentation: what Tab and new lines use in this file" AutomationProperties.Name="Indentation">
+                <TextBlock Text="{Binding Indent.Label}" />
+                <Button.Flyout>
+                  <MenuFlyout ItemsSource="{Binding IndentChoices}">
+                    <MenuFlyout.ItemContainerTheme>
+                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:IndentChoice">
+                        <Setter Property="Header" Value="{Binding Label}" />
+                        <Setter Property="ToggleType" Value="Radio" />
+                        <Setter Property="IsChecked" Value="{Binding IsCurrent, Mode=OneWay}" />
+                        <Setter Property="Command" Value="{Binding $parent[UserControl].((vm:ProjectFileViewModel)DataContext).SetIndentCommand, FallbackValue={x:Null}}" />
+                        <Setter Property="CommandParameter" Value="{Binding}" />
+                      </ControlTheme>
+                    </MenuFlyout.ItemContainerTheme>
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
+            </WrapPanel>
+          </Border>
+        </Panel>
+        <!-- Drag to give either side more; a double-click shares the width evenly again -->
+        <GridSplitter x:Name="PanesEdge" Grid.Column="1" Classes="previewedge" ResizeDirection="Columns" IsVisible="{Binding IsEditAndPreviewMode}"
+                      DoubleTapped="OnPanesEdgeDoubleTapped" />
+        <editor:MarkdownPreviewView x:Name="Preview" Grid.Column="2" IsVisible="{Binding ShowsPreview}" />
+      </Grid>
       <views:DiffLines DataContext="{Binding Diff}" DoubleTapped="OnDiffDoubleTapped" IsVisible="{Binding $parent[UserControl].((vm:ProjectFileViewModel)DataContext).IsDiffMode, FallbackValue=False}" />
-      <!-- The chip ("The chip"): where the cursor is and what the file is; line endings and indentation change from it -->
-      <Border x:Name="Chip" Classes="chip">
-        <Border.IsVisible>
-          <MultiBinding Converter="{x:Static BoolConverters.And}">
-            <Binding Path="IsText" />
-            <Binding Path="IsEditMode" />
-          </MultiBinding>
-        </Border.IsVisible>
-        <WrapPanel ItemSpacing="4">
-          <TextBlock Text="{Binding PositionText}" />
-          <TextBlock Text="·" />
-          <TextBlock Text="{Binding Language.Name}" />
-          <TextBlock Text="·" />
-          <Button Classes="flat chippart" ToolTip.Tip="Line endings: change every line's" AutomationProperties.Name="Line endings">
-            <TextBlock Text="{Binding LineEndingLabel}" />
-            <Button.Flyout>
-              <MenuFlyout>
-                <MenuItem Header="LF" Command="{Binding SetLineEndingsCommand}" CommandParameter="{x:Static pf:LineEndingKind.Lf}" />
-                <MenuItem Header="CRLF" Command="{Binding SetLineEndingsCommand}" CommandParameter="{x:Static pf:LineEndingKind.Crlf}" />
-              </MenuFlyout>
-            </Button.Flyout>
-          </Button>
-          <TextBlock Text="·" />
-          <TextBlock Text="{Binding EncodingLabel}" />
-          <TextBlock Text="·" />
-          <Button x:Name="IndentButton" Classes="flat chippart" ToolTip.Tip="Indentation: what Tab and new lines use in this file" AutomationProperties.Name="Indentation">
-            <TextBlock Text="{Binding Indent.Label}" />
-            <Button.Flyout>
-              <MenuFlyout ItemsSource="{Binding IndentChoices}">
-                <MenuFlyout.ItemContainerTheme>
-                  <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:IndentChoice">
-                    <Setter Property="Header" Value="{Binding Label}" />
-                    <Setter Property="ToggleType" Value="Radio" />
-                    <Setter Property="IsChecked" Value="{Binding IsCurrent, Mode=OneWay}" />
-                    <Setter Property="Command" Value="{Binding $parent[UserControl].((vm:ProjectFileViewModel)DataContext).SetIndentCommand, FallbackValue={x:Null}}" />
-                    <Setter Property="CommandParameter" Value="{Binding}" />
-                  </ControlTheme>
-                </MenuFlyout.ItemContainerTheme>
-              </MenuFlyout>
-            </Button.Flyout>
-          </Button>
-        </WrapPanel>
-      </Border>
     </Panel>
   </DockPanel>
 </UserControl>
