@@ -310,7 +310,7 @@ public sealed class GitWorkingTreeTests : IDisposable
         Write("crlf.txt", "one\ntwo\nthree\n");
         Write("both.txt", "one\ntwo\nTHREE\n");
         Write("newline.txt", "one\ntwo");
-        await GitAsync("update-index", "--chmod=+x", "mode.sh");
+        await MakeExecutableAsync("mode.sh");
         Write("plain.txt", "one\n2\n");
 
         var changes = (await _git.GetChangesAsync(_repo, Token)).ToDictionary(c => Path.GetFileName(c.Path));
@@ -328,6 +328,22 @@ public sealed class GitWorkingTreeTests : IDisposable
     }
 
     private static (GitChangeKind, int?, int?) Summary(GitChange change) => (change.Kind, change.Added, change.Removed);
+
+    /// <summary>
+    /// Makes a file executable as people do on each system. On macOS and Linux git reads the mode from the file
+    /// (<c>core.fileMode</c>), so it's <c>chmod +x</c>: setting only the index's would leave the file as HEAD has it, and
+    /// <c>git diff HEAD</c> with nothing to say. On Windows git can't read it from the file, so it's the index's.
+    /// </summary>
+    private async Task MakeExecutableAsync(string relativePath)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            await GitAsync("update-index", "--chmod=+x", relativePath);
+            return;
+        }
+        var path = Path.Combine(_repo, relativePath);
+        File.SetUnixFileMode(path, File.GetUnixFileMode(path) | UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute);
+    }
 
     private void Write(string relativePath, string content)
     {
