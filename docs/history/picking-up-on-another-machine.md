@@ -46,8 +46,6 @@ A tab that doesn't sync ignores all of this.
 
 ## Coming back to the first machine
 
-{% include unreleased.html %}
-
 A tab that syncs, such as a pinned one, can come back to a session you carried on elsewhere while Claudette was closed here. If the other machine has since closed Claudette, the tab picks up where it left off, from the library, rather than from this machine's older copy. The conversation ends with *Picked up where LAPTOP-02 left off at 12:04.*
 
 Your sync client may still be bringing the other machine's turns when Claudette starts, especially when it starts as you log in. So while the tab is open, it keeps looking:

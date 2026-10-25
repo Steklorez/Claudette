@@ -28,8 +28,6 @@ If Claude Code is installed but Claudette can't find it:
 
 ## Install Claude Code didn't work
 
-{% include unreleased.html %}
-
 The screen shows the installer's output, and its last lines under it.
 
 - **Nothing happens for a while.** The installer prints nothing while it downloads Claude Code. Wait a few minutes before deciding it's stuck.
@@ -37,8 +35,6 @@ The screen shows the installer's output, and its last lines under it.
 - **It finished, but Claudette still can't use Claude Code.** The screen says what Claudette found. Restart Claudette, or use **Choose claude…** to pick `claude` in `~/.local/bin` (`claude.exe` in `.local\bin` in your user folder on Windows).
 
 ## You have the Claude desktop app
-
-{% include unreleased.html %}
 
 The Claude desktop app isn't Claude Code. It keeps a copy of Claude Code for its own use, which it replaces whenever it updates, and Claudette doesn't run it. When Claude Code isn't installed and the desktop app is, the setup screen says so: choose **Install Claude Code**, which installs it beside the desktop app.
 

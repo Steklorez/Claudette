@@ -17,8 +17,6 @@ Click a file in [Changed files](changed-files.md), or select it and press `Enter
 
 ## A file that changed since
 
-{% include unreleased.html %}
-
 When the file has changed since this session's last change to it, by another tab, you or a command ([Changed since](changed-files.md#changed-since)), the view shows this session's changes: from before Claude's first change to how its last one left the file. There's no **Revert** then, since that isn't the file as it is.
 
 **With later changes** shows the file as it is now instead, with what changed since, and **Revert** as usual. Click it again to go back.
@@ -34,8 +32,6 @@ When the file has changed since this session's last change to it, by another tab
 - A binary file says there's nothing to show line by line, and a file that's gone says it has been deleted.
 
 ## What the lines don't show
-
-{% include unreleased.html %}
 
 When no line changed, the view says what did in their place, as the file's row in Changed files does ([What the lines don't show](changed-files.md#what-the-lines-dont-show)): *"Only its line endings changed: CRLF to LF. The lines are the same on both sides."* The counts at the top say *CRLF → LF*. When lines changed too, a line under the file's path says so: *"Its line endings changed too: CRLF to LF"*.
 

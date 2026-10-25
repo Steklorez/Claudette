@@ -35,13 +35,9 @@ The summary at the top reads *"5 files changed · 2 reviewed"*. **Refresh** read
 
 ## This session's changes
 
-{% include unreleased.html %}
-
 The counts are this tab's own: from what the file held before Claude's first change in the session to how Claude's latest change left it. Several tabs often work in one folder, and their Claudes change the same files; another tab's edits, yours and a command's don't count as this session's. A file Claude put back as it was shows as unchanged.
 
 ## What the lines don't show
-
-{% include unreleased.html %}
 
 A diff compares lines, so some changes look the same on both sides. When one of them is the only change, or comes with others, the row says what it was under its folder:
 
@@ -55,8 +51,6 @@ When lines changed too, it reads *"Its line endings changed too: CRLF to LF"*, a
 Claudette reads a file's line endings just before Claude changes it, since Claude Code doesn't report them. For a session it didn't run, such as one opened from History, it doesn't have them, and a change to them isn't told. To change a file's line endings back, open it in its project's Files tab, click the line endings on its chip and choose **CRLF** or **LF** ([The chip](../project-files/editing.md#the-chip)).
 
 ## Changed since
-
-{% include unreleased.html %}
 
 When a file on disk isn't as this session's last change left it, its row says so under its folder:
 
@@ -76,8 +70,6 @@ The list keeps up by itself:
 A tab off screen catches up once you show it.
 
 ## Several working trees
-
-{% include unreleased.html %}
 
 A session can change files in more than one checkout of a repository: a worktree Claude moved into ([Worktree tabs](../tabs/worktree-tabs.md#claude-moving-into-a-worktree)), one a subagent works in, or one made with `git worktree add` beside the checkout. The list then has a group for each, with the tab's own first, each headed by its folder and branch, such as *"brisk-otter · worktree-brisk-otter"*. A file's folder is shown from its own checkout's top.
 

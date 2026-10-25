@@ -26,8 +26,6 @@ In the sidebar, a worktree tab stays in the main checkout's group. Its branch ba
 
 ## Claude moving into a worktree
 
-{% include unreleased.html %}
-
 Claude can move a session into a worktree of its own partway through, when you ask it to work in one, and back out again. The tab follows: from then on its folder is the worktree, as a worktree tab's is, it stays in its group, and a note says *Working in the worktree brisk-otter, on its own branch*. When Claude leaves the worktree, the tab goes back, with a note saying *Out of the worktree, back in* and the folder.
 
 A session reopened in a worktree it moved into opens there too. A `cd` into one of the project's folders doesn't move the tab. The files Claude changed in each checkout are grouped in [Changed files](../changes/changed-files.md#several-working-trees).

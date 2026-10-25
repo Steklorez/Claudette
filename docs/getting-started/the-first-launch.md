@@ -32,8 +32,6 @@ Claudette needs Claude Code {{ site.claude_code.minimum }} or later. It was last
 
 ## Installing Claude Code from the setup screen
 
-{% include unreleased.html %}
-
 When Claude Code isn't installed, the setup screen shows the command that Claude Code's [setup page](https://code.claude.com/docs/en/setup) gives for your system, and **Install Claude Code** runs it:
 
 | System | The command |
