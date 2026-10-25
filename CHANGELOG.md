@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-24
+
 ### Added
 
 - **Read a Markdown file rendered.** In a Files tab, a Markdown file's bar has **Edit**, **Preview** and **Edit and preview**. **Preview** shows the file as Claude's replies show Markdown, with its headings, lists, tables, code blocks and images, and **Edit and preview** puts the editor and the preview side by side: the preview follows your typing, and each scrolls with the other. A link to a heading scrolls to it, a link to another file opens it, and each file keeps your choice. See [Markdown files](https://claudette.dotbunny.com/project-files/markdown-files/).
@@ -203,7 +205,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/dotBunny/Claudette/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/dotBunny/Claudette/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/dotBunny/Claudette/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/dotBunny/Claudette/compare/v0.3.0...v0.4.0
