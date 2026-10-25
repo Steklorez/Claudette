@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Claudette.App.Services;
 using Claudette.App.ViewModels;
 
 namespace Claudette.App.Views;
@@ -149,9 +150,16 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>For a clicked notification: restore the window if minimized and bring it to the front.</summary>
+    /// <summary>
+    /// For a clicked notification or another launch: restore the window if minimized and bring it to the front; not while
+    /// Claudette leaves the focus alone (DESIGN.md §9, "Taking screenshots without the focus").
+    /// </summary>
     private void BringToFront()
     {
+        if (UnfocusedWindows.IsOn)
+        {
+            return;
+        }
         if (WindowState == WindowState.Minimized)
         {
             WindowState = WindowState.Normal;
@@ -173,7 +181,7 @@ public partial class MainWindow : Window
         if (_usageWindow is not null)
         {
             (_usageWindow.DataContext as UsagePanelViewModel)?.Refresh();
-            _usageWindow.Activate();
+            UnfocusedWindows.Activate(_usageWindow);
             return Task.CompletedTask;
         }
         var panel = new UsagePanelViewModel(main.Services, tracker, header, id => main.Shell?.AllTabs.FirstOrDefault(t => t.Id == id)?.DisplayName);

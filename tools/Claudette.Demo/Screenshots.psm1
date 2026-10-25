@@ -1,18 +1,17 @@
 <#
 .SYNOPSIS
 What screenshots.ps1 and guide-screenshots.ps1 share (Windows): building Claudette and the demo, starting Claudette on the
-demo and closing it, finding its controls through UI Automation and clicking them, and capturing its windows with
+demo and closing it, finding its controls through UI Automation and driving them, and capturing its windows with
 PrintWindow.
 
 .DESCRIPTION
-Claudette runs with CLAUDETTE_UNFOCUSED=1 and its windows behind the user's, so a run leaves the focus, the keyboard and
-the pointer to the user, as far as Windows lets it. Controls are found and read through UI Automation, but clicked by
-posting the mouse's messages to their window, and keys without modifiers are posted too: Windows brings a window to
-the front, focus and all, for each of UI Automation's own actions (Invoke, Select, Toggle, SetValue). Text still goes
-through SetValue, as typing posted to a window that isn't active doesn't reach its text box. And the first click in
-each window comes to the front anyway: Avalonia focuses the window it's clicked in. Only a key chord or a hover needs
-the real keyboard or pointer: Enter-Input borrows them and Exit-Input gives them back. The focus watch warns if
-Claudette came to the front otherwise.
+A run leaves the focus, the keyboard and the pointer to the user (DESIGN.md §9, "Taking screenshots without the
+focus"). Claudette runs with CLAUDETTE_UNFOCUSED=1, so its windows never take the focus and stay behind the user's, and
+with CLAUDETTE_AUTOMATION_PIPE, so it takes commands on that pipe: click, right-click, toggle, set text, show, scroll,
+show a tip, press keys and close a window, each carried out by Claudette itself. Controls are found and read through UI
+Automation, which only reads, and each command names the control as UI Automation saw it. Nothing here sends the
+mouse's or the keyboard's input, or uses UI Automation's own actions, which Windows lets bring a window to the front.
+The focus watch warns if Claudette came to the front anyway.
 #>
 $ErrorActionPreference = 'Stop'
 
@@ -40,18 +39,9 @@ public static class WindowShot
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
     [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int width, int height, uint flags);
-    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
-    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hwnd, int command);
-    [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
-    [DllImport("user32.dll")] static extern void keybd_event(byte key, byte scan, uint flags, UIntPtr extra);
-    [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] static extern bool IsWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(POINT point);
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
-    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
-    [DllImport("user32.dll")] static extern uint MapVirtualKey(uint code, uint type);
-    [DllImport("user32.dll")] static extern bool ScreenToClient(IntPtr hwnd, ref POINT point);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out RECT value, int size);
 
     /// <summary>
@@ -152,20 +142,6 @@ public static class WindowShot
         SetWindowPos(hwnd, new IntPtr(1) /* HWND_BOTTOM */, 0, 0, 0, 0, 0x0001 /* NOSIZE */ | 0x0002 /* NOMOVE */ | 0x0010 /* NOACTIVATE */);
     }
 
-    /// <summary>Puts the pointer at (<paramref name="x"/>, <paramref name="y"/>) on the screen, which a tip waits for before it shows.</summary>
-    public static void MovePointer(int x, int y)
-    {
-        SetCursorPos(x, y);
-    }
-
-    /// <summary>Where the pointer is on the screen: x, then y.</summary>
-    public static int[] Pointer()
-    {
-        POINT point;
-        GetCursorPos(out point);
-        return new[] { point.X, point.Y };
-    }
-
     /// <summary>Whether the pointer is over a window of the same process as <paramref name="hwnd"/>.</summary>
     public static bool PointerOver(IntPtr hwnd)
     {
@@ -177,93 +153,9 @@ public static class WindowShot
         return under == mine;
     }
 
-    /// <summary>The window in front, or zero for none.</summary>
-    public static IntPtr Foreground()
-    {
-        return GetForegroundWindow();
-    }
-
-    /// <summary>
-    /// Presses a key without modifiers, such as Enter, by posting it to the window, which needs neither the focus nor the
-    /// keyboard. Not a chord: Avalonia reads Ctrl and Shift from the real keyboard.
-    /// </summary>
-    public static void PostKey(IntPtr hwnd, int key)
-    {
-        long scan = MapVirtualKey((uint)key, 0 /* MAPVK_VK_TO_VSC */);
-        PostMessage(hwnd, 0x0100 /* WM_KEYDOWN */, new IntPtr(key), new IntPtr(1 | (scan << 16)));
-        PostMessage(hwnd, 0x0101 /* WM_KEYUP */, new IntPtr(key), new IntPtr(1 | (scan << 16) | (1L << 30) | (1L << 31)));
-    }
-
-    /// <summary>
-    /// Clicks (<paramref name="x"/>, <paramref name="y"/>) on the screen in the window by posting the mouse's messages,
-    /// which needs neither the focus nor the pointer, then tells the window the pointer left, so nothing stays hovered
-    /// to show a tip over the user's windows.
-    /// </summary>
-    public static void PostClick(IntPtr hwnd, int x, int y)
-    {
-        var point = new POINT { X = x, Y = y };
-        ScreenToClient(hwnd, ref point);
-        var at = new IntPtr((point.Y << 16) | (point.X & 0xFFFF));
-        PostMessage(hwnd, 0x0200 /* WM_MOUSEMOVE */, IntPtr.Zero, at);
-        PostMessage(hwnd, 0x0201 /* WM_LBUTTONDOWN */, new IntPtr(1) /* MK_LBUTTON */, at);
-        PostMessage(hwnd, 0x0202 /* WM_LBUTTONUP */, IntPtr.Zero, at);
-        PostMessage(hwnd, 0x02A3 /* WM_MOUSELEAVE */, IntPtr.Zero, IntPtr.Zero);
-    }
-
-    /// <summary>A right-click, as <see cref="PostClick"/> posts a click: for a control's context menu.</summary>
-    public static void PostRightClick(IntPtr hwnd, int x, int y)
-    {
-        var point = new POINT { X = x, Y = y };
-        ScreenToClient(hwnd, ref point);
-        var at = new IntPtr((point.Y << 16) | (point.X & 0xFFFF));
-        PostMessage(hwnd, 0x0200 /* WM_MOUSEMOVE */, IntPtr.Zero, at);
-        PostMessage(hwnd, 0x0204 /* WM_RBUTTONDOWN */, new IntPtr(2) /* MK_RBUTTON */, at);
-        PostMessage(hwnd, 0x0205 /* WM_RBUTTONUP */, IntPtr.Zero, at);
-    }
-
-    /// <summary>Brings the window back from being minimized, and to the front; whether it got there.</summary>
-    public static bool Restore(IntPtr hwnd)
-    {
-        ShowWindow(hwnd, 9 /* SW_RESTORE */);
-        TapAlt();
-        SetForegroundWindow(hwnd);
-        for (var waited = 0; waited < 1000 && GetForegroundWindow() != hwnd; waited += 50) { Thread.Sleep(50); }
-        Thread.Sleep(300);
-        return GetForegroundWindow() == hwnd;
-    }
-
-    /// <summary>Gives the front back to <paramref name="hwnd"/>, which had it before <see cref="Restore"/>.</summary>
-    public static void GiveBack(IntPtr hwnd)
-    {
-        if (hwnd == IntPtr.Zero || !IsWindow(hwnd)) { return; }
-        TapAlt();
-        SetForegroundWindow(hwnd);
-    }
-
-    /// <summary>Windows lets a process take the front only just after it had input: a tap of Alt counts.</summary>
-    static void TapAlt()
-    {
-        keybd_event(0x12, 0, 0, UIntPtr.Zero);
-        keybd_event(0x12, 0, 2 /* KEYEVENTF_KEYUP */, UIntPtr.Zero);
-    }
-
-    /// <summary>
-    /// Presses <paramref name="keys"/> (virtual-key codes) together in the window, which must be in front: keys go to the
-    /// window in front, wherever the pointer is, so none are pressed otherwise.
-    /// </summary>
-    public static void Press(IntPtr hwnd, int[] keys)
-    {
-        if (GetForegroundWindow() != hwnd) { throw new InvalidOperationException("Claudette isn't in front, so the keys would go to another window."); }
-        foreach (var key in keys) { keybd_event((byte)key, 0, 0, UIntPtr.Zero); }
-        Thread.Sleep(50);
-        for (var i = keys.Length - 1; i >= 0; i--) { keybd_event((byte)keys[i], 0, 2, UIntPtr.Zero); }
-    }
 }
 
-/// <summary>
-/// Notes each step during which a window of Claudette's came to the front, other than while <see cref="Lent"/>: a run
-/// leaves the focus to the user.
-/// </summary>
+/// <summary>Notes each step during which a window of Claudette's came to the front: a run leaves the focus to the user.</summary>
 public static class FocusWatch
 {
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
@@ -277,16 +169,12 @@ public static class FocusWatch
     /// <summary>What the script is doing, to say when Claudette came to the front.</summary>
     public static volatile string Step = "";
 
-    /// <summary>The script brought Claudette to the front itself, for keys or the pointer.</summary>
-    public static volatile bool Lent;
-
     public static void Start(int processId)
     {
         Stop();
         lock (taken) { taken.Clear(); }
         watched = (uint)processId;
         last = 0;
-        Lent = false;
         Step = "starting Claudette";
         timer = new Timer(delegate { Check(); }, null, 0, 100);
     }
@@ -302,8 +190,8 @@ public static class FocusWatch
     {
         uint now;
         GetWindowThreadProcessId(GetForegroundWindow(), out now);
-        // Coming to the front counts, not staying there once lent.
-        if (now == watched && last != watched && !Lent)
+        // Coming to the front counts, each time.
+        if (now == watched && last != watched)
         {
             lock (taken) { if (!taken.Contains(Step)) { taken.Add(Step); } }
         }
@@ -391,22 +279,61 @@ function Show-Tree($from, [int] $depth = 12) {
     & $walk (Get-Root $from) 0
 }
 
+# ---- The command channel (DESIGN.md §9, "Taking screenshots without the focus") ----------------------------------------
+
+# The pipe the Claudette Start-Claudette started takes its commands on.
+$script:pipeName = $null
+
+# Sends $command to Claudette, which carries it out itself and answers; throws with why if it couldn't.
+function Send-Command([hashtable] $command) {
+    if (-not $script:pipeName) { throw "Claudette wasn't started with its command channel (Start-Claudette)." }
+    $client = New-Object System.IO.Pipes.NamedPipeClientStream('.', $script:pipeName, [System.IO.Pipes.PipeDirection]::InOut)
+    try {
+        $client.Connect(10000)
+        $utf8 = New-Object System.Text.UTF8Encoding($false)
+        $writer = New-Object System.IO.StreamWriter($client, $utf8)
+        $writer.AutoFlush = $true
+        $reader = New-Object System.IO.StreamReader($client, $utf8)
+        $writer.WriteLine(($command | ConvertTo-Json -Compress))
+        $line = $reader.ReadLine()
+    }
+    finally {
+        $client.Dispose()
+    }
+    if (-not $line) { throw "Claudette didn't answer '$($command.verb)'." }
+    $answer = $line | ConvertFrom-Json
+    if (-not $answer.ok) { throw "Claudette couldn't $($command.verb): $($answer.error)" }
+    $answer
+}
+
+# A command for $element: its window's handle, its name, id and type as UI Automation has them, and where its middle is,
+# for when several match.
+function Send-ElementCommand([string] $verb, $element, [hashtable] $more = @{}) {
+    $current = $element.Current
+    $command = @{
+        verb = $verb
+        window = [long] (Get-ElementWindow $element)
+        name = $current.Name
+        id = $current.AutomationId
+        type = $current.ControlType.ProgrammaticName -replace '^ControlType\.', ''
+    }
+    $rect = $current.BoundingRectangle
+    if (-not $rect.IsEmpty) {
+        $command.x = $rect.Left + $rect.Width / 2
+        $command.y = $rect.Top + $rect.Height / 2
+    }
+    foreach ($key in $more.Keys) { $command[$key] = $more[$key] }
+    Send-Command $command
+}
+
 # Clicks the control named $text, or the nearest one around it that can be clicked.
 function Invoke-ByText($from, [string] $text) {
     Invoke-Element (Find-ByText $from $text) $text
 }
 
 function Invoke-Element($element, [string] $what) {
-    $walker = [System.Windows.Automation.TreeWalker]::ControlViewWalker
-    while ($element) {
-        $pattern = $null
-        if ($element.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref] $pattern)) {
-            Send-Click $element
-            return
-        }
-        $element = $walker.GetParent($element)
-    }
-    throw "Nothing to click around '$what'."
+    if (-not $element) { throw "Found nothing named '$what' to click." }
+    Send-Click $element
 }
 
 # The window $element is drawn in: the one around it with a handle, such as Settings or a popup.
@@ -417,16 +344,9 @@ function Get-ElementWindow($element) {
     [IntPtr] $element.Current.NativeWindowHandle
 }
 
-# Clicks the middle of $element, scrolled into view first if it's out of it, by posting the mouse's messages to its window.
+# Clicks $element, as a click would: selects it, toggles it, invokes it or opens it, or the nearest control around it that can.
 function Send-Click($element) {
-    $pattern = $null
-    if ($element.Current.IsOffscreen -and $element.TryGetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern, [ref] $pattern)) {
-        $pattern.ScrollIntoView()
-        Start-Sleep -Milliseconds 300
-    }
-    $rect = $element.Current.BoundingRectangle
-    if ($rect.IsEmpty) { throw "'$($element.Current.Name)' isn't on screen to click." }
-    [WindowShot]::PostClick((Get-ElementWindow $element), [int] ($rect.Left + $rect.Width / 2), [int] ($rect.Top + $rect.Height / 2))
+    Send-ElementCommand 'click' $element | Out-Null
 }
 
 # Selects the item at $index (from 0) of the tree named $tree, such as a node of the agent map, by clicking its header:
@@ -445,22 +365,19 @@ function Select-TreeItem([IntPtr] $hwnd, [string] $tree, [int] $index) {
 # as $scroller, it then scrolls back until the element is $gap device-independent pixels under the pane's top, so what sits
 # above the element, such as a card's header, shows too.
 function Show-Element([IntPtr] $hwnd, $element, $scroller = $null, [int] $gap = 0) {
-    $pattern = $null
-    if ($element.TryGetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern, [ref] $pattern)) { $pattern.ScrollIntoView() }
+    Send-ElementCommand 'show' $element | Out-Null
     if (-not $scroller) { return }
-    $scroll = $scroller.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern)
     $least = $gap * [WindowShot]::Scale($hwnd)
     for ($step = 0; $step -lt 20; $step++) {
         Start-Sleep -Milliseconds 200
         if ($element.Current.BoundingRectangle.Top - $scroller.Current.BoundingRectangle.Top -ge $least) { break }
-        $scroll.Scroll([System.Windows.Automation.ScrollAmount]::NoAmount, [System.Windows.Automation.ScrollAmount]::SmallDecrement)
+        Send-ElementCommand 'scroll' $scroller @{ lines = -1 } | Out-Null
     }
 }
 
-# Puts $text in the text box $element, without typing it. Through UI Automation, which brings the window to the front:
-# typing posted to it reaches a text box only while its window is active, as Avalonia drops the keyboard focus otherwise.
+# Puts $text in the text box $element, as typing it would.
 function Set-ElementText($element, [string] $text) {
-    $element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text)
+    Send-ElementCommand 'settext' $element @{ text = $text } | Out-Null
 }
 
 # Sends $text from the selected tab's composer.
@@ -472,46 +389,24 @@ function Send-Message([IntPtr] $hwnd, [string] $text) {
     Invoke-ByText $hwnd 'Send'
 }
 
-# Takes the keyboard and the pointer for a shot that needs them (guide-screenshots.ps1's -WithInput): brings the window to
-# the front, noting the window that had it and where the pointer was, for Exit-Input to put back.
-function Enter-Input([IntPtr] $hwnd) {
-    $script:lentFrom = [WindowShot]::Foreground()
-    $script:pointerWas = [WindowShot]::Pointer()
-    [FocusWatch]::Lent = $true
-    if (-not [WindowShot]::Restore($hwnd)) {
-        Exit-Input $hwnd
-        throw "Couldn't bring Claudette to the front."
-    }
+# Shows the tip of $element, or of the nearest control around it that has one, as when the pointer rests on it.
+function Show-Tip($element) {
+    Send-ElementCommand 'hover' $element | Out-Null
 }
 
-# Puts the pointer back, gives the front back to the window that had it, and puts Claudette behind it again.
-function Exit-Input([IntPtr] $hwnd) {
-    [WindowShot]::MovePointer($script:pointerWas[0], $script:pointerWas[1])
-    [WindowShot]::GiveBack($script:lentFrom)
-    [WindowShot]::ToBack($hwnd)
-    Start-Sleep -Milliseconds 300
-    [FocusWatch]::Lent = $false
+# Hides it again, as when the pointer leaves.
+function Hide-Tip($element) {
+    Send-ElementCommand 'unhover' $element | Out-Null
 }
 
-# Puts the pointer on the middle of $element, for the tip over it to show.
-function Move-PointerTo($element) {
-    $rect = $element.Current.BoundingRectangle
-    [WindowShot]::MovePointer([int] ($rect.Left + $rect.Width / 2), [int] ($rect.Top + $rect.Height / 2))
-}
-
-$keyCodes = @{ Ctrl = 0x11; Shift = 0x10; Alt = 0x12; Esc = 0x1B; Enter = 0x0D; Tab = 0x09; F3 = 0x72; F4 = 0x73 }
-
-# Presses a key chord, such as 'Ctrl+Shift+P', on the real keyboard: the window must be in front (Enter-Input).
+# Presses keys together in the window, such as 'Ctrl+Shift+P', as the keyboard would: to its focused control, or itself.
 function Send-Keys([IntPtr] $hwnd, [string] $chord) {
-    $keys = foreach ($name in $chord -split '\+') {
-        if ($keyCodes.ContainsKey($name)) { $keyCodes[$name] } else { [int] [char] $name.ToUpperInvariant() }
-    }
-    [WindowShot]::Press($hwnd, [int[]] $keys)
+    Send-Command @{ verb = 'key'; window = [long] $hwnd; keys = $chord } | Out-Null
 }
 
-# Presses a key without modifiers, such as 'Enter' or 'Esc', by posting it to the window: no focus needed.
+# Presses one key, such as 'Enter' or 'Esc', in the window.
 function Send-WindowKey([IntPtr] $hwnd, [string] $key) {
-    [WindowShot]::PostKey($hwnd, $keyCodes[$key])
+    Send-Keys $hwnd $key
 }
 
 # What the script is doing, for Stop-Claudette to say if Claudette came to the front meanwhile.
@@ -539,10 +434,9 @@ function Wait-PointerAway([IntPtr] $hwnd, [string] $path) {
     }
 }
 
-# The window as $path, down to $bottom on the screen when that isn't zero. -Hovered for a tip the pointer is on purpose
-# over its window for.
-function Save-Window([IntPtr] $hwnd, [string] $path, [int] $bottom = 0, [switch] $Hovered) {
-    if (-not $Hovered) { Wait-PointerAway $hwnd $path }
+# The window as $path, down to $bottom on the screen when that isn't zero.
+function Save-Window([IntPtr] $hwnd, [string] $path, [int] $bottom = 0) {
+    Wait-PointerAway $hwnd $path
     [WindowShot]::Save($hwnd, $path, $bottom)
 }
 
@@ -575,14 +469,12 @@ function Save-Element([IntPtr] $hwnd, [string] $path, $element, [double[]] $marg
 
 # Closes a window of Claudette's, such as Settings, as its close button does.
 function Close-Window([IntPtr] $hwnd) {
-    $ae::FromHandle($hwnd).GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+    Send-Command @{ verb = 'close'; window = [long] $hwnd } | Out-Null
 }
 
-# Right-clicks the middle of $element, for its context menu, as Send-Click clicks it.
+# Opens the context menu of $element, or of the nearest control around it that has one, as a right-click would.
 function Send-RightClick($element) {
-    $rect = $element.Current.BoundingRectangle
-    if ($rect.IsEmpty) { throw "'$($element.Current.Name)' isn't on screen to right-click." }
-    [WindowShot]::PostRightClick((Get-ElementWindow $element), [int] ($rect.Left + $rect.Width / 2), [int] ($rect.Top + $rect.Height / 2))
+    Send-ElementCommand 'rightclick' $element | Out-Null
 }
 
 # Turns the switch or check box named $text on or off: the control itself, not a title beside it named the same.
@@ -593,7 +485,7 @@ function Set-Toggle($from, [string] $text, [bool] $on) {
     if (-not $box) { throw "Found no switch named '$text'." }
     $toggle = $box.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
     if (($toggle.Current.ToggleState -eq 'On') -ne $on) {
-        Send-Click $box
+        Send-ElementCommand 'toggle' $box @{ on = $on } | Out-Null
         Wait-Until { ($toggle.Current.ToggleState -eq 'On') -eq $on } "'$text' to change" 10
     }
 }
@@ -633,8 +525,8 @@ function New-DemoContent([string] $demo, [string] $work, [string] $projects, [st
     if ($LASTEXITCODE -ne 0) { throw 'claudette-demo failed.' }
 }
 
-# Starts Claudette on the demo in $work (fake-claude as Claude Code, so no account and no tokens), once it has a window,
-# behind the user's windows and without the focus. $environment adds to what it starts with, such as
+# Starts Claudette on the demo in $work (fake-claude as Claude Code, so no account and no tokens), once it has a window
+# and takes commands, behind the user's windows and without the focus. $environment adds to what it starts with, such as
 # FAKE_CLAUDE_LOGGED_IN = '0' for the sign-in screen.
 function Start-Claudette([string] $app, [string] $work, [hashtable] $environment = @{}) {
     $start = New-Object System.Diagnostics.ProcessStartInfo $app
@@ -646,11 +538,15 @@ function Start-Claudette([string] $app, [string] $work, [hashtable] $environment
     # A source build otherwise copies itself to its data folder and runs from there.
     $start.EnvironmentVariables['CLAUDETTE_RUN_IN_PLACE'] = '1'
     $start.EnvironmentVariables['CLAUDETTE_UNFOCUSED'] = '1'
+    # Its own pipe each time, so a Claudette left over from a run can't answer for this one.
+    $script:pipeName = "claudette-automation-$([guid]::NewGuid().ToString('N'))"
+    $start.EnvironmentVariables['CLAUDETTE_AUTOMATION_PIPE'] = $script:pipeName
     foreach ($name in $environment.Keys) { $start.EnvironmentVariables[$name] = $environment[$name] }
     $claudette = [System.Diagnostics.Process]::Start($start)
     [FocusWatch]::Start($claudette.Id)
     Wait-Until { $claudette.Refresh(); $claudette.MainWindowHandle -ne [IntPtr]::Zero } 'the window'
     [WindowShot]::ToBack($claudette.MainWindowHandle)
+    Wait-Until { try { Send-Command @{ verb = 'ping' } | Out-Null; $true } catch { $false } } 'the command channel' 30
     $claudette
 }
 
@@ -663,6 +559,6 @@ function Stop-Claudette($claudette) {
 }
 
 Export-ModuleMember -Function Get-Root, Get-Parent, Find-ByText, Find-ByPrefix, Find-ByType, Find-ById, Find-Lowest, Show-Tree, Invoke-ByText, Invoke-Element,
-    Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Click, Send-RightClick, Send-Message, Enter-Input, Exit-Input, Move-PointerTo, Send-Keys,
-    Send-WindowKey, Set-Step, Get-OtherWindow, Wait-PointerAway, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
+    Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Click, Send-RightClick, Send-Message, Show-Tip, Hide-Tip, Send-Keys,
+    Send-WindowKey, Send-Command, Send-ElementCommand, Set-Step, Get-OtherWindow, Wait-PointerAway, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
     Wait-Until, Build-Claudette, New-DemoContent, Start-Claudette, Stop-Claudette

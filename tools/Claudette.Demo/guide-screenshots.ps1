@@ -18,11 +18,11 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
   a permission waiting (ASK_PERMISSION) and a process for the process monitor (SPAWN).
 Claudette is closed by its window, as a user would, each time.
 
-A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
-CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view,
-clicks and Enter are posted to the window, and its controls are found and its text set through UI Automation. Two shots need the real keyboard or pointer: the
-command palette (Ctrl+Shift+P) and a tab's info card (the pointer resting on its row). They're taken only with
--WithInput, which borrows both for a few seconds each and puts them back.
+A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
+included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with CLAUDETTE_UNFOCUSED=1, its windows
+behind yours and never taking the focus, and is driven through its command channel (CLAUDETTE_AUTOMATION_PIPE): its
+controls are found through UI Automation, and clicked, typed in and so on by Claudette itself. Captures go through
+PrintWindow, which doesn't need the windows in view. Screenshots.psm1 has the helpers.
 
 .PARAMETER Projects
 Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing
@@ -34,18 +34,11 @@ The shots to take, by name (tabs/sidebar) or chapter (tabs). Every shot by defau
 .PARAMETER Themes
 The themes to take them in.
 
-.PARAMETER WithInput
-Takes the shots that need the real keyboard or pointer too: Claudette comes to the front for a few seconds each, and the
-shot is tried again if the mouse or keyboard is used meanwhile. Leave them alone while it runs.
-
 .EXAMPLE
 tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo
 
 .EXAMPLE
 tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo -Only tabs/sidebar, usage -Themes dark
-
-.EXAMPLE
-tools\Claudette.Demo\guide-screenshots.ps1 -Projects C:\Demo -Only tabs/info-card, tabs/command-palette -WithInput
 #>
 param(
     [Parameter(Mandatory)] [string] $Projects,
@@ -53,7 +46,6 @@ param(
     [string] $Work = (Join-Path ([IO.Path]::GetTempPath()) 'claudette-demo'),
     [string[]] $Only = @(),
     [string[]] $Themes = @('dark', 'light'),
-    [switch] $WithInput,
     # How long Claudette gets to start and restore its tabs before the first click.
     [int] $SettleSeconds = 10
 )
@@ -66,7 +58,6 @@ $Out = (Resolve-Path $Out).Path
 Import-Module (Join-Path $PSScriptRoot 'Screenshots.psm1') -Force -DisableNameChecking
 $build = Build-Claudette $repo
 $failed = @()
-$skipped = @()
 
 # Whether any of the shots is one to take.
 function Test-Wanted([string[]] $names) {
@@ -91,39 +82,25 @@ function Use-Claudette([hashtable] $environment, [scriptblock] $steps) {
     }
 }
 
-# One shot: $steps gets the path to save the picture to. -NeedsInput for one that borrows the keyboard or pointer, taken
-# only with -WithInput, and tried again if the user had them meanwhile.
-function Shot([string] $name, [scriptblock] $steps, [switch] $NeedsInput) {
+# One shot: $steps gets the path to save the picture to.
+function Shot([string] $name, [scriptblock] $steps) {
     if (-not (Test-Wanted $name)) { return }
-    if ($NeedsInput -and -not $WithInput) {
-        if ($script:skipped -notcontains $name) { $script:skipped += $name }
-        return
-    }
     $path = Join-Path $Out "$name-$theme.png"
     New-Item -ItemType Directory -Force (Split-Path $path) | Out-Null
     Write-Host "  $name"
     Set-Step $name
-    $tries = if ($NeedsInput) { 3 } else { 1 }
-    for ($try = 1; $try -le $tries; $try++) {
-        try {
-            & $steps $path
-            return
-        }
-        catch {
-            if ($try -lt $tries) {
-                Write-Host "    trying again: $_"
-                Start-Sleep -Seconds 3
-            }
-            else {
-                Write-Warning "$name ($theme): $_"
-                $script:failed += "$name ($theme)"
-            }
-        }
+    try {
+        & $steps $path
+    }
+    catch {
+        Write-Warning "$name ($theme): $_"
+        $script:failed += "$name ($theme)"
     }
 }
 
 # A tab loads its session when it's first shown: visit each, then come back to Grappling hook.
 function Show-Tabs {
+    Set-Step 'visiting the tabs'
     $tabs = 'Stamina drains twice on clients', 'Inventory loses items on save', 'Move to the Input System', 'UI on the Input System',
         'Gamepad rumble', 'Pool particle emitters', 'Grappling hook'
     foreach ($text in $tabs) {
@@ -290,6 +267,9 @@ foreach ($theme in $Themes) {
             Shot 'settings/project-tools' {
                 param($path)
                 $settings = Open-Settings
+                # The pages above the selected tab's project scroll, and only those in view are drawn: down to Project tools.
+                Send-ElementCommand 'scroll' (Find-ById $settings 'SidebarList') @{ lines = 20 } | Out-Null
+                Start-Sleep -Milliseconds 500
                 Select-ListItem $settings 'Unreal Engine'
                 Start-Sleep -Seconds 1
                 Save-Window $settings $path
@@ -318,8 +298,7 @@ foreach ($theme in $Themes) {
                 Start-Sleep -Seconds 1
             }
 
-            # From the tab's menu: the dialog over the main window, the demo's model and effort its own. Avalonia's menu doesn't
-            # take a posted click, so its item is chosen through UI Automation's Invoke.
+            # From the tab's menu: the dialog over the main window, the demo's model and effort its own.
             Shot 'tabs/tab-settings' {
                 param($path)
                 Invoke-ByText $window 'Grappling hook'
@@ -327,7 +306,7 @@ foreach ($theme in $Themes) {
                 Send-RightClick (Find-ByText $window 'Grappling hook')
                 $menu = Get-OtherWindow $claudette $window 'the tab menu'
                 Start-Sleep -Seconds 1
-                (Find-ByText $menu "Tab settings$([char] 0x2026)").GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+                Send-Click (Find-ByText $menu "Tab settings$([char] 0x2026)")
                 Wait-Until { Find-ByPrefix $window 'Settings for ' } 'Tab settings' 20
                 Start-Sleep -Seconds 1
                 # The dialog has no control of its own: its title and Done, with room for its padding and edge.
@@ -336,42 +315,33 @@ foreach ($theme in $Themes) {
                 Wait-Until { -not (Find-ByPrefix $window 'Settings for ') } 'Tab settings to close' 20
             }
 
-            # The two that borrow the keyboard and pointer (-WithInput), one after the other.
-            # The card over a tab's row once the pointer has rested on it: a window of its own.
-            Shot 'tabs/info-card' -NeedsInput {
+            # The card over a tab's row, as when the pointer rests on it: a window of its own.
+            Shot 'tabs/info-card' {
                 param($path)
-                $row = (Find-ByText $window 'Grappling hook').Current.BoundingRectangle
-                $x = [int] ($row.Left + 40)
-                $y = [int] ($row.Top + 10)
-                Enter-Input $window
+                $row = Find-ByText $window 'Grappling hook'
+                Show-Tip $row
                 try {
-                    [WindowShot]::MovePointer($x - 10, $y)
-                    Start-Sleep -Milliseconds 300
-                    [WindowShot]::MovePointer($x, $y)
                     Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } "the tab's info card" 20
                     Start-Sleep -Seconds 1
-                    $at = [WindowShot]::Pointer()
-                    if ($at[0] -ne $x -or $at[1] -ne $y) { throw 'The pointer moved.' }
-                    Save-Window ([WindowShot]::OtherWindow($claudette.Id, $window)) $path -Hovered
+                    Save-Window ([WindowShot]::OtherWindow($claudette.Id, $window)) $path
                 }
                 finally {
-                    Exit-Input $window
+                    Hide-Tip $row
                 }
                 Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -eq [IntPtr]::Zero } 'the info card to go' 20
             }
 
-            Shot 'tabs/command-palette' -NeedsInput {
+            # Its shortcut opens it, and closes it again.
+            Shot 'tabs/command-palette' {
                 param($path)
-                Enter-Input $window
+                Send-Keys $window 'Ctrl+Shift+P'
                 try {
-                    Send-Keys $window 'Ctrl+Shift+P'
                     Wait-Until { Find-ByText $window 'Command palette' -Optional } 'the command palette' 20
                     Start-Sleep -Seconds 1
                     Save-Element $window $path (Get-Parent (Find-ByText $window 'Command palette')) 12
                 }
                 finally {
-                    Exit-Input $window
-                    if (Find-ByText $window 'Command palette' -Optional) { Send-WindowKey $window 'Esc' }
+                    if (Find-ByText $window 'Command palette' -Optional) { Send-Keys $window 'Ctrl+Shift+P' }
                 }
                 Wait-Until { -not (Find-ByText $window 'Command palette' -Optional) } 'the command palette to close' 20
             }
@@ -516,8 +486,4 @@ foreach ($theme in $Themes) {
 }
 
 if ($failed) { Write-Warning "Not taken: $($failed -join ', ')." }
-if ($skipped) {
-    Write-Host "Skipped, as they borrow the keyboard and pointer: $($skipped -join ', '). To take them, run this again with"
-    Write-Host "-Only $($skipped -join ', ') -WithInput, and leave the mouse and keyboard alone for a minute."
-}
 Write-Host "Saved to $Out"

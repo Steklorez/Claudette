@@ -7,6 +7,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Claudette.App.Controls;
 using Claudette.App.Services;
+using Claudette.App.Services.Automation;
 using Claudette.App.Themes;
 using Claudette.App.ViewModels;
 using Claudette.App.Views;
@@ -40,6 +41,7 @@ public partial class App : Application
     private WindowPlacementTracker? _placement;
     private bool _shutdownComplete;
     private MainWindow? _mainWindow;
+    private AutomationChannel? _automation;
 
     /// <summary>Settings → Appearance → Style's colors (DESIGN.md §3, "Visual style").</summary>
     internal AppColors Colors { get; private set; } = null!;
@@ -119,6 +121,7 @@ public partial class App : Application
                 instance.ArgumentsReceived += args => Dispatcher.UIThread.Post(() => main.OnLaunchedAgain(args));
             }
             window.Closing += OnMainWindowClosing;
+            UseAutomation(desktop, loggers);
             desktop.MainWindow = window;
             _chrome = new PlatformChrome(this, window, _mainViewModel, _services, CreateJumpList());
             var opened = new TaskCompletionSource();
@@ -133,6 +136,23 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// The screenshot scripts' commands, with <c>CLAUDETTE_AUTOMATION_PIPE</c> set (DESIGN.md §9, "Taking screenshots
+    /// without the focus"): carried out on the UI thread, before the main window shows, so the first is answered.
+    /// </summary>
+    private void UseAutomation(IClassicDesktopStyleApplicationLifetime desktop, ILoggerFactory loggers)
+    {
+        if (AutomationChannel.PipeName is not { } pipe)
+        {
+            return;
+        }
+        OpenPopups.Watch();
+        var commands = AutomationCommands.ForApp();
+        _automation = new AutomationChannel(pipe, request => Dispatcher.UIThread.InvokeAsync(() => commands.Execute(request)).GetTask(),
+            loggers.CreateLogger("Automation"));
+        desktop.Exit += (_, _) => _automation.Dispose();
     }
 
     /// <summary>

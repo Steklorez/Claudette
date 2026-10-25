@@ -18,6 +18,28 @@ internal static class ContextMenuPlacement
     private static readonly AttachedProperty<bool> AnchoredProperty =
         AvaloniaProperty.RegisterAttached<ContextMenu, bool>("Anchored", typeof(ContextMenuPlacement));
 
+    /// <summary>
+    /// Opens <paramref name="control"/>'s menu as a right-click at <paramref name="point"/> (in the control) would: for the
+    /// screenshot scripts' commands (DESIGN.md §9, "Taking screenshots without the focus"), which have no pointer.
+    /// </summary>
+    public static void OpenAt(Control control, ContextMenu menu, Point point)
+    {
+        if (menu.Placement == PlacementMode.Pointer || menu.GetValue(AnchoredProperty))
+        {
+            Anchor(menu, point);
+        }
+        menu.Open(control);
+    }
+
+    private static void Anchor(ContextMenu menu, Point point)
+    {
+        menu.SetValue(AnchoredProperty, true);
+        menu.Placement = PlacementMode.AnchorAndGravity;
+        menu.PlacementAnchor = PopupAnchor.TopLeft;
+        menu.PlacementGravity = PopupGravity.BottomRight;
+        menu.PlacementRect = new Rect(point, new Size(1, 1));
+    }
+
     /// <summary>Anchors every context menu that would open at the pointer.</summary>
     public static void Use() => Control.ContextRequestedEvent.AddClassHandler<Control>(OnContextRequested);
 
@@ -32,11 +54,7 @@ internal static class ContextMenuPlacement
         // Avalonia places the menu against the control the request came from, so the point is taken from there too.
         if (e.TryGetPosition(e.Source as Control ?? control, out var point))
         {
-            menu.SetValue(AnchoredProperty, true);
-            menu.Placement = PlacementMode.AnchorAndGravity;
-            menu.PlacementAnchor = PopupAnchor.TopLeft;
-            menu.PlacementGravity = PopupGravity.BottomRight;
-            menu.PlacementRect = new Rect(point, new Size(1, 1));
+            Anchor(menu, point);
         }
         else
         {

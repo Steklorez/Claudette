@@ -28,7 +28,8 @@ To run from a checkout: `dotnet run --project src/Claudette.App -- --folder <pat
 |---|---|
 | `CLAUDETTE_HOME` | A folder where Claudette keeps all its settings and data, instead of your profile's. It's for trying things without touching your real tabs. A Claudette started with it also leaves the login entry alone, and **Start Claudette when I log in** is disabled. |
 | `CLAUDETTE_RUN_IN_PLACE` | Set to `1`, a source build runs from its build folder instead of from a copy. A debugger attached does the same. See [Running from source](../getting-started/running-from-source.md). |
-| `CLAUDETTE_UNFOCUSED` | Set to `1`, Claudette's windows open without taking the focus from the window you're in. The screenshot scripts in `tools/Claudette.Demo` use it. |
+| `CLAUDETTE_UNFOCUSED` | Set to `1`, Claudette's windows never take the focus from the window you're in, and on Windows they stay behind your windows. The screenshot scripts in `tools/Claudette.Demo` use it. |
+| `CLAUDETTE_AUTOMATION_PIPE` | The name of a pipe Claudette takes commands on: the screenshot scripts in `tools/Claudette.Demo` click, type and press keys in it this way, without the mouse or the keyboard. Only your own programs can connect. |
 
 ## Claude Code's variables
 

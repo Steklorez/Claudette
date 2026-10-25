@@ -729,11 +729,9 @@ public partial class ShellView : UserControl
         if (_settingsWindow is { DataContext: SettingsViewModel open } existing)
         {
             open.Open(opening);
-            // Coming to the front takes the focus, which a screenshot run leaves alone (DESIGN.md §9, "Working on Claudette").
-            if (!UnfocusedWindows.IsOn)
-            {
-                existing.Activate();
-            }
+            // Coming to the front takes the focus, which a screenshot run leaves alone (DESIGN.md §9, "Taking screenshots
+            // without the focus").
+            UnfocusedWindows.Activate(existing);
             return Task.CompletedTask;
         }
         if (this.FindAncestorOfType<Window>() is not { } owner || owner.DataContext is not MainWindowViewModel main)

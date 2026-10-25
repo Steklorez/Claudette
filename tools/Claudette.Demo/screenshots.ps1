@@ -24,9 +24,11 @@ and closes Claudette by its window, as a user would. Last, it has MascotPictureT
 animation from her art and steps, as claudette.gif, and social-card.ps1 draw the site's social card with the new
 standard-dark.png.
 
-A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile. Claudette runs with
-CLAUDETTE_UNFOCUSED=1, its windows behind yours: captures go through PrintWindow, which doesn't need them in view, and
-clicks are posted to the window, its controls found through UI Automation.
+A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
+included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with CLAUDETTE_UNFOCUSED=1, its windows
+behind yours and never taking the focus, and is driven through its command channel (CLAUDETTE_AUTOMATION_PIPE): its
+controls are found through UI Automation, and clicked, typed in and so on by Claudette itself. Captures go through
+PrintWindow, which doesn't need the windows in view.
 
 .PARAMETER Projects
 Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing
@@ -63,6 +65,7 @@ foreach ($style in 'standard', 'claude') {
             Start-Sleep -Seconds $SettleSeconds
 
             # A tab loads its session when it's first shown: visit each, then come back to the first.
+            Set-Step 'visiting the tabs'
             $tabs = 'Stamina drains twice on clients', 'Inventory loses items on save', 'Move to the Input System', 'UI on the Input System',
                 'Gamepad rumble', 'Pool particle emitters', 'Grappling hook', 'Files (5)'
             foreach ($text in $tabs) {
@@ -144,8 +147,7 @@ foreach ($style in 'standard', 'claude') {
             Save-Window $window (Join-Path $Out "history-$style-$theme.png")
 
             # Last, as it takes the layout with it: starfall's Files tab, with a changed file open to show Claude's marks.
-            # History is over the window, so Esc closes it first. The file is opened by clicks down the explorer, which
-            # leave the focus with the user, as typing its name in the find box wouldn't.
+            # History is over the window, so Esc closes it first. The file is opened by clicks down the explorer.
             Set-Step 'Project files'
             Send-WindowKey $window 'Esc'
             Wait-Until { -not (Find-ById $window 'SearchBox') } 'History to close' 20

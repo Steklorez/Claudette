@@ -545,7 +545,7 @@ public partial class TabView : UserControl
     {
         if (_toolWindows.TryGetValue(tool, out var open))
         {
-            open.Activate();
+            UnfocusedWindows.Activate(open);
             return;
         }
         if (_tab is not { } tab)
@@ -619,7 +619,7 @@ public partial class TabView : UserControl
     {
         if (_agentWindow is not null)
         {
-            _agentWindow.Activate();
+            UnfocusedWindows.Activate(_agentWindow);
             return;
         }
         var window = _agentWindow = new AgentMapWindow { DataContext = DataContext };
