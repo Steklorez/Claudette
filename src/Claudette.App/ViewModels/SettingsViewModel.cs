@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using Claudette.App.Services;
 using Claudette.App.ViewModels.Settings;
 using Claudette.Core.Settings;
@@ -198,8 +199,14 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     public IReadOnlyList<SettingsPage> Pages { get; private set; } = [];
 
-    /// <summary>The sidebar: each group's heading and its pages, then the project's.</summary>
+    /// <summary>The sidebar's list: each group's heading and its pages.</summary>
     public ObservableCollection<SettingsNavEntry> NavEntries { get; } = [];
+
+    /// <summary>
+    /// The selected tab's project's pages, in a list of their own at the foot of the sidebar, above the version, so they
+    /// stay in view however far the categories scroll (DESIGN.md §14, "The project's pages"); empty with no tab open.
+    /// </summary>
+    public ObservableCollection<SettingsNavEntry> ProjectNavEntries { get; } = [];
 
     /// <summary>The account in Claude Code, with <b>Sign in</b> and <b>Sign out</b> wired to the header's (DESIGN.md §11). Null in some tests.</summary>
     public AccountViewModel? Account
@@ -241,7 +248,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(SelectedNavEntry))]
+    [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(SelectedNavEntry), nameof(SelectedProjectNavEntry))]
     public partial string SelectedCategory { get; set; } = SettingsCategory.General;
 
     /// <summary>The page the window shows: the selected category's, or one of the project's. Null for a page there isn't.</summary>
@@ -249,20 +256,33 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     partial void OnSelectedCategoryChanged(string value) => CurrentPage?.OnShown();
 
-    /// <summary>The sidebar's selection: the current page's entry. A heading isn't a choice, and leaves the page as it is.</summary>
+    /// <summary>
+    /// The categories' selection: the current page's entry, or none while one of the project's pages shows. A heading
+    /// isn't a choice, and leaves the page as it is.
+    /// </summary>
     public SettingsNavEntry? SelectedNavEntry
     {
         get => NavEntries.FirstOrDefault(e => !e.IsHeading && e.Category == SelectedCategory);
-        set
+        set => Select(value);
+    }
+
+    /// <summary>The project's pages' selection: the current page's entry, or none while a category shows.</summary>
+    public SettingsNavEntry? SelectedProjectNavEntry
+    {
+        get => ProjectNavEntries.FirstOrDefault(e => e.Category == SelectedCategory);
+        set => Select(value);
+    }
+
+    /// <summary>Shows a page picked in either list; anything else (a heading, or a list emptied as it's filled again) leaves it as it is.</summary>
+    private void Select(SettingsNavEntry? value, [CallerMemberName] string? list = null)
+    {
+        if (value is { IsHeading: false } entry)
         {
-            if (value is { IsHeading: false } entry)
-            {
-                SelectedCategory = entry.Category;
-            }
-            else
-            {
-                OnPropertyChanged();
-            }
+            SelectedCategory = entry.Category;
+        }
+        else
+        {
+            OnPropertyChanged(list);
         }
     }
 
@@ -277,15 +297,13 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
                 NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey, page.NavTag));
             }
         }
-        if (Project is { } project)
+        ProjectNavEntries.Clear();
+        foreach (var page in Pages.OfType<ProjectPage>())
         {
-            NavEntries.Add(SettingsNavEntry.Heading(project.Heading, project.Folder));
-            foreach (var page in Pages.OfType<ProjectPage>())
-            {
-                NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey));
-            }
+            ProjectNavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey));
         }
         OnPropertyChanged(nameof(SelectedNavEntry));
+        OnPropertyChanged(nameof(SelectedProjectNavEntry));
     }
 
     // ---- Going to a setting (DESIGN.md §14: search and links bring one into view) --------------------------------------

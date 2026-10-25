@@ -31,7 +31,7 @@ The sidebar lists the pages in groups:
 - **Claude**: Claude Code, Accounts, Tabs, Usage and Advanced.
 - **Your work**: Sessions, and Files and diffs.
 - **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon (Godot's is its logo), then Perforce. A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
-- Then the [selected tab's project](#the-projects-pages).
+- At the foot, under a line, the [selected tab's project](#the-projects-pages), and under another line the [version and Help](#the-version-and-help).
 
 The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.
 
@@ -69,7 +69,7 @@ No **Reset to defaults** touches a project's files or the choices Claudette reme
 
 ## The project's pages
 
-After the pages is a group named for the project of the tab selected in the main window: its name when Claudette found one ("NightOwl"), otherwise the folder's name. Hover it for the folder's path. Select another tab while Settings is open and the group follows it. With no tab open, the group isn't there. Each page begins with a line saying which tab it's for.
+At the foot of the sidebar, above the version, is a group for the project of the tab selected in the main window, headed **Selected project**. It stays there however far you scroll the pages above it. Under the heading is the project's name when Claudette found one ("NightOwl"), otherwise the folder's name, after a dot in the color of the tab's group in the main window. Hover the name for the folder's path. Select another tab while Settings is open and the group follows it. With no tab open, the group isn't there, and while you search it's hidden with the pages. Each page begins with a line saying which tab it's for.
 
 - **Links** lists the project's web links, from `claudette.json` and `claudette.local.json`, with **Add…**, **Edit…**, **Remove**, **Move up** and **Move down**.
 - **Actions** is the same for the project's own actions, with **Open file**.

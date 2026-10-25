@@ -64,6 +64,35 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>
+    /// The arrow keys go through every page (DESIGN.md §14), from the categories' list on into the selected tab's
+    /// project's at the foot, and back: Down past the last category picks the project's first page, Up before it the last
+    /// category. Each list moves within itself.
+    /// </summary>
+    private void OnSidebarKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Handled || _settings is null || e.KeyModifiers != KeyModifiers.None)
+        {
+            return;
+        }
+        var lastCategory = _settings.NavEntries.LastOrDefault(n => !n.IsHeading);
+        var firstOfProject = _settings.ProjectNavEntries.FirstOrDefault();
+        var (list, entry) = e.Key switch
+        {
+            Key.Down when sender == SidebarList && firstOfProject is not null && _settings.SelectedNavEntry == lastCategory => (ProjectList, firstOfProject),
+            Key.Up when sender == ProjectList && lastCategory is not null && _settings.SelectedProjectNavEntry == firstOfProject => (SidebarList, lastCategory),
+            _ => (null, null),
+        };
+        if (list is null || entry is null)
+        {
+            return;
+        }
+        _settings.SelectedCategory = entry.Category;
+        list.ScrollIntoView(entry);
+        list.ContainerFromItem(entry)?.Focus(NavigationMethod.Directional);
+        e.Handled = true;
+    }
+
+    /// <summary>
     /// Esc clears the search, else closes the window, unless something open in it took it first (a dropdown, a menu, a
     /// dialog); <c>Ctrl/Cmd+W</c> closes it; <c>Ctrl/Cmd+F</c> goes to the search box.
     /// </summary>

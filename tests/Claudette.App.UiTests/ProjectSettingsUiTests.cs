@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
@@ -16,8 +18,8 @@ using Claudette.Core.Settings;
 namespace Claudette.App.UiTests;
 
 /// <summary>
-/// The selected tab's project in the Settings window, rendered (DESIGN.md §14, "The project's pages"): the group below
-/// the categories, and the Links page with its dialog.
+/// The selected tab's project in the Settings window, rendered (DESIGN.md §14, "The project's pages"): the group at the
+/// sidebar's foot, and the Links page with its dialog.
 /// </summary>
 public class ProjectSettingsUiTests
 {
@@ -41,25 +43,49 @@ public class ProjectSettingsUiTests
         return tab;
     }
 
+    /// <summary>
+    /// The selected tab's project sits at the sidebar's foot (DESIGN.md §14, "The project's pages"), in view however far
+    /// the categories scroll: under a line across the sidebar, headed Selected project and its name after its group's
+    /// color, with its folder in the name's tooltip, above a line over the version. Searching hides it with the
+    /// categories.
+    /// </summary>
     [AvaloniaFact]
-    public async Task The_sidebar_ends_its_categories_with_the_tabs_project_and_its_pages_in_either_style()
+    public async Task The_selected_tabs_project_sits_at_the_sidebars_foot_under_a_line_in_either_style()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         UnrealFixture.Write(h.Root, h.WorkFolder);
         var tab = await OpenTabAsync(h, project: true);
         // Tall enough for the whole list: one that scrolls realizes only the rows in view, in no particular order.
-        var window = ShowSettings(h, tab, null, out var settings, height: 1000);
+        var window = ShowSettings(h, tab, null, out var settings, height: 1100);
 
         var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
-        var heading = list.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible && t.Text == "NightOwl");
-        Assert.Equal(h.WorkFolder, ToolTip.GetTip(heading) as string);
-        // A heading isn't a page: it can't be picked or focused.
-        Assert.False(heading.FindAncestorOfType<ListBoxItem>()!.Focusable);
-        Assert.Equal("General", settings.SelectedNavEntry!.Title);
+        var projectList = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ProjectList");
+        var group = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "ProjectGroup");
+        var foot = window.GetVisualDescendants().OfType<Grid>().Single(g => g.Name == "SidebarFoot");
+        var heading = group.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "ProjectHeading");
+        Assert.True(group.IsEffectivelyVisible);
+        Assert.Equal("NightOwl", heading.Text);
+        Assert.Equal(h.WorkFolder, ToolTip.GetTip((Control)heading.Parent!) as string);
+        Assert.Contains(group.GetVisualDescendants().OfType<TextBlock>(), t => t.Text == "Selected project" && t.IsEffectivelyVisible);
+        var dot = group.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Ellipse>().Single();
+        Assert.True(dot.IsEffectivelyVisible);
+        Assert.Equal(h.Shell.Groups.Single(g => g.Tabs.Contains(tab)).Color, Assert.IsAssignableFrom<ISolidColorBrush>(dot.Fill).Color);
 
-        list.SelectedItem = settings.NavEntries.Single(e => !e.IsHeading && e.Title == SettingsViewModel.ToolsPage);
+        // Under the categories and over the version, each with a line across the sidebar above it.
+        var sidebar = foot.FindAncestorOfType<DockPanel>()!;
+        double Top(Visual v) => v.TranslatePoint(default, sidebar)!.Value.Y;
+        Assert.True(Top(group) >= Top(list) + list.Bounds.Height);
+        Assert.True(Top(foot) >= Top(group) + group.Bounds.Height);
+        Assert.Equal(new Thickness(0, 1, 0, 0), group.BorderThickness);
+        Assert.Equal(new Thickness(0, 1, 0, 0), Assert.IsType<Border>(foot.Parent).BorderThickness);
+        Assert.Equal(sidebar.Bounds.Width, group.Bounds.Width);
+        Assert.Equal("General", settings.SelectedNavEntry!.Title);
+        Assert.Null(projectList.SelectedItem);
+
+        projectList.SelectedItem = settings.ProjectNavEntries.Single(e => e.Title == SettingsViewModel.ToolsPage);
         UiText.Settle(window);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
+        Assert.Null(list.SelectedItem);
         var tools = window.GetVisualDescendants().OfType<StackPanel>().Single(p => p.Name == "ToolsPage");
         var toolsText = UiText.Describe(tools, (h.Root, "{root}"));
         Assert.Contains("\"Engine folder\"", toolsText, StringComparison.Ordinal);
@@ -67,11 +93,15 @@ public class ProjectSettingsUiTests
         list.SelectedItem = settings.NavEntries.Single(e => e.Title == "Appearance");
         UiText.Settle(window);
         Assert.Same(settings.Appearance, settings.CurrentPage);
+        Assert.Null(projectList.SelectedItem);
 
-        // The version foot stays at the bottom, below the list.
-        var version = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Copy version details");
-        var sidebar = version.FindAncestorOfType<DockPanel>()!;
-        Assert.True(version.TranslatePoint(default, sidebar)!.Value.Y >= list.TranslatePoint(new Point(0, list.Bounds.Height), sidebar)!.Value.Y);
+        // Searching lists results in the categories' place, and the project's pages go with them.
+        settings.SearchText = "font";
+        UiText.Settle(window);
+        Assert.False(group.IsEffectivelyVisible);
+        settings.SearchText = "";
+        UiText.Settle(window);
+        Assert.True(group.IsEffectivelyVisible);
 
         // The Claude style, dark: the group is drawn with the app's own tokens, which the style repaints.
         var app = (App)Application.Current!;
@@ -82,6 +112,7 @@ public class ProjectSettingsUiTests
             app.RequestedThemeVariant = ThemeVariant.Dark;
             UiText.Settle(window);
             Assert.Equal(((ISolidColorBrush)window.FindResource(ThemeVariant.Dark, "MutedTextBrush")!).Color, Assert.IsAssignableFrom<ISolidColorBrush>(heading.Foreground).Color);
+            Assert.Equal(((ISolidColorBrush)window.FindResource(ThemeVariant.Dark, "DividerBrush")!).Color, Assert.IsAssignableFrom<ISolidColorBrush>(group.BorderBrush).Color);
         }
         finally
         {
@@ -90,10 +121,45 @@ public class ProjectSettingsUiTests
             UiText.Settle(window);
         }
 
-        // What the list holds: every group's pages, then the project's.
-        var shown = UiText.Describe(list);
+        // What the sidebar holds: every group's pages, then the project's.
+        var shown = UiText.Describe(list) + Environment.NewLine + UiText.Describe(group);
         window.Close();
         await Verify(shown);
+    }
+
+    /// <summary>
+    /// The arrow keys go through every page (DESIGN.md §14): Down from the last category goes on into the project's
+    /// pages at the foot, and Up from their first comes back.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_arrow_keys_go_from_the_last_category_into_the_projects_pages_and_back()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await OpenTabAsync(h, project: false);
+        var window = ShowSettings(h, tab, SettingsCategory.Perforce, out var settings);
+        var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        var projectList = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ProjectList");
+        list.ScrollIntoView(settings.SelectedNavEntry!);
+        UiText.Settle(window);
+        list.ContainerFromItem(settings.SelectedNavEntry!)!.Focus();
+
+        window.KeyPressQwerty(PhysicalKey.ArrowDown, RawInputModifiers.None);
+        UiText.Settle(window);
+
+        Assert.Equal(SettingsViewModel.LinksPage, settings.SelectedCategory);
+        Assert.True(projectList.ContainerFromItem(settings.SelectedProjectNavEntry!)!.IsFocused);
+
+        // Within the project's pages, the list's own keys; then back up into the categories.
+        window.KeyPressQwerty(PhysicalKey.ArrowDown, RawInputModifiers.None);
+        UiText.Settle(window);
+        Assert.Equal(SettingsViewModel.ActionsPage, settings.SelectedCategory);
+        window.KeyPressQwerty(PhysicalKey.ArrowUp, RawInputModifiers.None);
+        window.KeyPressQwerty(PhysicalKey.ArrowUp, RawInputModifiers.None);
+        UiText.Settle(window);
+
+        Assert.Equal(SettingsCategory.Perforce, settings.SelectedCategory);
+        Assert.True(list.ContainerFromItem(settings.SelectedNavEntry!)!.IsFocused);
+        window.Close();
     }
 
     /// <summary>
@@ -151,7 +217,8 @@ public class ProjectSettingsUiTests
         window.Show();
         UiText.Settle(window);
 
-        Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage);
+        Assert.Empty(settings.ProjectNavEntries);
+        Assert.False(window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "ProjectGroup").IsVisible);
         var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
         Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], list.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible).Select(t => t.Text));
         window.Close();

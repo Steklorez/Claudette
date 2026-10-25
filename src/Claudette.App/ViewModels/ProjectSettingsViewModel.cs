@@ -42,6 +42,9 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
     /// <summary>The tab the pages are for: the one selected when the window opened.</summary>
     internal TabViewModel Tab => _tab;
 
+    /// <summary>The tab's group in the main window, whose color the project's heading in Settings has.</summary>
+    public TabGroupViewModel? Group => _shell.Groups.FirstOrDefault(g => g.Tabs.Contains(_tab));
+
     /// <summary>The tab's folder, where the project files are.</summary>
     public string Folder => _tab.Folder;
 

@@ -12,6 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- **Settings keeps the selected tab's project in view.** Its **Links**, **Actions** and **Tools** sit at the foot of the sidebar, under **Selected project** and the project's name after its group's color, apart from the pages above by a line, as the version and **Help** are now too.
 - **Godot projects show Godot's logo**, on their page in Settings and on the project's row at the foot of the sidebar, where they had a robot's head.
 
 ### Fixed

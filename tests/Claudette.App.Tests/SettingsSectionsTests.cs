@@ -153,13 +153,13 @@ public class SettingsSectionsTests
         h.Shell.SelectedTab = first;
         using var settings = new SettingsViewModel(h.Services, null, host: h.Shell) { SelectedCategory = SettingsViewModel.LinksPage };
         Assert.Same(first, settings.Project!.Tab);
-        Assert.Contains(settings.NavEntries, e => e.IsHeading && e.Title == "work");
+        Assert.Equal("work", settings.Project.Heading);
 
         h.Shell.SelectedTab = second;
 
         Assert.Same(second, settings.Project!.Tab);
-        Assert.Contains(settings.NavEntries, e => e.IsHeading && e.Title == "other");
-        Assert.DoesNotContain(settings.NavEntries, e => e.IsHeading && e.Title == "work");
+        Assert.Equal("other", settings.Project.Heading);
+        Assert.Equal(SettingsViewModel.LinksPage, settings.SelectedProjectNavEntry?.Title);
         var links = Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
         Assert.Same(settings.Project, links.Project);
     }

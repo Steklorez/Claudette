@@ -55,7 +55,7 @@ public class ProjectSettingsTests
         using (var none = await OpenSettingsAsync(h))
         {
             Assert.False(none.HasProject);
-            Assert.DoesNotContain(none.NavEntries, e => e.Title == SettingsViewModel.LinksPage);
+            Assert.Empty(none.ProjectNavEntries);
             Assert.Equal("General", none.SelectedCategory);
             Assert.Same(none.General, none.CurrentPage);
         }
@@ -68,15 +68,22 @@ public class ProjectSettingsTests
         Assert.Equal(h.WorkFolder, project.Folder);
         Assert.Equal($"For the tab in {h.WorkFolder}", project.ForTabText);
 
-        // The project's pages are in the sidebar's one list, under a heading named after it; a heading isn't a page.
-        Assert.Contains(settings.NavEntries, e => e.IsHeading && e.Title == "work");
-        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == SettingsViewModel.ToolsPage);
+        // Its heading has the color of the tab's group in the main window.
+        Assert.Same(h.Shell.Groups.Single(g => g.Tabs.Contains(tab)), project.Group);
+
+        // The project's pages are a list of their own, at the sidebar's foot, apart from the categories'. The page shown
+        // is selected in whichever list has it, and nowhere else; a heading isn't a page.
+        Assert.Equal([SettingsViewModel.LinksPage, SettingsViewModel.ActionsPage, SettingsViewModel.ToolsPage], settings.ProjectNavEntries.Select(e => e.Title));
+        Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage or "work");
+        settings.SelectedProjectNavEntry = settings.ProjectNavEntries.Single(e => e.Title == SettingsViewModel.ToolsPage);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.IsHeading && e.Title == "work");
+        Assert.Null(settings.SelectedNavEntry);
+        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.IsHeading && e.Title == SettingsSidebar.ProjectTools);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        Assert.Equal(SettingsViewModel.ToolsPage, settings.SelectedNavEntry?.Title);
+        Assert.Equal(SettingsViewModel.ToolsPage, settings.SelectedProjectNavEntry?.Title);
         settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == "Appearance");
         Assert.Same(settings.Appearance, settings.CurrentPage);
+        Assert.Null(settings.SelectedProjectNavEntry);
 
         // A provider finds a project: the group is named after it, in this window and the next.
         UnrealFixture.Write(h.Root, h.WorkFolder);

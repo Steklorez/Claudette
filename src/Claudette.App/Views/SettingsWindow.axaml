@@ -16,11 +16,16 @@
       <Setter Property="FontSize" Value="22" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-    <!-- The sidebar: each group's heading, then its pages, each with its icon; one list, so the arrow keys go through
-         them all. A heading isn't a page: it can't be picked or focused. -->
+    <!-- The sidebar's lists: each group's heading, then its pages, each with its icon, and the selected tab's project's
+         pages at the foot; the arrow keys go through them all (OnSidebarKeyDown). A heading isn't a page: it can't be
+         picked or focused. -->
     <Style Selector="ListBox.settingsnav">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="Padding" Value="8,0,8,8" />
+    </Style>
+    <!-- As much room under the last category as there is above a group's heading, before the line under them -->
+    <Style Selector="ListBox.categories">
+      <Setter Property="Padding" Value="8,0,8,20" />
     </Style>
     <Style Selector="ListBox.settingsnav ListBoxItem" x:DataType="vm:SettingsNavEntry">
       <Setter Property="Padding" Value="10,6" />
@@ -55,6 +60,31 @@
       <Setter Property="Margin" Value="0,10,0,0" />
       <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
+    <!-- A line across the sidebar over what sits at its foot: the selected tab's project, and the version -->
+    <Style Selector="Border.sidebarfoot">
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+    </Style>
+    <!-- The project's heading: what it's for, then its name after its group's color, as the main window's sidebar has
+         the group. Placed as a heading in the list would be, its name lined up with the pages'. -->
+    <Style Selector="StackPanel.projectheading">
+      <Setter Property="Margin" Value="18,17,8,9" />
+      <Setter Property="Spacing" Value="2" />
+    </Style>
+    <Style Selector="StackPanel.projectheading TextBlock.navheading">
+      <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="TextBlock.navcaption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Ellipse.groupdot">
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Height" Value="8" />
+      <Setter Property="Margin" Value="0,0,7,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
     <Style Selector="Path.navicon">
       <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
       <Setter Property="StrokeThickness" Value="1.15" />
@@ -78,6 +108,26 @@
     </Style>
   </Window.Styles>
 
+  <Window.Resources>
+    <!-- A row of the sidebar's lists: a group's heading, or a page with its icon -->
+    <DataTemplate x:Key="NavEntryTemplate" DataType="vm:SettingsNavEntry">
+      <Panel>
+        <TextBlock Classes="navheading" Text="{Binding Title}" IsVisible="{Binding IsHeading}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
+          <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
+                Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}" />
+          <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <!-- A word about the page after its name, such as Off for a project type switched off: the page can still be
+               picked -->
+          <Border Classes="settingchip" Margin="-4,0,0,0" VerticalAlignment="Center"
+                  IsVisible="{Binding Tag, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding Tag}" />
+          </Border>
+        </StackPanel>
+      </Panel>
+    </DataTemplate>
+  </Window.Resources>
+
   <!-- DESIGN.md §14: a sidebar of pages in groups; changes apply immediately; the window isn't modal. -->
   <Grid ColumnDefinitions="220,*">
     <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
@@ -87,7 +137,8 @@
                  AutomationProperties.Name="Search settings" />
         <!-- DESIGN.md §14, "Version": which Claudette this is, copied with a click, and Help: the user guide, dotBunny's
              Discord, and a bug report with the version filled in -->
-        <Grid x:Name="SidebarFoot" DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="8,4,8,8">
+        <Border DockPanel.Dock="Bottom" Classes="sidebarfoot">
+        <Grid x:Name="SidebarFoot" ColumnDefinitions="*,Auto" Margin="8,4,8,8">
           <Button Classes="flat" Command="{Binding CopyVersionCommand}" ToolTip.Tip="{Binding VersionTip}" HorizontalAlignment="Left"
                   AutomationProperties.Name="Copy version details">
             <TextBlock Classes="muted small" Text="{Binding VersionLabel}" TextTrimming="CharacterEllipsis" />
@@ -109,27 +160,33 @@
             </Button.Flyout>
           </Button>
         </Grid>
+        </Border>
+        <!-- DESIGN.md §14, "The project's pages": the selected tab's project, in view however far the categories scroll,
+             under Selected project and its name after its group's color; the folder in the name's tooltip -->
+        <Border x:Name="ProjectGroup" DockPanel.Dock="Bottom" Classes="sidebarfoot">
+          <Border.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="HasProject" />
+              <Binding Path="!IsSearching" />
+            </MultiBinding>
+          </Border.IsVisible>
+          <StackPanel>
+            <StackPanel Classes="projectheading">
+              <TextBlock Classes="navcaption" Text="Selected project" />
+              <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding Project.Folder, FallbackValue={x:Null}}">
+                <Ellipse Classes="groupdot" Fill="{Binding Project.Group.Brush, FallbackValue={x:Null}}"
+                         IsVisible="{Binding Project.Group, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+                <TextBlock x:Name="ProjectHeading" Classes="navheading" Text="{Binding Project.Heading, FallbackValue=''}" />
+              </StackPanel>
+            </StackPanel>
+            <ListBox x:Name="ProjectList" Classes="settingsnav" ItemsSource="{Binding ProjectNavEntries}" SelectedItem="{Binding SelectedProjectNavEntry}"
+                     ItemTemplate="{StaticResource NavEntryTemplate}" KeyDown="OnSidebarKeyDown" AutomationProperties.Name="The selected tab's project's pages" />
+          </StackPanel>
+        </Border>
         <Panel>
-          <ListBox x:Name="SidebarList" Classes="settingsnav" ItemsSource="{Binding NavEntries}" SelectedItem="{Binding SelectedNavEntry}"
+          <ListBox x:Name="SidebarList" Classes="settingsnav categories" ItemsSource="{Binding NavEntries}" SelectedItem="{Binding SelectedNavEntry}"
+                   ItemTemplate="{StaticResource NavEntryTemplate}" KeyDown="OnSidebarKeyDown"
                    IsVisible="{Binding !IsSearching}" AutomationProperties.Name="Settings pages">
-            <ListBox.ItemTemplate>
-              <DataTemplate DataType="vm:SettingsNavEntry">
-                <Panel>
-                  <TextBlock Classes="navheading" Text="{Binding Title}" ToolTip.Tip="{Binding Tip}" IsVisible="{Binding IsHeading}" />
-                  <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
-                    <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
-                          Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}" />
-                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <!-- A word about the page after its name, such as Off for a project type switched off: the page can
-                         still be picked -->
-                    <Border Classes="settingchip" Margin="-4,0,0,0" VerticalAlignment="Center"
-                            IsVisible="{Binding Tag, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                      <TextBlock Text="{Binding Tag}" />
-                    </Border>
-                  </StackPanel>
-                </Panel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
           </ListBox>
           <ListBox x:Name="SearchResultsList" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}" Background="Transparent" Padding="8,0"
                    IsVisible="{Binding IsSearching}" AutomationProperties.Name="Search results">

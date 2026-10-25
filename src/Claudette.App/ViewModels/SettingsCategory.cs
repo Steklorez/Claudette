@@ -64,7 +64,7 @@ public static class SettingsSidebar
     public static IReadOnlyList<string> Categories(IEnumerable<IProjectType> types) => [.. Groups(types).SelectMany(g => g.Categories)];
 }
 
-/// <summary>An entry in the Settings sidebar: a group's heading, or a page to show.</summary>
+/// <summary>An entry in the Settings sidebar's lists: a group's heading, or a page to show.</summary>
 public sealed partial class SettingsNavEntry : ObservableObject
 {
     private SettingsNavEntry(string title, string? iconKey, bool isHeading)
@@ -84,14 +84,11 @@ public sealed partial class SettingsNavEntry : ObservableObject
     /// <summary>The page's name, for a heading's group or a page; what <see cref="SettingsViewModel.SelectedCategory"/> holds.</summary>
     public string Category => Title;
 
-    /// <summary>A heading's tooltip, such as the project's folder.</summary>
-    public string? Tip { get; private init; }
-
     /// <summary>A word after a page's name, such as <i>Off</i> for a project type switched off (<see cref="Settings.SettingsPage.NavTag"/>).</summary>
     [ObservableProperty]
     public partial string? Tag { get; set; }
 
-    public static SettingsNavEntry Heading(string title, string? tip = null) => new(title, null, true) { Tip = tip };
+    public static SettingsNavEntry Heading(string title) => new(title, null, true);
 
     /// <summary>What a screen reader reads for it: its name.</summary>
     public override string ToString() => Title;
