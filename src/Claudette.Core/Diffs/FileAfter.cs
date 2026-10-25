@@ -21,7 +21,13 @@ public static class FileAfter
         switch (toolName)
         {
             case "Write":
-                return (input?.GetString("content") ?? result?.GetString("content")) is { } content ? (content, true) : (null, false);
+                var written = input?.GetString("content");
+                // Over a file with a byte order mark, Claude Code keeps the mark, and its result's content has it (2.1.302).
+                if (result?.GetString("content") is { } reported && (written is null || reported.Length == written.Length + 1 && HiddenChanges.HasMark(reported) && reported.AsSpan(1).SequenceEqual(written.AsSpan())))
+                {
+                    written = reported;
+                }
+                return written is not null ? (written, true) : (null, false);
             case "NotebookEdit":
                 return result?.GetString("updated_file") is { } notebook ? (notebook, true) : (null, false);
             case "Edit" when baseKnown:
@@ -180,7 +186,10 @@ public static class FileAfter
         return lines;
     }
 
-    /// <summary>Whether two texts are the same, line endings aside.</summary>
+    /// <summary>
+    /// Whether two texts have the same lines, as the diff shows them: their line endings, a byte order mark and the newline
+    /// at the end aside, which <see cref="HiddenChanges"/> tells apart (DESIGN.md §8, "What the lines don't show").
+    /// </summary>
     public static bool Same(string? a, string? b)
     {
         if (a is null || b is null)
@@ -191,8 +200,19 @@ public static class FileAfter
         {
             return true;
         }
-        return string.Equals(ToLf(a), ToLf(b), StringComparison.Ordinal);
+        return string.Equals(Lines(a), Lines(b), StringComparison.Ordinal);
 
-        static string ToLf(string text) => text.Contains('\r') ? text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n') : text;
+        static string Lines(string text)
+        {
+            if (HiddenChanges.HasMark(text))
+            {
+                text = text[1..];
+            }
+            if (text.Contains('\r'))
+            {
+                text = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
+            }
+            return text.EndsWith('\n') ? text[..^1] : text;
+        }
     }
 }

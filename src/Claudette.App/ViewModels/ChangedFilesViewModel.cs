@@ -25,7 +25,7 @@ public sealed partial class ChangedFileRow : ObservableObject
     public string FileName => System.IO.Path.GetFileName(Path);
 
     /// <summary>What a screen reader reads for its row.</summary>
-    public override string ToString() => Stats is null ? $"{DisplayPath}: {StatusText}" : $"{DisplayPath}: {StatusText}, {Stats}";
+    public override string ToString() => (Stats is null ? $"{DisplayPath}: {StatusText}" : $"{DisplayPath}: {StatusText}, {Stats}") + (Note is null ? "" : $". {Note}");
 
     /// <summary>A, M, D or R.</summary>
     public required string Status { get; init; }
@@ -33,6 +33,18 @@ public sealed partial class ChangedFileRow : ObservableObject
     public required string StatusText { get; init; }
 
     public string? Stats { get; init; }
+
+    /// <summary>
+    /// What changed that the lines don't show, for the line under the row's folder: <i>"Only its line endings changed:
+    /// CRLF to LF"</i> (DESIGN.md §8, "What the lines don't show"). Null when nothing did.
+    /// </summary>
+    public string? Note { get; init; }
+
+    /// <summary>What <see cref="Note"/> says, which a git row's diff says too: git's copy at HEAD comes without its line endings.</summary>
+    public HiddenChanges? Hidden { get; init; }
+
+    /// <summary>The line endings the file had before Claude's first change (<see cref="ChangedFile.BeforeLineEndings"/>).</summary>
+    public LineEndingKind? BeforeLineEndings { get; init; }
 
     public bool IsAdded => Status is "A" or "?";
 
@@ -97,7 +109,7 @@ public sealed partial class ChangedFileRow : ObservableObject
     /// <summary>Shows the same as <paramref name="other"/>, so the list can keep this row.</summary>
     public bool SameAs(ChangedFileRow other) =>
         Path == other.Path && DisplayPath == other.DisplayPath && Status == other.Status && StatusText == other.StatusText
-        && Stats == other.Stats && ReferenceEquals(Before, other.Before) && BeforeKnown == other.BeforeKnown && FromGit == other.FromGit
+        && Stats == other.Stats && Note == other.Note && BeforeLineEndings == other.BeforeLineEndings && ReferenceEquals(Before, other.Before) && BeforeKnown == other.BeforeKnown && FromGit == other.FromGit
         && LatestChange == other.LatestChange && IsReviewed == other.IsReviewed
         && ReferenceEquals(After, other.After) && AfterKnown == other.AfterKnown && Since == other.Since && IsGone == other.IsGone
         && InGoneWorkTree == other.InGoneWorkTree && WorkTree == other.WorkTree && Group == other.Group;
@@ -359,12 +371,18 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     private async Task CountTurnAsync(IReadOnlyList<TurnFileRow> rows)
     {
         var changes = Changes;
-        var counted = await Task.Run(() => rows
-            .Select(row => changes.CountTurn(row.Change) is var (added, removed) ? $"+{added} −{removed}" : null)
-            .ToArray());
+        var counted = await Task.Run(() => rows.Select(row => changes.CountTurn(row.Change)).ToArray());
         for (var i = 0; i < rows.Count; i++)
         {
-            rows[i].Stats = counted[i];
+            if (counted[i] is not { } count)
+            {
+                continue;
+            }
+            var (added, removed, hidden) = count;
+            // No line changed: what did, in place of +0 −0 (DESIGN.md §8, "What the lines don't show").
+            rows[i].Stats = added + removed == 0 && HiddenChangeText.Short(hidden) is { } shown ? shown : $"+{added} −{removed}";
+            rows[i].Hidden = hidden;
+            rows[i].Note = HiddenChangeText.Note(hidden, linesChanged: added + removed > 0 && hidden is not { WhitespaceOnly: true });
         }
     }
 
@@ -392,6 +410,11 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             : later is not null ? "this turn's changes, with a later turn's: before it, against the file now"
             : change.IsNew ? "this turn's changes: new in it, against the file now"
             : "this turn's changes: before it, against the file now";
+        // What changed that the lines don't show: as the tile counted it, against how the turn left the file; against
+        // how the next turn found it, with the line endings it found; against the file now, from its text.
+        Func<string?, HiddenChanges?> hidden = change.AfterKnown ? _ => row.Hidden
+            : later is { Change.BeforeKnown: true } next ? text => HiddenChanges.Between(change.Before, change.BeforeLineEndings, text, next.Change.BeforeLineEndings)
+            : text => HiddenChanges.Between(change.Before, change.BeforeLineEndings, text, LineEndingsOf(text));
         var file = new ChangedFileRow { Path = change.Path, DisplayPath = row.DisplayPath, Status = change.IsNew ? "A" : "M", StatusText = "" };
         Func<Task>? inDiffTool = HasDiffTool && change.BeforeKnown ? () => OpenTurnInDiffToolAsync(change.Path, change.Before, after) : null;
         DiffRequested?.Invoke(new DiffSource(
@@ -407,8 +430,11 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             After: after,
             AllowRevert: false,
             OpenInSystem: () => OpenFileInSystemAsync(file),
-            WordWrap: DiffWordWrap.From(_services)));
+            WordWrap: DiffWordWrap.From(_services),
+            Hidden: hidden));
     }
+
+    private static LineEndingKind? LineEndingsOf(string? text) => text is null ? null : LineEndings.Detect(text);
 
     /// <summary>A turn's changes in the external diff tool: before the turn, against how it left the file, or the file now.</summary>
     private async Task OpenTurnInDiffToolAsync(string path, string? before, DiffAfter? after)
@@ -526,7 +552,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                         GitChangeKind.Renamed => $"Renamed from {Relative(c.OldPath ?? "", from)}",
                         _ => c.Kind.ToString(),
                     },
-                    Stats = c.Added is { } a && c.Removed is { } r ? $"+{a} −{r}" : null,
+                    Stats = c.Added is { } a && c.Removed is { } r && (a + r > 0 || c.Hidden is null) ? $"+{a} −{r}" : null,
+                    Note = HiddenChangeText.Note(c.Hidden, linesChanged: c.Added + c.Removed > 0, fromGit: true),
+                    Hidden = c.Hidden,
                     FromGit = true,
                     WorkTree = tree,
                 }));
@@ -590,7 +618,11 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 _ => state.Status.ToString(),
             }) + (file.ChangedBetween ? ", with changes made outside this session between its edits" : "")
                 + (treeGone ? ", in a worktree that's gone" : ""),
-            Stats = state.Added is { } a && state.Removed is { } r ? $"+{a} −{r}" : state.IsBinary ? "binary" : null,
+            // No line changed: the line under the folder says what did, in place of +0 −0.
+            Stats = state.Added is { } a && state.Removed is { } r ? a + r > 0 || state.Hidden is null ? $"+{a} −{r}" : null : state.IsBinary ? "binary" : null,
+            Note = HiddenChangeText.Note(state.Hidden, linesChanged: state.Added + state.Removed > 0 && state.Hidden is not { WhitespaceOnly: true }),
+            Hidden = state.Hidden,
+            BeforeLineEndings = file.BeforeLineEndings,
             Before = file.Before,
             BeforeKnown = file.BeforeKnown,
             After = file.After,
@@ -627,18 +659,27 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     internal HookRegistration BeforeHook() => new("PreToolUse", FileToolMatcher, OnFileToolCallAsync);
 
     /// <summary>
-    /// A file tool's call, before it runs: Claude Code waits for the answer, so the file is as the call found it. Only a
-    /// subagent's (<c>agent_id</c>), whose result won't say. Called off the UI thread.
+    /// A file tool's call, before it runs: Claude Code waits for the answer, so the file is as the call found it. A
+    /// subagent's (<c>agent_id</c>) result won't say what it held, so the hook reads that; the session's own calls report
+    /// a file with Windows line endings with <c>\n</c>, so the hook reads its line endings (DESIGN.md §8, "What the
+    /// lines don't show"). Called off the UI thread.
     /// </summary>
     private Task<JsonObject> OnFileToolCallAsync(HookInput input, CancellationToken cancellationToken)
     {
-        if (input.Raw["agent_id"] is not null && input.ToolUseId is { } id
+        if (input.ToolUseId is { } id
             && (input.ToolInput?.GetString("file_path") ?? input.ToolInput?.GetString("notebook_path")) is { Length: > 0 } path
             && Path.IsPathFullyQualified(path))
         {
-            var (before, known) = ChangedFiles.ReadFromDisk(path);
-            // Before the answer goes, so before the tool's result comes.
-            _services.Dispatcher.Post(() => Changes.NoteBefore(id, path, before, known));
+            // Posted before the answer goes, so before the tool's result comes.
+            if (input.Raw["agent_id"] is not null)
+            {
+                var (before, known) = ChangedFiles.ReadFromDisk(path);
+                _services.Dispatcher.Post(() => Changes.NoteBefore(id, path, before, known));
+            }
+            else if (ChangedFiles.ReadLineEndings(path) is { } lineEndings)
+            {
+                _services.Dispatcher.Post(() => Changes.NoteLineEndings(id, lineEndings));
+            }
         }
         return Task.FromResult(HookOutputs.Continue());
     }
@@ -982,24 +1023,25 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             review,
             FromGit: row.FromGit,
             OpenInSystem: () => OpenFileInSystemAsync(row),
-            WordWrap: DiffWordWrap.From(_services));
+            WordWrap: DiffWordWrap.From(_services),
+            // Git's copy at HEAD comes without its line endings, so a git row's are as git said them; the session's are
+            // from the file the view reads (DESIGN.md §8, "What the lines don't show").
+            Hidden: row.FromGit ? _ => row.Hidden : text => HiddenChanges.Between(before, row.BeforeLineEndings, text, LineEndingsOf(text)));
+        // How the session's latest change left the file: with the line endings Claude Code reported, so theirs aren't told.
+        var asLeft = againstNow with { After = new DiffAfter(row.After), AllowRevert = false, Hidden = text => HiddenChanges.Between(before, row.BeforeLineEndings, text, null) };
         DiffRequested?.Invoke(
             // In a worktree that's gone, the session's changes as they were (DESIGN.md §8, "Working trees").
-            row is { FromGit: false, AfterKnown: true, InGoneWorkTree: true } ? againstNow with
+            row is { FromGit: false, AfterKnown: true, InGoneWorkTree: true } ? asLeft with
             {
                 BeforeLabel = !beforeKnown ? againstNow.BeforeLabel
                     : before is null ? "new in this session, in a worktree that's gone"
                     : "this session's changes, in a worktree that's gone",
-                After = new DiffAfter(row.After),
-                AllowRevert = false,
             }
             // Changed since the session's latest change: the diff ends where that left it, with the file now to switch to
             // (DESIGN.md §8, "This session's changes").
-            : row is { FromGit: false, AfterKnown: true, Since: not null } && beforeKnown ? againstNow with
+            : row is { FromGit: false, AfterKnown: true, Since: not null } && beforeKnown ? asLeft with
             {
                 BeforeLabel = before is null ? "new in this session, as its last change left it" : "this session's changes: from before its first change to how its last change left the file",
-                After = new DiffAfter(row.After),
-                AllowRevert = false,
                 AgainstNow = againstNow,
             }
             : againstNow);
@@ -1030,6 +1072,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             StatusText = file.IsNew ? "Added" : "Modified",
             Before = file.Before,
             BeforeKnown = file.BeforeKnown,
+            BeforeLineEndings = file.BeforeLineEndings,
             After = file.After,
             AfterKnown = file.AfterKnown,
             Since = SinceText(since),

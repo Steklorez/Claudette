@@ -1235,6 +1235,18 @@ items:
     usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.Core/Diffs/BeforeContentStore.cs
     test: RealCliTests, BeforeContentStoreTests, SidePanelTests
     fallback: "In 2.1.284 the live tool_use_result carries the whole originalFile, but the transcript's toolUseResult has null when it's over 10,000 characters (DESIGN.md §8, \"Large files in transcripts\"). Claudette saves the first change's originalFile when it's over BeforeContentStore.TranscriptLimit and reads it back on replay. If the limit drops, files between the new limit and 10,000 characters replay with an unknown \"before\" (modified, without counts) until TranscriptLimit follows it. If transcripts keep it whole again, nothing breaks."
+  - id: "line endings"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.Core/Diffs/HiddenChanges.cs, src/Claudette.App/ViewModels/ChangedFilesViewModel.cs
+    test: RealCliTests, ChangedFilesTests, ChangedFilesTrackingTests
+    fallback: "In 2.1.302 a Write writes its content as the model gave it, with \\n, so a file with Windows line endings becomes Unix; an Edit keeps CRLF and makes mixed line endings CRLF; and originalFile comes with \\n for a CRLF file (DESIGN.md §8, \"What the lines don't show\"). So Claudette's PreToolUse hook on the file tools reads a file's line endings before each of the session's own calls, and Changed files says when they changed. If Write starts keeping a file's line endings, nothing breaks: there's just nothing to tell. If originalFile starts keeping CRLF, the hook's read still decides, and comparing lines ignores line endings either way."
+  - id: "BOM"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Claudette.Core/Diffs/TextFiles.cs, src/Claudette.Core/Diffs/FileAfter.cs, src/Claudette.Core/Diffs/HiddenChanges.cs
+    test: RealCliTests, ChangedFilesTests, FileAfterTests
+    fallback: "In 2.1.302 originalFile keeps a file's byte order mark as a leading \\uFEFF, Edit and Write keep the mark on disk, and a Write's result content starts with it though its input's doesn't. Claudette reads files the same way, so they compare alike, and takes a Write's result content when it's the input's with the mark. If Claude Code dropped the mark from originalFile, Changed files would say the mark was added; lines are compared without it, so no line would show as changed."
   - id: "uuid and parentUuid"
     kind: file
     status: undocumented

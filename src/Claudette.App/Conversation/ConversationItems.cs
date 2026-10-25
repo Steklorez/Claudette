@@ -1057,9 +1057,23 @@ public sealed partial class TurnFileRow(TurnSummaryItem turn, Core.Diffs.TurnFil
 
     public bool HasFolder => Folder is not null;
 
-    /// <summary><c>+12 −3</c> once counted against how the turn left the file; null until then, or when it can't be.</summary>
+    /// <summary>
+    /// <c>+12 −3</c> once counted against how the turn left the file, or what changed when no line did (<c>CRLF → LF</c>);
+    /// null until then, or when it can't be.
+    /// </summary>
     [ObservableProperty]
     public partial string? Stats { get; set; }
+
+    /// <summary>What changed that the lines don't show, once counted (DESIGN.md §8, "What the lines don't show").</summary>
+    public Core.Diffs.HiddenChanges? Hidden { get; set; }
+
+    /// <summary>What <see cref="Hidden"/> says, under the path in the tile's tip.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Tip))]
+    public partial string? Note { get; set; }
+
+    /// <summary>The tile's tip: the file's path, and what changed that the lines don't show.</summary>
+    public string Tip => Note is null ? Change.Path : $"{Change.Path}\n{Note}";
 }
 
 /// <summary>

@@ -122,6 +122,9 @@
                                  controls:Baseline.AlignWith="{Binding #FileName}" />
                     </Grid>
                     <TextBlock Classes="muted small" Text="{Binding DisplayPath}" TextWrapping="Wrap" />
+                    <!-- DESIGN.md §8, "What the lines don't show": its line endings, byte order mark, newline at the end or whitespace -->
+                    <TextBlock Classes="muted small" Text="{Binding Note}" TextWrapping="Wrap"
+                               IsVisible="{Binding Note, Converter={x:Static ObjectConverters.IsNotNull}}" />
                     <!-- DESIGN.md §8, "This session's changes": the file changed on disk since the session's latest change to it -->
                     <TextBlock Classes="small warning" Text="{Binding Since}" TextWrapping="Wrap"
                                IsVisible="{Binding Since, Converter={x:Static ObjectConverters.IsNotNull}}" />

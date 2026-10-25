@@ -30,8 +30,16 @@ When the file has changed since this session's last change to it, by another tab
 - Lines are colored by the file's language, in the app's light or dark theme. Files over 20,000 lines and binary files are shown without colors.
 - Long lines scroll sideways, with the scroll bar along the bottom, `Shift` and the mouse wheel, or a touchpad. Both sides scroll together, and the line numbers stay where they are.
 - **Wrap lines** wraps long lines at the width of the window instead, each side in its half when they're side by side, so there's nothing to scroll sideways. The next diff you open, in its window or a [Files tab](../project-files/claudes-changes-in-the-editor.md), starts the way you left it.
-- A byte order mark at the start of a file isn't counted as a change.
+- Line endings, a byte order mark at the start of a file and the newline at its end aren't counted as changed lines ([below](#what-the-lines-dont-show)).
 - A binary file says there's nothing to show line by line, and a file that's gone says it has been deleted.
+
+## What the lines don't show
+
+{% include unreleased.html %}
+
+When no line changed, the view says what did in their place, as the file's row in Changed files does ([What the lines don't show](changed-files.md#what-the-lines-dont-show)): *"Only its line endings changed: CRLF to LF. The lines are the same on both sides."* The counts at the top say *CRLF → LF*. When lines changed too, a line under the file's path says so: *"Its line endings changed too: CRLF to LF"*.
+
+A line whose only change is its whitespace shows its spaces as · and its tabs as →, in a faint gray, on both sides, and the line under the path says so. A tab shown as → takes one character's width.
 
 When Claude changes the file while the window is open, choose **Refresh** in the **…** menu to read it again.
 

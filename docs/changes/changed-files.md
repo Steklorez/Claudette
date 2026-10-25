@@ -26,6 +26,7 @@ Each row has, from the left:
 - a box to tick when you've reviewed the file ([Reviewed files](reviewed-files.md));
 - a letter: **A** for a file Claude created, **M** for one it modified, **D** for one deleted, and **=** for a file that's back to how it was;
 - the file's name, with `+12 −3` beside it for the lines added and removed, and its folder under it. A file that isn't text shows *binary* in place of the counts;
+- when something changed that its lines don't show, such as its line endings, a line saying what ([What the lines don't show](#what-the-lines-dont-show));
 - when the file has changed on disk since this session's last change to it, a line saying so ([Changed since](#changed-since)).
 
 Point at a row to see what it is in words.
@@ -37,6 +38,21 @@ The summary at the top reads *"5 files changed · 2 reviewed"*. **Refresh** read
 {% include unreleased.html %}
 
 The counts are this tab's own: from what the file held before Claude's first change in the session to how Claude's latest change left it. Several tabs often work in one folder, and their Claudes change the same files; another tab's edits, yours and a command's don't count as this session's. A file Claude put back as it was shows as unchanged.
+
+## What the lines don't show
+
+{% include unreleased.html %}
+
+A diff compares lines, so some changes look the same on both sides. When one of them is the only change, or comes with others, the row says what it was under its folder:
+
+- *"Only its line endings changed: CRLF to LF"*: the file's lines end differently. Claude's **Write** saves a file with Unix line endings (LF), so a file that had Windows ones (CRLF) changes all through. An edit to a file with mixed line endings makes them all CRLF.
+- *"Only its byte order mark changed: removed"* (or *added*): the invisible mark some editors put at the start of a file, as in many Unity and Unreal projects.
+- *"Only the newline at its end changed: removed"* (or *added*).
+- *"Only whitespace changed"*: lines changed only in their spaces and tabs, which the [diff view](the-diff-view.md#what-the-lines-dont-show) shows.
+
+When lines changed too, it reads *"Its line endings changed too: CRLF to LF"*, and two or more at once read like *"Only its line endings (CRLF to LF) and the newline at its end (removed) changed"*. Such a file counts as changed, and **=** is only for a file that's back to how it was in every way.
+
+Claudette reads a file's line endings just before Claude changes it, since Claude Code doesn't report them. For a session it didn't run, such as one opened from History, it doesn't have them, and a change to them isn't told. To change a file's line endings back, open it in its project's Files tab, click the line endings on its chip and choose **CRLF** or **LF** ([The chip](../project-files/editing.md#the-chip)).
 
 ## Changed since
 
@@ -76,6 +92,8 @@ In a git repository, the **Working tree vs HEAD** box switches the list to every
 - files git sees as deleted or renamed (**D** and **R**).
 
 It also lists each other checkout Claude changed files in, in its own group ([Several working trees](#several-working-trees)).
+
+A file whose lines git sees as changed only at their ends says *"Only its line endings changed"*, with what to what when git can tell, or *"they differ from HEAD's"*, as for a file checked out with other line endings than git would commit. Its counts leave those lines out, as its diff does. A file whose only change is that it's now executable, or no longer, says *"Only its mode changed"*.
 
 Claudette asks git half a second after Claude's edits pause, not after each one, and again when a turn ends, when you come back to Claudette, and, while the tab is on screen, when you stage, commit or check out, from a terminal too. It never takes git's lock on your repository's index, so it won't get in the way of your own git commands. Outside a git repository the box isn't there.
 

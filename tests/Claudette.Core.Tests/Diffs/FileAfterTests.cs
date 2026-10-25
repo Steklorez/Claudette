@@ -15,6 +15,27 @@ public class FileAfterTests
     }
 
     [Fact]
+    public void A_write_over_a_file_with_a_byte_order_mark_keeps_it_as_Claude_Code_does()
+    {
+        // 2.1.302: the model's content has no mark, but Claude Code keeps the file's, and its result's content has it.
+        var input = new JsonObject { ["file_path"] = "/p/a.cs", ["content"] = "new\n" };
+
+        Assert.Equal(("﻿new\n", true), FileAfter.Of("Write", input, new JsonObject { ["content"] = "﻿new\n" }, "﻿old\n", baseKnown: true));
+        Assert.Equal(("new\n", true), FileAfter.Of("Write", input, new JsonObject { ["content"] = "other\n" }, "old\n", baseKnown: true));
+    }
+
+    [Fact]
+    public void The_same_lines_are_the_same_whatever_the_line_endings_mark_or_newline_at_the_end()
+    {
+        Assert.True(FileAfter.Same("a\nb\n", "a\r\nb\r\n"));
+        Assert.True(FileAfter.Same("﻿a\nb\n", "a\nb\n"));
+        Assert.True(FileAfter.Same("a\nb\n", "a\nb"));
+        Assert.False(FileAfter.Same("a\nb\n\n", "a\nb"));
+        Assert.False(FileAfter.Same("a \nb\n", "a\nb\n"));
+        Assert.False(FileAfter.Same(null, ""));
+    }
+
+    [Fact]
     public void An_edit_replaces_the_first_match_or_every_one()
     {
         var once = new JsonObject { ["old_string"] = "x", ["new_string"] = "y" };

@@ -58,6 +58,20 @@ public class ChangesPerTurnTests
     }
 
     [Fact]
+    public async Task A_turn_that_changed_no_line_says_what_it_did_change_on_its_tile()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var path = Path.Combine(h.WorkFolder, "auth.cs");
+
+        await EditTurnAsync(h, tab, "e1", path, "one\ntwo\n", "one\ntwo");
+
+        var row = Assert.Single(((TurnSummaryItem)tab.Items.Last()).Files);
+        await TabTestHarness.Eventually(() => row.Stats == "newline at end", "what changed, in place of +0 −0");
+        Assert.Equal($"{path}\nOnly the newline at its end changed: removed", row.Tip);
+    }
+
+    [Fact]
     public async Task A_files_diff_runs_from_before_the_turn_to_how_it_left_it()
     {
         await using var h = new TabTestHarness();

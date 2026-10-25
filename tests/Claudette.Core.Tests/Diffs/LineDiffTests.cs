@@ -102,6 +102,22 @@ public class LineDiffTests
     }
 
     [Fact]
+    public void Lines_that_differ_only_in_whitespace_are_told_apart()
+    {
+        Assert.True(LineDiff.LineDiffersOnlyInWhitespace("\tif (x)", "    if (x)"));
+        Assert.True(LineDiff.LineDiffersOnlyInWhitespace("return x; ", "return x;"));
+        Assert.True(LineDiff.LineDiffersOnlyInWhitespace("a b", "ab"));
+        Assert.False(LineDiff.LineDiffersOnlyInWhitespace("ab", "ab"));
+        Assert.False(LineDiff.LineDiffersOnlyInWhitespace("ab", "ac"));
+        Assert.False(LineDiff.LineDiffersOnlyInWhitespace("ab ", "abc"));
+
+        Assert.True(LineDiff.DiffersOnlyInWhitespace("a \nb\n", "a\r\nb"));
+        Assert.False(LineDiff.DiffersOnlyInWhitespace("a\nb\n", "a\nb\n"));
+        Assert.False(LineDiff.DiffersOnlyInWhitespace("a \nb\n", "a\nc\n"));
+        Assert.False(LineDiff.DiffersOnlyInWhitespace("a\nb\n", "a\n\nb\n"));
+    }
+
+    [Fact]
     public void Line_endings_are_normalized()
     {
         Assert.Empty(LineDiff.Hunks("a\r\nb\r\n", "a\nb\n"));

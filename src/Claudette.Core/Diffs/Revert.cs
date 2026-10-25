@@ -63,6 +63,11 @@ public static class Revert
         {
             throw new IOException("It isn't UTF-8 or UTF-16 text, so it can't be written back as it was.");
         }
+        // The view shows a file's byte order mark as a leading ﻿, as Claude Code's originalFile has it.
+        if (encoding is { HasMark: true } && expectedCurrent is { Length: > 0 } && expectedCurrent[0] == '﻿')
+        {
+            expectedCurrent = expectedCurrent[1..];
+        }
         if (!string.Equals(now, expectedCurrent, StringComparison.Ordinal))
         {
             return false;

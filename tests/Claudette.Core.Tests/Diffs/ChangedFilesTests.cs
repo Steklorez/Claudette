@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Claudette.Core.Diffs;
+using Claudette.Core.ProjectFiles;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Claudette.Core.Tests.Diffs;
@@ -404,10 +405,10 @@ public sealed class ChangedFilesTests : IDisposable
 
         var change = Assert.Single(_files.TakeTurn());
 
-        Assert.Equal((2, 0), _files.CountTurn(change));
+        Assert.Equal(new TurnCount(2, 0), _files.CountTurn(change));
         Assert.Null(_files.CountTurn(change with { BeforeKnown = false, Before = null }));
         File.Delete(path);
-        Assert.Equal((0, 1), _files.CountTurn(change));
+        Assert.Equal(new TurnCount(0, 1), _files.CountTurn(change));
     }
 
     [Fact]
@@ -480,7 +481,7 @@ public sealed class ChangedFilesTests : IDisposable
         var change = Assert.Single(_files.TakeTurn());
 
         Assert.Equal(("b\n", true), (change.After, change.AfterKnown));
-        Assert.Equal((1, 1), _files.CountTurn(change));
+        Assert.Equal(new TurnCount(1, 1), _files.CountTurn(change));
     }
 
     [Fact]
@@ -522,6 +523,120 @@ public sealed class ChangedFilesTests : IDisposable
 
         Assert.Equal([("a\n", false, true, "b\n"), (null, true, true, "new\n")],
             replayed.Files.Select(f => (f.Before, f.IsNew, f.BeforeKnown, f.After)));
+    }
+
+    // ---- What the lines don't show (DESIGN.md §8) ---------------------------------------------------------------------
+
+    [Fact]
+    public void A_write_that_makes_a_crlf_file_lf_changes_only_its_line_endings()
+    {
+        var path = PathOf("a.cs");
+        File.WriteAllText(path, "one\r\ntwo\r\n");
+        // The hook reads them before the call runs; Claude Code reports the file with \n, and writes the content as given.
+        _files.NoteLineEndings("t1", ChangedFiles.ReadLineEndings(path)!.Value);
+        WriteOver("t1", path, "one\ntwo\n", "one\ntwo\n");
+        File.WriteAllText(path, "one\ntwo\n");
+
+        var file = Assert.Single(_files.Files);
+        var state = _files.Inspect(file);
+
+        Assert.Equal(LineEndingKind.Crlf, file.BeforeLineEndings);
+        Assert.Equal(ChangedFileStatus.Modified, state.Status);
+        Assert.Equal((0, 0), (state.Added, state.Removed));
+        Assert.Equal(new HiddenChanges { LineEndings = new LineEndingChange(LineEndingKind.Crlf, LineEndingKind.Lf) }, state.Hidden);
+        Assert.Null(state.Since);
+    }
+
+    [Fact]
+    public void An_edit_that_keeps_a_files_windows_line_endings_doesnt_change_them()
+    {
+        var path = PathOf("a.cs");
+        File.WriteAllText(path, "one\r\nORIGINAL\r\n");
+        _files.NoteLineEndings("t1", LineEndingKind.Crlf);
+        EditTo("t1", path, "one\nORIGINAL\n", "ORIGINAL", "EDITED");
+        File.WriteAllText(path, "one\r\nEDITED\r\n");
+
+        var state = _files.Inspect(Assert.Single(_files.Files));
+
+        Assert.Equal((ChangedFileStatus.Modified, 1, 1), (state.Status, state.Added, state.Removed));
+        Assert.Null(state.Hidden);
+        Assert.Null(state.Since);
+    }
+
+    [Fact]
+    public void An_edit_to_a_file_with_a_byte_order_mark_isnt_changed_since()
+    {
+        // Claude Code keeps the mark in originalFile and on disk (2.1.302); reading the disk keeps it too.
+        var path = PathOf("a.cs");
+        EditTo("t1", path, "﻿one\nORIGINAL\n", "ORIGINAL", "EDITED");
+        File.WriteAllBytes(path, [0xEF, 0xBB, 0xBF, .. "one\nEDITED\n"u8]);
+
+        var state = _files.Inspect(Assert.Single(_files.Files));
+
+        Assert.Equal((ChangedFileStatus.Modified, 1, 1), (state.Status, state.Added, state.Removed));
+        Assert.Null(state.Since);
+        Assert.Null(state.Hidden);
+    }
+
+    [Fact]
+    public void A_write_that_leaves_out_the_newline_at_the_end_says_so()
+    {
+        var path = PathOf("a.cs");
+        WriteOver("t1", path, "one\ntwo\n", "one\ntwo");
+        File.WriteAllText(path, "one\ntwo");
+
+        var state = _files.Inspect(Assert.Single(_files.Files));
+
+        Assert.Equal((ChangedFileStatus.Modified, 0, 0), (state.Status, state.Added, state.Removed));
+        Assert.Equal(new HiddenChanges { NewlineAtEnd = false }, state.Hidden);
+        Assert.Null(state.Since);
+    }
+
+    [Fact]
+    public void A_file_whose_after_isnt_known_is_told_against_the_disk()
+    {
+        var path = PathOf("a.cs");
+        _files.NoteLineEndings("t1", LineEndingKind.Lf);
+        // The helper's Edit replaces "a", which isn't in the file, so what it left isn't known.
+        Edit("t1", path, "x\ny\n");
+        File.WriteAllText(path, "﻿x\r\ny\r\n");
+
+        var state = _files.Inspect(Assert.Single(_files.Files));
+
+        Assert.Equal((ChangedFileStatus.Modified, 0, 0), (state.Status, state.Added, state.Removed));
+        Assert.Equal(new HiddenChanges { LineEndings = new LineEndingChange(LineEndingKind.Lf, LineEndingKind.Crlf), ByteOrderMark = true }, state.Hidden);
+    }
+
+    [Fact]
+    public void A_turn_that_changed_only_line_endings_is_counted_with_them()
+    {
+        var path = PathOf("turn.cs");
+        File.WriteAllText(path, "one\r\ntwo\r\n");
+        _files.NoteLineEndings("t1", LineEndingKind.Crlf);
+        WriteOver("t1", path, "one\ntwo\n", "one\ntwo\n");
+        File.WriteAllText(path, "one\ntwo\n");
+
+        var change = Assert.Single(_files.TakeTurn());
+
+        Assert.Equal(LineEndingKind.Crlf, change.BeforeLineEndings);
+        Assert.Equal(new TurnCount(0, 0, new HiddenChanges { LineEndings = new LineEndingChange(LineEndingKind.Crlf, LineEndingKind.Lf) }), _files.CountTurn(change));
+    }
+
+    [Fact]
+    public void Reading_a_file_from_disk_keeps_its_byte_order_mark()
+    {
+        var path = PathOf("a.cs");
+        File.WriteAllBytes(path, [0xEF, 0xBB, 0xBF, .. "one\r\n"u8]);
+
+        Assert.Equal(("﻿one\r\n", true), ChangedFiles.ReadFromDisk(path));
+        Assert.Equal(LineEndingKind.Crlf, ChangedFiles.ReadLineEndings(path));
+        Assert.Null(ChangedFiles.ReadLineEndings(PathOf("missing.cs")));
+    }
+
+    private void WriteOver(string id, string path, string originalFile, string content)
+    {
+        _files.RecordToolUse(id, "Write", new JsonObject { ["file_path"] = path, ["content"] = content });
+        _files.RecordToolResult(id, false, new JsonObject { ["type"] = "update", ["filePath"] = path, ["content"] = content, ["originalFile"] = originalFile, ["structuredPatch"] = new JsonArray() });
     }
 
     /// <summary>An Edit of <paramref name="path"/> from <paramref name="originalFile"/>, replacing <paramref name="from"/> with <paramref name="to"/>.</summary>

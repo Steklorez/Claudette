@@ -577,6 +577,92 @@ public sealed class RealCliTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// A Write over a file with Windows line endings writes the content as the model gave it, with <c>\n</c>, and its
+    /// <c>originalFile</c> has <c>\n</c> too (checked with 2.1.302): only the line endings the hook read before the call
+    /// say they changed (DESIGN.md §8, "What the lines don't show").
+    /// </summary>
+    [Fact]
+    public async Task A_write_over_a_windows_file_leaves_it_unix_which_the_hooks_read_tells()
+    {
+        var file = Path.Combine(Work, "crlf.txt");
+        await File.WriteAllTextAsync(file, "hello from mock\r\n", TestContext.Current.CancellationToken);
+        var noted = new System.Collections.Concurrent.ConcurrentQueue<(string Id, Core.ProjectFiles.LineEndingKind LineEndings)>();
+        var hook = new HookRegistration("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", (input, _) =>
+        {
+            if (input.ToolUseId is { } id && input.ToolInput?["file_path"]?.GetValue<string>() is { } path && ChangedFiles.ReadLineEndings(path) is { } lineEndings)
+            {
+                noted.Enqueue((id, lineEndings));
+            }
+            return Task.FromResult(HookOutputs.Continue());
+        });
+        await using var session = await StartAsync(permissionMode: "acceptEdits", hooks: [hook]);
+
+        // Claude Code writes over a file only once it's been read.
+        await session.SendUserMessageAsync($"READ_FILE {file}", TestContext.Current.CancellationToken);
+        await session.ReadUntilAsync<TurnCompleted>();
+        await session.SendUserMessageAsync($"WRITE_FILE {file}", TestContext.Current.CancellationToken);
+        var (_, seen) = await session.ReadUntilAsync<TurnCompleted>();
+
+        var changes = new ChangedFiles(TimeProvider.System);
+        foreach (var (id, lineEndings) in noted)
+        {
+            changes.NoteLineEndings(id, lineEndings);
+        }
+        Record(changes, seen);
+        var changed = Assert.Single(changes.Files);
+        Assert.Equal("hello from mock\n", changed.Before);
+        Assert.Equal("hello from mock\n", await File.ReadAllTextAsync(file, TestContext.Current.CancellationToken));
+        var state = changes.Inspect(changed);
+        Assert.Equal((ChangedFileStatus.Modified, 0, 0), (state.Status, state.Added, state.Removed));
+        Assert.Equal(new HiddenChanges { LineEndings = new LineEndingChange(Core.ProjectFiles.LineEndingKind.Crlf, Core.ProjectFiles.LineEndingKind.Lf) }, state.Hidden);
+    }
+
+    /// <summary>
+    /// An Edit to a file with a byte order mark keeps it, on disk and in <c>originalFile</c> (checked with 2.1.302), so
+    /// the file read back is as the Edit left it, not changed since (DESIGN.md §8, "What the lines don't show").
+    /// </summary>
+    [Fact]
+    public async Task An_edit_to_a_file_with_a_byte_order_mark_keeps_it()
+    {
+        var file = Path.Combine(Work, "bom.txt");
+        await File.WriteAllBytesAsync(file, [0xEF, 0xBB, 0xBF, .. "first line\nORIGINAL LINE\nlast line\n"u8], TestContext.Current.CancellationToken);
+        await using var session = await StartAsync(permissionMode: "acceptEdits");
+
+        await session.SendUserMessageAsync($"EDIT_FILE {file}", TestContext.Current.CancellationToken);
+        var (_, seen) = await session.ReadUntilAsync<TurnCompleted>();
+
+        var changes = new ChangedFiles(TimeProvider.System);
+        Record(changes, seen);
+        var changed = Assert.Single(changes.Files);
+        Assert.Equal("﻿first line\nORIGINAL LINE\nlast line\n", changed.Before);
+        Assert.Equal([0xEF, 0xBB, 0xBF], (await File.ReadAllBytesAsync(file, TestContext.Current.CancellationToken))[..3]);
+        var state = changes.Inspect(changed);
+        Assert.Equal((ChangedFileStatus.Modified, 1, 1, null, null), (state.Status, state.Added, state.Removed, state.Since, state.Hidden));
+    }
+
+    /// <summary>The session's file tool calls and their results, recorded as a tab records them.</summary>
+    private static void Record(ChangedFiles changes, IEnumerable<SessionEvent> seen)
+    {
+        foreach (var e in seen)
+        {
+            if (e is AssistantMessageReceived assistant)
+            {
+                foreach (var use in assistant.Message.Content.OfType<Core.Protocol.ToolUseBlock>())
+                {
+                    changes.RecordToolUse(use.Id, use.Name, use.Input);
+                }
+            }
+            else if (e is ToolResultsReceived results)
+            {
+                foreach (var result in results.Message.Content.OfType<Core.Protocol.ToolResultBlock>())
+                {
+                    changes.RecordToolResult(result.ToolUseId, result.IsError, results.Message.ToolUseResult);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Claude Code sends a large file's whole <c>originalFile</c> live, but writes it to the transcript as null over
     /// 10,000 characters; the changed files keep it for the replay (DESIGN.md §8, "Before content").
     /// </summary>

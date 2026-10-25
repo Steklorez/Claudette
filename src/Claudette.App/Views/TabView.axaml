@@ -745,7 +745,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="conv:TurnFileRow">
-                <Button Classes="flat tile" ToolTip.Tip="{Binding Change.Path}"
+                <Button Classes="flat tile" ToolTip.Tip="{Binding Tip}"
                         AutomationProperties.Name="{Binding DisplayPath, StringFormat='What this turn changed in {0}'}"
                         Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.OpenTurnDiffCommand}" CommandParameter="{Binding}">
                   <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="2">

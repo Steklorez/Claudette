@@ -379,6 +379,33 @@ public class SidePanelUiTests
     }
 
     [AvaloniaFact]
+    public async Task A_change_the_lines_dont_show_is_said_under_its_folder()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.IsSidePanelOpen = true;
+        UiText.Settle(window);
+        var (spaces, newline) = (Path.Combine(h.WorkFolder, "auth.cs"), Path.Combine(h.WorkFolder, "login.cs"));
+        // One Edit takes a space off the end of a line; the other, the newline off the end of the file.
+        await File.WriteAllTextAsync(spaces, "a\nb\n", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(newline, "a\nb", TestContext.Current.CancellationToken);
+        h.Transport.Emit(Edit("e1", spaces, "a ", "a"));
+        h.Transport.Emit(EditResult("e1", spaces, "a ", "a", "a \nb\n"));
+        h.Transport.Emit(Edit("e2", newline, "b\n", "b"));
+        h.Transport.Emit(EditResult("e2", newline, "b\n", "b", "a\nb\n"));
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var list = view.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "ChangedFilesList");
+
+        await UiText.SettleUntilAsync(window, () => list.GetVisualDescendants().OfType<TextBlock>().Any(t => t.Text == "Only the newline at its end changed: removed"),
+            "the line for what the lines don't show");
+
+        var note = list.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == "Only whitespace changed");
+        Assert.Contains("muted", note.Classes);
+        await Verify(UiText.Describe(list));
+    }
+
+    [AvaloniaFact]
     public async Task Changed_files_in_another_working_tree_are_headed_by_it()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
@@ -662,23 +689,23 @@ public class SidePanelUiTests
         return (window, list.GetVisualDescendants().OfType<Grid>().Single(g => g.Classes.Contains("changedfile")));
     }
 
-    private static JsonObject Edit(string id, string path) => new()
+    private static JsonObject Edit(string id, string path, string from = "a", string to = "b") => new()
     {
         ["type"] = "assistant",
         ["message"] = new JsonObject
         {
             ["content"] = new JsonArray(new JsonObject
             {
-                ["type"] = "tool_use", ["id"] = id, ["name"] = "Edit", ["input"] = new JsonObject { ["file_path"] = path, ["old_string"] = "a", ["new_string"] = "b" },
+                ["type"] = "tool_use", ["id"] = id, ["name"] = "Edit", ["input"] = new JsonObject { ["file_path"] = path, ["old_string"] = from, ["new_string"] = to },
             }),
         },
     };
 
-    private static JsonObject EditResult(string id, string path) => new()
+    private static JsonObject EditResult(string id, string path, string from = "a", string to = "b", string originalFile = "a\n") => new()
     {
         ["type"] = "user",
         ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = id, ["content"] = "The file has been updated." }) },
-        ["tool_use_result"] = new JsonObject { ["filePath"] = path, ["oldString"] = "a", ["newString"] = "b", ["originalFile"] = "a\n" },
+        ["tool_use_result"] = new JsonObject { ["filePath"] = path, ["oldString"] = from, ["newString"] = to, ["originalFile"] = originalFile },
     };
 
     private static void Drag(Window window, Control edge, double by)

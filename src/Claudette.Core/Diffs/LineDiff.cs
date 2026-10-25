@@ -158,6 +158,62 @@ public static class LineDiff
     public static bool NewlineAtEndDiffers(string? before, string? after) =>
         !string.IsNullOrEmpty(before) && !string.IsNullOrEmpty(after) && EndsWithNewline(before) != EndsWithNewline(after);
 
+    /// <summary>
+    /// Whether the texts' lines differ, but only in whitespace: with it taken out of every line, they're the same lines
+    /// (DESIGN.md §8, "What the lines don't show"). A line added or removed, even a blank one, isn't whitespace only.
+    /// </summary>
+    public static bool DiffersOnlyInWhitespace(string? before, string? after)
+    {
+        var (a, b) = (Split(before), Split(after));
+        if (a.Length != b.Length)
+        {
+            return false;
+        }
+        var differs = false;
+        for (var i = 0; i < a.Length; i++)
+        {
+            if (string.Equals(a[i], b[i], StringComparison.Ordinal))
+            {
+                continue;
+            }
+            if (!LineDiffersOnlyInWhitespace(a[i], b[i]))
+            {
+                return false;
+            }
+            differs = true;
+        }
+        return differs;
+    }
+
+    /// <summary>Whether two lines differ, but are the same with their whitespace taken out: the diff view shows it on them.</summary>
+    public static bool LineDiffersOnlyInWhitespace(string a, string b)
+    {
+        if (string.Equals(a, b, StringComparison.Ordinal))
+        {
+            return false;
+        }
+        int i = 0, j = 0;
+        while (true)
+        {
+            while (i < a.Length && char.IsWhiteSpace(a[i]))
+            {
+                i++;
+            }
+            while (j < b.Length && char.IsWhiteSpace(b[j]))
+            {
+                j++;
+            }
+            if (i == a.Length || j == b.Length)
+            {
+                return i == a.Length && j == b.Length;
+            }
+            if (a[i++] != b[j++])
+            {
+                return false;
+            }
+        }
+    }
+
     /// <summary>Splits text into lines, treating <c>\r\n</c>, <c>\r</c> and <c>\n</c> alike. A final newline doesn't start another line.</summary>
     public static IReadOnlyList<string> SplitLines(string? text) => Split(text);
 

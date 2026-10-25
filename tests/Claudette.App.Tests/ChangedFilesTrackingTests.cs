@@ -313,6 +313,67 @@ public class ChangedFilesTrackingTests
         Assert.True(File.Exists(Path.Combine(h.Services.Paths.BeforeContentDirectory, "toolu_s1.txt.gz")));
     }
 
+    /// <summary>
+    /// A Write that makes a file with Windows line endings Unix ones, as Claude Code's does, says so on its row and in
+    /// its diff: the hook read the line endings before the call ran (DESIGN.md §8, "What the lines don't show").
+    /// </summary>
+    [Fact]
+    public async Task A_write_that_changes_only_line_endings_says_so_on_its_row_and_in_its_diff()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var path = Path.Combine(h.WorkFolder, "a.cs");
+        await File.WriteAllTextAsync(path, "one\r\ntwo\r\n", TestContext.Current.CancellationToken);
+
+        // The session's own call: the hook reads the file's line endings, and answers.
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "control_request",
+            ["request_id"] = "r1",
+            ["request"] = new JsonObject
+            {
+                ["subtype"] = "hook_callback",
+                ["callback_id"] = "hook_2",
+                ["input"] = new JsonObject
+                {
+                    ["session_id"] = "s1", ["hook_event_name"] = "PreToolUse", ["tool_name"] = "Write", ["tool_use_id"] = "w1",
+                    ["tool_input"] = new JsonObject { ["file_path"] = path, ["content"] = "one\ntwo\n" },
+                },
+                ["tool_use_id"] = "w1",
+            },
+        });
+        await TabTestHarness.Eventually(() => h.Transport.Sent.Any(m => m["type"]?.GetValue<string>() == "control_response"
+            && m["response"]?["request_id"]?.GetValue<string>() == "r1"), "the hook's answer");
+        // Claude Code reports the file with \n, and writes the content as the model gave it.
+        await File.WriteAllTextAsync(path, "one\ntwo\n", TestContext.Current.CancellationToken);
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "assistant",
+            ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject
+            {
+                ["type"] = "tool_use", ["id"] = "w1", ["name"] = "Write",
+                ["input"] = new JsonObject { ["file_path"] = path, ["content"] = "one\ntwo\n" },
+            }) },
+        });
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "user",
+            ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = "w1", ["content"] = "The file has been updated." }) },
+            ["tool_use_result"] = new JsonObject { ["type"] = "update", ["filePath"] = path, ["content"] = "one\ntwo\n", ["originalFile"] = "one\ntwo\n", ["structuredPatch"] = new JsonArray() },
+        });
+
+        await TabTestHarness.Eventually(() => tab.ChangedFiles.Files is [{ Status: "M", Stats: null, Note: "Only its line endings changed: CRLF to LF" }], "the row");
+        Assert.Equal("1 file changed", tab.ChangedFiles.Summary);
+        Diffs.DiffSource? requested = null;
+        tab.ChangedFiles.DiffRequested += source => requested = source;
+        await tab.ChangedFiles.OpenFileDiffCommand.ExecuteAsync(tab.ChangedFiles.Files[0]);
+        var view = new Diffs.DiffWindowViewModel(requested!, dark: false);
+        await TabTestHarness.Eventually(() => !view.IsLoading, "the diff");
+        Assert.Equal("CRLF → LF", view.Stats);
+        Assert.Equal("Only its line endings changed: CRLF to LF. The lines are the same on both sides.", view.Message);
+        Assert.Empty(view.InlineRows);
+    }
+
     /// <summary>Git, faked: the tab's folder is the top of its working tree, which has <paramref name="untracked"/> as its one untracked file, if any.</summary>
     private static FakeLauncher GitAt(out StrongBox<string?> untracked)
     {

@@ -1,6 +1,7 @@
 using Claudette.Core.Diffs;
 using Claudette.Core.Git;
 using Claudette.Core.Processes;
+using Claudette.Core.ProjectFiles;
 using Claudette.Core.Tests.Support;
 
 namespace Claudette.Core.Tests.Git;
@@ -288,6 +289,42 @@ public sealed class GitWorkingTreeTests : IDisposable
         Assert.Equal("git", spec.FileName);
         Assert.Equal(["-c", "core.quotepath=false", "--no-optional-locks", "status", "--porcelain=v1", "-z"], spec.Arguments.Take(6));
         Assert.Equal(_repo, spec.WorkingDirectory);
+    }
+
+    /// <summary>
+    /// A file whose line endings, newline at the end or mode changed says so, and its counts leave out the lines that
+    /// changed only at their ends, as the diff view does (DESIGN.md §8, "What the lines don't show").
+    /// </summary>
+    [Fact]
+    public async Task Changes_the_lines_dont_show_are_told()
+    {
+        Assert.SkipWhen(!GitInstalled, "git isn't on PATH.");
+        await InitAsync();
+        Write("crlf.txt", "one\r\ntwo\r\nthree\r\n");
+        Write("both.txt", "one\r\ntwo\r\nthree\r\n");
+        Write("newline.txt", "one\ntwo\n");
+        Write("mode.sh", "echo hi\n");
+        Write("plain.txt", "one\ntwo\n");
+        await CommitAsync();
+
+        Write("crlf.txt", "one\ntwo\nthree\n");
+        Write("both.txt", "one\ntwo\nTHREE\n");
+        Write("newline.txt", "one\ntwo");
+        await GitAsync("update-index", "--chmod=+x", "mode.sh");
+        Write("plain.txt", "one\n2\n");
+
+        var changes = (await _git.GetChangesAsync(_repo, Token)).ToDictionary(c => Path.GetFileName(c.Path));
+
+        Assert.Equal((GitChangeKind.Modified, 0, 0), Summary(changes["crlf.txt"]));
+        Assert.Equal(new LineEndingChange(LineEndingKind.Crlf, LineEndingKind.Lf), changes["crlf.txt"].Hidden?.LineEndings);
+        Assert.Equal((GitChangeKind.Modified, 1, 1), Summary(changes["both.txt"]));
+        Assert.Equal(new LineEndingChange(LineEndingKind.Crlf, LineEndingKind.Lf), changes["both.txt"].Hidden?.LineEndings);
+        Assert.Equal((GitChangeKind.Modified, 0, 0), Summary(changes["newline.txt"]));
+        Assert.Equal(new HiddenChanges { NewlineAtEnd = false }, changes["newline.txt"].Hidden);
+        Assert.Equal((GitChangeKind.Modified, 0, 0), Summary(changes["mode.sh"]));
+        Assert.Equal(true, changes["mode.sh"].Hidden?.Mode?.NowExecutable);
+        Assert.Equal((GitChangeKind.Modified, 1, 1), Summary(changes["plain.txt"]));
+        Assert.Null(changes["plain.txt"].Hidden);
     }
 
     private static (GitChangeKind, int?, int?) Summary(GitChange change) => (change.Kind, change.Added, change.Removed);

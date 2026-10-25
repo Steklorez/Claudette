@@ -129,6 +129,22 @@ public class DiffWindowUiTests
         Assert.True(scroll.Offset.Y > 0);
     }
 
+    /// <summary>A line that changed only in its whitespace shows it, faintly, and the header says how (DESIGN.md §8, "What the lines don't show").</summary>
+    [AvaloniaFact]
+    public async Task Whitespace_shows_faintly_on_a_line_that_changed_only_in_it()
+    {
+        await using var file = await DiffFile.CreateAsync("if (a)\n\treturn;\n", "if (a)\n    return;\n");
+        var (window, _) = await ShowAsync(file);
+
+        var codes = Code(Shown<LineScroller>(window)).ToArray();
+        var dots = codes.Single(c => c.Code == "····return;").Inlines!.OfType<Avalonia.Controls.Documents.Run>().First(r => r.Text == "····");
+        var arrow = codes.Single(c => c.Code == "→return;").Inlines!.OfType<Avalonia.Controls.Documents.Run>().First(r => r.Text == "→");
+        Assert.Equal(Avalonia.Media.Color.Parse("#A0888888"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(dots.Foreground).Color);
+        Assert.Equal(dots.Foreground, arrow.Foreground);
+        Assert.Contains(window.GetVisualDescendants().OfType<TextBlock>(),
+            t => t.Text == "Where a line changed only in its whitespace, spaces show as · and tabs as →" && t.IsEffectivelyVisible);
+    }
+
     /// <summary>The syntax colors follow a change of theme while the window is open (GitHub issue #14).</summary>
     [AvaloniaFact]
     public async Task The_syntax_colors_follow_the_theme_while_the_window_is_open()

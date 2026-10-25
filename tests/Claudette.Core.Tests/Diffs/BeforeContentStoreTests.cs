@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Claudette.Core.Diffs;
+using Claudette.Core.ProjectFiles;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Claudette.Core.Tests.Diffs;
@@ -66,6 +67,39 @@ public sealed class BeforeContentStoreTests : IDisposable
         var file = Assert.Single(files.Files);
         Assert.False(file.BeforeKnown);
         Assert.False(file.IsNew);
+    }
+
+    [Fact]
+    public void The_line_endings_the_hook_read_before_a_first_change_are_found_again_when_replayed()
+    {
+        // Claude Code reports a file with Windows line endings with \n, so what the hook read is kept with the change.
+        var live = Create();
+        live.NoteLineEndings("toolu_01", LineEndingKind.Crlf);
+        Edit(live, "toolu_01", "a line\n");
+        live.NoteLineEndings("toolu_02", LineEndingKind.Lf);
+        Edit(live, "toolu_02", "a changed line\n");
+
+        var replayed = Create();
+        Edit(replayed, "toolu_01", "a line\n");
+        Edit(replayed, "toolu_02", "a changed line\n");
+
+        Assert.Equal(LineEndingKind.Crlf, Assert.Single(replayed.Files).BeforeLineEndings);
+        // Only the first change's are needed.
+        Assert.Equal(["toolu_01.eol"], Directory.GetFiles(Saved).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public void Line_endings_unused_for_30_days_are_deleted()
+    {
+        var store = new BeforeContentStore(Saved, _time);
+        store.SaveLineEndings("old", LineEndingKind.Mixed);
+        File.SetLastWriteTimeUtc(Path.Combine(Saved, "old.eol"), (_time.GetUtcNow() - TimeSpan.FromDays(31)).UtcDateTime);
+        store.SaveLineEndings("new", LineEndingKind.Mixed);
+
+        BeforeContentStore.DeleteOld(Saved, _time.GetUtcNow());
+
+        Assert.Null(store.LoadLineEndings("old"));
+        Assert.Equal(LineEndingKind.Mixed, store.LoadLineEndings("new"));
     }
 
     [Fact]

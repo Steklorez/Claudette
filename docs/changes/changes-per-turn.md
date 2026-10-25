@@ -13,7 +13,7 @@ summary: "Changed files shows everything since the session started."
 
 ## The Modified files card
 
-After a turn that changed files, the conversation has a **Modified files** card with *"3 files changed"* in its header and a tile for each file: its name, its folder, and `+12 −3` for the lines added and removed. The counts are from before the turn to how its last change left the file, so another tab editing the same file as the turn ends doesn't change them.
+After a turn that changed files, the conversation has a **Modified files** card with *"3 files changed"* in its header and a tile for each file: its name, its folder, and `+12 −3` for the lines added and removed. The counts are from before the turn to how its last change left the file, so another tab editing the same file as the turn ends doesn't change them. A file whose turn changed no line, only what lines don't show, has that in place of the counts, such as *CRLF → LF* or *newline at end*, and pointing at the tile says it in full ([What the lines don't show](changed-files.md#what-the-lines-dont-show)).
 
 The card counts changes Claude made with its file editing tools, subagents' included. Under it, the **Turn** card has the turn's duration, tokens and model ([The end of a turn](../conversation/the-end-of-a-turn.md)).
 

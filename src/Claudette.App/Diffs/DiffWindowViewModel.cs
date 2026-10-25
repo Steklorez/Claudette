@@ -76,6 +76,10 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 /// For a file that's changed since the session's latest change to it, which this diff ends at (DESIGN.md §8, "This
 /// session's changes"): the same "before" against the file now, which <b>With later changes</b> switches to.
 /// </param>
+/// <param name="Hidden">
+/// What changed that the lines don't show (DESIGN.md §8, "What the lines don't show"), given the text the view compares
+/// with: <paramref name="Before"/> may not have the line endings the file had. Null says nothing.
+/// </param>
 public sealed record DiffSource(
     string Path,
     string DisplayPath,
@@ -93,7 +97,8 @@ public sealed record DiffSource(
     Func<string?, bool>? RevertInto = null,
     Func<Task>? OpenInSystem = null,
     DiffWordWrap? WordWrap = null,
-    DiffSource? AgainstNow = null);
+    DiffSource? AgainstNow = null,
+    Func<string?, HiddenChanges?>? Hidden = null);
 
 /// <summary>A diff's "after" side that isn't the file now; null text means the file didn't exist then.</summary>
 public sealed record DiffAfter(string? Text);
@@ -135,6 +140,11 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     private IReadOnlyList<IReadOnlyList<ColoredRun>>? _beforeColors;
     private IReadOnlyList<IReadOnlyList<ColoredRun>>? _afterColors;
     private bool _isBinary;
+    /// <summary>What changed that the lines don't show, as the source says for the file read.</summary>
+    private HiddenChanges? _hidden;
+    private bool _noLineChanged;
+    /// <summary>The changed lines whose only change is whitespace, which shows on them.</summary>
+    private HashSet<DiffLineEntry> _whitespace = [];
 
     public DiffWindowViewModel(DiffSource source, bool dark)
     {
@@ -192,6 +202,13 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial string Stats { get; set; } = "";
+
+    /// <summary>
+    /// Under the path: what changed that the lines don't show, and how whitespace shows on a line that changed only in
+    /// it (DESIGN.md §8, "What the lines don't show"). Null when there's nothing to say.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? Note { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsInline))]
@@ -353,7 +370,8 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
             {
                 if (fixedAfter is null)
                 {
-                    current = File.Exists(path) ? File.ReadAllText(path) : null;
+                    // With its byte order mark, as Claude Code's originalFile has it.
+                    current = File.Exists(path) ? TextFiles.ReadAll(path) : null;
                 }
             }
             catch (IOException)
@@ -374,9 +392,18 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
         _isBinary = IsBinary(before, after);
         _beforeColors = Source.BeforeKnown ? beforeColors : afterColors;
         _afterColors = afterColors;
-        Message = message;
         var (added, removed) = LineDiff.Count(before, after);
-        Stats = Source.BeforeKnown ? $"+{added} −{removed}" : "";
+        var hidden = Source.BeforeKnown && !_isBinary ? Source.Hidden?.Invoke(after) : null;
+        (_hidden, _noLineChanged) = (hidden, added + removed == 0);
+        Stats = !Source.BeforeKnown ? "" : added + removed == 0 && HiddenChangeText.Short(hidden) is { } shown ? shown : $"+{added} −{removed}";
+        if (message is null && Source.BeforeKnown && !_isBinary && added + removed == 0 && after is not null && (Source.Hidden is not null || Source.FromGit))
+        {
+            // Nothing to show line by line: say why (DESIGN.md §8, "What the lines don't show").
+            message = HiddenChangeText.Note(hidden, linesChanged: false) is { } note ? $"{note}. The lines are the same on both sides."
+                : Source.FromGit ? "The lines are the same as at HEAD. Git counts something else as changed, such as its byte order mark or encoding."
+                : "Nothing has changed: the lines are the same on both sides.";
+        }
+        Message = message;
         // Build the rows before saying it's loaded, so nothing sees "loaded" with no rows.
         BuildRows();
         IsLoading = false;
@@ -461,6 +488,16 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
                 lines.AddRange(hunk.Lines.Select(l => ((DiffLineEntry?)l, (string?)null, (DiffHunk?)null)));
             }
         }
+        _whitespace = WhitespaceOnlyLines(lines.Select(l => l.Line));
+        // When no line changed, the message in the lines' place says it.
+        var hiddenNote = _noLineChanged ? null : HiddenChangeText.Note(_hidden, linesChanged: _hidden is not { WhitespaceOnly: true });
+        Note = (hiddenNote, _whitespace.Count > 0) switch
+        {
+            (null, false) => null,
+            (null, true) => "Where a line changed only in its whitespace, spaces show as · and tabs as →",
+            ({ } note, false) => note,
+            ({ } note, true) => _hidden is { WhitespaceOnly: true } ? $"{note}: spaces show as · and tabs as →" : $"{note}. Where a line changed only in its whitespace, spaces show as · and tabs as →",
+        };
 
         if (IsSideBySide)
         {
@@ -490,10 +527,14 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
         }
         else
         {
-            InlineRows = lines.Select(item => item.Line is { } l
-                ? new InlineDiffRow(l.OldNumber?.ToString() ?? "", l.NewNumber?.ToString() ?? "",
-                    l.Op switch { DiffOp.Added => "+", DiffOp.Removed => "−", _ => " " }, l.Text, Colors(l), l.Op, false)
-                : new InlineDiffRow("", "", "", item.Header!, null, DiffOp.Context, true, item.Hunk)).ToArray();
+            InlineRows = lines.Select(item => item.Line is { } l ? InlineRow(l) : new InlineDiffRow("", "", "", item.Header!, null, DiffOp.Context, true, item.Hunk)).ToArray();
+        }
+
+        InlineDiffRow InlineRow(DiffLineEntry line)
+        {
+            var (text, runs) = Shown(line, Colors(line));
+            return new InlineDiffRow(line.OldNumber?.ToString() ?? "", line.NewNumber?.ToString() ?? "",
+                line.Op switch { DiffOp.Added => "+", DiffOp.Removed => "−", _ => " " }, text, runs, line.Op, false);
         }
     }
 
@@ -505,7 +546,92 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
         }
         var number = left ? line.OldNumber : line.NewNumber;
         var colors = left ? _beforeColors : _afterColors;
-        return new DiffCell(number?.ToString() ?? "", line.Text, number is { } n && colors is not null && n - 1 < colors.Count ? colors[n - 1] : null, line.Op);
+        var (text, runs) = Shown(line, number is { } n && colors is not null && n - 1 < colors.Count ? colors[n - 1] : null);
+        return new DiffCell(number?.ToString() ?? "", text, runs, line.Op);
+    }
+
+    // ---- Whitespace (DESIGN.md §8, "What the lines don't show") -------------------------------------------------------
+
+    /// <summary>How whitespace shows on a line that changed only in it: a muted gray, over both themes' backgrounds.</summary>
+    private const string WhitespaceColor = "#A0888888";
+
+    /// <summary>A line's text and colors as shown: with its spaces as · and its tabs as → when it changed only in its whitespace.</summary>
+    private (string Text, IReadOnlyList<ColoredRun>? Runs) Shown(DiffLineEntry line, IReadOnlyList<ColoredRun>? runs)
+    {
+        if (!_whitespace.Contains(line))
+        {
+            return (line.Text, runs);
+        }
+        var text = line.Text;
+        var colors = new string?[text.Length];
+        foreach (var run in runs ?? [])
+        {
+            for (var i = Math.Max(0, run.Start); i < Math.Min(text.Length, run.Start + run.Length); i++)
+            {
+                colors[i] = run.Color;
+            }
+        }
+        var shown = new char[text.Length];
+        for (var i = 0; i < text.Length; i++)
+        {
+            shown[i] = text[i] switch { '\t' => '→', var c when char.IsWhiteSpace(c) => '·', var c => c };
+            if (shown[i] != text[i])
+            {
+                colors[i] = WhitespaceColor;
+            }
+        }
+        var colored = new List<ColoredRun>();
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (colored.Count > 0 && colored[^1].Color == colors[i])
+            {
+                colored[^1] = colored[^1] with { Length = colored[^1].Length + 1 };
+            }
+            else
+            {
+                colored.Add(new ColoredRun(i, 1, colors[i]));
+            }
+        }
+        return (new string(shown), colored);
+    }
+
+    /// <summary>
+    /// The changed lines whose only difference from the line they replace is whitespace: in each change, the removed lines
+    /// paired in order with the added ones, as side by side pairs them.
+    /// </summary>
+    private static HashSet<DiffLineEntry> WhitespaceOnlyLines(IEnumerable<DiffLineEntry?> lines)
+    {
+        var found = new HashSet<DiffLineEntry>();
+        var removed = new List<DiffLineEntry>();
+        var added = new List<DiffLineEntry>();
+        foreach (var line in lines.Append(null))
+        {
+            if (line is { Op: DiffOp.Removed } && added.Count == 0)
+            {
+                removed.Add(line);
+                continue;
+            }
+            if (line is { Op: DiffOp.Added })
+            {
+                added.Add(line);
+                continue;
+            }
+            for (var k = 0; k < Math.Min(removed.Count, added.Count); k++)
+            {
+                if (LineDiff.LineDiffersOnlyInWhitespace(removed[k].Text, added[k].Text))
+                {
+                    found.Add(removed[k]);
+                    found.Add(added[k]);
+                }
+            }
+            removed.Clear();
+            added.Clear();
+            if (line is { Op: DiffOp.Removed })
+            {
+                removed.Add(line);
+            }
+        }
+        return found;
     }
 
     /// <summary>Removed lines take the old file's colors; added and unchanged lines the new file's.</summary>

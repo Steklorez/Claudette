@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
+using Claudette.Core.ProjectFiles;
 
 namespace Claudette.Core.Diffs;
 
@@ -24,6 +25,9 @@ public sealed partial class BeforeContentStore(string directory, TimeProvider ti
 
     /// <summary>The marker for a file that wasn't there before the change.</summary>
     private const string MissingExtension = ".missing";
+
+    /// <summary>The line endings a file had before the change: <c>lf</c>, <c>crlf</c>, <c>mixed</c> or <c>none</c>.</summary>
+    private const string LineEndingsExtension = ".eol";
 
     /// <summary>Keeps the content a file had before the change <paramref name="toolUseId"/>.</summary>
     public void Save(string toolUseId, string content)
@@ -82,6 +86,46 @@ public sealed partial class BeforeContentStore(string directory, TimeProvider ti
         return true;
     }
 
+    /// <summary>
+    /// Keeps the line endings the file had before the change <paramref name="toolUseId"/>, as Claudette's hook read them:
+    /// its <c>originalFile</c> has <c>\n</c> for a file with Windows ones (DESIGN.md §8, "What the lines don't show").
+    /// </summary>
+    public void SaveLineEndings(string toolUseId, LineEndingKind lineEndings)
+    {
+        if (FileFor(toolUseId, LineEndingsExtension) is not { } path)
+        {
+            return;
+        }
+        try
+        {
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(path, lineEndings switch { LineEndingKind.Lf => "lf", LineEndingKind.Crlf => "crlf", LineEndingKind.Mixed => "mixed", _ => "none" });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Only a replay needs them; a change to them isn't told then.
+        }
+    }
+
+    /// <summary>The line endings <see cref="SaveLineEndings"/> kept for the change <paramref name="toolUseId"/>, if any.</summary>
+    public LineEndingKind? LoadLineEndings(string toolUseId)
+    {
+        if (FileFor(toolUseId, LineEndingsExtension) is not { } path || !File.Exists(path))
+        {
+            return null;
+        }
+        try
+        {
+            var saved = Enum.TryParse<LineEndingKind>(File.ReadAllText(path).Trim(), ignoreCase: true, out var kind) && Enum.IsDefined(kind) ? kind : (LineEndingKind?)null;
+            File.SetLastWriteTimeUtc(path, timeProvider.GetUtcNow().UtcDateTime);
+            return saved;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>The content saved for the change <paramref name="toolUseId"/>, if any. Using it keeps it from being deleted as old.</summary>
     public string? Load(string toolUseId)
     {
@@ -114,7 +158,8 @@ public sealed partial class BeforeContentStore(string directory, TimeProvider ti
         {
             return;
         }
-        foreach (var file in new DirectoryInfo(folder).EnumerateFiles().Where(f => f.Name.EndsWith(Extension, StringComparison.Ordinal) || f.Name.EndsWith(MissingExtension, StringComparison.Ordinal)))
+        foreach (var file in new DirectoryInfo(folder).EnumerateFiles().Where(f => f.Name.EndsWith(Extension, StringComparison.Ordinal)
+            || f.Name.EndsWith(MissingExtension, StringComparison.Ordinal) || f.Name.EndsWith(LineEndingsExtension, StringComparison.Ordinal)))
         {
             try
             {
