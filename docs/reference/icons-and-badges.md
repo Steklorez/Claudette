@@ -66,7 +66,7 @@ The rail shows each group's color, then a square per tab with the first letter o
 
 | Icon | What it means | More |
 |---|---|---|
-| A gear, a cube or a robot's head, with the project's name | The selected tab's project row: an Unreal Engine, Unity or Godot project. A folder when the tab's folder has no project Claudette knows. A busy dot replaces the icon while a job runs | [Project tools](../project-tools/using-project-tools.md) |
+| A gear, a cube or Godot's logo, with the project's name | The selected tab's project row: an Unreal Engine, Unity or Godot project. A folder when the tab's folder has no project Claudette knows. A busy dot replaces the icon while a job runs | [Project tools](../project-tools/using-project-tools.md) |
 | A Claude Code update badge | A newer Claude Code is available | [Claude Code's updates](../updates/claude-codes-updates.md) |
 | A Claudette update badge | A new Claudette release is available | [Claudette's updates](../updates/claudettes-updates.md) |
 | **New build ready** | A source build of Claudette has a new build to restart into | [Running from source](../getting-started/running-from-source.md) |

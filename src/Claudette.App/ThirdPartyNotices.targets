@@ -1,0 +1,178 @@
+<Project>
+  <!--
+    The licenses of what Claudette ships, for Settings → About (DESIGN.md §14, "About"): every package the build copies
+    beside the app, read from its nuspec, with Licenses/extras.xml for what isn't a package. Written on every build into
+    obj as ThirdPartyNotices.xml and embedded under that name, so the list follows the packages without anyone keeping
+    it. A package whose license has no text in Licenses/, or that doesn't say its license, fails the build: someone has
+    to look at it first.
+  -->
+  <PropertyGroup>
+    <!-- Packages the build copies that Claudette never ships: AvaloniaUI.DiagnosticsSupport is in Debug builds only. -->
+    <ThirdPartyNoticesExclude>AvaloniaUI.DiagnosticsSupport</ThirdPartyNoticesExclude>
+  </PropertyGroup>
+
+  <UsingTask TaskName="WriteThirdPartyNotices" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Packages ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <PackageFolders ParameterType="System.String" Required="true" />
+      <LicensesFolder ParameterType="System.String" Required="true" />
+      <OutputFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Text" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        // MSBuild's paths may have backslashes on macOS and Linux too.
+        Func<string, string> local = path => path.Replace('\\', Path.DirectorySeparatorChar);
+        LicensesFolder = local(LicensesFolder);
+        OutputFile = local(OutputFile);
+        PackageFolders = local(PackageFolders);
+
+        // Each text once, however many packages share it: SkiaSharp's natives and HarfBuzzSharp's carry the same notices.
+        var textIds = new Dictionary<string, string>(StringComparer.Ordinal);
+        Func<string, string> textId = text =>
+        {
+            // Without what XML can't hold, such as the form feeds some notices separate their pages with.
+            text = new string(text.Replace("\r\n", "\n").Where(c => c >= ' ' || c == '\n' || c == '\t').ToArray()).Trim('﻿', '\n', ' ');
+            string id;
+            if (!textIds.TryGetValue(text, out id))
+            {
+                id = "t" + textIds.Count;
+                textIds.Add(text, id);
+            }
+            return id;
+        };
+        Func<string, string> licenseText = name =>
+        {
+            var path = Path.Combine(LicensesFolder, name + ".txt");
+            return File.Exists(path) ? File.ReadAllText(path, Encoding.UTF8) : null;
+        };
+        Func<XElement, string, XElement> child = (parent, name) => parent.Elements().FirstOrDefault(e => e.Name.LocalName == name);
+        Func<XElement, string, string> attr = (element, name) => element.Attribute(name) == null ? null : element.Attribute(name).Value;
+
+        var extras = XDocument.Load(Path.Combine(LicensesFolder, "extras.xml")).Root;
+        var namedLicenses = extras.Elements("package").ToDictionary(e => attr(e, "id"), e => attr(e, "license"), StringComparer.OrdinalIgnoreCase);
+        var folders = PackageFolders.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+        var libraries = new List<XElement>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var package in Packages)
+        {
+            var id = package.ItemSpec;
+            var version = package.GetMetadata("NuGetPackageVersion");
+            if (!seen.Add(id))
+                continue;
+            var directory = folders.Select(f => Path.Combine(f, id.ToLowerInvariant(), version.ToLowerInvariant())).FirstOrDefault(Directory.Exists);
+            if (directory == null)
+            {
+                Log.LogError("Third-party notices: package {0} {1} isn't in {2}.", id, version, PackageFolders);
+                continue;
+            }
+            var metadata = child(XDocument.Load(Path.Combine(directory, id.ToLowerInvariant() + ".nuspec")).Root, "metadata");
+            var license = child(metadata, "license");
+            var repository = child(metadata, "repository");
+            var projectUrl = child(metadata, "projectUrl");
+            var copyright = child(metadata, "copyright");
+            var url = (repository == null ? null : attr(repository, "url")) ?? (projectUrl == null ? null : projectUrl.Value.Trim());
+
+            // The package's own text first, which names its copyright holders; else the license's text from Licenses/.
+            var files = Directory.GetFiles(directory).Select(Path.GetFileName).ToList();
+            var ownLicense = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals("license", StringComparison.OrdinalIgnoreCase));
+            string name = null, text = null;
+            if (license != null && attr(license, "type") == "file")
+            {
+                name = namedLicenses.ContainsKey(id) ? namedLicenses[id] : null;
+                text = File.ReadAllText(Path.Combine(directory, license.Value.Trim()), Encoding.UTF8);
+            }
+            else if (license != null && attr(license, "type") == "expression")
+            {
+                name = license.Value.Trim();
+                if (ownLicense != null)
+                    text = File.ReadAllText(Path.Combine(directory, ownLicense), Encoding.UTF8);
+                else
+                {
+                    var parts = new List<string>();
+                    foreach (var part in name.Split(new[] { ' ', '(', ')' }, StringSplitOptions.RemoveEmptyEntries).Where(p => p != "OR" && p != "AND" && p != "WITH"))
+                    {
+                        var partText = licenseText(part);
+                        if (partText == null)
+                            Log.LogError("Third-party notices: {0} {1} is under {2}, which has no text in {3}. Add it there.", id, version, part, LicensesFolder);
+                        else
+                            parts.Add(partText.Trim());
+                    }
+                    text = string.Join("\n\n", parts);
+                }
+            }
+            else
+            {
+                Log.LogError("Third-party notices: {0} {1} doesn't say its license. Name it in {2}, or add the package to ThirdPartyNoticesExclude if Claudette doesn't ship it.",
+                    id, version, Path.Combine(LicensesFolder, "extras.xml"));
+                continue;
+            }
+
+            var element = new XElement("library",
+                new XAttribute("name", id), new XAttribute("version", version), new XAttribute("license", name ?? ""),
+                new XAttribute("copyright", copyright == null ? "" : copyright.Value.Trim()), new XAttribute("url", url ?? ""),
+                new XAttribute("licenseText", textId(text)));
+            var notices = files.FirstOrDefault(f => f.StartsWith("THIRD-PARTY-NOTICES", StringComparison.OrdinalIgnoreCase)
+                || f.StartsWith("ThirdPartyNotices", StringComparison.OrdinalIgnoreCase));
+            if (notices != null)
+                element.Add(new XAttribute("noticesText", textId(File.ReadAllText(Path.Combine(directory, notices), Encoding.UTF8))));
+            libraries.Add(element);
+        }
+
+        foreach (var extra in extras.Elements("library"))
+        {
+            var element = new XElement("library",
+                new XAttribute("name", attr(extra, "name")), new XAttribute("version", attr(extra, "version") ?? ""),
+                new XAttribute("license", attr(extra, "license")), new XAttribute("copyright", attr(extra, "copyright") ?? ""),
+                new XAttribute("url", attr(extra, "url") ?? ""), new XAttribute("note", attr(extra, "note") ?? ""));
+            var licenseUrl = attr(extra, "licenseUrl");
+            if (licenseUrl != null)
+                element.Add(new XAttribute("licenseUrl", licenseUrl));
+            else if (licenseText(attr(extra, "license")) is string text)
+                element.Add(new XAttribute("licenseText", textId(text)));
+            else
+                Log.LogError("Third-party notices: {0} is under {1}, which has no text in {2}. Add it there, or give it a licenseUrl.",
+                    attr(extra, "name"), attr(extra, "license"), LicensesFolder);
+            libraries.Add(element);
+        }
+
+        var document = new XElement("notices",
+            libraries.OrderBy(l => attr(l, "name"), StringComparer.OrdinalIgnoreCase),
+            textIds.Select(t => new XElement("text", new XAttribute("id", t.Value), t.Key)));
+        var content = new XDeclaration("1.0", "utf-8", null) + "\n" + document.ToString().Replace("\r\n", "\n");
+        // Only when it changed, so an unchanged list doesn't rebuild the app.
+        if (!File.Exists(OutputFile) || File.ReadAllText(OutputFile, Encoding.UTF8) != content)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(OutputFile));
+            File.WriteAllText(OutputFile, content, new UTF8Encoding(false));
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!-- After the packages are resolved and before the resources are named, so the embedded file is the current one. -->
+  <Target Name="WriteThirdPartyNotices" DependsOnTargets="ResolvePackageAssets" BeforeTargets="AssignTargetPaths">
+    <!-- Here rather than above: the SDK sets IntermediateOutputPath after the project file is read -->
+    <PropertyGroup>
+      <ThirdPartyNoticesFile>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)ThirdPartyNotices.xml</ThirdPartyNoticesFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ThirdPartyPackageFile Include="@(RuntimeCopyLocalItems);@(NativeCopyLocalItems);@(ResourceCopyLocalItems);@(RuntimeTargetsCopyLocalItems)" />
+      <!-- One per file, named for its package, keeping its NuGetPackageVersion; the task takes each package once -->
+      <_ThirdPartyPackage Include="@(_ThirdPartyPackageFile->'%(NuGetPackageId)')" Condition="'%(_ThirdPartyPackageFile.NuGetPackageId)' != ''" />
+      <_ThirdPartyPackage Remove="$(ThirdPartyNoticesExclude)" />
+    </ItemGroup>
+    <WriteThirdPartyNotices Packages="@(_ThirdPartyPackage)" PackageFolders="$(NuGetPackageFolders)" LicensesFolder="$(MSBuildThisFileDirectory)Licenses"
+                            OutputFile="$(ThirdPartyNoticesFile)" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(ThirdPartyNoticesFile)" LogicalName="ThirdPartyNotices.xml" />
+      <FileWrites Include="$(ThirdPartyNoticesFile)" />
+    </ItemGroup>
+  </Target>
+</Project>

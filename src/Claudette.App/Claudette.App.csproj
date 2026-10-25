@@ -39,6 +39,8 @@
     <EmbeddedResource Include="Assets\AppIcon\*.png" LogicalName="AppIcon.%(Filename)%(Extension)" />
     <!-- Claudette on the composer's poses (Mascot/MascotArt), read the same way. -->
     <EmbeddedResource Include="Assets\Mascot\mascot.json" LogicalName="Mascot.mascot.json" />
+    <!-- Claudette's own license, for Settings → About (ThirdPartyNotices.ClaudetteLicense). -->
+    <EmbeddedResource Include="..\..\LICENSE" LogicalName="License.txt" />
     <!-- Also a file next to the app: toasts from an unpackaged Claudette show it (WindowsAppIdentity). -->
     <Content Include="Assets\claudette.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -47,4 +49,7 @@
     <InternalsVisibleTo Include="Claudette.App.Tests" />
     <InternalsVisibleTo Include="Claudette.App.UiTests" />
   </ItemGroup>
+
+  <!-- The shipped packages' licenses, embedded as ThirdPartyNotices.xml for Settings → About (DESIGN.md §14). -->
+  <Import Project="ThirdPartyNotices.targets" />
 </Project>

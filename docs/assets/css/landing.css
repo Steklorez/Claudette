@@ -361,6 +361,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .footer nav a { color: var(--muted); font-weight: 600; }
 .footer nav a:hover { color: var(--heading); }
 .footer p { flex-basis: 100%; margin: 0; }
+.footer .trademarks { margin-top: -0.5rem; font-size: 0.8rem; }
 .footer .brand { font-size: 1.1rem; }
 
 /* Motion: what rises into view, and the hero's window settling flat. Only with JavaScript, and never with reduced motion. */

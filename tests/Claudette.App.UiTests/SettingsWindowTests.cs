@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.LogicalTree;
@@ -10,6 +11,7 @@ using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.Settings;
 using Claudette.App.Views;
 using Claudette.Core.Settings;
 
@@ -253,8 +255,58 @@ public class SettingsWindowTests
         window.Close();
     }
 
+    /// <summary>
+    /// About (DESIGN.md §14, "About") lists every library with its license, which shows under its row on request; a
+    /// license that asks only for a link, such as the Godot logo's, is a link. Godot's page in the sidebar has its logo,
+    /// filled, where the other pages' icons are strokes.
+    /// </summary>
     [AvaloniaFact]
-    public async Task The_sidebar_ends_with_the_version_and_Help_with_the_guide_Discord_and_Report_an_issue()
+    public async Task About_shows_each_librarys_license_under_its_row_and_Godots_page_has_its_logo()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = SettingsCategory.About };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+        var host = window.GetVisualDescendants().OfType<ContentControl>().Single(c => c.Name == "PageHost");
+        SettingRow Row(string title) => host.GetVisualDescendants().OfType<SettingRow>().Single(r => r.Title == title);
+        IEnumerable<Button> Links(SettingRow row) => row.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("settingslink") && b.IsEffectivelyVisible);
+
+        var avalonia = settings.About.Libraries.Single(r => r.Library.Name == "Avalonia");
+        var row = Row(avalonia.Title);
+        Assert.Equal(["Website", "License"], Links(row).Select(b => b.Content as string));
+        // Not drawn until it's shown, so it's in the row's logical tree.
+        var text = row.GetLogicalDescendants().OfType<SelectableTextBlock>().Single(t => t.Text == avalonia.Library.LicenseText);
+        Assert.False(text.GetLogicalAncestors().OfType<Border>().First().IsVisible);
+
+        Links(row).OfType<ToggleButton>().Single().IsChecked = true;
+        UiText.Settle(window);
+
+        Assert.True(text.IsAttachedToVisualTree());
+        Assert.True(text.IsEffectivelyVisible);
+        var logo = Row("Godot Engine logo");
+        Assert.Equal(["Website", "License"], Links(logo).Select(b => b.Content as string));
+        Assert.IsNotType<ToggleButton>(Links(logo).Last());
+        Assert.Equal(AboutPage.TrademarkNotices.Select(t => t.Names), AboutPage.TrademarkNotices.Select(t => Row(t.Names).Title));
+
+        var sidebar = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        // The list draws only the rows in view.
+        sidebar.ScrollIntoView(settings.NavEntries.Single(e => e.Title == "Godot"));
+        UiText.Settle(window);
+        Avalonia.Controls.Shapes.Path Icon(string page) => sidebar.GetVisualDescendants().OfType<ListBoxItem>().Single(i => (i.Content as SettingsNavEntry)?.Title == page)
+            .GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single();
+        var godot = Icon("Godot");
+        Assert.Contains("filled", godot.Classes);
+        Assert.NotNull(godot.Fill);
+        Assert.Null(godot.Stroke);
+        var unity = Icon("Unity");
+        Assert.DoesNotContain("filled", unity.Classes);
+        Assert.NotNull(unity.Stroke);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task The_sidebar_ends_with_the_version_and_Help_with_the_guide_Discord_Report_an_issue_and_About()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         h.Services.BuildCommit = "842169b";
@@ -273,12 +325,13 @@ public class SettingsWindowTests
         // The foot sits below the pages, not over them.
         var pagesBottom = sidebar.TranslatePoint(new Point(0, sidebar.Bounds.Height), window)!.Value.Y;
         Assert.True(version.TranslatePoint(default, window)!.Value.Y >= pagesBottom);
-        // Help's menu: the guide, Discord, and a bug report.
+        // Help's menu: the guide, Discord, a bug report, and About.
         var menu = Assert.IsType<MenuFlyout>(help.Flyout);
         menu.ShowAt(help);
         UiText.Settle(window);
-        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue"], menu.Items.OfType<MenuItem>().Select(i => i.Header as string));
-        Assert.Equal([settings.OpenGuideCommand, settings.OpenDiscordCommand, settings.ReportIssueCommand], menu.Items.OfType<MenuItem>().Select(i => i.Command));
+        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Claudette"], menu.Items.OfType<MenuItem>().Select(i => i.Header as string));
+        Assert.Equal([settings.OpenGuideCommand, settings.OpenDiscordCommand, settings.ReportIssueCommand, settings.ShowAboutCommand],
+            menu.Items.OfType<MenuItem>().Select(i => i.Command));
         menu.Hide();
 
         version.Command!.Execute(null);

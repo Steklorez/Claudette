@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Claudette.App.ViewModels;
 
 namespace Claudette.App.Conversation;
 
@@ -37,6 +38,12 @@ public static class ToolIcons
     /// <summary>Looks the icon up in the app's resources; the default icon when it's missing.</summary>
     public static readonly IValueConverter Geometry = new FuncValueConverter<string?, Geometry?>(key =>
         Find(key ?? Default) ?? Find(Default));
+
+    /// <summary>
+    /// Whether the icon is drawn filled rather than stroked: a project type's logo (<see cref="ProjectTypeIcons.IsLogo"/>),
+    /// for a <c>filled</c> class on its <c>Path</c>.
+    /// </summary>
+    public static readonly IValueConverter IsFilled = new FuncValueConverter<string?, bool>(ProjectTypeIcons.IsLogo);
 
     private static Geometry? Find(string key) =>
         Application.Current?.TryFindResource(key, out var resource) == true ? resource as Geometry : null;

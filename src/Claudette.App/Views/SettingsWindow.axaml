@@ -68,6 +68,14 @@
     <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon">
       <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
     </Style>
+    <!-- A logo (ProjectTypeIcons.IsLogo): filled in the same color, where the others are strokes -->
+    <Style Selector="Path.navicon.filled">
+      <Setter Property="Stroke" Value="{x:Null}" />
+      <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.filled">
+      <Setter Property="Fill" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
   </Window.Styles>
 
   <!-- DESIGN.md §14: a sidebar of pages in groups; changes apply immediately; the window isn't modal. -->
@@ -84,7 +92,7 @@
                   AutomationProperties.Name="Copy version details">
             <TextBlock Classes="muted small" Text="{Binding VersionLabel}" TextTrimming="CharacterEllipsis" />
           </Button>
-          <Button x:Name="HelpButton" Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="Help: the user guide, Discord, and reporting an issue"
+          <Button x:Name="HelpButton" Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="Help: the user guide, Discord, reporting an issue, and About"
                   AutomationProperties.Name="Help">
             <Path Classes="navicon" Data="{DynamicResource IconHelp}" />
             <Button.Flyout>
@@ -94,6 +102,9 @@
                           ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Claudette." />
                 <MenuItem Header="Report an issue" Command="{Binding ReportIssueCommand}"
                           ToolTip.Tip="Opens a new issue on Claudette's GitHub with the versions filled in. Nothing is sent until you submit it." />
+                <Separator />
+                <MenuItem Header="About Claudette" Command="{Binding ShowAboutCommand}"
+                          ToolTip.Tip="Which Claudette this is, the trademarks it names, and the licenses of what it's built with." />
               </MenuFlyout>
             </Button.Flyout>
           </Button>
@@ -106,7 +117,8 @@
                 <Panel>
                   <TextBlock Classes="navheading" Text="{Binding Title}" ToolTip.Tip="{Binding Tip}" IsVisible="{Binding IsHeading}" />
                   <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
-                    <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}" />
+                    <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
+                          Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}" />
                     <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                     <!-- A word about the page after its name, such as Off for a project type switched off: the page can
                          still be picked -->
@@ -175,6 +187,9 @@
             </DataTemplate>
             <DataTemplate DataType="settings:KeyboardPage">
               <pages:KeyboardPageView />
+            </DataTemplate>
+            <DataTemplate DataType="settings:AboutPage">
+              <pages:AboutPageView />
             </DataTemplate>
             <DataTemplate DataType="settings:ClaudeCodePage">
               <pages:ClaudeCodePageView />

@@ -11,7 +11,7 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
   side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window, the Settings window on General,
-  Appearance, a search, Unreal Engine's page in Project tools and Accounts, and a tab's Tab settings;
+  Appearance, a search, Unreal Engine's page in Project tools, About and Accounts, and a tab's Tab settings;
 - with a stand-in for the Unreal editor open on starfall (claudette-demo --stand-in-editor, run as UnrealEditor.exe),
   for its log under the tab and in the main area;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
@@ -188,7 +188,7 @@ foreach ($theme in $Themes) {
     # As the demo is.
     if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
         'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'usage/usage-window',
-        'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'accounts/settings-accounts',
+        'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts',
         'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
         Use-Claudette @{} {
             Show-Tabs
@@ -291,6 +291,17 @@ foreach ($theme in $Themes) {
                 param($path)
                 $settings = Open-Settings
                 Select-ListItem $settings 'Unreal Engine'
+                Start-Sleep -Seconds 1
+                Save-Window $settings $path
+                Close-Window $settings
+                Start-Sleep -Seconds 1
+            }
+
+            # About: the version, its links and license, and the trademarks.
+            Shot 'settings/about' {
+                param($path)
+                $settings = Open-Settings
+                Select-ListItem $settings 'About'
                 Start-Sleep -Seconds 1
                 Save-Window $settings $path
                 Close-Window $settings

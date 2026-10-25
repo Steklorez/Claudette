@@ -9,10 +9,10 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.Services;
 
 /// <summary>
-/// The parts of the OS around the window (DESIGN.md §2, §4, §14). On macOS: <b>Settings…</b> in the app menu, a File
-/// menu with <b>Open Recent</b>, a Help menu with the user guide, dotBunny's Discord and <b>Report an Issue</b>, and
-/// recent folders in the Dock icon's menu. On Windows: recent folders in the taskbar jump list. Kept current as folders
-/// are opened and shortcuts rebound.
+/// The parts of the OS around the window (DESIGN.md §2, §4, §14). On macOS: <b>About Claudette</b> and <b>Settings…</b>
+/// in the app menu, a File menu with <b>Open Recent</b>, a Help menu with the user guide, dotBunny's Discord and
+/// <b>Report an Issue</b>, and recent folders in the Dock icon's menu. On Windows: recent folders in the taskbar jump
+/// list. Kept current as folders are opened and shortcuts rebound.
 /// </summary>
 public sealed class PlatformChrome : IDisposable
 {
@@ -38,7 +38,16 @@ public sealed class PlatformChrome : IDisposable
         {
             _openRecent = new NativeMenu();
             _dock = new NativeMenu();
-            NativeMenu.SetMenu(app, [Item("Settings…", KeyboardShortcuts.Settings, () => _main.Shell?.OpenSettingsCommand.Execute(null))]);
+            NativeMenu.SetMenu(app,
+            [
+                // DESIGN.md §14, "About": the page in Settings, as About comes first in a Mac app's menu.
+                new NativeMenuItem("About Claudette")
+                {
+                    Command = new AsyncRelayCommand(() => _main.Shell?.OpenSettingsAtAsync(SettingsCategory.About) ?? Task.CompletedTask),
+                },
+                new NativeMenuItemSeparator(),
+                Item("Settings…", KeyboardShortcuts.Settings, () => _main.Shell?.OpenSettingsCommand.Execute(null)),
+            ]);
             NativeMenu.SetMenu(window,
             [
                 new NativeMenuItem("File")

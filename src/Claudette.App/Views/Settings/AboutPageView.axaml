@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Claudette.App.ViewModels.Settings"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.AboutPageView" ClipToBounds="False"
+             x:DataType="settings:AboutPage">
+  <!-- About (DESIGN.md §14, "About"): which Claudette this is, the trademarks it names, and the licenses of what it's built
+       with, each license and notices under its row on request -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="claudette">
+      <c:SettingRow Key="about.version" />
+      <c:SettingRow Key="about.links">
+        <WrapPanel ItemSpacing="12">
+          <Button Classes="settingslink" Content="Website" Command="{Binding OpenWebsiteCommand}" ToolTip.Tip="{x:Static settings:AboutPage.WebsiteUrl}" />
+          <Button Classes="settingslink" Content="Source code" Command="{Binding OpenSourceCommand}" ToolTip.Tip="{x:Static settings:AboutPage.SourceUrl}" />
+          <Button Classes="settingslink" Content="Changelog" Command="{Binding OpenChangelogCommand}" ToolTip.Tip="{x:Static settings:AboutPage.ChangelogUrl}" />
+          <Button Classes="settingslink" Content="Privacy policy" Command="{Binding OpenPrivacyPolicyCommand}"
+                  ToolTip.Tip="{x:Static settings:AboutPage.PrivacyPolicyUrl}" />
+        </WrapPanel>
+      </c:SettingRow>
+      <c:SettingRow Key="about.license">
+        <ToggleButton Classes="settingslink" Content="License" IsChecked="{Binding IsLicenseOpen}" />
+        <c:SettingRow.Details>
+          <Border Classes="settingsnote" IsVisible="{Binding IsLicenseOpen}">
+            <ScrollViewer Classes="licensetext">
+              <SelectableTextBlock Classes="small" Text="{Binding LicenseText}" TextWrapping="Wrap" />
+            </ScrollViewer>
+          </Border>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="trademarks" ItemsSource="{Binding Trademarks}">
+      <c:SettingsSection.ItemTemplate>
+        <DataTemplate x:DataType="settings:SettingItem">
+          <c:SettingRow Key="{Binding Key}" />
+        </DataTemplate>
+      </c:SettingsSection.ItemTemplate>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="licenses" ItemsSource="{Binding Libraries}">
+      <c:SettingsSection.ItemTemplate>
+        <DataTemplate x:DataType="settings:ThirdPartyLibraryRow">
+          <c:SettingRow Title="{Binding Title}" Description="{Binding Description}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <Button Classes="settingslink" Content="Website" Command="{Binding OpenWebsiteCommand}" IsVisible="{Binding HasWebsite}"
+                      ToolTip.Tip="{Binding Library.Url}" />
+              <ToggleButton Classes="settingslink" Content="License" IsChecked="{Binding IsLicenseOpen}" IsVisible="{Binding HasLicenseText}" />
+              <!-- A license that asks only for a link, such as CC BY: its page in the browser -->
+              <Button Classes="settingslink" Content="License" Command="{Binding OpenLicenseCommand}" IsVisible="{Binding HasLicenseLink}"
+                      ToolTip.Tip="{Binding Library.LicenseUrl}" />
+              <ToggleButton Classes="settingslink" Content="Notices" IsChecked="{Binding IsNoticesOpen}" IsVisible="{Binding HasNotices}"
+                            ToolTip.Tip="The licenses of what it's built from in turn" />
+            </StackPanel>
+            <c:SettingRow.Details>
+              <StackPanel Spacing="8">
+                <Border Classes="settingsnote" IsVisible="{Binding IsLicenseOpen}">
+                  <ScrollViewer Classes="licensetext">
+                    <SelectableTextBlock Classes="small" Text="{Binding Library.LicenseText}" TextWrapping="Wrap" />
+                  </ScrollViewer>
+                </Border>
+                <Border Classes="settingsnote" IsVisible="{Binding IsNoticesOpen}">
+                  <ScrollViewer Classes="licensetext">
+                    <SelectableTextBlock Classes="small" Text="{Binding Library.NoticesText}" TextWrapping="Wrap" />
+                  </ScrollViewer>
+                </Border>
+              </StackPanel>
+            </c:SettingRow.Details>
+          </c:SettingRow>
+        </DataTemplate>
+      </c:SettingsSection.ItemTemplate>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

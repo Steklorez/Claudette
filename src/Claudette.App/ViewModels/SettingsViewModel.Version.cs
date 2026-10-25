@@ -7,8 +7,8 @@ namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// The foot of the Settings sidebar (DESIGN.md §14, "Version"): which Claudette this is, copied with a click, the
-/// <b>User Guide</b>, <b>Ask on Discord</b>, and <b>Report an issue</b>, which opens a new GitHub issue with the versions
-/// filled in.
+/// <b>User Guide</b>, <b>Ask on Discord</b>, <b>Report an issue</b>, which opens a new GitHub issue with the versions
+/// filled in, and <b>About Claudette</b>.
 /// </summary>
 public sealed partial class SettingsViewModel
 {
@@ -50,4 +50,8 @@ public sealed partial class SettingsViewModel
     /// <summary>A new issue on Claudette's GitHub with the versions filled in. Nothing is sent until the user submits it.</summary>
     [RelayCommand]
     private Task ReportIssueAsync() => HelpLinks.ReportIssueAsync(_services);
+
+    /// <summary>The About page (DESIGN.md §14, "About"): the version, trademarks and licenses.</summary>
+    [RelayCommand]
+    private void ShowAbout() => Show(SettingsCategory.About);
 }

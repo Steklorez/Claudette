@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **About Claudette.** Settings has an About page, the last in the Claudette group, which **About Claudette** opens from the **Help** menu beside the version, and on macOS from the app menu. It says which Claudette you have, links to its website, source code, changelog and privacy policy, and shows its license, the trademarks it names with their owners' notices, and every open-source library, font and picture it's built with, each with its license.
+
+### Changed
+
+- **Godot projects show Godot's logo**, on their page in Settings and on the project's row at the foot of the sidebar, where they had a robot's head.
+
 ### Fixed
 
 - **Start Claudette when I log in** now starts a build of Claudette on macOS and Linux that runs on a .NET in your home folder, such as the one Microsoft's install script puts in `~/.dotnet`. It used to start the build's own program, which looks for .NET only in the usual places, so nothing started at login. If you turned it on before and Claudette didn't start, turn it off and on again.

@@ -86,6 +86,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Conversation = new ConversationPage(_context);
         Notifications = new NotificationsPage(_context);
         Keyboard = new KeyboardPage(_context);
+        About = new AboutPage(_context);
         Tabs = new TabsPage(_context);
         ClaudeCode = new ClaudeCodePage(_context, accountText, updates, Tabs);
         Accounts = new AccountsPage(_context);
@@ -99,7 +100,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Advanced = new AdvancedPage(_context, ClaudeCode);
         _groups = SettingsSidebar.Groups(types);
         Categories = [.. _groups.SelectMany(g => g.Categories)];
-        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, AllTools, .. ProjectTypes, Perforce];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, About, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, AllTools, .. ProjectTypes, Perforce];
         _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
@@ -161,6 +162,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public NotificationsPage Notifications { get; }
 
     public KeyboardPage Keyboard { get; }
+
+    public AboutPage About { get; }
 
     public ClaudeCodePage ClaudeCode { get; }
 

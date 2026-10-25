@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What Claudette ships that the packages don't say, for Settings → About's licenses (DESIGN.md §14, "About").
+  ThirdPartyNotices.targets adds these to what it reads from the packages.
+
+  <library>: something shipped that isn't a package. Its license text is the file in this folder named for its license,
+  unless it has a licenseUrl, for a license that asks only for a link (CC BY).
+  <package>: names the license of a package whose nuspec only points at a file in it.
+-->
+<extras>
+  <library name=".NET" license="MIT" copyright="Copyright (c) .NET Foundation and Contributors" url="https://github.com/dotnet/runtime"
+           note="The runtime that comes with Claudette, whose own third-party notices are in its repository." />
+  <library name="Inter" license="OFL-1.1" copyright="Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)" url="https://github.com/rsms/inter"
+           note="The interface's font, which Avalonia.Fonts.Inter carries." />
+  <library name="Godot Engine logo" license="CC-BY-4.0" licenseUrl="https://creativecommons.org/licenses/by/4.0/" copyright="Copyright (c) 2017 Andrea Calabró"
+           url="https://godotengine.org/press/"
+           note="The icon of Godot projects: Godot's monochrome icon from its press kit, redrawn as a single shape. Godot and its logo are trademarks of the Godot Foundation." />
+  <package id="Avalonia.Angle.Windows.Natives" license="BSD-3-Clause" />
+</extras>

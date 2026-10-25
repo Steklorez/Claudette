@@ -75,8 +75,6 @@ claude_code:
   minimum: 2.1.284
   tested: 2.1.308
 
-footer_content: 'Claudette is made by <a href="https://dotbunny.com">dotBunny</a> under the <a href="https://github.com/dotBunny/Claudette/blob/main/LICENSE">MIT license</a>. It isn''t made by Anthropic. <a href="/privacy-policy/">Privacy policy</a>'
-
 exclude:
   - Gemfile
   - Gemfile.lock

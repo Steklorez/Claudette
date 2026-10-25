@@ -4,6 +4,7 @@
 "Conversation"
 "Notifications"
 "Keyboard"
+"About"
 "Claude"
 "Claude Code"
 "Accounts"

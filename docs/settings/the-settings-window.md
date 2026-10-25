@@ -27,10 +27,10 @@ Settings opens on the page you left it on. It's a window of its own that stays o
 
 The sidebar lists the pages in groups:
 
-- **Claudette**: General, Appearance, Conversation, Notifications and Keyboard.
+- **Claudette**: General, Appearance, Conversation, Notifications, Keyboard and [About](about.md).
 - **Claude**: Claude Code, Accounts, Tabs, Usage and Advanced.
 - **Your work**: Sessions, and Files and diffs.
-- **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon, then Perforce. A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
+- **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon (Godot's is its logo), then Perforce. A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
 - Then the [selected tab's project](#the-projects-pages).
 
 The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.
@@ -86,6 +86,7 @@ The foot of the sidebar shows which Claudette this is, such as "Claudette 0.6.0"
   - **User Guide**, which opens this guide in your browser.
   - **Ask on Discord**, which opens dotBunny's Discord in your browser, where you can ask questions about Claudette.
   - **Report an issue**, which opens a new issue on Claudette's GitHub page in your browser, with an outline to fill in and the same versions already there. Nothing is sent until you submit it. [Reporting an issue](../troubleshooting/reporting-an-issue.md) has more.
+  - **About Claudette**, which opens [About](about.md): the version, the trademarks Claudette names, and the licenses of what it's built with.
 
 ## Where the settings are kept
 

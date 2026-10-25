@@ -21,6 +21,8 @@ public static class SettingsCategory
 
     public const string Keyboard = "Keyboard";
 
+    public const string About = "About";
+
     public const string ClaudeCode = "Claude Code";
 
     public const string Accounts = "Accounts";
@@ -41,9 +43,9 @@ public static class SettingsCategory
 }
 
 /// <summary>
-/// The Settings sidebar's groups (DESIGN.md §14), in order: a heading and its categories. Claude ends with Advanced, which
-/// is mostly about running Claude Code; Project tools has All tools, a page for each project type Claudette knows, in its
-/// order, then Perforce.
+/// The Settings sidebar's groups (DESIGN.md §14), in order: a heading and its categories. Claudette ends with About, which
+/// has no settings; Claude ends with Advanced, which is mostly about running Claude Code; Project tools has All tools, a
+/// page for each project type Claudette knows, in its order, then Perforce.
 /// </summary>
 public static class SettingsSidebar
 {
@@ -51,7 +53,8 @@ public static class SettingsSidebar
 
     public static IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types) =>
     [
-        ("Claudette", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard]),
+        ("Claudette", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard,
+            SettingsCategory.About]),
         ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
         ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files]),
         (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name), SettingsCategory.Perforce]),

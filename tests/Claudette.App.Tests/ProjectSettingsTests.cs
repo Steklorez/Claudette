@@ -787,6 +787,8 @@ public class ProjectSettingsTests
         using var settings = new SettingsViewModel(h.Services, null);
 
         Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
+        // About is the last of Claudette's pages: it has no settings.
+        Assert.Equal(["General", "Appearance", "Conversation", "Notifications", "Keyboard", "About"], PagesUnder(settings, "Claudette"));
         // Advanced is the last of Claude's pages: it's mostly about running Claude Code.
         Assert.Equal(["Claude Code", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, "Claude"));
         Assert.Equal(["Sessions", "Files and diffs"], PagesUnder(settings, "Your work"));
@@ -798,6 +800,8 @@ public class ProjectSettingsTests
         Assert.Equal(pages.Count, pages.Select(e => e.IconKey).Distinct().Count());
         Assert.All(settings.ProjectTypes, page => Assert.Equal(ProjectTypeIcons.For(page.Kind), pages.Single(e => e.Title == page.Title).IconKey));
         Assert.DoesNotContain(settings.ProjectTypes, page => page.IconKey == ProjectTypeIcons.Other);
+        // Godot's is its logo, which its owner lets Claudette show, drawn filled; the others are drawn for what they're known by.
+        Assert.Equal([GodotProvider.KindId], settings.ProjectTypes.Where(page => ProjectTypeIcons.IsLogo(page.IconKey)).Select(page => page.Kind));
 
         // A type's page: its switches, then the defaults it declares, under its own line.
         var unreal = settings.ProjectType(UnrealProvider.KindId);
