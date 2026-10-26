@@ -23,7 +23,7 @@
       <Style Selector="^ > TextBlock">
         <Setter Property="Margin" Value="0,4,0,0" />
       </Style>
-      <Style Selector="^ Viewbox.perforcelogo, ^ Viewbox.unreallogo">
+      <Style Selector="^ Viewbox.perforcelogo, ^ Viewbox.unreallogo, ^ Viewbox.godotlogo">
         <Setter Property="IsVisible" Value="False" />
       </Style>
     </Style>
@@ -57,6 +57,21 @@
       </Style>
       <Style Selector="^ > TextBlock">
         <Setter Property="Margin" Value="0,26,0,0" />
+      </Style>
+    </Style>
+    <!-- Settings → Godot's title is Godot's logo, the small horizontal one its press kit has for less than 100 pixels tall -->
+    <Style Selector="StackPanel.pageheader.godot">
+      <Style Selector="^ TextBlock.pagetitle">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="^ Viewbox.godotlogo">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="15" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,12,0,0" />
       </Style>
     </Style>
     <!-- The sidebar's lists: each group's heading, then its pages, each with its icon, and the selected tab's project's
@@ -276,11 +291,12 @@
            It fills the space up to 720 pixels, so a setting's control stays near its name, and is centred in a wider window
            (a stretched control that its MaxWidth stops short is centred). -->
       <StackPanel MaxWidth="720" Margin="40,28,40,40">
-        <!-- Its title, or Perforce's logo for Settings → Perforce's, 128 pixels wide where Perforce's least is 110, and Epic's
-             for Settings → Unreal Engine's -->
+        <!-- Its title, or Perforce's logo for Settings → Perforce's, 128 pixels wide where Perforce's least is 110, Epic's
+             for Settings → Unreal Engine's, and Godot's for Settings → Godot's -->
         <StackPanel Classes="pageheader"
                     Classes.perforce="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}, FallbackValue=False}"
-                    Classes.unreal="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}, FallbackValue=False}">
+                    Classes.unreal="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}, FallbackValue=False}"
+                    Classes.godot="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Godot}, FallbackValue=False}">
           <StackPanel Orientation="Horizontal">
             <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
             <Viewbox Classes="perforcelogo" Width="128" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
@@ -294,6 +310,16 @@
                      AutomationProperties.AccessibilityView="Content">
               <Canvas Width="3156.27" Height="434.56">
                 <Path Data="{StaticResource LogoUnrealHorizontal}" Fill="{DynamicResource UnrealLogoBrush}" />
+              </Canvas>
+            </Viewbox>
+            <Viewbox Classes="godotlogo" Width="91" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
+                     AutomationProperties.AccessibilityView="Content">
+              <Canvas Width="885" Height="312.23">
+                <Path Data="{StaticResource LogoGodotWordmark}" Fill="{DynamicResource GodotWordmarkBrush}" />
+                <Path Data="{StaticResource LogoGodotJaw}" Fill="{StaticResource GodotWhiteBrush}" />
+                <Path Data="{StaticResource LogoGodotHead}" Fill="{StaticResource GodotBlueBrush}" />
+                <Path Data="{StaticResource LogoGodotEyes}" Fill="{StaticResource GodotWhiteBrush}" />
+                <Path Data="{StaticResource LogoGodotPupils}" Fill="{StaticResource GodotPupilBrush}" />
               </Canvas>
             </Viewbox>
             <!-- Everything on the page is this computer's: said once, here -->

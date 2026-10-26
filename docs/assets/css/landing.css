@@ -231,10 +231,12 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 /* Her colors along its top, as along the page's. */
 .engine::before, .platform::before { position: absolute; inset: 0 0 auto; height: 3px; content: ""; background: var(--gradient); }
 .engine-head, .platform-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.1rem; }
-.engine-head .icon, .platform-head .icon { width: 2.8rem; height: 2.8rem; padding: 0.6rem; border-radius: 0.85rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(217, 119, 87, 0.28); }
-/* Unreal Engine's icon in place of its card's tile, as Epic's guidelines say: on the card itself in Epic's black or white,
-   never a tile's color, and as large as the tiles, so the cards' headings line up. */
-.engine-head .unreal-icon { flex: none; width: 2.8rem; height: 2.8rem; fill: var(--unreal-logo); }
+.platform-head .icon { width: 2.8rem; height: 2.8rem; padding: 0.6rem; border-radius: 0.85rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(217, 119, 87, 0.28); }
+/* An engine's logo on its card itself, with no tile: Epic's guidelines allow Unreal Engine's only in its black or white,
+   Godot's is in its own colors, and Unity's cube is in the headings' color until Unity's logo can take its place. */
+.engine-head .icon, .engine-head .unreal-icon, .engine-head .godot-icon { flex: none; width: 2.8rem; height: 2.8rem; }
+.engine-head .icon { color: var(--heading); stroke-width: 1.5; }
+.engine-head .unreal-icon { fill: var(--unreal-logo); }
 .engine h3, .platform h3 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
 .engine-head p, .platform-head p { margin: 0.2rem 0 0; font-size: 0.86rem; line-height: 1.4; color: var(--muted); }
 .engine ul, .platform ul { display: grid; gap: 0.6rem; margin: 0 0 1.3rem; padding: 0; list-style: none; font-size: 0.95rem; color: var(--muted); }
@@ -345,10 +347,12 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .card .icon { width: 2.4rem; height: 2.4rem; margin-bottom: 0.4rem; padding: 0.55rem; border-radius: 0.8rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(217, 119, 87, 0.28); }
 .card strong { color: var(--heading); font-size: 1.05rem; }
 .card span { font-size: 0.92rem; color: var(--muted); }
-/* Perforce's symbol in place of its card's icon, as Perforce's brand guidelines say: on the card itself, never a tile or
-   another color, 40 pixels wide (its least), in a box as tall as the tiles so the card's words line up with its
-   neighbours', with clear space of half its height around it. */
-.card .perforce-symbol { width: 2.5rem; height: 2.4rem; margin-bottom: 0.4rem; fill: var(--perforce-symbol); }
+/* The project tools' cards: each icon beside its title, on the card itself with no tile, as Perforce's guidelines ask of
+   its symbol (40 pixels wide, its least, with clear space of half its height around it), the others in the headings'
+   color to match. */
+.card .card-head { display: flex; align-items: center; gap: 1.1rem; margin-bottom: 0.2rem; font-size: inherit; color: inherit; }
+.card .card-head .icon { flex: none; width: 2.2rem; height: 2.2rem; margin: 0; padding: 0; border-radius: 0; color: var(--heading); background: none; box-shadow: none; stroke-width: 1.75; }
+.card .card-head .perforce-symbol { flex: none; width: 2.5rem; height: auto; fill: var(--perforce-symbol); }
 
 /* The end: a warm card to start from. */
 .closing {
@@ -418,10 +422,10 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   .topnav a span { display: none; }
   .topbar-inner { gap: 0.6rem; padding-inline: 1rem; }
   .looks-grid, .cards, .cards.cards-3, .get-buttons { grid-template-columns: minmax(0, 1fr); }
-  /* A card's icon beside its words, so a column of them stays short: a column wide enough for Perforce's symbol and its
-     clear space, so every card's words start at the same place. */
-  .card { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 0.2rem 1rem; align-items: start; padding: 1.1rem 1.2rem; }
-  .card .icon, .card .perforce-symbol { grid-row: span 2; margin-bottom: 0; }
+  /* A card's icon beside its words, so a column of them stays short; a project tool's card has its icon beside its title already. */
+  .card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 1rem; align-items: start; padding: 1.1rem 1.2rem; }
+  .card .icon { grid-row: span 2; margin-bottom: 0; }
+  .card.tool { display: flex; }
   .band.gamedev, .tour { padding-top: 5rem; }
   .hero { padding-top: 3rem; }
   .story-index { top: 4.1rem; border-radius: 1rem; }

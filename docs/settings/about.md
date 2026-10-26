@@ -30,7 +30,7 @@ Settings → About says which Claudette you have and where to find it on the web
 
 Claudette names Claude Code, and the engines and tools it works with, to say what it works with. Each has a row with its owner's notice: Claude and Claude Code, Godot and the Godot logo, Unity, Unreal, Unreal Engine and the Unreal Engine logo, and Perforce, P4V and the Perforce logo. Claudette is made by dotBunny, and isn't sponsored by, affiliated with or endorsed by any of them.
 
-Godot's logo is the icon of Godot projects, on their page in Settings and on the [project's row](../project-tools/using-project-tools.md) at the foot of the sidebar. Claudette uses it under the Godot Foundation's trademark policy, and the logo itself is by Andrea Calabró, under CC BY 4.0. Unity has an icon Claudette draws for it.
+Godot's logo is the icon of Godot projects, on their page in Settings and on the [project's row](../project-tools/using-project-tools.md) at the foot of the sidebar, and its whole logo, in color, is the title of Settings → [Godot](../project-tools/godot.md). Claudette uses it under the Godot Foundation's trademark policy, and the logo itself is by Andrea Calabró, under CC BY 4.0. Unity has an icon Claudette draws for it.
 
 Unreal Engine's logo is the icon of Unreal Engine projects, on their page in Settings and on the project's row, and the title of Settings → [Unreal Engine](../project-tools/unreal-engine.md). Claudette shows it with Epic's permission, in Epic's black, or its white in a dark theme.
 

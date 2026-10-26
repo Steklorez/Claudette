@@ -5,7 +5,7 @@ nav_order: 4
 summary: "A Godot project gets a row with its name and version, and actions to open the editor and run the game."
 ---
 
-# Godot
+<h1 class="godot-title">{% include godot-logo.html %}</h1>
 
 When a tab's folder holds a Godot project (a folder with `project.godot`), the [project row](using-project-tools.md) shows its name and version, such as `Godot 4.3`, and its menu has the actions below. Godot 3 and Godot 4 projects both work.
 

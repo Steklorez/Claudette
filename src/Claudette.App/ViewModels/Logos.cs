@@ -8,8 +8,8 @@ namespace Claudette.App.ViewModels;
 public static class Logos
 {
     /// <summary>
-    /// Godot's logo, which the Godot Foundation's trademark policy lets Claudette use to refer to Godot: in the color of
-    /// the icons around it.
+    /// Godot's logo, which the Godot Foundation's trademark policy lets Claudette use to refer to Godot: its monochrome
+    /// icon in the color of the icons around it, and Settings → Godot's title its whole logo, in color.
     /// </summary>
     public const string Godot = "IconProjectGodot";
 

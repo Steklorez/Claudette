@@ -98,7 +98,7 @@ search_exclude: true
     </article>
     <article class="engine" data-reveal>
       <div class="engine-head">
-        {% include icon.html name="godot" %}
+        {% include godot-logo.html icon=true %}
         <div>
           <h3>Godot</h3>
           <p>Godot 3 and 4, C# projects too</p>
@@ -114,9 +114,9 @@ search_exclude: true
   </div>
 
   <div class="cards cards-3">
-    <a class="card" href="{{ '/project-tools/editor-logs/' | relative_url }}" data-reveal>{% include icon.html name="scroll" %}<strong>Editor logs</strong><span>The editor's log under the tab as it's written, its errors counted, and still there when the editor crashes.</span></a>
-    <a class="card" href="{{ '/project-tools/perforce/' | relative_url }}" data-reveal>{% include perforce-logo.html %}<strong>Perforce</strong><span>Tickets renewed before they run out, so a long task never stops at <code>p4 login</code>, and each tab's changelist.</span></a>
-    <a class="card" href="{{ '/project-tools/actions-and-links/' | relative_url }}" data-reveal>{% include icon.html name="terminal" %}<strong>Your pipeline</strong><span>Your own actions in <code>claudette.json</code>, committed for the whole team: cook, package, run the tests.</span></a>
+    <a class="card tool" href="{{ '/project-tools/editor-logs/' | relative_url }}" data-reveal><span class="card-head">{% include icon.html name="scroll" %}<strong>Editor logs</strong></span><span>The editor's log under the tab as it's written, its errors counted, and still there when the editor crashes.</span></a>
+    <a class="card tool" href="{{ '/project-tools/perforce/' | relative_url }}" data-reveal><span class="card-head">{% include perforce-logo.html %}<strong>Perforce</strong></span><span>Tickets renewed before they run out, so a long task never stops at <code>p4 login</code>, and each tab's changelist.</span></a>
+    <a class="card tool" href="{{ '/project-tools/actions-and-links/' | relative_url }}" data-reveal><span class="card-head">{% include icon.html name="terminal" %}<strong>Your pipeline</strong></span><span>Your own actions in <code>claudette.json</code>, committed for the whole team: cook, package, run the tests.</span></a>
   </div>
 </section>
 

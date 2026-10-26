@@ -14,6 +14,6 @@
            note="The interface's font, which Avalonia.Fonts.Inter carries." />
   <library name="Godot Engine logo" license="CC-BY-4.0" licenseUrl="https://creativecommons.org/licenses/by/4.0/" copyright="Copyright (c) 2017 Andrea Calabró"
            url="https://godotengine.org/press/"
-           note="The icon of Godot projects: Godot's monochrome icon from its press kit, redrawn as a single shape. Godot and its logo are trademarks of the Godot Foundation." />
+           note="The icon of Godot projects: Godot's monochrome icon from its press kit, redrawn as a single shape; and its small horizontal logo, as it is, for Settings → Godot's title. Godot and its logo are trademarks of the Godot Foundation." />
   <package id="Avalonia.Angle.Windows.Natives" license="BSD-3-Clause" />
 </extras>

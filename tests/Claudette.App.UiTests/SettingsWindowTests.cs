@@ -396,6 +396,35 @@ public class SettingsWindowTests
         window.Close();
     }
 
+    /// <summary>
+    /// Godot's page (DESIGN.md §14, "About") has Godot's whole logo for its title, named for a screen reader as the title
+    /// is, its word in the theme's color for it; another page has its name.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Godots_page_has_Godots_logo_for_a_title()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = "Godot" };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+        var logo = window.GetVisualDescendants().OfType<Viewbox>().Single(v => v.Classes.Contains("godotlogo"));
+        var title = window.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("pagetitle"));
+
+        Assert.True(logo.IsEffectivelyVisible);
+        Assert.False(title.IsEffectivelyVisible);
+        Assert.Equal("Godot", AutomationProperties.GetName(logo));
+        Assert.True(window.TryFindResource("GodotWordmarkBrush", window.ActualThemeVariant, out var word));
+        Assert.Same(word, logo.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().First().Fill);
+
+        settings.SelectedCategory = "Unity";
+        UiText.Settle(window);
+
+        Assert.False(logo.IsEffectivelyVisible);
+        Assert.True(title.IsEffectivelyVisible);
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task The_sidebar_ends_with_the_version_and_Help_with_the_guide_Discord_Report_an_issue_and_About()
     {
