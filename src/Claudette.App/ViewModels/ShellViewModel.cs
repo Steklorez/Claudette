@@ -772,6 +772,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public void SetGroupColor(TabGroupViewModel group, Color color)
     {
         group.Color = color;
+        foreach (var tab in OpenTabs.Where(t => FolderHistory.SamePath(t.GroupFolder, group.Folder)))
+        {
+            tab.PaneColor = color;
+        }
         GroupColors.Remember(_services.State, group.Folder, color);
         _services.SaveState();
     }

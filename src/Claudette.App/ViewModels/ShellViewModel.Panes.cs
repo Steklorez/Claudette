@@ -71,6 +71,7 @@ public sealed partial class ShellViewModel
             var index = shown.IndexOf(tab);
             tab.IsInSplit = split && index >= 0;
             tab.PaneIndex = index;
+            tab.PaneColor = Groups.FirstOrDefault(g => Core.Settings.FolderHistory.SamePath(g.Folder, tab.GroupFolder))?.Color;
             tab.IsShown = index >= 0;
         }
         if (!Panes.SequenceEqual(shown))

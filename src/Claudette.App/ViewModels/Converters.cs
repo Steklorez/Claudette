@@ -8,6 +8,9 @@ public static class Converters
 {
     public static readonly IValueConverter BoldIfTrue = new FuncValueConverter<bool, FontWeight>(b => b ? FontWeight.SemiBold : FontWeight.Normal);
 
+    /// <summary>A color as a brush of it, such as a group's on its panes' headers; none for none.</summary>
+    public static readonly IValueConverter ColorBrush = new FuncValueConverter<Color?, IBrush?>(color => color is { } c ? new SolidColorBrush(c) : null);
+
     /// <summary>An indent, for tree rows.</summary>
     public static readonly IValueConverter LeftMargin = new FuncValueConverter<double, Thickness>(left => new Thickness(left, 0, 0, 0));
 

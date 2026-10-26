@@ -29,7 +29,7 @@ The selected tab is the focused pane's. The keyboard shortcuts, the command pale
 
 - Click a pane, or put the cursor in its composer, to focus it.
 - Picking a tab in the sidebar focuses it when it's already on a pane. Any other tab takes the focused pane's place.
-- Each pane has a header line with the tab's name, its folder and **Close pane**. The focused pane's header has the accent color under it.
+- Each pane has a header line with the tab's name, its folder and **Close pane**. A bar before the name is in its project's color, the same as its group in the sidebar, and the focused pane's header has that color under it.
 
 Every tab in a pane counts as on screen: its Claude starts, its working line runs, its changed files stay fresh, and it isn't marked unread. Claudette skips its [notifications](../away/notifications.md) while Claudette is in front.
 

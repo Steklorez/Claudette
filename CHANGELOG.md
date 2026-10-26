@@ -13,6 +13,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- **Panes side by side show whose they are.** Each pane's header has a bar in its project's color before the tab's name, as its group has in the sidebar, and the focused pane's header has that color under it rather than the accent.
 - **Settings keeps the selected tab's project in view.** Its **Links**, **Actions** and **Tools** sit at the foot of the sidebar, under **Selected project** and the project's name after its group's color, apart from the pages above by a line, as the version and **Help** are now too.
 - **Godot projects show Godot's logo**, on their page in Settings and on the project's row at the foot of the sidebar, where they had a robot's head.
 - **Settings → Perforce shows Perforce's logo**, with Perforce's permission: its symbol beside its name in the sidebar, where it had a drum, and the whole logo as the page's title.

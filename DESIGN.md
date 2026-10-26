@@ -3446,7 +3446,7 @@ Up to three tabs side by side, each pane with its own conversation, composer and
   - The keyboard's shortcuts, the command palette, the header (the account, the side panel's button), Settings' project group and Claudette on the composer follow it.
   - A click or the focus in a pane focuses it.
   - Picking a tab in the sidebar focuses it when it's on screen; any other tab takes the focused pane's place.
-  - Each pane has a header line with the tab's name, its folder and **Close pane**. The focused pane's has the accent under it.
+  - Each pane has a header line with the tab's name, its folder and **Close pane**. A short bar before the name is in its group's color, as the group's line in the sidebar is, and the focused pane's header has that color under it, so each pane's project can be told without reading it. (The accent was under the focused one at first, which said which pane but not whose.)
 - **On screen.** Every tab in a pane is on screen, as the selected tab is on its own: it starts its `claude`, its working line runs, its changed files and message times stay fresh, it isn't marked unread, and its notifications are skipped while Claudette is in front ([§10](#10-notifications)).
 - **The side panel** shows only on the focused pane. The other panes keep it closed, and each tab keeps its own choice for when it has the focus.
 - **Room.** Each pane keeps the conversation's 360 pixels beside the sidebar, and beside the focused pane's side panel's least while it shows. Panes past that fold away, keeping the focused one and its neighbours, and come back as the window widens.

@@ -4,7 +4,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ae="using:AvaloniaEdit"
         xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
-        xmlns:controls="using:Claudette.App.Controls">
+        xmlns:controls="using:Claudette.App.Controls"
+        xmlns:vm="using:Claudette.App.ViewModels">
   <!-- "Jump to latest" (DESIGN.md §5): an accent pill lifted off the conversation. A plain button's fill is see-through
        in the dark theme, so the text under it showed through and it was hard to find. -->
   <Style Selector="Button.jumplatest">
@@ -328,17 +329,24 @@
   <Style Selector=".compact controls|ConversationPanel.conversation Button.row">
     <Setter Property="Padding" Value="4,0" />
   </Style>
-  <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes"): the focused one's has the accent under it. -->
+  <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes"): its group's color in a bar before its name,
+       and under the focused one's, so each pane's project can be told without reading it. -->
   <Style Selector="Border.paneheader">
     <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
     <Setter Property="BorderThickness" Value="0,0,0,1" />
     <Setter Property="Padding" Value="12,3,6,3" />
   </Style>
-  <Style Selector="Border.paneheader.focused">
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  <Style Selector="Border.paneheader.focused" x:DataType="vm:IShellTab">
+    <Setter Property="BorderBrush" Value="{Binding PaneColor, Converter={x:Static vm:Converters.ColorBrush}}" />
     <Setter Property="BorderThickness" Value="0,0,0,2" />
     <Setter Property="Padding" Value="12,3,6,2" />
+  </Style>
+  <Style Selector="Border.panecolor">
+    <Setter Property="Width" Value="3" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="CornerRadius" Value="1.5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
   <!-- A project run's log in the main area (DESIGN.md §18, "Project tools", "A run's log"): its status over a divider,
        then the log, clear of the scroll bar on the right. -->

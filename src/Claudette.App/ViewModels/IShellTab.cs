@@ -29,6 +29,12 @@ public interface IShellTab : INotifyPropertyChanged
     /// <summary>Its place among the panes, from the left; -1 when it isn't in one.</summary>
     int PaneIndex { get; set; }
 
+    /// <summary>
+    /// Its group's color, which its pane's header shows with tabs side by side, so each pane's project can be told without
+    /// reading it; null outside a group. The shell keeps it.
+    /// </summary>
+    Avalonia.Media.Color? PaneColor { get; set; }
+
     /// <summary>Its side panel shows, which its pane keeps room for.</summary>
     bool ShowsSidePanel { get; }
 

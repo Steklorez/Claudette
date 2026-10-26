@@ -517,6 +517,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [ObservableProperty]
     public partial int PaneIndex { get; set; } = -1;
 
+    /// <summary>Its group's color, for its pane's header with tabs side by side (DESIGN.md §18, "Split panes"); the shell keeps it.</summary>
+    [ObservableProperty]
+    public partial Avalonia.Media.Color? PaneColor { get; set; }
+
     /// <summary>The side panel shows: it's open, and with tabs side by side, only on the focused pane.</summary>
     public bool ShowsSidePanel => IsSidePanelOpen && (IsSelected || !IsInSplit);
 

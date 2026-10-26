@@ -53,6 +53,22 @@ public class SplitPanesTests
     }
 
     [Fact]
+    public async Task Each_panes_header_has_its_groups_color_and_follows_it_when_its_changed()
+    {
+        var (h, a, _, c) = await ThreeTabsAsync();
+        await using var _ = h;
+        var group = h.Shell.Groups.Single();
+
+        h.Shell.OpenBesideCommand.Execute(c);
+
+        Assert.Equal([group.Color, group.Color], h.Shell.Panes.Select(p => p.PaneColor));
+
+        h.Shell.SetGroupColor(group, Avalonia.Media.Colors.Orange);
+
+        Assert.Equal([Avalonia.Media.Colors.Orange, Avalonia.Media.Colors.Orange], new[] { a, c }.Select(t => t.PaneColor));
+    }
+
+    [Fact]
     public async Task Picking_a_tab_on_screen_focuses_it_and_any_other_takes_the_focused_panes_place()
     {
         var (h, a, b, c) = await ThreeTabsAsync();
