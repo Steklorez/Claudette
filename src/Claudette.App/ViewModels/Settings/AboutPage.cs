@@ -30,8 +30,9 @@ public sealed partial class AboutPage : SettingsPage
         ("about.trademark.godot", "Godot and the Godot logo",
             "Trademarks of the Godot Foundation, used under its trademark policy. The logo is by Andrea Calabró, under CC BY 4.0."),
         ("about.trademark.unity", "Unity", "A trademark or registered trademark of Unity Technologies or its affiliates in the U.S. and elsewhere."),
-        ("about.trademark.unreal", "Unreal Engine",
-            "Unreal and Unreal Engine are trademarks or registered trademarks of Epic Games, Inc. in the United States of America and elsewhere."),
+        // Epic's own notice, which its guidelines require as it's worded.
+        ("about.trademark.unreal", "Unreal, Unreal Engine and the Unreal Engine logo",
+            "Unreal®, Unreal Engine®, and the Unreal Engine® logo are trademarks or registered trademarks of Epic Games, Inc. in the United States of America and elsewhere. Other brands or product names are the trademarks of their respective owners. The logo is used with Epic's permission."),
         ("about.trademark.perforce", "Perforce, P4V and the Perforce logo",
             "Trademarks of Perforce Software, Inc. or one of its affiliates. The logo is used with Perforce's permission, as its brand guidelines say."),
     ];

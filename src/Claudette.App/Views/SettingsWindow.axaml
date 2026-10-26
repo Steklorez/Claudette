@@ -23,7 +23,7 @@
       <Style Selector="^ > TextBlock">
         <Setter Property="Margin" Value="0,4,0,0" />
       </Style>
-      <Style Selector="^ Viewbox.perforcelogo">
+      <Style Selector="^ Viewbox.perforcelogo, ^ Viewbox.unreallogo">
         <Setter Property="IsVisible" Value="False" />
       </Style>
     </Style>
@@ -41,6 +41,22 @@
       </Style>
       <Style Selector="^ > TextBlock">
         <Setter Property="Margin" Value="0,15,0,0" />
+      </Style>
+    </Style>
+    <!-- Settings → Unreal Engine's title is Epic's horizontal logo, with the clear space Epic's guidelines ask for: its
+         height above and below it, and twice that beside it (App.axaml's LogoUnrealIcon): 26 pixels at its 189 -->
+    <Style Selector="StackPanel.pageheader.unreal">
+      <Style Selector="^ TextBlock.pagetitle">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="^ Viewbox.unreallogo">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="52" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,26,0,0" />
       </Style>
     </Style>
     <!-- The sidebar's lists: each group's heading, then its pages, each with its icon, and the selected tab's project's
@@ -144,6 +160,10 @@
     <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.perforce">
       <Setter Property="Fill" Value="{DynamicResource PerforceSymbolBrush}" />
     </Style>
+    <!-- And Unreal Engine's icon (Logos.Unreal), in Epic's black or white, selected or not: its guidelines allow no other -->
+    <Style Selector="Path.navicon.unreal, ListBox.settingsnav ListBoxItem:selected Path.navicon.unreal">
+      <Setter Property="Fill" Value="{DynamicResource UnrealLogoBrush}" />
+    </Style>
   </Window.Styles>
 
   <Window.Resources>
@@ -154,7 +174,8 @@
         <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
           <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
                 Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
-                Classes.perforce="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}}" />
+                Classes.perforce="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}}"
+                Classes.unreal="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}}" />
           <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
           <!-- A word about the page after its name, such as Off for a project type switched off: the page can still be
                picked -->
@@ -255,9 +276,11 @@
            It fills the space up to 720 pixels, so a setting's control stays near its name, and is centred in a wider window
            (a stretched control that its MaxWidth stops short is centred). -->
       <StackPanel MaxWidth="720" Margin="40,28,40,40">
-        <!-- Its title, or Perforce's logo for Settings → Perforce's, 128 pixels wide where Perforce's least is 110 -->
+        <!-- Its title, or Perforce's logo for Settings → Perforce's, 128 pixels wide where Perforce's least is 110, and Epic's
+             for Settings → Unreal Engine's -->
         <StackPanel Classes="pageheader"
-                    Classes.perforce="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}, FallbackValue=False}">
+                    Classes.perforce="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}, FallbackValue=False}"
+                    Classes.unreal="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}, FallbackValue=False}">
           <StackPanel Orientation="Horizontal">
             <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
             <Viewbox Classes="perforcelogo" Width="128" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
@@ -265,6 +288,12 @@
               <Canvas Width="638.98" Height="144.22">
                 <Path Data="{StaticResource LogoPerforceSymbol}" Fill="{DynamicResource PerforceSymbolBrush}" />
                 <Path Data="{StaticResource LogoPerforceWordmark}" Fill="{DynamicResource PerforceWordmarkBrush}" />
+              </Canvas>
+            </Viewbox>
+            <Viewbox Classes="unreallogo" Width="189" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
+                     AutomationProperties.AccessibilityView="Content">
+              <Canvas Width="3156.27" Height="434.56">
+                <Path Data="{StaticResource LogoUnrealHorizontal}" Fill="{DynamicResource UnrealLogoBrush}" />
               </Canvas>
             </Viewbox>
             <!-- Everything on the page is this computer's: said once, here -->

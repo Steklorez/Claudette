@@ -75,6 +75,8 @@ public class AboutPageTests
         Assert.StartsWith("MIT License", about.LicenseText, StringComparison.Ordinal);
         Assert.Equal(AboutPage.TrademarkNotices.Select(t => t.Names), about.Trademarks.Select(t => t.Title));
         Assert.Contains("Godot Foundation", about.FindSetting("about.trademark.godot")!.Description, StringComparison.Ordinal);
+        // Epic's notice is worded as Epic requires.
+        Assert.StartsWith("Unreal®, Unreal Engine®, and the Unreal Engine® logo are trademarks", about.FindSetting("about.trademark.unreal")!.Description, StringComparison.Ordinal);
         // Perforce's logo, on its page, is shown with Perforce's permission.
         Assert.Contains("Perforce's permission", about.FindSetting("about.trademark.perforce")!.Description, StringComparison.Ordinal);
         Assert.Contains("isn't sponsored by, affiliated with or endorsed by", about.FindGroup("trademarks")!.Description, StringComparison.Ordinal);

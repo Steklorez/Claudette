@@ -13,7 +13,7 @@ A tab can do things for the project in its folder: launch the editor, generate p
 
 ## The project row
 
-At the foot of the sidebar, above **History**, a row shows the selected tab's project: its kind's icon (a gear for Unreal Engine, a cube for Unity, Godot's logo for Godot), its name and its version, such as `NightOwl · UE 5.4 ›`. It's there for every tab, whatever the folder holds, so you can add a first action or link from it. When no project is recognized, the row shows a folder icon and the folder's name, and its tooltip has the folder's path.
+At the foot of the sidebar, above **History**, a row shows the selected tab's project: its kind's icon (Unreal Engine's logo, a cube for Unity, Godot's logo for Godot), its name and its version, such as `NightOwl · UE 5.4 ›`. It's there for every tab, whatever the folder holds, so you can add a first action or link from it. When no project is recognized, the row shows a folder icon and the folder's name, and its tooltip has the folder's path.
 
 While a job runs, a busy dot replaces the icon and the job's name replaces the project's. When the sidebar is collapsed to its rail, the row is the icon alone.
 

@@ -22,8 +22,7 @@ public static class ProjectTypeIcons
     public static string For(string? kind) => kind switch
     {
         null => Folder,
-        // Unreal Engine: an engine's gear.
-        UnrealProvider.KindId => "IconProjectUnreal",
+        UnrealProvider.KindId => Logos.Unreal,
         // Unity: a cube, what its projects are known by.
         UnityProvider.KindId => "IconProjectUnity",
         GodotProvider.KindId => Logos.Godot,

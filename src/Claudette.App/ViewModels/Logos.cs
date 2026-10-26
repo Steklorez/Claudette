@@ -20,6 +20,12 @@ public static class Logos
     /// </summary>
     public const string Perforce = "LogoPerforceSymbol";
 
+    /// <summary>
+    /// Unreal Engine's icon, which Epic lets Claudette show as its guidelines say: only in Epic's black or white (App.axaml's
+    /// UnrealLogoBrush), selected or not, and at 14 pixels, which Epic allowed in writing.
+    /// </summary>
+    public const string Unreal = "LogoUnrealIcon";
+
     /// <summary>Whether the icon <paramref name="key"/> names is a logo, drawn filled.</summary>
-    public static bool IsLogo(string? key) => key is Godot or Perforce;
+    public static bool IsLogo(string? key) => key is Godot or Perforce or Unreal;
 }

@@ -179,6 +179,14 @@
       <Setter Property="Stroke" Value="{x:Null}" />
       <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
     </Style>
+    <!-- Unreal Engine's icon (Logos.Unreal): Epic's black or white, never the theme's, at 14 pixels as Epic allowed, centred
+         where the others' 13 are -->
+    <Style Selector="Button.side Path.icon.unreal">
+      <Setter Property="Fill" Value="{DynamicResource UnrealLogoBrush}" />
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
     <!-- Only the badge's own label: its flyout's text is inside the button too. -->
     <Style Selector="Button.side.update TextBlock.badge">
       <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
@@ -950,6 +958,7 @@
                 <Panel DockPanel.Dock="Left" Width="13" VerticalAlignment="Center">
                   <Path Classes="icon" Data="{Binding ProjectTab.ProjectTools.IconKey, Converter={x:Static conversation:ToolIcons.Geometry}, FallbackValue={x:Null}}"
                         Classes.filled="{Binding ProjectTab.ProjectTools.IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}, FallbackValue=False}"
+                        Classes.unreal="{Binding ProjectTab.ProjectTools.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}, FallbackValue=False}"
                         IsVisible="{Binding !ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=True}" />
                   <TextBlock Classes="status busy" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
                              IsVisible="{Binding ProjectTab.ProjectTools.Runs.IsJobRunning, FallbackValue=False}" />

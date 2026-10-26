@@ -807,8 +807,9 @@ public class ProjectSettingsTests
         Assert.Equal(pages.Count, pages.Select(e => e.IconKey).Distinct().Count());
         Assert.All(settings.ProjectTypes, page => Assert.Equal(ProjectTypeIcons.For(page.Kind), pages.Single(e => e.Title == page.Title).IconKey));
         Assert.DoesNotContain(settings.ProjectTypes, page => page.IconKey == ProjectTypeIcons.Other);
-        // Godot's is its logo, which its owner lets Claudette show, drawn filled; the others are drawn for what they're known by.
-        Assert.Equal([GodotProvider.KindId], settings.ProjectTypes.Where(page => Logos.IsLogo(page.IconKey)).Select(page => page.Kind));
+        // Unreal Engine's and Godot's are their logos, which their owners let Claudette show, drawn filled; Unity's is drawn
+        // for what it's known by.
+        Assert.Equal([UnrealProvider.KindId, GodotProvider.KindId], settings.ProjectTypes.Where(page => Logos.IsLogo(page.IconKey)).Select(page => page.Kind));
         // Perforce's page has Perforce's symbol, which Perforce lets Claudette show.
         Assert.Equal(Logos.Perforce, pages.Single(e => e.Title == "Perforce").IconKey);
         Assert.True(Logos.IsLogo(Logos.Perforce));

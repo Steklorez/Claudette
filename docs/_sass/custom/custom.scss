@@ -111,6 +111,24 @@ body::before {
     }
   }
 
+  // Unreal Engine's page has Epic's horizontal logo for its title (unreal-logo.html), as Epic's guidelines say: in its
+  // black, or its white on a dark page, with clear space of the icon's height above and below it, so her bar under the
+  // title keeps that far off. 15rem wide, it's 2.07rem tall.
+  h1.unreal-title {
+    margin-top: 2.1rem;
+
+    &::after {
+      margin-top: 2.1rem;
+    }
+
+    .unreal-logo {
+      display: block;
+      width: 15rem;
+      height: auto;
+      fill: if($cl-dark, #ffffff, #000000);
+    }
+  }
+
   h2 {
     font-weight: 700;
     letter-spacing: -0.01em;

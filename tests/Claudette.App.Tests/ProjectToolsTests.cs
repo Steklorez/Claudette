@@ -81,7 +81,7 @@ public class ProjectToolsTests
         await using var _h = h;
         var tab = await OpenWithProjectAsync(h);
         Assert.Equal(ProjectTypeIcons.For(UnrealProvider.KindId), tab.ProjectTools.IconKey);
-        Assert.Equal("IconProjectUnreal", tab.ProjectTools.IconKey);
+        Assert.Equal(Logos.Unreal, tab.ProjectTools.IconKey);
     }
 
     [Fact]

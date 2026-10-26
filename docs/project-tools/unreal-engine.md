@@ -5,7 +5,7 @@ nav_order: 2
 summary: "An Unreal Engine project gets a row with its name and engine, and actions to launch the editor, generate project files and build."
 ---
 
-# Unreal Engine
+<h1 class="unreal-title">{% include unreal-logo.html full=true %}</h1>
 
 When a tab's folder holds an Unreal Engine project (a `.uproject` file), the [project row](using-project-tools.md) shows its name and engine, such as `NightOwl · UE 5.4`, and its menu has the actions below. Unreal Engine 4 projects work too.
 
