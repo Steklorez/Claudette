@@ -78,8 +78,10 @@
     <!-- A tool call's tile in its card (DESIGN.md §18, "Conversation cards"): the call's status, icon, tool and time,
          what it worked on, how it went and the first line of its output. A click opens its detail under the tiles. -->
     <DataTemplate x:Key="ToolTile" x:DataType="conv:ToolUseItem">
-      <Button Classes="flat tile" Classes.open="{Binding IsExpanded}" Command="{Binding ToggleCommand}" ToolTip.Tip="{Binding FullSummary}"
-              AutomationProperties.Name="{Binding TileName}">
+      <Button Classes="flat tile" Classes.open="{Binding IsExpanded}" Command="{Binding ToggleCommand}" AutomationProperties.Name="{Binding TileName}">
+        <ToolTip.Tip>
+          <ToolTip Classes="calltip" Content="{Binding FullSummary}" />
+        </ToolTip.Tip>
         <StackPanel Spacing="2">
           <Grid ColumnDefinitions="Auto,Auto,*,Auto">
             <TextBlock Classes="status small" Classes.busy="{Binding !IsComplete}" Classes.ok="{Binding IsComplete}" Classes.failed="{Binding IsError}"
@@ -153,7 +155,10 @@
     <DataTemplate x:Key="ToolDetail" x:DataType="conv:ToolUseItem">
       <StackPanel Spacing="6">
         <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="4">
-          <TextBlock Classes="small" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding FullSummary}">
+          <TextBlock Classes="small" TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+            <ToolTip.Tip>
+              <ToolTip Classes="calltip" Content="{Binding FullSummary}" />
+            </ToolTip.Tip>
             <Run FontWeight="SemiBold" Text="{Binding Name}" />
             <Run Foreground="{DynamicResource MutedTextBrush}" Text="{Binding Summary}" />
           </TextBlock>

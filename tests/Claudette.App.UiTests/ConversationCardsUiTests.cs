@@ -47,6 +47,12 @@ public sealed class ConversationCardsUiTests
         Assert.Equal(left.Y, right.Y);
         Assert.True(right.X >= left.X + first.Bounds.Width, $"The second tile starts at {right.X}, inside the first.");
         Assert.Equal("Bash ls docs", AutomationProperties.GetName(first));
+        // Its tip has the whole command, and is wider than a tip of words, so a long command wraps less.
+        ToolTip.SetIsOpen(first, true);
+        UiText.Settle(window);
+        var tip = Assert.IsType<ToolTip>(ToolTip.GetTip(first));
+        Assert.Equal(("ls docs", 760d), (tip.Content as string, tip.MaxWidth));
+        ToolTip.SetIsOpen(first, false);
         var detail = card.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("tiledetail"));
         Assert.False(detail.IsVisible);
 

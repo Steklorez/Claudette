@@ -25,6 +25,11 @@
   </Application.DataTemplates>
 
   <Application.Styles>
+    <!-- A tool call's tip: its whole command or path, which can run to many long lines, as a heredoc does. Wider than a tip
+         of words, so it wraps less (DESIGN.md §18, "Conversation cards"). -->
+    <Style Selector="ToolTip.calltip">
+      <Setter Property="MaxWidth" Value="760" />
+    </Style>
     <FluentTheme />
     <!-- The spectrum and hue slider of a folder group's color picker (Views/GroupColorPicker). -->
     <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />

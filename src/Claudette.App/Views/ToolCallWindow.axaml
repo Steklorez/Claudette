@@ -48,8 +48,11 @@
     <Border DockPanel.Dock="Top" Padding="14,10" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
         <Path Classes="toolicon" Data="{Binding Tool.IconKey, Converter={x:Static conv:ToolIcons.Geometry}}" Margin="0,0,8,0" VerticalAlignment="Center" />
-        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                   ToolTip.Tip="{Binding Tool.FullSummary}" />
+        <TextBlock Grid.Column="1" Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+          <ToolTip.Tip>
+            <ToolTip Classes="calltip" Content="{Binding Tool.FullSummary}" />
+          </ToolTip.Tip>
+        </TextBlock>
         <Button Grid.Column="2" Content="Open diff" Command="{Binding OpenDiffCommand}" IsVisible="{Binding CanOpenDiff}"
                 ToolTip.Tip="The file in the diff view, from before Claude's first change in this session to now" />
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
