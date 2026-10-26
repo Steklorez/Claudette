@@ -48,6 +48,7 @@ public partial class ProjectFilesView : UserControl
             _files.FindFocusRequested -= FocusFindBox;
             _files.NamingStarted -= OnNamingStarted;
             _files.TreeFocusRequested -= FocusTree;
+            _files.DeleteAsked -= FocusDeleteQuestion;
         }
         _files = DataContext as ProjectFilesViewModel;
         if (_files is not null)
@@ -56,6 +57,7 @@ public partial class ProjectFilesView : UserControl
             _files.FindFocusRequested += FocusFindBox;
             _files.NamingStarted += OnNamingStarted;
             _files.TreeFocusRequested += FocusTree;
+            _files.DeleteAsked += FocusDeleteQuestion;
             PlaceExplorer();
             TellTheme();
             if (_files.IsFinding)
@@ -181,13 +183,31 @@ public partial class ProjectFilesView : UserControl
     /// <summary>Enter opens a file to stay; Right and Left open and close folders; Left on a file or a closed folder goes up.</summary>
     private void OnTreeKeyDown(object? sender, KeyEventArgs e)
     {
-        if (_files is null || (sender as ListBox)?.SelectedItem is not ExplorerRow row || e.KeyModifiers != KeyModifiers.None
-            || (e.Source as StyledElement)?.DataContext is NewEntryRow)
+        if (_files is null || (sender as ListBox)?.SelectedItem is not ExplorerRow row || (e.Source as StyledElement)?.DataContext is NameRow)
+        {
+            return;
+        }
+        // Cmd+Backspace on macOS, as Finder's Move to Trash.
+        if (OperatingSystem.IsMacOS() && e.Key == Key.Back && e.KeyModifiers == KeyModifiers.Meta)
+        {
+            _files.DeleteRowCommand.Execute(row);
+            e.Handled = true;
+            return;
+        }
+        if (e.KeyModifiers != KeyModifiers.None)
         {
             return;
         }
         switch (e.Key)
         {
+            case Key.F2:
+                _files.RenameRowCommand.Execute(row);
+                e.Handled = true;
+                break;
+            case Key.Delete:
+                _files.DeleteRowCommand.Execute(row);
+                e.Handled = true;
+                break;
             case Key.Enter:
                 _files.OpenRowToStayCommand.Execute(row);
                 e.Handled = true;
@@ -253,22 +273,31 @@ public partial class ProjectFilesView : UserControl
         }
     }
 
-    // ---- New files and folders ----------------------------------------------------------------------------------
+    // ---- New files and folders, renaming and deleting --------------------------------------------------------------
 
-    /// <summary>The new row in view, so its box is made and takes the keyboard.</summary>
-    private void OnNamingStarted(NewEntryRow row) => TreeList.ScrollIntoView(row);
+    /// <summary>The name's row in view, so its box is made and takes the keyboard.</summary>
+    private void OnNamingStarted(NameRow row) => TreeList.ScrollIntoView(row);
 
+    /// <summary>The box takes the keyboard; renaming, with the name up to its extension selected.</summary>
     private void OnNewRowAttached(object? sender, VisualTreeAttachmentEventArgs e)
     {
         if (sender is TextBox box)
         {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() => box.Focus());
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                box.Focus();
+                if (box.DataContext is RenameRow rename)
+                {
+                    box.SelectionStart = 0;
+                    box.SelectionEnd = rename.SelectedLength;
+                }
+            });
         }
     }
 
     /// <summary>
-    /// In the new row's box: Enter makes it, Esc leaves it. Up and Down stay in the box rather than moving through the
-    /// tree, which would take the keyboard away.
+    /// In a name's box: Enter makes or renames it, Esc leaves it. Up and Down stay in the box rather than moving through
+    /// the tree, which would take the keyboard away.
     /// </summary>
     private void OnNewRowKeyDown(object? sender, KeyEventArgs e)
     {
@@ -279,11 +308,11 @@ public partial class ProjectFilesView : UserControl
         switch (e.Key)
         {
             case Key.Enter:
-                _files.CommitNewEntryCommand.Execute(null);
+                _files.CommitNamingCommand.Execute(null);
                 e.Handled = true;
                 break;
             case Key.Escape:
-                _files.CancelNewEntryCommand.Execute(null);
+                _files.CancelNamingCommand.Execute(null);
                 FocusTree();
                 e.Handled = true;
                 break;
@@ -293,16 +322,29 @@ public partial class ProjectFilesView : UserControl
         }
     }
 
-    /// <summary>A click elsewhere leaves the new row without making anything; the box's own menu (Paste) doesn't.</summary>
+    /// <summary>A click elsewhere leaves a name's row without making or renaming anything; the box's own menu (Paste) doesn't.</summary>
     private void OnNewRowLostFocus(object? sender, RoutedEventArgs e)
     {
         if (sender is TextBox box && box.ContextFlyout is not { IsOpen: true } && box.ContextMenu is not { IsOpen: true })
         {
-            _files?.CancelNewEntryCommand.Execute(null);
+            _files?.CancelNamingCommand.Execute(null);
         }
     }
 
-    /// <summary>The new row has no menu: the empty space's doesn't open over it.</summary>
+    /// <summary>The delete question takes the keyboard on its button, so Enter answers it.</summary>
+    private void FocusDeleteQuestion() => Avalonia.Threading.Dispatcher.UIThread.Post(() => ConfirmDeleteButton.Focus());
+
+    /// <summary>Esc in the delete question is Cancel.</summary>
+    private void OnDeleteQuestionKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            _files?.CancelDeleteCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>A name's row has no menu: the empty space's doesn't open over it.</summary>
     private void OnNewRowContextRequested(object? sender, ContextRequestedEventArgs e) => e.Handled = true;
 
     /// <summary>The keyboard back in the tree, on the selected row, or the first.</summary>

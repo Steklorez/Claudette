@@ -74,7 +74,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         TabLabel = Name;
     }
 
-    public string Path { get; }
+    public string Path { get; private set; }
 
     public string Name => System.IO.Path.GetFileName(Path);
 
@@ -426,6 +426,41 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         await Task.Run(() => _services.EditorBackups.Delete(path));
         _owner.OnFileSaved(this);
         return true;
+    }
+
+    /// <summary>
+    /// It was renamed, or a folder it's in was, from the explorer (DESIGN.md §18, "Project files", "Renaming and
+    /// deleting"): it follows, edits and all. Their copy is kept under the new name, and a new extension colors it anew.
+    /// </summary>
+    internal void MoveTo(string path)
+    {
+        var old = Path;
+        Path = path;
+        if (Document is { } document)
+        {
+            if (document.IsModified)
+            {
+                _backupWait.Cancel();
+                var text = document.Text;
+                var baseHash = EditorBackups.Hash(_readText);
+                _ = Task.Run(() =>
+                {
+                    _services.EditorBackups.Save(path, text, baseHash);
+                    _services.EditorBackups.Delete(old);
+                });
+            }
+            Language = EditorLanguages.For(path, document.LineCount > 0 ? document.GetLineText(1) : null);
+            if (Mode is FileViewMode.Preview or FileViewMode.EditAndPreview && Language.Scope != MarkdownPreview.Scope)
+            {
+                Mode = FileViewMode.Edit;
+            }
+        }
+        OnPropertyChanged(nameof(Path));
+        OnPropertyChanged(nameof(Name));
+        OnPropertyChanged(nameof(RelativePath));
+        OnPropertyChanged(nameof(IsOutsideProject));
+        OnPropertyChanged(nameof(Tip));
+        OnPropertyChanged(nameof(BannerText));
     }
 
     /// <summary>Throws away the unsaved edits' copy: <b>Don't save</b>.</summary>

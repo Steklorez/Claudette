@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.Core.Files;
 using Claudette.Core.ProjectFiles;
 using Claudette.Core.Settings;
 
@@ -201,7 +202,7 @@ public class ProjectFilesTests
         Assert.Equal((1, "File name"), (row.Depth, row.Placeholder));
 
         row.NameText = "Weapon.cpp";
-        await files.CommitNewEntryCommand.ExecuteAsync(null);
+        await files.CommitNamingCommand.ExecuteAsync(null);
 
         var path = Path.Combine(h.WorkFolder, "Source", "Weapon.cpp");
         Assert.Equal("", File.ReadAllText(path));
@@ -236,7 +237,7 @@ public class ProjectFilesTests
         Assert.Single(files.Rows, r => r is NewEntryRow);
 
         row.NameText = "Art/Icons";
-        await files.CommitNewEntryCommand.ExecuteAsync(null);
+        await files.CommitNamingCommand.ExecuteAsync(null);
 
         Assert.True(Directory.Exists(Path.Combine(h.WorkFolder, "Art", "Icons")));
         Assert.Equal("Art/Icons", files.SelectedRow?.RelativePath);
@@ -259,7 +260,7 @@ public class ProjectFilesTests
         row.NameText = "a.txt";
         Assert.Equal("There's already a file called a.txt here.", row.Problem);
 
-        await files.CommitNewEntryCommand.ExecuteAsync(null);
+        await files.CommitNamingCommand.ExecuteAsync(null);
 
         Assert.Same(row, files.NamingRow);
         row.NameText = "b.txt";
@@ -274,12 +275,198 @@ public class ProjectFilesTests
         Assert.DoesNotContain(files.Rows, r => r.Name == "c.txt");
 
         // Esc on the UI thread, as in the app: the reading it starts finishes there, so the wait can't see it halfway.
-        InlineDispatcher.Run(() => files.CancelNewEntryCommand.Execute(null));
+        InlineDispatcher.Run(() => files.CancelNamingCommand.Execute(null));
 
         Assert.Null(files.NamingRow);
         await TabTestHarness.Eventually(() => files.Rows.Any(r => r.Name == "c.txt"), "the file added meanwhile");
         Assert.DoesNotContain(row, files.Rows);
         Assert.False(File.Exists(Path.Combine(h.WorkFolder, "b.txt")));
+    }
+
+    // ---- Renaming and deleting ---------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Rename_puts_a_box_in_the_rows_place_and_the_open_file_follows_with_its_edits()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "Source", "Brain.cpp"), "think\n");
+        var (_, files) = await OpenFilesAsync(h);
+        await files.ToggleRowCommand.ExecuteAsync(files.Rows.Single(r => r.Name == "Source"));
+        var file = await files.OpenFileAsync(path, preview: false);
+        Text(file).Insert(0, "x");
+        file.FlushBackup();
+        var row = files.Rows.Single(r => r.Name == "Brain.cpp");
+        var index = files.Rows.IndexOf(row);
+
+        files.RenameRowCommand.Execute(row);
+
+        // The box takes the row's place, with its name, up to the extension selected.
+        var box = Assert.IsType<RenameRow>(files.Rows[index]);
+        Assert.Same(box, files.NamingRow);
+        Assert.Equal(("Brain.cpp", 5, "File name", 1), (box.NameText, box.SelectedLength, box.Placeholder, box.Depth));
+
+        box.NameText = "Mind.h";
+        var told = new List<string?>();
+        files.PropertyChanged += (_, e) => told.Add(e.PropertyName);
+        await InlineDispatcher.RunAsync(() => files.CommitNamingCommand.ExecuteAsync(null));
+
+        var moved = Path.Combine(h.WorkFolder, "Source", "Mind.h");
+        Assert.Equal("think\n", await File.ReadAllTextAsync(moved, Token));
+        Assert.False(File.Exists(path));
+        Assert.Null(files.NamingRow);
+        Assert.DoesNotContain(files.Rows, r => r is NameRow || r.Name == "Brain.cpp");
+        Assert.Equal("Source/Mind.h", files.SelectedRow?.RelativePath);
+        // The open file follows, its edits and all, kept under its new name.
+        Assert.Same(file, Assert.Single(files.OpenFiles));
+        Assert.Equal((moved, "Mind.h", "Source/Mind.h"), (file.Path, file.TabLabel, file.RelativePath));
+        // The sidebar's row, which names the file showing, hears of it.
+        Assert.Contains(nameof(ProjectFilesViewModel.RowDetail), told);
+        Assert.True(file.IsModified);
+        Assert.Equal("xthink\n", file.Document!.Text);
+        await TabTestHarness.Eventually(() => h.Services.EditorBackups.Load(moved) is not null && h.Services.EditorBackups.Load(path) is null,
+            "its edits kept under the new name");
+    }
+
+    [Fact]
+    public async Task Rename_refuses_a_name_thats_taken_and_Esc_puts_the_row_back()
+    {
+        await using var h = new TabTestHarness();
+        var a = Write(Path.Combine(h.WorkFolder, "a.txt"), "");
+        Write(Path.Combine(h.WorkFolder, "b.txt"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        var row = files.Rows.Single(r => r.Name == "a.txt");
+        var index = files.Rows.IndexOf(row);
+
+        files.RenameRowCommand.Execute(row);
+        var box = (RenameRow)files.NamingRow!;
+        box.NameText = "b.txt";
+
+        Assert.Equal("There's already a file called b.txt here.", box.Problem);
+        await InlineDispatcher.RunAsync(() => files.CommitNamingCommand.ExecuteAsync(null));
+        Assert.Same(box, files.NamingRow);
+
+        InlineDispatcher.Run(() => files.CancelNamingCommand.Execute(null));
+
+        Assert.Null(files.NamingRow);
+        Assert.Same(row, files.Rows[index]);
+        Assert.Same(row, files.SelectedRow);
+        Assert.True(File.Exists(a));
+    }
+
+    [Fact]
+    public async Task A_renamed_folder_stays_expanded_with_the_folders_in_it_and_their_open_files_follow()
+    {
+        await using var h = new TabTestHarness();
+        var eye = Write(Path.Combine(h.WorkFolder, "AI", "Parts", "Eye.cpp"), "see\n");
+        var (_, files) = await OpenFilesAsync(h);
+        var ai = files.Rows.Single(r => r.Name == "AI");
+        await files.ToggleRowCommand.ExecuteAsync(ai);
+        await files.ToggleRowCommand.ExecuteAsync(files.Rows.Single(r => r.Name == "Parts"));
+        var file = await files.OpenFileAsync(eye, preview: false);
+
+        files.RenameRowCommand.Execute(ai);
+        files.NamingRow!.NameText = "Brain";
+        await InlineDispatcher.RunAsync(() => files.CommitNamingCommand.ExecuteAsync(null));
+
+        var moved = Path.Combine(h.WorkFolder, "Brain", "Parts", "Eye.cpp");
+        Assert.Equal(moved, file.Path);
+        Assert.Equal(["Brain", "Parts", "Eye.cpp"], files.Rows.Select(r => r.Name).Where(n => n is "Brain" or "Parts" or "Eye.cpp" or "AI"));
+        Assert.True(files.Rows.Single(r => r.Name == "Brain").IsExpanded);
+        Assert.True(files.Rows.Single(r => r.Name == "Parts").IsExpanded);
+        Assert.Equal("Brain", files.SelectedRow?.Name);
+        Assert.Contains(Path.Combine(h.WorkFolder, "Brain", "Parts"), h.FolderWatcher.Folders);
+        Assert.DoesNotContain(Path.Combine(h.WorkFolder, "AI", "Parts"), h.FolderWatcher.Folders);
+    }
+
+    [Fact]
+    public async Task Delete_asks_first_then_sends_it_to_the_trash_closes_it_and_selects_the_next()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, "a.txt"), "");
+        var b = Write(Path.Combine(h.WorkFolder, "b.txt"), "b\n");
+        Write(Path.Combine(h.WorkFolder, "c.txt"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(b, preview: false);
+        Text(file).Insert(0, "x");
+        file.FlushBackup();
+
+        await InlineDispatcher.RunAsync(() => files.DeleteRowCommand.ExecuteAsync(files.Rows.Single(r => r.Name == "b.txt")));
+
+        Assert.True(files.IsAskingToDelete);
+        Assert.Equal("Delete b.txt? It goes to the Recycle Bin. b.txt has unsaved edits, which go with it.", files.Deleting!.Text);
+        Assert.Equal("Delete", files.Deleting.ConfirmText);
+        Assert.True(File.Exists(b));
+
+        await InlineDispatcher.RunAsync(() => files.ConfirmDeleteCommand.ExecuteAsync(null));
+
+        Assert.False(files.IsAskingToDelete);
+        Assert.Equal([b], h.Trash.Taken);
+        Assert.False(File.Exists(b));
+        Assert.Empty(files.OpenFiles);
+        Assert.DoesNotContain(files.Rows, r => r.Name == "b.txt");
+        Assert.Equal("c.txt", files.SelectedRow?.Name);
+        await TabTestHarness.Eventually(() => h.Services.EditorBackups.Load(b) is null, "its unsaved copy to go");
+    }
+
+    [Fact]
+    public async Task Deleting_a_folder_says_how_many_files_go_with_it_and_Cancel_leaves_it()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, "AI", "Brain.cpp"), "");
+        Write(Path.Combine(h.WorkFolder, "AI", "Parts", "Eye.cpp"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        var ai = files.Rows.Single(r => r.Name == "AI");
+
+        await InlineDispatcher.RunAsync(() => files.DeleteRowCommand.ExecuteAsync(ai));
+
+        Assert.Equal("Delete the folder AI and the 2 files in it? It goes to the Recycle Bin.", files.Deleting!.Text);
+
+        InlineDispatcher.Run(() => files.CancelDeleteCommand.Execute(null));
+
+        Assert.False(files.IsAskingToDelete);
+        Assert.Empty(h.Trash.Taken);
+        Assert.True(Directory.Exists(Path.Combine(h.WorkFolder, "AI")));
+        Assert.Contains(ai, files.Rows);
+    }
+
+    [Fact]
+    public async Task Where_theres_no_trash_it_asks_again_to_delete_it_for_good()
+    {
+        await using var h = new TabTestHarness();
+        var a = Write(Path.Combine(h.WorkFolder, "a.txt"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        h.Trash.Next = new TrashResult(TrashOutcome.NoTrash, "Its drive has no Recycle Bin");
+
+        await InlineDispatcher.RunAsync(() => files.DeleteRowCommand.ExecuteAsync(files.Rows.Single(r => r.Name == "a.txt")));
+        await InlineDispatcher.RunAsync(() => files.ConfirmDeleteCommand.ExecuteAsync(null));
+
+        Assert.True(files.Deleting!.IsPermanent);
+        Assert.Equal("a.txt can't go to the Recycle Bin. Its drive has no Recycle Bin. Delete it permanently? It can't be put back.", files.Deleting.Text);
+        Assert.Equal("Delete permanently", files.Deleting.ConfirmText);
+        Assert.True(File.Exists(a));
+
+        await InlineDispatcher.RunAsync(() => files.ConfirmDeleteCommand.ExecuteAsync(null));
+
+        Assert.False(files.IsAskingToDelete);
+        Assert.False(File.Exists(a));
+        Assert.Empty(h.Trash.Taken);
+    }
+
+    [Fact]
+    public async Task When_the_trash_fails_the_question_stays_and_says_why()
+    {
+        await using var h = new TabTestHarness();
+        var a = Write(Path.Combine(h.WorkFolder, "a.txt"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        h.Trash.Next = new TrashResult(TrashOutcome.Failed, "It's open in another program");
+
+        await InlineDispatcher.RunAsync(() => files.DeleteRowCommand.ExecuteAsync(files.Rows.Single(r => r.Name == "a.txt")));
+        await InlineDispatcher.RunAsync(() => files.ConfirmDeleteCommand.ExecuteAsync(null));
+
+        Assert.True(files.IsAskingToDelete);
+        Assert.Equal("Claudette couldn't move it to the Recycle Bin. It's open in another program.", files.Deleting!.Problem);
+        Assert.True(files.Deleting.CanConfirm);
+        Assert.True(File.Exists(a));
     }
 
     // ---- Open files --------------------------------------------------------------------------------------------------

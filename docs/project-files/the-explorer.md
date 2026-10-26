@@ -57,13 +57,41 @@ As you type, the line under the box says if the name can't be used, and `Enter` 
 
 Claudette never writes over a file. If one with the name appears while you type, it stays as it is and the box says so.
 
+## Renaming
+
+{% include unreleased.html %}
+
+1. Right-click a file or folder and choose **Rename**, or select it and press `F2`.
+2. A box takes its place with its name in it. For a file, the name up to its extension is selected, so what you type keeps the extension.
+3. Type the new name and press `Enter`.
+
+`Esc`, or a click elsewhere, leaves the name as it was. The line under the box says when a name can't be used, as it does for a new file. A rename keeps it in its folder, so the name can't have a slash. Changing only the case, `brain.cpp` to `Brain.cpp`, works too.
+
+Files you have open from it follow it, with any unsaved edits. A folder that was expanded stays expanded.
+
+Claudette renames it on disk, as your file manager would. Git notices the rename by itself. Perforce needs `p4 reconcile`, or **Reconcile Offline Work** in P4V.
+
+## Deleting
+
+{% include unreleased.html %}
+
+1. Right-click a file or folder and choose **Delete**, or select it and press `Delete` (`Cmd+Backspace` on macOS).
+2. A question under the explorer's header says what goes and where: *"Delete Brain.cpp? It goes to the Recycle Bin."* For a folder, it says how many files are in it. If a file open from it has unsaved edits, it says those go too.
+3. Choose **Delete**, or press `Enter`. **Cancel**, or `Esc`, keeps it.
+
+It goes to the Recycle Bin on Windows, the Trash on macOS, or your desktop's trash on Linux, so you can put it back from there. On Linux that needs `gio`, which comes with GLib's tools (`libglib2.0-bin` on Debian and Ubuntu).
+
+Where it can't go to the trash, such as on a network share, nothing is deleted yet. The question says so and why, and offers **Delete permanently**, which can't be put back.
+
+Files you had open from it close, and the next row in the tree is selected.
+
 ## Menus
 
-Right-click a file for **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **New file**, **New folder**, **Copy path**, **Copy relative path** and **Reveal in file manager**.
+Right-click a file for **Open**, **Open in the OS's app**, **Open diff** (when Claude changed it), **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager**, **Rename** and **Delete**.
 
 On a program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`), **Open in the OS's app** shows it in its folder rather than running it.
 
-Right-click a folder for **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager** and **Collapse**.
+Right-click a folder for **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager**, **Collapse**, **Rename** and **Delete**.
 
 Right-click the empty space under the tree for **New file** and **New folder**, at the top of the project.
 
@@ -96,8 +124,10 @@ Opening the Files tab from its group, with the **Project files** button or **Ope
 | `Ctrl/Cmd+P` | Find a file by name |
 | `Up`, `Down` | Move through the tree |
 | `Right`, `Left` | Expand or collapse a folder |
-| `Enter` | Open the file to stay; in a new file's or folder's box, make it |
-| `Esc` | In a new file's or folder's box, close it without making anything |
+| `Enter` | Open the file to stay; in a new file's or folder's box, make it; in a rename's box, rename it |
+| `Esc` | In a new file's or folder's box, or a rename's, close it without making or renaming anything; in the delete question, keep it |
+| `F2` | Rename the selected file or folder |
+| `Delete` (`Cmd+Backspace` on macOS) | Delete the selected file or folder, asking first |
 
 ## See also
 

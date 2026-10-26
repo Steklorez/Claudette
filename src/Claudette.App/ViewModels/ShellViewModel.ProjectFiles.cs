@@ -337,6 +337,31 @@ public sealed partial class ShellViewModel
         return relative != "." && !FolderListing.IsUp(relative) && !Path.IsPathRooted(relative);
     }
 
+    /// <summary>The files open from <paramref name="path"/> (the file, or those in the folder) in every Files tab.</summary>
+    internal IEnumerable<ProjectFileViewModel> OpenFilesAtOrUnder(string path) =>
+        Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().SelectMany(f => f.OpenFilesAtOrUnder(path));
+
+    /// <summary>
+    /// A file or folder renamed in a Files tab's explorer (DESIGN.md §18, "Project files", "Renaming and deleting"): the
+    /// files open from it follow it, in every Files tab.
+    /// </summary>
+    internal void FollowRename(string oldPath, string newPath)
+    {
+        foreach (var files in Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>())
+        {
+            files.FollowRename(oldPath, newPath);
+        }
+    }
+
+    /// <summary>A file or folder deleted from a Files tab's explorer: the files open from it close, in every Files tab.</summary>
+    internal void CloseDeleted(string path)
+    {
+        foreach (var files in Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>())
+        {
+            files.CloseDeleted(path);
+        }
+    }
+
     /// <summary>A tab of the group wrote files (a tool call, or its turn ended): its Files tab looks at its open files again.</summary>
     internal void OnTabWroteFiles(TabViewModel tab)
     {

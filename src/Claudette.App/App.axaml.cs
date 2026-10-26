@@ -19,6 +19,7 @@ using Claudette.Core.Processes;
 using Claudette.Core.Settings;
 using Claudette.Platform.Accessibility;
 using Claudette.Platform.Credentials;
+using Claudette.Platform.Files;
 using Claudette.Platform.LoginShell;
 using Claudette.Platform.Notifications;
 using Claudette.Platform.Power;
@@ -89,6 +90,7 @@ public partial class App : Application
                 sleepBlocker: SleepBlockers.CreateForCurrentOS(launcher),
                 loginItems: LoginLaunch.CreateItems(launcher, TimeProvider.System),
                 systemMotion: SystemMotion.CreateForCurrentOS(launcher, TimeProvider.System),
+                trash: Trash.CreateForCurrentOS(launcher, TimeProvider.System),
                 loggerFactory: loggers);
             // In the background, so the window isn't held up; the first claude start waits for it (DESIGN.md §13).
             _services.UserEnvironment.Start();

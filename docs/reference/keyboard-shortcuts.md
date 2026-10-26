@@ -88,7 +88,7 @@ The shortcut that goes to a file is rebindable. The editor's own keys are fixed,
 
 Dragging with `Alt` (`Option`) held makes a box selection. In the go-to-line box, `Enter` goes, `Esc` closes it, and `42:7` goes to line 42, column 7.
 
-In the explorer, the arrow keys move without opening anything, `Enter` opens a file to stay, `Space` opens it in the preview tab, `Right` and `Left` open and close folders, and `Left` on a file or closed folder goes up to its folder. In the find box, `Up` and `Down` choose, `Enter` opens and `Esc` brings the tree back ([The explorer](../project-files/the-explorer.md)).
+In the explorer, the arrow keys move without opening anything, `Enter` opens a file to stay, `Space` opens it in the preview tab, `Right` and `Left` open and close folders, `Left` on a file or closed folder goes up to its folder, `F2` renames the selected file or folder, and `Delete` (`Cmd+Backspace` on macOS) deletes it, asking first. In the find box, `Up` and `Down` choose, `Enter` opens and `Esc` brings the tree back ([The explorer](../project-files/the-explorer.md)).
 
 ## Fixed keys
 

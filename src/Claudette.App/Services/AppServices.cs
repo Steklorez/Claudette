@@ -82,6 +82,10 @@ public sealed class AppServices : IAsyncDisposable
     /// </param>
     /// <param name="loginItems">The OS's login entry (DESIGN.md §9, "Starting at login"). Null has none: tests.</param>
     /// <param name="systemMotion">Whether the OS asks for less motion (DESIGN.md §3, "Accessibility"). Null never does: tests.</param>
+    /// <param name="trash">
+    /// The OS's trash, for deleting from a Files tab's explorer (DESIGN.md §18, "Project files", "Renaming and deleting").
+    /// Null has none, so deleting asks to delete for good: tests.
+    /// </param>
     public AppServices(
         AppPaths paths,
         IProcessLauncher launcher,
@@ -101,7 +105,8 @@ public sealed class AppServices : IAsyncDisposable
         ProjectToolPaths? projectToolPaths = null,
         ISleepBlocker? sleepBlocker = null,
         ILoginItems? loginItems = null,
-        ISystemMotion? systemMotion = null)
+        ISystemMotion? systemMotion = null,
+        ITrash? trash = null)
     {
         AppInstaller = appInstaller ?? new NoAppInstaller();
         AppVersion = appVersion ?? BuiltVersion();
@@ -126,6 +131,7 @@ public sealed class AppServices : IAsyncDisposable
         Settings = _settingsStore.Load();
         State = _stateStore.Load();
         _systemMotion = systemMotion ?? new NoSystemMotion();
+        Trash = trash ?? new NoTrash();
         ReduceMotion = Motion.Reduce(Settings.Appearance.Motion, false, false);
         // The first launch that knows about folder trust trusts the folders already used here (DESIGN.md §7).
         State.TrustFoldersAlreadyUsed();
@@ -344,6 +350,9 @@ public sealed class AppServices : IAsyncDisposable
     /// this computer awake</b>, which the header's cup turns on and off, and tabs connected to the Claude app.
     /// </summary>
     public KeepAwakeService KeepAwake { get; }
+
+    /// <summary>The OS's trash, which a Files tab's explorer deletes to (DESIGN.md §18, "Project files", "Renaming and deleting").</summary>
+    public ITrash Trash { get; }
 
     /// <summary>
     /// Claude's service status from status.claude.com (DESIGN.md §18, "Service status"): the header's dot and the banner.

@@ -63,6 +63,18 @@
               </Button>
             </Grid>
           </Border>
+          <!-- Deleting asks first, in place ("Renaming and deleting"): Esc is Cancel -->
+          <Border x:Name="DeleteQuestionBox" DockPanel.Dock="Top" Classes="explorerquestion" IsVisible="{Binding IsAskingToDelete}" KeyDown="OnDeleteQuestionKeyDown">
+            <StackPanel Spacing="8">
+              <TextBlock Text="{Binding Deleting.Text, FallbackValue=''}" TextWrapping="Wrap" />
+              <TextBlock Classes="small error" Text="{Binding Deleting.Problem, FallbackValue=''}" TextWrapping="Wrap" IsVisible="{Binding Deleting.HasProblem, FallbackValue=False}" />
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button x:Name="ConfirmDeleteButton" Classes="accent" Content="{Binding Deleting.ConfirmText, FallbackValue='Delete'}" Command="{Binding ConfirmDeleteCommand}"
+                        IsEnabled="{Binding Deleting.CanConfirm, FallbackValue=False}" />
+                <Button Content="Cancel" Command="{Binding CancelDeleteCommand}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
           <!-- Finding a file by name ("Finding a file by name") -->
           <TextBox x:Name="FindBox" DockPanel.Dock="Top" Classes="findfile" Text="{Binding FindText}" IsVisible="{Binding IsFinding}"
                    PlaceholderText="Find a file by name" AutomationProperties.Name="Find a file by name" KeyDown="OnFindKeyDown" />
@@ -80,14 +92,14 @@
                 </ContextMenu>
               </ListBox.ContextMenu>
               <ListBox.DataTemplates>
-                <!-- A new file's or folder's name, typed at the top of its folder ("New files and folders"); before the
-                     row's template, which would match it too -->
-                <DataTemplate DataType="vm:NewEntryRow">
+                <!-- A name typed: a new file's or folder's, at the top of its folder ("New files and folders"), or a new one
+                     for a row, in its place ("Renaming and deleting"); before the row's template, which would match it too -->
+                <DataTemplate DataType="vm:NameRow">
                   <Grid ColumnDefinitions="Auto,14,Auto,*" RowDefinitions="Auto,Auto" ContextRequested="OnNewRowContextRequested">
                     <Border Width="{Binding Indent}" />
                     <Panel Grid.Column="2" Margin="0,0,6,0">
-                      <Path Classes="rowicon" Data="{StaticResource IconToolFolder}" IsVisible="{Binding IsNewFolder}" />
-                      <Path Classes="rowicon" Data="{StaticResource IconToolRead}" IsVisible="{Binding IsNewFile}" />
+                      <Path Classes="rowicon" Data="{StaticResource IconToolFolder}" IsVisible="{Binding IsFolderName}" />
+                      <Path Classes="rowicon" Data="{StaticResource IconToolRead}" IsVisible="{Binding IsFileName}" />
                     </Panel>
                     <TextBox Grid.Column="3" Classes="newentry" Text="{Binding NameText}" PlaceholderText="{Binding Placeholder}" AutomationProperties.Name="{Binding Placeholder}"
                              KeyDown="OnNewRowKeyDown" LostFocus="OnNewRowLostFocus" AttachedToVisualTree="OnNewRowAttached" />
@@ -127,6 +139,9 @@
                         <MenuItem Header="Copy relative path" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CopyRowRelativePathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Reveal in file manager" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RevealRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Collapse" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).ToggleRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsExpanded}" />
+                        <Separator />
+                        <MenuItem Header="Rename" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RenameRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="Delete" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).DeleteRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                       </ContextMenu>
                     </Panel.ContextMenu>
                   </Panel>

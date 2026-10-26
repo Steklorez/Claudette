@@ -56,7 +56,8 @@ public static class NewEntry
         return new NewEntryName(path, null);
     }
 
-    private static string? NameProblem(string name, bool windows)
+    /// <summary>Why one name, without slashes, can't be used, or null when it can: a new entry's, or a new name for one (<see cref="RenameEntry"/>).</summary>
+    internal static string? NameProblem(string name, bool windows)
     {
         if (name is "." or "..")
         {

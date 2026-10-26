@@ -276,6 +276,46 @@ public sealed class ProjectFilesUiTests
     }
 
     [AvaloniaFact]
+    public async Task F2_renames_with_the_name_up_to_its_extension_selected_and_Delete_asks_with_its_button_ready()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, files, _, window) = await ShowAsync(h);
+        var tree = View(window).GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "TreeList");
+        var project = files.Rows.Single(r => r.Name == "Starfall.uproject");
+        files.SelectedRow = project;
+        UiText.Settle(window);
+        ((Control)tree.ContainerFromItem(project)!).Focus();
+        UiText.Settle(window);
+
+        Press(TopLevel.GetTopLevel(tree)!, PhysicalKey.F2);
+        TextBox? box = null;
+        await UiText.SettleUntilAsync(window,
+            () => (box = View(window).GetVisualDescendants().OfType<TextBox>().FirstOrDefault(b => b.DataContext is RenameRow)) is { IsFocused: true },
+            "the rename box to take the keyboard");
+
+        // Typing replaces the name and keeps its extension.
+        Assert.Equal(("Starfall.uproject", 0, 8), (box!.Text, box.SelectionStart, box.SelectionEnd));
+        var keys = TopLevel.GetTopLevel(box)!;
+        keys.KeyTextInput("Nightfall");
+        Press(keys, PhysicalKey.Enter);
+        var renamed = Path.Combine(h.WorkFolder, "Nightfall.uproject");
+        await UiText.SettleUntilAsync(window, () => File.Exists(renamed) && files.SelectedRow?.Name == "Nightfall.uproject" && tree.IsKeyboardFocusWithin,
+            "the rename, with the keyboard back in the tree");
+
+        Press(TopLevel.GetTopLevel(tree)!, PhysicalKey.Delete);
+        var confirm = View(window).GetVisualDescendants().OfType<Button>().Single(b => b.Name == "ConfirmDeleteButton");
+        await UiText.SettleUntilAsync(window, () => files.IsAskingToDelete && confirm.IsFocused, "the question, with its button ready");
+
+        Assert.Equal("Delete Nightfall.uproject? It goes to the Recycle Bin.", files.Deleting!.Text);
+        Press(TopLevel.GetTopLevel(confirm)!, PhysicalKey.Escape);
+        UiText.Settle(window);
+
+        Assert.False(files.IsAskingToDelete);
+        Assert.True(File.Exists(renamed));
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public async Task The_group_has_its_Files_row_first_and_its_button_beside_new_tab()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());

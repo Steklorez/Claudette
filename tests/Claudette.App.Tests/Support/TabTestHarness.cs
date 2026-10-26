@@ -627,12 +627,14 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Directory.CreateDirectory(Path.Combine(_root, "work"));
         Directory.CreateDirectory(ProjectsDirectory);
         Trees = new FakeProcessTreeTracker(Time);
+        Trash = new FakeTrash(Path.Combine(_root, "trash"));
         // Other programs' folders (the Epic launcher's, Unity Hub's) are empty ones here, never the real ones (DESIGN.md §18).
         var otherPrograms = new Core.ProjectTools.ProjectToolPaths(Path.Combine(_root, "home"), Path.Combine(_root, "appdata"), Path.Combine(_root, "localappdata"),
             Path.Combine(_root, "programdata"), Path.Combine(_root, "programfiles"), Path.Combine(_root, "applications"));
         Services = new AppServices(AppPaths.Under(_root), launcher ?? new ProcessLauncher(), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
             appInstaller: appInstaller, httpHandler: http ?? new OfflineHandler(), appVersion: appVersion ?? TestVersion, loginShell: loginShell,
-            projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion);
+            projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion,
+            trash: Trash);
         Services.Notifications.UseBadge(Notifier);
         // The machine running the tests doesn't decide whether the Claude app is available (its ANTHROPIC_BASE_URL, say).
         Services.RemoteControl.EnvironmentVariable = _ => null;
@@ -687,6 +689,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     /// <summary>Stands in for the OS's reduce-motion setting (DESIGN.md §3, "Accessibility").</summary>
     public FakeSystemMotion SystemMotion { get; } = new();
+
+    /// <summary>Stands in for the OS's trash (DESIGN.md §18, "Project files", "Renaming and deleting"): never the user's own.</summary>
+    public FakeTrash Trash { get; private set; } = null!;
 
     /// <summary>Stands in for the OS's login entry (DESIGN.md §9, "Starting at login"): never the real Run key or LaunchAgents.</summary>
     public Core.Tests.Support.FakeLoginItems LoginItems { get; } = new();

@@ -93,6 +93,13 @@
   <Style Selector="Border.explorerheader">
     <Setter Property="Padding" Value="12,6,4,6" />
   </Style>
+  <!-- Deleting asks first, under the header, in the caution colors as the question before closing files is. -->
+  <Style Selector="Border.explorerquestion">
+    <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="BorderThickness" Value="0,1" />
+    <Setter Property="Padding" Value="12,8" />
+  </Style>
 
   <!-- The file tabs' row over the editor: each tab its name, a dot while it has unsaved edits that's the × on hover. -->
   <Style Selector="Border.filetabs">

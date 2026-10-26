@@ -196,6 +196,11 @@ public partial class CodeEditor : UserControl
             case nameof(ProjectFileViewModel.IsReadOnly) or nameof(ProjectFileViewModel.Indent) or nameof(ProjectFileViewModel.WordWrap):
                 ApplyOptions();
                 break;
+            // Renamed with another extension: colored as that.
+            case nameof(ProjectFileViewModel.Language) when _file is { } file && Editor.Document is { } shown:
+                _coloring?.Dispose();
+                _coloring = TextMateColoring.Install(Editor.TextArea.TextView, shown, file.Language.Scope, ActualThemeVariant == ThemeVariant.Dark);
+                break;
             case nameof(ProjectFileViewModel.IsShowing) when _file?.IsShowing == true && _file.TakePendingReveal() is { } pending:
                 Later(() => Reveal(pending.Line, pending.Column, pending.EndLine));
                 break;

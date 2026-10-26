@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Rename and delete in a Files tab's explorer.** Right-click a file or folder for **Rename** and **Delete**, or press `F2` and `Delete` (`Cmd+Backspace` on macOS). Renaming puts the name in a box in the row's place, and files you have open from it follow it, unsaved edits and all. Deleting asks first, saying how many files a folder holds and whether open files have unsaved edits, then moves it to the Recycle Bin, the Trash or your desktop's trash, so you can put it back. Where there's no trash, as on a network share, it asks again before deleting permanently. See [The explorer](https://claudette.dotbunny.com/project-files/the-explorer/#renaming).
 - **About Claudette.** Settings has an About page, the last in the Claudette group, which **About Claudette** opens from the **Help** menu beside the version, and on macOS from the app menu. It says which Claudette you have, links to its website, source code, changelog and privacy policy, and shows its license, the trademarks it names with their owners' notices, and every open-source library, font and picture it's built with, each with its license.
 
 ### Changed

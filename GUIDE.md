@@ -190,7 +190,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Page | Covers | From |
 |---|---|---|
 | Opening project files | The **Project files** button, **Open project files**, **Go to file…** (`Ctrl/Cmd+P`), its sidebar row, panes, and what it doesn't do (no language features, terminal or source control). | [Project files](DESIGN.md#project-files) |
-| The explorer | The tree, dimmed and linked entries, following the disk, new files and folders, its menus, **Show only changed files**, its side and width, hiding it. | [Project files](DESIGN.md#project-files) |
+| The explorer | The tree, dimmed and linked entries, following the disk, new files and folders, renaming and deleting, its menus, **Show only changed files**, its side and width, hiding it. | [Project files](DESIGN.md#project-files) |
 | Finding a file by name | The find box, `name:42`, its keys and messages. | [Project files](DESIGN.md#project-files) |
 | File tabs | Preview and kept tabs, **Pin**, the **Close…** commands, moving between files. | [Project files](DESIGN.md#project-files) |
 | Editing | The editor, **Wrap long lines**, languages and colors, the chip (line endings, indentation, encoding), files that open read-only or not at all. | [Project files](DESIGN.md#project-files) |

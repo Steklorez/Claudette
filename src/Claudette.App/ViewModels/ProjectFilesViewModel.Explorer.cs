@@ -10,7 +10,7 @@ namespace Claudette.App.ViewModels;
 /// <summary>
 /// A row of the Project Files tab's explorer (DESIGN.md §18, "Project files", "The explorer"): a folder or a file of the
 /// tree, indented by its depth, or in <b>Show only changed files</b>, a file Claude changed with its folder beside it. A
-/// new file's or folder's name is typed in a <see cref="NewEntryRow"/>.
+/// name, a new file's or folder's or a new one for a row, is typed in a <see cref="NameRow"/>.
 /// </summary>
 public partial class ExplorerRow : ObservableObject
 {
@@ -172,7 +172,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task ToggleRowAsync(ExplorerRow? row)
     {
-        if (row is not { CanExpand: true } or NewEntryRow)
+        if (row is not { CanExpand: true } or NameRow)
         {
             return Task.CompletedTask;
         }
@@ -188,7 +188,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private Task OpenRowAsync(ExplorerRow? row)
     {
-        if (row is null or NewEntryRow)
+        if (row is null or NameRow)
         {
             return Task.CompletedTask;
         }
@@ -207,7 +207,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private async Task OpenRowToStayAsync(ExplorerRow? row)
     {
-        if (row is null or NewEntryRow)
+        if (row is null or NameRow)
         {
             return;
         }
