@@ -40,10 +40,10 @@ public static class ToolIcons
         Find(key ?? Default) ?? Find(Default));
 
     /// <summary>
-    /// Whether the icon is drawn filled rather than stroked: a project type's logo (<see cref="ProjectTypeIcons.IsLogo"/>),
-    /// for a <c>filled</c> class on its <c>Path</c>.
+    /// Whether the icon is drawn filled rather than stroked: a maker's logo (<see cref="Logos.IsLogo"/>), for a
+    /// <c>filled</c> class on its <c>Path</c>.
     /// </summary>
-    public static readonly IValueConverter IsFilled = new FuncValueConverter<string?, bool>(ProjectTypeIcons.IsLogo);
+    public static readonly IValueConverter IsFilled = new FuncValueConverter<string?, bool>(Logos.IsLogo);
 
     private static Geometry? Find(string key) =>
         Application.Current?.TryFindResource(key, out var resource) == true ? resource as Geometry : null;

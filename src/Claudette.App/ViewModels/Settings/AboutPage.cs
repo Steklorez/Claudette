@@ -21,7 +21,8 @@ public sealed partial class AboutPage : SettingsPage
 
     /// <summary>
     /// The trademarks Claudette names or shows, each with its owner's notice: a row each under Trademarks. A logo shown
-    /// with its owner's permission says so here, as Godot's does (DESIGN.md §18, "Project types").
+    /// with its owner's permission says so here, as Godot's and Perforce's do (<see cref="Logos"/>; DESIGN.md §14,
+    /// "About").
     /// </summary>
     public static IReadOnlyList<(string Key, string Names, string Notice)> TrademarkNotices { get; } =
     [
@@ -31,7 +32,8 @@ public sealed partial class AboutPage : SettingsPage
         ("about.trademark.unity", "Unity", "A trademark or registered trademark of Unity Technologies or its affiliates in the U.S. and elsewhere."),
         ("about.trademark.unreal", "Unreal Engine",
             "Unreal and Unreal Engine are trademarks or registered trademarks of Epic Games, Inc. in the United States of America and elsewhere."),
-        ("about.trademark.perforce", "Perforce and P4V", "Trademarks of Perforce Software, Inc. or one of its affiliates."),
+        ("about.trademark.perforce", "Perforce, P4V and the Perforce logo",
+            "Trademarks of Perforce Software, Inc. or one of its affiliates. The logo is used with Perforce's permission, as its brand guidelines say."),
     ];
 
     public AboutPage(SettingsContext context) : base(context, SettingsCategory.About)

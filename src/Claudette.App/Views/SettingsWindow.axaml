@@ -16,6 +16,33 @@
       <Setter Property="FontSize" Value="22" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <Style Selector="StackPanel.pageheader">
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="10" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,4,0,0" />
+      </Style>
+      <Style Selector="^ Viewbox.perforcelogo">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+    </Style>
+    <!-- Settings → Perforce's title is Perforce's logo, with clear space of half its height around it, as Perforce's brand
+         guidelines say (App.axaml's LogoPerforceSymbol): 14.4 pixels at its 128 -->
+    <Style Selector="StackPanel.pageheader.perforce">
+      <Style Selector="^ TextBlock.pagetitle">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="^ Viewbox.perforcelogo">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="15" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,15,0,0" />
+      </Style>
+    </Style>
     <!-- The sidebar's lists: each group's heading, then its pages, each with its icon, and the selected tab's project's
          pages at the foot; the arrow keys go through them all (OnSidebarKeyDown). A heading isn't a page: it can't be
          picked or focused. -->
@@ -98,13 +125,24 @@
     <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon">
       <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
     </Style>
-    <!-- A logo (ProjectTypeIcons.IsLogo): filled in the same color, where the others are strokes -->
+    <!-- A logo (Logos.IsLogo): filled in the same color, where the others are strokes -->
     <Style Selector="Path.navicon.filled">
       <Setter Property="Stroke" Value="{x:Null}" />
       <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
     </Style>
     <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.filled">
       <Setter Property="Fill" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <!-- Except Perforce's symbol (Logos.Perforce), which its brand guidelines allow only in Perforce's colors: in its mono
+         black or white beside the others' gray, and in full color once its page is selected (white still in the dark
+         themes, which have no other) -->
+    <Style Selector="Path.navicon.perforce">
+      <Setter Property="Fill" Value="{DynamicResource PerforceMonoBrush}" />
+      <!-- As tall as it is at 14 wide, so it's centred on the row's name: a stretched shape is drawn at its box's top -->
+      <Setter Property="Height" Value="11.44" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.perforce">
+      <Setter Property="Fill" Value="{DynamicResource PerforceSymbolBrush}" />
     </Style>
   </Window.Styles>
 
@@ -115,7 +153,8 @@
         <TextBlock Classes="navheading" Text="{Binding Title}" IsVisible="{Binding IsHeading}" />
         <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
           <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
-                Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}" />
+                Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
+                Classes.perforce="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}}" />
           <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
           <!-- A word about the page after its name, such as Off for a project type switched off: the page can still be
                picked -->
@@ -216,16 +255,27 @@
            It fills the space up to 720 pixels, so a setting's control stays near its name, and is centred in a wider window
            (a stretched control that its MaxWidth stops short is centred). -->
       <StackPanel MaxWidth="720" Margin="40,28,40,40">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
-          <!-- Everything on the page is this computer's: said once, here -->
-          <Border Classes="settingchip" VerticalAlignment="Center" IsVisible="{Binding CurrentPage.IsMachineOnly, FallbackValue=False}"
-                  ToolTip.Tip="Kept on this computer: settings sync leaves everything on this page as it is">
-            <TextBlock Text="This computer" />
-          </Border>
+        <!-- Its title, or Perforce's logo for Settings → Perforce's, 128 pixels wide where Perforce's least is 110 -->
+        <StackPanel Classes="pageheader"
+                    Classes.perforce="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}, FallbackValue=False}">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
+            <Viewbox Classes="perforcelogo" Width="128" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
+                     AutomationProperties.AccessibilityView="Content">
+              <Canvas Width="638.98" Height="144.22">
+                <Path Data="{StaticResource LogoPerforceSymbol}" Fill="{DynamicResource PerforceSymbolBrush}" />
+                <Path Data="{StaticResource LogoPerforceWordmark}" Fill="{DynamicResource PerforceWordmarkBrush}" />
+              </Canvas>
+            </Viewbox>
+            <!-- Everything on the page is this computer's: said once, here -->
+            <Border Classes="settingchip" VerticalAlignment="Center" IsVisible="{Binding CurrentPage.IsMachineOnly, FallbackValue=False}"
+                    ToolTip.Tip="Kept on this computer: settings sync leaves everything on this page as it is">
+              <TextBlock Text="This computer" />
+            </Border>
+          </StackPanel>
+          <TextBlock Classes="muted" Text="{Binding CurrentPage.Description, FallbackValue=''}" TextWrapping="Wrap"
+                     IsVisible="{Binding CurrentPage.Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" />
         </StackPanel>
-        <TextBlock Classes="muted" Text="{Binding CurrentPage.Description, FallbackValue=''}" TextWrapping="Wrap" Margin="0,4,0,0"
-                   IsVisible="{Binding CurrentPage.Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" />
         <!-- Neither it nor the page views (ClipToBounds="False" on each) cut off the rows, which reach 8 pixels past the page
              for their changed bars and highlight. -->
         <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Margin="0,24,0,0" ClipToBounds="False">

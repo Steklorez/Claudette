@@ -808,7 +808,10 @@ public class ProjectSettingsTests
         Assert.All(settings.ProjectTypes, page => Assert.Equal(ProjectTypeIcons.For(page.Kind), pages.Single(e => e.Title == page.Title).IconKey));
         Assert.DoesNotContain(settings.ProjectTypes, page => page.IconKey == ProjectTypeIcons.Other);
         // Godot's is its logo, which its owner lets Claudette show, drawn filled; the others are drawn for what they're known by.
-        Assert.Equal([GodotProvider.KindId], settings.ProjectTypes.Where(page => ProjectTypeIcons.IsLogo(page.IconKey)).Select(page => page.Kind));
+        Assert.Equal([GodotProvider.KindId], settings.ProjectTypes.Where(page => Logos.IsLogo(page.IconKey)).Select(page => page.Kind));
+        // Perforce's page has Perforce's symbol, which Perforce lets Claudette show.
+        Assert.Equal(Logos.Perforce, pages.Single(e => e.Title == "Perforce").IconKey);
+        Assert.True(Logos.IsLogo(Logos.Perforce));
 
         // A type's page: its switches, then the defaults it declares, under its own line.
         var unreal = settings.ProjectType(UnrealProvider.KindId);

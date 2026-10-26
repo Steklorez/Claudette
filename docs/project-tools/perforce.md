@@ -5,7 +5,7 @@ nav_order: 7
 summary: "In a Perforce workspace, Claude runs p4 commands through its Bash tool."
 ---
 
-# Perforce
+<h1 class="perforce-title">{% include perforce-logo.html full=true %}</h1>
 
 In a Perforce workspace, Claude runs `p4` commands through its Bash tool. Perforce login tickets expire, often after 12 hours, and after that every `p4` command fails with *"Your session has expired, please login again."* Claude can't fix that itself, because `p4 login` asks for a password, so a long-running tab gets stuck.
 
@@ -56,7 +56,7 @@ Claudette doesn't try a password with servers that sign in through single sign-o
 When Claude works in a numbered changelist, Claudette shows it:
 
 - The tab's info card has a **Changelist** row, such as *"CL 12345"*, and *"earlier: CL 12001 · submitted, …"* when the session used several.
-- With Settings → Perforce → **Show changelist on tabs** on (off by default), a `CL 12345` badge sits at the right of the tab's second line in the sidebar, after the git branch. Clicking it offers **Copy changelist number** and **Open in P4V**.
+- With Settings → Perforce → **Show changelist on tabs** on (off by default), a `CL 12345` badge sits at the right of the tab's second line in the sidebar. Clicking it offers **Copy changelist number** and **Open in P4V**.
 - The info card lists every changelist with **Copy** and **Open in P4V**.
 
 Claudette reads it from the `p4` commands Claude runs and their output, so it works in every tab, even with **Keep Perforce logins fresh** off. A command that names a changelist, such as `p4 edit -c 12345`, or output such as *"Change 12345 created."* counts. The most recently used changelist wins, and the default changelist isn't shown. When the changelist is submitted, the badge says `CL 12345 · submitted`. When it's deleted, the badge goes away. The changelist is saved with the tab, and a link can use it as `{changelist}` ([Actions and links](actions-and-links.md)).

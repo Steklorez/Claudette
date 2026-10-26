@@ -28,9 +28,11 @@ Settings → About says which Claudette you have and where to find it on the web
 
 ## Trademarks
 
-Claudette names Claude Code, and the engines and tools it works with, to say what it works with. Each has a row with its owner's notice: Claude and Claude Code, Godot and the Godot logo, Unity, Unreal Engine, and Perforce and P4V. Claudette is made by dotBunny, and isn't sponsored by, affiliated with or endorsed by any of them.
+Claudette names Claude Code, and the engines and tools it works with, to say what it works with. Each has a row with its owner's notice: Claude and Claude Code, Godot and the Godot logo, Unity, Unreal Engine, and Perforce, P4V and the Perforce logo. Claudette is made by dotBunny, and isn't sponsored by, affiliated with or endorsed by any of them.
 
 Godot's logo is the icon of Godot projects, on their page in Settings and on the [project's row](../project-tools/using-project-tools.md) at the foot of the sidebar. Claudette uses it under the Godot Foundation's trademark policy, and the logo itself is by Andrea Calabró, under CC BY 4.0. Unreal Engine and Unity have icons Claudette draws for them.
+
+Perforce's logo is on Settings → [Perforce](../project-tools/perforce.md): its symbol beside the page's name in the sidebar, and the whole logo as the page's title. Claudette shows it with Perforce's permission, only in Perforce's own colors, whatever the style: in the sidebar, black (white in a dark theme) until you select the page.
 
 ## Open-source licenses
 

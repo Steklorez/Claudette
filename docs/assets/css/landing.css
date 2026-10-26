@@ -30,6 +30,8 @@
   --frame-shadow: 0 1.6rem 3.6rem rgba(90, 58, 32, 0.16), 0 0 3rem rgba(217, 119, 87, 0.1);
   --card-shadow: 0 0.8rem 2rem rgba(90, 58, 32, 0.12);
   --topbar: rgba(250, 249, 245, 0.82);
+  /* Perforce's logo (perforce-logo.html): in full color on a light page, as its brand guidelines say. */
+  --perforce-symbol: #4c00ff;
 
   --font: system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
   --mono: "Cascadia Mono", "SFMono-Regular", menlo, consolas, monospace;
@@ -56,6 +58,8 @@
     --frame-shadow: 0 1.8rem 4.5rem rgba(0, 0, 0, 0.55), 0 0 4rem rgba(217, 119, 87, 0.12), 0 0 6rem rgba(184, 51, 106, 0.1);
     --card-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.4);
     --topbar: rgba(20, 20, 19, 0.78);
+    /* And in white on a dark one: its reversed logo's. */
+    --perforce-symbol: #f6f9fd;
   }
 }
 
@@ -335,6 +339,10 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .card .icon { width: 2.4rem; height: 2.4rem; margin-bottom: 0.4rem; padding: 0.55rem; border-radius: 0.8rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(217, 119, 87, 0.28); }
 .card strong { color: var(--heading); font-size: 1.05rem; }
 .card span { font-size: 0.92rem; color: var(--muted); }
+/* Perforce's symbol in place of its card's icon, as Perforce's brand guidelines say: on the card itself, never a tile or
+   another color, 40 pixels wide (its least), in a box as tall as the tiles so the card's words line up with its
+   neighbours', with clear space of half its height around it. */
+.card .perforce-symbol { width: 2.5rem; height: 2.4rem; margin-bottom: 0.4rem; fill: var(--perforce-symbol); }
 
 /* The end: a warm card to start from. */
 .closing {
@@ -404,9 +412,10 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   .topnav a span { display: none; }
   .topbar-inner { gap: 0.6rem; padding-inline: 1rem; }
   .looks-grid, .cards, .cards.cards-3, .get-buttons { grid-template-columns: minmax(0, 1fr); }
-  /* A card's icon beside its words, so a column of them stays short. */
-  .card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 1rem; align-items: start; padding: 1.1rem 1.2rem; }
-  .card .icon { grid-row: span 2; margin-bottom: 0; }
+  /* A card's icon beside its words, so a column of them stays short: a column wide enough for Perforce's symbol and its
+     clear space, so every card's words start at the same place. */
+  .card { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 0.2rem 1rem; align-items: start; padding: 1.1rem 1.2rem; }
+  .card .icon, .card .perforce-symbol { grid-row: span 2; margin-bottom: 0; }
   .band.gamedev, .tour { padding-top: 5rem; }
   .hero { padding-top: 3rem; }
   .story-index { top: 4.1rem; border-radius: 1rem; }

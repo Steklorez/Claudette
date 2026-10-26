@@ -305,6 +305,59 @@ public class SettingsWindowTests
         window.Close();
     }
 
+    /// <summary>
+    /// Perforce's page (DESIGN.md §14, "About") has Perforce's logo for its title, as its brand guidelines say: at least
+    /// 110 pixels wide, with clear space of half its height around it, and named for a screen reader as the title is. Its
+    /// icon in the sidebar is Perforce's symbol, in Perforce's mono black or white until the page is selected, then in
+    /// Perforce's full color, where the other pages' icons take the accent.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Perforces_page_has_its_logo_for_a_title_and_its_symbol_is_in_full_color_when_selected()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        using var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = SettingsCategory.Perforce };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+        var title = window.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("pagetitle"));
+        var logo = window.GetVisualDescendants().OfType<Viewbox>().Single(v => v.Classes.Contains("perforcelogo"));
+        var description = window.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == settings.CurrentPage!.Description);
+        var chip = window.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("settingchip") && b.IsEffectivelyVisible);
+        Rect Place(Visual v) => new(v.TranslatePoint(default, window)!.Value, v.Bounds.Size);
+
+        Assert.False(title.IsEffectivelyVisible);
+        Assert.True(logo.IsEffectivelyVisible);
+        Assert.Equal("Perforce", AutomationProperties.GetName(logo));
+        Assert.InRange(logo.Bounds.Width, 110, 200);
+        var clear = logo.Bounds.Height / 2;
+        Assert.True(Place(description).Top - Place(logo).Bottom >= clear);
+        Assert.True(Place(chip).Left - Place(logo).Right >= clear);
+
+        var sidebar = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        // The list draws only the rows in view.
+        sidebar.ScrollIntoView(settings.NavEntries.Single(e => e.Title == "Perforce"));
+        UiText.Settle(window);
+        ListBoxItem Item(string page) => sidebar.GetVisualDescendants().OfType<ListBoxItem>().Single(i => (i.Content as SettingsNavEntry)?.Title == page);
+        Avalonia.Controls.Shapes.Path Icon(string page) => Item(page).GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single();
+        Assert.True(Item("Perforce").IsSelected);
+        Assert.True(window.TryFindResource("PerforceSymbolBrush", window.ActualThemeVariant, out var perforceColor));
+        Assert.True(window.TryFindResource("PerforceMonoBrush", window.ActualThemeVariant, out var perforceMono));
+        Assert.True(window.TryFindResource("AccentStatusBrush", window.ActualThemeVariant, out var accent));
+        var symbol = Icon("Perforce");
+        Assert.Contains("filled", symbol.Classes);
+        Assert.Same(perforceColor, symbol.Fill);
+
+        settings.SelectedCategory = "Unity";
+        UiText.Settle(window);
+
+        Assert.Same(perforceMono, Icon("Perforce").Fill);
+        Assert.Same(accent, Icon("Unity").Stroke);
+        // Another page has its name for its title.
+        Assert.True(title.IsEffectivelyVisible);
+        Assert.False(logo.IsEffectivelyVisible);
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task The_sidebar_ends_with_the_version_and_Help_with_the_guide_Discord_Report_an_issue_and_About()
     {

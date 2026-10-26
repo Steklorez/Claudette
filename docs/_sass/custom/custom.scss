@@ -86,6 +86,31 @@ body::before {
     }
   }
 
+  // Perforce's page has Perforce's logo for its title (perforce-logo.html), as its brand guidelines say: in its own
+  // colors, in full on a light page and white on a dark one, with clear space of half its height around it, so her bar
+  // under the title keeps that far off. 11rem wide, it's 2.48rem tall.
+  h1.perforce-title {
+    margin-top: 1.25rem;
+
+    &::after {
+      margin-top: 1.25rem;
+    }
+
+    .perforce-logo {
+      display: block;
+      width: 11rem;
+      height: auto;
+    }
+
+    .symbol {
+      fill: if($cl-dark, #f6f9fd, #4c00ff);
+    }
+
+    .wordmark {
+      fill: if($cl-dark, #f6f9fd, #00003a);
+    }
+  }
+
   h2 {
     font-weight: 700;
     letter-spacing: -0.01em;
