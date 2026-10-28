@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 using Claudette.Core.ProjectTools.Unreal;
 using Claudette.Core.Settings;
@@ -113,7 +114,7 @@ public class ProjectToolsUiTests
         Assert.False(view.IsEffectivelyVisible);
         Assert.Contains(window.GetVisualDescendants().OfType<ComposerView>(), c => c.IsEffectivelyVisible);
         // The actions are in the project's menu at the sidebar's foot, and the logs in the main area, not on the page.
-        tab.OpenSidePanelPage(ViewModels.SidePanelPage.Project);
+        h.ShowToolWindow(ToolWindowKinds.Project);
         UiText.Settle(window);
         var page = window.GetVisualDescendants().OfType<ScrollViewer>().Single(p => p.Name == "ProjectPage");
         Assert.True(page.IsEffectivelyVisible);

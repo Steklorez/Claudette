@@ -541,12 +541,12 @@ public sealed partial class TodoList : ObservableObject
     /// <summary>The Tasks page has something to show.</summary>
     public bool HasAnything => HasItems || HasPlan || HasDocs;
 
-    /// <summary>The side panel's Tasks button's tip: how far the tasks have got, else what the page holds.</summary>
+    /// <summary>The Tasks tool window's tab's tip: how far the tasks have got, else what the page holds.</summary>
     public string PageTip => HasItems ? Summary
         : HasPlan ? "The plan"
         : Docs.Count == 1 ? "A Claude Doc" : $"{Docs.Count} Claude Docs";
 
-    /// <summary>"2 of 5", for the side panel's Tasks button; empty without tasks.</summary>
+    /// <summary>"2 of 5", for the Tasks tool window's tab; empty without tasks.</summary>
     public string Badge => Items.Count == 0 ? "" : $"{DoneCount} of {Items.Count}";
 
     public int DoneCount => Items.Count(i => i.IsDone);

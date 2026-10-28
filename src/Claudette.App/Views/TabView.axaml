@@ -775,17 +775,6 @@
 
   <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,Auto">
 
-    <!-- Side panel (DESIGN.md §3): changed files, agents, the project's tools and, when the monitor is on, processes.
-         With tabs side by side, only the focused pane's shows (DESIGN.md §18, "Split panes"). -->
-    <Border x:Name="SidePanel" Grid.Column="1" Grid.RowSpan="3" Width="{Binding SidePanelWidth}" IsVisible="{Binding ShowsSidePanel}"
-            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1,0,0,0" Background="{DynamicResource SubtleBrush}">
-      <views:SidePanelView />
-    </Border>
-
-    <!-- Drag the side panel's edge to resize it; double-click for the default width. -->
-    <Border x:Name="SidePanelEdge" Grid.Column="1" Grid.RowSpan="3" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent"
-            Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding ShowsSidePanel}" />
-
     <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes"): the tab and its folder, and Close pane.
          The focused pane's has the accent line under it. -->
     <Border x:Name="PaneHeader" Classes="paneheader" Classes.focused="{Binding IsSelected}" IsVisible="{Binding IsInSplit}">

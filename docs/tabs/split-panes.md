@@ -25,7 +25,7 @@ A pane needs at least 360 pixels, so how many fit depends on the window. Panes t
 
 ## The focused pane
 
-The selected tab is the focused pane's. The keyboard shortcuts, the command palette, the header (the account, the side panel's button) and Claudette on the composer all follow the focus.
+The selected tab is the focused pane's. The keyboard shortcuts, the command palette, the header (the account, the **Tool windows** menu) and Claudette on the composer all follow the focus.
 
 - Click a pane, or put the cursor in its composer, to focus it.
 - Picking a tab in the sidebar focuses it when it's already on a pane. Any other tab takes the focused pane's place.
@@ -33,7 +33,7 @@ The selected tab is the focused pane's. The keyboard shortcuts, the command pale
 
 Every tab in a pane counts as on screen: its Claude starts, its working line runs, its changed files stay fresh, and it isn't marked unread. Claudette skips its [notifications](../away/notifications.md) while Claudette is in front.
 
-The [side panel](the-side-panel.md) shows only on the focused pane. The other panes keep it closed, and each tab keeps its own choice for when it has the focus.
+The [tool windows](tool-windows.md) show the focused pane's tab, and name it over them while other tabs are on screen too.
 
 ## Resizing
 

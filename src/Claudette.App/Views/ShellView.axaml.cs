@@ -56,6 +56,8 @@ public partial class ShellView : UserControl
         PaneLines.Dragged += OnPaneLineDragged;
         PaneLines.DragEnded += () => ViewModel?.Layout.SavePaneShares();
         PaneLines.ResetRequested += () => ViewModel?.Layout.ResetPaneShares();
+        // The tool windows (DESIGN.md §3, "Tool windows").
+        WatchToolWindowsView();
     }
 
     // ---- Resizing the sidebar -------------------------------------------------------------------------------------
@@ -266,14 +268,14 @@ public partial class ShellView : UserControl
         panel.Arranged += (_, _) => PaneLines.Lines = panel.Lines;
     }
 
-    /// <summary>Dragging the line after pane <paramref name="line"/>: each pane keeps its conversation's least, and its side panel's while it shows.</summary>
+    /// <summary>Dragging the line after pane <paramref name="line"/>: each pane keeps its conversation's least.</summary>
     private void OnPaneLineDragged(int line, double x)
     {
         if (ViewModel is not { } shell || Panes is not { } panel)
         {
             return;
         }
-        var leasts = shell.Panes.Select(p => ShellLayout.MinConversationWidth + (p.ShowsSidePanel ? ShellLayout.MinSidePanelWidth : 0)).ToList();
+        var leasts = shell.Panes.Select(_ => ShellLayout.MinConversationWidth).ToList();
         shell.Layout.ResizePanes(line, x, panel.Bounds.Width, leasts);
     }
 
@@ -390,6 +392,7 @@ public partial class ShellView : UserControl
         if (_shell is not null)
         {
             _shell.PropertyChanged -= OnShellChanged;
+            _shell.ToolWindows.FocusRequested -= OnToolFocusRequested;
         }
         _shell = ViewModel;
         if (_shell is not null)
@@ -397,6 +400,7 @@ public partial class ShellView : UserControl
             _shell.ShowSettingsWindow = ShowSettingsAsync;
             _shell.ShowImageWindow = viewer => ImageWindow.Open(viewer, TopLevel.GetTopLevel(this) as Window);
             _shell.PropertyChanged += OnShellChanged;
+            _shell.ToolWindows.FocusRequested += OnToolFocusRequested;
             if (Bounds.Width > 0)
             {
                 _shell.Layout.SetAvailableWidth(Bounds.Width);
@@ -463,6 +467,12 @@ public partial class ShellView : UserControl
         if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && shell.IsPickerOpen)
         {
             shell.ClosePicker();
+            e.Handled = true;
+            return;
+        }
+        // A tool tab's drag, or a window slid out over the panes (DESIGN.md §3, "Tool windows").
+        if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && EscapeToolWindows())
+        {
             e.Handled = true;
             return;
         }

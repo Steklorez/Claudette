@@ -9,6 +9,7 @@ using Claudette.App.Games;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 
 namespace Claudette.App.UiTests;
@@ -47,10 +48,10 @@ public class GamesUiTests
         var shown = UiText.Describe(page);
 
         // Another page, and the game's controls go; it's still open, and shows again on its page.
-        tab.Page = SidePanelPage.Files;
+        h.ShowToolWindow(ToolWindowKinds.Files);
         UiText.Settle(window);
         Assert.Empty(window.GetVisualDescendants().OfType<GamesView>());
-        tab.Page = SidePanelPage.Games;
+        h.ShowToolWindow(ToolWindowKinds.Games);
         UiText.Settle(window);
         page = window.GetVisualDescendants().OfType<GamesView>().Single();
         Assert.Single(Squares(page), s => AutomationProperties.GetName(s)!.EndsWith(", yours", StringComparison.Ordinal));
@@ -143,7 +144,7 @@ public class GamesUiTests
         menu.Items.OfType<MenuItem>().Single(i => i.Header as string == "Play Connect Four").Command!.Execute(GameKind.ConnectFour);
         UiText.Settle(window);
         Assert.IsType<ConnectFourViewModel>(h.Services.Games.Game);
-        Assert.True(tab.IsGamesPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.Games));
 
         h.Services.Settings.Appearance.GamesWithClaudette = false;
         h.Services.SaveSettings();
@@ -155,7 +156,7 @@ public class GamesUiTests
     }
 
     private static List<string?> PageTabs(Window window) =>
-        [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("pagetab") && b.IsVisible)
+        [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("tooltab") && b.IsEffectivelyVisible)
             .Select(b => b.GetVisualDescendants().OfType<TextBlock>().First().Text)];
 
     private static List<Button> Squares(Control page) => [.. page.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("gamesquare"))];

@@ -103,8 +103,8 @@ public sealed partial class ProcessRow : ObservableObject
 /// <summary>What the process monitor needs from its tab.</summary>
 internal interface IProcessMonitorHost : ITabAreaHost
 {
-    /// <summary>The side panel is open, so the composer bar leaves the summary to it.</summary>
-    bool IsSidePanelOpen { get; }
+    /// <summary>The Processes tool window shows the tab's processes, so the composer bar leaves the summary to it.</summary>
+    bool IsProcessesWindowShowing { get; }
 
     /// <summary>The conversation's tool calls, for the call that started a process.</summary>
     IEnumerable<ToolUseItem> ToolItems { get; }
@@ -162,11 +162,11 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowSummary))]
     public partial string? SummaryText { get; set; }
 
-    /// <summary>In the composer bar, unless the side panel is open and already shows it.</summary>
-    public bool ShowSummary => SummaryText is not null && !_host.IsSidePanelOpen;
+    /// <summary>In the composer bar, unless the Processes tool window shows the tab's processes already.</summary>
+    public bool ShowSummary => SummaryText is not null && !_host.IsProcessesWindowShowing;
 
-    /// <summary>The side panel opened or closed, which shows the summary instead of the composer bar.</summary>
-    internal void OnSidePanelOpenChanged() => OnPropertyChanged(nameof(ShowSummary));
+    /// <summary>The Processes window came on screen with the tab's processes, or went, which shows the summary instead of the composer bar.</summary>
+    internal void OnProcessesWindowChanged() => OnPropertyChanged(nameof(ShowSummary));
 
     /// <summary>
     /// The latest sample's totals, <c>claude</c> included, for the header's total across the tabs; null while the monitor

@@ -99,7 +99,7 @@ public sealed class AppearancePage : SettingsPage
                 "At most every ten minutes, and never while you're typing.", ["claudette", "hints"]),
             Setting("appearance.gamesWithClaudette", "Games with Claudette", s => s.Appearance.GamesWithClaudette, (s, v) => s.Appearance.GamesWithClaudette = v,
                 "Tic-tac-toe, Connect Four or hangman against her while Claude works.",
-                "Or while a usage limit holds a task. Start one by right-clicking her, from the command palette, or from the usage limit bar; it opens on the side panel's Games page. She plays whether or not she's on the composer.",
+                "Or while a usage limit holds a task. Start one by right-clicking her, from the command palette, or from the usage limit bar; it opens in the Games tool window. She plays whether or not she's on the composer.",
                 ["play", "tic-tac-toe", "connect four", "hangman"]),
         ]);
         context.SettingsSaved += OnPreviewSettingsSaved;

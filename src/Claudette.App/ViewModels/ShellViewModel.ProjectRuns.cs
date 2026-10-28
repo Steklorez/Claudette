@@ -34,9 +34,6 @@ public sealed partial class ShellViewModel
         }
     }
 
-    /// <summary>A run's log took the focus: it has no side panel for the sidebar to leave room for.</summary>
-    internal void OnRunSelected() => Layout.IsSidePanelShown = false;
-
     /// <summary>
     /// A run was closed, by its × or with its tab: its log leaves the panes. While it had the focus, its tab takes its
     /// place, or the focus where it's on screen already.

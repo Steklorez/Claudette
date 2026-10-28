@@ -1,6 +1,7 @@
 using Claudette.App.Games;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
@@ -12,19 +13,18 @@ namespace Claudette.App.Tests;
 public class GameServiceTests
 {
     [Fact]
-    public async Task Starting_a_game_opens_the_side_panel_on_the_Games_page_which_goes_when_the_game_ends()
+    public async Task Starting_a_game_shows_the_Games_window_which_goes_when_the_game_ends()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        Assert.False(tab.HasSidePanelPage(SidePanelPage.Games));
-        Assert.Null(tab.ShownGames);
+        var games = h.ToolWindow(ToolWindowKinds.Games);
+        Assert.False(games.IsAvailable);
 
         tab.PlayGame(GameKind.TicTacToe);
 
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsGamesPage);
-        Assert.True(tab.HasSidePanelPage(SidePanelPage.Games));
-        Assert.Same(h.Services.Games, tab.ShownGames);
+        Assert.True(h.IsShowing(ToolWindowKinds.Games));
+        Assert.True(games.IsAvailable);
+        Assert.Same(h.Services.Games, games.Content);
         var game = Assert.IsType<TicTacToeViewModel>(h.Services.Games.Game);
 
         // Asked for again, it's the same game; another switches to it.
@@ -34,18 +34,16 @@ public class GameServiceTests
         Assert.IsType<HangmanViewModel>(h.Services.Games.Game);
         Assert.True(h.Services.Games.IsHangman);
 
-        // Another page: the game stays, but the page isn't made.
-        tab.Page = SidePanelPage.Files;
-        Assert.Null(tab.ShownGames);
+        // Another window: the game stays.
+        h.ShowToolWindow(ToolWindowKinds.Files);
+        Assert.False(h.IsShowing(ToolWindowKinds.Games));
         Assert.True(h.Services.Games.IsOpen);
-        tab.Page = SidePanelPage.Games;
 
         h.Services.Games.CloseCommand.Execute(null);
 
         Assert.False(h.Services.Games.IsOpen);
-        Assert.Equal(SidePanelPage.Files, tab.Page);
-        Assert.False(tab.HasSidePanelPage(SidePanelPage.Games));
-        Assert.Null(tab.ShownGames);
+        Assert.False(games.IsAvailable);
+        Assert.False(h.IsShowing(ToolWindowKinds.Games));
     }
 
     [Fact]
@@ -60,14 +58,15 @@ public class GameServiceTests
 
         second.PlayGame(GameKind.ConnectFour);
 
-        Assert.True(first.HasSidePanelPage(SidePanelPage.Games));
-        first.Page = SidePanelPage.Games;
-        Assert.Same(second.ShownGames, first.ShownGames);
+        // Its window shows the same game whichever tab has the focus.
+        var games = h.ToolWindow(ToolWindowKinds.Games);
+        InlineDispatcher.Run(() => h.Shell.SelectedTab = first);
+        Assert.True(games.IsAvailable);
+        Assert.Same(h.Services.Games, games.Content);
 
-        // Ending it from one tab takes the page from every tab.
+        // Ending it takes the window away.
         h.Services.Games.Close();
-        Assert.Equal(SidePanelPage.Files, first.Page);
-        Assert.Equal(SidePanelPage.Files, second.Page);
+        Assert.False(games.IsAvailable);
     }
 
     [Fact]
@@ -262,11 +261,11 @@ public class GameServiceTests
         h.Services.SaveSettings();
 
         Assert.False(h.Services.Games.IsOpen);
-        Assert.False(tab.HasSidePanelPage(SidePanelPage.Games));
+        Assert.False(h.ToolWindow(ToolWindowKinds.Games).IsAvailable);
         Assert.DoesNotContain(h.Shell.PaletteEntries(), e => e.Label.StartsWith("Play ", StringComparison.Ordinal));
         tab.PlayGame(GameKind.TicTacToe);
         Assert.False(h.Services.Games.IsOpen);
-        Assert.False(tab.IsGamesPage);
+        Assert.False(h.IsShowing(ToolWindowKinds.Games));
     }
 
     [Fact]
@@ -279,7 +278,7 @@ public class GameServiceTests
         {
             await h.Shell.PaletteEntries().Single(e => e.Label == label).Run();
             Assert.IsType(type, h.Services.Games.Game);
-            Assert.True(tab.IsGamesPage);
+            Assert.True(h.IsShowing(ToolWindowKinds.Games));
         }
     }
 

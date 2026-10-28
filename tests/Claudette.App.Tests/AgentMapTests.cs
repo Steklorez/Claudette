@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
@@ -50,8 +51,7 @@ public class AgentMapTests
         // The composer bar's way in.
         Assert.Equal("3 agents running", tab.AgentsButtonText);
         tab.OpenAgentsPageCommand.Execute(null);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsAgentsPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.Agents));
     }
 
     [Fact]
@@ -432,25 +432,20 @@ public class AgentMapTests
     }
 
     [Fact]
-    public async Task The_agents_page_is_a_side_panel_page()
+    public async Task The_agent_map_is_a_tool_window()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        Assert.True(tab.IsFilesPage);
         Assert.Equal("Claude hasn't started any subagents in this tab.", tab.AgentsHeader);
 
-        tab.ShowAgentsPageCommand.Execute(null);
-        Assert.True(tab.IsAgentsPage);
-        Assert.False(tab.IsFilesPage);
+        h.ShowToolWindow(ToolWindowKinds.Agents);
+        Assert.True(h.IsShowing(ToolWindowKinds.Agents));
+        Assert.False(h.IsShowing(ToolWindowKinds.Files));
+        Assert.Same(tab, h.ToolWindow(ToolWindowKinds.Agents).Content);
 
-        tab.ShowProcessesPageCommand.Execute(null);
-        Assert.False(tab.IsAgentsPage);
-        tab.ShowAgentsPageCommand.Execute(null);
-        Assert.False(tab.IsProcessesPage);
-
-        tab.ShowFilesPageCommand.Execute(null);
-        Assert.True(tab.IsFilesPage);
-        Assert.False(tab.IsAgentsPage);
+        h.ShowToolWindow(ToolWindowKinds.Files);
+        Assert.True(h.IsShowing(ToolWindowKinds.Files));
+        Assert.False(h.IsShowing(ToolWindowKinds.Agents));
     }
 
     [Fact]

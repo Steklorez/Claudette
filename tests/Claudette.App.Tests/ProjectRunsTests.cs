@@ -245,8 +245,8 @@ public class ProjectRunsTests
         Assert.True(build.IsShown);
         Assert.False(generate.IsSelected);
         Assert.False(other.IsShown);
-        Assert.False(tab.IsSidePanelOpen);
-        Assert.False(h.Shell.Layout.IsSidePanelShown);
+        // The tool windows show its tab's data, as its group's last focused session tab (DESIGN.md §3, "Tool windows").
+        Assert.Same(tab, h.Shell.ToolWindows.Session);
         // The sidebar's foot shows its tab's project, and the app state keeps its tab: runs aren't saved.
         Assert.Same(tab, h.Shell.ProjectTab);
         Assert.Equal(tab.Id, h.Services.State.SelectedTabId);
@@ -376,7 +376,7 @@ public class ProjectRunsTests
         });
 
         Assert.Same(failed, h.Shell.Selected);
-        Assert.False(tab.IsSidePanelOpen);
+        Assert.Same(tab, h.Shell.ToolWindows.Session);
         // Looked at now: its notification is no longer news.
         Assert.Contains(h.Notifier.Removed, id => id.StartsWith("ProjectAction:", StringComparison.Ordinal));
     }

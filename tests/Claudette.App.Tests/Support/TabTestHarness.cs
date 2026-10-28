@@ -725,6 +725,25 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     public string WorkFolder => Path.Combine(_root, "work");
 
+    /// <summary>The tool window of <paramref name="kind"/> (DESIGN.md §3, "Tool windows").</summary>
+    public ViewModels.ToolWindows.ToolWindowViewModel ToolWindow(ViewModels.ToolWindows.ToolWindowKind kind) => Shell.ToolWindows.For(kind);
+
+    /// <summary>The tool window of <paramref name="kind"/> is on screen: docked and its tab showing, or slid out.</summary>
+    public bool IsShowing(ViewModels.ToolWindows.ToolWindowKind kind) => InlineDispatcher.Read(() => ToolWindow(kind).IsShowing);
+
+    /// <summary>Shows the tool window of <paramref name="kind"/>, as its tab, a button or the palette does.</summary>
+    public void ShowToolWindow(ViewModels.ToolWindows.ToolWindowKind kind) => InlineDispatcher.Run(() => Shell.ToolWindows.Show(kind));
+
+    /// <summary>
+    /// Docks the edge of the tool window of <paramref name="kind"/> and shows it there, where it stays as the focus moves,
+    /// as the side panel did; an auto-hidden one slides back once the focus leaves it.
+    /// </summary>
+    public void DockToolWindow(ViewModels.ToolWindows.ToolWindowKind kind) => InlineDispatcher.Run(() =>
+    {
+        Shell.ToolWindows.SetAutoHide(Shell.ToolWindows.For(kind).Edge, false);
+        Shell.ToolWindows.Show(kind);
+    });
+
     public async Task<TabViewModel> OpenTabAsync()
     {
         await Shell.OpenFolderAsync(WorkFolder);

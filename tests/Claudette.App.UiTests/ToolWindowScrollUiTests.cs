@@ -10,7 +10,7 @@ using Avalonia.VisualTree;
 using Claudette.App.Controls;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
-using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 
 namespace Claudette.App.UiTests;
@@ -20,7 +20,7 @@ namespace Claudette.App.UiTests;
 /// a path and a process's name wrap, and a row's numbers line up at its right edge. Only a tree's row nested
 /// past the edge scrolls sideways.
 /// </summary>
-public class SidePanelScrollUiTests
+public class ToolWindowScrollUiTests
 {
     private static readonly string LongName = "very_long_" + string.Concat(Enumerable.Repeat("unbreakable_", 30));
 
@@ -71,7 +71,7 @@ public class SidePanelScrollUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        tab.IsSidePanelOpen = true;
+        h.DockToolWindow(ToolWindowKinds.Files);
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
         var folder = Directory.CreateDirectory(Path.Combine([h.WorkFolder, .. Enumerable.Repeat("a_folder_with_a_long_name_that_goes_on", 6), "src"])).FullName;
@@ -99,8 +99,7 @@ public class SidePanelScrollUiTests
         var tab = await h.OpenTabAsync();
         h.Trees.Trees[4242].Children.Add((5001, LongName));
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        tab.IsSidePanelOpen = true;
-        tab.OpenSidePanelPage(SidePanelPage.Processes);
+        h.DockToolWindow(ToolWindowKinds.Processes);
         h.Time.Advance(TimeSpan.FromSeconds(10));
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
@@ -130,7 +129,7 @@ public class SidePanelScrollUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        tab.IsSidePanelOpen = true;
+        h.DockToolWindow(ToolWindowKinds.Files);
         h.Transport.Emit(new JsonObject
         {
             ["type"] = "assistant",
@@ -144,7 +143,7 @@ public class SidePanelScrollUiTests
             },
         });
         await UiText.SettleUntilAsync(window, () => tab.TodoList.HasItems, "the task");
-        tab.OpenSidePanelPage(SidePanelPage.Tasks);
+        h.DockToolWindow(ToolWindowKinds.Tasks);
         UiText.Settle(window);
 
         var viewer = window.GetVisualDescendants().OfType<ScrollViewer>().Single(v => v.Name == "TasksScroller");
@@ -158,12 +157,11 @@ public class SidePanelScrollUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        tab.IsSidePanelOpen = true;
+        h.DockToolWindow(ToolWindowKinds.Files);
         // The agent map's views are built once its page shows.
-        tab.ShowAgentsPageCommand.Execute(null);
+        h.DockToolWindow(ToolWindowKinds.Agents);
         UiText.Settle(window);
-        var view = window.GetVisualDescendants().OfType<TabView>().Single();
-        var panel = view.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "SidePanel");
+        var panel = window.GetVisualDescendants().OfType<ToolEdgeView>().Single(v => v.Name == "RightEdge");
 
         // Every page's scroll viewer and list, shown or not. One that scrolls sideways gives its text all the width it
         // likes, so the text never wraps; only the trees do, for rows nested past the edge.

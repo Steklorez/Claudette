@@ -37,7 +37,7 @@ The row stays first. You can't drag it within the group, and **Move up** and **M
 - **Left out of the session tabs' keys.** `Ctrl+Tab`, `Ctrl/Cmd+1` to `9` and `Ctrl/Cmd+J` go only through session tabs and skip it, so opening it never changes their numbers.
 - **It keeps its group.** Closing the group's last session tab leaves the group with only its Files tab. **Close group** closes it too.
 - **It comes back on launch** with the files it had open, as a pinned tab does.
-- **It has nothing a session has.** There's no composer, no side panel (the header's side panel button hides while it has the focus), no status, usage or notifications. Claudette on the composer stays on the session panes.
+- **It has nothing a session has.** There's no composer (the [tool windows](../tabs/tool-windows.md) show the group's session tab you used last), no status, usage or notifications. Claudette on the composer stays on the session panes.
 
 ## What it doesn't do
 

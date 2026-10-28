@@ -1,6 +1,8 @@
 using System.Text.Json.Nodes;
+using Avalonia;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Diffs;
 using Claudette.Core.Processes;
 using Claudette.Core.Settings;
@@ -8,126 +10,177 @@ using Claudette.Platform.Processes;
 
 namespace Claudette.App.Tests;
 
-/// <summary>The side panel: changed files (DESIGN.md §8) and the process monitor (DESIGN.md §4).</summary>
-public class SidePanelTests
+/// <summary>
+/// The tool windows (DESIGN.md §3, "Tool windows"), and what the session's show: changed files (DESIGN.md §8) and the
+/// process monitor (DESIGN.md §4).
+/// </summary>
+public class ToolWindowsTests
 {
     [Fact]
-    public async Task Resizing_the_side_panel_resizes_every_tabs_down_to_its_least_and_is_saved()
+    public async Task The_right_edge_starts_auto_hidden_with_the_windows_that_have_something_to_show()
     {
         await using var h = new TabTestHarness();
-        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true }, new TabState { Folder = h.WorkFolder, IsPinned = true }];
-        h.Shell.Restore(null);
-        var (first, second) = (h.Shell.AllTabs.First(), h.Shell.AllTabs.Last());
-        // The selected tab starts meanwhile, changing properties on another thread while the test reads them.
-        await TabTestHarness.Eventually(() => first.Status == TabStatus.Idle && first.IsSettled, "the first tab to start");
-        Assert.Equal(ShellLayout.DefaultSidePanelWidth, second.SidePanelWidth);
-        var changed = new List<string?>();
-        second.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        await h.OpenTabAsync();
+        var dock = h.Shell.ToolWindows;
 
-        first.ResizeSidePanel(40);
-        Assert.Equal(ShellLayout.MinSidePanelWidth, second.SidePanelWidth);
-        // No most of its own: each tab's view shows it as far as leaves the conversation room.
-        first.ResizeSidePanel(5000);
-        Assert.Equal(5000, second.SidePanelWidth);
-        Assert.Contains(nameof(TabViewModel.SidePanelWidth), changed);
-
-        // Kept when the drag ends, for every tab and the next launch.
-        first.ResizeSidePanel(480);
-        Assert.Null(h.Services.State.SidePanelWidth);
-        first.SaveSidePanelWidth();
-        Assert.Equal(480, h.Services.State.SidePanelWidth);
-        Assert.Equal(480, new ShellViewModel(h.Services, () => { }).Layout.SidePanelWidth);
-
-        // Double-clicking the edge.
-        second.ResetSidePanelWidth();
-        Assert.Equal(ShellLayout.DefaultSidePanelWidth, first.SidePanelWidth);
-        Assert.Equal(ShellLayout.DefaultSidePanelWidth, h.Services.State.SidePanelWidth);
+        Assert.True(dock.Right.IsAutoHide);
+        Assert.True(dock.Right.HasStrip);
+        Assert.Equal(["Changed files", "Agents", "Scratch pad"], InlineDispatcher.Read(() => dock.Right.Tabs.Select(w => w.Title).ToList()));
+        Assert.False(dock.Bottom.HasTabs);
+        Assert.Null(dock.SlidOut);
+        Assert.Equal(ToolDockViewModel.StripThickness, h.Shell.Layout.RightEdgeRoom);
+        Assert.Equal("Changed files, auto-hidden, right", dock.For(ToolWindowKinds.Files).AutomationName);
     }
 
     [Fact]
-    public async Task Moving_a_page_moves_it_in_every_tabs_side_panel_and_is_saved()
+    public async Task Pointing_at_an_auto_hidden_tab_slides_its_window_out_after_a_moment_and_back_once_the_pointer_leaves()
     {
         await using var h = new TabTestHarness();
-        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true }, new TabState { Folder = h.WorkFolder, IsPinned = true }];
-        h.Shell.Restore(null);
-        var (first, second) = (h.Shell.AllTabs.First(), h.Shell.AllTabs.Last());
-        await TabTestHarness.Eventually(() => first.Status == TabStatus.Idle && first.IsSettled, "the first tab to start");
-        Assert.Equal(Enum.GetValues<SidePanelPage>(), second.SidePanelPages);
-        var changed = new List<string?>();
-        second.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        await h.OpenTabAsync();
+        var dock = h.Shell.ToolWindows;
+        var files = dock.For(ToolWindowKinds.Files);
 
-        // Dragged onto Agents' place, the scratch pad takes it, and Agents moves over.
-        first.MoveSidePanelPage(SidePanelPage.ScratchPad, SidePanelPage.Agents);
-        SidePanelPage[] moved = [SidePanelPage.Files, SidePanelPage.ScratchPad, SidePanelPage.Agents, SidePanelPage.Project, SidePanelPage.Processes, SidePanelPage.Tasks, SidePanelPage.Mcp,
-            SidePanelPage.Games];
-        Assert.Equal(moved, second.SidePanelPages);
-        Assert.Contains(nameof(TabViewModel.SidePanelPages), changed);
-        Assert.Equal(moved.Select(p => p.ToString()), h.Services.State.SidePanelPages);
-        Assert.Equal(moved, new ShellViewModel(h.Services, () => { }).Layout.SidePanelPages);
+        InlineDispatcher.Run(() => dock.PointAtTab(files));
+        Assert.Null(dock.SlidOut);
+        h.Time.Advance(ToolDockViewModel.SlideOutDelay);
+        Assert.Same(files, dock.SlidOut);
+        Assert.True(h.IsShowing(ToolWindowKinds.Files));
+        // Slid out over the conversation, it takes no room.
+        Assert.Equal(ToolDockViewModel.StripThickness, h.Shell.Layout.RightEdgeRoom);
 
-        // Reset order.
-        second.ResetSidePanelPages();
-        Assert.Equal(Enum.GetValues<SidePanelPage>(), first.SidePanelPages);
-        Assert.Null(h.Services.State.SidePanelPages);
+        InlineDispatcher.Run(() => dock.LeaveTab(files));
+        h.Time.Advance(ToolDockViewModel.SlideBackDelay);
+        Assert.Null(dock.SlidOut);
+        Assert.False(h.IsShowing(ToolWindowKinds.Files));
+
+        // A click slides it out at once, and keeps it there until a press elsewhere or Esc.
+        InlineDispatcher.Run(() => dock.ClickTab(files));
+        Assert.Same(files, dock.SlidOut);
+        InlineDispatcher.Run(() => dock.LeaveTab(files));
+        h.Time.Advance(ToolDockViewModel.SlideBackDelay);
+        Assert.Same(files, dock.SlidOut);
+        Assert.True(InlineDispatcher.Read(dock.Escape));
+        Assert.Null(dock.SlidOut);
     }
 
     [Fact]
-    public async Task Move_left_and_right_pass_the_next_page_the_tab_has()
+    public async Task The_pin_docks_the_edge_beside_the_panes_and_the_layout_is_kept()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var dock = h.Shell.ToolWindows;
+
+        InlineDispatcher.Run(() => dock.Right.TogglePinCommand.Execute(null));
+
+        Assert.True(dock.Right.IsDocked);
+        Assert.Same(dock.For(ToolWindowKinds.Files), dock.Right.Selected);
+        Assert.True(h.IsShowing(ToolWindowKinds.Files));
+        Assert.Equal(ToolDockViewModel.MinRightWidth, h.Shell.Layout.RightEdgeRoom);
+        Assert.False(h.Services.State.ToolWindows!.Edges.Single(e => e.Edge == "Right").AutoHide);
+
+        // Its tab chosen, and its width, come back with the next launch.
+        InlineDispatcher.Run(() =>
+        {
+            dock.For(ToolWindowKinds.Agents).SelectCommand.Execute(null);
+            dock.Resize(ToolEdge.Right, 480);
+            dock.SaveSize();
+        });
+        var again = new ShellViewModel(h.Services, () => { }).ToolWindows;
+        Assert.False(again.Right.IsAutoHide);
+        Assert.Equal(480, again.Right.Size);
+        Assert.Equal("Agents", h.Services.State.ToolWindows!.Edges.Single(e => e.Edge == "Right").Selected);
+    }
+
+    [Fact]
+    public async Task A_window_moved_to_the_bottom_docks_there_and_once_closed_comes_back_where_it_was()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var dock = h.Shell.ToolWindows;
+        var agents = dock.For(ToolWindowKinds.Agents);
+
+        InlineDispatcher.Run(() => agents.MoveToOtherEdgeCommand.Execute(null));
+
+        Assert.Equal(ToolEdge.Bottom, agents.Edge);
+        Assert.Equal("Move to the right", agents.MoveText);
+        Assert.True(dock.Bottom.IsDocked);
+        Assert.Same(agents, dock.Bottom.Selected);
+        Assert.DoesNotContain(agents, InlineDispatcher.Read(() => dock.Right.Tabs.ToList()));
+
+        InlineDispatcher.Run(() => agents.CloseCommand.Execute(null));
+        Assert.False(agents.HasTab);
+        Assert.False(dock.Bottom.HasTabs);
+
+        h.ShowToolWindow(ToolWindowKinds.Agents);
+        Assert.Equal(ToolEdge.Bottom, agents.Edge);
+        Assert.True(h.IsShowing(ToolWindowKinds.Agents));
+    }
+
+    [Fact]
+    public async Task The_composer_bars_Files_shows_Changed_files()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        // No project tools, monitor or MCP servers, and no tasks: Changed files, Agents and Scratch pad.
-        Assert.Equal([SidePanelPage.Files, SidePanelPage.Agents, SidePanelPage.ScratchPad], tab.SidePanelPages.Where(tab.HasSidePanelPage));
 
-        tab.MoveSidePanelPage(SidePanelPage.ScratchPad, -1);
-        Assert.Equal([SidePanelPage.Files, SidePanelPage.ScratchPad, SidePanelPage.Agents], tab.SidePanelPages.Where(tab.HasSidePanelPage));
+        InlineDispatcher.Run(() => tab.OpenFilesPageCommand.Execute(null));
 
-        // Already at either end, it stays.
-        tab.MoveSidePanelPage(SidePanelPage.Files, -1);
-        tab.MoveSidePanelPage(SidePanelPage.Agents, 1);
-        Assert.Equal([SidePanelPage.Files, SidePanelPage.ScratchPad, SidePanelPage.Agents], tab.SidePanelPages.Where(tab.HasSidePanelPage));
-
-        tab.MoveSidePanelPage(SidePanelPage.Files, 1);
-        Assert.Equal([SidePanelPage.ScratchPad, SidePanelPage.Files, SidePanelPage.Agents], tab.SidePanelPages.Where(tab.HasSidePanelPage));
+        Assert.True(h.IsShowing(ToolWindowKinds.Files));
+        Assert.Same(tab, h.ToolWindow(ToolWindowKinds.Files).Content);
     }
 
     [Fact]
-    public async Task A_saved_order_leaves_out_names_it_doesnt_know_and_puts_a_page_it_doesnt_name_after_the_one_it_follows()
+    public async Task The_side_panels_width_and_page_order_carry_over_to_the_right_edge()
     {
         await using var h = new TabTestHarness();
-        // Saved before MCP and Games were pages, and with one since taken out.
-        h.Services.State.SidePanelPages = ["ScratchPad", "Tasks", "Gone", "Files", "Agents", "Project", "Processes", "Files"];
+        h.Services.State.SidePanelWidth = 480;
+        h.Services.State.SidePanelPages = ["ScratchPad", "Agents", "Files"];
 
-        var layout = new ShellViewModel(h.Services, () => { }).Layout;
+        var dock = new ShellViewModel(h.Services, () => { }).ToolWindows;
 
-        Assert.Equal([SidePanelPage.ScratchPad, SidePanelPage.Games, SidePanelPage.Tasks, SidePanelPage.Mcp, SidePanelPage.Files, SidePanelPage.Agents, SidePanelPage.Project, SidePanelPage.Processes],
-            layout.SidePanelPages);
+        Assert.Equal(480, dock.Right.Size);
+        Assert.Equal(["Scratch pad", "Agents", "Changed files"], dock.Right.Tabs.Select(w => w.Title));
     }
 
     [Fact]
-    public async Task The_composer_bars_Files_opens_the_side_panel_on_Changed_files_whatever_page_it_showed()
+    public async Task A_tab_dragged_to_the_bottom_of_the_panes_docks_there()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var dock = h.Shell.ToolWindows;
+        var files = dock.For(ToolWindowKinds.Files);
+        var geometry = new ToolDockGeometry(new Rect(0, 0, 1000, 800), new Rect(0, 0, 1026, 800), RightStrip: new Rect(1000, 0, 26, 800));
+
+        // In the middle of the panes: nowhere to go.
+        Assert.Null(dock.DropAt(files, new Point(500, 300), geometry));
+        // Near the bottom: the bottom edge, which has nothing yet.
+        var drop = dock.DropAt(files, new Point(500, 780), geometry);
+        Assert.NotNull(drop);
+        Assert.Equal((ToolEdge.Bottom, "Dock bottom"), (drop.Edge, drop.Label));
+        // Over its own edge's tabs: it moves among them instead.
+        Assert.Null(dock.DropAt(files, new Point(1010, 300), geometry));
+
+        InlineDispatcher.Run(() => dock.Drop(files, drop));
+        Assert.Equal(ToolEdge.Bottom, files.Edge);
+        Assert.True(h.IsShowing(ToolWindowKinds.Files));
+    }
+
+    [Fact]
+    public async Task With_a_Files_tab_focused_the_windows_show_its_groups_last_session_tab_and_say_whose()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        tab.OpenSidePanelPage(SidePanelPage.ScratchPad);
-        tab.IsSidePanelOpen = false;
+        var dock = h.Shell.ToolWindows;
+        Assert.Same(tab, dock.Session);
+        Assert.False(dock.NamesSession);
 
-        // Closed on another page: it opens on Changed files.
-        tab.ToggleFilesPageCommand.Execute(null);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsFilesPage);
+        InlineDispatcher.Run(() => h.Shell.OpenProjectFilesCommand.Execute(h.Shell.Groups.Single()));
 
-        // Open on another page: it goes to Changed files rather than closing.
-        tab.ShowScratchPadPageCommand.Execute(null);
-        tab.ToggleFilesPageCommand.Execute(null);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsFilesPage);
-
-        // Already on Changed files: it closes.
-        tab.ToggleFilesPageCommand.Execute(null);
-        Assert.False(tab.IsSidePanelOpen);
+        Assert.IsType<ProjectFilesViewModel>(h.Shell.Selected);
+        Assert.Same(tab, dock.Session);
+        Assert.True(dock.NamesSession);
+        h.ShowToolWindow(ToolWindowKinds.Files);
+        Assert.Equal(tab.DisplayName, dock.Right.SessionLabel);
     }
-
     [Fact]
     public async Task A_new_file_from_Write_shows_as_added()
     {

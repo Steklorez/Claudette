@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Diffs;
 using Claudette.Core.Files;
 using Claudette.Core.Git;
@@ -118,8 +119,7 @@ public sealed class ScratchPadTests
 
         Assert.Equal("First note\n\nSecond note\n", tab.ScratchPad.Text);
         Assert.Equal([(0, 10), (12, 11)], added);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsScratchPadPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.ScratchPad));
         Assert.Same(tab.ScratchPad, tab.ShownScratchPad);
         Assert.StartsWith("Added to the scratch pad.", h.Shell.Announcement, StringComparison.Ordinal);
         await TabTestHarness.Eventually(() => Saved(h, tab.ScratchPad)?.Text == "First note\n\nSecond note\n", "the pad saved without waiting");
@@ -151,7 +151,7 @@ public sealed class ScratchPadTests
 
         await h.Shell.PaletteEntries().Single(e => e.Label == "Show scratch pad").Run();
 
-        Assert.True(tab.IsSidePanelOpen && tab.IsScratchPadPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.ScratchPad));
         Assert.NotNull(tab.ShownScratchPad);
     }
 
@@ -310,7 +310,7 @@ public sealed class ScratchPadTests
 
         tab.AddMessageToScratchPadCommand.Execute(new UserMessageItem(""));
 
-        Assert.False(tab.IsSidePanelOpen);
+        Assert.False(h.IsShowing(ToolWindowKinds.ScratchPad));
         Assert.Null(tab.ShownScratchPad);
     }
 

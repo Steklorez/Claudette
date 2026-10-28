@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
@@ -117,8 +118,7 @@ public class TasksPlanTests
         Assert.Equal(reply.SentAt, tab.TodoList.PlanAt);
         Assert.Equal("Following the plan", tab.TodoList.StatusText);
         Assert.True(tab.TodoList.HasAnything);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsTasksPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.Tasks));
         Assert.Equal(tab.TodoList.Plan, tab.State.Plan?.Text);
         Assert.Equal(h.Time.GetUtcNow(), tab.State.Plan?.ChosenAt);
 

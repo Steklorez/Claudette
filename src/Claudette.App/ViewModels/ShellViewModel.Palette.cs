@@ -156,15 +156,8 @@ public sealed partial class ShellViewModel
             {
                 Command("Stash the message", () => tab.StashCommand.Execute(null), KeyboardShortcuts.Stash);
             }
-            Command("Show changed files", () => tab.OpenSidePanelPage(SidePanelPage.Files));
-            Command("Show the agent map", () => tab.OpenSidePanelPage(SidePanelPage.Agents));
-            Command("Show tasks", () => tab.OpenSidePanelPage(SidePanelPage.Tasks));
-            Command("Show processes", () => tab.OpenSidePanelPage(SidePanelPage.Processes));
-            if (tab.HasMcpServers)
-            {
-                Command("Show MCP servers", () => tab.OpenSidePanelPage(SidePanelPage.Mcp));
-            }
-            Command("Show scratch pad", () => tab.OpenSidePanelPage(SidePanelPage.ScratchPad));
+            // The tool windows that have something to show (DESIGN.md §3, "Tool windows").
+            entries.AddRange(ToolWindowEntries());
             if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group)
             {
                 Command("Open project files", () => OpenProjectFiles(group));

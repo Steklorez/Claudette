@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels;
 
-/// <summary>One MCP server on the side panel's MCP page. Its name and error are the server's own: untrusted text.</summary>
+/// <summary>One MCP server in the MCP tool window. Its name and error are the server's own: untrusted text.</summary>
 public sealed partial class McpServerRow(McpServerStatus status) : ObservableObject
 {
     public McpServerStatus Status { get; } = status;
@@ -70,7 +70,7 @@ public sealed partial class McpServerRow(McpServerStatus status) : ObservableObj
 }
 
 /// <summary>
-/// The side panel's MCP page (DESIGN.md §4, "MCP servers"): the session's MCP servers and how each is connected, with
+/// The MCP tool window (DESIGN.md §4, "MCP servers"): the session's MCP servers and how each is connected, with
 /// <b>Reconnect</b> and a switch to turn one off for the session. Read from Claude Code when the page opens and after a
 /// change; a tab without a session shows nothing.
 /// </summary>

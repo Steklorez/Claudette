@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 using Claudette.Core.Settings;
 using Path = Avalonia.Controls.Shapes.Path;
@@ -171,7 +172,7 @@ public class RunningTasksUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         StartThreeTasks(h);
         await UiText.SettleUntilAsync(window, () => tab.Tasks.Count == 3, "the tasks");
-        tab.OpenSidePanelPage(ViewModels.SidePanelPage.Agents);
+        h.ShowToolWindow(ToolWindowKinds.Agents);
         UiText.Settle(window);
         var tree = window.GetVisualDescendants().OfType<AgentTree>().Single();
         await UiText.SettleUntilAsync(window, () => tree.GetVisualDescendants().OfType<Button>().Any(b => b.Classes.Contains("agentstop") && b.IsVisible), "the agent's row");

@@ -7,6 +7,7 @@ using Claudette.App.Games;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 
 namespace Claudette.App.UiTests;
@@ -72,7 +73,7 @@ public class AutoContinueUiTests
         flyout.Hide();
         UiText.Settle(window);
         Assert.IsType<HangmanViewModel>(h.Services.Games.Game);
-        Assert.True(tab.IsGamesPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.Games));
 
         // Left stopped, the limit still holds.
         tab.DontContinueCommand.Execute(null);

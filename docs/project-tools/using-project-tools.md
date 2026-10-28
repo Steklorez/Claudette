@@ -9,7 +9,7 @@ summary: "A tab can do things for the project in its folder: launch the editor, 
 
 A tab can do things for the project in its folder: launch the editor, generate project files, build, open the solution. Which things you get depends on the project. Claudette knows [Unreal Engine](unreal-engine.md), [Unity](unity.md) and [Godot](godot.md) projects, and a folder can have its own [actions and links](actions-and-links.md). [Perforce](perforce.md) has a page of its own.
 
-{% include shot.html name="guide/project-tools/project-page" alt="The Project page in the side panel for the Unreal project, with the project's details." %}
+{% include shot.html name="guide/project-tools/project-page" alt="The Project tool window for the Unreal project, with the project's details." %}
 
 ## The project row
 
@@ -73,7 +73,7 @@ A run's log shows in the main area, in the conversation's place, without the mes
 
 ## The Project page
 
-The **Project** page of the side panel, beside Changed files, Agents and Processes, shows the project's details: its file, the engine's version, folder and kind, the editor target and the configuration. It also lists entries of your project files that were skipped. The runs' logs are in the main area.
+The **Project** tool window, beside Changed files, Agents and Processes, shows the project's details: its file, the engine's version, folder and kind, the editor target and the configuration. It also lists entries of your project files that were skipped. The runs' logs are in the main area.
 
 The page's tab shows a busy dot while a job runs. It's there when the tab has project tools: a project, actions of your own, or skipped entries. A running job's processes also show on the [Processes](../tabs/processes.md) page when the process monitor is on. Closing the tab stops a running job along with its other processes.
 

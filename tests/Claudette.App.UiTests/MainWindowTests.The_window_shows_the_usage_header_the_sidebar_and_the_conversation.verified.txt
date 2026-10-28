@@ -49,4 +49,7 @@
 [button] Send
 "{root}/work"
 "Idle"
+[button] Changed files, auto-hidden, right: Changed files
+[button] Agents, auto-hidden, right: Agents
+[button] Scratch pad, auto-hidden, right: Scratch pad
 "work: Claude finished."

@@ -14,3 +14,6 @@
 "Start a Claude Code session"
 "Pick the folder Claude should work in."
 [button] New tab
+[button] Changed files, auto-hidden, right: Changed files
+[button] Agents, auto-hidden, right: Agents
+[button] Scratch pad, auto-hidden, right: Scratch pad

@@ -7,7 +7,7 @@ namespace Claudette.App.Controls;
 
 /// <summary>
 /// Keeps its content within the width a sideways-scrolling <see cref="ScrollViewer"/> shows, from where the content
-/// starts to <see cref="Gap"/> short of the viewer's right edge (DESIGN.md §3, "Side panel"). A tree's row wraps its
+/// starts to <see cref="Gap"/> short of the viewer's right edge (DESIGN.md §3, "Tool windows"). A tree's row wraps its
 /// text there and lines its numbers up at that edge however deep it's nested, and only a row nested so deep that it
 /// would get less than <see cref="Minimum"/> scrolls sideways.
 /// </summary>

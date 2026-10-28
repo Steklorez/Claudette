@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// A project's scratch pad (DESIGN.md §18, "Scratch pad"): the text every tab in the project shows on the side panel's
-/// Scratch pad page, one object for all of them (<see cref="ScratchPadService"/>). What's typed is saved to this
+/// A project's scratch pad (DESIGN.md §18, "Scratch pad"): the text every tab in the project shows in the Scratch pad
+/// tool window, one object for all of them (<see cref="ScratchPadService"/>). What's typed is saved to this
 /// machine's copy a second after typing stops, and a pad with a git remote then syncs with the session library. When
 /// another machine changed it too, <see cref="Conflict"/> asks what it should become.
 /// </summary>
@@ -112,6 +112,20 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
     /// </summary>
     public event Action<int, int>? Added;
 
+    /// <summary>
+    /// The last text added, until a view selects it: the pad's window may only be made once it shows, after the text was
+    /// added (DESIGN.md §3, "Tool windows").
+    /// </summary>
+    private (int Start, int Length)? _unselected;
+
+    /// <summary>The last text added that no view has selected yet, which the view taking the pad selects.</summary>
+    internal (int Start, int Length)? TakeUnselected()
+    {
+        var unselected = _unselected;
+        _unselected = null;
+        return unselected;
+    }
+
     // ---- Where it's kept, and how syncing went ---------------------------------------------------------------------
 
     /// <summary>Where the pad is kept, under <see cref="Summary"/>: synced through the library, or why not.</summary>
@@ -170,6 +184,7 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
         var addition = ScratchPadText.Append(Text, text);
         Text = addition.Text;
         _ = SaveAsync();
+        _unselected = Added is null ? (addition.Start, addition.Length) : null;
         Added?.Invoke(addition.Start, addition.Length);
         return true;
     }

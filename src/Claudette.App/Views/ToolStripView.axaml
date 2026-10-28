@@ -1,0 +1,37 @@
+<!-- An auto-hidden edge's tabs along the window's edge (DESIGN.md §3, "Tool windows"): pointing at one, after a moment, or
+     clicking it slides its window out over the conversation. The right edge's read downwards. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tw="using:Claudette.App.ViewModels.ToolWindows"
+             x:Class="Claudette.App.Views.ToolStripView"
+             x:DataType="tw:ToolEdgeViewModel">
+  <!-- The pages' looks and the tool windows', which the tab's view includes for its own (DESIGN.md §3, "Tool windows") -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
+  </UserControl.Styles>
+  <Border Classes="toolstrip" Classes.right="{Binding IsRight}" Classes.bottom="{Binding IsBottom}">
+    <ItemsControl ItemsSource="{Binding Tabs}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="{Binding IsRight, Converter={x:Static tw:ToolStripOrientation.Converter}}" Spacing="2" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate DataType="tw:ToolWindowViewModel">
+          <Button Classes="flat striptab tooltab" Classes.slid="{Binding IsShowing}" AutomationProperties.Name="{Binding AutomationName}"
+                  PointerEntered="OnTabEntered" PointerExited="OnTabExited" Click="OnTabClicked" ToolTip.Tip="{Binding Tip}">
+            <LayoutTransformControl LayoutTransform="{Binding Edge, Converter={x:Static tw:ToolStripOrientation.Rotation}}">
+              <TextBlock Classes="small" Text="{Binding Title}" />
+            </LayoutTransformControl>
+            <Button.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="{Binding MoveText}" Command="{Binding MoveToOtherEdgeCommand}" />
+                <MenuItem Header="Close" Command="{Binding CloseCommand}" />
+              </ContextMenu>
+            </Button.ContextMenu>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </Border>
+</UserControl>

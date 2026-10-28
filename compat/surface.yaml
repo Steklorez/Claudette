@@ -1233,7 +1233,7 @@ items:
     kind: behavior
     status: undocumented
     usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.Core/Diffs/BeforeContentStore.cs
-    test: RealCliTests, BeforeContentStoreTests, SidePanelTests
+    test: RealCliTests, BeforeContentStoreTests, ToolWindowsTests
     fallback: "In 2.1.284 the live tool_use_result carries the whole originalFile, but the transcript's toolUseResult has null when it's over 10,000 characters (DESIGN.md §8, \"Large files in transcripts\"). Claudette saves the first change's originalFile when it's over BeforeContentStore.TranscriptLimit and reads it back on replay. If the limit drops, files between the new limit and 10,000 characters replay with an unknown \"before\" (modified, without counts) until TranscriptLimit follows it. If transcripts keep it whole again, nothing breaks."
   - id: "line endings"
     kind: behavior
@@ -1873,13 +1873,13 @@ items:
     status: documented
     usedIn: src/Claudette.App/Conversation/RunningTasks.cs, src/Claudette.App/Conversation/AgentMap.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: SidePanelTests, AgentMapTests, RunningTasksTests
+    test: ToolWindowsTests, AgentMapTests, RunningTasksTests
   - id: "stop_task"
     kind: control
     status: documented
     usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: SidePanelTests, RunningTasksTests
+    test: ToolWindowsTests, RunningTasksTests
   # --- Agent map (DESIGN.md §18) ------------------------------------------------------------------------
   - id: "tool_progress"
     kind: message

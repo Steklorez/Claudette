@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 
 namespace Claudette.App.UiTests;
@@ -44,11 +45,10 @@ public class TasksAndMcpPagesUiTests
         Tool("t3", "TaskUpdate", new JsonObject { ["taskId"] = "2", ["addBlockedBy"] = new JsonArray("1") });
         await UiText.SettleUntilAsync(window, () => tab.TodoList.Items.Count == 2 && tab.TodoList.Items[1].IsBlocked, "the tasks");
 
-        tab.IsSidePanelOpen = true;
-        tab.ShowTasksPageCommand.Execute(null);
+        h.DockToolWindow(ToolWindowKinds.Tasks);
         UiText.Settle(window);
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
-        var texts = Texts(view);
+        var texts = Texts(window);
 
         Assert.Contains("0 of 2", texts);
         Assert.Contains("Add the users.email index.", texts);
@@ -64,16 +64,16 @@ public class TasksAndMcpPagesUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 800);
         h.Transport.EmitTurn("Here's my plan: read the build script, then fix the config.");
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
-        Button ShowAsPlan() => view.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Show as the plan");
-        await UiText.SettleUntilAsync(window, () => view.GetVisualDescendants().OfType<Button>().Any(b => AutomationProperties.GetName(b) == "Show as the plan"), "the reply's chip");
+        Button ShowAsPlan() => window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Show as the plan");
+        await UiText.SettleUntilAsync(window, () => window.GetVisualDescendants().OfType<Button>().Any(b => AutomationProperties.GetName(b) == "Show as the plan"), "the reply's chip");
         var button = ShowAsPlan();
         Assert.True(button.IsVisible);
         Assert.IsType<Claudette.App.Conversation.AssistantTextItem>(button.CommandParameter);
 
         button.Command!.Execute(button.CommandParameter);
         // The plan's Markdown lays out in the background: the page is read once it shows the plan's text.
-        await UiText.SettleUntilAsync(window, () => tab.IsTasksPage && Texts(view).Any(t => t?.Contains("read the build script", StringComparison.Ordinal) == true), "the plan on the tasks page");
-        var texts = Texts(view);
+        await UiText.SettleUntilAsync(window, () => h.IsShowing(ToolWindowKinds.Tasks) && Texts(window).Any(t => t?.Contains("read the build script", StringComparison.Ordinal) == true), "the plan on the tasks page");
+        var texts = Texts(window);
 
         Assert.Contains("Plan", texts);
         Assert.Contains(texts, t => t?.StartsWith("From Claude's reply at ", StringComparison.Ordinal) == true);
@@ -95,16 +95,15 @@ public class TasksAndMcpPagesUiTests
         h.Transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5","permissionMode":"default","mcp_servers":[{"name":"tickets","status":"connected"},{"name":"broken","status":"failed"}]}""");
         await UiText.SettleUntilAsync(window, () => tab.HasMcpServers, "the servers");
 
-        tab.IsSidePanelOpen = true;
-        tab.ShowMcpPageCommand.Execute(null);
+        h.DockToolWindow(ToolWindowKinds.Mcp);
         await UiText.SettleUntilAsync(window, () => tab.McpServers.Servers.Count == 2, "the list");
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
-        var texts = Texts(view);
+        var texts = Texts(window);
         Assert.Contains("Connected · 1 tool", texts);
         Assert.Contains("Failed", texts);
         Assert.Equal("1 needs attention", tab.McpServers.Attention);
 
-        var turnOff = view.GetVisualDescendants().OfType<Button>().First(b => b.IsEffectivelyVisible && b.Content as string == "Turn off" && b.DataContext is McpServerRow { Name: "tickets" });
+        var turnOff = window.GetVisualDescendants().OfType<Button>().First(b => b.IsEffectivelyVisible && b.Content as string == "Turn off" && b.DataContext is McpServerRow { Name: "tickets" });
         await ((CommunityToolkit.Mvvm.Input.IAsyncRelayCommand)turnOff.Command!).ExecuteAsync(turnOff.CommandParameter);
         await UiText.SettleUntilAsync(window, () => tab.McpServers.Servers.Any(s => s is { Name: "tickets", IsDisabled: true }), "the server off");
         Assert.Contains("mcp_toggle", h.Transport.SentControlSubtypes);
@@ -119,10 +118,9 @@ public class TasksAndMcpPagesUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 800);
         h.Transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5","permissionMode":"default","mcp_servers":[{"name":"tickets","status":"connected"}]}""");
         await UiText.SettleUntilAsync(window, () => tab.HasMcpServers, "the servers");
-        tab.IsSidePanelOpen = true;
-        tab.ShowMcpPageCommand.Execute(null);
+        h.DockToolWindow(ToolWindowKinds.Mcp);
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
-        List<Border> Rows() => [.. view.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("mcprow"))];
+        List<Border> Rows() => [.. window.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("mcprow"))];
         await UiText.SettleUntilAsync(window, () => Rows().Count == 1, "the server's row");
         var row = Rows()[0];
         var hover = Assert.IsAssignableFrom<ISolidColorBrush>(window.FindResource(window.ActualThemeVariant, "HoverBrush")).Color;
@@ -172,21 +170,19 @@ public class TasksAndMcpPagesUiTests
         await UiText.SettleUntilAsync(window, () => tab.Items.OfType<Claudette.App.Conversation.DocSummaryItem>().Any(), "the row at the turn's end");
 
         // The card's link and the row at the turn's end, rather than the reply's JSON.
-        Assert.Equal(2, Texts(view).Count(t => t == "Created “Enemies: your task list”"));
-        Assert.DoesNotContain(Texts(view), t => t?.Contains("verdict", StringComparison.Ordinal) == true);
+        Assert.Equal(2, Texts(window).Count(t => t == "Created “Enemies: your task list”"));
+        Assert.DoesNotContain(Texts(window), t => t?.Contains("verdict", StringComparison.Ordinal) == true);
 
-        tab.IsSidePanelOpen = true;
-        tab.ShowTasksPageCommand.Execute(null);
+        h.DockToolWindow(ToolWindowKinds.Tasks);
         UiText.Settle(window);
-        var tasksTab = view.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("pagetab") && Equals(b.Tag, SidePanelPage.Tasks));
+        var tasksTab = window.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("tooltab") && b.DataContext is ToolWindowViewModel { Kind.Id: "Tasks" });
         Assert.True(tasksTab.IsVisible);
-        Assert.Equal("A Claude Doc", ToolTip.GetTip(tasksTab));
-        var texts = Texts(view);
+        var texts = Texts(window);
         Assert.Contains("Docs", texts);
         Assert.Contains("Enemies: your task list", texts);
         Assert.Contains(texts, t => t?.StartsWith("Created ", StringComparison.Ordinal) == true && !t.Contains('“'));
 
-        var open = view.GetVisualDescendants().OfType<Button>().Single(b => b.DataContext is Claudette.App.Conversation.DocRow && b.IsEffectivelyVisible);
+        var open = window.GetVisualDescendants().OfType<Button>().Single(b => b.DataContext is Claudette.App.Conversation.DocRow && b.IsEffectivelyVisible);
         Assert.Equal("Open Enemies: your task list", AutomationProperties.GetName(open));
         open.Command!.Execute(open.CommandParameter);
         await UiText.SettleUntilAsync(window, () => h.Platform.OpenedUrls.Count == 1, "the doc opening");

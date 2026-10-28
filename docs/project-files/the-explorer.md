@@ -134,4 +134,4 @@ Opening the Files tab from its group, with the **Project files** button or **Ope
 
 ## See also
 
-- [Changed files](../changes/changed-files.md) is the same idea for one session, in the side panel of a conversation.
+- [Changed files](../changes/changed-files.md) is the same idea for one session, in a tool window beside a conversation.

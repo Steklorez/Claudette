@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 
 namespace Claudette.App.UiTests;
@@ -126,13 +127,12 @@ public class TaskProgressUiTests
         Propose("p2", "t2", "1. Read the code\n2. Extend the API");
         await UiText.SettleUntilAsync(window, () => tab.Items.OfType<PlanItem>().Count() == 2 && Texts(view).Contains("Claude's plan · v2"), "the second plan's card");
 
-        tab.IsSidePanelOpen = true;
-        tab.ShowTasksPageCommand.Execute(null);
-        await UiText.SettleUntilAsync(window, () => Texts(view).Contains("v2 of 2"), "the versions on the page");
-        Assert.Contains("Waiting for review", Texts(view));
+        h.DockToolWindow(ToolWindowKinds.Tasks);
+        await UiText.SettleUntilAsync(window, () => Texts(window).Contains("v2 of 2"), "the versions on the page");
+        Assert.Contains("Waiting for review", Texts(window));
 
         // What changed from v1, line by line, on the page.
-        var panel = view.GetVisualDescendants().OfType<SidePanelView>().Single();
+        var panel = window.GetVisualDescendants().OfType<SessionPagesView>().First(v => v.IsEffectivelyVisible);
         var changes = panel.GetVisualDescendants().OfType<ToggleButton>().Single(b => b.IsEffectivelyVisible && Texts(b).Contains("Changes from v1"));
         changes.IsChecked = true;
         await UiText.SettleUntilAsync(window, () => Texts(panel).Contains("2. Extend the API") && Texts(panel).Contains("2. Rewrite the API"), "the changes");
