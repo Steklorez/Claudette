@@ -68,6 +68,25 @@ public sealed partial class PerforcePage : SettingsPage
                 "A CL 12345 badge at the right of a tab's second line.",
                 "The tab info card always shows the changelist Claude is working in.", ["changelist", "cl", "tab rows"]),
         ]);
+        Section("files", "Opening files in Perforce",
+        [
+            Setting("perforce.checkOutBeforeChanges", "Check out files before they're changed",
+                s => s.Perforce.CheckOutBeforeChanges, (s, v) => s.Perforce.CheckOutBeforeChanges = v,
+                "As you start editing one in a Files tab, and before Claude's Edit or Write changes one.",
+                "A file Perforce hasn't checked out is read-only, so it couldn't be saved or written otherwise. It goes in the changelist the tab is working in, or the default one.",
+                ["p4 edit", "check out", "checkout", "read-only"]),
+            Setting("perforce.addNewFiles", "Add new files", s => s.Perforce.AddNewFiles, (s, v) => s.Perforce.AddNewFiles = v,
+                "Files made with a Files tab's New file, or created by Claude's Write, are marked for add.",
+                "Perforce's own ignore rules (P4IGNORE) still apply.", ["p4 add", "mark for add"]),
+            Setting("perforce.deleteRemovedFiles", "Mark deleted files for delete", s => s.Perforce.DeleteRemovedFiles, (s, v) => s.Perforce.DeleteRemovedFiles = v,
+                "Files and folders deleted from a Files tab's explorer are marked for delete.",
+                "Files Claude deletes with a command aren't seen: Claude uses p4 delete for those, as its note asks.", ["p4 delete", "mark for delete"]),
+            Setting("perforce.moveRenamedFiles", "Rename with p4 move", s => s.Perforce.MoveRenamedFiles, (s, v) => s.Perforce.MoveRenamedFiles = v,
+                "Renaming in a Files tab's explorer moves the file in Perforce too.", keywords: ["p4 move", "rename"]),
+            Setting("perforce.showFileState", "Show Perforce state in the Files tab", s => s.Perforce.ShowFileState, (s, v) => s.Perforce.ShowFileState = v,
+                "Beside each file's name: edit, add, delete or move, as Perforce says.",
+                "Asked of Perforce in the background, a folder at a time as it's shown, and again when files change.", ["p4 fstat", "explorer", "status", "opened"]),
+        ], description: "In a Perforce workspace, Claudette opens files in Perforce as they're changed, made, renamed and deleted.");
         Section("password", "Stored password",
         [
             Info("perforce.storedPassword", "Save a Perforce password", keywords: ["forget password", "credential manager", "keychain"]),
@@ -81,7 +100,7 @@ public sealed partial class PerforcePage : SettingsPage
 
     public override string IconKey => Logos.Perforce;
 
-    public override string Description => "Keeping Perforce logins fresh, so Claude's p4 commands keep working.";
+    public override string Description => "Keeping Perforce logins fresh, so Claude's p4 commands keep working, and opening files in Perforce as they change.";
 
     private PerforceSettings Perforce => Settings.Perforce;
 
@@ -89,6 +108,38 @@ public sealed partial class PerforcePage : SettingsPage
     {
         get => Perforce.Enabled;
         set => Set(value, v => Perforce.Enabled = v);
+    }
+
+    // ---- Opening files in Perforce (DESIGN.md §18, "Opening files in Perforce") --------------------------------------
+
+    public bool CheckOutBeforeChanges
+    {
+        get => Perforce.CheckOutBeforeChanges;
+        set => Set(value, v => Perforce.CheckOutBeforeChanges = v);
+    }
+
+    public bool AddNewFiles
+    {
+        get => Perforce.AddNewFiles;
+        set => Set(value, v => Perforce.AddNewFiles = v);
+    }
+
+    public bool DeleteRemovedFiles
+    {
+        get => Perforce.DeleteRemovedFiles;
+        set => Set(value, v => Perforce.DeleteRemovedFiles = v);
+    }
+
+    public bool MoveRenamedFiles
+    {
+        get => Perforce.MoveRenamedFiles;
+        set => Set(value, v => Perforce.MoveRenamedFiles = v);
+    }
+
+    public bool ShowFileState
+    {
+        get => Perforce.ShowFileState;
+        set => Set(value, v => Perforce.ShowFileState = v);
     }
 
     public IReadOnlyList<PerforcePasswordSourceChoice> PerforcePasswordSources { get; } =

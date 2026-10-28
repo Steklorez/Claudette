@@ -141,6 +141,9 @@ internal interface IChangedFilesHost : ITabAreaHost
 
     /// <summary>The session's Claude changed <paramref name="path"/>: the other tabs listing it look again.</summary>
     void ClaudeChangedFile(string path);
+
+    /// <summary>The session's Claude created <paramref name="path"/>: Perforce marks it for add (DESIGN.md §18, "Opening files in Perforce").</summary>
+    void ClaudeCreatedFile(string path);
 }
 
 /// <summary>The tab's changed files and diffs (DESIGN.md §8).</summary>
@@ -302,6 +305,11 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                     {
                         // The other tabs that changed the file look at it again (DESIGN.md §8, "This session's changes").
                         _host.ClaudeChangedFile(file.Path);
+                        // This change made it: the session's first, to a file that wasn't there.
+                        if (file.IsNew && file.ToolUseIds.Count == 1 && file.ToolUseIds[0] == result.ToolUseId)
+                        {
+                            _host.ClaudeCreatedFile(file.Path);
+                        }
                     }
                 }
                 break;
@@ -975,19 +983,15 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary>Whether an external diff tool is set in Settings → Files and diffs → Diff tool.</summary>
     public bool HasDiffTool => DiffTool.Kind != DiffToolKind.BuiltIn;
 
-    private DiffToolChoice DiffTool
+    private DiffToolChoice DiffTool => DiffToolFrom(_services.Settings.DiffTool);
+
+    /// <summary>Settings → Files and diffs → <b>Diff tool</b>, as a choice to launch: the built-in view, a preset, or a command.</summary>
+    internal static DiffToolChoice DiffToolFrom(DiffToolSettings settings) => settings.Kind switch
     {
-        get
-        {
-            var settings = _services.Settings.DiffTool;
-            return settings.Kind switch
-            {
-                "preset" when settings.PresetId is { Length: > 0 } => new DiffToolChoice(DiffToolKind.Preset, settings.PresetId),
-                "custom" when settings.CustomCommand is { Length: > 0 } => new DiffToolChoice(DiffToolKind.Custom, CustomCommand: settings.CustomCommand),
-                _ => DiffToolChoice.BuiltIn,
-            };
-        }
-    }
+        "preset" when settings.PresetId is { Length: > 0 } => new DiffToolChoice(DiffToolKind.Preset, settings.PresetId),
+        "custom" when settings.CustomCommand is { Length: > 0 } => new DiffToolChoice(DiffToolKind.Custom, CustomCommand: settings.CustomCommand),
+        _ => DiffToolChoice.BuiltIn,
+    };
 
     private string DiffTempDirectory => Path.Combine(_services.Paths.DiffTempDirectory, _host.Id);
 

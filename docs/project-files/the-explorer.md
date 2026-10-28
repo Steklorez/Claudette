@@ -95,6 +95,8 @@ Right-click a folder for **New file**, **New folder**, **Copy path**, **Copy rel
 
 Right-click the empty space under the tree for **New file** and **New folder**, at the top of the project.
 
+In a Perforce workspace, a file's and a folder's menus also have a Perforce section, **Check out**, **Mark for add**, **Mark for delete**, **Revert** and **Diff against the depot**, and the tree marks what Perforce has open, such as *edit* beside a file you've checked out. Renaming, deleting and new files are opened in Perforce too. See [Perforce](../project-tools/perforce.md#in-the-files-tab).
+
 **Reveal in file manager** opens Explorer on Windows, Finder on macOS and your file manager on Linux.
 
 ## Its side and its width

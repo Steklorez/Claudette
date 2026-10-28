@@ -29,7 +29,12 @@ public enum TextFileProblem
 /// <param name="Text">The text, without a byte order mark. Empty when <paramref name="Problem"/> isn't None.</param>
 /// <param name="Encoding">How it's encoded; null when it isn't valid text in an encoding Claudette writes back.</param>
 /// <param name="ReadOnlyReason">Why it can't be edited, or null when it can.</param>
-public sealed record TextFileContent(string Path, string Text, TextFileEncoding? Encoding, string? ReadOnlyReason, TextFileProblem Problem = TextFileProblem.None)
+/// <param name="WriteProtected">
+/// It's read-only only because the file is: what Perforce leaves a file it hasn't checked out as, which checking it out
+/// changes (DESIGN.md §18, "Perforce in the Files tab").
+/// </param>
+public sealed record TextFileContent(string Path, string Text, TextFileEncoding? Encoding, string? ReadOnlyReason, TextFileProblem Problem = TextFileProblem.None,
+    bool WriteProtected = false)
 {
     public bool IsReadOnly => ReadOnlyReason is not null;
 
@@ -49,6 +54,23 @@ public static class TextFile
 
     /// <summary>A file with a line longer than this opens read-only: typing on it takes about half a second a key.</summary>
     public const int LongestEditableLine = 1_000_000;
+
+    /// <summary>What a file that's read-only on disk says.</summary>
+    public const string WriteProtectedReason = "Claudette isn't allowed to write this file, so it's shown read-only.";
+
+    /// <summary>Whether the file can be written now: it was read-only, and may have been checked out since.</summary>
+    public static bool IsWritable(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            return info.Exists && CanWrite(info);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
 
     public static TextFileContent Read(string path)
     {
@@ -79,15 +101,17 @@ public static class TextFile
                 return Problem(path, TextFileProblem.Binary);
             }
             string? readOnly = null;
+            var writeProtected = false;
             if (LongestLine(text) > LongestEditableLine)
             {
                 readOnly = "This file has a line over a million characters, so it's shown read-only: typing on a line that long takes about half a second a key.";
             }
             else if (!CanWrite(info))
             {
-                readOnly = "Claudette isn't allowed to write this file, so it's shown read-only.";
+                readOnly = WriteProtectedReason;
+                writeProtected = true;
             }
-            return new TextFileContent(path, text, encoding, readOnly);
+            return new TextFileContent(path, text, encoding, readOnly, WriteProtected: writeProtected);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

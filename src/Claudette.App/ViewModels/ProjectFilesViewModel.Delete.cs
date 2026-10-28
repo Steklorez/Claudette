@@ -174,6 +174,11 @@ public sealed partial class ProjectFilesViewModel
         var after = end > 0 && end < Rows.Count && Rows[end].Depth == row.Depth ? Rows[end] : null;
         var before = index > 0 ? Rows[index - 1] : null;
         _shell.CloseDeleted(row.FullPath);
+        // Marked for delete in Perforce, in the background; a link's own target isn't what went (DESIGN.md §18, "Opening files in Perforce").
+        if (!row.IsLink)
+        {
+            MarkDeletedInPerforce(row.FullPath, row.IsFolder);
+        }
         _foldersToRead.Add(Path.GetDirectoryName(row.FullPath)!);
         await ReadQueuedFoldersAsync();
         SelectedRow = after is not null && Rows.Contains(after) ? after : before is not null && Rows.Contains(before) ? before : null;

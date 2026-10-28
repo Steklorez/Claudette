@@ -28,6 +28,11 @@ public sealed class PerforceService(AppServices services, ICredentialStore crede
 
     public PerforceLoginGate Gate { get; } = new();
 
+    /// <summary>Perforce for files: the Files tab's marks and menus, and opening files as they change (DESIGN.md §18).</summary>
+    public PerforceFilesService Files => LazyInitializer.EnsureInitialized(ref _files, () => new PerforceFilesService(services, this));
+
+    private PerforceFilesService? _files;
+
     /// <summary>Where "Stored by Claudette" keeps passwords. Tests replace it.</summary>
     public ICredentialStore Credentials { get; internal set; } = credentials;
 

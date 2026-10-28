@@ -274,6 +274,11 @@ The second page under **Source control**. None of this page syncs.
 | **Renew the ticket when less is left than (minutes)** | Logins | 30 | [Perforce](../project-tools/perforce.md) |
 | **Request tickets valid on all hosts** | Logins | Off | [Perforce](../project-tools/perforce.md) |
 | **Show changelist on tabs** | Logins | Off | [Perforce](../project-tools/perforce.md) |
+| **Check out files before they're changed** | Opening files in Perforce | On | [Perforce](../project-tools/perforce.md#opening-files-in-perforce) |
+| **Add new files** | Opening files in Perforce | On | [Perforce](../project-tools/perforce.md#opening-files-in-perforce) |
+| **Mark deleted files for delete** | Opening files in Perforce | On | [Perforce](../project-tools/perforce.md#opening-files-in-perforce) |
+| **Rename with p4 move** | Opening files in Perforce | On | [Perforce](../project-tools/perforce.md#opening-files-in-perforce) |
+| **Show Perforce state in the Files tab** | Opening files in Perforce | On | [Perforce](../project-tools/perforce.md#in-the-files-tab) |
 | A password for a server and user, with **Save password** and **Forget password** | Stored password | None | [Perforce](../project-tools/perforce.md) |
 | Each folder's server and user, with **Add folder…** | Per-folder server and user | None | [Perforce](../project-tools/perforce.md) |
 
