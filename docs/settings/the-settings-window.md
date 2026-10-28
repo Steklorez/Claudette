@@ -30,7 +30,8 @@ The sidebar lists the pages in groups:
 - **Claudette**: General, Appearance, Conversation, Notifications, Keyboard and [About](about.md).
 - **Claude**: Claude Code, Accounts, Tabs, Usage and Advanced.
 - **Your work**: Sessions, and Files and diffs.
-- **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon (Unreal Engine's and Godot's are their logos), then Perforce, with Perforce's logo. A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
+- **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Claudette knows, Unreal Engine, Unity and Godot, each with its own icon (Unreal Engine's and Godot's are their logos). A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
+- **Source control**: [Git](git.md), with a branch for its icon, then [Perforce](../project-tools/perforce.md), with Perforce's logo.
 - At the foot, under a line, the [selected tab's project](#the-projects-pages), and under another line the [version and Help](#the-version-and-help).
 
 The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.

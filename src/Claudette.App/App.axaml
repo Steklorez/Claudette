@@ -648,7 +648,7 @@
       <!-- Not a mark: what covers it while every changed file is reviewed. Filled even-odd, so the check is a hole. -->
       <StreamGeometry x:Key="IconMarkReviewed">F0 M0.5,6 A5.5,5.5 0 1 1 11.5,6 A5.5,5.5 0 1 1 0.5,6 Z M2.5,6.6 L5.2,9.3 L9.5,4.65 L7.9,3.15 L5.2,6.1 L4.1,5 Z</StreamGeometry>
       <!-- The Settings sidebar's pages (DESIGN.md §14), with IconSettings, IconCardClaude, IconCardYou, IconCardStats,
-           IconFiles, the project types' (IconProjectUnity, Godot's and Unreal's logos) and IconToolBash: 12×12 strokes. And
+           IconFiles, the project types' (IconProjectUnity, Godot's and Unreal's logos), IconBranch for Git and IconToolBash: 12×12 strokes. And
            Perforce's symbol (LogoPerforceSymbol), filled in Perforce's colors. -->
       <StreamGeometry x:Key="IconSettingsAppearance">M6,3.6 A2.4,2.4 0 1 1 6,8.4 A2.4,2.4 0 1 1 6,3.6 M6,0.8 L6,1.8 M6,10.2 L6,11.2 M0.8,6 L1.8,6 M10.2,6 L11.2,6 M2.3,2.3 L3,3 M9,9 L9.7,9.7 M2.3,9.7 L3,9 M9,3 L9.7,2.3</StreamGeometry>
       <StreamGeometry x:Key="IconSettingsConversation">M1.5,2 L10.5,2 L10.5,8 L5.2,8 L2.8,10.4 L2.8,8 L1.5,8 Z M3.8,4.4 L8.2,4.4 M3.8,6 L6.6,6</StreamGeometry>

@@ -1,6 +1,6 @@
 ﻿"General"
 "This computer"
-"Starting Claudette, keeping the computer awake, worktrees and updates."
+"Starting Claudette, keeping the computer awake, and updates."
 "Starting and closing"
 [button] Reset to defaults
 "Start Claudette when I log in"
@@ -24,18 +24,6 @@
 "Also while tabs are connected to the Claude app"
 "So the Claude app can still reach them. The screen can still turn off."
 [toggle on] Also while tabs are connected to the Claude app
-"Worktrees"
-[button] Reset to defaults
-"The worktrees of worktree tabs that no open tab works in."
-"Remove worktrees once everything in them is merged"
-"Every commit is on another branch, so nothing is lost.  "
-[toggle] Remove worktrees once everything in them is merged
-"Remove worktrees no tab has used for"
-"Its branch stays when it has commits on no other branch.  "
-[choice] "Never"
-"Last cleanup"
-"Nothing removed yet. Claudette looks a minute after it starts, then every hour."
-[button] Last cleanup: Clean up now
 "Updates and status"
 [button] Reset to defaults
 "Show Claude's service status"

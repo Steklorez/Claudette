@@ -36,7 +36,7 @@ Turning it off keeps the settings as they are on this machine and stops syncing.
 - Whether Claudette starts at login, and the rest of Settings → General.
 - The path to `claude`, the login shell setting, and the Claude app settings (Settings → Claude Code).
 - This page's own settings: the machine's name, the library folder, how long library sessions are kept, and whether new tabs sync.
-- Settings → Files and diffs, Settings → Project tools, and Perforce settings. Program paths and installed tools differ between machines, and a Perforce server, workspace and stored password belong to the machine.
+- Settings → Files and diffs, Settings → Project tools, and Source control's pages but Git's **Show the git branch**: Git's worktrees, path to git and Files tab choices, and Perforce. Program paths and installed tools differ between machines, and a Perforce server, workspace and stored password belong to the machine.
 - Accounts and their keys.
 - Recent and favorite folders, folder mappings, pinned tabs, and window sizes and positions.
 

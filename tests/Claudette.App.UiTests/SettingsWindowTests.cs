@@ -103,6 +103,48 @@ public class SettingsWindowTests
     }
 
     /// <summary>
+    /// Git, the first page of Source control (DESIGN.md §14): the branch switch, worktrees, the git Claudette runs with
+    /// its version under it, and the Files tab's two choices; This computer by each section's heading but Tab rows', which
+    /// syncs. The sidebar has Source control after Project tools, with Git's branch icon.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Gits_page_shows_the_git_found_and_this_computer_by_its_sections()
+    {
+        var launcher = new FakeLauncher
+        {
+            OnStart = (_, process) =>
+            {
+                process.WriteOutput("git version 2.50.1");
+                process.Exit(0);
+            },
+        };
+        await using var h = new TabTestHarness(launcher: launcher, dispatcher: new AvaloniaUiDispatcher());
+        var git = Path.Combine(Directory.CreateDirectory(Path.Combine(h.Root, "tools")).FullName, "git");
+        File.WriteAllText(git, "");
+        h.Services.Settings.Git.Path = git;
+        using var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = SettingsCategory.Git };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        await Waiting.UntilAsync(() => settings.Git.Checking.IsCompleted, "git's version", poll: () => Dispatcher.UIThread.RunJobs());
+        UiText.Settle(window);
+
+        var sidebar = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
+        // The list draws only the rows in view.
+        sidebar.ScrollIntoView(settings.NavEntries.Single(e => e.Title == SettingsCategory.Perforce));
+        UiText.Settle(window);
+        ListBoxItem Item(string title) => sidebar.GetVisualDescendants().OfType<ListBoxItem>().Single(i => (i.Content as SettingsNavEntry)?.Title == title);
+        Assert.True(Item(SettingsCategory.Git).IsSelected);
+        Assert.Contains(sidebar.GetVisualDescendants().OfType<TextBlock>(), t => t.Classes.Contains("navheading") && t.Text == SettingsSidebar.SourceControl && t.IsEffectivelyVisible);
+        Assert.True(window.TryFindResource("IconBranch", out var branch));
+        Assert.Same(branch, Item(SettingsCategory.Git).GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single().Data);
+        var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Name == "PageScroller");
+        var text = UiText.Describe(page, (h.Root, "{root}"));
+        window.Close();
+
+        await Verify(text);
+    }
+
+    /// <summary>
     /// The search box's entries go somewhere (DESIGN.md §14, "Search"): each page, rendered, has a row or section for the
     /// key of each of its entries, which picking the entry scrolls to. And each row with a key finds its setting, so its
     /// words, its marks and its Reset come from the page. Rows a page holds while hidden count, since some only show in

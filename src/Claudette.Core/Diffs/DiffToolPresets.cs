@@ -146,20 +146,29 @@ public static class DiffToolPresets
 public static class DiffToolDetector
 {
     /// <summary>The presets found on this machine, in <see cref="DiffToolPresets.All"/> order.</summary>
-    public static IReadOnlyList<DetectedDiffTool> Detect(IFileProbe probe) => Detect(probe, DiffToolPresets.CurrentPlatform);
+    /// <param name="gitPath">Settings → Git → <b>Path to git</b>, which the git difftool preset runs; null finds git as the other presets are found.</param>
+    public static IReadOnlyList<DetectedDiffTool> Detect(IFileProbe probe, string? gitPath = null) => Detect(probe, DiffToolPresets.CurrentPlatform, gitPath);
 
-    public static IReadOnlyList<DetectedDiffTool> Detect(IFileProbe probe, DiffToolPlatform platform) =>
+    public static IReadOnlyList<DetectedDiffTool> Detect(IFileProbe probe, DiffToolPlatform platform, string? gitPath = null) =>
         DiffToolPresets.All
-            .Select(preset => Find(probe, platform, preset))
+            .Select(preset => Find(probe, platform, preset, gitPath))
             .OfType<DetectedDiffTool>()
             .ToArray();
 
     /// <summary>One preset, or null when it isn't installed (or doesn't exist on this OS).</summary>
-    public static DetectedDiffTool? Find(IFileProbe probe, DiffToolPlatform platform, DiffToolPreset preset)
+    /// <param name="gitPath">The git the git difftool preset runs, when one is set (DESIGN.md §14, "Path to git").</param>
+    public static DetectedDiffTool? Find(IFileProbe probe, DiffToolPlatform platform, DiffToolPreset preset, string? gitPath = null)
     {
         if (preset.For(platform) is not { } variant)
         {
             return null;
+        }
+        if (preset.Id == DiffToolPresets.GitDifftool && !string.IsNullOrWhiteSpace(gitPath))
+        {
+            var git = gitPath.Trim();
+            return probe.FileExists(git) ? new DetectedDiffTool(preset, git)
+                : probe.FindOnPath(git) is { } onPath ? new DetectedDiffTool(preset, onPath)
+                : null;
         }
         foreach (var candidate in variant.Paths)
         {

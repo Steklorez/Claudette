@@ -441,7 +441,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     {
         try
         {
-            var launcher = new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment);
+            var launcher = new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment) { GitPath = _services.Settings.Git.Path };
             if (after is null)
             {
                 await launcher.LaunchAsync(DiffTool, before, path, DiffTempDirectory);
@@ -1099,7 +1099,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         try
         {
             var before = row.FromGit ? await _services.Git.GetHeadContentAsync(row.WorkTree ?? _host.Folder, row.Path) : row.Before;
-            var launcher = new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment);
+            var launcher = new DiffToolLauncher(_services.Launcher, _services.Time, environment: _services.UserEnvironment) { GitPath = _services.Settings.Git.Path };
             if (row is { FromGit: false, AfterKnown: true, InGoneWorkTree: true })
             {
                 // Its worktree is gone: the session's changes as they were.

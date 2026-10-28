@@ -44,7 +44,9 @@ public sealed partial class ShellViewModel
         {
             return open;
         }
-        var files = new ProjectFilesViewModel(_services, this, group, new ProjectFilesState { Folder = group.Folder });
+        // A new Files tab compares as Settings → Git → New Files tabs show says; from then on it has its own (DESIGN.md §18).
+        var files = new ProjectFilesViewModel(_services, this, group,
+            new ProjectFilesState { Folder = group.Folder, AgainstGitHead = _services.Settings.Git.NewFilesTabsShow == FilesTabChanges.GitHead });
         AddProjectFiles(group, files);
         SaveTabs();
         return files;

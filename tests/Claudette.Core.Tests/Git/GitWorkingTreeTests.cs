@@ -276,6 +276,63 @@ public sealed class GitWorkingTreeTests : IDisposable
         Assert.Equal(["-c", "core.quotepath=false", "--no-optional-locks", "check-ignore"], launcher.Started[0].Arguments.Take(4));
     }
 
+    /// <summary>Settings → Git → Path to git (DESIGN.md §14): read as each run starts, and empty for git from PATH.</summary>
+    [Fact]
+    public async Task Git_runs_from_the_path_set_read_as_each_run_starts()
+    {
+        var launcher = new Support.FakeProcessLauncher { Respond = _ => new ProcessResult(0, "", "") };
+        string? setting = null;
+        var git = new GitWorkingTree(launcher, TimeProvider.System) { ConfiguredPath = () => setting };
+
+        await git.HasUncommittedChangesAsync(_repo, Token);
+        setting = " /opt/git/bin/git ";
+        await git.HasUncommittedChangesAsync(_repo, Token);
+        setting = "   ";
+        await git.HasUncommittedChangesAsync(_repo, Token);
+
+        Assert.Equal(["git", "/opt/git/bin/git", "git"], launcher.Started.Select(s => s.FileName));
+    }
+
+    [Fact]
+    public async Task Checking_git_says_its_version_or_what_is_wrong()
+    {
+        var program = Path.Combine(_root, "tools", "git");
+        Directory.CreateDirectory(Path.GetDirectoryName(program)!);
+        File.WriteAllText(program, "");
+        var answer = "git version 2.50.1\n";
+        var launcher = new Support.FakeProcessLauncher { Respond = _ => new ProcessResult(0, answer, "") };
+        var setting = program;
+        var git = new GitWorkingTree(launcher, TimeProvider.System) { ConfiguredPath = () => setting };
+
+        Assert.Equal(new GitCheck(program, "2.50.1", null), await git.CheckAsync(Token));
+        Assert.Equal(["--version"], launcher.Started[^1].Arguments);
+        Assert.Null(launcher.Started[^1].WorkingDirectory);
+
+        answer = "usage: something else";
+        Assert.Equal(new GitCheck(program, null, "It isn't git: it didn't answer as git does."), await git.CheckAsync(Token));
+
+        setting = Path.Combine(_root, "tools", "nothing");
+        Assert.Equal("There's no file at that path.", (await git.CheckAsync(Token)).Problem);
+        setting = Path.GetDirectoryName(program)!;
+        Assert.Equal("That's a folder. Choose the git program in it.", (await git.CheckAsync(Token)).Problem);
+
+        // Nothing set and no git on PATH: say so, rather than fail later.
+        var missing = new GitWorkingTree(launcher, TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        Assert.Equal(new GitCheck(null, null, $"No {missing.Executable} was found on your PATH."), await missing.CheckAsync(Token));
+
+        launcher.StartFailure = new System.ComponentModel.Win32Exception("not a program");
+        setting = program;
+        Assert.Equal(new GitCheck(program, null, "It couldn't be run: not a program"), await git.CheckAsync(Token));
+    }
+
+    [Theory]
+    [InlineData("git version 2.47.1.windows.2\n", "2.47.1.windows.2")]
+    [InlineData("git version 2.39.5 (Apple Git-154)", "2.39.5 (Apple Git-154)")]
+    [InlineData("hub version 2.14.2", null)]
+    [InlineData("", null)]
+    public void Gits_version_is_read_from_what_it_says(string output, string? version) =>
+        Assert.Equal(version, GitWorkingTree.ParseVersion(output));
+
     [Fact]
     public async Task Git_runs_with_quotepath_off_and_optional_locks_off_for_status()
     {

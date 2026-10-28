@@ -97,11 +97,12 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         AllTools = new AllToolsPage(_context);
         var types = services.ProjectTools.Detector.Types;
         ProjectTypes = [.. types.Select(type => new ProjectTypePage(_context, type))];
+        Git = new GitPage(_context);
         Perforce = new PerforcePage(_context);
         Advanced = new AdvancedPage(_context, ClaudeCode);
         _groups = SettingsSidebar.Groups(types);
         Categories = [.. _groups.SelectMany(g => g.Categories)];
-        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, About, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, AllTools, .. ProjectTypes, Perforce];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, About, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, AllTools, .. ProjectTypes, Git, Perforce];
         _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
@@ -148,6 +149,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         General.Dispose();
         ClaudeCode.Dispose();
         Accounts.Dispose();
+        Git.Dispose();
         Project?.Dispose();
         _context.Dispose();
     }
@@ -185,6 +187,9 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     /// <summary>The project type's page for projects of <paramref name="kind"/>, such as <c>unreal</c>.</summary>
     public ProjectTypePage ProjectType(string kind) => ProjectTypes.Single(p => p.Kind == kind);
+
+    /// <summary>Source control's first page (DESIGN.md §14).</summary>
+    public GitPage Git { get; }
 
     public PerforcePage Perforce { get; }
 
@@ -416,7 +421,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         bool Named(SettingsSearchResult r) => words.All(w => Has(r.Label, w));
         var phrase = string.Join(' ', words);
         bool Phrase(SettingsSearchResult r) => r.Words.Any(text => Has(text, phrase));
-        var found = Pages.SelectMany(p => p.SearchEntries).Where(Finds).ToList();
+        var found = Pages.SelectMany(p => p.SearchEntries).Select(WithGroupWords).Where(Finds).ToList();
         foreach (var result in found.OrderBy(r => Named(r) ? 0 : Phrase(r) ? 1 : 2))
         {
             SearchResults.Add(result);
@@ -425,6 +430,13 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         {
             SelectedCategory = SearchResults[0].Category;
         }
+    }
+
+    /// <summary>An entry with the words its page's group is found by, such as "version control" for Source control's (<see cref="SettingsSidebar.GroupWords"/>).</summary>
+    private SettingsSearchResult WithGroupWords(SettingsSearchResult entry)
+    {
+        var more = _groups.Where(g => g.Categories.Contains(entry.Category)).SelectMany(g => SettingsSidebar.GroupWords(g.Heading)).ToList();
+        return more.Count == 0 ? entry : entry with { Words = [.. entry.Words, .. more] };
     }
 
     /// <summary>Picking a result shows its page, and brings it into view there.</summary>

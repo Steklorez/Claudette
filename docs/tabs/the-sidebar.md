@@ -109,8 +109,9 @@ At the top, **New tab** opens the [picker](opening-tabs.md), and a button beside
 Settings → Conversation → Tab rows:
 
 - **Show context**: the ring. On by default.
-- **Show git branch**: the branch badge. On by default. With it off, a worktree tab shows a branch icon before its name instead.
 - **Show task progress**: `3/7`, and the task Claude is working on in place of the model while it works. On by default.
+
+Settings → Git → Tab rows → **Show the git branch**: the branch badge. On by default. With it off, a worktree tab shows a branch icon before its name instead.
 
 Settings → Perforce → **Show changelist on tabs** shows the changelist badge.
 

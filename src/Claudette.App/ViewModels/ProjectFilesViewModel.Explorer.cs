@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using Claudette.Core.Diffs;
 using Claudette.Core.Git;
 using Claudette.Core.ProjectFiles;
+using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -139,7 +140,7 @@ public sealed partial class ProjectFilesViewModel
     {
         _inRepository = Directory.Exists(Folder) && GitInfo.TryGetBranch(Folder) is not null;
         OnPropertyChanged(nameof(IsGitRepository));
-        var entries = await FolderListing.ReadAsync(Folder, Folder, _services.Git, _inRepository, parentIgnored: false);
+        var entries = await ListAsync(Folder, parentIgnored: false);
         Rows.Clear();
         foreach (var entry in entries)
         {
@@ -166,6 +167,41 @@ public sealed partial class ProjectFilesViewModel
         var row = new ExplorerRow(entry, depth);
         ApplyChange(row);
         return row;
+    }
+
+    /// <summary>What git ignores is left out of the tree, as Settings → Git → <b>Files git ignores</b> said when it was last read; null before.</summary>
+    private bool? _hidesIgnored;
+
+    private bool HidesIgnored => _hidesIgnored ??= _services.Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
+
+    /// <summary>
+    /// A folder's entries for the tree, with what git ignores marked to be dimmed, or left out while Settings → Git →
+    /// <b>Files git ignores</b> is <b>Hidden</b> (DESIGN.md §18, "The explorer"). Which is decided once they're read, so
+    /// a listing that finishes after the setting changed follows it too.
+    /// </summary>
+    private async Task<IReadOnlyList<TreeEntry>> ListAsync(string folder, bool parentIgnored)
+    {
+        var entries = await FolderListing.ReadAsync(Folder, folder, _services.Git, _inRepository, parentIgnored);
+        return HidesIgnored ? [.. entries.Where(e => !e.IsIgnored)] : entries;
+    }
+
+    /// <summary>
+    /// Settings changed: when <b>Files git ignores</b> did, every folder shown is read again, so what git ignores leaves
+    /// the tree, or comes back dimmed, at once.
+    /// </summary>
+    private void FollowIgnoredFilesSetting()
+    {
+        var hides = _services.Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
+        if (_hidesIgnored == hides)
+        {
+            return;
+        }
+        var listed = _hidesIgnored is not null;
+        _hidesIgnored = hides;
+        if (listed && _started)
+        {
+            RefreshExplorer();
+        }
     }
 
     /// <summary>A click on a folder, or Right and Left: shows what's in it, or hides it.</summary>
@@ -236,7 +272,7 @@ public sealed partial class ProjectFilesViewModel
             return;
         }
         row.IsExpanded = true;
-        var entries = await FolderListing.ReadAsync(Folder, row.FullPath, _services.Git, _inRepository, row.IsIgnored);
+        var entries = await ListAsync(row.FullPath, row.IsIgnored);
         var index = Rows.IndexOf(row);
         // It was collapsed again, or went away, while it was read.
         if (index < 0 || !row.IsExpanded)
@@ -468,7 +504,7 @@ public sealed partial class ProjectFilesViewModel
         {
             return;
         }
-        var entries = await FolderListing.ReadAsync(Folder, folder, _services.Git, _inRepository, parent?.IsIgnored ?? false);
+        var entries = await ListAsync(folder, parent?.IsIgnored ?? false);
         var start = parent is null ? 0 : Rows.IndexOf(parent) + 1;
         if (parent is not null && start == 0)
         {

@@ -27,6 +27,10 @@ public class SyncedSettingsTests
     [InlineData("claudeCode.subagents", false)]
     [InlineData("diffTool.kind", false)]
     [InlineData("projectTools.types", false)]
+    [InlineData("git.path", false)]
+    [InlineData("git.ignoredFiles", false)]
+    [InlineData("appearance.showBranchOnTabs", true)]
+    [InlineData("general.removeMergedWorktrees", false)]
     [InlineData("state.detailedUsageHeader", false)]
     public void A_path_syncs_by_its_section_but_for_the_few_kept_per_machine(string path, bool syncs) =>
         Assert.Equal(syncs, SyncedSettings.Syncs(path));

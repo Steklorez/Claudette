@@ -1,0 +1,47 @@
+﻿"Git"
+"The git branch on tab rows, worktrees, the git Claudette runs, and git in the Files tab."
+"Tab rows"
+[button] Reset to defaults
+"What each tab's row in the sidebar shows of git. The rest is on Conversation."
+"Show the git branch"
+"The branch each tab's folder has checked out, such as “main”.  "
+[toggle on] Show the git branch
+"Worktrees"
+"This computer"
+[button] Reset to defaults
+"The worktrees of worktree tabs that no open tab works in."
+"Remove worktrees once everything in them is merged"
+"Every commit is on another branch, so nothing is lost.  "
+[toggle] Remove worktrees once everything in them is merged
+"Remove worktrees no tab has used for"
+"Its branch stays when it has commits on no other branch.  "
+[choice] "Never"
+"Last cleanup"
+"Nothing removed yet. Claudette looks a minute after it starts, then every hour."
+[button] Last cleanup: Clean up now
+"Git"
+"This computer"
+[button] Reset to defaults
+"The git Claudette runs to ask about your repositories."
+"Path to git"
+"Empty uses the first git on your PATH, as a terminal does.  "
+[button] Reset Path to git to its default
+[field] "{root}/tools/git"
+[button] Browse…
+"git 2.50.1 at {root}/tools/git"
+"Project Files tab"
+"This computer"
+[button] Reset to defaults
+"What each folder group's tab of its project's files shows of git."
+"New Files tabs show"
+"What a Files tab marks as changed when it first opens. Each changes its own with its explorer's ⋯ menu.  "
+[toggle on] Claude's changes
+[toggle] Changes against git HEAD
+"Files git ignores"
+"How the explorer shows them. A change applies to open Files tabs at once.  "
+[toggle on] Dimmed
+[toggle] Hidden
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

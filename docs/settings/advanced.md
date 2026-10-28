@@ -1,7 +1,7 @@
 ---
 title: Advanced
 parent: Settings
-nav_order: 6
+nav_order: 7
 summary: "Settings → Advanced is for the things you reach for when something isn't working, or when you want claude to start with an option Claudette doesn't have a setting for."
 ---
 

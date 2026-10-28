@@ -220,7 +220,14 @@ public class ProjectSettingsUiTests
         Assert.Empty(settings.ProjectNavEntries);
         Assert.False(window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "ProjectGroup").IsVisible);
         var list = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
-        Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], list.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible).Select(t => t.Text));
+        // The list draws only the rows in view, and reuses them as it scrolls: the headings drawn at the top and at the end.
+        var headings = new HashSet<string>(StringComparer.Ordinal);
+        void Drawn() => headings.UnionWith(list.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Classes.Contains("navheading") && t.IsEffectivelyVisible).Select(t => t.Text ?? ""));
+        Drawn();
+        list.ScrollIntoView(settings.NavEntries[^1]);
+        UiText.Settle(window);
+        Drawn();
+        Assert.Equal(new[] { "Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl }.Order(StringComparer.Ordinal), headings.Order(StringComparer.Ordinal));
         window.Close();
     }
 

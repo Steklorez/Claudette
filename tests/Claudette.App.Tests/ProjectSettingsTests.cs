@@ -788,18 +788,19 @@ public class ProjectSettingsTests
         [.. settings.NavEntries.SkipWhile(e => !(e.IsHeading && e.Title == heading)).Skip(1).TakeWhile(e => !e.IsHeading).Select(e => e.Title)];
 
     [Fact]
-    public async Task Project_tools_is_a_group_with_All_tools_a_page_for_each_project_type_and_Perforce()
+    public async Task Project_tools_is_a_group_with_All_tools_and_a_page_for_each_project_type_then_Source_control_has_Git_and_Perforce()
     {
         await using var h = new TabTestHarness();
         using var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
+        Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
         // About is the last of Claudette's pages: it has no settings.
         Assert.Equal(["General", "Appearance", "Conversation", "Notifications", "Keyboard", "About"], PagesUnder(settings, "Claudette"));
         // Advanced is the last of Claude's pages: it's mostly about running Claude Code.
         Assert.Equal(["Claude Code", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, "Claude"));
         Assert.Equal(["Sessions", "Files and diffs"], PagesUnder(settings, "Your work"));
-        Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot", "Perforce"], PagesUnder(settings, SettingsSidebar.ProjectTools));
+        Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot"], PagesUnder(settings, SettingsSidebar.ProjectTools));
+        Assert.Equal(["Git", "Perforce"], PagesUnder(settings, SettingsSidebar.SourceControl));
         Assert.Equal(h.Services.ProjectTools.Detector.Types.Select(t => t.Name), settings.ProjectTypes.Select(p => p.Title));
 
         // Every page has an icon of its own; each project type's is its kind's.

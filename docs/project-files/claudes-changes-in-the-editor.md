@@ -16,6 +16,7 @@ A file's "before" is what it held before Claude first changed it in any of the p
 - With one tab, the editor and that tab's [Changed files](../changes/changed-files.md) show the same changes.
 - The changes come from open tabs. Closing the last tab that changed a file takes its marks away.
 - In a git repository, the explorer's **⋯** menu switches the whole Files tab from **Claude's changes** to **Against git HEAD**, as **Working tree vs HEAD** does in Changed files. That also shows changes you, commands and closed tabs made.
+- A Files tab starts as Settings → Git → **New Files tabs show** says: **Claude's changes**, or **Changes against git HEAD**. From then on, each Files tab keeps its own choice.
 
 The "before" is compared with the editor's text, unsaved edits and all, and worked out again 300 milliseconds after you stop typing. A file over 20,000 lines, or with too many changes to compare, shows none, and its tab's tip says *Too long to show what changed*.
 
@@ -61,6 +62,7 @@ The bar has a **Reviewed** button, and so does the file tab's menu. Ticking it t
 | Setting | Default | Where |
 |---|---|---|
 | **Claude's changes** or **Against git HEAD** | **Claude's changes** | The explorer's **⋯** menu, in a repository |
+| **New Files tabs show** | **Claude's changes** | Settings → **Git** |
 
 ## Shortcuts
 

@@ -377,6 +377,9 @@
             <DataTemplate DataType="settings:ProjectTypePage">
               <pages:ProjectTypePageView />
             </DataTemplate>
+            <DataTemplate DataType="settings:GitPage">
+              <pages:GitPageView />
+            </DataTemplate>
             <DataTemplate DataType="settings:PerforcePage">
               <pages:PerforcePageView />
             </DataTemplate>

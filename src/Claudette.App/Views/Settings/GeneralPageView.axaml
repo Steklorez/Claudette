@@ -56,19 +56,6 @@
       </c:SettingRow>
     </c:SettingsSection>
 
-    <!-- Cleaning up worktrees (DESIGN.md §4, "Cleaning up worktrees") -->
-    <c:SettingsSection Key="worktrees">
-      <c:SettingRow Key="general.removeMergedWorktrees">
-        <ToggleSwitch IsChecked="{Binding RemoveMergedWorktrees}" />
-      </c:SettingRow>
-      <c:SettingRow Key="general.removeInactiveWorktreesAfterDays">
-        <ComboBox ItemsSource="{Binding InactiveDaysChoices}" SelectedItem="{Binding RemoveInactiveWorktreesAfter}" />
-      </c:SettingRow>
-      <c:SettingRow Key="general.cleanUpWorktrees" Description="{Binding WorktreeCleanupText}">
-        <Button Content="Clean up now" Command="{Binding CleanUpWorktreesCommand}" IsEnabled="{Binding CanCleanUpWorktrees}" />
-      </c:SettingRow>
-    </c:SettingsSection>
-
     <!-- Claude's service status (DESIGN.md §18) and Claudette's own updates (DESIGN.md §2, "Updating Claudette") -->
     <c:SettingsSection Key="updates">
       <c:SettingRow Key="general.showServiceStatus">

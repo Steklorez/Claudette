@@ -53,9 +53,6 @@
       <c:SettingRow Key="appearance.showContextOnTabs">
         <ToggleSwitch IsChecked="{Binding ShowContextOnTabs}" />
       </c:SettingRow>
-      <c:SettingRow Key="appearance.showBranchOnTabs">
-        <ToggleSwitch IsChecked="{Binding ShowBranchOnTabs}" />
-      </c:SettingRow>
       <c:SettingRow Key="appearance.showTaskProgressOnTabs">
         <ToggleSwitch IsChecked="{Binding ShowTaskProgressOnTabs}" />
       </c:SettingRow>
