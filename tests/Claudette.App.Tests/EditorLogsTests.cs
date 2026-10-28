@@ -541,6 +541,238 @@ public class EditorLogsTests
         Assert.False(Logs(tab)[1].WordWrap);
     }
 
+    // ---- Unity's log moving to the project's (DESIGN.md §18, "Editor logs", "A log that moves") ------------------------
+
+    private const string MovedSentence = "Logs moved to project-relative Editor.log file, and subsequent logs will only be written to this file.";
+
+    /// <summary>A tab on a Unity project, with Unity's machine-wide log in a temporary folder.</summary>
+    private sealed record UnityFixture(TabTestHarness H, FakeSystemProcesses Processes, TabViewModel Tab, string GlobalLog) : IAsyncDisposable
+    {
+        public string Root => H.WorkFolder;
+
+        /// <summary>The project's own log, which Unity 6.5 moves to once it has the project open.</summary>
+        public string ProjectLog => Path.Combine(Root, "Logs", "Editor.log");
+
+        /// <summary>The project's log as Unity writes it in the machine's: with forward slashes, even on Windows.</summary>
+        public string ProjectLogAsUnityWritesIt => ProjectLog.Replace('\\', '/');
+
+        public ValueTask DisposeAsync() => H.DisposeAsync();
+
+        public void Look() => H.Time.Advance(TimeSpan.FromSeconds(EditorLogService.ReadsPerCheck));
+
+        public void Read() => H.Time.Advance(TimeSpan.FromSeconds(1));
+
+        public SystemProcess StartEditor(int pid, string arguments = "")
+        {
+            var process = new SystemProcess(pid, "Unity", $"\"C:\\Unity\\6000.5.0f1\\Editor\\Unity.exe\" -projectPath \"{Root}\" {arguments}", H.Time.GetUtcNow());
+            Processes.Start(process);
+            return process;
+        }
+
+        /// <summary>Writes the project's own log, as written <paramref name="since"/> the editor started (or before it, when negative).</summary>
+        public void WriteProjectLog(TimeSpan since, params string[] lines)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(ProjectLog)!);
+            File.WriteAllText(ProjectLog, string.Join("\n", lines) + "\n");
+            File.SetLastWriteTimeUtc(ProjectLog, H.Time.GetUtcNow().UtcDateTime + since);
+        }
+
+        public void WriteGlobalLog(params string[] lines)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(GlobalLog)!);
+            File.WriteAllText(GlobalLog, string.Join("\n", lines) + "\n");
+        }
+    }
+
+    private static async Task<UnityFixture> OpenUnityAsync()
+    {
+        var h = new TabTestHarness();
+        var os = ToolOSExtensions.Current == ToolOS.Windows ? ToolOS.Windows : ToolOS.Linux;
+        h.Services.ProjectTools.OS = os;
+        h.Services.ProjectTools.Paths = new ProjectToolPaths(Path.Combine(h.Root, "home"), LocalAppData: Path.Combine(h.Root, "local"));
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "ProjectSettings"));
+        File.WriteAllText(Path.Combine(h.WorkFolder, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.5.0f1\n");
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "Assets"));
+        var processes = new FakeSystemProcesses();
+        h.Services.ProjectTools.Processes = processes;
+        var tab = await h.OpenTabAsync();
+        await TabTestHarness.Eventually(() => tab.ProjectTools.Project is { Logs: not null }, "the project");
+        return new UnityFixture(h, processes, tab, Core.ProjectTools.Unity.UnityEditors.EditorLog(h.Services.ProjectTools.Paths, os)!);
+    }
+
+    [Fact]
+    public async Task Unitys_log_moving_to_the_projects_gives_it_a_row_read_from_its_start_and_the_old_one_stops_saying_where()
+    {
+        await using var f = await OpenUnityAsync();
+        var h = f.H;
+        f.WriteGlobalLog("Unity Editor version: 6000.5.0f1", "Loading project");
+        f.StartEditor(4412);
+        f.Look();
+        var global = Assert.Single(Logs(f.Tab));
+        Assert.Equal(f.GlobalLog, global.LogPath);
+        Assert.Equal("Unity editor", global.Detail);
+
+        // It has the project open: the machine's log says where its log went, before the file is there, and another
+        // editor's startup comes after it.
+        Fixture.AppendLog(f.GlobalLog, MovedSentence, f.ProjectLogAsUnityWritesIt, "Another editor: Loading project");
+        f.Read();
+
+        Assert.Equal(2, Logs(f.Tab).Count);
+        var own = Logs(f.Tab)[1];
+        Assert.Equal(f.ProjectLog, own.LogPath);
+        Assert.Equal("Editor.log", own.FileName);
+        Assert.True(own.IsRunning);
+        Assert.Equal("Unity editor", own.Role);
+        Assert.Contains("(PID 4412)", own.Status, StringComparison.Ordinal);
+        Assert.Contains(own, h.Shell.OpenTabs);
+        var moved = Path.Combine("Logs", "Editor.log");
+        Assert.False(global.IsRunning);
+        Assert.True(global.IsMoved);
+        Assert.Equal($"Moved to {moved}", global.Detail);
+        Assert.Equal($"Unity editor moved its log to {moved} at {MessageTimes.Short(h.Time.GetUtcNow(), h.Time)}.", global.Status);
+        Assert.Equal(f.ProjectLogAsUnityWritesIt, global.Lines()[^1]);
+        Assert.Equal("2 logs", f.Tab.RowsUnderText);
+
+        // Unity copies what it wrote as it started into the project's log, and carries on there: read from its start.
+        f.WriteProjectLog(TimeSpan.FromMinutes(1), "Unity Editor version: 6000.5.0f1", "Loading project", "Assets/Player.cs(3,7): warning CS0168: The variable 'e' is declared but never used");
+        f.Read();
+        Assert.Equal(["Unity Editor version: 6000.5.0f1", "Loading project", "Assets/Player.cs(3,7): warning CS0168: The variable 'e' is declared but never used"], own.Lines());
+        Assert.Equal(1, own.Warnings);
+
+        // The machine's log goes on with other editors' lines, which aren't this project's.
+        Fixture.AppendLog(f.GlobalLog, "Another editor: Refreshing");
+        f.Look();
+        Assert.Equal([global, own], Logs(f.Tab));
+        Assert.DoesNotContain("Another editor: Refreshing", global.Lines());
+        Assert.DoesNotContain("Another editor: Loading project", global.Lines());
+        Assert.True(global.IsMoved);
+        Assert.True(own.IsRunning);
+
+        // The editor closes: the old row goes, its tab taking its place on screen, and the project's log stays, closed.
+        global.OpenCommand.Execute(null);
+        Assert.Same(global, h.Shell.Selected);
+        f.Processes.End(4412);
+        f.Look();
+        Assert.Same(own, Assert.Single(Logs(f.Tab)));
+        Assert.False(own.IsRunning);
+        Assert.StartsWith("Closed", own.Detail, StringComparison.Ordinal);
+        Assert.DoesNotContain(global, h.Shell.OpenTabs);
+        Assert.Same(f.Tab, h.Shell.Selected);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Unitys_line_saying_the_log_moved_can_have_its_file_after_it_or_none(bool sameLine)
+    {
+        await using var f = await OpenUnityAsync();
+        f.WriteGlobalLog("Loading project");
+        f.StartEditor(4412);
+        f.Look();
+        var global = Assert.Single(Logs(f.Tab));
+
+        if (sameLine)
+        {
+            Fixture.AppendLog(f.GlobalLog, $"{MovedSentence} {f.ProjectLogAsUnityWritesIt}", "Another editor: Loading project");
+        }
+        else
+        {
+            // Without a file, it's the project's own.
+            Fixture.AppendLog(f.GlobalLog, MovedSentence, "Another editor: Loading project");
+        }
+        f.Read();
+
+        Assert.Equal([global.LogPath, f.ProjectLog], Logs(f.Tab).Select(l => l.LogPath));
+        Assert.True(global.IsMoved);
+        Assert.DoesNotContain("Another editor: Loading project", global.Lines());
+        Assert.EndsWith(sameLine ? f.ProjectLogAsUnityWritesIt : MovedSentence, global.Lines()[^1], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Another_projects_line_saying_its_log_moved_leaves_this_projects_log_as_it_is()
+    {
+        await using var f = await OpenUnityAsync();
+        f.WriteGlobalLog("Loading project");
+        f.StartEditor(4412);
+        f.Look();
+        var global = Assert.Single(Logs(f.Tab));
+
+        var other = Path.Combine(f.H.Root, "Lark", "Logs", "Editor.log").Replace('\\', '/');
+        Fixture.AppendLog(f.GlobalLog, MovedSentence, other, "Still this editor");
+        f.Read();
+        f.Look();
+
+        Assert.Same(global, Assert.Single(Logs(f.Tab)));
+        Assert.True(global.IsRunning);
+        Assert.False(global.IsMoved);
+        Assert.Equal([MovedSentence, other, "Still this editor"], global.Lines().TakeLast(3));
+    }
+
+    [Fact]
+    public async Task A_unity_editor_with_useGlobalLog_keeps_the_machines_log()
+    {
+        await using var f = await OpenUnityAsync();
+        f.WriteGlobalLog("Loading project");
+        f.StartEditor(4412, "-useGlobalLog");
+        f.Look();
+        var global = Assert.Single(Logs(f.Tab));
+
+        // Even with the project's log being written, by another session say, and a line naming it.
+        f.WriteProjectLog(TimeSpan.FromMinutes(1), "Another session");
+        Fixture.AppendLog(f.GlobalLog, MovedSentence, f.ProjectLogAsUnityWritesIt, "Still this editor");
+        f.Read();
+        f.Look();
+
+        Assert.Same(global, Assert.Single(Logs(f.Tab)));
+        Assert.Equal(f.GlobalLog, global.LogPath);
+        Assert.True(global.IsRunning);
+        Assert.False(global.IsMoved);
+        Assert.Equal("Still this editor", global.Lines()[^1]);
+    }
+
+    [Fact]
+    public async Task A_unity_editor_already_writing_the_projects_log_has_that_row_alone()
+    {
+        await using var f = await OpenUnityAsync();
+        // Claudette starts after the move, as when it's opened with the editor open.
+        f.WriteGlobalLog("Unity Editor version: 6000.5.0f1", MovedSentence, f.ProjectLogAsUnityWritesIt);
+        f.StartEditor(4412);
+        f.WriteProjectLog(TimeSpan.FromMinutes(1), "Unity Editor version: 6000.5.0f1", "Loading project", "Refreshing");
+
+        f.Look();
+
+        var own = Assert.Single(Logs(f.Tab));
+        Assert.Equal(f.ProjectLog, own.LogPath);
+        Assert.True(own.IsRunning);
+        Assert.Equal(["Unity Editor version: 6000.5.0f1", "Loading project", "Refreshing"], own.Lines());
+    }
+
+    [Fact]
+    public async Task An_earlier_sessions_project_log_isnt_followed_and_one_written_at_a_later_look_moves_the_log_there()
+    {
+        await using var f = await OpenUnityAsync();
+        f.WriteGlobalLog("Loading project");
+        f.WriteProjectLog(TimeSpan.FromHours(-1), "An earlier session");
+        f.StartEditor(4412);
+        f.Look();
+        var global = Assert.Single(Logs(f.Tab));
+        Assert.Equal(f.GlobalLog, global.LogPath);
+
+        // The project's log is being written before its line is read: the same move.
+        f.WriteProjectLog(TimeSpan.FromMinutes(1), "Loading project", "Refreshing");
+        f.Look();
+
+        Assert.Equal([f.GlobalLog, f.ProjectLog], Logs(f.Tab).Select(l => l.LogPath));
+        Assert.True(global.IsMoved);
+        var own = Logs(f.Tab)[1];
+        Assert.True(own.IsRunning);
+        Assert.Equal(["Loading project", "Refreshing"], own.Lines());
+
+        f.Processes.End(4412);
+        f.Look();
+        Assert.Same(own, Assert.Single(Logs(f.Tab)));
+    }
+
     [Fact]
     public async Task Another_projects_editor_gets_no_row()
     {

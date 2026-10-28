@@ -17,7 +17,14 @@ public enum LogLineLevel
 /// the engine tries them (Unreal's <c>Name.log</c>, then <c>Name_2.log</c>…), told apart by when each was opened
 /// (<see cref="EditorLogSource.OpenedAt"/>).
 /// </param>
-public sealed record EditorLogWriter(string Role, IReadOnlyList<string> LogFiles);
+public sealed record EditorLogWriter(string Role, IReadOnlyList<string> LogFiles)
+{
+    /// <summary>
+    /// Its log may move to another file while it runs, when a line in it says so (<see cref="EditorLogSource.NewMoveReader"/>),
+    /// as Unity's editor writes the machine's <c>Editor.log</c> until it has the project open, then the project's own.
+    /// </summary>
+    public bool CanMove { get; init; }
+}
 
 /// <summary>
 /// What a provider says about its engine's logs (DESIGN.md §18, "Editor logs"): which processes write them, which of
@@ -55,6 +62,13 @@ public sealed class EditorLogSource
     /// when a process's <see cref="EditorLogWriter.LogFiles"/> are several to choose from.
     /// </summary>
     public Func<string, TimeZoneInfo, DateTimeOffset?>? OpenedAt { get; init; }
+
+    /// <summary>
+    /// A reader for the lines in one of its logs that say the log moved to another file, as Unity's machine-wide
+    /// <c>Editor.log</c> says when the editor moves to the project's own (DESIGN.md §18, "Editor logs", "A log that
+    /// moves"); null when its logs don't move.
+    /// </summary>
+    public Func<LogMoveReader>? NewMoveReader { get; init; }
 }
 
 /// <summary>Options on a process's command line, as editors read them: quoted or not, ignoring case.</summary>

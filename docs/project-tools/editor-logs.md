@@ -15,9 +15,9 @@ While the Unreal editor, Unity or Godot has a tab's project open, the log it wri
 
 The row sits under the tab's row, after its subagents and before its project runs. It has:
 
-- The log icon, in the accent color while the editor runs and muted once it has closed, or a red ✕ when the log says it crashed.
+- The log icon, in the accent color while the editor runs and muted once it has closed or moved its log, or a red ✕ when the log says it crashed.
 - The file's name, such as `NightOwl.log`.
-- Under it, what's writing it and how many errors and warnings it has so far, such as *Unreal editor · 2 errors · 14 warnings*. Once the editor has closed it says when: *Closed · 15:02 · 2 errors*, or *Crashed · 15:02* in red.
+- Under it, what's writing it and how many errors and warnings it has so far, such as *Unreal editor · 2 errors · 14 warnings*. Once the editor has closed it says when: *Closed · 15:02 · 2 errors*, or *Crashed · 15:02* in red. When Unity has moved its log to the project's, it says where: *Moved to Logs/Editor.log* (see [below](#when-unity-moves-its-log)).
 
 Hover the row for its status and the file's path. Right-click it for **Open beside**, **Close pane**, **Copy log**, **Open file**, **Show in Explorer** (**Show in Finder** on macOS, **Show in file manager** on Linux) and **Close**.
 
@@ -59,6 +59,16 @@ The levels and categories you hide belong to the project: Claudette remembers th
 - **It crashes:** Unreal's `=== Critical error: ===`, Unity's `Crash!!!` and Godot's crash handler are in the log, so the row says *Crashed* in red.
 - **It starts again:** Unreal keeps the old log as a backup (`NightOwl-backup-2026.10.20-15.30.00.log`) and starts a new one. The same row comes back with the new log from its first line.
 
+## When Unity moves its log
+
+From Unity 6.5, the editor writes Unity's own `Editor.log`, the one every project shares, only while it starts. Once it has the project open, it carries on in the project's `Logs/Editor.log`, and writes in the shared one that it has moved, and where to. Claudette follows it there:
+
+- The project's `Logs/Editor.log` gets a row of its own under the same tab, read from its first line, so it has what the editor wrote as it started too.
+- The shared log's row stops where the editor said it moved, so other editors starting later don't add their lines to it. It says *Moved to Logs/Editor.log*, and over its log, *Unity editor moved its log to Logs/Editor.log at 14:31.*
+- When the editor closes, the shared log's row goes, and the project's row stays, *Closed*, with the whole log.
+
+If the editor already had the project open when Claudette started, the project's log is the only row. **Use Global Editor Log** in Unity's preferences, or starting Unity with `-useGlobalLog`, keeps everything in the shared log, and its row carries on as before.
+
 ## Closing it
 
 Click **×** on the row, **Close** over the log, or press `Ctrl/Cmd+W` while it has the focus.
@@ -85,7 +95,7 @@ When a tab is [collapsed](../tabs/the-sidebar.md#collapsing-a-tab), its logs fol
 | Engine | What gets a row | The log |
 |---|---|---|
 | Unreal Engine | The editor, `UnrealEditor-Cmd` and commandlets (`-run=`), `-game` and `-server` runs, with the project's `.uproject` on their command line. | `Saved/Logs/<project>.log`, or `<project>_2.log` and on while another has that one, or the file `-abslog=` or `LOG=` names. |
-| Unity | The editor and batch mode runs with the project after `-projectPath`. | Unity's `Editor.log` (the one **Open Editor log** opens), or the file `-logFile` names. Claudette's own **Run EditMode tests** writes its output to the run instead. |
+| Unity | The editor and batch mode runs with the project after `-projectPath`. | Unity's `Editor.log` (the one **Open Editor log** opens), and from Unity 6.5 the project's `Logs/Editor.log` once the editor has the project open, or the file `-logFile` names. Claudette's own **Run EditMode tests** writes its output to the run instead. |
 | Godot | The editor and the game with the project after `--path`. | `logs/godot.log` in the project's user data folder, or wherever the project's file logging settings or `--log-file` say. |
 
 Claudette looks at which programs are running every couple of seconds (every five on macOS), so a row appears a moment after the editor starts.

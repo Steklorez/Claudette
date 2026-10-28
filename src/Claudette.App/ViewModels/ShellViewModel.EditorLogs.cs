@@ -9,7 +9,9 @@ namespace Claudette.App.ViewModels;
 /// of the project's tabs, and a tab of the panes without a composer, as a run's log is. The log goes under the tab whose
 /// own process started it (Claude running a commandlet), else the tab whose launch started it, else the first of the
 /// project's tabs in the sidebar; it stays there while that tab has the project, and moves to the next when it closes.
-/// Each file is one log for the whole app, read by <see cref="EditorLogService"/>.
+/// Each file is one log for the whole app, read by <see cref="EditorLogService"/>. A log whose processes move to another
+/// file, as Unity's editor does once it has the project open, stays as it was, saying where, until they end; the other
+/// file is a log of its own under the same tab.
 /// </summary>
 public sealed partial class ShellViewModel : IEditorLogHost
 {
@@ -18,6 +20,15 @@ public sealed partial class ShellViewModel : IEditorLogHost
 
     /// <summary>The logs being shown or remembered, by file.</summary>
     private Dictionary<string, EditorLogViewModel> EditorLogs => field ??= new(_services.ProjectTools.OS.PathComparer());
+
+    /// <summary>
+    /// Logs whose processes moved to another file: no longer their file's log, which something else may write, and
+    /// kept until those processes end.
+    /// </summary>
+    private List<EditorLogViewModel> MovedLogs => field ??= [];
+
+    /// <summary>Every log under a tab or remembered: those of their file, and those moved from it.</summary>
+    private EditorLogViewModel[] AllEditorLogs() => [.. EditorLogs.Values, .. MovedLogs];
 
     /// <summary>The tab that last launched each project's engine, and when, by the project's path.</summary>
     private Dictionary<string, (TabViewModel Tab, DateTimeOffset At)> LaunchedFrom => field ??= new(_services.ProjectTools.OS.PathComparer());
@@ -49,6 +60,7 @@ public sealed partial class ShellViewModel : IEditorLogHost
             _watchingEditorLogs = true;
             _services.EditorLogs.Checked += OnEditorLogsChecked;
             _services.EditorLogs.Read += OnEditorLogRead;
+            _services.EditorLogs.Moved += OnEditorLogMoved;
         }
         var comparer = _services.ProjectTools.OS.PathComparer();
         var withLogs = _services.Settings.ProjectTools.ShowEditorLogs
@@ -64,7 +76,7 @@ public sealed partial class ShellViewModel : IEditorLogHost
         if (projects.Length == 0)
         {
             // Turned off, or no project has logs now: they all go at once.
-            foreach (var log in EditorLogs.Values.ToArray())
+            foreach (var log in AllEditorLogs())
             {
                 ForgetLog(log);
             }
@@ -117,6 +129,51 @@ public sealed partial class ShellViewModel : IEditorLogHost
                 }
             }
         }
+        var running = checks.SelectMany(c => c.Log.Writers).Select(w => w.Key).ToHashSet();
+        foreach (var moved in MovedLogs.ToArray())
+        {
+            if (!moved.Writers.Any(w => running.Contains(w.Key)))
+            {
+                // The editor that moved from it has ended: the log it moved to has everything.
+                ForgetLog(moved);
+            }
+        }
+        PlaceEditorLogs();
+    }
+
+    /// <summary>
+    /// A log's processes write another file now (DESIGN.md §18, "Editor logs", "A log that moves"): that file is a log
+    /// under the same tab, read from its start, and the old one says where it went, until they end.
+    /// </summary>
+    private void OnEditorLogMoved(EditorLogMove move)
+    {
+        if (!_services.Settings.ProjectTools.ShowEditorLogs)
+        {
+            return;
+        }
+        EditorLogs.TryGetValue(move.From, out var old);
+        if (!EditorLogs.TryGetValue(move.To.Path, out var log))
+        {
+            log = new EditorLogViewModel(_services, this, move.To.Path, move.To.Project);
+            EditorLogs[move.To.Path] = log;
+        }
+        // The same editor's log: ×'d away there, it's away here too, until the editor next starts.
+        log.IsDismissed = old?.IsDismissed ?? false;
+        log.PreferredTab = old?.Owner ?? old?.PreferredTab ?? LaunchedTab(move.To.Project.ProjectPath);
+        log.Writing(move.To.Writers, newWriters: true);
+        if (old is not null)
+        {
+            EditorLogs.Remove(move.From);
+            old.Moved(move.To.Path, move.To.Writers);
+            if (old.IsDismissed)
+            {
+                ForgetLog(old);
+            }
+            else
+            {
+                MovedLogs.Add(old);
+            }
+        }
         PlaceEditorLogs();
     }
 
@@ -144,7 +201,7 @@ public sealed partial class ShellViewModel : IEditorLogHost
     /// </summary>
     private void PlaceEditorLogs()
     {
-        foreach (var log in EditorLogs.Values.ToArray())
+        foreach (var log in AllEditorLogs())
         {
             var current = log.Owner;
             var owner = log.IsDismissed ? null : OwnerFor(log, current);
@@ -159,7 +216,7 @@ public sealed partial class ShellViewModel : IEditorLogHost
                 RemoveLogTab(log, current);
                 if (!log.IsDismissed || !log.IsRunning)
                 {
-                    EditorLogs.Remove(log.LogPath);
+                    Untrack(log);
                 }
             }
             else if (!OpenTabs.Contains(log))
@@ -191,8 +248,17 @@ public sealed partial class ShellViewModel : IEditorLogHost
         var tab = log.Owner;
         tab?.ProjectTools.RemoveLog(log);
         log.Owner = null;
-        EditorLogs.Remove(log.LogPath);
+        Untrack(log);
         RemoveLogTab(log, tab);
+    }
+
+    /// <summary>Forgets a log: one moved from its file, or its file's, while it still is.</summary>
+    private void Untrack(EditorLogViewModel log)
+    {
+        if (!MovedLogs.Remove(log) && EditorLogs.TryGetValue(log.LogPath, out var current) && ReferenceEquals(current, log))
+        {
+            EditorLogs.Remove(log.LogPath);
+        }
     }
 
     /// <summary>A log leaves the panes. While it had the focus, its tab takes its place, or the focus where it's on screen already.</summary>
