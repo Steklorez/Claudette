@@ -306,7 +306,6 @@ public sealed partial class ShellViewModel : IEditorLogHost
     {
         // Its row comes out from under a collapsed tab, and a collapsed thread (DESIGN.md §4, "Sidebar").
         TabOf(log)?.RevealRowsUnder();
-        OnRunSelected();
     }
 
     void IEditorLogHost.CloseLogPane(EditorLogViewModel log) => ClosePaneCommand.Execute(log);

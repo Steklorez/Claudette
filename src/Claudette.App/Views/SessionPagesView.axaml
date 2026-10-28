@@ -1,6 +1,6 @@
-<!-- A tab's side panel (DESIGN.md §3): changed files, agents, tasks, MCP servers, the project's tools, the scratch pad,
-     the game against Claudette while one is open and, when the monitor is on, processes. TabView holds it in a border it
-     sizes. -->
+<!-- A session's tool window's page (DESIGN.md §3, "Tool windows"): changed files, agents, tasks, MCP servers, the project's
+     tools, the scratch pad or, when the monitor is on, processes; the one Page names shows. ToolWindowView holds it, with
+     the session tab whose data it shows. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Claudette.App.ViewModels"
@@ -13,78 +13,13 @@
              xmlns:services="using:Claudette.App.Services"
              xmlns:views="using:Claudette.App.Views"
              xmlns:tools="using:Claudette.Core.ProjectTools"
-             x:Class="Claudette.App.Views.SidePanelView"
+             x:Class="Claudette.App.Views.SessionPagesView"
              x:DataType="vm:TabViewModel">
   <DockPanel>
-    <!-- The pages, as tabs: the one showing in full text over an accent line, the others muted. Those that don't fit are
-         in the menu of the button after them (DESIGN.md §3, "Side panel"). Each is tagged with its page, which the code
-         behind uses to put them in the order every tab shares and to drag them. -->
-    <Border DockPanel.Dock="Top" Classes="pagetabs">
-      <Grid ColumnDefinitions="*,Auto">
-        <controls:PageTabsPanel x:Name="PageTabs" LayoutUpdated="OnPageTabsLayoutUpdated">
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Files}" Classes.selected="{Binding IsFilesPage}" Command="{Binding ShowFilesPageCommand}">
-            <TextBlock Text="Changed files" Classes.muted="{Binding !IsFilesPage}" />
-          </Button>
-          <!-- Agents (DESIGN.md §18); a busy dot while a subagent runs -->
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Agents}" Classes.selected="{Binding IsAgentsPage}" Command="{Binding ShowAgentsPageCommand}" ToolTip.Tip="{Binding AgentsHeader}">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Agents" Classes.muted="{Binding !IsAgentsPage}" />
-              <TextBlock Classes="status busy" Text="●" FontSize="8" VerticalAlignment="Center" IsVisible="{Binding HasActiveAgents}" />
-            </StackPanel>
-          </Button>
-          <!-- Project tools (DESIGN.md §18); a busy dot while a job runs -->
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Project}" Classes.selected="{Binding IsProjectPage}" Command="{Binding ShowProjectPageCommand}" IsVisible="{Binding ProjectTools.HasTools}" ToolTip.Tip="{Binding ProjectTools.HeaderTitle}">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Project" Classes.muted="{Binding !IsProjectPage}" />
-              <TextBlock Classes="status busy" Text="●" FontSize="8" VerticalAlignment="Center" IsVisible="{Binding ProjectTools.Runs.IsJobRunning}" />
-            </StackPanel>
-          </Button>
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Processes}" Classes.selected="{Binding IsProcessesPage}" Command="{Binding ShowProcessesPageCommand}" IsVisible="{Binding ProcessMonitor.IsOn}">
-            <TextBlock Text="Processes" Classes.muted="{Binding !IsProcessesPage}" />
-          </Button>
-          <!-- Tasks (DESIGN.md §5, "Tasks"): "2 of 5" done -->
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Tasks}" Classes.selected="{Binding IsTasksPage}" Command="{Binding ShowTasksPageCommand}" IsVisible="{Binding TodoList.HasAnything}"
-                  ToolTip.Tip="{Binding TodoList.PageTip}">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="Tasks" Classes.muted="{Binding !IsTasksPage}" />
-              <TextBlock Classes="muted small" Text="{Binding TodoList.Badge}" VerticalAlignment="Center" IsVisible="{Binding TodoList.HasItems}" />
-            </StackPanel>
-          </Button>
-          <!-- MCP servers (DESIGN.md §4, "MCP servers"); a warning dot when one failed -->
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Mcp}" Classes.selected="{Binding IsMcpPage}" Command="{Binding ShowMcpPageCommand}" IsVisible="{Binding HasMcpServers}"
-                  ToolTip.Tip="{Binding McpServers.Attention, TargetNullValue='MCP servers'}">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-              <TextBlock Text="MCP" Classes.muted="{Binding !IsMcpPage}" />
-              <TextBlock Classes="status warning" Text="●" FontSize="8" VerticalAlignment="Center"
-                         IsVisible="{Binding McpServers.Attention, Converter={x:Static ObjectConverters.IsNotNull}}" />
-            </StackPanel>
-          </Button>
-          <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad") -->
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.ScratchPad}" Classes.selected="{Binding IsScratchPadPage}" Command="{Binding ShowScratchPadPageCommand}" ToolTip.Tip="Notes shared by the tabs in this project">
-            <TextBlock Text="Scratch pad" Classes.muted="{Binding !IsScratchPadPage}" />
-          </Button>
-          <!-- A game against Claudette, while one is open (DESIGN.md §18, "Games with Claudette") -->
-          <Button Classes="pagetab" Tag="{x:Static vm:SidePanelPage.Games}" Classes.selected="{Binding IsGamesPage}" Command="{Binding ShowGamesPageCommand}" IsVisible="{Binding Games.IsOpen}"
-                  ToolTip.Tip="Playing against Claudette">
-            <TextBlock Text="Games" Classes.muted="{Binding !IsGamesPage}" />
-          </Button>
-          <!-- The pages that don't fit, with a dot when one of them shows one; its menu is made as it opens -->
-          <controls:FreshMenuButton x:Name="MorePages" Classes="flat" Padding="6" VerticalAlignment="Center" ToolTip.Tip="More pages" AutomationProperties.Name="More pages">
-            <StackPanel Orientation="Horizontal" Spacing="3">
-              <Path Data="{StaticResource IconMore}" Fill="{DynamicResource MutedTextBrush}" Width="12" Height="12" Stretch="None" />
-              <TextBlock x:Name="MorePagesDot" Classes="status" Text="●" FontSize="8" VerticalAlignment="Center" IsVisible="False" />
-            </StackPanel>
-          </controls:FreshMenuButton>
-        </controls:PageTabsPanel>
-        <Button Grid.Column="1" Classes="flat" Padding="6" VerticalAlignment="Center" ToolTip.Tip="Close the side panel" AutomationProperties.Name="Close side panel" Command="{Binding ToggleSidePanelCommand}">
-          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
-        </Button>
-      </Grid>
-    </Border>
 
     <Panel Margin="0,8,0,0">
       <!-- Changed files (DESIGN.md §8) -->
-      <DockPanel IsVisible="{Binding IsFilesPage}">
+      <DockPanel x:Name="FilesPage" IsVisible="False">
         <StackPanel DockPanel.Dock="Top" Margin="12,0,12,6" Spacing="4">
           <Grid ColumnDefinitions="*,Auto">
             <TextBlock Classes="muted small" Text="{Binding ChangedFiles.Summary}" TextWrapping="Wrap" VerticalAlignment="Center" />
@@ -155,7 +90,7 @@
       </DockPanel>
 
       <!-- Agents (DESIGN.md §18, "Agent map"): the tree, and the selected agent's prompt and result -->
-      <Grid IsVisible="{Binding IsAgentsPage}" RowDefinitions="Auto,*,Auto,*">
+      <Grid x:Name="AgentsPage" IsVisible="False" RowDefinitions="Auto,*,Auto,*">
         <Grid Margin="12,0,6,6" ColumnDefinitions="*,Auto">
           <TextBlock Classes="muted small" Text="{Binding AgentsHeader}" TextWrapping="Wrap" VerticalAlignment="Center" />
           <Button Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="Open the agent map in its own window" AutomationProperties.Name="Open the agent map in a window"
@@ -171,7 +106,7 @@
 
       <!-- Project (DESIGN.md §18, "Project tools"): the project's details. The actions are in the project's menu at the
            sidebar's foot, and each run's log shows in the main area. -->
-      <ScrollViewer x:Name="ProjectPage" IsVisible="{Binding IsProjectPage}" HorizontalScrollBarVisibility="Disabled">
+      <ScrollViewer x:Name="ProjectPage" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="12,0,16,12" Spacing="8">
           <TextBlock Text="{Binding ProjectTools.HeaderTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
           <ItemsControl ItemsSource="{Binding ProjectTools.FileProblems}" IsVisible="{Binding ProjectTools.HasFileProblems}">
@@ -198,7 +133,7 @@
 
       <!-- Tasks (DESIGN.md §5, "Tasks"): the Claude Docs the session made, the plan (its draft, a version put up for
            review, or a reply shown as the plan), then each task with its state, owner, what it waits on, times, files and tokens -->
-      <DockPanel IsVisible="{Binding IsTasksPage}">
+      <DockPanel x:Name="TasksPage" IsVisible="False">
         <TextBlock DockPanel.Dock="Top" Classes="muted small" Margin="12,0,12,6" Text="{Binding TodoList.Summary}" TextWrapping="Wrap" IsVisible="{Binding TodoList.HasItems}" />
         <!-- The text wraps at the width shown; a plan's code blocks scroll sideways on their own -->
         <ScrollViewer x:Name="TasksScroller" HorizontalScrollBarVisibility="Disabled">
@@ -248,7 +183,21 @@
                 </ToggleButton>
                 <md:MarkdownRenderer MarkdownBuilder="{Binding ShownPlan.Markdown, FallbackValue={x:Null}}" IsVisible="{Binding !ShowsPlanChanges}"
                                      LinkCommand="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenLinkCommand}" />
-                <ItemsControl ItemsSource="{Binding ShownPlan.Changes.Lines, FallbackValue={x:Null}}" IsVisible="{Binding ShowsPlanChanges}" />
+                <!-- Its own template: the page is in the shell's tool windows, not under the tab's view, whose templates it can't use -->
+                <ItemsControl ItemsSource="{Binding ShownPlan.Changes.Lines, FallbackValue={x:Null}}" IsVisible="{Binding ShowsPlanChanges}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="conv:DiffLine">
+                      <Border Classes="diffline" Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsRemoved}" Classes.hunk="{Binding IsHunk}" Padding="6,0">
+                        <Grid ColumnDefinitions="36,36,14,*">
+                          <TextBlock Classes="mono muted small" Text="{Binding OldNumberText}" HorizontalAlignment="Right" Margin="0,0,6,0" />
+                          <TextBlock Grid.Column="1" Classes="mono muted small" Text="{Binding NewNumberText}" HorizontalAlignment="Right" Margin="0,0,6,0" />
+                          <TextBlock Grid.Column="2" Classes="mono" Classes.added="{Binding IsAdded}" Classes.removed="{Binding IsRemoved}" Text="{Binding Marker}" />
+                          <SelectableTextBlock Grid.Column="3" Classes="mono" Text="{Binding Text}" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
               </StackPanel>
             </Border>
             <ItemsControl ItemsSource="{Binding TodoList.Items}">
@@ -306,7 +255,7 @@
       </DockPanel>
 
       <!-- MCP servers (DESIGN.md §4, "MCP servers") -->
-      <DockPanel IsVisible="{Binding IsMcpPage}">
+      <DockPanel x:Name="McpPage" IsVisible="False">
         <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="12,0,12,6">
           <TextBlock Classes="muted small" Text="This session's MCP servers." VerticalAlignment="Center" />
           <Button Grid.Column="1" Classes="flat" Content="Refresh" Command="{Binding McpServers.RefreshCommand}" />
@@ -360,21 +309,14 @@
       </DockPanel>
 
       <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad"), once the tab has used it -->
-      <Panel IsVisible="{Binding IsScratchPadPage}">
+      <Panel x:Name="ScratchPadPage" IsVisible="False">
         <views:ScratchPadView DataContext="{Binding ShownScratchPad}" />
       </Panel>
 
-      <!-- Games with Claudette (DESIGN.md §18): made only while the page shows a game -->
-      <ContentControl IsVisible="{Binding IsGamesPage}" Content="{Binding ShownGames}">
-        <ContentControl.ContentTemplate>
-          <DataTemplate DataType="services:GameService">
-            <views:GamesView />
-          </DataTemplate>
-        </ContentControl.ContentTemplate>
-      </ContentControl>
+
 
       <!-- Processes (DESIGN.md §4, "Process monitor") -->
-      <DockPanel IsVisible="{Binding IsProcessesPage}">
+      <DockPanel x:Name="ProcessesPage" IsVisible="False">
         <TextBlock DockPanel.Dock="Top" Classes="muted small" Margin="12,0,12,6" Text="{Binding ProcessMonitor.SummaryText, TargetNullValue='Only Claude Code is running.'}" TextWrapping="Wrap" />
         <!-- A process's text wraps at the width shown and its numbers line up at the right edge, however deep it's nested;
              only a row nested past the edge scrolls sideways. Its command line is in its tooltip. -->

@@ -2,14 +2,14 @@
 title: A tour of the window
 parent: Getting started
 nav_order: 7
-summary: "The usage header, the sidebar, the conversation, the side panel and the composer, and where each is explained."
+summary: "The usage header, the sidebar, the conversation, the tool windows and the composer, and where each is explained."
 ---
 
 # A tour of the window
 
-The window has five parts: the usage header across the top, the sidebar on the left, the conversation in the middle, the side panel on the right and the composer under the conversation. This page names each part and says where to read more.
+The window has five parts: the usage header across the top, the sidebar on the left, the conversation in the middle, the tool windows on the right and the composer under the conversation. This page names each part and says where to read more.
 
-{% include shot.html name="standard" alt="Claudette's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files page in the side panel, the plan's usage in the header, and Claudette herself standing on the message box" %}
+{% include shot.html name="standard" alt="Claudette's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Claudette herself standing on the message box" %}
 
 ## The header
 
@@ -20,7 +20,7 @@ The header is always visible. From left to right it shows:
 - **The cup**, which keeps the computer awake while it steams. See [Keeping the computer awake](../away/keeping-the-computer-awake.md).
 - **A colored dot**, which shows whether Claude itself is having trouble. See [Claude is having problems](../troubleshooting/claude-is-having-problems.md).
 - **Your account** and its plan. See [Your Claude sign-in](../accounts/your-claude-sign-in.md).
-- **A button that shows and hides the side panel** for the selected tab.
+- **The Tool windows menu**, which shows and hides each tool window.
 
 A banner can run across the top, under the header: Claude's service status when there's an incident, **Claude Code needs you to sign in.**, or a usage alert. Each has a button to deal with it or **Dismiss**.
 
@@ -37,11 +37,11 @@ The sidebar lists your tabs, one row each, grouped by working folder. A row show
 
 The middle shows the selected tab's conversation: your messages, Claude's replies as Markdown with highlighted code, its tool calls, its thinking, and the questions it asks you. Permission prompts, questions and plans are cards with buttons, in the conversation itself. Read on in [The conversation](../conversation/index.md) and [Permissions and prompts](../permissions/permission-cards.md).
 
-## The side panel
+## Tool windows
 
-The side panel has pages along its top, and each tab has its own. You can drag the pages into the order you like.
+The tool windows are at the right of the window, as tabs along its edge that slide out over the conversation when you point at them, or docked beside it with the pin. They show the tab you're looking at.
 
-| Page | What it shows | Where to read more |
+| Window | What it shows | Where to read more |
 |---|---|---|
 | **Changed files** | The files this tab changed, with their diffs | [Changed files](../changes/changed-files.md) |
 | **Agents** | Claude's subagents as a tree | [The agent map](../plans/the-agent-map.md) |
@@ -51,7 +51,7 @@ The side panel has pages along its top, and each tab has its own. You can drag t
 | **MCP** | The session's MCP servers, when it has any | [MCP servers](../tabs/mcp-servers.md) |
 | **Scratch pad** | Your notes for the project | [The scratch pad](../conversation/the-scratch-pad.md) |
 
-[The side panel](../tabs/the-side-panel.md) covers resizing, reordering and the **⋯** menu for pages that don't fit.
+[Tool windows](../tabs/tool-windows.md) covers docking them, sliding them out, resizing, reordering and the **⋯** menu for pages that don't fit.
 
 ## The composer
 

@@ -10,7 +10,7 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
 - signed out (FAKE_CLAUDE_LOGGED_IN=0), for the sign-in screen;
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
-  side panel's Changed files, Scratch pad and Project pages, a Files tab, the Usage window, the Settings window on General,
+  Changed files, Scratch pad and Project tool windows, a Files tab, the Usage window, the Settings window on General,
   Appearance, a search, Unreal Engine's page in Project tools, About and Accounts, and a tab's Tab settings;
 - with a stand-in for the Unreal editor open on starfall (claudette-demo --stand-in-editor, run as UnrealEditor.exe),
   for its log under the tab and in the main area;
@@ -117,10 +117,10 @@ function Open-Settings {
     $settings
 }
 
-# The side panel, down to the bottom of $last (a control on its page) when that's given, or $height device-independent
-# pixels from its top: a page is often much shorter than the panel.
+# The right edge's tool windows, docked, down to the bottom of $last (a control in its window) when that's given, or
+# $height device-independent pixels from its top: a window's page is often much shorter than the edge.
 function Get-PanelRect($last = $null, [int] $height = 0) {
-    $panel = Get-Parent (Find-ByText $window 'Close side panel')
+    $panel = Find-ByText $window 'Tool windows at the right'
     $rect = $panel.Current.BoundingRectangle
     $scale = [WindowShot]::Scale($window)
     $bottom = 0
@@ -130,20 +130,23 @@ function Get-PanelRect($last = $null, [int] $height = 0) {
     $rect
 }
 
-# Shows the side panel of the selected tab if it's hidden.
+# Docks the right edge's tool windows beside the conversation, as the side panel was, if they're auto-hidden: a tab of
+# its slides one out, whose pin docks them (DESIGN.md §3, "Tool windows").
 function Show-SidePanel {
-    if (Find-ByText $window 'Show the side panel' -Optional) {
-        Invoke-ByText $window 'Show the side panel'
+    if (Find-ByText $window 'Changed files, auto-hidden, right' -Optional) {
+        Invoke-ByText $window 'Changed files, auto-hidden, right'
+        Start-Sleep -Seconds 1
+        Invoke-ByText $window 'Dock'
         Start-Sleep -Seconds 1
     }
 }
 
-# Opens a page of the side panel, such as Scratch pad, in the tab.
+# Shows a tool window, such as Scratch pad, docked at the right, for the tab.
 function Show-SidePage([string] $tab, [string] $page) {
     Invoke-ByText $window $tab
     Start-Sleep -Seconds 2
     Show-SidePanel
-    Invoke-ByText $window $page
+    Invoke-ByText $window "$page, docked, right"
     Start-Sleep -Seconds 2
 }
 
@@ -217,7 +220,7 @@ foreach ($theme in $Themes) {
             Shot 'project-tools/project-page' {
                 param($path)
                 Show-SidePage 'Grappling hook' 'Project'
-                Save-Rect $window $path (Get-PanelRect (Find-Lowest (Get-Parent (Find-ByText $window 'Close side panel')))) 0
+                Save-Rect $window $path (Get-PanelRect (Find-Lowest (Find-ByText $window 'Tool windows at the right'))) 0
             }
 
             Shot 'usage/usage-window' {
@@ -474,8 +477,8 @@ foreach ($theme in $Themes) {
                 Start-Sleep -Seconds 1
                 Send-Message $window 'SPAWN 600'
                 Show-SidePanel
-                Wait-Until { Find-ByText $window 'Processes' -Optional } 'the Processes page' 30
-                Invoke-ByText $window 'Processes'
+                Wait-Until { Find-ByText $window 'Processes, docked, right' -Optional } 'the Processes window' 30
+                Invoke-ByText $window 'Processes, docked, right'
                 Start-Sleep -Seconds 2
                 Wait-Until { Find-ByText $window '--child 600' -Optional } 'the spawned process' 60
                 Start-Sleep -Seconds 3

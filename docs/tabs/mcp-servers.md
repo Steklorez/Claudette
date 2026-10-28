@@ -7,11 +7,11 @@ summary: "MCP servers give Claude extra tools."
 
 # MCP servers
 
-MCP servers give Claude extra tools. Claude Code runs them, from your own and the project's configuration: see [Claude Code's MCP documentation](https://code.claude.com/docs/en/mcp). Claudette shows each tab's servers on the **MCP** page of its side panel, and lets you reconnect, turn off and sign in to them without leaving the window.
+MCP servers give Claude extra tools. Claude Code runs them, from your own and the project's configuration: see [Claude Code's MCP documentation](https://code.claude.com/docs/en/mcp). Claudette shows each tab's servers in the **MCP** tool window, and lets you reconnect, turn off and sign in to them without leaving the window.
 
 ## The MCP page
 
-The page shows for a tab whose session has MCP servers. Open the [side panel](the-side-panel.md) and choose **MCP**, or use **Show MCP servers** in the [command palette](the-command-palette.md).
+The page shows for a tab whose session has MCP servers. Choose the **MCP** [tool window](tool-windows.md), or use **Show MCP servers** in the [command palette](the-command-palette.md).
 
 Each server shows its name, how it's connected, where it's configured and its version when Claude Code says, and the error for one that failed. The state is one of:
 
@@ -49,5 +49,5 @@ A server can ask for input in the middle of a turn, with a form in the conversat
 
 ## See also
 
-- [The side panel](the-side-panel.md), for the other pages.
+- [Tool windows](tool-windows.md), for the other windows.
 - [Processes](processes.md), which lists a server's process while the process monitor is on.

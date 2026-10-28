@@ -9,13 +9,13 @@ summary: "The scratch pad is a place for notes beside the conversation: what to 
 
 The scratch pad is a place for notes beside the conversation: what to check later, a command worth keeping, a piece of a reply. Each project has one pad, shared by every tab in that project, and by the same project on your other machines.
 
-{% include shot.html name="guide/conversation/scratch-pad" alt="The Scratch pad page in the side panel, with notes and a command kept from a conversation." %}
+{% include shot.html name="guide/conversation/scratch-pad" alt="The Scratch pad tool window, with notes and a command kept from a conversation." %}
 
 Nothing in it goes to Claude unless you paste it into a message.
 
 ## Opening it
 
-The **Scratch pad** page is in the side panel, the last page until you move it, and it is always there ([The side panel](../tabs/the-side-panel.md)). The command palette's **Show scratch pad** opens it too.
+The **Scratch pad** is a tool window, the last at the right until you move it, and it is always there ([Tool windows](../tabs/tool-windows.md)). The command palette's **Show scratch pad** opens it too.
 
 Its first line says whose pad it is, named as the tab group is: *Shared by the tabs in api*. **Copy all** copies the whole pad. **Clear…** empties it, after asking, for every tab of the project and on your other machines.
 
@@ -34,7 +34,7 @@ The rest is the text: plain text in the code font, so pasted code keeps its colu
 2. Or, with nothing selected, right-click a message and choose **Add message to scratch pad**.
 3. Or use the **Add to scratch pad** button on a message's card, or on a code block's header.
 
-The text goes at the end after a blank line, the side panel opens on the page, and the added text is selected, without taking the keyboard from where it was. A screen reader hears *Added to the scratch pad.* [Copying and quoting](copying-and-quoting.md) has the menus.
+The text goes at the end after a blank line, its tool window shows, and the added text is selected, without taking the keyboard from where it was. A screen reader hears *Added to the scratch pad.* [Copying and quoting](copying-and-quoting.md) has the menus.
 
 ## Which pad a project has
 

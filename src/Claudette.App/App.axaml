@@ -543,8 +543,8 @@
       <!-- A thread (DESIGN.md §18, "Threads"): a line with two rows branching off it. -->
       <StreamGeometry x:Key="IconThread">M2,1.5 L2,9.5 L7,9.5 M2,5 L7,5 M7,3.5 L10.5,3.5 L10.5,6.5 L7,6.5 Z M7,8 L10.5,8 L10.5,11 L7,11 Z</StreamGeometry>
       <StreamGeometry x:Key="IconSidebar">M1.5,2 L10.5,2 L10.5,10 L1.5,10 Z M4.5,2 L4.5,10</StreamGeometry>
-      <!-- The sidebar's icon mirrored: the header's button for the side panel (DESIGN.md §3). -->
-      <StreamGeometry x:Key="IconSidePanel">M1.5,2 L10.5,2 L10.5,10 L1.5,10 Z M7.5,2 L7.5,10</StreamGeometry>
+      <!-- The sidebar's icon mirrored: the header's Tool windows button (DESIGN.md §3, "Tool windows"). -->
+      <StreamGeometry x:Key="IconToolWindows">M1.5,2 L10.5,2 L10.5,10 L1.5,10 Z M7.5,2 L7.5,10</StreamGeometry>
       <!-- The header's cup (DESIGN.md §9, "Keeping the computer awake"), and the steam over it while the computer is kept awake. -->
       <StreamGeometry x:Key="IconCup">M1.5,5 L8,5 L8,8.5 C8,10 7,11 5.5,11 L4,11 C2.5,11 1.5,10 1.5,8.5 Z M8,6 L9,6 C10.1,6 10.6,6.6 10.6,7.3 C10.6,8 10.1,8.6 9,8.6 L8,8.6</StreamGeometry>
       <StreamGeometry x:Key="IconSteam">M3.6,0.8 C2.9,1.7 4.3,2.4 3.6,3.5 M6.1,0.8 C5.4,1.7 6.8,2.4 6.1,3.5</StreamGeometry>

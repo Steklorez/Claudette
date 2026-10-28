@@ -9,7 +9,7 @@ summary: "The process monitor shows what each tab has started, such as test runs
 
 The process monitor shows what each tab has started, such as test runs, dev servers, builds and MCP servers, with their CPU and memory use. It's off until you turn it on.
 
-{% include shot.html name="guide/tabs/processes" alt="The Processes page in the side panel, with a tree of a tab's processes and their CPU and memory use." %}
+{% include shot.html name="guide/tabs/processes" alt="The Processes tool window, with a tree of a tab's processes and their CPU and memory use." %}
 
 ## Turning it on
 
@@ -18,10 +18,10 @@ The process monitor shows what each tab has started, such as test runs, dev serv
 
 ## What it shows
 
-- **The composer bar's summary**, for example `3 procs · 42% CPU · 1.1 GB`, which leaves out `claude` itself. Click it to open the Processes page. It's hidden while the side panel is open, since the panel shows the same.
+- **The composer bar's summary**, for example `3 procs · 42% CPU · 1.1 GB`, which leaves out `claude` itself. Click it to open the Processes page. It's hidden while the Processes tool window shows the tab, since the window shows the same.
 - **The activity icon** (`⚙`) on the tab's row while a process it started is using noticeable CPU, 5% or more. See [The sidebar](the-sidebar.md#badges).
 - **The header's total**, before the service status dot: the CPU and memory of every tab's processes together, `claude` included (*63% CPU · 2.4 GB*). Hover it for each tab's summary and how many tabs aren't counted. It's hidden while no tab has the monitor on. Claudette's own process isn't in it.
-- **The Processes page** in the side panel, a tree of the tab's processes starting from its `claude`.
+- **The Processes tool window**, a tree of the tab's processes starting from its `claude`.
 
 ## The Processes page
 
@@ -67,5 +67,5 @@ All in Settings → Tabs → Process monitor:
 
 ## See also
 
-- [The side panel](the-side-panel.md), for the other pages.
+- [Tool windows](tool-windows.md), for the other windows.
 - [Tab settings](tab-settings.md), for turning the monitor on for one tab.

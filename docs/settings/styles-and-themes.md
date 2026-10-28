@@ -19,7 +19,7 @@ Settings → Appearance → **Theme** is **System**, **Light** or **Dark**. **Sy
 
 Settings → Appearance → **Style** is **Standard** (the default) or **Claude**. The layout, the tool rows, the diffs and every control are the same in both. The look changes.
 
-{% include shot.html name="standard" alt="Claudette in the Standard style: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files page in the side panel, the plan's usage in the header and Claudette standing on the message box" %}
+{% include shot.html name="standard" alt="Claudette in the Standard style: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header and Claudette standing on the message box" %}
 
 **Standard** takes Claude Code's extension for Visual Studio Code as its reference: a dense, calm layout in neutral greys, with your OS's accent color for selection, the usage meters and checked boxes. Diffs are inline, in red and green, and code takes Visual Studio Code's Light+ and Dark+ colors. The composer is a rounded box, and Send and Stop are round buttons: an arrow in the accent color, and a square.
 

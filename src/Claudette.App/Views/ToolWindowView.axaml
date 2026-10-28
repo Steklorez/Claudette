@@ -1,0 +1,25 @@
+<!-- What a tool window shows (DESIGN.md §3, "Tool windows"): a session's page, of the session tab it follows, or what made it,
+     such as the game against Claudette. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tw="using:Claudette.App.ViewModels.ToolWindows"
+             xmlns:services="using:Claudette.App.Services"
+             xmlns:views="using:Claudette.App.Views"
+             x:Class="Claudette.App.Views.ToolWindowView"
+             x:DataType="tw:ToolWindowViewModel">
+  <Panel>
+    <!-- A session's page: its data, the focused tab's or its group's last -->
+    <views:SessionPagesView x:Name="Pages" DataContext="{Binding Content}" IsVisible="{Binding HasSession, RelativeSource={RelativeSource AncestorType=views:ToolWindowView}}" />
+    <TextBlock Classes="muted small" Margin="12" TextWrapping="Wrap" Text="Open a tab to see its work here."
+               IsVisible="{Binding HasNoSession, RelativeSource={RelativeSource AncestorType=views:ToolWindowView}}" />
+    <!-- The rest show what made them -->
+    <ContentControl Content="{Binding Content}" IsVisible="{Binding !Kind.FollowsSession}">
+      <ContentControl.DataTemplates>
+        <!-- Games with Claudette (DESIGN.md §18) -->
+        <DataTemplate DataType="services:GameService">
+          <views:GamesView />
+        </DataTemplate>
+      </ContentControl.DataTemplates>
+    </ContentControl>
+  </Panel>
+</UserControl>

@@ -10,12 +10,15 @@ using Claudette.Platform.Processes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using Claudette.App.ViewModels.ToolWindows;
+
 namespace Claudette.App.ViewModels;
 
 /// <summary>
 /// The main UI once Claude Code is ready: the sidebar of tabs grouped by folder, the selected tab, the new-tab picker
-/// and dialogs (DESIGN.md §3, §4). Opening a session from History is <see cref="SessionOpener"/>'s, the sidebar's and
-/// side panel's widths are <see cref="Layout"/>'s, and a group's color is chosen by <see cref="GroupColors"/>.
+/// and dialogs (DESIGN.md §3, §4). Opening a session from History is <see cref="SessionOpener"/>'s, the sidebar's width
+/// is <see cref="Layout"/>'s, the tool windows are <see cref="ToolWindows"/>, and a group's color is chosen by
+/// <see cref="GroupColors"/>.
 /// </summary>
 public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 {
@@ -28,19 +31,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services = services;
         _onAuthenticationRequired = onAuthenticationRequired;
         _opener = new SessionOpener(services, this);
-        Layout = new ShellLayout(services.State, services.SaveState, () =>
-        {
-            foreach (var tab in AllTabs)
-            {
-                tab.OnSidePanelWidthChanged();
-            }
-        }, () =>
-        {
-            foreach (var tab in AllTabs)
-            {
-                tab.OnSidePanelPagesChanged();
-            }
-        });
+        Layout = new ShellLayout(services.State, services.SaveState);
+        ToolWindows = new ToolDockViewModel(services.State, services.SaveState, services.Time, services.Dispatcher);
+        WatchToolWindows();
         // Panes fold away as the window narrows, and come back as it widens (DESIGN.md §18, "Split panes").
         Layout.PropertyChanged += (_, e) =>
         {
@@ -1015,9 +1008,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [ObservableProperty]
     public partial bool IsQuietSteps { get; private set; }
 
-    // ---- Sidebar and side panel (DESIGN.md §3, §4, "Sidebar") -------------------------------------------------
+    // ---- Sidebar (DESIGN.md §3, §4, "Sidebar") ----------------------------------------------------------------
 
-    /// <summary>The sidebar's width, and whether it shows only its rail, and the width every tab's side panel has.</summary>
+    /// <summary>The sidebar's width, and whether it shows only its rail.</summary>
     public ShellLayout Layout { get; }
 
     // ---- Settings -------------------------------------------------------------------------------------------

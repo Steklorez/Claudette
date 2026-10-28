@@ -1,7 +1,7 @@
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// Games with Claudette (DESIGN.md §18): every tab's Games page follows the one game that's open, and the line over the
+/// Games with Claudette (DESIGN.md §18): the Games tool window follows the one game that's open, and the line over the
 /// board says when Claude needs the user.
 /// </summary>
 public sealed partial class ShellViewModel
@@ -9,13 +9,7 @@ public sealed partial class ShellViewModel
     private void WatchGames()
     {
         _services.Games.Announcer = Announce;
-        _services.Games.OpenChanged += () =>
-        {
-            foreach (var tab in AllTabs)
-            {
-                tab.OnGameOpenChanged();
-            }
-        };
+        _services.Games.OpenChanged += OnGameOpenChanged;
     }
 
     /// <summary>

@@ -94,7 +94,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     }
 
     /// <summary>
-    /// The side panel has a Project page, and the project's menu <b>Show output…</b>: a detected project, custom
+    /// The Project tool window shows, and the project's menu <b>Show output…</b>: a detected project, custom
     /// actions, or a claudette.json whose entries were skipped (the menu says why). The sidebar's project row shows
     /// either way.
     /// </summary>

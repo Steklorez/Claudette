@@ -1227,60 +1227,97 @@
     <Border x:Name="SidebarEdge" Grid.Column="0" Width="6" Margin="0,0,-3,0" HorizontalAlignment="Right" Background="Transparent"
             Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding Layout.IsSidebarExpanded}" />
 
-    <!-- The tabs on screen, side by side when there are several, each with the share of the width its pane was dragged to
-         (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
-    <ItemsControl x:Name="PaneHost" Grid.Column="1" Classes="panes" ItemsSource="{Binding OpenTabs}">
-      <ItemsControl.Styles>
-        <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:IShellTab">
-          <Setter Property="IsVisible" Value="{Binding IsShown}" />
-          <Setter Property="controls:PanesPanel.Index" Value="{Binding PaneIndex}" />
-          <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
-          <Setter Property="BorderThickness" Value="{Binding PaneIndex, Converter={x:Static controls:PanesPanel.DividerThickness}}" />
-        </Style>
-      </ItemsControl.Styles>
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <controls:PanesPanel Shares="{Binding $parent[ItemsControl].((vm:ShellViewModel)DataContext).Layout.PaneShares, FallbackValue={x:Null}}"
-                               LeastWidth="{x:Static vm:ShellLayout.MinConversationWidth}" />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.DataTemplates>
-        <DataTemplate DataType="vm:TabViewModel">
-          <views:TabView />
-        </DataTemplate>
-        <DataTemplate DataType="vm:ProjectFilesViewModel">
-          <views:ProjectFilesView />
-        </DataTemplate>
-        <!-- A project run's log (DESIGN.md §18, "Project tools", "A run's log") -->
-        <DataTemplate DataType="vm:ProjectRunViewModel">
-          <views:ProjectRunView />
-        </DataTemplate>
-        <!-- An editor's log (DESIGN.md §18, "Editor logs") -->
-        <DataTemplate DataType="vm:EditorLogViewModel">
-          <views:EditorLogView />
-        </DataTemplate>
-      </ItemsControl.DataTemplates>
-    </ItemsControl>
+    <!-- The panes, with the tool windows docked at their right, the whole height, and under them (DESIGN.md §3, "Tool
+         windows"); an auto-hidden edge's tabs along the window's edge, and a window slid out over the panes. -->
+    <Grid x:Name="DockArea" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto,Auto">
+      <Panel x:Name="PanesArea">
+        <!-- The tabs on screen, side by side when there are several, each with the share of the width its pane was dragged to
+             (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
+        <ItemsControl x:Name="PaneHost" Classes="panes" ItemsSource="{Binding OpenTabs}">
+          <ItemsControl.Styles>
+            <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:IShellTab">
+              <Setter Property="IsVisible" Value="{Binding IsShown}" />
+              <Setter Property="controls:PanesPanel.Index" Value="{Binding PaneIndex}" />
+              <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+              <Setter Property="BorderThickness" Value="{Binding PaneIndex, Converter={x:Static controls:PanesPanel.DividerThickness}}" />
+            </Style>
+          </ItemsControl.Styles>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <controls:PanesPanel Shares="{Binding $parent[ItemsControl].((vm:ShellViewModel)DataContext).Layout.PaneShares, FallbackValue={x:Null}}"
+                                   LeastWidth="{x:Static vm:ShellLayout.MinConversationWidth}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.DataTemplates>
+            <DataTemplate DataType="vm:TabViewModel">
+              <views:TabView />
+            </DataTemplate>
+            <DataTemplate DataType="vm:ProjectFilesViewModel">
+              <views:ProjectFilesView />
+            </DataTemplate>
+            <!-- A project run's log (DESIGN.md §18, "Project tools", "A run's log") -->
+            <DataTemplate DataType="vm:ProjectRunViewModel">
+              <views:ProjectRunView />
+            </DataTemplate>
+            <!-- An editor's log (DESIGN.md §18, "Editor logs") -->
+            <DataTemplate DataType="vm:EditorLogViewModel">
+              <views:EditorLogView />
+            </DataTemplate>
+          </ItemsControl.DataTemplates>
+        </ItemsControl>
 
-    <!-- The lines between the panes, to drag; a double-click shares the width evenly again (DESIGN.md §18, "Split panes"). -->
-    <controls:PaneDividers x:Name="PaneLines" Grid.Column="1" Highlight="{DynamicResource AccentStatusBrush}"
-                           AutomationProperties.Name="Lines between the panes" />
+        <!-- The lines between the panes, to drag; a double-click shares the width evenly again (DESIGN.md §18, "Split panes"). -->
+        <controls:PaneDividers x:Name="PaneLines" Highlight="{DynamicResource AccentStatusBrush}"
+                               AutomationProperties.Name="Lines between the panes" />
 
-    <!-- Where a tab's row dragged from the sidebar would open: beside a pane, on the half under the pointer, or in its place. -->
-    <Canvas x:Name="PaneDropLayer" Grid.Column="1" IsHitTestVisible="False" IsVisible="False">
-      <Border x:Name="PaneDropTarget" Classes="panedrop">
-        <Border Classes="panedroplabel" HorizontalAlignment="Center" VerticalAlignment="Center">
-          <TextBlock x:Name="PaneDropText" Classes="small" FontWeight="SemiBold" />
-        </Border>
+        <!-- Where a tab's row dragged from the sidebar would open: beside a pane, on the half under the pointer, or in its place. -->
+        <Canvas x:Name="PaneDropLayer" IsHitTestVisible="False" IsVisible="False">
+          <Border x:Name="PaneDropTarget" Classes="panedrop">
+            <Border Classes="panedroplabel" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock x:Name="PaneDropText" Classes="small" FontWeight="SemiBold" />
+            </Border>
+          </Border>
+        </Canvas>
+
+        <!-- No tabs -->
+        <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasTabs}">
+          <TextBlock Classes="title" Text="Start a Claude Code session" HorizontalAlignment="Center" />
+          <TextBlock Classes="muted" Text="Pick the folder Claude should work in." HorizontalAlignment="Center" />
+          <Button Classes="accent" Content="New tab" HorizontalAlignment="Center" Command="{Binding NewTabCommand}" />
+        </StackPanel>
+      </Panel>
+
+      <!-- The bottom edge, docked, and its tabs while it's auto-hidden -->
+      <views:ToolEdgeView x:Name="BottomEdge" Grid.Row="1" AutomationProperties.Name="Tool windows at the bottom" DataContext="{Binding ToolWindows.Bottom}" IsVisible="{Binding IsDocked}" Height="{Binding Size}" />
+      <Border x:Name="BottomEdgeGrip" Grid.Row="1" Height="6" Margin="0,-3,0,0" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNorthSouth" ZIndex="1"
+              IsVisible="{Binding ToolWindows.Bottom.IsDocked}" />
+      <views:ToolStripView Grid.Row="2" DataContext="{Binding ToolWindows.Bottom}" IsVisible="{Binding HasStrip}" />
+
+      <!-- The right edge, docked, the whole height, and its tabs while it's auto-hidden -->
+      <views:ToolEdgeView x:Name="RightEdge" Grid.Column="1" AutomationProperties.Name="Tool windows at the right" Grid.RowSpan="3" DataContext="{Binding ToolWindows.Right}" IsVisible="{Binding IsDocked}" Width="{Binding Size}" />
+      <Border x:Name="RightEdgeGrip" Grid.Column="1" Grid.RowSpan="3" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWestEast" ZIndex="1"
+              IsVisible="{Binding ToolWindows.Right.IsDocked}" />
+      <views:ToolStripView Grid.Column="2" Grid.RowSpan="3" DataContext="{Binding ToolWindows.Right}" IsVisible="{Binding HasStrip}" />
+
+      <!-- An auto-hidden window slid out over the panes, at its edge's size -->
+      <Border x:Name="RightSlide" Grid.RowSpan="2" Classes="toolslide" HorizontalAlignment="Right" Width="{Binding ToolWindows.Right.Size}" ZIndex="2"
+              IsVisible="{Binding ToolWindows.Right.IsSlidOut}">
+        <views:ToolEdgeView IsSlide="True" DataContext="{Binding ToolWindows.Right}" />
       </Border>
-    </Canvas>
+      <Border x:Name="BottomSlide" Grid.RowSpan="2" Classes="toolslide" VerticalAlignment="Bottom" Height="{Binding ToolWindows.Bottom.Size}" ZIndex="2"
+              IsVisible="{Binding ToolWindows.Bottom.IsSlidOut}">
+        <views:ToolEdgeView IsSlide="True" DataContext="{Binding ToolWindows.Bottom}" />
+      </Border>
 
-    <!-- No tabs -->
-    <StackPanel Grid.Column="1" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasTabs}">
-      <TextBlock Classes="title" Text="Start a Claude Code session" HorizontalAlignment="Center" />
-      <TextBlock Classes="muted" Text="Pick the folder Claude should work in." HorizontalAlignment="Center" />
-      <Button Classes="accent" Content="New tab" HorizontalAlignment="Center" Command="{Binding NewTabCommand}" />
-    </StackPanel>
+      <!-- Where a tool window's tab dragged to the other edge would go, marked as a tab dragged over the panes is -->
+      <Canvas x:Name="DockDropLayer" Grid.ColumnSpan="3" Grid.RowSpan="3" IsHitTestVisible="False" IsVisible="False" ZIndex="3">
+        <Border x:Name="DockDropTarget" Classes="panedrop">
+          <Border Classes="panedroplabel" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock x:Name="DockDropText" Classes="small" FontWeight="SemiBold" />
+          </Border>
+        </Border>
+      </Canvas>
+    </Grid>
 
     <!-- New tab picker (DESIGN.md §4, "Opening a tab") -->
     <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsPickerOpen}" PointerPressed="OnOverlayPressed">

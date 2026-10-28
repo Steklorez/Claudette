@@ -216,10 +216,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>The processes the tab started (DESIGN.md §4, "Process monitor").</summary>
     public ProcessMonitorViewModel ProcessMonitor { get; }
 
-    /// <summary>The session's MCP servers, for the side panel's MCP page (DESIGN.md §4, "MCP servers").</summary>
+    /// <summary>The session's MCP servers, for the MCP tool window (DESIGN.md §4, "MCP servers").</summary>
     public McpServersViewModel McpServers { get; }
 
-    /// <summary>The session has MCP servers, as its last <c>system/init</c> listed: the side panel offers the MCP page.</summary>
+    /// <summary>The session has MCP servers, as its last <c>system/init</c> listed: the MCP tool window has a tab.</summary>
     [ObservableProperty]
     public partial bool HasMcpServers { get; private set; }
 
@@ -457,7 +457,6 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// (DESIGN.md §18, "Split panes"). On its own, it's also the one on screen.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsSidePanel))]
     public partial bool IsSelected { get; set; }
 
     /// <summary>
@@ -478,7 +477,6 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             IsShown = value;
         }
-        TellLayoutAboutSidePanel();
         SubagentRowsShowingChanged();
         if (value)
         {
@@ -522,7 +520,6 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>It shares the window with other tabs, side by side: its pane has a header line (DESIGN.md §18, "Split panes").</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsSidePanel))]
     public partial bool IsInSplit { get; set; }
 
     /// <summary>Its place among the panes, from the left; -1 when it isn't in one.</summary>
@@ -532,9 +529,6 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>Its group's color, for its pane's header with tabs side by side (DESIGN.md §18, "Split panes"); the shell keeps it.</summary>
     [ObservableProperty]
     public partial Avalonia.Media.Color? PaneColor { get; set; }
-
-    /// <summary>The side panel shows: it's open, and with tabs side by side, only on the focused pane.</summary>
-    public bool ShowsSidePanel => IsSidePanelOpen && (IsSelected || !IsInSplit);
 
     /// <summary>A click or the focus in its pane: the keyboard and the header follow this tab now.</summary>
     public void FocusPane()

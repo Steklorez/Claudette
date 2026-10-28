@@ -16,6 +16,7 @@ using Claudette.App.Services;
 using Claudette.App.Controls;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 using Claudette.Core.Auth;
 using Claudette.Core.Library;
@@ -201,9 +202,9 @@ public class MainWindowTests
         Assert.False(cup.IsChecked);
     }
 
-    /// <summary>The header's button after the plan shows and hides the selected tab's side panel (DESIGN.md §3).</summary>
+    /// <summary>The header's button after the plan is the Tool windows menu (DESIGN.md §3, "Tool windows").</summary>
     [AvaloniaFact]
-    public async Task The_button_after_the_plan_shows_and_hides_the_side_panel()
+    public async Task The_button_after_the_plan_is_the_tool_windows_menu()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
@@ -214,24 +215,26 @@ public class MainWindowTests
 
         var window = new MainWindow { DataContext = main, Width = 1200, Height = 800 };
         window.Show();
-        await UiText.SettleUntilAsync(window, () => window.GetVisualDescendants().OfType<Button>().Any(b => b is { Name: "SidePanelToggle", IsEffectivelyVisible: true }), "the button");
-        var toggle = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "SidePanelToggle");
+        await UiText.SettleUntilAsync(window, () => window.GetVisualDescendants().OfType<Button>().Any(b => b is { Name: "ToolWindowsMenu", IsEffectivelyVisible: true }), "the button");
+        var menu = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "ToolWindowsMenu");
         var plan = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Plan usage");
-        var sidePanel = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "SidePanel");
+        var slide = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "RightSlide");
 
         Assert.True(plan.IsEffectivelyVisible);
-        Assert.True(toggle.TranslatePoint(default, window)!.Value.X > plan.TranslatePoint(default, window)!.Value.X);
-        Assert.Equal("Show the side panel", ToolTip.GetTip(toggle));
-        Assert.False(sidePanel.IsEffectivelyVisible);
+        Assert.True(menu.TranslatePoint(default, window)!.Value.X > plan.TranslatePoint(default, window)!.Value.X);
+        Assert.Equal("Tool windows", ToolTip.GetTip(menu));
+        // Its menu lists every tool window (DESIGN.md §3, "Tool windows").
+        Assert.Same(h.Shell.ToolWindows.Windows, Assert.IsType<MenuFlyout>(menu.Flyout).ItemsSource);
+        Assert.False(slide.IsEffectivelyVisible);
 
-        Click(window, toggle);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(sidePanel.IsEffectivelyVisible);
-        Assert.Equal("Hide the side panel", AutomationProperties.GetName(toggle));
-
-        Click(window, toggle);
-        Assert.False(tab.IsSidePanelOpen);
-        Assert.False(sidePanel.IsEffectivelyVisible);
+        // Choosing one shows it: the right edge is auto-hidden, so it slides out; choosing it again slides it back.
+        h.ToolWindow(ToolWindowKinds.Files).ToggleCommand.Execute(null);
+        UiText.Settle(window);
+        Assert.True(slide.IsEffectivelyVisible);
+        Assert.Same(tab, h.ToolWindow(ToolWindowKinds.Files).Content);
+        h.ToolWindow(ToolWindowKinds.Files).ToggleCommand.Execute(null);
+        UiText.Settle(window);
+        Assert.False(slide.IsEffectivelyVisible);
     }
 
     [AvaloniaFact]

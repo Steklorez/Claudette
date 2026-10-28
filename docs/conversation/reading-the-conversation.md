@@ -9,7 +9,7 @@ summary: "A tab's conversation is drawn from what Claude Code sends, not from te
 
 A tab's conversation is drawn from what Claude Code sends, not from terminal text. Replies arrive as formatted Markdown with colored code blocks, and they stream in as Claude writes them.
 
-{% include shot.html name="standard" alt="The main window: a conversation in cards, with a Tool calls card, and Changed files in the side panel." %}
+{% include shot.html name="standard" alt="The main window: a conversation in cards, with a Tool calls card, and the Changed files tool window." %}
 
 ## The cards
 Every step is a card: a stripe down its left edge in the card's color, over a faint tint of it, inside a thin outline. The card always names its kind in words, so the color is never the only clue.

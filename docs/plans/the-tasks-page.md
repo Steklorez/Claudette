@@ -2,18 +2,18 @@
 title: The Tasks page
 parent: Plans, tasks and agents
 nav_order: 1
-summary: "When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, the side panel gets a Tasks page, and the tab shows how far the work has got, such as 2 of 5."
+summary: "When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, a Tasks tool window comes, and the tab shows how far the work has got, such as 2 of 5."
 ---
 
 # The Tasks page
 
-When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, the side panel gets a **Tasks** page, and the tab shows how far the work has got, such as *2 of 5*. The page shows the plan, each task with who has it and what it did, and the docs. Claude's own task list and Plan mode are Claude Code's; this is what Claudette shows of them.
+When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, a **Tasks** tool window comes, and the tab shows how far the work has got, such as *2 of 5*. The page shows the plan, each task with who has it and what it did, and the docs. Claude's own task list and Plan mode are Claude Code's; this is what Claudette shows of them.
 
 {% include shot.html name="tasks-standard" alt="The Tasks page of a thread: the plan in its second version with its changes from the first, seven tasks with two done and who has each, the thread's sub-threads under it in the sidebar, and SendMessage calls in the conversation." %}
 
 ## Opening the page
 
-- Click **Tasks** among the side panel's page tabs. It shows only while the tab has tasks, a plan or a doc.
+- Click the **Tasks** tool window's tab. It shows only while the tab has tasks, a plan or a doc.
 - Click the progress text at the right of the status line, or the *3/7* badge on the tab's row.
 - Choose **Show tasks** in the [command palette](../tabs/the-command-palette.md).
 

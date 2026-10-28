@@ -28,6 +28,11 @@ public partial class ScratchPadView : UserControl
         if (_pad is not null)
         {
             _pad.Added += OnAdded;
+            // Text added before this view was made, as the pad's window came to show it.
+            if (_pad.TakeUnselected() is { } added)
+            {
+                OnAdded(added.Start, added.Length);
+            }
         }
     }
 

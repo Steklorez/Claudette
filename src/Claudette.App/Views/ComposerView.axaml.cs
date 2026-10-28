@@ -216,8 +216,7 @@ public partial class ComposerView : UserControl
     {
         if (ViewModel is { } tab)
         {
-            tab.IsProcessesPage = true;
-            tab.IsSidePanelOpen = true;
+            tab.OpenProcessesPageCommand.Execute(null);
         }
     }
 

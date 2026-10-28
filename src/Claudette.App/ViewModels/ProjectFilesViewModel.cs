@@ -9,7 +9,7 @@ namespace Claudette.App.ViewModels;
 /// <summary>
 /// A folder group's Project Files tab (DESIGN.md §18, "Project files"): the explorer of the project's folders and files,
 /// the files open in tabs, and Claude's changes marked in them. It's a tab like a session's in the sidebar and the
-/// panes, without a session: no composer, side panel, status or notifications. Partials hold the explorer
+/// panes, without a session: no composer, status or notifications, and the tool windows show its group's last session tab. Partials hold the explorer
 /// (<c>.Explorer.cs</c>), finding a file by name (<c>.Find.cs</c>), the open files (<c>.Files.cs</c>) and Claude's
 /// changes (<c>.Changes.cs</c>).
 /// </summary>
@@ -87,11 +87,6 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         {
             IsShown = value;
         }
-        if (value)
-        {
-            // It has no side panel for the sidebar to leave room for.
-            _shell.Layout.IsSidePanelShown = false;
-        }
     }
 
     [ObservableProperty]
@@ -118,9 +113,6 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
 
     [ObservableProperty]
     public partial bool IsDragged { get; set; }
-
-    /// <summary>It has no side panel: its explorer is its own.</summary>
-    public bool ShowsSidePanel => false;
 
     /// <summary>A click or the focus in its pane: the keyboard and the header follow it now.</summary>
     public void FocusPane()

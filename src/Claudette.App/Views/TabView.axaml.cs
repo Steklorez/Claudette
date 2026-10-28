@@ -16,8 +16,7 @@ using Claudette.Core.Settings;
 namespace Claudette.App.Views;
 
 /// <summary>
-/// One tab: the conversation, find, the prompts over it and the side panel's width. The side panel's pages are
-/// <see cref="SidePanelView"/>, the composer <see cref="ComposerView"/>, and their styles <c>Themes/ConversationStyles.axaml</c>.
+/// One tab: the conversation, find and the prompts over it. The composer is <see cref="ComposerView"/>; their styles are <c>Themes/ConversationStyles.axaml</c>.
 /// </summary>
 public partial class TabView : UserControl
 {
@@ -56,8 +55,6 @@ public partial class TabView : UserControl
     private ShownList Active => _tab?.IsViewingAgent == true ? _agent : _main;
 
     /// <summary>Where a drag of the side panel's edge started, and the width then; null when not resizing.</summary>
-    private double? _resizeFrom;
-    private double _resizeStartWidth;
 
     public TabView()
     {
@@ -92,53 +89,11 @@ public partial class TabView : UserControl
         CodeBlockCopy.Attach(this);
         // Add to scratch pad: a code block's button, and the menu of text selected in the conversation (DESIGN.md §18).
         ScratchPadAdd.Attach(this, ConversationLists);
-        SidePanelEdge.PointerPressed += OnSidePanelEdgePressed;
-        SidePanelEdge.PointerMoved += OnSidePanelEdgeMoved;
-        SidePanelEdge.PointerReleased += (_, e) => EndSidePanelResize(e.Pointer);
-        SidePanelEdge.PointerCaptureLost += (_, _) => EndSidePanelResize(null);
-        SidePanelEdge.DoubleTapped += (_, _) => ViewModel?.ResetSidePanelWidth();
-        // However wide it was dragged, the side panel leaves the conversation its least (DESIGN.md §3, "Side panel").
-        SizeChanged += (_, e) => SidePanel.MaxWidth = Math.Max(ShellLayout.MinSidePanelWidth, e.NewSize.Width - ShellLayout.MinConversationWidth);
         // An open to-do list takes at most two fifths of the conversation's height and scrolls past that (DESIGN.md §5, "Tasks").
         ConversationArea.SizeChanged += (_, e) => PinnedTodoTasks.MaxHeight = e.NewSize.Height * PinnedTodoShare;
     }
 
     private TabViewModel? ViewModel => DataContext as TabViewModel;
-
-    // ---- Resizing the side panel (DESIGN.md §3) -------------------------------------------------------------------
-
-    private void OnSidePanelEdgePressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (ViewModel is null || !e.GetCurrentPoint(SidePanelEdge).Properties.IsLeftButtonPressed || e.ClickCount > 1)
-        {
-            return;
-        }
-        // Measured against the whole view, which doesn't move as the edge does, from the width it shows.
-        _resizeFrom = e.GetPosition(this).X;
-        _resizeStartWidth = SidePanel.Bounds.Width;
-        e.Pointer.Capture(SidePanelEdge);
-        e.Handled = true;
-    }
-
-    /// <summary>The panel is on the right, so dragging its edge left widens it.</summary>
-    private void OnSidePanelEdgeMoved(object? sender, PointerEventArgs e)
-    {
-        if (_resizeFrom is { } from)
-        {
-            ViewModel?.ResizeSidePanel(Math.Min(_resizeStartWidth + from - e.GetPosition(this).X, SidePanel.MaxWidth));
-        }
-    }
-
-    private void EndSidePanelResize(IPointer? pointer)
-    {
-        if (_resizeFrom is null)
-        {
-            return;
-        }
-        _resizeFrom = null;
-        pointer?.Capture(null);
-        ViewModel?.SaveSidePanelWidth();
-    }
 
     /// <summary>The Perforce password prompt opened: type straight into it.</summary>
     private void OnPerforcePasswordAttached(object? sender, VisualTreeAttachmentEventArgs e)

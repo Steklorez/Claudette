@@ -9,7 +9,7 @@ permalink: /guide/
 
 Claudette puts [Claude Code](https://code.claude.com/docs) in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time. Each tab runs the real `claude`, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions. This guide shows how to use every part of it.
 
-{% include shot.html name="standard" alt="Claudette's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files page in the side panel, the plan's usage in the header, and Claudette herself standing on the message box" %}
+{% include shot.html name="standard" alt="Claudette's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Claudette herself standing on the message box" %}
 
 ## Where to start
 

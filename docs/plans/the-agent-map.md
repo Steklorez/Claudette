@@ -13,7 +13,7 @@ When Claude fans work out to several subagents, possibly nested, the conversatio
 
 ## Opening it
 
-- Click **Agents** in the side panel's page tabs. It shows a busy dot while a subagent runs.
+- Click the **Agents** tool window's tab. It shows a busy dot while a subagent runs.
 - Click the **Agents** button in the [composer bar](../composer/the-composer-bar.md), which appears once the tab has subagents. It says *2 agents running*, or *Agents (3)* once they've finished.
 - Choose **Show the agent map** in the [command palette](../tabs/the-command-palette.md).
 

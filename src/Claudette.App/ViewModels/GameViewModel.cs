@@ -50,7 +50,7 @@ public sealed record GameLevelChoice(GameLevel Level, string Label)
 }
 
 /// <summary>
-/// A game against Claudette on the side panel's Games page (DESIGN.md §18, "Games with Claudette"): its rounds, who
+/// A game against Claudette in the Games tool window (DESIGN.md §18, "Games with Claudette"): its rounds, who
 /// starts each, Claudette's turn after a moment's thought on the injected clock, its level and its score.
 /// </summary>
 public abstract partial class GameViewModel : ObservableObject, IDisposable

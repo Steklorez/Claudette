@@ -35,9 +35,6 @@ public interface IShellTab : INotifyPropertyChanged
     /// </summary>
     Avalonia.Media.Color? PaneColor { get; set; }
 
-    /// <summary>Its side panel shows, which its pane keeps room for.</summary>
-    bool ShowsSidePanel { get; }
-
     /// <summary>Its row is being dragged in the sidebar.</summary>
     bool IsDragged { get; set; }
 }

@@ -66,12 +66,20 @@ public sealed class AppState
     /// <summary>The sidebar's width as the user dragged it, or null for the default.</summary>
     public double? SidebarWidth { get; set; }
 
-    /// <summary>The side panel's width as the user dragged it, or null for the default (DESIGN.md §3). One for every tab.</summary>
+    /// <summary>
+    /// The tool windows' layout (DESIGN.md §3, "Tool windows"), or null until it's first saved. One for the whole window.
+    /// </summary>
+    public ToolWindowsState? ToolWindows { get; set; }
+
+    /// <summary>
+    /// The side panel's width as the user dragged it, saved before <see cref="ToolWindows"/>: it becomes the right edge's,
+    /// and is cleared once the tool windows are saved.
+    /// </summary>
     public double? SidePanelWidth { get; set; }
 
     /// <summary>
-    /// The side panel's pages in the order the user dragged them into, by name, or null for the default (DESIGN.md §3).
-    /// One for every tab.
+    /// The side panel's pages in the order the user dragged them into, by name, saved before <see cref="ToolWindows"/>: it
+    /// becomes the right edge's order, and is cleared once the tool windows are saved.
     /// </summary>
     public List<string>? SidePanelPages { get; set; }
 

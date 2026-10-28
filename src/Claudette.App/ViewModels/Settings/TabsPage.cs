@@ -110,7 +110,7 @@ public sealed partial class TabsPage : SettingsPage
         [
             Setting("processes.showMonitor", "Show the process monitor", s => s.Processes.ShowMonitor, (s, v) => s.Processes.ShowMonitor = v,
                 "The processes each tab starts, with their CPU and memory.",
-                "Test runs, dev servers, builds and MCP servers, in the message box's bar and on the side panel. Closing a tab stops the processes it started, unless you choose to leave them running.",
+                "Test runs, dev servers, builds and MCP servers, in the message box's bar and the Processes tool window. Closing a tab stops the processes it started, unless you choose to leave them running.",
                 ["processes", "cpu", "memory"], TabOverrideKeys.ProcessMonitor),
             Setting("processes.refreshSeconds", "Refresh every (seconds)", s => s.Processes.RefreshSeconds, (s, v) => s.Processes.RefreshSeconds = v,
                 keywords: ["process monitor", "interval"]),

@@ -5,8 +5,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// The tab's agent map (DESIGN.md §18, "Agent map"): the main agent and its subagents as a tree, on a page of the side
-/// panel next to Changed files and Processes, and in a window of its own.
+/// The tab's agent map (DESIGN.md §18, "Agent map"): the main agent and its subagents as a tree, in the Agents tool
+/// window, and in a window of its own.
 /// </summary>
 public sealed partial class TabViewModel
 {
@@ -16,16 +16,9 @@ public sealed partial class TabViewModel
     /// <summary>Kept by the conversation builder from the same routing as the subagent groups.</summary>
     public AgentMap Agents { get; }
 
+    /// <summary>The composer bar's way to the Agents tool window, while the tab has subagents.</summary>
     [RelayCommand]
-    private void ShowAgentsPage() => IsAgentsPage = true;
-
-    /// <summary>The composer bar's way to the Agents page, while the tab has subagents: opens the side panel on it.</summary>
-    [RelayCommand]
-    private void OpenAgentsPage()
-    {
-        IsSidePanelOpen = true;
-        IsAgentsPage = true;
-    }
+    private void OpenAgentsPage() => ShowToolWindow(ToolWindows.ToolWindowKinds.Agents);
 
     /// <summary>"2 agents running" while any are, else how many there were.</summary>
     public string AgentsButtonText => Agents.ActiveCount is > 0 and var active

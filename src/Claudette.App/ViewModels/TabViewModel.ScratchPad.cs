@@ -6,9 +6,9 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels;
 
 /// <summary>
-/// The tab's scratch pad (DESIGN.md §18, "Scratch pad"): its project's, the same one every tab in the project shows on
-/// the side panel's Scratch Pad page. Text from the conversation goes into it from a message's chip, a code block's
-/// header or the menu of selected text, and the page opens on it.
+/// The tab's scratch pad (DESIGN.md §18, "Scratch pad"): its project's, the same one the Scratch pad tool window shows for
+/// every tab in the project. Text from the conversation goes into it from a message's chip, a code block's
+/// header or the menu of selected text, and the window shows it.
 /// </summary>
 public sealed partial class TabViewModel
 {
@@ -16,7 +16,7 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// The project's scratch pad, taken from <see cref="Services.ScratchPadService"/> when first needed: showing the page,
-    /// or adding to it. Every open tab has a view, so the page binds to <see cref="ShownScratchPad"/> instead, and a tab
+    /// or adding to it. The window binds to <see cref="ShownScratchPad"/> instead, and a tab
     /// that never uses its pad doesn't read it.
     /// </summary>
     public ScratchPadViewModel ScratchPad
@@ -62,7 +62,7 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>
-    /// <b>Add to scratch pad</b>: opens the side panel on the project's pad and adds <paramref name="text"/> at its end,
+    /// <b>Add to scratch pad</b>: shows the project's pad in its tool window and adds <paramref name="text"/> at its end,
     /// where the page shows it. Text that's only blank adds nothing.
     /// </summary>
     public void AddToScratchPad(string text)
@@ -72,7 +72,7 @@ public sealed partial class TabViewModel
             return;
         }
         // The page first, so it's there to show what's added.
-        OpenSidePanelPage(SidePanelPage.ScratchPad);
+        ShowToolWindow(ToolWindows.ToolWindowKinds.ScratchPad);
         if (ScratchPad.Append(text))
         {
             _shell.Announce("Added to the scratch pad.");

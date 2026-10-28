@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 using LiveMarkdown.Avalonia;
 
@@ -25,6 +26,8 @@ public class ScratchPadUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        // Docked, as the side panel was, so the pad stays while the keyboard is elsewhere (DESIGN.md §3, "Tool windows").
+        InlineDispatcher.Run(() => h.Shell.ToolWindows.SetAutoHide(ToolEdge.Right, false));
         // A tab that hasn't used its pad hasn't read it.
         Assert.DoesNotContain(window.GetVisualDescendants().OfType<ScratchPadView>(), v => v.DataContext is not null);
 
@@ -63,7 +66,7 @@ public class ScratchPadUiTests
         UiText.Settle(window);
 
         Assert.Equal("```csharp\nretry(3);\n```\n", tab.ScratchPad.Text);
-        Assert.True(tab.IsSidePanelOpen && tab.IsScratchPadPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.ScratchPad));
 
         // Outside a tab, as in the agent map's own window, there's no pad to add to.
         var markdown = new ObservableStringBuilder();
@@ -104,7 +107,7 @@ public class ScratchPadUiTests
         Assert.Equal("> Use exponential backoff for retries.\n\n", tab.ComposerText);
         menu.Items.OfType<MenuItem>().Last().Command!.Execute(null);
         Assert.Equal("Use exponential backoff for retries.\n", tab.ScratchPad.Text);
-        Assert.True(tab.IsScratchPadPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.ScratchPad));
 
         // The menu key, or a right click, opens it in place of the text block's own.
         var request = new ContextRequestedEventArgs { RoutedEvent = Control.ContextRequestedEvent };

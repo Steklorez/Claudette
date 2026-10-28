@@ -32,7 +32,7 @@ Most of these show only when they apply to the tab.
 
 | Item | What it says | More |
 |---|---|---|
-| Processes, such as *3 procs · 42% CPU · 1.1 GB* | What the tab's Claude started and left running. It shows when the process monitor is on and the side panel is closed. | [Processes](../tabs/processes.md) |
+| Processes, such as *3 procs · 42% CPU · 1.1 GB* | What the tab's Claude started and left running. It shows when the process monitor is on and the Processes tool window isn't showing the tab. | [Processes](../tabs/processes.md) |
 | **Agents (3)** or *2 agents running* | The tab has subagents. It opens the Agents page. | [The agent map](../plans/the-agent-map.md) |
 | *2 running tasks* | Work Claude Code keeps going in the background. It opens a list with **Stop**. | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Files (4)** | How many files Claude changed. It opens the Changed files page. | [Changed files](../changes/changed-files.md) |
@@ -74,4 +74,4 @@ Under the box, left to right:
 
 ## See also
 
-- [The side panel](../tabs/the-side-panel.md), where the Processes, Agents and Changed files buttons lead.
+- [Tool windows](../tabs/tool-windows.md), where the Processes, Agents and Changed files buttons lead.

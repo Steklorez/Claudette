@@ -80,9 +80,6 @@ public abstract partial class LogTabViewModel : ObservableObject, IShellTab
     [ObservableProperty]
     public partial bool IsDragged { get; set; }
 
-    /// <summary>It has no side panel.</summary>
-    public bool ShowsSidePanel => false;
-
     /// <summary>A click or the focus in its pane: the keyboard follows it now.</summary>
     public void FocusPane()
     {

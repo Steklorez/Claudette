@@ -1,6 +1,7 @@
 using Claudette.App.Services;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Diffs;
 using Claudette.Core.ProjectTools;
 using Claudette.Core.ProjectTools.Unreal;
@@ -443,23 +444,24 @@ public class ProjectToolsTests
     }
 
     [Fact]
-    public async Task The_Project_page_takes_turns_with_the_other_pages()
+    public async Task The_Project_window_takes_turns_with_the_others_on_its_edge()
     {
         var (h, _, _) = UnrealHarness();
         await using var _h = h;
         var tab = await OpenWithProjectAsync(h);
 
-        tab.IsSidePanelOpen = true;
-        tab.ShowProjectPageCommand.Execute(null);
+        h.ShowToolWindow(ToolWindowKinds.Project);
 
-        Assert.True(tab.IsProjectPage);
-        Assert.False(tab.IsFilesPage);
-        tab.ShowAgentsPageCommand.Execute(null);
-        Assert.False(tab.IsProjectPage);
-        tab.ShowProjectPageCommand.Execute(null);
-        Assert.False(tab.IsAgentsPage);
-        tab.ShowFilesPageCommand.Execute(null);
-        Assert.True(tab.IsFilesPage);
+        // The windows on an edge take turns (DESIGN.md §3, "Tool windows").
+        Assert.True(h.IsShowing(ToolWindowKinds.Project));
+        Assert.Same(tab, h.Shell.ToolWindows.Session);
+        Assert.False(h.IsShowing(ToolWindowKinds.Files));
+        h.ShowToolWindow(ToolWindowKinds.Agents);
+        Assert.False(h.IsShowing(ToolWindowKinds.Project));
+        h.ShowToolWindow(ToolWindowKinds.Project);
+        Assert.False(h.IsShowing(ToolWindowKinds.Agents));
+        h.ShowToolWindow(ToolWindowKinds.Files);
+        Assert.True(h.IsShowing(ToolWindowKinds.Files));
     }
 
     // ---- Clean ---------------------------------------------------------------------------------------------------------------

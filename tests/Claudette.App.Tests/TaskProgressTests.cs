@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.Settings;
 
 namespace Claudette.App.Tests;
@@ -253,8 +254,7 @@ public class TaskProgressTests
         // The badge opens the Tasks page on the tab.
         tab.ShowTasksFromRowCommand.Execute(null);
         Assert.Same(tab, h.Shell.SelectedTab);
-        Assert.True(tab.IsSidePanelOpen);
-        Assert.True(tab.IsTasksPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.Tasks));
     }
 
     [Fact]
@@ -272,7 +272,7 @@ public class TaskProgressTests
         Assert.False(tab.TodoList.HasSuggestion);
         Assert.Equal(PlanSource.Reply, tab.TodoList.PlanSource);
         Assert.StartsWith("Here's the plan:", tab.TodoList.Plan, StringComparison.Ordinal);
-        Assert.True(tab.IsTasksPage);
+        Assert.True(h.IsShowing(ToolWindowKinds.Tasks));
     }
 
     [Fact]

@@ -11,7 +11,7 @@ While Claude works, or a usage limit holds a task, you can play a game against C
 
 ## Start a game
 
-Any of these opens the side panel on the **Games** page:
+Any of these shows the **Games** tool window:
 
 - Right-click Claudette and choose **Play tic-tac-toe**, **Play Connect Four** or **Play hangman**.
 - Open the [command palette](../tabs/the-command-palette.md) and choose **Play tic-tac-toe with Claudette**, **Play Connect Four with Claudette** or **Play hangman with Claudette**.
@@ -21,7 +21,7 @@ Now and then, while Claude works or a limit holds the task, one of her tips says
 
 ## One game at a time
 
-There's one game for the whole app. It follows you from tab to tab, as she does, so the Games page shows it in any tab's side panel. The page's tab is there only while a game is open.
+There's one game for the whole app. It follows you from tab to tab, as she does, so the Games tool window shows it whichever tab is in front. Its tab is there only while a game is open.
 
 - The row at the top of the page (**Tic-tac-toe**, **Connect Four**, **Hangman**) switches to another game. A round in progress is dropped, and not counted.
 - **Done playing** ends the game, and the page goes.
@@ -87,4 +87,4 @@ Turning it off removes every way in and ends a game that's open. It works whethe
 ## See also
 
 - [Claudette on the composer](claudette-on-the-composer.md), for her right-click menu and what she does the rest of the time.
-- [The side panel](../tabs/the-side-panel.md), for its other pages.
+- [Tool windows](../tabs/tool-windows.md), for the other windowes.

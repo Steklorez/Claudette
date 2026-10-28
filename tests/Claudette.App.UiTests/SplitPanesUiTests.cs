@@ -21,8 +21,6 @@ public sealed class SplitPanesUiTests
         var alpha = await ThreadScript.OpenAsync(h, "Alpha");
         var beta = await ThreadScript.OpenAsync(h, "Beta");
         h.Shell.SelectedTab = alpha;
-        alpha.IsSidePanelOpen = true;
-        beta.IsSidePanelOpen = true;
         var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1600, 800);
 
         h.Shell.OpenBesideCommand.Execute(beta);
@@ -37,15 +35,16 @@ public sealed class SplitPanesUiTests
         // The same width, but for the line between them, which the second pane draws.
         Assert.InRange(left.Bounds.Width - right.Bounds.Width, 0, 1.5);
 
-        // Each pane names its tab; the focused one, Beta, has the accent under its header and the side panel.
+        // Each pane names its tab; the focused one, Beta, has the accent under its header, and the tool windows show its data.
         Assert.True(Header(left).IsVisible && Header(right).IsVisible);
         Assert.Contains("Alpha", UiText.Describe(Header(left)), StringComparison.Ordinal);
         Assert.Contains("focused", Header(right).Classes);
         Assert.DoesNotContain("focused", Header(left).Classes);
-        Assert.False(SidePanel(left).IsVisible);
-        Assert.True(SidePanel(right).IsVisible);
+        Assert.Same(beta, h.Shell.ToolWindows.Session);
+        // Named over them, since another tab is on screen too (DESIGN.md §3, "Tool windows").
+        Assert.True(h.Shell.ToolWindows.NamesSession);
 
-        // A click in Alpha's conversation moves the focus there, and the side panel with it.
+        // A click in Alpha's conversation moves the focus there, and the tool windows follow.
         var conversation = left.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "ConversationScroll");
         var at = conversation.TranslatePoint(new Point(conversation.Bounds.Width / 2, 40), window)!.Value;
         window.MouseDown(at, MouseButton.Left);
@@ -54,8 +53,7 @@ public sealed class SplitPanesUiTests
 
         Assert.Same(alpha, h.Shell.SelectedTab);
         Assert.Contains("focused", Header(left).Classes);
-        Assert.True(SidePanel(left).IsVisible);
-        Assert.False(SidePanel(right).IsVisible);
+        Assert.Same(alpha, h.Shell.ToolWindows.Session);
         Assert.True(beta.IsShown);
 
         // Close pane, on Beta's header: Alpha has the window to itself again, without a header.
@@ -144,6 +142,4 @@ public sealed class SplitPanesUiTests
         window.GetVisualDescendants().OfType<TabView>().Single(v => v.IsEffectivelyVisible && v.DataContext == tab);
 
     private static Border Header(TabView view) => view.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "PaneHeader");
-
-    private static Border SidePanel(TabView view) => view.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "SidePanel");
 }

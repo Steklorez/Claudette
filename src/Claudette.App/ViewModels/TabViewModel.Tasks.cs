@@ -220,12 +220,12 @@ public sealed partial class TabViewModel
         }
     }
 
-    /// <summary>The row's badge: selects the tab and opens the Tasks page.</summary>
+    /// <summary>The row's badge: selects the tab and shows the Tasks tool window.</summary>
     [RelayCommand]
     private void ShowTasksFromRow()
     {
         _shell.SelectedTab = this;
-        OpenSidePanelPage(SidePanelPage.Tasks);
+        ShowToolWindow(ToolWindows.ToolWindowKinds.Tasks);
     }
 
     /// <summary>A task on the Tasks page or the pinned list: where it started in the conversation, its groups expanded.</summary>
