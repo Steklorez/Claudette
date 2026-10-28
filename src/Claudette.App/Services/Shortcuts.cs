@@ -138,12 +138,44 @@ public sealed class ShortcutTips(AppSettings settings) : ObservableObject
     {
         get
         {
-            var keys = settings.Keyboard.SendKey == SendKey.PrimaryEnter
-                ? $"{new KeyChord(ChordModifiers.Primary, "Enter").Display(Shortcuts.IsMac)} to send, Enter for a new line"
-                : "Enter to send, Shift+Enter for a new line";
+            var keys = SendsWithPrimaryEnter ? $"{PrimaryEnter} to send, Enter for a new line" : "Enter to send, Shift+Enter for a new line";
             return Text(KeyboardShortcuts.Stop) is { } stop ? $"Message Claude…  ({keys}, {stop} to stop)" : $"Message Claude…  ({keys})";
         }
     }
+
+    // ---- Send with (DESIGN.md §14), on the composer's send key chip and Send (DESIGN.md §5, "Composer") ------------
+
+    /// <summary>
+    /// The glyph the send key chip shows for Enter, on every OS. It's drawn from Inter, which Claudette ships: the OS's
+    /// own interface font may not have it (Segoe UI hasn't), and fallback would take it from whichever font has.
+    /// </summary>
+    public const string ReturnGlyph = "⏎";
+
+    /// <summary>The key that sends, as the app writes keys: Enter, or Ctrl+Enter (⌘↩ on macOS).</summary>
+    public string SendKeyText => SendsWithPrimaryEnter ? PrimaryEnter : "Enter";
+
+    /// <summary>
+    /// What the send key chip shows before <see cref="ReturnGlyph"/>, so it reads <c>⏎ sends</c>, <c>Ctrl+⏎ sends</c> or
+    /// <c>⌘⏎ sends</c>: nothing, or the modifier as the app writes it. It's the chord's display without its key's, which
+    /// comes last.
+    /// </summary>
+    public string SendKeyModifiers => SendsWithPrimaryEnter ? PrimaryEnter[..^new KeyChord(ChordModifiers.None, "Enter").Display(Shortcuts.IsMac).Length] : "";
+
+    /// <summary>The chip's name, in words for a screen reader: Enter sends, or Ctrl+Enter sends.</summary>
+    public string SendKeyName => $"{SendKeyText} sends";
+
+    /// <summary>The chip's tooltip: what each key does, and what a click does.</summary>
+    public string SendKeyTip => SendsWithPrimaryEnter
+        ? $"{PrimaryEnter} sends, Enter starts a new line. Click to send with Enter instead."
+        : $"Enter sends, Shift+Enter starts a new line. Click to send with {PrimaryEnter} instead.";
+
+    /// <summary>Send's tooltip, which names the key that sends.</summary>
+    public string Send => $"Send ({SendKeyText})";
+
+    private bool SendsWithPrimaryEnter => settings.Keyboard.SendKey == SendKey.PrimaryEnter;
+
+    /// <summary>Ctrl+Enter, or ⌘↩ on macOS.</summary>
+    private static string PrimaryEnter => new KeyChord(ChordModifiers.Primary, "Enter").Display(Shortcuts.IsMac);
 
     /// <summary>The shortcut as it reads on this OS, or null when it has been removed.</summary>
     public string? Text(string commandId) => KeyboardShortcuts.Resolve(settings.Keyboard, commandId)?.Display(Shortcuts.IsMac);

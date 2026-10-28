@@ -52,6 +52,43 @@ public class MainWindowTests
         Assert.True(Right(send) <= window.Bounds.Width, $"Send ends at {Right(send)}, past the window's {window.Bounds.Width}");
         Assert.True(bar.IsWrapped);
         Assert.True(Top(send) > Top(attach) + attach.Bounds.Height, "The right-hand group should have moved under the chips");
+        // The send key chip goes with Send, just before it, and stays in view too.
+        var chip = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "SendKeyChip");
+        Assert.True(chip.IsEffectivelyVisible);
+        Assert.True(Right(chip) <= window.Bounds.Width, $"The send key chip ends at {Right(chip)}, past the window's {window.Bounds.Width}");
+        Assert.True(Top(chip) > Top(attach) + attach.Bounds.Height, "The send key chip should have moved under the chips with Send");
+    }
+
+    /// <summary>
+    /// In a pane too narrow even for the counts on a line of their own (DESIGN.md §5), they wrap, and Send is still last
+    /// at the right, with the send key chip before it, neither past the edge.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task In_a_very_narrow_pane_the_counts_wrap_and_Send_stays_last_in_view()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, width: 640);
+        var send = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Send");
+        var chip = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "SendKeyChip");
+        var composer = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "ComposerBox");
+        double Left(Control c) => c.TranslatePoint(default, window)!.Value.X;
+        double Right(Control c) => c.TranslatePoint(new Point(c.Bounds.Width, 0), window)!.Value.X;
+        double Top(Control c) => c.TranslatePoint(default, window)!.Value.Y;
+        var group = send.GetVisualAncestors().OfType<WrapPanel>().First();
+        var shown = group.Children.Where(c => c.IsVisible).ToList();
+
+        Assert.True(send.IsEffectivelyVisible && chip.IsEffectivelyVisible);
+        Assert.True(Right(send) <= Right(composer), $"Send ends at {Right(send)}, past the composer's {Right(composer)}");
+        Assert.True(Right(chip) <= Right(composer), $"The chip ends at {Right(chip)}, past the composer's {Right(composer)}");
+        Assert.True(Top(group) + group.Bounds.Height <= window.Bounds.Height);
+        Assert.Same(send, shown[^1]);
+        Assert.Same(chip, shown[^2]);
+        // Send is last: on the chip's line after it, or on a line of its own under it.
+        Assert.True(Top(send) > Top(chip) + chip.Bounds.Height / 2 || Left(send) >= Right(chip),
+            $"Send at ({Left(send)}, {Top(send)}) should come after the chip, which ends at ({Right(chip)}, {Top(chip)})");
+        // Every count is inside the composer.
+        Assert.All(shown, c => Assert.True(Right(c) <= Right(composer), $"{c} ends at {Right(c)}, past the composer's {Right(composer)}"));
     }
 
     [AvaloniaFact]

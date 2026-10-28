@@ -14,7 +14,7 @@ The message box at the foot of a tab is where you talk to Claude. You can send a
 ## Send a message
 
 1. Click the message box and type. The box grows with your text, then scrolls.
-2. Press `Enter`, or click the **Send** arrow.
+2. Press `Enter`, or click the **Send** arrow. If the chip before **Send** says *Ctrl+⏎ sends*, press `Ctrl+Enter` (`Cmd+Enter` on macOS) instead.
 
 `Shift+Enter` adds a new line. A message can be only images, only [quick suffixes](quick-suffixes.md) or only a large paste: **Send** works with any of them.
 
@@ -26,6 +26,8 @@ Settings → Keyboard → **Send with** has two choices:
 
 - **Enter, with Shift+Enter for a new line**, the default.
 - `Ctrl/Cmd+Enter`, with `Enter` for a new line.
+
+The chip just before **Send** says which is in use, *⏎ sends* or *Ctrl+⏎ sends* (*⌘⏎ sends* on macOS), and clicking it switches to the other. It's the same setting, so every tab changes with it. **Send**'s tooltip names the key too. See [The send key](the-composer-bar.md#the-send-key).
 
 With the second, `Ctrl/Cmd+Enter` on an empty box still answers a waiting prompt, as **Allow the waiting prompt** does ([Permission cards](../permissions/permission-cards.md)).
 
@@ -69,8 +71,8 @@ Some things about queued messages:
 
 | | Windows and Linux | macOS |
 |---|---|---|
-| Send | `Enter` | `Enter` |
-| New line | `Shift+Enter` | `Shift+Enter` |
+| Send | `Enter`, or `Ctrl+Enter` with **Send with** changed | `Enter`, or `Cmd+Enter` with **Send with** changed |
+| New line | `Shift+Enter`, or `Enter` with **Send with** changed | `Shift+Enter`, or `Enter` with **Send with** changed |
 | Stop Claude | `Esc` | `Esc` |
 
 ## See also

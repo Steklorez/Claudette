@@ -1,6 +1,8 @@
 using System.Text.Json.Nodes;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -19,7 +21,7 @@ namespace Claudette.App.UiTests;
 /// <summary>
 /// The composer's large pastes and the stash (DESIGN.md §5, "Attachments", "Drafts and the stash"), long messages shown
 /// short, a turn's files on its footer (DESIGN.md §8, "Changes per turn"), and Ctrl/Cmd+Enter as the send key (DESIGN.md
-/// §14), rendered.
+/// §14) with the chip that switches it (§5, "Composer"), rendered.
 /// </summary>
 public class ComposerExtrasUiTests
 {
@@ -131,6 +133,64 @@ public class ComposerExtrasUiTests
         Assert.Contains("\"auth.cs\"", UiText.Describe(card), StringComparison.Ordinal);
         var row = card.GetVisualDescendants().OfType<Button>().Single(b => Avalonia.Automation.AutomationProperties.GetName(b) == "What this turn changed in auth.cs");
         Assert.True(row.Command!.CanExecute(row.CommandParameter));
+    }
+
+    /// <summary>
+    /// The send key chip before Send (DESIGN.md §5, "Composer"): it says which key sends, a click switches Settings →
+    /// Keyboard → Send with (§14) and the placeholder and Send's tooltip follow, and the keyboard reaches it.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_send_key_chip_says_which_key_sends_and_a_click_switches_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        var chip = Named<Button>(window, "SendKeyChip");
+        var send = Named<Button>(window, "SendButton");
+        var composer = Named<TextBox>(window, "Composer");
+        // The right-hand group: the counts, the chip and Send.
+        var group = send.GetVisualAncestors().OfType<WrapPanel>().First();
+        // macOS writes Cmd+Enter as ⌘↩; the snapshots read as on Windows and Linux.
+        (string, string)[] asOnWindows = Shortcuts.IsMac ? [("⌘⏎", "Ctrl+⏎"), ("⌘↩", "Ctrl+Enter")] : [];
+        string Shown() => UiText.Describe(group, asOnWindows) + string.Join("\n",
+            $"chip tip: {ToolTip.GetTip(chip)}", $"Send tip: {ToolTip.GetTip(send)}", $"placeholder: {composer.PlaceholderText}", "")
+            .Replace("⌘↩", "Ctrl+Enter", StringComparison.Ordinal).Replace("⎋", "Esc", StringComparison.Ordinal);
+
+        Assert.True(chip.IsEffectivelyVisible);
+        Assert.Same(group, chip.GetVisualAncestors().OfType<WrapPanel>().First());
+        Assert.Equal(group.Children.IndexOf(send) - 1, group.Children.IndexOf(chip));
+        Assert.True(chip.Focusable && chip.IsTabStop, "The keyboard should reach the chip, as it does the bar's other buttons");
+        // ⏎ comes from Inter, which Claudette ships, rather than whichever font fallback finds it in.
+        var glyph = chip.GetVisualDescendants().OfType<TextBlock>().Single().Inlines!.OfType<Run>().Single(r => r.Classes.Contains("returnkey"));
+        Assert.Equal(ShortcutTips.ReturnGlyph, glyph.Text);
+        Assert.Contains("fonts:Inter", glyph.FontFamily.ToString(), StringComparison.Ordinal);
+        var enter = Shown();
+
+        Click(window, chip);
+
+        Assert.Equal(SendKey.PrimaryEnter, h.Services.Settings.Keyboard.SendKey);
+        var primaryEnter = Shown();
+
+        // The keyboard switches it back: Space on the focused chip.
+        chip.Focus();
+        window.KeyPressQwerty(PhysicalKey.Space, RawInputModifiers.None);
+        window.KeyReleaseQwerty(PhysicalKey.Space, RawInputModifiers.None);
+        UiText.Settle(window);
+        Assert.Equal(SendKey.Enter, h.Services.Settings.Keyboard.SendKey);
+        Assert.Equal(enter, Shown());
+        Assert.Equal("", tab.ComposerText);
+
+        // Verify resumes off the UI thread, so it comes last.
+        await Verify($"With Enter:\n{enter}\nWith Ctrl+Enter:\n{primaryEnter}");
+    }
+
+    private static void Click(Window window, Control target)
+    {
+        var center = target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), window)!.Value;
+        window.MouseMove(center);
+        window.MouseDown(center, MouseButton.Left);
+        window.MouseUp(center, MouseButton.Left);
+        UiText.Settle(window);
     }
 
     [AvaloniaFact]
