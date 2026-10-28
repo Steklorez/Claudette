@@ -74,9 +74,11 @@ public sealed partial class ProjectFilesViewModel
 
     /// <summary>
     /// Opens <paramref name="path"/>, or shows it if it's open: in the preview tab, which the next file opened that way
-    /// replaces, or to stay. Goes to <paramref name="line"/> (and selects through <paramref name="endLine"/>) when given.
+    /// replaces, or to stay. Goes to <paramref name="line"/> (and selects through <paramref name="endLine"/>, or up to
+    /// <paramref name="endColumn"/>) when given.
     /// </summary>
-    public async Task<ProjectFileViewModel> OpenFileAsync(string path, bool preview, int? line = null, int? column = null, int? endLine = null, bool focus = false)
+    public async Task<ProjectFileViewModel> OpenFileAsync(string path, bool preview, int? line = null, int? column = null, int? endLine = null, bool focus = false,
+        int? endColumn = null)
     {
         var file = OpenFiles.FirstOrDefault(f => PathComparer.Equals(f.Path, path));
         if (file is not null)
@@ -120,7 +122,7 @@ public sealed partial class ProjectFilesViewModel
         }
         if (line is { } at)
         {
-            file.Reveal(at, column ?? 1, endLine);
+            file.Reveal(at, column ?? 1, endLine, endColumn);
         }
         if (focus)
         {

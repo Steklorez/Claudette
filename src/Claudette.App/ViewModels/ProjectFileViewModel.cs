@@ -54,7 +54,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
     private string? _diskText;
 
     /// <summary>A place to go to that came before the view was there to go to it.</summary>
-    private (int Line, int Column, int? EndLine)? _pendingReveal;
+    private (int Line, int Column, int? EndLine, int? EndColumn)? _pendingReveal;
 
     internal ProjectFileViewModel(AppServices services, ProjectFilesViewModel owner, OpenFileState state)
     {
@@ -221,7 +221,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         if (value && _pendingReveal is { } pending && RevealRequested is not null)
         {
             _pendingReveal = null;
-            RevealRequested(pending.Line, pending.Column, pending.EndLine);
+            RevealRequested(pending.Line, pending.Column, pending.EndLine, pending.EndColumn);
         }
         if (value)
         {
@@ -967,6 +967,9 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
     /// <summary>The line the view's peek is under now, which moves with the text; null without a view.</summary>
     internal Func<int?>? PeekLine { get; set; }
 
+    /// <summary>The text selected in the view's editor, for Find in files to start with; null without a view.</summary>
+    internal Func<string?>? SelectionText { get; set; }
+
     /// <summary>The peek's header: who changed the file, and when.</summary>
     public string PeekHeader => Change is { } change
         ? $"Changed by Claude in {change.AuthorNames} · {MessageTimes.Short(change.LastChanged, _services.Time)}"
@@ -1124,8 +1127,11 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
 
     // ---- What the view is asked to do --------------------------------------------------------------------------------
 
-    /// <summary>Go to a line and column, and select to the end of <c>EndLine</c> when there's one.</summary>
-    public event Action<int, int, int?>? RevealRequested;
+    /// <summary>
+    /// Go to a line and column, and select to the end of <c>EndLine</c> when there's one, or to <c>EndColumn</c> (of
+    /// <c>EndLine</c>, or else the same line) when there's that.
+    /// </summary>
+    public event Action<int, int, int?, int?>? RevealRequested;
 
     /// <summary>Open the editor's find, or its replace.</summary>
     public event Action<bool>? FindRequested;
@@ -1137,23 +1143,24 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
     public event Action? FocusRequested;
 
     /// <summary>
-    /// Goes to <paramref name="line"/>, and selects through <paramref name="endLine"/> when it's given. If the view isn't
-    /// there yet, it goes there once it is.
+    /// Goes to <paramref name="line"/>, and selects through <paramref name="endLine"/> when it's given, or up to
+    /// <paramref name="endColumn"/> when that is (a match Find in files found). If the view isn't there yet, it goes
+    /// there once it is.
     /// </summary>
-    internal void Reveal(int line, int column, int? endLine)
+    internal void Reveal(int line, int column, int? endLine, int? endColumn = null)
     {
         CaretLine = Math.Max(1, line);
         CaretColumn = Math.Max(1, column);
         if (RevealRequested is null || !IsShowing)
         {
-            _pendingReveal = (line, column, endLine);
+            _pendingReveal = (line, column, endLine, endColumn);
             return;
         }
-        RevealRequested(line, column, endLine);
+        RevealRequested(line, column, endLine, endColumn);
     }
 
     /// <summary>The view takes any place it was asked to go before it was there.</summary>
-    internal (int Line, int Column, int? EndLine)? TakePendingReveal()
+    internal (int Line, int Column, int? EndLine, int? EndColumn)? TakePendingReveal()
     {
         var pending = _pendingReveal;
         _pendingReveal = null;

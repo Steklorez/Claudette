@@ -86,6 +86,9 @@ public sealed partial class ShellViewModel
         if (Groups.Count > 0)
         {
             Command("Go to file…", GoToFile, KeyboardShortcuts.GoToFile);
+            // DESIGN.md §18, "Finding in files".
+            Command("Find in files…", OpenFindInFiles, KeyboardShortcuts.FindInFiles);
+            Command("Replace in files…", OpenReplaceInFiles, KeyboardShortcuts.ReplaceInFiles);
         }
         if (SelectedFiles is { } files)
         {

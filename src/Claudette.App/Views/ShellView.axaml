@@ -1330,6 +1330,17 @@
       </ContentControl>
     </Border>
 
+    <!-- Find in files (DESIGN.md §18, "Finding in files") -->
+    <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsFindInFilesOpen}" PointerPressed="OnFindInFilesOverlayPressed">
+      <ContentControl Content="{Binding FindInFiles}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:FindInFilesViewModel">
+            <views:FindInFilesView />
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </Border>
+
     <!-- Command palette (DESIGN.md §4, "Command palette") -->
     <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsPaletteOpen}" PointerPressed="OnPaletteOverlayPressed">
       <ContentControl Content="{Binding Palette}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0">

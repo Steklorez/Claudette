@@ -175,7 +175,7 @@ public static class TextFile
         return longest;
     }
 
-    private static bool CanWrite(FileInfo info)
+    internal static bool CanWrite(FileInfo info)
     {
         if (info.IsReadOnly)
         {

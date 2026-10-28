@@ -25,6 +25,9 @@ public interface IEditorDocument
     /// </summary>
     void ReplaceLines(int firstLine, int count, IReadOnlyList<string> lines, string newline);
 
+    /// <summary>Makes <paramref name="edits"/>, which don't overlap, as one step Undo takes back: Replace in files.</summary>
+    void Replace(IReadOnlyList<Core.ProjectFiles.TextEdit> edits);
+
     /// <summary>It has edits since it was read or last saved; undoing back to then counts as none.</summary>
     bool IsModified { get; }
 

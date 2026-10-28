@@ -78,6 +78,8 @@ The shortcut that goes to a file is rebindable. The editor's own keys are fixed,
 | Command | Windows and Linux | macOS | More |
 |---|---|---|---|
 | Go to file | `Ctrl+P` | `Cmd+P` | [Finding a file by name](../project-files/finding-a-file-by-name.md) |
+| Find in files | `Ctrl+Shift+F` | `Cmd+Shift+F` | [Finding in files](../project-files/finding-in-files.md) |
+| Replace in files | `Ctrl+Shift+R` | `Cmd+Shift+R` | [Finding in files](../project-files/finding-in-files.md#replace) |
 | Save | `Ctrl+S` | `Cmd+S` | [Saving](../project-files/saving.md) |
 | Save all | `Ctrl+Alt+S` | `Cmd+Option+S` | |
 | Replace | `Ctrl+H` | `Cmd+Option+F` | [Editing](../project-files/editing.md) |

@@ -1,0 +1,23 @@
+﻿"Replace in files"
+"work"
+[field] "speed"
+[toggle] Match case: Aa
+[toggle] Words: W
+[toggle] Regex: .*
+[field] "Replace with"
+[button] Replace
+[button] Replace all
+"File mask"
+[field] "*.cs, !*.Designer.cs"
+[toggle on] In project
+[toggle] Directory
+[field] "{root}/work"
+[button] Choose a folder: ⋯
+"2 matches in 2 files"
+"Enter opens · ↑↓ choose · Esc closes"
+"#define SPEED 600"
+"Config.h 1"
+"float Speed = 600.f;"
+"Player.cpp 2"
+"Config.h"
+[editor read-only, 2 lines, caret 1:14, 5 selected] "#define SPEED 600⏎"

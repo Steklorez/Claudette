@@ -33,7 +33,8 @@ public class CommandPaletteUiTests
         var box = window.GetVisualDescendants().OfType<TextBox>().Single(b => b.Name == "QueryBox");
         Assert.True(box.IsFocused);
 
-        window.KeyTextInput("find in");
+        // "find in" is Find in files… too (DESIGN.md §18, "Finding in files").
+        window.KeyTextInput("find in the");
         UiText.Settle(window);
         Assert.Equal("Find in the conversation", h.Shell.Palette!.Selected!.Label);
         Press(window, PhysicalKey.Enter);
