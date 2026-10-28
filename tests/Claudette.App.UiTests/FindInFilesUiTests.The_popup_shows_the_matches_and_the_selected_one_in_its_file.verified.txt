@@ -15,6 +15,7 @@
 [button] Choose a folder: ⋯
 "2 matches in 2 files"
 "Enter opens · ↑↓ choose · Esc closes"
+[button] Open in Find window
 "#define SPEED 600"
 "Config.h 1"
 "float Speed = 600.f;"

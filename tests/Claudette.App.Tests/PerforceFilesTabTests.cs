@@ -227,6 +227,64 @@ public class PerforceFilesTabTests
         File.SetAttributes(path, FileAttributes.Normal);
     }
 
+    /// <summary>Replace in files, opened as its shortcut does, replacing <paramref name="query"/> everywhere it's found once.</summary>
+    private static async Task<FindInFilesViewModel> ReplaceAllAsync(TabTestHarness h, string query, string replacement, Action? beforeReplacing = null)
+    {
+        InlineDispatcher.Run(() => h.Shell.OpenReplaceInFilesCommand.Execute(null));
+        var find = h.Shell.FindInFiles!;
+        InlineDispatcher.Run(() =>
+        {
+            find.Query = query;
+            find.Replacement = replacement;
+        });
+        h.Time.Advance(FindInFilesViewModel.SearchDelay);
+        await TabTestHarness.Eventually(() => !find.IsSearching && find.Hits.Count == 1, "the match");
+        beforeReplacing?.Invoke();
+        InlineDispatcher.Run(() => find.AskReplaceAllCommand.Execute(null));
+        InlineDispatcher.Run(() => find.ConfirmReplaceAllCommand.Execute(null));
+        await TabTestHarness.Eventually(() => find.ReplaceNotice is not null && !find.IsSearching, "the replace");
+        return find;
+    }
+
+    [Fact]
+    public async Task Replace_in_files_checks_out_the_depot_files_it_changes_first()
+    {
+        var (h, p4) = Harness();
+        await using var _h = h;
+        var path = Write(Path.Combine(h.WorkFolder, "Player.cpp"), "float Speed = 600.f;\n");
+        File.SetAttributes(path, FileAttributes.ReadOnly);
+        p4.Has(path, "float Speed = 600.f;\n");
+        await h.OpenTabAsync();
+
+        var find = await ReplaceAllAsync(h, "Speed", "MaxSpeed");
+
+        // Checked out in the default changelist, the tab having none of its own, then written.
+        var edit = Assert.Single(p4.FileCommands);
+        Assert.Equal("edit", edit.Command);
+        Assert.DoesNotContain("-c", edit.Arguments);
+        Assert.Equal("edit", p4.Find(path)!.Action);
+        Assert.Equal("float MaxSpeed = 600.f;\n", await File.ReadAllTextAsync(path, Token));
+        Assert.Empty(find.ReplaceProblems);
+    }
+
+    [Fact]
+    public async Task Replace_in_files_leaves_a_file_Perforce_couldnt_check_out_and_says_why()
+    {
+        var (h, p4) = Harness();
+        await using var _h = h;
+        var path = Write(Path.Combine(h.WorkFolder, "Player.cpp"), "Speed\n");
+        File.SetAttributes(path, FileAttributes.ReadOnly);
+        p4.Has(path, "Speed\n");
+        await h.OpenTabAsync();
+
+        var find = await ReplaceAllAsync(h, "Speed", "MaxSpeed", () => p4.Unreachable = true);
+
+        var problem = Assert.Single(find.ReplaceProblems);
+        Assert.StartsWith("Player.cpp: Perforce couldn't check it out:", problem, StringComparison.Ordinal);
+        Assert.Equal("Speed\n", await File.ReadAllTextAsync(path, Token));
+        File.SetAttributes(path, FileAttributes.Normal);
+    }
+
     [Fact]
     public async Task New_files_are_marked_for_add_and_renames_and_deletes_follow_in_Perforce()
     {

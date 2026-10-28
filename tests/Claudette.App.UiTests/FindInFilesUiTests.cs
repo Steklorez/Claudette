@@ -49,4 +49,37 @@ public sealed class FindInFilesUiTests
         // Verify resumes off the UI thread, so it comes last.
         await Verify(UiText.Describe(view, (h.Root, "{root}")));
     }
+
+    [AvaloniaFact]
+    public async Task Open_in_Find_window_shows_the_matches_by_file_in_a_window_docked_at_the_bottom()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        Write(Path.Combine(h.WorkFolder, "Source", "Player.cpp"), "float Health = 100.f;\nfloat Speed = 600.f;\n");
+        Write(Path.Combine(h.WorkFolder, "Config.h"), "#define SPEED 600\n");
+        await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, width: 1300, height: 900);
+        h.Shell.OpenFindInFilesCommand.Execute(null);
+        var find = h.Shell.FindInFiles!;
+        find.Query = "speed";
+        h.Time.Advance(FindInFilesViewModel.SearchDelay);
+        await Waiting.UntilAsync(() =>
+        {
+            UiText.Settle(window);
+            return find is { IsSearching: false } && find.Hits.Count == 2;
+        }, "the matches");
+
+        find.KeepCommand.Execute(null);
+        UiText.Settle(window);
+
+        // The popup's gone, and its matches are in the bottom edge's window, its tab titled by the query.
+        Assert.DoesNotContain(window.GetVisualDescendants().OfType<FindInFilesView>(), v => v.IsEffectivelyVisible);
+        var bottom = window.GetVisualDescendants().OfType<ToolEdgeView>().Single(v => v.Name == "BottomEdge");
+        Assert.True(bottom.IsEffectivelyVisible);
+        var results = bottom.GetVisualDescendants().OfType<FindResultsView>().Single();
+        Assert.True(results.IsEffectivelyVisible);
+        var text = UiText.Describe(bottom, (h.Root, "{root}"));
+        Assert.Contains("speed", text, StringComparison.Ordinal);
+        Assert.Contains("Player.cpp", text, StringComparison.Ordinal);
+        Assert.Contains("Config.h", text, StringComparison.Ordinal);
+    }
 }

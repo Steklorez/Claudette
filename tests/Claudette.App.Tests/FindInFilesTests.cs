@@ -1,5 +1,6 @@
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
+using Claudette.App.ViewModels.ToolWindows;
 
 namespace Claudette.App.Tests;
 
@@ -142,19 +143,26 @@ public class FindInFilesTests
     }
 
     [Fact]
-    public async Task Kept_results_are_grouped_by_file_and_Replace_all_leaves_out_what_is_unticked()
+    public async Task Kept_results_go_to_a_Find_window_grouped_by_file_and_Replace_all_leaves_out_what_is_unticked()
     {
         await using var h = new TabTestHarness();
         var a = Write(Path.Combine(h.WorkFolder, "a.txt"), "old\nold\n");
         var b = Write(Path.Combine(h.WorkFolder, "b.txt"), "old\n");
         await h.OpenTabAsync();
         var find = await OpenAsync(h, "old", replace: true);
-        // Until tool windows hold the Find window, the popup can't keep its results.
-        Assert.False(find.CanKeep);
+        Assert.True(find.CanKeep);
 
-        var settings = find.Settings;
-        var results = new FindResultsViewModel(new FindInFilesSearch(h.Services, h.Shell), settings, replaceMode: true, "new");
-        await InlineDispatcher.RunAsync(() => results.SearchAgainCommand.ExecuteAsync(null));
+        // Open in Find window: the popup goes, and the matches are in a Find window of their own, docked at the bottom.
+        InlineDispatcher.Run(() =>
+        {
+            find.Replacement = "new";
+            find.KeepCommand.Execute(null);
+        });
+        Assert.Null(h.Shell.FindInFiles);
+        var window = Assert.Single(h.Shell.ToolWindows.Windows, w => w.Kind == ToolWindowKinds.FindResults);
+        Assert.Equal(("old", ToolEdge.Bottom, true), (window.Title, window.Edge, window.IsShowing));
+        Assert.False(h.Shell.ToolWindows.Bottom.IsAutoHide);
+        var results = Assert.IsType<FindResultsViewModel>(window.Content);
 
         Assert.Equal(["a.txt", "b.txt"], results.Files.Select(f => f.FileName).Order());
         Assert.Equal(2, results.Files.Single(f => f.FileName == "a.txt").Hits.Count);
@@ -172,6 +180,14 @@ public class FindInFilesTests
 
         Assert.Equal("new\nold\n", await File.ReadAllTextAsync(a, Token));
         Assert.Equal("new\n", await File.ReadAllTextAsync(b, Token));
-        results.Dispose();
+
+        // A second search's window is a tab beside it; the ×, which takes a window for good, leaves the other.
+        var again = await OpenAsync(h, "new");
+        InlineDispatcher.Run(() => again.KeepCommand.Execute(null));
+        var second = h.Shell.ToolWindows.Windows.Last(w => w.Kind == ToolWindowKinds.FindResults);
+        Assert.Equal(("new", true), (second.Title, second.IsShowing));
+        Assert.Equal([window, second], h.Shell.ToolWindows.Bottom.Tabs);
+        InlineDispatcher.Run(() => window.CloseCommand.Execute(null));
+        Assert.Equal([second], h.Shell.ToolWindows.Windows.Where(w => w.Kind == ToolWindowKinds.FindResults));
     }
 }

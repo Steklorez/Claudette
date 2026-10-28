@@ -28,6 +28,7 @@ They show the tab you're looking at: its changed files, its agents, its tasks. W
 | **MCP** | When the session has MCP servers. A warning dot shows when one needs attention. | [MCP servers](mcp-servers.md) |
 | **Scratch pad** | Always. | [The scratch pad](../conversation/the-scratch-pad.md) |
 | **Games** | While a game is open. | [Games with Claudette](../claudette/games-with-claudette.md) |
+| **Find** | One for each search you keep with **Open in Find window**, titled by what it looked for, docked at the bottom. It shows that search whichever tab you're in. | [Finding in files](../project-files/finding-in-files.md#keep-the-results) |
 
 Each window scrolls and wraps its text at the width shown, so a long file name or an error is never cut off.
 
@@ -45,7 +46,7 @@ Drag a docked edge's inner side to make it wider or taller; double-click it for 
 - The **Tool windows** button at the far right of the header lists every window, ticked while it's on screen. Choose one to show it, or to hide it.
 - **Files** in the composer bar shows Changed files, and the bar's **Agents** button, process summary and task progress show theirs.
 - The command palette's **Show changed files**, **Show the agent map**, **Show tasks**, **Show processes**, **Show MCP servers** and **Show scratch pad** show that window.
-- The **×** on an edge's header closes the window showing. A closed window comes back where it was the next time something shows it.
+- The **×** on an edge's header closes the window showing. A closed window comes back where it was the next time something shows it, except a Find window, which goes for good: search again to get it back.
 
 ## Moving them
 

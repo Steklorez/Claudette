@@ -359,7 +359,7 @@ public sealed partial class FindInFilesViewModel : ViewModelBase, IDisposable
             return;
         }
         var at = Hits.IndexOf(row);
-        var outcome = await _search.ReplaceAsync(matcher, Replacement, [new ReplaceTarget(row.Hit.Path, row.Hit.RelativePath) { Only = row.Hit }]);
+        var outcome = await _search.ReplaceAsync(Project, matcher, Replacement, [new ReplaceTarget(row.Hit.Path, row.Hit.RelativePath) { Only = row.Hit }]);
         Report(outcome);
         var fresh = await _search.SearchFileAsync(row.Hit.Path, row.Hit.RelativePath, matcher);
         if (!ReferenceEquals(matcher, _matcher))
@@ -438,7 +438,7 @@ public sealed partial class FindInFilesViewModel : ViewModelBase, IDisposable
         {
             return;
         }
-        var outcome = await _search.ReplaceAsync(matcher, Replacement, [.. _files.Select(f => new ReplaceTarget(f.Path, f.RelativePath))]);
+        var outcome = await _search.ReplaceAsync(Project, matcher, Replacement, [.. _files.Select(f => new ReplaceTarget(f.Path, f.RelativePath))]);
         Report(outcome);
         await SearchNowAsync();
     }

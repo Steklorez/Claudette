@@ -4,8 +4,8 @@ namespace Claudette.App.ViewModels.ToolWindows;
 
 /// <summary>
 /// The tool windows Claudette has (DESIGN.md §3, "Tool windows"), in the order they take along their edge at first: the
-/// side panel's pages, which all dock on the right. A feature adds its kind to <see cref="All"/> and its view to
-/// <c>Views/ToolWindows/ToolWindowViews</c>.
+/// side panel's pages, which all dock on the right, then Find's, at the bottom. A feature adds its kind to <see cref="All"/>
+/// and its view to <c>Views/ToolWindowView</c>.
 /// </summary>
 public static class ToolWindowKinds
 {
@@ -85,8 +85,20 @@ public static class ToolWindowKinds
         Title = "Games",
     };
 
+    /// <summary>
+    /// A search's matches, kept by Find in files' <b>Open in Find window</b> (DESIGN.md §18, "Finding in files"): a window
+    /// for each search, titled by what it looked for, which shows what made it, a <see cref="FindResultsViewModel"/>.
+    /// </summary>
+    public static readonly ToolWindowKind FindResults = new()
+    {
+        Id = "Find",
+        Title = "Find",
+        DefaultEdge = ToolEdge.Bottom,
+        IsMultiple = true,
+    };
+
     /// <summary>Every kind, in the order the windows take along their edge at first.</summary>
-    public static IReadOnlyList<ToolWindowKind> All { get; } = [Files, Agents, Project, Processes, Tasks, Mcp, ScratchPad, Games];
+    public static IReadOnlyList<ToolWindowKind> All { get; } = [Files, Agents, Project, Processes, Tasks, Mcp, ScratchPad, Games, FindResults];
 
     /// <summary>The kind named <paramref name="id"/>, or null for a name no kind has (one taken out since it was saved).</summary>
     public static ToolWindowKind? Find(string id) => All.FirstOrDefault(k => k.Id == id);

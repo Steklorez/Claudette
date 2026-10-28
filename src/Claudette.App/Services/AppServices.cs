@@ -199,12 +199,6 @@ public sealed class AppServices : IAsyncDisposable
     internal IFolderWatcher FolderWatcher { get; set; } = new FolderWatcher();
 
     /// <summary>
-    /// What's done before Replace in files writes files nobody has open (DESIGN.md §18, "Finding in files"): nothing yet.
-    /// A workspace that keeps files read-only until they're checked out, as Perforce's does, plugs in here.
-    /// </summary>
-    public IBeforeFilesWrite BeforeFilesWrite { get; set; } = NothingBeforeFilesWrite.Instance;
-
-    /// <summary>
     /// Claudette's animations stop (DESIGN.md §3, "Accessibility"): Settings → Appearance → Motion says so, or follows
     /// the OS or Claude Code's <c>prefersReducedMotion</c>, which ask for it.
     /// </summary>

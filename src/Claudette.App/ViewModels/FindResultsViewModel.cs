@@ -238,7 +238,7 @@ public sealed partial class FindResultsViewModel : ObservableObject, IDisposable
             return;
         }
         var excluded = Files.SelectMany(f => f.Hits).Where(h => h.IsExcluded).Select(h => h.Hit).ToLookup(h => h.Path, FindInFiles.PathComparer);
-        var outcome = await _search.ReplaceAsync(matcher, Replacement, [.. _files.Select(f => new ReplaceTarget(f.Path, f.RelativePath) { Excluded = [.. excluded[f.Path]] })]);
+        var outcome = await _search.ReplaceAsync(Settings.Project, matcher, Replacement, [.. _files.Select(f => new ReplaceTarget(f.Path, f.RelativePath) { Excluded = [.. excluded[f.Path]] })]);
         ReplaceProblems.Clear();
         foreach (var problem in outcome.Problems)
         {

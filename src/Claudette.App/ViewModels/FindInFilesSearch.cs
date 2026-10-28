@@ -29,6 +29,9 @@ internal interface IFindInFilesHost
 
     /// <summary>Opens a match in its project's Files tab, with the match selected, as a file clicked in a conversation opens.</summary>
     Task OpenHitAsync(FindHit hit);
+
+    /// <summary>What's done before Replace writes <paramref name="project"/>'s files no editor has open, such as checking them out. On the UI thread.</summary>
+    IBeforeFilesWrite BeforeWriting(string project);
 }
 
 /// <summary>
@@ -229,9 +232,10 @@ internal sealed class FindInFilesSearch(AppServices services, IFindInFilesHost h
 
     /// <summary>
     /// Replaces as <paramref name="targets"/> say: in an open file's editor, which is left unsaved so its Undo takes it
-    /// back, and otherwise on disk, through <see cref="AppServices.BeforeFilesWrite"/>. Each file is searched again first.
+    /// back, and otherwise on disk, after what <paramref name="project"/>'s files need first, such as checking them out in
+    /// Perforce (<see cref="IFindInFilesHost.BeforeWriting"/>). Each file is searched again first.
     /// </summary>
-    public async Task<ReplaceOutcome> ReplaceAsync(FindMatcher matcher, string replacement, IReadOnlyList<ReplaceTarget> targets)
+    public async Task<ReplaceOutcome> ReplaceAsync(string project, FindMatcher matcher, string replacement, IReadOnlyList<ReplaceTarget> targets)
     {
         var results = new List<FileReplaceResult>();
         var onDisk = new List<ReplaceTarget>();
@@ -251,7 +255,7 @@ internal sealed class FindInFilesSearch(AppServices services, IFindInFilesHost h
                 onDisk.Add(target);
             }
         }
-        results.AddRange(await FindReplace.OnDiskAsync(onDisk, matcher, replacement, services.BeforeFilesWrite));
+        results.AddRange(await FindReplace.OnDiskAsync(onDisk, matcher, replacement, onDisk.Count == 0 ? NothingBeforeFilesWrite.Instance : host.BeforeWriting(project)));
         return new ReplaceOutcome(results.Sum(r => r.Replaced), results.Count(r => r.Replaced > 0),
             [.. results.Where(r => r.Problem is not null).Select(r => $"{Path.GetFileName(r.Path)}: {r.Problem}")]);
     }

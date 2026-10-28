@@ -1,4 +1,6 @@
 using Claudette.App.Editor;
+using Claudette.App.Services;
+using Claudette.App.ViewModels.ToolWindows;
 using Claudette.Core.ProjectFiles;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -89,10 +91,22 @@ public sealed partial class ShellViewModel : IFindInFilesHost, IFindResultsHost
     Task IFindInFilesHost.OpenHitAsync(FindHit hit) =>
         OpenInEditorAsync(hit.Path, hit.Line, hit.Column, hit.Line, SelectedTab, endColumn: hit.Column + hit.Length);
 
+    /// <summary>
+    /// Before Replace writes files no editor has open: in a Perforce workspace, they're checked out, in the changelist of
+    /// the project's tab focused last, as the Files tab does (DESIGN.md §18, "Opening files in Perforce").
+    /// </summary>
+    IBeforeFilesWrite IFindInFilesHost.BeforeWriting(string project) =>
+        Groups.FirstOrDefault(g => FindPaths.Equals(g.Folder, project)) is { } group
+            ? new PerforceBeforeFilesWrite(_services.Perforce.Files, PerforceFilesService.ContextFor(group.Folder, group.Tabs))
+            : NothingBeforeFilesWrite.Instance;
+
     // ---- Keeping results (DESIGN.md §18, "Finding in files") ------------------------------------------------------------
 
-    /// <summary>The Find window keeps results once tool windows are there to hold it; until then, the popup's results go with it.</summary>
-    public bool CanKeepResults => false;
+    public bool CanKeepResults => true;
 
-    public void Keep(FindResultsViewModel results) => results.Dispose();
+    /// <summary><b>Open in Find window</b>: a Find window of their own, docked at the bottom, which disposes them when it closes.</summary>
+    public void Keep(FindResultsViewModel results) => ToolWindows.Add(ToolWindowKinds.FindResults, results.Title, results);
+
+    /// <summary>A Find window closed, by its × or its tab's <b>Close</b>: its search stops for good.</summary>
+    private static void OnToolWindowRemoved(ToolWindowViewModel window) => (window.Content as IDisposable)?.Dispose();
 }

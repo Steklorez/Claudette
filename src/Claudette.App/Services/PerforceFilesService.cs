@@ -43,6 +43,18 @@ public enum PerforceRefresh
 /// </summary>
 public sealed class PerforceFilesService
 {
+    /// <summary>
+    /// Where a project's files are opened in Perforce, by a Files tab or Replace in files: <paramref name="folder"/>, in the
+    /// changelist of the project's session tab focused most recently (DESIGN.md §18, "Which changelist"), whose ticket
+    /// keeper, when ticket handling is on, renews an expired login. On the UI thread, where the tabs are.
+    /// </summary>
+    internal static PerforceContext ContextFor(string folder, IEnumerable<ViewModels.TabViewModel> projectTabs)
+    {
+        var tabs = projectTabs.OrderByDescending(t => t.FocusOrder).ToArray();
+        var renewer = tabs.FirstOrDefault(t => t.Perforce.Workspace is not null);
+        return new PerforceContext(folder, tabs.FirstOrDefault()?.Perforce.WorkingChangelist, renewer is null ? null : renewer.Perforce.RenewLoginAsync);
+    }
+
     /// <summary>A command run for a file or a few, by the user or by Claudette.</summary>
     public static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(20);
 
