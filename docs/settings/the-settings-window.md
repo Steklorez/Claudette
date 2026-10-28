@@ -42,7 +42,7 @@ Each page starts with a line saying what's on it, then its sections. In the Clau
 Each setting is a row: its name, a line saying what it does, and **More** when there's more to say. Its switch, list or box is beside it, or under it when it needs the width.
 
 - **Changes apply as you make them.** There's no **Save** button, and nothing to restart, except where a setting says it applies to tabs started after the change. A box you type in takes effect when you leave it.
-- **A changed setting** has a short colored bar at its left. Point at it, or move to it with Tab, for its **Reset**, which puts just that setting back.
+- **A changed setting** has a short colored bar at its left. Point at it, or move to it with Tab, for its **Reset**, which puts just that setting back. **Reset** appears in a space kept for it beside the setting's switch or list, so nothing moves as it does.
 - **This computer** by a setting means [settings sync](../history/settings-sync.md) leaves it as it is on each machine. When a whole section or page stays on this machine, it says so once, by the section's heading or the page's title.
 - **1 tab has its own** by a setting means a tab changed it for itself in its [Tab settings…](../tabs/tab-settings.md). Point at it for which tabs.
 

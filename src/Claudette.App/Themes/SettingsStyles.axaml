@@ -121,7 +121,7 @@
               </Panel>
               <SelectableTextBlock Grid.Row="1" Name="PART_MoreText" Classes="muted small" Text="{TemplateBinding More}" TextWrapping="Wrap" Margin="0,6,0,0"
                                    IsVisible="{TemplateBinding IsMoreOpen}" />
-              <!-- Reset, while it's changed and pointed at or focused -->
+              <!-- Reset, while it's changed and pointed at or focused; its room is kept while it's hidden -->
               <Button Grid.Column="1" Name="PART_Reset" Classes="flat settingreset" Command="{TemplateBinding ResetCommand}"
                       ToolTip.Tip="Reset to default" AutomationProperties.Name="{TemplateBinding ResetName}" VerticalAlignment="Center">
                 <Path Data="{DynamicResource IconRestart}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" StrokeLineCap="Round" StrokeJoin="Round"
@@ -174,17 +174,27 @@
     <Setter Property="Margin" Value="-6,1,0,1" />
     <Setter Property="Background" Value="{DynamicResource AccentStatusBrush}" />
   </Style>
+  <!-- Reset keeps its room beside the control on every row with a default to go back to, drawn or not, so showing it, or
+       changing the setting, moves nothing: the words don't wrap again and the row stays the same height. It reaches out
+       above and below its line, so a row of one short line is no taller for it. Hidden, it can't be clicked or reached
+       with Tab. -->
   <Style Selector="controls|SettingRow Button.settingreset">
     <Setter Property="Padding" Value="6" />
-    <Setter Property="Margin" Value="8,0,0,0" />
+    <Setter Property="Margin" Value="8,-6,0,-6" />
     <Setter Property="IsVisible" Value="False" />
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="IsHitTestVisible" Value="False" />
+    <Setter Property="KeyboardNavigation.IsTabStop" Value="False" />
   </Style>
-  <Style Selector="controls|SettingRow:changed:pointerover /template/ Button.settingreset, controls|SettingRow:changed:focus-within /template/ Button.settingreset">
+  <Style Selector="controls|SettingRow:resettable /template/ Button.settingreset">
     <Setter Property="IsVisible" Value="True" />
   </Style>
-  <!-- A nested row's own reset, not its parent's, shows while it's pointed at. -->
-  <Style Selector="controls|SettingRow:changed:pointerover controls|SettingRow:not(:pointerover) /template/ Button.settingreset">
-    <Setter Property="IsVisible" Value="False" />
+  <!-- Shown while the row is changed and pointed at or has the focus. A nested row's own reset, not its parent's, shows
+       while it's pointed at. -->
+  <Style Selector="controls|SettingRow:changed:pointerover:not(:nestedpointerover) /template/ Button.settingreset, controls|SettingRow:changed:focus-within /template/ Button.settingreset">
+    <Setter Property="Opacity" Value="1" />
+    <Setter Property="IsHitTestVisible" Value="True" />
+    <Setter Property="KeyboardNavigation.IsTabStop" Value="True" />
   </Style>
   <!-- Picked out for a moment when search or a link brings it into view. -->
   <Style Selector="controls|SettingRow:highlighted /template/ Border#PART_Row">
