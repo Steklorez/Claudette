@@ -30,8 +30,6 @@ public class ClaudeStyleTests
         {
             app.RequestedThemeVariant = ThemeVariant.Light;
             UiText.Settle(window);
-            var systemBackground = BackgroundOf(window);
-            var systemAccent = (Color)window.FindResource("SystemAccentColor")!;
 
             app.Colors.Apply(AppStyle.Claude);
             UiText.Settle(window);
@@ -55,10 +53,11 @@ public class ClaudeStyleTests
             app.RequestedThemeVariant = ThemeVariant.Light;
             UiText.Settle(window);
 
-            Assert.Equal(systemBackground, BackgroundOf(window));
-            Assert.Equal(Color.Parse("#F0F0F2"), Token(window, "SidebarBrush"));
+            // Standard's are Rider's (DESIGN.md §3, "Visual style"): its frame, its greys and its blue.
+            Assert.Equal(Color.Parse("#EBECF0"), BackgroundOf(window));
+            Assert.Equal(Color.Parse("#F7F8FA"), Token(window, "SidebarBrush"));
             Assert.Equal(Color.Parse("#E87BA4"), Token(window, "CardYouStripeBrush"));
-            Assert.Equal(systemAccent, (Color)window.FindResource("SystemAccentColor")!);
+            Assert.Equal(AppColors.RiderAccent, (Color)window.FindResource("SystemAccentColor")!);
         }
         finally
         {

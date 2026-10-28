@@ -7,8 +7,8 @@ namespace Claudette.App.Controls;
 /// <summary>
 /// The tabs on screen side by side (DESIGN.md §18, "Split panes"): each shown child in the order of its
 /// <see cref="IndexProperty"/>, sharing the width as <see cref="Shares"/> says, or evenly. A child that isn't shown takes
-/// no room, as the other tabs' views wait out of sight. Each pane after the first draws the line between it and the one
-/// before (<see cref="DividerThickness"/>); <see cref="Lines"/> says where those are, for dragging them.
+/// no room, as the other tabs' views wait out of sight. Each pane is an island, and each after the first keeps a gap
+/// before it (<see cref="Gap"/>); <see cref="Lines"/> says where those are, for dragging them.
 /// </summary>
 public sealed class PanesPanel : Panel
 {
@@ -33,7 +33,7 @@ public sealed class PanesPanel : Panel
     public static void SetIndex(Control control, int value) => control.SetValue(IndexProperty, value);
 
     /// <summary>A pane's border: a line on its left when another pane is before it.</summary>
-    public static readonly IValueConverter DividerThickness = new FuncValueConverter<int, Thickness>(index => index > 0 ? new Thickness(1, 0, 0, 0) : default);
+    public static readonly IValueConverter Gap = new FuncValueConverter<int, Thickness>(index => index > 0 ? new Thickness(6, 0, 0, 0) : default);
 
     /// <summary>The share of the width each pane has, left to right; null, or of another count, for even shares.</summary>
     public IReadOnlyList<double>? Shares

@@ -31,6 +31,11 @@
       <Setter Property="MaxWidth" Value="760" />
     </Style>
     <FluentTheme />
+    <!-- Every window's and popup's text in the interface's font: Inter in the Standard style, as Rider's (DESIGN.md §3,
+         "Visual style"). -->
+    <Style Selector=":is(TopLevel)">
+      <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
+    </Style>
     <!-- The spectrum and hue slider of a folder group's color picker (Views/GroupColorPicker). -->
     <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
     <StyleInclude Source="avares://LiveMarkdown.Avalonia/Styles.axaml" />
@@ -367,6 +372,13 @@
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
+    <!-- An island on the window's frame (DESIGN.md §3, "Visual style"): the sidebar, a pane, a tool window -->
+    <Style Selector="Border.island">
+      <Setter Property="Background" Value="{DynamicResource IslandBrush}" />
+      <Setter Property="CornerRadius" Value="{DynamicResource IslandRadius}" />
+      <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+
     <!-- Status dots and glyphs -->
     <Style Selector="TextBlock.status">
       <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
@@ -513,12 +525,15 @@
 
       <!-- Updated from Settings → Appearance. -->
       <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Menlo, monospace</FontFamily>
+      <!-- The interface's font, which App sets for the style (DESIGN.md §3, "Visual style"). -->
+      <FontFamily x:Key="UiFont">$Default</FontFamily>
       <FontFamily x:Key="ConversationFont">$Default</FontFamily>
       <FontFamily x:Key="ReplyFont">$Default</FontFamily>
-      <!-- The page's background: none, except under Mica (MainWindow sets it then). -->
+      <!-- The page's background: none, so the frame shows between the islands. -->
       <SolidColorBrush x:Key="PageBackgroundBrush" Color="Transparent" />
-      <!-- The corners of a tool window's panel (DESIGN.md §3, "Tool windows") -->
+      <!-- An island's corners, and the gap around it (DESIGN.md §3, "Visual style") -->
       <CornerRadius x:Key="IslandRadius">10</CornerRadius>
+      <x:Double x:Key="IslandGap">6</x:Double>
       <!-- Updated from Settings → Appearance. -->
       <x:Double x:Key="ConversationFontSize">14</x:Double>
       <x:Double x:Key="CodeFontSize">13</x:Double>
@@ -685,21 +700,22 @@
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
           <!-- With Mica on Windows 11 (MainWindow): the page stays opaque and the sidebar lets the backdrop through. -->
-          <SolidColorBrush x:Key="MicaPageBrush" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="MicaSidebarBrush" Color="#66F3F3F3" />
-          <SolidColorBrush x:Key="MutedTextBrush" Color="#5F6368" />
-          <SolidColorBrush x:Key="DividerBrush" Color="#1F000000" />
-          <SolidColorBrush x:Key="CardBrush" Color="#FAFAFA" />
-          <SolidColorBrush x:Key="SubtleBrush" Color="#F4F4F6" />
-          <SolidColorBrush x:Key="HoverBrush" Color="#0F000000" />
-          <!-- The tool windows (DESIGN.md §3, "Tool windows"): a panel's surface, and the icon of a window showing, filled in -->
+          <!-- Islands (DESIGN.md §3, "Visual style"), as Rider's Islands Light: the window's frame, behind the header, the
+               strip and the gaps, and the islands on it, the sidebar, the panes and the tool windows. -->
+          <SolidColorBrush x:Key="FrameBrush" Color="#EBECF0" />
           <SolidColorBrush x:Key="IslandBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="MutedTextBrush" Color="#6C707E" />
+          <SolidColorBrush x:Key="DividerBrush" Color="#DFE1E5" />
+          <SolidColorBrush x:Key="CardBrush" Color="#F7F8FA" />
+          <SolidColorBrush x:Key="SubtleBrush" Color="#F7F8FA" />
+          <SolidColorBrush x:Key="HoverBrush" Color="#0F000000" />
+          <!-- A tool window's icon on the strip while its window shows, filled in (DESIGN.md §3, "Tool windows") -->
           <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#3574F0" />
           <SolidColorBrush x:Key="ToolIconSelectedTextBrush" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="TabSelectedBrush" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="SidebarBrush" Color="#F0F0F2" />
+          <SolidColorBrush x:Key="TabSelectedBrush" Color="#DFE1E5" />
+          <SolidColorBrush x:Key="SidebarBrush" Color="#F7F8FA" />
           <SolidColorBrush x:Key="ComposerBrush" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="ComposerBorderBrush" Color="#2A000000" />
+          <SolidColorBrush x:Key="ComposerBorderBrush" Color="#C9CCD6" />
           <SolidColorBrush x:Key="DialogBrush" Color="#FFFFFF" />
           <SolidColorBrush x:Key="OverlayBrush" Color="#33000000" />
           <SolidColorBrush x:Key="ErrorTextBrush" Color="#C42B1C" />
@@ -710,7 +726,7 @@
           <!-- Games with Claudette (DESIGN.md §18): the user's marks and pieces blue, hers the berry of her hair tie. -->
           <SolidColorBrush x:Key="GameYouBrush" Color="#2A78D6" />
           <SolidColorBrush x:Key="GameClaudetteBrush" Color="#B8336A" />
-          <SolidColorBrush x:Key="AccentStatusBrush" Color="{DynamicResource SystemAccentColor}" />
+          <SolidColorBrush x:Key="AccentStatusBrush" Color="#3574F0" />
           <SolidColorBrush x:Key="CautionBorderBrush" Color="#D9A400" />
           <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#FFF6D6" />
           <SolidColorBrush x:Key="DiffAddedBrush" Color="#E6F4EA" />
@@ -719,16 +735,16 @@
           <!-- The Project Files tab's editor (DESIGN.md §18, "Project files"): the gutter's bars, the current line, and the
                selection, a see-through tint so the code keeps its colors under it. -->
           <SolidColorBrush x:Key="ChangeAddedBrush" Color="#2EA043" />
-          <SolidColorBrush x:Key="ChangeModifiedBrush" Color="{DynamicResource SystemAccentColor}" />
+          <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#3574F0" />
           <SolidColorBrush x:Key="ChangeRemovedBrush" Color="#D1242F" />
           <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0A000000" />
-          <SolidColorBrush x:Key="EditorSelectionBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.25" />
-          <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColor}" Opacity="0.14" />
+          <SolidColorBrush x:Key="EditorSelectionBrush" Color="#3574F0" Opacity="0.25" />
+          <SolidColorBrush x:Key="SelectedRowBrush" Color="#D5E1FF" />
           <!-- Find's text in the card it brought into view (Controls/FindHighlights), drawn over the text: see-through. -->
           <SolidColorBrush x:Key="FindHighlightBrush" Color="#F2C200" Opacity="0.45" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#C42B1C" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A000000" />
-          <SolidColorBrush x:Key="MeterBrush" Color="{DynamicResource SystemAccentColor}" />
+          <SolidColorBrush x:Key="MeterBrush" Color="#3574F0" />
           <SolidColorBrush x:Key="MeterWarningBrush" Color="#D98A00" />
           <SolidColorBrush x:Key="MeterCriticalBrush" Color="#C42B1C" />
           <!-- The detailed usage header's charts (DESIGN.md §6): model-specific weekly limits beside the accent line, and
@@ -736,7 +752,7 @@
                also with color blindness. -->
           <SolidColorBrush x:Key="ChartModelBrush" Color="#12946A" />
           <SolidColorBrush x:Key="ChartModel2Brush" Color="#4A3AA7" />
-          <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#EBECF0" />
           <!-- The parts of a tab's context window (DESIGN.md §6, "Per-tab context"), in the bar's order: the categorical
                palette, placed so that every two parts that can end up side by side stay apart, also with color
                blindness (ContextBreakdown.Parts). The auto-compact buffer is hatched, beside the free space's track. -->
@@ -805,22 +821,20 @@
           <SolidColorBrush x:Key="GodotWordmarkBrush" Color="#414042" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="MicaPageBrush" Color="#202020" />
-          <SolidColorBrush x:Key="MicaSidebarBrush" Color="#66141416" />
-          <SolidColorBrush x:Key="MutedTextBrush" Color="#A6A6A6" />
-          <SolidColorBrush x:Key="DividerBrush" Color="#2EFFFFFF" />
-          <SolidColorBrush x:Key="CardBrush" Color="#1F1F1F" />
-          <SolidColorBrush x:Key="SubtleBrush" Color="#1C1C1F" />
+          <SolidColorBrush x:Key="FrameBrush" Color="#26282C" />
+          <SolidColorBrush x:Key="IslandBrush" Color="#191A1C" />
+          <SolidColorBrush x:Key="MutedTextBrush" Color="#868A91" />
+          <SolidColorBrush x:Key="DividerBrush" Color="#2B2D30" />
+          <SolidColorBrush x:Key="CardBrush" Color="#1E1F22" />
+          <SolidColorBrush x:Key="SubtleBrush" Color="#1E1F22" />
           <SolidColorBrush x:Key="HoverBrush" Color="#14FFFFFF" />
-          <!-- The tool windows (DESIGN.md §3, "Tool windows"): a panel's surface, and the icon of a window showing, filled in -->
-          <SolidColorBrush x:Key="IslandBrush" Color="#202020" />
-          <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#3574F0" />
+          <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#3871E1" />
           <SolidColorBrush x:Key="ToolIconSelectedTextBrush" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="TabSelectedBrush" Color="#2B2B2F" />
-          <SolidColorBrush x:Key="SidebarBrush" Color="#141416" />
-          <SolidColorBrush x:Key="ComposerBrush" Color="#1C1C1F" />
-          <SolidColorBrush x:Key="ComposerBorderBrush" Color="#3DFFFFFF" />
-          <SolidColorBrush x:Key="DialogBrush" Color="#202023" />
+          <SolidColorBrush x:Key="TabSelectedBrush" Color="#33353B" />
+          <SolidColorBrush x:Key="SidebarBrush" Color="#1E1F22" />
+          <SolidColorBrush x:Key="ComposerBrush" Color="#1E1F22" />
+          <SolidColorBrush x:Key="ComposerBorderBrush" Color="#43454A" />
+          <SolidColorBrush x:Key="DialogBrush" Color="#2B2D30" />
           <SolidColorBrush x:Key="OverlayBrush" Color="#66000000" />
           <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF99A4" />
           <SolidColorBrush x:Key="WarningTextBrush" Color="#FCE100" />
@@ -828,27 +842,27 @@
           <SolidColorBrush x:Key="MarkStarBrush" Color="#F5B83D" />
           <SolidColorBrush x:Key="GameYouBrush" Color="#5B9BD5" />
           <SolidColorBrush x:Key="GameClaudetteBrush" Color="#E0608F" />
-          <SolidColorBrush x:Key="AccentStatusBrush" Color="{DynamicResource SystemAccentColorLight2}" />
+          <SolidColorBrush x:Key="AccentStatusBrush" Color="#548AF7" />
           <SolidColorBrush x:Key="CautionBorderBrush" Color="#8A6D00" />
           <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#2B2610" />
           <SolidColorBrush x:Key="DiffAddedBrush" Color="#1D3B26" />
           <SolidColorBrush x:Key="DiffRemovedBrush" Color="#46201F" />
           <SolidColorBrush x:Key="DiffHunkBrush" Color="#23283A" />
           <SolidColorBrush x:Key="ChangeAddedBrush" Color="#3FB950" />
-          <SolidColorBrush x:Key="ChangeModifiedBrush" Color="{DynamicResource SystemAccentColorLight2}" />
+          <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#548AF7" />
           <SolidColorBrush x:Key="ChangeRemovedBrush" Color="#F85149" />
           <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0FFFFFFF" />
-          <SolidColorBrush x:Key="EditorSelectionBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.3" />
-          <SolidColorBrush x:Key="SelectedRowBrush" Color="{DynamicResource SystemAccentColorLight2}" Opacity="0.22" />
+          <SolidColorBrush x:Key="EditorSelectionBrush" Color="#3574F0" Opacity="0.35" />
+          <SolidColorBrush x:Key="SelectedRowBrush" Color="#2A4371" />
           <SolidColorBrush x:Key="FindHighlightBrush" Color="#F2B233" Opacity="0.4" />
           <SolidColorBrush x:Key="BypassBorderBrush" Color="#E0605A" />
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FFFFFF" />
-          <SolidColorBrush x:Key="MeterBrush" Color="{DynamicResource SystemAccentColorLight2}" />
+          <SolidColorBrush x:Key="MeterBrush" Color="#548AF7" />
           <SolidColorBrush x:Key="MeterWarningBrush" Color="#F2B233" />
           <SolidColorBrush x:Key="MeterCriticalBrush" Color="#FF6B61" />
           <SolidColorBrush x:Key="ChartModelBrush" Color="#199E70" />
           <SolidColorBrush x:Key="ChartModel2Brush" Color="#9D6FE8" />
-          <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#000000" />
+          <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#26282C" />
           <SolidColorBrush x:Key="ContextMemoryBrush" Color="#D95926" />
           <SolidColorBrush x:Key="ContextSkillsBrush" Color="#199E70" />
           <SolidColorBrush x:Key="ContextPromptBrush" Color="#9085E9" />

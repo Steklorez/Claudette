@@ -11,8 +11,7 @@
     <!-- Light, on claude.ai's scale: white cards and composer (#FFFFFF), an ivory page (#FAF9F5), a warmer sidebar
          (#F5F4ED) and selection (#E8E6DC), near-black text (#141413) and warm grey muted text. -->
     <ResourceDictionary x:Key="Light">
-      <SolidColorBrush x:Key="MicaPageBrush" Color="#FAF9F5" />
-      <SolidColorBrush x:Key="MicaSidebarBrush" Color="#F5F4ED" />
+      <SolidColorBrush x:Key="FrameBrush" Color="#F0EEE6" />
       <SolidColorBrush x:Key="MutedTextBrush" Color="#73726C" />
       <SolidColorBrush x:Key="DividerBrush" Color="#261F1E1D" />
       <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
@@ -32,7 +31,7 @@
       <SolidColorBrush x:Key="FindHighlightBrush" Color="#E8A93B" Opacity="0.45" />
       <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A1F1E1D" />
       <SolidColorBrush x:Key="MeterBrush" Color="#D97757" />
-      <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#FAF9F5" />
+      <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#F0EEE6" />
       <!-- The Project Files tab's editor (DESIGN.md §18): changed lines' bars, the selection and the current line in Claude's warm tones. -->
       <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#D97757" />
       <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0A1F1E1D" />
@@ -72,11 +71,10 @@
     <!-- Dark, on the same scale: a charcoal page (#262624), lighter cards and composer (#30302E), a darker sidebar
          (#1F1E1D), off-white text (#FAF9F5) and warm grey muted text. -->
     <ResourceDictionary x:Key="Dark">
-      <SolidColorBrush x:Key="MicaPageBrush" Color="#262624" />
+      <SolidColorBrush x:Key="FrameBrush" Color="#1F1E1D" />
       <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#D97757" />
       <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0FFAF9F5" />
       <SolidColorBrush x:Key="EditorSelectionBrush" Color="#D97757" Opacity="0.3" />
-      <SolidColorBrush x:Key="MicaSidebarBrush" Color="#1F1E1D" />
       <SolidColorBrush x:Key="MutedTextBrush" Color="#9C9A92" />
       <SolidColorBrush x:Key="DividerBrush" Color="#26DEDCD1" />
       <SolidColorBrush x:Key="CardBrush" Color="#30302E" />
@@ -96,7 +94,7 @@
       <SolidColorBrush x:Key="FindHighlightBrush" Color="#F0B95A" Opacity="0.4" />
       <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FAF9F5" />
       <SolidColorBrush x:Key="MeterBrush" Color="#D97757" />
-      <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#262624" />
+      <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#1F1E1D" />
       <SolidColorBrush x:Key="InlineCodeBrush" Color="#141413" />
       <SolidColorBrush x:Key="InlineCodeTextBrush" Color="#E9A48D" />
       <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#33271F" />

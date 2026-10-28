@@ -14,7 +14,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        UseMicaOnWindows11();
         // Notifications are skipped for what's already in front of the user (DESIGN.md §10).
         Activated += (_, _) =>
         {
@@ -99,54 +98,6 @@ public partial class MainWindow : Window
         if (Bounds.Width > 0)
         {
             usage.SetDetailsWidth(Bounds.Width / _zoom);
-        }
-    }
-
-    /// <summary>
-    /// Asks for the Mica backdrop on Windows 11, or stops asking. Claude's colors (DESIGN.md §3, "Visual style") are
-    /// solid, so the warm sidebar and header aren't replaced by the desktop showing through.
-    /// </summary>
-    public void UseMica(bool use)
-    {
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
-        {
-            TransparencyLevelHint = use ? [WindowTransparencyLevel.Mica] : [];
-        }
-    }
-
-    /// <summary>
-    /// The Mica backdrop on Windows 11 (DESIGN.md §2). Only once Windows actually grants it does the window's background
-    /// go transparent: the header, sidebar and title bar then show Mica, and the page keeps an opaque background.
-    /// </summary>
-    private void UseMicaOnWindows11()
-    {
-        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
-        {
-            return;
-        }
-        UseMica(true);
-        PropertyChanged += (_, e) =>
-        {
-            if (e.Property == ActualTransparencyLevelProperty || e.Property == ActualThemeVariantProperty)
-            {
-                ApplyBackdrop();
-            }
-        };
-    }
-
-    private void ApplyBackdrop()
-    {
-        if (ActualTransparencyLevel == WindowTransparencyLevel.Mica)
-        {
-            Background = Brushes.Transparent;
-            Resources["PageBackgroundBrush"] = this.FindResource(ActualThemeVariant, "MicaPageBrush");
-            Resources["SidebarBrush"] = this.FindResource(ActualThemeVariant, "MicaSidebarBrush");
-        }
-        else
-        {
-            ClearValue(BackgroundProperty);
-            Resources.Remove("PageBackgroundBrush");
-            Resources.Remove("SidebarBrush");
         }
     }
 

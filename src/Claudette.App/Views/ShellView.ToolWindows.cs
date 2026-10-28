@@ -40,7 +40,7 @@ public partial class ShellView
         // However wide or tall the windows were dragged, the panes keep their least.
         DockArea.SizeChanged += (_, e) =>
         {
-            RightSide.MaxWidth = Math.Max(ToolDockViewModel.MinRightWidth, e.NewSize.Width - ToolDockViewModel.StripWidth - ShellLayout.MinConversationWidth);
+            RightSide.MaxWidth = Math.Max(ToolDockViewModel.MinRightWidth, e.NewSize.Width - ToolDockViewModel.StripWidth - RightSide.Margin.Left - ShellLayout.MinConversationWidth);
             BottomPanel.MaxHeight = Math.Max(ToolDockViewModel.MinBottomHeight, e.NewSize.Height - ToolDockViewModel.MinPanesHeight);
         };
         DataContextChanged += (_, _) => WatchDock(Dock);

@@ -8,16 +8,22 @@ using Claudette.Core.Settings;
 namespace Claudette.App.Themes;
 
 /// <summary>
-/// The colors of Settings → Appearance → Style (DESIGN.md §3, "Visual style"). Standard is App.axaml's tokens and
-/// Fluent's own palette, with the OS's accent color. Claude puts <see cref="ClaudeColors"/> over those tokens, and gives
-/// Fluent a palette of the Claude apps' warm greys, ivory and orange for what it draws itself: window backgrounds, text,
-/// controls and the accent, whose lighter and darker shades Fluent works out from it. Both work in light and dark. The
-/// Claude style's shapes are styles under the "claude" class, which ShellView takes.
+/// The colors of Settings → Appearance → Style (DESIGN.md §3, "Visual style"). Standard is App.axaml's tokens, Rider's
+/// Islands colors, and gives Fluent Rider's palette: its greys and blue. Claude puts <see cref="ClaudeColors"/> over those
+/// tokens, and gives Fluent a palette of the Claude apps' warm greys, ivory and orange. Fluent draws with the palette what
+/// it draws itself: window backgrounds, text, controls and the accent, whose lighter and darker shades it works out from
+/// it. Both work in light and dark. The Claude style's shapes are styles under the "claude" class, which ShellView takes.
 /// </summary>
 public sealed class AppColors(Application app)
 {
     /// <summary>Claude's orange.</summary>
     public static readonly Color ClaudeAccent = Color.Parse("#D97757");
+
+    /// <summary>Rider's blue.</summary>
+    public static readonly Color RiderAccent = Color.Parse("#3574F0");
+
+    /// <summary>The Standard style's interface font, Rider's: Inter, which Claudette ships.</summary>
+    public static readonly FontFamily InterFont = new("fonts:Inter#Inter, $Default");
 
     /// <summary>
     /// Serifs close to the Claude apps' reply typeface, most alike first, with one on each OS: Charter on macOS (and
@@ -28,16 +34,20 @@ public sealed class AppColors(Application app)
     private readonly Dictionary<(ThemeVariant Variant, object Key), object?> _standard = [];
     private ClaudeColors? _claude;
 
-    public AppStyle Current { get; private set; } = AppStyle.Standard;
+    /// <summary>The style applied; null until the first is.</summary>
+    public AppStyle? Current { get; private set; }
+
+    /// <summary>The interface's font: Inter in the Standard style, as Rider's; the system's in the Claude style.</summary>
+    public static FontFamily UiFont(AppStyle style) => style == AppStyle.Standard ? InterFont : FontFamily.Default;
 
     /// <summary>
     /// The font of Claude's replies: the conversation font when one is set, otherwise a serif in the Claude style, as
-    /// the Claude apps set replies, and the app's own font in Standard.
+    /// the Claude apps set replies, and the interface's in Standard.
     /// </summary>
     public static FontFamily ReplyFont(AppStyle style, string? conversationFont) =>
         conversationFont is { } font ? new FontFamily($"{font}, {FontFamily.DefaultFontFamilyName}")
         : style == AppStyle.Claude ? new FontFamily($"{SerifFonts}, {FontFamily.DefaultFontFamilyName}")
-        : FontFamily.Default;
+        : UiFont(style);
 
     public void Apply(AppStyle style)
     {
@@ -83,13 +93,59 @@ public sealed class AppColors(Application app)
             return;
         }
         var fresh = new FluentTheme { DensityStyle = fluent.DensityStyle };
-        if (claude)
-        {
-            fresh.Palettes[ThemeVariant.Light] = LightPalette();
-            fresh.Palettes[ThemeVariant.Dark] = DarkPalette();
-        }
+        fresh.Palettes[ThemeVariant.Light] = claude ? LightPalette() : RiderLightPalette();
+        fresh.Palettes[ThemeVariant.Dark] = claude ? DarkPalette() : RiderDarkPalette();
         app.Styles[app.Styles.IndexOf(fluent)] = fresh;
     }
+
+    /// <summary>Rider's Islands Light: a light grey frame, black text, Rider's greys and blue.</summary>
+    private static ColorPaletteResources RiderLightPalette() => new()
+    {
+        Accent = RiderAccent,
+        RegionColor = Color.Parse("#EBECF0"),
+        BaseHigh = Color.Parse("#000000"),
+        BaseMediumHigh = Color.Parse("#CC000000"),
+        BaseMedium = Color.Parse("#99000000"),
+        BaseMediumLow = Color.Parse("#66000000"),
+        BaseLow = Color.Parse("#33000000"),
+        ChromeAltLow = Color.Parse("#000000"),
+        ChromeDisabledHigh = Color.Parse("#EBECF0"),
+        ChromeDisabledLow = Color.Parse("#A8ADBD"),
+        ChromeGray = Color.Parse("#6C707E"),
+        ChromeHigh = Color.Parse("#C9CCD6"),
+        ChromeLow = Color.Parse("#F7F8FA"),
+        ChromeMedium = Color.Parse("#EBECF0"),
+        ChromeMediumLow = Color.Parse("#FFFFFF"),
+        ListLow = Color.Parse("#0F000000"),
+        ListMedium = Color.Parse("#1F000000"),
+    };
+
+    /// <summary>Rider's Islands Dark: a grey frame, darker islands, soft white text, Rider's greys and blue.</summary>
+    private static ColorPaletteResources RiderDarkPalette() => new()
+    {
+        Accent = RiderAccent,
+        RegionColor = Color.Parse("#26282C"),
+        AltHigh = Color.Parse("#191A1C"),
+        AltMediumHigh = Color.Parse("#CC191A1C"),
+        AltMedium = Color.Parse("#99191A1C"),
+        AltMediumLow = Color.Parse("#66191A1C"),
+        AltLow = Color.Parse("#33191A1C"),
+        BaseHigh = Color.Parse("#DFE1E5"),
+        BaseMediumHigh = Color.Parse("#CCDFE1E5"),
+        BaseMedium = Color.Parse("#99DFE1E5"),
+        BaseMediumLow = Color.Parse("#66DFE1E5"),
+        BaseLow = Color.Parse("#33DFE1E5"),
+        ChromeAltLow = Color.Parse("#DFE1E5"),
+        ChromeDisabledHigh = Color.Parse("#393B40"),
+        ChromeDisabledLow = Color.Parse("#6F737A"),
+        ChromeGray = Color.Parse("#868A91"),
+        ChromeHigh = Color.Parse("#5A5D63"),
+        ChromeLow = Color.Parse("#1E1F22"),
+        ChromeMedium = Color.Parse("#2B2D30"),
+        ChromeMediumLow = Color.Parse("#2B2D30"),
+        ListLow = Color.Parse("#14FFFFFF"),
+        ListMedium = Color.Parse("#29FFFFFF"),
+    };
 
     /// <summary>Ivory page, warm greys, near-black text.</summary>
     private static ColorPaletteResources LightPalette() => new()

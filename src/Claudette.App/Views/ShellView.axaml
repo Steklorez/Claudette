@@ -319,8 +319,7 @@
 
     <!-- The sidebar: tabs grouped by folder, with New tab above and History, updates and Settings below
          (DESIGN.md §3, §4). Collapses to a rail of status icons. -->
-    <Border x:Name="Sidebar" Grid.Column="0" Width="{Binding Layout.SidebarDisplayWidth}" Background="{DynamicResource SidebarBrush}"
-            BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+    <Border x:Name="Sidebar" Grid.Column="0" Classes="island" Width="{Binding Layout.SidebarDisplayWidth}" Margin="6,0,0,6">
       <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- New tab, and collapsing -->
@@ -1230,7 +1229,7 @@
     <!-- The panes, with the tool windows beside them (DESIGN.md §3, "Tool windows"): the strip of icons at the right, the
          right side's windows by it, the whole height, the top group's over the split group's, and the bottom group's
          under the panes. -->
-    <Grid x:Name="DockArea" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto">
+    <Grid x:Name="DockArea" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto" Margin="6,0,0,6">
       <Panel x:Name="PanesArea">
         <!-- The tabs on screen, side by side when there are several, each with the share of the width its pane was dragged to
              (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
@@ -1239,8 +1238,9 @@
             <Style Selector="ItemsControl.panes > ContentPresenter" x:DataType="vm:IShellTab">
               <Setter Property="IsVisible" Value="{Binding IsShown}" />
               <Setter Property="controls:PanesPanel.Index" Value="{Binding PaneIndex}" />
-              <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
-              <Setter Property="BorderThickness" Value="{Binding PaneIndex, Converter={x:Static controls:PanesPanel.DividerThickness}}" />
+              <!-- A gap before each pane but the first; each is an island, its view clipped to its corners (DESIGN.md §3,
+                   "Visual style") -->
+              <Setter Property="Margin" Value="{Binding PaneIndex, Converter={x:Static controls:PanesPanel.Gap}}" />
             </Style>
           </ItemsControl.Styles>
           <ItemsControl.ItemsPanel>
@@ -1251,18 +1251,26 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.DataTemplates>
             <DataTemplate DataType="vm:TabViewModel">
-              <views:TabView />
+              <Border Classes="island">
+                <views:TabView />
+              </Border>
             </DataTemplate>
             <DataTemplate DataType="vm:ProjectFilesViewModel">
-              <views:ProjectFilesView />
+              <Border Classes="island">
+                <views:ProjectFilesView />
+              </Border>
             </DataTemplate>
             <!-- A project run's log (DESIGN.md §18, "Project tools", "A run's log") -->
             <DataTemplate DataType="vm:ProjectRunViewModel">
-              <views:ProjectRunView />
+              <Border Classes="island">
+                <views:ProjectRunView />
+              </Border>
             </DataTemplate>
             <!-- An editor's log (DESIGN.md §18, "Editor logs") -->
             <DataTemplate DataType="vm:EditorLogViewModel">
-              <views:EditorLogView />
+              <Border Classes="island">
+                <views:EditorLogView />
+              </Border>
             </DataTemplate>
           </ItemsControl.DataTemplates>
         </ItemsControl>
@@ -1290,17 +1298,18 @@
 
       <!-- The bottom group's window, under the panes, and its grip -->
       <views:ToolPanelView x:Name="BottomPanel" Grid.Row="1" AutomationProperties.Name="Tool window at the bottom" DataContext="{Binding ToolWindows.Bottom}"
-                           IsVisible="{Binding IsShowing}" Height="{Binding Dock.BottomHeight}" />
-      <Border x:Name="BottomGrip" Grid.Row="1" Classes="toolgrip" Height="6" Margin="0,-3,0,0" VerticalAlignment="Top" Cursor="SizeNorthSouth" ZIndex="1"
+                           IsVisible="{Binding IsShowing}" Height="{Binding Dock.BottomHeight}" Margin="0,6,0,0" />
+      <!-- The grips are the gaps between the islands -->
+      <Border x:Name="BottomGrip" Grid.Row="1" Classes="toolgrip" Height="6" VerticalAlignment="Top" Cursor="SizeNorthSouth" ZIndex="1"
               IsVisible="{Binding ToolWindows.Bottom.IsShowing}" />
 
       <!-- The right side, the whole height: the top group's window over the split group's, a line between them to drag -->
-      <Grid x:Name="RightSide" Grid.Column="1" Grid.RowSpan="2" RowDefinitions="*,Auto,*" Width="{Binding ToolWindows.RightWidth}" IsVisible="{Binding ToolWindows.IsRightShowing}">
+      <Grid x:Name="RightSide" Grid.Column="1" Grid.RowSpan="2" RowDefinitions="*,Auto,*" Width="{Binding ToolWindows.RightWidth}" Margin="6,0,0,0" IsVisible="{Binding ToolWindows.IsRightShowing}">
         <views:ToolPanelView x:Name="TopPanel" AutomationProperties.Name="Tool window at the right" DataContext="{Binding ToolWindows.Top}" IsVisible="{Binding IsShowing}" />
         <Border x:Name="SplitGrip" Grid.Row="1" Classes="toolgrip" Height="6" Cursor="SizeNorthSouth" />
         <views:ToolPanelView x:Name="SplitPanel" Grid.Row="2" AutomationProperties.Name="Tool window at the right, below" DataContext="{Binding ToolWindows.Split}" IsVisible="{Binding IsShowing}" />
       </Grid>
-      <Border x:Name="RightGrip" Grid.Column="1" Grid.RowSpan="2" Classes="toolgrip" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Cursor="SizeWestEast" ZIndex="1"
+      <Border x:Name="RightGrip" Grid.Column="1" Grid.RowSpan="2" Classes="toolgrip" Width="6" HorizontalAlignment="Left" Cursor="SizeWestEast" ZIndex="1"
               IsVisible="{Binding ToolWindows.IsRightShowing}" />
 
       <!-- The strip of icons, at the window's right -->
