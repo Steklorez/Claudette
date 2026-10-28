@@ -17,21 +17,21 @@ Settings → Appearance → **Theme** is **System**, **Light** or **Dark**. **Sy
 
 ## Style
 
-Settings → Appearance → **Style** is **Standard** (the default) or **Claude**. The layout, the tool rows, the diffs and every control are the same in both. The look changes.
+Settings → Appearance → **Style** is **Standard** (the default) or **Claude**. The layout, the tool rows, the diffs and every control are the same in both. So are the islands: the sidebar, each pane and each tool window are rounded panels with a gap between them, on the window's frame, which the header and the strip of tool window icons sit on. The look changes.
 
 {% include shot.html name="standard" alt="Claudette in the Standard style: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header and Claudette standing on the message box" %}
 
-**Standard** takes Claude Code's extension for Visual Studio Code as its reference: a dense, calm layout in neutral greys, with your OS's accent color for selection, the usage meters and checked boxes. Diffs are inline, in red and green, and code takes Visual Studio Code's Light+ and Dark+ colors. The composer is a rounded box, and Send and Stop are round buttons: an arrow in the accent color, and a square.
+**Standard** takes JetBrains Rider as its reference, in its Islands colors: a grey frame with darker panels in dark, white panels on light grey in light, and Rider's blue for selection, the usage meters, checked boxes and the icon of a tool window showing. Its type is Rider's too, Inter for the interface and JetBrains Mono for code, which come with Claudette, so it looks the same on every system. The conversation keeps the dense, calm layout of Claude Code's extension for Visual Studio Code: diffs are inline, in red and green, and code takes Visual Studio Code's Light+ and Dark+ colors. The composer is a rounded box, and Send and Stop are round buttons: an arrow in the accent color, and a square.
 
 {% include shot.html name="claude" alt="The same window in the Claude style: an ivory page and warm greys, Claude's orange for the accent, rounder cards and the replies set in a serif" %}
 
 **Claude** takes the Claude apps (the iOS app and claude.ai) as its reference:
 
-- **Colors** from the Claude apps. In light, an ivory page, a warmer sidebar, white cards and composer, and near-black text. In dark, a charcoal page, a darker sidebar and lighter cards. The accent is Claude's orange, including the working line's glyph and verb and the Send button.
+- **Colors** from the Claude apps. In light, ivory panels on a warmer frame, white cards and composer, and near-black text. In dark, charcoal panels on a darker frame, and lighter cards. The accent is Claude's orange, including the working line's glyph and verb and the Send button.
 - **Cautions are warm tints of the orange**, not yellow: a waiting prompt, a usage alert, *Needs your input*. Errors, diffs, the charts' model lines and a folder group's own color keep their usual colors.
 - **Claude's replies are set in a serif**, as in the Claude apps. Their typeface isn't available, so Claudette uses the closest installed one: Charter on macOS, Georgia or Cambria on Windows, and Charter, Noto Serif or DejaVu Serif on Linux. A conversation font you pick in Settings wins.
 - **A bigger composer**, a big rounded box lifted a little off the page, and rounder corners on the cards, code blocks and the sidebar's rows.
-- **No desktop showing through** the sidebar and header, as the Mica effect lets it on Windows, so they stay warm.
+- **Your system's interface font**, rather than Standard's Inter.
 
 All four, side by side:
 

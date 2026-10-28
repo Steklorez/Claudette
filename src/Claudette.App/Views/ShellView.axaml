@@ -1313,7 +1313,7 @@
               IsVisible="{Binding ToolWindows.IsRightShowing}" />
 
       <!-- The strip of icons, at the window's right -->
-      <views:ToolStripView x:Name="ToolStrip" Grid.Column="2" Grid.RowSpan="2" DataContext="{Binding ToolWindows}" IsVisible="{Binding HasStrip}" />
+      <views:ToolStripView x:Name="ToolStrip" Grid.Column="2" Grid.RowSpan="2" AutomationProperties.Name="Tool windows" DataContext="{Binding ToolWindows}" IsVisible="{Binding HasStrip}" />
     </Grid>
 
     <!-- New tab picker (DESIGN.md §4, "Opening a tab") -->

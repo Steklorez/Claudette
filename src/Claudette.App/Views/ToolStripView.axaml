@@ -14,7 +14,8 @@
   <UserControl.DataTemplates>
     <DataTemplate DataType="tw:ToolWindowViewModel">
       <Button Classes="stripicon" Classes.showing="{Binding IsShowing}" Command="{Binding ToggleCommand}" ContextRequested="OnIconContextRequested"
-              ToolTip.Tip="{Binding IconTip}" ToolTip.Placement="Left" AutomationProperties.Name="{Binding Title}">
+              ToolTip.Tip="{Binding IconTip}" ToolTip.Placement="Left" AutomationProperties.Name="{Binding Title}"
+              AutomationProperties.AutomationId="{Binding Id, StringFormat='tool-{0}'}">
         <Panel Width="16" Height="16">
           <Path Classes="stripglyph" Data="{Binding Kind.Icon, Converter={x:Static views:ToolStripView.Icon}}" />
           <!-- A dot: its work is running, or something needs looking at -->
