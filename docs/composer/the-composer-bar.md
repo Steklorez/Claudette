@@ -7,11 +7,11 @@ summary: "The bar under the message box holds your choices on its left and the c
 
 # The composer bar
 
-The bar under the message box holds your choices on its left and the counts for the tab on its right, with **Send** last. The status line under the whole composer says where the tab is working and what it's doing.
+The bar under the message box holds your choices on its left and the counts for the tab on its right, with the key that sends and **Send** last. The status line under the whole composer says where the tab is working and what it's doing.
 
 {% include shot.html name="guide/composer/composer" alt="The composer's bar: the paper clip, Suffixes, the model, effort and permission mode on the left, and the counts and Send on the right, with the status line under the box." %}
 
-When the bar doesn't fit on one line, as in a narrow window, the counts and **Send** move to a second line under your choices, still at the right. **Send** stays in view.
+When the bar doesn't fit on one line, as in a narrow window, the counts and **Send** move to a second line under your choices, still at the right. **Send** stays in view, with the send key chip before it.
 
 ## On the left
 
@@ -39,7 +39,18 @@ Most of these show only when they apply to the tab.
 | *Context 42%* | How full the context window is. It turns the caution color when Claude Code is about to compact the conversation. Click it for what fills the window and **Compact now**. | [Context and compacting](../usage/context-and-compacting.md) |
 | The tab's tokens, such as *12.3k tok* | Click for a breakdown by model. | [A tab's tokens](../usage/a-tabs-tokens.md) |
 | **ⓘ** | The tab's info card: its folder, session, model and more. | [The tab info card](../tabs/the-tab-info-card.md) |
+| *⏎ sends* or *Ctrl+⏎ sends* | Which key sends the message. Click it to switch. | [The send key](#the-send-key), below |
 | **Send** | Sends the message. While Claude works it's **Stop**. | [Sending and stopping](sending-and-stopping.md) |
+
+## The send key
+
+{% include unreleased.html %}
+
+Just before **Send**, a chip says which key sends your message: *⏎ sends* when it's `Enter`, or *Ctrl+⏎ sends* when it's `Ctrl+Enter` (*⌘⏎ sends* on macOS). It's always there.
+
+Click it to switch between the two. With the keyboard, `Tab` to it and press `Space`. Its tooltip says what each key does and what clicking does, such as *Enter sends, Shift+Enter starts a new line. Click to send with Ctrl+Enter instead.*
+
+It's the same choice as Settings → Keyboard → **Send with**, so it applies to every tab: each tab's chip and placeholder change with it, and so does the Settings window if it's open. **Send**'s tooltip names the key too, such as *Send (Ctrl+Enter)*. [Sending and stopping](sending-and-stopping.md#change-the-key-that-sends) says more about the two keys.
 
 ## The prompt cache
 
@@ -57,6 +68,7 @@ Under the box, left to right:
 
 ## Settings
 
+- Settings → Keyboard → **Send with**, **Enter, with Shift+Enter for a new line** by default, is what the send key chip shows and switches. See [Keyboard](../settings/keyboard.md#send-with).
 - Settings → Conversation → **Show when the prompt cache expires**, on by default, for the Cache chip.
 - Settings → Conversation → Tab rows → **Show context** is for the ring on the sidebar's rows, not the bar. See [The sidebar](../tabs/the-sidebar.md).
 

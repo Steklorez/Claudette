@@ -16,7 +16,7 @@ The top of the page picks the key that sends the message in the composer, and th
 - **Enter, with Shift+Enter for a new line** is the default.
 - **Ctrl+Enter, with Enter for a new line** (**⌘↩, with Enter for a new line** on macOS) suits messages with many lines.
 
-The composer's placeholder says which is in use. `Ctrl/Cmd+Enter` also answers a waiting prompt, as **Allow the waiting prompt** does: with it as the send key, it sends what you've typed, and with nothing typed it answers the prompt. [Sending and stopping](../composer/sending-and-stopping.md) explains the composer's side, and [Permission cards](../permissions/permission-cards.md) the prompts.
+The composer's placeholder says which is in use, and so does the chip just before **Send**, *⏎ sends* or *Ctrl+⏎ sends*; clicking the chip switches it from any tab, and this page follows ([The send key](../composer/the-composer-bar.md#the-send-key)). `Ctrl/Cmd+Enter` also answers a waiting prompt, as **Allow the waiting prompt** does: with it as the send key, it sends what you've typed, and with nothing typed it answers the prompt. [Sending and stopping](../composer/sending-and-stopping.md) explains the composer's side, and [Permission cards](../permissions/permission-cards.md) the prompts.
 
 ## Changing a shortcut
 

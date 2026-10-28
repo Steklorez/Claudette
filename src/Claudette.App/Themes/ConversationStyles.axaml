@@ -676,6 +676,12 @@
     <Setter Property="HorizontalContentAlignment" Value="Center" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
+  <!-- The send key chip before Send (DESIGN.md §5, "Composer"): a flat button with muted text, as the bar's counts are.
+       Its ⏎ comes from Inter, which Claudette ships and which has it in every weight, so it reads the same on every OS:
+       Segoe UI hasn't got it, and fallback would draw it from whichever font has, such as a code font. -->
+  <Style Selector="Run.returnkey">
+    <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default" />
+  </Style>
   <!-- Tool card icons (DESIGN.md §5): 12×12 strokes from App.axaml, drawn as they are. -->
   <Style Selector="Path.toolicon">
     <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />

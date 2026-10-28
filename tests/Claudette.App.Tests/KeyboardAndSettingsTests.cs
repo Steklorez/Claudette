@@ -55,6 +55,78 @@ public class KeyboardAndSettingsTests
 
     // ---- Settings → Keyboard --------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// The composer's send key chip (DESIGN.md §5, "Composer") switches Settings → Keyboard → Send with (§14), saved as the
+    /// page saves it: every tab's chip, Send and placeholder follow, and so does an open Settings window.
+    /// </summary>
+    [Fact]
+    public async Task The_send_key_chip_switches_Send_with_for_every_tab_and_the_open_Settings_window()
+    {
+        await using var h = new TabTestHarness();
+        h.Factory.ProcessPerSession = true;
+        var first = await h.OpenTabAsync();
+        var second = await h.OpenTabAsync();
+        using var settings = new SettingsViewModel(h.Services, null);
+        var sendWith = settings.Keyboard.FindSetting("keyboard.sendKey")!;
+        var saves = 0;
+        h.Services.SettingsChanged += (_, _) => saves++;
+        var placeholderChanged = new List<TabViewModel>();
+        foreach (var tab in new[] { first, second })
+        {
+            tab.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TabViewModel.ComposerPlaceholder))
+                {
+                    placeholderChanged.Add(tab);
+                }
+            };
+        }
+        var tipsChanged = 0;
+        h.Services.Tips.PropertyChanged += (_, _) => tipsChanged++;
+        var primaryEnter = new KeyChord(ChordModifiers.Primary, "Enter").Display(Shortcuts.IsMac);
+
+        Assert.All(new[] { first, second }, tab =>
+        {
+            Assert.Equal("", tab.Tips.SendKeyModifiers);
+            Assert.Equal("Enter sends", tab.Tips.SendKeyName);
+            Assert.Equal($"Enter sends, Shift+Enter starts a new line. Click to send with {primaryEnter} instead.", tab.Tips.SendKeyTip);
+            Assert.Equal("Send (Enter)", tab.Tips.Send);
+        });
+
+        InlineDispatcher.Run(() => first.SwitchSendKeyCommand.Execute(null));
+
+        Assert.Equal(SendKey.PrimaryEnter, h.Services.Settings.Keyboard.SendKey);
+        Assert.Equal(1, saves);
+        Assert.True(tipsChanged > 0);
+        Assert.All(new[] { first, second }, tab =>
+        {
+            Assert.Contains(tab, placeholderChanged);
+            Assert.Equal(Shortcuts.IsMac ? "⌘" : "Ctrl+", tab.Tips.SendKeyModifiers);
+            Assert.Equal($"{primaryEnter} sends", tab.Tips.SendKeyName);
+            Assert.Equal($"{primaryEnter} sends, Enter starts a new line. Click to send with Enter instead.", tab.Tips.SendKeyTip);
+            Assert.Equal($"Send ({primaryEnter})", tab.Tips.Send);
+            Assert.Contains($"{primaryEnter} to send, Enter for a new line", tab.ComposerPlaceholder, StringComparison.Ordinal);
+        });
+        Assert.True(settings.Keyboard.SendWithPrimaryEnter);
+        Assert.False(settings.Keyboard.SendWithEnter);
+        Assert.True(sendWith.IsChanged);
+
+        // From the other tab, back again.
+        placeholderChanged.Clear();
+        InlineDispatcher.Run(() => second.SwitchSendKeyCommand.Execute(null));
+
+        Assert.Equal(SendKey.Enter, h.Services.Settings.Keyboard.SendKey);
+        Assert.Equal(2, saves);
+        Assert.All(new[] { first, second }, tab =>
+        {
+            Assert.Contains(tab, placeholderChanged);
+            Assert.Equal("Enter sends", tab.Tips.SendKeyName);
+            Assert.Contains("Enter to send, Shift+Enter for a new line", tab.ComposerPlaceholder, StringComparison.Ordinal);
+        });
+        Assert.True(settings.Keyboard.SendWithEnter);
+        Assert.False(sendWith.IsChanged);
+    }
+
     [Fact]
     public async Task Recording_a_shortcut_rebinds_the_command_and_its_tooltip()
     {

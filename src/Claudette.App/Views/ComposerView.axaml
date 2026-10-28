@@ -594,7 +594,15 @@
                 </Button.Flyout>
               </Button>
   
-              <Button x:Name="SendButton" Classes="accent send" Margin="6,0,0,0" Command="{Binding SendCommand}" IsVisible="{Binding !IsWorking}" AutomationProperties.Name="Send">
+              <!-- The send key (DESIGN.md §5, "Composer"; Settings → Keyboard → Send with, §14): which key sends, and a click
+                   switches it for every tab. ⏎ comes from Inter on every OS (ShortcutTips.ReturnGlyph says why). -->
+              <Button x:Name="SendKeyChip" Classes="flat sendkey" ToolTip.Tip="{Binding Tips.SendKeyTip}" AutomationProperties.Name="{Binding Tips.SendKeyName}"
+                      Command="{Binding SwitchSendKeyCommand}">
+                <TextBlock Classes="muted small"><Run Text="{Binding Tips.SendKeyModifiers}" /><Run Classes="returnkey" Text="{x:Static services:ShortcutTips.ReturnGlyph}" /><Run Text=" sends" /></TextBlock>
+              </Button>
+
+              <Button x:Name="SendButton" Classes="accent send" Margin="6,0,0,0" Command="{Binding SendCommand}" IsVisible="{Binding !IsWorking}"
+                      ToolTip.Tip="{Binding Tips.Send}" AutomationProperties.Name="Send">
                 <Path Classes="sendarrow" Data="{StaticResource IconSendArrow}" Stroke="{Binding $parent[Button].Foreground}" StrokeThickness="1.8"
                       StrokeLineCap="Round" StrokeJoin="Round" Width="32" Height="32" Stretch="None" />
               </Button>

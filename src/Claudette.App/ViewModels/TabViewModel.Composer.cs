@@ -3,6 +3,7 @@ using Claudette.Core.Composer;
 using Claudette.Core.Development;
 using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
+using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -176,6 +177,19 @@ public sealed partial class TabViewModel
 
     /// <summary>The composer's placeholder: the suggestion, with the key that takes it, or which keys send.</summary>
     public string ComposerPlaceholder => PromptSuggestion is { } suggestion ? $"{suggestion}  (Tab to use)" : Tips.ComposerPlaceholder;
+
+    /// <summary>
+    /// The send key chip in the composer's bar (DESIGN.md §5, "Composer"): Enter sends, or Ctrl/Cmd+Enter does. It's
+    /// Settings → Keyboard → Send with (DESIGN.md §14), saved as that page saves it, so every tab's chip and placeholder,
+    /// an open Settings window and settings sync follow.
+    /// </summary>
+    [RelayCommand]
+    private void SwitchSendKey()
+    {
+        var keyboard = _services.Settings.Keyboard;
+        keyboard.SendKey = keyboard.SendKey == SendKey.PrimaryEnter ? SendKey.Enter : SendKey.PrimaryEnter;
+        _services.SaveSettings();
+    }
 
     /// <summary>
     /// Tab or Right in the empty composer: the suggestion goes in the box, to send as it is or change first. False when

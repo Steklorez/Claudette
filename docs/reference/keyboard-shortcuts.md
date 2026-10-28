@@ -96,7 +96,7 @@ These aren't in the list of rebindable shortcuts.
 
 | Where | Key | What it does |
 |---|---|---|
-| The message box | `Enter` | Sends, or starts a new line, as **Send with** says. `Shift+Enter` does the other. |
+| The message box | `Enter` | Sends, or starts a new line, as **Send with** says, which the chip before **Send** shows and switches ([The send key](../composer/the-composer-bar.md#the-send-key)). `Shift+Enter` does the other. |
 | The message box | `Ctrl/Cmd+Shift+V` | Pastes the clipboard's text as it is, however long ([Attachments and large pastes](../composer/attachments-and-large-pastes.md)). |
 | The message box | `Up` on the first line, `Down` on the last | Goes back through the tab's earlier prompts, and forward again. |
 | The empty message box | `Tab` or `→` | Takes the suggested next prompt ([Prompt suggestions](../composer/prompt-suggestions.md)). |

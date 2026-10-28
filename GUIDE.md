@@ -135,8 +135,8 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 
 | Page | Covers | From |
 |---|---|---|
-| Sending and stopping | **Send with**, **Stop** and `Esc`, messages sent while Claude works: into the turn, or queued with **Send now** and **Cancel**. | [Composer](DESIGN.md#composer), [Queued messages](DESIGN.md#queued-messages) |
-| The composer bar | The attach button, **Suffixes ▾**, **Stashed ▾**, model, effort and mode on the left; processes, **Agents**, running tasks, **Files**, context, the prompt cache, tokens and **ⓘ** on the right; the status line under the box, with the folder. Each links to its page. | [Composer](DESIGN.md#composer) |
+| Sending and stopping | **Send with** and the chip that shows it, **Stop** and `Esc`, messages sent while Claude works: into the turn, or queued with **Send now** and **Cancel**. | [Composer](DESIGN.md#composer), [Queued messages](DESIGN.md#queued-messages) |
+| The composer bar | The attach button, **Suffixes ▾**, **Stashed ▾**, model, effort and mode on the left; processes, **Agents**, running tasks, **Files**, context, the prompt cache, tokens and **ⓘ** on the right; the send key chip before **Send**, which switches **Send with**; the status line under the box, with the folder. Each links to its page. | [Composer](DESIGN.md#composer) |
 | Slash commands and mentions | `/` commands; `@` files and folders, the extra folders' among them; typing a path, anywhere on the computer or into a folder of the project, with ignored files dimmed; `@` sessions, tabs and agents, which Threads explains. | [Autocomplete](DESIGN.md#autocomplete) |
 | Attachments and large pastes | Dropping, pasting and the paper clip; images and their limits; files and folders as `@` mentions; large pastes as a chip, and `Ctrl/Cmd+Shift+V`; long messages shown short. | [Attachments](DESIGN.md#attachments) |
 | Earlier prompts, drafts and the stash | `Up` and `Down`, drafts kept when Claudette closes, **Stash the message** (`Ctrl/Cmd+S`) and **Stashed ▾**. | [Composer](DESIGN.md#composer), [Drafts and the stash](DESIGN.md#drafts-and-the-stash) |
