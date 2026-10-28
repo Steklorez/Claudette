@@ -100,6 +100,20 @@
     <Setter Property="BorderThickness" Value="0,1" />
     <Setter Property="Padding" Value="12,8" />
   </Style>
+  <!-- What p4 refused, under the explorer's header (DESIGN.md §18, "Perforce in the Files tab"), in the error color. -->
+  <Style Selector="Border.explorerproblem">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,6,6,6" />
+  </Style>
+  <!-- A file's Perforce state beside its name, in Perforce's own words (edit, add, delete, move): muted, so Claude's change
+       letters, in the change colors at the row's end, stay what catches the eye. -->
+  <Style Selector="TextBlock.p4mark">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="6,0,4,0" />
+  </Style>
 
   <!-- The file tabs' row over the editor: each tab its name, a dot while it has unsaved edits that's the × on hover. -->
   <Style Selector="Border.filetabs">

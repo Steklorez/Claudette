@@ -8,6 +8,27 @@ namespace Claudette.Core.Perforce;
 /// <param name="Message">Perforce's own words, such as "Password invalid.".</param>
 public sealed record PerforceLoginResult(bool Succeeded, bool NeedsUserLogin, string Message);
 
+/// <summary>Why a folder is, or isn't, in a workspace Claudette can use (DESIGN.md §18, "Finding the workspace").</summary>
+public enum PerforceDetectionOutcome
+{
+    Workspace,
+
+    /// <summary>Perforce answered, and the folder isn't in one of its workspaces.</summary>
+    NotWorkspace,
+
+    /// <summary><c>p4 set</c> found no server or workspace for the folder, so the server wasn't asked.</summary>
+    NotConfigured,
+
+    /// <summary>The server didn't answer, or wants a login first: it's asked again later.</summary>
+    Unreachable,
+
+    /// <summary><c>p4</c> isn't installed, or couldn't be run.</summary>
+    NoP4,
+}
+
+/// <summary>What finding a folder's workspace came to: the workspace, when <see cref="Outcome"/> says it's one.</summary>
+public sealed record PerforceDetection(PerforceDetectionOutcome Outcome, PerforceWorkspace? Workspace);
+
 /// <summary>
 /// Runs the <c>p4</c> commands of Perforce ticket handling (DESIGN.md §18) through <see cref="IProcessLauncher"/>,
 /// always in the tab's folder. Never throws for a missing <c>p4</c>, a timeout or an error: those come back as results.
@@ -94,6 +115,76 @@ public sealed class PerforceClient(IProcessLauncher launcher, TimeProvider timeP
         }
         options.AddRange(["-u", target.User ?? workspace.User]);
         return options;
+    }
+
+    /// <summary>
+    /// Finds the workspace a folder is in for Perforce in the Files tab and the automatic actions (DESIGN.md §18,
+    /// "Finding the workspace"), saying why when it isn't one. Unless Settings → Perforce sets a server for the folder,
+    /// <c>p4 set -q</c> comes first, which doesn't reach the server: with no P4PORT or P4CLIENT from any source, there's
+    /// nothing to ask, and nothing is. Then <c>p4 -ztag info</c>, as <see cref="DetectAsync"/> runs it.
+    /// </summary>
+    public async Task<PerforceDetection> FindWorkspaceAsync(PerforceTarget target, CancellationToken cancellationToken = default)
+    {
+        var settings = await RunCommandAsync(target.Folder, PerforceFileCommands.Settings(), DetectTimeout, cancellationToken).ConfigureAwait(false);
+        if (!settings.Ran)
+        {
+            return new PerforceDetection(settings.TimedOut ? PerforceDetectionOutcome.Unreachable : PerforceDetectionOutcome.NoP4, null);
+        }
+        var values = PerforceFileCommands.ParseSettings(settings.Output);
+        if (string.IsNullOrWhiteSpace(target.Port) && !PerforceFileCommands.IsConfigured(values))
+        {
+            return new PerforceDetection(PerforceDetectionOutcome.NotConfigured, null);
+        }
+        var info = await RunCommandAsync(target, ["-ztag", "info"], DetectTimeout, cancellationToken).ConfigureAwait(false);
+        if (!info.Ran)
+        {
+            return new PerforceDetection(info.TimedOut ? PerforceDetectionOutcome.Unreachable : PerforceDetectionOutcome.NoP4, null);
+        }
+        if (info.IsConnectionFailure || info.ExitCode != 0 && info.NeedsLogin)
+        {
+            return new PerforceDetection(PerforceDetectionOutcome.Unreachable, null);
+        }
+        if (info.ExitCode != 0)
+        {
+            return new PerforceDetection(PerforceDetectionOutcome.NotWorkspace, null);
+        }
+        var port = target.Port is { Length: > 0 } overridden ? overridden : values.GetValueOrDefault("P4PORT");
+        return PerforceWorkspace.FromInfo(info.Output, target.Folder, port, values.GetValueOrDefault("P4LOGINSSO")) is { } workspace
+            ? new PerforceDetection(PerforceDetectionOutcome.Workspace, workspace)
+            : new PerforceDetection(PerforceDetectionOutcome.NotWorkspace, null);
+    }
+
+    /// <summary>
+    /// Runs <c>p4</c> in the target's folder with its per-folder server and user, if any. Never throws for a missing
+    /// <c>p4</c>, a missing folder or a timeout: those come back as a result that didn't run.
+    /// </summary>
+    public Task<PerforceCommandResult> RunCommandAsync(PerforceTarget target, IReadOnlyList<string> arguments, TimeSpan? timeout = null, CancellationToken cancellationToken = default) =>
+        RunCommandAsync(target.Folder, [.. target.GlobalOptions(), .. arguments], timeout, cancellationToken);
+
+    private async Task<PerforceCommandResult> RunCommandAsync(string folder, IReadOnlyList<string> arguments, TimeSpan? timeout, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!Directory.Exists(folder))
+            {
+                return PerforceCommandResult.NotRun();
+            }
+            var spec = new ProcessStartSpec(executable, arguments) { WorkingDirectory = folder };
+            if (environment is not null)
+            {
+                spec = await environment.ApplyAsync(spec, cancellationToken).ConfigureAwait(false);
+            }
+            var result = await ProcessRunner.RunAsync(launcher, spec, timeout ?? Timeout, timeProvider, cancellationToken).ConfigureAwait(false);
+            return new PerforceCommandResult(true, result.ExitCode, result.StandardOutput, result.StandardError);
+        }
+        catch (TimeoutException)
+        {
+            return PerforceCommandResult.NotRun(timedOut: true);
+        }
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            return PerforceCommandResult.NotRun();
+        }
     }
 
     /// <summary><c>p4 set -q NAME</c> in <paramref name="folder"/>: the value Perforce resolves there, or null.</summary>

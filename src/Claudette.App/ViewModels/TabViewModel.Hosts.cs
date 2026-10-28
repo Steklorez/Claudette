@@ -48,6 +48,8 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     void IChangedFilesHost.ClaudeChangedFile(string path) => _shell.OnClaudeChangedFile(this, path);
 
+    void IChangedFilesHost.ClaudeCreatedFile(string path) => Perforce.OnClaudeCreatedFile(path);
+
     void IChangedFilesHost.AllReviewedChanged()
     {
         MarkShownChanged();

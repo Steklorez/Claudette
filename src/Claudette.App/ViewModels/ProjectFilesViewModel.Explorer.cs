@@ -84,6 +84,35 @@ public partial class ExplorerRow : ObservableObject
     [ObservableProperty]
     public partial bool IsDeleted { get; set; }
 
+    /// <summary>It's in the project's Perforce workspace: its menu has a Perforce section (DESIGN.md §18, "Perforce in the Files tab").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCheckOut), nameof(CanMarkForAdd), nameof(CanMarkForDelete), nameof(CanRevert), nameof(CanDiffAgainstDepot))]
+    public partial bool InPerforce { get; set; }
+
+    /// <summary>What Perforce says of it, from the cache; null when that isn't known, or isn't shown.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PerforceMark), nameof(HasPerforceMark), nameof(PerforceTip),
+        nameof(CanCheckOut), nameof(CanMarkForAdd), nameof(CanMarkForDelete), nameof(CanRevert), nameof(CanDiffAgainstDepot))]
+    public partial Core.Perforce.PerforceFileState? PerforceState { get; set; }
+
+    /// <summary>Its Perforce state beside its name, in Perforce's own words: <c>edit</c>, <c>add</c>, <c>delete</c>, <c>move</c>.</summary>
+    public string? PerforceMark => PerforceMarks.Mark(PerforceState);
+
+    public bool HasPerforceMark => PerforceMark is not null;
+
+    /// <summary>The mark's tip, in full: <i>Checked out in CL 12345.</i></summary>
+    public string? PerforceTip => PerforceState?.Describe();
+
+    public bool CanCheckOut => InPerforce && PerforceMenu.CanCheckOut(PerforceState, IsFolder);
+
+    public bool CanMarkForAdd => InPerforce && PerforceMenu.CanMarkForAdd(PerforceState, IsFolder);
+
+    public bool CanMarkForDelete => InPerforce && PerforceMenu.CanMarkForDelete(PerforceState, IsFolder);
+
+    public bool CanRevert => InPerforce && PerforceMenu.CanRevert(PerforceState, IsFolder);
+
+    public bool CanDiffAgainstDepot => InPerforce && PerforceMenu.CanDiff(PerforceState, IsFolder);
+
     internal void Refresh(TreeEntry entry)
     {
         Entry = entry;
@@ -147,6 +176,7 @@ public sealed partial class ProjectFilesViewModel
             Rows.Add(NewRow(entry, 0));
         }
         Watch(Folder);
+        RefreshPerforce([Folder]);
         // Shallowest first, so a folder's parent is there to expand it in.
         foreach (var relative in State.ExpandedFolders.OrderBy(f => f.Count(c => c == '/')).ToArray())
         {
@@ -166,6 +196,7 @@ public sealed partial class ProjectFilesViewModel
     {
         var row = new ExplorerRow(entry, depth);
         ApplyChange(row);
+        ApplyPerforce(row);
         return row;
     }
 
@@ -284,6 +315,7 @@ public sealed partial class ProjectFilesViewModel
             Rows.Insert(++index, NewRow(entry, row.Depth + 1));
         }
         Watch(row.FullPath);
+        RefreshPerforce([row.FullPath]);
         OnFileStateChanged();
     }
 
@@ -319,6 +351,7 @@ public sealed partial class ProjectFilesViewModel
     [RelayCommand]
     private void RefreshExplorer()
     {
+        RefreshPerforceWorkspace();
         _foldersToRead.Add(Folder);
         foreach (var row in Rows.Where(r => r.IsExpanded))
         {
@@ -490,6 +523,8 @@ public sealed partial class ProjectFilesViewModel
             await ReadFolderAgainAsync(folder);
         }
         UpdateRowChanges();
+        // What changed on disk may have changed in Perforce too: asked again, never waited for.
+        RefreshPerforce(folders);
     }
 
     /// <summary>

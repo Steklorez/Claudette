@@ -28,6 +28,25 @@
       </c:SettingRow>
     </c:SettingsSection>
 
+    <!-- Opening files in Perforce as they change, in the Files tab and for Claude (DESIGN.md §18) -->
+    <c:SettingsSection Key="files">
+      <c:SettingRow Key="perforce.checkOutBeforeChanges">
+        <ToggleSwitch IsChecked="{Binding CheckOutBeforeChanges}" />
+      </c:SettingRow>
+      <c:SettingRow Key="perforce.addNewFiles">
+        <ToggleSwitch IsChecked="{Binding AddNewFiles}" />
+      </c:SettingRow>
+      <c:SettingRow Key="perforce.deleteRemovedFiles">
+        <ToggleSwitch IsChecked="{Binding DeleteRemovedFiles}" />
+      </c:SettingRow>
+      <c:SettingRow Key="perforce.moveRenamedFiles">
+        <ToggleSwitch IsChecked="{Binding MoveRenamedFiles}" />
+      </c:SettingRow>
+      <c:SettingRow Key="perforce.showFileState">
+        <ToggleSwitch IsChecked="{Binding ShowFileState}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
     <!-- The stored password: the OS credential store, never settings.json -->
     <c:SettingsSection Key="password" Description="{Binding StoredPasswordNote}">
       <c:SettingRow Key="perforce.storedPassword" Title="" IsStacked="True">

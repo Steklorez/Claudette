@@ -156,8 +156,11 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         _readAt = _services.Time.GetUtcNow();
         EncodingLabel = content.EncodingLabel;
         ReadOnlyReason = content.ReadOnlyReason;
+        IsWriteProtected = content.WriteProtected;
         var document = _services.EditorDocuments(content.Text);
         Document = document;
+        // Read-only on disk: Perforce may say it can be checked out on the first edit.
+        ApplyWriteProtection();
         Language = EditorLanguages.For(path, document.LineCount > 0 ? document.GetLineText(1) : null);
         if (Mode is FileViewMode.Preview or FileViewMode.EditAndPreview && Language.Scope != MarkdownPreview.Scope)
         {
@@ -395,6 +398,8 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         {
             return false;
         }
+        // The check-out the first edit started, so the file is writable (DESIGN.md §18, "Opening files in Perforce").
+        await _owner.WaitForCheckOutAsync(Path);
         var text = document.Text;
         var expected = _readText;
         var path = Path;
@@ -469,6 +474,93 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         _backupWait.Cancel();
         var path = Path;
         _ = Task.Run(() => _services.EditorBackups.Delete(path));
+    }
+
+    // ---- Perforce (DESIGN.md §18, "Perforce in the Files tab") -----------------------------------------------------
+
+    /// <summary>
+    /// It's read-only only because the file is, on disk: what Perforce leaves a file it hasn't checked out as. Checking it
+    /// out makes it writable.
+    /// </summary>
+    public bool IsWriteProtected { get; private set; }
+
+    /// <summary>It's in the project's Perforce workspace: its tab's menu has a Perforce section.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCheckOut), nameof(CanMarkForAdd), nameof(CanMarkForDelete), nameof(CanRevert), nameof(CanDiffAgainstDepot))]
+    public partial bool InPerforce { get; private set; }
+
+    /// <summary>What Perforce says of it, from the cache; null when that isn't known.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCheckOut), nameof(CanMarkForAdd), nameof(CanMarkForDelete), nameof(CanRevert), nameof(CanDiffAgainstDepot))]
+    public partial Core.Perforce.PerforceFileState? PerforceState { get; private set; }
+
+    public bool CanCheckOut => InPerforce && PerforceMenu.CanCheckOut(PerforceState, isFolder: false);
+
+    public bool CanMarkForAdd => InPerforce && PerforceMenu.CanMarkForAdd(PerforceState, isFolder: false);
+
+    public bool CanMarkForDelete => InPerforce && PerforceMenu.CanMarkForDelete(PerforceState, isFolder: false);
+
+    public bool CanRevert => InPerforce && PerforceMenu.CanRevert(PerforceState, isFolder: false);
+
+    public bool CanDiffAgainstDepot => InPerforce && PerforceMenu.CanDiff(PerforceState, isFolder: false);
+
+    /// <summary>Settings → Perforce → <b>Check out files before they're changed</b>, as last told.</summary>
+    private bool _checksOutOnEdit;
+
+    /// <summary>What Perforce says of it, from the explorer's cache: whether it's in the workspace, and its state.</summary>
+    internal void UpdatePerforce(bool inPerforce, Core.Perforce.PerforceFileState? state, bool checkOutBeforeChanges)
+    {
+        InPerforce = inPerforce;
+        PerforceState = state;
+        _checksOutOnEdit = checkOutBeforeChanges;
+        ApplyWriteProtection();
+    }
+
+    /// <summary>
+    /// A file read-only on disk that Perforce hasn't checked out can be edited while checking out before changes is on:
+    /// the first edit checks it out, and a save waits for that. With it off, it stays read-only and says how to edit it.
+    /// One Perforce has open by now, and that's writable, is just a file to edit.
+    /// </summary>
+    private void ApplyWriteProtection()
+    {
+        if (!IsWriteProtected || Document is null)
+        {
+            return;
+        }
+        if (PerforceState is { IsOpen: true } && TextFile.IsWritable(Path))
+        {
+            IsWriteProtected = false;
+            ReadOnlyReason = null;
+            return;
+        }
+        var notCheckedOut = InPerforce && PerforceState is { Status: Core.Perforce.PerforceFileStatus.InDepot };
+        ReadOnlyReason = !notCheckedOut ? TextFile.WriteProtectedReason
+            : _checksOutOnEdit ? null
+            : $"{Name} isn't checked out in Perforce, so it's shown read-only. Check it out from its tab's menu to edit it.";
+    }
+
+    /// <summary>Checked out: a file that was read-only on disk and is writable now can be edited.</summary>
+    internal void OnCheckedOut()
+    {
+        if (IsWriteProtected && TextFile.IsWritable(Path))
+        {
+            IsWriteProtected = false;
+            ReadOnlyReason = null;
+        }
+    }
+
+    /// <summary>
+    /// Its unsaved edits go, as <b>Revert</b> asked: the text is what was last read, and the disk is read again after it
+    /// (<see cref="CheckDiskAsync"/>), where the depot's copy now is.
+    /// </summary>
+    internal void DiscardEdits()
+    {
+        if (Document is { } document && _readText is { } read)
+        {
+            document.ReplaceAll(read);
+            document.MarkSaved();
+        }
+        DiscardBackup();
     }
 
     // ---- Changes on disk (DESIGN.md §18, "Project files", "When a file changes on disk") -----------------------------

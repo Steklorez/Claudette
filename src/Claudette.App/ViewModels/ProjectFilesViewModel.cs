@@ -154,6 +154,8 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         }
         _started = true;
         _ = LoadExplorerAsync();
+        // Its Perforce workspace, looked for in the background (DESIGN.md §18, "Perforce in the Files tab").
+        StartPerforce();
         foreach (var file in OpenFiles.ToArray())
         {
             _ = file.LoadAsync();
@@ -283,6 +285,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
             file.OnWordWrapChanged();
         }
         FollowIgnoredFilesSetting();
+        OnPerforceSettingsChanged();
     }
 
     /// <summary>Settings → Files and diffs → Word wrap, unless the file showing has its own (<c>Alt+Z</c>).</summary>
@@ -334,6 +337,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         FlushBackups();
         _services.SettingsChanged -= OnSettingsChanged;
         _shell.Layout.PropertyChanged -= OnLayoutChanged;
+        StopPerforce();
         StopWatchingGroupTabs();
         StopWatching();
         _refreshWait.Dispose();

@@ -65,7 +65,9 @@ public class PerforceTabTests
         var tab = await h.OpenTabAsync();
 
         Assert.False(new AppSettings().Perforce.Enabled);
-        Assert.Empty(p4.Runs);
+        // The workspace is still looked for, in the background, for opening Claude's files in Perforce (DESIGN.md §18,
+        // "Opening files in Perforce"), but nothing logs in.
+        Assert.DoesNotContain(p4.Runs, r => r.Command == "login");
         Assert.Null(h.Factory.Launches.Single().AppendSystemPrompt);
         Assert.DoesNotContain(h.Factory.Launches.Single().Hooks, hook => hook.Matcher == "Bash");
         Assert.DoesNotContain(tab.InfoRows, r => r.Label == "Perforce");

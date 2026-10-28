@@ -2344,6 +2344,13 @@ items:
     fallback: "A message another of the user's sessions sent a tab echoes (with --replay-user-messages) as a user message with origin {kind: peer, name, body, from, msg_id, fromMode}, and is kept in the transcript as an isMeta entry with the same origin (checked against 2.1.284). The tab shows it as its own card, from body and name. Without the origin, the echo would be taken for a waiting prompt's, as an echo with an id Claudette didn't send is."
 
   # --- Subagents: discouraging or refusing them (DESIGN.md §5, "Subagents") ------------------------------
+  - id: "PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit before the file is written"
+    kind: behavior
+    status: documented
+    usedIn: src/Claudette.App/ViewModels/PerforceViewModel.cs, src/Claudette.App/Services/PerforceFilesService.cs
+    docs: https://code.claude.com/docs/en/hooks
+    test: PerforceFilesTabTests
+    fallback: "Every tab registers a second PreToolUse hook on the file tools, after Changed files' own, which checks out a Perforce depot file (tool_input.file_path, or a notebook's notebook_path) before the tool writes it, since Perforce leaves a file it hasn't checked out read-only (DESIGN.md §18, \"Opening files in Perforce\"). It always answers {\"continue\": true} and never changes the call, and answers by itself 15 seconds before its 60-second timeout. If Claude Code stopped calling it, Claude's Edit or Write of a read-only file would fail, and Claude would have to run p4 edit itself (which the session note tells it to use for source control, when ticket handling is on); the Files tab's Check out still works."
   - id: "PreToolUse hook on Agent"
     kind: behavior
     status: documented

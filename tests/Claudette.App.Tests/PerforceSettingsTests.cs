@@ -17,7 +17,9 @@ public class PerforceSettingsTests
         Assert.Contains("Perforce", settings.Categories);
         settings.SearchText = "changelist";
 
-        Assert.Equal([("Perforce", "Show changelist on tabs")], settings.SearchResults.Select(r => (r.Category, r.Label)));
+        // The setting with the word in its title first; Check out files before they're changed says it under its More.
+        Assert.Equal(("Perforce", "Show changelist on tabs"), settings.SearchResults.Select(r => (r.Category, r.Label)).First());
+        Assert.All(settings.SearchResults, r => Assert.Equal("Perforce", r.Category));
         Assert.Equal("Perforce", settings.SelectedCategory);
         Assert.Same(settings.Perforce, settings.CurrentPage);
     }

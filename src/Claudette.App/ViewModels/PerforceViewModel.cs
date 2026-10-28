@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Claudette.App.Conversation;
 using Claudette.App.Services;
 using Claudette.Core.Perforce;
+using Claudette.Core.Protocol;
 using Claudette.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -242,17 +243,24 @@ public sealed partial class PerforceViewModel : ObservableObject
     internal async Task<ClaudeLaunchOptions> WithPerforceAsync(ClaudeLaunchOptions options)
     {
         Stop();
+        var perforce = _services.Perforce;
         if (!_services.Settings.Perforce.Enabled)
         {
+            // Opening Claude's files in Perforce looks for the workspace in the background, never holding up the start
+            // (DESIGN.md §18, "Finding the workspace").
+            if (_services.Settings.Perforce.OpensFilesForClaude())
+            {
+                _ = perforce.Files.DetectAsync(_host.Folder);
+            }
             return options;
         }
-        var perforce = _services.Perforce;
         var target = perforce.TargetFor(_host.Folder);
         var workspace = await perforce.Client.DetectAsync(target);
         if (workspace is null)
         {
             return options;
         }
+        perforce.Files.RememberWorkspace(target, workspace);
         var keeper = new PerforceTicketKeeper(perforce.Client, target, workspace, new PerforcePasswords(perforce, AskForPerforcePasswordAsync), perforce.Gate, _services.Time, perforce.KeeperOptions);
         keeper.Changed += e => _services.Dispatcher.Post(() => OnPerforceKeeperChanged(keeper, e));
         _perforceKeeper = keeper;
@@ -289,6 +297,91 @@ public sealed partial class PerforceViewModel : ObservableObject
             // Out of time: let the command run.
         }
         return HookOutputs.Continue();
+    }
+
+    // ---- Opening Claude's files in Perforce (DESIGN.md §18, "Opening files in Perforce") ----------------------------
+
+    /// <summary>
+    /// The changelist Claudette opens files in for this tab: the one the <c>CL</c> badge shows while it's pending, else
+    /// none, which is the default changelist.
+    /// </summary>
+    internal long? WorkingChangelist => Changelists.Current is { State: ChangelistState.Pending } current ? current.Number : null;
+
+    /// <summary>Renews an expired login through the tab's ticket keeper, when ticket handling is on for it; false otherwise.</summary>
+    internal Task<bool> RenewLoginAsync(CancellationToken cancellationToken) =>
+        _perforceKeeper is { } keeper ? keeper.EnsureFreshAsync(PerforceCheckReason.Recovery, cancellationToken) : Task.FromResult(false);
+
+    /// <summary>Where this tab's files are opened in Perforce: its folder, its changelist, and its login.</summary>
+    internal PerforceContext FilesContext() => new(_host.Folder, WorkingChangelist, RenewLoginAsync);
+
+    /// <summary>
+    /// The PreToolUse hook on Claude's file tools, which every tab registers so the setting applies at once: before an
+    /// Edit, Write, MultiEdit or NotebookEdit changes a depot file that isn't checked out, it's checked out.
+    /// </summary>
+    internal HookRegistration CheckOutHook() => new("PreToolUse", ChangedFilesViewModel.FileToolMatcher, CheckOutBeforeClaudeChangesAsync, PerforceFilesService.HookTimeout);
+
+    /// <summary>
+    /// Checks out the file Claude's tool is about to change (<c>tool_input.file_path</c>, or a notebook's
+    /// <c>notebook_path</c>), so it's writable when the tool writes it. It always answers <c>{"continue": true}</c> and
+    /// never changes the call: a file it couldn't check out gets a note, and the tool says what it found. It waits for
+    /// the workspace to be found, and for <c>p4</c>, only until shortly before its own timeout, since a hook that times
+    /// out stops the tool. Called off the UI thread.
+    /// </summary>
+    private async Task<JsonObject> CheckOutBeforeClaudeChangesAsync(HookInput input, CancellationToken cancellationToken)
+    {
+        if (!_services.Settings.Perforce.CheckOutBeforeChanges
+            || (input.ToolInput?.GetString("file_path") ?? input.ToolInput?.GetString("notebook_path")) is not { Length: > 0 } path
+            || !Path.IsPathFullyQualified(path))
+        {
+            return HookOutputs.Continue();
+        }
+        using var deadline = new CancellationTokenSource(PerforceFilesService.HookTimeout - PerforceFilesService.HookMargin, _services.Time);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
+        try
+        {
+            var context = await InlineContextAsync().WaitAsync(linked.Token).ConfigureAwait(false);
+            var outcome = await _services.Perforce.Files.CheckOutBeforeWritingAsync(context, [path], linked.Token).ConfigureAwait(false);
+            if (!outcome.Succeeded)
+            {
+                _services.Dispatcher.Post(() => _host.AddNote($"Couldn't check out {Path.GetFileName(path)} in Perforce before Claude changed it: {outcome.Problem}", NoteKind.Warning));
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            _services.Dispatcher.Post(() => _host.AddNote($"Perforce didn't answer in time, so Claude changed {Path.GetFileName(path)} without checking it out first.", NoteKind.Warning));
+        }
+        return HookOutputs.Continue();
+    }
+
+    /// <summary>The tab's context, read on the UI thread, where its changelists are kept.</summary>
+    private Task<PerforceContext> InlineContextAsync()
+    {
+        var read = new TaskCompletionSource<PerforceContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _services.Dispatcher.Post(() => read.TrySetResult(FilesContext()));
+        return read.Task;
+    }
+
+    /// <summary>
+    /// Claude's Write (or an Edit with nothing to replace) created a file: it's marked for add, as Settings → Perforce →
+    /// <b>Add new files</b> says, in the background. On the UI thread.
+    /// </summary>
+    internal void OnClaudeCreatedFile(string path)
+    {
+        if (!_services.Settings.Perforce.AddNewFiles || !Path.IsPathFullyQualified(path))
+        {
+            return;
+        }
+        var context = FilesContext();
+        _ = AddCreatedAsync();
+
+        async Task AddCreatedAsync()
+        {
+            var outcome = await _services.Perforce.Files.AddNewFilesAsync(context, [path]);
+            if (!outcome.Succeeded)
+            {
+                _services.Dispatcher.Post(() => _host.AddNote($"Couldn't mark {Path.GetFileName(path)} for add in Perforce: {outcome.Problem}", NoteKind.Warning));
+            }
+        }
     }
 
     /// <summary>Each session event, on the UI thread.</summary>

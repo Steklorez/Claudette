@@ -79,6 +79,29 @@
               </WrapPanel>
             </StackPanel>
           </Border>
+          <!-- Perforce asks first, in place, as deleting does (§18, "Perforce in the Files tab"): Esc is Cancel -->
+          <Border x:Name="PerforceQuestionBox" DockPanel.Dock="Top" Classes="explorerquestion" IsVisible="{Binding IsAskingPerforce}" KeyDown="OnPerforceQuestionKeyDown">
+            <StackPanel Spacing="8">
+              <TextBlock Text="{Binding PerforceAsking.Text, FallbackValue=''}" TextWrapping="Wrap" />
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button x:Name="ConfirmPerforceButton" Classes="accent" Content="{Binding PerforceAsking.ConfirmText, FallbackValue=''}" Command="{Binding ConfirmPerforceCommand}"
+                        IsEnabled="{Binding PerforceAsking.CanConfirm, FallbackValue=False}" />
+                <Button Content="Cancel" Command="{Binding CancelPerforceCommand}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <!-- What p4 refused, until it's dismissed or the next command -->
+          <Border DockPanel.Dock="Top" Classes="explorerproblem" IsVisible="{Binding HasPerforceProblem}">
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Classes="flat" Padding="4" Command="{Binding DismissPerforceProblemCommand}" AutomationProperties.Name="Dismiss" ToolTip.Tip="Dismiss"
+                      VerticalAlignment="Top">
+                <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Width="10" Height="10" Stretch="Uniform" />
+              </Button>
+              <SelectableTextBlock Classes="small error" Text="{Binding PerforceProblem}" TextWrapping="Wrap" />
+            </DockPanel>
+          </Border>
+          <!-- The server didn't answer: one quiet line, and no marks -->
+          <TextBlock DockPanel.Dock="Top" Classes="muted small" Margin="12,6,12,2" Text="{Binding PerforceNote}" TextWrapping="Wrap" IsVisible="{Binding HasPerforceNote}" />
           <!-- Finding a file by name ("Finding a file by name") -->
           <TextBox x:Name="FindBox" DockPanel.Dock="Top" Classes="findfile" Text="{Binding FindText}" IsVisible="{Binding IsFinding}"
                    PlaceholderText="Find a file by name" AutomationProperties.Name="Find a file by name" KeyDown="OnFindKeyDown" />
@@ -128,6 +151,9 @@
                       <TextBlock DockPanel.Dock="Right" Classes="changeletter" Classes.added="{Binding ChangeLetter, Converter={x:Static vm:Converters.IsAddedLetter}}"
                                  Classes.reviewed="{Binding IsReviewed}" Text="{Binding ChangeLetter}" IsVisible="{Binding HasChangeLetter}" />
                       <Ellipse DockPanel.Dock="Right" Classes="changedinside" IsVisible="{Binding HasChangesInside}" />
+                      <!-- Its Perforce state, in Perforce's words (§18, "The state in the tree") -->
+                      <TextBlock DockPanel.Dock="Right" Classes="p4mark" Text="{Binding PerforceMark}" IsVisible="{Binding HasPerforceMark}"
+                                 ToolTip.Tip="{Binding PerforceTip}" AutomationProperties.Name="{Binding PerforceTip}" />
                       <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                     </DockPanel>
                     <Panel.ContextMenu>
@@ -143,6 +169,13 @@
                         <MenuItem Header="Copy relative path" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CopyRowRelativePathCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Reveal in file manager" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RevealRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Collapse" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).ToggleRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsExpanded}" />
+                        <!-- Perforce, in a workspace (§18, "The Perforce menu") -->
+                        <Separator IsVisible="{Binding InPerforce}" />
+                        <MenuItem Header="Check out" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).CheckOutRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanCheckOut}" />
+                        <MenuItem Header="Mark for add" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).MarkRowForAddCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanMarkForAdd}" />
+                        <MenuItem Header="Mark for delete" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).MarkRowForDeleteCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanMarkForDelete}" />
+                        <MenuItem Header="Revert" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RevertRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanRevert}" />
+                        <MenuItem Header="Diff against the depot" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).DiffRowAgainstDepotCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanDiffAgainstDepot}" />
                         <Separator />
                         <MenuItem Header="Rename" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RenameRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Delete" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).DeleteRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
@@ -267,6 +300,13 @@
                           <MenuItem Header="Reveal in the explorer" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).RevealRowInTreeCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                           <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).RevealFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                           <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).OpenFileInSystemCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
+                          <!-- Perforce, in a workspace (§18, "The Perforce menu") -->
+                          <Separator IsVisible="{Binding InPerforce}" />
+                          <MenuItem Header="Check out" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).CheckOutFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanCheckOut}" />
+                          <MenuItem Header="Mark for add" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).MarkFileForAddCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanMarkForAdd}" />
+                          <MenuItem Header="Mark for delete" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).MarkFileForDeleteCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanMarkForDelete}" />
+                          <MenuItem Header="Revert" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).RevertFileCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanRevert}" />
+                          <MenuItem Header="Diff against the depot" Command="{Binding $parent[UserControl].((vm:ProjectFilesViewModel)DataContext).DiffFileAgainstDepotCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanDiffAgainstDepot}" />
                         </ContextMenu>
                       </Button.ContextMenu>
                     </Button>

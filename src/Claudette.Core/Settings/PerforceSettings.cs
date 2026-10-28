@@ -25,6 +25,26 @@ public sealed class PerforceSettings
     /// <summary>A <c>CL 12345</c> badge after the tab's name. The info card always shows the changelist.</summary>
     public bool ShowChangelistOnTabs { get; set; }
 
+    // ---- Opening files in Perforce (DESIGN.md §18, "Perforce in the Files tab"); on by default, in a workspace only ----
+
+    /// <summary>Check out a depot file before it's changed: as an editor's text first changes, and before Claude's file tools.</summary>
+    public bool CheckOutBeforeChanges { get; set; } = true;
+
+    /// <summary>Mark for add a file made with the Files tab's <b>New file</b>, or created by Claude's Write.</summary>
+    public bool AddNewFiles { get; set; } = true;
+
+    /// <summary>Mark for delete a file deleted from the Files tab's explorer.</summary>
+    public bool DeleteRemovedFiles { get; set; } = true;
+
+    /// <summary>The Files tab's <b>Rename</b> moves a depot file with <c>p4 move</c>, after renaming it on disk.</summary>
+    public bool MoveRenamedFiles { get; set; } = true;
+
+    /// <summary>The Files tab's explorer marks what's checked out, marked for add or delete, moved, or opened by others.</summary>
+    public bool ShowFileState { get; set; } = true;
+
+    /// <summary>Claude's side of opening files: a session tab looks for its workspace when either is on.</summary>
+    public bool OpensFilesForClaude() => CheckOutBeforeChanges || AddNewFiles;
+
     /// <summary>A server or user to use instead of what Perforce resolves, for tabs in a folder.</summary>
     public List<PerforceFolderOverride> FolderOverrides { get; set; } = [];
 

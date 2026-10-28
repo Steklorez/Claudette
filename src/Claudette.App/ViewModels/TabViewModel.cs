@@ -460,8 +460,20 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [NotifyPropertyChangedFor(nameof(ShowsSidePanel))]
     public partial bool IsSelected { get; set; }
 
+    /// <summary>
+    /// Later for a tab focused more recently: its project's Files tab opens files in Perforce in the changelist of the
+    /// one focused last (DESIGN.md §18, "Which changelist").
+    /// </summary>
+    internal long FocusOrder { get; private set; }
+
+    private static long _focusCount;
+
     partial void OnIsSelectedChanged(bool value)
     {
+        if (value)
+        {
+            FocusOrder = Interlocked.Increment(ref _focusCount);
+        }
         if (!IsInSplit)
         {
             IsShown = value;
@@ -1547,9 +1559,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 EnvironmentOverrides = environment,
             }));
             // Every tab has the threads' hook, so making it a thread later needs no restart (DESIGN.md §18, "Threads"), and
-            // the subagents' one, so turning them off applies at once (DESIGN.md §5, "Subagents").
+            // the subagents' one, so turning them off applies at once (DESIGN.md §5, "Subagents"), and so does Perforce's
+            // check-out before Claude's file tools (DESIGN.md §18, "Opening files in Perforce").
             var withSubagents = WithSubagentNote(withPerforce);
-            var options = withSubagents with { Hooks = [.. withSubagents.Hooks, ThreadHook(), SubagentHook(), ChangedFiles.BeforeHook()] };
+            var options = withSubagents with { Hooks = [.. withSubagents.Hooks, ThreadHook(), SubagentHook(), ChangedFiles.BeforeHook(), Perforce.CheckOutHook()] };
             // Closed while the start was under way: nothing is started for a tab that's gone.
             _closing.Token.ThrowIfCancellationRequested();
             var session = await sessions.StartAsync(options, _closing.Token);

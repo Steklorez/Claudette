@@ -214,6 +214,11 @@ public sealed partial class ProjectFilesViewModel
             return;
         }
         EndNaming(row);
+        if (!made.IsNewFolder)
+        {
+            // Marked for add, in the background (DESIGN.md §18, "Opening files in Perforce").
+            AddNewFileToPerforce(path);
+        }
         _foldersToRead.Add(row.InFolder);
         await ReadQueuedFoldersAsync();
         await RevealInTreeAsync(path);
@@ -243,6 +248,11 @@ public sealed partial class ProjectFilesViewModel
         EndNaming(row);
         var expanded = ExpandedAtOrUnder(row.Renaming).Select(folder => path + folder[old.Length..]).ToArray();
         _shell.FollowRename(old, path);
+        // Moved in Perforce too, in the background (DESIGN.md §18, "Opening files in Perforce").
+        if (!row.Renaming.IsLink)
+        {
+            MoveInPerforce(old, path, row.Renaming.IsFolder);
+        }
         _foldersToRead.Add(row.InFolder);
         await ReadQueuedFoldersAsync();
         // Shallowest first, so each folder's parent is there to expand it in.

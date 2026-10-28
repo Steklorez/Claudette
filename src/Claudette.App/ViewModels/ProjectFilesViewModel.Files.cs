@@ -391,6 +391,11 @@ public sealed partial class ProjectFilesViewModel
     internal void OnFileLoaded(ProjectFileViewModel file)
     {
         ApplyBaseline(file);
+        // Its Perforce menu, and whether a file read-only on disk can be checked out on its first edit.
+        if (_perforceStarted)
+        {
+            ApplyPerforce(file);
+        }
         OnPropertyChanged(nameof(UnsavedCount));
         OnPropertyChanged(nameof(HasUnsaved));
         OnPropertyChanged(nameof(RowDetail));
@@ -404,6 +409,8 @@ public sealed partial class ProjectFilesViewModel
         if (file.IsModified)
         {
             file.IsPreview = false;
+            // Its first edit: a depot file not checked out yet is checked out (DESIGN.md §18, "Opening files in Perforce").
+            CheckOutForEdit(file);
         }
     }
 

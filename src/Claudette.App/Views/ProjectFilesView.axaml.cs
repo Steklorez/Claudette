@@ -49,6 +49,8 @@ public partial class ProjectFilesView : UserControl
             _files.NamingStarted -= OnNamingStarted;
             _files.TreeFocusRequested -= FocusTree;
             _files.DeleteAsked -= FocusDeleteQuestion;
+            _files.PerforceAsked -= FocusPerforceQuestion;
+            _files.DiffRequested -= OnDiffRequested;
         }
         _files = DataContext as ProjectFilesViewModel;
         if (_files is not null)
@@ -58,6 +60,8 @@ public partial class ProjectFilesView : UserControl
             _files.NamingStarted += OnNamingStarted;
             _files.TreeFocusRequested += FocusTree;
             _files.DeleteAsked += FocusDeleteQuestion;
+            _files.PerforceAsked += FocusPerforceQuestion;
+            _files.DiffRequested += OnDiffRequested;
             PlaceExplorer();
             TellTheme();
             if (_files.IsFinding)
@@ -333,6 +337,32 @@ public partial class ProjectFilesView : UserControl
 
     /// <summary>The delete question takes the keyboard on its button, so Enter answers it.</summary>
     private void FocusDeleteQuestion() => Avalonia.Threading.Dispatcher.UIThread.Post(() => ConfirmDeleteButton.Focus());
+
+    /// <summary>Perforce asks first (DESIGN.md §18, "Perforce in the Files tab"): the keyboard goes to its button.</summary>
+    private void FocusPerforceQuestion() => Avalonia.Threading.Dispatcher.UIThread.Post(() => ConfirmPerforceButton.Focus());
+
+    private void OnPerforceQuestionKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            _files?.CancelPerforceCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary><b>Diff against the depot</b>, in the built-in diff view's window, as Changed files opens one (DESIGN.md §8).</summary>
+    private void OnDiffRequested(Claudette.App.Diffs.DiffSource source)
+    {
+        var window = new DiffWindow { DataContext = new Claudette.App.Diffs.DiffWindowViewModel(source, ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark) };
+        if (TopLevel.GetTopLevel(this) is Window owner)
+        {
+            window.Show(owner);
+        }
+        else
+        {
+            window.Show();
+        }
+    }
 
     /// <summary>Esc in the delete question is Cancel.</summary>
     private void OnDeleteQuestionKeyDown(object? sender, KeyEventArgs e)
