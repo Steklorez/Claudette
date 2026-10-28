@@ -31,7 +31,8 @@ internal interface IEditorLogHost
 /// (DESIGN.md §18, "Editor logs"). It appears under one of the project's tabs while its process runs, and stays after it
 /// ends; its lines, read by <see cref="EditorLogService"/>, show in the main area as a run's log does, colored by how
 /// bad each is, with the errors and warnings counted on its row. When something writes the file again, it shows the new
-/// log in place of the old.
+/// log in place of the old. When its processes move to another file, as Unity's editor does once it has the project
+/// open, it stops there and says where they went (<see cref="MovedTo"/>), and goes once they end.
 /// </summary>
 public sealed partial class EditorLogViewModel : LogTabViewModel
 {
@@ -112,6 +113,23 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     /// <summary>When its process was seen to have ended; null while it runs.</summary>
     public DateTimeOffset? Ended { get; private set; }
 
+    /// <summary>
+    /// Where its processes moved to, as the row says it: the file relative to the project's folder when it's in it,
+    /// <c>Logs\Editor.log</c>; null unless they did.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Detail), nameof(Status), nameof(Tip), nameof(IsMoved))]
+    public partial string? MovedTo { get; private set; }
+
+    /// <summary>Its processes write another file now: it's read no more, and goes once they end.</summary>
+    public bool IsMoved => MovedTo is not null;
+
+    /// <summary>When its processes moved to another file.</summary>
+    public DateTimeOffset? MovedAt { get; private set; }
+
+    /// <summary>The processes writing it, or that wrote it until they moved to another file.</summary>
+    internal IReadOnlyList<LogWriterProcess> Writers => _writers;
+
     /// <summary>The error lines in its log, those Claudette no longer keeps included.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Detail), nameof(Counts))]
@@ -148,28 +166,34 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     }
 
     /// <summary>
-    /// Its row's second line: what writes it while it runs, or how it ended and when, then the counts:
-    /// "Unreal editor · 2 errors · 14 warnings", "Closed · 15:02 · 1 error", "Crashed · 15:02".
+    /// Its row's second line: what writes it while it runs, where it moved to, or how it ended and when, then the counts:
+    /// "Unreal editor · 2 errors · 14 warnings", "Moved to Logs\Editor.log · 1 warning", "Closed · 15:02 · 1 error",
+    /// "Crashed · 15:02".
     /// </summary>
     public string Detail
     {
         get
         {
             var state = IsRunning && !IsCrashed ? Role
+                : MovedTo is { } moved && !IsCrashed ? $"Moved to {moved}"
                 : $"{(IsCrashed ? "Crashed" : "Closed")}{(Ended is { } ended ? $" · {MessageTimes.Short(ended, _services.Time)}" : "")}";
             return Counts is { Length: > 0 } counts ? $"{state} · {counts}" : state;
         }
     }
 
     /// <summary>
-    /// The line over its log: "Unreal editor running since 14:30 (PID 4412).", "Unreal editor closed at 15:02.",
-    /// "Unreal editor crashed at 15:02."
+    /// The line over its log: "Unreal editor running since 14:30 (PID 4412).", "Unity editor moved its log to
+    /// Logs\Editor.log at 14:31.", "Unreal editor closed at 15:02.", "Unreal editor crashed at 15:02."
     /// </summary>
     public string Status
     {
         get
         {
             var role = Role.Length > 0 ? Role : "Its process";
+            if (MovedTo is { } moved && !IsCrashed)
+            {
+                return MovedAt is { } at ? $"{role} moved its log to {moved} at {MessageTimes.Short(at, _services.Time)}." : $"{role} moved its log to {moved}.";
+            }
             if (IsRunning && !IsCrashed)
             {
                 var pids = _writers.Select(w => w.Process.Pid.ToString(CultureInfo.InvariantCulture)).ToArray();
@@ -219,6 +243,20 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
         Role = writers.Count > 0 ? writers[0].Role : Role;
         IsRunning = true;
         OnPropertyChanged(nameof(Status));
+        OnPropertyChanged(nameof(Timing));
+    }
+
+    /// <summary>
+    /// Its processes, <paramref name="movers"/>, write <paramref name="path"/> now, a log of its own: this one is read no
+    /// more. They're kept, so the shell can tell when they end; other projects' processes that wrote it too aren't its.
+    /// </summary>
+    internal void Moved(string path, IReadOnlyList<LogWriterProcess> movers)
+    {
+        _writers = movers;
+        MovedAt = _services.Time.GetUtcNow();
+        var relative = System.IO.Path.GetRelativePath(Root, path);
+        MovedTo = relative.StartsWith("..", StringComparison.Ordinal) || System.IO.Path.IsPathRooted(relative) ? path : relative;
+        IsRunning = false;
         OnPropertyChanged(nameof(Timing));
     }
 

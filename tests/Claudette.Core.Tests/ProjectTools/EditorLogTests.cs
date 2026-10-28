@@ -159,6 +159,199 @@ public sealed class EditorLogTests : IDisposable
         Assert.False(UnityLogs.IsCrash("Crashing is not happening here"));
     }
 
+    // ---- Unity's log moving to the project's (DESIGN.md §18, "Editor logs", "A log that moves") ------------------------
+
+    private const string Sentence = "Logs moved to project-relative Editor.log file, and subsequent logs will only be written to this file.";
+
+    [Fact]
+    public void A_unity_editor_writing_the_projects_own_log_since_it_started_is_followed_there()
+    {
+        var os = ToolOSExtensions.Current;
+        var root = _temp.CreateFolder("Owl");
+        var own = Path.Combine(root, "Logs", "Editor.log");
+        var global = _temp.Combine("Editor.log");
+        EditorLogWriter Writer(string arguments = "") =>
+            UnityLogs.Writer(Process(1, "Unity", $"Unity -projectPath \"{root}\" {arguments}", Start), root, global, os)!;
+
+        Assert.Equal(own, UnityLogs.ProjectLog(root, os));
+        // None of its own yet: the machine's, which can move to the project's.
+        Assert.Equal([global], Writer().LogFiles);
+        Assert.True(Writer().CanMove);
+
+        // One from before it started, as an earlier session, Unity before 6.5 or Use Global Editor Log leaves it: the machine's still.
+        Directory.CreateDirectory(Path.GetDirectoryName(own)!);
+        File.WriteAllText(own, "An earlier session\n");
+        File.SetLastWriteTimeUtc(own, Start.UtcDateTime.AddHours(-1));
+        Assert.Equal([global], Writer().LogFiles);
+
+        // Written since it started: the project's own, which doesn't move again.
+        File.SetLastWriteTimeUtc(own, Start.UtcDateTime.AddMinutes(1));
+        Assert.Equal([own], Writer().LogFiles);
+        Assert.False(Writer().CanMove);
+        Assert.Equal("Unity (batch mode)", Writer("-batchmode").Role);
+
+        // -useGlobalLog keeps the machine's, and -logFile the file it names; neither moves.
+        Assert.Equal([global], Writer("-useGlobalLog").LogFiles);
+        Assert.False(Writer("-useGlobalLog").CanMove);
+        Assert.Equal([os.Join(root, "editor.txt")], Writer("-logFile editor.txt").LogFiles);
+        Assert.False(Writer("-logFile editor.txt").CanMove);
+        // Without the time it started, there's no telling.
+        Assert.Equal([global], UnityLogs.Writer(new SystemProcess(1, "Unity", $"Unity -projectPath \"{root}\""), root, global, os)!.LogFiles);
+    }
+
+    private static IReadOnlyList<LogMoveLine> Moves(LogMoveReader reader, params string[] lines) => reader.Read(lines, fresh: false, final: false);
+
+    [Fact]
+    public void Unitys_line_saying_the_log_moved_has_the_file_on_the_next_line_with_either_slash()
+    {
+        var windows = new UnityLogs.MoveReader(@"F:\Unity\projs\myproj", ToolOS.Windows);
+        Assert.Equal(
+            [new LogMoveLine(2, @"F:\Unity\projs\myproj\Logs\Editor.log")],
+            Moves(windows, "Loading project", Sentence, "F:/Unity/projs/myproj/Logs/Editor.log", "Another editor: Starting"));
+
+        // The next line that isn't blank, and a backslash where the OS writes a slash.
+        var linux = new UnityLogs.MoveReader("/home/owl/Owl", ToolOS.Linux);
+        Assert.Equal([new LogMoveLine(2, "/home/owl/Owl/Logs/Editor.log")], Moves(linux, Sentence, "", @"\home\owl\Owl\Logs\Editor.log"));
+
+        // Another project's: it says which, and it's for the tracker to tell whose.
+        Assert.Equal([new LogMoveLine(1, @"D:\Lark\Logs\Editor.log")], Moves(windows, Sentence, "D:/Lark/Logs/Editor.log"));
+
+        // A relative path is the project's; Unity's -timestamps before each line, and other words after the start, still match.
+        Assert.Equal(
+            [new LogMoveLine(1, @"F:\Unity\projs\myproj\Logs\Editor.log")],
+            Moves(windows, "2026-10-28T12:00:00.123Z|0x2a1c|Logs moved to project-relative log file:", "2026-10-28T12:00:00.124Z|0x2a1c|Logs/Editor.log"));
+        Assert.Equal(
+            [new LogMoveLine(1, @"F:\My Projects\Owl\Logs\Editor.log")],
+            Moves(windows, Sentence, "2026-10-28T12:00:00.124Z|0x2a1c|F:/My Projects/Owl/Logs/Editor.log"));
+        Assert.Empty(Moves(windows, "Logs moved elsewhere", "F:/Unity/projs/myproj/Logs/Editor.log"));
+    }
+
+    [Fact]
+    public void Unitys_line_saying_the_log_moved_can_have_the_file_after_it_or_none()
+    {
+        var reader = new UnityLogs.MoveReader(@"F:\Owl", ToolOS.Windows);
+
+        // On the same line, after the sentence.
+        Assert.Equal([new LogMoveLine(0, @"F:\Owl\Logs\Editor.log")], Moves(reader, $"{Sentence} F:/Owl/Logs/Editor.log", "Next"));
+        Assert.Equal([new LogMoveLine(0, @"F:\Owl\Logs\Editor.log")], Moves(reader, $"{Sentence} \"F:/Owl/Logs/Editor.log\""));
+
+        // The next line isn't a file: the project's own, and the next line isn't this log's.
+        Assert.Equal([new LogMoveLine(0, @"F:\Owl\Logs\Editor.log")], Moves(reader, Sentence, "Refreshing native plugins"));
+
+        // The sentence last in a read: its file is in the next.
+        Assert.Empty(Moves(reader, "Loading project", Sentence));
+        Assert.Equal([new LogMoveLine(0, @"F:\Owl\Logs\Editor.log")], Moves(reader, "F:/Owl/Logs/Editor.log", "Next"));
+
+        // No file in the read after it either: the project's own, said in the read before.
+        Assert.Empty(Moves(reader, Sentence));
+        Assert.Equal([new LogMoveLine(-1, @"F:\Owl\Logs\Editor.log")], Moves(reader));
+
+        // The last read, as the editor has ended: decided there and then.
+        Assert.Equal([new LogMoveLine(0, @"F:\Owl\Logs\Editor.log")], reader.Read([Sentence], fresh: false, final: true));
+
+        // A new file in its place forgets a sentence waiting for its file.
+        Assert.Empty(Moves(reader, Sentence));
+        Assert.Empty(reader.Read(["Unity Editor version: 6000.5.0f1"], fresh: true, final: false));
+        Assert.Empty(Moves(reader));
+    }
+
+    private static readonly ProjectToolPaths UnityPaths = new(Path.Combine(Path.GetTempPath(), "owl-home"), LocalAppData: Path.Combine(Path.GetTempPath(), "owl-local"));
+
+    private static string GlobalLog => UnityEditors.EditorLog(UnityPaths, ToolOSExtensions.Current)!;
+
+    private FollowedProject UnityFollowed(string name, out string projectLog)
+    {
+        var root = _temp.CreateFolder(name);
+        projectLog = Path.Combine(root, "Logs", "Editor.log");
+        var project = new UnityProject(root, name, "6000.5.0f1", null, null, null, []);
+        return new FollowedProject(root, root, UnityLogs.Source(project, UnityPaths, ToolOSExtensions.Current));
+    }
+
+    private static SystemProcess UnityEditor(int pid, FollowedProject project, string arguments = "", DateTimeOffset? started = null) =>
+        Process(pid, "Unity", $"Unity -projectPath \"{project.Root}\" {arguments}", started ?? Start);
+
+    [Fact]
+    public void A_line_saying_a_unity_editors_log_moved_moves_that_projects_editor_and_no_other()
+    {
+        var owl = UnityFollowed("Owl", out var owlLog);
+        var lark = UnityFollowed("Lark", out var larkLog);
+        var tracker = new EditorLogTracker(TimeZoneInfo.Utc, ToolOSExtensions.Current);
+        var owlEditor = UnityEditor(10, owl);
+        var larkEditor = UnityEditor(20, lark, started: Start.AddMinutes(1));
+
+        // Both write the machine's log, which is one log, the first's.
+        var shared = Assert.Single(tracker.Update([owl, lark], [owlEditor, larkEditor]));
+        Assert.Equal(GlobalLog, shared.Path);
+        Assert.Same(owl, shared.Project);
+
+        // Lark's line: Lark's editor writes its project's log from now on, and Owl's the machine's still.
+        var move = tracker.Move(GlobalLog, larkLog)!;
+        Assert.Same(lark, move.Project);
+        Assert.Equal([20], move.Writers.Select(w => w.Process.Pid));
+        var logs = tracker.Update([owl, lark], [owlEditor, larkEditor], out var moves);
+        Assert.Empty(moves);
+        Assert.Equal([GlobalLog, larkLog], logs.Select(l => l.Path));
+        Assert.Equal([10], logs[0].Writers.Select(w => w.Process.Pid));
+
+        // A project no tab has, the same file, or one that has moved already: nothing moves.
+        Assert.Null(tracker.Move(GlobalLog, _temp.Combine("Elsewhere", "Logs", "Editor.log")));
+        Assert.Null(tracker.Move(GlobalLog, GlobalLog));
+        Assert.Null(tracker.Move(larkLog, Path.Combine(lark.Root, "Logs", "Other.log")));
+
+        Assert.Equal(owl, tracker.Move(GlobalLog, owlLog)!.Project);
+        Assert.Equal([owlLog, larkLog], tracker.Update([owl, lark], [owlEditor, larkEditor]).Select(l => l.Path));
+        // A new editor of the project starts on the machine's log again.
+        Assert.Equal([GlobalLog], tracker.Update([owl], [UnityEditor(11, owl, started: Start.AddHours(1))]).Select(l => l.Path));
+    }
+
+    [Fact]
+    public void A_unity_editor_with_useGlobalLog_keeps_the_machines_log_whatever_it_says()
+    {
+        var owl = UnityFollowed("Owl", out var owlLog);
+        var tracker = new EditorLogTracker(TimeZoneInfo.Utc, ToolOSExtensions.Current);
+        var editor = UnityEditor(10, owl, "-useGlobalLog");
+        Assert.Equal(GlobalLog, Assert.Single(tracker.Update([owl], [editor])).Path);
+
+        Assert.Null(tracker.Move(GlobalLog, owlLog));
+        Directory.CreateDirectory(Path.GetDirectoryName(owlLog)!);
+        File.WriteAllText(owlLog, "Another session's\n");
+        File.SetLastWriteTimeUtc(owlLog, Start.UtcDateTime.AddMinutes(1));
+
+        Assert.Equal(GlobalLog, Assert.Single(tracker.Update([owl], [editor], out var moves)).Path);
+        Assert.Empty(moves);
+    }
+
+    [Fact]
+    public void A_unity_editor_found_writing_its_projects_log_at_a_later_look_has_moved_there_for_good()
+    {
+        var owl = UnityFollowed("Owl", out var owlLog);
+        var tracker = new EditorLogTracker(TimeZoneInfo.Utc, ToolOSExtensions.Current);
+        var editor = UnityEditor(10, owl);
+        Assert.Equal(GlobalLog, Assert.Single(tracker.Update([owl], [editor], out var none)).Path);
+        Assert.Empty(none);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(owlLog)!);
+        File.WriteAllText(owlLog, "Unity Editor version: 6000.5.0f1\n");
+        File.SetLastWriteTimeUtc(owlLog, Start.UtcDateTime.AddMinutes(1));
+        Assert.Equal(owlLog, Assert.Single(tracker.Update([owl], [editor], out var moves)).Path);
+        var move = Assert.Single(moves);
+        Assert.Equal((GlobalLog, owlLog), (move.From, move.To));
+        Assert.Same(owl, move.Project);
+        Assert.Equal([10], move.Writers.Select(w => w.Process.Pid));
+
+        // It keeps to it, even with the file gone for now, and says so once.
+        File.Delete(owlLog);
+        Assert.Equal(owlLog, Assert.Single(tracker.Update([owl], [editor], out moves)).Path);
+        Assert.Empty(moves);
+
+        // One that was writing it when first seen has nothing to move from.
+        File.WriteAllText(owlLog, "Unity Editor version: 6000.5.0f1\n");
+        File.SetLastWriteTimeUtc(owlLog, Start.UtcDateTime.AddMinutes(1));
+        var fresh = new EditorLogTracker(TimeZoneInfo.Utc, ToolOSExtensions.Current);
+        Assert.Equal(owlLog, Assert.Single(fresh.Update([owl], [editor], out moves)).Path);
+        Assert.Empty(moves);
+    }
+
     // ---- Godot --------------------------------------------------------------------------------------------------------
 
     private static readonly ProjectToolPaths Paths = new(@"C:\Users\owl", AppData: @"C:\Users\owl\AppData\Roaming");

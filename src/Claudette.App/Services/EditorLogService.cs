@@ -12,6 +12,12 @@ public sealed record EditorLogTab(string TabId, string ProjectPath, Func<int, bo
 /// <param name="StartedBy">With <paramref name="NewWriters"/>, the tab one of them is a process of; null when none is.</param>
 public sealed record EditorLogCheck(LiveLog Log, bool NewWriters, string? StartedBy);
 
+/// <summary>
+/// A log's processes moved to another file (DESIGN.md §18, "Editor logs", "A log that moves"), as Unity's editor does once
+/// it has the project open: the log at <paramref name="From"/> stops there, and <paramref name="To"/> is being written.
+/// </summary>
+public sealed record EditorLogMove(string From, LiveLog To);
+
 /// <summary>What a read of a log found: its new lines, and what's counted of them and of the lines passed over.</summary>
 /// <param name="Fresh">The lines start the log afresh, in place of what was read before.</param>
 /// <param name="Counts">Its entries at each level and in each category, and whether one says its process crashed.</param>
@@ -30,7 +36,8 @@ public sealed record EditorLogRead(IReadOnlyList<LogLine> Lines, bool Fresh, Log
 /// reads what's new in each log being written, opening it only for the read (<see cref="LogTail"/>); every
 /// <see cref="ReadsPerCheck"/> seconds it looks at which of the projects' processes are running, with one
 /// <see cref="ISystemProcesses.Find"/> for them all. It runs only while a tab's project has logs, and says what it finds
-/// on the UI thread, a check before the reads after it.
+/// on the UI thread, a check before the reads after it. A log whose processes move to another file, as a line in it says
+/// or a check finds, stops being read where it says so, and the other file is read from its start in its place.
 /// </summary>
 public sealed class EditorLogService : IDisposable
 {
@@ -64,6 +71,12 @@ public sealed class EditorLogService : IDisposable
 
     /// <summary>On the UI thread: what a read of the log at the path found.</summary>
     public event Action<string, EditorLogRead>? Read;
+
+    /// <summary>
+    /// On the UI thread: a log's processes write another file now. It comes after the old log's last read, and before
+    /// the check and the reads that find the new one.
+    /// </summary>
+    public event Action<EditorLogMove>? Moved;
 
     /// <summary>
     /// The projects whose logs to follow and the tabs they're the projects of, from the UI thread whenever they change.
@@ -160,7 +173,25 @@ public sealed class EditorLogService : IDisposable
         {
             running = processes.Find(EditorLogTracker.ProcessNames(projects));
         }
-        var live = _tracker.Update(projects, running);
+        var live = _tracker.Update(projects, running, out var moves);
+        foreach (var move in moves)
+        {
+            if (_logs.TryGetValue(move.From, out var from) && from.IsLive && SameProject(from.Project, move.Project))
+            {
+                // Its own processes write another file now, found before the line saying so was read: what's new in this
+                // one, to that line if it's there, is its last.
+                ReadLog(from, final: false, to =>
+                {
+                    if (_tracker.Holds(from.Project.Root, to))
+                    {
+                        return true;
+                    }
+                    _tracker.Move(from.Path, to);
+                    return false;
+                });
+                MoveLog(from, move);
+            }
+        }
         var checks = new List<EditorLogCheck>(live.Count);
         var seen = new HashSet<string>(_logs.Comparer);
         foreach (var log in live)
@@ -171,9 +202,10 @@ public sealed class EditorLogService : IDisposable
             if (followed is null || isNew)
             {
                 // A log starting, or starting again: read from its start, as a new file.
-                followed = new Followed(log.Path, log.Project.Source.NewParser(_services.Time.LocalTimeZone));
+                followed = new Followed(log.Path, log.Project, _services.Time.LocalTimeZone);
                 _logs[log.Path] = followed;
             }
+            followed.Project = log.Project;
             followed.IsLive = true;
             followed.Writers = writers;
             checks.Add(new EditorLogCheck(log, isNew, isNew ? StartedBy(log, tabs) : null));
@@ -220,23 +252,79 @@ public sealed class EditorLogService : IDisposable
     {
         foreach (var followed in _logs.Values.ToArray())
         {
-            if (!followed.IsLive && !followed.FinalRead)
+            if ((!followed.IsLive && !followed.FinalRead) || !IsFollowed(followed))
             {
+                // Done with, or moved from earlier in this loop.
                 continue;
             }
             var final = followed.FinalRead;
             followed.FinalRead = false;
-            var read = followed.Read(final);
-            if (read is not null)
+            LogMove? own = null;
+            ReadLog(followed, final, to =>
             {
-                _services.Dispatcher.Post(() => Read?.Invoke(followed.Path, read));
+                // A line saying a log moved: its processes write the file it names from now on.
+                if (_tracker.Move(followed.Path, to) is not { } move || !SameProject(move.Project, followed.Project))
+                {
+                    return false;
+                }
+                own ??= move;
+                return true;
+            });
+            if (own is not null)
+            {
+                MoveLog(followed, own);
             }
-            if (final)
+            else if (final && IsFollowed(followed))
             {
                 _logs.Remove(followed.Path);
             }
         }
     }
+
+    /// <summary>
+    /// Reads what's new in a log and says so. <paramref name="isOwnMove"/> is told where each line saying it moved says
+    /// it moved to, and says whether that's this log's processes' move: its lines stop at the first that is.
+    /// </summary>
+    private void ReadLog(Followed followed, bool final, Func<string, bool> isOwnMove)
+    {
+        var read = followed.Read(final, isOwnMove);
+        if (read is not null)
+        {
+            _services.Dispatcher.Post(() => Read?.Invoke(followed.Path, read));
+        }
+    }
+
+    /// <summary>
+    /// The log's processes write <paramref name="move"/>'s file now: the log is read no more, and the other file is read
+    /// from its start, already written by them, so the next check finds it carried on rather than starting.
+    /// </summary>
+    private void MoveLog(Followed from, LogMove move)
+    {
+        if (IsFollowed(from))
+        {
+            _logs.Remove(from.Path);
+        }
+        var writers = move.Writers.Select(w => w.Key).ToHashSet();
+        if (_logs.TryGetValue(move.To, out var to) && to.IsLive)
+        {
+            writers.UnionWith(to.Writers);
+        }
+        else
+        {
+            to = new Followed(move.To, move.Project, _services.Time.LocalTimeZone);
+            _logs[move.To] = to;
+        }
+        to.IsLive = true;
+        to.Writers = writers;
+        var moved = new EditorLogMove(from.Path, new LiveLog(move.To, move.Project, move.Writers));
+        _services.Dispatcher.Post(() => Moved?.Invoke(moved));
+    }
+
+    /// <summary>Whether it's still the log being read at its path, not one moved from or done with.</summary>
+    private bool IsFollowed(Followed followed) => _logs.TryGetValue(followed.Path, out var current) && ReferenceEquals(current, followed);
+
+    private bool SameProject(FollowedProject a, FollowedProject b) =>
+        string.Equals(a.ProjectPath, b.ProjectPath, _services.ProjectTools.OS.PathComparison());
 
     public void Dispose()
     {
@@ -253,12 +341,15 @@ public sealed class EditorLogService : IDisposable
     {
         private readonly LogTail _tail;
         private readonly EditorLogParser _parser;
+        private readonly LogMoveReader? _moves;
         private bool _resetThisRead;
 
-        public Followed(string path, EditorLogParser parser)
+        public Followed(string path, FollowedProject project, TimeZoneInfo zone)
         {
             Path = path;
-            _parser = parser;
+            Project = project;
+            _parser = project.Source.NewParser(zone);
+            _moves = project.Source.NewMoveReader?.Invoke();
             _tail = new LogTail(path, beforeWindow: line =>
             {
                 // Only a fresh read passes lines over: the log starts afresh from its first.
@@ -269,6 +360,9 @@ public sealed class EditorLogService : IDisposable
 
         public string Path { get; }
 
+        /// <summary>The project whose processes write it, whose folder a move to a file in it is this log's own.</summary>
+        public FollowedProject Project { get; set; }
+
         public bool IsLive { get; set; }
 
         /// <summary>Its writers have gone since the last read.</summary>
@@ -276,12 +370,32 @@ public sealed class EditorLogService : IDisposable
 
         public HashSet<(int Pid, DateTimeOffset? StartedAt)> Writers { get; set; } = [];
 
-        /// <summary>What's new, read as entries and counted; null when there's nothing to say.</summary>
-        public EditorLogRead? Read(bool final)
+        /// <summary>
+        /// What's new, read as entries and counted; null when there's nothing to say. Each line saying the log moved goes
+        /// to <paramref name="isOwnMove"/>, and the lines stop at the first it says is this log's own.
+        /// </summary>
+        public EditorLogRead? Read(bool final, Func<string, bool> isOwnMove)
         {
             _resetThisRead = false;
             var read = _tail.Read(final);
-            if (read.Lines.Count == 0 && !read.Fresh)
+            var lines = read.Lines;
+            if (_moves is { } reader)
+            {
+                var stop = -2;
+                foreach (var move in reader.Read(lines, read.Fresh, final))
+                {
+                    // Each is told, so another project's move after this one's still moves that one.
+                    if (isOwnMove(move.To) && stop == -2)
+                    {
+                        stop = move.Line;
+                    }
+                }
+                if (stop > -2)
+                {
+                    lines = lines.Take(stop + 1).ToArray();
+                }
+            }
+            if (lines.Count == 0 && !read.Fresh)
             {
                 return null;
             }
@@ -289,7 +403,7 @@ public sealed class EditorLogService : IDisposable
             {
                 StartAfresh();
             }
-            foreach (var line in read.Lines)
+            foreach (var line in lines)
             {
                 _parser.Add(line);
             }
