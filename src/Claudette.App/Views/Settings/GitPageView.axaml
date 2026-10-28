@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Claudette.App.ViewModels.Settings"
+             xmlns:c="using:Claudette.App.Controls"
+             x:Class="Claudette.App.Views.Settings.GitPageView" ClipToBounds="False"
+             x:DataType="settings:GitPage">
+  <!-- Git, in Source control (DESIGN.md §14) -->
+  <StackPanel Spacing="32">
+    <!-- The branch on each tab's row (DESIGN.md §4, "Sidebar") -->
+    <c:SettingsSection Key="tabRows">
+      <c:SettingRow Key="appearance.showBranchOnTabs">
+        <ToggleSwitch IsChecked="{Binding ShowBranchOnTabs}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- Cleaning up worktrees (DESIGN.md §4, "Cleaning up worktrees") -->
+    <c:SettingsSection Key="worktrees">
+      <c:SettingRow Key="general.removeMergedWorktrees">
+        <ToggleSwitch IsChecked="{Binding RemoveMergedWorktrees}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.removeInactiveWorktreesAfterDays">
+        <ComboBox ItemsSource="{Binding InactiveDaysChoices}" SelectedItem="{Binding RemoveInactiveWorktreesAfter}" />
+      </c:SettingRow>
+      <c:SettingRow Key="general.cleanUpWorktrees" Description="{Binding WorktreeCleanupText}">
+        <Button Content="Clean up now" Command="{Binding CleanUpWorktreesCommand}" IsEnabled="{Binding CanCleanUpWorktrees}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- The git Claudette runs, and the version found -->
+    <c:SettingsSection Key="git">
+      <c:SettingRow Key="git.path" IsStacked="True">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <TextBox Classes="mono" Text="{Binding GitPath, UpdateSourceTrigger=LostFocus}" PlaceholderText="Found on your PATH" AutomationProperties.Name="Path to git" />
+          <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseGitPathCommand}" />
+        </Grid>
+        <c:SettingRow.Details>
+          <StackPanel Spacing="4">
+            <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding GitFoundText}"
+                       IsVisible="{Binding GitFoundText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding GitProblem}"
+                       IsVisible="{Binding GitProblem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- What the Project Files tab shows of git (DESIGN.md §18, "Project files") -->
+    <c:SettingsSection Key="projectFiles">
+      <c:SettingRow Key="git.newFilesTabsShow">
+        <c:SettingRow.Details>
+          <StackPanel Classes="options">
+            <RadioButton GroupName="NewFilesTabsShow" Content="Claude's changes" IsChecked="{Binding NewFilesTabsShowClaudesChanges}" />
+            <RadioButton GroupName="NewFilesTabsShow" Content="Changes against git HEAD" IsChecked="{Binding NewFilesTabsShowGitHead}" />
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="git.ignoredFiles">
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <RadioButton GroupName="IgnoredFiles" Content="Dimmed" IsChecked="{Binding IgnoredFilesDimmed}" />
+          <RadioButton GroupName="IgnoredFiles" Content="Hidden" IsChecked="{Binding IgnoredFilesHidden}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

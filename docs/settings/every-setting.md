@@ -29,8 +29,6 @@ None of this page syncs, and a tab can't change it for itself.
 | **Keep this computer awake** | Keeping the computer awake | Off | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
 | **When**: **Only while Claude has work to finish** or **Whenever Claudette is running** | Keeping the computer awake | Only while Claude has work to finish | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
 | **Also while tabs are connected to the Claude app** | Keeping the computer awake | On | [The Claude app](../away/the-claude-app.md) |
-| **Remove worktrees once everything in them is merged** | Worktrees | Off | [Worktree tabs](../tabs/worktree-tabs.md) |
-| **Remove worktrees no tab has used for** | Worktrees | Never (or 7, 14, 30 or 90 days), with **Clean up now** | [Worktree tabs](../tabs/worktree-tabs.md) |
 | **Show Claude's service status** | Updates and status | On | [Claude is having problems](../troubleshooting/claude-is-having-problems.md) |
 | **Check for Claudette updates automatically** | Updates and status | On | [Claudette's updates](../updates/claudettes-updates.md) |
 | **Include pre-releases** | Updates and status | Off | [Claudette's updates](../updates/claudettes-updates.md) |
@@ -76,7 +74,6 @@ The page starts with a preview that shows your choices as you make them.
 | **Show when the prompt cache expires** | Message box | On | Yes | [The prompt cache](../usage/the-prompt-cache.md) |
 | **Suggest my next prompt** | Message box | Off | No | [Prompt suggestions](../composer/prompt-suggestions.md) |
 | **Show context** | Tab rows | On | Yes | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
-| **Show git branch** | Tab rows | On | Yes | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
 | **Show task progress** | Tab rows | On | Yes | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
 
 ## Notifications
@@ -253,9 +250,22 @@ Each kind of project Claudette knows has a page, which starts with two switches 
 | **Tell Claude about Godot projects** | Projects | On | [Godot](../project-tools/godot.md) |
 | **Godot executable**, with **Browse…** and **Detect** | Defaults | Found automatically | [Godot](../project-tools/godot.md) |
 
+## Git
+
+The first page under **Source control**. A tab can't change any of it for itself.
+
+| Setting | Section | Default | Syncs | Explained in |
+|---|---|---|---|---|
+| **Show the git branch** | Tab rows | On | Yes | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
+| **Remove worktrees once everything in them is merged** | Worktrees | Off | No | [Worktree tabs](../tabs/worktree-tabs.md) |
+| **Remove worktrees no tab has used for** | Worktrees | Never (or 7, 14, 30 or 90 days), with **Clean up now** | No | [Worktree tabs](../tabs/worktree-tabs.md) |
+| **Path to git**, with **Browse…** | Git | Empty: the first git on your `PATH` | No | [Git](git.md) |
+| **New Files tabs show** | Project Files tab | Claude's changes (or Changes against git HEAD) | No | [Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md#what-the-changes-are-against) |
+| **Files git ignores** | Project Files tab | Dimmed (or Hidden) | No | [The explorer](../project-files/the-explorer.md) |
+
 ## Perforce
 
-None of this page syncs.
+The second page under **Source control**. None of this page syncs.
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|

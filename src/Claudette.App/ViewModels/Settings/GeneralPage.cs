@@ -1,19 +1,13 @@
 using Claudette.Core.LoginItems;
 using Claudette.Core.Settings;
 using Claudette.Core.Updates;
-using CommunityToolkit.Mvvm.Input;
 
 namespace Claudette.App.ViewModels.Settings;
 
-/// <summary>A choice for <b>Remove worktrees no tab has used for</b>.</summary>
-public sealed record InactiveDaysChoice(int Days)
-{
-    public override string ToString() => Days == 0 ? "Never" : $"{Days} days";
-}
-
 /// <summary>
 /// Settings → General (DESIGN.md §14): starting at login and restoring tabs, closing a working tab, keeping the computer
-/// awake, cleaning up worktrees, Claude's service status and Claudette's own updates. Dispose it with the window.
+/// awake, Claude's service status and Claudette's own updates. Cleaning up worktrees is on Git (<see cref="GitPage"/>).
+/// Dispose it with the window.
 /// </summary>
 public sealed partial class GeneralPage : SettingsPage, IDisposable
 {
@@ -44,20 +38,6 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
                 s => s.ClaudeCode.KeepAwakeWhileConnected, (s, v) => s.ClaudeCode.KeepAwakeWhileConnected = v,
                 "So the Claude app can still reach them. The screen can still turn off.", keywords: ["remote control", "phone"]),
         ]);
-        Section("worktrees", "Worktrees",
-        [
-            Setting("general.removeMergedWorktrees", "Remove worktrees once everything in them is merged",
-                s => s.General.RemoveMergedWorktrees, (s, v) => s.General.RemoveMergedWorktrees = v,
-                "Every commit is on another branch, so nothing is lost.",
-                "The worktree and its branch go a day after a tab last used it. One with uncommitted changes is always kept, and files git ignores there, such as build output, go with it.",
-                ["clean up", "git"]),
-            Setting("general.removeInactiveWorktreesAfterDays", "Remove worktrees no tab has used for",
-                s => s.General.RemoveInactiveWorktreesAfterDays, (s, v) => s.General.RemoveInactiveWorktreesAfterDays = v,
-                "Its branch stays when it has commits on no other branch.",
-                "So a new worktree tab can carry on from the branch. One with uncommitted changes is always kept.",
-                ["clean up", "stale", "git"]),
-            Info("general.cleanUpWorktrees", "Last cleanup", keywords: ["clean up now", "worktrees"]),
-        ], description: "The worktrees of worktree tabs that no open tab works in.");
         Section("updates", "Updates and status",
         [
             Setting("general.showServiceStatus", "Show Claude's service status", s => s.General.ShowServiceStatus, (s, v) => s.General.ShowServiceStatus = v,
@@ -76,7 +56,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
 
     public override string IconKey => "IconSettings";
 
-    public override string Description => "Starting Claudette, keeping the computer awake, worktrees and updates.";
+    public override string Description => "Starting Claudette, keeping the computer awake, and updates.";
 
     // ---- Starting at login (DESIGN.md §9, "Starting at login") ----------------------------------------------------
 
@@ -240,82 +220,6 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
     }
 
     public void Dispose() => Services.KeepAwake.PropertyChanged -= OnKeepAwakeChanged;
-
-    // ---- Cleaning up worktrees (DESIGN.md §4, "Cleaning up worktrees") ---------------------------------------------
-
-    public bool RemoveMergedWorktrees
-    {
-        get => Settings.General.RemoveMergedWorktrees;
-        set
-        {
-            Set(value, v => Settings.General.RemoveMergedWorktrees = v);
-            OnPropertyChanged(nameof(CanCleanUpWorktrees));
-        }
-    }
-
-    /// <summary>The choices for <b>Remove worktrees no tab has used for</b>; 0 is never.</summary>
-    public IReadOnlyList<InactiveDaysChoice> InactiveDaysChoices { get; } = [.. new[] { 0, 7, 14, 30, 90 }.Select(d => new InactiveDaysChoice(d))];
-
-    public InactiveDaysChoice RemoveInactiveWorktreesAfter
-    {
-        get => InactiveDaysChoices.FirstOrDefault(c => c.Days == Settings.General.RemoveInactiveWorktreesAfterDays)
-            ?? new InactiveDaysChoice(Settings.General.RemoveInactiveWorktreesAfterDays);
-        set
-        {
-            if (value is not null && value.Days != Settings.General.RemoveInactiveWorktreesAfterDays)
-            {
-                Set(value.Days, v => Settings.General.RemoveInactiveWorktreesAfterDays = v);
-                OnPropertyChanged(nameof(CanCleanUpWorktrees));
-            }
-        }
-    }
-
-    /// <summary>What the last cleanup removed, and when: "Last removed brisk-otter and calm-heron, 2 h ago."</summary>
-    public string WorktreeCleanupText
-    {
-        get
-        {
-            if (_cleanupResult is { } result)
-            {
-                return result;
-            }
-            if (Services.State.LastWorktreeCleanup is not { Removed.Count: > 0 } last)
-            {
-                return "Nothing removed yet. Claudette looks a minute after it starts, then every hour.";
-            }
-            var names = last.Removed.Select(p => Path.GetFileName(Path.TrimEndingDirectorySeparator(p))).ToList();
-            return $"Last removed {Core.Formats.List(names)}, {Core.Formats.Ago(Services.Time.GetUtcNow() - last.At)}.";
-        }
-    }
-
-    public bool CanCleanUpWorktrees => (RemoveMergedWorktrees || Settings.General.RemoveInactiveWorktreesAfterDays > 0) && !_cleaningUp;
-
-    private string? _cleanupResult;
-    private bool _cleaningUp;
-
-    /// <summary><b>Clean up now</b>: a pass straight away, rather than at the next hour.</summary>
-    [RelayCommand]
-    private async Task CleanUpWorktreesAsync()
-    {
-        _cleaningUp = true;
-        OnPropertyChanged(nameof(CanCleanUpWorktrees));
-        try
-        {
-            var removed = await Services.Worktrees.RunAsync();
-            _cleanupResult = removed.Count switch
-            {
-                0 => "Nothing to remove right now.",
-                1 => $"Removed {Path.GetFileName(removed[0])}.",
-                _ => $"Removed {removed.Count} worktrees: {Core.Formats.List(removed.Select(p => Path.GetFileName(Path.TrimEndingDirectorySeparator(p))).ToList())}.",
-            };
-        }
-        finally
-        {
-            _cleaningUp = false;
-            OnPropertyChanged(nameof(CanCleanUpWorktrees));
-            OnPropertyChanged(nameof(WorktreeCleanupText));
-        }
-    }
 
     // ---- Claudette's own updates (DESIGN.md §2, "Updating Claudette") ---------------------------------------------
 

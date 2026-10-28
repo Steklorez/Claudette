@@ -22,7 +22,7 @@ The header has the group's name, then:
 
 - Folders come first, then files, each by name, ignoring case. A folder's entries are read when you expand it.
 - `.git` isn't shown.
-- What git ignores is shown dimmed. Outside a repository, the folders the composer's `@` list skips (`node_modules`, `bin`, `obj` and the like) are dimmed instead.
+- What git ignores is shown dimmed. Outside a repository, the folders the composer's `@` list skips (`node_modules`, `bin`, `obj` and the like) are dimmed instead. To leave them out of the tree altogether, set Settings → Git → **Files git ignores** to **Hidden**; the open Files tabs follow at once.
 - A link to a folder has a link badge and expands like a folder, unless it leads back up into the tree.
 - **It follows the disk.** Half a second after files appear, go or are renamed, the tree is drawn again, keeping what's expanded and selected.
 
@@ -116,6 +116,7 @@ Opening the Files tab from its group, with the **Project files** button or **Ope
 | Setting | Default | Where |
 |---|---|---|
 | **The explorer is on the** | Left | Settings → **Files and diffs** |
+| **Files git ignores** | Dimmed | Settings → **Git** |
 
 ## Shortcuts
 

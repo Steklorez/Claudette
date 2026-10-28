@@ -29,20 +29,104 @@ public sealed record GitChange(string Path, GitChangeKind Kind, string? OldPath,
     public HiddenChanges? Hidden { get; init; }
 }
 
+/// <summary>What <see cref="GitWorkingTree.CheckAsync"/> found: the git Claudette runs and its version, or why it can't run it.</summary>
+/// <param name="Path">Where it is: the path set, or the first git on the <c>PATH</c>. Null when there's none.</param>
+/// <param name="Version">What <c>git --version</c> says after "git version", such as <c>2.47.1.windows.2</c>.</param>
+/// <param name="Problem">Why it can't be used, written for the user; null when it can.</param>
+public sealed record GitCheck(string? Path, string? Version, string? Problem);
+
 /// <summary>
 /// The "working tree vs HEAD" view of a repository (DESIGN.md §8), which also shows changes made by Bash commands or by
-/// the user. Runs <c>git</c> from <c>PATH</c>. Every call has a timeout, and returns null or empty instead of throwing
-/// when git is missing, times out, or the folder isn't in a repository.
+/// the user, and the one way Claudette runs git: everything it asks git goes through its <c>RunAsync</c>.
+/// Runs the git Settings → Git → <b>Path to git</b> names (<see cref="ConfiguredPath"/>), or <c>git</c> from <c>PATH</c>.
+/// Every call has a timeout, and returns null or empty instead of throwing when git is missing, times out, or the folder
+/// isn't in a repository.
 /// </summary>
+/// <param name="gitExecutable">The git to run while no path is set: <c>git</c>, found on <c>PATH</c>.</param>
 /// <param name="environment">
 /// The user environment git runs with, and whose <c>PATH</c> it's found on (DESIGN.md §13), so git and its helpers
 /// (Git LFS, credential helpers) are the ones a terminal would use. Null: Claudette's own.
 /// </param>
-public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeProvider, string gitExecutable = "git", UserEnvironment? environment = null)
+public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeProvider, string gitExecutable = GitWorkingTree.DefaultExecutable, UserEnvironment? environment = null)
 {
+    /// <summary>The git run while no path is set, from <c>PATH</c>.</summary>
+    public const string DefaultExecutable = "git";
+
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
+    /// <summary>How long <c>git --version</c> may take: a program that isn't git may never finish.</summary>
+    public static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(10);
+
     public TimeSpan Timeout { get; init; } = DefaultTimeout;
+
+    /// <summary>
+    /// Settings → Git → <b>Path to git</b> (DESIGN.md §14), read each time git runs, so a change applies to the next run;
+    /// null or empty runs <c>gitExecutable</c>.
+    /// </summary>
+    public Func<string?>? ConfiguredPath { get; init; }
+
+    /// <summary>The program a run starts: the path set, or <c>gitExecutable</c>.</summary>
+    public string Executable => ConfiguredPath?.Invoke() is { } path && !string.IsNullOrWhiteSpace(path) ? path.Trim() : gitExecutable;
+
+    private IFileProbe Probe => environment?.Probe ?? FileProbe.Instance;
+
+    /// <summary>
+    /// The git a run starts and its version, for Settings → Git → <b>Path to git</b> (DESIGN.md §14): where it is, from the
+    /// path set or the user environment's <c>PATH</c>, and what <c>git --version</c> says. A path to nothing, to a folder,
+    /// or to a program that doesn't answer as git does has a problem instead. Never throws.
+    /// </summary>
+    public async Task<GitCheck> CheckAsync(CancellationToken cancellationToken = default)
+    {
+        var program = Executable;
+        string? path;
+        if (IsBareName(program))
+        {
+            path = Probe.FindOnPath(program) ?? (OperatingSystem.IsWindows() && !Path.HasExtension(program) ? Probe.FindOnPath(program + ".exe") : null);
+            if (path is null)
+            {
+                return new GitCheck(null, null, program == DefaultExecutable
+                    ? "No git was found on your PATH. Install git, or set where it is."
+                    : $"No {program} was found on your PATH.");
+            }
+        }
+        else
+        {
+            if (Directory.Exists(program))
+            {
+                return new GitCheck(program, null, "That's a folder. Choose the git program in it.");
+            }
+            if (!Probe.FileExists(program))
+            {
+                return new GitCheck(program, null, "There's no file at that path.");
+            }
+            path = program;
+        }
+        ProcessResult result;
+        try
+        {
+            result = await ProcessRunner.RunAsync(launcher, await SpecAsync(null, ["--version"], cancellationToken).ConfigureAwait(false), CheckTimeout, timeProvider, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is TimeoutException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            return new GitCheck(path, null, ex is TimeoutException ? "It didn't answer as git does." : $"It couldn't be run: {ex.Message}");
+        }
+        return ParseVersion(result.StandardOutput) is { } version && result.ExitCode == 0
+            ? new GitCheck(path, version, null)
+            : new GitCheck(path, null, "It isn't git: it didn't answer as git does.");
+    }
+
+    /// <summary>The version in <c>git --version</c>'s output, <c>git version 2.47.1.windows.2</c>; null for anything else.</summary>
+    public static string? ParseVersion(string output)
+    {
+        const string prefix = "git version ";
+        var line = output.Split('\n', 2)[0].Trim();
+        return line.StartsWith(prefix, StringComparison.Ordinal) && line.Length > prefix.Length ? line[prefix.Length..].Trim() : null;
+    }
+
+    /// <summary>A program's name alone, which is looked for on <c>PATH</c>, rather than a path to it.</summary>
+    private static bool IsBareName(string program) =>
+        program.IndexOfAny(['/', '\\']) < 0 && !Path.IsPathRooted(program);
 
     /// <summary>Untracked files larger than this aren't read to count their lines.</summary>
     public long MaxCountBytes { get; init; } = TextFiles.DefaultMaxBytes;
@@ -350,11 +434,7 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
             {
                 return null;
             }
-            var spec = new ProcessStartSpec(gitExecutable, ["-c", "core.quotepath=false", .. arguments]) { WorkingDirectory = workingDirectory };
-            if (environment is not null)
-            {
-                spec = await environment.ApplyAsync(spec, cancellationToken).ConfigureAwait(false);
-            }
+            var spec = await SpecAsync(workingDirectory, ["-c", "core.quotepath=false", .. arguments], cancellationToken).ConfigureAwait(false);
             if (variables is not null)
             {
                 spec = UserEnvironment.WithVariables(spec, variables);
@@ -365,6 +445,13 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
         {
             return null;
         }
+    }
+
+    /// <summary>A run of the git <see cref="Executable"/> names, in the user environment.</summary>
+    private async Task<ProcessStartSpec> SpecAsync(string? workingDirectory, IReadOnlyList<string> arguments, CancellationToken cancellationToken)
+    {
+        var spec = new ProcessStartSpec(Executable, arguments) { WorkingDirectory = workingDirectory };
+        return environment is null ? spec : await environment.ApplyAsync(spec, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

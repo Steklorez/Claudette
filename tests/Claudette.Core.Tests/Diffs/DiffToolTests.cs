@@ -130,6 +130,23 @@ public sealed partial class DiffToolTests : IDisposable
             detected.Select(d => (d.Preset.Id, d.ExecutablePath)));
     }
 
+    /// <summary>The git difftool preset runs the git Settings → Git → Path to git names, when one is (DESIGN.md §14).</summary>
+    [Fact]
+    public void The_git_difftool_preset_runs_the_git_path_set()
+    {
+        var probe = new FakeFileProbe
+        {
+            Files = { @"D:\Tools\PortableGit\bin\git.exe" },
+            OnPath = { ["git.exe"] = @"C:\Program Files\Git\cmd\git.exe", ["git2"] = @"C:\odd\git2" },
+        };
+        string? Git(string? path) => DiffToolDetector.Detect(probe, DiffToolPlatform.Windows, path).SingleOrDefault(d => d.Preset.Id == DiffToolPresets.GitDifftool)?.ExecutablePath;
+
+        Assert.Equal(@"C:\Program Files\Git\cmd\git.exe", Git(null));
+        Assert.Equal(@"D:\Tools\PortableGit\bin\git.exe", Git(@" D:\Tools\PortableGit\bin\git.exe "));
+        Assert.Equal(@"C:\odd\git2", Git("git2"));
+        Assert.Null(Git(@"D:\Tools\gone\git.exe"));
+    }
+
     [Fact]
     public void Undefined_variables_do_not_match()
     {

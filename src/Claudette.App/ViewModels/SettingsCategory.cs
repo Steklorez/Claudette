@@ -37,6 +37,8 @@ public static class SettingsCategory
 
     public const string AllTools = "All tools";
 
+    public const string Git = "Git";
+
     public const string Perforce = "Perforce";
 
     public const string Advanced = "Advanced";
@@ -44,12 +46,14 @@ public static class SettingsCategory
 
 /// <summary>
 /// The Settings sidebar's groups (DESIGN.md §14), in order: a heading and its categories. Claudette ends with About, which
-/// has no settings; Claude ends with Advanced, which is mostly about running Claude Code; Project tools has All tools, a
-/// page for each project type Claudette knows, in its order, then Perforce.
+/// has no settings; Claude ends with Advanced, which is mostly about running Claude Code; Project tools has All tools,
+/// then a page for each project type Claudette knows, in its order; Source control has Git, then Perforce.
 /// </summary>
 public static class SettingsSidebar
 {
     public const string ProjectTools = "Project tools";
+
+    public const string SourceControl = "Source control";
 
     public static IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types) =>
     [
@@ -57,11 +61,22 @@ public static class SettingsSidebar
             SettingsCategory.About]),
         ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
         ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files]),
-        (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name), SettingsCategory.Perforce]),
+        (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name)]),
+        (SourceControl, [SettingsCategory.Git, SettingsCategory.Perforce]),
     ];
 
     /// <summary>Every category, in the sidebar's order.</summary>
     public static IReadOnlyList<string> Categories(IEnumerable<IProjectType> types) => [.. Groups(types).SelectMany(g => g.Categories)];
+
+    /// <summary>
+    /// Other words every page of a group is found by, besides its own (DESIGN.md §14, "Search"): Source control's, so
+    /// "version control" finds Git and Perforce alike.
+    /// </summary>
+    public static IReadOnlyList<string> GroupWords(string heading) => heading switch
+    {
+        SourceControl => [SourceControl, "version control", "vcs"],
+        _ => [],
+    };
 }
 
 /// <summary>An entry in the Settings sidebar's lists: a group's heading, or a page to show.</summary>

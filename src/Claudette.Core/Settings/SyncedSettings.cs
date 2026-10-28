@@ -7,7 +7,10 @@ namespace Claudette.Core.Settings;
 /// </summary>
 public static class SyncedSettings
 {
-    /// <summary>The sections that sync. The path to claude, the machine name, the library folder, the diff tool, folders and tabs stay per machine.</summary>
+    /// <summary>
+    /// The sections that sync. The paths to claude and git, the machine name, the library folder, the diff tool, folders
+    /// and tabs stay per machine.
+    /// </summary>
     public static IReadOnlyList<string> Sections { get; } = ["appearance", "newTabs", "usage", "checkIns", "quickSuffixes", "processes", "notifications", "keyboard"];
 
     /// <summary>Within the synced sections, what stays per machine: the zoom suits this machine's screen.</summary>

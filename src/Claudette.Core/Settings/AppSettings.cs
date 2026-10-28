@@ -45,6 +45,49 @@ public sealed class AppSettings
     public AdvancedSettings Advanced { get; set; } = new();
 
     public PerforceSettings Perforce { get; set; } = new();
+
+    /// <summary>Settings → Git (DESIGN.md §14): the git Claudette runs, and what the Project Files tab shows of git. Per machine.</summary>
+    public GitSettings Git { get; set; } = new();
+}
+
+/// <summary>
+/// Settings → Git (DESIGN.md §14). The page also has <b>Show the git branch</b> and <b>Worktrees</b>, which are kept
+/// where they were before it (<see cref="AppearanceSettings.ShowBranchOnTabs"/>, <see cref="GeneralSettings"/>), so
+/// choices made before carry over.
+/// </summary>
+public sealed class GitSettings
+{
+    /// <summary>
+    /// The git Claudette runs, for everything it asks git; null for the first <c>git</c> on the user environment's
+    /// <c>PATH</c>. Claude's own git commands, in its Bash tool, don't use it.
+    /// </summary>
+    public string? Path { get; set; }
+
+    /// <summary>What a Project Files tab compares files with when it opens with nothing saved; each tab then has its own.</summary>
+    public FilesTabChanges NewFilesTabsShow { get; set; } = FilesTabChanges.ClaudesChanges;
+
+    /// <summary>What the Project Files tab's explorer does with what git ignores (outside a repository, the folders the <c>@</c> list skips).</summary>
+    public IgnoredFiles IgnoredFiles { get; set; } = IgnoredFiles.Dimmed;
+}
+
+/// <summary>Settings → Git → <b>New Files tabs show</b> (DESIGN.md §18, "Project files", "Claude's changes").</summary>
+public enum FilesTabChanges
+{
+    /// <summary>Claude's changes, against what each file held before Claude first changed it.</summary>
+    ClaudesChanges,
+
+    /// <summary>Every change against git's HEAD, in a repository: the user's, commands' and closed tabs' too.</summary>
+    GitHead,
+}
+
+/// <summary>Settings → Git → <b>Files git ignores</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+public enum IgnoredFiles
+{
+    /// <summary>In the tree, drawn dimmed.</summary>
+    Dimmed,
+
+    /// <summary>Left out of the tree.</summary>
+    Hidden,
 }
 
 /// <summary>

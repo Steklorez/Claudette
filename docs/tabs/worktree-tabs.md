@@ -49,7 +49,7 @@ A folder's actions marked to run in each new worktree, such as installing depend
 
 Kept worktrees pile up. Claudette can remove them on its own. Both rules are off by default.
 
-- Settings → General → **Worktrees** → **Remove worktrees once everything in them is merged**: a worktree with nothing of its own (no uncommitted changes, and every commit on another branch) goes with its branch, a day after a tab last used it.
+- Settings → Git → **Worktrees** → **Remove worktrees once everything in them is merged**: a worktree with nothing of its own (no uncommitted changes, and every commit on another branch) goes with its branch, a day after a tab last used it.
 - **Remove worktrees no tab has used for**: *Never* (the default), 7, 14, 30 or 90 days. The worktree goes, and its branch stays when it has commits on no other branch, so nothing committed is lost.
 - **Clean up now** runs a pass straight away. The settings say what the last pass removed and when (*Last removed brisk-otter and calm-heron, 2 h ago.*).
 
@@ -59,8 +59,8 @@ Claudette looks a minute after it starts and then every hour, while either rule 
 
 ## Settings
 
-- Settings → General → **Worktrees**: the two rules above, and **Clean up now**.
-- Settings → Conversation → Tab rows → **Show git branch**: whether the branch badge shows.
+- Settings → Git → **Worktrees**: the two rules above, and **Clean up now**.
+- Settings → Git → Tab rows → **Show the git branch**: whether the branch badge shows.
 
 ## See also
 

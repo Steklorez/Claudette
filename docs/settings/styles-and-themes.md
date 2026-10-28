@@ -70,10 +70,10 @@ Pick a font from the list of the ones installed, or type a name. Leave a font em
 
 ## What the tab rows show
 
-Three switches in Settings → Conversation → Tab rows decide what a tab's row in the sidebar carries, beside its status icon. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
+Three switches decide what a tab's row in the sidebar carries, beside its status icon: two in Settings → Conversation → Tab rows, and the branch's in Settings → Git → Tab rows. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
 
 - **Show context** puts a small ring on the row that fills as the tab's context window does. It turns amber when Claude Code is about to compact the conversation, and red when it's nearly full ([Context and compacting](../usage/context-and-compacting.md)).
-- **Show git branch** shows the branch the tab's folder has checked out, such as `main`, at the right of the row's second line. A tab in a worktree shows the worktree's name instead.
+- **Show the git branch** shows the branch the tab's folder has checked out, such as `main`, at the right of the row's second line. A tab in a worktree shows the worktree's name instead. It's on the [Git](git.md) page, with the rest of what Claudette does with git.
 - **Show task progress** shows how many of Claude's tasks are done, such as `3/7`, at the right of the second line, and the task Claude is working on in place of the model while it works ([The Tasks page](../plans/the-tasks-page.md)).
 
 All three are on by default.
@@ -92,7 +92,7 @@ All of these sync to your other machines when [settings sync](../history/setting
 | **Code font** | Cascadia Mono, Consolas or Menlo | Settings → Appearance |
 | **Code font size** | 13 | Settings → Appearance |
 | **Show context** | On | Settings → Conversation → Tab rows |
-| **Show git branch** | On | Settings → Conversation → Tab rows |
+| **Show the git branch** | On | Settings → Git → Tab rows |
 | **Show task progress** | On | Settings → Conversation → Tab rows |
 
 ## See also

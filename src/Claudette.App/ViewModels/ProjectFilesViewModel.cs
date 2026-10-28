@@ -27,12 +27,13 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         Group = group;
         State = state;
         Folder = state.Folder;
-        ShowOnlyChanged = state.ShowOnlyChanged;
-        AgainstGitHead = state.AgainstGitHead;
-        _explorerHiddenHere = state.ExplorerHidden;
+        // Before the switches below, whose changes save the state and read the changes again with them.
         _refreshWait = new UiTimeout(services.Time, services.Dispatcher);
         _changesWait = new UiTimeout(services.Time, services.Dispatcher);
         _stateWait = new UiTimeout(services.Time, services.Dispatcher);
+        ShowOnlyChanged = state.ShowOnlyChanged;
+        AgainstGitHead = state.AgainstGitHead;
+        _explorerHiddenHere = state.ExplorerHidden;
         _services.SettingsChanged += OnSettingsChanged;
         _shell.Layout.PropertyChanged += OnLayoutChanged;
         WatchGroupTabs();
@@ -281,6 +282,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         {
             file.OnWordWrapChanged();
         }
+        FollowIgnoredFilesSetting();
     }
 
     /// <summary>Settings → Files and diffs → Word wrap, unless the file showing has its own (<c>Alt+Z</c>).</summary>

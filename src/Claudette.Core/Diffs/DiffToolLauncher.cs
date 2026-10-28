@@ -52,6 +52,9 @@ public sealed class DiffToolLauncher
         _environment = environment;
     }
 
+    /// <summary>Settings → Git → <b>Path to git</b>, which the git difftool preset runs (DESIGN.md §14); null finds git on <c>PATH</c>.</summary>
+    public string? GitPath { get; init; }
+
     /// <summary>
     /// Writes <paramref name="beforeContent"/> to a temporary read-only file in <paramref name="tempDirectory"/> and
     /// opens it against <paramref name="afterPath"/>. Returns once the tool has started; it isn't waited for.
@@ -102,7 +105,7 @@ public sealed class DiffToolLauncher
                     ?? throw new DiffToolException($"There's no diff tool preset called '{choice.PresetId}'. Choose another in Settings.");
                 var variant = preset.For(_platform)
                     ?? throw new DiffToolException($"{preset.Name} isn't available on this OS. Choose another diff tool in Settings.");
-                var found = DiffToolDetector.Find(_probe, _platform, preset)
+                var found = DiffToolDetector.Find(_probe, _platform, preset, GitPath)
                     ?? throw new DiffToolException($"{preset.Name} wasn't found. Install it, or choose another diff tool in Settings.");
                 return (found.ExecutablePath, variant.Arguments);
             case DiffToolKind.Custom:

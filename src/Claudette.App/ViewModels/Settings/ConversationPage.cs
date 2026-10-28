@@ -59,13 +59,10 @@ public sealed class ConversationPage : SettingsPage
             Setting("appearance.showContextOnTabs", "Show context", s => s.Appearance.ShowContextOnTabs, (s, v) => s.Appearance.ShowContextOnTabs = v,
                 "A ring on each tab that fills with its context window.",
                 "It turns amber when Claude Code is about to compact the conversation, and red when it's nearly full.", ["context window", "sidebar", "ring"]),
-            Setting("appearance.showBranchOnTabs", "Show git branch", s => s.Appearance.ShowBranchOnTabs, (s, v) => s.Appearance.ShowBranchOnTabs = v,
-                "The branch each tab's folder has checked out, such as “main”.",
-                "At the right of the row's second line. A tab in a worktree shows the worktree's name instead.", ["git", "sidebar", "worktree"]),
             Setting("appearance.showTaskProgressOnTabs", "Show task progress", s => s.Appearance.ShowTaskProgressOnTabs, (s, v) => s.Appearance.ShowTaskProgressOnTabs = v,
                 "How many of Claude's tasks are done, such as “3/7”.",
                 "At the right of the row's second line, and the task Claude is working on in place of the model while it works.", ["tasks", "to-do", "sidebar"]),
-        ], description: "What each tab's row in the sidebar shows besides its name.");
+        ], description: "What each tab's row in the sidebar shows besides its name. The git branch is on Git.");
     }
 
     public override string IconKey => "IconSettingsConversation";
@@ -181,13 +178,6 @@ public sealed class ConversationPage : SettingsPage
     {
         get => Settings.Appearance.ShowContextOnTabs;
         set => Set(value, v => Settings.Appearance.ShowContextOnTabs = v);
-    }
-
-    /// <summary>The git branch, or worktree, on each tab's row (DESIGN.md §4, "Sidebar").</summary>
-    public bool ShowBranchOnTabs
-    {
-        get => Settings.Appearance.ShowBranchOnTabs;
-        set => Set(value, v => Settings.Appearance.ShowBranchOnTabs = v);
     }
 
     /// <summary>How far Claude's tasks have got on each tab's row (DESIGN.md §5, "Tasks").</summary>

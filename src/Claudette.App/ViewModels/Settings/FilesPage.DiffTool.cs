@@ -17,7 +17,7 @@ public sealed partial class FilesPage
     public IReadOnlyList<DiffToolOption> DiffToolOptions => field ??=
     [
         new DiffToolOption("builtIn", null, "Built-in diff view"),
-        .. DiffToolDetector.Detect(Services.UserEnvironment.Probe).Select(d => new DiffToolOption("preset", d.Preset.Id, $"{d.Preset.Name}  ({d.ExecutablePath})")),
+        .. DiffToolDetector.Detect(Services.UserEnvironment.Probe, Settings.Git.Path).Select(d => new DiffToolOption("preset", d.Preset.Id, $"{d.Preset.Name}  ({d.ExecutablePath})")),
         new DiffToolOption("custom", null, "Custom command…"),
     ];
 
@@ -78,7 +78,7 @@ public sealed partial class FilesPage
             : new DiffToolChoice(DiffToolKind.Preset, settings.PresetId);
         try
         {
-            await new DiffToolLauncher(Services.Launcher, Services.Time, environment: Services.UserEnvironment).TestAsync(choice, Path.Combine(Services.Paths.DiffTempDirectory, "test"));
+            await new DiffToolLauncher(Services.Launcher, Services.Time, environment: Services.UserEnvironment) { GitPath = Settings.Git.Path }.TestAsync(choice, Path.Combine(Services.Paths.DiffTempDirectory, "test"));
             DiffToolTestResult = "Opened a sample diff. If nothing appeared, check the command.";
         }
         catch (Exception ex)

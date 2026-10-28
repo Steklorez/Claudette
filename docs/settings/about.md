@@ -1,7 +1,7 @@
 ---
 title: About
 parent: Settings
-nav_order: 7
+nav_order: 8
 summary: "Settings → About says which Claudette you have, where it is on the web, the trademarks it names, and the licenses of what it's built with."
 ---
 
