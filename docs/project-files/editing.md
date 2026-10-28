@@ -1,7 +1,7 @@
 ---
 title: Editing
 parent: Project files
-nav_order: 5
+nav_order: 6
 summary: "The editor shows one file at a time, in the Files tab, under its file tabs."
 ---
 

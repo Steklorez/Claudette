@@ -347,6 +347,26 @@ public sealed partial class ProjectFilesViewModel
         }
     }
 
+    /// <summary>A folder's <b>Find in folder…</b>: Find in files, looking in it (DESIGN.md §18, "Finding in files").</summary>
+    [RelayCommand]
+    private void FindInFolder(ExplorerRow? row)
+    {
+        if (row is { IsFolder: true } and not NameRow)
+        {
+            _shell.ShowFindInFiles(replace: false, row.FullPath, Group);
+        }
+    }
+
+    /// <summary>A folder's <b>Replace in folder…</b>.</summary>
+    [RelayCommand]
+    private void ReplaceInFolder(ExplorerRow? row)
+    {
+        if (row is { IsFolder: true } and not NameRow)
+        {
+            _shell.ShowFindInFiles(replace: true, row.FullPath, Group);
+        }
+    }
+
     /// <summary>The explorer's <b>Refresh</b>: every folder shown is read again.</summary>
     [RelayCommand]
     private void RefreshExplorer()

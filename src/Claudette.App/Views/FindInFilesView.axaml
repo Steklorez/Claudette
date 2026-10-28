@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:ae="using:AvaloniaEdit"
+             x:Class="Claudette.App.Views.FindInFilesView"
+             x:DataType="vm:FindInFilesViewModel">
+  <!-- Find in files and Replace in files (DESIGN.md §18, "Finding in files"): Rider's popup, over the window. Its look is
+       in Themes/ProjectFilesStyles.axaml. -->
+  <Border Classes="dialog findinfiles" Padding="12">
+    <DockPanel>
+      <!-- Its title, and the project it looks in -->
+      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+        <TextBlock Classes="findtitle" Text="{Binding Title}" />
+        <TextBlock Classes="muted small" Text="{Binding ProjectName}" VerticalAlignment="Center" />
+      </StackPanel>
+
+      <!-- What to look for, with its options -->
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <TextBox x:Name="QueryBox" Text="{Binding Query}" PlaceholderText="Text to find" AutomationProperties.Name="Text to find" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+          <ToggleButton Classes="findoption" IsChecked="{Binding MatchCase}" Content="Aa" ToolTip.Tip="Match case" AutomationProperties.Name="Match case" />
+          <ToggleButton Classes="findoption" IsChecked="{Binding WholeWords}" Content="W" ToolTip.Tip="Words" AutomationProperties.Name="Words" />
+          <ToggleButton Classes="findoption" IsChecked="{Binding IsRegex}" Content=".*" ToolTip.Tip="Regex" AutomationProperties.Name="Regex" />
+        </StackPanel>
+      </Grid>
+
+      <!-- What to put in its place, in Replace in files -->
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,6,0,0" IsVisible="{Binding IsReplaceMode}">
+        <TextBox x:Name="ReplaceBox" Text="{Binding Replacement}" PlaceholderText="Replace with" AutomationProperties.Name="Replace with" />
+        <Button Grid.Column="1" Content="Replace" Command="{Binding ReplaceCommand}" ToolTip.Tip="Replace the selected match" />
+        <Button Grid.Column="2" Content="Replace all" Command="{Binding AskReplaceAllCommand}" />
+      </Grid>
+      <!-- Replace all asks first, in place -->
+      <Border DockPanel.Dock="Top" Classes="findquestion" IsVisible="{Binding IsAskingToReplaceAll}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+            <Button Classes="accent" Content="Replace" Command="{Binding ConfirmReplaceAllCommand}" />
+            <Button Content="Cancel" Command="{Binding CancelReplaceAllCommand}" />
+          </StackPanel>
+          <TextBlock Text="{Binding ReplaceAllText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+        </DockPanel>
+      </Border>
+
+      <!-- Which files: the mask, and the project or a folder -->
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,180,Auto,Auto,*,Auto" ColumnSpacing="8" Margin="0,6,0,0">
+        <TextBlock Classes="muted small" Text="File mask" VerticalAlignment="Center" />
+        <TextBox Grid.Column="1" Classes="mono" Text="{Binding FileMask}" PlaceholderText="*.cs, !*.Designer.cs" AutomationProperties.Name="File mask" />
+        <RadioButton Grid.Column="2" GroupName="FindScope" Content="In project" IsChecked="{Binding IsInProject}" />
+        <RadioButton Grid.Column="3" GroupName="FindScope" Content="Directory" IsChecked="{Binding IsInDirectory}" />
+        <TextBox Grid.Column="4" Classes="mono" Text="{Binding Directory}" IsEnabled="{Binding IsInDirectory}" AutomationProperties.Name="Directory" />
+        <Button Grid.Column="5" Content="⋯" Command="{Binding PickDirectoryCommand}" ToolTip.Tip="Choose a folder" AutomationProperties.Name="Choose a folder" />
+      </Grid>
+
+      <!-- What can't be looked for, and what a replace did -->
+      <TextBlock DockPanel.Dock="Top" Classes="small error" Margin="0,6,0,0" Text="{Binding Problem}" TextWrapping="Wrap" IsVisible="{Binding HasProblem}" />
+      <StackPanel DockPanel.Dock="Top" Margin="0,6,0,0" IsVisible="{Binding HasReplaceNotice}">
+        <TextBlock Classes="muted small" Text="{Binding ReplaceNotice}" TextWrapping="Wrap" />
+        <ItemsControl ItemsSource="{Binding ReplaceProblems}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Classes="small error" Text="{Binding}" TextWrapping="Wrap" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- The counts, and keeping the results -->
+      <Grid DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,8,0,0">
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock x:Name="SummaryText" Classes="muted small" Text="{Binding Summary}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted small" Text="{Binding Notes}" TextWrapping="Wrap" IsVisible="{Binding HasNotes}" />
+          <TextBlock Classes="muted small" x:Name="KeysText" Text="Enter opens · ↑↓ choose · Esc closes" />
+        </StackPanel>
+        <Button Grid.Column="1" Content="Open in Find window" Command="{Binding KeepCommand}" IsVisible="{Binding CanKeep}" VerticalAlignment="Center" />
+      </Grid>
+
+      <!-- The matches, and the selected one in its file -->
+      <Grid RowDefinitions="*,6,*" Margin="0,8,0,0">
+        <ListBox x:Name="HitList" Classes="findhits" ItemsSource="{Binding Hits}" SelectedItem="{Binding SelectedHit}" AutomationProperties.Name="Matches"
+                 DoubleTapped="OnHitDoubleTapped">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="vm:FindHitRow">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700">
+                <TextBlock Classes="findline" TextTrimming="CharacterEllipsis">
+                  <Run Text="{Binding Before}" /><Run Classes="findmatch" Text="{Binding Match}" /><Run Text="{Binding After}" />
+                </TextBlock>
+                <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding Location}" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Classes="muted small" Margin="4,12" Text="{Binding Summary}" IsVisible="{Binding !HasHits}" />
+        <Border Grid.Row="2" Classes="findpreview" IsVisible="{Binding HasPreview}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Classes="muted small" Margin="8,4" Text="{Binding Preview.RelativePath, FallbackValue=''}" TextTrimming="LeadingCharacterEllipsis" />
+            <ae:TextEditor x:Name="PreviewEditor" IsReadOnly="True" ShowLineNumbers="True" FontFamily="{DynamicResource MonoFont}" FontSize="{DynamicResource CodeFontSize}"
+                           Background="Transparent" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Preview" />
+          </DockPanel>
+        </Border>
+      </Grid>
+    </DockPanel>
+  </Border>
+</UserControl>

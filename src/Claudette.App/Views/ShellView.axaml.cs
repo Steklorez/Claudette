@@ -490,6 +490,35 @@ public partial class ShellView : UserControl
             return;
         }
 
+        if (shell.FindInFiles is { } find)
+        {
+            // Find in files has the keys while it's open (DESIGN.md §18, "Finding in files"): Esc closes it, and its own
+            // shortcuts switch between finding and replacing.
+            if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
+            {
+                shell.CloseFindInFiles();
+                e.Handled = true;
+            }
+            else if (Is(KeyboardShortcuts.FindInFiles) || Is(KeyboardShortcuts.ReplaceInFiles))
+            {
+                find.IsReplaceMode = Is(KeyboardShortcuts.ReplaceInFiles);
+                e.Handled = true;
+            }
+            return;
+        }
+        if (Is(KeyboardShortcuts.FindInFiles))
+        {
+            shell.OpenFindInFilesCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        if (Is(KeyboardShortcuts.ReplaceInFiles))
+        {
+            shell.OpenReplaceInFilesCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+
         // With a Project Files tab focused, its own keys, and the window's shortcuts that act on a tab act on its editor
         // (DESIGN.md §18, "Project files", "Keyboard").
         if (shell.SelectedFiles is { } files && HandleFilesKey(files, e, Is))
@@ -709,6 +738,15 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>A click outside the command palette closes it.</summary>
+    /// <summary>A click outside Find in files closes it (DESIGN.md §18, "Finding in files").</summary>
+    private void OnFindInFilesOverlayPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (ReferenceEquals(e.Source, sender))
+        {
+            ViewModel?.CloseFindInFiles();
+        }
+    }
+
     private void OnPaletteOverlayPressed(object? sender, PointerPressedEventArgs e)
     {
         if (ReferenceEquals(e.Source, sender))

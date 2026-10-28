@@ -27,6 +27,8 @@ internal sealed class PlainEditorDocument(string text) : IEditorDocument
         Change(Text[..offset] + replacement + Text[(offset + length)..]);
     }
 
+    public void Replace(IReadOnlyList<Core.ProjectFiles.TextEdit> edits) => Change(Core.ProjectFiles.FindReplace.Apply(Text, edits));
+
     /// <summary>Types <paramref name="typed"/> at <paramref name="offset"/>, as a user would.</summary>
     public void Insert(int offset, string typed) => Change(Text[..offset] + typed + Text[offset..]);
 

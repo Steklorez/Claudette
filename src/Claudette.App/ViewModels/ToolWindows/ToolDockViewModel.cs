@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Claudette.App.Services;
 using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -32,7 +33,7 @@ public sealed partial class ToolDockViewModel : ViewModelBase, IDisposable
 
     private readonly AppState _state;
     private readonly Action _saveState;
-    private readonly List<ToolWindowViewModel> _windows = [];
+    private readonly ObservableCollection<ToolWindowViewModel> _windows = [];
 
     /// <summary>Set once the layout is restored: until then, nothing is worked out or saved.</summary>
     private readonly bool _ready;

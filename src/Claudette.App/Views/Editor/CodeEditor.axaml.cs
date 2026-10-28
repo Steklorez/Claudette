@@ -106,6 +106,7 @@ public partial class CodeEditor : UserControl
         file.FocusRequested += FocusEditor;
         file.TextSettled += UpdateFoldings;
         file.PeekLine = () => _peek.Line;
+        file.SelectionText = () => Editor.SelectedText;
         ShowDocument();
     }
 
@@ -122,6 +123,7 @@ public partial class CodeEditor : UserControl
         file.FocusRequested -= FocusEditor;
         file.TextSettled -= UpdateFoldings;
         file.PeekLine = null;
+        file.SelectionText = null;
         _peek.Remove();
         _coloring?.Dispose();
         _coloring = null;
@@ -150,7 +152,7 @@ public partial class CodeEditor : UserControl
         // Where it was left, or where it was asked to go before the editor was there.
         if (file.TakePendingReveal() is { } pending)
         {
-            Later(() => Reveal(pending.Line, pending.Column, pending.EndLine));
+            Later(() => Reveal(pending.Line, pending.Column, pending.EndLine, pending.EndColumn));
         }
         else
         {
@@ -202,7 +204,7 @@ public partial class CodeEditor : UserControl
                 _coloring = TextMateColoring.Install(Editor.TextArea.TextView, shown, file.Language.Scope, ActualThemeVariant == ThemeVariant.Dark);
                 break;
             case nameof(ProjectFileViewModel.IsShowing) when _file?.IsShowing == true && _file.TakePendingReveal() is { } pending:
-                Later(() => Reveal(pending.Line, pending.Column, pending.EndLine));
+                Later(() => Reveal(pending.Line, pending.Column, pending.EndLine, pending.EndColumn));
                 break;
         }
     }
@@ -261,8 +263,11 @@ public partial class CodeEditor : UserControl
 
     // ---- What the file asks for ---------------------------------------------------------------------------------------
 
-    /// <summary>Goes to a line and column, centered, and selects through <paramref name="endLine"/> when there's one.</summary>
-    private void Reveal(int line, int column, int? endLine)
+    /// <summary>
+    /// Goes to a line and column, centered, and selects through <paramref name="endLine"/> when there's one, or up to
+    /// <paramref name="endColumn"/> when there's that (a match Find in files found).
+    /// </summary>
+    private void Reveal(int line, int column, int? endLine, int? endColumn)
     {
         if (Editor.Document is not { } document)
         {
@@ -270,7 +275,14 @@ public partial class CodeEditor : UserControl
         }
         line = Math.Clamp(line, 1, document.LineCount);
         var start = document.GetLineByNumber(line);
-        if (endLine is { } end && end >= line)
+        if (endColumn is { } stop)
+        {
+            var last = document.GetLineByNumber(Math.Clamp(endLine ?? line, line, document.LineCount));
+            var from = start.Offset + Math.Clamp(column - 1, 0, start.Length);
+            var to = last.Offset + Math.Clamp(stop - 1, 0, last.Length);
+            Editor.Select(from, Math.Max(0, to - from));
+        }
+        else if (endLine is { } end && end >= line)
         {
             var last = document.GetLineByNumber(Math.Clamp(end, line, document.LineCount));
             Editor.Select(start.Offset, last.EndOffset - start.Offset);
@@ -324,7 +336,7 @@ public partial class CodeEditor : UserControl
             {
                 var column = parts.Length > 1 && int.TryParse(parts[1].Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var c) ? c : 1;
                 GoToLineBox.IsVisible = false;
-                Reveal(line, column, null);
+                Reveal(line, column, null, null);
                 FocusEditor();
             }
             e.Handled = true;

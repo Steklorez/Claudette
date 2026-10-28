@@ -5,6 +5,7 @@
              xmlns:tw="using:Claudette.App.ViewModels.ToolWindows"
              xmlns:services="using:Claudette.App.Services"
              xmlns:views="using:Claudette.App.Views"
+             xmlns:vm="using:Claudette.App.ViewModels"
              x:Class="Claudette.App.Views.ToolWindowView"
              x:DataType="tw:ToolWindowViewModel">
   <Panel>
@@ -18,6 +19,10 @@
         <!-- Games with Claudette (DESIGN.md §18) -->
         <DataTemplate DataType="services:GameService">
           <views:GamesView />
+        </DataTemplate>
+        <!-- A search's matches, kept from Find in files (DESIGN.md §18, "Finding in files") -->
+        <DataTemplate DataType="vm:FindResultsViewModel">
+          <views:FindResultsView />
         </DataTemplate>
       </ContentControl.DataTemplates>
     </ContentControl>

@@ -107,6 +107,9 @@ public sealed class AppState
     /// <summary>The Project Files tabs' explorer is hidden, by its button.</summary>
     public bool ExplorerHidden { get; set; }
 
+    /// <summary>What Find in files had last: its query, options, mask and folder (DESIGN.md §18, "Finding in files").</summary>
+    public ProjectFiles.FindInFilesState FindInFiles { get; set; } = new();
+
     /// <summary>
     /// The usage header is drawn taller, with charts of the session and the week (DESIGN.md §6, "Detailed header").
     /// Its chevron and Settings → Appearance both set it. Kept per machine, like the sidebar's collapsed state.

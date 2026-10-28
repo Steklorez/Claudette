@@ -21,6 +21,7 @@ public sealed partial class ShellViewModel
     private void WatchToolWindows()
     {
         ToolWindows.ShowingChanged += TellTabsWhatShows;
+        ToolWindows.Removed += OnToolWindowRemoved;
         ToolWindows.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ToolDockViewModel.RightRoom))

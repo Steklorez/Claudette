@@ -91,7 +91,7 @@ Right-click a file for **Open**, **Open in the OS's app**, **Open diff** (when C
 
 On a program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`), **Open in the OS's app** shows it in its folder rather than running it.
 
-Right-click a folder for **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager**, **Collapse**, **Rename** and **Delete**.
+Right-click a folder for **New file**, **New folder**, **Copy path**, **Copy relative path**, **Reveal in file manager**, **Collapse**, **Find in folder…**, **Replace in folder…** ([Finding in files](finding-in-files.md)), **Rename** and **Delete**.
 
 Right-click the empty space under the tree for **New file** and **New folder**, at the top of the project.
 

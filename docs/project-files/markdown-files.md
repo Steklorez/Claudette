@@ -1,7 +1,7 @@
 ---
 title: Markdown files
 parent: Project files
-nav_order: 6
+nav_order: 7
 summary: "Read a Markdown file rendered, in the editor's place or beside it."
 ---
 

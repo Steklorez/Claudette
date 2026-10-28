@@ -335,12 +335,7 @@ public sealed partial class ProjectFilesViewModel
     /// The project's session tab focused most recently: its changelist is the one the Files tab opens files in, and its
     /// ticket keeper, when ticket handling is on, renews an expired login.
     /// </summary>
-    internal PerforceContext PerforceContext()
-    {
-        var tabs = Group.Tabs.OrderByDescending(t => t.FocusOrder).ToArray();
-        var renewer = tabs.FirstOrDefault(t => t.Perforce.Workspace is not null);
-        return new PerforceContext(Folder, tabs.FirstOrDefault()?.Perforce.WorkingChangelist, renewer is null ? null : renewer.Perforce.RenewLoginAsync);
-    }
+    internal PerforceContext PerforceContext() => PerforceFilesService.ContextFor(Folder, Group.Tabs);
 
     [RelayCommand]
     private void DismissPerforceProblem() => PerforceProblem = null;
@@ -655,24 +650,6 @@ public sealed partial class ProjectFilesViewModel
     /// <summary>A file or folder renamed in the explorer is moved in Perforce, as <b>Rename with p4 move</b> says.</summary>
     private void MoveInPerforce(string oldPath, string newPath, bool isFolder) =>
         RunAutomatically($"move {Path.GetFileName(oldPath)} to {Path.GetFileName(newPath)} in Perforce", context => PerforceFiles.OnRenamedAsync(context, oldPath, newPath, isFolder));
-
-    /// <summary>
-    /// Settings → Perforce → <b>Check out files before they're changed</b>, for Claudette's own writes, such as replacing
-    /// text in files: the depot files among <paramref name="paths"/> are checked out first, in the changelist of the
-    /// project's tab focused last. What Perforce refuses shows under the explorer's header; the files are still written.
-    /// </summary>
-    internal async Task CheckOutBeforeWritingAsync(IReadOnlyList<string> paths, CancellationToken cancellationToken = default)
-    {
-        var outcome = await PerforceFiles.CheckOutBeforeWritingAsync(PerforceContext(), paths, cancellationToken);
-        if (!outcome.Succeeded)
-        {
-            PerforceProblem = $"Couldn't check out every file first: {outcome.Problem}";
-        }
-        foreach (var path in paths)
-        {
-            AfterCheckOut(path);
-        }
-    }
 
     /// <summary>An automatic action, in the background: what Perforce refused shows under the header.</summary>
     private void RunAutomatically(string what, Func<PerforceContext, Task<PerforceOutcome>> run)

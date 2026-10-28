@@ -204,7 +204,7 @@ public sealed partial class ShellViewModel
     /// "Opening files in the editor"). From a conversation the Files tab opens beside it, or in its place, as Settings →
     /// Editor says, and takes the focus. Opened beside it for its first file, its explorer starts hidden.
     /// </summary>
-    internal async Task OpenInEditorAsync(string path, int? line, int? column, int? endLine, TabViewModel? from)
+    internal async Task OpenInEditorAsync(string path, int? line, int? column, int? endLine, TabViewModel? from, int? endColumn = null)
     {
         var group = Groups.Where(g => IsInside(path, g.Folder)).OrderByDescending(g => g.Folder.Length).FirstOrDefault()
             ?? (from is null ? null : Groups.FirstOrDefault(g => g.Tabs.Contains(from)))
@@ -227,7 +227,7 @@ public sealed partial class ShellViewModel
         {
             Selected = files;
         }
-        await files.OpenFileAsync(path, preview: false, line, column, endLine, focus: true);
+        await files.OpenFileAsync(path, preview: false, line, column, endLine, focus: true, endColumn);
     }
 
     /// <summary>

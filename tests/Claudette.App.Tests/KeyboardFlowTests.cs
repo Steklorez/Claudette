@@ -103,7 +103,9 @@ public sealed class KeyboardFlowTests
         // Only what applies now: Claude isn't working, and no other tab is waiting.
         Assert.DoesNotContain(palette.Results, e => e.Label is "Stop Claude" or "Go to the next tab waiting for you");
 
-        palette.Query = "find in";
+        // "find in" is Find in files… too (DESIGN.md §18, "Finding in files").
+        Assert.Contains(palette.Results, e => e.Label == "Find in files…");
+        palette.Query = "find in the";
         Assert.Equal("Find in the conversation", palette.Selected!.Label);
         await palette.RunCommand.ExecuteAsync(null);
 

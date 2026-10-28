@@ -34,6 +34,22 @@ public sealed class TextEditorDocument : IEditorDocument
         Document.Replace(offset, length, text);
     }
 
+    public void Replace(IReadOnlyList<Core.ProjectFiles.TextEdit> edits)
+    {
+        if (edits.Count == 0)
+        {
+            return;
+        }
+        // One update is one step for Undo; from the end back, so each edit's offset still holds.
+        using (Document.RunUpdate())
+        {
+            foreach (var edit in edits.OrderByDescending(e => e.Offset))
+            {
+                Document.Replace(edit.Offset, edit.Length, edit.Text);
+            }
+        }
+    }
+
     public bool IsModified => !Document.UndoStack.IsOriginalFile;
 
     public void MarkSaved() => Document.UndoStack.MarkAsOriginalFile();

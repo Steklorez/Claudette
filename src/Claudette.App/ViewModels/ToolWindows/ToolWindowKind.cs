@@ -15,7 +15,7 @@ public enum ToolEdge
 /// <summary>
 /// A kind of tool window (DESIGN.md §3, "Tool windows"): what its tab says, the edge it docks at until the user moves it,
 /// and whether it shows the focused session tab's data. The built-in kinds are <see cref="ToolWindowKinds"/>; each kind's
-/// view is in <c>Views/ToolWindows/ToolWindowViews</c>.
+/// view is in <c>Views/ToolWindowView</c>.
 /// </summary>
 public sealed class ToolWindowKind
 {

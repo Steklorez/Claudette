@@ -115,6 +115,52 @@
     <Setter Property="Margin" Value="6,0,4,0" />
   </Style>
 
+  <!-- Find in files' popup (DESIGN.md §18, "Finding in files"): large, as Rider's is, with its matches over the selected
+       one's file. -->
+  <Style Selector="Border.findinfiles">
+    <Setter Property="Width" Value="900" />
+    <Setter Property="Height" Value="640" />
+  </Style>
+  <Style Selector="TextBlock.findtitle">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ToggleButton.findoption">
+    <Setter Property="MinWidth" Value="30" />
+    <Setter Property="Padding" Value="6,4" />
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+  <Style Selector="Border.findquestion">
+    <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Margin" Value="0,6,0,0" />
+  </Style>
+  <Style Selector="TextBlock.findline">
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- The match in its line: bold, so it's found at a glance without a color of its own. -->
+  <Style Selector="Run.findmatch">
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="Border.findpreview">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+
+  <!-- The Find window's results (DESIGN.md §18, "Finding in files"): files, and their matches under them. -->
+  <Style Selector="TextBlock.findfile">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
   <!-- The file tabs' row over the editor: each tab its name, a dot while it has unsaved edits that's the × on hover. -->
   <Style Selector="Border.filetabs">
     <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />

@@ -176,6 +176,10 @@
                         <MenuItem Header="Mark for delete" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).MarkRowForDeleteCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanMarkForDelete}" />
                         <MenuItem Header="Revert" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RevertRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanRevert}" />
                         <MenuItem Header="Diff against the depot" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).DiffRowAgainstDepotCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding CanDiffAgainstDepot}" />
+                        <!-- Finding in files, in this folder (§18, "Finding in files") -->
+                        <Separator IsVisible="{Binding IsFolder}" />
+                        <MenuItem Header="Find in folder…" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).FindInFolderCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsFolder}" />
+                        <MenuItem Header="Replace in folder…" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).ReplaceInFolderCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" IsVisible="{Binding IsFolder}" />
                         <Separator />
                         <MenuItem Header="Rename" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).RenameRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
                         <MenuItem Header="Delete" Command="{Binding $parent[ListBox].((vm:ProjectFilesViewModel)DataContext).DeleteRowCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}" />
