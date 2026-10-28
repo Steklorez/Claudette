@@ -21,7 +21,12 @@ namespace Claudette.App.Controls;
 /// words, unless the row sets its own, and its marks: changed from its default (with <b>Reset</b>), this computer's alone,
 /// and tabs that have their own. Its look is in Themes/SettingsStyles.axaml.
 /// </summary>
-[PseudoClasses(":changed", ":highlighted", ":stacked", ":nested", ":divided")]
+/// <remarks>
+/// <c>:resettable</c> is a row whose setting has a default to go back to, which keeps <b>Reset</b>'s room whether it
+/// shows or not; <c>:nestedpointerover</c> is a row with a row in it pointed at, which shows that row's <b>Reset</b>
+/// rather than its own.
+/// </remarks>
+[PseudoClasses(":changed", ":highlighted", ":stacked", ":nested", ":divided", ":resettable", ":nestedpointerover")]
 public sealed class SettingRow : ContentControl
 {
     public static readonly StyledProperty<string?> KeyProperty = AvaloniaProperty.Register<SettingRow, string?>(nameof(Key));
@@ -58,6 +63,7 @@ public sealed class SettingRow : ContentControl
         SettingProperty.Changed.AddClassHandler<SettingRow>((row, e) => row.UseSetting(e.OldValue as SettingItem, e.NewValue as SettingItem));
         IsStackedProperty.Changed.AddClassHandler<SettingRow>((row, _) => row.PseudoClasses.Set(":stacked", row.IsStacked));
         IsChangedProperty.Changed.AddClassHandler<SettingRow>((row, _) => row.PseudoClasses.Set(":changed", row.IsChanged));
+        IsPointerOverProperty.Changed.AddClassHandler<SettingRow>((row, _) => row.TellRowsAbove());
         DividedPanel.HasDividerAboveProperty.Changed.AddClassHandler<SettingRow>((row, _) => row.PseudoClasses.Set(":divided", DividedPanel.GetHasDividerAbove(row)));
         ContentProperty.Changed.AddClassHandler<SettingRow>((row, _) => row.NameControl());
         TitleProperty.Changed.AddClassHandler<SettingRow>((row, _) => row.NameControl());
@@ -277,6 +283,7 @@ public sealed class SettingRow : ContentControl
         {
             old.PropertyChanged -= OnSettingChanged;
         }
+        PseudoClasses.Set(":resettable", setting?.CanReset == true);
         if (setting is null)
         {
             return;
@@ -289,6 +296,18 @@ public sealed class SettingRow : ContentControl
         SetValue(ResetCommandProperty, setting.ResetCommand, BindingPriority.Style);
         SetValue(ResetNameProperty, $"Reset {setting.Title} to its default", BindingPriority.Style);
         ShowMarks(setting);
+    }
+
+    /// <summary>
+    /// The rows this one is nested in learn whether a row in them is pointed at: the pointer is over them too, but the
+    /// <b>Reset</b> that shows is the nested row's, not theirs.
+    /// </summary>
+    private void TellRowsAbove()
+    {
+        foreach (var above in this.GetLogicalAncestors().OfType<SettingRow>())
+        {
+            above.PseudoClasses.Set(":nestedpointerover", above.GetLogicalDescendants().OfType<SettingRow>().Any(r => r.IsPointerOver));
+        }
     }
 
     private void OnSettingChanged(object? sender, PropertyChangedEventArgs e)

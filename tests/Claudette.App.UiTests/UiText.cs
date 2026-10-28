@@ -80,7 +80,9 @@ public static class UiText
 
     private static void Walk(Visual visual, int depth, StringBuilder builder)
     {
-        if (!visual.IsVisible)
+        // Drawn fully transparent and disabled, such as the Reset of a setting at its default, which only keeps its room:
+        // nothing there to see or do.
+        if (!visual.IsVisible || visual.Opacity == 0 && visual is InputElement { IsEffectivelyEnabled: false })
         {
             return;
         }
