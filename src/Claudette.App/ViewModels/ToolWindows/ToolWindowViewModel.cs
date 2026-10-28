@@ -4,124 +4,124 @@ using CommunityToolkit.Mvvm.Input;
 namespace Claudette.App.ViewModels.ToolWindows;
 
 /// <summary>
-/// One tool window (DESIGN.md §3, "Tool windows"): its tab on an edge, open or closed, and what it shows. The dock keeps
-/// its place; its kind says what it is.
+/// One tool window (DESIGN.md §3, "Tool windows"): its icon on the strip, in a group, whether it shows, its view mode and
+/// what it shows. The dock keeps its place; its kind says what it is.
 /// </summary>
 public sealed partial class ToolWindowViewModel : ViewModelBase
 {
     private readonly ToolDockViewModel _dock;
 
-    internal ToolWindowViewModel(ToolDockViewModel dock, ToolWindowKind kind, string id, string title, object? content)
+    internal ToolWindowViewModel(ToolDockViewModel dock, ToolWindowKind kind)
     {
         _dock = dock;
         Kind = kind;
-        Id = id;
-        Title = title;
-        Content = content;
-        Edge = kind.DefaultEdge;
-        // A kind that shows only when the session has something for it waits to be told it has.
-        IsAvailable = kind.ShowsWhen is null;
+        Group = kind.DefaultGroup;
+        // A kind that shows only when the session has something for it waits to be told it has; Games and Find wait for
+        // the shell.
+        IsAvailable = kind.ShowsWhen is null && kind.FollowsSession;
     }
 
     public ToolWindowKind Kind { get; }
 
-    /// <summary>Its id, which its place is saved by: its kind's, for a kind that has one window.</summary>
-    public string Id { get; }
+    /// <summary>Its id, which its place is saved by: its kind's.</summary>
+    public string Id => Kind.Id;
 
-    /// <summary>What its tab says, such as <i>Changed files</i>, or a search's query.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AutomationName))]
-    public partial string Title { get; set; }
+    /// <summary>What its header and its icon's tip say, such as <i>Changed files</i>.</summary>
+    public string Title => Kind.Title;
 
     /// <summary>
     /// What its view shows: for a kind that follows the session, the session tab whose data it shows (null with no session
-    /// tab); for others, what made it.
+    /// tab); for others, what the shell gave it.
     /// </summary>
     [ObservableProperty]
     public partial object? Content { get; set; }
 
-    /// <summary>The edge it docks at.</summary>
+    /// <summary>Its group on the strip.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AutomationName))]
-    public partial ToolEdge Edge { get; internal set; }
+    [NotifyPropertyChangedFor(nameof(IsInTop), nameof(IsInSplit), nameof(IsInBottom))]
+    public partial ToolGroup Group { get; internal set; }
 
-    /// <summary>It has a tab on its edge; a closed window comes back where it was.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasTab))]
-    public partial bool IsOpen { get; internal set; } = true;
+    public bool IsInTop => Group == ToolGroup.Top;
+
+    public bool IsInSplit => Group == ToolGroup.Split;
+
+    public bool IsInBottom => Group == ToolGroup.Bottom;
 
     /// <summary>
     /// It has something to show: for a kind that follows the session, as <see cref="ToolWindowKind.ShowsWhen"/> says of the
-    /// session (the dock keeps it); for others, as what made it says. Its tab hides the rest of the time.
+    /// session (the dock keeps it); for others, as the shell says. Its icon hides the rest of the time.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasTab))]
     public partial bool IsAvailable { get; set; }
 
     partial void OnIsAvailableChanged(bool value) => _dock.Refresh();
 
-    /// <summary>Its tab is on its edge: open, with something to show.</summary>
-    public bool HasTab => IsOpen && IsAvailable;
-
-    /// <summary>Its edge's tab showing: the docked group's, while the edge is docked.</summary>
-    [ObservableProperty]
-    public partial bool IsSelected { get; internal set; }
-
-    /// <summary>On screen: its docked group's tab showing, or slid out over the conversation.</summary>
+    /// <summary>On screen, beside the strip: the window of its group showing.</summary>
     [ObservableProperty]
     public partial bool IsShowing { get; internal set; }
 
-    /// <summary>Its edge folds its windows into tabs along the window's edge.</summary>
-    public bool IsAutoHidden => _dock.EdgeOf(Edge).IsAutoHide;
-
-    /// <summary>What a screen reader hears for its tab, such as <i>Changed files, auto-hidden, right</i>.</summary>
-    public string AutomationName => $"{Title}, {(IsAutoHidden ? "auto-hidden" : "docked")}, {(Edge == ToolEdge.Right ? "right" : "bottom")}";
-
-    /// <summary>Its edge was pinned or unpinned: its state, in what a screen reader hears, changed.</summary>
-    internal void OnEdgeStateChanged()
-    {
-        OnPropertyChanged(nameof(IsAutoHidden));
-        OnPropertyChanged(nameof(AutomationName));
-    }
-
-    /// <summary>Its tab clicked in a docked group: it shows.</summary>
-    [RelayCommand]
-    private void Select() => _dock.Select(this);
-
-    // ---- Beside its title, as the side panel's tabs had (DESIGN.md §3, "Tool windows") ----------------------------
-
-    /// <summary>A count beside its title, such as Tasks' <i>2 of 5</i>; null for none.</summary>
+    /// <summary>
+    /// Dock Pinned, as Rider calls it: it stays until it's hidden. Unpinned, it hides once the user clicks outside it, or
+    /// presses Esc.
+    /// </summary>
     [ObservableProperty]
-    public partial string? Badge { get; internal set; }
+    [NotifyPropertyChangedFor(nameof(IsUnpinned))]
+    public partial bool IsPinned { get; internal set; } = true;
 
-    /// <summary>Its work is running: a subagent, or a project's job. A dot in the busy color.</summary>
+    public bool IsUnpinned => !IsPinned;
+
+    // ---- Beside its icon, as the side panel's tabs had (DESIGN.md §3, "Tool windows") ------------------------------
+
+    /// <summary>Its work is running: a subagent, or a project's job. A dot on its icon in the busy color.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDot))]
     public partial bool IsBusy { get; internal set; }
 
-    /// <summary>Something needs looking at, such as an MCP server that failed. A dot in the warning color.</summary>
+    /// <summary>Something needs looking at, such as an MCP server that failed. A dot on its icon in the warning color.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDot))]
     public partial bool HasWarning { get; internal set; }
 
-    /// <summary>Its tab's tip: what it holds now.</summary>
+    /// <summary>A dot on its icon: busy, or a warning.</summary>
+    public bool HasDot => IsBusy || HasWarning;
+
+    /// <summary>What it holds now, such as Tasks' progress, <i>To-do · 2 of 5 done</i>.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IconTip))]
     public partial string? Tip { get; internal set; }
 
-    /// <summary>Its tab's menu: <b>Move to the bottom</b>, or <b>Move to the right</b>.</summary>
-    public string MoveText => Edge == ToolEdge.Right ? "Move to the bottom" : "Move to the right";
+    /// <summary>Its icon's tip: its title, then what it holds now when that says more, as <i>Tasks · To-do · 2 of 5 done</i>.</summary>
+    public string IconTip => Tip is { Length: > 0 } tip && tip != Title ? $"{Title} · {tip}" : Title;
 
-    partial void OnEdgeChanged(ToolEdge value) => OnPropertyChanged(nameof(MoveText));
+    // ---- What the user does ------------------------------------------------------------------------------------------
 
-    /// <summary>Its tab's <b>Move to the bottom</b> or <b>Move to the right</b>: the other edge, where it shows.</summary>
-    [RelayCommand]
-    private void MoveToOtherEdge() => _dock.MoveToEdge(this, Edge == ToolEdge.Right ? ToolEdge.Bottom : ToolEdge.Right);
-
-    /// <summary>The header's <b>Tool windows</b> menu: shows it, or hides it while it shows.</summary>
+    /// <summary>Its icon clicked: it shows, in place of its group's other, and takes the keyboard; showing, it hides.</summary>
     [RelayCommand]
     private void Toggle() => _dock.Toggle(this);
 
-    /// <summary>Its ×, or its tab's <b>Close</b>.</summary>
+    /// <summary>The <b>−</b> on its header, or its menu's <b>Hide</b>.</summary>
     [RelayCommand]
-    private void Close() => _dock.Close(this);
+    private void Hide() => _dock.Hide(this);
+
+    /// <summary>Its menu's <b>Dock Pinned</b>.</summary>
+    [RelayCommand]
+    private void Pin() => _dock.SetPinned(this, true);
+
+    /// <summary>Its menu's <b>Dock Unpinned</b>.</summary>
+    [RelayCommand]
+    private void Unpin() => _dock.SetPinned(this, false);
+
+    /// <summary>Its menu's <b>Move to</b> → <b>Right top</b>.</summary>
+    [RelayCommand]
+    private void MoveToTop() => _dock.MoveTo(this, ToolGroup.Top);
+
+    /// <summary>Its menu's <b>Move to</b> → <b>Right bottom</b>, splitting the right side.</summary>
+    [RelayCommand]
+    private void MoveToSplit() => _dock.MoveTo(this, ToolGroup.Split);
+
+    /// <summary>Its menu's <b>Move to</b> → <b>Bottom</b>, under the panes.</summary>
+    [RelayCommand]
+    private void MoveToBottom() => _dock.MoveTo(this, ToolGroup.Bottom);
 
     public override string ToString() => Title;
 }

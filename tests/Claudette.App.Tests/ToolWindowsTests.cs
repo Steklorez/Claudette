@@ -1,5 +1,4 @@
 using System.Text.Json.Nodes;
-using Avalonia;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
 using Claudette.App.ViewModels.ToolWindows;
@@ -16,104 +15,145 @@ namespace Claudette.App.Tests;
 /// </summary>
 public class ToolWindowsTests
 {
+    /// <summary>The titles of a group's icons on the strip.</summary>
+    private static List<string> Icons(ToolGroupViewModel group) => InlineDispatcher.Read(() => group.Icons.Select(w => w.Title).ToList());
+
     [Fact]
-    public async Task The_right_edge_starts_auto_hidden_with_the_windows_that_have_something_to_show()
+    public async Task The_strip_starts_with_an_icon_for_each_window_that_has_something_to_show_and_none_showing()
     {
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         var dock = h.Shell.ToolWindows;
 
-        Assert.True(dock.Right.IsAutoHide);
-        Assert.True(dock.Right.HasStrip);
-        Assert.Equal(["Changed files", "Agents", "Scratch pad"], InlineDispatcher.Read(() => dock.Right.Tabs.Select(w => w.Title).ToList()));
-        Assert.False(dock.Bottom.HasTabs);
-        Assert.Null(dock.SlidOut);
-        Assert.Equal(ToolDockViewModel.StripThickness, h.Shell.Layout.RightEdgeRoom);
-        Assert.Equal("Changed files, auto-hidden, right", dock.For(ToolWindowKinds.Files).AutomationName);
+        Assert.Equal(["Changed files", "Agents"], Icons(dock.Top));
+        Assert.Equal(["Scratch pad"], Icons(dock.Split));
+        Assert.Empty(Icons(dock.Bottom));
+        Assert.True(dock.HasStrip);
+        Assert.True(dock.HasDivider);
+        Assert.False(dock.IsRightShowing);
+        Assert.DoesNotContain(dock.Windows, w => w.IsShowing);
+        // Only the strip takes room beside the conversation.
+        Assert.Equal(ToolDockViewModel.StripWidth, h.Shell.Layout.RightEdgeRoom);
     }
 
     [Fact]
-    public async Task Pointing_at_an_auto_hidden_tab_slides_its_window_out_after_a_moment_and_back_once_the_pointer_leaves()
+    public async Task An_icons_click_shows_its_window_in_place_of_its_groups_other_and_hides_it_again()
     {
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         var dock = h.Shell.ToolWindows;
-        var files = dock.For(ToolWindowKinds.Files);
+        var (files, agents, pad) = (dock.For(ToolWindowKinds.Files), dock.For(ToolWindowKinds.Agents), dock.For(ToolWindowKinds.ScratchPad));
+        var focused = new List<ToolWindowViewModel>();
+        dock.FocusRequested += focused.Add;
 
-        InlineDispatcher.Run(() => dock.PointAtTab(files));
-        Assert.Null(dock.SlidOut);
-        h.Time.Advance(ToolDockViewModel.SlideOutDelay);
-        Assert.Same(files, dock.SlidOut);
-        Assert.True(h.IsShowing(ToolWindowKinds.Files));
-        // Slid out over the conversation, it takes no room.
-        Assert.Equal(ToolDockViewModel.StripThickness, h.Shell.Layout.RightEdgeRoom);
+        InlineDispatcher.Run(() => files.ToggleCommand.Execute(null));
+        Assert.True(files.IsShowing);
+        Assert.Same(files, dock.Top.Showing);
+        Assert.Equal([files], focused);
+        // It takes room beside the conversation, with the strip.
+        Assert.Equal(ToolDockViewModel.StripWidth + ToolDockViewModel.MinRightWidth, h.Shell.Layout.RightEdgeRoom);
 
-        InlineDispatcher.Run(() => dock.LeaveTab(files));
-        h.Time.Advance(ToolDockViewModel.SlideBackDelay);
-        Assert.Null(dock.SlidOut);
-        Assert.False(h.IsShowing(ToolWindowKinds.Files));
+        // Another of its group shows in its place.
+        InlineDispatcher.Run(() => agents.ToggleCommand.Execute(null));
+        Assert.Equal((false, true), (files.IsShowing, agents.IsShowing));
 
-        // A click slides it out at once, and keeps it there until a press elsewhere or Esc.
-        InlineDispatcher.Run(() => dock.ClickTab(files));
-        Assert.Same(files, dock.SlidOut);
-        InlineDispatcher.Run(() => dock.LeaveTab(files));
-        h.Time.Advance(ToolDockViewModel.SlideBackDelay);
-        Assert.Same(files, dock.SlidOut);
-        Assert.True(InlineDispatcher.Read(dock.Escape));
-        Assert.Null(dock.SlidOut);
+        // One of the split group shows under it, sharing the right side.
+        InlineDispatcher.Run(() => pad.ToggleCommand.Execute(null));
+        Assert.Equal((true, true), (agents.IsShowing, pad.IsShowing));
+
+        // Clicked again, a window hides, and its group shows nothing.
+        InlineDispatcher.Run(() => agents.ToggleCommand.Execute(null));
+        Assert.Null(dock.Top.Showing);
+        Assert.True(dock.IsRightShowing);
+        InlineDispatcher.Run(() => pad.HideCommand.Execute(null));
+        Assert.False(dock.IsRightShowing);
+        Assert.Equal(ToolDockViewModel.StripWidth, h.Shell.Layout.RightEdgeRoom);
     }
 
     [Fact]
-    public async Task The_pin_docks_the_edge_beside_the_panes_and_the_layout_is_kept()
+    public async Task An_unpinned_window_hides_once_the_user_clicks_outside_it_or_presses_Esc()
     {
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         var dock = h.Shell.ToolWindows;
+        var (files, pad) = (dock.For(ToolWindowKinds.Files), dock.For(ToolWindowKinds.ScratchPad));
+        h.ShowToolWindow(ToolWindowKinds.ScratchPad);
 
-        InlineDispatcher.Run(() => dock.Right.TogglePinCommand.Execute(null));
-
-        Assert.True(dock.Right.IsDocked);
-        Assert.Same(dock.For(ToolWindowKinds.Files), dock.Right.Selected);
-        Assert.True(h.IsShowing(ToolWindowKinds.Files));
-        Assert.Equal(ToolDockViewModel.MinRightWidth, h.Shell.Layout.RightEdgeRoom);
-        Assert.False(h.Services.State.ToolWindows!.Edges.Single(e => e.Edge == "Right").AutoHide);
-
-        // Its tab chosen, and its width, come back with the next launch.
         InlineDispatcher.Run(() =>
         {
-            dock.For(ToolWindowKinds.Agents).SelectCommand.Execute(null);
-            dock.Resize(ToolEdge.Right, 480);
-            dock.SaveSize();
+            files.UnpinCommand.Execute(null);
+            files.ToggleCommand.Execute(null);
         });
-        var again = new ShellViewModel(h.Services, () => { }).ToolWindows;
-        Assert.False(again.Right.IsAutoHide);
-        Assert.Equal(480, again.Right.Size);
-        Assert.Equal("Agents", h.Services.State.ToolWindows!.Edges.Single(e => e.Edge == "Right").Selected);
+        Assert.False(files.IsPinned);
+
+        // A press in it, or on the strip, leaves it.
+        InlineDispatcher.Run(() => dock.PressAt(files, onStrip: false));
+        InlineDispatcher.Run(() => dock.PressAt(null, onStrip: true));
+        Assert.True(files.IsShowing);
+
+        // A press elsewhere hides it; the pinned scratch pad stays, even pressed outside.
+        InlineDispatcher.Run(() => dock.PressAt(null, onStrip: false));
+        Assert.Equal((false, true), (files.IsShowing, pad.IsShowing));
+
+        // Esc hides it too, and says so; with only pinned windows showing, Esc is someone else's.
+        InlineDispatcher.Run(() => files.ToggleCommand.Execute(null));
+        Assert.True(InlineDispatcher.Read(dock.Escape));
+        Assert.False(files.IsShowing);
+        Assert.False(InlineDispatcher.Read(dock.Escape));
+        Assert.True(pad.IsShowing);
     }
 
     [Fact]
-    public async Task A_window_moved_to_the_bottom_docks_there_and_once_closed_comes_back_where_it_was()
+    public async Task A_window_moved_to_another_group_shows_there_and_the_layout_is_kept()
     {
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         var dock = h.Shell.ToolWindows;
         var agents = dock.For(ToolWindowKinds.Agents);
-
-        InlineDispatcher.Run(() => agents.MoveToOtherEdgeCommand.Execute(null));
-
-        Assert.Equal(ToolEdge.Bottom, agents.Edge);
-        Assert.Equal("Move to the right", agents.MoveText);
-        Assert.True(dock.Bottom.IsDocked);
-        Assert.Same(agents, dock.Bottom.Selected);
-        Assert.DoesNotContain(agents, InlineDispatcher.Read(() => dock.Right.Tabs.ToList()));
-
-        InlineDispatcher.Run(() => agents.CloseCommand.Execute(null));
-        Assert.False(agents.HasTab);
-        Assert.False(dock.Bottom.HasTabs);
-
         h.ShowToolWindow(ToolWindowKinds.Agents);
-        Assert.Equal(ToolEdge.Bottom, agents.Edge);
-        Assert.True(h.IsShowing(ToolWindowKinds.Agents));
+
+        // Showing, it moves to the bottom and shows there.
+        InlineDispatcher.Run(() => agents.MoveToBottomCommand.Execute(null));
+        Assert.Equal(ToolGroup.Bottom, agents.Group);
+        Assert.Equal(["Agents"], Icons(dock.Bottom));
+        Assert.Same(agents, dock.Bottom.Showing);
+        Assert.Null(dock.Top.Showing);
+
+        // Its group, whether it shows, its view mode and the sizes come back with the next launch.
+        InlineDispatcher.Run(() =>
+        {
+            agents.UnpinCommand.Execute(null);
+            dock.ResizeRight(480);
+            dock.ResizeSplit(0.3);
+            dock.ResizeBottom(300);
+            dock.SaveSize();
+        });
+        var again = new ShellViewModel(h.Services, () => { }).ToolWindows;
+        var restored = again.For(ToolWindowKinds.Agents);
+        Assert.Equal((ToolGroup.Bottom, false), (restored.Group, restored.IsPinned));
+        Assert.Same(restored, again.Bottom.Showing);
+        Assert.Equal((480, 0.3, 300), (again.RightWidth, again.SplitShare, again.BottomHeight));
+    }
+
+    [Fact]
+    public async Task Dragging_an_icon_along_the_strip_moves_it_before_the_icon_at_its_place()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var dock = h.Shell.ToolWindows;
+        var (files, pad) = (dock.For(ToolWindowKinds.Files), dock.For(ToolWindowKinds.ScratchPad));
+
+        // Over the divider, to the top of the strip.
+        InlineDispatcher.Run(() => dock.MoveTo(pad, ToolGroup.Top, 0));
+        Assert.Equal(["Scratch pad", "Changed files", "Agents"], Icons(dock.Top));
+        Assert.Empty(Icons(dock.Split));
+        Assert.False(dock.HasDivider);
+
+        // Along its group, past the last; and dropped at its own place, it stays.
+        InlineDispatcher.Run(() => dock.MoveTo(files, ToolGroup.Top, 3));
+        Assert.Equal(["Scratch pad", "Agents", "Changed files"], Icons(dock.Top));
+        InlineDispatcher.Run(() => dock.MoveTo(files, ToolGroup.Top, 2));
+        Assert.Equal(["Scratch pad", "Agents", "Changed files"], Icons(dock.Top));
     }
 
     [Fact]
@@ -129,7 +169,7 @@ public class ToolWindowsTests
     }
 
     [Fact]
-    public async Task The_side_panels_width_and_page_order_carry_over_to_the_right_edge()
+    public async Task The_side_panels_width_and_page_order_carry_over_to_the_strip()
     {
         await using var h = new TabTestHarness();
         h.Services.State.SidePanelWidth = 480;
@@ -137,31 +177,27 @@ public class ToolWindowsTests
 
         var dock = new ShellViewModel(h.Services, () => { }).ToolWindows;
 
-        Assert.Equal(480, dock.Right.Size);
-        Assert.Equal(["Scratch pad", "Agents", "Changed files"], dock.Right.Tabs.Select(w => w.Title));
+        Assert.Equal(480, dock.RightWidth);
+        Assert.Equal(["Agents", "Changed files"], Icons(dock.Top));
+        Assert.Equal(["Scratch pad"], Icons(dock.Split));
     }
 
     [Fact]
-    public async Task A_tab_dragged_to_the_bottom_of_the_panes_docks_there()
+    public async Task A_layout_saved_before_the_strips_keeps_its_edges_as_groups_and_its_sizes()
     {
         await using var h = new TabTestHarness();
-        await h.OpenTabAsync();
-        var dock = h.Shell.ToolWindows;
-        var files = dock.For(ToolWindowKinds.Files);
-        var geometry = new ToolDockGeometry(new Rect(0, 0, 1000, 800), new Rect(0, 0, 1026, 800), RightStrip: new Rect(1000, 0, 26, 800));
+        h.Services.State.ToolWindows = new ToolWindowsState
+        {
+            Edges = [new ToolEdgeState { Edge = "Right", Size = 420 }, new ToolEdgeState { Edge = "Bottom", Size = 300 }],
+            Windows = [new ToolWindowState { Id = "Agents", Edge = "Bottom" }, new ToolWindowState { Id = "Files", Edge = "Right" }],
+        };
 
-        // In the middle of the panes: nowhere to go.
-        Assert.Null(dock.DropAt(files, new Point(500, 300), geometry));
-        // Near the bottom: the bottom edge, which has nothing yet.
-        var drop = dock.DropAt(files, new Point(500, 780), geometry);
-        Assert.NotNull(drop);
-        Assert.Equal((ToolEdge.Bottom, "Dock bottom"), (drop.Edge, drop.Label));
-        // Over its own edge's tabs: it moves among them instead.
-        Assert.Null(dock.DropAt(files, new Point(1010, 300), geometry));
+        var dock = new ShellViewModel(h.Services, () => { }).ToolWindows;
 
-        InlineDispatcher.Run(() => dock.Drop(files, drop));
-        Assert.Equal(ToolEdge.Bottom, files.Edge);
-        Assert.True(h.IsShowing(ToolWindowKinds.Files));
+        Assert.Equal((420, 300), (dock.RightWidth, dock.BottomHeight));
+        Assert.Equal(ToolGroup.Bottom, dock.For(ToolWindowKinds.Agents).Group);
+        Assert.Equal(ToolGroup.Top, dock.For(ToolWindowKinds.Files).Group);
+        Assert.DoesNotContain(dock.Windows, w => w.IsShowing);
     }
 
     [Fact]
@@ -179,8 +215,9 @@ public class ToolWindowsTests
         Assert.Same(tab, dock.Session);
         Assert.True(dock.NamesSession);
         h.ShowToolWindow(ToolWindowKinds.Files);
-        Assert.Equal(tab.DisplayName, dock.Right.SessionLabel);
+        Assert.Equal(tab.DisplayName, dock.Top.SessionLabel);
     }
+
     [Fact]
     public async Task A_new_file_from_Write_shows_as_added()
     {

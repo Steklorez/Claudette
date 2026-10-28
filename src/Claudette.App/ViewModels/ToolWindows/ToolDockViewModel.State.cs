@@ -3,14 +3,15 @@ using Claudette.Core.Settings;
 namespace Claudette.App.ViewModels.ToolWindows;
 
 /// <summary>
-/// The layout kept with the app state (DESIGN.md §3, "Tool windows", "Saved"): each window's edge, place and whether it's
-/// open, and each edge's size, state and tab. The side panel's width and order, saved before tool windows, carry over.
+/// The layout kept with the app state (DESIGN.md §3, "Tool windows", "Kept"): each window's group, place in it, whether
+/// it shows and its view mode, and the sizes. The side panel's width and order, saved before tool windows, carry over, as
+/// do the edges' sizes and windows saved before the strips.
 /// </summary>
 public sealed partial class ToolDockViewModel
 {
     /// <summary>
-    /// The layout as it was saved, or with none saved yet, the windows open as tabs along the right edge, auto-hidden, in
-    /// the side panel's order and at its width when the user had chosen them.
+    /// The layout as it was saved, or with none saved yet, each window in its own group in the side panel's order as far as
+    /// the user had chosen one, at the side panel's width, and none showing.
     /// </summary>
     private void Restore()
     {
@@ -20,54 +21,49 @@ public sealed partial class ToolDockViewModel
             return;
         }
         Arrange(_state.SidePanelPages);
-        Right.Size = Math.Max(_state.SidePanelWidth ?? DefaultRightWidth, MinRightWidth);
-        // The tabs along the edge take no room from the conversation, and show the windows are there.
-        Right.IsAutoHide = true;
+        RightWidth = Math.Max(_state.SidePanelWidth ?? DefaultRightWidth, MinRightWidth);
     }
 
     private void RestoreSaved(ToolWindowsState saved)
     {
-        var chosen = new Dictionary<ToolEdge, string?>();
-        foreach (var state in saved.Edges)
-        {
-            if (Parse(state.Edge) is not { } which)
-            {
-                continue;
-            }
-            var edge = EdgeOf(which);
-            edge.Size = Math.Max(state.Size ?? edge.DefaultSize, edge.MinSize);
-            edge.IsAutoHide = state.AutoHide;
-            chosen[which] = state.Selected;
-        }
+        // A layout from before the strips kept each edge's size.
+        var edges = saved.Edges ?? [];
+        var rightWidth = saved.RightWidth ?? edges.FirstOrDefault(e => e.Edge == "Right")?.Size;
+        var bottomHeight = saved.BottomHeight ?? edges.FirstOrDefault(e => e.Edge == "Bottom")?.Size;
+        RightWidth = Math.Max(rightWidth ?? DefaultRightWidth, MinRightWidth);
+        BottomHeight = Math.Max(bottomHeight ?? DefaultBottomHeight, MinBottomHeight);
+        SplitShare = Math.Clamp(saved.SplitShare ?? DefaultSplitShare, MinSplitShare, 1 - MinSplitShare);
         var placed = new HashSet<ToolWindowViewModel>();
         foreach (var state in saved.Windows)
         {
-            if (Parse(state.Edge) is not { } which)
+            if (Find(state.Id) is not { } window || GroupNamed(state) is not { } group || !placed.Add(window))
             {
                 continue;
             }
-            if (ToolWindowKinds.Find(state.Id) is { IsMultiple: true } multiple)
+            window.Group = group;
+            window.IsPinned = state.IsPinned;
+            var at = GroupOf(group);
+            at.Windows.Add(window);
+            if (state.IsShowing && state.Group is not null)
             {
-                _kindEdges[multiple.Id] = which;
-                continue;
+                at.Chosen = window;
             }
-            if (Find(state.Id) is not { } window || !placed.Add(window))
-            {
-                continue;
-            }
-            window.Edge = which;
-            window.IsOpen = state.IsOpen;
-            EdgeOf(which).Windows.Add(window);
         }
         PlaceTheRest(placed);
-        foreach (var edge in Edges)
-        {
-            edge.Chosen = chosen.GetValueOrDefault(edge.Edge) is { } id && Find(id) is { } window && window.Edge == edge.Edge ? window : null;
-        }
     }
 
+    /// <summary>A saved window's group, or for one saved before the strips, its edge's: the right's top, or the bottom.</summary>
+    private static ToolGroup? GroupNamed(ToolWindowState state) =>
+        state.Group is { } name ? Enum.TryParse<ToolGroup>(name, out var group) && Enum.IsDefined(group) ? group : null
+        : state.Edge switch
+        {
+            "Right" => ToolGroup.Top,
+            "Bottom" => ToolGroup.Bottom,
+            _ => null,
+        };
+
     /// <summary>
-    /// Each window on its own edge, in <paramref name="order"/> (the side panel's pages, by name) as far as it goes.
+    /// Each window in its own group, in <paramref name="order"/> (the side panel's pages, by name) as far as it goes.
     /// A name no kind has is left out.
     /// </summary>
     private void Arrange(IEnumerable<string>? order)
@@ -77,35 +73,34 @@ public sealed partial class ToolDockViewModel
         {
             if (Find(name) is { } window && placed.Add(window))
             {
-                window.Edge = window.Kind.DefaultEdge;
-                EdgeOf(window.Edge).Windows.Add(window);
+                window.Group = window.Kind.DefaultGroup;
+                GroupOf(window.Group).Windows.Add(window);
             }
         }
         PlaceTheRest(placed);
     }
 
     /// <summary>
-    /// The windows a saved layout doesn't have, such as a kind added since: each on its own edge, open, after the window it
+    /// The windows a saved layout doesn't have, such as a kind added since: each in its own group, after the window it
     /// follows by default there, or first.
     /// </summary>
     private void PlaceTheRest(HashSet<ToolWindowViewModel> placed)
     {
-        var kinds = ToolWindowKinds.All.Where(k => !k.IsMultiple).ToList();
+        var kinds = ToolWindowKinds.All;
         for (var i = 0; i < kinds.Count; i++)
         {
-            if (Find(kinds[i].Id) is not { } window || placed.Contains(window))
+            var window = For(kinds[i]);
+            if (placed.Contains(window))
             {
                 continue;
             }
-            window.Edge = kinds[i].DefaultEdge;
-            var edge = EdgeOf(window.Edge);
-            var after = kinds.Take(i).Reverse().Select(k => Find(k.Id)).FirstOrDefault(w => w is not null && edge.Windows.Contains(w));
-            edge.Windows.Insert(after is null ? 0 : edge.Windows.IndexOf(after) + 1, window);
+            window.Group = kinds[i].DefaultGroup;
+            var group = GroupOf(window.Group);
+            var after = kinds.Take(i).Reverse().Select(For).FirstOrDefault(group.Windows.Contains);
+            group.Windows.Insert(after is null ? 0 : group.Windows.IndexOf(after) + 1, window);
             placed.Add(window);
         }
     }
-
-    private static ToolEdge? Parse(string name) => Enum.TryParse<ToolEdge>(name, out var edge) && Enum.IsDefined(edge) ? edge : null;
 
     /// <summary>Keeps the layout, in place of the side panel's width and order.</summary>
     private void Save()
@@ -116,13 +111,18 @@ public sealed partial class ToolDockViewModel
         }
         _state.ToolWindows = new ToolWindowsState
         {
-            Edges = [.. Edges.Select(e => new ToolEdgeState { Edge = e.Edge.ToString(), Size = e.Size, AutoHide = e.IsAutoHide, Selected = e.Chosen?.Id })],
+            RightWidth = RightWidth,
+            BottomHeight = BottomHeight,
+            SplitShare = SplitShare,
             Windows =
             [
-                .. Edges.SelectMany(e => e.Windows.Where(w => !w.Kind.IsMultiple)
-                    .Select(w => new ToolWindowState { Id = w.Id, Edge = e.Edge.ToString(), IsOpen = w.IsOpen })),
-                // Where a kind with several windows docks its next one.
-                .. _kindEdges.Select(k => new ToolWindowState { Id = k.Key, Edge = k.Value.ToString(), IsOpen = false }),
+                .. Groups.SelectMany(g => g.Windows.Select(w => new ToolWindowState
+                {
+                    Id = w.Id,
+                    Group = g.Group.ToString(),
+                    IsShowing = ReferenceEquals(g.Chosen, w),
+                    IsPinned = w.IsPinned,
+                })),
             ],
         };
         _state.SidePanelWidth = null;
@@ -131,36 +131,24 @@ public sealed partial class ToolDockViewModel
     }
 
     /// <summary>
-    /// The Tool windows menu's <b>Reset layout</b>: every window open on its own edge in its first order, the edges at
-    /// their first sizes, the right one auto-hidden, the bottom one docked.
+    /// The command palette's <b>Reset tool windows</b>: every window in its own group in its first order, pinned and hidden,
+    /// and the sizes as at first.
     /// </summary>
     public void ResetLayout()
     {
-        CancelSlideTimers();
-        EndSlide();
-        foreach (var edge in Edges)
+        foreach (var group in Groups)
         {
-            edge.Windows.Clear();
-            edge.Size = edge.DefaultSize;
-            edge.Chosen = null;
+            group.Windows.Clear();
+            group.Chosen = null;
         }
-        Right.IsAutoHide = true;
-        Bottom.IsAutoHide = false;
-        _kindEdges.Clear();
         foreach (var window in _windows)
         {
-            window.IsOpen = true;
+            window.IsPinned = true;
         }
+        RightWidth = DefaultRightWidth;
+        BottomHeight = DefaultBottomHeight;
+        SplitShare = DefaultSplitShare;
         Arrange(null);
-        foreach (var window in _windows.Where(w => w.Kind.IsMultiple))
-        {
-            window.Edge = window.Kind.DefaultEdge;
-            EdgeOf(window.Edge).Windows.Add(window);
-        }
-        foreach (var window in _windows)
-        {
-            window.OnEdgeStateChanged();
-        }
         Refresh();
         Save();
     }

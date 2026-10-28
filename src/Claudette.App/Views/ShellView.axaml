@@ -1227,9 +1227,10 @@
     <Border x:Name="SidebarEdge" Grid.Column="0" Width="6" Margin="0,0,-3,0" HorizontalAlignment="Right" Background="Transparent"
             Cursor="SizeWestEast" ZIndex="1" IsVisible="{Binding Layout.IsSidebarExpanded}" />
 
-    <!-- The panes, with the tool windows docked at their right, the whole height, and under them (DESIGN.md §3, "Tool
-         windows"); an auto-hidden edge's tabs along the window's edge, and a window slid out over the panes. -->
-    <Grid x:Name="DockArea" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto,Auto">
+    <!-- The panes, with the tool windows beside them (DESIGN.md §3, "Tool windows"): the strip of icons at the right, the
+         right side's windows by it, the whole height, the top group's over the split group's, and the bottom group's
+         under the panes. -->
+    <Grid x:Name="DockArea" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto">
       <Panel x:Name="PanesArea">
         <!-- The tabs on screen, side by side when there are several, each with the share of the width its pane was dragged to
              (DESIGN.md §18, "Split panes"); the others' views wait out of sight. -->
@@ -1287,36 +1288,23 @@
         </StackPanel>
       </Panel>
 
-      <!-- The bottom edge, docked, and its tabs while it's auto-hidden -->
-      <views:ToolEdgeView x:Name="BottomEdge" Grid.Row="1" AutomationProperties.Name="Tool windows at the bottom" DataContext="{Binding ToolWindows.Bottom}" IsVisible="{Binding IsDocked}" Height="{Binding Size}" />
-      <Border x:Name="BottomEdgeGrip" Grid.Row="1" Height="6" Margin="0,-3,0,0" VerticalAlignment="Top" Background="Transparent" Cursor="SizeNorthSouth" ZIndex="1"
-              IsVisible="{Binding ToolWindows.Bottom.IsDocked}" />
-      <views:ToolStripView Grid.Row="2" DataContext="{Binding ToolWindows.Bottom}" IsVisible="{Binding HasStrip}" />
+      <!-- The bottom group's window, under the panes, and its grip -->
+      <views:ToolPanelView x:Name="BottomPanel" Grid.Row="1" AutomationProperties.Name="Tool window at the bottom" DataContext="{Binding ToolWindows.Bottom}"
+                           IsVisible="{Binding IsShowing}" Height="{Binding Dock.BottomHeight}" />
+      <Border x:Name="BottomGrip" Grid.Row="1" Classes="toolgrip" Height="6" Margin="0,-3,0,0" VerticalAlignment="Top" Cursor="SizeNorthSouth" ZIndex="1"
+              IsVisible="{Binding ToolWindows.Bottom.IsShowing}" />
 
-      <!-- The right edge, docked, the whole height, and its tabs while it's auto-hidden -->
-      <views:ToolEdgeView x:Name="RightEdge" Grid.Column="1" AutomationProperties.Name="Tool windows at the right" Grid.RowSpan="3" DataContext="{Binding ToolWindows.Right}" IsVisible="{Binding IsDocked}" Width="{Binding Size}" />
-      <Border x:Name="RightEdgeGrip" Grid.Column="1" Grid.RowSpan="3" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Background="Transparent" Cursor="SizeWestEast" ZIndex="1"
-              IsVisible="{Binding ToolWindows.Right.IsDocked}" />
-      <views:ToolStripView Grid.Column="2" Grid.RowSpan="3" DataContext="{Binding ToolWindows.Right}" IsVisible="{Binding HasStrip}" />
+      <!-- The right side, the whole height: the top group's window over the split group's, a line between them to drag -->
+      <Grid x:Name="RightSide" Grid.Column="1" Grid.RowSpan="2" RowDefinitions="*,Auto,*" Width="{Binding ToolWindows.RightWidth}" IsVisible="{Binding ToolWindows.IsRightShowing}">
+        <views:ToolPanelView x:Name="TopPanel" AutomationProperties.Name="Tool window at the right" DataContext="{Binding ToolWindows.Top}" IsVisible="{Binding IsShowing}" />
+        <Border x:Name="SplitGrip" Grid.Row="1" Classes="toolgrip" Height="6" Cursor="SizeNorthSouth" />
+        <views:ToolPanelView x:Name="SplitPanel" Grid.Row="2" AutomationProperties.Name="Tool window at the right, below" DataContext="{Binding ToolWindows.Split}" IsVisible="{Binding IsShowing}" />
+      </Grid>
+      <Border x:Name="RightGrip" Grid.Column="1" Grid.RowSpan="2" Classes="toolgrip" Width="6" Margin="-3,0,0,0" HorizontalAlignment="Left" Cursor="SizeWestEast" ZIndex="1"
+              IsVisible="{Binding ToolWindows.IsRightShowing}" />
 
-      <!-- An auto-hidden window slid out over the panes, at its edge's size -->
-      <Border x:Name="RightSlide" Grid.RowSpan="2" Classes="toolslide" HorizontalAlignment="Right" Width="{Binding ToolWindows.Right.Size}" ZIndex="2"
-              IsVisible="{Binding ToolWindows.Right.IsSlidOut}">
-        <views:ToolEdgeView IsSlide="True" DataContext="{Binding ToolWindows.Right}" />
-      </Border>
-      <Border x:Name="BottomSlide" Grid.RowSpan="2" Classes="toolslide" VerticalAlignment="Bottom" Height="{Binding ToolWindows.Bottom.Size}" ZIndex="2"
-              IsVisible="{Binding ToolWindows.Bottom.IsSlidOut}">
-        <views:ToolEdgeView IsSlide="True" DataContext="{Binding ToolWindows.Bottom}" />
-      </Border>
-
-      <!-- Where a tool window's tab dragged to the other edge would go, marked as a tab dragged over the panes is -->
-      <Canvas x:Name="DockDropLayer" Grid.ColumnSpan="3" Grid.RowSpan="3" IsHitTestVisible="False" IsVisible="False" ZIndex="3">
-        <Border x:Name="DockDropTarget" Classes="panedrop">
-          <Border Classes="panedroplabel" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock x:Name="DockDropText" Classes="small" FontWeight="SemiBold" />
-          </Border>
-        </Border>
-      </Canvas>
+      <!-- The strip of icons, at the window's right -->
+      <views:ToolStripView x:Name="ToolStrip" Grid.Column="2" Grid.RowSpan="2" DataContext="{Binding ToolWindows}" IsVisible="{Binding HasStrip}" />
     </Grid>
 
     <!-- New tab picker (DESIGN.md §4, "Opening a tab") -->

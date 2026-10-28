@@ -127,7 +127,7 @@ public class TaskProgressUiTests
         Propose("p2", "t2", "1. Read the code\n2. Extend the API");
         await UiText.SettleUntilAsync(window, () => tab.Items.OfType<PlanItem>().Count() == 2 && Texts(view).Contains("Claude's plan · v2"), "the second plan's card");
 
-        h.DockToolWindow(ToolWindowKinds.Tasks);
+        h.ShowToolWindow(ToolWindowKinds.Tasks);
         await UiText.SettleUntilAsync(window, () => Texts(window).Contains("v2 of 2"), "the versions on the page");
         Assert.Contains("Waiting for review", Texts(window));
 

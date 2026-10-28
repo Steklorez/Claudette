@@ -32,7 +32,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _onAuthenticationRequired = onAuthenticationRequired;
         _opener = new SessionOpener(services, this);
         Layout = new ShellLayout(services.State, services.SaveState);
-        ToolWindows = new ToolDockViewModel(services.State, services.SaveState, services.Time, services.Dispatcher);
+        ToolWindows = new ToolDockViewModel(services.State, services.SaveState);
         WatchToolWindows();
         // Panes fold away as the window narrows, and come back as it widens (DESIGN.md §18, "Split panes").
         Layout.PropertyChanged += (_, e) =>
@@ -1149,6 +1149,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     {
         SaveTabs();
         _services.EditorLogs.Follow([], []);
+        FindInFiles?.Dispose();
+        FindResults.Dispose();
+        ToolWindows.Dispose();
         await Task.WhenAll(Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray().Select(f => f.DisposeAsync().AsTask()));
         await Task.WhenAll(AllTabs.ToArray().Select(t => t.DisposeAsync().AsTask()));
     }

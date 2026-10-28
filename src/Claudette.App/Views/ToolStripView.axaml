@@ -1,37 +1,62 @@
-<!-- An auto-hidden edge's tabs along the window's edge (DESIGN.md §3, "Tool windows"): pointing at one, after a moment, or
-     clicking it slides its window out over the conversation. The right edge's read downwards. -->
+<!-- The tool window strip at the window's right (DESIGN.md §3, "Tool windows"), as Rider's stripe: an icon for each window
+     with something to show, the right side's top group, a line, the group that splits it, and at its foot the bottom's.
+     A click shows a window beside it, or hides it; dragging an icon moves it along the strip. Its look is in
+     Themes/ConversationStyles.axaml. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:tw="using:Claudette.App.ViewModels.ToolWindows"
+             xmlns:views="using:Claudette.App.Views"
              x:Class="Claudette.App.Views.ToolStripView"
-             x:DataType="tw:ToolEdgeViewModel">
-  <!-- The pages' looks and the tool windows', which the tab's view includes for its own (DESIGN.md §3, "Tool windows") -->
+             x:DataType="tw:ToolDockViewModel">
   <UserControl.Styles>
     <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
   </UserControl.Styles>
-  <Border Classes="toolstrip" Classes.right="{Binding IsRight}" Classes.bottom="{Binding IsBottom}">
-    <ItemsControl ItemsSource="{Binding Tabs}">
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel Orientation="{Binding IsRight, Converter={x:Static tw:ToolStripOrientation.Converter}}" Spacing="2" />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate DataType="tw:ToolWindowViewModel">
-          <Button Classes="flat striptab tooltab" Classes.slid="{Binding IsShowing}" AutomationProperties.Name="{Binding AutomationName}"
-                  PointerEntered="OnTabEntered" PointerExited="OnTabExited" Click="OnTabClicked" ToolTip.Tip="{Binding Tip}">
-            <LayoutTransformControl LayoutTransform="{Binding Edge, Converter={x:Static tw:ToolStripOrientation.Rotation}}">
-              <TextBlock Classes="small" Text="{Binding Title}" />
-            </LayoutTransformControl>
-            <Button.ContextMenu>
-              <ContextMenu>
-                <MenuItem Header="{Binding MoveText}" Command="{Binding MoveToOtherEdgeCommand}" />
-                <MenuItem Header="Close" Command="{Binding CloseCommand}" />
-              </ContextMenu>
-            </Button.ContextMenu>
-          </Button>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="tw:ToolWindowViewModel">
+      <Button Classes="stripicon" Classes.showing="{Binding IsShowing}" Command="{Binding ToggleCommand}" ContextRequested="OnIconContextRequested"
+              ToolTip.Tip="{Binding IconTip}" ToolTip.Placement="Left" AutomationProperties.Name="{Binding Title}">
+        <Panel Width="16" Height="16">
+          <Path Classes="stripglyph" Data="{Binding Kind.Icon, Converter={x:Static views:ToolStripView.Icon}}" />
+          <!-- A dot: its work is running, or something needs looking at -->
+          <Ellipse Classes="stripdot" Classes.busy="{Binding IsBusy}" Classes.warning="{Binding HasWarning}" IsVisible="{Binding HasDot}" />
+        </Panel>
+      </Button>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+  <Border x:Name="Strip" Classes="toolstrip">
+    <Panel>
+      <DockPanel>
+        <!-- The bottom's icons, at the foot -->
+        <ItemsControl x:Name="BottomIcons" DockPanel.Dock="Bottom" ItemsSource="{Binding Bottom.Icons}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="4" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <StackPanel Spacing="4">
+          <ItemsControl x:Name="TopIcons" ItemsSource="{Binding Top.Icons}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="4" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+          <!-- The line between the right side's top and the group that splits it; shown while dragging too, to drop under -->
+          <Border x:Name="Divider" Classes="stripdivider" IsVisible="{Binding HasDivider}" />
+          <ItemsControl x:Name="SplitIcons" ItemsSource="{Binding Split.Icons}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="4" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+        </StackPanel>
+      </DockPanel>
+      <!-- Where a dragged icon would go -->
+      <Canvas x:Name="DropLayer" IsHitTestVisible="False" IsVisible="False">
+        <Border x:Name="DropLine" Classes="stripdrop" />
+      </Canvas>
+    </Panel>
   </Border>
 </UserControl>

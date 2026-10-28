@@ -45,12 +45,12 @@ public class TasksAndMcpPagesUiTests
         Tool("t3", "TaskUpdate", new JsonObject { ["taskId"] = "2", ["addBlockedBy"] = new JsonArray("1") });
         await UiText.SettleUntilAsync(window, () => tab.TodoList.Items.Count == 2 && tab.TodoList.Items[1].IsBlocked, "the tasks");
 
-        h.DockToolWindow(ToolWindowKinds.Tasks);
+        h.ShowToolWindow(ToolWindowKinds.Tasks);
         UiText.Settle(window);
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
         var texts = Texts(window);
 
-        Assert.Contains("0 of 2", texts);
+        Assert.Equal("Tasks · To-do · 0 of 2 done", ToolTip.GetTip(StripIcon(window, "Tasks")));
         Assert.Contains("Add the users.email index.", texts);
         Assert.Contains("Waiting on #1", texts);
         Assert.Contains(texts, t => t?.Contains("#2", StringComparison.Ordinal) == true && t.Contains("Run the migration", StringComparison.Ordinal));
@@ -95,7 +95,7 @@ public class TasksAndMcpPagesUiTests
         h.Transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5","permissionMode":"default","mcp_servers":[{"name":"tickets","status":"connected"},{"name":"broken","status":"failed"}]}""");
         await UiText.SettleUntilAsync(window, () => tab.HasMcpServers, "the servers");
 
-        h.DockToolWindow(ToolWindowKinds.Mcp);
+        h.ShowToolWindow(ToolWindowKinds.Mcp);
         await UiText.SettleUntilAsync(window, () => tab.McpServers.Servers.Count == 2, "the list");
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
         var texts = Texts(window);
@@ -118,7 +118,7 @@ public class TasksAndMcpPagesUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 800);
         h.Transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5","permissionMode":"default","mcp_servers":[{"name":"tickets","status":"connected"}]}""");
         await UiText.SettleUntilAsync(window, () => tab.HasMcpServers, "the servers");
-        h.DockToolWindow(ToolWindowKinds.Mcp);
+        h.ShowToolWindow(ToolWindowKinds.Mcp);
         var view = window.GetVisualDescendants().OfType<TabView>().Single();
         List<Border> Rows() => [.. window.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("mcprow"))];
         await UiText.SettleUntilAsync(window, () => Rows().Count == 1, "the server's row");
@@ -173,10 +173,9 @@ public class TasksAndMcpPagesUiTests
         Assert.Equal(2, Texts(window).Count(t => t == "Created “Enemies: your task list”"));
         Assert.DoesNotContain(Texts(window), t => t?.Contains("verdict", StringComparison.Ordinal) == true);
 
-        h.DockToolWindow(ToolWindowKinds.Tasks);
+        h.ShowToolWindow(ToolWindowKinds.Tasks);
         UiText.Settle(window);
-        var tasksTab = window.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("tooltab") && b.DataContext is ToolWindowViewModel { Kind.Id: "Tasks" });
-        Assert.True(tasksTab.IsVisible);
+        Assert.True(StripIcon(window, "Tasks").IsEffectivelyVisible);
         var texts = Texts(window);
         Assert.Contains("Docs", texts);
         Assert.Contains("Enemies: your task list", texts);
@@ -191,4 +190,8 @@ public class TasksAndMcpPagesUiTests
     }
 
     private static Color? Fill(Border border) => (border.Background as ISolidColorBrush)?.Color;
+
+    /// <summary>A tool window's icon on the strip, by its title.</summary>
+    private static Button StripIcon(Window window, string title) =>
+        window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("stripicon") && AutomationProperties.GetName(b) == title);
 }

@@ -20,9 +20,9 @@
         <DataTemplate DataType="services:GameService">
           <views:GamesView />
         </DataTemplate>
-        <!-- A search's matches, kept from Find in files (DESIGN.md §18, "Finding in files") -->
-        <DataTemplate DataType="vm:FindResultsViewModel">
-          <views:FindResultsView />
+        <!-- The searches kept from Find in files, the one whose tab shows in the header (DESIGN.md §18, "Finding in files") -->
+        <DataTemplate DataType="vm:FindWindowViewModel">
+          <views:FindResultsView DataContext="{Binding Selected}" />
         </DataTemplate>
       </ContentControl.DataTemplates>
     </ContentControl>

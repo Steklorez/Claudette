@@ -18,6 +18,9 @@
       <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
       <SolidColorBrush x:Key="SubtleBrush" Color="#F5F4ED" />
       <SolidColorBrush x:Key="HoverBrush" Color="#0F1F1E1D" />
+      <SolidColorBrush x:Key="IslandBrush" Color="#FAF9F5" />
+      <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#D97757" />
+      <SolidColorBrush x:Key="ToolIconSelectedTextBrush" Color="#FFFFFF" />
       <SolidColorBrush x:Key="TabSelectedBrush" Color="#E8E6DC" />
       <SolidColorBrush x:Key="SidebarBrush" Color="#F5F4ED" />
       <SolidColorBrush x:Key="ComposerBrush" Color="#FFFFFF" />
@@ -79,6 +82,9 @@
       <SolidColorBrush x:Key="CardBrush" Color="#30302E" />
       <SolidColorBrush x:Key="SubtleBrush" Color="#1F1E1D" />
       <SolidColorBrush x:Key="HoverBrush" Color="#14FAF9F5" />
+      <SolidColorBrush x:Key="IslandBrush" Color="#262624" />
+      <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#D97757" />
+      <SolidColorBrush x:Key="ToolIconSelectedTextBrush" Color="#FFFFFF" />
       <SolidColorBrush x:Key="TabSelectedBrush" Color="#30302E" />
       <SolidColorBrush x:Key="SidebarBrush" Color="#1F1E1D" />
       <SolidColorBrush x:Key="ComposerBrush" Color="#30302E" />

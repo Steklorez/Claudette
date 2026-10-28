@@ -90,11 +90,12 @@ public sealed class SplitPanesUiTests
         window.MouseUp(start + new Vector(150, 0), MouseButton.Left);
         UiText.Settle(window);
 
-        Assert.Equal(before + 150, left.Bounds.Width, precision: 0);
-        Assert.Equal(rightBefore - 150, right.Bounds.Width, precision: 0);
+        // To the pixel, which the shares round to.
+        Assert.InRange(left.Bounds.Width - before, 149, 151);
+        Assert.InRange(rightBefore - right.Bounds.Width, 149, 151);
         // Kept, for the next launch.
         Assert.Equal(2, h.Services.State.PaneShares!.Count);
-        Assert.Equal(lines.Lines[0], left.Bounds.Width, precision: 0);
+        Assert.InRange(left.Bounds.Width - lines.Lines[0], -1, 1);
         window.Close();
     }
 

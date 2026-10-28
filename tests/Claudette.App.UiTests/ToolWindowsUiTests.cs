@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Claudette.App.Controls;
@@ -19,76 +18,96 @@ using Claudette.App.Views;
 namespace Claudette.App.UiTests;
 
 /// <summary>
-/// The tool windows rendered (DESIGN.md §3, "Tool windows"): the right edge's tabs along the window's edge, a window slid
-/// out over the conversation, the pin docking them beside it, and what the session's windows show: ticking changed files
-/// as reviewed (DESIGN.md §8), and processes (DESIGN.md §4).
+/// The tool windows rendered (DESIGN.md §3, "Tool windows"): the strip of icons, a window shown beside it with its header,
+/// the right side shared and the bottom under the panes, and what the session's windows show: ticking changed files as
+/// reviewed (DESIGN.md §8), and processes (DESIGN.md §4).
 /// </summary>
 public class ToolWindowsUiTests
 {
-    /// <summary>The tool window on screen, slid out or docked: where its page's controls are.</summary>
+    /// <summary>The tool window on screen: where its page's controls are.</summary>
     private static Control ShownWindow(Window window) => window.GetVisualDescendants().OfType<ToolWindowView>().First(v => v.IsEffectivelyVisible);
 
     [AvaloniaFact]
-    public async Task The_right_edges_tabs_run_down_the_window_and_a_click_slides_one_out_over_the_conversation()
+    public async Task The_strip_has_an_icon_for_each_window_and_a_click_shows_it_beside_the_conversation()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         UiText.Settle(window);
         var strip = window.GetVisualDescendants().OfType<ToolStripView>().Single(s => s.IsEffectivelyVisible);
-        var tabs = strip.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("striptab")).ToList();
-        Assert.Equal(["Changed files, auto-hidden, right", "Agents, auto-hidden, right", "Scratch pad, auto-hidden, right"],
-            tabs.Select(AutomationProperties.GetName));
-        // Down the window's edge, each under the one before, reading downwards.
-        Assert.True(tabs[1].TranslatePoint(default, strip)!.Value.Y > tabs[0].TranslatePoint(default, strip)!.Value.Y);
-        Assert.True(tabs[0].Bounds.Height > tabs[0].Bounds.Width);
-        var slide = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "RightSlide");
-        Assert.False(slide.IsVisible);
+        var icons = strip.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("stripicon")).ToList();
+        Assert.Equal(["Changed files", "Agents", "Scratch pad"], icons.Select(AutomationProperties.GetName));
+        // Their tips say what each holds now.
+        Assert.Equal("Agents · Claude hasn't started any subagents in this tab.", ToolTip.GetTip(icons[1]));
+        // Down the strip, the split group's under a line.
+        var divider = strip.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "Divider");
+        Assert.True(divider.IsEffectivelyVisible);
+        double Top(Visual v) => v.TranslatePoint(default, strip)!.Value.Y;
+        Assert.True(Top(icons[0]) < Top(icons[1]) && Top(icons[1]) < Top(divider) && Top(divider) < Top(icons[2]));
+        Assert.Equal(ToolDockViewModel.StripWidth, strip.Bounds.Width);
+        var right = window.GetVisualDescendants().OfType<Grid>().Single(g => g.Name == "RightSide");
+        Assert.False(right.IsVisible);
 
-        tabs[0].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        icons[0].Command!.Execute(null);
         UiText.Settle(window);
 
-        Assert.True(slide.IsEffectivelyVisible);
-        Assert.Equal(ToolDockViewModel.DefaultRightWidth, slide.Bounds.Width);
+        // Its window shows beside the strip, taking room from the conversation, with Rider's header and no tabs.
+        Assert.Contains("showing", icons[0].Classes);
+        Assert.True(right.IsEffectivelyVisible);
+        Assert.Equal(ToolDockViewModel.DefaultRightWidth, right.Bounds.Width);
+        var panel = window.GetVisualDescendants().OfType<ToolPanelView>().Single(v => v.Name == "TopPanel");
         Assert.NotNull(ShownWindow(window).GetVisualDescendants().OfType<ListBox>().SingleOrDefault(l => l.Name == "ChangedFilesList"));
-        // It lies over the conversation, which keeps its width.
+        Assert.Equal("Changed files", panel.GetVisualDescendants().OfType<TextBlock>().First(t => t.Classes.Contains("tooltitle")).Text);
+        Assert.Equal(["Changed files options", "Hide Changed files"],
+            panel.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("toolaction")).Select(AutomationProperties.GetName));
         var conversation = window.GetVisualDescendants().OfType<TabView>().Single();
-        Assert.True(conversation.Bounds.Width > ShellLayout.MinConversationWidth + slide.Bounds.Width);
+        Assert.True(conversation.TranslatePoint(new Point(conversation.Bounds.Width, 0), window)!.Value.X <= right.TranslatePoint(default, window)!.Value.X + 1);
+
+        // Its − hides it.
+        panel.GetVisualDescendants().OfType<Button>().Last(b => b.Classes.Contains("toolaction")).Command!.Execute(null);
+        UiText.Settle(window);
+        Assert.False(right.IsVisible);
+        Assert.DoesNotContain("showing", icons[0].Classes);
     }
 
     [AvaloniaFact]
-    public async Task The_pin_docks_the_edge_beside_the_conversation_with_its_windows_tabs()
+    public async Task The_split_groups_window_shares_the_right_side_and_the_bottoms_shows_under_the_panes()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
-        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, width: 1400, height: 900);
         h.ShowToolWindow(ToolWindowKinds.Files);
-        UiText.Settle(window);
-        var pin = window.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("toolpin") && b.IsEffectivelyVisible);
-        Assert.Equal("Dock", AutomationProperties.GetName(pin));
-
-        pin.Command!.Execute(null);
+        h.ShowToolWindow(ToolWindowKinds.ScratchPad);
         UiText.Settle(window);
 
-        var edge = window.GetVisualDescendants().OfType<ToolEdgeView>().Single(v => v.Name == "RightEdge");
-        Assert.True(edge.IsEffectivelyVisible);
-        Assert.Equal(ToolDockViewModel.DefaultRightWidth, edge.Bounds.Width);
-        var tabs = edge.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("tooltab")).ToList();
-        Assert.Equal(["Changed files", "Agents", "Scratch pad"], tabs.Select(t => t.GetVisualDescendants().OfType<TextBlock>().First().Text));
-        Assert.Contains("selected", tabs[0].Classes);
-        // Beside the conversation now, not over it.
+        var (top, split) = (Panel(window, "TopPanel"), Panel(window, "SplitPanel"));
+        Assert.True(top.IsEffectivelyVisible && split.IsEffectivelyVisible);
+        Assert.True(top.TranslatePoint(default, window)!.Value.Y < split.TranslatePoint(default, window)!.Value.Y);
+        // Half each at first.
+        Assert.InRange(top.Bounds.Height - split.Bounds.Height, -2, 2);
+
+        InlineDispatcher.Run(() => h.Shell.ToolWindows.MoveTo(h.ToolWindow(ToolWindowKinds.Agents), ToolGroup.Bottom));
+        h.ShowToolWindow(ToolWindowKinds.Agents);
+        UiText.Settle(window);
+
+        var bottom = Panel(window, "BottomPanel");
+        Assert.True(bottom.IsEffectivelyVisible);
+        Assert.Equal(ToolDockViewModel.DefaultBottomHeight, bottom.Bounds.Height);
+        // Under the conversation, which ends above it, and beside the right side, which keeps the whole height.
         var conversation = window.GetVisualDescendants().OfType<TabView>().Single();
-        var right = conversation.TranslatePoint(new Point(conversation.Bounds.Width, 0), window)!.Value.X;
-        Assert.True(right <= edge.TranslatePoint(default, window)!.Value.X + 1);
-        Assert.Equal("Auto-hide", AutomationProperties.GetName(edge.GetVisualDescendants().OfType<Button>().First(b => b.Classes.Contains("toolpin"))));
+        Assert.True(conversation.TranslatePoint(new Point(0, conversation.Bounds.Height), window)!.Value.Y <= bottom.TranslatePoint(default, window)!.Value.Y + 1);
+        Assert.True(bottom.TranslatePoint(new Point(bottom.Bounds.Width, 0), window)!.Value.X <= top.TranslatePoint(default, window)!.Value.X + 1);
     }
+
+    private static ToolPanelView Panel(Window window, string name) => window.GetVisualDescendants().OfType<ToolPanelView>().Single(v => v.Name == name);
+
     [AvaloniaFact]
     public async Task A_changed_files_box_ticks_it_as_reviewed_without_opening_the_diff()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
         var (first, second) = (Path.Combine(h.WorkFolder, "auth.cs"), Path.Combine(h.WorkFolder, "login.cs"));
@@ -124,7 +143,7 @@ public class ToolWindowsUiTests
         Assert.True(Boxes(list)[0].IsChecked);
 
         // Claude changing the file again unticks it.
-        var panel = window.GetVisualDescendants().OfType<ToolEdgeView>().Single(v => v.Name == "RightEdge");
+        var panel = window.GetVisualDescendants().OfType<ToolPanelView>().Single(v => v.Name == "TopPanel");
         var shown = UiText.Describe(panel);
         h.Transport.Emit(Edit("e3", first));
         h.Transport.Emit(EditResult("e3", first));
@@ -140,7 +159,7 @@ public class ToolWindowsUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         UiText.Settle(window);
         var path = Path.Combine(h.WorkFolder, "auth.cs");
         // Claude's Edit leaves "b"; another line is on disk since.
@@ -162,7 +181,7 @@ public class ToolWindowsUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         UiText.Settle(window);
         var (spaces, newline) = (Path.Combine(h.WorkFolder, "auth.cs"), Path.Combine(h.WorkFolder, "login.cs"));
         // One Edit takes a space off the end of a line; the other, the newline off the end of the file.
@@ -191,7 +210,7 @@ public class ToolWindowsUiTests
         var worktree = FakeGitFolders.Worktree(h.WorkFolder, "brisk-otter");
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         UiText.Settle(window);
         var (home, there) = (Path.Combine(h.WorkFolder, "auth.cs"), Path.Combine(worktree, "login.cs"));
         await File.WriteAllTextAsync(home, "b\n", TestContext.Current.CancellationToken);
@@ -217,7 +236,7 @@ public class ToolWindowsUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
         var (first, second) = (Path.Combine(h.WorkFolder, "auth.cs"), Path.Combine(h.WorkFolder, "login.cs"));
@@ -295,7 +314,7 @@ public class ToolWindowsUiTests
         await using var h = new TabTestHarness(s => s.Processes.ShowMonitor = true, dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Processes);
+        h.ShowToolWindow(ToolWindowKinds.Processes);
         h.Time.Advance(TimeSpan.FromSeconds(10));
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
@@ -335,7 +354,7 @@ public class ToolWindowsUiTests
         tree.Parents[5002] = 5001;
         tree.Parents[5003] = 5002;
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Processes);
+        h.ShowToolWindow(ToolWindowKinds.Processes);
         h.Time.Advance(TimeSpan.FromSeconds(10));
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
@@ -454,7 +473,7 @@ public class ToolWindowsUiTests
     {
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         UiText.Settle(window);
         var file = Path.Combine(h.WorkFolder, "auth.cs");
         await File.WriteAllTextAsync(file, "b\n", TestContext.Current.CancellationToken);

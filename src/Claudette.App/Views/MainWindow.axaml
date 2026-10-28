@@ -1,7 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Claudette.App.ViewModels"
-        xmlns:tw="using:Claudette.App.ViewModels.ToolWindows"
         xmlns:controls="using:Claudette.App.Controls"
         xmlns:settings="using:Claudette.Core.Settings"
         x:Class="Claudette.App.Views.MainWindow"
@@ -285,24 +284,6 @@
               <Button Classes="header" Command="{Binding Account.OpenHeaderPlanCommand}" IsVisible="{Binding Account.HeaderPlan, Converter={x:Static ObjectConverters.IsNotNull}}"
                       ToolTip.Tip="{Binding Account.HeaderPlanTip}" AutomationProperties.Name="{Binding Account.HeaderPlanName}">
                 <TextBlock Classes="muted" Text="{Binding Account.HeaderPlan}" VerticalAlignment="Center" />
-              </Button>
-              <!-- The tool windows (DESIGN.md §3, "Tool windows"): each, ticked while it's on screen; choosing one shows it, or hides it -->
-              <Button Name="ToolWindowsMenu" Classes="flat" Padding="8" VerticalAlignment="Center" ToolTip.Tip="Tool windows" AutomationProperties.Name="Tool windows"
-                      IsVisible="{Binding Shell, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}">
-                <Path Data="{StaticResource IconToolWindows}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="13" Height="13" Stretch="Uniform" />
-                <Button.Flyout>
-                  <MenuFlyout ItemsSource="{Binding Shell.ToolWindows.Windows, FallbackValue={x:Null}}">
-                    <MenuFlyout.ItemContainerTheme>
-                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="tw:ToolWindowViewModel">
-                        <Setter Property="Header" Value="{Binding Title}" />
-                        <Setter Property="ToggleType" Value="CheckBox" />
-                        <Setter Property="IsChecked" Value="{Binding IsShowing, Mode=OneWay}" />
-                        <Setter Property="Command" Value="{Binding ToggleCommand}" />
-                        <Setter Property="IsVisible" Value="{Binding IsAvailable}" />
-                      </ControlTheme>
-                    </MenuFlyout.ItemContainerTheme>
-                  </MenuFlyout>
-                </Button.Flyout>
               </Button>
             </StackPanel>
 

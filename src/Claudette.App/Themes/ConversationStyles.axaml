@@ -710,81 +710,141 @@
   <Style Selector="Border.composer.dropping">
     <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
   </Style>
-  <!-- Tool windows (DESIGN.md §3, "Tool windows"): an edge docked beside the panes, an auto-hidden edge's strip of tabs,
-       and a window slid out over the conversation, which casts a shadow. -->
-  <Style Selector="Border.tooledge">
-    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+  <!-- Tool windows (DESIGN.md §3, "Tool windows"), as Rider's: the strip of icons at the window's right, an icon picked
+       out while its window shows; and a window's panel with its header (its title, Find's searches, ⋮ and −). -->
+  <Style Selector="Border.toolstrip">
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Padding" Value="0,6" />
   </Style>
-  <Style Selector="Border.tooledge.right">
-    <Setter Property="BorderThickness" Value="1,0,0,0" />
+  <Style Selector="Button.stripicon">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="MinHeight" Value="0" />
   </Style>
-  <Style Selector="Border.tooledge.bottom">
-    <Setter Property="BorderThickness" Value="0,1,0,0" />
+  <Style Selector="Button.stripicon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
   </Style>
-  <Style Selector="Border.toolslide">
-    <Setter Property="Effect">
-      <DropShadowEffect BlurRadius="16" OffsetX="0" OffsetY="0" Opacity="0.25" />
-    </Setter>
+  <Style Selector="Button.stripicon.showing /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ToolIconSelectedBrush}" />
+  </Style>
+  <Style Selector="Path.stripglyph">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.3" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="Button.stripicon:pointerover Path.stripglyph, Button.stripicon.showing Path.stripglyph">
+    <Setter Property="Stroke" Value="{DynamicResource ToolIconSelectedTextBrush}" />
+  </Style>
+  <Style Selector="Ellipse.stripdot">
+    <Setter Property="Width" Value="6" />
+    <Setter Property="Height" Value="6" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Margin" Value="0,-3,-3,0" />
+  </Style>
+  <Style Selector="Ellipse.stripdot.busy">
+    <Setter Property="Fill" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="Ellipse.stripdot.warning">
+    <Setter Property="Fill" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <Style Selector="Border.stripdivider">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Margin" Value="10,4" />
+    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+  </Style>
+  <Style Selector="Border.stripdrop">
+    <Setter Property="Height" Value="2" />
+    <Setter Property="CornerRadius" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- A window's panel: an island like the panes', its header a row of 36 -->
+  <Style Selector="Border.toolpanel">
+    <Setter Property="Background" Value="{DynamicResource IslandBrush}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource IslandRadius}" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style Selector="Grid.toolheader">
+    <Setter Property="Height" Value="36" />
+    <Setter Property="Margin" Value="4,0,6,0" />
   </Style>
   <Style Selector="TextBlock.tooltitle">
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="VerticalAlignment" Value="Center" />
-    <Setter Property="Margin" Value="10,0" />
+    <Setter Property="Margin" Value="8,0,10,0" />
   </Style>
-  <Style Selector="Border.toolstrip">
-    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
-  </Style>
-  <Style Selector="Border.toolstrip.right">
-    <Setter Property="BorderThickness" Value="1,0,0,0" />
+  <Style Selector="Button.toolaction">
     <Setter Property="Width" Value="26" />
-    <Setter Property="Padding" Value="0,6" />
-  </Style>
-  <Style Selector="Border.toolstrip.bottom">
-    <Setter Property="BorderThickness" Value="0,1,0,0" />
     <Setter Property="Height" Value="26" />
-    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="5" />
   </Style>
-  <Style Selector="Border.toolstrip.right Button.striptab">
-    <Setter Property="Padding" Value="4,10" />
+  <Style Selector="Button.toolaction:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
   </Style>
-  <Style Selector="Border.toolstrip.bottom Button.striptab">
-    <Setter Property="Padding" Value="10,4" />
+  <!-- Drawn on the icons' own 12×12 grid: a line stretched to fit would have no height. -->
+  <Style Selector="Button.toolaction Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.4" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
   </Style>
-  <Style Selector="Button.striptab.slid">
+  <Style Selector="Button.toolaction Path.filled">
+    <Setter Property="StrokeThickness" Value="0" />
+    <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <!-- A tool window's own tabs in its header, as Find's searches: the one showing filled in, each with its × -->
+  <Style Selector="ListBox.contenttabs">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ListBox.contenttabs ListBoxItem">
+    <Setter Property="Padding" Value="8,3,4,3" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+  <Style Selector="ListBox.contenttabs ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
   </Style>
-  <Style Selector="Button.toolpin.autohide Path">
-    <Setter Property="RenderTransform" Value="rotate(90deg)" />
-  </Style>
-  <!-- A docked edge's windows (DESIGN.md §3, "Tool windows"), as tabs over a divider: the one showing in full text with
-       an accent line under it, over the divider, and the others muted. -->
-  <Style Selector="Border.pagetabs">
-    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
-    <Setter Property="BorderThickness" Value="0,0,0,1" />
-    <Setter Property="Padding" Value="6,4,6,0" />
-  </Style>
-  <Style Selector="Button.pagetab">
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="Transparent" />
-    <Setter Property="BorderThickness" Value="0,0,0,2" />
-    <Setter Property="CornerRadius" Value="4,4,0,0" />
-    <Setter Property="Padding" Value="8,6,8,6" />
+  <Style Selector="Button.contenttabclose">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Padding" Value="0" />
     <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
-  <Style Selector=".compact Button.pagetab">
-    <Setter Property="Padding" Value="8,3,8,4" />
+  <Style Selector="Button.contenttabclose Path">
+    <Setter Property="Width" Value="7" />
+    <Setter Property="Height" Value="7" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.3" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
   </Style>
-  <Style Selector="Button.pagetab.selected">
-    <Setter Property="FontWeight" Value="SemiBold" />
-  </Style>
-  <Style Selector="Button.pagetab:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.pagetab:pressed /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
-    <Setter Property="BorderBrush" Value="Transparent" />
-  </Style>
-  <Style Selector="Button.pagetab.selected /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  <Style Selector="Border.toolgrip">
+    <Setter Property="Background" Value="Transparent" />
   </Style>
   <!-- Changed files (DESIGN.md §8, "Reviewed"): a small box before each file, and a reviewed file drawn faintly -->
   <Style Selector="CheckBox.reviewed">

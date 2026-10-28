@@ -34,8 +34,8 @@ public class GameServiceTests
         Assert.IsType<HangmanViewModel>(h.Services.Games.Game);
         Assert.True(h.Services.Games.IsHangman);
 
-        // Another window: the game stays.
-        h.ShowToolWindow(ToolWindowKinds.Files);
+        // Another window of its group in its place: the game stays.
+        h.ShowToolWindow(ToolWindowKinds.ScratchPad);
         Assert.False(h.IsShowing(ToolWindowKinds.Games));
         Assert.True(h.Services.Games.IsOpen);
 

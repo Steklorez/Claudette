@@ -5,7 +5,7 @@ namespace Claudette.App.ViewModels;
 /// <summary>
 /// The tool windows (DESIGN.md §3, "Tool windows"): one dock for the whole window, outside the panes. The windows that
 /// follow the session show the focused session tab's data, or with a Project Files tab or a log focused, its group's last
-/// focused session tab's; the tabs hear which windows show them, and the sidebar leaves the right edge its room.
+/// focused session tab's; the tabs hear which windows show them, and the sidebar leaves the strip and the right side their room.
 /// </summary>
 public sealed partial class ShellViewModel
 {
@@ -21,7 +21,6 @@ public sealed partial class ShellViewModel
     private void WatchToolWindows()
     {
         ToolWindows.ShowingChanged += TellTabsWhatShows;
-        ToolWindows.Removed += OnToolWindowRemoved;
         ToolWindows.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ToolDockViewModel.RightRoom))
@@ -41,6 +40,16 @@ public sealed partial class ShellViewModel
         var games = ToolWindows.For(ToolWindowKinds.Games);
         games.Content = _services.Games;
         games.IsAvailable = _services.Games.IsOpen;
+        // So are the searches kept in the Find window: its icon is on the strip while there are any.
+        var find = ToolWindows.For(ToolWindowKinds.Find);
+        find.Content = FindResults;
+        FindResults.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(FindWindowViewModel.HasSearches))
+            {
+                find.IsAvailable = FindResults.HasSearches;
+            }
+        };
     }
 
     /// <summary>
@@ -76,7 +85,7 @@ public sealed partial class ShellViewModel
     /// <summary>A game opened or closed: its window comes, or goes with the game.</summary>
     private void OnGameOpenChanged() => ToolWindows.For(ToolWindowKinds.Games).IsAvailable = _services.Games.IsOpen;
 
-    /// <summary>The command palette's entries for the tool windows: each that has one, shown as its tab's click does.</summary>
+    /// <summary>The command palette's entries for the tool windows: each that has one and has its icon, shown.</summary>
     private IEnumerable<PaletteEntry> ToolWindowEntries() =>
         ToolWindows.Windows
             .Where(w => w.Kind.PaletteText is not null && w.IsAvailable)

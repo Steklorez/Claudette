@@ -73,7 +73,7 @@ public sealed class FindInFilesUiTests
 
         // The popup's gone, and its matches are in the bottom edge's window, its tab titled by the query.
         Assert.DoesNotContain(window.GetVisualDescendants().OfType<FindInFilesView>(), v => v.IsEffectivelyVisible);
-        var bottom = window.GetVisualDescendants().OfType<ToolEdgeView>().Single(v => v.Name == "BottomEdge");
+        var bottom = window.GetVisualDescendants().OfType<ToolPanelView>().Single(v => v.Name == "BottomPanel");
         Assert.True(bottom.IsEffectivelyVisible);
         var results = bottom.GetVisualDescendants().OfType<FindResultsView>().Single();
         Assert.True(results.IsEffectivelyVisible);

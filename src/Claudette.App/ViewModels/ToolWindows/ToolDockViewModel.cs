@@ -1,80 +1,119 @@
-using System.Collections.ObjectModel;
-using Claudette.App.Services;
 using Claudette.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Claudette.App.ViewModels.ToolWindows;
 
 /// <summary>
-/// The tool windows (DESIGN.md §3, "Tool windows"), as Visual Studio has them: one layout for the whole main window, at
-/// its right and bottom edges, outside the panes. Each window has a tab on its edge; an edge is docked, beside the panes
-/// with a size of its own, or auto-hidden, its tabs along the window's edge sliding their window out over the
-/// conversation. The windows that follow the session show the focused session tab's data. Partials: the session
-/// (<c>.Session</c>), sliding out (<c>.Slide</c>), dragging a tab to another edge (<c>.Drop</c>), and saving the layout
-/// (<c>.State</c>).
+/// The tool windows (DESIGN.md §3, "Tool windows"), as Rider has them: one layout for the whole main window, outside the
+/// panes, with a strip of icons at its right. The icons are in three groups, and one window of each shows at a time,
+/// taking room beside the strip: the top group's at the right, the split group's under it, the bottom group's under the
+/// panes. A window is Dock Pinned, staying until it's hidden, or Dock Unpinned, hiding once the user clicks elsewhere. The
+/// windows that follow the session show the focused session tab's data. Partials: the session (<c>.Session</c>), what the
+/// icons say beside their titles (<c>.Adornments</c>) and saving the layout (<c>.State</c>).
 /// </summary>
 public sealed partial class ToolDockViewModel : ViewModelBase, IDisposable
 {
-    /// <summary>The right edge's width at first: the side panel's, which tool windows replaced.</summary>
+    /// <summary>The right side's width at first: the side panel's, which tool windows replaced.</summary>
     public const double DefaultRightWidth = 340;
 
-    /// <summary>The least the right edge can be dragged to: the side panel's.</summary>
+    /// <summary>The least the right side can be dragged to: the side panel's.</summary>
     public const double MinRightWidth = 260;
 
     public const double DefaultBottomHeight = 240;
 
     public const double MinBottomHeight = 120;
 
-    /// <summary>The panes keep at least this height above a docked bottom edge.</summary>
+    /// <summary>The panes keep at least this height above the bottom window.</summary>
     public const double MinPanesHeight = 200;
 
-    /// <summary>How much room an auto-hidden edge's tabs take along the window's edge.</summary>
-    public const double StripThickness = 26;
+    /// <summary>The width of the strip of icons at the window's right.</summary>
+    public const double StripWidth = 40;
+
+    /// <summary>The top window's share of the right side's height at first, while the split group shows one too.</summary>
+    public const double DefaultSplitShare = 0.5;
+
+    /// <summary>The least share of the right side's height either of its windows keeps.</summary>
+    public const double MinSplitShare = 0.15;
 
     private readonly AppState _state;
     private readonly Action _saveState;
-    private readonly ObservableCollection<ToolWindowViewModel> _windows = [];
+    private readonly List<ToolWindowViewModel> _windows = [];
 
     /// <summary>Set once the layout is restored: until then, nothing is worked out or saved.</summary>
     private readonly bool _ready;
 
     /// <param name="saveState">Saves <paramref name="state"/> once the layout changes.</param>
-    internal ToolDockViewModel(AppState state, Action saveState, TimeProvider time, IUiDispatcher dispatcher)
+    internal ToolDockViewModel(AppState state, Action saveState)
     {
         _state = state;
         _saveState = saveState;
-        _slideOutTimer = new UiTimeout(time, dispatcher);
-        _slideBackTimer = new UiTimeout(time, dispatcher);
-        Right = new ToolEdgeViewModel(this, ToolEdge.Right);
-        Bottom = new ToolEdgeViewModel(this, ToolEdge.Bottom);
-        foreach (var kind in ToolWindowKinds.All.Where(k => !k.IsMultiple))
+        Top = new ToolGroupViewModel(this, ToolGroup.Top);
+        Split = new ToolGroupViewModel(this, ToolGroup.Split);
+        Bottom = new ToolGroupViewModel(this, ToolGroup.Bottom);
+        foreach (var kind in ToolWindowKinds.All)
         {
-            _windows.Add(new ToolWindowViewModel(this, kind, kind.Id, kind.Title, content: null));
+            _windows.Add(new ToolWindowViewModel(this, kind));
         }
         Restore();
         _ready = true;
         Refresh();
     }
 
-    public ToolEdgeViewModel Right { get; }
+    /// <summary>The right side's top: the group above the strip's divider.</summary>
+    public ToolGroupViewModel Top { get; }
 
-    public ToolEdgeViewModel Bottom { get; }
+    /// <summary>The right side's bottom, which splits it with the top: the group under the strip's divider.</summary>
+    public ToolGroupViewModel Split { get; }
 
-    public IReadOnlyList<ToolEdgeViewModel> Edges => [Right, Bottom];
+    /// <summary>Under the panes: the group at the strip's foot.</summary>
+    public ToolGroupViewModel Bottom { get; }
 
-    /// <summary>Every window, open or closed.</summary>
+    public IReadOnlyList<ToolGroupViewModel> Groups => [Top, Split, Bottom];
+
+    /// <summary>Every window, with something to show or not.</summary>
     public IReadOnlyList<ToolWindowViewModel> Windows => _windows;
 
-    public ToolEdgeViewModel EdgeOf(ToolEdge edge) => edge == ToolEdge.Right ? Right : Bottom;
+    public ToolGroupViewModel GroupOf(ToolGroup group) => group switch
+    {
+        ToolGroup.Top => Top,
+        ToolGroup.Split => Split,
+        _ => Bottom,
+    };
 
-    public ToolWindowViewModel? Find(string id) => _windows.FirstOrDefault(w => w.Id == id);
+    /// <summary>The window of <paramref name="kind"/>.</summary>
+    public ToolWindowViewModel For(ToolWindowKind kind) => _windows.First(w => w.Kind == kind);
 
-    /// <summary>The window of a kind that has one.</summary>
-    public ToolWindowViewModel For(ToolWindowKind kind) => Find(kind.Id) ?? throw new ArgumentException($"{kind.Id} has no window of its own.", nameof(kind));
+    private ToolWindowViewModel? Find(string id) => _windows.FirstOrDefault(w => w.Id == id);
+
+    // ---- What's on screen ----------------------------------------------------------------------------------------
+
+    /// <summary>The strip has an icon.</summary>
+    [ObservableProperty]
+    public partial bool HasStrip { get; private set; }
+
+    /// <summary>The strip has icons both above its divider and under it, so the divider shows.</summary>
+    [ObservableProperty]
+    public partial bool HasDivider { get; private set; }
+
+    /// <summary>A window shows at the right: the top group's, the split group's, or both.</summary>
+    [ObservableProperty]
+    public partial bool IsRightShowing { get; private set; }
+
+    /// <summary>The right side's width, as the user dragged it.</summary>
+    [ObservableProperty]
+    public partial double RightWidth { get; private set; } = DefaultRightWidth;
+
+    /// <summary>The bottom's height, as the user dragged it.</summary>
+    [ObservableProperty]
+    public partial double BottomHeight { get; private set; } = DefaultBottomHeight;
+
+    /// <summary>The top window's share of the right side's height, while the split group shows one too.</summary>
+    [ObservableProperty]
+    public partial double SplitShare { get; private set; } = DefaultSplitShare;
 
     /// <summary>
-    /// The least room the right edge takes beside the panes, which the sidebar and the panes leave it (DESIGN.md §4,
-    /// "Sidebar"; §18, "Split panes"): docked, its least width; auto-hidden, its tabs; nothing without windows.
+    /// The least room the tool windows take at the right, which the sidebar and the panes leave them (DESIGN.md §4,
+    /// "Sidebar"; §18, "Split panes"): the strip, and the right side's least width while a window shows there.
     /// </summary>
     [ObservableProperty]
     public partial double RightRoom { get; private set; }
@@ -88,273 +127,140 @@ public sealed partial class ToolDockViewModel : ViewModelBase, IDisposable
     /// <summary>The kinds of the windows on screen.</summary>
     public IReadOnlySet<string> ShowingKinds => _windows.Where(w => w.IsShowing).Select(w => w.Kind.Id).ToHashSet();
 
-    /// <summary>The edges' tabs and what shows follow the windows, and every window and tab hears what changed.</summary>
+    /// <summary>The icons follow the windows, the groups what they show, and every window hears what changed.</summary>
     internal void Refresh()
     {
         if (!_ready)
         {
             return;
         }
-        Right.Refresh();
-        Bottom.Refresh();
-        RightRoom = Right.IsDocked ? MinRightWidth : Right.HasStrip ? StripThickness : 0;
+        foreach (var group in Groups)
+        {
+            group.Refresh();
+        }
+        HasStrip = Groups.Any(g => g.HasIcons);
+        HasDivider = Top.HasIcons && Split.HasIcons;
+        IsRightShowing = Top.IsShowing || Split.IsShowing;
+        RightRoom = (HasStrip ? StripWidth : 0) + (IsRightShowing ? MinRightWidth : 0);
         ShowingChanged?.Invoke();
     }
 
-    // ---- Showing, hiding and closing -----------------------------------------------------------------------------
+    // ---- Showing and hiding ----------------------------------------------------------------------------------------
 
     /// <summary>
-    /// The way to a window from a button, a menu or the command palette: docked, its tab shows; auto-hidden, it slides
-    /// out, until the pointer is pressed elsewhere; closed, it opens where it was, and shows.
+    /// A window wanted from a button, a menu or the command palette: it shows, in place of its group's other. Shown by
+    /// <see cref="Toggle"/>, a click on its icon, it takes the keyboard too.
     /// </summary>
     public void Show(ToolWindowKind kind) => Show(For(kind));
 
     /// <inheritdoc cref="Show(ToolWindowKind)"/>
     public void Show(ToolWindowViewModel window)
     {
-        if (!_windows.Contains(window))
-        {
-            return;
-        }
-        var edge = EdgeOf(window.Edge);
-        var opened = !window.IsOpen;
-        window.IsOpen = true;
-        edge.Chosen = window;
+        var group = GroupOf(window.Group);
+        group.Chosen = window;
         Refresh();
-        if (edge.IsAutoHide)
-        {
-            SlideOut(window, held: true);
-        }
-        if (opened || !edge.IsAutoHide)
-        {
-            Save();
-        }
+        Save();
     }
 
-    /// <summary>
-    /// The Tool windows menu's entry: a window on screen hides, slid out sliding back and docked closing; any other shows,
-    /// as <see cref="Show(ToolWindowViewModel)"/> says.
-    /// </summary>
+    /// <summary>A click on its icon: hidden, it shows and takes the keyboard; showing, it hides.</summary>
     public void Toggle(ToolWindowViewModel window)
     {
-        if (!window.IsShowing)
+        if (window.IsShowing)
         {
-            Show(window);
+            Hide(window);
+            return;
         }
-        else if (EdgeOf(window.Edge).IsAutoHide)
+        Show(window);
+        if (window.IsShowing)
         {
-            SlideBack();
-        }
-        else
-        {
-            Close(window);
+            FocusRequested?.Invoke(window);
         }
     }
 
-    /// <summary>Its tab clicked in a docked group: it shows, and is the tab the edge shows from now on.</summary>
-    public void Select(ToolWindowViewModel window)
+    /// <summary>Its <b>−</b>, its menu's <b>Hide</b>, or for one unpinned, a click elsewhere: it goes, and its group shows nothing.</summary>
+    public void Hide(ToolWindowViewModel window)
     {
-        if (!window.HasTab)
+        var group = GroupOf(window.Group);
+        if (!ReferenceEquals(group.Chosen, window))
         {
             return;
         }
-        var edge = EdgeOf(window.Edge);
-        if (edge.IsAutoHide)
-        {
-            ClickTab(window);
-            return;
-        }
-        edge.Chosen = window;
+        group.Chosen = null;
         Refresh();
         Save();
     }
 
-    /// <summary>
-    /// Its ×: its tab goes, and the tab beside it shows. It comes back where it was from the Tool windows menu, or
-    /// whatever shows it. A window of a kind that has several is gone for good (<see cref="Remove"/>).
-    /// </summary>
-    public void Close(ToolWindowViewModel window)
+    /// <summary>A window shown by a click on its icon: the view puts the keyboard focus in it.</summary>
+    public event Action<ToolWindowViewModel>? FocusRequested;
+
+    /// <summary>Its menu's <b>Dock Pinned</b> and <b>Dock Unpinned</b>.</summary>
+    public void SetPinned(ToolWindowViewModel window, bool pinned)
     {
-        if (window.Kind.IsMultiple)
+        if (window.IsPinned == pinned)
         {
-            Remove(window);
             return;
         }
-        var edge = EdgeOf(window.Edge);
-        if (ReferenceEquals(edge.Selected, window) && edge.Tabs.IndexOf(window) is >= 0 and var at)
-        {
-            edge.Chosen = edge.Tabs.ElementAtOrDefault(at + 1) ?? edge.Tabs.ElementAtOrDefault(at - 1);
-        }
-        if (ReferenceEquals(edge.SlidOut, window))
-        {
-            EndSlide();
-        }
-        window.IsOpen = false;
-        Refresh();
+        window.IsPinned = pinned;
         Save();
     }
 
     /// <summary>
-    /// The pin on an edge's header: docked, its windows fold into tabs along the window's edge; auto-hidden, they dock
-    /// beside the panes, the one slid out showing. As in Visual Studio, it's all the edge's windows.
+    /// The pointer was pressed in the main window: an unpinned window showing hides unless the press was in it
+    /// (<paramref name="inside"/>), or on the strip, whose icons do their own showing and hiding.
     /// </summary>
-    public void SetAutoHide(ToolEdge which, bool autoHide)
+    public void PressAt(ToolWindowViewModel? inside, bool onStrip)
     {
-        var edge = EdgeOf(which);
-        if (edge.IsAutoHide == autoHide)
+        if (onStrip)
         {
             return;
         }
-        if (edge.SlidOut is { } slid)
-        {
-            edge.Chosen = slid;
-        }
-        if (SlidOut is not null)
-        {
-            CancelSlideTimers();
-            EndSlide();
-        }
-        edge.IsAutoHide = autoHide;
-        foreach (var window in edge.Windows)
-        {
-            window.OnEdgeStateChanged();
-        }
-        Refresh();
-        Save();
+        HideUnpinned(except: inside);
     }
 
-    // ---- Windows made at run time ----------------------------------------------------------------------------------
+    /// <summary>Esc: an unpinned window showing hides. False when none did.</summary>
+    public bool Escape() => HideUnpinned(except: null);
 
-    /// <summary>Where the next window of a kind that has several docks: where the user last moved one, else its edge.</summary>
-    private readonly Dictionary<string, ToolEdge> _kindEdges = [];
-
-    private int _made;
-
-    /// <summary>
-    /// Makes a window of a kind that has several (<see cref="ToolWindowKind.IsMultiple"/>), such as a search's results,
-    /// last on the edge the kind's windows dock at, and shows it unless <paramref name="show"/> is false. Its × removes it.
-    /// </summary>
-    public ToolWindowViewModel Add(ToolWindowKind kind, string title, object? content, bool show = true)
+    private bool HideUnpinned(ToolWindowViewModel? except)
     {
-        if (!kind.IsMultiple)
+        var hid = false;
+        foreach (var group in Groups)
         {
-            throw new ArgumentException($"{kind.Id} has one window, made with the dock.", nameof(kind));
+            if (group.Showing is { IsPinned: false } showing && !ReferenceEquals(showing, except))
+            {
+                group.Chosen = null;
+                hid = true;
+            }
         }
-        var window = new ToolWindowViewModel(this, kind, $"{kind.Id}#{++_made}", title, content)
-        {
-            Edge = _kindEdges.TryGetValue(kind.Id, out var edge) ? edge : kind.DefaultEdge,
-        };
-        _windows.Add(window);
-        var at = EdgeOf(window.Edge);
-        // The first window on an empty edge docks it, as dragging one there does.
-        if (!at.HasTabs)
-        {
-            at.IsAutoHide = false;
-        }
-        at.Windows.Add(window);
-        if (show)
-        {
-            Show(window);
-        }
-        else
+        if (hid)
         {
             Refresh();
+            Save();
         }
-        return window;
+        return hid;
     }
 
-    /// <summary>A window of a kind that has several was closed, by its × or by what made it.</summary>
-    public event Action<ToolWindowViewModel>? Removed;
-
-    /// <summary>Takes a window made at run time away for good.</summary>
-    public void Remove(ToolWindowViewModel window)
-    {
-        if (!window.Kind.IsMultiple || !_windows.Remove(window))
-        {
-            return;
-        }
-        var edge = EdgeOf(window.Edge);
-        if (ReferenceEquals(edge.Selected, window) && edge.Tabs.IndexOf(window) is >= 0 and var at)
-        {
-            edge.Chosen = edge.Tabs.ElementAtOrDefault(at + 1) ?? edge.Tabs.ElementAtOrDefault(at - 1);
-        }
-        if (ReferenceEquals(edge.SlidOut, window))
-        {
-            EndSlide();
-        }
-        edge.Windows.Remove(window);
-        window.IsOpen = false;
-        Refresh();
-        Removed?.Invoke(window);
-    }
-
-    // ---- Order and edges ---------------------------------------------------------------------------------------------
+    // ---- Moving ----------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Dragging a tab past the middle of another on its edge: it takes that one's place, which moves over to make room.
-    /// Returns whether it moved.
+    /// An icon dragged along the strip, or its menu's <b>Move to</b>: it goes into <paramref name="to"/>, before the icon now
+    /// at <paramref name="index"/> among its icons, or last. Showing, it shows there in place of that group's window.
     /// </summary>
-    public bool MoveTo(ToolWindowViewModel window, ToolWindowViewModel to)
+    public void MoveTo(ToolWindowViewModel window, ToolGroup to, int? index = null)
     {
-        var edge = EdgeOf(window.Edge);
-        var (from, index) = (edge.Windows.IndexOf(window), edge.Windows.IndexOf(to));
-        if (from < 0 || index < 0 || from == index || to.Edge != window.Edge)
+        var (from, target) = (GroupOf(window.Group), GroupOf(to));
+        var showing = window.IsShowing;
+        // The icon it goes before: the one at the index, or past itself, the next.
+        var before = index is { } at ? target.Icons.Skip(Math.Max(at, 0)).FirstOrDefault(i => !ReferenceEquals(i, window)) : null;
+        if (ReferenceEquals(from.Chosen, window))
         {
-            return false;
-        }
-        edge.Windows.RemoveAt(from);
-        edge.Windows.Insert(index, window);
-        Refresh();
-        Save();
-        return true;
-    }
-
-    /// <summary>A tab's <b>Move left</b> and <b>Move right</b> (up and down along the right edge): past the next tab that way.</summary>
-    public void MoveBy(ToolWindowViewModel window, int offset)
-    {
-        var tabs = EdgeOf(window.Edge).Tabs;
-        var from = tabs.IndexOf(window);
-        var to = from + offset;
-        if (from >= 0 && to >= 0 && to < tabs.Count)
-        {
-            MoveTo(window, tabs[to]);
-        }
-    }
-
-    /// <summary>
-    /// A tab dragged to the other edge, or its menu's <b>Move to the bottom</b> or <b>Move to the right</b>: it goes at
-    /// <paramref name="index"/> among that edge's windows, or last, and is the tab it shows. An edge with no tabs docks
-    /// as it takes its first.
-    /// </summary>
-    public void MoveToEdge(ToolWindowViewModel window, ToolEdge to, int? index = null)
-    {
-        if (!_windows.Contains(window))
-        {
-            return;
-        }
-        var (from, target) = (EdgeOf(window.Edge), EdgeOf(to));
-        if (ReferenceEquals(from.SlidOut, window))
-        {
-            CancelSlideTimers();
-            EndSlide();
-        }
-        if (ReferenceEquals(from, target))
-        {
-            return;
-        }
-        if (!target.Tabs.Any(t => !ReferenceEquals(t, window)))
-        {
-            target.IsAutoHide = false;
+            from.Chosen = null;
         }
         from.Windows.Remove(window);
-        target.Windows.Insert(Math.Clamp(index ?? target.Windows.Count, 0, target.Windows.Count), window);
-        window.Edge = to;
-        window.IsOpen = true;
-        window.OnEdgeStateChanged();
-        target.Chosen = window;
-        if (window.Kind.IsMultiple)
+        target.Windows.Insert(before is null ? target.Windows.Count : target.Windows.IndexOf(before), window);
+        window.Group = to;
+        if (showing)
         {
-            _kindEdges[window.Kind.Id] = to;
+            target.Chosen = window;
         }
         Refresh();
         Save();
@@ -362,26 +268,37 @@ public sealed partial class ToolDockViewModel : ViewModelBase, IDisposable
 
     // ---- Sizes -----------------------------------------------------------------------------------------------------
 
-    /// <summary>Dragging an edge's inner side: at least its least, and the view keeps the panes their room. <see cref="SaveSize"/> keeps it.</summary>
-    public void Resize(ToolEdge which, double size)
-    {
-        var edge = EdgeOf(which);
-        edge.Size = Math.Max(size, edge.MinSize);
-    }
+    /// <summary>Dragging the right side's inner edge: at least its least, and the view keeps the panes their room. <see cref="SaveSize"/> keeps it.</summary>
+    public void ResizeRight(double width) => RightWidth = Math.Max(width, MinRightWidth);
+
+    /// <summary>Dragging the bottom's top edge.</summary>
+    public void ResizeBottom(double height) => BottomHeight = Math.Max(height, MinBottomHeight);
+
+    /// <summary>Dragging the line between the right side's two windows: the top's share of its height.</summary>
+    public void ResizeSplit(double share) => SplitShare = Math.Clamp(share, MinSplitShare, 1 - MinSplitShare);
 
     public void SaveSize() => Save();
 
-    /// <summary>A double-click on an edge's side: its size at first.</summary>
-    public void ResetSize(ToolEdge which)
+    /// <summary>A double-click on the right side's edge: its width at first.</summary>
+    public void ResetRightWidth()
     {
-        var edge = EdgeOf(which);
-        edge.Size = edge.DefaultSize;
+        RightWidth = DefaultRightWidth;
         Save();
     }
 
-    public void Dispose()
+    /// <summary>A double-click on the bottom's edge: its height at first.</summary>
+    public void ResetBottomHeight()
     {
-        CancelSlideTimers();
-        Unwatch();
+        BottomHeight = DefaultBottomHeight;
+        Save();
     }
+
+    /// <summary>A double-click on the line between the right side's windows: half each.</summary>
+    public void ResetSplit()
+    {
+        SplitShare = DefaultSplitShare;
+        Save();
+    }
+
+    public void Dispose() => Unwatch();
 }

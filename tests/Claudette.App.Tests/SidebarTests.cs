@@ -74,8 +74,8 @@ public class SidebarTests
         h.Shell.Layout.ResizeSidebar(1500);
         Assert.Equal(1500, h.Shell.Layout.SidebarWidth);
         h.Shell.Layout.ResizeSidebar(5000);
-        // Beside the conversation's least and the tool windows' strip of tabs (DESIGN.md §3, "Tool windows").
-        Assert.Equal(2000 - ShellLayout.MinConversationWidth - ToolDockViewModel.StripThickness, h.Shell.Layout.SidebarWidth);
+        // Beside the conversation's least and the tool windows' strip of icons (DESIGN.md §3, "Tool windows").
+        Assert.Equal(2000 - ShellLayout.MinConversationWidth - ToolDockViewModel.StripWidth, h.Shell.Layout.SidebarWidth);
 
         h.Shell.Layout.ResizeSidebar(300);
         Assert.Null(h.Services.State.SidebarWidth);
@@ -86,7 +86,7 @@ public class SidebarTests
     }
 
     [Fact]
-    public async Task The_sidebar_leaves_room_for_the_tool_windows_right_edge_and_gives_way_after_it()
+    public async Task The_sidebar_leaves_room_for_the_tool_windows_at_the_right_and_gives_way_after_them()
     {
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
@@ -95,23 +95,24 @@ public class SidebarTests
         layout.SetAvailableWidth(2000);
         layout.ResizeSidebar(1000);
 
-        // Docked, the right edge takes its least beside the conversation's (DESIGN.md §3, "Tool windows").
-        InlineDispatcher.Run(() => dock.SetAutoHide(ToolEdge.Right, false));
-        Assert.Equal(ToolDockViewModel.MinRightWidth, layout.RightEdgeRoom);
+        // A window showing at the right takes its least beside the conversation's, with the strip (DESIGN.md §3, "Tool windows").
+        const double room = ToolDockViewModel.StripWidth + ToolDockViewModel.MinRightWidth;
+        h.ShowToolWindow(ToolWindowKinds.Files);
+        Assert.Equal(room, layout.RightEdgeRoom);
         Assert.Equal(1000, layout.SidebarDisplayWidth);
         layout.SetAvailableWidth(1400);
-        Assert.Equal(1400 - ShellLayout.MinConversationWidth - ToolDockViewModel.MinRightWidth, layout.SidebarDisplayWidth);
+        Assert.Equal(1400 - ShellLayout.MinConversationWidth - room, layout.SidebarDisplayWidth);
 
         // The window wide again, the width the user dragged comes back.
         layout.SetAvailableWidth(2000);
         Assert.Equal(1000, layout.SidebarDisplayWidth);
         Assert.Equal(1000, layout.SidebarWidth);
 
-        // Auto-hidden, it takes only its tabs' strip: its windows slide out over the conversation.
+        // Hidden, only the strip takes room; a window at the bottom takes none at the right.
         layout.SetAvailableWidth(1200);
-        InlineDispatcher.Run(() => dock.SetAutoHide(ToolEdge.Right, true));
-        Assert.Equal(ToolDockViewModel.StripThickness, layout.RightEdgeRoom);
-        Assert.Equal(1200 - ShellLayout.MinConversationWidth - ToolDockViewModel.StripThickness, layout.SidebarDisplayWidth);
+        InlineDispatcher.Run(() => dock.Hide(dock.For(ToolWindowKinds.Files)));
+        Assert.Equal(ToolDockViewModel.StripWidth, layout.RightEdgeRoom);
+        Assert.Equal(1200 - ShellLayout.MinConversationWidth - ToolDockViewModel.StripWidth, layout.SidebarDisplayWidth);
     }
     [Fact]
     public async Task Move_up_and_down_keep_pinned_tabs_first()
