@@ -10,7 +10,7 @@ summary: "A long conversation can run to thousands of cards."
 A long conversation can run to thousands of cards. Claudette marks the ones you are likely to look for, jumps between messages, and has a find bar for the rest.
 
 ## Marks in the scroll bar
-While the conversation scrolls, its scroll bar marks where things are, along its right edge, as JetBrains Rider's does:
+While the conversation scrolls, its scroll bar marks where things are, as JetBrains Rider's does, each mark as wide as the bar: a thin line while it rests, and wider once you point at it:
 
 - your messages, in the **You** card's color;
 - prompts waiting for you, in amber;

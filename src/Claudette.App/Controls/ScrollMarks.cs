@@ -15,8 +15,8 @@ public sealed record ScrollMark(double Fraction, IBrush Brush, int Index, string
 
 /// <summary>
 /// Marks in the conversation's scroll bar where the user's messages, waiting prompts, errors and changed files are
-/// (DESIGN.md §18, "Conversation cards"), as Rider and VS Code mark theirs: in a lane at the bar's right, from its top to
-/// its bottom, over the track and the thumb. A click on one goes there. It lies over the whole of its <see cref="Viewer"/>,
+/// (DESIGN.md §18, "Conversation cards"), as Rider and VS Code mark theirs: in a lane as wide as the bar's thumb is drawn,
+/// thin while the bar rests and wide once it widens under the pointer, as tall as its track, over the track and the thumb. A click on one goes there. It lies over the whole of its <see cref="Viewer"/>,
 /// but only the marks take the pointer, and not where the thumb is, so the thumb still drags, the track still pages, and
 /// the conversation under it still scrolls and selects.
 /// </summary>
@@ -28,7 +28,7 @@ public sealed class ScrollMarks : Control, ICustomHitTest
     public static readonly StyledProperty<ScrollViewer?> ViewerProperty =
         AvaloniaProperty.Register<ScrollMarks, ScrollViewer?>(nameof(Viewer));
 
-    /// <summary>The lane's width, at the scroll bar's right.</summary>
+    /// <summary>The lane's width at the scroll bar's right before the bar has a thumb to take it from.</summary>
     public const double LaneWidth = 6;
 
     /// <summary>A mark's height; marks closer than this draw over each other.</summary>
@@ -41,6 +41,9 @@ public sealed class ScrollMarks : Control, ICustomHitTest
 
     /// <summary>The viewer's vertical scroll bar, once its template has made one, which the marks are drawn in.</summary>
     private ScrollBar? _bar;
+
+    /// <summary>The bar's thumb, whose drawn width the lane takes.</summary>
+    private Thumb? _thumb;
 
     static ScrollMarks() => AffectsRender<ScrollMarks>(MarksProperty, ViewerProperty);
 
@@ -83,12 +86,20 @@ public sealed class ScrollMarks : Control, ICustomHitTest
         }
     }
 
-    /// <summary>Draws again as the bar moves or changes size, with the pane, or as it shows and hides.</summary>
+    /// <summary>
+    /// Draws again as the bar moves or changes size, with the pane, or as it shows and hides; and at each step of its thumb
+    /// widening or thinning, which Fluent draws as the thumb scaled from the bar's right edge, so the marks keep its width.
+    /// </summary>
     private void Watch(ScrollBar? bar)
     {
         if (_bar is not null)
         {
             _bar.LayoutUpdated -= OnBarLaidOut;
+        }
+        if (_thumb is not null)
+        {
+            _thumb.PropertyChanged -= OnThumbChanged;
+            _thumb = null;
         }
         _bar = bar;
         if (_bar is not null)
@@ -97,13 +108,31 @@ public sealed class ScrollMarks : Control, ICustomHitTest
         }
     }
 
-    private void OnBarLaidOut(object? sender, EventArgs e) => InvalidateVisual();
+    private void OnBarLaidOut(object? sender, EventArgs e)
+    {
+        // The thumb comes with the bar's template, after the bar itself.
+        if (_thumb is null && _bar?.GetVisualDescendants().OfType<Thumb>().FirstOrDefault() is { } thumb)
+        {
+            _thumb = thumb;
+            _thumb.PropertyChanged += OnThumbChanged;
+        }
+        InvalidateVisual();
+    }
+
+    private void OnThumbChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == RenderTransformProperty || e.Property == BoundsProperty || e.Property == IsVisibleProperty)
+        {
+            InvalidateVisual();
+        }
+    }
 
     /// <summary>
-    /// The lane the marks are in, in this control's coordinates: the bar's right, as tall as its track, between its arrows,
+    /// The lane the marks are in, in this control's coordinates: as wide as the bar's thumb is drawn, thin while the bar
+    /// rests and the bar's width once it has widened, and in between as it does; as tall as its track, between its arrows,
     /// where the thumb goes, so a mark is where the thumb is when its item is at the top. Empty without a bar showing.
     /// </summary>
-    private Rect Lane()
+    internal Rect Lane()
     {
         if (Bar is not { IsEffectivelyVisible: true } bar || bar.TranslatePoint(default, this) is not { } at)
         {
@@ -111,7 +140,13 @@ public sealed class ScrollMarks : Control, ICustomHitTest
         }
         var track = bar.GetVisualDescendants().OfType<Track>().FirstOrDefault();
         var (top, height) = track?.TranslatePoint(default, this) is { } trackAt ? (trackAt.Y, track.Bounds.Height) : (at.Y, bar.Bounds.Height);
-        return new Rect(at.X + bar.Bounds.Width - LaneWidth, top, LaneWidth, height);
+        var (left, right) = (at.X + bar.Bounds.Width - LaneWidth, at.X + bar.Bounds.Width);
+        // Where the thumb is drawn, through its transform: its two ends, within the bar.
+        if (track?.Thumb is { } thumb && thumb.TranslatePoint(default, this) is { } start && thumb.TranslatePoint(new Point(thumb.Bounds.Width, 0), this) is { } end)
+        {
+            (left, right) = (Math.Max(Math.Min(start.X, end.X), at.X), Math.Min(Math.Max(start.X, end.X), at.X + bar.Bounds.Width));
+        }
+        return new Rect(left, top, Math.Max(0, right - left), height);
     }
 
     private static double YOf(ScrollMark mark, Rect lane) =>

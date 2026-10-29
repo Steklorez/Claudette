@@ -136,10 +136,22 @@ public sealed class ConversationCardsUiTests
         Assert.True(marks.Marks[0].Fraction < marks.Marks[1].Fraction);
         Assert.Null(list.ContainerFromItem(first));
 
-        // The marks are in the conversation's scroll bar.
+        // The marks are in the conversation's scroll bar, as wide as its thumb is drawn: thin while the bar rests, scaled from
+        // its right edge, and its whole width once the bar widens.
         var bar = view.GetVisualDescendants().OfType<ScrollBar>().First(b => b.Orientation == Orientation.Vertical && b.IsEffectivelyVisible);
         var onFirst = marks.PointOf(marks.Marks[0]);
         Assert.True(new Rect(bar.Bounds.Size).Contains(marks.TranslatePoint(onFirst, bar)!.Value), "The mark is outside the scroll bar.");
+        var thumb = bar.GetVisualDescendants().OfType<Thumb>().Single();
+        double Drawn() => Math.Abs(thumb.TranslatePoint(new Point(thumb.Bounds.Width, 0), marks)!.Value.X - thumb.TranslatePoint(default, marks)!.Value.X);
+        Assert.InRange(marks.Lane().Width, Drawn() - 0.5, Drawn() + 0.5);
+        Assert.True(marks.Lane().Width < bar.Bounds.Width, "The resting bar's marks are as wide as the whole bar.");
+        var (restingWidth, resting) = (marks.Lane().Width, thumb.RenderTransform);
+        // Widened, as the pointer near it does, and back: Fluent animates the thumb, and the marks keep up.
+        thumb.RenderTransform = null;
+        await UiText.SettleUntilAsync(window, () => Math.Abs(marks.Lane().Width - bar.Bounds.Width) < 0.5, "the marks as wide as the bar");
+        thumb.RenderTransform = resting;
+        await UiText.SettleUntilAsync(window, () => Math.Abs(marks.Lane().Width - restingWidth) < 0.5, "the marks thin again");
+        onFirst = marks.PointOf(marks.Marks[0]);
 
         // A click on the first mark goes to the first message.
         var at = marks.TranslatePoint(onFirst, window)!.Value;
