@@ -233,6 +233,8 @@ Claudette's menu on the composer ([§5](#claudette-on-the-composer)) is drawn in
 
 Settings → Appearance → **Style** picks one of two looks, in light and dark alike. It changes at once, without a restart, and syncs with the other Appearance settings.
 
+**Scroll bars** rest as a 6-pixel line at the edge, Fluent's thumb scaled down from the bar's 16 (Fluent's own is 2), and widen to 16 under the pointer, as Fluent's do; the app sets the scale in `VerticalSmallScrollThumbScaleTransform` and its horizontal twin.
+
 **Both styles are islands**, as JetBrains Rider's Islands theme has it (built 2026-10-28): the sidebar, each pane and the tool windows ([Tool windows](#tool-windows)) are rounded panels (10-pixel corners, their content clipped to them) with a 6-pixel gap between them, on the window's frame, which the usage header and the tool window strip sit on. Panes side by side have a gap between them rather than a line, and the lines to drag, the panes', the right side's and the bottom's, are the gaps. The frame is opaque, as Rider's is: there's no Mica backdrop.
 
 **Standard** (the default) takes JetBrains Rider (its New UI, with the Islands theme) as its reference for the window, and Claude Code's own Visual Studio Code extension for the conversation's layout:

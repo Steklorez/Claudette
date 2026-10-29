@@ -144,7 +144,8 @@ public sealed class ConversationCardsUiTests
         var thumb = bar.GetVisualDescendants().OfType<Thumb>().Single();
         double Drawn() => Math.Abs(thumb.TranslatePoint(new Point(thumb.Bounds.Width, 0), marks)!.Value.X - thumb.TranslatePoint(default, marks)!.Value.X);
         Assert.InRange(marks.Lane().Width, Drawn() - 0.5, Drawn() + 0.5);
-        Assert.True(marks.Lane().Width < bar.Bounds.Width, "The resting bar's marks are as wide as the whole bar.");
+        // At rest, 6 pixels: the app's resting thumb, wider than Fluent's 2.
+        Assert.InRange(marks.Lane().Width, 5.5, 6.5);
         var (restingWidth, resting) = (marks.Lane().Width, thumb.RenderTransform);
         // Widened, as the pointer near it does, and back: Fluent animates the thumb, and the marks keep up.
         thumb.RenderTransform = null;

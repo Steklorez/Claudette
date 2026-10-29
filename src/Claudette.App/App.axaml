@@ -531,6 +531,11 @@
       <FontFamily x:Key="ReplyFont">$Default</FontFamily>
       <!-- The page's background: none, so the frame shows between the islands. -->
       <SolidColorBrush x:Key="PageBackgroundBrush" Color="Transparent" />
+      <!-- A resting scroll bar's thumb (DESIGN.md §3, "Visual style"): Fluent's own, scaled from the bar's edge, but 6 pixels
+           wide rather than 2, so it's easy to see; it still widens to the bar's 16 under the pointer. The conversation's
+           marks take its width (Controls/ScrollMarks). -->
+      <TransformOperations x:Key="VerticalSmallScrollThumbScaleTransform">scaleX(0.375) translateX(-2px)</TransformOperations>
+      <TransformOperations x:Key="HorizontalSmallScrollThumbScaleTransform">scaleY(0.375) translateY(-2px)</TransformOperations>
       <!-- An island's corners, and the gap around it (DESIGN.md §3, "Visual style") -->
       <CornerRadius x:Key="IslandRadius">10</CornerRadius>
       <x:Double x:Key="IslandGap">6</x:Double>
