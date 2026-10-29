@@ -81,8 +81,9 @@ foreach ($style in 'standard', 'claude') {
 
             # An Edit's tile opens its detail, which has Open in the diff view.
             Set-Step 'the diff view'
-            Invoke-ByText $window ('Edit ' + (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp'))
-            Start-Sleep -Seconds 1
+            # The last of its tiles, which is in view: the first can be scrolled up out of it.
+            Send-Click (Find-LowestByText $window ('Edit ' + (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp')))
+            Wait-Until { Find-ByText $window 'Open in the diff view' -Optional } "the Edit tile's detail" 20
             Invoke-ByText $window 'Open in the diff view'
             $diff = Get-OtherWindow $claudette $window 'the diff view'
             [WindowShot]::Resize($diff, 1000, 470)

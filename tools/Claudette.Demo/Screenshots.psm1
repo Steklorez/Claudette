@@ -223,6 +223,18 @@ function Find-ByText($from, [string] $text, [switch] $Optional) {
     $all[$index]
 }
 
+# The lowest on screen of the controls named $text, such as the last of several tool tiles on one file, which is the one
+# in view when the conversation is scrolled to its end; or null.
+function Find-LowestByText($from, [string] $text) {
+    $named = New-Object System.Windows.Automation.PropertyCondition($ae::NameProperty, $text)
+    $lowest = $null
+    foreach ($element in (Get-Root $from).FindAll($descendants, $named)) {
+        $rect = $element.Current.BoundingRectangle
+        if (-not $rect.IsEmpty -and (-not $lowest -or $rect.Top -gt $lowest.Current.BoundingRectangle.Top)) { $lowest = $element }
+    }
+    $lowest
+}
+
 # The first control whose name starts with $prefix, such as History's chip for a project, "starfall, 5 sessions"; or null.
 function Find-ByPrefix($from, [string] $prefix) {
     $all = (Get-Root $from).FindAll($descendants, [System.Windows.Automation.Condition]::TrueCondition)
@@ -558,7 +570,7 @@ function Stop-Claudette($claudette) {
     if (-not $claudette.WaitForExit(30000)) { Write-Warning "Claudette (pid $($claudette.Id)) didn't close." }
 }
 
-Export-ModuleMember -Function Get-Root, Get-Parent, Find-ByText, Find-ByPrefix, Find-ByType, Find-ById, Find-Lowest, Show-Tree, Invoke-ByText, Invoke-Element,
+Export-ModuleMember -Function Get-Root, Get-Parent, Find-ByText, Find-ByPrefix, Find-ByType, Find-ById, Find-Lowest, Find-LowestByText, Show-Tree, Invoke-ByText, Invoke-Element,
     Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Click, Send-RightClick, Send-Message, Show-Tip, Hide-Tip, Send-Keys,
     Send-WindowKey, Send-Command, Send-ElementCommand, Set-Step, Get-OtherWindow, Wait-PointerAway, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
     Wait-Until, Build-Claudette, New-DemoContent, Start-Claudette, Stop-Claudette
