@@ -963,9 +963,10 @@
             </ItemsControl.ItemsPanel>
           </ItemsControl>
         </ScrollViewer>
-        <!-- Marks beside the scroll bar where your messages, waiting prompts, errors and changed files are; a click goes
-             there (DESIGN.md §18, "Conversation cards"). Clear of the scroll bar, which Fluent draws over the content. -->
-        <controls:ScrollMarks x:Name="ScrollMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" IsVisible="{Binding !IsViewingAgent}" />
+        <!-- Marks in the scroll bar where your messages, waiting prompts, errors and changed files are; a click goes there
+             (DESIGN.md §18, "Conversation cards"). Over the whole list, but drawn in the bar and taking the pointer only on
+             a mark off the thumb. -->
+        <controls:ScrollMarks x:Name="ScrollMarks" Viewer="{Binding #ConversationScroll}" IsVisible="{Binding !IsViewingAgent}" />
         <!-- A subagent's work, read-only, in place of the conversation (DESIGN.md §5, "Subagents"): its cards, as its
              group in the conversation would hold them, then what it handed back. The conversation keeps its place
              under it. -->
@@ -983,7 +984,7 @@
             </controls:Card>
           </StackPanel>
         </ScrollViewer>
-        <controls:ScrollMarks x:Name="AgentMarks" Width="6" HorizontalAlignment="Right" Margin="0,4,17,4" IsVisible="{Binding IsViewingAgent}" />
+        <controls:ScrollMarks x:Name="AgentMarks" Viewer="{Binding #AgentScroll}" IsVisible="{Binding IsViewingAgent}" />
         <!-- Find's text in the card it brought into view, marked over the text (DESIGN.md §5, "Find"); TabView.axaml.cs
              says which card and what text -->
         <controls:FindHighlights x:Name="FindMarks" Fill="{DynamicResource FindHighlightBrush}" />

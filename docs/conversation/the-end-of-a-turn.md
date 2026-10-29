@@ -42,5 +42,5 @@ The **Turn** card is an in-between step, so **Quieter in-between steps** (Settin
 
 ## See also
 
-- [Finding your way](finding-your-way.md): turns that changed files have a mark beside the scroll bar.
+- [Finding your way](finding-your-way.md): turns that changed files have a mark in the scroll bar.
 - [Notifications](../away/notifications.md): the **Finished** notification starts with the same words as the **Tasks** card.

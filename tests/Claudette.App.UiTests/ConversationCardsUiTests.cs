@@ -1,9 +1,11 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Claudette.App.Controls;
@@ -107,7 +109,7 @@ public sealed class ConversationCardsUiTests
     }
 
     [AvaloniaFact]
-    public async Task Marks_beside_the_scroll_bar_go_to_your_messages_and_F3_and_F4_step_between_messages()
+    public async Task Marks_in_the_scroll_bar_go_to_your_messages_and_F3_and_F4_step_between_messages()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
@@ -134,11 +136,20 @@ public sealed class ConversationCardsUiTests
         Assert.True(marks.Marks[0].Fraction < marks.Marks[1].Fraction);
         Assert.Null(list.ContainerFromItem(first));
 
+        // The marks are in the conversation's scroll bar.
+        var bar = view.GetVisualDescendants().OfType<ScrollBar>().First(b => b.Orientation == Orientation.Vertical && b.IsEffectivelyVisible);
+        var onFirst = marks.PointOf(marks.Marks[0]);
+        Assert.True(new Rect(bar.Bounds.Size).Contains(marks.TranslatePoint(onFirst, bar)!.Value), "The mark is outside the scroll bar.");
+
         // A click on the first mark goes to the first message.
-        var at = marks.TranslatePoint(new Point(3, marks.Marks[0].Fraction * marks.Bounds.Height + 1), window)!.Value;
+        var at = marks.TranslatePoint(onFirst, window)!.Value;
         window.MouseDown(at, MouseButton.Left);
         window.MouseUp(at, MouseButton.Left);
         await UiText.SettleUntilAsync(window, () => list.ContainerFromItem(first) is not null, "the first message");
+
+        // There, the thumb is over the first mark, and takes the pointer to be dragged.
+        await UiText.SettleUntilAsync(window, () => !marks.HitTest(marks.PointOf(marks.Marks[0])), "the thumb over the first mark");
+        Assert.True(marks.HitTest(marks.PointOf(marks.Marks[1])));
 
         // F4 goes on to the next message, F3 back, Ctrl+F4 to the latest.
         window.KeyPressQwerty(PhysicalKey.F4, RawInputModifiers.None);

@@ -72,5 +72,5 @@ A long conversation, such as a restored session with thousands of tool calls, co
 
 ## See also
 
-- [Finding your way](finding-your-way.md) for the marks beside the scroll bar, `F3` and `F4`, and find.
+- [Finding your way](finding-your-way.md) for the marks in the scroll bar, `F3` and `F4`, and find.
 - [Copying and quoting](copying-and-quoting.md) for the buttons on a card.

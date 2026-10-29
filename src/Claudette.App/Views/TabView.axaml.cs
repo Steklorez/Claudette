@@ -324,7 +324,7 @@ public partial class TabView : UserControl
         }
     }
 
-    // ---- Marks beside the scroll bar, and going from message to message (DESIGN.md §18, "Conversation cards") ----
+    // ---- Marks in the scroll bar, and going from message to message (DESIGN.md §18, "Conversation cards") -------
 
     private void OnPanelArranged(object? sender, EventArgs e) => UpdateMarks(ReferenceEquals(sender, _agent.Panel) ? _agent : _main);
 
