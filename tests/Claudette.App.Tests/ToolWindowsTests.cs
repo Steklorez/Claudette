@@ -189,7 +189,12 @@ public class ToolWindowsTests
         h.Services.State.ToolWindows = new ToolWindowsState
         {
             Edges = [new ToolEdgeState { Edge = "Right", Size = 420 }, new ToolEdgeState { Edge = "Bottom", Size = 300 }],
-            Windows = [new ToolWindowState { Id = "Agents", Edge = "Bottom" }, new ToolWindowState { Id = "Files", Edge = "Right" }],
+            Windows =
+            [
+                new ToolWindowState { Id = "Agents", Edge = "Bottom" },
+                new ToolWindowState { Id = "Files", Edge = "Right" },
+                new ToolWindowState { Id = "ScratchPad", Edge = "Right" },
+            ],
         };
 
         var dock = new ShellViewModel(h.Services, () => { }).ToolWindows;
@@ -197,6 +202,8 @@ public class ToolWindowsTests
         Assert.Equal((420, 300), (dock.RightWidth, dock.BottomHeight));
         Assert.Equal(ToolGroup.Bottom, dock.For(ToolWindowKinds.Agents).Group);
         Assert.Equal(ToolGroup.Top, dock.For(ToolWindowKinds.Files).Group);
+        // The right edge had no split: Scratch pad goes under the line, as it starts.
+        Assert.Equal(ToolGroup.Split, dock.For(ToolWindowKinds.ScratchPad).Group);
         Assert.DoesNotContain(dock.Windows, w => w.IsShowing);
     }
 

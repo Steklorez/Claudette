@@ -36,7 +36,7 @@ public sealed partial class ToolDockViewModel
         var placed = new HashSet<ToolWindowViewModel>();
         foreach (var state in saved.Windows)
         {
-            if (Find(state.Id) is not { } window || GroupNamed(state) is not { } group || !placed.Add(window))
+            if (Find(state.Id) is not { } window || GroupNamed(state, window.Kind) is not { } group || !placed.Add(window))
             {
                 continue;
             }
@@ -52,12 +52,15 @@ public sealed partial class ToolDockViewModel
         PlaceTheRest(placed);
     }
 
-    /// <summary>A saved window's group, or for one saved before the strips, its edge's: the right's top, or the bottom.</summary>
-    private static ToolGroup? GroupNamed(ToolWindowState state) =>
+    /// <summary>
+    /// A saved window's group, or for one saved before the strips, its edge's: the bottom's, or for the right, which had
+    /// no split, the right-side group its kind starts in, so Scratch pad, Processes and Games split the right side.
+    /// </summary>
+    private static ToolGroup? GroupNamed(ToolWindowState state, ToolWindowKind kind) =>
         state.Group is { } name ? Enum.TryParse<ToolGroup>(name, out var group) && Enum.IsDefined(group) ? group : null
         : state.Edge switch
         {
-            "Right" => ToolGroup.Top,
+            "Right" => kind.DefaultGroup == ToolGroup.Bottom ? ToolGroup.Top : kind.DefaultGroup,
             "Bottom" => ToolGroup.Bottom,
             _ => null,
         };
