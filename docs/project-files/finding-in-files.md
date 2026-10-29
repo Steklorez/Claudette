@@ -48,7 +48,7 @@ A file you have open changes in its editor, unsaved, so **Undo** takes it back. 
 
 ## Keep the results
 
-**Open in Find window**, or `Ctrl+Enter` (`Cmd+Enter`), keeps the matches in the Find window, docked at the bottom of the window, a tab for each search. There they're grouped by file. Click a file to fold its matches away, and a match to open it. **Search again** runs the same search. In replace mode, untick a match to leave it out of **Replace all**.
+**Open in Find window**, or `Ctrl+Enter` (`Cmd+Enter`), keeps the matches in the Find window, along the bottom of the window, with a tab on its header for each search, which its **×** closes. The Find icon at the foot of the [tool window strip](../tabs/tool-windows.md) shows and hides it while you have a search kept. There they're grouped by file. Click a file to fold its matches away, and a match to open it. **Search again** runs the same search. In replace mode, untick a match to leave it out of **Replace all**.
 
 ## Shortcuts
 

@@ -47,8 +47,8 @@ public class GamesUiTests
         Assert.Single(Squares(page), s => AutomationProperties.GetName(s)!.EndsWith(", Claudette's", StringComparison.Ordinal));
         var shown = UiText.Describe(page);
 
-        // Another page, and the game's controls go; it's still open, and shows again on its page.
-        h.ShowToolWindow(ToolWindowKinds.Files);
+        // Another window of its group, and the game's controls go; it's still open, and shows again in its window.
+        h.ShowToolWindow(ToolWindowKinds.ScratchPad);
         UiText.Settle(window);
         Assert.Empty(window.GetVisualDescendants().OfType<GamesView>());
         h.ShowToolWindow(ToolWindowKinds.Games);
@@ -155,9 +155,9 @@ public class GamesUiTests
         window.Close();
     }
 
+    /// <summary>The tool windows' icons on the strip, by name.</summary>
     private static List<string?> PageTabs(Window window) =>
-        [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("tooltab") && b.IsEffectivelyVisible)
-            .Select(b => b.GetVisualDescendants().OfType<TextBlock>().First().Text)];
+        [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("stripicon") && b.IsEffectivelyVisible).Select(AutomationProperties.GetName)];
 
     private static List<Button> Squares(Control page) => [.. page.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("gamesquare"))];
 

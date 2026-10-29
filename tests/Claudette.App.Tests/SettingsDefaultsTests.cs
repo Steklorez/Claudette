@@ -231,7 +231,7 @@ public class SettingsDefaultsTests
     }
 
     [Theory]
-    [InlineData(AppStyle.Standard, null, "$Default")]
+    [InlineData(AppStyle.Standard, null, "Inter")]
     [InlineData(AppStyle.Claude, null, "Charter")]
     [InlineData(AppStyle.Claude, "Fira Sans", "Fira Sans")]
     [InlineData(AppStyle.Standard, "Fira Sans", "Fira Sans")]

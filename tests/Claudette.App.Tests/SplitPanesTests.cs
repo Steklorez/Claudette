@@ -151,7 +151,7 @@ public class SplitPanesTests
         h.Shell.SelectedTab = a;
 
         // Room for two beside the sidebar: the focused one and its neighbour.
-        h.Shell.Layout.SetAvailableWidth(ShellLayout.DefaultSidebarWidth + 2 * ShellLayout.MinConversationWidth + ToolDockViewModel.StripThickness + 10);
+        h.Shell.Layout.SetAvailableWidth(ShellLayout.DefaultSidebarWidth + 2 * ShellLayout.MinConversationWidth + ToolDockViewModel.StripWidth + 10);
         Assert.Equal([a, b], h.Shell.Panes);
         Assert.False(c.IsShown);
         h.Shell.SelectedTab = c;

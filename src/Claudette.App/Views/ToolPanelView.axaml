@@ -1,0 +1,71 @@
+<!-- A group's tool window, beside the strip (DESIGN.md §3, "Tool windows"), as Rider's: a header with its title (and for
+     Find, a tab for each search), the session it shows when that isn't the tab in front, ⋮ for its options and − to hide
+     it; then the window. ShellView holds one for each group. Its look is in Themes/ConversationStyles.axaml. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tw="using:Claudette.App.ViewModels.ToolWindows"
+             xmlns:vm="using:Claudette.App.ViewModels"
+             xmlns:views="using:Claudette.App.Views"
+             xmlns:sys="using:System"
+             x:Class="Claudette.App.Views.ToolPanelView"
+             x:DataType="tw:ToolGroupViewModel">
+  <!-- The pages' looks and the tool windows', which the tab's view includes for its own (DESIGN.md §3, "Tool windows") -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Claudette/Themes/ConversationStyles.axaml" />
+  </UserControl.Styles>
+  <Border Classes="toolpanel">
+    <DockPanel>
+      <Grid DockPanel.Dock="Top" Classes="toolheader" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+        <TextBlock Classes="tooltitle" Text="{Binding Showing.Title, FallbackValue=''}" />
+        <!-- Find: a tab for each search kept, the one showing picked out, each with its × -->
+        <ContentControl Grid.Column="1" Content="{Binding Showing.Content, FallbackValue={x:Null}}">
+          <ContentControl.DataTemplates>
+            <DataTemplate DataType="vm:FindWindowViewModel">
+              <ListBox Classes="contenttabs" ItemsSource="{Binding Searches}" SelectedItem="{Binding Selected}" AutomationProperties.Name="Searches">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="2" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate DataType="vm:FindResultsViewModel">
+                    <StackPanel Orientation="Horizontal" Spacing="4" ToolTip.Tip="{Binding Summary}">
+                      <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                      <Button Classes="flat contenttabclose" Command="{Binding $parent[ListBox].((vm:FindWindowViewModel)DataContext).CloseCommand, FallbackValue={x:Null}}"
+                              CommandParameter="{Binding}" ToolTip.Tip="Close this search" AutomationProperties.Name="{Binding Title, StringFormat='Close the search for {0}'}">
+                        <Path Data="{StaticResource IconClose}" />
+                      </Button>
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </DataTemplate>
+            <!-- The rest have only their title -->
+            <DataTemplate DataType="sys:Object">
+              <Panel />
+            </DataTemplate>
+          </ContentControl.DataTemplates>
+        </ContentControl>
+        <!-- The session the window shows, when it might not be the tab in front -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Margin="6,0"
+                    IsVisible="{Binding SessionLabel, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <Ellipse Width="7" Height="7" Fill="{Binding SessionColor, Converter={x:Static views:ToolPanelView.ColorBrush}}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted small" Text="{Binding SessionLabel}" MaxWidth="140" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        </StackPanel>
+        <Button Grid.Column="3" Classes="toolaction" Click="OnOptionsClicked" ToolTip.Tip="Options" AutomationProperties.Name="{Binding OptionsName}">
+          <Path Classes="filled" Data="{StaticResource IconMoreVertical}" />
+        </Button>
+        <Button Grid.Column="4" Classes="toolaction" Command="{Binding HideShowingCommand}" ToolTip.Tip="Hide" AutomationProperties.Name="{Binding HideName}">
+          <Path Data="{StaticResource IconMinus}" />
+        </Button>
+      </Grid>
+      <ContentControl Content="{Binding Showing}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="tw:ToolWindowViewModel">
+            <views:ToolWindowView />
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </DockPanel>
+  </Border>
+</UserControl>

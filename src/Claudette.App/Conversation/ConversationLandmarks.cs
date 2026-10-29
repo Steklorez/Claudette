@@ -22,7 +22,7 @@ public enum LandmarkKind
 /// </summary>
 public static class ConversationLandmarks
 {
-    /// <summary>The mark an item gets beside the scroll bar; null for none.</summary>
+    /// <summary>The mark an item gets in the scroll bar; null for none.</summary>
     public static LandmarkKind? KindOf(ConversationItem item) => item switch
     {
         UserMessageItem => LandmarkKind.Prompt,

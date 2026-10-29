@@ -104,9 +104,13 @@ public sealed partial class ShellViewModel : IFindInFilesHost, IFindResultsHost
 
     public bool CanKeepResults => true;
 
-    /// <summary><b>Open in Find window</b>: a Find window of their own, docked at the bottom, which disposes them when it closes.</summary>
-    public void Keep(FindResultsViewModel results) => ToolWindows.Add(ToolWindowKinds.FindResults, results.Title, results);
+    /// <summary>The Find tool window's searches, each a tab in its header.</summary>
+    public FindWindowViewModel FindResults { get; } = new();
 
-    /// <summary>A Find window closed, by its × or its tab's <b>Close</b>: its search stops for good.</summary>
-    private static void OnToolWindowRemoved(ToolWindowViewModel window) => (window.Content as IDisposable)?.Dispose();
+    /// <summary><b>Open in Find window</b>: a tab of their own in the Find window, which shows, and disposes them when the tab closes.</summary>
+    public void Keep(FindResultsViewModel results)
+    {
+        FindResults.Add(results);
+        ToolWindows.Show(ToolWindowKinds.Find);
+    }
 }

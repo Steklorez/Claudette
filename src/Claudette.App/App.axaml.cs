@@ -256,6 +256,9 @@ public partial class App : Application
 
     private const string DefaultMonoFonts = "Cascadia Mono, Consolas, Menlo, monospace";
 
+    /// <summary>The Standard style's code font, Rider's: JetBrains Mono without ligatures, which Claudette ships.</summary>
+    private const string RiderMonoFont = "avares://Claudette/Assets/Fonts#JetBrains Mono NL";
+
     /// <summary>The appearance settings last applied, so unchanged ones aren't applied again.</summary>
     private object? _appliedAppearance;
 
@@ -300,13 +303,16 @@ public partial class App : Application
             _ => ThemeVariant.Default,
         };
         Colors.Apply(appearance.Style);
-        _mainWindow?.UseMica(appearance.Style == AppStyle.Standard);
         Resources["ConversationFontSize"] = appearance.ConversationFontSize;
         Resources["CodeFontSize"] = appearance.CodeFontSize;
-        // A font that isn't installed falls back to the next name in the list.
-        Resources["ConversationFont"] = appearance.ConversationFont is { } conversation ? new FontFamily($"{conversation}, {FontFamily.DefaultFontFamilyName}") : FontFamily.Default;
+        // A font that isn't installed falls back to the next name in the list. The Standard style's are Rider's, which
+        // Claudette ships: Inter for the interface and JetBrains Mono for code (DESIGN.md §3, "Visual style").
+        var ui = AppColors.UiFont(appearance.Style);
+        Resources["UiFont"] = ui;
+        Resources["ConversationFont"] = appearance.ConversationFont is { } conversation ? new FontFamily($"{conversation}, {FontFamily.DefaultFontFamilyName}") : ui;
         Resources["ReplyFont"] = AppColors.ReplyFont(appearance.Style, appearance.ConversationFont);
-        Resources["MonoFont"] = new FontFamily(appearance.CodeFont is { } code ? $"{code}, {DefaultMonoFonts}" : DefaultMonoFonts);
+        var mono = appearance.Style == AppStyle.Standard ? $"{RiderMonoFont}, {DefaultMonoFonts}" : DefaultMonoFonts;
+        Resources["MonoFont"] = new FontFamily(appearance.CodeFont is { } code ? $"{code}, {mono}" : mono);
     }
 
 

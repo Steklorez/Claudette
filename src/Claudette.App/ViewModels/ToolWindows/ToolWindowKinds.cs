@@ -3,9 +3,9 @@ using Claudette.App.Conversation;
 namespace Claudette.App.ViewModels.ToolWindows;
 
 /// <summary>
-/// The tool windows Claudette has (DESIGN.md §3, "Tool windows"), in the order they take along their edge at first: the
-/// side panel's pages, which all dock on the right, then Find's, at the bottom. A feature adds its kind to <see cref="All"/>
-/// and its view to <c>Views/ToolWindowView</c>.
+/// The tool windows Claudette has (DESIGN.md §3, "Tool windows"), in the order their icons take on the strip at first:
+/// the side panel's pages at the right, Scratch pad, Processes and Games splitting it, and Find at the bottom. A feature
+/// adds its kind to <see cref="All"/> and its view to <c>Views/ToolWindowView</c>.
 /// </summary>
 public static class ToolWindowKinds
 {
@@ -14,6 +14,7 @@ public static class ToolWindowKinds
     {
         Id = "Files",
         Title = "Changed files",
+        Icon = "IconChangedFiles",
         PaletteText = "Show changed files",
         FollowsSession = true,
     };
@@ -23,6 +24,7 @@ public static class ToolWindowKinds
     {
         Id = "Agents",
         Title = "Agents",
+        Icon = "IconToolAgent",
         PaletteText = "Show the agent map",
         FollowsSession = true,
     };
@@ -32,18 +34,9 @@ public static class ToolWindowKinds
     {
         Id = "Project",
         Title = "Project",
+        Icon = "IconSettingsAllTools",
         FollowsSession = true,
         ShowsWhen = new(t => t.ProjectTools, nameof(ProjectToolsViewModel.HasTools), t => t.ProjectTools.HasTools),
-    };
-
-    /// <summary>The session's processes, while the process monitor is on (DESIGN.md §4, "Process monitor").</summary>
-    public static readonly ToolWindowKind Processes = new()
-    {
-        Id = "Processes",
-        Title = "Processes",
-        PaletteText = "Show processes",
-        FollowsSession = true,
-        ShowsWhen = new(t => t.ProcessMonitor, nameof(ProcessMonitorViewModel.IsOn), t => t.ProcessMonitor.IsOn),
     };
 
     /// <summary>The plan, the tasks and the Claude Docs, once the session has any (DESIGN.md §5, "Tasks").</summary>
@@ -51,6 +44,7 @@ public static class ToolWindowKinds
     {
         Id = "Tasks",
         Title = "Tasks",
+        Icon = "IconToolTodo",
         PaletteText = "Show tasks",
         FollowsSession = true,
         ShowsWhen = new(t => t.TodoList, nameof(TodoList.HasAnything), t => t.TodoList.HasAnything),
@@ -61,6 +55,7 @@ public static class ToolWindowKinds
     {
         Id = "Mcp",
         Title = "MCP",
+        Icon = "IconToolMcp",
         PaletteText = "Show MCP servers",
         FollowsSession = true,
         ShowsWhen = new(t => t, nameof(TabViewModel.HasMcpServers), t => t.HasMcpServers),
@@ -71,8 +66,22 @@ public static class ToolWindowKinds
     {
         Id = "ScratchPad",
         Title = "Scratch pad",
+        Icon = "IconScratchPad",
         PaletteText = "Show scratch pad",
+        DefaultGroup = ToolGroup.Split,
         FollowsSession = true,
+    };
+
+    /// <summary>The session's processes, while the process monitor is on (DESIGN.md §4, "Process monitor").</summary>
+    public static readonly ToolWindowKind Processes = new()
+    {
+        Id = "Processes",
+        Title = "Processes",
+        Icon = "IconToolMonitor",
+        PaletteText = "Show processes",
+        DefaultGroup = ToolGroup.Split,
+        FollowsSession = true,
+        ShowsWhen = new(t => t.ProcessMonitor, nameof(ProcessMonitorViewModel.IsOn), t => t.ProcessMonitor.IsOn),
     };
 
     /// <summary>
@@ -83,23 +92,22 @@ public static class ToolWindowKinds
     {
         Id = "Games",
         Title = "Games",
+        Icon = "IconGames",
+        DefaultGroup = ToolGroup.Split,
     };
 
     /// <summary>
-    /// A search's matches, kept by Find in files' <b>Open in Find window</b> (DESIGN.md §18, "Finding in files"): a window
-    /// for each search, titled by what it looked for, which shows what made it, a <see cref="FindResultsViewModel"/>.
+    /// The searches kept by Find in files' <b>Open in Find window</b> (DESIGN.md §18, "Finding in files"), a tab in its
+    /// header for each, while there are any. The app's: the shell gives it its <see cref="FindWindowViewModel"/>.
     /// </summary>
-    public static readonly ToolWindowKind FindResults = new()
+    public static readonly ToolWindowKind Find = new()
     {
         Id = "Find",
         Title = "Find",
-        DefaultEdge = ToolEdge.Bottom,
-        IsMultiple = true,
+        Icon = "IconToolSearch",
+        DefaultGroup = ToolGroup.Bottom,
     };
 
-    /// <summary>Every kind, in the order the windows take along their edge at first.</summary>
-    public static IReadOnlyList<ToolWindowKind> All { get; } = [Files, Agents, Project, Processes, Tasks, Mcp, ScratchPad, Games, FindResults];
-
-    /// <summary>The kind named <paramref name="id"/>, or null for a name no kind has (one taken out since it was saved).</summary>
-    public static ToolWindowKind? Find(string id) => All.FirstOrDefault(k => k.Id == id);
+    /// <summary>Every kind, in the order their icons take on the strip at first.</summary>
+    public static IReadOnlyList<ToolWindowKind> All { get; } = [Files, Agents, Project, Tasks, Mcp, ScratchPad, Processes, Games, Find];
 }

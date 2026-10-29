@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -9,226 +10,199 @@ using Claudette.App.ViewModels.ToolWindows;
 namespace Claudette.App.Views;
 
 /// <summary>
-/// The tool windows' side of the shell's view (DESIGN.md §3, "Tool windows"): resizing a docked edge by its grip, keeping
-/// the panes their least, the window slid out over them (the pointer, a press, the focus, Esc), and dragging a window's tab
-/// along its edge or to the other one, marked as a tab dragged over the panes is.
+/// The tool windows' side of the shell's view (DESIGN.md §3, "Tool windows"): resizing the right side, the bottom and the
+/// line between the right side's two windows by their grips, keeping the panes their least; sharing the right side's
+/// height; a press outside an unpinned window hiding it; and the keyboard into a window shown by its icon.
 /// </summary>
 public partial class ShellView
 {
-    private const double ToolDragThreshold = 6;
+    private enum Grip
+    {
+        Right,
+        Bottom,
+        Split,
+    }
 
-    private ToolEdge? _resizingEdge;
-    private Point _edgeResizeFrom;
-    private double _edgeResizeStart;
-
-    private ToolWindowViewModel? _pressedTool;
-    private Point _toolPressedAt;
-    private bool _draggingTool;
-    private ToolDrop? _toolDrop;
+    private Grip? _toolResizing;
+    private Point _toolResizeFrom;
+    private double _toolResizeStart;
+    private ToolDockViewModel? _watchedDock;
 
     private ToolDockViewModel? Dock => ViewModel?.ToolWindows;
 
-    /// <summary>From the constructor: the grips, the slides and the tool tabs' drags.</summary>
+    /// <summary>From the constructor: the grips, and presses that hide an unpinned window.</summary>
     private void WatchToolWindowsView()
     {
-        WatchGrip(RightEdgeGrip, ToolEdge.Right);
-        WatchGrip(BottomEdgeGrip, ToolEdge.Bottom);
-        foreach (var slide in new[] { RightSlide, BottomSlide })
-        {
-            slide.PointerEntered += (_, _) => Dock?.PointInSlide(true);
-            slide.PointerExited += (_, _) => Dock?.PointInSlide(false);
-            slide.AddHandler(PointerPressedEvent, (_, _) => Dock?.PressInSlide(), RoutingStrategies.Tunnel, handledEventsToo: true);
-            slide.GotFocus += (_, _) => Dock?.FocusInSlide(true);
-            slide.LostFocus += (_, _) => Dock?.FocusInSlide(slide.IsKeyboardFocusWithin);
-        }
-        // A press anywhere else slides an auto-hidden window back; a press on a tool tab may start dragging it.
+        WatchGrip(RightGrip, Grip.Right);
+        WatchGrip(BottomGrip, Grip.Bottom);
+        WatchGrip(SplitGrip, Grip.Split);
         DockArea.AddHandler(PointerPressedEvent, OnDockPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
-        DockArea.AddHandler(PointerMovedEvent, OnDockMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
-        DockArea.AddHandler(PointerReleasedEvent, OnDockReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
-        // However wide or tall an edge was dragged, the panes keep their least.
+        // However wide or tall the windows were dragged, the panes keep their least.
         DockArea.SizeChanged += (_, e) =>
         {
-            RightEdge.MaxWidth = Math.Max(ToolDockViewModel.MinRightWidth, e.NewSize.Width - ShellLayout.MinConversationWidth);
-            RightSlide.MaxWidth = RightEdge.MaxWidth;
-            BottomEdge.MaxHeight = Math.Max(ToolDockViewModel.MinBottomHeight, e.NewSize.Height - ToolDockViewModel.MinPanesHeight);
-            BottomSlide.MaxHeight = BottomEdge.MaxHeight;
+            RightSide.MaxWidth = Math.Max(ToolDockViewModel.MinRightWidth, e.NewSize.Width - ToolDockViewModel.StripWidth - RightSide.Margin.Left - ShellLayout.MinConversationWidth);
+            BottomPanel.MaxHeight = Math.Max(ToolDockViewModel.MinBottomHeight, e.NewSize.Height - ToolDockViewModel.MinPanesHeight);
         };
+        DataContextChanged += (_, _) => WatchDock(Dock);
+        WatchDock(Dock);
     }
 
-    /// <summary>The dock asks for the keyboard in a window it slid out on a click.</summary>
+    private void WatchDock(ToolDockViewModel? dock)
+    {
+        if (ReferenceEquals(dock, _watchedDock))
+        {
+            return;
+        }
+        if (_watchedDock is not null)
+        {
+            _watchedDock.PropertyChanged -= OnDockChanged;
+            _watchedDock.ShowingChanged -= ShareRightSide;
+        }
+        _watchedDock = dock;
+        if (dock is not null)
+        {
+            dock.PropertyChanged += OnDockChanged;
+            // A window coming or going in either group changes how they share the right side.
+            dock.ShowingChanged += ShareRightSide;
+        }
+        ShareRightSide();
+    }
+
+    private void OnDockChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ToolDockViewModel.SplitShare))
+        {
+            ShareRightSide();
+        }
+    }
+
+    /// <summary>
+    /// The right side's height: the top group's window and the split group's in their shares with the line between, or the
+    /// one showing the whole of it.
+    /// </summary>
+    private void ShareRightSide()
+    {
+        if (Dock is not { } dock)
+        {
+            return;
+        }
+        var (top, split) = (dock.Top.IsShowing, dock.Split.IsShowing);
+        var rows = RightSide.RowDefinitions;
+        rows[0].Height = top ? new GridLength(split ? dock.SplitShare : 1, GridUnitType.Star) : new GridLength(0);
+        rows[2].Height = split ? new GridLength(top ? 1 - dock.SplitShare : 1, GridUnitType.Star) : new GridLength(0);
+        SplitGrip.IsVisible = top && split;
+    }
+
+    /// <summary>The dock asks for the keyboard in a window shown by a click on its icon.</summary>
     private void OnToolFocusRequested(ToolWindowViewModel window)
     {
-        var slide = window.Edge == ToolEdge.Right ? RightSlide : BottomSlide;
+        var panel = window.Group switch
+        {
+            ToolGroup.Top => TopPanel,
+            ToolGroup.Split => SplitPanel,
+            _ => BottomPanel,
+        };
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            if (slide.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Focusable && c.IsEffectivelyVisible) is { } first)
+            // Past the header's buttons, into the window itself.
+            var content = panel.GetVisualDescendants().OfType<ToolWindowView>().FirstOrDefault();
+            if (content?.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Focusable && c.IsEffectivelyVisible && c.IsEnabled) is { } first)
             {
                 first.Focus();
             }
         });
     }
 
-    // ---- Resizing a docked edge ---------------------------------------------------------------------------------------
+    // ---- Resizing ----------------------------------------------------------------------------------------------------
 
-    private void WatchGrip(Border grip, ToolEdge edge)
+    private void WatchGrip(Border grip, Grip which)
     {
         grip.PointerPressed += (_, e) =>
         {
-            if (Dock is not { } dock || !e.GetCurrentPoint(grip).Properties.IsLeftButtonPressed || e.ClickCount > 1)
+            if (Dock is null || !e.GetCurrentPoint(grip).Properties.IsLeftButtonPressed || e.ClickCount > 1)
             {
                 return;
             }
-            _resizingEdge = edge;
-            _edgeResizeFrom = e.GetPosition(DockArea);
-            _edgeResizeStart = edge == ToolEdge.Right ? RightEdge.Bounds.Width : BottomEdge.Bounds.Height;
+            _toolResizing = which;
+            _toolResizeFrom = e.GetPosition(DockArea);
+            _toolResizeStart = which switch
+            {
+                Grip.Right => RightSide.Bounds.Width,
+                Grip.Bottom => BottomPanel.Bounds.Height,
+                _ => TopPanel.Bounds.Height,
+            };
             e.Pointer.Capture(grip);
             e.Handled = true;
         };
         grip.PointerMoved += (_, e) =>
         {
-            if (_resizingEdge != edge || Dock is not { } dock)
+            if (_toolResizing != which || Dock is not { } dock)
             {
                 return;
             }
             var at = e.GetPosition(DockArea);
-            // The right edge widens as its grip goes left, the bottom grows as its grip goes up.
-            var size = edge == ToolEdge.Right ? _edgeResizeStart + _edgeResizeFrom.X - at.X : _edgeResizeStart + _edgeResizeFrom.Y - at.Y;
-            dock.Resize(edge, Math.Min(size, edge == ToolEdge.Right ? RightEdge.MaxWidth : BottomEdge.MaxHeight));
+            switch (which)
+            {
+                // The right side widens as its grip goes left, the bottom grows as its grip goes up.
+                case Grip.Right:
+                    dock.ResizeRight(Math.Min(_toolResizeStart + _toolResizeFrom.X - at.X, RightSide.MaxWidth));
+                    break;
+                case Grip.Bottom:
+                    dock.ResizeBottom(Math.Min(_toolResizeStart + _toolResizeFrom.Y - at.Y, BottomPanel.MaxHeight));
+                    break;
+                default:
+                    var height = RightSide.Bounds.Height - SplitGrip.Bounds.Height;
+                    if (height > 0)
+                    {
+                        dock.ResizeSplit((_toolResizeStart + at.Y - _toolResizeFrom.Y) / height);
+                    }
+                    break;
+            }
         };
-        grip.PointerReleased += (_, e) => EndEdgeResize(e.Pointer);
-        grip.PointerCaptureLost += (_, _) => EndEdgeResize(null);
-        grip.DoubleTapped += (_, _) => Dock?.ResetSize(edge);
+        grip.PointerReleased += (_, e) => EndToolResize(e.Pointer);
+        grip.PointerCaptureLost += (_, _) => EndToolResize(null);
+        grip.DoubleTapped += (_, _) =>
+        {
+            switch (which)
+            {
+                case Grip.Right:
+                    Dock?.ResetRightWidth();
+                    break;
+                case Grip.Bottom:
+                    Dock?.ResetBottomHeight();
+                    break;
+                default:
+                    Dock?.ResetSplit();
+                    break;
+            }
+        };
     }
 
-    private void EndEdgeResize(IPointer? pointer)
+    private void EndToolResize(IPointer? pointer)
     {
-        if (_resizingEdge is null)
+        if (_toolResizing is null)
         {
             return;
         }
-        _resizingEdge = null;
+        _toolResizing = null;
         pointer?.Capture(null);
         Dock?.SaveSize();
     }
 
-    // ---- The slide, and dragging a tool tab ---------------------------------------------------------------------------
+    // ---- Unpinned windows --------------------------------------------------------------------------------------------
 
-    /// <summary>The tool window whose tab is under a press: a docked group's or a strip's.</summary>
-    private static ToolWindowViewModel? ToolTabAt(RoutedEventArgs e) =>
-        (e.Source as Visual)?.FindAncestorOfType<Button>(includeSelf: true) is { } button && button.Classes.Contains("tooltab")
-            ? button.DataContext as ToolWindowViewModel
-            : null;
-
+    /// <summary>A press in the dock area: an unpinned window showing hides, unless the press was in it or on the strip.</summary>
     private void OnDockPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (Dock is not { } dock)
+        if (Dock is not { } dock || e.Source is not Visual source)
         {
             return;
         }
-        var source = e.Source as Visual;
-        var inSlide = source is not null && (source.FindAncestorOfType<Border>(includeSelf: true) is { } border
-            && (ReferenceEquals(border, RightSlide) || ReferenceEquals(border, BottomSlide) || border.GetVisualAncestors().Contains(RightSlide) || border.GetVisualAncestors().Contains(BottomSlide)));
-        var tab = ToolTabAt(e);
-        if (!inSlide && tab is null)
-        {
-            dock.PressOutside();
-        }
-        if (tab is not null && e.GetCurrentPoint(DockArea).Properties.IsLeftButtonPressed)
-        {
-            _pressedTool = tab;
-            _toolPressedAt = e.GetPosition(DockArea);
-            _draggingTool = false;
-        }
+        var onStrip = ReferenceEquals(source, ToolStrip) || source.GetVisualAncestors().Contains(ToolStrip);
+        var panel = source as ToolPanelView ?? source.FindAncestorOfType<ToolPanelView>();
+        dock.PressAt((panel?.DataContext as ToolGroupViewModel)?.Showing, onStrip);
     }
 
-    private void OnDockMoved(object? sender, PointerEventArgs e)
-    {
-        if (_pressedTool is not { } window || Dock is not { } dock)
-        {
-            return;
-        }
-        var at = e.GetPosition(DockArea);
-        if (!_draggingTool)
-        {
-            if (Math.Abs(at.X - _toolPressedAt.X) < ToolDragThreshold && Math.Abs(at.Y - _toolPressedAt.Y) < ToolDragThreshold)
-            {
-                return;
-            }
-            _draggingTool = true;
-            e.Pointer.Capture(DockArea);
-        }
-        // Along its own edge's tabs: it takes the place of the tab it's over, as the side panel's pages did.
-        if (DockArea.InputHitTest(at) is Visual over && over.FindAncestorOfType<Button>(includeSelf: true) is { Classes: var classes, DataContext: ToolWindowViewModel to }
-            && classes.Contains("tooltab") && !ReferenceEquals(to, window) && to.Edge == window.Edge)
-        {
-            dock.MoveTo(window, to);
-            ShowDockDrop(null);
-            return;
-        }
-        ShowDockDrop(dock.DropAt(window, at, Geometry()));
-    }
-
-    private void OnDockReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (_pressedTool is not { } window)
-        {
-            return;
-        }
-        if (_draggingTool)
-        {
-            if (_toolDrop is { } drop)
-            {
-                Dock?.Drop(window, drop);
-            }
-            e.Pointer.Capture(null);
-            e.Handled = true;
-        }
-        EndToolDrag();
-    }
-
-    /// <summary>A drag ended, or Esc cancelled it.</summary>
-    private bool EndToolDrag()
-    {
-        var was = _draggingTool;
-        _pressedTool = null;
-        _draggingTool = false;
-        ShowDockDrop(null);
-        return was;
-    }
-
-    /// <summary>Where the dock's parts are, in the dock area's coordinates, for the drop marker.</summary>
-    private ToolDockGeometry Geometry()
-    {
-        Rect? Of(Control control) => control.IsEffectivelyVisible && control.TranslatePoint(default, DockArea) is { } at ? new Rect(at, control.Bounds.Size) : null;
-        var panes = Of(PanesArea) ?? new Rect(DockArea.Bounds.Size);
-        var strips = DockArea.GetVisualChildren().OfType<ToolStripView>().ToList();
-        return new ToolDockGeometry(panes, new Rect(DockArea.Bounds.Size), Of(RightEdge), Of(BottomEdge),
-            strips.FirstOrDefault(s => s.DataContext is ToolEdgeViewModel { IsRight: true }) is { } right ? Of(right) : null,
-            strips.FirstOrDefault(s => s.DataContext is ToolEdgeViewModel { IsBottom: true }) is { } bottom ? Of(bottom) : null);
-    }
-
-    private void ShowDockDrop(ToolDrop? drop)
-    {
-        _toolDrop = drop;
-        DockDropLayer.IsVisible = drop is not null;
-        if (drop is null)
-        {
-            return;
-        }
-        Canvas.SetLeft(DockDropTarget, drop.Area.X);
-        Canvas.SetTop(DockDropTarget, drop.Area.Y);
-        DockDropTarget.Width = drop.Area.Width;
-        DockDropTarget.Height = drop.Area.Height;
-        DockDropText.Text = drop.Label;
-    }
-
-    /// <summary>Esc: a tool tab's drag is cancelled, else a window slid out slides back. True when it did either.</summary>
-    private bool EscapeToolWindows()
-    {
-        if (_draggingTool)
-        {
-            return EndToolDrag();
-        }
-        return Dock?.Escape() == true;
-    }
+    /// <summary>Esc: an icon's drag is cancelled, else an unpinned window showing hides. True when it did either.</summary>
+    private bool EscapeToolWindows() => ToolStrip.CancelDrag() || Dock?.Escape() == true;
 }

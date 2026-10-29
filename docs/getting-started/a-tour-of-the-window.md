@@ -20,7 +20,6 @@ The header is always visible. From left to right it shows:
 - **The cup**, which keeps the computer awake while it steams. See [Keeping the computer awake](../away/keeping-the-computer-awake.md).
 - **A colored dot**, which shows whether Claude itself is having trouble. See [Claude is having problems](../troubleshooting/claude-is-having-problems.md).
 - **Your account** and its plan. See [Your Claude sign-in](../accounts/your-claude-sign-in.md).
-- **The Tool windows menu**, which shows and hides each tool window.
 
 A banner can run across the top, under the header: Claude's service status when there's an incident, **Claude Code needs you to sign in.**, or a usage alert. Each has a button to deal with it or **Dismiss**.
 
@@ -39,7 +38,7 @@ The middle shows the selected tab's conversation: your messages, Claude's replie
 
 ## Tool windows
 
-The tool windows are at the right of the window, as tabs along its edge that slide out over the conversation when you point at them, or docked beside it with the pin. They show the tab you're looking at.
+The tool windows are on a strip of icons down the window's right edge, as in JetBrains Rider. Click an icon to show its window beside the strip, and click it again to hide it. They show the tab you're looking at.
 
 | Window | What it shows | Where to read more |
 |---|---|---|
@@ -50,8 +49,9 @@ The tool windows are at the right of the window, as tabs along its edge that sli
 | **Tasks** | Claude's plan and task list, while it keeps one | [The Tasks page](../plans/the-tasks-page.md) |
 | **MCP** | The session's MCP servers, when it has any | [MCP servers](../tabs/mcp-servers.md) |
 | **Scratch pad** | Your notes for the project | [The scratch pad](../conversation/the-scratch-pad.md) |
+| **Find** | The searches you kept from Find in files, along the bottom | [Finding in files](../project-files/finding-in-files.md) |
 
-[Tool windows](../tabs/tool-windows.md) covers docking them, sliding them out, resizing, reordering and the **⋯** menu for pages that don't fit.
+[Tool windows](../tabs/tool-windows.md) covers the strip's groups, windows that hide when you click elsewhere, and moving and sizing them.
 
 ## The composer
 

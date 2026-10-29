@@ -117,10 +117,11 @@ function Open-Settings {
     $settings
 }
 
-# The right edge's tool windows, docked, down to the bottom of $last (a control in its window) when that's given, or
-# $height device-independent pixels from its top: a window's page is often much shorter than the edge.
-function Get-PanelRect($last = $null, [int] $height = 0) {
-    $panel = Find-ByText $window 'Tool windows at the right'
+# A tool window at the right (the top group's, or with -Below the split group's under it), down to the bottom of $last
+# (a control in it) when that's given, or $height device-independent pixels from its top: a window's page is often much
+# shorter than the window.
+function Get-PanelRect($last = $null, [int] $height = 0, [switch] $Below) {
+    $panel = Find-ByText $window $(if ($Below) { 'Tool window at the right, below' } else { 'Tool window at the right' })
     $rect = $panel.Current.BoundingRectangle
     $scale = [WindowShot]::Scale($window)
     $bottom = 0
@@ -130,23 +131,21 @@ function Get-PanelRect($last = $null, [int] $height = 0) {
     $rect
 }
 
-# Docks the right edge's tool windows beside the conversation, as the side panel was, if they're auto-hidden: a tab of
-# its slides one out, whose pin docks them (DESIGN.md §3, "Tool windows").
-function Show-SidePanel {
-    if (Find-ByText $window 'Changed files, auto-hidden, right' -Optional) {
-        Invoke-ByText $window 'Changed files, auto-hidden, right'
-        Start-Sleep -Seconds 1
-        Invoke-ByText $window 'Dock'
-        Start-Sleep -Seconds 1
+# Shows a tool window by its icon on the strip (DESIGN.md §3, "Tool windows"), unless it shows already: its kind, such as
+# ScratchPad, finds the icon, and its header's "Hide <title>" says it shows.
+function Show-ToolWindow([string] $kind, [string] $title) {
+    if (-not (Find-ByText $window "Hide $title" -Optional)) {
+        Wait-Until { Find-ById $window "tool-$kind" } "the $title icon" 30
+        Send-Click (Find-ById $window "tool-$kind")
+        Start-Sleep -Seconds 2
     }
 }
 
-# Shows a tool window, such as Scratch pad, docked at the right, for the tab.
-function Show-SidePage([string] $tab, [string] $page) {
+# Shows a tool window, such as Scratch pad, for the tab.
+function Show-SidePage([string] $tab, [string] $kind, [string] $title) {
     Invoke-ByText $window $tab
     Start-Sleep -Seconds 2
-    Show-SidePanel
-    Invoke-ByText $window "$page, docked, right"
+    Show-ToolWindow $kind $title
     Start-Sleep -Seconds 2
 }
 
@@ -167,7 +166,7 @@ foreach ($theme in $Themes) {
 
     # As the demo is.
     if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
-        'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'usage/usage-window',
+        'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
         'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts',
         'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
         Use-Claudette @{} {
@@ -212,15 +211,23 @@ foreach ($theme in $Themes) {
 
             Shot 'changes/changed-files' {
                 param($path)
-                Show-SidePage 'Grappling hook' 'Changed files'
+                Show-SidePage 'Grappling hook' 'Files' 'Changed files'
                 $rows = (Find-ById $window 'ChangedFilesList').FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
                 Save-Rect $window $path (Get-PanelRect $rows[$rows.Count - 1]) 0
             }
 
             Shot 'project-tools/project-page' {
                 param($path)
-                Show-SidePage 'Grappling hook' 'Project'
-                Save-Rect $window $path (Get-PanelRect (Find-Lowest (Find-ByText $window 'Tool windows at the right'))) 0
+                Show-SidePage 'Grappling hook' 'Project' 'Project'
+                Save-Rect $window $path (Get-PanelRect (Find-Lowest (Find-ByText $window 'Tool window at the right'))) 0
+            }
+
+            # The right side: Changed files over Scratch pad, with the strip beside them, Changed files' icon filled in.
+            Shot 'tabs/tool-windows' {
+                param($path)
+                Show-SidePage 'Grappling hook' 'Files' 'Changed files'
+                Show-ToolWindow 'ScratchPad' 'Scratch pad'
+                Save-Elements $window $path @((Find-ByText $window 'Tool window at the right'), (Find-ByText $window 'Tool window at the right, below'), (Find-ByText $window 'Tool windows')) @(8, 8, 0, 8)
             }
 
             Shot 'usage/usage-window' {
@@ -352,10 +359,10 @@ foreach ($theme in $Themes) {
             # The notes go in the project's pad, which every tab of it shares.
             Shot 'conversation/scratch-pad' {
                 param($path)
-                Show-SidePage 'Grappling hook' 'Scratch pad'
+                Show-SidePage 'Grappling hook' 'ScratchPad' 'Scratch pad'
                 Set-ElementText (Find-ByType $window 'Edit' 'Scratch pad') "- Let go when the player jumps, or past Range`n- Try AirControl 0.6 with a gamepad: does the swing feel right?`n- Create IA_Grapple in the editor and assign it to Grapple Action`n- Ask Claude about a cooldown"
                 Start-Sleep -Seconds 2
-                Save-Rect $window $path (Get-PanelRect -height 330) 0
+                Save-Rect $window $path (Get-PanelRect -height 330 -Below) 0
             }
 
             # Last, as it takes the layout with it: the group's Files tab, with a changed file open to show Claude's marks.
@@ -476,13 +483,10 @@ foreach ($theme in $Themes) {
                 Close-Window $settings
                 Start-Sleep -Seconds 1
                 Send-Message $window 'SPAWN 600'
-                Show-SidePanel
-                Wait-Until { Find-ByText $window 'Processes, docked, right' -Optional } 'the Processes window' 30
-                Invoke-ByText $window 'Processes, docked, right'
-                Start-Sleep -Seconds 2
+                Show-ToolWindow 'Processes' 'Processes'
                 Wait-Until { Find-ByText $window '--child 600' -Optional } 'the spawned process' 60
                 Start-Sleep -Seconds 3
-                Save-Rect $window $path (Get-PanelRect (Find-ByText $window '--child 600')) 0
+                Save-Rect $window $path (Get-PanelRect (Find-ByText $window '--child 600') -Below) 0
             }
         }
     }

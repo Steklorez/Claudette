@@ -13,7 +13,7 @@ namespace Claudette.App.Controls;
 /// screens either side (DESIGN.md §5). It remembers each item's height once it has measured it, and places the items
 /// by those heights, so an item that changes height (a reply streaming in, a card opening) moves only the items after
 /// it. While the UI is otherwise idle it builds the items it hasn't measured at this width, half a screen's worth at a
-/// time, to learn their heights, so where each item is, and the marks beside the scroll bar, stop moving as the user
+/// time, to learn their heights, so where each item is, and the marks in the scroll bar, stop moving as the user
 /// scrolls.
 /// Until then they're taken to be the average height of those it has measured.
 /// </summary>

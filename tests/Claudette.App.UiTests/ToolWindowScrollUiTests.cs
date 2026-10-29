@@ -71,7 +71,7 @@ public class ToolWindowScrollUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
         var folder = Directory.CreateDirectory(Path.Combine([h.WorkFolder, .. Enumerable.Repeat("a_folder_with_a_long_name_that_goes_on", 6), "src"])).FullName;
@@ -99,7 +99,7 @@ public class ToolWindowScrollUiTests
         var tab = await h.OpenTabAsync();
         h.Trees.Trees[4242].Children.Add((5001, LongName));
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Processes);
+        h.ShowToolWindow(ToolWindowKinds.Processes);
         h.Time.Advance(TimeSpan.FromSeconds(10));
         // The panel's pages are only in the visual tree once it has been laid out open.
         UiText.Settle(window);
@@ -129,7 +129,7 @@ public class ToolWindowScrollUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         h.Transport.Emit(new JsonObject
         {
             ["type"] = "assistant",
@@ -143,7 +143,7 @@ public class ToolWindowScrollUiTests
             },
         });
         await UiText.SettleUntilAsync(window, () => tab.TodoList.HasItems, "the task");
-        h.DockToolWindow(ToolWindowKinds.Tasks);
+        h.ShowToolWindow(ToolWindowKinds.Tasks);
         UiText.Settle(window);
 
         var viewer = window.GetVisualDescendants().OfType<ScrollViewer>().Single(v => v.Name == "TasksScroller");
@@ -157,11 +157,11 @@ public class ToolWindowScrollUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        h.DockToolWindow(ToolWindowKinds.Files);
+        h.ShowToolWindow(ToolWindowKinds.Files);
         // The agent map's views are built once its page shows.
-        h.DockToolWindow(ToolWindowKinds.Agents);
+        h.ShowToolWindow(ToolWindowKinds.Agents);
         UiText.Settle(window);
-        var panel = window.GetVisualDescendants().OfType<ToolEdgeView>().Single(v => v.Name == "RightEdge");
+        var panel = window.GetVisualDescendants().OfType<ToolPanelView>().Single(v => v.Name == "TopPanel");
 
         // Every page's scroll viewer and list, shown or not. One that scrolls sideways gives its text all the width it
         // likes, so the text never wraps; only the trees do, for rows nested past the edge.

@@ -1,8 +1,6 @@
-﻿[button] Changed files, docked, right: Changed files
-[button] Agents, docked, right: Agents
-[button] Scratch pad, docked, right: Scratch pad
-[button] Auto-hide
-[button] Close Changed files
+﻿"Changed files"
+[button] Changed files options
+[button] Hide Changed files
 "2 files changed · 1 reviewed"
 [button] Refresh
 [x] Reviewed

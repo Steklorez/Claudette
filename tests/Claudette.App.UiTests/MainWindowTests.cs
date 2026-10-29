@@ -16,7 +16,6 @@ using Claudette.App.Services;
 using Claudette.App.Controls;
 using Claudette.App.Tests.Support;
 using Claudette.App.ViewModels;
-using Claudette.App.ViewModels.ToolWindows;
 using Claudette.App.Views;
 using Claudette.Core.Auth;
 using Claudette.Core.Library;
@@ -200,41 +199,6 @@ public class MainWindowTests
         Click(window, cup);
         Assert.False(h.Services.Settings.General.KeepAwake);
         Assert.False(cup.IsChecked);
-    }
-
-    /// <summary>The header's button after the plan is the Tool windows menu (DESIGN.md §3, "Tool windows").</summary>
-    [AvaloniaFact]
-    public async Task The_button_after_the_plan_is_the_tool_windows_menu()
-    {
-        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
-        await h.OpenTabAsync();
-        var tab = h.Shell.SelectedTab!;
-        var main = new MainWindowViewModel(h.Services);
-        main.UseShell(h.Shell);
-        main.Account.Status = new AuthStatus(true, "claude.ai", null, "me@example.com", null, "max", null, null);
-
-        var window = new MainWindow { DataContext = main, Width = 1200, Height = 800 };
-        window.Show();
-        await UiText.SettleUntilAsync(window, () => window.GetVisualDescendants().OfType<Button>().Any(b => b is { Name: "ToolWindowsMenu", IsEffectivelyVisible: true }), "the button");
-        var menu = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "ToolWindowsMenu");
-        var plan = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Plan usage");
-        var slide = window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "RightSlide");
-
-        Assert.True(plan.IsEffectivelyVisible);
-        Assert.True(menu.TranslatePoint(default, window)!.Value.X > plan.TranslatePoint(default, window)!.Value.X);
-        Assert.Equal("Tool windows", ToolTip.GetTip(menu));
-        // Its menu lists every tool window (DESIGN.md §3, "Tool windows").
-        Assert.Same(h.Shell.ToolWindows.Windows, Assert.IsType<MenuFlyout>(menu.Flyout).ItemsSource);
-        Assert.False(slide.IsEffectivelyVisible);
-
-        // Choosing one shows it: the right edge is auto-hidden, so it slides out; choosing it again slides it back.
-        h.ToolWindow(ToolWindowKinds.Files).ToggleCommand.Execute(null);
-        UiText.Settle(window);
-        Assert.True(slide.IsEffectivelyVisible);
-        Assert.Same(tab, h.ToolWindow(ToolWindowKinds.Files).Content);
-        h.ToolWindow(ToolWindowKinds.Files).ToggleCommand.Execute(null);
-        UiText.Settle(window);
-        Assert.False(slide.IsEffectivelyVisible);
     }
 
     [AvaloniaFact]

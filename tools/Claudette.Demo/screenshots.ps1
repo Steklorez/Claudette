@@ -11,7 +11,7 @@ icon, opens the Grappling hook tab's Changed files, and captures the window as <
 the composer, close up, as claudette-<style>-<theme>.png (the demo runs with motion reduced, so she stands still at the
 composer's right rather than being caught part-way through falling off it). Then it:
 - opens the diff of StarfallCharacter.cpp from an Edit's tile and captures that window as diff-<style>-<theme>.png;
-- selects the Move to the Input System thread, shows its Tasks tool window, docked, and captures the window as
+- selects the Move to the Input System thread, shows its Tasks tool window and captures the window as
   tasks-<style>-<theme>.png, then on Agents, with the first subagent selected, as agents-<style>-<theme>.png;
 - expands the usage header and captures the top of the window as header-<style>-<theme>.png;
 - collapses it again, selects Pool particle emitters, which runs on the Studio API key, and captures the window, with
@@ -81,8 +81,9 @@ foreach ($style in 'standard', 'claude') {
 
             # An Edit's tile opens its detail, which has Open in the diff view.
             Set-Step 'the diff view'
-            Invoke-ByText $window ('Edit ' + (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp'))
-            Start-Sleep -Seconds 1
+            # The last of its tiles, which is in view: the first can be scrolled up out of it.
+            Send-Click (Find-LowestByText $window ('Edit ' + (Join-Path $Projects 'starfall\Source\Starfall\Player\StarfallCharacter.cpp')))
+            Wait-Until { Find-ByText $window 'Open in the diff view' -Optional } "the Edit tile's detail" 20
             Invoke-ByText $window 'Open in the diff view'
             $diff = Get-OtherWindow $claudette $window 'the diff view'
             [WindowShot]::Resize($diff, 1000, 470)
@@ -96,15 +97,11 @@ foreach ($style in 'standard', 'claude') {
             Set-Step 'the thread'
             Invoke-ByText $window 'Move to the Input System'
             Start-Sleep -Seconds 2
-            # Docked beside the conversation, as the side panel was (DESIGN.md §3, "Tool windows").
-            Invoke-ByText $window 'Changed files, auto-hidden, right'
-            Start-Sleep -Seconds 1
-            Invoke-ByText $window 'Dock'
-            Start-Sleep -Seconds 1
-            Invoke-ByText $window 'Tasks, docked, right'
+            # By their icons on the tool window strip (DESIGN.md §3, "Tool windows").
+            Send-Click (Find-ById $window 'tool-Tasks')
             Start-Sleep -Seconds 2
             Save-Window $window (Join-Path $Out "tasks-$style-$theme.png")
-            Invoke-ByText $window 'Agents, docked, right'
+            Send-Click (Find-ById $window 'tool-Agents')
             Start-Sleep -Seconds 1
             Select-TreeItem $window 'Agents' 1
             Start-Sleep -Seconds 2

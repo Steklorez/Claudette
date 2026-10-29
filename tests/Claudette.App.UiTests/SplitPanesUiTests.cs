@@ -32,8 +32,8 @@ public sealed class SplitPanesUiTests
         var (leftAt, rightAt) = (left.TranslatePoint(default, window)!.Value, right.TranslatePoint(default, window)!.Value);
         Assert.Equal(leftAt.Y, rightAt.Y);
         Assert.True(rightAt.X >= leftAt.X + left.Bounds.Width - 1, "Beta's pane overlaps Alpha's.");
-        // The same width, but for the line between them, which the second pane draws.
-        Assert.InRange(left.Bounds.Width - right.Bounds.Width, 0, 1.5);
+        // The same width, but for the gap between the islands, which the second pane keeps before it.
+        Assert.InRange(left.Bounds.Width - right.Bounds.Width, 6 - 1.5, 6 + 1.5);
 
         // Each pane names its tab; the focused one, Beta, has the accent under its header, and the tool windows show its data.
         Assert.True(Header(left).IsVisible && Header(right).IsVisible);
@@ -90,11 +90,12 @@ public sealed class SplitPanesUiTests
         window.MouseUp(start + new Vector(150, 0), MouseButton.Left);
         UiText.Settle(window);
 
-        Assert.Equal(before + 150, left.Bounds.Width, precision: 0);
-        Assert.Equal(rightBefore - 150, right.Bounds.Width, precision: 0);
+        // To the pixel, which the shares round to.
+        Assert.InRange(left.Bounds.Width - before, 149, 151);
+        Assert.InRange(rightBefore - right.Bounds.Width, 149, 151);
         // Kept, for the next launch.
         Assert.Equal(2, h.Services.State.PaneShares!.Count);
-        Assert.Equal(lines.Lines[0], left.Bounds.Width, precision: 0);
+        Assert.InRange(left.Bounds.Width - lines.Lines[0], -1, 1);
         window.Close();
     }
 
