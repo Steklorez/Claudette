@@ -31,6 +31,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- The marks beside the conversation's scroll bar have a little room between them and the cards, which they touched, and in Compact density overlapped.
 - Pointing at a changed setting in Settings, or moving to it with Tab, no longer moves its words when its **Reset** button shows: **Reset** keeps its place beside the setting whether it shows or not, so the title and its line don't wrap again and the row stays the same height. A setting under another, such as **When** under **Keep this computer awake**, shows its own **Reset** while you point at it, not the one above's too.
 - A tool call's tip, which shows its whole command or path, is wider, so a long command, such as one writing a file, no longer wraps into a narrow column.
 - **Start Claudette when I log in** now starts a build of Claudette on macOS and Linux that runs on a .NET in your home folder, such as the one Microsoft's install script puts in `~/.dotnet`. It used to start the build's own program, which looks for .NET only in the usual places, so nothing started at login. If you turned it on before and Claudette didn't start, turn it off and on again.

@@ -45,12 +45,13 @@
   </Style>
 
   <!-- Settings → Appearance → Density (DESIGN.md §14): ShellView takes the "compact" class. The top leaves room for
-       the first message's chip, which sits above it. -->
+       the first message's chip, which sits above it. The right keeps the cards 3 pixels clear of the marks beside the
+       scroll bar, which are 6 wide and 17 from the edge (TabView), in both densities. -->
   <Style Selector="ItemsControl.conversationlist">
-    <Setter Property="Margin" Value="24,20,24,24" />
+    <Setter Property="Margin" Value="24,20,26,24" />
   </Style>
   <Style Selector=".compact ItemsControl.conversationlist">
-    <Setter Property="Margin" Value="20,20,20,14" />
+    <Setter Property="Margin" Value="20,20,26,14" />
   </Style>
   <!-- The conversation is virtualized (DESIGN.md §5): only the items in view have controls. The panel has no spacing
        of its own, so each item keeps its distance from the next. -->
