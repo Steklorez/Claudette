@@ -454,6 +454,15 @@ public class MascotReactionsTests
     }
 
     [Fact]
+    public void In_a_screenshot_run_she_wears_no_hat_whatever_the_day()
+    {
+        using var stage = new MascotStage(at: DateTimeOffset.Parse("2026-10-31T23:30:00Z"), hats: false);
+        stage.ShowStanding();
+
+        Assert.Null(stage.Frame.Hat);
+    }
+
+    [Fact]
     public void Calm_she_waits_thirty_to_ninety_seconds_between_the_things_she_does()
     {
         using var stage = new MascotStage(seed: 3);

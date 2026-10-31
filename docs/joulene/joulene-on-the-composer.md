@@ -12,7 +12,7 @@ Joulene stands on the top edge of the message box and does little things now and
 
 ![Joulene on the composer: climbing up, looking around, dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up.](../screenshots/joulene.gif)
 
-{% include shot.html name="deventry-standard" alt="Joulene standing on the message box, close up." %}
+{% include shot.html name="joulene-standard" alt="Joulene standing on the message box, close up." %}
 
 ## Where she stands
 

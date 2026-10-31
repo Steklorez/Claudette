@@ -12,12 +12,12 @@ internal sealed class MascotStage : IDisposable
 
     private readonly DateTimeOffset _start;
 
-    public MascotStage(int seed = 1, IMascotLines? lines = null, DateTimeOffset? at = null)
+    public MascotStage(int seed = 1, IMascotLines? lines = null, DateTimeOffset? at = null, bool hats = true)
     {
         Time = new FakeTimeProvider(at ?? DateTimeOffset.Parse("2026-10-10T12:00:00Z"));
         _start = Time.GetUtcNow();
         Lines = lines;
-        Director = new MascotDirector(Time, new Immediately(), new Random(seed), lines);
+        Director = new MascotDirector(Time, new Immediately(), new Random(seed), lines) { Hats = hats };
         Director.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MascotDirector.Frame))

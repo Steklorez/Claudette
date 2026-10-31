@@ -7,8 +7,8 @@ each.
 .DESCRIPTION
 For Standard and Claude, dark and light: makes the demo content afresh, starts the Debug build of Deventry on it
 (fake-claude as Claude Code, so no account and no tokens), visits every tab so each shows its model and any reviewed
-icon, opens the Grappling hook tab's Changed files, and captures the window as <style>-<theme>.png, and Deventry standing on
-the composer, close up, as deventry-<style>-<theme>.png (the demo runs with motion reduced, so she stands still at the
+icon, opens the Grappling hook tab's Changed files, and captures the window as <style>-<theme>.png, and Joulene standing on
+the composer, close up, as joulene-<style>-<theme>.png (the demo runs with motion reduced, so she stands still at the
 composer's right rather than being caught part-way through falling off it). Then it:
 - opens the diff of StarfallCharacter.cpp from an Edit's tile and captures that window as diff-<style>-<theme>.png;
 - selects the Move to the Input System thread, shows its Tasks tool window and captures the window as
@@ -77,7 +77,7 @@ foreach ($style in 'standard', 'claude') {
 
             # Joulene on the composer, close up: with motion reduced she stands still at its right, over Send.
             $send = (Find-ByText $window 'Send').Current.BoundingRectangle
-            Save-Rect $window (Join-Path $Out "deventry-$style-$theme.png") $send @((616 - $send.Width / [WindowShot]::Scale($window)), 150, 24, 34)
+            Save-Rect $window (Join-Path $Out "joulene-$style-$theme.png") $send @((616 - $send.Width / [WindowShot]::Scale($window)), 150, 24, 34)
 
             # An Edit's tile opens its detail, which has Open in the diff view.
             Set-Step 'the diff view'
@@ -176,7 +176,7 @@ foreach ($style in 'standard', 'claude') {
     }
 }
 # Joulene on the composer's animation, drawn from her art and steps rather than captured, so it's the same every time.
-Write-Host "Deventry's animation"
+Write-Host "Joulene's animation"
 $env:DEVENTRY_MASCOT_GIF = Join-Path $Out 'joulene.gif'
 try {
     & dotnet test (Join-Path $repo 'tests\Deventry.App.Tests\Deventry.App.Tests.csproj') --filter 'FullyQualifiedName~MascotPictureTests' -v q -nologo | Out-Null

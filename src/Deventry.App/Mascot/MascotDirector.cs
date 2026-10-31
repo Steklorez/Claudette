@@ -70,6 +70,12 @@ public sealed partial class MascotDirector : ObservableObject, IDisposable
     private DateTimeOffset _lastSweat = DateTimeOffset.MinValue;
     private DateTimeOffset _workingSince;
 
+    /// <summary>
+    /// Whether she wears the hat the calendar gives her (<see cref="MascotCalendar"/>). Not in a screenshot run, whose pictures
+    /// shouldn't depend on the day they're taken.
+    /// </summary>
+    public bool Hats { get; init; } = true;
+
     /// <param name="lines">What she says: tips, and that another tab needs the user. Null says nothing.</param>
     public MascotDirector(TimeProvider time, IUiDispatcher dispatcher, Random random, IMascotLines? lines = null)
     {
@@ -404,7 +410,7 @@ public sealed partial class MascotDirector : ObservableObject, IDisposable
         var x = Frame.X + step.Move;
         Frame = new MascotFrame(Gazing(step.Pose), _room is { } room ? Within(room, x) : x, step.Drop, step.Props ?? [])
         {
-            Hat = MascotCalendar.HatAt(_time.GetLocalNow()),
+            Hat = Hats ? MascotCalendar.HatAt(_time.GetLocalNow()) : null,
             Say = step.Say,
         };
     }
@@ -568,7 +574,7 @@ public sealed partial class MascotDirector : ObservableObject, IDisposable
         };
         return new MascotFrame(step.Pose, room.HomeX, step.Drop, step.Props ?? [])
         {
-            Hat = MascotCalendar.HatAt(_time.GetLocalNow()),
+            Hat = Hats ? MascotCalendar.HatAt(_time.GetLocalNow()) : null,
             Say = step.Say,
         };
     }

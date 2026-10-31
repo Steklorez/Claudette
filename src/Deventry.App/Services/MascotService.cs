@@ -44,7 +44,8 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
         };
         if (Settings.ShowJoulene && Director is null)
         {
-            var director = new MascotDirector(_services.Time, _services.Dispatcher, _services.Random, this);
+            // A screenshot run's pictures don't depend on the day: no hat (DESIGN.md §9, "Taking screenshots without the focus").
+            var director = new MascotDirector(_services.Time, _services.Dispatcher, _services.Random, this) { Hats = !UnfocusedWindows.IsOn };
             director.SetStill(_services.ReduceMotion);
             director.SetSituation(_situation);
             Director = director;
