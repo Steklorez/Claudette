@@ -15,7 +15,7 @@ public class UserEnvironmentTests
     {
         ["PATH"] = "/usr/bin:/bin",
         ["HOME"] = "/Users/me",
-        ["CLAUDETTE_HOME"] = "/tmp/claudette-home",
+        ["DEVENTRY_HOME"] = "/tmp/claudette-home",
         ["XPC_SERVICE_NAME"] = "application.com.dotbunny.claudette",
     };
 
@@ -25,8 +25,8 @@ public class UserEnvironmentTests
         ["HOME"] = "/Users/me",
         ["HOMEBREW_PREFIX"] = "/opt/homebrew",
         ["GITHUB_TOKEN"] = "ghp_secret-value",
-        ["CLAUDETTE_HOME"] = "/from/zprofile",
-        ["CLAUDETTE_RESOLVING_ENVIRONMENT"] = "1",
+        ["DEVENTRY_HOME"] = "/from/zprofile",
+        ["DEVENTRY_RESOLVING_ENVIRONMENT"] = "1",
         ["CLAUDE_CODE_ENTRYPOINT"] = "cli",
         ["_"] = "/usr/bin/env",
         ["PWD"] = "/Users/me",
@@ -51,9 +51,10 @@ public class UserEnvironmentTests
     [Fact]
     public void Claudettes_own_variables_and_Claude_Codes_session_variables_never_come_from_the_shell()
     {
-        var merged = UserEnvironment.Merge(Own, Login);
+        var merged = UserEnvironment.Merge(Own, new Dictionary<string, string>(Login) { ["CLAUDETTE_RESOLVING_ENVIRONMENT"] = "1" });
 
-        Assert.Equal("/tmp/claudette-home", merged["CLAUDETTE_HOME"]);
+        Assert.Equal("/tmp/claudette-home", merged["DEVENTRY_HOME"]);
+        Assert.False(merged.ContainsKey("DEVENTRY_RESOLVING_ENVIRONMENT"));
         Assert.False(merged.ContainsKey("CLAUDETTE_RESOLVING_ENVIRONMENT"));
         Assert.False(merged.ContainsKey("CLAUDE_CODE_ENTRYPOINT"));
         // What the shell says about itself describes the shell Claudette ran.
@@ -80,7 +81,7 @@ public class UserEnvironmentTests
         Assert.False(environment.ContainsKey("HOMEBREW_PREFIX"));
         Assert.False(environment.ContainsKey("CLAUDECODE"));
         Assert.False(environment.ContainsKey("CLAUDE_CODE_SESSION_ID"));
-        Assert.Equal("/tmp/claudette-home", environment["CLAUDETTE_HOME"]);
+        Assert.Equal("/tmp/claudette-home", environment["DEVENTRY_HOME"]);
     }
 
     [Fact]

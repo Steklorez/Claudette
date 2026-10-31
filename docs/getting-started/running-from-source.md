@@ -29,7 +29,7 @@ dotnet run --project src/Deventry.App -- --folder <path>
 
 A source build copies its build output to a `builds` folder in Claudette's data folder and runs from there. That lets you rebuild while it runs: on Windows a running program's files are locked, and elsewhere replacing them can crash it. `dotnet run` returns as soon as the copy has started.
 
-To run in place instead, set `CLAUDETTE_RUN_IN_PLACE=1`, or attach a debugger. Claudette counts as a source build when its program is in a `bin` folder below a checkout that holds `Deventry.slnx`.
+To run in place instead, set `DEVENTRY_RUN_IN_PLACE=1`, or attach a debugger. Claudette counts as a source build when its program is in a `bin` folder below a checkout that holds `Deventry.slnx`.
 
 A source build doesn't check for releases. It checks its checkout for new commits instead (below), and Settings → General says so.
 
@@ -44,7 +44,7 @@ A checkout of `main` can keep up with `main` as an installed Claudette keeps up 
 
 The checkout may be where you're working on Claudette, so Claudette only ever fast-forwards it. It doesn't merge, rebase, stash or throw anything away. With uncommitted changes to tracked files, or commits of your own that the remote doesn't have, the card still lists the new commits but says why it won't pull, such as *The checkout has uncommitted changes. Commit or stash them to pull.* Untracked files don't get in the way, unless the new commits add a file with the same name: then git refuses, and the card says so.
 
-The build is `dotnet build` of the app, in the configuration you built it in, such as Debug, with the SDK `global.json` names. It uses the `dotnet` in `DOTNET_ROOT` if you've set one, else the one on your `PATH`. The card shows the build's last lines as it runs. If the build fails, the checkout stays pulled, and the card shows the error and **Build again**. A build that runs in place (`CLAUDETTE_RUN_IN_PLACE=1`, or with a debugger) can't be rebuilt while it runs, so it offers **Pull** alone; build it yourself after that.
+The build is `dotnet build` of the app, in the configuration you built it in, such as Debug, with the SDK `global.json` names. It uses the `dotnet` in `DOTNET_ROOT` if you've set one, else the one on your `PATH`. The card shows the build's last lines as it runs. If the build fails, the checkout stays pulled, and the card shows the error and **Build again**. A build that runs in place (`DEVENTRY_RUN_IN_PLACE=1`, or with a debugger) can't be rebuilt while it runs, so it offers **Pull** alone; build it yourself after that.
 
 **Check for Claudette updates automatically** in Settings → General turns the hourly check off, and **Check now** checks straight away. A checkout that isn't on a branch, or whose branch doesn't track a remote one, isn't checked.
 
@@ -70,7 +70,7 @@ The foot of the Settings sidebar shows the version and, for a source build, the 
 
 Two environment variables keep a development copy out of your real setup:
 
-- `CLAUDETTE_HOME` is a folder for Claudette's settings, saved tabs and data. A copy with its own `CLAUDETTE_HOME` counts as a separate Claudette, so it runs beside your installed one.
+- `DEVENTRY_HOME` is a folder for Claudette's settings, saved tabs and data. A copy with its own `DEVENTRY_HOME` counts as a separate Claudette, so it runs beside your installed one.
 - `CLAUDE_CONFIG_DIR` points Claude Code at another configuration folder.
 
 See [Command line and environment](../reference/command-line-and-environment.md).
@@ -86,7 +86,7 @@ dotnet run --project tools/Deventry.Demo -- <empty folder>
 Give it an empty folder, or one an earlier run made. It writes the demo there and prints the environment to start Claudette with:
 
 ```
-CLAUDETTE_HOME=<the folder>/home
+DEVENTRY_HOME=<the folder>/home
 CLAUDE_CONFIG_DIR=<the folder>/claude-config
 FAKE_CLAUDE_USAGE=<the folder>/usage.json
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
@@ -95,13 +95,13 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 Set those, then run Claudette as above. In PowerShell, set each one like this:
 
 ```powershell
-$env:CLAUDETTE_HOME = "C:\demo\home"
+$env:DEVENTRY_HOME = "C:\demo\home"
 ```
 
 In bash or zsh, on macOS and Linux, `export` each one:
 
 ```sh
-export CLAUDETTE_HOME=~/demo/home
+export DEVENTRY_HOME=~/demo/home
 ```
 
 The conversations show the projects' paths. `--projects <folder>` puts the projects somewhere else, so you can choose a path that says nothing about you.

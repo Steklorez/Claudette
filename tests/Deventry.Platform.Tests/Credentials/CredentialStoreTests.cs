@@ -11,9 +11,10 @@ namespace Deventry.Platform.Tests.Credentials;
 
 /// <summary>
 /// The OS credential stores that keep a stored Perforce password (DESIGN.md §18). <c>secret-tool</c> is faked; the
-/// Windows store is used for real on Windows, and the macOS Keychain only when <c>CLAUDETTE_TEST_KEYCHAIN=1</c>, since
+/// Windows store is used for real on Windows, and the macOS Keychain only when <c>DEVENTRY_TEST_KEYCHAIN=1</c>, since
 /// a locked keychain would ask.
 /// </summary>
+[Collection(nameof(RealCredentialStore))]
 public class CredentialStoreTests
 {
     private const string Key = "perforce/ssl:perforce:1666/matt";
@@ -35,7 +36,7 @@ public class CredentialStoreTests
         var write = SecretTool.WriteAsync(Key, "Claudette: Perforce matt @ ssl:perforce:1666", "s3cret", TestContext.Current.CancellationToken);
         var process = await Started(0);
 
-        Assert.Equal(["store", "--label=Claudette: Perforce matt @ ssl:perforce:1666", "application", "claudette", "key", Key], _launcher.Specs[0].Arguments);
+        Assert.Equal(["store", "--label=Claudette: Perforce matt @ ssl:perforce:1666", "application", "deventry", "key", Key], _launcher.Specs[0].Arguments);
         Assert.Equal(["s3cret"], process.Input);
         Assert.DoesNotContain(_launcher.Specs[0].Arguments, a => a.Contains("s3cret", StringComparison.Ordinal));
         process.Exit(0);
@@ -51,7 +52,7 @@ public class CredentialStoreTests
         process.Exit(0);
 
         Assert.Equal("s3cret", await read);
-        Assert.Equal(["lookup", "application", "claudette", "key", Key], _launcher.Specs[0].Arguments);
+        Assert.Equal(["lookup", "application", "deventry", "key", Key], _launcher.Specs[0].Arguments);
     }
 
     [Fact]
@@ -79,7 +80,7 @@ public class CredentialStoreTests
         (await Started(1)).Exit(0);
 
         Assert.True(await delete);
-        Assert.Equal(["clear", "application", "claudette", "key", Key], _launcher.Specs[1].Arguments);
+        Assert.Equal(["clear", "application", "deventry", "key", Key], _launcher.Specs[1].Arguments);
     }
 
     [Fact]
@@ -138,7 +139,7 @@ public class CredentialStoreTests
         Assert.NotEqual(0, Security.MatchLimitOne);
         using var query = CF.Dictionary(
             (Security.Class, Security.ClassGenericPassword),
-            (Security.AttrService, CF.String(MacKeychain.Service)),
+            (Security.AttrService, CF.String(MacKeychain.DefaultService)),
             (Security.ValueData, CF.Data([1, 2, 3])));
         Assert.NotEqual(0, query.Handle);
     }
@@ -147,7 +148,7 @@ public class CredentialStoreTests
     [SupportedOSPlatform("macos")]
     public async Task Mac_keychain_round_trips()
     {
-        Assert.SkipUnless(OperatingSystem.IsMacOS() && Environment.GetEnvironmentVariable("CLAUDETTE_TEST_KEYCHAIN") == "1", "macOS with CLAUDETTE_TEST_KEYCHAIN=1 only.");
+        Assert.SkipUnless(OperatingSystem.IsMacOS() && Environment.GetEnvironmentVariable("DEVENTRY_TEST_KEYCHAIN") == "1", "macOS with DEVENTRY_TEST_KEYCHAIN=1 only.");
         var store = new MacKeychain();
         var key = $"test/{Guid.NewGuid():N}";
         try
@@ -180,3 +181,10 @@ public class CredentialStoreTests
         public string ExpandEnvironmentVariables(string path) => path;
     }
 }
+
+/// <summary>
+/// The tests that use the real Credential Manager, one at a time: written to from two threads of one process at once,
+/// it has kept the first of two writes to one credential instead of the second.
+/// </summary>
+[CollectionDefinition(nameof(RealCredentialStore), DisableParallelization = true)]
+public sealed class RealCredentialStore;

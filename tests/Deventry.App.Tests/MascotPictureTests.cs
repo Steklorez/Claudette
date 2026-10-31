@@ -5,8 +5,8 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// The README's animation of Claudette on the composer (DESIGN.md §5), drawn from her own art and steps, so it always
-/// shows what she does. With <c>CLAUDETTE_MASCOT_GIF=&lt;path&gt;</c> it's written there (<c>screenshots.ps1</c> does);
-/// with <c>CLAUDETTE_MASCOT_SHEETS=&lt;folder&gt;</c>, every one of her antics, frame by frame, to look over.
+/// shows what she does. With <c>DEVENTRY_MASCOT_GIF=&lt;path&gt;</c> it's written there (<c>screenshots.ps1</c> does);
+/// with <c>DEVENTRY_MASCOT_SHEETS=&lt;folder&gt;</c>, every one of her antics, frame by frame, to look over.
 /// </summary>
 public class MascotPictureTests
 {
@@ -44,7 +44,7 @@ public class MascotPictureTests
         {
             Assert.Equal(frames[i].Pixels, decoded[i]);
         }
-        if (Environment.GetEnvironmentVariable("CLAUDETTE_MASCOT_GIF") is { Length: > 0 } path)
+        if (Environment.GetEnvironmentVariable("DEVENTRY_MASCOT_GIF") is { Length: > 0 } path)
         {
             File.WriteAllBytes(path, gif);
         }
@@ -73,7 +73,7 @@ public class MascotPictureTests
             rows.Add([canvas.Draw(new MascotFrame("stand", 40, 0, []) { Hat = hat })]);
         }
 
-        if (Environment.GetEnvironmentVariable("CLAUDETTE_MASCOT_SHEETS") is { Length: > 0 } folder)
+        if (Environment.GetEnvironmentVariable("DEVENTRY_MASCOT_SHEETS") is { Length: > 0 } folder)
         {
             Directory.CreateDirectory(folder);
             foreach (var (sheet, i) in rows.Chunk(6).Select((chunk, i) => (chunk, i)))

@@ -5,7 +5,7 @@ namespace Deventry.Core.Settings;
 /// <summary>
 /// What project tools remember on this machine (DESIGN.md §18, "Project tools"), in <c>state.json</c>. Folders and
 /// projects are kept by their full path; nothing here syncs. A folder's own actions and links are in its
-/// <c>claudette.json</c> and <c>claudette.local.json</c>, not here.
+/// <c>deventry.json</c> and <c>deventry.local.json</c>, not here.
 /// </summary>
 public sealed class ProjectToolState
 {

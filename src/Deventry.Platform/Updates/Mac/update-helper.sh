@@ -14,7 +14,7 @@
 #
 # <new app> is where the new version goes: <app>, or its new name beside it. "open" starts an app through Launch
 # Services; "exec" runs its executable, named as its bundle is, directly, for tests off macOS. Tests also shorten the
-# waits with CLAUDETTE_UPDATE_QUIT_TICKS and CLAUDETTE_UPDATE_READY_TICKS.
+# waits with DEVENTRY_UPDATE_QUIT_TICKS and DEVENTRY_UPDATE_READY_TICKS.
 set -u
 
 pid="$1"; app="$2"; staged="$3"; new="$4"; ready="$5"; nonce="$6"; mode="$7"
@@ -23,8 +23,8 @@ previous="$app.previous"
 # A copy already where a renamed app goes, such as one installed by hand: set aside too, and back if the update fails.
 displaced=""
 launched=""
-quit_ticks="${CLAUDETTE_UPDATE_QUIT_TICKS:-1200}"    # of 0.1 s: 2 minutes
-ready_ticks="${CLAUDETTE_UPDATE_READY_TICKS:-240}"   # of 0.25 s: 60 seconds
+quit_ticks="${DEVENTRY_UPDATE_QUIT_TICKS:-1200}"    # of 0.1 s: 2 minutes
+ready_ticks="${DEVENTRY_UPDATE_READY_TICKS:-240}"   # of 0.25 s: 60 seconds
 
 launch() {
   target="$1"; shift

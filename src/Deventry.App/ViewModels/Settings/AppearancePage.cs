@@ -20,20 +20,20 @@ public sealed record MotionChoice(MotionSetting Setting)
 }
 
 /// <summary>Claudette's sizes in Settings → Appearance (DESIGN.md §5, "Claudette on the composer").</summary>
-public sealed record ClaudetteSizeChoice(ClaudetteSize Size)
+public sealed record JouleneSizeChoice(JouleneSize Size)
 {
     public override string ToString() => Size switch
     {
-        ClaudetteSize.Small => "Small",
-        ClaudetteSize.Large => "Large",
+        JouleneSize.Small => "Small",
+        JouleneSize.Large => "Large",
         _ => "Medium",
     };
 }
 
 /// <summary>How often Claudette does something, in Settings → Appearance (DESIGN.md §5, "Claudette on the composer").</summary>
-public sealed record ClaudetteLivelinessChoice(ClaudetteLiveliness Liveliness)
+public sealed record JouleneLivelinessChoice(JouleneLiveliness Liveliness)
 {
-    public override string ToString() => Liveliness == ClaudetteLiveliness.Calm ? "Calm: every 30 to 90 seconds" : "Lively: every 10 to 30 seconds";
+    public override string ToString() => Liveliness == JouleneLiveliness.Calm ? "Calm: every 30 to 90 seconds" : "Lively: every 10 to 30 seconds";
 }
 
 /// <summary>Settings → Appearance → Zoom's steps (DESIGN.md §3, "Accessibility").</summary>
@@ -91,17 +91,17 @@ public sealed class AppearancePage : SettingsPage
         ]);
         Section("claudette", "Claudette",
         [
-            Setting("appearance.showClaudette", "Show Claudette on the composer", s => s.Appearance.ShowClaudette, (s, v) => s.Appearance.ShowClaudette = v,
+            Setting("appearance.showJoulene", "Show Claudette on the composer", s => s.Appearance.ShowJoulene, (s, v) => s.Appearance.ShowJoulene = v,
                 "She stands on the message box and does little things every so often.",
                 "She walks about, dances, juggles, sits on the edge, and sometimes falls off behind it. While Claude works she works too, with whatever suits what it's doing, and she points out other tabs that need you. Click her to startle her, drag her about, or right-click to hide her. She stands still when motion is reduced.",
                 ["mascot", "character"]),
-            Setting("appearance.claudetteSize", "Size", s => s.Appearance.ClaudetteSize, (s, v) => s.Appearance.ClaudetteSize = v, keywords: ["claudette", "mascot"]),
-            Setting("appearance.claudetteLiveliness", "How often", s => s.Appearance.ClaudetteLiveliness, (s, v) => s.Appearance.ClaudetteLiveliness = v,
+            Setting("appearance.jouleneSize", "Size", s => s.Appearance.JouleneSize, (s, v) => s.Appearance.JouleneSize = v, keywords: ["claudette", "mascot"]),
+            Setting("appearance.jouleneLiveliness", "How often", s => s.Appearance.JouleneLiveliness, (s, v) => s.Appearance.JouleneLiveliness = v,
                 "How often she does something.", keywords: ["claudette", "mascot", "calm", "lively"]),
-            Setting("appearance.claudetteTips", "Shares tips", s => s.Appearance.ClaudetteTips, (s, v) => s.Appearance.ClaudetteTips = v,
+            Setting("appearance.jouleneTips", "Shares tips", s => s.Appearance.JouleneTips, (s, v) => s.Appearance.JouleneTips = v,
                 "Now and then she holds up a tip, such as a shortcut you might not know.",
                 "At most every ten minutes, and never while you're typing.", ["claudette", "hints"]),
-            Setting("appearance.gamesWithClaudette", "Games with Claudette", s => s.Appearance.GamesWithClaudette, (s, v) => s.Appearance.GamesWithClaudette = v,
+            Setting("appearance.gamesWithJoulene", "Games with Claudette", s => s.Appearance.GamesWithJoulene, (s, v) => s.Appearance.GamesWithJoulene = v,
                 "Tic-tac-toe, Connect Four, hangman or Minesweeper against her while Claude works.",
                 "Or while a usage limit holds a task. Start one by right-clicking her, from the command palette, or from the usage limit bar; it opens in the Games tool window. She plays whether or not she's on the composer.",
                 ["play", "tic-tac-toe", "connect four", "hangman", "minesweeper"]),
@@ -130,10 +130,10 @@ public sealed class AppearancePage : SettingsPage
     public double ZoomScale => Settings.Appearance.Zoom / 100.0;
 
     /// <summary>Screen pixels in a cell of Claudette's sprite, for her size in the preview.</summary>
-    public double ClaudetteCell => Settings.Appearance.ClaudetteSize switch
+    public double JouleneCell => Settings.Appearance.JouleneSize switch
     {
-        Core.Settings.ClaudetteSize.Small => 2,
-        Core.Settings.ClaudetteSize.Large => 4,
+        Core.Settings.JouleneSize.Small => 2,
+        Core.Settings.JouleneSize.Large => 4,
         _ => 3,
     };
 
@@ -145,7 +145,7 @@ public sealed class AppearancePage : SettingsPage
         OnPropertyChanged(nameof(IndentYou));
         OnPropertyChanged(nameof(IndentSteps));
         OnPropertyChanged(nameof(ZoomScale));
-        OnPropertyChanged(nameof(ClaudetteCell));
+        OnPropertyChanged(nameof(JouleneCell));
     }
 
     public override string Description => "How Claudette looks: in every tab, and on this computer's screen.";
@@ -248,43 +248,43 @@ public sealed class AppearancePage : SettingsPage
     // ---- Claudette on the composer (DESIGN.md §5) -----------------------------------------------------------------
 
     /// <summary>Claudette standing on the composer, doing little things now and then (DESIGN.md §5, "Claudette on the composer").</summary>
-    public bool ShowClaudette
+    public bool ShowJoulene
     {
-        get => Settings.Appearance.ShowClaudette;
-        set => Set(value, v => Settings.Appearance.ShowClaudette = v);
+        get => Settings.Appearance.ShowJoulene;
+        set => Set(value, v => Settings.Appearance.ShowJoulene = v);
     }
 
-    public IReadOnlyList<ClaudetteSizeChoice> ClaudetteSizes { get; } =
-        [new(Core.Settings.ClaudetteSize.Small), new(Core.Settings.ClaudetteSize.Medium), new(Core.Settings.ClaudetteSize.Large)];
+    public IReadOnlyList<JouleneSizeChoice> JouleneSizes { get; } =
+        [new(Core.Settings.JouleneSize.Small), new(Core.Settings.JouleneSize.Medium), new(Core.Settings.JouleneSize.Large)];
 
     /// <summary>How big she is: 24, 36 or 48 pixels tall at 100%.</summary>
-    public ClaudetteSizeChoice ClaudetteSize
+    public JouleneSizeChoice JouleneSize
     {
-        get => ClaudetteSizes.FirstOrDefault(c => c.Size == Settings.Appearance.ClaudetteSize) ?? ClaudetteSizes[1];
-        set => Set(value?.Size ?? Core.Settings.ClaudetteSize.Medium, v => Settings.Appearance.ClaudetteSize = v);
+        get => JouleneSizes.FirstOrDefault(c => c.Size == Settings.Appearance.JouleneSize) ?? JouleneSizes[1];
+        set => Set(value?.Size ?? Core.Settings.JouleneSize.Medium, v => Settings.Appearance.JouleneSize = v);
     }
 
-    public IReadOnlyList<ClaudetteLivelinessChoice> ClaudetteLivelinesses { get; } =
-        [new(Core.Settings.ClaudetteLiveliness.Lively), new(Core.Settings.ClaudetteLiveliness.Calm)];
+    public IReadOnlyList<JouleneLivelinessChoice> JouleneLivelinesses { get; } =
+        [new(Core.Settings.JouleneLiveliness.Lively), new(Core.Settings.JouleneLiveliness.Calm)];
 
     /// <summary>How often she does something.</summary>
-    public ClaudetteLivelinessChoice ClaudetteLiveliness
+    public JouleneLivelinessChoice JouleneLiveliness
     {
-        get => ClaudetteLivelinesses.FirstOrDefault(c => c.Liveliness == Settings.Appearance.ClaudetteLiveliness) ?? ClaudetteLivelinesses[0];
-        set => Set(value?.Liveliness ?? Core.Settings.ClaudetteLiveliness.Lively, v => Settings.Appearance.ClaudetteLiveliness = v);
+        get => JouleneLivelinesses.FirstOrDefault(c => c.Liveliness == Settings.Appearance.JouleneLiveliness) ?? JouleneLivelinesses[0];
+        set => Set(value?.Liveliness ?? Core.Settings.JouleneLiveliness.Lively, v => Settings.Appearance.JouleneLiveliness = v);
     }
 
     /// <summary>She shares a tip now and then, such as a shortcut.</summary>
-    public bool ClaudetteTips
+    public bool JouleneTips
     {
-        get => Settings.Appearance.ClaudetteTips;
-        set => Set(value, v => Settings.Appearance.ClaudetteTips = v);
+        get => Settings.Appearance.JouleneTips;
+        set => Set(value, v => Settings.Appearance.JouleneTips = v);
     }
 
     /// <summary>Tic-tac-toe, Connect Four, hangman and Minesweeper against her (DESIGN.md §18, "Games with Claudette").</summary>
-    public bool GamesWithClaudette
+    public bool GamesWithJoulene
     {
-        get => Settings.Appearance.GamesWithClaudette;
-        set => Set(value, v => Settings.Appearance.GamesWithClaudette = v);
+        get => Settings.Appearance.GamesWithJoulene;
+        set => Set(value, v => Settings.Appearance.GamesWithJoulene = v);
     }
 }

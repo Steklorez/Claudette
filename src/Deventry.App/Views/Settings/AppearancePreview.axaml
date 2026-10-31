@@ -51,7 +51,7 @@
           </controls:Card>
           <!-- The message box, with Claudette standing on its edge when she's shown -->
           <Grid RowDefinitions="Auto,Auto" Margin="0,4,0,0">
-            <Panel x:Name="MascotHost" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,40,-1" IsVisible="{Binding ShowClaudette}" />
+            <Panel x:Name="MascotHost" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,40,-1" IsVisible="{Binding ShowJoulene}" />
             <Border Grid.Row="1" Classes="composer">
               <TextBlock Classes="muted" Text="Message Claude…" Margin="0,6" />
             </Border>

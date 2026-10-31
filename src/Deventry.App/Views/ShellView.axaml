@@ -109,7 +109,7 @@
                    IsVisible="{Binding ProjectTools.Runs.IsJobRunning}" />
       </Panel>
     </DataTemplate>
-    <!-- The project's menu (DESIGN.md §18, "Project tools"): the project and what's wrong with claudette.json, then its
+    <!-- The project's menu (DESIGN.md §18, "Project tools"): the project and what's wrong with deventry.json, then its
          actions and links -->
     <DataTemplate x:Key="ProjectMenu" DataType="vm:TabViewModel">
       <StackPanel x:Name="ProjectMenu" MinWidth="300" MaxWidth="440" Spacing="1">
@@ -121,7 +121,7 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <!-- Entries of claudette.json that were skipped, and why (DESIGN.md §18) -->
+        <!-- Entries of deventry.json that were skipped, and why (DESIGN.md §18) -->
         <ItemsControl ItemsSource="{Binding ProjectTools.FileProblems}" Margin="8,0,8,2" IsVisible="{Binding ProjectTools.HasFileProblems}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="x:String">

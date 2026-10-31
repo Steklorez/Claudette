@@ -44,9 +44,9 @@ Only you can turn some of these back on, so the switch shows them off and disabl
 - **Linux:** a `claudette.desktop` file with `Hidden=true` or `X-GNOME-Autostart-enabled=false` is off.
 - **macOS:** you can turn off the login item under **Allow in the Background** in System Settings → General → Login Items. Claudette doesn't read that, so its switch can show on while macOS holds it off.
 
-## Trying things with CLAUDETTE_HOME
+## Trying things with DEVENTRY_HOME
 
-A Claudette started with the `CLAUDETTE_HOME` environment variable, which keeps its settings and tabs in a folder of its own, leaves the entry alone and disables the switch, since the entry would start Claudette without it.
+A Claudette started with the `DEVENTRY_HOME` environment variable, which keeps its settings and tabs in a folder of its own, leaves the entry alone and disables the switch, since the entry would start Claudette without it.
 
 ## Settings
 

@@ -8,7 +8,7 @@
   <!-- The tab's project: Links (DESIGN.md §14, "The project's pages"; §18, "Links"). Saved as each change is made. -->
   <StackPanel x:Name="LinksPage" Spacing="16">
     <TextBlock Classes="muted small" Text="{Binding Project.ForTabText, FallbackValue=''}" TextWrapping="Wrap" />
-    <c:SettingsSection Key="links" Description="Shared links are in claudette.json, committed with the project; yours alone are in claudette.local.json. Saving rewrites the file, so comments in it are dropped.">
+    <c:SettingsSection Key="links" Description="Shared links are in deventry.json, committed with the project; yours alone are in deventry.local.json. Saving rewrites the file, so comments in it are dropped.">
       <c:SettingRow Key="project.links" Title="" IsStacked="True">
         <StackPanel Spacing="10" DataContext="{Binding Project}" x:DataType="vm:ProjectSettingsViewModel">
           <ItemsControl ItemsSource="{Binding LinkFileErrors}" IsVisible="{Binding HasLinkFileErrors}">

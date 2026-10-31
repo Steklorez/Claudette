@@ -46,7 +46,7 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory, st
     /// Where a new version says it has started, after an update (DESIGN.md §2, "Updating Claudette"). It's outside the
     /// data folder, since the new version may move that, as Deventry does Claudette's; the new version is told the path.
     /// </summary>
-    public string UpdateReadyFile(string nonce) => Path.Combine(TempDirectory ?? Path.GetTempPath(), $"claudette-update-{nonce}.ready");
+    public string UpdateReadyFile(string nonce) => Path.Combine(TempDirectory ?? Path.GetTempPath(), $"deventry-update-{nonce}.ready");
 
     /// <summary>Files project actions write for Claudette to read, such as Unity's test results (DESIGN.md §18).</summary>
     public string ProjectJobsDirectory => Path.Combine(DataDirectory, "project-jobs");
@@ -69,22 +69,35 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory, st
     /// </summary>
     public string PresenceFile => Path.Combine(DataDirectory, "presence");
 
+    /// <summary>For development and UI checks: everything under this one folder instead of the real profile.</summary>
+    public const string HomeVariable = "DEVENTRY_HOME";
+
     /// <summary>
-    /// The per-user defaults. Data: <c>%LOCALAPPDATA%\Claudette</c>, <c>~/Library/Application Support/Claudette</c>,
-    /// <c>~/.local/share/claudette</c>. Settings: <c>%APPDATA%\Claudette</c>, the same Application Support folder on
-    /// macOS, and <c>~/.config/claudette</c> on Linux.
+    /// The per-user defaults. Data: <c>%LOCALAPPDATA%\Deventry</c>, <c>~/Library/Application Support/Deventry</c>,
+    /// <c>~/.local/share/deventry</c>. Settings: <c>%APPDATA%\Deventry</c>, the same Application Support folder on
+    /// macOS, and <c>~/.config/deventry</c> on Linux.
     /// </summary>
     public static AppPaths ForCurrentUser()
     {
-        // For development and UI checks: keep everything under one folder instead of the real profile.
-        if (Environment.GetEnvironmentVariable("CLAUDETTE_HOME") is { Length: > 0 } home)
+        // FromClaudette: CLAUDETTE_HOME too.
+        if (FromClaudette.ClaudetteVariables.Get(HomeVariable) is { } home)
         {
             return Under(home);
         }
+        // FromClaudette: Claudette's folders, until Deventry has moved them (DESIGN.md §2, "Renaming to Deventry").
+        return FromClaudette.ClaudetteFolders.WhereTheyAre(Default());
+    }
+
+    /// <summary>Deventry's per-user folders, whether or not they're there yet.</summary>
+    public static AppPaths Default() => Named("Deventry", "deventry");
+
+    /// <summary>The per-user folders called <paramref name="name"/>, or <paramref name="linuxName"/> on Linux.</summary>
+    public static AppPaths Named(string name, string linuxName)
+    {
         var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create);
         var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
-        var name = OperatingSystem.IsLinux() ? "claudette" : "Claudette";
-        return new AppPaths(Path.Combine(local, name), Path.Combine(OperatingSystem.IsMacOS() ? local : roaming, name));
+        var folder = OperatingSystem.IsLinux() ? linuxName : name;
+        return new AppPaths(Path.Combine(local, folder), Path.Combine(OperatingSystem.IsMacOS() ? local : roaming, folder));
     }
 
     /// <summary>Everything under one folder, for tests.</summary>

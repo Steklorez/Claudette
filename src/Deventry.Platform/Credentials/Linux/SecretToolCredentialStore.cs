@@ -7,18 +7,22 @@ namespace Deventry.Platform.Credentials.Linux;
 
 /// <summary>
 /// The Secret Service (GNOME Keyring, KWallet) through libsecret's <c>secret-tool</c>, with the attributes
-/// <c>application claudette</c> and <c>key &lt;key&gt;</c>. The secret goes to <c>secret-tool store</c> on standard
+/// <c>application deventry</c> and <c>key &lt;key&gt;</c>. The secret goes to <c>secret-tool store</c> on standard
 /// input, never on the command line. Linux isn't a polished target (DESIGN.md §1), so this stays a command-line tool
 /// rather than D-Bus calls.
 /// </summary>
-public sealed class SecretToolCredentialStore(string secretTool, IProcessLauncher launcher, TimeProvider timeProvider) : ICredentialStore
+/// <param name="application">The <c>application</c> attribute: <c>claudette</c> for Claudette's.</param>
+public sealed class SecretToolCredentialStore(string secretTool, IProcessLauncher launcher, TimeProvider timeProvider, string application = SecretToolCredentialStore.DefaultApplication) : ICredentialStore
 {
     /// <summary>Long enough for the keyring to ask the user to unlock it.</summary>
     public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(2);
 
-    public const string Application = "claudette";
+    public const string DefaultApplication = "deventry";
 
     public const string MissingReason = "Install secret-tool (the libsecret-tools package) to keep passwords and API keys in the Secret Service.";
+
+    /// <summary>The path to <c>secret-tool</c>.</summary>
+    public string SecretTool => secretTool;
 
     public string Name => "the Secret Service";
 
@@ -27,10 +31,10 @@ public sealed class SecretToolCredentialStore(string secretTool, IProcessLaunche
     public string? UnavailableReason => null;
 
     /// <summary>The store, or null when <c>secret-tool</c> isn't installed.</summary>
-    public static SecretToolCredentialStore? TryCreate(IProcessLauncher launcher, TimeProvider timeProvider, IFileProbe? probe = null) =>
-        (probe ?? FileProbe.Instance).FindOnPath("secret-tool") is { } path ? new SecretToolCredentialStore(path, launcher, timeProvider) : null;
+    public static SecretToolCredentialStore? TryCreate(IProcessLauncher launcher, TimeProvider timeProvider, IFileProbe? probe = null, string application = DefaultApplication) =>
+        (probe ?? FileProbe.Instance).FindOnPath("secret-tool") is { } path ? new SecretToolCredentialStore(path, launcher, timeProvider, application) : null;
 
-    public static IReadOnlyList<string> Attributes(string key) => ["application", Application, "key", key];
+    public IReadOnlyList<string> Attributes(string key) => ["application", application, "key", key];
 
     public async Task<string?> ReadAsync(string key, CancellationToken cancellationToken = default)
     {

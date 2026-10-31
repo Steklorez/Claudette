@@ -57,6 +57,8 @@ public class WorktreeCleanupServiceTests
         Assert.True(FolderHistory.SamePath(path, install.WorkingDirectory!));
         Assert.True(FolderHistory.SamePath(path, install.Environment![CustomProjectAction.WorktreeVariable]));
         Assert.True(FolderHistory.SamePath(h.WorkFolder, install.Environment[CustomProjectAction.MainCheckoutVariable]));
+        // Under Claudette's names too, for scripts written for it.
+        Assert.Equal(install.Environment[CustomProjectAction.WorktreeVariable], install.Environment["CLAUDETTE_WORKTREE"]);
         Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text == "Setting up the new worktree: Install, Copy env.");
         Assert.Equal("Install", tab.ProjectTools.Runs.RunningRun?.Name);
 
@@ -78,7 +80,7 @@ public class WorktreeCleanupServiceTests
 
         var (tab, _) = await WorktreeTabTests.WorktreeTabAsync(h, realWorktree: false);
 
-        await TabTestHarness.Eventually(() => tab.Items.OfType<NoteItem>().Any(n => n.Text.StartsWith("claudette.json's actions for a new worktree didn't run", StringComparison.Ordinal)), "the note");
+        await TabTestHarness.Eventually(() => tab.Items.OfType<NoteItem>().Any(n => n.Text.StartsWith("deventry.json's actions for a new worktree didn't run", StringComparison.Ordinal)), "the note");
         Assert.Empty(launcher.Fake.Started);
 
         // Trusted, the next worktree's run.

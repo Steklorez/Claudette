@@ -8,7 +8,7 @@ namespace Deventry.Core.ProjectTools;
 
 /// <summary>What a folder's project files hold, both merged: the shared file's entries, then the local file's.</summary>
 /// <param name="Actions">The actions for this OS, in order. <see cref="ProjectFile.Read"/> also leaves out those whose <c>ifExists</c> is missing.</param>
-/// <param name="Problems">Why entries (or a whole file) were skipped, such as "claudette.json: actions[2] has no command".</param>
+/// <param name="Problems">Why entries (or a whole file) were skipped, such as "deventry.json: actions[2] has no command".</param>
 public sealed record ProjectFileContents(IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems)
 {
     public static ProjectFileContents Empty { get; } = new([], [], []);
@@ -34,7 +34,7 @@ public sealed record ProjectFileLinkEntry(JsonNode? Raw, ProjectLink? Link, stri
 }
 
 /// <summary>
-/// <c>claudette.json</c> and <c>claudette.local.json</c> in a tab's folder (DESIGN.md §18, "claudette.json"): the
+/// <c>deventry.json</c> and <c>deventry.local.json</c> in a tab's folder (DESIGN.md §18, "deventry.json"): the
 /// folder's own actions and links. The shared file is committed with the project; the local one is the user's.
 /// Both are read tolerantly: comments and trailing commas are fine, unknown fields are ignored, and a bad entry is
 /// skipped with a reason rather than failing the file. A missing file means nothing.
@@ -53,9 +53,9 @@ public sealed record ProjectFileLinkEntry(JsonNode? Raw, ProjectLink? Link, stri
 /// </summary>
 public static class ProjectFile
 {
-    public const string SharedName = "claudette.json";
+    public const string SharedName = "deventry.json";
 
-    public const string LocalName = "claudette.local.json";
+    public const string LocalName = "deventry.local.json";
 
     private const string ObjectShape = "{ \"actions\": [ … ], \"links\": [ … ] }";
 
@@ -68,7 +68,19 @@ public static class ProjectFile
 
     public static string FileName(ProjectFileScope scope) => scope == ProjectFileScope.Shared ? SharedName : LocalName;
 
-    public static string PathFor(string folder, ProjectFileScope scope) => Path.Combine(folder, FileName(scope));
+    /// <summary>
+    /// Where <paramref name="folder"/>'s file is, or is to be written: <c>deventry.json</c> or <c>deventry.local.json</c>,
+    /// or Claudette's name for it in a project that has only that.
+    /// </summary>
+    public static string PathFor(string folder, ProjectFileScope scope)
+    {
+        var path = Path.Combine(folder, FileName(scope));
+        // FromClaudette: a project's deventry.json, read and written in its place while it has no deventry.json.
+        return FromClaudette.ClaudetteProjectFiles.InPlaceOf(folder, scope, path) ?? path;
+    }
+
+    /// <summary>The name of <paramref name="folder"/>'s file, as <see cref="PathFor"/> finds it.</summary>
+    public static string FileName(string folder, ProjectFileScope scope) => Path.GetFileName(PathFor(folder, scope));
 
     /// <summary>
     /// Both files of <paramref name="folder"/>, the shared one first. Actions whose <c>ifExists</c> paths aren't all
@@ -76,24 +88,29 @@ public static class ProjectFile
     /// </summary>
     public static ProjectFileContents Read(string folder, ToolOS os)
     {
-        var shared = Parse(ReadText(PathFor(folder, ProjectFileScope.Shared), out var sharedError), ProjectFileScope.Shared, os);
-        var local = Parse(ReadText(PathFor(folder, ProjectFileScope.Local), out var localError), ProjectFileScope.Local, os);
+        var sharedPath = PathFor(folder, ProjectFileScope.Shared);
+        var localPath = PathFor(folder, ProjectFileScope.Local);
+        var sharedName = Path.GetFileName(sharedPath);
+        var localName = Path.GetFileName(localPath);
+        var shared = Parse(ReadText(sharedPath, out var sharedError), ProjectFileScope.Shared, os, sharedName);
+        var local = Parse(ReadText(localPath, out var localError), ProjectFileScope.Local, os, localName);
         return new ProjectFileContents(
             [.. shared.Actions.Concat(local.Actions).Where(a => a.IsShownIn(folder))],
             [.. shared.Links, .. local.Links],
-            [.. Error(SharedName, sharedError), .. shared.Problems, .. Error(LocalName, localError), .. local.Problems]);
+            [.. Error(sharedName, sharedError), .. shared.Problems, .. Error(localName, localError), .. local.Problems]);
 
         static IEnumerable<string> Error(string file, string? error) => error is null ? [] : [$"{file} couldn't be read: {error}"];
     }
 
     /// <summary>One file's text; null (no file) reads as nothing.</summary>
-    public static ProjectFileContents Parse(string? text, ProjectFileScope scope, ToolOS os)
+    /// <param name="fileName">The file's name, for its problems; <see cref="FileName(ProjectFileScope)"/> by default.</param>
+    public static ProjectFileContents Parse(string? text, ProjectFileScope scope, ToolOS os, string? fileName = null)
     {
         if (text is null)
         {
             return ProjectFileContents.Empty;
         }
-        var file = FileName(scope);
+        var file = fileName ?? FileName(scope);
         var problems = new List<string>();
         if (!TryParseRoot(text, out var root, out var error))
         {
@@ -132,14 +149,14 @@ public static class ProjectFile
     /// <exception cref="InvalidOperationException">The file exists but isn't JSON: it can't be edited here without losing it.</exception>
     public static IReadOnlyList<ProjectFileEntry> ReadEntries(string folder, ProjectFileScope scope, ToolOS os) =>
         ReadRoot(folder, scope) is { } root
-            ? Entries(root, "actions", FileName(scope), []).Select((node, index) => ReadAction(node, index, scope, os)).ToArray()
+            ? Entries(root, "actions", FileName(folder, scope), []).Select((node, index) => ReadAction(node, index, scope, os)).ToArray()
             : [];
 
     /// <summary>Every entry of one file's <c>links</c>, for Settings' Links page, including ones it can't read.</summary>
     /// <exception cref="InvalidOperationException">The file exists but isn't JSON: it can't be edited here without losing it.</exception>
     public static IReadOnlyList<ProjectFileLinkEntry> ReadLinkEntries(string folder, ProjectFileScope scope) =>
         ReadRoot(folder, scope) is { } root
-            ? Entries(root, "links", FileName(scope), []).Select((node, index) => ReadLink(node, index, scope)).ToArray()
+            ? Entries(root, "links", FileName(folder, scope), []).Select((node, index) => ReadLink(node, index, scope)).ToArray()
             : [];
 
     /// <summary>
@@ -170,7 +187,7 @@ public static class ProjectFile
         var text = ReadText(PathFor(folder, scope), out var error);
         if (error is not null)
         {
-            throw new InvalidOperationException($"{FileName(scope)} couldn't be read: {error}");
+            throw new InvalidOperationException($"{FileName(folder, scope)} couldn't be read: {error}");
         }
         if (text is null)
         {
@@ -179,8 +196,8 @@ public static class ProjectFile
         if (!TryParseRoot(text, out var root, out var parseError))
         {
             throw new InvalidOperationException(parseError is null
-                ? $"{FileName(scope)} isn't a JSON object, so Claudette won't rewrite it. Fix it by hand first."
-                : $"{FileName(scope)} isn't valid JSON ({parseError}), so Claudette won't rewrite it. Fix it by hand first.");
+                ? $"{FileName(folder, scope)} isn't a JSON object, so Claudette won't rewrite it. Fix it by hand first."
+                : $"{FileName(folder, scope)} isn't valid JSON ({parseError}), so Claudette won't rewrite it. Fix it by hand first.");
         }
         return root;
     }

@@ -19,8 +19,8 @@ public sealed class UserEnvironment
     /// <summary>What the shell sets about itself. They describe the shell Claudette ran, not the user's setup.</summary>
     public static readonly IReadOnlySet<string> ShellBookkeeping = new HashSet<string>(StringComparer.Ordinal) { "_", "PWD", "OLDPWD", "SHLVL" };
 
-    /// <summary>Claudette's own variables, such as <c>CLAUDETTE_HOME</c>, always come from Claudette's environment.</summary>
-    public const string ClaudettePrefix = "CLAUDETTE_";
+    /// <summary>Deventry's own variables, such as <c>DEVENTRY_HOME</c>, always come from Deventry's environment.</summary>
+    public const string OwnPrefix = "DEVENTRY_";
 
     private const int MaxNamesShown = 30;
 
@@ -132,7 +132,7 @@ public sealed class UserEnvironment
 
     /// <summary>
     /// Claudette's own environment with the login shell's on top: the shell's values win, except for Claudette's own
-    /// variables (<see cref="ClaudettePrefix"/>), the session variables Claude Code sets for its children (removed for
+    /// variables (<see cref="OwnPrefix"/>), the session variables Claude Code sets for its children (removed for
     /// <c>claude</c> anyway, <see cref="ClaudeEnvironment.SessionVariables"/>) and the shell's
     /// <see cref="ShellBookkeeping"/>. Variables only Claudette has are kept.
     /// </summary>
@@ -141,7 +141,9 @@ public sealed class UserEnvironment
         var result = new Dictionary<string, string>(own, Comparer);
         foreach (var (key, value) in login)
         {
-            if (!key.StartsWith(ClaudettePrefix, StringComparison.OrdinalIgnoreCase)
+            if (!key.StartsWith(OwnPrefix, StringComparison.OrdinalIgnoreCase)
+                // FromClaudette: and Claudette's, such as CLAUDETTE_HOME.
+                && !key.StartsWith(FromClaudette.ClaudetteVariables.Prefix, StringComparison.OrdinalIgnoreCase)
                 && !ClaudeEnvironment.SessionVariables.Contains(key)
                 && !ShellBookkeeping.Contains(key))
             {

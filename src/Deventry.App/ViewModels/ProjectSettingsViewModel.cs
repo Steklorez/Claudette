@@ -7,7 +7,7 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its <b>Links</b> and <b>Actions</b>,
-/// from the folder's <c>claudette.json</c> and <c>claudette.local.json</c>, and its <b>Tools</b>, this machine's choices
+/// from the folder's <c>deventry.json</c> and <c>deventry.local.json</c>, and its <b>Tools</b>, this machine's choices
 /// for the project in <c>state.json</c>. Like the rest of Settings, each change is saved as it's made: a file is
 /// rewritten after each add, edit, removal or move, and every tab in the folder reads it again, so the project's menu
 /// follows. Dispose it with the window.
@@ -57,7 +57,7 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
     /// <summary>The small line at the top of each page: which tab the window follows.</summary>
     public string ForTabText => $"For the tab in {_tab.Folder}";
 
-    /// <summary>"Shared (claudette.json)" or "Just me (claudette.local.json)": where a link or action is.</summary>
+    /// <summary>"Shared (deventry.json)" or "Just me (deventry.local.json)": where a link or action is.</summary>
     public static string FileLabel(ProjectFileScope scope) =>
         scope == ProjectFileScope.Shared ? $"Shared ({ProjectFile.SharedName})" : $"Just me ({ProjectFile.LocalName})";
 

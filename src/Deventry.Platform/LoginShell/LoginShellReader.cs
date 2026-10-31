@@ -35,7 +35,16 @@ public sealed class LoginShellReader : ILoginShell
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
     /// <summary>Set to 1 for the shell, so an rc file can skip slow or interactive setup, like VS Code's <c>VSCODE_RESOLVING_ENVIRONMENT</c>.</summary>
-    public const string ResolvingVariable = "CLAUDETTE_RESOLVING_ENVIRONMENT";
+    public const string ResolvingVariable = "DEVENTRY_RESOLVING_ENVIRONMENT";
+
+    /// <summary>What the shell is given on top of Deventry's own environment.</summary>
+    internal static Dictionary<string, string?> ResolvingEnvironment()
+    {
+        var environment = new Dictionary<string, string?> { [ResolvingVariable] = "1" };
+        // FromClaudette: CLAUDETTE_RESOLVING_ENVIRONMENT too, which people's rc files may check.
+        Core.FromClaudette.ClaudetteVariables.AddTo(environment, ResolvingVariable);
+        return environment;
+    }
 
     private readonly IProcessLauncher _launcher;
     private readonly TimeProvider _time;
@@ -61,7 +70,7 @@ public sealed class LoginShellReader : ILoginShell
     public LoginShellOutcome? NotNeeded { get; }
 
     /// <summary>Makes each run's marker. Tests fix it.</summary>
-    internal Func<string> NewMarker { get; init; } = () => $"_CLAUDETTE_ENV_{Guid.NewGuid():N}_";
+    internal Func<string> NewMarker { get; init; } = () => $"_DEVENTRY_ENV_{Guid.NewGuid():N}_";
 
     /// <summary>
     /// Why this run doesn't need the login shell, or null when it does.
@@ -114,7 +123,7 @@ public sealed class LoginShellReader : ILoginShell
         var spec = new ProcessStartSpec(Shell, arguments)
         {
             // Claudette's own environment, without the variables of a Claude Code session it may have been started from.
-            Environment = ClaudeEnvironment.From(_host.Environment, new Dictionary<string, string?> { [ResolvingVariable] = "1" }),
+            Environment = ClaudeEnvironment.From(_host.Environment, ResolvingEnvironment()),
             WorkingDirectory = _host.HomeDirectory is { Length: > 0 } home && Directory.Exists(home) ? home : null,
         };
         var started = _time.GetTimestamp();

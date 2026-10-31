@@ -156,10 +156,10 @@ public class MascotTabTests
         await using var h = new TabTestHarness();
         Assert.Equal(3, h.Services.Mascot.PixelsPerCell);
 
-        h.Services.Settings.Appearance.ClaudetteSize = ClaudetteSize.Large;
+        h.Services.Settings.Appearance.JouleneSize = JouleneSize.Large;
         h.Services.SaveSettings();
         Assert.Equal(4, h.Services.Mascot.PixelsPerCell);
-        h.Services.Settings.Appearance.ClaudetteSize = ClaudetteSize.Small;
+        h.Services.Settings.Appearance.JouleneSize = JouleneSize.Small;
         h.Services.SaveSettings();
         Assert.Equal(2, h.Services.Mascot.PixelsPerCell);
     }

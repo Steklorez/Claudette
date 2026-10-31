@@ -3,7 +3,7 @@
 //   dotnet run --project tools/Deventry.Fixtures -- <protocol.log> <fixture.jsonl> [--root <folder>]...
 //
 // A protocol log comes from Settings → Advanced → Log protocol traffic (in <data folder>/logs/protocol), or from the
-// recording tests (CLAUDETTE_RECORD_FIXTURES). Each --root is a folder to hide, such as the project the session ran
+// recording tests (DEVENTRY_RECORD_FIXTURES). Each --root is a folder to hide, such as the project the session ran
 // in; the home folder is always hidden. Check the result before committing it: the scrubbing covers paths, emails,
 // account details and session ids, not what the prompts or files themselves said.
 using Deventry.Fixtures;

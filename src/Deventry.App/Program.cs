@@ -34,6 +34,9 @@ internal sealed class Program
         }
         // Before anything hands the arguments on, to a running Claudette or a copy of this build.
         args = LaunchArguments.WithFullPaths(args, Environment.CurrentDirectory);
+        // FromClaudette: Claudette's folders and settings become Deventry's, before anything reads them (DESIGN.md §2,
+        // "Renaming to Deventry").
+        Core.FromClaudette.ClaudetteCarryOver.Run();
         var paths = AppPaths.ForCurrentUser();
         // The MSIX's startup task starts it without arguments: mark it as started at login, as the other entries do.
         if (LoginItemPlatforms.StartedByPackageTask())

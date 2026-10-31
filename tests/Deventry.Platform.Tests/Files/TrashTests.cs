@@ -10,7 +10,7 @@ namespace Deventry.Platform.Tests.Files;
 /// <summary>
 /// The OS's trash, for deleting from the Project Files tab's explorer (DESIGN.md §18, "Project files", "Renaming and
 /// deleting"). <c>gio</c> is faked; the Recycle Bin and the macOS Trash are used for real only with
-/// <c>CLAUDETTE_TEST_TRASH=1</c>, since what they're given lands in the user's own trash.
+/// <c>DEVENTRY_TEST_TRASH=1</c>, since what they're given lands in the user's own trash.
 /// </summary>
 public class TrashTests
 {
@@ -71,8 +71,8 @@ public class TrashTests
     [Fact]
     public async Task The_OSs_own_trash_takes_a_file_and_a_folder()
     {
-        Assert.SkipUnless((OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()) && Environment.GetEnvironmentVariable("CLAUDETTE_TEST_TRASH") == "1",
-            "Windows or macOS with CLAUDETTE_TEST_TRASH=1 only: it puts two small things in your trash.");
+        Assert.SkipUnless((OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()) && Environment.GetEnvironmentVariable("DEVENTRY_TEST_TRASH") == "1",
+            "Windows or macOS with DEVENTRY_TEST_TRASH=1 only: it puts two small things in your trash.");
         var folder = Directory.CreateTempSubdirectory("claudette-trash-").FullName;
         try
         {

@@ -194,7 +194,7 @@ public class ProjectSettingsTests
         var project = settings.Project!;
 
         Assert.Equal(["Board", "https://mine.example"], project.Links.Select(r => r.Name));
-        Assert.Equal(["Shared (claudette.json)", "Just me (claudette.local.json)"], project.Links.Select(r => r.FileText));
+        Assert.Equal(["Shared (deventry.json)", "Just me (deventry.local.json)"], project.Links.Select(r => r.FileText));
         Assert.All(project.Links, r => Assert.False(r.HasWarning));
 
         // Add: the dialog asks which file, just the user's by default.
@@ -230,7 +230,7 @@ public class ProjectSettingsTests
         project.EditLinkCommand.Execute(null);
         editor = Assert.IsType<ProjectLinkEditorViewModel>(project.Editor);
         Assert.Equal(("Edit link", false, "Board", "https://example.com/board"), (editor.Title, editor.AsksForFile, editor.Name, editor.Url));
-        Assert.Equal("In claudette.json", editor.FileText);
+        Assert.Equal("In deventry.json", editor.FileText);
         editor.Name = "Sprint board";
         editor.Url = "https://example.com/sprint";
         editor.SaveCommand.Execute(null);
@@ -322,7 +322,7 @@ public class ProjectSettingsTests
         var project = settings.Project!;
 
         var error = Assert.Single(project.LinkFileErrors);
-        Assert.StartsWith("claudette.json isn't valid JSON (", error, StringComparison.Ordinal);
+        Assert.StartsWith("deventry.json isn't valid JSON (", error, StringComparison.Ordinal);
         Assert.EndsWith("so Claudette won't rewrite it. Fix it by hand first.", error, StringComparison.Ordinal);
 
         // The dialog refuses that file, with the reason, and takes the other.
@@ -348,7 +348,7 @@ public class ProjectSettingsTests
         editor = Assert.IsType<ProjectLinkEditorViewModel>(project.Editor);
         editor.Url = "https://example.com";
         editor.SaveCommand.Execute(null);
-        Assert.StartsWith("claudette.local.json isn't valid JSON (", project.LinksError, StringComparison.Ordinal);
+        Assert.StartsWith("deventry.local.json isn't valid JSON (", project.LinksError, StringComparison.Ordinal);
         Assert.Empty(project.Links);
         Assert.Equal(2, project.LinkFileErrors.Count);
 

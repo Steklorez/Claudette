@@ -35,15 +35,15 @@ public partial class AppearancePreview : UserControl
         if (_page is not null)
         {
             _page.PropertyChanged += OnPageChanged;
-            Size(_page.ClaudetteCell);
+            Size(_page.JouleneCell);
         }
     }
 
     private void OnPageChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (_page is not null && e.PropertyName is nameof(AppearancePage.ClaudetteCell) or "" or null)
+        if (_page is not null && e.PropertyName is nameof(AppearancePage.JouleneCell) or "" or null)
         {
-            Size(_page.ClaudetteCell);
+            Size(_page.JouleneCell);
         }
     }
 

@@ -6,21 +6,22 @@ using Deventry.Core.Processes;
 namespace Deventry.Platform.LoginItems.Linux;
 
 /// <summary>
-/// Starting Claudette at login on Linux (DESIGN.md §9, "Starting at login"): <c>claudette.desktop</c> in the XDG
+/// Starting Claudette at login on Linux (DESIGN.md §9, "Starting at login"): <c>deventry.desktop</c> in the XDG
 /// autostart folder, which desktops that follow the Desktop Application Autostart spec run at login. Only file work, so
 /// it's tested on every OS.
 /// </summary>
 /// <param name="dotnet">The .NET a build is started with when its program wouldn't find it: the one Claudette runs on, by default.</param>
-public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string autostartDirectory, LoginDotnet? dotnet = null) : ILoginItems
+/// <param name="fileName">The file's name: <c>claudette.desktop</c> for Claudette's.</param>
+public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string autostartDirectory, LoginDotnet? dotnet = null, string fileName = XdgAutostartLoginItems.DefaultFileName) : ILoginItems
 {
-    public const string FileName = "claudette.desktop";
+    public const string DefaultFileName = "deventry.desktop";
 
     /// <summary>What the Desktop Entry spec says needs quoting in an <c>Exec</c> argument.</summary>
     private const string Reserved = " \t\n\"'\\><~|&;$*?#()`";
 
     private readonly LoginDotnet _dotnet = dotnet ?? LoginDotnet.Current();
 
-    public string FilePath => Path.Combine(autostartDirectory, FileName);
+    public string FilePath => Path.Combine(autostartDirectory, fileName);
 
     public string? UnavailableReason => null;
 

@@ -59,7 +59,7 @@ A new worktree is a fresh checkout: no installed packages, and none of the files
 
 - **When.** Once Claude Code has made the worktree for a [worktree tab](../tabs/worktree-tabs.md), not when a tab opens a worktree that was already there.
 - **Which.** Those in `claudette.local.json` always run. Those in `claudette.json` run only while the main checkout is trusted. Otherwise a note names them and says they can be run from the project's menu.
-- **How.** They run in the new worktree, with the variables `CLAUDETTE_WORKTREE` and `CLAUDETTE_MAIN_CHECKOUT` in their environment, so a command can copy a file from the main checkout: `copy "%CLAUDETTE_MAIN_CHECKOUT%\.env" .env` on Windows, `cp "$CLAUDETTE_MAIN_CHECKOUT/.env" .` elsewhere. A note says *"Setting up the new worktree: Install packages, Copy .env."* Launch actions start at once. Output actions run as jobs, one after another, each only once the one before it succeeded.
+- **How.** They run in the new worktree, with the variables `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT` in their environment, so a command can copy a file from the main checkout: `copy "%DEVENTRY_MAIN_CHECKOUT%\.env" .env` on Windows, `cp "$DEVENTRY_MAIN_CHECKOUT/.env" .` elsewhere. A note says *"Setting up the new worktree: Install packages, Copy .env."* Launch actions start at once. Output actions run as jobs, one after another, each only once the one before it succeeded.
 
 They stay in the project's menu, to run again by hand.
 

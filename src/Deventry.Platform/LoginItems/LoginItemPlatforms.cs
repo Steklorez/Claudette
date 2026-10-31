@@ -20,7 +20,9 @@ public static class LoginItemPlatforms
     {
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 16299))
         {
-            return new WindowsLoginItems(launcher, timeProvider);
+            // FromClaudette: with the Run value Claudette wrote under its own name.
+            return FromClaudette.ClaudetteLoginItems.CarriedOver(new WindowsLoginItems(launcher, timeProvider),
+                new WindowsLoginItems(launcher, timeProvider, valueName: FromClaudette.ClaudetteLoginItems.WindowsValueName));
         }
         if (OperatingSystem.IsMacOS())
         {
@@ -28,7 +30,9 @@ public static class LoginItemPlatforms
         }
         if (OperatingSystem.IsLinux())
         {
-            return new XdgAutostartLoginItems(launcher, XdgAutostartLoginItems.DefaultDirectory());
+            // FromClaudette: with the autostart file Claudette wrote under its own name.
+            return FromClaudette.ClaudetteLoginItems.CarriedOver(new XdgAutostartLoginItems(launcher, XdgAutostartLoginItems.DefaultDirectory()),
+                new XdgAutostartLoginItems(launcher, XdgAutostartLoginItems.DefaultDirectory(), fileName: FromClaudette.ClaudetteLoginItems.LinuxFileName));
         }
         return new NoLoginItems("Claudette can't start at login on this OS.");
     }

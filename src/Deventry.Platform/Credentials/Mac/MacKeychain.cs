@@ -6,13 +6,16 @@ using Deventry.Core.Credentials;
 namespace Deventry.Platform.Credentials.Mac;
 
 /// <summary>
-/// The macOS Keychain: generic passwords with service <c>Claudette</c> and the key as the account, through
+/// The macOS Keychain: generic passwords with service <c>Deventry</c> and the key as the account, through
 /// Security.framework's <c>SecItem</c> calls (the current API, not the deprecated <c>SecKeychain</c> one).
 /// </summary>
+/// <param name="service">The items' service: <c>Claudette</c> for Claudette's.</param>
 [SupportedOSPlatform("macos")]
-public sealed class MacKeychain : ICredentialStore
+public sealed class MacKeychain(string service = MacKeychain.DefaultService) : ICredentialStore
 {
-    public const string Service = "Claudette";
+    public const string DefaultService = "Deventry";
+
+    public string Service => service;
 
     public string Name => "the macOS Keychain";
 
@@ -30,7 +33,7 @@ public sealed class MacKeychain : ICredentialStore
 
     public Task<bool> DeleteAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(Delete(key));
 
-    private static unsafe string? Read(string key)
+    private unsafe string? Read(string key)
     {
         using var query = CF.Dictionary(
             (Security.Class, Security.ClassGenericPassword),
@@ -59,7 +62,7 @@ public sealed class MacKeychain : ICredentialStore
     /// Updates the item in place, and adds it only when there's none: deleting first and then adding would lose the
     /// stored password if the add failed (the Keychain locking in between, say).
     /// </summary>
-    private static unsafe void Write(string key, string label, string secret)
+    private unsafe void Write(string key, string label, string secret)
     {
         var bytes = Encoding.UTF8.GetBytes(secret);
         try
@@ -91,7 +94,7 @@ public sealed class MacKeychain : ICredentialStore
         }
     }
 
-    private static bool Delete(string key)
+    private bool Delete(string key)
     {
         using var query = CF.Dictionary(
             (Security.Class, Security.ClassGenericPassword),

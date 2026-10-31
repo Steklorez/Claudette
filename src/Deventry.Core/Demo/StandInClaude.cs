@@ -14,7 +14,7 @@ namespace Deventry.Core.Demo;
 public sealed class StandInClaude
 {
     /// <summary>In the environment of the demo's <c>claude</c>: Claudette, started so, stands in for it.</summary>
-    public const string Variable = "CLAUDETTE_STAND_IN_CLAUDE";
+    public const string Variable = "DEVENTRY_STAND_IN_CLAUDE";
 
     /// <summary>The demo's plan usage, a <c>get_usage</c> answer, in <c>CLAUDE_CONFIG_DIR</c>.</summary>
     public const string UsageFile = "demo-usage.json";

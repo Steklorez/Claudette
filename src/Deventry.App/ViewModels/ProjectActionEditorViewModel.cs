@@ -36,7 +36,7 @@ public sealed partial class ProjectActionEditorViewModel : ViewModelBase
     /// <summary>Asks which file the action goes in; from Tab settings… the file is already chosen.</summary>
     public bool AsksForFile { get; init; }
 
-    /// <summary>In <c>claudette.json</c>, shared with the project, rather than <c>claudette.local.json</c>.</summary>
+    /// <summary>In <c>deventry.json</c>, shared with the project, rather than <c>deventry.local.json</c>.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SaveToLocal), nameof(FileNote))]
     public partial bool SaveToShared { get; set; }
@@ -53,7 +53,7 @@ public sealed partial class ProjectActionEditorViewModel : ViewModelBase
 
     /// <summary>Saving rewrites the file, which drops its comments.</summary>
     public string FileNote => AsksForFile
-        ? $"Saving rewrites {ProjectFile.FileName(SaveToShared ? ProjectFileScope.Shared : ProjectFileScope.Local)} in {Folder}, so comments in it are dropped."
+        ? $"Saving rewrites {ProjectFile.FileName(Folder, SaveToShared ? ProjectFileScope.Shared : ProjectFileScope.Local)} in {Folder}, so comments in it are dropped."
         : "";
 
     /// <summary>The tab's folder, which the working folder is relative to.</summary>

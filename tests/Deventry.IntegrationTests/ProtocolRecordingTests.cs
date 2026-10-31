@@ -13,7 +13,7 @@ namespace Deventry.IntegrationTests;
 /// <summary>
 /// The protocol scenarios DESIGN.md §15 lists, run against the real <c>claude</c> and the mock Messages API: a denied
 /// permission, an interrupt, <c>/clear</c>, compaction, API retries, a subagent's edits and Claude moving into a
-/// worktree. Each checks what Claudette sees, and with <c>CLAUDETTE_RECORD_FIXTURES=&lt;folder&gt;</c> set also
+/// worktree. Each checks what Claudette sees, and with <c>DEVENTRY_RECORD_FIXTURES=&lt;folder&gt;</c> set also
 /// writes the traffic there as a cleaned protocol fixture
 /// ("record mode"), to check in under <c>tests/Deventry.Core.Tests/Fixtures/protocol/&lt;version&gt;/</c>.
 /// </summary>
@@ -49,7 +49,7 @@ public sealed class ProtocolRecordingTests : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         await _api.DisposeAsync();
-        if (Environment.GetEnvironmentVariable("CLAUDETTE_RECORD_FIXTURES") is { Length: > 0 } folder && _fixtureName is not null && File.Exists(LogPath))
+        if (Environment.GetEnvironmentVariable("DEVENTRY_RECORD_FIXTURES") is { Length: > 0 } folder && _fixtureName is not null && File.Exists(LogPath))
         {
             var lines = new ProtocolFixtureWriter([_root.Path]).FromProtocolLog(await File.ReadAllLinesAsync(LogPath));
             var target = Path.Combine(folder, _version ?? "unknown", $"{_fixtureName}.jsonl");

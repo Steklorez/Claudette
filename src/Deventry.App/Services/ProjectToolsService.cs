@@ -66,7 +66,7 @@ public sealed class ProjectToolsService(AppServices services, ISystemProcesses? 
         return Task.Run(() => Detector.Detect(folder, context, chosen));
     }
 
-    /// <summary>The folder's <c>claudette.json</c> and <c>claudette.local.json</c>, off the UI thread.</summary>
+    /// <summary>The folder's <c>deventry.json</c> and <c>deventry.local.json</c>, off the UI thread.</summary>
     public Task<ProjectFileContents> ReadProjectFileAsync(string folder)
     {
         var os = OS;

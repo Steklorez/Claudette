@@ -95,7 +95,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     /// <summary>
     /// The Project tool window shows, and the project's menu <b>Show output…</b>: a detected project, custom
-    /// actions, or a claudette.json whose entries were skipped (the menu says why). The sidebar's project row shows
+    /// actions, or a deventry.json whose entries were skipped (the menu says why). The sidebar's project row shows
     /// either way.
     /// </summary>
     public bool HasTools => Project is not null || _customActions.Count > 0 || _projectFile.Problems.Count > 0;
@@ -131,7 +131,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     public bool HasProblem => Problem is not null;
 
-    /// <summary>Entries of <c>claudette.json</c> or <c>claudette.local.json</c> that were skipped, and why.</summary>
+    /// <summary>Entries of <c>deventry.json</c> or <c>deventry.local.json</c> that were skipped, and why.</summary>
     public IReadOnlyList<string> FileProblems => _projectFile.Problems;
 
     public bool HasFileProblems => _projectFile.Problems.Count > 0;
@@ -178,7 +178,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     // ---- Detection ----------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Finds the tab folder's project again, and reads its <c>claudette.json</c> and <c>claudette.local.json</c>, off
+    /// Finds the tab folder's project again, and reads its <c>deventry.json</c> and <c>deventry.local.json</c>, off
     /// the UI thread.
     /// </summary>
     public async Task RefreshAsync()
@@ -406,7 +406,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     /// <summary>
     /// A worktree tab's worktree has just been made: runs the actions marked <c>runOnNewWorktree</c>, one after another
     /// in order, each only once the one before succeeded. They're read from the main checkout's files, where
-    /// <c>claudette.local.json</c> is (git ignores it, so the worktree has none), and run in the worktree, told both
+    /// <c>deventry.local.json</c> is (git ignores it, so the worktree has none), and run in the worktree, told both
     /// folders. The shared file's run only when the folder is trusted, as Claude Code runs a folder's hooks.
     /// </summary>
     /// <param name="trusted">The main checkout is trusted, and the tab uses its own configuration (DESIGN.md §7, "Folder trust").</param>
@@ -437,6 +437,8 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             [CustomProjectAction.WorktreeVariable] = worktree,
             [CustomProjectAction.MainCheckoutVariable] = mainCheckout,
         };
+        // FromClaudette: under Claudette's names too, for scripts written for it.
+        Core.FromClaudette.ClaudetteVariables.AddTo(environment, CustomProjectAction.WorktreeVariable, CustomProjectAction.MainCheckoutVariable);
         var actions = setups.Except(skipped)
             .Select(a => _services.ProjectTools.CustomActions(new ProjectFileContents([a], [], []), worktree)[0].Action with { ExtraEnvironment = environment })
             .Where(a => a.IsEnabled)
@@ -484,7 +486,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             _host.AddNote($"{action.Label}: {action.DisabledReason}", NoteKind.Warning);
             return;
         }
-        // Shared actions from claudette.json run on a click like any other, without asking first: the user's choice
+        // Shared actions from deventry.json run on a click like any other, without asking first: the user's choice
         // (DESIGN.md §18, "Custom actions"). Hovering one shows its whole command.
         switch (action.Kind)
         {

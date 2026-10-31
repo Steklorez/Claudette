@@ -347,7 +347,7 @@ public class GameServiceTests
         tab.PlayGame(GameKind.Hangman);
         Assert.Contains(h.Shell.PaletteEntries(), e => e.Label == "Play hangman with Claudette");
 
-        h.Services.Settings.Appearance.GamesWithClaudette = false;
+        h.Services.Settings.Appearance.GamesWithJoulene = false;
         h.Services.SaveSettings();
 
         Assert.False(h.Services.Games.IsOpen);
@@ -404,7 +404,7 @@ public class GameServiceTests
         Assert.DoesNotContain("Right-click me for a game while you wait", Tips(0));
         mascot.Follow(new Mascot.MascotSituation { Mood = Mascot.MascotMood.Working });
         Assert.Contains("Right-click me for a game while you wait", Tips(0));
-        h.Services.Settings.Appearance.GamesWithClaudette = false;
+        h.Services.Settings.Appearance.GamesWithJoulene = false;
         Assert.DoesNotContain("Right-click me for a game while you wait", Tips(0));
     }
 

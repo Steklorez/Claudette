@@ -58,24 +58,24 @@
 
     <!-- Claudette on the composer (DESIGN.md §5) and her games (DESIGN.md §18): she plays whether or not she's shown -->
     <c:SettingsSection Key="claudette">
-      <c:SettingRow Key="appearance.showClaudette">
-        <ToggleSwitch IsChecked="{Binding ShowClaudette}" />
+      <c:SettingRow Key="appearance.showJoulene">
+        <ToggleSwitch IsChecked="{Binding ShowJoulene}" />
         <c:SettingRow.Details>
-          <StackPanel IsEnabled="{Binding ShowClaudette}">
-            <c:SettingRow Key="appearance.claudetteSize">
-              <ComboBox ItemsSource="{Binding ClaudetteSizes}" SelectedItem="{Binding ClaudetteSize}" />
+          <StackPanel IsEnabled="{Binding ShowJoulene}">
+            <c:SettingRow Key="appearance.jouleneSize">
+              <ComboBox ItemsSource="{Binding JouleneSizes}" SelectedItem="{Binding JouleneSize}" />
             </c:SettingRow>
-            <c:SettingRow Key="appearance.claudetteLiveliness">
-              <ComboBox ItemsSource="{Binding ClaudetteLivelinesses}" SelectedItem="{Binding ClaudetteLiveliness}" />
+            <c:SettingRow Key="appearance.jouleneLiveliness">
+              <ComboBox ItemsSource="{Binding JouleneLivelinesses}" SelectedItem="{Binding JouleneLiveliness}" />
             </c:SettingRow>
-            <c:SettingRow Key="appearance.claudetteTips">
-              <ToggleSwitch IsChecked="{Binding ClaudetteTips}" />
+            <c:SettingRow Key="appearance.jouleneTips">
+              <ToggleSwitch IsChecked="{Binding JouleneTips}" />
             </c:SettingRow>
           </StackPanel>
         </c:SettingRow.Details>
       </c:SettingRow>
-      <c:SettingRow Key="appearance.gamesWithClaudette">
-        <ToggleSwitch IsChecked="{Binding GamesWithClaudette}" />
+      <c:SettingRow Key="appearance.gamesWithJoulene">
+        <ToggleSwitch IsChecked="{Binding GamesWithJoulene}" />
       </c:SettingRow>
     </c:SettingsSection>
   </StackPanel>

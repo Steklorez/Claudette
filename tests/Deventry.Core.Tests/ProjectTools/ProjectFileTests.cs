@@ -4,7 +4,7 @@ using Deventry.Core.Tests.Support;
 
 namespace Deventry.Core.Tests.ProjectTools;
 
-/// <summary><c>claudette.json</c> and <c>claudette.local.json</c>: reading, merging, editing and links (DESIGN.md §18).</summary>
+/// <summary><c>deventry.json</c> and <c>deventry.local.json</c>: reading, merging, editing and links (DESIGN.md §18).</summary>
 public sealed class ProjectFileTests : IDisposable
 {
     private readonly TempFolder _temp = new("claudette-projectfile");
@@ -43,11 +43,11 @@ public sealed class ProjectFileTests : IDisposable
         Assert.Equal("shared:2", contents.Actions[1].Id);
         Assert.Equal(
         [
-            "claudette.json: actions[3] has no name, so it was skipped.",
-            "claudette.json: actions[4] (\"No command\") has no command, so it was skipped.",
-            "claudette.json: actions[5] (\"Odd mode\") has mode \"background\", which isn't \"output\" or \"launch\", so it was skipped.",
-            "claudette.json: actions[6] isn't an object, so it was skipped.",
-            "claudette.json: links[2] has no url, so it was skipped.",
+            "deventry.json: actions[3] has no name, so it was skipped.",
+            "deventry.json: actions[4] (\"No command\") has no command, so it was skipped.",
+            "deventry.json: actions[5] (\"Odd mode\") has mode \"background\", which isn't \"output\" or \"launch\", so it was skipped.",
+            "deventry.json: actions[6] isn't an object, so it was skipped.",
+            "deventry.json: links[2] has no url, so it was skipped.",
         ], contents.Problems);
         Assert.Equal(["Board", "https://github.com/org/repo/compare/{branch}?expand=1"], contents.Links.Select(l => l.Name));
     }
@@ -70,8 +70,8 @@ public sealed class ProjectFileTests : IDisposable
         var folder = _temp.CreateFolder("game");
         Assert.True(ProjectFile.Read(folder, ToolOS.Linux).IsEmpty);
 
-        _temp.Write("game/claudette.json", Shared);
-        _temp.Write("game/claudette.local.json", """
+        _temp.Write("game/deventry.json", Shared);
+        _temp.Write("game/deventry.local.json", """
             { "actions": [ { "name": "My build", "command": "make mine" } ], "links": [ { "name": "My board", "url": "https://mine.example" } ] }
             """);
 
@@ -87,7 +87,7 @@ public sealed class ProjectFileTests : IDisposable
     public void An_action_with_ifExists_is_shown_only_while_all_its_paths_exist()
     {
         var folder = _temp.CreateFolder("game");
-        _temp.Write("game/claudette.json", """
+        _temp.Write("game/deventry.json", """
             {
               "actions": [
                 { "name": "Play", "command": "Build/Game", "ifExists": "Build/Game" },
@@ -100,7 +100,7 @@ public sealed class ProjectFileTests : IDisposable
 
         var before = ProjectFile.Read(folder, ToolOS.Linux);
         Assert.Equal(["Always"], before.Actions.Select(a => a.Name));
-        Assert.Equal(["claudette.json: actions[3] (\"Odd\"): \"ifExists\" should be a path or a list of paths, such as \"Build/Game.exe\", so it was skipped."], before.Problems);
+        Assert.Equal(["deventry.json: actions[3] (\"Odd\"): \"ifExists\" should be a path or a list of paths, such as \"Build/Game.exe\", so it was skipped."], before.Problems);
 
         _temp.Write("game/Build/Game", "");
         Assert.Equal(["Play", "Always"], ProjectFile.Read(folder, ToolOS.Linux).Actions.Select(a => a.Name));
@@ -118,13 +118,13 @@ public sealed class ProjectFileTests : IDisposable
     public void A_file_that_isnt_JSON_is_skipped_with_a_reason_and_the_other_still_counts()
     {
         var folder = _temp.CreateFolder("game");
-        _temp.Write("game/claudette.json", "{ \"actions\": [ oops");
-        _temp.Write("game/claudette.local.json", """{ "actions": [ { "name": "Mine", "command": "make" } ] }""");
+        _temp.Write("game/deventry.json", "{ \"actions\": [ oops");
+        _temp.Write("game/deventry.local.json", """{ "actions": [ { "name": "Mine", "command": "make" } ] }""");
 
         var contents = ProjectFile.Read(folder, ToolOS.Linux);
 
         Assert.Equal(["Mine"], contents.Actions.Select(a => a.Name));
-        Assert.StartsWith("claudette.json isn't valid JSON, so it was skipped:", Assert.Single(contents.Problems), StringComparison.Ordinal);
+        Assert.StartsWith("deventry.json isn't valid JSON, so it was skipped:", Assert.Single(contents.Problems), StringComparison.Ordinal);
         Assert.Single(ProjectFile.Parse("[1, 2]", ProjectFileScope.Local, ToolOS.Linux).Problems);
         Assert.Single(ProjectFile.Parse("""{ "actions": { "name": "x" } }""", ProjectFileScope.Local, ToolOS.Linux).Problems);
         Assert.True(ProjectFile.Parse("", ProjectFileScope.Local, ToolOS.Linux).IsEmpty);
@@ -136,7 +136,7 @@ public sealed class ProjectFileTests : IDisposable
     public void Saving_actions_keeps_the_other_keys_and_each_entrys_own_fields()
     {
         var folder = _temp.CreateFolder("game");
-        var path = _temp.Write("game/claudette.json", Shared);
+        var path = _temp.Write("game/deventry.json", Shared);
         var entries = ProjectFile.ReadEntries(folder, ProjectFileScope.Shared, ToolOS.MacOS);
         Assert.Equal(7, entries.Count);
         Assert.False(entries[1].ForThisOS);
@@ -190,7 +190,7 @@ public sealed class ProjectFileTests : IDisposable
         ProjectFile.WriteActions(folder, ProjectFileScope.Local, [ProjectFile.ToJson(new CustomProjectAction { Name = "Mine", Command = "make", WorkingFolder = "src" })]);
         Assert.Equal(("Mine", "src"), (ProjectFile.Read(folder, ToolOS.Linux).Actions.Single().Name, ProjectFile.Read(folder, ToolOS.Linux).Actions.Single().WorkingFolder));
 
-        var broken = _temp.Write("game/claudette.json", "{ broken");
+        var broken = _temp.Write("game/deventry.json", "{ broken");
         Assert.Throws<InvalidOperationException>(() => ProjectFile.WriteActions(folder, ProjectFileScope.Shared, []));
         Assert.Throws<InvalidOperationException>(() => ProjectFile.ReadEntries(folder, ProjectFileScope.Shared, ToolOS.Linux));
         Assert.Equal("{ broken", File.ReadAllText(broken));
@@ -200,7 +200,7 @@ public sealed class ProjectFileTests : IDisposable
     public void Saving_links_rewrites_only_links_and_keeps_the_actions_and_each_entrys_own_fields()
     {
         var folder = _temp.CreateFolder("game");
-        var path = _temp.Write("game/claudette.json", Shared);
+        var path = _temp.Write("game/deventry.json", Shared);
         var entries = ProjectFile.ReadLinkEntries(folder, ProjectFileScope.Shared);
         Assert.Equal(["Board", "https://github.com/org/repo/compare/{branch}?expand=1", null], entries.Select(e => e.Link?.Name));
         Assert.Equal(("Board", ""), (entries[0].GivenName, entries[1].GivenName));
@@ -235,9 +235,9 @@ public sealed class ProjectFileTests : IDisposable
         Assert.Equal(("mailto:team@example.com", ProjectFileScope.Local), (ProjectFile.Read(folder, ToolOS.Linux).Links.Single().Name, ProjectFile.Read(folder, ToolOS.Linux).Links.Single().Scope));
         Assert.Empty(ProjectFile.ReadLinkEntries(folder, ProjectFileScope.Shared));
 
-        var broken = _temp.Write("game/claudette.json", "{ broken");
+        var broken = _temp.Write("game/deventry.json", "{ broken");
         var refused = Assert.Throws<InvalidOperationException>(() => ProjectFile.WriteLinks(folder, ProjectFileScope.Shared, []));
-        Assert.StartsWith("claudette.json isn't valid JSON (", refused.Message, StringComparison.Ordinal);
+        Assert.StartsWith("deventry.json isn't valid JSON (", refused.Message, StringComparison.Ordinal);
         Assert.Throws<InvalidOperationException>(() => ProjectFile.ReadLinkEntries(folder, ProjectFileScope.Shared));
         Assert.Equal("{ broken", File.ReadAllText(broken));
     }

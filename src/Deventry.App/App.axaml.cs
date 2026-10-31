@@ -139,7 +139,11 @@ public partial class App : Application
             var started = _mainViewModel.StartAsync();
             if (restored is not null)
             {
-                _ = SignalRestartedAsync(started, opened.Task, LaunchArguments.ReadyFile(args) ?? _services.Paths.RestartReadyFile, _services.Paths, restored.Nonce);
+                var readyFile = LaunchArguments.ReadyFile(args);
+                // FromClaudette: a Claudette before 0.7.0 that updated to this one waits in its own data folder.
+                var claudettes = Core.FromClaudette.ClaudetteReadyFile.AlsoFor(restored.Update is not null, readyFile);
+                _ = SignalRestartedAsync(started, opened.Task, [readyFile ?? _services.Paths.RestartReadyFile, .. claudettes is null ? [] : new[] { claudettes }],
+                    _services.Paths, restored.Nonce);
             }
             // An installed Claudette notes itself for source builds, and takes over an entry one left for it.
             _ = _services.StartAtLogin.RefreshAtLaunchAsync();
@@ -149,7 +153,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// The screenshot scripts' commands, with <c>CLAUDETTE_AUTOMATION_PIPE</c> set (DESIGN.md §9, "Taking screenshots
+    /// The screenshot scripts' commands, with <c>DEVENTRY_AUTOMATION_PIPE</c> set (DESIGN.md §9, "Taking screenshots
     /// without the focus"): carried out on the UI thread, before the main window shows, so the first is answered.
     /// </summary>
     private void UseAutomation(IClassicDesktopStyleApplicationLifetime desktop, ILoggerFactory loggers)
@@ -238,11 +242,14 @@ public partial class App : Application
     /// back, so the snapshot is only deleted now.
     /// </summary>
     /// <param name="ready">Where to say so: <c>--ready-file</c>'s path after an update, the data folder's otherwise.</param>
-    private static async Task SignalRestartedAsync(Task started, Task opened, string ready, AppPaths paths, string nonce)
+    private static async Task SignalRestartedAsync(Task started, Task opened, IReadOnlyList<string> ready, AppPaths paths, string nonce)
     {
         await Task.WhenAll(started, opened);
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
-        RestartHandshake.SignalReady(ready, nonce);
+        foreach (var path in ready)
+        {
+            RestartHandshake.SignalReady(path, nonce);
+        }
         RestartSnapshot.Delete(paths.RestartFile);
     }
 

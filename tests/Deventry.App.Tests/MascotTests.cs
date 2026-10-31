@@ -312,14 +312,14 @@ public class MascotTests
     public async Task She_is_on_by_default_her_menu_takes_her_away_and_the_setting_brings_her_back()
     {
         await using var h = new TabTestHarness();
-        Assert.True(h.Services.Settings.Appearance.ShowClaudette);
+        Assert.True(h.Services.Settings.Appearance.ShowJoulene);
         Assert.NotNull(h.Services.Mascot.Director);
 
         h.Services.Mascot.HideCommand.Execute(null);
-        Assert.False(h.Services.Settings.Appearance.ShowClaudette);
+        Assert.False(h.Services.Settings.Appearance.ShowJoulene);
         Assert.Null(h.Services.Mascot.Director);
 
-        h.Services.Settings.Appearance.ShowClaudette = true;
+        h.Services.Settings.Appearance.ShowJoulene = true;
         h.Services.SaveSettings();
         Assert.NotNull(h.Services.Mascot.Director);
     }

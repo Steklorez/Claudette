@@ -32,7 +32,7 @@ public sealed record DemoWritten(AppPaths Paths, string ClaudeConfig, IReadOnlyL
 
 /// <summary>
 /// A demo's folder, but for its usage history, which <c>Deventry.Usage</c>'s <c>DemoUsage</c> writes: Claudette's settings
-/// and state under <c>home</c> (as <c>CLAUDETTE_HOME</c>), the tabs' and History's transcripts under <c>claude-config</c>
+/// and state under <c>home</c> (as <c>DEVENTRY_HOME</c>), the tabs' and History's transcripts under <c>claude-config</c>
 /// (as <c>CLAUDE_CONFIG_DIR</c>), and the projects. <c>tools/Deventry.Demo</c> writes it for the screenshots, with git
 /// repositories and <c>fake-claude</c>; the app's demo with empty folders and Claudette standing in for Claude Code
 /// (DESIGN.md §11, "Demo mode").

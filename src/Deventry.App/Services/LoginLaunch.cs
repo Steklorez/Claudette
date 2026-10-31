@@ -12,12 +12,13 @@ namespace Deventry.App.Services;
 public static class LoginLaunch
 {
     /// <summary>
-    /// The OS's login entry. A Claudette started with <c>CLAUDETTE_HOME</c> gets none: the entry would start Claudette
+    /// The OS's login entry. A Claudette started with <c>DEVENTRY_HOME</c> gets none: the entry would start Claudette
     /// without it, on the real profile.
     /// </summary>
     public static ILoginItems CreateItems(IProcessLauncher launcher, TimeProvider timeProvider) =>
-        Environment.GetEnvironmentVariable("CLAUDETTE_HOME") is { Length: > 0 }
-            ? new NoLoginItems("Not while CLAUDETTE_HOME is set: Claudette would start at login without it.")
+        // FromClaudette: CLAUDETTE_HOME too.
+        Core.FromClaudette.ClaudetteVariables.Get(AppPaths.HomeVariable) is not null
+            ? new NoLoginItems("Not while DEVENTRY_HOME is set: Claudette would start at login without it.")
             : LoginItemPlatforms.CreateForCurrentOS(launcher, timeProvider);
 
     /// <summary>This copy of Claudette: a source build by its build output, anything else as it's installed.</summary>

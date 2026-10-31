@@ -20,7 +20,7 @@ On Linux, `XDG_CONFIG_HOME` and `XDG_DATA_HOME` move them. The Windows package k
 
 Settings → Advanced → **Open data folder** shows the data folder in your file manager.
 
-To keep a copy of Claudette's files somewhere else, such as for trying things out, start it with the `CLAUDETTE_HOME` environment variable set to a folder. Claudette then keeps everything under that folder, in `settings` and `data`, and leaves your real files alone. A copy started that way leaves your login entry alone too ([Starting at login](../away/starting-at-login.md)).
+To keep a copy of Claudette's files somewhere else, such as for trying things out, start it with the `DEVENTRY_HOME` environment variable set to a folder. Claudette then keeps everything under that folder, in `settings` and `data`, and leaves your real files alone. A copy started that way leaves your login entry alone too ([Starting at login](../away/starting-at-login.md)).
 
 ## What's in them
 

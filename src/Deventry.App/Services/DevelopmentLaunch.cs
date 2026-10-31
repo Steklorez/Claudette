@@ -16,7 +16,7 @@ public static class DevelopmentLaunch
     public const string AssemblyName = "Deventry";
 
     /// <summary>Set to <c>1</c> to run a source build where it is, for example to profile it. A debugger has the same effect.</summary>
-    public const string RunInPlaceVariable = "CLAUDETTE_RUN_IN_PLACE";
+    public const string RunInPlaceVariable = "DEVENTRY_RUN_IN_PLACE";
 
     /// <summary>
     /// For a source build started from its build output: copies the build, starts the copy with the same arguments and
@@ -27,7 +27,8 @@ public static class DevelopmentLaunch
     {
         if (LaunchArguments.SourceBuild(args) is not null
             || Debugger.IsAttached
-            || Environment.GetEnvironmentVariable(RunInPlaceVariable) == "1"
+            // FromClaudette: CLAUDETTE_RUN_IN_PLACE too.
+            || Core.FromClaudette.ClaudetteVariables.Get(RunInPlaceVariable) == "1"
             || SourceBuild.Detect(AppContext.BaseDirectory) is not { } build)
         {
             return false;

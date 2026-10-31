@@ -10,21 +10,25 @@ using Microsoft.Win32;
 namespace Deventry.Platform.LoginItems.Windows;
 
 /// <summary>
-/// Starting Claudette at login on Windows (DESIGN.md §9, "Starting at login"): a <c>Claudette</c> value under the Run key,
+/// Starting Claudette at login on Windows (DESIGN.md §9, "Starting at login"): a <c>Deventry</c> value under the Run key,
 /// which any copy of Claudette can write, and in the MSIX the package's startup task. Task Manager's Startup apps turns
 /// a Run value off with a value of the same name under <c>StartupApproved\Run</c>, whose first byte is odd.
 /// </summary>
 /// <param name="runKey">The Run key under HKCU. Tests use a key of their own.</param>
 /// <param name="approvedKey">Where Task Manager keeps which Run values are turned off.</param>
+/// <param name="valueName">The value's name: <c>Claudette</c> for Claudette's.</param>
 [SupportedOSPlatform("windows10.0.16299")]
-public sealed class WindowsLoginItems(IProcessLauncher launcher, TimeProvider timeProvider, string runKey = WindowsLoginItems.RunKey, string approvedKey = WindowsLoginItems.ApprovedKey)
+public sealed class WindowsLoginItems(IProcessLauncher launcher, TimeProvider timeProvider, string runKey = WindowsLoginItems.RunKey, string approvedKey = WindowsLoginItems.ApprovedKey,
+    string valueName = WindowsLoginItems.DefaultValueName)
     : ILoginItems
 {
     public const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
     public const string ApprovedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
 
-    public const string ValueName = "Claudette";
+    public const string DefaultValueName = "Deventry";
+
+    public string ValueName => valueName;
 
     public string? UnavailableReason => null;
 

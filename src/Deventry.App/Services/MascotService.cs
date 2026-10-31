@@ -36,26 +36,26 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
     /// <summary>The settings may have changed: she comes, climbing up from behind the box, or goes, or changes.</summary>
     public void OnSettingsChanged()
     {
-        PixelsPerCell = Settings.ClaudetteSize switch
+        PixelsPerCell = Settings.JouleneSize switch
         {
-            ClaudetteSize.Small => 2,
-            ClaudetteSize.Large => 4,
+            JouleneSize.Small => 2,
+            JouleneSize.Large => 4,
             _ => 3,
         };
-        if (Settings.ShowClaudette && Director is null)
+        if (Settings.ShowJoulene && Director is null)
         {
             var director = new MascotDirector(_services.Time, _services.Dispatcher, _services.Random, this);
             director.SetStill(_services.ReduceMotion);
             director.SetSituation(_situation);
             Director = director;
         }
-        else if (!Settings.ShowClaudette && Director is { } gone)
+        else if (!Settings.ShowJoulene && Director is { } gone)
         {
             Director = null;
             gone.Dispose();
         }
-        Director?.SetSpell(Settings.ClaudetteLiveliness == ClaudetteLiveliness.Calm ? MascotSpell.Calm : MascotSpell.Lively);
-        Director?.SetTips(Settings.ClaudetteTips);
+        Director?.SetSpell(Settings.JouleneLiveliness == JouleneLiveliness.Calm ? MascotSpell.Calm : MascotSpell.Lively);
+        Director?.SetTips(Settings.JouleneTips);
     }
 
     /// <summary>What the selected tab is doing.</summary>
@@ -115,7 +115,7 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
     [RelayCommand]
     private void Hide()
     {
-        Settings.ShowClaudette = false;
+        Settings.ShowJoulene = false;
         _services.SaveSettings();
     }
 
@@ -140,7 +140,7 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
             ("", "Drop a file on the message box to attach it"),
             ("", "Right-click me if you'd like me to go"),
             // DESIGN.md §18, "Games with Claudette": while there's a wait.
-            (Settings.GamesWithClaudette && _situation.Mood is MascotMood.Working or MascotMood.Resting ? "" : null, "Right-click me for a game while you wait"),
+            (Settings.GamesWithJoulene && _situation.Mood is MascotMood.Working or MascotMood.Resting ? "" : null, "Right-click me for a game while you wait"),
         }.Where(t => t.Shortcut is not null).ToArray();
         if (tips.Length == 0)
         {

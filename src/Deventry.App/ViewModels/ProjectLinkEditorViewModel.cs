@@ -56,7 +56,7 @@ public sealed partial class ProjectLinkEditorViewModel : ViewModelBase
     /// <summary>The one-line hint about <c>{branch}</c>, <c>{changelist}</c> and <c>{folderName}</c>.</summary>
     public string PlaceholderHint => ProjectLinks.PlaceholderHint;
 
-    /// <summary>In <c>claudette.json</c>, shared with the project, rather than <c>claudette.local.json</c>.</summary>
+    /// <summary>In <c>deventry.json</c>, shared with the project, rather than <c>deventry.local.json</c>.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SaveToLocal), nameof(FileNote), nameof(FileText), nameof(FileProblem), nameof(HasFileProblem))]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
@@ -75,12 +75,12 @@ public sealed partial class ProjectLinkEditorViewModel : ViewModelBase
     public string LocalText => $"Just me ({ProjectFile.LocalName})";
 
     /// <summary>For an edited link: the file it's in.</summary>
-    public string FileText => $"In {ProjectFile.FileName(Scope)}";
+    public string FileText => $"In {ProjectFile.FileName(Folder, Scope)}";
 
     /// <summary>Saving rewrites the file, which drops its comments.</summary>
-    public string FileNote => $"Saving rewrites {ProjectFile.FileName(Scope)} in {Folder}, so comments in it are dropped.";
+    public string FileNote => $"Saving rewrites {ProjectFile.FileName(Folder, Scope)} in {Folder}, so comments in it are dropped.";
 
-    /// <summary>Why the chosen file can't be saved, such as "claudette.json isn't valid JSON (…)".</summary>
+    /// <summary>Why the chosen file can't be saved, such as "deventry.json isn't valid JSON (…)".</summary>
     public string? FileProblem => _fileProblem(Scope);
 
     public bool HasFileProblem => FileProblem is not null;

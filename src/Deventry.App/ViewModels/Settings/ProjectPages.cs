@@ -20,7 +20,7 @@ public sealed class ProjectLinksPage : ProjectPage
     public ProjectLinksPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.LinksPage, project) =>
         Section("links", "Links",
         [
-            Info("project.links", "Web links for this project", keywords: ["add a link", "url", "bookmark", "claudette.json"]),
+            Info("project.links", "Web links for this project", keywords: ["add a link", "url", "bookmark", "deventry.json"]),
         ]);
 
     public override string IconKey => "IconSettingsLinks";
@@ -34,7 +34,7 @@ public sealed class ProjectActionsPage : ProjectPage
     public ProjectActionsPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.ActionsPage, project) =>
         Section("actions", "Actions",
         [
-            Info("project.actions", "Commands of your own", keywords: ["add an action", "project actions", "claudette.json", "command"]),
+            Info("project.actions", "Commands of your own", keywords: ["add an action", "project actions", "deventry.json", "command"]),
         ]);
 
     public override string IconKey => "IconSettingsActions";

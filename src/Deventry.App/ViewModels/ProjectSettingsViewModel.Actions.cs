@@ -91,8 +91,8 @@ public sealed partial class ProjectSettingsViewModel
     public bool CanEditProjectActionFile => ProjectActionFileError is null;
 
     public string ProjectActionsNote => Scope == ProjectFileScope.Shared
-        ? $"{ProjectFile.SharedName} in {_tab.FolderName} is shared: commit it with the project. Saving rewrites it, so comments in it are dropped."
-        : $"{ProjectFile.LocalName} in {_tab.FolderName} is just yours: add it to .gitignore. Saving rewrites it, so comments in it are dropped.";
+        ? $"{ProjectFile.FileName(Folder, ProjectFileScope.Shared)} in {_tab.FolderName} is shared: commit it with the project. Saving rewrites it, so comments in it are dropped."
+        : $"{ProjectFile.FileName(Folder, ProjectFileScope.Local)} in {_tab.FolderName} is just yours: add it to .gitignore. Saving rewrites it, so comments in it are dropped.";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditProjectActionCommand), nameof(RemoveProjectActionCommand), nameof(MoveProjectActionUpCommand), nameof(MoveProjectActionDownCommand))]

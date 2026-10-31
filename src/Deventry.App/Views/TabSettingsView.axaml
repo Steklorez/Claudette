@@ -121,7 +121,7 @@
             <!-- The folder's custom project actions are in Settings, on the tab's Actions page (DESIGN.md §14, §18) -->
             <c:SettingRow Key="tab.projectActions">
               <Button Content="Open" Command="{Binding OpenProjectActionsCommand}"
-                      ToolTip.Tip="Open Settings on this folder's actions, from its claudette.json files" />
+                      ToolTip.Tip="Open Settings on this folder's actions, from its deventry.json files" />
             </c:SettingRow>
           </c:SettingsSection>
         </StackPanel>

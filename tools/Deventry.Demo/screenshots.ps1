@@ -25,8 +25,8 @@ animation from her art and steps, as claudette.gif, and social-card.ps1 draw the
 standard-dark.png.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
-included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with CLAUDETTE_UNFOCUSED=1, its windows
-behind yours and never taking the focus, and is driven through its command channel (CLAUDETTE_AUTOMATION_PIPE): its
+included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with DEVENTRY_UNFOCUSED=1, its windows
+behind yours and never taking the focus, and is driven through its command channel (DEVENTRY_AUTOMATION_PIPE): its
 controls are found through UI Automation, and clicked, typed in and so on by Claudette itself. Captures go through
 PrintWindow, which doesn't need the windows in view.
 
@@ -177,13 +177,13 @@ foreach ($style in 'standard', 'claude') {
 }
 # Claudette on the composer's animation, drawn from her art and steps rather than captured, so it's the same every time.
 Write-Host "Claudette's animation"
-$env:CLAUDETTE_MASCOT_GIF = Join-Path $Out 'claudette.gif'
+$env:DEVENTRY_MASCOT_GIF = Join-Path $Out 'claudette.gif'
 try {
     & dotnet test (Join-Path $repo 'tests\Deventry.App.Tests\Deventry.App.Tests.csproj') --filter 'FullyQualifiedName~MascotPictureTests' -v q -nologo | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Drawing her animation failed.' }
 }
 finally {
-    Remove-Item Env:CLAUDETTE_MASCOT_GIF
+    Remove-Item Env:DEVENTRY_MASCOT_GIF
 }
 # The site's social card shows the main window, so it's drawn again with the new one.
 Write-Host 'The social card'

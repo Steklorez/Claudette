@@ -6,8 +6,8 @@ PrintWindow.
 
 .DESCRIPTION
 A run leaves the focus, the keyboard and the pointer to the user (DESIGN.md §9, "Taking screenshots without the
-focus"). Claudette runs with CLAUDETTE_UNFOCUSED=1, so its windows never take the focus and stay behind the user's, and
-with CLAUDETTE_AUTOMATION_PIPE, so it takes commands on that pipe: click, right-click, toggle, set text, show, scroll,
+focus"). Claudette runs with DEVENTRY_UNFOCUSED=1, so its windows never take the focus and stay behind the user's, and
+with DEVENTRY_AUTOMATION_PIPE, so it takes commands on that pipe: click, right-click, toggle, set text, show, scroll,
 show a tip, press keys and close a window, each carried out by Claudette itself. Controls are found and read through UI
 Automation, which only reads, and each command names the control as UI Automation saw it. Nothing here sends the
 mouse's or the keyboard's input, or uses UI Automation's own actions, which Windows lets bring a window to the front.
@@ -575,16 +575,16 @@ function New-DemoContent([string] $demo, [string] $work, [string] $projects, [st
 function Start-Claudette([string] $app, [string] $work, [hashtable] $environment = @{}) {
     $start = New-Object System.Diagnostics.ProcessStartInfo $app
     $start.UseShellExecute = $false
-    $start.EnvironmentVariables['CLAUDETTE_HOME'] = Join-Path $work 'home'
+    $start.EnvironmentVariables['DEVENTRY_HOME'] = Join-Path $work 'home'
     $start.EnvironmentVariables['CLAUDE_CONFIG_DIR'] = Join-Path $work 'claude-config'
     $start.EnvironmentVariables['FAKE_CLAUDE_USAGE'] = Join-Path $work 'usage.json'
     $start.EnvironmentVariables['CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'] = '1'
     # A source build otherwise copies itself to its data folder and runs from there.
-    $start.EnvironmentVariables['CLAUDETTE_RUN_IN_PLACE'] = '1'
-    $start.EnvironmentVariables['CLAUDETTE_UNFOCUSED'] = '1'
+    $start.EnvironmentVariables['DEVENTRY_RUN_IN_PLACE'] = '1'
+    $start.EnvironmentVariables['DEVENTRY_UNFOCUSED'] = '1'
     # Its own pipe each time, so a Claudette left over from a run can't answer for this one.
     $script:pipeName = "claudette-automation-$([guid]::NewGuid().ToString('N'))"
-    $start.EnvironmentVariables['CLAUDETTE_AUTOMATION_PIPE'] = $script:pipeName
+    $start.EnvironmentVariables['DEVENTRY_AUTOMATION_PIPE'] = $script:pipeName
     foreach ($name in $environment.Keys) { $start.EnvironmentVariables[$name] = $environment[$name] }
     $claudette = [System.Diagnostics.Process]::Start($start)
     [FocusWatch]::Start($claudette.Id)

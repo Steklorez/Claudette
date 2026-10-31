@@ -297,7 +297,7 @@ public sealed class MacAppInstallerTests : IDisposable
         var start = new ProcessStartInfo("/bin/sh")
         {
             ArgumentList = { script, quitting.Id.ToString(System.Globalization.CultureInfo.InvariantCulture), App, Staged, installed ?? App, Path.Combine(_root, "restart-ready"), "n1", "exec", "--restore", "n1" },
-            Environment = { ["CLAUDETTE_UPDATE_READY_TICKS"] = readyTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) },
+            Environment = { ["DEVENTRY_UPDATE_READY_TICKS"] = readyTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) },
             RedirectStandardError = true,
         };
         using var helper = Process.Start(start)!;

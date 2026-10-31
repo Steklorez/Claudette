@@ -203,6 +203,12 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
         {
             NoteInstalled();
             var entry = items.ReadEntry();
+            // FromClaudette: an entry under Claudette's name is written again under Deventry's, as its program's name changed too.
+            if (items is FromClaudette.CarriedOverLoginItems { HasOnlyClaudettes: true } && record.Target is not null)
+            {
+                record.Target = null;
+                save();
+            }
             if (items.PackageTask is { } task)
             {
                 var state = await task.GetStateAsync(cancellationToken);

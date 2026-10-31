@@ -559,22 +559,22 @@ public sealed class AppearanceSettings
     /// Claudette, the app's pixel mascot, standing on the composer and doing little things now and then (DESIGN.md §5,
     /// "Claudette on the composer"). On by default.
     /// </summary>
-    public bool ShowClaudette { get; set; } = true;
+    public bool ShowJoulene { get; set; } = true;
 
     /// <summary>How big she is: 2, 3 or 4 screen pixels a cell of her sprite.</summary>
-    public ClaudetteSize ClaudetteSize { get; set; } = ClaudetteSize.Medium;
+    public JouleneSize JouleneSize { get; set; } = JouleneSize.Medium;
 
     /// <summary>How often she does something: every 10 to 30 seconds, or every 30 to 90.</summary>
-    public ClaudetteLiveliness ClaudetteLiveliness { get; set; } = ClaudetteLiveliness.Lively;
+    public JouleneLiveliness JouleneLiveliness { get; set; } = JouleneLiveliness.Lively;
 
     /// <summary>She shares a tip now and then, such as a shortcut.</summary>
-    public bool ClaudetteTips { get; set; } = true;
+    public bool JouleneTips { get; set; } = true;
 
     /// <summary>
     /// Tic-tac-toe, Connect Four, hangman and Minesweeper against Claudette, in the Games tool window (DESIGN.md §18, "Games
     /// with Claudette"). On by default.
     /// </summary>
-    public bool GamesWithClaudette { get; set; } = true;
+    public bool GamesWithJoulene { get; set; } = true;
 
     /// <summary>How much room the conversation, the sidebar's rows and the composer take (DESIGN.md §14).</summary>
     public Density Density { get; set; } = Density.Comfortable;
@@ -645,7 +645,7 @@ public enum MotionSetting
 }
 
 /// <summary>Settings → Appearance → Claudette's size (DESIGN.md §5, "Claudette on the composer").</summary>
-public enum ClaudetteSize
+public enum JouleneSize
 {
     Small,
     Medium,
@@ -653,7 +653,7 @@ public enum ClaudetteSize
 }
 
 /// <summary>Settings → Appearance → how often Claudette does something (DESIGN.md §5, "Claudette on the composer").</summary>
-public enum ClaudetteLiveliness
+public enum JouleneLiveliness
 {
     /// <summary>Every 10 to 30 seconds.</summary>
     Lively,

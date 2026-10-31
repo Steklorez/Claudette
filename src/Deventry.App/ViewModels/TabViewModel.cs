@@ -512,7 +512,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             }
             RefreshMessageTimes();
             _ = EnsureStartedAsync();
-            // Its claudette.json may have changed while another tab was showing (DESIGN.md §18).
+            // Its deventry.json may have changed while another tab was showing (DESIGN.md §18).
             _ = ProjectTools.RefreshFileAsync();
             RefreshBranch();
         }
@@ -2274,7 +2274,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                     TellMascot(mascot => mascot.TurnFailed());
                 }
                 SetCompacting(false);
-                // Claude may have edited claudette.json or switched branches: the actions and links follow, and the badge.
+                // Claude may have edited deventry.json or switched branches: the actions and links follow, and the badge.
                 _ = ProjectTools.RefreshFileAsync();
                 RefreshBranch();
                 // The switch changed while Claude worked (DESIGN.md §18, "Remote Control").

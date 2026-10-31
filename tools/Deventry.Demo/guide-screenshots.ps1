@@ -19,8 +19,8 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
 Claudette is closed by its window, as a user would, each time.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
-included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with CLAUDETTE_UNFOCUSED=1, its windows
-behind yours and never taking the focus, and is driven through its command channel (CLAUDETTE_AUTOMATION_PIPE): its
+included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with DEVENTRY_UNFOCUSED=1, its windows
+behind yours and never taking the focus, and is driven through its command channel (DEVENTRY_AUTOMATION_PIPE): its
 controls are found through UI Automation, and clicked, typed in and so on by Claudette itself. Captures go through
 PrintWindow, which doesn't need the windows in view. Screenshots.psm1 has the helpers.
 

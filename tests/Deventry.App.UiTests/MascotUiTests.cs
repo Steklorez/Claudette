@@ -144,7 +144,7 @@ public class MascotUiTests
         Assert.Equal(scene.H.Shell.Groups.Single().Color, scene.Layer.HairTie);
         Assert.Equal(MascotArt.Width * 3, scene.Layer.Figure.Bounds.Width, precision: 1);
 
-        scene.H.Services.Settings.Appearance.ClaudetteSize = Core.Settings.ClaudetteSize.Large;
+        scene.H.Services.Settings.Appearance.JouleneSize = Core.Settings.JouleneSize.Large;
         scene.H.Services.SaveSettings();
         UiText.Settle(scene.Window);
 
@@ -232,7 +232,7 @@ public class MascotUiTests
     [AvaloniaFact]
     public async Task With_the_setting_off_she_isnt_there()
     {
-        await using var h = new TabTestHarness(s => s.Appearance.ShowClaudette = false, dispatcher: new AvaloniaUiDispatcher());
+        await using var h = new TabTestHarness(s => s.Appearance.ShowJoulene = false, dispatcher: new AvaloniaUiDispatcher());
         h.Services.Mascot.OnSettingsChanged();
         await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });

@@ -30,9 +30,9 @@ public class DemoModeTests
         var environment = spec.Environment!;
         var folder = environment[DemoMode.Variable];
         Assert.StartsWith(Path.Combine(h.Root, "temp", DemoLaunch.FolderPrefix), folder, StringComparison.Ordinal);
-        Assert.Equal(Path.Combine(folder, "home"), environment["CLAUDETTE_HOME"]);
+        Assert.Equal(Path.Combine(folder, "home"), environment["DEVENTRY_HOME"]);
         Assert.Equal(Path.Combine(folder, "claude-config"), environment["CLAUDE_CONFIG_DIR"]);
-        Assert.Equal("1", environment["CLAUDETTE_RUN_IN_PLACE"]);
+        Assert.Equal("1", environment["DEVENTRY_RUN_IN_PLACE"]);
         // Not the stand-in itself: only the demo's claude is.
         Assert.False(environment.ContainsKey(StandInClaude.Variable));
         // Its claude is the Claudette it started, and the stand-in has the demo's plan usage to answer with.

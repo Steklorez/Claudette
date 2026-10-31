@@ -180,6 +180,7 @@ public sealed class LoginShellTests : IDisposable
         Assert.Equal(["-i", "-l", "-c"], spec.Arguments.Take(3));
         Assert.Equal(_home, spec.WorkingDirectory);
         Assert.Equal("1", spec.Environment![LoginShellReader.ResolvingVariable]);
+        Assert.Equal("1", spec.Environment["CLAUDETTE_RESOLVING_ENVIRONMENT"]);
         Assert.Equal("/usr/bin:/bin", spec.Environment["PATH"]);
         // Started from inside Claude Code's terminal or not, the shell doesn't get its session variables.
         Assert.False(spec.Environment.ContainsKey("CLAUDECODE"));

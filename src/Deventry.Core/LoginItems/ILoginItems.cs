@@ -65,7 +65,7 @@ public interface IPackageStartupTask
     Task DisableAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>No way to start Claudette at login: tests, other OSes, and a Claudette started with <c>CLAUDETTE_HOME</c>.</summary>
+/// <summary>No way to start Claudette at login: tests, other OSes, and a Claudette started with <c>DEVENTRY_HOME</c>.</summary>
 public sealed class NoLoginItems(string reason) : ILoginItems
 {
     public string? UnavailableReason => reason;

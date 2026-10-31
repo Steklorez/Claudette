@@ -595,7 +595,7 @@ public class ProjectToolsTests
         Assert.Equal("Run EditMode tests failed (exit code 2). 11 passed, 1 failed.", LastRun(tab)!.Status);
     }
 
-    // ---- Custom actions (claudette.json and claudette.local.json) ----------------------------------------------------------
+    // ---- Custom actions (deventry.json and deventry.local.json) ----------------------------------------------------------
 
     [Fact]
     public async Task Custom_actions_alone_are_named_after_the_folder_and_run_through_the_shell_in_their_folder()
@@ -648,7 +648,7 @@ public class ProjectToolsTests
         await TabTestHarness.Eventually(() => tab.ProjectTools.HasTools, "the new action");
 
         Assert.Equal(["Lint"], tab.ProjectTools.Actions.Select(a => a.Label));
-        Assert.Equal(["claudette.json: actions[1] has no name, so it was skipped."], tab.ProjectTools.FileProblems);
+        Assert.Equal(["deventry.json: actions[1] has no name, so it was skipped."], tab.ProjectTools.FileProblems);
     }
 
     [Fact]
@@ -663,7 +663,7 @@ public class ProjectToolsTests
 
         await tab.ProjectTools.RunActionCommand.ExecuteAsync(tab.ProjectTools.Actions[0]);
 
-        // The user's choice (DESIGN.md §18): claudette.json's actions run like the local file's, with no confirmation.
+        // The user's choice (DESIGN.md §18): deventry.json's actions run like the local file's, with no confirmation.
         Assert.Null(h.Shell.Confirmation);
         Assert.Equal(started + 1, launcher.Started.Count);
         launcher.Processes.Last().Exit(0);

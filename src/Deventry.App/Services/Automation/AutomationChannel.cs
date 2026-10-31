@@ -73,14 +73,14 @@ public sealed record AutomationResponse(bool Ok, string? Error = null, string? V
 
 /// <summary>
 /// The demo's command channel (DESIGN.md §9, "Taking screenshots without the focus"): with
-/// <c>CLAUDETTE_AUTOMATION_PIPE</c> set, Claudette takes commands from the screenshot scripts on a named pipe of that
+/// <c>DEVENTRY_AUTOMATION_PIPE</c> set, Claudette takes commands from the screenshot scripts on a named pipe of that
 /// name (a Unix domain socket on macOS and Linux), one JSON line each, and answers each with one. The scripts drive
 /// Claudette this way rather than with the mouse, keys or UI Automation's actions, any of which Windows lets bring a
 /// window to the front. Only this user's processes can connect, one at a time.
 /// </summary>
 public sealed class AutomationChannel : IDisposable
 {
-    public const string Variable = "CLAUDETTE_AUTOMATION_PIPE";
+    public const string Variable = "DEVENTRY_AUTOMATION_PIPE";
 
     internal static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -99,7 +99,7 @@ public sealed class AutomationChannel : IDisposable
         _listening = Task.Run(() => ListenAsync(_stop.Token));
     }
 
-    /// <summary>The pipe's name from <c>CLAUDETTE_AUTOMATION_PIPE</c>; null, and no channel, without it.</summary>
+    /// <summary>The pipe's name from <c>DEVENTRY_AUTOMATION_PIPE</c>; null, and no channel, without it.</summary>
     public static string? PipeName => Environment.GetEnvironmentVariable(Variable) is { Length: > 0 } name ? name : null;
 
     /// <summary>Stops listening; a command being answered finishes first.</summary>

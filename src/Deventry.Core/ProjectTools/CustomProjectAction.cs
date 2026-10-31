@@ -1,6 +1,6 @@
 namespace Deventry.Core.ProjectTools;
 
-/// <summary>How a custom action runs: <c>"mode": "output"</c> or <c>"launch"</c> in <c>claudette.json</c>.</summary>
+/// <summary>How a custom action runs: <c>"mode": "output"</c> or <c>"launch"</c> in <c>deventry.json</c>.</summary>
 public enum CustomActionMode
 {
     /// <summary>Output on the Project page, Stop, and a notification when it ends.</summary>
@@ -10,18 +10,18 @@ public enum CustomActionMode
     LaunchAndForget,
 }
 
-/// <summary>Which of a folder's two project files something comes from (DESIGN.md §18, "claudette.json").</summary>
+/// <summary>Which of a folder's two project files something comes from (DESIGN.md §18, "deventry.json").</summary>
 public enum ProjectFileScope
 {
-    /// <summary><c>claudette.json</c>: committed with the project and shared with everyone who works on it.</summary>
+    /// <summary><c>deventry.json</c>: committed with the project and shared with everyone who works on it.</summary>
     Shared,
 
-    /// <summary><c>claudette.local.json</c>: the user's own, usually gitignored.</summary>
+    /// <summary><c>deventry.local.json</c>: the user's own, usually gitignored.</summary>
     Local,
 }
 
 /// <summary>
-/// An action from a folder's <c>claudette.json</c> or <c>claudette.local.json</c> (DESIGN.md §18, "Custom actions"):
+/// An action from a folder's <c>deventry.json</c> or <c>deventry.local.json</c> (DESIGN.md §18, "Custom actions"):
 /// a shell command, run in the tab's folder or a folder under it.
 /// </summary>
 public sealed class CustomProjectAction
@@ -57,10 +57,10 @@ public sealed class CustomProjectAction
     public bool RunOnNewWorktree { get; set; }
 
     /// <summary>The variable a new worktree's actions find the worktree in.</summary>
-    public const string WorktreeVariable = "CLAUDETTE_WORKTREE";
+    public const string WorktreeVariable = "DEVENTRY_WORKTREE";
 
     /// <summary>The variable a new worktree's actions find its main checkout in, to copy files such as a local <c>.env</c> from.</summary>
-    public const string MainCheckoutVariable = "CLAUDETTE_MAIN_CHECKOUT";
+    public const string MainCheckoutVariable = "DEVENTRY_MAIN_CHECKOUT";
 
     public CustomProjectAction Clone() => (CustomProjectAction)MemberwiseClone();
 
@@ -82,7 +82,7 @@ public sealed class CustomProjectAction
         var kind = Mode == CustomActionMode.LaunchAndForget ? ProjectActionKind.Launch : ProjectActionKind.Run;
         var label = Name.Trim().Length > 0 ? Name.Trim() : Command.Trim();
         var id = $"custom:{Id}";
-        var file = Scope == ProjectFileScope.Shared ? ProjectFile.SharedName : ProjectFile.LocalName;
+        var file = ProjectFile.FileName(tabFolder, Scope);
         try
         {
             var folder = WorkingDirectory(tabFolder);

@@ -20,16 +20,18 @@ public static class CredentialStores
         {
             if (OperatingSystem.IsWindows())
             {
-                return new WindowsCredentialStore();
+                // FromClaudette: with what Claudette saved under its own name carried over.
+                return FromClaudette.ClaudetteCredentials.CarriedOver(new WindowsCredentialStore(), new WindowsCredentialStore(FromClaudette.ClaudetteCredentials.WindowsPrefix), loggerFactory);
             }
             if (OperatingSystem.IsMacOS())
             {
-                return new MacKeychain();
+                return FromClaudette.ClaudetteCredentials.CarriedOver(new MacKeychain(), new MacKeychain(FromClaudette.ClaudetteCredentials.MacService), loggerFactory);
             }
             if (OperatingSystem.IsLinux())
             {
-                return SecretToolCredentialStore.TryCreate(launcher, timeProvider)
-                    ?? (ICredentialStore)new UnavailableCredentialStore("the Secret Service", SecretToolCredentialStore.MissingReason);
+                return SecretToolCredentialStore.TryCreate(launcher, timeProvider) is { } store
+                    ? FromClaudette.ClaudetteCredentials.CarriedOver(store, new SecretToolCredentialStore(store.SecretTool, launcher, timeProvider, FromClaudette.ClaudetteCredentials.LinuxApplication), loggerFactory)
+                    : new UnavailableCredentialStore("the Secret Service", SecretToolCredentialStore.MissingReason);
             }
         }
         catch (Exception ex)

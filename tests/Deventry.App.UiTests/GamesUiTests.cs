@@ -244,7 +244,7 @@ public class GamesUiTests
         Assert.IsType<ConnectFourViewModel>(h.Services.Games.Game);
         Assert.True(h.IsShowing(ToolWindowKinds.Games));
 
-        h.Services.Settings.Appearance.GamesWithClaudette = false;
+        h.Services.Settings.Appearance.GamesWithJoulene = false;
         h.Services.SaveSettings();
         UiText.Settle(window);
         Assert.Equal(["Hide Claudette", "Claudette settings…"], menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));

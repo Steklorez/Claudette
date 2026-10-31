@@ -6,19 +6,22 @@ using Deventry.Core.Credentials;
 namespace Deventry.Platform.Credentials.Windows;
 
 /// <summary>
-/// Windows Credential Manager: generic credentials named <c>Claudette/&lt;key&gt;</c>, kept for this user on this
+/// Windows Credential Manager: generic credentials named <c>Deventry/&lt;key&gt;</c>, kept for this user on this
 /// machine (<c>CRED_PERSIST_LOCAL_MACHINE</c>, so they don't roam with a domain profile). The secret is UTF-16.
 /// </summary>
+/// <param name="prefix">What the names start with: <c>Claudette</c> for Claudette's.</param>
 [SupportedOSPlatform("windows")]
-public sealed class WindowsCredentialStore : ICredentialStore
+public sealed class WindowsCredentialStore(string prefix = WindowsCredentialStore.DefaultPrefix) : ICredentialStore
 {
+    public const string DefaultPrefix = "Deventry";
+
     public string Name => "Windows Credential Manager";
 
     public bool IsAvailable => true;
 
     public string? UnavailableReason => null;
 
-    public static string TargetName(string key) => $"Claudette/{key}";
+    public string TargetName(string key) => $"{prefix}/{key}";
 
     public Task<string?> ReadAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(Read(key));
 
@@ -40,7 +43,7 @@ public sealed class WindowsCredentialStore : ICredentialStore
             : Task.FromException<bool>(new CredentialStoreException($"Couldn't remove it from Windows Credential Manager (error {error})."));
     }
 
-    private static unsafe string? Read(string key)
+    private unsafe string? Read(string key)
     {
         if (!CredentialNative.CredRead(TargetName(key), CredentialNative.CredTypeGeneric, 0, out var pointer))
         {
@@ -62,7 +65,7 @@ public sealed class WindowsCredentialStore : ICredentialStore
         }
     }
 
-    private static unsafe void Write(string key, string label, string secret)
+    private unsafe void Write(string key, string label, string secret)
     {
         var blob = Encoding.Unicode.GetBytes(secret);
         if (blob.Length > CredentialNative.MaxBlobSize)

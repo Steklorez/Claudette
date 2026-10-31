@@ -25,7 +25,7 @@ public sealed record ProjectLinkRow(JsonNode? Raw, ProjectLink? Link, string? Pr
     /// <summary>The address as written, placeholders and all.</summary>
     public string Url => Link?.Url ?? "";
 
-    /// <summary>Which file it's in: "Shared (claudette.json)" or "Just me (claudette.local.json)".</summary>
+    /// <summary>Which file it's in: "Shared (deventry.json)" or "Just me (deventry.local.json)".</summary>
     public string FileText => ProjectSettingsViewModel.FileLabel(Scope);
 
     public bool CanEdit => Link is not null;
@@ -55,7 +55,7 @@ public sealed partial class ProjectSettingsViewModel
 {
     private readonly Dictionary<ProjectFileScope, string?> _linkFileErrors = [];
 
-    /// <summary>Both files' links: <c>claudette.json</c>'s, then <c>claudette.local.json</c>'s.</summary>
+    /// <summary>Both files' links: <c>deventry.json</c>'s, then <c>deventry.local.json</c>'s.</summary>
     public ObservableCollection<ProjectLinkRow> Links { get; } = [];
 
     public bool HasLinks => Links.Count > 0;
@@ -64,7 +64,7 @@ public sealed partial class ProjectSettingsViewModel
     [NotifyCanExecuteChangedFor(nameof(EditLinkCommand), nameof(RemoveLinkCommand), nameof(MoveLinkUpCommand), nameof(MoveLinkDownCommand))]
     public partial ProjectLinkRow? SelectedLink { get; set; }
 
-    /// <summary>Files that can't be read, so their links can't be edited here: "claudette.json isn't valid JSON (…)".</summary>
+    /// <summary>Files that can't be read, so their links can't be edited here: "deventry.json isn't valid JSON (…)".</summary>
     public IReadOnlyList<string> LinkFileErrors => [.. _linkFileErrors.Values.OfType<string>()];
 
     public bool HasLinkFileErrors => LinkFileErrors.Count > 0;

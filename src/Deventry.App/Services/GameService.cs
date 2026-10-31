@@ -31,7 +31,7 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
     public GameService(AppServices services) => _services = services;
 
     /// <summary>Settings → Appearance → <b>Games with Claudette</b>.</summary>
-    public bool IsEnabled => _services.Settings.Appearance.GamesWithClaudette;
+    public bool IsEnabled => _services.Settings.Appearance.GamesWithJoulene;
 
     /// <summary>The game open, or null.</summary>
     [ObservableProperty]

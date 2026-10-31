@@ -51,12 +51,12 @@ public sealed class WindowsLoginItemsTests : IDisposable
         // Task Manager turns it off with an odd first byte, and on again with an even one.
         using (var approved = Registry.CurrentUser.CreateSubKey(ApprovedKey))
         {
-            approved.SetValue(WindowsLoginItems.ValueName, new byte[] { 3, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8 }, RegistryValueKind.Binary);
+            approved.SetValue(WindowsLoginItems.DefaultValueName, new byte[] { 3, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8 }, RegistryValueKind.Binary);
         }
         Assert.Equal(LoginEntryState.DisabledByUser, items.ReadEntry());
         using (var approved = Registry.CurrentUser.CreateSubKey(ApprovedKey))
         {
-            approved.SetValue(WindowsLoginItems.ValueName, new byte[] { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, RegistryValueKind.Binary);
+            approved.SetValue(WindowsLoginItems.DefaultValueName, new byte[] { 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, RegistryValueKind.Binary);
         }
         Assert.Equal(LoginEntryState.Enabled, items.ReadEntry());
 
@@ -64,7 +64,7 @@ public sealed class WindowsLoginItemsTests : IDisposable
 
         Assert.Equal(LoginEntryState.Missing, items.ReadEntry());
         using var left = Registry.CurrentUser.OpenSubKey(ApprovedKey);
-        Assert.Null(left?.GetValue(WindowsLoginItems.ValueName));
+        Assert.Null(left?.GetValue(WindowsLoginItems.DefaultValueName));
     }
 
     [Fact]

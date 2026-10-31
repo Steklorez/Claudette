@@ -197,7 +197,7 @@ public sealed partial class DiffToolTests : IDisposable
     public void The_real_probe_expands_variables_and_searches_path()
     {
         Assert.Null(FileProbe.Instance.FindOnPath($"no-such-tool-{Guid.NewGuid():N}"));
-        Assert.Equal("%CLAUDETTE_NOT_SET_X%", FileProbe.Instance.ExpandEnvironmentVariables("%CLAUDETTE_NOT_SET_X%"));
+        Assert.Equal("%DEVENTRY_NOT_SET_X%", FileProbe.Instance.ExpandEnvironmentVariables("%DEVENTRY_NOT_SET_X%"));
         Assert.True(FileProbe.Instance.FileExists(typeof(DiffToolTests).Assembly.Location));
     }
 

@@ -105,4 +105,4 @@ When you edit entries in Settings, saving replaces only the list you edited, kee
 ## See also
 
 - [Actions and links](../project-tools/actions-and-links.md), for adding them in the app.
-- [Command line and environment](command-line-and-environment.md), for `CLAUDETTE_WORKTREE` and `CLAUDETTE_MAIN_CHECKOUT`.
+- [Command line and environment](command-line-and-environment.md), for `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT`.

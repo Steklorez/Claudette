@@ -18,7 +18,7 @@ How to start Claudette from a terminal, the environment variables Claudette read
 
 Claudette has two other options, `--restore` and `--source-build`, which it passes itself when it restarts into an update or a new build. Don't use them.
 
-**One Claudette at a time.** Starting Claudette while it's running hands the options to the running one, which comes to the front, and opens a tab if you gave a folder. A copy started with its own `CLAUDETTE_HOME` counts as a separate Claudette.
+**One Claudette at a time.** Starting Claudette while it's running hands the options to the running one, which comes to the front, and opens a tab if you gave a folder. A copy started with its own `DEVENTRY_HOME` counts as a separate Claudette.
 
 To run from a checkout: `dotnet run --project src/Deventry.App -- --folder <path>`. See [Running from source](../getting-started/running-from-source.md).
 
@@ -26,10 +26,10 @@ To run from a checkout: `dotnet run --project src/Deventry.App -- --folder <path
 
 | Variable | What it does |
 |---|---|
-| `CLAUDETTE_HOME` | A folder where Claudette keeps all its settings and data, instead of your profile's. It's for trying things without touching your real tabs. A Claudette started with it also leaves the login entry alone, and **Start Claudette when I log in** is disabled. |
-| `CLAUDETTE_RUN_IN_PLACE` | Set to `1`, a source build runs from its build folder instead of from a copy. A debugger attached does the same. See [Running from source](../getting-started/running-from-source.md). |
-| `CLAUDETTE_UNFOCUSED` | Set to `1`, Claudette's windows never take the focus from the window you're in, and on Windows they stay behind your windows. The screenshot scripts in `tools/Deventry.Demo` use it. |
-| `CLAUDETTE_AUTOMATION_PIPE` | The name of a pipe Claudette takes commands on: the screenshot scripts in `tools/Deventry.Demo` click, type and press keys in it this way, without the mouse or the keyboard. Only your own programs can connect. |
+| `DEVENTRY_HOME` | A folder where Claudette keeps all its settings and data, instead of your profile's. It's for trying things without touching your real tabs. A Claudette started with it also leaves the login entry alone, and **Start Claudette when I log in** is disabled. |
+| `DEVENTRY_RUN_IN_PLACE` | Set to `1`, a source build runs from its build folder instead of from a copy. A debugger attached does the same. See [Running from source](../getting-started/running-from-source.md). |
+| `DEVENTRY_UNFOCUSED` | Set to `1`, Claudette's windows never take the focus from the window you're in, and on Windows they stay behind your windows. The screenshot scripts in `tools/Deventry.Demo` use it. |
+| `DEVENTRY_AUTOMATION_PIPE` | The name of a pipe Claudette takes commands on: the screenshot scripts in `tools/Deventry.Demo` click, type and press keys in it this way, without the mouse or the keyboard. Only your own programs can connect. |
 
 ## Claude Code's variables
 
@@ -69,8 +69,8 @@ Actions that run in each new worktree get two more variables, so a command can c
 
 | Variable | Value |
 |---|---|
-| `CLAUDETTE_WORKTREE` | The new worktree's folder. |
-| `CLAUDETTE_MAIN_CHECKOUT` | The main checkout's folder. |
+| `DEVENTRY_WORKTREE` | The new worktree's folder. |
+| `DEVENTRY_MAIN_CHECKOUT` | The main checkout's folder. |
 
 See [Actions and links](../project-tools/actions-and-links.md#setting-up-each-new-worktree).
 
@@ -81,15 +81,15 @@ An app started from the Dock, Finder or a desktop launcher gets a minimal enviro
 - **When.** Settings → Claude Code → **Use my login shell's environment**, on by default, on macOS and Linux, when Claudette wasn't started from a terminal. Started from a terminal, it already has that shell's environment.
 - **Which shell.** Your `$SHELL`, or `zsh` on macOS and `bash` on Linux, run as an interactive login shell. bash, zsh, sh, dash, ksh, mksh, yash, fish, tcsh and csh work. Others, such as nushell, xonsh and PowerShell, aren't run, and Diagnostics says so.
 - **If it fails.** It gets 10 seconds. On a timeout or a failure Claudette carries on with its own environment.
-- **`CLAUDETTE_RESOLVING_ENVIRONMENT`.** It's set to `1` while the shell runs, so a startup file can skip slow or interactive setup:
+- **`DEVENTRY_RESOLVING_ENVIRONMENT`.** It's set to `1` while the shell runs, so a startup file can skip slow or interactive setup:
 
   ```sh
-  if [ -z "$CLAUDETTE_RESOLVING_ENVIRONMENT" ]; then
+  if [ -z "$DEVENTRY_RESOLVING_ENVIRONMENT" ]; then
     # slow or interactive setup, such as a prompt theme
   fi
   ```
 
-- **What it doesn't change.** Claudette's own `CLAUDETTE_*` variables always come from Claudette's environment, and Claude Code's session variables are never taken from the shell.
+- **What it doesn't change.** Claudette's own `DEVENTRY_*` variables always come from Claudette's environment, and Claude Code's session variables are never taken from the shell.
 - **Checking it.** Settings → Advanced → **Diagnostics** says whether it was used, which shell, how long it took and the names of the variables it added or changed, never their values.
 
 If Claude can't find a program, see [Claude can't find a program](../troubleshooting/claude-cant-find-a-program.md).

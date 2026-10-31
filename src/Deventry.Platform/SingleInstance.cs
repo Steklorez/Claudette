@@ -42,7 +42,7 @@ public sealed class SingleInstance : IDisposable
 
     /// <param name="scope">
     /// What makes an instance separate: the data folder, which holds the claim. A development copy run with
-    /// <c>CLAUDETTE_HOME</c> is separate from the installed one.
+    /// <c>DEVENTRY_HOME</c> is separate from the installed one.
     /// </param>
     /// <param name="patience">How long <see cref="StartAsync"/> waits for another launch that holds the claim.</param>
     public SingleInstance(string scope, ILogger? logger = null, TimeProvider? timeProvider = null, TimeSpan? patience = null)

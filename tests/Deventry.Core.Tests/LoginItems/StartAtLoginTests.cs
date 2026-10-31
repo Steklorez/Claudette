@@ -199,11 +199,11 @@ public sealed class StartAtLoginTests
     [Fact]
     public async Task Nothing_changes_where_Claudette_cant_start_at_login()
     {
-        _items.UnavailableReason = "Not while CLAUDETTE_HOME is set.";
+        _items.UnavailableReason = "Not while DEVENTRY_HOME is set.";
 
         var status = await As(SourceBuild).SetAsync(true, Ct);
 
-        Assert.Equal(new LoginItemStatus(false, false, null, "Not while CLAUDETTE_HOME is set."), status);
+        Assert.Equal(new LoginItemStatus(false, false, null, "Not while DEVENTRY_HOME is set."), status);
         Assert.Equal(0, _items.Writes);
         Assert.Null(As(SourceBuild).HandOverAtLogin());
     }

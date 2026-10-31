@@ -57,8 +57,8 @@ public static class ThreadMessages
     /// <param name="waits">The sub-thread is busy, so the message waits for its turn to end.</param>
     public static string Delivered(string name, bool waits) =>
         (waits
-            ? $"Claudette delivered this message to the sub-thread \"{name}\". It's busy, so the message waits there and starts its next turn once the current one ends."
-            : $"Claudette delivered this message to the sub-thread \"{name}\", where it starts the next turn.")
+            ? $"{DeliveredStart} \"{name}\". It's busy, so the message waits there and starts its next turn once the current one ends."
+            : $"{DeliveredStart} \"{name}\", where it starts the next turn.")
         + " It went, although this reads as an error: don't send it again. When every sub-thread you've messaged has finished, "
         + "Claudette sends you their results in one message, so there's no need to wait, poll or ask to be told.";
 
@@ -83,8 +83,12 @@ public static class ThreadMessages
     /// thread's tool row shows it as done, not failed.
     /// </summary>
     public static bool IsDeliveryAnswer(string? text) =>
-        text is not null && (text.StartsWith("Claudette delivered this message to the sub-thread", StringComparison.Ordinal)
-            || text.StartsWith("Nothing was sent. ", StringComparison.Ordinal));
+        text is not null && (text.StartsWith(DeliveredStart, StringComparison.Ordinal)
+            || text.StartsWith("Nothing was sent. ", StringComparison.Ordinal)
+            // FromClaudette: as Claudette said it, in sessions History reopens.
+            || FromClaudette.ClaudetteThreads.IsDeliveryAnswer(text));
+
+    private const string DeliveredStart = "Deventry delivered this message to the sub-thread";
 
     /// <summary>What a sub-thread receives: the thread's message, saying who it's from and where the answer goes.</summary>
     public static string ForSubThread(string thread, string message) =>

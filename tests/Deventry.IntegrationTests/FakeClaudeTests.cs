@@ -317,7 +317,7 @@ public sealed class CleanEnvironmentTests
         using var work = new TempFolder();
         var record = work.Combine("record.json");
         Environment.SetEnvironmentVariable("CLAUDE_CODE_CHILD_SESSION", "1");
-        Environment.SetEnvironmentVariable("CLAUDETTE_TEST_MARKER", "kept");
+        Environment.SetEnvironmentVariable("DEVENTRY_TEST_MARKER", "kept");
         try
         {
             var factory = new ClaudeSessionFactory(FakeClaude.Path, new ProcessLauncher(), TimeProvider.System);
@@ -330,12 +330,12 @@ public sealed class CleanEnvironmentTests
             var env = JsonNode.Parse(await File.ReadAllTextAsync(record, TestContext.Current.CancellationToken))!["env"]!.AsObject();
             Assert.False(env.ContainsKey("CLAUDE_CODE_CHILD_SESSION"));
             Assert.False(env.ContainsKey("CLAUDECODE"));
-            Assert.Equal("kept", env["CLAUDETTE_TEST_MARKER"]!.GetValue<string>());
+            Assert.Equal("kept", env["DEVENTRY_TEST_MARKER"]!.GetValue<string>());
         }
         finally
         {
             Environment.SetEnvironmentVariable("CLAUDE_CODE_CHILD_SESSION", null);
-            Environment.SetEnvironmentVariable("CLAUDETTE_TEST_MARKER", null);
+            Environment.SetEnvironmentVariable("DEVENTRY_TEST_MARKER", null);
         }
     }
 }

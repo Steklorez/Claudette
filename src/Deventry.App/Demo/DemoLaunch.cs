@@ -15,7 +15,7 @@ namespace Deventry.App.Demo;
 public sealed record DemoMode(string Folder)
 {
     /// <summary>In a demo's environment: the folder it runs on.</summary>
-    public const string Variable = "CLAUDETTE_DEMO";
+    public const string Variable = "DEVENTRY_DEMO";
 
     /// <summary>The demo this is, from the environment it was started with; null for any other Claudette.</summary>
     public static DemoMode? FromEnvironment() =>
@@ -36,7 +36,7 @@ public static class DemoLaunch
     /// of driving it.
     /// </summary>
     private static readonly string[] NotPassedOn =
-        ["CLAUDETTE_HOME", "CLAUDE_CONFIG_DIR", "CLAUDETTE_AUTOMATION_PIPE", "CLAUDETTE_UNFOCUSED", StandInClaude.Variable, DemoMode.Variable];
+        ["DEVENTRY_HOME", "CLAUDE_CONFIG_DIR", "DEVENTRY_AUTOMATION_PIPE", "DEVENTRY_UNFOCUSED", StandInClaude.Variable, DemoMode.Variable];
 
     /// <summary>Writes a demo under <paramref name="temporary"/> and starts <paramref name="app"/> on it; returns its folder.</summary>
     public static async Task<string> StartAsync(AppServices services, string app, string temporary)
@@ -60,11 +60,11 @@ public static class DemoLaunch
                 environment[name] = value;
             }
         }
-        environment["CLAUDETTE_HOME"] = Path.GetDirectoryName(written.Paths.DataDirectory)!;
+        environment["DEVENTRY_HOME"] = Path.GetDirectoryName(written.Paths.DataDirectory)!;
         environment["CLAUDE_CONFIG_DIR"] = written.ClaudeConfig;
         environment[DemoMode.Variable] = folder;
         // A source build would copy itself into the demo's folder first (DESIGN.md §9, "Working on Claudette").
-        environment["CLAUDETTE_RUN_IN_PLACE"] = "1";
+        environment["DEVENTRY_RUN_IN_PLACE"] = "1";
         _ = services.Launcher.Start(new ProcessStartSpec(app, []) { Environment = environment, Detached = true });
         return folder;
     }

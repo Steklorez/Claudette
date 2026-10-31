@@ -22,7 +22,7 @@ public partial class MainWindow : Window
             _viewModel?.Services.Notifications.SetAppActive(true);
             // Back from the OS's settings, perhaps with Reduce motion changed (DESIGN.md §3, "Accessibility").
             _ = _viewModel?.Services.ReadMotionPreferencesAsync(onlyIfStale: true);
-            // Back from an editor, perhaps with claudette.json changed: the actions and links follow (DESIGN.md §18).
+            // Back from an editor, perhaps with deventry.json changed: the actions and links follow (DESIGN.md §18).
             if (_viewModel?.Shell?.SelectedTab is { } tab)
             {
                 _ = tab.ProjectTools.RefreshFileAsync();

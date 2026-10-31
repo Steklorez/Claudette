@@ -11,11 +11,11 @@ namespace Deventry.IntegrationTests;
 /// The live suite (DESIGN.md §15): what only the real service can confirm. <b>These use real tokens</b>, so they're
 /// tagged <c>Live</c>, left out of every normal run (<c>--filter "Category!=Live"</c>), and run by hand before a release:
 /// <list type="bullet">
-/// <item><c>CLAUDETTE_LIVE_API_KEY</c>: a separate API key with a spend limit, never a personal subscription. Real model
+/// <item><c>DEVENTRY_LIVE_API_KEY</c>: a separate API key with a spend limit, never a personal subscription. Real model
 /// output, at the cheapest settings: Haiku, low effort, one-line prompts.</item>
-/// <item><c>CLAUDETTE_LIVE_CONFIG_DIR</c>: a Claude Code config folder signed in to a subscription, for what an API key
+/// <item><c>DEVENTRY_LIVE_CONFIG_DIR</c>: a Claude Code config folder signed in to a subscription, for what an API key
 /// can't show: <c>get_usage</c>'s plan limits and <c>claude auth status</c>. These make no model calls.</item>
-/// <item><c>CLAUDETTE_RECORD_FIXTURES</c>: also writes the traffic there as cleaned protocol fixtures (record mode).</item>
+/// <item><c>DEVENTRY_RECORD_FIXTURES</c>: also writes the traffic there as cleaned protocol fixtures (record mode).</item>
 /// </list>
 /// Each test skips when its variable isn't set.
 /// </summary>
@@ -41,7 +41,7 @@ public sealed class LiveTests : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
-        if (System.Environment.GetEnvironmentVariable("CLAUDETTE_RECORD_FIXTURES") is { Length: > 0 } folder && _fixtureName is not null && File.Exists(LogPath))
+        if (System.Environment.GetEnvironmentVariable("DEVENTRY_RECORD_FIXTURES") is { Length: > 0 } folder && _fixtureName is not null && File.Exists(LogPath))
         {
             var lines = new ProtocolFixtureWriter([_root.Path]).FromProtocolLog(await File.ReadAllLinesAsync(LogPath));
             var target = Path.Combine(folder, _install?.Version.ToString() ?? "unknown", $"{_fixtureName}.jsonl");
@@ -71,8 +71,8 @@ public sealed class LiveTests : IAsyncLifetime
     [Fact]
     public async Task A_subscription_reports_its_account_and_plan_limits()
     {
-        var config = System.Environment.GetEnvironmentVariable("CLAUDETTE_LIVE_CONFIG_DIR");
-        Assert.SkipWhen(string.IsNullOrEmpty(config), "Set CLAUDETTE_LIVE_CONFIG_DIR to a signed-in Claude Code config folder.");
+        var config = System.Environment.GetEnvironmentVariable("DEVENTRY_LIVE_CONFIG_DIR");
+        Assert.SkipWhen(string.IsNullOrEmpty(config), "Set DEVENTRY_LIVE_CONFIG_DIR to a signed-in Claude Code config folder.");
         Assert.SkipWhen(_install is null, "Claude Code isn't installed.");
         var factory = new ClaudeSessionFactory(_install!.Path, new ProcessLauncher(), TimeProvider.System);
         await using var utility = await UtilitySession.StartAsync(new ConfiguredFactory(factory, SignedInEnvironment(config!)), Work, TestContext.Current.CancellationToken);
@@ -89,8 +89,8 @@ public sealed class LiveTests : IAsyncLifetime
 
     private async Task<ClaudeSession> StartWithApiKeyAsync(string fixtureName)
     {
-        var key = System.Environment.GetEnvironmentVariable("CLAUDETTE_LIVE_API_KEY");
-        Assert.SkipWhen(string.IsNullOrEmpty(key), "Set CLAUDETTE_LIVE_API_KEY to a separate API key with a spend limit.");
+        var key = System.Environment.GetEnvironmentVariable("DEVENTRY_LIVE_API_KEY");
+        Assert.SkipWhen(string.IsNullOrEmpty(key), "Set DEVENTRY_LIVE_API_KEY to a separate API key with a spend limit.");
         Assert.SkipWhen(_install is null, "Claude Code isn't installed.");
         _fixtureName = fixtureName;
         var factory = new ClaudeSessionFactory(_install!.Path, new ProcessLauncher(), TimeProvider.System);

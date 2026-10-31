@@ -31,7 +31,7 @@ Settings → Advanced → **Diagnostics** has a **Login shell environment** row.
 - **Put the setup where a login shell reads it.** Claudette runs your shell (`$SHELL`, or `zsh` on macOS and `bash` on Linux) as a login, interactive shell. Variables and `PATH` entries your startup files set there are picked up. Anything the files print is ignored.
 - **It reads the shell once per run.** After you change a startup file, restart Claudette.
 - **Supported shells:** bash, zsh, sh, dash, ksh, mksh, yash, fish, tcsh and csh. Nushell, xonsh and PowerShell aren't run, and Diagnostics says so. If that's your login shell, start Claudette from a terminal.
-- **A slow shell.** While Claudette reads the environment it sets `CLAUDETTE_RESOLVING_ENVIRONMENT=1`. A startup file can check that variable and skip slow or interactive setup, such as a prompt theme or a version manager's long start.
+- **A slow shell.** While Claudette reads the environment it sets `DEVENTRY_RESOLVING_ENVIRONMENT=1`. A startup file can check that variable and skip slow or interactive setup, such as a prompt theme or a version manager's long start.
 - **Start Claudette from a terminal.** Then it uses that terminal's environment, and `dotnet run` builds do too.
 
 Claude Code's own Bash tool reads your shell's startup file for aliases and functions, but it takes environment variables from the environment Claudette gave it, so the fix above is the one that matters.

@@ -6,7 +6,7 @@ each: in each style and theme, the main window, Settings on Appearance, and Abou
 .DESCRIPTION
 For .github/workflows/screenshots.yml, which keeps each system's pictures as an artifact of its run. Unlike
 screenshots.ps1, which takes the README's pictures on Windows through UI Automation and PrintWindow, it drives Claudette
-only through its command channel (CLAUDETTE_AUTOMATION_PIPE), naming windows by their titles, and has Claudette save each
+only through its command channel (DEVENTRY_AUTOMATION_PIPE), naming windows by their titles, and has Claudette save each
 window as it draws it (the channel's capture command). So it needs only PowerShell 7 and a display, and on Linux a
 virtual one does. The main window is 1920 by 1080 on every system, past the macOS runner's small screen. Popups aren't in
 the pictures; the window's buttons are, macOS's traffic lights drawn in where AppKit has them.
@@ -95,15 +95,15 @@ foreach ($style in 'standard', 'claude') {
         $start = [System.Diagnostics.ProcessStartInfo]::new($app)
         $start.UseShellExecute = $false
         $environment = @{
-            CLAUDETTE_HOME = Join-Path $Work 'home'
+            DEVENTRY_HOME = Join-Path $Work 'home'
             CLAUDE_CONFIG_DIR = Join-Path $Work 'claude-config'
             FAKE_CLAUDE_USAGE = Join-Path $Work 'usage.json'
             CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
             # A source build otherwise copies itself to its data folder and runs from there.
-            CLAUDETTE_RUN_IN_PLACE = '1'
+            DEVENTRY_RUN_IN_PLACE = '1'
             # On Windows, behind the user's windows, for a run on a desktop someone's using.
-            CLAUDETTE_UNFOCUSED = '1'
-            CLAUDETTE_AUTOMATION_PIPE = $pipe
+            DEVENTRY_UNFOCUSED = '1'
+            DEVENTRY_AUTOMATION_PIPE = $pipe
         }
         foreach ($name in $environment.Keys) { $start.Environment[$name] = $environment[$name] }
         $claudette = [System.Diagnostics.Process]::Start($start)

@@ -3,7 +3,7 @@
 //   deventry-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]
 //
 // Makes, in <folder> (replacing what an earlier run made there):
-//   home/           for CLAUDETTE_HOME: settings with fake-claude as Claude Code and the theme and style asked for
+//   home/           for DEVENTRY_HOME: settings with fake-claude as Claude Code and the theme and style asked for
 //                   (--still reduces motion, so Claudette on the composer stands still for screenshots, and --quiet
 //                   turns the OS's notifications off, which a Claudette kept behind other windows would send),
 //                   seven tabs over three game projects (Unreal in C++, Unity in C#, Godot): the first with a long
@@ -116,7 +116,7 @@ Console.WriteLine($"""
     Demo content in {folder}, with its projects in {projects}.
     Run Claudette with these set (the usage history ends now, so the header's projection reads best soon after):
 
-      CLAUDETTE_HOME={home}
+      DEVENTRY_HOME={home}
       CLAUDE_CONFIG_DIR={config}
       FAKE_CLAUDE_USAGE={usage}
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
