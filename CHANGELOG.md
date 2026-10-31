@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-31
+
+**This is the last version called Claudette.** The next one, 1.0.0, is **devEntry**: the same app with a new name, and a new mascot on the composer, Joulene. When devEntry is released, this version offers it as an update like any other, and your tabs, settings, History and saved passwords come with you; on a Mac, it arrives in Applications as `DevEntry.app`, in place of `Claudette.app`. If you installed Claudette from the Microsoft Store, devEntry has a listing of its own there to install it from.
+
 ### Added
 
 - **Try Claudette without an account.** **Try the demo**, on the sign-in screen and on the screen that offers to install Claude Code, opens Claudette in a window of its own on made-up game projects, with a stand-in for Claude that answers offline. Its tabs, History, the usage header and an API-key account are there to look around, and a message gets an example turn: thinking, a file it asks your permission to write, or a question. Nothing in it reaches Claude or your account, and **Leave demo** closes it, taking what it made with it. See [Trying the demo](https://claudette.dotbunny.com/getting-started/trying-the-demo/).
@@ -267,7 +271,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/dotBunny/Claudette/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/dotBunny/Claudette/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/dotBunny/Claudette/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/dotBunny/Claudette/compare/v0.4.0...v0.5.0
