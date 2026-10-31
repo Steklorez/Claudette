@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Claudette.Tests;
+namespace Deventry.Tests;
 
 /// <summary>
 /// Links to folders, for paths that reach a folder another way, as macOS's <c>/var</c> reaches <c>/private/var</c>: a

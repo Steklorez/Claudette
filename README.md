@@ -86,18 +86,18 @@ You need [Claude Code](https://code.claude.com/docs) installed. Claudette finds 
 - **From source** (Windows, macOS or Linux), with the .NET SDK that `global.json` names:
 
   ```sh
-  dotnet run --project src/Claudette.App
+  dotnet run --project src/Deventry.App
   ```
 
 ### Try it without an account
 
-`tools/Claudette.Demo` builds a demo, the one in these screenshots: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads and two on a studio's API key, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
+`tools/Deventry.Demo` builds a demo, the one in these screenshots: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads and two on a studio's API key, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
 
 ```sh
-dotnet run --project tools/Claudette.Demo -- <empty folder>
+dotnet run --project tools/Deventry.Demo -- <empty folder>
 ```
 
-It prints the environment variables to start Claudette with. On Windows, `tools/Claudette.Demo/screenshots.ps1 -Projects C:\Demo` takes these screenshots again.
+It prints the environment variables to start Claudette with. On Windows, `tools/Deventry.Demo/screenshots.ps1 -Projects C:\Demo` takes these screenshots again.
 
 ## Getting help
 
@@ -108,8 +108,8 @@ The [user guide](https://claudette.dotbunny.com/guide/) shows how to use every p
 [DESIGN.md](DESIGN.md) is the spec for every feature, and [CLAUDE.md](CLAUDE.md) covers the layout, rules and commands. The tests never touch a real account: they use a fake Claude Code, a mock Messages API and recorded protocol fixtures.
 
 ```sh
-dotnet build Claudette.slnx
-dotnet test Claudette.slnx --filter "Category!=Live"
+dotnet build Deventry.slnx
+dotnet test Deventry.slnx --filter "Category!=Live"
 ```
 
 ## License

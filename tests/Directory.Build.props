@@ -3,6 +3,6 @@
   <!-- Helpers every test project shares. -->
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Shared/*.cs" Link="Shared/%(Filename)%(Extension)" />
-    <Using Include="Claudette.Tests" />
+    <Using Include="Deventry.Tests" />
   </ItemGroup>
 </Project>

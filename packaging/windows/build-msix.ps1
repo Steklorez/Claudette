@@ -44,7 +44,7 @@ while ($parts.Count -lt 3) { $parts += '0' }
 $packageVersion = ($parts[0..2] + '0') -join '.'
 
 Write-Host "Publishing Claudette $Version for win-$Architecture"
-dotnet publish (Join-Path $root 'src/Claudette.App/Claudette.App.csproj') -c Release -r "win-$Architecture" --self-contained `
+dotnet publish (Join-Path $root 'src/Deventry.App/Deventry.App.csproj') -c Release -r "win-$Architecture" --self-contained `
     -p:Version=$Version -p:DebugType=portable -o $layout
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
 

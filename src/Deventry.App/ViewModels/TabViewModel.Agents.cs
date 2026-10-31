@@ -1,0 +1,151 @@
+using Deventry.App.Conversation;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
+namespace Deventry.App.ViewModels;
+
+/// <summary>
+/// The tab's agent map (DESIGN.md §18, "Agent map"): the main agent and its subagents as a tree, in the Agents tool
+/// window, and in a window of its own.
+/// </summary>
+public sealed partial class TabViewModel
+{
+    /// <summary>Running times tick every second while an agent runs.</summary>
+    private UiTicker AgentTicker => field ??= new(_services.Time, _services.Dispatcher, TimeSpan.FromSeconds(1), Agents.Tick);
+
+    /// <summary>Kept by the conversation builder from the same routing as the subagent groups.</summary>
+    public AgentMap Agents { get; }
+
+    /// <summary>The composer bar's way to the Agents tool window, while the tab has subagents.</summary>
+    [RelayCommand]
+    private void OpenAgentsPage() => ShowToolWindow(ToolWindows.ToolWindowKinds.Agents);
+
+    /// <summary>"2 agents running" while any are, else how many there were.</summary>
+    public string AgentsButtonText => Agents.ActiveCount is > 0 and var active
+        ? $"{active} agent{(active == 1 ? "" : "s")} running"
+        : $"Agents ({Agents.Subagents.Count})";
+
+    public bool HasAgents => Agents.HasSubagents;
+
+    /// <summary>A subagent is running or waiting: the Agents page button shows a busy dot.</summary>
+    public bool HasActiveAgents => Agents.ActiveCount > 0;
+
+    /// <summary>The top of the Agents page.</summary>
+    public string AgentsHeader => Agents.Summary ?? "Claude hasn't started any subagents in this tab.";
+
+    /// <summary>The node whose prompt and result show below the tree.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedAgent))]
+    public partial AgentNode? SelectedAgent { get; set; }
+
+    public bool HasSelectedAgent => SelectedAgent is not null;
+
+    /// <summary>Asks the view to open the agent map in a window of its own.</summary>
+    public event Action? AgentWindowRequested;
+
+    [RelayCommand]
+    private void OpenAgentWindow() => AgentWindowRequested?.Invoke();
+
+    /// <summary>
+    /// Clicking a node: its work in the tab; or, with subagents' work in the conversation, the permission prompt it's
+    /// waiting on, else its group, expanded along with the groups it's nested in (DESIGN.md §18, "Interaction").
+    /// </summary>
+    [RelayCommand]
+    private void ShowAgent(AgentNode? node)
+    {
+        if (node is null)
+        {
+            return;
+        }
+        SelectedAgent = node;
+        // In the sidebar mode its own work shows, with a prompt it waits on under it (DESIGN.md §5, "Subagents").
+        if (SubagentsInSidebar && node.Item is not null)
+        {
+            ViewAgent(node);
+            return;
+        }
+        if (node.WaitingPrompt is { } prompt)
+        {
+            ScrollToRequested?.Invoke(prompt);
+            return;
+        }
+        if (node.Item is not { } group)
+        {
+            return;
+        }
+        for (var parent = node.Parent; parent?.Item is { } outer; parent = parent.Parent)
+        {
+            outer.IsExpanded = true;
+        }
+        group.IsExpanded = true;
+        ScrollToRequested?.Invoke(group);
+    }
+
+    /// <summary>
+    /// Stops one subagent, after confirming. Claude Code's <c>stop_task</c> stops a subagent in the foreground or the
+    /// background, and the ones it started; the rest of the turn carries on. Without a task id to stop it by, the
+    /// fallback is the whole-turn Stop.
+    /// </summary>
+    [RelayCommand]
+    private void StopAgent(AgentNode? node)
+    {
+        if (node is not { CanStop: true } || _session is not { } session)
+        {
+            return;
+        }
+        if (node.TaskId is { } taskId)
+        {
+            _shell.Confirm(
+                $"Stop \"{node.Title}\"?",
+                "Claude Code stops this subagent, and any subagents it started, and tells Claude it was stopped. The rest of the turn carries on.",
+                "Stop subagent",
+                async () =>
+                {
+                    // A prompt of its that Claude Code withdraws now wasn't answered in the Claude app (DESIGN.md §18).
+                    RemoteControl.OnStoppedHere();
+                    try
+                    {
+                        await session.StopTaskAsync(taskId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _conversation.AddNote($"Couldn't stop the subagent: {ex.Message}", NoteKind.Error);
+                    }
+                });
+        }
+        else if (IsWorking)
+        {
+            _shell.Confirm(
+                "Stop the whole turn?",
+                "Claude Code hasn't given this subagent an ID to stop it by, so Claudette can only stop the whole turn, like the Stop button.",
+                "Stop turn",
+                StopAsync);
+        }
+    }
+
+    [RelayCommand]
+    private Task CopyAgentPromptAsync(AgentNode? node) =>
+        node?.Prompt is { Length: > 0 } prompt ? _services.Platform.SetClipboardTextAsync(prompt) : Task.CompletedTask;
+
+    [RelayCommand]
+    private Task CopyAgentResultAsync(AgentNode? node) =>
+        node?.ResultText is { Length: > 0 } result ? _services.Platform.SetClipboardTextAsync(result) : Task.CompletedTask;
+
+    private void OnAgentsChanged()
+    {
+        OnPropertyChanged(nameof(InfoRows));
+        OnPropertyChanged(nameof(AgentsHeader));
+        OnPropertyChanged(nameof(HasAgents));
+        OnPropertyChanged(nameof(HasActiveAgents));
+        OnPropertyChanged(nameof(AgentsButtonText));
+        if (SelectedAgent is { } selected && !Agents.Contains(selected))
+        {
+            // Gone after /clear.
+            SelectedAgent = null;
+        }
+        AgentTicker.Run(Agents.IsTicking);
+        OnSubagentsChanged();
+        // Claudette on the composer juggles a ball for each subagent running (DESIGN.md §5).
+        TellMascot();
+    }
+}

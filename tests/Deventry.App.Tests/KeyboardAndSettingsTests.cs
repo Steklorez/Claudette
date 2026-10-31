@@ -1,0 +1,409 @@
+using Avalonia.Input;
+using Deventry.App.Services;
+using Deventry.App.Tests.Support;
+using Deventry.App.ViewModels;
+using Deventry.Core.Files;
+using Deventry.Core.Settings;
+
+namespace Deventry.App.Tests;
+
+/// <summary>
+/// Settings → Keyboard, per-suffix shortcuts and the suffix menu's numbers, the Settings search box, and dragging tabs
+/// (DESIGN.md §4, §5, §14).
+/// </summary>
+public class KeyboardAndSettingsTests
+{
+    private static KeyModifiers Primary => Shortcuts.IsMac ? KeyModifiers.Meta : KeyModifiers.Control;
+
+    private static KeyChord Chord(string text) => KeyChord.TryParse(text, out var chord) ? chord : throw new ArgumentException(text);
+
+    // ---- Matching key presses -------------------------------------------------------------------------------------
+
+    [Fact]
+    public void Key_presses_match_the_bound_shortcuts()
+    {
+        var keyboard = new KeyboardSettings();
+
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.NewTab, Key.T, Primary));
+        Assert.False(Shortcuts.Matches(keyboard, KeyboardShortcuts.NewTab, Key.T, Primary | KeyModifiers.Shift));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.History, Key.H, Primary | KeyModifiers.Shift));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.NextTab, Key.Tab, KeyModifiers.Control));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.GoToTab, Key.D7, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.GoToTab, Key.NumPad3, Primary));
+        Assert.False(Shortcuts.Matches(keyboard, KeyboardShortcuts.GoToTab, Key.D0, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.AllowPrompt, Key.Enter, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.Stop, Key.Escape, KeyModifiers.None));
+        // The number pad's keys work like the main keyboard's.
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.ZoomIn, Key.OemPlus, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.ZoomIn, Key.Add, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.ZoomOut, Key.Subtract, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.ResetZoom, Key.NumPad0, Primary));
+        Assert.Equal(Chord("Primary+OemPlus"), Shortcuts.FromKeyPress(Key.Add, Primary));
+
+        keyboard.Bindings[KeyboardShortcuts.NewTab] = "Primary+Shift+N";
+        Assert.False(Shortcuts.Matches(keyboard, KeyboardShortcuts.NewTab, Key.T, Primary));
+        Assert.True(Shortcuts.Matches(keyboard, KeyboardShortcuts.NewTab, Key.N, Primary | KeyModifiers.Shift));
+    }
+
+    [Fact]
+    public void Key_presses_become_chords_and_modifiers_alone_do_not()
+    {
+        Assert.Null(Shortcuts.FromKeyPress(Key.LeftShift, KeyModifiers.Shift));
+        Assert.Equal(Chord("Primary+Alt+Enter"), Shortcuts.FromKeyPress(Key.Return, Primary | KeyModifiers.Alt));
+        Assert.Equal(Chord("Primary+D4"), Shortcuts.FromKeyPress(Key.NumPad4, Primary));
+    }
+
+    // ---- Settings → Keyboard --------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// The composer's send key chip (DESIGN.md §5, "Composer") switches Settings → Keyboard → Send with (§14), saved as the
+    /// page saves it: every tab's chip, Send and placeholder follow, and so does an open Settings window.
+    /// </summary>
+    [Fact]
+    public async Task The_send_key_chip_switches_Send_with_for_every_tab_and_the_open_Settings_window()
+    {
+        await using var h = new TabTestHarness();
+        var first = await h.OpenTabAsync();
+        var second = await h.OpenTabAsync();
+        using var settings = new SettingsViewModel(h.Services, null);
+        var sendWith = settings.Keyboard.FindSetting("keyboard.sendKey")!;
+        var saves = 0;
+        h.Services.SettingsChanged += (_, _) => saves++;
+        var placeholderChanged = new List<TabViewModel>();
+        foreach (var tab in new[] { first, second })
+        {
+            tab.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TabViewModel.ComposerPlaceholder))
+                {
+                    placeholderChanged.Add(tab);
+                }
+            };
+        }
+        var tipsChanged = 0;
+        h.Services.Tips.PropertyChanged += (_, _) => tipsChanged++;
+        var primaryEnter = new KeyChord(ChordModifiers.Primary, "Enter").Display(Shortcuts.IsMac);
+
+        Assert.All(new[] { first, second }, tab =>
+        {
+            Assert.Equal("", tab.Tips.SendKeyModifiers);
+            Assert.Equal("Enter sends", tab.Tips.SendKeyName);
+            Assert.Equal($"Enter sends, Shift+Enter starts a new line. Click to send with {primaryEnter} instead.", tab.Tips.SendKeyTip);
+            Assert.Equal("Send (Enter)", tab.Tips.Send);
+        });
+
+        InlineDispatcher.Run(() => first.SwitchSendKeyCommand.Execute(null));
+
+        Assert.Equal(SendKey.PrimaryEnter, h.Services.Settings.Keyboard.SendKey);
+        Assert.Equal(1, saves);
+        Assert.True(tipsChanged > 0);
+        Assert.All(new[] { first, second }, tab =>
+        {
+            Assert.Contains(tab, placeholderChanged);
+            Assert.Equal(Shortcuts.IsMac ? "⌘" : "Ctrl+", tab.Tips.SendKeyModifiers);
+            Assert.Equal($"{primaryEnter} sends", tab.Tips.SendKeyName);
+            Assert.Equal($"{primaryEnter} sends, Enter starts a new line. Click to send with Enter instead.", tab.Tips.SendKeyTip);
+            Assert.Equal($"Send ({primaryEnter})", tab.Tips.Send);
+            Assert.Contains($"{primaryEnter} to send, Enter for a new line", tab.ComposerPlaceholder, StringComparison.Ordinal);
+        });
+        Assert.True(settings.Keyboard.SendWithPrimaryEnter);
+        Assert.False(settings.Keyboard.SendWithEnter);
+        Assert.True(sendWith.IsChanged);
+
+        // From the other tab, back again.
+        placeholderChanged.Clear();
+        InlineDispatcher.Run(() => second.SwitchSendKeyCommand.Execute(null));
+
+        Assert.Equal(SendKey.Enter, h.Services.Settings.Keyboard.SendKey);
+        Assert.Equal(2, saves);
+        Assert.All(new[] { first, second }, tab =>
+        {
+            Assert.Contains(tab, placeholderChanged);
+            Assert.Equal("Enter sends", tab.Tips.SendKeyName);
+            Assert.Contains("Enter to send, Shift+Enter for a new line", tab.ComposerPlaceholder, StringComparison.Ordinal);
+        });
+        Assert.True(settings.Keyboard.SendWithEnter);
+        Assert.False(sendWith.IsChanged);
+    }
+
+    [Fact]
+    public async Task Recording_a_shortcut_rebinds_the_command_and_its_tooltip()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+        var newTab = settings.Keyboard.ShortcutRows.Single(r => r.Command.Id == KeyboardShortcuts.NewTab);
+
+        settings.Keyboard.StartRecordingCommand.Execute(newTab);
+        Assert.True(settings.IsRecordingShortcut);
+        Assert.Equal("Press keys…", newTab.ShortcutText);
+
+        settings.RecordShortcut(Chord("Primary+Shift+N"));
+
+        Assert.False(settings.IsRecordingShortcut);
+        Assert.Equal("Primary+Shift+N", h.Services.Settings.Keyboard.Bindings[KeyboardShortcuts.NewTab]);
+        Assert.True(newTab.IsCustomized);
+        Assert.Equal($"New tab ({Chord("Primary+Shift+N").Display(Shortcuts.IsMac)})", h.Services.Tips.NewTab);
+
+        // Its row's Reset: the shortcut is a setting of its own, and goes back to its default.
+        settings.Keyboard.FindSetting(newTab.Key)!.ResetCommand.Execute(null);
+        Assert.False(newTab.IsCustomized);
+        Assert.Empty(h.Services.Settings.Keyboard.Bindings);
+    }
+
+    [Fact]
+    public async Task A_shortcut_already_in_use_is_refused()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+        var newTab = settings.Keyboard.ShortcutRows.Single(r => r.Command.Id == KeyboardShortcuts.NewTab);
+
+        settings.Keyboard.StartRecordingCommand.Execute(newTab);
+        settings.RecordShortcut(Chord("Primary+W"));
+
+        Assert.True(settings.IsRecordingShortcut);
+        Assert.Equal($"{Chord("Primary+W").Display(Shortcuts.IsMac)} is already used by \"Close tab\".", newTab.Error);
+        Assert.Empty(h.Services.Settings.Keyboard.Bindings);
+    }
+
+    [Fact]
+    public async Task A_shortcut_that_would_stop_typing_is_refused()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+        var history = settings.Keyboard.ShortcutRows.Single(r => r.Command.Id == KeyboardShortcuts.History);
+
+        settings.Keyboard.StartRecordingCommand.Execute(history);
+        settings.RecordShortcut(Chord("Shift+H"));
+        Assert.Equal(Shortcuts.IsMac ? "Add Cmd, Ctrl or Option, so typing still works." : "Add Ctrl or Alt, so typing still works.", history.Error);
+
+        settings.RecordShortcut(Chord("F2"));
+        Assert.Equal("F2", h.Services.Settings.Keyboard.Bindings[KeyboardShortcuts.History]);
+    }
+
+    [Fact]
+    public async Task Go_to_tab_takes_a_number_key_for_all_nine()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+        var goTo = settings.Keyboard.ShortcutRows.Single(r => r.Command.Id == KeyboardShortcuts.GoToTab);
+
+        settings.Keyboard.StartRecordingCommand.Execute(goTo);
+        settings.RecordShortcut(Chord("Alt+G"));
+        Assert.Contains("number key", goTo.Error);
+
+        settings.RecordShortcut(Chord("Alt+D5"));
+        Assert.Equal("Alt+D1", h.Services.Settings.Keyboard.Bindings[KeyboardShortcuts.GoToTab]);
+        Assert.Equal("Alt+1…9", goTo.ShortcutText.Replace("⌥", "Alt+", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Removing_and_resetting_all_shortcuts()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+        var stop = settings.Keyboard.ShortcutRows.Single(r => r.Command.Id == KeyboardShortcuts.Stop);
+
+        settings.Keyboard.ClearShortcutCommand.Execute(stop);
+        Assert.Equal("None", stop.ShortcutText);
+        Assert.False(Shortcuts.Matches(h.Services.Settings.Keyboard, KeyboardShortcuts.Stop, Key.Escape, KeyModifiers.None));
+
+        settings.Keyboard.ResetAllSections();
+        Assert.True(Shortcuts.Matches(h.Services.Settings.Keyboard, KeyboardShortcuts.Stop, Key.Escape, KeyModifiers.None));
+    }
+
+    // ---- Quick suffixes (DESIGN.md §5) ----------------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_suffix_gets_its_own_shortcut_unless_a_command_has_it()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+        var clarify = settings.Keyboard.Suffixes.First();
+
+        settings.Keyboard.StartRecordingCommand.Execute(clarify);
+        settings.RecordShortcut(Chord("Primary+Shift+H"));
+        Assert.Contains("History", clarify.Error);
+
+        settings.RecordShortcut(Chord("Primary+Alt+C"));
+        Assert.Equal("Primary+Alt+C", clarify.Suffix.Shortcut);
+        Assert.True(clarify.HasShortcut);
+
+        settings.Keyboard.ClearShortcutCommand.Execute(clarify);
+        Assert.Null(clarify.Suffix.Shortcut);
+    }
+
+    [Fact]
+    public async Task The_suffix_menu_numbers_the_first_nine_and_picks_by_number()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.Settings.QuickSuffixes[1].Shortcut = "Primary+Alt+P";
+        var tab = await h.OpenTabAsync();
+
+        var menu = tab.SuffixMenu;
+        Assert.Equal([1, 2, 3, 4, 5], menu.Select(m => m.Number));
+        Assert.Equal(Chord("Primary+Alt+P").Display(Shortcuts.IsMac), menu[1].Shortcut);
+
+        Assert.All(menu, m => Assert.False(m.IsOn));
+
+        Assert.True(tab.PickSuffix(2));
+        Assert.False(tab.PickSuffix(9));
+
+        Assert.Equal("Plan only", Assert.Single(tab.Chips).Suffix.Label);
+        Assert.Equal([false, true, false, false, false], tab.SuffixMenu.Select(m => m.IsOn));
+    }
+
+    [Fact]
+    public async Task Picking_a_checked_suffix_takes_it_off_kept_or_not()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var changed = new List<string?>();
+        tab.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        tab.ToggleSuffixCommand.Execute(h.Services.Suffix("clarify"));
+        Assert.True(tab.SuffixMenu.Single(m => m.Suffix.Id == "clarify").IsOn);
+        Assert.Contains(nameof(TabViewModel.SuffixMenu), changed);
+
+        tab.ToggleSuffixCommand.Execute(h.Services.Suffix("clarify"));
+        Assert.Empty(tab.Chips);
+        Assert.False(tab.SuffixMenu.Single(m => m.Suffix.Id == "clarify").IsOn);
+
+        // A kept one comes off the tab too.
+        Assert.True(tab.PickSuffix(1));
+        tab.ToggleKeepCommand.Execute(tab.Chips[0]);
+        Assert.Equal([tab.Chips[0].Suffix.Id], tab.State.KeptSuffixes);
+        Assert.True(tab.PickSuffix(1));
+        Assert.Empty(tab.Chips);
+        Assert.Empty(tab.State.KeptSuffixes);
+    }
+
+    // ---- Settings search (DESIGN.md §14) -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Searching_settings_finds_them_by_name_and_opens_their_category()
+    {
+        await using var h = new TabTestHarness();
+        var settings = new SettingsViewModel(h.Services, null);
+
+        settings.SearchText = "font";
+
+        Assert.True(settings.IsSearching);
+        Assert.Equal(["Conversation font", "Conversation font size", "Code font", "Code font size"], settings.SearchResults.Select(r => r.Label));
+        Assert.Equal("Appearance", settings.SelectedCategory);
+
+        settings.SearchText = "badge";
+        settings.SelectedSearchResult = settings.SearchResults.First();
+        Assert.Equal("Notifications", settings.SelectedCategory);
+
+        settings.SearchText = "usage history";
+        Assert.Equal("Usage", settings.SearchResults[0].Category);
+
+        settings.SearchText = "sync new tabs";
+        Assert.Equal(("Sessions", "sessions.syncNewTabs"), (settings.SearchResults[0].Category, settings.SearchResults[0].Key));
+
+        settings.SearchText = "xyzzy";
+        Assert.Empty(settings.SearchResults);
+
+        settings.SearchText = "";
+        Assert.False(settings.IsSearching);
+    }
+
+    // ---- Dragging tabs and groups (DESIGN.md §4) ------------------------------------------------------------------
+
+    [Fact]
+    public async Task Tabs_move_within_their_group_and_pinned_tabs_stay_first()
+    {
+        await using var h = new TabTestHarness();
+        // Restored tabs don't start until selected, so only the first one talks to the scripted Claude Code.
+        h.Services.Settings.Sessions.RestoreUnpinnedTabs = true;
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true }, new TabState { Folder = h.WorkFolder }, new TabState { Folder = h.WorkFolder }];
+        h.Shell.Restore(null);
+        var group = h.Shell.Groups.Single();
+        var (a, b, c) = (group.Tabs[0], group.Tabs[1], group.Tabs[2]);
+
+        Assert.True(h.Shell.MoveTabTo(c, 1));
+        Assert.Equal([a, c, b], group.Tabs);
+
+        // An unpinned tab can't move ahead of a pinned one, nor a pinned one behind the unpinned.
+        h.Shell.MoveTabTo(b, 0);
+        Assert.Equal(a, group.Tabs[0]);
+        Assert.False(h.Shell.MoveTabTo(a, 2));
+        Assert.Equal([a.Id, b.Id, c.Id], h.Services.State.Tabs.Select(t => t.Id));
+    }
+
+    [Fact]
+    public async Task Groups_move_and_keep_their_order()
+    {
+        await using var h = new TabTestHarness();
+        var other = Path.Combine(h.Root, "other");
+        Directory.CreateDirectory(other);
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true }, new TabState { Folder = other, IsPinned = true }];
+        h.Shell.Restore(null);
+        var (first, second) = (h.Shell.Groups[0], h.Shell.Groups[1]);
+
+        Assert.True(h.Shell.MoveGroupTo(second, 0));
+
+        Assert.Equal([second, first], h.Shell.Groups);
+        Assert.Equal(other, h.Services.State.Tabs[0].Folder);
+    }
+
+    // ---- Settings sync (DESIGN.md §14) ----------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Shortcuts_and_notification_settings_sync_between_machines()
+    {
+        await using var first = new TabTestHarness();
+        await using var second = new TabTestHarness();
+        var library = Path.Combine(first.Root, "shared-library");
+
+        // This machine turns sync on with its own shortcut and notification choices: they're published.
+        first.Services.Settings.Keyboard.Bindings[KeyboardShortcuts.NewTab] = "Primary+Shift+N";
+        first.Services.Settings.Notifications.TurnFinished = false;
+        first.Services.Settings.Sessions.LibraryFolder = library;
+        first.Services.Settings.Sessions.SyncSettings = true;
+        first.Services.Library.OnSettingsChanged();
+        var syncFile = Path.Combine(library, "settings-sync.json");
+        // Read as the sync reads it, waiting out a write that has the file open on Windows.
+        await TabTestHarness.Eventually(() => File.Exists(syncFile) && AtomicFile.ReadAllText(syncFile).Contains("keyboard.bindings", StringComparison.Ordinal), "the published settings");
+
+        // Another machine joins the same library and takes them.
+        second.Services.Settings.Sessions.LibraryFolder = library;
+        second.Services.Settings.Sessions.SyncSettings = true;
+        second.Services.Library.OnSettingsChanged();
+        await TabTestHarness.Eventually(() => second.Services.Settings.Keyboard.Bindings.ContainsKey(KeyboardShortcuts.NewTab), "the synced shortcut");
+
+        Assert.Equal("Primary+Shift+N", second.Services.Settings.Keyboard.Bindings[KeyboardShortcuts.NewTab]);
+        Assert.False(second.Services.Settings.Notifications.TurnFinished);
+    }
+
+    [Fact]
+    public async Task Density_and_the_context_ring_sync_with_the_other_appearance_settings_but_zoom_does_not()
+    {
+        await using var first = new TabTestHarness();
+        await using var second = new TabTestHarness();
+        var library = Path.Combine(first.Root, "shared-library");
+        first.Services.Settings.Appearance.Density = Density.Compact;
+        first.Services.Settings.Appearance.ShowContextOnTabs = false;
+        // The zoom suits each machine's screen (DESIGN.md §3, "Accessibility").
+        first.Services.Settings.Appearance.Zoom = 150;
+        first.Services.Settings.Sessions.LibraryFolder = library;
+        first.Services.Settings.Sessions.SyncSettings = true;
+        first.Services.Library.OnSettingsChanged();
+        var syncFile = Path.Combine(library, "settings-sync.json");
+        // Read as the sync reads it, waiting out a write that has the file open on Windows.
+        await TabTestHarness.Eventually(() => File.Exists(syncFile) && AtomicFile.ReadAllText(syncFile).Contains("appearance.density", StringComparison.Ordinal), "the published settings");
+
+        second.Services.Settings.Sessions.LibraryFolder = library;
+        second.Services.Settings.Sessions.SyncSettings = true;
+        second.Services.Library.OnSettingsChanged();
+        // Applied as it arrives, like a change made here. The sync stores the values on its own thread and then
+        // announces them, so wait for the shell to follow rather than for the stored value alone.
+        await TabTestHarness.Eventually(() => second.Shell.IsCompact, "the synced density, applied");
+
+        Assert.Equal(Density.Compact, second.Services.Settings.Appearance.Density);
+        Assert.False(second.Services.Settings.Appearance.ShowContextOnTabs);
+        Assert.Equal(100, second.Services.Settings.Appearance.Zoom);
+        Assert.DoesNotContain("appearance.zoom", AtomicFile.ReadAllText(syncFile), StringComparison.Ordinal);
+        Assert.Equal(150, first.Services.Settings.Appearance.Zoom);
+    }
+}

@@ -16,20 +16,20 @@ You need Claude Code installed ([What you need](what-you-need.md)) and the .NET 
 From the checkout's root:
 
 ```sh
-dotnet run --project src/Claudette.App
+dotnet run --project src/Deventry.App
 ```
 
 This uses your real account, so messages cost usage as they do in any tab. To open a tab in a folder at startup:
 
 ```sh
-dotnet run --project src/Claudette.App -- --folder <path>
+dotnet run --project src/Deventry.App -- --folder <path>
 ```
 
 ## Running from a copy
 
 A source build copies its build output to a `builds` folder in Claudette's data folder and runs from there. That lets you rebuild while it runs: on Windows a running program's files are locked, and elsewhere replacing them can crash it. `dotnet run` returns as soon as the copy has started.
 
-To run in place instead, set `CLAUDETTE_RUN_IN_PLACE=1`, or attach a debugger. Claudette counts as a source build when its program is in a `bin` folder below a checkout that holds `Claudette.slnx`.
+To run in place instead, set `CLAUDETTE_RUN_IN_PLACE=1`, or attach a debugger. Claudette counts as a source build when its program is in a `bin` folder below a checkout that holds `Deventry.slnx`.
 
 A source build doesn't check for releases. It checks its checkout for new commits instead (below), and Settings → General says so.
 
@@ -77,10 +77,10 @@ See [Command line and environment](../reference/command-line-and-environment.md)
 
 ## Try it without an account
 
-`tools/Claudette.Demo` makes a demo: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
+`tools/Deventry.Demo` makes a demo: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
 
 ```sh
-dotnet run --project tools/Claudette.Demo -- <empty folder>
+dotnet run --project tools/Deventry.Demo -- <empty folder>
 ```
 
 Give it an empty folder, or one an earlier run made. It writes the demo there and prints the environment to start Claudette with:

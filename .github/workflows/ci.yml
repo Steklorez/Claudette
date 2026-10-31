@@ -67,16 +67,16 @@ jobs:
         if: ${{ matrix.real-cli }}
         run: claude --version
       - name: Restore
-        run: dotnet restore Claudette.slnx --locked-mode
+        run: dotnet restore Deventry.slnx --locked-mode
       - name: Build
-        run: dotnet build Claudette.slnx --no-restore --configuration Release
+        run: dotnet build Deventry.slnx --no-restore --configuration Release
       # Live tests use real tokens and never run in CI. Where Claude Code is installed, a RealCli test that can't find it
       # fails rather than skips (CLAUDETTE_REQUIRE_CLAUDE), so the leg can't pass while running none of them.
       # A test that hangs fails the run after 10 minutes and names itself, rather than holding the runner for hours.
       - name: Test
         env:
           CLAUDETTE_REQUIRE_CLAUDE: ${{ matrix.real-cli && '1' || '' }}
-        run: dotnet test Claudette.slnx --no-build --configuration Release --filter "${{ matrix.filter }}" --blame-hang-timeout 10m --blame-hang-dump-type none --logger trx --results-directory TestResults
+        run: dotnet test Deventry.slnx --no-build --configuration Release --filter "${{ matrix.filter }}" --blame-hang-timeout 10m --blame-hang-dump-type none --logger trx --results-directory TestResults
       - name: Summary
         if: ${{ !cancelled() }}
         shell: bash

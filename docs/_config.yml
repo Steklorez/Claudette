@@ -28,7 +28,7 @@ favicon_ico: /assets/favicon.ico
 color_scheme: claudette-light
 
 # The picture a link to any page shows where it's shared, which jekyll-seo-tag writes as og:image and twitter:image: the
-# social card, drawn by tools/Claudette.Demo/social-card.ps1 (GUIDE.md, "The site").
+# social card, drawn by tools/Deventry.Demo/social-card.ps1 (GUIDE.md, "The site").
 defaults:
   - scope:
       path: ""

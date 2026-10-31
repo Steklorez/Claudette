@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds Claudette.app and a .dmg for one architecture (DESIGN.md §2, "Packaging"), then signs and notarizes them when
+# Builds Deventry.app and a .dmg for one architecture (DESIGN.md §2, "Packaging"), then signs and notarizes them when
 # credentials are given. Without them it still builds, unsigned, which is what pull request checks do.
 #
 #   packaging/macos/build-dmg.sh <version> <arm64|x64> [output folder]
@@ -18,13 +18,13 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 output="${3:-$root/artifacts}"
 here="$root/packaging/macos"
 work="$root/obj/package/osx-$arch"
-app="$work/Claudette.app"
+app="$work/Deventry.app"
 mkdir -p "$output"
 rm -rf "$work"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 
 echo "Publishing Claudette $version for osx-$arch"
-dotnet publish "$root/src/Claudette.App/Claudette.App.csproj" -c Release -r "osx-$arch" --self-contained \
+dotnet publish "$root/src/Deventry.App/Deventry.App.csproj" -c Release -r "osx-$arch" --self-contained \
   -p:Version="$version" -p:DebugType=portable -o "$app/Contents/MacOS"
 # The symbols stay out of the bundle (and its signature), kept beside it to read crash reports' stack traces with.
 symbols="$output/symbols-osx-$arch"
@@ -39,13 +39,13 @@ if ! command -v iconutil >/dev/null; then
 fi
 
 # The icon, from the 1024-pixel master.
-iconset="$work/Claudette.iconset"
+iconset="$work/Deventry.iconset"
 mkdir -p "$iconset"
 for size in 16 32 128 256 512; do
   sips -z "$size" "$size" "$root/packaging/icon/claudette-1024.png" --out "$iconset/icon_${size}x${size}.png" >/dev/null
   sips -z $((size * 2)) $((size * 2)) "$root/packaging/icon/claudette-1024.png" --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
 done
-iconutil -c icns "$iconset" -o "$app/Contents/Resources/Claudette.icns"
+iconutil -c icns "$iconset" -o "$app/Contents/Resources/Deventry.icns"
 
 identity="${MACOS_SIGNING_IDENTITY:-}"
 if [[ -n "$identity" ]]; then
@@ -54,9 +54,9 @@ if [[ -n "$identity" ]]; then
   # .NET keeps its assemblies there too, in Contents/MacOS, where codesign counts every file as code, so each is signed,
   # not only the Mach-O ones; one that isn't Mach-O keeps its signature in extended attributes, which the .dmg and
   # ditto keep. The entitlements, for .NET's JIT, go on the executable alone, which signing the bundle signs.
-  find "$app/Contents/MacOS" -type f ! -path "$app/Contents/MacOS/Claudette" -print0 \
+  find "$app/Contents/MacOS" -type f ! -path "$app/Contents/MacOS/Deventry" -print0 \
     | xargs -0 codesign --force --timestamp --options runtime --sign "$identity"
-  codesign --force --timestamp --options runtime --entitlements "$here/Claudette.entitlements" --sign "$identity" "$app"
+  codesign --force --timestamp --options runtime --entitlements "$here/Deventry.entitlements" --sign "$identity" "$app"
   codesign --verify --deep --strict --verbose=2 "$app"
 else
   echo "warning: MACOS_SIGNING_IDENTITY isn't set, so the app is unsigned and Gatekeeper will block it." >&2

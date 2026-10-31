@@ -97,7 +97,7 @@ jobs:
         timeout-minutes: 25
         run: |
           set -o pipefail
-          dotnet test Claudette.slnx --configuration Release --filter "Category!=Live" --blame-hang-timeout 10m --blame-hang-dump-type none 2>&1 | tee test-output.txt
+          dotnet test Deventry.slnx --configuration Release --filter "Category!=Live" --blame-hang-timeout 10m --blame-hang-dump-type none 2>&1 | tee test-output.txt
 
       # The whole report, and the issue's copy cut to GitHub's 65,536-character limit (a large docs change can match
       # hundreds of ids, and a diff can run to megabytes).
@@ -180,4 +180,4 @@ jobs:
         if: steps.changed.outputs.run == 'true'
         run: |
           claude --version
-          dotnet test Claudette.slnx --configuration Release --filter "Category=RealCli" --blame-hang-timeout 10m --blame-hang-dump-type none
+          dotnet test Deventry.slnx --configuration Release --filter "Category=RealCli" --blame-hang-timeout 10m --blame-hang-dump-type none

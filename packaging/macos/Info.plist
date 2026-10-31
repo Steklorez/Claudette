@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Claudette.app's Info.plist (DESIGN.md §2, "Packaging"). build-dmg.sh fills in $VERSION$. -->
+<!-- Deventry.app's Info.plist (DESIGN.md §2, "Packaging"). build-dmg.sh fills in $VERSION$. -->
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key>
@@ -11,9 +11,9 @@
   <key>CFBundleIdentifier</key>
   <string>com.dotbunny.claudette</string>
   <key>CFBundleExecutable</key>
-  <string>Claudette</string>
+  <string>Deventry</string>
   <key>CFBundleIconFile</key>
-  <string>Claudette.icns</string>
+  <string>Deventry.icns</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

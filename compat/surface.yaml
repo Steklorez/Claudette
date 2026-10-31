@@ -21,62 +21,62 @@ items:
   - id: "-p"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "--input-format stream-json"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "--output-format stream-json"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "--verbose"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "--include-partial-messages"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "--permission-prompt-tool stdio"
     kind: flag
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
     fallback: The flag is documented but the "stdio" value is taken from the Agent SDK source. If it changes, take the new value from the TypeScript SDK; last resort is the Node sidecar (DESIGN.md §13).
   - id: "--model"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "--effort"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests
   - id: "--permission-mode"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests, PermissionModeTests
   - id: "--permission-mode auto"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Claude/StartingPermissionMode.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/permission-modes
     test: RealCliTests, PermissionModeTests
     # DESIGN.md §7, "Starting mode": claude -p starts in Manual, so a tab asks for auto mode itself. Where auto mode is
@@ -84,13 +84,13 @@ items:
   - id: "--resume"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/sessions
     test: RealCliTests
   - id: "--name"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.cs, src/Claudette.App/ViewModels/TabViewModel.Messaging.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.cs, src/Deventry.App/ViewModels/TabViewModel.Messaging.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, MessagingTests, SessionNameRealCliTests
     # DESIGN.md §13, "Session naming": what other sessions message a tab's session by, and claude --resume finds it by.
@@ -100,20 +100,20 @@ items:
   - id: "--no-session-persistence"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.Core/Sessions/UtilitySession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.Core/Sessions/UtilitySession.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests
   - id: "--thinking-display"
     kind: flag
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeEnvironmentTests
     fallback: Not in claude --help; the Agent SDKs pass it (ThinkingConfig.display is documented). Without it, newer models send empty thinking blocks and the Thinking row has no text.
   - id: "--forward-subagent-text"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests
 
@@ -121,41 +121,41 @@ items:
   - id: "claude --version"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeLocator.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeLocator.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: FakeClaudeTests
     fallback: Output is read as the first X.Y.Z in the text, so formatting changes are tolerated.
   - id: "claude auth status"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: InstallAndAuthTests
   - id: "loggedIn"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: InstallAndAuthTests
     fallback: The command and its exit code (0 signed in, 1 not) are documented; fall back to the exit code if the JSON changes.
   - id: "projectsDirectory"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs
     docs: https://code.claude.com/docs/en/sessions
     test: InstallAndAuthTests
     fallback: Use the documented default location (CLAUDE_CONFIG_DIR or ~/.claude, then projects/).
   - id: "configDirectory"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs, src/Claudette.App/ViewModels/MainWindowViewModel.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs, src/Deventry.App/ViewModels/MainWindowViewModel.cs
     docs: https://code.claude.com/docs/en/settings
     test: InstallAndAuthTests
     fallback: Use the parent of projectsDirectory, which is the config folder by default. Without either, the working line skips the user's settings file.
   - id: "claude auth logout"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs, src/Claudette.App/ViewModels/AccountViewModel.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs, src/Deventry.App/ViewModels/AccountViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: SignInTests, FakeClaudeSignInTests, AccountAndSignInTests
 
@@ -163,37 +163,37 @@ items:
   - id: "CLAUDECODE"
     kind: env
     status: undocumented
-    usedIn: src/Claudette.Core/Claude/ClaudeEnvironment.cs
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
     test: CleanEnvironmentTests
     fallback: One of the session variables Claude Code sets for its children; the full list is ClaudeEnvironment.SessionVariables. Re-check the list when Claude Code adds new ones (run env inside a Claude Code Bash tool call).
   - id: "CLAUDE_CODE_CHILD_SESSION"
     kind: env
     status: undocumented
-    usedIn: src/Claudette.Core/Claude/ClaudeEnvironment.cs
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
     test: CleanEnvironmentTests
     fallback: See CLAUDECODE.
   - id: "ANTHROPIC_BASE_URL"
     kind: env
     status: documented
-    usedIn: tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: tests/Deventry.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RealCliTests
   - id: "CLAUDE_CONFIG_DIR"
     kind: env
     status: documented
-    usedIn: tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: tests/Deventry.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RealCliTests
   - id: "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"
     kind: env
     status: documented
-    usedIn: tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: tests/Deventry.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RealCliTests
   - id: "Bash tool environment comes from Claude Code's own environment"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Processes/UserEnvironment.cs, src/Claudette.Platform/LoginShell/LoginShellReader.cs
+    usedIn: src/Deventry.Core/Processes/UserEnvironment.cs, src/Deventry.Platform/LoginShell/LoginShellReader.cs
     docs: https://code.claude.com/docs/en/tools-reference
     test: UserEnvironmentTests, LoginShellTests
     fallback: Claude Code sources the shell startup file (~/.zshrc, ~/.bashrc or ~/.profile) only for aliases, functions and shell options ("What persists between commands"), so the PATH and variables its Bash commands get are the ones Claudette starts claude with. That is why Claudette gives claude the login shell's environment on macOS and Linux (DESIGN.md §13, "Login shell environment"). If Claude Code starts taking environment variables from the startup file itself, the login shell environment is redundant for the Bash tool but does no harm, and still matters for finding claude, git and p4.
@@ -202,13 +202,13 @@ items:
   - id: "system/init"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests
   - id: "system/init cwd"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.App/ViewModels/TabViewModel.Worktree.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: WorktreeTabTests, ChangedFilesWorkTreesTests, ProtocolRecordingTests, RealCliTests
     # Where a worktree tab's Claude Code works once --worktree made the worktree, and where the session works after
@@ -218,7 +218,7 @@ items:
   - id: "EnterWorktree"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Git/WorktreeMove.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    usedIn: src/Deventry.Core/Git/WorktreeMove.cs, src/Deventry.App/ViewModels/TabViewModel.Worktree.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesWorkTreesTests, ProtocolRecordingTests
     # The tool's result, worktreePath and worktreeBranch: Claude moved the session into a worktree mid-session, and the
@@ -226,246 +226,246 @@ items:
   - id: "ExitWorktree"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Git/WorktreeMove.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    usedIn: src/Deventry.Core/Git/WorktreeMove.cs, src/Deventry.App/ViewModels/TabViewModel.Worktree.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesWorkTreesTests, ProtocolRecordingTests
     # The tool's result, action and originalCwd: Claude moved the session back out of its worktree, and the tab follows.
   - id: "restoredCwd"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Git/WorktreeMove.cs
+    usedIn: src/Deventry.Core/Git/WorktreeMove.cs
     test: ProtocolRecordingTests
     fallback: "ExitWorktree's result names the folder the session went back to as restoredCwd (2.1.302, 2.1.308), which the Agent SDK's ExitWorktreeOutput doesn't list. Without it, the documented originalCwd is used; and the next turn's system/init cwd says where the session works either way."
   - id: "capabilities"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     docs: https://code.claude.com/docs/en/headless
     test: MessageParserTests
   - id: "interrupt_receipt_v1"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
   - id: "stream_event"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests
   - id: "authentication_failed"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Auth/SignInErrors.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Auth/SignInErrors.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ReplayTests, ClaudeSessionTests, SignInTests
   - id: "tool_use_result"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     test: RealCliTests
     fallback: Carries originalFile and structuredPatch for diffs (DESIGN.md §8). If it goes away, use the git working tree diff, or file checkpoints.
   - id: "originalFile"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Core/Diffs/ChangedFiles.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Core/Diffs/ChangedFiles.cs
     test: RealCliTests, ChangedFilesTests, BeforeContentStoreTests
     fallback: See tool_use_result. Without it, a changed file's "before" side is unknown; the Working tree vs HEAD view still works in a git repository. An Edit's null means a new file only with an empty oldString; transcripts also write null for a large file (see "originalFile over 10,000 characters is null in transcripts").
   - id: "<local-command-stdout>"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs
     test: MessageParserTests
     fallback: Only used to show local command output as a note. If the wrapper changes, the text shows as a tool result row instead.
   - id: "result"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests
   - id: "aborted_streaming"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs
     test: RealCliTests
     fallback: Only used to show "Stopped." instead of an error note.
   - id: "rate_limit_event"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Usage/UsageParser.cs, src/Claudette.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Usage/UsageParser.cs, src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: UsageParserTests, UsageHeaderTests, AutoContinueMonitorTests
   - id: "auth_status"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests
     fallback: One with an error means Claude Code needs a sign-in (DESIGN.md §11). 2.1.284 only sends it with the hidden --enable-auth-status flag, which Claudette doesn't pass, to report cloud credential helpers such as awsAuthRefresh, so in practice authentication_failed is what arrives.
   - id: "control_cancel_request"
     kind: message
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     test: ClaudeSessionTests
     fallback: Without it, a withdrawn permission card stays open until the turn ends.
   - id: "conversation_reset"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests, AgentMapTests, ProcessUsageTests
     # Also starts modelUsage's running totals again (DESIGN.md §6, "Usage history").
   - id: "api_retry"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/Conversation/ConversationBuilder.cs, src/Claudette.Core/Status/ApiTrouble.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.Core/Status/ApiTrouble.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ServiceStatusTests
   # A retry or a failed turn on Anthropic's side checks Claude's status page straight away (DESIGN.md §18, "Service status").
   - id: "error_status"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.Core/Status/ApiTrouble.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.Core/Status/ApiTrouble.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ServiceStatusTests
   - id: "error_category"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/Conversation/ConversationBuilder.cs, src/Claudette.Core/Status/ApiTrouble.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.Core/Status/ApiTrouble.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ServiceStatusTests
   - id: "api_error_status"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Status/ApiTrouble.cs, src/Claudette.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Core/Status/ApiTrouble.cs, src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ServiceStatusTests, AutoContinueMonitorTests
   # A turn stopped at a plan usage limit, continued once the limit resets (DESIGN.md §6, "Continuing after a limit resets").
   - id: "rate_limit_info.status"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AutoContinueMonitorTests, AutoContinueTests
   - id: "resetsAt"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/AutoContinueMonitor.cs, src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs, src/Deventry.Usage/UsageParser.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AutoContinueMonitorTests, UsageParserTests
   - id: "errorCode"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AutoContinueMonitorTests
   - id: "terminal_reason"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/AutoContinueMonitor.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AutoContinueMonitorTests, RealCliTests
   - id: "autoContinueAtUsageLimit"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/interactive-mode
     test: AutoContinueMonitorTests
     fallback: Claude Code waits for a usage limit to reset and continues the task by itself only in interactive sessions; -p runs like Claudette's don't get the wait, so Claudette does it, with the same prompt ("Continue from where you left off."). If a later Claude Code continues by itself in -p too, the turn it starts ends Claudette's wait, as any turn that starts does, so the task isn't continued twice.
   - id: "parent_tool_use_id"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "structuredPatch"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/Diff.cs, src/Claudette.Core/Diffs/FileAfter.cs
+    usedIn: src/Deventry.App/Conversation/Diff.cs, src/Deventry.Core/Diffs/FileAfter.cs
     test: DiffTests, FileAfterTests
     fallback: See tool_use_result. Without it, the Edit card shows old_string/new_string as the diff. Changed files works out what an Edit left from its oldString and newString, and only falls back to the patch when they don't fit; without either, the file is counted against the disk (DESIGN.md §8, "This session's changes").
   - id: "updated_file"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/FileAfter.cs
+    usedIn: src/Deventry.Core/Diffs/FileAfter.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: FileAfterTests
     # NotebookEdit's whole notebook after the edit: how the session's change left it (DESIGN.md §8, "This session's changes").
   - id: "Agent"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "TodoWrite"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/TodoList.cs
+    usedIn: src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "TaskCreate"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/TodoList.cs
+    usedIn: src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "TaskUpdate"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/TodoList.cs
+    usedIn: src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "TaskList"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/TodoList.cs
+    usedIn: src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "TaskGet"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/TodoList.cs
+    usedIn: src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
   - id: "mcp__claude_ai_"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Docs/ClaudeDocCall.cs
+    usedIn: src/Deventry.Core/Docs/ClaudeDocCall.cs
     docs: https://code.claude.com/docs/en/mcp
     test: ClaudeDocCallTests
     fallback: Claude Code names a claude.ai connector's tools mcp__claude_ai_<connector>__<tool> (2.1.284 named the Claude Docs connector's mcp__claude_ai_Claude_Docs__batch, __update, __create and so on). Claudette takes a call with that prefix whose input names a container of kind project as a call to the Docs connector (DESIGN.md §5, "Claude Docs"), whatever the connector is called. If the prefix changes, docs go unlisted and their cards show the connector's reply, as before, and Claude's own reply still has the link once; match the new prefix.
   - id: "artifactUrl"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Docs/ClaudeDocCall.cs
+    usedIn: src/Deventry.Core/Docs/ClaudeDocCall.cs
     test: ClaudeDocCallTests
     fallback: "claude.ai's Docs connector writes it, not Claude Code (seen with 2.1.284): a reply's first line is JSON with verdict (allow), frame (slug, url, artifactUrl) and, for a doc it made, created (verdict, minted); instructions to the model follow. Read tolerantly: a verdict other than allow changes nothing, an address that isn't http(s) is dropped, and a reply that isn't JSON still names an edit's doc by the call's container.id. If frame goes, new docs go unlisted and their cards show the reply, as before. If Claude Code starts opening docs itself (an Artifact tool in -p), list them from that instead."
   - id: "CLAUDE_CODE_ENABLE_TASKS"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Claude/ClaudeEnvironment.cs
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: CleanEnvironmentTests
     fallback: Inherited from a parent Claude Code session, it switches the to-do tool from TodoWrite to the Task tools; it's in the session variable list. The to-do list handles both.
   - id: "CLAUDE_CODE_ENABLE_TODO_TOOLS"
     kind: env
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/tools-reference#task-tool-availability
     test: TasksPlanTests
     fallback: Settings → Claude Code → Give Claude a task list (on by default) sets it to 1, so models newer than Opus 4.7, Sonnet 4.6 and Haiku 4.5 get the Task tools too (Claude Code v2.1.233 and later; from v2.1.268 those models don't have them by default). If it stops working, those models make no task list and the status line says only "Following the plan" after a plan; --allowedTools TaskCreate does the same.
   - id: "CLAUDE_CODE_TASK_LIST_ID"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeTasks.cs, src/Claudette.App/ViewModels/TabViewModel.Tasks.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeTasks.cs, src/Deventry.App/ViewModels/TabViewModel.Tasks.cs
     docs: https://code.claude.com/docs/en/interactive-mode#task-list
     test: ClaudeTaskFolderTests, TaskFolderTests
     fallback: Read, never set. From the environment a tab's claude starts with and its settings files' env, it says which folder in tasks has the session's list (named for it, else for the session's id; DESIGN.md §5). User configuration, so it passes through to claude.
   - id: "tasks/<list id>/<number>.json"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeTasks.cs, src/Claudette.App/Conversation/TodoListFolder.cs, src/Claudette.App/Conversation/TodoList.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeTasks.cs, src/Deventry.App/Conversation/TodoListFolder.cs, src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/interactive-mode#task-list
     test: ClaudeTaskFolderTests, TaskFolderTests, TaskBoardTests
     fallback: "The docs name the folder (~/.claude/tasks/<name>, in the config folder) but not what's in it. Claude Code 2.1.301 keeps a <number>.json for each task, with the fields of a TaskList result (id, subject, description, activeForm, owner, status, blocks, blockedBy, and metadata, whose _internal marks one of its own), beside its own .lock and .highwatermark, which aren't read. Claudette reads the folder after each answer to a Task tool's call and whenever it changes, and the tab's list becomes it (DESIGN.md §5). Claude Code can also keep tasks elsewhere, behind a storage layer it has, and names an agent team's list for the team: a folder without the newest task Claude made is left alone. Without the folder the list follows the calls: a number means the newest task with it, a number given again means Claude Code started its list over, and a TaskList result is the whole list."
@@ -474,322 +474,322 @@ items:
   - id: "control_request"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/ControlChannel.cs
+    usedIn: src/Deventry.Core/Protocol/ControlChannel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
     fallback: The envelope matches the Python and TypeScript Agent SDKs. Follow their sources; last resort is the Node sidecar (DESIGN.md §13).
   - id: "initialize"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/InitializeResult.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/InitializeResult.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
     fallback: See control_request.
   - id: "interrupt"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
     fallback: See control_request. SIGINT also ends a turn (documented in headless mode).
   - id: "CLAUDE_CODE_RESUME_INTERRUPTED_TURN"
     kind: env
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RestartTests, RealCliTests
     fallback: Set to 1, once, for a tab Claudette's own restart cut off mid-turn; Claude Code re-runs the turn on resume (checked with 2.1.286). Without it the tab resumes idle, as before.
   - id: "CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS"
     kind: env
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RestartTests, RealCliTests
     fallback: 600000 (a restart snapshot's 10 minutes) beside CLAUDE_CODE_RESUME_INTERRUPTED_TURN, so a stale turn isn't re-run.
   - id: "resume_reason"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#resume_reason
     test: RestartTests, RealCliTests
     fallback: On the assistant messages and result of a turn a restart cut off, when Claude Code re-runs it or (by 2.1.300) goes on from its tool calls or the permission prompt it took over; the first one adds a note. Without it the turn reads as an ordinary one.
   - id: "startup_failure_reason"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/StartupFailure.cs, src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/StartupFailure.cs, src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#startup_failure_reason
     test: ClaudeSessionTests, AccountAndSignInTests, RealCliTests
     fallback: Read from the error_during_execution result written before exiting, with its errors. Each known reason is put in words; an unknown one shows the errors. Without the result, the start error is the last line of the error output, as before.
   - id: "CLAUDE_CODE_STARTUP_FAILURE_RESULTS"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSessionFactory.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSessionFactory.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RealCliTests
     fallback: Set to 1 for every claude a tab starts, unless the environment sets it. Without it Claude Code writes the result only for a few reasons.
   - id: "cancel_queued"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkcontrolinterruptresponse
     test: QueuedMessageTests, RealCliTests
     fallback: Sent on Stop only when system/init lists interrupt_cancel_queued_v1; the receipt's cancelled ids take those cards back to the composer. Without the capability Stop is a plain interrupt and queued messages run afterwards, as before.
   - id: "interrupt_cancel_queued_v1"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdksystemmessage
     test: QueuedMessageTests, RealCliTests
     fallback: See cancel_queued.
   - id: "still_queued"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkcontrolinterruptresponse
     test: QueuedMessageTests, RealCliTests
     fallback: Read with cancelled from the interrupt receipt. Ids Claudette didn't send are ignored, as the SDK says to.
   - id: "ultracode"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.Styles.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.Styles.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#applyflagsettings
     test: UltracodeAndStyleTests, RealCliTests
     fallback: apply_flag_settings with {ultracode:true}, or null to turn it off, from the next turn at the session's effort level (2.1.284 and later). Refused, the tab says so and keeps it as it was.
   - id: "update_settings"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.Styles.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.Styles.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#updatesettings
     test: UltracodeAndStyleTests, RealCliTests
     fallback: The documented updateSettings() method; its wire name is the SDK's. source localSettings with {outputStyle} writes the project's .claude/settings.local.json (checked with 2.1.286). Refused, the tab says so.
   - id: "available_output_styles"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/InitializeResult.cs, src/Claudette.App/ViewModels/TabViewModel.Styles.cs
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs, src/Deventry.App/ViewModels/TabViewModel.Styles.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkcontrolinitializeresponse
     test: UltracodeAndStyleTests, RealCliTests
     fallback: With output_style from initialize, the effort dropdown's style list. Without it (or one style) there's no list.
   - id: "agentProgressSummaries"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#options
     test: ClaudeSessionTests, AgentMapTests, RealCliTests
     fallback: Sent as true on initialize when Settings asks for it (the option is documented; the initialize field name is the SDK's, accepted by 2.1.286). task_progress.summary then replaces the subagent row's latest tool call. Without it the row shows the tool call, as before.
   - id: "gitOperation"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/GitChips.cs, src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.App/Conversation/GitChips.cs, src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
     fallback: commit (sha, kind, branch), push (branch), branch (ref, action) and pr (number, url, action) become chips on the Bash card; an unknown action names the pull request plainly, and only an http(s) url is a link. Without it the card shows the output, as before.
   - id: "timedOutAfterMs"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
     fallback: The Bash card's summary says the command reached its time limit and carries on in the background. Without it the summary is the output's first line.
   - id: "backgroundTaskId"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ConversationBuilderTests
     fallback: With backgroundedByUser, the Bash card's summary says it runs in the background, or was moved there. Without it the summary is the output's first line.
   - id: "dangerouslyDisableSandbox"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/PromptItems.cs
+    usedIn: src/Deventry.App/Conversation/PromptItems.cs
     docs: https://code.claude.com/docs/en/sandboxing
     test: PromptTests
     fallback: True on a Bash permission request's input adds a warning to the card. Without it nothing is said, as before.
   - id: "mcp_authenticate"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/McpServersViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/McpServersViewModel.cs
     docs: https://code.claude.com/docs/en/mcp
     test: McpServersTests, ClaudeSessionTests, RealCliTests
     fallback: The TypeScript SDK's host request. With serverName, 2.1.286 answers {authUrl, requiresUserAction, callbackExpected, redirectScheme, callbackPort} and connects the server once the browser comes back on localhost, or {requiresUserAction:false} when signed in already. Refused, the MCP page says to sign in with /mcp in a terminal.
   - id: "mcp_oauth_callback_url"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/McpServersViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/McpServersViewModel.cs
     docs: https://code.claude.com/docs/en/mcp
     test: McpServersTests
     fallback: With serverName and callbackUrl (the address the browser ended on), answered once the sign-in is done. Only for a sign-in whose page couldn't come back to Claude Code by itself.
   - id: "mcp_clear_auth"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/McpServersViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/McpServersViewModel.cs
     docs: https://code.claude.com/docs/en/mcp
     test: McpServersTests, RealCliTests
     fallback: With serverName, for a connected HTTP or SSE server (config.type from mcp_status). Refused, the page shows Claude Code's error.
   - id: "cancel_async_message"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: QueuedMessageTests, RealCliTests
     fallback: The TypeScript SDK's cancelAsyncMessage. With message_uuid, 2.1.286 answers {"cancelled":true} and the message never runs, or false when it's no longer waiting. Rejected or false, the card stays queued with a note; Stop still takes everything back.
   - id: "command_lifecycle"
     kind: message
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     test: MessageParserTests
     fallback: Seen in 2.1.286 for each message sent with a uuid ({command_uuid, state queued/cancelled/completed}, capability msg_lifecycle_v1). Skipped on purpose, so Diagnostics doesn't count it as unknown; the echo and the interrupt receipt say the same.
   - id: "can_use_tool"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/PermissionRequest.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/PermissionRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
     fallback: See control_request.
   - id: "updatedPermissions"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
   - id: "permission_suggestions"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/user-input
     test: PermissionRequestTests, RealCliTests
     fallback: The wire name of the documented canUseTool "suggestions" option (addRules, setMode, addDirectories). Without it, hide "Always allow" and offer Allow and Deny only.
   - id: "destination: session"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PermissionRequestTests
   - id: "setMode"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.App/Conversation/PromptItems.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs, src/Deventry.App/Conversation/PromptItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
   - id: "decision_reason"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs, src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PermissionRequestTests
     fallback: Documented as the canUseTool option decisionReason; both spellings are read. Without it the card just doesn't say why.
   - id: "default_to_no"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PermissionRequestTests, PromptTests
     fallback: Documented as the canUseTool option defaultToNo; both spellings are read. If neither arrives, Ctrl/Cmd+Enter can approve every prompt, as before.
   - id: "suppress_always_allow_rule"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PermissionRequestTests
     fallback: Documented as the canUseTool option suppressAlwaysAllowRule; both spellings are read. If neither arrives, "Always allow" shows the suggested rule, which the user can still edit.
   - id: "AskUserQuestion"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/PromptItems.cs, tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: src/Deventry.App/Conversation/PromptItems.cs, tools/Deventry.MockApi/MockAnthropicApi.cs
     docs: https://code.claude.com/docs/en/agent-sdk/user-input
     test: PromptTests, RealCliTests
   - id: "ExitPlanMode"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/PromptItems.cs, tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: src/Deventry.App/Conversation/PromptItems.cs, tools/Deventry.MockApi/MockAnthropicApi.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptTests, RealCliTests
   - id: "plan"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/PromptItems.cs
+    usedIn: src/Deventry.App/Conversation/PromptItems.cs
     docs: https://code.claude.com/docs/en/hooks
     test: RealCliTests
     fallback: The model writes the plan to a plan file and calls ExitPlanMode with no plan; Claude Code reads the file and passes its text as input.plan, with planFilePath. The hooks reference documents this for hooks; the permission callback gets the same input (2.1.285 changelog), and 2.1.285 drops a plan the model passes itself. Without it the card says Claude is ready to start and the plan stays in Claude's last message.
   - id: "create your plan at"
     kind: behavior
     status: undocumented
-    usedIn: tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: tools/Deventry.MockApi/MockAnthropicApi.cs
     test: RealCliTests
     fallback: The plan mode reminder names the plan file ("You should create your plan at <path> using the Write tool."), and the mock's EXIT_PLAN writes the plan there. If the wording changes, match the new wording; without a path the mock passes the plan as input.plan, which 2.1.285 drops.
   - id: "ToolSearch"
     kind: behavior
     status: documented
-    usedIn: tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: tools/Deventry.MockApi/MockAnthropicApi.cs
     docs: https://code.claude.com/docs/en/tools-reference
     test: RealCliTests
     fallback: 2.1.308 holds some tools back, ExitPlanMode and SendMessage among them, until the model loads them with ToolSearch; the mock calls ToolSearch with "select:<name>" (the query form the deferred tools' reminder gives, undocumented) before a tool it means to call, as a model does. Claudette itself doesn't depend on which tools are held back. If the query form changes, follow the reminder's.
   - id: "deferred tools are now available via ToolSearch"
     kind: behavior
     status: undocumented
-    usedIn: tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: tools/Deventry.MockApi/MockAnthropicApi.cs
     test: RealCliTests
     fallback: The reminder that lists the tools Claude Code holds back for ToolSearch, a name a line after this header. The mock reads it to know a tool it isn't offered can be loaded; if the wording changes, match the new wording, or the mock's EXIT_PLAN and SEND_MESSAGE fall through to "pong" and the plan and thread RealCli tests wait for a prompt that never comes.
   - id: "<summary> block"
     kind: behavior
     status: undocumented
-    usedIn: tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: tools/Deventry.MockApi/MockAnthropicApi.cs
     test: ProtocolRecordingTests, ProcessUsageTests
     fallback: Compacting asks the model for its summary in "a <summary> block" (or inside "<summary></summary> tags"), and from 2.1.311 asks once more when the reply has none. The mock answers that request with a <summary> block, as a model does. If the wording changes, match the new wording, or each compaction makes two calls and the recorded 10-compact counts the compaction twice.
   - id: "ExitPlanModeOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: TaskBoardTests, TasksPlanTests, RealCliTests
     fallback: "An approved ExitPlanMode's tool_use_result (toolUseResult in transcripts) carries the plan as plan, which heads the Tasks page however it was approved: on its card, in the Claude app, or before a restore (DESIGN.md §5). A denied one is an error result: that version of the plan was sent back, or, with tool_result_meta's interrupted, never answered. Without plan, the call's own input.plan is used (the model passed it before 2.1.285); without either, the plan shows only in the conversation."
   - id: "Plan mode allows edits only to the plan file"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs
     test: TasksPlanTests
     fallback: "In Plan mode Claude writes its plan to a Markdown plan file with Write and Edit, the only file Claude Code lets it change, so the main agent's Write or Edit to a .md file in Plan mode is taken as the plan's draft and shown on the Tasks page as it's written (DESIGN.md §5). If Plan mode starts allowing other edits, another Markdown file could show as the draft until the plan is put up for review, which replaces it with the plan Claude Code passes. If the plan stops being written with these tools, nothing shows until it's put up, as before."
   - id: "permission_denied"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptTests
   - id: "informational"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkinformationalmessage
     test: ConversationBuilderTests
     fallback: system/informational with content and level (info, notice, suggestion, warning) becomes a note, a warning in the warning color. Without it Claude Code's notices aren't shown, as before.
   - id: "compact_boundary"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: TabViewModelTests
   - id: "/compact"
     kind: command
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/headless
     test: TabViewModelTests
   - id: "compacting"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/SystemNotices.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests, MascotTabTests
   - id: "built-in tool names"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Mascot/MascotModel.cs, src/Claudette.App/Conversation/ToolActivity.cs
+    usedIn: src/Deventry.App/Mascot/MascotModel.cs, src/Deventry.App/Conversation/ToolActivity.cs
     docs: https://code.claude.com/docs/en/settings
     test: MascotTabTests, ToolActivityTests
     fallback: "Read, Grep, Glob, Edit, MultiEdit, Write, NotebookEdit, Bash, PowerShell, BashOutput, Monitor, WebFetch, WebSearch, Agent and Task, by name, for what the working line says and what Claudette on the composer works with. A renamed tool shows as Using <name> and gets her laptop until it's added."
   - id: "--fork-session"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.Rewind.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.Rewind.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, RealCliTests, RewindAndBranchTests
 
@@ -797,111 +797,111 @@ items:
   - id: "--resume-session-at"
     kind: flag
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.cs, src/Claudette.App/ViewModels/TabViewModel.Rewind.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.cs, src/Deventry.App/ViewModels/TabViewModel.Rewind.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeEnvironmentTests, RealCliTests, RewindAndBranchTests
     fallback: The Agent SDKs' resumeSessionAt option passes it. If it goes, branch from a message by forking the whole session and say the later turns are still in it.
   - id: "--resume-drops-turn"
     kind: flag
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.Rewind.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.Rewind.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeEnvironmentTests, RewindAndBranchTests
     fallback: The guard for editing and resending a prompt. Without it, resume at the reply before the prompt unguarded.
   - id: "user message uuid and origin"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/OutgoingMessages.cs, src/Claudette.App/ViewModels/TabViewModel.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs, src/Deventry.App/ViewModels/TabViewModel.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkmessageorigin
     test: QuickSuffixMessageTests, TabViewModelTests, RealCliTests
     fallback: Each message Claudette sends has a uuid, kept by the echo, the transcript and user_message_uuid (checked with 2.1.286); a typed one has origin {kind:"human"}. A Claude Code that made its own ids instead would have each echo matched by its text, then by order, as before.
   - id: "--replay-user-messages"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/file-checkpointing
     test: RealCliTests, ClaudeSessionTests
   - id: "isReplay"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, ClaudeSessionTests
   - id: "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING"
     kind: env
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/file-checkpointing
     test: RealCliTests
   - id: "rewind_files"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/McpServers.cs, src/Claudette.App/ViewModels/TabViewModel.Rewind.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/McpServers.cs, src/Deventry.App/ViewModels/TabViewModel.Rewind.cs
     docs: https://code.claude.com/docs/en/agent-sdk/file-checkpointing
     test: RealCliTests, ClaudeSessionTests, RewindAndBranchTests
     fallback: See control_request. The documented CLI form is claude -p --resume <id> --rewind-files <uuid> with checkpointing on.
   - id: "--include-hook-events"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests
   - id: "hook_started"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Protocol/SystemNotices.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Protocol/SystemNotices.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
   - id: "hook_progress"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Protocol/SystemNotices.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Protocol/SystemNotices.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: none yet (sent only while a hook runs over a second with output)
   - id: "hook_response"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Protocol/SystemNotices.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Protocol/SystemNotices.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
   - id: "mcp_status"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/McpServers.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/McpServers.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, ClaudeSessionTests
     fallback: See control_request. Without it, the MCP page lists the servers from system/init's mcp_servers.
   - id: "mcp_reconnect"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests
     fallback: See control_request. Hide Reconnect; /mcp in the terminal does the same.
   - id: "mcp_toggle"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, ClaudeSessionTests
     fallback: See control_request. Hide the switch.
   - id: "elicitation"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/ElicitationRequest.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/ElicitationRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests
     fallback: If the wire shape changes, follow the TypeScript SDK's SDKControlElicitationRequest. A request Claudette can't show is declined, as the SDKs do without an onElicitation handler.
   - id: "elicitation_complete"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Protocol/SystemNotices.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Protocol/SystemNotices.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: none yet (needs an MCP server that asks through a URL)
   - id: "--setting-sources"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.Trust.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.Trust.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, FolderTrustTests
     # "user" leaves out the folder's settings, its .mcp.json servers and its CLAUDE.md (checked with 2.1.286): a tab
@@ -909,13 +909,13 @@ items:
   - id: "--fallback-model"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, RealCliTests
   - id: "--worktree"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.Worktree.cs
     docs: https://code.claude.com/docs/en/worktrees
     test: ClaudeEnvironmentTests, WorktreeTabTests, RealCliTests
     # A worktree tab's first start (DESIGN.md §4, "Worktree tabs"). With -p, Claude Code makes
@@ -925,42 +925,42 @@ items:
   - id: "--add-dir"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.Worktree.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.Worktree.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, WorktreeTabTests
     # A tab's extra folders (DESIGN.md §4, "Extra folders"), one --add-dir each. A folder that's gone isn't passed.
   - id: ".claude/worktrees/<name>"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Git/GitWorktrees.cs
+    usedIn: src/Deventry.Core/Git/GitWorktrees.cs
     docs: https://code.claude.com/docs/en/worktrees
     test: GitWorktreesTests
     fallback: Where --worktree puts a worktree and its worktree-<name> branch. Claudette names new worktrees so it doesn't reuse one, groups a session found there with its main checkout, and deletes the branch only when it has the worktree- prefix. If the place changes, the tab still follows system/init's cwd; only grouping from History and naming around existing folders are off.
   - id: "set_model"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
     fallback: See control_request. Last resort is restarting the session with --model.
   - id: "apply_flag_settings"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
     fallback: See control_request. Last resort is restarting the session with --effort.
   - id: "set_permission_mode"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests, PermissionModeTests, RealCliTests
     fallback: See control_request. A resumed tab uses it to switch to auto mode after it starts (DESIGN.md §7, "Starting mode"); if it fails, the tab stays in Manual.
   - id: "get_context_usage"
     kind: control
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/ContextUsage.cs, src/Claudette.App/ViewModels/ContextBreakdown.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/ContextUsage.cs, src/Deventry.App/ViewModels/ContextBreakdown.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, ContextUsageTests, ContextBreakdownTests
     fallback: The main agent's latest call (its message.usage) divided by modelUsage.contextWindow from the last result, warning near autocompact_state's threshold (CallUsage, TabViewModel.ShowEstimatedContext). The context flyout then shows the estimate's total and free space, without the parts.
@@ -968,83 +968,83 @@ items:
   - id: "autoCompactThreshold"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs, src/Claudette.App/ViewModels/ContextBreakdown.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs, src/Deventry.App/ViewModels/ContextBreakdown.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ContextBreakdownTests
     fallback: Without a buffer row (2.1.284 sends none), the space past this threshold is shown as the auto-compact buffer, as /context shows it.
   - id: "categories"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs, src/Claudette.App/ViewModels/ContextBreakdown.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs, src/Deventry.App/ViewModels/ContextBreakdown.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ContextUsageTests, ContextBreakdownTests
     fallback: "Each row's kind (used, free, buffer, deferred) says where it goes; an unknown kind is listed without a share of the window. Without a kind (before Agent SDK 0.3.268), isDeferred and the names Free space and Autocompact buffer are used. The bar's colors and order go by the display name; a name Claudette doesn't know gets the Other color, after Messages."
   - id: "memoryFiles"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ContextUsageTests
   - id: "mcpTools"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ContextUsageTests
     fallback: isLoaded is optional; a tool without it counts as in the window.
   - id: "agents"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ContextUsageTests
   - id: "skillFrontmatter"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests
   - id: "messageBreakdown"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ContextUsage.cs, src/Claudette.App/ViewModels/ContextBreakdown.cs
+    usedIn: src/Deventry.Core/Sessions/ContextUsage.cs, src/Deventry.App/ViewModels/ContextBreakdown.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests, ContextBreakdownTests
     fallback: Optional in the type; without it the flyout has no Messages section.
   - id: "get_usage"
     kind: control
     status: experimental
-    usedIn: src/Claudette.Core/Sessions/UtilitySession.cs, src/Claudette.Usage/UsagePoller.cs, src/Claudette.App/Services/UsageTracker.cs
+    usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.Usage/UsagePoller.cs, src/Deventry.App/Services/UsageTracker.cs
     test: UsagePollerTests
     fallback: The SDK calls it usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET. Fall back to rate_limit_event, then parsing /usage (DESIGN.md §6). When the usage endpoint fails it answers, unmarked, from a cached reading up to an hour old (2.1.284), so a reading lower than the current one for the same window is ignored for an hour (UsageParser.Merge).
   - id: "claude_authenticate"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/UtilitySession.cs, src/Claudette.App/ViewModels/SignInViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.App/ViewModels/SignInViewModel.cs
     test: FakeClaudeSignInTests, AccountAndSignInTests (against fakes; no real sign-in has completed through it yet)
     fallback: claude auth login (documented), which Claudette runs whenever claude_authenticate is rejected or gives no address, with the pasted code written to its input (DESIGN.md §11).
   - id: "claude_oauth_wait_for_completion"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/UtilitySession.cs, src/Claudette.App/ViewModels/SignInViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.App/ViewModels/SignInViewModel.cs
     test: FakeClaudeSignInTests, AccountAndSignInTests (against fakes; no real sign-in has completed through it yet)
     fallback: See claude_authenticate.
   - id: "claude_oauth_callback"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/UtilitySession.cs, src/Claudette.App/ViewModels/SignInViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.App/ViewModels/SignInViewModel.cs
     test: FakeClaudeSignInTests, AccountAndSignInTests (against fakes; no real sign-in has completed through it yet)
     fallback: See claude_authenticate.
   - id: "generate_session_title"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     test: RealCliTests (with nonessential traffic off it answers {"title": null} and makes no model call; a generated title is covered by spikes/scenarios/03)
     fallback: Name the tab from the first line of the first prompt (DESIGN.md §13, "Session naming").
   - id: "rename_session"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.Messaging.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.Messaging.cs
     test: RealCliTests, MessagingTests, SessionNameRealCliTests
     fallback: "Names a running tab's session after the tab when its name changes, while Settings → General → Name each tab's session in Claude Code after the tab is on (DESIGN.md §13). In 2.1.284 it changes the name other sessions message it by at once, gives a name another session has a variant (Art page-joyful-stearns), and writes custom-title and agent-name entries. If it failed, the tab keeps its name in Claudette, and its session takes it with --name at its next start."
 
@@ -1052,99 +1052,99 @@ items:
   - id: "slash_commands"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.Core/Composer/SlashCommandCatalog.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.Core/Composer/SlashCommandCatalog.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SlashCommandTests, ComposerTests, RealCliTests
   - id: "terminal_slash_commands"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.Core/Composer/SlashCommandCatalog.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.Core/Composer/SlashCommandCatalog.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SlashCommandTests, ComposerTests
   - id: "argumentHint"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/InitializeResult.cs
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SlashCommandTests, RealCliTests
   - id: "aliases"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/InitializeResult.cs, src/Claudette.Core/Composer/SlashCommandCatalog.cs
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs, src/Deventry.Core/Composer/SlashCommandCatalog.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SlashCommandTests
   - id: "builtin"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/InitializeResult.cs
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SlashCommandTests, RealCliTests
   - id: "commands_changed"
     kind: message
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.Composer.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.Composer.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ComposerTests
   - id: "image content blocks in user messages"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Protocol/OutgoingMessages.cs, src/Claudette.Core/Protocol/MessageImage.cs
+    usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs, src/Deventry.Core/Protocol/MessageImage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, AttachmentTests, ComposerTests
   - id: "Claude Code scales down images it receives"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Composer/Attachment.cs
+    usedIn: src/Deventry.Core/Composer/Attachment.cs
     test: RealCliTests
     fallback: 2.1.284 caps the long edge at 2000 px and re-encodes large images as JPEG (a 12 MB or 20 MB PNG reaches the API under 5 MB base64), so Claudette sends images as they are, up to 20 MB. If that stops, scale images down in Claudette before sending (at most 2000 px on the long edge and 5 MB base64, the Bedrock and Vertex limit).
   - id: "@path mentions in prompts"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Composer/ComposerTokens.cs, src/Claudette.Core/Composer/Attachment.cs
+    usedIn: src/Deventry.Core/Composer/ComposerTokens.cs, src/Deventry.Core/Composer/Attachment.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests
   - id: "@path mentions of a full path outside the working folder, with forward slashes and quoted when it has spaces"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Composer/MentionFolder.cs, src/Claudette.App/ViewModels/ComposerCompletions.cs
+    usedIn: src/Deventry.Core/Composer/MentionFolder.cs, src/Deventry.App/ViewModels/ComposerCompletions.cs
     test: RealCliTests
     fallback: 2.1.284 reads @"C:/a folder/notes.txt" without asking, as it does a path inside the folder, so the composer inserts files outside the working folder and its extra folders' files in full (DESIGN.md §5, "Autocomplete"). If it stops, insert them relative to the working folder (../other/notes.txt), and failing that, offer to add the file's folder as one of the tab's extra folders.
   - id: "@path mentions are only read in the last content block"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/OutgoingMessages.cs
+    usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs
     test: RealCliTests
     fallback: Claudette puts the text after the images. If mentions next to images stop being read, send the images first in a user message with shouldQuery false (documented; Claude Code holds it and merges it into the next message, checked against 2.1.284), then the text as a plain-text message.
   - id: "a slash command is read from the last content block, with the blocks before it passed to its prompt"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/OutgoingMessages.cs, src/Claudette.Core/Transcripts/TranscriptPrompts.cs
+    usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs, src/Deventry.Core/Transcripts/TranscriptPrompts.cs
     test: RealCliTests, QuickSuffixMessageTests, TranscriptReaderTests
     fallback: Claudette sends a command's quick suffixes in a text block before it, because Claude Code takes everything after the command's name as its arguments. A local command such as /compact records those blocks ahead of its <command-name> echo, which the transcript readers skip. If the blocks stop reaching the command's prompt, append the suffixes to the command after a blank line again (they then arrive as its arguments) and say so in §5.
   - id: "image blocks in transcript user entries"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs
     test: AttachmentTests, ComposerTests
     fallback: A restored prompt shows its text without thumbnails.
   - id: "Images in tool results"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ContentBlocks.cs, src/Claudette.Core/Protocol/MessageImage.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/ContentBlocks.cs, src/Deventry.Core/Protocol/MessageImage.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/mcp
     test: ToolImagesTests, ToolImageTests, ToolImageRealCliTests
     fallback: "A tool_result's content can hold base64 image blocks, as the Messages API's do: a Read of an image, a PDF's pages read with pages, a notebook's figures, Bash output that's an image, an MCP tool's image (checked against 2.1.299, live and in transcripts). Claudette shows them under the tool's card (DESIGN.md §18, \"Images from Claude's tools\"). Non-base64 sources are skipped. If images move elsewhere, the cards show only the text, as before."
   - id: "FileReadOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ToolImages.cs
+    usedIn: src/Deventry.Core/Protocol/ToolImages.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolImagesTests, ToolImageTests
     fallback: "A Read's tool_use_result names what it read: type image (file.dimensions' originalWidth, originalHeight, displayWidth and displayHeight say what Claude Code scaled it down from), parts (a PDF's pages, firstPage the first one's number) or notebook. Without it, the images are called Image 1, Image 2, and only the file a Read of an image read can be opened."
   - id: "isImage"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolImageTests
     fallback: Bash's output that's a data:image URL comes back as an image block, with isImage on its tool_use_result; the card shows the image and not the URL. Without it, the URL shows as the output again, beside the image.
@@ -1152,54 +1152,54 @@ items:
   - id: "file.content"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.Core/Protocol/ToolOutput.cs, src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolOutputTests, ConversationCardsTests, ToolCallWindowTests
     fallback: "A Read's tool_use_result of type text has the file as it read it, without line numbers (file.content), with file.startLine, numLines and totalLines (checked against 2.1.284). Its tile says how many lines it read, and its detail and window show the file. Without them, the tile says Done and the file isn't shown; the tool_result's numbered text still is in the call's Details."
   - id: "GrepOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/ViewModels/ToolCallWindowViewModel.cs
+    usedIn: src/Deventry.Core/Protocol/ToolOutput.cs, src/Deventry.App/ViewModels/ToolCallWindowViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolOutputTests, ToolCallWindowTests
     fallback: "A Grep's tool_use_result: mode, numFiles, numLines, numMatches and filenames. The tile says what it found by its mode, and the window lists the files. A content-mode result's text is ripgrep's lines (path:line:text), which the window groups by file. Without them, the tile says Done and the window shows the result as text."
   - id: "GlobOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/ViewModels/ToolCallWindowViewModel.cs
+    usedIn: src/Deventry.Core/Protocol/ToolOutput.cs, src/Deventry.App/ViewModels/ToolCallWindowViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolOutputTests, ToolCallWindowTests
     fallback: "A Glob's tool_use_result: numFiles, filenames and truncated. The tile says how many files, with a + when the list was cut, and the window lists them. Without them, the tile says Done and the window shows the result as text."
   - id: "WebFetchOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs
+    usedIn: src/Deventry.Core/Protocol/ToolOutput.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolOutputTests
     fallback: "A WebFetch's tool_use_result: code, codeText and bytes, which the tile shows as \"200 OK · 14 KB\". Without them, the tile says Done."
   - id: "WriteOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ToolOutput.cs, src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.Core/Protocol/ToolOutput.cs, src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolOutputTests
     fallback: "A Write's tool_use_result type: create for a new file, update for one it replaced. The tile says Created or Updated. Without it, the tile shows only the counts."
   - id: "--prompt-suggestions"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, PromptSuggestionTests, RealCliTests
   - id: "prompt_suggestion"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/TabViewModel.Composer.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.Composer.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests, ClaudeSessionTests, PromptSuggestionTests, RealCliTests
   - id: "a prompt suggestion comes after the turn's result"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.Composer.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.Composer.cs
     test: RealCliTests
     fallback: The docs say only "after each turn"; 2.1.284 sends it straight after the result, none after a conversation's first turn, also with nonessential traffic off, and none when promptSuggestionEnabled is false or CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false. Claudette shows one only while the session is idle, so one that came before the result would be dropped. If that happens, keep the newest suggestion from the turn and show it when the turn ends.
 
@@ -1207,68 +1207,68 @@ items:
   - id: "cost-state"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/CostState.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Transcripts/CostState.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/cost-tracking
     test: ProcessUsageTests, RealCliTests
     fallback: The docs say Claude Code saves a session's totals to its transcript when a process exits normally and starts a resumed or forked session from them (since 2.1.277); 2.1.284 writes {"type":"cost-state","modelUsage":{…}} lines. Claudette takes the latest one the first result could have grown from as the turn's baseline. Without one, or if the format changes, the baseline is empty and a resumed tab's first turn counts what Claude Code restored too, once.
   - id: "ai-title"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/History/HistoryIndex.cs
     test: TranscriptReaderTests, HistoryIndexTests
     fallback: The format is internal to Claude Code. Without titles, a restored tab keeps the name Claudette saved, and History shows the first prompt.
   - id: "custom-title"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/History/HistoryIndex.cs
     test: TranscriptReaderTests, HistoryIndexTests
     fallback: See ai-title.
   - id: "toolUseResult"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs
     test: TranscriptReaderTests
     fallback: Restored tool cards show the tool result text without diffs.
   - id: "a subagent's file tool results have no tool_use_result"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/ViewModels/ChangedFilesViewModel.cs, src/Claudette.Core/Diffs/ChangedFiles.cs
+    usedIn: src/Deventry.App/ViewModels/ChangedFilesViewModel.cs, src/Deventry.Core/Diffs/ChangedFiles.cs
     test: ProtocolRecordingTests, RealCliTests, ChangedFilesTests
     fallback: "A subagent's Edit and Write come without tool_use_result, live and in its transcript (2.1.302, 2.1.308), and its file_path can be relative to its own folder, so Claudette's PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit reads the file before the call runs, for calls with agent_id (DESIGN.md §8, \"Subagents' changes\"). The hook input's tool_input has the real path. If results start carrying originalFile, it's used and the hook's read is ignored; if the hook stops being called for subagents, their files have an unknown \"before\" again."
   - id: "originalFile over 10,000 characters is null in transcripts"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.Core/Diffs/BeforeContentStore.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.Core/Diffs/BeforeContentStore.cs
     test: RealCliTests, BeforeContentStoreTests, ToolWindowsTests
     fallback: "In 2.1.284 the live tool_use_result carries the whole originalFile, but the transcript's toolUseResult has null when it's over 10,000 characters (DESIGN.md §8, \"Large files in transcripts\"). Claudette saves the first change's originalFile when it's over BeforeContentStore.TranscriptLimit and reads it back on replay. If the limit drops, files between the new limit and 10,000 characters replay with an unknown \"before\" (modified, without counts) until TranscriptLimit follows it. If transcripts keep it whole again, nothing breaks."
   - id: "line endings"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.Core/Diffs/HiddenChanges.cs, src/Claudette.App/ViewModels/ChangedFilesViewModel.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.Core/Diffs/HiddenChanges.cs, src/Deventry.App/ViewModels/ChangedFilesViewModel.cs
     test: RealCliTests, ChangedFilesTests, ChangedFilesTrackingTests
     fallback: "In 2.1.302 a Write writes its content as the model gave it, with \\n, so a file with Windows line endings becomes Unix; an Edit keeps CRLF and makes mixed line endings CRLF; and originalFile comes with \\n for a CRLF file (DESIGN.md §8, \"What the lines don't show\"). So Claudette's PreToolUse hook on the file tools reads a file's line endings before each of the session's own calls, and Changed files says when they changed. If Write starts keeping a file's line endings, nothing breaks: there's just nothing to tell. If originalFile starts keeping CRLF, the hook's read still decides, and comparing lines ignores line endings either way."
   - id: "BOM"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Diffs/TextFiles.cs, src/Claudette.Core/Diffs/FileAfter.cs, src/Claudette.Core/Diffs/HiddenChanges.cs
+    usedIn: src/Deventry.Core/Diffs/TextFiles.cs, src/Deventry.Core/Diffs/FileAfter.cs, src/Deventry.Core/Diffs/HiddenChanges.cs
     test: RealCliTests, ChangedFilesTests, FileAfterTests
     fallback: "In 2.1.302 originalFile keeps a file's byte order mark as a leading \\uFEFF, Edit and Write keep the mark on disk, and a Write's result content starts with it though its input's doesn't. Claudette reads files the same way, so they compare alike, and takes a Write's result content when it's the input's with the mark. If Claude Code dropped the mark from originalFile, Changed files would say the mark was added; lines are compared without it, so no line would show as changed."
   - id: "uuid and parentUuid"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     test: TranscriptReaderTests, RewindAndBranchTests
     fallback: A restored prompt has no point to go back to (DESIGN.md §5, "Rewind and branch"); a later live prompt still gets one from its echo. Without them, Edit and resend and Branch from here on a restored prompt would start a new session, so the menu should offer only Duplicate tab.
   - id: "fork keeps the copied entries' uuids"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.Rewind.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.Rewind.cs
     test: RewindAndBranchTests
     fallback: "Checked with 2.1.286 (DESIGN.md §5, \"Rewind and branch\"). If a fork gives its entries new ids, going back again in a copy to a message from before the fork would name an entry the copy hasn't: read the copy's transcript again after its first turn to pick up the new ids."
   - id: "isSidechain"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/History/HistoryIndex.cs
     test: TranscriptReaderTests, HistoryIndexTests
     fallback: Restored tabs could show subagent messages at the top level, and History could count them.
 
@@ -1276,26 +1276,26 @@ items:
   - id: "sessions/<pid>.json"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/LiveSessions.cs, src/Claudette.App/Services/LiveSessionsService.cs, src/Claudette.App/ViewModels/TabViewModel.Messaging.cs
+    usedIn: src/Deventry.Core/Sessions/LiveSessions.cs, src/Deventry.App/Services/LiveSessionsService.cs, src/Deventry.App/ViewModels/TabViewModel.Messaging.cs
     docs: https://code.claude.com/docs/en/cross-session-messaging
     test: LiveSessionsTests, MessagingTests, SessionNameRealCliTests
     fallback: "Claude Code keeps an entry for each running session in its config folder's sessions/<pid>.json, which /list-agents reads too (checked against 2.1.284). Claudette reads pid, sessionId, name, nameSource (derived for a name Claude Code made up), cwd and status, for the info card's Reached as row, the other sessions the composer's @ lists, and the session IDs a message names (DESIGN.md §13, §5). The folder's .key files are messaging keys and are never read. Without it, the info card has no Reached as row, and the @ list has Claudette's own tabs (by the name each tab's session was given) and the tab's subagents; Claude can still find other sessions with ListAgents."
   - id: "settings.local.json"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.Core/Claude/ClaudeSettingsFiles.cs, src/Claudette.Core/Claude/SpinnerVerbs.cs, src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs, src/Deventry.Core/Claude/ClaudeSettingsFiles.cs, src/Deventry.Core/Claude/SpinnerVerbs.cs, src/Deventry.Core/Claude/StartingPermissionMode.cs, src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/settings
     test: RealCliTests, SpinnerVerbsTests, StartingPermissionModeTests, PromptCacheTests
   - id: "settings.json"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Claude/ClaudeSettingsFiles.cs, src/Claudette.Core/Claude/SpinnerVerbs.cs, src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Claude/ClaudeSettingsFiles.cs, src/Deventry.Core/Claude/SpinnerVerbs.cs, src/Deventry.Core/Claude/StartingPermissionMode.cs, src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/settings
     test: SpinnerVerbsTests, StartingPermissionModeTests, PromptCacheTests
   - id: ".mcp.json"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Claude/FolderTrust.cs
+    usedIn: src/Deventry.Core/Claude/FolderTrust.cs
     docs: https://code.claude.com/docs/en/mcp
     test: FolderTrustTests
     # Listed before a folder is trusted. Claude Code finds one in any folder above the session's too, past the
@@ -1303,14 +1303,14 @@ items:
   - id: "-p runs a never-trusted folder's hooks, env, helpers and .mcp.json servers"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Claude/FolderTrust.cs, src/Claudette.App/ViewModels/TabViewModel.Trust.cs
+    usedIn: src/Deventry.Core/Claude/FolderTrust.cs, src/Deventry.App/ViewModels/TabViewModel.Trust.cs
     docs: https://code.claude.com/docs/en/permissions
     test: FolderTrustTests
     fallback: If -p starts asking or holding them back itself, the card is redundant but harmless; the question can be turned off in Settings.
   - id: "hooks"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Claude/FolderTrust.cs
+    usedIn: src/Deventry.Core/Claude/FolderTrust.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: FolderTrustTests
     # Also apiKeyHelper, awsAuthRefresh, awsCredentialExport, gcpAuthRefresh, otelHeadersHelper, env, enabledPlugins and
@@ -1319,7 +1319,7 @@ items:
   - id: "managed-settings.json"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Claude/StartingPermissionMode.cs
+    usedIn: src/Deventry.Core/Claude/StartingPermissionMode.cs
     docs: https://code.claude.com/docs/en/managed-settings
     test: StartingPermissionModeTests
     # With the managed-settings.d drop-ins, in C:\Program Files\ClaudeCode, /Library/Application Support/ClaudeCode and
@@ -1327,7 +1327,7 @@ items:
   - id: "permissions.defaultMode"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Claude/StartingPermissionMode.cs
+    usedIn: src/Deventry.Core/Claude/StartingPermissionMode.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: StartingPermissionModeTests
     # Where one is set, a tab is started without --permission-mode, so Claude Code applies it. auto and
@@ -1335,14 +1335,14 @@ items:
   - id: "disableAutoMode"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Claude/StartingPermissionMode.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: StartingPermissionModeTests, PermissionModeTests
     # "disable", at the top level or under permissions: no auto mode flag, and no Auto in the mode picker.
   - id: "claude -p starts in Manual, and -p --resume brings back plan mode without --permission-mode"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Claude/StartingPermissionMode.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Claude/StartingPermissionMode.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/sessions
     test: PermissionModeTests
     # https://code.claude.com/docs/en/permission-modes (which mode a session starts in). If -p ever starts in auto mode
@@ -1350,13 +1350,13 @@ items:
   - id: "spinnerVerbs"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Claude/SpinnerVerbs.cs
+    usedIn: src/Deventry.Core/Claude/SpinnerVerbs.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: SpinnerVerbsTests
   - id: "prefersReducedMotion"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Accessibility/Motion.cs
+    usedIn: src/Deventry.Core/Accessibility/Motion.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: MotionAndZoomTests
     # Read from the user's settings.json in Claude Code's config folder, for Settings → Appearance → Motion's "Follow
@@ -1364,21 +1364,21 @@ items:
   - id: "resume from a transcript path writes <session-id>.jsonl next to it"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Library/SessionLibrary.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Library/SessionLibrary.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/sessions
     test: RealCliTests
     fallback: Copy the updated transcript from the projects folder back to the library after each turn.
   - id: "a transcript resumed from a path is only added to"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Library/LibraryFiles.cs, src/Claudette.App/Services/LibraryService.cs, src/Claudette.App/ViewModels/TabViewModel.Library.cs
+    usedIn: src/Deventry.Core/Library/LibraryFiles.cs, src/Deventry.App/Services/LibraryService.cs, src/Deventry.App/ViewModels/TabViewModel.Library.cs
     docs: https://code.claude.com/docs/en/sessions
     test: RealCliTests
     fallback: Claudette tells another machine's turns in the library from this machine's by whether one transcript is the start of the other (DESIGN.md §9, "One machine at a time"). If Claude Code wrote a resumed transcript again rather than adding to it, compare the transcripts by their lines' uuids instead of their bytes, or every copy after resuming would look like a session that went on in two places.
   - id: "HEAD /api/hello"
     kind: behavior
     status: undocumented
-    usedIn: tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: tools/Deventry.MockApi/MockAnthropicApi.cs
     test: RealCliTests
     fallback: A connectivity check Claude Code makes against ANTHROPIC_BASE_URL. The mock answers 404 and Claude Code carries on; if that stops working, answer 200.
 
@@ -1386,70 +1386,70 @@ items:
   - id: "claude auth login"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Auth/ClaudeLogin.cs, src/Claudette.Core/Auth/ClaudeAuth.cs, src/Claudette.App/ViewModels/SignInViewModel.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs, src/Deventry.Core/Auth/ClaudeAuth.cs, src/Deventry.App/ViewModels/SignInViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: SignInTests, FakeClaudeSignInTests, AccountAndSignInTests
     fallback: The fallback for the sign-in control requests, and the only way to sign in with SSO. Success is read from its exit code (0), which isn't documented; claude auth status then confirms the sign-in either way.
   - id: "--console"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Auth/ClaudeLogin.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: SignInTests
   - id: "--sso"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Auth/ClaudeLogin.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: SignInTests
   - id: "If the browser didn't open, visit:"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeLogin.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs
     test: SignInTests, FakeClaudeSignInTests
     fallback: What claude auth login prints with no terminal attached (2.1.284), followed by the address of the page that shows a code. Claudette takes the first http(s) address in any line of its output, with terminal escape codes removed, so the wording can change. Without one, the command still opens the browser itself and can finish on its own; only Open browser again and Enter a code instead have no page to open.
   - id: "Paste code here if prompted >"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeLogin.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs
     test: SignInTests, FakeClaudeSignInTests
     fallback: claude auth login reads the code from its input, one line of code#state that 2.1.284 splits on "#". Claudette writes the code as pasted, trimmed. If the command stops reading its input, the code field can't finish a sign-in, but the browser's automatic redirect still can.
   - id: "loginWithClaudeAi"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/UtilitySession.cs, src/Claudette.App/ViewModels/SignInViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.App/ViewModels/SignInViewModel.cs
     test: FakeClaudeSignInTests, AccountAndSignInTests
     fallback: The claude_authenticate field that picks a Claude subscription (true) or an Anthropic Console account (false), as the TypeScript SDK's claudeAuthenticate sends it. If it goes away, sign in to a Console account with claude auth login --console.
   - id: "oauth_org_not_allowed"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Auth/SignInErrors.cs
+    usedIn: src/Deventry.Core/Auth/SignInErrors.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests, SignInTests
   - id: "Please run /login"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/SignInErrors.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Auth/SignInErrors.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     test: SignInTests, FakeClaudeSignInTests, AccountAndSignInTests
     fallback: A session that can't start without a sign-in is recognized from the words of its error ("/login", "Not logged in", "Invalid API key", "OAuth token"…). If the wording changes, the tab shows an ordinary start error with Restart, and a session that starts anyway still reports authentication_failed, which is documented, with its first message.
   - id: "subscriptionType"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs, src/Claudette.App/ViewModels/AccountViewModel.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs, src/Deventry.App/ViewModels/AccountViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: InstallAndAuthTests, AccountAndSignInTests
     fallback: With email, orgName and authMethod from claude auth status, for the account menu and Settings. Only shown; without them the menu says "Signed in".
   - id: "orgName"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs, src/Claudette.App/ViewModels/AccountViewModel.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs, src/Deventry.App/ViewModels/AccountViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: InstallAndAuthTests
     fallback: See subscriptionType.
   - id: "authMethod"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Auth/ClaudeAuth.cs, src/Claudette.App/ViewModels/AccountViewModel.cs
+    usedIn: src/Deventry.Core/Auth/ClaudeAuth.cs, src/Deventry.App/ViewModels/AccountViewModel.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: InstallAndAuthTests, AccountAndSignInTests
     fallback: See subscriptionType. 2.1.284 reports none, claude.ai, api_key, api_key_helper, oauth_token or third_party; an unknown value is shown as it is. Since 2.1.286 a Console sign-in's stored key reports api_key (2.1.285 said claude.ai), so it reads as an API key, with Console billing and no Remote Control.
@@ -1458,13 +1458,13 @@ items:
   - id: "--settings"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/Services/AccountsService.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/Services/AccountsService.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: RealCliTests, AccountsTests
   - id: "apiKeyHelper"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, src/Claudette.App/Services/ApiKeyHelperLaunch.cs
+    usedIn: src/Deventry.Core/Accounts/ApiKeyHelper.cs, src/Deventry.App/Services/ApiKeyHelperLaunch.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: RealCliTests, AccountsTests
     # An API-key account's tab passes {"apiKeyHelper": "\"<Claudette>\" --api-key-helper <id>"} with --settings. Claude
@@ -1473,7 +1473,7 @@ items:
   - id: "apiKeyHelper outranks a claude.ai sign-in"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.App/Services/AccountsService.cs
+    usedIn: src/Deventry.App/Services/AccountsService.cs
     docs: https://code.claude.com/docs/en/authentication
     test: RealCliTests
     # "Authentication precedence": ANTHROPIC_AUTH_TOKEN, then ANTHROPIC_API_KEY, then apiKeyHelper, then the claude.ai
@@ -1481,7 +1481,7 @@ items:
   - id: "ANTHROPIC_API_KEY"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, src/Claudette.Core/Sessions/PromptCache.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: src/Deventry.Core/Accounts/ApiKeyHelper.cs, src/Deventry.Core/Sessions/PromptCache.cs, tests/Deventry.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: AccountsTests, RealCliTests, PromptCacheTests
     # Removed from an API-key account's tabs: under -p it always wins over apiKeyHelper. Default's tabs keep it, as user
@@ -1490,14 +1490,14 @@ items:
   - id: "ANTHROPIC_AUTH_TOKEN"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Accounts/ApiKeyHelper.cs, src/Claudette.Core/Sessions/PromptCache.cs, tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: src/Deventry.Core/Accounts/ApiKeyHelper.cs, src/Deventry.Core/Sessions/PromptCache.cs, tests/Deventry.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: AccountsTests, PromptCacheTests
     # See ANTHROPIC_API_KEY: it outranks apiKeyHelper too, and a tab with it isn't on a subscription's prompt cache default.
   - id: "costUSD"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/TurnUsage.cs
+    usedIn: src/Deventry.Core/Sessions/TurnUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ProcessUsageTests, UsageStoreTests, AccountsTests
     # Each model's estimated cost in a result's modelUsage, at list price and running like the rest of modelUsage: an
@@ -1507,44 +1507,44 @@ items:
   - id: "rate_limits_available"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     test: UsageParserTests
     fallback: Part of the get_usage response. If it goes away, the limits are read anyway; false means no plan limits (for example an API key), and the meters stay hidden.
   - id: "rate_limits.limits"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     test: UsageParserTests
     fallback: Reads kind (session, weekly_all, weekly_scoped), percent, severity, resets_at, is_active and scope.model.display_name; unknown kinds are skipped. Without the list, read rate_limits.five_hour, seven_day and model_scoped, then rely on rate_limit_event.
   - id: "rate_limits.five_hour"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     test: UsageParserTests
     fallback: Only read when rate_limits.limits is missing (utilization 0-100, resets_at). Otherwise rate_limit_event.
   - id: "rate_limits.seven_day"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     test: UsageParserTests
     fallback: See rate_limits.five_hour.
   - id: "rate_limits.model_scoped"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     test: UsageParserTests
     fallback: Only read when rate_limits.limits is missing (display_name, utilization, resets_at). Otherwise the model meters hide unless the /usage fallback is on.
   - id: "unifiedWindows"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: UsageParserTests
     fallback: rate_limit_info.unifiedWindows.five_hour / seven_day (utilization 0-1, resetsAt epoch seconds). Without it, use the documented top-level utilization and resetsAt for the window named by rateLimitType.
   - id: "rateLimitType"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs, src/Claudette.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs, src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: UsageParserTests, AutoContinueMonitorTests
     fallback: Only needed when unifiedWindows is missing (five_hour = session, seven_day = weekly). Without it, such an event is ignored and get_usage still supplies the readings. On a rejected event it also names the limit that stopped a turn (five_hour, seven_day, seven_day_opus, seven_day_sonnet); without it the bar says "usage limit".
@@ -1552,33 +1552,33 @@ items:
   - id: "rate_limits.extra_usage"
     kind: field
     status: documented
-    usedIn: src/Claudette.Usage/UsageParser.cs, src/Claudette.Usage/UsageCredits.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs, src/Deventry.Usage/UsageCredits.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: UsageParserTests, UsageCreditsTests, UsageHeaderTests
     fallback: Reads is_enabled, used_credits, monthly_limit (minor units) and currency; a null monthly_limit isn't no cap. Without it (or is_enabled), the poll says nothing about credits, and only isUsingOverage shows the notice.
   - id: "isUsingOverage"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs, src/Claudette.Usage/UsageCredits.cs, src/Claudette.Core/Sessions/AutoContinueMonitor.cs, src/Claudette.App/ViewModels/TabViewModel.UsageCredits.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs, src/Deventry.Usage/UsageCredits.cs, src/Deventry.Core/Sessions/AutoContinueMonitor.cs, src/Deventry.App/ViewModels/TabViewModel.UsageCredits.cs
     test: UsageParserTests, UsageCreditsTests, UsageHeaderTests, UsageCreditsUiTests, AutoContinueMonitorTests, UsageCreditsTabTests
     fallback: rate_limit_info.isUsingOverage, with rateLimitType and resetsAt for the used-up limit (status rejected, overageStatus allowed). Without it, the notice shows from get_usage alone, rate_limits.extra_usage.is_enabled with the session or weekly limit at 100%, a poll late and without a model's own limit. A tab that doesn't use usage credits stops a turn on it, and treats such a rejection as one the turn got past rather than the limit; without it, the tab holds messages by the poll alone, and a turn already running on credits isn't stopped.
   - id: "/usage"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Sessions/UtilitySession.cs, src/Claudette.App/Services/UsageTracker.cs
+    usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.App/Services/UsageTracker.cs
     docs: https://code.claude.com/docs/en/commands
     test: UsagePollerTests
   - id: "/usage output format"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Usage/UsageParser.cs
+    usedIn: src/Deventry.Usage/UsageParser.cs
     docs: https://code.claude.com/docs/en/commands
     test: UsageParserTests
     fallback: "Current session / Current week (all models) / Current week (<model>): N% used · resets <date>, <time> (<IANA zone>)", in one-line or block form. Last resort and off by default; if it can't be read, the model-specific meters stay hidden.
   - id: "modelUsage"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/TurnUsage.cs, src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/TurnUsage.cs, src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/cost-tracking
     test: ProcessUsageTests, RealCliTests
     # The process's running totals, not the turn's: each turn is what it added to the result before (ProcessUsage).
@@ -1587,39 +1587,39 @@ items:
   - id: "contextWindow"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/CallUsage.cs
+    usedIn: src/Deventry.Core/Sessions/CallUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: CallUsageTests
   - id: "message.usage"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/CallUsage.cs
+    usedIn: src/Deventry.Core/Sessions/CallUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: CallUsageTests
     # Per-call usage on assistant messages: repeated on every content block of a call, so counted once by message id.
   - id: "autocompact_state"
     kind: message
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     test: ReplayTests
     fallback: "Seen in 2.1.284 and 2.1.285 before each turn: value.enabled, value.effective_window, value.threshold. 2.1.286 sent none in the recorded scenarios. Only the context estimate uses it (when get_context_usage isn't available); without it the estimate warns at 80% of the context window."
   - id: "active_goal"
     kind: message
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     test: MessageParserTests
     fallback: Seen in 2.1.284 ({"value":null} before each turn). Skipped on purpose, so Diagnostics doesn't count it as unknown; nothing depends on it.
   - id: "supportedEffortLevels"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Services/AppServices.cs, src/Claudette.App/ViewModels/Settings/TabsPage.cs, src/Claudette.App/ViewModels/TabSettingsViewModel.cs
+    usedIn: src/Deventry.App/Services/AppServices.cs, src/Deventry.App/ViewModels/Settings/TabsPage.cs, src/Deventry.App/ViewModels/TabSettingsViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: SettingsDefaultsTests
     # The models (and their effort levels) in the initialize reply, kept per machine for the lists in Settings.
   - id: "supportsAutoMode"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/InitializeResult.cs, src/Claudette.App/ViewModels/TabViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests, PermissionModeTests, RealCliTests
     # On each model in the initialize reply; left out for a model without auto mode (Haiku 4.5 in 2.1.284). The mode
@@ -1629,119 +1629,119 @@ items:
   - id: "cache_creation"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/PromptCacheWrites.cs, src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs, src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptCacheWritesTests, PromptCacheTests
     fallback: "The Usage type's cache_creation on a result's usage: ephemeral_5m_input_tokens and ephemeral_1h_input_tokens, what the turn wrote to the cache at each lifetime (every recording since 2.1.284 has it, all zeros against the mock, which caches nothing). The latest turn that wrote any says the cache's lifetime, after Claude Code's own configuration. Without it the chip goes by that configuration, then Claude Code's default: an hour for a subscription, five minutes otherwise."
   - id: "ephemeral_1h_input_tokens"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/PromptCacheWrites.cs
+    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptCacheWritesTests
     fallback: See cache_creation. Any tokens here mean the 1-hour lifetime.
   - id: "ephemeral_5m_input_tokens"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/PromptCacheWrites.cs
+    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptCacheWritesTests
     fallback: See cache_creation. Tokens here, with none at an hour, mean the 5-minute lifetime.
   - id: "message.usage.cache_creation"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptCacheWritesTests, PromptCacheTests
     fallback: "Optional, and unverified: the Messages API's usage has it, but no recording shows it on an assistant message (the mock's usage leaves it out). Read on the main agent's messages only, and from a restored tab's transcript, where it beats the result's, which can count subagents' writes. Without it the result's is used."
   - id: "apiKeySource"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.Core/Sessions/PromptCache.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.Core/Sessions/PromptCache.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PromptCacheWritesTests, PromptCacheTests
     fallback: "On system/init: ANTHROPIC_API_KEY, apiKeyHelper or /login managed key for an API key, none for a claude.ai sign-in, a bearer token or a cloud provider. Anything but none means the tab is billed by the token (the prompt cache's default is five minutes). Without it, the environment's ANTHROPIC_API_KEY and claude auth status's authMethod and apiProvider decide, and anything else is taken for a subscription."
   - id: "promptCacheTtl"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: PromptCacheTests
     fallback: "5m or 1h, from the tab's .claude/settings.local.json, then .claude/settings.json, then the user's settings.json (as spinnerVerbs is read; managed settings aren't). Since 2.1.242. Below CLAUDE_CODE_PROMPT_CACHE_TTL and FORCE_PROMPT_CACHING_5M, above ENABLE_PROMPT_CACHING_1H. Any other value is passed over, to the next file."
   - id: "env"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: PromptCacheTests
     fallback: "The settings files' env, read only for the prompt cache's variables (and whether ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN is set): a value there overrides the environment claude starts with, the most specific file's winning, and an empty one unsets it. If Claude Code stops applying it, a variable set only there would show a lifetime the session doesn't use, until a turn's writes say."
   - id: "DISABLE_PROMPT_CACHING"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: Read from the environment the tab's claude starts with and its settings files' env. On (1, true, yes or on, as Claude Code reads a switch), there's no cache and no chip, whatever the per-model variables say.
   - id: "DISABLE_PROMPT_CACHING_FABLE"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: No chip while the tab's model id has "fable" in it. The per-model variables are matched by the family's name in the model id, which may not be exactly what "the default <family> model" means in the docs.
   - id: "DISABLE_PROMPT_CACHING_HAIKU"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: See DISABLE_PROMPT_CACHING_FABLE, for "haiku".
   - id: "DISABLE_PROMPT_CACHING_OPUS"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: See DISABLE_PROMPT_CACHING_FABLE, for "opus".
   - id: "DISABLE_PROMPT_CACHING_SONNET"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: See DISABLE_PROMPT_CACHING_FABLE, for "sonnet".
   - id: "CLAUDE_CODE_PROMPT_CACHE_TTL"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: 5m or 1h for the main conversation, since 2.1.242; over promptCacheTtl and ENABLE_PROMPT_CACHING_1H, under FORCE_PROMPT_CACHING_5M. Any other value is passed over. CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL isn't read, since subagents' caches aren't the conversation's.
   - id: "ENABLE_PROMPT_CACHING_1H"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: On, the 1-hour lifetime, below CLAUDE_CODE_PROMPT_CACHE_TTL and promptCacheTtl. The deprecated ENABLE_PROMPT_CACHING_1H_BEDROCK isn't read; a turn's writes still show its hour.
   - id: "FORCE_PROMPT_CACHING_5M"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: On, the 5-minute lifetime, over everything else.
   - id: "Subscription users within included usage receive the 1-hour TTL automatically"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
     fallback: "ENABLE_PROMPT_CACHING_1H's entry: a subscription's main conversation gets an hour while it's within included usage, and every other request, an API key's or a cloud provider's, five minutes. Claudette can't tell whether a subscription is drawing on usage credits, so its tooltip says usually; it's the last resort, after the configuration and a turn's writes, which show the hour or the five minutes the session really got."
   - id: "prompt_cache_likely_expired"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Sessions/PromptCache.cs, src/Claudette.App/ViewModels/TabViewModel.PromptCache.cs
+    usedIn: src/Deventry.Core/Sessions/PromptCache.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs
     docs: https://code.claude.com/docs/en/hooks
     test: PromptCacheTests
     fallback: "Not read: Claudette follows the rule this hook field states, that the cache is likely gone once the last response is older than the session's lifetime or a compaction replaced the conversation. So the countdown starts again at each main-agent assistant message and at the result of a turn that made a request; subagents have caches of their own (the sub-agents page), so their messages don't count. A compact_boundary or conversation_reset forgets it, as does switching the model (each model has its own cache, the settings page says) or the account."
@@ -1750,50 +1750,50 @@ items:
   - id: "isMeta"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.Core/Transcripts/TranscriptPrompts.cs, src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/Transcripts/TranscriptPrompts.cs, src/Deventry.Core/History/HistoryIndex.cs
     test: TranscriptReaderTests, HistoryIndexTests
     fallback: Injected context would count as a prompt in restored tabs and in History's first prompt and message count.
   - id: "cwd"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs
     test: HistoryIndexTests
     fallback: History can't group the session by folder; it lists it under "Unknown folder" and asks for the folder when it's opened.
   - id: "gitBranch"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs
     test: HistoryIndexTests
     fallback: History shows no branch.
   - id: "timestamp"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs, src/Claudette.Core/Transcripts/TranscriptReader.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs, src/Deventry.Core/Transcripts/TranscriptReader.cs
     test: HistoryIndexTests, TranscriptReaderTests, MessageCopyAndTimeTests
     fallback: Last activity falls back to the transcript's last-write time. A restored tab's messages show no time on hover, and its start time is when it was restored.
   - id: "version"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs
     test: HistoryIndexTests
     fallback: Informational only; History shows no version.
   - id: "projects/<project>/<session-id>.jsonl"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs, src/Claudette.Core/Transcripts/TranscriptReader.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs, src/Deventry.Core/Transcripts/TranscriptReader.cs
     docs: https://code.claude.com/docs/en/sessions
     test: HistoryIndexTests
     fallback: History lists only Claudette's saved tabs and the session library; resuming by session id still works.
   - id: "<session-id>/subagents/*.jsonl"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs, src/Claudette.Core/Library/SessionLibrary.cs, src/Claudette.App/Services/LibraryService.cs, src/Claudette.Core/Transcripts/TranscriptReader.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs, src/Deventry.Core/Library/SessionLibrary.cs, src/Deventry.App/Services/LibraryService.cs, src/Deventry.Core/Transcripts/TranscriptReader.cs
     test: HistoryIndexTests, SessionLibraryTests, TranscriptReaderTests
     fallback: History ignores the folder. If it moves, the library copies only the main transcript and a session restored on another machine loses subagent detail, and a restored tab's subagent groups and agent map show only the top-level subagents, without their activity.
   - id: "compact JSONL transcript lines"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/History/HistoryIndex.cs
+    usedIn: src/Deventry.Core/History/HistoryIndex.cs
     test: HistoryIndexTests
     fallback: HistoryIndex pre-filters lines with substrings such as "type":"user" before parsing them. If Claude Code starts writing spaced JSON, History shows no prompts; parse every line instead (slower on large transcripts).
 
@@ -1801,75 +1801,75 @@ items:
   - id: "Edit"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests, TaskProgressTests
   - id: "Write"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests, TasksPlanTests
   - id: "content"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: TasksPlanTests
     fallback: Write's input content is the plan's draft in Plan mode (DESIGN.md §5, "Tasks"). Without it the draft isn't shown until the plan is put up for review.
   - id: "old_string"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/Diff.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/Diff.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: DiffTests, TasksPlanTests
     fallback: With new_string and replace_all, the Edit card's diff before its result, and an Edit to the plan's draft in Plan mode (DESIGN.md §5, "Tasks"). Without them the card waits for structuredPatch, and the draft stays as it was until the plan is put up.
   - id: "new_string"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/Diff.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/Diff.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: DiffTests, TasksPlanTests
   - id: "replace_all"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: TasksPlanTests
   - id: "NotebookEdit"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests
   - id: "MultiEdit"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs
     test: ChangedFilesTests
     fallback: No longer in the SDK reference; handled like Edit so older transcripts replay. Nothing is lost if it never appears.
   - id: "file_path"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests, TaskProgressTests, ReplyFileTests
   - id: "filePath"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests
   - id: 'type: "create" | "update"'
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.App/Conversation/ConversationItems.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests
   - id: "notebook_path"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Diffs/ChangedFiles.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ChangedFilesTests
 
@@ -1877,154 +1877,154 @@ items:
   - id: "task_started"
     kind: message
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs, src/Claudette.App/Conversation/AgentMap.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs, src/Deventry.App/Conversation/AgentMap.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolWindowsTests, AgentMapTests, RunningTasksTests
   - id: "stop_task"
     kind: control
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ToolWindowsTests, RunningTasksTests
   # --- Agent map (DESIGN.md §18) ------------------------------------------------------------------------
   - id: "tool_progress"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs, src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/Conversation/AgentMap.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/Conversation/AgentMap.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests, AgentMapTests
   - id: "subagent_retry"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/Conversation/AgentMap.cs, src/Claudette.App/Conversation/AgentNode.cs, src/Claudette.Core/Status/ApiTrouble.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/Conversation/AgentMap.cs, src/Deventry.App/Conversation/AgentNode.cs, src/Deventry.Core/Status/ApiTrouble.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests, ServiceStatusTests
   - id: "heartbeat"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Protocol/MessageParser.cs
+    usedIn: src/Deventry.Core/Protocol/MessageParser.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: MessageParserTests
   - id: "<task-notification>"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs, src/Claudette.Core/Transcripts/TranscriptPrompts.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/Transcripts/TranscriptPrompts.cs
     test: TranscriptReaderTests
     fallback: How a transcript records a background task ending, with <task-id>, <tool-use-id>, <status>, <result> and <usage>. When the model was idle it's a user turn; when it was mid-turn, an entry of type "attachment" whose attachment has type "queued_command" and the notification as its prompt (commandMode "task-notification"; checked against 2.1.284 and 2.1.302). A subagent's report may come separately, as a peer message (<result> then only points to it), which Claudette doesn't need because it reads the subagent's own transcript. If either form changes, a restored tab shows a background subagent as "Didn't finish", and the user-turn form shows as a user message; the entry's origin.kind "task-notification" (documented on SDKUserMessage) still marks it.
   - id: "agent-<id>.meta.json"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Transcripts/TranscriptReader.cs
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs
     test: TranscriptReaderTests
     fallback: Its toolUseId says which Agent call a subagent transcript belongs to. Without it, a restored tab's subagent groups are empty and the agent map shows only the top-level subagents, without their activity.
   - id: "task_progress"
     kind: message
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentMap.cs, src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/AgentMap.cs, src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "task_notification"
     kind: message
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentMap.cs, src/Claudette.App/Conversation/AgentNode.cs, src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/AgentMap.cs, src/Deventry.App/Conversation/AgentNode.cs, src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, RunningTasksTests
   - id: "task_updated"
     kind: message
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentMap.cs, src/Claudette.App/Conversation/AgentNode.cs, src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/AgentMap.cs, src/Deventry.App/Conversation/AgentNode.cs, src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, RunningTasksTests
   - id: 'task_type: "local_agent"'
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentMap.cs
+    usedIn: src/Deventry.App/Conversation/AgentMap.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, RealCliTests
   - id: "is_backgrounded"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs, src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs, src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, RunningTasksTests
   - id: "agent_id"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/PermissionRequest.cs, src/Claudette.App/Conversation/AgentMap.cs, src/Claudette.App/ViewModels/ChangedFilesViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/PermissionRequest.cs, src/Deventry.App/Conversation/AgentMap.cs, src/Deventry.App/ViewModels/ChangedFilesViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, ChangedFilesTrackingTests, RealCliTests
     fallback: On can_use_tool it names the subagent asking (its task id); only the TypeScript option (agentID) and the matching field on permission_denied are documented. Without it, a prompt is matched to the subagent by its tool_use_id once the tool call arrives, else counted against the main agent.
   - id: "subagent_type"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationItems.cs, src/Claudette.App/Conversation/AgentMap.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs, src/Deventry.App/Conversation/AgentMap.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "run_in_background"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs, src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs, src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, RunningTasksTests
   - id: 'status: "async_launched"'
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/ConversationItems.cs, src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs, src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "totalTokens"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs, src/Claudette.Core/Sessions/ContextUsage.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs, src/Deventry.Core/Sessions/ContextUsage.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests, ContextUsageTests
   - id: "totalToolUseCount"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "totalDurationMs"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "resolvedModel"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "agentType"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "[Subagent hand-back]"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/ConversationItems.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs
     test: AgentMapTests
     fallback: The frame around a subagent's report in its Agent call's tool result text, read only for nested subagents, whose results have no tool_use_result. If it changes, the map uses the subagent's last text (it's forwarded with --forward-subagent-text), which is the report it hands back.
   - id: "tool_result_meta"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/ClaudeMessages.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     test: AgentMapTests, TasksPlanTests
     fallback: Marks an Agent call cut off by an interrupt or a stop (non_execution_kind "interrupted"), and an ExitPlanMode call cut off before its plan was answered. Without it, the "[Request interrupted" result text and the stopped task_notification still mark the subagent stopped, and a plan cut off reads as sent back until its turn ends, when a plan still waiting is marked not answered.
   - id: "stop_task (subagents)"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.Agents.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.Agents.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, AgentMapTests
     fallback: Documented for background tasks; in 2.1.284 it also stops a foreground subagent, with its nested ones, and the turn carries on. If that stops working, Stop on a subagent falls back to the whole-turn Stop (interrupt).
   - id: "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH"
     kind: env
     status: documented
-    usedIn: tests/Claudette.IntegrationTests/RealCliTests.cs
+    usedIn: tests/Deventry.IntegrationTests/RealCliTests.cs
     docs: https://code.claude.com/docs/en/sub-agents
     test: RealCliTests
     fallback: User configuration, passed through to claude. The real-CLI test sets it so nesting is on whatever the machine's environment says.
@@ -2033,44 +2033,44 @@ items:
   - id: 'task_type: "local_bash"'
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests
   - id: 'task_type: "remote_agent"'
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests
   - id: 'taskType: "local_workflow"'
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests
     fallback: Documented on the Workflow tool's output as the type of the task it registers; read as task_started's task_type. Any other type still counts as a running task, with the default icon.
   - id: "Monitor"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs, src/Claudette.App/Conversation/ToolIcons.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs, src/Deventry.App/Conversation/ToolIcons.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests, ComposerTests
   - id: "ambient"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs, src/Claudette.Core/Protocol/ProtocolDiagnostics.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs, src/Deventry.Core/Protocol/ProtocolDiagnostics.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests
   - id: 'status: "killed"'
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs, src/Claudette.App/Conversation/AgentNode.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs, src/Deventry.App/Conversation/AgentNode.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests, AgentMapTests
   - id: "patch"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Conversation/RunningTasks.cs, src/Claudette.App/Conversation/AgentMap.cs
+    usedIn: src/Deventry.App/Conversation/RunningTasks.cs, src/Deventry.App/Conversation/AgentMap.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RunningTasksTests, AgentMapTests
 
@@ -2078,109 +2078,109 @@ items:
   - id: "claude doctor"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdater.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdater.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdaterTests
   - id: "Running:"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
     fallback: "Read as `Running: <native|npm-global|npm-local|package-manager|development> (<version>)`. An unknown or missing install type falls back to `claude update`, which works out the install itself; the version always comes from `claude --version`."
   - id: "Package manager:"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs, src/Claudette.Core/Installation/ClaudeUpdatePlan.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs, src/Deventry.Core/Installation/ClaudeUpdatePlan.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
     fallback: "Values seen in 2.1.284: homebrew, winget, deb, rpm, apk, pacman, mise, asdf. Without it, a package-manager install gets no update action, only the version."
   - id: "Path:"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdatePlan.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdatePlan.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
     fallback: Used to find the Homebrew cask (claude-code or claude-code@latest) from its Caskroom path. The resolved claude launcher is tried too, then the default cask claude-code.
   - id: "Auto-updates:"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
   - id: "set by env: DISABLE_UPDATES"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdaterTests
     fallback: The docs show the DISABLE_AUTOUPDATER form of this line; DISABLE_UPDATES uses the same format in 2.1.284. If it changes, Update now is still offered and `claude update` refuses with its own message.
   - id: "Auto-update channel:"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
     fallback: Only shown in Settings; nothing depends on it.
   - id: "Last update attempt:"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
   - id: "Fix:"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
     fallback: "Warnings are read after the `N warnings found` line as `- <issue>` and `  Fix: <fix>`. If the format changes, Settings shows no warnings; `claude doctor` in a terminal still does."
   - id: "claude update"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdatePlan.cs, src/Claudette.Core/Installation/ClaudeUpdater.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdatePlan.cs, src/Deventry.Core/Installation/ClaudeUpdater.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdaterTests
   - id: "Successfully updated from"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdatePlan.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdatePlan.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
   - id: "DISABLE_UPDATES"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: ClaudeUpdateTests
   - id: "DISABLE_AUTOUPDATER"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeDoctor.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDoctor.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: ClaudeUpdateTests
   - id: "claude-code@latest"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdatePlan.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdatePlan.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
   - id: "winget upgrade Anthropic.ClaudeCode"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdatePlan.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdatePlan.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
   - id: "apt upgrade claude-code"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeUpdatePlan.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeUpdatePlan.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeUpdateTests
   - id: "CHANGELOG.md"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.App/Services/ClaudeUpdateService.cs
+    usedIn: src/Deventry.App/Services/ClaudeUpdateService.cs
     test: ClaudeUpdateTests
     fallback: The update dialog's "What's new" link. If the file moves in the anthropics/claude-code repository, point the link at the repository's releases page.
 
@@ -2188,19 +2188,19 @@ items:
   - id: "irm https://claude.ai/install.ps1 | iex"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeInstaller.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeInstaller.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeInstallerTests, SetupScreenTests
   - id: "curl -fsSL https://claude.ai/install.sh | bash"
     kind: command
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeInstaller.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeInstaller.cs
     docs: https://code.claude.com/docs/en/setup
     test: ClaudeInstallerTests
   - id: "~/.local/bin/claude"
     kind: file
     status: documented
-    usedIn: src/Claudette.Core/Installation/ClaudeLocator.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeLocator.cs
     docs: https://code.claude.com/docs/en/setup
     test: none yet (the known locations are in the real home folder)
     # The native installer's launcher, %USERPROFILE%\.local\bin\claude.exe on Windows. Looked in after PATH, so Claude
@@ -2208,20 +2208,20 @@ items:
   - id: "claude-desktop"
     kind: command
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDesktop.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDesktop.cs
     docs: https://code.claude.com/docs/en/desktop-linux
     test: ClaudeDesktopTests
     fallback: "The Claude desktop app's command: documented on Linux; on Windows its app execution alias (claude-desktop.exe, seen with 3.6556.2). Only tells Claudette the app is installed. Without it, Windows still sees the app's package folder, and the setup screen at worst leaves out its note about the desktop app."
   - id: "Claude_pzs8sxrjxfjjc"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDesktop.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDesktop.cs
     test: ClaudeDesktopTests, SetupScreenTests
     fallback: "The Claude desktop app's Windows package: its install folder (WindowsApps/Claude_<version>_x64__pzs8sxrjxfjjc, whose app/claude.exe is the app) and data folder (Packages/Claude_pzs8sxrjxfjjc), any publisher id matching. If it changes, a path to the app is run like any claude (its --version opens the app's window, and the setup screen says Claude Code didn't respond), and the setup screen leaves out its note about the desktop app."
   - id: "claude-code"
     kind: file
     status: undocumented
-    usedIn: src/Claudette.Core/Installation/ClaudeDesktop.cs
+    usedIn: src/Deventry.Core/Installation/ClaudeDesktop.cs
     test: ClaudeDesktopTests, SetupScreenTests
     fallback: "Where the Claude desktop app keeps its copy of Claude Code: its data folder's Claude/claude-code/<version>/ (on Windows, %LOCALAPPDATA%/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/claude-code/<version>/<hash>/claude.exe with 3.6556.2; on macOS and Linux, ~/Library/Application Support and ~/.config, not yet seen). If it moves, a path to the copy works until the app replaces it, then says it doesn't exist."
 
@@ -2229,79 +2229,79 @@ items:
   - id: "--append-system-prompt"
     kind: flag
     status: documented
-    usedIn: src/Claudette.Core/Sessions/ClaudeLaunchOptions.cs, src/Claudette.App/ViewModels/PerforceViewModel.cs, src/Claudette.App/ViewModels/TabViewModel.Subagents.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeLaunchOptions.cs, src/Deventry.App/ViewModels/PerforceViewModel.cs, src/Deventry.App/ViewModels/TabViewModel.Subagents.cs
     docs: https://code.claude.com/docs/en/cli-reference
     test: HookCallbackTests, PerforceTabTests, SubagentTests, RealCliTests
   - id: "hooks"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.Core/Sessions/HookCallbacks.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/HookCallbacks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: HookCallbackTests, RealCliTests
     fallback: "The initialize request's hooks field, as the Python Agent SDK sends it: {\"PreToolUse\": [{\"matcher\": \"Bash\", \"hookCallbackIds\": [\"hook_0\"], \"timeout\": 300}]}. The SDK option it carries (HookCallbackMatcher, with a timeout in seconds) is documented; the wire names aren't. If Claude Code stops calling back, the Perforce ticket is still renewed ahead of time, and by recovery after a p4 command fails."
   - id: "hookCallbackIds"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/HookCallbacks.cs
+    usedIn: src/Deventry.Core/Sessions/HookCallbacks.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: HookCallbackTests, RealCliTests
     fallback: See hooks.
   - id: "hook_callback"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs, tools/Claudette.FakeClaude/Program.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, tools/Deventry.FakeClaude/Program.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: HookCallbackTests, FakeClaudeTests, RealCliTests
     fallback: "What Claude Code sends for a registered hook: {subtype: hook_callback, callback_id, input, tool_use_id}, answered with a control_response whose response is the hook's output. Claude Code logs an error answer and runs the tool anyway. See hooks for what happens without it."
   - id: "callback_id"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: HookCallbackTests, RealCliTests
     fallback: See hook_callback. An unknown id gets an error answer.
   - id: "hook_event_name"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/HookCallbacks.cs
+    usedIn: src/Deventry.Core/Sessions/HookCallbacks.cs
     docs: https://code.claude.com/docs/en/hooks
     test: HookCallbackTests
   - id: "tool_input"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/HookCallbacks.cs, src/Claudette.App/ViewModels/PerforceViewModel.cs
+    usedIn: src/Deventry.Core/Sessions/HookCallbacks.cs, src/Deventry.App/ViewModels/PerforceViewModel.cs
     docs: https://code.claude.com/docs/en/hooks
     test: HookCallbackTests, PerforceTabTests, RealCliTests
   - id: "`continue`"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/HookCallbacks.cs
+    usedIn: src/Deventry.Core/Sessions/HookCallbacks.cs
     docs: https://code.claude.com/docs/en/hooks
     test: HookCallbackTests, RealCliTests
   - id: "PreToolUse hook did not respond before its timeout"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/Services/PerforceService.cs, src/Claudette.App/ViewModels/PerforceViewModel.cs
+    usedIn: src/Deventry.App/Services/PerforceService.cs, src/Deventry.App/ViewModels/PerforceViewModel.cs
     docs: https://code.claude.com/docs/en/hooks
     test: RealCliTests
     fallback: "In 2.1.284 a hook_callback that isn't answered within its timeout gets a control_cancel_request, and the tool call isn't run (its result is this error). So the Perforce hook answers by itself 15 seconds before its 5-minute timeout, even with a password prompt still open; recovery then renews the login and asks Claude to retry. If Claude Code instead ran the tool after a timeout, nothing would need to change."
   - id: "BashOutput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Perforce/BashCommandLog.cs
+    usedIn: src/Deventry.Core/Perforce/BashCommandLog.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PerforceTabTests
     fallback: "The Bash tool_use_result's stdout and stderr, read for p4 output (changelists, an expired session). Without them the tool_result text is used, which holds the same output."
   - id: "BashInput"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Perforce/BashCommandLog.cs, src/Claudette.App/ViewModels/PerforceViewModel.cs
+    usedIn: src/Deventry.Core/Perforce/BashCommandLog.cs, src/Deventry.App/ViewModels/PerforceViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: PerforceTabTests
   - id: "control_cancel_request for hook_callback"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Sessions/ClaudeSession.cs
+    usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: HookCallbackTests
     fallback: Sent when the turn is interrupted or the hook times out. Without it, a hook callback that's still waiting finishes and its answer is ignored.
@@ -2310,41 +2310,41 @@ items:
   - id: "SendMessage"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Threads/SendMessageCall.cs, src/Claudette.Core/Composer/SessionMentions.cs, src/Claudette.App/ViewModels/TabViewModel.Thread.cs, src/Claudette.App/Conversation/ConversationBuilder.cs, tools/Claudette.MockApi/MockAnthropicApi.cs
+    usedIn: src/Deventry.Core/Threads/SendMessageCall.cs, src/Deventry.Core/Composer/SessionMentions.cs, src/Deventry.App/ViewModels/TabViewModel.Thread.cs, src/Deventry.App/Conversation/ConversationBuilder.cs, tools/Deventry.MockApi/MockAnthropicApi.cs
     docs: https://code.claude.com/docs/en/cross-session-messaging
     test: ThreadTests, ThreadRealCliTests, SessionMentionTests, MessagingTests
     fallback: "The tool a thread's Claude hands work to its sub-threads with, offered in -p sessions (checked against 2.1.284). Its input's to, message and notify_when_idle are read from the PreToolUse hook (Claude Code also adds recipient and content, the same values). If it went away or changed shape, the hook would let every call through and threads would do nothing; the tabs still work."
   - id: "SendMessage's to is a session's name, not its session ID"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Composer/SessionMentions.cs, src/Claudette.App/ViewModels/TabViewModel.Messaging.cs
+    usedIn: src/Deventry.Core/Composer/SessionMentions.cs, src/Deventry.App/ViewModels/TabViewModel.Messaging.cs
     test: SessionMentionTests, MessagingTests
     fallback: "The docs address a session by its name; 2.1.284's tool text says the name is the address, and a session ID matches nothing, so Claude looks it up with ListAgents first. A session ID in a message (the tab menu's Copy session ID, pasted) gets the mention note with the name to send to (DESIGN.md §5, \"Sessions and agents\"). If Claude Code starts taking IDs, the note is still right; drop it then if it's noise."
   - id: "PreToolUse hook on SendMessage before the recipient is looked up"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.Thread.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.Thread.cs
     docs: https://code.claude.com/docs/en/hooks
     test: ThreadTests, ThreadRealCliTests
     fallback: "In 2.1.284 Claude Code calls the hook before it resolves the name, so a thread's sub-threads go by their tabs' names, not their sessions', and a subscription on its own (notify_when_idle without a message) reaches the hook too. If Claude Code checked the name first, a sub-thread's name would fail as an unknown recipient before the hook: launching each tab with --name set to its name would fix it."
   - id: "permissionDecision"
     kind: field
     status: documented
-    usedIn: src/Claudette.Core/Sessions/HookCallbacks.cs, src/Claudette.App/ViewModels/TabViewModel.Thread.cs
+    usedIn: src/Deventry.Core/Sessions/HookCallbacks.cs, src/Deventry.App/ViewModels/TabViewModel.Thread.cs
     docs: https://code.claude.com/docs/en/hooks
     test: ThreadTests, ThreadRealCliTests
     fallback: "A PreToolUse hook's hookSpecificOutput {hookEventName, permissionDecision: deny, permissionDecisionReason}: the tool doesn't run, Claude gets the reason as the tool's error result, and the turn's result lists the call in permission_denials (checked against 2.1.284). Threads deny SendMessage once Claudette has delivered the message itself."
   - id: "PreToolUse hook waits past 60 seconds with a longer timeout"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.App/ViewModels/TabViewModel.Thread.cs
+    usedIn: src/Deventry.App/ViewModels/TabViewModel.Thread.cs
     docs: https://code.claude.com/docs/en/hooks
     test: ThreadTests
     fallback: "A thread asking before it sends waits up to 10 minutes for the user, with the hook registered for 11; a hook answered after 75 seconds was honored in 2.1.284. If a long wait were cut short, the call fails as a timed-out hook, and Claude is told it wasn't sent."
   - id: "origin.kind peer"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/Protocol/MessageOrigin.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/MessageOrigin.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/cross-session-messaging
     test: ThreadTests
     fallback: "A message another of the user's sessions sent a tab echoes (with --replay-user-messages) as a user message with origin {kind: peer, name, body, from, msg_id, fromMode}, and is kept in the transcript as an isMeta entry with the same origin (checked against 2.1.284). The tab shows it as its own card, from body and name. Without the origin, the echo would be taken for a waiting prompt's, as an echo with an id Claudette didn't send is."
@@ -2353,21 +2353,21 @@ items:
   - id: "PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit before the file is written"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.App/ViewModels/PerforceViewModel.cs, src/Claudette.App/Services/PerforceFilesService.cs
+    usedIn: src/Deventry.App/ViewModels/PerforceViewModel.cs, src/Deventry.App/Services/PerforceFilesService.cs
     docs: https://code.claude.com/docs/en/hooks
     test: PerforceFilesTabTests
     fallback: "Every tab registers a second PreToolUse hook on the file tools, after Changed files' own, which checks out a Perforce depot file (tool_input.file_path, or a notebook's notebook_path) before the tool writes it, since Perforce leaves a file it hasn't checked out read-only (DESIGN.md §18, \"Opening files in Perforce\"). It always answers {\"continue\": true} and never changes the call, and answers by itself 15 seconds before its 60-second timeout. If Claude Code stopped calling it, Claude's Edit or Write of a read-only file would fail, and Claude would have to run p4 edit itself (which the session note tells it to use for source control, when ticket handling is on); the Files tab's Check out still works."
   - id: "PreToolUse hook on Agent"
     kind: behavior
     status: documented
-    usedIn: src/Claudette.Core/Subagents/SubagentMessages.cs, src/Claudette.App/ViewModels/TabViewModel.Subagents.cs
+    usedIn: src/Deventry.Core/Subagents/SubagentMessages.cs, src/Deventry.App/ViewModels/TabViewModel.Subagents.cs
     docs: https://code.claude.com/docs/en/hooks
     test: SubagentTests, RealCliTests
     fallback: "Every tab registers a PreToolUse hook matched on Agent|Task (Task being the tool's older name); with Settings → Claude Code → Subagents on Don't allow it answers deny, and Claude Code doesn't start the subagent. In 2.1.284 the hook is called for a subagent's own Agent calls too. If Claude Code stopped calling it, subagents would run again; the note Claude starts with still asks it not to, and --disallowedTools Agent would remove the tool instead (applying only when a tab starts)."
   - id: "PreToolUse:Agent hook error"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/Subagents/SubagentMessages.cs, src/Claudette.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Subagents/SubagentMessages.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     test: SubagentTests, RealCliTests
     fallback: "What Claude reads when the hook refuses an Agent call: Claude Code's \"PreToolUse:Agent hook error: \" and then the hook's reason, as the call's error result (checked against 2.1.284). The conversation finds a refused call by the reason's own text, wherever Claude Code puts it, and shows it as not started. If the reason were dropped, a refused call would show as a failed subagent."
 
@@ -2375,95 +2375,95 @@ items:
   - id: "remote_control"
     kind: control
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs, src/Claudette.Core/Sessions/ClaudeSession.cs, src/Claudette.App/ViewModels/RemoteControlViewModel.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     docs: https://code.claude.com/docs/en/remote-control
     test: RemoteControlProtocolTests, RemoteControlTests, RealCliTests, RemoteControlRealCliTests
     fallback: "{subtype: remote_control, enabled: true, name} connects the session as SDK hosts (the VS Code extension) do, and {enabled: false} disconnects it; the wire names are from Claude Code 2.1.284's own handler, not the docs or the Agent SDK types. Claude Code runs its eligibility checks first and answers with the reason as an error (against the mock: \"Remote Control is only available when using Claude via api.anthropic.com…\"), which the tab shows. If it's rejected as unsupported, the tab sends the /remote-control command instead. If enabled: false fails, the tab's claude is restarted on the same session and doesn't connect again. Either way nothing else in the tab breaks."
   - id: "session_url"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs
     test: RemoteControlProtocolTests, RemoteControlTests
     fallback: The success answer to remote_control, the session at claude.ai/code that the note links to and Open in the Claude app opens. Without it connect_url is used; without either the tab reads Connected with no link.
   - id: "connect_url"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs
     test: RemoteControlProtocolTests
     fallback: See session_url; used only when that's missing.
   - id: "bridge_session_id"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs
     test: RemoteControlProtocolTests
     fallback: In the success answer to remote_control, with environment_id and bridge_epoch. Not used; a later version could pass it back as reattach_session_id so a restarted tab keeps its session in the Claude app.
   - id: "bridge_epoch"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs
     test: RemoteControlProtocolTests
     fallback: Not used; see bridge_session_id.
   - id: "Unsupported control request subtype"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs
     test: RemoteControlProtocolTests, RemoteControlTests
     fallback: How 2.1.284 rejects a control request it doesn't know, which sends a tab to the /remote-control fallback. If the wording changes, a rejected remote_control shows as the tab's reason for not connecting instead.
   - id: "bridge_state"
     kind: message
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs, src/Claudette.App/ViewModels/RemoteControlViewModel.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     test: RemoteControlProtocolTests, RemoteControlTests, RealCliTests
     fallback: "system/bridge_state with state (ready, connected, reconnecting, failed, policy_disabled), detail and failure_kind: the connection's progress after remote_control. A state Claudette doesn't know is Unknown and changes nothing. Without the message the tab keeps what the answer to remote_control said until the session ends."
   - id: "worker_shutting_down"
     kind: message
     status: documented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs, src/Claudette.App/ViewModels/RemoteControlViewModel.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RemoteControlProtocolTests, RemoteControlTests
     fallback: A connected tab reads Not connected, with the reason. One arriving while the tab isn't connected (replayed from a resumed session) is ignored. The reason remote_control_disabled (2.1.286, when a policy turns Remote Control off) makes it not available in every tab until Claudette restarts or another account signs in, unless the tab was disconnecting itself. An unknown reason is shown in words.
   - id: "/remote-control"
     kind: command
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs, src/Claudette.App/ViewModels/RemoteControlViewModel.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     docs: https://code.claude.com/docs/en/remote-control
     test: RemoteControlProtocolTests, RemoteControlTests, RealCliTests
     fallback: "Documented for the terminal, the Desktop app and the VS Code extension's prompt box; sent by an SDK host as a message it's undocumented. Only the fallback for a Claude Code that rejects remote_control, sent while Claude isn't working and hidden from the conversation, with its reply shown as a note. In -p mode 2.1.284 always answers it locally with \"/remote-control isn't available in this environment.\", so the fallback only says why the tab isn't connected; the tab stays unconnected and nothing else breaks."
   - id: "isn't available in this environment"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs
     test: RemoteControlProtocolTests, RealCliTests
     fallback: "The reply to /remote-control in -p mode (2.1.284), an assistant message from the model <synthetic> and a result with num_turns 0. Replies are read tolerantly: a claude.ai/code address means connected; isn't available, requires, disabled and similar mean unavailable, with the reply as the reason; anything else counts as connected, with the reply as the note."
   - id: "unavailable_headless"
     kind: field
     status: undocumented
-    usedIn: src/Claudette.Core/RemoteControl/RemoteControlProtocol.cs, src/Claudette.App/ViewModels/RemoteControlViewModel.cs
+    usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     test: RemoteControlProtocolTests, RealCliTests
     fallback: "local_command_outcome.kind on a local command's reply (marked internal in Claude Code's schema): the command can't run in a headless session. unknown, failed and restart_required mean it didn't run either. Without the field the reply's words decide."
   - id: "control_cancel_request for can_use_tool answered in the Claude app"
     kind: behavior
     status: undocumented
-    usedIn: src/Claudette.App/Conversation/ConversationBuilder.cs, src/Claudette.App/Conversation/PendingPrompts.cs, src/Claudette.App/ViewModels/RemoteControlViewModel.cs
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.App/Conversation/PendingPrompts.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     test: RemoteControlTests
     fallback: When a connected device answers a permission prompt, question or plan, 2.1.284 withdraws the host's copy with control_cancel_request (from its injectControlResponse). The card closes and reads "Answered in the Claude app" while the tab is connected and Claudette didn't stop the turn. Without it the card stays open until the turn moves on, as for any withdrawn request.
   - id: "CLAUDE_CLIENT_PRESENCE_FILE"
     kind: env
     status: documented
-    usedIn: src/Claudette.Core/RemoteControl/PresenceFile.cs, src/Claudette.App/Services/RemoteControlService.cs
+    usedIn: src/Deventry.Core/RemoteControl/PresenceFile.cs, src/Deventry.App/Services/RemoteControlService.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RemoteControlProtocolTests, RemoteControlTests
   - id: "inputNeededNotifEnabled"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Views/SettingsWindow.axaml
+    usedIn: src/Deventry.App/Views/SettingsWindow.axaml
     docs: https://code.claude.com/docs/en/settings-reference
     test: RemoteControlUiTests
     fallback: Claudette only names it ("Push when actions required" in /config) and links to the docs; it never writes Claude Code's settings.
   - id: "agentPushNotifEnabled"
     kind: field
     status: documented
-    usedIn: src/Claudette.App/Views/SettingsWindow.axaml
+    usedIn: src/Deventry.App/Views/SettingsWindow.axaml
     docs: https://code.claude.com/docs/en/settings-reference
     test: RemoteControlUiTests
     fallback: See inputNeededNotifEnabled ("Push when Claude decides"; the docs page the link opens describes both).

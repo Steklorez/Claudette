@@ -34,7 +34,7 @@
   </Resources>
 
   <Applications>
-    <Application Id="Claudette" Executable="Claudette.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="Claudette" Executable="Deventry.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements DisplayName="Claudette" Description="A native desktop app for Claude Code." BackgroundColor="transparent"
                           Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
@@ -44,7 +44,7 @@
           Start Claudette when I log in (DESIGN.md §9, "Starting at login"). Off until Settings turns it on; TaskId must stay
           in step with MsixStartupTask.TaskId. Task Manager's Startup apps lists it as Claudette.
         -->
-        <desktop:Extension Category="windows.startupTask" Executable="Claudette.exe" EntryPoint="Windows.FullTrustApplication">
+        <desktop:Extension Category="windows.startupTask" Executable="Deventry.exe" EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask TaskId="ClaudetteAtLogin" Enabled="false" DisplayName="Claudette" />
         </desktop:Extension>
       </Extensions>

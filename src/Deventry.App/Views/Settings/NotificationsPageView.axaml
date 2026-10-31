@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.NotificationsPageView" ClipToBounds="False"
+             x:DataType="settings:NotificationsPage">
+  <!-- Notifications (DESIGN.md §10) -->
+  <StackPanel Spacing="32">
+    <TextBlock Classes="small warning" TextWrapping="Wrap" IsVisible="{Binding !NotificationsAvailable}" Margin="0,0,0,-16"
+               Text="Notifications aren't available here. On macOS, Claudette has to run from its app (not with dotnet run); on Linux, it needs notify-send." />
+    <c:SettingsSection Key="notify">
+      <c:SettingRow Key="notifications.turnFinished">
+        <ToggleSwitch IsChecked="{Binding NotifyTurnFinished}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.needsInput">
+        <ToggleSwitch IsChecked="{Binding NotifyNeedsInput}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.processErrors">
+        <ToggleSwitch IsChecked="{Binding NotifyProcessErrors}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.usageAlerts">
+        <ToggleSwitch IsChecked="{Binding NotifyUsageAlerts}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.signIn">
+        <ToggleSwitch IsChecked="{Binding NotifySignIn}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.updateReady">
+        <ToggleSwitch IsChecked="{Binding NotifyUpdateReady}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.projectActions">
+        <ToggleSwitch IsChecked="{Binding NotifyProjectActions}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+    <c:SettingsSection Key="icon">
+      <c:SettingRow Key="notifications.badge">
+        <ToggleSwitch IsChecked="{Binding ShowBadge}" />
+      </c:SettingRow>
+      <c:SettingRow Key="notifications.animateIcon">
+        <ToggleSwitch IsChecked="{Binding AnimateIcon}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

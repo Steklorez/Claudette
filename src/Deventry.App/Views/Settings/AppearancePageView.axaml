@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             xmlns:pages="using:Deventry.App.Views.Settings"
+             x:Class="Deventry.App.Views.Settings.AppearancePageView" ClipToBounds="False"
+             x:DataType="settings:AppearancePage">
+  <!-- Appearance (DESIGN.md §14; §3, "Visual style" and "Accessibility") -->
+  <StackPanel Spacing="32">
+    <!-- A little of a tab, as these settings draw it -->
+    <pages:AppearancePreview x:Name="Preview" />
+    <c:SettingsSection Key="look">
+      <c:SettingRow Key="appearance.theme">
+        <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" />
+      </c:SettingRow>
+      <!-- Claudette's own look or the Claude apps', in light and dark alike (DESIGN.md §3) -->
+      <c:SettingRow Key="appearance.style">
+        <ComboBox ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding Style}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.density">
+        <ComboBox ItemsSource="{Binding Densities}" SelectedItem="{Binding Density}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.fullWidthConversation">
+        <ToggleSwitch IsChecked="{Binding FullWidthConversation}" />
+      </c:SettingRow>
+      <!-- The header as the window's title bar, as in Rider, or the system's over it (DESIGN.md §3, "Window frame") -->
+      <c:SettingRow Key="appearance.systemTitleBar" IsVisible="{Binding CanMergeTitleBar}">
+        <ToggleSwitch IsChecked="{Binding SystemTitleBar}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <c:SettingsSection Key="text">
+      <c:SettingRow Key="appearance.conversationFont">
+        <AutoCompleteBox ItemsSource="{Binding InstalledFonts}" Text="{Binding ConversationFont}" FilterMode="ContainsOrdinal"
+                         PlaceholderText="Claudette's default" MinimumPrefixLength="0" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.conversationFontSize">
+        <NumericUpDown Minimum="9" Maximum="28" Increment="1" FormatString="0" Value="{Binding ConversationFontSize}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.codeFont">
+        <AutoCompleteBox ItemsSource="{Binding InstalledFonts}" Text="{Binding CodeFont}" FilterMode="ContainsOrdinal"
+                         PlaceholderText="Cascadia Mono, Consolas or Menlo" MinimumPrefixLength="0" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.codeFontSize">
+        <NumericUpDown Minimum="8" Maximum="28" Increment="1" FormatString="0" Value="{Binding CodeFontSize}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- Accessibility (DESIGN.md §3): the main window's scale, and whether anything moves -->
+    <c:SettingsSection Key="accessibility">
+      <c:SettingRow Key="appearance.zoom">
+        <ComboBox ItemsSource="{Binding ZoomChoices}" SelectedItem="{Binding Zoom}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.motion">
+        <ComboBox ItemsSource="{Binding MotionChoices}" SelectedItem="{Binding Motion}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- Claudette on the composer (DESIGN.md §5) and her games (DESIGN.md §18): she plays whether or not she's shown -->
+    <c:SettingsSection Key="claudette">
+      <c:SettingRow Key="appearance.showClaudette">
+        <ToggleSwitch IsChecked="{Binding ShowClaudette}" />
+        <c:SettingRow.Details>
+          <StackPanel IsEnabled="{Binding ShowClaudette}">
+            <c:SettingRow Key="appearance.claudetteSize">
+              <ComboBox ItemsSource="{Binding ClaudetteSizes}" SelectedItem="{Binding ClaudetteSize}" />
+            </c:SettingRow>
+            <c:SettingRow Key="appearance.claudetteLiveliness">
+              <ComboBox ItemsSource="{Binding ClaudetteLivelinesses}" SelectedItem="{Binding ClaudetteLiveliness}" />
+            </c:SettingRow>
+            <c:SettingRow Key="appearance.claudetteTips">
+              <ToggleSwitch IsChecked="{Binding ClaudetteTips}" />
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.gamesWithClaudette">
+        <ToggleSwitch IsChecked="{Binding GamesWithClaudette}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

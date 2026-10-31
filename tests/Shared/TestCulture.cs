@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace Claudette.Tests;
+namespace Deventry.Tests;
 
 /// <summary>
 /// Every test project runs in the invariant culture, whatever the machine's, so numbers read the way the assertions

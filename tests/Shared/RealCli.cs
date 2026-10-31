@@ -1,4 +1,4 @@
-namespace Claudette.Tests;
+namespace Deventry.Tests;
 
 /// <summary>Tests that run the real <c>claude</c> (<c>[Trait("Category", "RealCli")]</c>).</summary>
 internal static class RealCli

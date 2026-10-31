@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Deventry.App/Deventry.App.csproj" />
+    <Project Path="src/Deventry.Core/Deventry.Core.csproj" />
+    <Project Path="src/Deventry.Platform/Deventry.Platform.csproj" />
+    <Project Path="src/Deventry.Usage/Deventry.Usage.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Deventry.App.Tests/Deventry.App.Tests.csproj" />
+    <Project Path="tests/Deventry.App.UiTests/Deventry.App.UiTests.csproj" />
+    <Project Path="tests/Deventry.Core.Tests/Deventry.Core.Tests.csproj" />
+    <Project Path="tests/Deventry.IntegrationTests/Deventry.IntegrationTests.csproj" />
+    <Project Path="tests/Deventry.Platform.Tests/Deventry.Platform.Tests.csproj" />
+    <Project Path="tests/Deventry.Usage.Tests/Deventry.Usage.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Deventry.Demo/Deventry.Demo.csproj" />
+    <Project Path="tools/Deventry.FakeClaude/Deventry.FakeClaude.csproj" />
+    <Project Path="tools/Deventry.Fixtures/Deventry.Fixtures.csproj" />
+    <Project Path="tools/Deventry.MockApi/Deventry.MockApi.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="CLAUDE.md" />
+    <File Path="DESIGN.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+</Solution>

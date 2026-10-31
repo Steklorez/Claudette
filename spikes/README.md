@@ -9,9 +9,9 @@ Throwaway Node scripts from the milestone 1 spikes (2026-09-28, Claude Code 2.1.
 
 They aren't part of the app or the build, and aren't maintained like production code. The .NET test harness replaces them for day-to-day testing:
 
-- `tools/Claudette.MockApi` is a port of `mock-server.mjs`, with the same prompt keywords.
-- `tools/Claudette.FakeClaude` stands in for the CLI itself.
-- `tests/Claudette.IntegrationTests` runs the real CLI against the mock.
+- `tools/Deventry.MockApi` is a port of `mock-server.mjs`, with the same prompt keywords.
+- `tools/Deventry.FakeClaude` stands in for the CLI itself.
+- `tests/Deventry.IntegrationTests` runs the real CLI against the mock.
 
 ## Requirements
 

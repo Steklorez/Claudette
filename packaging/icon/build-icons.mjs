@@ -1,16 +1,16 @@
 // Draws Claudette's icon (DESIGN.md §2, "Packaging and signing"): Clawd, Claude Code's mascot, with hair on top, a
 // hair tie and a ponytail. Every size is drawn from the sprite below with a whole number of pixels per cell, so the
 // small sizes stay crisp. Writes:
-//   packaging/icon/claudette.svg              the icon as vectors, also Rider's project icon (.idea/.idea.Claudette/.idea/icon.svg)
+//   packaging/icon/claudette.svg              the icon as vectors, also Rider's project icon (.idea/.idea.Deventry/.idea/icon.svg)
 //   packaging/icon/claudette-1024.png         the macOS icon, on an ivory tile; build-dmg.sh scales it
-//   src/Claudette.App/Assets/claudette.ico    the window and executable icon
+//   src/Deventry.App/Assets/claudette.ico    the window and executable icon
 //   docs/assets/claudette.svg, favicon.ico    the user guide's logo and favicon (GUIDE.md, "The site")
 //   docs/assets/wordmark.svg                  her name in pixels, for the guide's landing page
 //   packaging/windows/Assets/*.png            the MSIX logos, and the taskbar's unplated sizes
-//   src/Claudette.App/Assets/AppIcon/*.png    the animations' frames (DESIGN.md §10): the taskbar overlay's pulsing
+//   src/Deventry.App/Assets/AppIcon/*.png    the animations' frames (DESIGN.md §10): the taskbar overlay's pulsing
 //                                             spark and running hourglass, and the Dock icon typing, waving and
 //                                             waiting by an hourglass (AppIconAnimations)
-//   src/Claudette.App/Assets/Mascot/mascot.json  Claudette on the composer's poses and props, as cells (DESIGN.md §5)
+//   src/Deventry.App/Assets/Mascot/mascot.json  Claudette on the composer's poses and props, as cells (DESIGN.md §5)
 // Run from anywhere: node packaging/icon/build-icons.mjs
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -500,9 +500,9 @@ function write(path, content) {
 }
 
 write('packaging/icon/claudette.svg', svg());
-write('.idea/.idea.Claudette/.idea/icon.svg', svg());
+write('.idea/.idea.Deventry/.idea/icon.svg', svg());
 write('packaging/icon/claudette-1024.png', png(macIcon()));
-write('src/Claudette.App/Assets/claudette.ico', ico([16, 20, 24, 32, 40, 48, 64, 128, 256].map(size => icon(size))));
+write('src/Deventry.App/Assets/claudette.ico', ico([16, 20, 24, 32, 40, 48, 64, 128, 256].map(size => icon(size))));
 write('docs/assets/claudette.svg', svg());
 write('docs/assets/favicon.ico', ico([16, 32, 48].map(size => icon(size))));
 write('docs/assets/wordmark.svg', wordmark());
@@ -517,7 +517,7 @@ write(`${assets}/Square150x150Logo.png`, png(icon(150)));
 write(`${assets}/Wide310x150Logo.png`, png(icon(310, 150)));
 
 // The animations' frames, in the order AppIconAnimations shows them.
-const frames = 'src/Claudette.App/Assets/AppIcon';
+const frames = 'src/Deventry.App/Assets/AppIcon';
 [spark[0], spark[1], spark[2], spark[3], spark[2], spark[1]].forEach((rows, i) => write(`${frames}/spark-${i}.png`, png(sparkIcon(rows))));
 [pose.typeLeft, pose.typeRight].forEach((body, i) => write(`${frames}/typing-${i}.png`, png(macIcon(512, claudette(body)))));
 [pose.wave, pose.stand].forEach((body, i) => write(`${frames}/waving-${i}.png`, png(macIcon(512, claudette(body)))));
@@ -525,4 +525,4 @@ sandFrames.forEach((rows, i) => write(`${frames}/hourglass-${i}.png`, png(hourgl
 sandFrames.forEach((rows, i) => write(`${frames}/waiting-${i}.png`, png(waitingIcon(rows))));
 
 // Claudette on the composer: her poses and props, which the app draws cell by cell (Mascot/MascotArt).
-write('src/Claudette.App/Assets/Mascot/mascot.json', mascotJson());
+write('src/Deventry.App/Assets/Mascot/mascot.json', mascotJson());

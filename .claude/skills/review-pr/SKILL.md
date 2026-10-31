@@ -80,7 +80,7 @@ Say what you checked even when nothing turned up.
   a second branch, `review/pr-<N>-on-<other>`, made from `review/pr-<N>`, to build and test the two together. If
   another session is working on it, ask that session for its head, and merge again when it moves. Once it's on
   `origin/main`, merge `origin/main` into `review/pr-<N>` instead.
-- `dotnet build Claudette.slnx`, then the projects the change touches, and `tests/Claudette.App.UiTests` when it
+- `dotnet build Deventry.slnx`, then the projects the change touches, and `tests/Deventry.App.UiTests` when it
   changes a view, a style or a color token: `dotnet test <project> --filter "Category!=RealCli&Category!=Live"`.
 - A test that fails only here is still a bug: CI and other contributors run in other time zones, cultures and systems.
   Find which, rather than accepting a snapshot made on this machine.
@@ -111,7 +111,7 @@ which are choices for the user, and ask the choices.
 
 Fix what you found on `review/pr-<N>`, a commit for each, with a test that fails without it. Leave the contributor's
 commits as they are. Then give the user what they need to build it and see it: the worktree, and
-`dotnet run --project tools/Claudette.Demo -- <folder>` with the environment it prints, so it runs on the demo with no
+`dotnet run --project tools/Deventry.Demo -- <folder>` with the environment it prints, so it runs on the demo with no
 account. Better, start it for them from the worktree, beside their own Claudette (CLAUDE.md, "Commands": showing the
 user a branch), and say it's there.
 

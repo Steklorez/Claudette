@@ -1,0 +1,781 @@
+using System.Text.Json.Serialization;
+
+namespace Deventry.Core.Settings;
+
+/// <summary>
+/// Claudette's settings (DESIGN.md §14). Stored as <c>settings.json</c>; separate from Claude Code's own settings.
+/// Categories that belong to later milestones are added with those milestones.
+/// </summary>
+public sealed class AppSettings
+{
+    public const int CurrentVersion = 1;
+
+    public int Version { get; set; } = CurrentVersion;
+
+    public GeneralSettings General { get; set; } = new();
+
+    public ClaudeCodeSettings ClaudeCode { get; set; } = new();
+
+    public NewTabSettings NewTabs { get; set; } = new();
+
+    /// <summary>Settings → Tabs → Claude Code's projects (DESIGN.md §4, "Claude Code's projects"). Per machine, as folders are.</summary>
+    public SidebarSettings Sidebar { get; set; } = new();
+
+    public AppearanceSettings Appearance { get; set; } = new();
+
+    public SessionSettings Sessions { get; set; } = new();
+
+    public CheckInSettings CheckIns { get; set; } = new();
+
+    public List<QuickSuffix> QuickSuffixes { get; set; } = QuickSuffix.Defaults();
+
+    public UsageSettings Usage { get; set; } = new();
+
+    public ProcessSettings Processes { get; set; } = new();
+
+    public DiffToolSettings DiffTool { get; set; } = new();
+
+    /// <summary>Settings → Files and diffs: the Project Files tab, and where files open (DESIGN.md §18, "Project files").</summary>
+    public EditorSettings Editor { get; set; } = new();
+
+    /// <summary>Settings → Project tools (DESIGN.md §18). Per machine, like the diff tool.</summary>
+    public ProjectToolSettings ProjectTools { get; set; } = new();
+
+    public NotificationSettings Notifications { get; set; } = new();
+
+    public KeyboardSettings Keyboard { get; set; } = new();
+
+    public AdvancedSettings Advanced { get; set; } = new();
+
+    public PerforceSettings Perforce { get; set; } = new();
+
+    /// <summary>Settings → Git (DESIGN.md §14): the git Claudette runs, and what the Project Files tab shows of git. Per machine.</summary>
+    public GitSettings Git { get; set; } = new();
+}
+
+/// <summary>
+/// Settings → Git (DESIGN.md §14). The page also has <b>Show the git branch</b> and <b>Worktrees</b>, which are kept
+/// where they were before it (<see cref="AppearanceSettings.ShowBranchOnTabs"/>, <see cref="GeneralSettings"/>), so
+/// choices made before carry over.
+/// </summary>
+public sealed class GitSettings
+{
+    /// <summary>
+    /// The git Claudette runs, for everything it asks git; null for the first <c>git</c> on the user environment's
+    /// <c>PATH</c>. Claude's own git commands, in its Bash tool, don't use it.
+    /// </summary>
+    public string? Path { get; set; }
+
+    /// <summary>What a Project Files tab compares files with when it opens with nothing saved; each tab then has its own.</summary>
+    public FilesTabChanges NewFilesTabsShow { get; set; } = FilesTabChanges.ClaudesChanges;
+
+    /// <summary>What the Project Files tab's explorer does with what git ignores (outside a repository, the folders the <c>@</c> list skips).</summary>
+    public IgnoredFiles IgnoredFiles { get; set; } = IgnoredFiles.Dimmed;
+}
+
+/// <summary>Settings → Git → <b>New Files tabs show</b> (DESIGN.md §18, "Project files", "Claude's changes").</summary>
+public enum FilesTabChanges
+{
+    /// <summary>Claude's changes, against what each file held before Claude first changed it.</summary>
+    ClaudesChanges,
+
+    /// <summary>Every change against git's HEAD, in a repository: the user's, commands' and closed tabs' too.</summary>
+    GitHead,
+}
+
+/// <summary>Settings → Git → <b>Files git ignores</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+public enum IgnoredFiles
+{
+    /// <summary>In the tree, drawn dimmed.</summary>
+    Dimmed,
+
+    /// <summary>Left out of the tree.</summary>
+    Hidden,
+}
+
+/// <summary>
+/// OS notifications, each type on or off, and the Dock/taskbar badge (DESIGN.md §10). Check-in notifications are a
+/// check-in setting (<see cref="CheckInSettings.Notify"/>), so a tab can override them.
+/// </summary>
+public sealed class NotificationSettings
+{
+    /// <summary>A tab finished its turn while you weren't looking at it.</summary>
+    public bool TurnFinished { get; set; } = true;
+
+    /// <summary>A permission prompt, question or plan is waiting.</summary>
+    public bool NeedsInput { get; set; } = true;
+
+    /// <summary>A tab's Claude Code stopped with an error or exited unexpectedly.</summary>
+    public bool ProcessErrors { get; set; } = true;
+
+    /// <summary>Usage thresholds, the projection and limit resets (DESIGN.md §6, "Alerts").</summary>
+    public bool UsageAlerts { get; set; } = true;
+
+    public bool SignIn { get; set; } = true;
+
+    public bool UpdateReady { get; set; } = true;
+
+    /// <summary>A long project action, such as a build, finished or failed (DESIGN.md §18, "Project tools").</summary>
+    public bool ProjectActions { get; set; } = true;
+
+    /// <summary>The number of tabs needing input on the Dock icon or taskbar button.</summary>
+    public bool Badge { get; set; } = true;
+
+    /// <summary>
+    /// The Dock icon or taskbar button moves while tabs work or wait (DESIGN.md §10): the taskbar overlay's spark, and an
+    /// hourglass while a tab waits for a usage limit to reset (Windows); or Claudette typing, waving while a tab needs
+    /// input, and waiting by an hourglass (macOS).
+    /// </summary>
+    public bool AnimateIcon { get; set; } = true;
+}
+
+/// <summary>How long to keep usage history (DESIGN.md §6), and what library sessions were kept for before that was in days (§9).</summary>
+public enum RetentionPeriod
+{
+    OneDay,
+    OneWeek,
+    OneMonth,
+    OneYear,
+    Forever,
+}
+
+public static class RetentionPeriodExtensions
+{
+    /// <summary>Null means forever.</summary>
+    public static TimeSpan? ToTimeSpan(this RetentionPeriod period) => period switch
+    {
+        RetentionPeriod.OneDay => TimeSpan.FromDays(1),
+        RetentionPeriod.OneWeek => TimeSpan.FromDays(7),
+        RetentionPeriod.OneMonth => TimeSpan.FromDays(31),
+        RetentionPeriod.OneYear => TimeSpan.FromDays(366),
+        _ => null,
+    };
+
+    public static string Label(this RetentionPeriod period) => period switch
+    {
+        RetentionPeriod.OneDay => "1 day",
+        RetentionPeriod.OneWeek => "1 week",
+        RetentionPeriod.OneMonth => "1 month",
+        RetentionPeriod.OneYear => "1 year",
+        _ => "Forever",
+    };
+}
+
+/// <summary>DESIGN.md §6 and the Usage row of §14.</summary>
+public sealed class UsageSettings
+{
+    /// <summary>The session meter turns amber here.</summary>
+    public double WarnPercent { get; set; } = 75;
+
+    /// <summary>The session meter turns red here.</summary>
+    public double CriticalPercent { get; set; } = 90;
+
+    /// <summary>The burn rate is measured over this many recent minutes.</summary>
+    public int BurnRateWindowMinutes { get; set; } = 30;
+
+    /// <summary>
+    /// The header's meters on one line, each a short name, a thin bar and the percent (DESIGN.md §6, "Compact header").
+    /// Off by default.
+    /// </summary>
+    public bool CompactHeader { get; set; }
+
+    /// <summary>Show model-specific weekly limits (for example Fable).</summary>
+    public bool ShowModelMeters { get; set; } = true;
+
+    /// <summary>If <c>get_usage</c> stops working, read model-specific limits from <c>/usage</c> text instead.</summary>
+    public bool UseUsageCommandFallback { get; set; }
+
+    /// <summary>
+    /// When a usage limit stops a task, continue it once the limit resets (DESIGN.md §6, "Continuing after a limit
+    /// resets"). Each tab can override it.
+    /// </summary>
+    public bool ContinueAfterLimitReset { get; set; } = true;
+
+    /// <summary>
+    /// Tabs carry on with usage credits once a limit is used up; off, a tab stops and waits for the limit to reset
+    /// instead (DESIGN.md §6, "Tabs that don't use usage credits"). Each tab can override it.
+    /// </summary>
+    public bool UseUsageCredits { get; set; } = true;
+
+    public RetentionPeriod KeepHistory { get; set; } = RetentionPeriod.OneMonth;
+
+    /// <summary>
+    /// Share this machine's plan usage readings through the session library, and chart those of the other machines signed
+    /// in to the same account (DESIGN.md §6, "Sharing across machines"). Off by default.
+    /// </summary>
+    public bool ShareThroughLibrary { get; set; }
+}
+
+/// <summary>DESIGN.md §4, "Process monitor". Off by default.</summary>
+public sealed class ProcessSettings
+{
+    public bool ShowMonitor { get; set; }
+
+    /// <summary>How often the Processes panel refreshes while visible. The composer summary refreshes every 10 seconds.</summary>
+    public int RefreshSeconds { get; set; } = 2;
+
+    /// <summary>Command lines can contain tokens or passwords, so they can be hidden.</summary>
+    public bool ShowCommandLines { get; set; } = true;
+}
+
+/// <summary>How changed files open (DESIGN.md §8, "External diff tool"). Per machine: program paths differ.</summary>
+/// <summary>Settings → Files and diffs (DESIGN.md §18, "Project files").</summary>
+public sealed class EditorSettings
+{
+    /// <summary>Which side of the Project Files tab the explorer is on.</summary>
+    public ExplorerSide ExplorerSide { get; set; } = ExplorerSide.Left;
+
+    /// <summary>Where a file named in a reply, or Changed files' <b>Open</b>, goes.</summary>
+    public OpenFilesIn OpenFilesIn { get; set; } = OpenFilesIn.Editor;
+
+    /// <summary>Where an image file or a web image clicked in a conversation, or opened from the explorer, goes.</summary>
+    public OpenImagesIn OpenImagesIn { get; set; } = OpenImagesIn.Viewer;
+
+    /// <summary>Where the Project Files tab shows a file clicked in a conversation.</summary>
+    public FilesFromConversation FilesFromConversation { get; set; } = FilesFromConversation.Beside;
+
+    /// <summary>What the diff window's <b>Open</b> does (DESIGN.md §8).</summary>
+    public DiffWindowOpen DiffWindowOpen { get; set; } = DiffWindowOpen.AsOpenFilesIn;
+
+    /// <summary>Long lines wrap at the editor's width.</summary>
+    public bool WordWrap { get; set; }
+
+    /// <summary>Tab and new lines in a file that has no indentation to go by: so many spaces, or tabs.</summary>
+    public int IndentSize { get; set; } = 4;
+
+    public bool IndentWithTabs { get; set; }
+}
+
+public enum ExplorerSide
+{
+    Left,
+    Right,
+}
+
+public enum OpenFilesIn
+{
+    /// <summary>The project's Files tab, at the line named.</summary>
+    Editor,
+
+    /// <summary>The app the OS uses for the file, as before the editor.</summary>
+    System,
+}
+
+public enum OpenImagesIn
+{
+    /// <summary>Claudette's image window (DESIGN.md §18, "Images from Claude's tools").</summary>
+    Viewer,
+
+    /// <summary>The app the OS uses for the file, and the browser for a web image.</summary>
+    System,
+}
+
+public enum DiffWindowOpen
+{
+    /// <summary>The file, as <see cref="EditorSettings.OpenFilesIn"/> says.</summary>
+    AsOpenFilesIn,
+
+    /// <summary>The file, in the app the OS uses for it.</summary>
+    System,
+
+    /// <summary>The changes, in the external diff tool; the file as <see cref="AsOpenFilesIn"/> when there's none for them.</summary>
+    DiffTool,
+}
+
+public enum FilesFromConversation
+{
+    /// <summary>The Files tab opens beside the conversation, as <b>Open beside</b> does.</summary>
+    Beside,
+
+    /// <summary>It takes the conversation's pane, as selecting it in the sidebar does.</summary>
+    InPlace,
+}
+
+public sealed class DiffToolSettings
+{
+    /// <summary><c>builtIn</c>, <c>preset</c> or <c>custom</c>.</summary>
+    public string Kind { get; set; } = "builtIn";
+
+    public string? PresetId { get; set; }
+
+    /// <summary>A program and arguments with <c>{left}</c>, <c>{right}</c>, <c>{leftTitle}</c> and <c>{rightTitle}</c>.</summary>
+    public string? CustomCommand { get; set; }
+}
+
+public sealed class GeneralSettings
+{
+    public bool ConfirmCloseWorkingTab { get; set; } = true;
+
+    /// <summary>
+    /// Name each tab's session in Claude Code after the tab, its generated name or the user's (DESIGN.md §13, "Session
+    /// naming"): other sessions message it by that name, and <c>claude --resume &lt;name&gt;</c> finds it.
+    /// </summary>
+    public bool RenameInClaudeCode { get; set; } = true;
+
+    /// <summary>Check GitHub for new Claudette releases at launch and every few hours (DESIGN.md §2, "Updating Claudette").</summary>
+    public bool CheckForAppUpdates { get; set; } = true;
+
+    /// <summary>Offer pre-releases too, not only full releases.</summary>
+    public bool IncludePrereleases { get; set; }
+
+    /// <summary>
+    /// Show Claude's service status from status.claude.com: a dot in the header, and a banner while Claude has an
+    /// incident (DESIGN.md §18, "Service status"). Off stops the checks too.
+    /// </summary>
+    public bool ShowServiceStatus { get; set; } = true;
+
+    /// <summary>What happens to a message sent while Claude works (DESIGN.md §5, "Queued messages").</summary>
+    public WhileWorking MessagesWhileWorking { get; set; } = WhileWorking.Steer;
+
+    /// <summary>
+    /// Keep this computer from sleeping, as <see cref="KeepAwakeWhen"/> says (DESIGN.md §9, "Keeping the computer
+    /// awake"). Only system sleep: the screen can still turn off. Off by default; the header's cup turns it on and off.
+    /// </summary>
+    public bool KeepAwake { get; set; }
+
+    /// <summary>When <see cref="KeepAwake"/> holds sleep off.</summary>
+    public KeepAwakeWhen KeepAwakeWhen { get; set; } = KeepAwakeWhen.ClaudeHasWork;
+
+    /// <summary>
+    /// Remove the worktrees of worktree tabs once everything in them is on another branch, with no uncommitted changes
+    /// (DESIGN.md §4, "Cleaning up worktrees"). Off by default.
+    /// </summary>
+    public bool RemoveMergedWorktrees { get; set; }
+
+    /// <summary>
+    /// Remove the worktrees of worktree tabs that no tab has used for this many days, with no uncommitted changes, keeping
+    /// a branch that has commits of its own (DESIGN.md §4, "Cleaning up worktrees"). 0 turns it off, the default.
+    /// </summary>
+    public int RemoveInactiveWorktreesAfterDays { get; set; }
+}
+
+/// <summary>Settings → General → <b>Messages sent while Claude works</b> (DESIGN.md §5, "Queued messages").</summary>
+public enum WhileWorking
+{
+    /// <summary>Sent to Claude Code at once, which gives it to Claude at its next step, inside the turn.</summary>
+    Steer,
+
+    /// <summary>Held by Claudette until the turn ends, then sent as the next turn.</summary>
+    Queue,
+}
+
+/// <summary>Settings → General → <b>Keep this computer awake</b>: when (DESIGN.md §9, "Keeping the computer awake").</summary>
+public enum KeepAwakeWhen
+{
+    /// <summary>
+    /// Only while Claude has work to finish: a turn running, tasks it keeps running in the background, or a task waiting
+    /// for a usage limit to reset so it can carry on by itself.
+    /// </summary>
+    ClaudeHasWork,
+
+    /// <summary>Whenever Claudette is running.</summary>
+    ClaudetteRuns,
+}
+
+public sealed class ClaudeCodeSettings
+{
+    /// <summary>Null means find it automatically.</summary>
+    public string? ClaudePath { get; set; }
+
+    /// <summary>Check for Claude Code updates at launch and every few hours (DESIGN.md §12).</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>
+    /// On macOS and Linux, give Claude and the tools Claudette runs the login shell's environment when Claudette wasn't
+    /// started from a terminal (DESIGN.md §13, "Login shell environment").
+    /// </summary>
+    public bool UseLoginShellEnvironment { get; set; } = true;
+
+    /// <summary>
+    /// New tabs start with <see cref="TabState.RemoteControl"/> on, connected to the Claude app (DESIGN.md §18, "Remote
+    /// Control"). Off by default; it never changes open tabs.
+    /// </summary>
+    public bool ConnectNewTabsToClaudeApp { get; set; }
+
+    /// <summary>Keep the computer from sleeping while a tab is connected to the Claude app (DESIGN.md §18). The display can still sleep.</summary>
+    public bool KeepAwakeWhileConnected { get; set; } = true;
+
+    /// <summary>
+    /// A model alias or id Claude Code falls back to when the tab's model is overloaded (<c>--fallback-model</c>); null
+    /// for none. Applies to tabs started after the change.
+    /// </summary>
+    public string? FallbackModel { get; set; }
+
+    /// <summary>
+    /// Claude Code keeps a copy of each file before Claude changes it, so a prompt's changes can be put back (DESIGN.md
+    /// §5, "Rewind and branch"). On by default, as in Claude Code's terminal.
+    /// </summary>
+    public bool KeepFileCheckpoints { get; set; } = true;
+
+    /// <summary>
+    /// Claude gets Claude Code's task-tracking tools on every model, which it gives only older models by default, so the
+    /// pinned list, the status line and the tab's row can follow Claude's tasks (DESIGN.md §5, "Tasks"). On by default.
+    /// </summary>
+    public bool GiveClaudeTaskList { get; set; } = true;
+
+    /// <summary>A row in the conversation for every hook run, not only those that fail or print (DESIGN.md §5, "Hook runs").</summary>
+    public bool ShowAllHookRuns { get; set; }
+
+    /// <summary>
+    /// Claude Code writes a one-line summary of each subagent's progress, for the agent map (DESIGN.md §18, "Agent map").
+    /// Each is a model call that counts toward usage, so it's off by default.
+    /// </summary>
+    public bool SubagentProgressSummaries { get; set; }
+
+    /// <summary>
+    /// Whether Claude may hand work to subagents (DESIGN.md §5, "Subagents"): as it decides, discouraged, or not at all.
+    /// Each tab can override it.
+    /// </summary>
+    public SubagentUse Subagents { get; set; } = SubagentUse.ClaudeDecides;
+
+    /// <summary>
+    /// After each turn, Claude Code predicts the user's next prompt, which the empty composer shows (DESIGN.md §5, "Prompt
+    /// suggestions"). Each is a model call that counts toward usage, so it's off by default.
+    /// </summary>
+    public bool PromptSuggestions { get; set; }
+
+    /// <summary>
+    /// Before Claude Code first starts in a folder that isn't trusted, ask about what the folder's own configuration
+    /// would run (DESIGN.md §7, "Folder trust"). On by default.
+    /// </summary>
+    public bool AskBeforeUsingFolderSettings { get; set; } = true;
+}
+
+/// <summary>Settings → Tabs → Subagents (DESIGN.md §5, "Subagents").</summary>
+public enum SubagentUse
+{
+    /// <summary>Claude uses subagents when it judges they help, as Claude Code has it.</summary>
+    ClaudeDecides,
+
+    /// <summary>Claude is asked to do the work itself, and to use a subagent only when the user asks for one.</summary>
+    Discourage,
+
+    /// <summary>Claude is told it can't, and Claudette's hook refuses every Agent call, even in a running tab.</summary>
+    DontAllow,
+}
+
+/// <summary>Settings → Conversation → Show subagents' work (DESIGN.md §5, "Subagents").</summary>
+public enum SubagentDisplay
+{
+    /// <summary>Each subagent is a card in the conversation, whose line opens its own cards.</summary>
+    InConversation,
+
+    /// <summary>Each subagent has a row under its tab in the sidebar, which shows its cards in the tab, read-only.</summary>
+    InSidebar,
+}
+
+public sealed class NewTabSettings
+{
+    /// <summary>A model alias or id; null uses Claude Code's default.</summary>
+    public string? DefaultModel { get; set; }
+
+    public string? DefaultEffort { get; set; }
+
+    public string? DefaultPermissionMode { get; set; }
+
+    public int RecentFolderLimit { get; set; } = 20;
+}
+
+/// <summary>
+/// The sidebar's own settings (DESIGN.md §4, "Claude Code's projects"). Not synced: which folders Claude Code has
+/// sessions in differs from one machine to the next.
+/// </summary>
+public sealed class SidebarSettings
+{
+    /// <summary>
+    /// Every folder Claude Code has sessions in on this machine has a group in the sidebar, with its past sessions
+    /// under it, whether or not a tab is open there. Off until the user chooses it, from the offer or Settings → Tabs.
+    /// </summary>
+    public bool ShowClaudeProjects { get; set; }
+}
+
+public enum ThemeChoice
+{
+    System,
+    Light,
+    Dark,
+}
+
+/// <summary>Settings → Appearance → Style (DESIGN.md §3, "Visual style").</summary>
+public enum AppStyle
+{
+    /// <summary>Claudette's own look, after Claude Code's VS Code extension: neutral greys and the OS's accent color.</summary>
+    Standard,
+
+    /// <summary>The Claude apps' look: ivory and warm greys, Claude's orange, rounder cards and serif replies.</summary>
+    Claude,
+}
+
+public sealed class AppearanceSettings
+{
+    public ThemeChoice Theme { get; set; } = ThemeChoice.System;
+
+    /// <summary>The look, in light and dark alike (DESIGN.md §3, "Visual style").</summary>
+    public AppStyle Style { get; set; } = AppStyle.Standard;
+
+    public double ConversationFontSize { get; set; } = 14;
+
+    public double CodeFontSize { get; set; } = 13;
+
+    /// <summary>The conversation's font family, or null for Claudette's own (DESIGN.md §14, "Appearance").</summary>
+    public string? ConversationFont { get; set; }
+
+    /// <summary>The font family for code, commands and diffs, or null for the default monospace fonts.</summary>
+    public string? CodeFont { get; set; }
+
+    public bool ExpandThinking { get; set; }
+
+    /// <summary>
+    /// Where a subagent's work shows (DESIGN.md §5, "Subagents"): under its tab in the sidebar (the default), or in the
+    /// conversation. It changes only what's shown, so it applies at once, to every tab.
+    /// </summary>
+    public SubagentDisplay ShowSubagents { get; set; } = SubagentDisplay.InSidebar;
+
+    /// <summary>The working line's twinkling glyph and fun verbs (DESIGN.md §5, "Working line"); off shows "Working…".</summary>
+    public bool FunWorkingWords { get; set; } = true;
+
+    /// <summary>The working line says what the running tool is doing, such as "Running dotnet test…".</summary>
+    public bool ShowToolInWorkingLine { get; set; } = true;
+
+    /// <summary>
+    /// The composer's bar shows how long the tab's prompt cache has left, such as "Cache 52m" (DESIGN.md §6, "Prompt
+    /// cache"). On by default.
+    /// </summary>
+    public bool ShowPromptCacheExpiry { get; set; } = true;
+
+    /// <summary>A small ring on each tab's row showing how full its context is (DESIGN.md §4, "Sidebar").</summary>
+    public bool ShowContextOnTabs { get; set; } = true;
+
+    /// <summary>A badge on each tab's row with the git branch it's on, or its worktree (DESIGN.md §4, "Sidebar").</summary>
+    public bool ShowBranchOnTabs { get; set; } = true;
+
+    /// <summary>
+    /// How far Claude's tasks have got on each tab's row, and the task in progress on its second line while it works
+    /// (DESIGN.md §5, "Tasks").
+    /// </summary>
+    public bool ShowTaskProgressOnTabs { get; set; } = true;
+
+    /// <summary>
+    /// Claudette, the app's pixel mascot, standing on the composer and doing little things now and then (DESIGN.md §5,
+    /// "Claudette on the composer"). On by default.
+    /// </summary>
+    public bool ShowClaudette { get; set; } = true;
+
+    /// <summary>How big she is: 2, 3 or 4 screen pixels a cell of her sprite.</summary>
+    public ClaudetteSize ClaudetteSize { get; set; } = ClaudetteSize.Medium;
+
+    /// <summary>How often she does something: every 10 to 30 seconds, or every 30 to 90.</summary>
+    public ClaudetteLiveliness ClaudetteLiveliness { get; set; } = ClaudetteLiveliness.Lively;
+
+    /// <summary>She shares a tip now and then, such as a shortcut.</summary>
+    public bool ClaudetteTips { get; set; } = true;
+
+    /// <summary>
+    /// Tic-tac-toe, Connect Four, hangman and Minesweeper against Claudette, in the Games tool window (DESIGN.md §18, "Games
+    /// with Claudette"). On by default.
+    /// </summary>
+    public bool GamesWithClaudette { get; set; } = true;
+
+    /// <summary>How much room the conversation, the sidebar's rows and the composer take (DESIGN.md §14).</summary>
+    public Density Density { get; set; } = Density.Comfortable;
+
+    /// <summary>
+    /// The conversation and the composer fill the tab's width, rather than stopping at a width that's easy to read
+    /// (DESIGN.md §14). Off by default.
+    /// </summary>
+    public bool FullWidthConversation { get; set; }
+
+    /// <summary>
+    /// Settings → Appearance → Use the system's title bar: the OS's title bar over the header, rather than the header in its
+    /// place as in JetBrains Rider (DESIGN.md §3, "Window frame"). Off by default; Linux always has the OS's. Per machine.
+    /// </summary>
+    public bool SystemTitleBar { get; set; }
+
+    /// <summary>
+    /// The conversation's steps on the way (tool calls, thinking, hook runs, notes and the replies Claude carried on
+    /// after) lose their cards' tint and outline until they're pointed at (DESIGN.md §18, "Conversation cards"). On by
+    /// default.
+    /// </summary>
+    public bool QuietSteps { get; set; } = true;
+
+    /// <summary>
+    /// New Tool calls cards start collapsed to their header line, with a chevron to open them, as thinking rows start
+    /// collapsed (DESIGN.md §18, "Conversation cards"); a card's menu changes it for its tab. Off by default.
+    /// </summary>
+    public bool CollapseToolCalls { get; set; }
+
+    /// <summary>
+    /// Each run of steps on the way (thinking, tool calls, subagents) between two messages folds into one, which the
+    /// reply after it carries in its header and opens inside its card (DESIGN.md §18, "Conversation cards"). Off by default.
+    /// </summary>
+    public bool FoldChains { get; set; }
+
+    /// <summary>
+    /// Your messages' cards start far in from the left, so whose turn each card is can be told by its place alone
+    /// (DESIGN.md §18, "Conversation cards"). Off by default.
+    /// </summary>
+    public bool IndentYourMessages { get; set; }
+
+    /// <summary>
+    /// Claude's steps between its replies, its thinking, tool calls and subagents, start a little in from its replies
+    /// (DESIGN.md §18, "Conversation cards"). Off by default.
+    /// </summary>
+    public bool IndentClaudesSteps { get; set; }
+
+    /// <summary>Settings → Appearance → Motion (DESIGN.md §3, "Accessibility").</summary>
+    public MotionSetting Motion { get; set; } = MotionSetting.System;
+
+    /// <summary>
+    /// Settings → Appearance → Zoom: the main window's content, in percent (DESIGN.md §3, "Accessibility"). It suits
+    /// this machine's screen, so it doesn't sync.
+    /// </summary>
+    public int Zoom { get; set; } = Accessibility.Zoom.Default;
+}
+
+/// <summary>Settings → Appearance → Motion: whether Claudette's animations run.</summary>
+public enum MotionSetting
+{
+    /// <summary>Reduced when the OS, or Claude Code's <c>prefersReducedMotion</c>, asks for it.</summary>
+    System,
+
+    Reduce,
+
+    /// <summary>Always animate.</summary>
+    Full,
+}
+
+/// <summary>Settings → Appearance → Claudette's size (DESIGN.md §5, "Claudette on the composer").</summary>
+public enum ClaudetteSize
+{
+    Small,
+    Medium,
+    Large,
+}
+
+/// <summary>Settings → Appearance → how often Claudette does something (DESIGN.md §5, "Claudette on the composer").</summary>
+public enum ClaudetteLiveliness
+{
+    /// <summary>Every 10 to 30 seconds.</summary>
+    Lively,
+
+    /// <summary>Every 30 to 90 seconds.</summary>
+    Calm,
+}
+
+/// <summary>Settings → Appearance → Density: Compact tightens spacing and padding (DESIGN.md §14).</summary>
+public enum Density
+{
+    Comfortable,
+    Compact,
+}
+
+public sealed class SessionSettings
+{
+    /// <summary>
+    /// Pinned tabs are always restored; this also restores the unpinned ones (DESIGN.md §9). On by default, so a launch
+    /// that isn't a restart handover, such as after an update installed by hand, still brings back every tab.
+    /// </summary>
+    public bool RestoreUnpinnedTabs { get; set; } = true;
+
+    /// <summary>The session library folder (DESIGN.md §9). Null uses the app data folder.</summary>
+    public string? LibraryFolder { get; set; }
+
+    /// <summary>This machine's name in History and leases. Null uses the computer name.</summary>
+    public string? MachineName { get; set; }
+
+    /// <summary>
+    /// Delete library sessions no machine has used or opened for <see cref="KeepLibrarySessionDays"/> (DESIGN.md §9,
+    /// "Keeping sessions"). On by default; off keeps them for good.
+    /// </summary>
+    public bool DeleteOldLibrarySessions { get; set; } = true;
+
+    /// <summary>How many days a library session stays after it was last used or opened.</summary>
+    public int KeepLibrarySessionDays { get; set; } = 15;
+
+    /// <summary>
+    /// Reads <c>keepLibrarySessions</c>, the choice these replaced: 1 month and 1 year carry on as 31 and 366 days, and
+    /// Forever, its default, becomes the new default. Never written.
+    /// </summary>
+    [JsonPropertyName("keepLibrarySessions")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public RetentionPeriod? FormerKeepLibrarySessions
+    {
+        get => null;
+        set
+        {
+            if (value?.ToTimeSpan() is { } period)
+            {
+                DeleteOldLibrarySessions = true;
+                KeepLibrarySessionDays = (int)period.TotalDays;
+            }
+        }
+    }
+
+    /// <summary>How long library sessions are kept, from the two settings above; null keeps them for good.</summary>
+    public TimeSpan? LibraryRetention() => DeleteOldLibrarySessions ? TimeSpan.FromDays(Math.Max(1, KeepLibrarySessionDays)) : null;
+
+    /// <summary>
+    /// New tabs start with <see cref="TabState.SyncToLibrary"/> on (DESIGN.md §9, "Session library"). Off by default,
+    /// so a tab copies its session to the library only when it opts in.
+    /// </summary>
+    public bool SyncNewTabs { get; set; }
+
+    /// <summary>Sync Claudette's settings through the library (DESIGN.md §14, "Settings sync").</summary>
+    public bool SyncSettings { get; set; }
+}
+
+/// <summary>DESIGN.md §5, "Check-ins on long turns".</summary>
+public sealed class CheckInSettings
+{
+    public const string DefaultMessage =
+        "Everything OK? Give me a one or two sentence status update: what you're doing, and whether you're stuck or waiting on something.";
+
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Check in after the turn has run this long. 0 turns this trigger off.</summary>
+    public int RunTimeMinutes { get; set; } = 15;
+
+    /// <summary>Check in after the turn has produced no output for this long. 0 turns this trigger off.</summary>
+    public int QuietTimeMinutes { get; set; } = 5;
+
+    public string Message { get; set; } = DefaultMessage;
+
+    /// <summary>Also send an OS notification when a check-in is sent.</summary>
+    public bool Notify { get; set; }
+
+    public CheckInSettings Clone() => (CheckInSettings)MemberwiseClone();
+}
+
+/// <summary>A saved snippet that can be appended to a message (DESIGN.md §5, "Quick suffixes").</summary>
+public sealed class QuickSuffix
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    public string Label { get; set; } = "";
+
+    public string Text { get; set; } = "";
+
+    /// <summary>Adds this suffix straight from the keyboard, as a <see cref="KeyChord"/> such as <c>Primary+Alt+1</c>.</summary>
+    public string? Shortcut { get; set; }
+
+    public static List<QuickSuffix> Defaults() =>
+    [
+        new() { Id = "clarify", Label = "Clarify first", Text = "Ask clarifying questions before you start." },
+        new() { Id = "plan", Label = "Plan only", Text = "Don't change any files yet. Explain your plan and wait for me to approve it." },
+        new() { Id = "small", Label = "Keep it small", Text = "Keep the change as small as possible and don't refactor unrelated code." },
+        new() { Id = "test", Label = "Test it", Text = "Run the relevant tests when you're done and fix any failures." },
+        new() { Id = "explain", Label = "Explain", Text = "Explain what you changed and why when you're done." },
+    ];
+}
+
+public sealed class AdvancedSettings
+{
+    /// <summary>Extra command-line arguments for every <c>claude</c> process, split on spaces.</summary>
+    public string ExtraArguments { get; set; } = "";
+
+    /// <summary>
+    /// Writes each session's raw protocol traffic to the log folder, and shows messages Claudette skipped in the
+    /// conversation (DESIGN.md §13, "Logging"; §16).
+    /// </summary>
+    public bool LogProtocol { get; set; }
+}

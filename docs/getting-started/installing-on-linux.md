@@ -69,7 +69,7 @@ Your distribution's own .NET package is usually an earlier SDK, such as 10.0.1xx
 ## Build and run it
 
 ```sh
-dotnet run --project src/Claudette.App -c Release
+dotnet run --project src/Deventry.App -c Release
 ```
 
 The first build fetches Claudette's packages and takes a few minutes. `-c Release` builds it optimized, as a release is.
@@ -87,7 +87,7 @@ cat > ~/.local/share/applications/claudette.desktop <<EOF
 Type=Application
 Name=Claudette
 Comment=Claude Code in a desktop window
-Exec=$HOME/.dotnet/dotnet $HOME/Claudette/src/Claudette.App/bin/Release/net10.0/Claudette.dll
+Exec=$HOME/.dotnet/dotnet $HOME/Claudette/src/Deventry.App/bin/Release/net10.0/Deventry.dll
 Icon=$HOME/Claudette/packaging/icon/claudette-1024.png
 Categories=Development;
 StartupWMClass=Claudette
@@ -108,7 +108,7 @@ To start Claudette when you log in, turn on Settings → General → **Start Cla
 
 Claudette checks the branch your checkout tracks, `origin/main`, at launch and every hour, with your own git. When there are new commits, *3 new commits on origin/main* appears at the foot of the sidebar. **Pull, build and restart** pulls them, builds Claudette in the configuration you built (Release, above) and restarts into the new build, keeping every tab, its session and the message you were typing.
 
-It only ever fast-forwards, so a checkout with changes of your own is never thrown away: the card says why it won't pull instead. To update by hand, `git pull` and `dotnet build src/Claudette.App -c Release`, then **New build ready** offers the restart. [Running from source](running-from-source.md#when-there-are-new-commits) has the details.
+It only ever fast-forwards, so a checkout with changes of your own is never thrown away: the card says why it won't pull instead. To update by hand, `git pull` and `dotnet build src/Deventry.App -c Release`, then **New build ready** offers the restart. [Running from source](running-from-source.md#when-there-are-new-commits) has the details.
 
 ## Everything else
 

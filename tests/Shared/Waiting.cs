@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Claudette.Tests;
+namespace Deventry.Tests;
 
 /// <summary>
 /// Waiting in tests for real work: processes, background threads and rendering. By the clock, never by counting loops,

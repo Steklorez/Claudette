@@ -28,4 +28,4 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   } >> "$CLAUDE_ENV_FILE"
 fi
 
-dotnet restore Claudette.slnx
+dotnet restore Deventry.slnx

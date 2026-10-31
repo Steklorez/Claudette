@@ -81,5 +81,5 @@ CHANGELOG.md.
 
 - The new or fixed test fails without the fix and passes with it.
 - The free suite passes several times in a row under load:
-  `dotnet test Claudette.slnx -c Release --no-build --filter "Category!=Live&Category!=RealCli"`.
+  `dotnet test Deventry.slnx -c Release --no-build --filter "Category!=Live&Category!=RealCli"`.
 - The pull request says, for each failure, what it was, how it was reproduced and what shows it fixed.

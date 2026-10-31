@@ -159,12 +159,12 @@ function after() {
 
 /** The lock files name the projects' version, and CI restores in locked mode. */
 function restoreLockFiles() {
-  const result = spawnSync('dotnet', ['restore', 'Claudette.slnx', '--force-evaluate'], { cwd: root, encoding: 'utf8', shell: process.platform === 'win32' });
+  const result = spawnSync('dotnet', ['restore', 'Deventry.slnx', '--force-evaluate'], { cwd: root, encoding: 'utf8', shell: process.platform === 'win32' });
   if (result.status === 0) {
     console.log('The lock files are restored for it.');
     return;
   }
-  console.log(`Restoring the lock files failed; run it yourself: dotnet restore Claudette.slnx --force-evaluate\n${(result.stderr || result.stdout || String(result.error ?? '')).trim()}`);
+  console.log(`Restoring the lock files failed; run it yourself: dotnet restore Deventry.slnx --force-evaluate\n${(result.stderr || result.stdout || String(result.error ?? '')).trim()}`);
   process.exitCode = 1;
 }
 

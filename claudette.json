@@ -10,19 +10,19 @@
       "name": "Get Latest",
       "command": "git pull --rebase=true origin --prune",
       "mode": "output",
-      "ifExists": "src/Claudette.App/Claudette.App.csproj"
+      "ifExists": "src/Deventry.App/Deventry.App.csproj"
     },
     {
       "name": "Rebuild Self (Debug)",
-      "command": "dotnet build src\\Claudette.App\\Claudette.App.csproj -c Debug",
+      "command": "dotnet build src\\Deventry.App\\Deventry.App.csproj -c Debug",
       "mode": "output",
-      "ifExists": "src/Claudette.App/Claudette.App.csproj"
+      "ifExists": "src/Deventry.App/Deventry.App.csproj"
     },
     {
       "name": "Rebuild Self (Release)",
-      "command": "dotnet build src\\Claudette.App\\Claudette.App.csproj -c Release",
+      "command": "dotnet build src\\Deventry.App\\Deventry.App.csproj -c Release",
       "mode": "output",
-      "ifExists": "src/Claudette.App/Claudette.App.csproj"
+      "ifExists": "src/Deventry.App/Deventry.App.csproj"
     },
     {
       "name": "Build & Host Docs",

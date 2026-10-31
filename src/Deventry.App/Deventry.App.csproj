@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Deventry.App</RootNamespace>
+    <AssemblyName>Deventry</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\claudette.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="LiveMarkdown.Avalonia" />
+    <PackageReference Include="TextMateSharp" />
+    <PackageReference Include="TextMateSharp.Grammars" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="AvaloniaEdit.TextMate" />
+    <PackageReference Include="SkiaSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Deventry.Core\Deventry.Core.csproj" />
+    <ProjectReference Include="..\Deventry.Platform\Deventry.Platform.csproj" />
+    <ProjectReference Include="..\Deventry.Usage\Deventry.Usage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\AppIcon\**;Assets\Mascot\**" />
+    <!-- The icon's animation frames (AppIconAnimations), read without Avalonia so view model tests can use them. -->
+    <EmbeddedResource Include="Assets\AppIcon\*.png" LogicalName="AppIcon.%(Filename)%(Extension)" />
+    <!-- Claudette on the composer's poses (Mascot/MascotArt), read the same way. -->
+    <EmbeddedResource Include="Assets\Mascot\mascot.json" LogicalName="Mascot.mascot.json" />
+    <!-- Claudette's own license, for Settings → About (ThirdPartyNotices.ClaudetteLicense). -->
+    <EmbeddedResource Include="..\..\LICENSE" LogicalName="License.txt" />
+    <!-- Also a file next to the app: toasts from an unpackaged Claudette show it (WindowsAppIdentity). -->
+    <Content Include="Assets\claudette.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Deventry.App.Tests" />
+    <InternalsVisibleTo Include="Deventry.App.UiTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Compact the large object heap when it's fragmented (DESIGN.md §2). Its objects, 85 KB and up, are never moved
+         otherwise, and Claude Code's lines with a screenshot or a big file in them leave holes between the images a
+         tab keeps: 650 MB of them, half the heap, after a day of six tabs. -->
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+  </ItemGroup>
+
+  <!-- The shipped packages' licenses, embedded as ThirdPartyNotices.xml for Settings → About (DESIGN.md §14). -->
+  <Import Project="ThirdPartyNotices.targets" />
+</Project>
