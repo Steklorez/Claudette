@@ -302,6 +302,12 @@ const mascotProps = {
   'hourglass-2': ['XXXXX', '.GGG.', '..G..', '.SSS.', 'XXXXX'],
 };
 
+// Her cave, which she visits (DESIGN.md §5): the icon's, without its prompt, in her palette's letters; and with her eyes
+// looking out of its dark while she's inside.
+const caveProp = cave.map(row => row.replace(/[gGhD]/g, ch => ({ g: 'c', G: 'C', h: 'i', D: 'k' })[ch]));
+mascotProps.cave = caveProp;
+mascotProps['cave-eyes'] = set(caveProp, { '8,5': 'W', '8,7': 'W' });
+
 // What she wears on her head in place of her circlet, its brim over it: `y` is the row of her sprite the hat's top row
 // goes on (negative is above her), `x` the column. A witch's hat for Halloween, Santa's in December, a nightcap late at
 // night.
@@ -332,6 +338,14 @@ const mascotPalette = {
   N: '#8B5E3C', // wood: handles, a clipboard, a crate
   P: '#7B5BB0', // a witch's hat, and its brim
   Q: '#4B3470',
+  // Her cave: the icon's grass, stone, dark and ground.
+  c: palette.g,
+  C: palette.G,
+  M: palette.M,
+  m: palette.m,
+  i: palette.h,
+  k: palette.D,
+  e: palette.e,
 };
 
 function mascotJson() {

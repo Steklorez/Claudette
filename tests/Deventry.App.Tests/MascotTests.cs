@@ -30,13 +30,43 @@ public class MascotTests
             MascotAntics.TopplesOff(random), MascotAntics.ClimbUp(), MascotAntics.Duck(), MascotAntics.Typing(random),
             MascotAntics.Doze(random, hourglass: true, settle: true), MascotAntics.WakeUp(), MascotAntics.StandAbout(TimeSpan.FromSeconds(1)),
             MascotAntics.Dance(), MascotAntics.Twirl(), MascotAntics.Yawn(), MascotAntics.TapFoot(), MascotAntics.TossBall(),
-            MascotAntics.Puzzled(), MascotAntics.BlowHeart(), MascotAntics.Sneeze(),
+            MascotAntics.Puzzled(), MascotAntics.BlowHeart(), MascotAntics.Sneeze(), MascotAntics.VisitCave(1), MascotAntics.VisitCave(-1),
         ];
         foreach (var step in all.SelectMany(s => s))
         {
             Assert.True(MascotArt.Poses.ContainsKey(step.Pose), step.Pose);
             Assert.All(step.Props ?? [], prop => Assert.True(MascotArt.Props.ContainsKey(prop.Name), prop.Name));
         }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(-1)]
+    public void Her_cave_stays_where_it_appeared_while_she_walks_in_and_hides_her_until_she_comes_out(int way)
+    {
+        var steps = MascotAntics.VisitCave(way).ToList();
+        var x = 0;
+        var caveAt = new List<int>();
+        var hidden = 0;
+        foreach (var step in steps)
+        {
+            x += step.Move;
+            if (step.Props?.SingleOrDefault(p => p.Name.StartsWith("cave", StringComparison.Ordinal)) is { } prop)
+            {
+                caveAt.Add(x + prop.X);
+                // Her whole sprite is under the cave's, which is drawn over her.
+                hidden += prop.X == 0 ? 1 : 0;
+            }
+        }
+
+        Assert.Equal([way * MascotAntics.CaveAway], caveAt.Distinct());
+        Assert.True(hidden >= 5, "she's inside a while");
+        Assert.Contains(steps, s => s.Props?.Any(p => p.Name == "cave-eyes") == true);
+        Assert.Equal(way * (MascotAntics.CaveAway - MascotAntics.CaveWave), x);
+        Assert.Equal(["puff", "puff"], steps.SelectMany(s => s.Props ?? []).Select(p => p.Name).Where(n => n == "puff"));
+        var cave = MascotArt.Props["cave"];
+        Assert.All(MascotArt.Poses["stand"].Rows.Select((row, y) => (row, y)), r =>
+            Assert.All(r.row.Select((ch, c) => (ch, c)).Where(p => p.ch != '.'), p => Assert.NotEqual('.', cave.Rows[r.y][p.c])));
     }
 
     [Fact]

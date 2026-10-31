@@ -503,6 +503,11 @@ public sealed partial class MascotDirector : ObservableObject, IDisposable
         // likely to take her back there than further off, and set down outside her patch, she's soon on her way back.
         var wander = Math.Clamp(_random.Next(room.Left, room.MaxX + 1) - Frame.X, -40, 40);
         var home = Math.Clamp(room.HomeX - Frame.X, -40, 40);
+        // Her cave goes on whichever side of her has room for it and the walk to it, in her patch: her right first.
+        var caveWay = !room.InPatch(Frame.X) ? 0
+            : Frame.X + MascotAntics.CaveAway <= room.MaxX ? 1
+            : Frame.X - MascotAntics.CaveAway >= room.Left ? -1
+            : 0;
         (int Weight, Activity Activity, Func<IEnumerable<MascotStep>> Steps)[] choices =
         [
             (3, Activity.Antic, () => MascotAntics.LookAround(_random)),
@@ -522,6 +527,7 @@ public sealed partial class MascotDirector : ObservableObject, IDisposable
             (1, Activity.Antic, MascotAntics.BlowHeart),
             (1, Activity.Antic, MascotAntics.Sneeze),
             (_situation.ContextFull ? 3 : 0, Activity.Antic, MascotAntics.WipeBrow),
+            (caveWay != 0 ? 2 : 0, Activity.Antic, () => MascotAntics.VisitCave(caveWay)),
             // The tip and the fall stay last: the tip's place is how its time is kept.
             (tip is not null ? 2 : 0, Activity.Antic, () => MascotAntics.Tip(tip!)),
             (canFall ? 1 : 0, Activity.Tumble, () => MascotAntics.TopplesOff(_random).Concat(MascotAntics.ClimbUp())),

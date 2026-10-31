@@ -176,6 +176,50 @@ internal static class MascotAntics
     public static IEnumerable<MascotStep> TapFoot() =>
         [.. Enumerable.Range(0, 6).SelectMany(_ => new[] { Step("tap", 180), Step("stand", 180) }), Step("blink", 140), Step("stand", 0)];
 
+    /// <summary>How far from her a cave she visits stands, and so how far she walks to it.</summary>
+    public const int CaveAway = 14;
+
+    /// <summary>How far from the cave she stops on her way back out, to wave.</summary>
+    public const int CaveWave = 6;
+
+    /// <summary>
+    /// A visit to her cave, the icon's (DESIGN.md §5): it appears on the edge beside her in a puff, she walks into its
+    /// dark mouth, her eyes look out of it, and she comes back out the way she went in, puts her hands on her hips and
+    /// waves before it goes in another puff. <paramref name="way"/> is 1 for the cave on her right, -1 on her left; she
+    /// ends <see cref="CaveAway"/> less <see cref="CaveWave"/> cells that way. The cave stays where it appeared: a prop
+    /// is placed from her, so its place moves against each step she takes.
+    /// </summary>
+    public static IEnumerable<MascotStep> VisitCave(int way)
+    {
+        var toward = way > 0 ? "Right" : "Left";
+        var back = way > 0 ? "Left" : "Right";
+        static MascotProp Cave(int x, bool eyes = false) => new(eyes ? "cave-eyes" : "cave", x, 0);
+        var at = way * CaveAway;
+        return
+        [
+            Step($"look{toward}", 300, props: Puff(at + 4, 5)),
+            Step($"look{toward}", 900, props: Cave(at)),
+            Step("blink", 140, props: Cave(at)),
+            // In: the cave is drawn over her, so its dark takes her as she goes.
+            .. Enumerable.Range(1, CaveAway).Select(i => Step($"walk{toward}-{(i - 1) % 4}", 140, move: way, props: Cave(at - way * i))),
+            Step("stand", 1600, props: Cave(0)),
+            Step("stand", 900, props: Cave(0, eyes: true)),
+            Step("stand", 140, props: Cave(0)),
+            Step("stand", 800, props: Cave(0, eyes: true)),
+            Step("stand", 700, props: Cave(0)),
+            // And out again, back the way she came.
+            .. Enumerable.Range(1, CaveWave).Select(i => Step($"walk{back}-{(i - 1) % 4}", 140, move: -way, props: Cave(way * i))),
+            Step("handsOnHips", 700, props: Cave(way * CaveWave)),
+            .. Enumerable.Range(0, 2).SelectMany(_ => new[]
+            {
+                Step(way > 0 ? "waveRight" : "wave", 280, props: Cave(way * CaveWave)),
+                Step("stand", 280, props: Cave(way * CaveWave)),
+            }),
+            Step("stand", 300, props: Puff(way * CaveWave + 4, 5)),
+            Step("stand", 0),
+        ];
+    }
+
     /// <summary>She tosses a ball up from her raised hand and catches it, twice.</summary>
     public static IEnumerable<MascotStep> TossBall() =>
     [

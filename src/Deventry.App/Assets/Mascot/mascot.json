@@ -1,6 +1,6 @@
 {
   "_comment": "Drawn by packaging/icon/build-icons.mjs; change the poses there. Z is the theme's muted text colour, K her gem, in the tab group's colour.",
-  "palette": {"O":"#CF7F96","E":"#141413","H":"#F0DFA6","h":"#C4A961","K":"#5B7FD6","U":"#3B4E8C","L":"#8F8D86","B":"#5F5E59","X":"#8F8D86","G":"#F4F6FB","F":"#E6E1D8","S":"#CF7F96","Y":"#E3B341","D":"#5B9BD5","V":"#4CAF6A","R":"#D2453C","W":"#F5F4EF","N":"#8B5E3C","P":"#7B5BB0","Q":"#4B3470"},
+  "palette": {"O":"#CF7F96","E":"#141413","H":"#F0DFA6","h":"#C4A961","K":"#5B7FD6","U":"#3B4E8C","L":"#8F8D86","B":"#5F5E59","X":"#8F8D86","G":"#F4F6FB","F":"#E6E1D8","S":"#CF7F96","Y":"#E3B341","D":"#5B9BD5","V":"#4CAF6A","R":"#D2453C","W":"#F5F4EF","N":"#8B5E3C","P":"#7B5BB0","Q":"#4B3470","c":"#4E7D3E","C":"#6FA35A","M":"#8A7F73","m":"#6B5F55","i":"#A89E92","k":"#1E1A22","e":"#5A4A3C"},
   "poses": {
     "stand": ["....hHHh....","..hYYKYYYh..",".hHHHHHHHHh.",".HHHOOOOHHH.",".HHOEOOEOHH.",".HHOOOOOOHHh",".HHHOOOOHHHH",".HUUUUUUUUHH",".HOUUhhUUOHh",".h.UUUUUU.H.","..UUUUUUUU..",".UUUUUUUUUU."],
     "blink": ["....hHHh....","..hYYKYYYh..",".hHHHHHHHHh.",".HHHOOOOHHH.",".HHOOOOOOHH.",".HHOOOOOOHHh",".HHHOOOOHHHH",".HUUUUUUUUHH",".HOUUhhUUOHh",".h.UUUUUU.H.","..UUUUUUUU..",".UUUUUUUUUU."],
@@ -78,7 +78,9 @@
     "laptop": [".LLLLLLLL.",".LLLLLLLL.",".LLLLLLLL.","BBBBBBBBBB"],
     "hourglass-0": ["XXXXX",".SSS.","..S..",".GGG.","XXXXX"],
     "hourglass-1": ["XXXXX",".GSG.","..S..",".GSG.","XXXXX"],
-    "hourglass-2": ["XXXXX",".GGG.","..G..",".SSS.","XXXXX"]
+    "hourglass-2": ["XXXXX",".GGG.","..G..",".SSS.","XXXXX"],
+    "cave": ["....cCCc....","..cCCcCCCc..",".cCMiiMMMCc.",".MiiMMMMMMm.","MiMMMMkkMMMm","MMMMkkkkkMMm","MiMkkkkkkkMm","MMMkkkkkkkmm","MMkkkkkkkkkm","mMkkkkkkkkkm","mmkkkkkkkkmm","eeeeeeeeeeee"],
+    "cave-eyes": ["....cCCc....","..cCCcCCCc..",".cCMiiMMMCc.",".MiiMMMMMMm.","MiMMMMkkMMMm","MMMMkkkkkMMm","MiMkkkkkkkMm","MMMkkkkkkkmm","MMkkkWkWkkkm","mMkkkkkkkkkm","mmkkkkkkkkmm","eeeeeeeeeeee"]
   },
   "hats": {
     "witch": {"x":0,"y":-4,"rows":[".......P....","......PP....",".....PPP....","....PPPP....","...PYYYPP...","QQQQQQQQQQQQ"]},

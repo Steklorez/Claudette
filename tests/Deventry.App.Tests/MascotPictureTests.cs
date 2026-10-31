@@ -63,7 +63,7 @@ public class MascotPictureTests
             ("hammer", MascotAntics.Hammer()), ("terminal", MascotAntics.Terminal(new Random(1))), ("globe", MascotAntics.Globe()), ("juggle", MascotAntics.Juggle(3)),
             ("coffee", MascotAntics.FetchCoffee()), ("sweep", MascotAntics.Sweep()), ("point", MascotAntics.PointToSidebar("")), ("dizzy", MascotAntics.Dizzy()),
             ("confetti", MascotAntics.Confetti()), ("stamp", MascotAntics.Stamp()), ("plane", MascotAntics.PaperPlane()), ("catch", MascotAntics.CatchFile()),
-            ("crate", MascotAntics.HeavyCrate()), ("doze", MascotAntics.Doze(new Random(1), hourglass: true, settle: true)), ("excited", MascotAntics.Excited()),
+            ("crate", MascotAntics.HeavyCrate()), ("cave", MascotAntics.VisitCave(1)), ("doze", MascotAntics.Doze(new Random(1), hourglass: true, settle: true)), ("excited", MascotAntics.Excited()),
         };
         var canvas = new MascotCanvas();
         var rows = antics.Select(antic => Sample(canvas, antic.Steps)).ToList();
