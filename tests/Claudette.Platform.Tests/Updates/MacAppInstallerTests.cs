@@ -23,6 +23,9 @@ public sealed class MacAppInstallerTests : IDisposable
 
     private string Staged => Path.Combine(Applications, ".Claudette-update.app");
 
+    /// <summary>Where devEntry goes, beside Claudette (DESIGN.md §2, "Renaming to devEntry").</summary>
+    private string DevEntry => Path.Combine(Applications, "DevEntry.app");
+
     private string Updates => Path.Combine(_root, "updates");
 
     public MacAppInstallerTests()
@@ -32,16 +35,20 @@ public sealed class MacAppInstallerTests : IDisposable
     }
 
     /// <summary>An app bundle whose "Info.plist" is key=value lines, which the scripted plutil reads.</summary>
-    private static void MakeApp(string path, string contents, string version, string bundleId = MacAppInstaller.BundleIdentifier)
+    /// <param name="executable">Its program, named as the bundle is: <c>Claudette</c>, or <c>DevEntry</c> after the rename.</param>
+    private static void MakeApp(string path, string contents, string version, string bundleId = MacAppInstaller.BundleIdentifier, string executable = "Claudette")
     {
         Directory.CreateDirectory(Path.Combine(path, "Contents", "MacOS"));
-        File.WriteAllText(Path.Combine(path, "Contents", "MacOS", "Claudette"), contents);
+        File.WriteAllText(Path.Combine(path, "Contents", "MacOS", executable), contents);
         File.WriteAllText(Path.Combine(path, "Contents", "Info.plist"), $"CFBundleIdentifier={bundleId}\nCFBundleShortVersionString={version}\n");
     }
 
     /// <summary>What the disk image holds, and how the scripted tools answer.</summary>
     private sealed class Tools
     {
+        /// <summary>The app in the disk image, by name.</summary>
+        public string ImageApp { get; set; } = "Claudette.app";
+
         public string ImageVersion { get; set; } = "1.3.0";
 
         public string ImageBundleId { get; set; } = MacAppInstaller.BundleIdentifier;
@@ -71,7 +78,7 @@ public sealed class MacAppInstallerTests : IDisposable
         switch (Path.GetFileName(spec.FileName), args[0])
         {
             case ("hdiutil", "attach"):
-                MakeApp(Path.Combine(args[^2], "Claudette.app"), "new", tools.ImageVersion, tools.ImageBundleId);
+                MakeApp(Path.Combine(args[^2], tools.ImageApp), "new", tools.ImageVersion, tools.ImageBundleId, Path.GetFileNameWithoutExtension(tools.ImageApp));
                 return (0, "", "");
             case ("hdiutil", "detach"):
                 Directory.Delete(args[1], recursive: true);
@@ -135,10 +142,23 @@ public sealed class MacAppInstallerTests : IDisposable
         var prepared = await Installer(tools).PrepareAsync("/downloads/Claudette-1.3.0-arm64.dmg", Version, TestContext.Current.CancellationToken);
 
         Assert.Equal(Staged, prepared.StagedPath);
+        Assert.Equal(App, prepared.InstalledPath);
         Assert.Equal("new", File.ReadAllText(Path.Combine(Staged, "Contents", "MacOS", "Claudette")));
         Assert.Equal("old", File.ReadAllText(Path.Combine(App, "Contents", "MacOS", "Claudette")));
         Assert.Equal(["hdiutil", "ditto", "hdiutil"], tools.Commands.Take(3).Select(c => c.Split(' ')[0]));
         Assert.Empty(Directory.EnumerateDirectories(Updates, "mount-*"));
+    }
+
+    [Fact]
+    public async Task A_renamed_app_is_to_go_beside_the_running_one_under_its_own_name()
+    {
+        // devEntry's disk image holds DevEntry.app, with Claudette's bundle identifier and team.
+        var prepared = await Installer(new Tools { ImageApp = "DevEntry.app" }).PrepareAsync("/downloads/DevEntry-1.3.0-arm64.dmg", Version, TestContext.Current.CancellationToken);
+
+        Assert.Equal(Staged, prepared.StagedPath);
+        Assert.Equal(DevEntry, prepared.InstalledPath);
+        Assert.Equal("new", File.ReadAllText(Path.Combine(Staged, "Contents", "MacOS", "DevEntry")));
+        Assert.False(Directory.Exists(DevEntry));
     }
 
     [Fact]
@@ -233,16 +253,30 @@ public sealed class MacAppInstallerTests : IDisposable
         var helper = launcher.Specs[^1];
         Assert.Equal("/bin/sh", helper.FileName);
         Assert.True(helper.Detached);
-        Assert.Equal([Path.Combine(Updates, "update-helper.sh"), "4242", App, Staged, "/data/restart-ready", "n1", "open", "--restore", "n1"], helper.Arguments);
+        Assert.Equal([Path.Combine(Updates, "update-helper.sh"), "4242", App, Staged, App, "/data/restart-ready", "n1", "open", "--restore", "n1"], helper.Arguments);
         Assert.Equal(MacAppInstaller.HelperScript(), File.ReadAllText(Path.Combine(Updates, "update-helper.sh")));
+    }
+
+    [Fact]
+    public async Task Installing_a_renamed_app_tells_the_helper_where_it_goes()
+    {
+        var tools = new Tools { ImageApp = "DevEntry.app" };
+        var launcher = new ScriptedLauncher(spec => Run(tools, spec));
+        var installer = new MacAppInstaller(launcher, new FakeTimeProvider(), App, Updates, processId: 4242);
+        var prepared = await installer.PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken);
+
+        await installer.InstallAsync(prepared, ["--restore", "n1"], "/tmp/ready", "n1", TestContext.Current.CancellationToken);
+
+        Assert.Equal([Path.Combine(Updates, "update-helper.sh"), "4242", App, Staged, DevEntry, "/tmp/ready", "n1", "open", "--restore", "n1"], launcher.Specs[^1].Arguments);
     }
 
     // ---- The helper script, run for real ----------------------------------------------------------------------------
 
     /// <summary>An executable that logs how it was started, and optionally says it's up.</summary>
-    private void MakeExecutable(string app, string name, bool signalsReady)
+    /// <param name="executable">Its file name in the bundle: <c>Claudette</c>, or <c>DevEntry</c> after the rename.</param>
+    private void MakeExecutable(string app, string executable, string name, bool signalsReady)
     {
-        var path = Path.Combine(app, "Contents", "MacOS", "Claudette");
+        var path = Path.Combine(app, "Contents", "MacOS", executable);
         var log = Path.Combine(_root, "launches.log");
         var ready = signalsReady ? $"printf '%s' \"$2\" > '{Path.Combine(_root, "restart-ready")}'\n" : "";
         File.WriteAllText(path, $"#!/bin/sh\necho \"{name} $*\" >> '{log}'\n{ready}");
@@ -253,7 +287,8 @@ public sealed class MacAppInstallerTests : IDisposable
     }
 
     /// <param name="launches">How many launches the log should hold once the helper is done.</param>
-    private async Task<(int ExitCode, string Log)> RunHelperAsync(int readyTicks, int launches)
+    /// <param name="installed">Where the new app goes: Claudette.app's place, unless renamed.</param>
+    private async Task<(int ExitCode, string Log)> RunHelperAsync(int readyTicks, int launches, string? installed = null)
     {
         var script = Path.Combine(Updates, "update-helper.sh");
         File.WriteAllText(script, MacAppInstaller.HelperScript());
@@ -261,7 +296,7 @@ public sealed class MacAppInstallerTests : IDisposable
         using var quitting = Process.Start(new ProcessStartInfo("sleep", "0.3"))!;
         var start = new ProcessStartInfo("/bin/sh")
         {
-            ArgumentList = { script, quitting.Id.ToString(System.Globalization.CultureInfo.InvariantCulture), App, Staged, Path.Combine(_root, "restart-ready"), "n1", "exec", "--restore", "n1" },
+            ArgumentList = { script, quitting.Id.ToString(System.Globalization.CultureInfo.InvariantCulture), App, Staged, installed ?? App, Path.Combine(_root, "restart-ready"), "n1", "exec", "--restore", "n1" },
             Environment = { ["CLAUDETTE_UPDATE_READY_TICKS"] = readyTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) },
             RedirectStandardError = true,
         };
@@ -280,8 +315,8 @@ public sealed class MacAppInstallerTests : IDisposable
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
         MakeApp(Staged, "", Version.ToString());
-        MakeExecutable(App, "old", signalsReady: true);
-        MakeExecutable(Staged, "new", signalsReady: true);
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "Claudette", "new", signalsReady: true);
 
         var (exitCode, log) = await RunHelperAsync(readyTicks: 40, launches: 1);
 
@@ -293,12 +328,52 @@ public sealed class MacAppInstallerTests : IDisposable
     }
 
     [Fact]
+    public async Task The_helper_installs_a_renamed_app_under_its_own_name_and_removes_the_old_one()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
+        // A DevEntry.app installed by hand earlier is replaced too.
+        MakeApp(DevEntry, "by hand", Version.ToString(), executable: "DevEntry");
+        MakeApp(Staged, "", Version.ToString(), executable: "DevEntry");
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "DevEntry", "new", signalsReady: true);
+
+        var (exitCode, log) = await RunHelperAsync(readyTicks: 40, launches: 1, installed: DevEntry);
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal("new --restore n1\n", log);
+        Assert.Contains("echo \"new", File.ReadAllText(Path.Combine(DevEntry, "Contents", "MacOS", "DevEntry")));
+        Assert.False(Directory.Exists(App));
+        Assert.False(Directory.Exists(Staged));
+        Assert.False(Directory.Exists(App + ".previous"));
+        Assert.False(Directory.Exists(DevEntry + ".previous"));
+    }
+
+    [Fact]
+    public async Task When_a_renamed_app_does_not_start_everything_goes_back_as_it_was()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
+        MakeApp(DevEntry, "by hand", Version.ToString(), executable: "DevEntry");
+        MakeApp(Staged, "", Version.ToString(), executable: "DevEntry");
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "DevEntry", "new", signalsReady: false);
+
+        var (exitCode, log) = await RunHelperAsync(readyTicks: 4, launches: 2, installed: DevEntry);
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal("new --restore n1\nold --restore n1\n", log);
+        Assert.Contains("echo \"old", File.ReadAllText(Path.Combine(App, "Contents", "MacOS", "Claudette")));
+        Assert.Equal("by hand", File.ReadAllText(Path.Combine(DevEntry, "Contents", "MacOS", "DevEntry")));
+        Assert.False(Directory.Exists(App + ".previous"));
+        Assert.False(Directory.Exists(DevEntry + ".previous"));
+    }
+
+    [Fact]
     public async Task When_the_new_version_does_not_start_the_old_one_comes_back_and_takes_the_tabs()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
         MakeApp(Staged, "", Version.ToString());
-        MakeExecutable(App, "old", signalsReady: true);
-        MakeExecutable(Staged, "new", signalsReady: false);
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "Claudette", "new", signalsReady: false);
 
         var (exitCode, log) = await RunHelperAsync(readyTicks: 4, launches: 2);
 

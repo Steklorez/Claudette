@@ -24,7 +24,11 @@ public enum AppInstallKind
 /// <summary>A downloaded package, checked and ready to install.</summary>
 /// <param name="PackagePath">The downloaded file.</param>
 /// <param name="StagedPath">What the installer prepared from it, such as the new <c>Claudette.app</c> next to the old one.</param>
-public sealed record PreparedInstall(AppVersion Version, string PackagePath, string? StagedPath = null);
+/// <param name="InstalledPath">
+/// Where the new version goes, when that's decided now: on macOS, the app under the name it has in the disk image,
+/// <c>DevEntry.app</c> beside <c>Claudette.app</c> once the app is renamed (DESIGN.md §2, "Renaming to devEntry").
+/// </param>
+public sealed record PreparedInstall(AppVersion Version, string PackagePath, string? StagedPath = null, string? InstalledPath = null);
 
 /// <summary>What the caller does once the install has started.</summary>
 public enum InstallOutcome
@@ -100,7 +104,9 @@ public sealed record AvailableUpdate(AppRelease Release, ReleaseAsset? Asset)
 
     /// <summary>
     /// The package for this install: <c>Claudette-&lt;version&gt;-&lt;arch&gt;.msix</c> or <c>….dmg</c>, as
-    /// <c>.github/workflows/package.yml</c> names them. Null when there's none, or this install can't use one.
+    /// <c>.github/workflows/package.yml</c> names them. It's found by its architecture and kind alone, whatever name comes
+    /// before them, so devEntry's <c>DevEntry-…</c> packages are found too (DESIGN.md §2, "Renaming to devEntry"). Null
+    /// when there's none, or this install can't use one.
     /// </summary>
     public static ReleaseAsset? PickAsset(AppRelease release, AppInstallKind kind, Architecture architecture)
     {

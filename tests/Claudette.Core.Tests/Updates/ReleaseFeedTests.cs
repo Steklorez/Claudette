@@ -116,6 +116,17 @@ public class ReleaseFeedTests
     }
 
     [Fact]
+    public void A_release_under_the_new_name_is_offered_with_its_package()
+    {
+        // devEntry's packages (DESIGN.md §2, "Renaming to devEntry"): found by architecture and kind, whatever comes first.
+        AppRelease release = new(new AppVersion(2, 0, 0), "v2.0.0", "devEntry 2.0.0", "", "", null, IsPrerelease: false,
+            [new("DevEntry-2.0.0-arm64.dmg", "https://example.invalid/a.dmg", 1, null), new("DevEntry-2.0.0-x64.msix", "https://example.invalid/x.msix", 1, null)]);
+
+        Assert.Equal("DevEntry-2.0.0-x64.msix", AvailableUpdate.Find([release], Current, includePrereleases: false, AppInstallKind.Msix, Architecture.X64)?.Asset?.Name);
+        Assert.Equal("DevEntry-2.0.0-arm64.dmg", AvailableUpdate.PickAsset(release, AppInstallKind.MacApp, Architecture.Arm64)?.Name);
+    }
+
+    [Fact]
     public void Pre_releases_are_offered_only_when_asked_for()
     {
         var releases = ReleaseFeed.Parse(Releases);

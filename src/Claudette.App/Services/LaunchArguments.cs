@@ -11,6 +11,8 @@ public static class LaunchArguments
 
     public const string RestoreOption = "--restore";
 
+    public const string ReadyFileOption = "--ready-file";
+
     /// <summary><c>--login</c>: started by the login entry (DESIGN.md §9, "Starting at login").</summary>
     public const string LoginOption = LoginCommand.LoginOption;
 
@@ -28,6 +30,13 @@ public static class LaunchArguments
 
     /// <summary><c>--restore &lt;nonce&gt;</c>: take over the tabs of the build that restarted into this one.</summary>
     public static string? RestoreNonce(IReadOnlyList<string> args) => Value(args, RestoreOption);
+
+    /// <summary>
+    /// <c>--ready-file &lt;path&gt;</c>, beside <c>--restore</c> after an update: where to say this version is up, in place of
+    /// the data folder's <c>restart-ready</c>. It's outside the data folder, which a new version may move, as devEntry does
+    /// Claudette's (DESIGN.md §2, "Updating Claudette"). Null without it, as from a Claudette before 0.7.0.
+    /// </summary>
+    public static string? ReadyFile(IReadOnlyList<string> args) => Value(args, ReadyFileOption) is { } path ? Path.GetFullPath(path) : null;
 
     /// <summary>
     /// The arguments with the paths of <c>--folder</c> and <c>--source-build</c> made absolute from
@@ -48,13 +57,16 @@ public static class LaunchArguments
         return resolved;
     }
 
-    /// <summary>The arguments without <c>--source-build</c> and <c>--restore</c>, which only Claudette passes itself.</summary>
+    /// <summary>
+    /// The arguments without <c>--source-build</c>, <c>--restore</c> and <c>--ready-file</c>, which only Claudette passes
+    /// itself.
+    /// </summary>
     public static List<string> WithoutDevelopmentOptions(IReadOnlyList<string> args)
     {
         var kept = new List<string>();
         for (var i = 0; i < args.Count; i++)
         {
-            if (args[i] is SourceBuildOption or RestoreOption)
+            if (args[i] is SourceBuildOption or RestoreOption or ReadyFileOption)
             {
                 i++;
                 continue;

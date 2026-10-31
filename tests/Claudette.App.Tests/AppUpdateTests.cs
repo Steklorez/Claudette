@@ -272,7 +272,9 @@ public class AppUpdateTests
         Assert.Equal(Package, File.ReadAllBytes(package));
         Assert.StartsWith(s.H.Services.Paths.UpdatesDirectory, package, StringComparison.Ordinal);
         var arguments = Assert.Single(s.Installer.Installed);
-        Assert.Equal(LaunchArguments.RestoreOption, arguments[0]);
+        // The new version is told where to say it's up: outside the data folder, which it may move (DESIGN.md §2).
+        Assert.Equal([LaunchArguments.RestoreOption, arguments[1], LaunchArguments.ReadyFileOption, s.H.Services.Paths.UpdateReadyFile(arguments[1])], arguments);
+        Assert.False(arguments[3].StartsWith(s.H.Services.Paths.DataDirectory, StringComparison.Ordinal));
         var snapshot = RestartSnapshot.Load(s.H.Services.Paths.RestartFile, arguments[1], s.H.Time.GetUtcNow());
         Assert.NotNull(snapshot);
         Assert.Equal(new AppUpdateHandover("1.2.0", "1.3.0"), snapshot.Update);
@@ -293,11 +295,18 @@ public class AppUpdateTests
         await OpenTabsAsync(s.H);
         await s.Updates.CheckNowAsync();
         s.Installer.Outcome = InstallOutcome.WaitForNewVersion;
-        s.Installer.NewVersionStarts = RestartHandshake.SignalReady;
+        string? ready = null;
+        s.Installer.NewVersionStarts = (file, nonce) =>
+        {
+            ready = file;
+            RestartHandshake.SignalReady(file, nonce);
+        };
 
         Assert.True(await s.Updates.InstallAsync());
 
         Assert.True(s.Host.Exited);
+        Assert.NotEqual(s.H.Services.Paths.RestartReadyFile, ready);
+        Assert.False(File.Exists(ready), "Claudette tidies the ready file away once it has read it.");
     }
 
     [Fact]

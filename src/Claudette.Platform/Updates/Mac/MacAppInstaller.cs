@@ -6,8 +6,9 @@ namespace Claudette.Platform.Updates.Mac;
 /// <summary>
 /// Updates <c>Claudette.app</c> from a release's <c>.dmg</c> (DESIGN.md §2, "Updating Claudette"). Preparing mounts the
 /// image, copies the new app next to the running one and checks it: a valid signature from the same team, the same
-/// bundle identifier, and the release's version. Installing hands over to <c>update-helper.sh</c>, which swaps the apps
-/// once Claudette has quit and starts the new one.
+/// bundle identifier, and the release's version. Installing hands over to <c>update-helper.sh</c>, which puts the new
+/// app in place once Claudette has quit and starts it. The new app keeps the name it has in the image, so devEntry's
+/// arrives as <c>DevEntry.app</c> and <c>Claudette.app</c> goes (DESIGN.md §2, "Renaming to devEntry").
 /// </summary>
 /// <param name="appBundle">The running <c>Claudette.app</c>.</param>
 /// <param name="workDirectory">Where the image is mounted and the helper script written: the updates folder.</param>
@@ -58,10 +59,13 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
             TryDeleteDirectory(mount);
             throw new AppInstallException($"The disk image couldn't be opened: {Tail(attach)}", canOpenPackage: true);
         }
+        // Where the new version goes: beside this one, under the name it has in the image.
+        string installed;
         try
         {
             var source = Directory.EnumerateDirectories(mount, "*.app").FirstOrDefault()
                 ?? throw new AppInstallException("The disk image has no app in it.");
+            installed = Path.Combine(Path.GetDirectoryName(appBundle)!, Path.GetFileName(source));
             var copy = await RunAsync("/usr/bin/ditto", [source, staged], cancellationToken);
             if (copy.ExitCode != 0)
             {
@@ -83,7 +87,7 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
             TryDeleteDirectory(staged);
             throw;
         }
-        return new PreparedInstall(version, packagePath, staged);
+        return new PreparedInstall(version, packagePath, staged, installed);
     }
 
     private async Task VerifyAsync(string staged, AppVersion version, CancellationToken cancellationToken)
@@ -141,7 +145,8 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
             var script = Path.Combine(workDirectory, "update-helper.sh");
             File.WriteAllText(script, HelperScript());
             launcher.Start(new ProcessStartSpec("/bin/sh",
-                [script, processId.ToString(System.Globalization.CultureInfo.InvariantCulture), appBundle, staged, readyFile, nonce, launchMode, .. restartArguments])
+                [script, processId.ToString(System.Globalization.CultureInfo.InvariantCulture), appBundle, staged, prepared.InstalledPath ?? appBundle,
+                    readyFile, nonce, launchMode, .. restartArguments])
             {
                 Detached = true,
             });

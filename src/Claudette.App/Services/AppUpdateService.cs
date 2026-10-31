@@ -375,13 +375,16 @@ public sealed class AppUpdateService : IDisposable
         await _services.FlushAsync();
         _services.SuspendSaving = true;
         await _host.CloseTabsAsync($"Installing Claudette {prepared.Version}…");
+        // The new version is told where to say it's up, outside the data folder: it may move that, as devEntry does when
+        // it takes over from Claudette (DESIGN.md §2, "Renaming to devEntry").
+        var ready = _services.Paths.UpdateReadyFile(nonce);
         try
         {
             snapshot.Save(_services.Paths.RestartFile);
-            RestartSnapshot.Delete(_services.Paths.RestartReadyFile);
+            RestartSnapshot.Delete(ready);
             _stopListening?.Invoke();
-            var outcome = await _installer.InstallAsync(prepared, [LaunchArguments.RestoreOption, nonce], _services.Paths.RestartReadyFile, nonce);
-            if (outcome == InstallOutcome.ExitNow || await WaitForReadyAsync(nonce))
+            var outcome = await _installer.InstallAsync(prepared, [LaunchArguments.RestoreOption, nonce, LaunchArguments.ReadyFileOption, ready], ready, nonce);
+            if (outcome == InstallOutcome.ExitNow || await WaitForReadyAsync(ready, nonce))
             {
                 _logger.LogInformation("Installing Claudette {Version}.", prepared.Version);
                 _host.Exit();
@@ -401,13 +404,14 @@ public sealed class AppUpdateService : IDisposable
         }
     }
 
-    private async Task<bool> WaitForReadyAsync(string nonce)
+    private async Task<bool> WaitForReadyAsync(string ready, string nonce)
     {
         var started = _services.Time.GetUtcNow();
         while (_services.Time.GetUtcNow() - started < StartTimeout)
         {
-            if (RestartHandshake.IsReady(_services.Paths.RestartReadyFile, nonce))
+            if (RestartHandshake.IsReady(ready, nonce))
             {
+                RestartSnapshot.Delete(ready);
                 return true;
             }
             await Task.Delay(ReadyCheckInterval, _services.Time);

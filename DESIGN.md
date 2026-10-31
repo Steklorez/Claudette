@@ -85,6 +85,7 @@ An installed Claudette checks its GitHub releases for a newer version, downloads
 - **Which package.** The release asset named for this install, as `package.yml` names them:
   - `Claudette-<version>-<x64|arm64>.msix` for an MSIX install.
   - `Claudette-<version>-<arm64|x64>.dmg` for `Claudette.app`.
+  - It's found by its architecture and kind alone, whatever name comes first, so devEntry's `DevEntry-…` packages are found too ([Renaming to devEntry](#renaming-to-deventry)).
   - Anything else, such as a Linux build or an unpackaged Windows one, can't replace itself. The release is still announced, with a link to its page.
 - **Offering it.** A badge at the foot of the sidebar, like Claude Code's ([§12](#applying-it)): *"Claudette 1.3.0 is available"*. Its dialog shows:
   - the release notes and a link to the release page;
@@ -100,24 +101,24 @@ An installed Claudette checks its GitHub releases for a newer version, downloads
   - A package already downloaded isn't fetched again. Downloads of the running version and older ones are deleted at launch.
 - **Checking the package** before anything closes. If the package fails a check, nothing else happens.
   - **MSIX:** its manifest must be `dotBunny.Claudette`, from the same publisher as the installed package (compared as the package family name, so a package signed by someone else would install beside this one instead of replacing it). It must also be the release's version and this machine's architecture. Windows checks the signature when it installs.
-  - **macOS:** the image is mounted, and its `Claudette.app` copied next to the running one, as `.Claudette-update.app` in the same folder. The copy must have:
+  - **macOS:** the image is mounted, and the app in it (`Claudette.app`, or `DevEntry.app` once the app is renamed) copied next to the running one, as `.Claudette-update.app` in the same folder. The copy must have:
     - a valid signature (`codesign --verify --deep --strict`). When the running app is signed with a Developer ID, the copy must also meet the code requirement `anchor apple generic and certificate leaf[subject.OU] = "<its team>"`: a certificate Apple issued to the same team, which an ad-hoc signature or another developer's doesn't. When the running app's own signature can't be read (`codesign` failed or timed out), nothing is installed, rather than the check being skipped;
     - the bundle identifier `com.dotbunny.claudette`;
     - the release's version.
 - **The handover**, as for a new build ([§9](#working-on-claudette)):
   1. Claudette writes the restart snapshot (every tab, draft, the selected tab and the window's placement) with the versions it's updating from and to.
   2. It saves its state and stops writing it, stops every tab as closing does, and stops taking later launches.
-  3. **Windows:** it calls `RegisterApplicationRestart` with `--restore <nonce>`, then `PackageManager.AddPackageAsync` with `ForceApplicationShutdown`, as Microsoft documents for apps published outside the Store. Windows closes Claudette, installs the update and starts the new version with those arguments. If the install finishes without closing Claudette, Claudette starts the new version itself (`IApplicationActivationManager`) and waits up to 60 seconds for it to say it's up.
+  3. **Windows:** it calls `RegisterApplicationRestart` with `--restore <nonce> --ready-file <path>`, then `PackageManager.AddPackageAsync` with `ForceApplicationShutdown`, as Microsoft documents for apps published outside the Store. Windows closes Claudette, installs the update and starts the new version with those arguments. If the install finishes without closing Claudette, Claudette starts the new version itself (`IApplicationActivationManager`) and waits up to 60 seconds for it to say it's up.
   4. **macOS:** Claudette starts a small helper script and quits. Once Claudette has quit, the helper:
-     - renames the running app to `Claudette.app.previous` and the new one to `Claudette.app`;
-     - starts it with `--restore <nonce>`;
-     - waits up to 60 seconds for it to write the nonce to `restart-ready`.
-  5. The new version opens the snapshot's tabs, writes the nonce once its first page has drawn, and only then deletes the snapshot.
+     - sets the running app aside as `Claudette.app.previous`, and moves the new one in under the name it has in the image: `Claudette.app`, or `DevEntry.app` beside it, setting aside a `DevEntry.app` already there;
+     - starts it with `--restore <nonce> --ready-file <path>`;
+     - waits up to 60 seconds for it to write the nonce to the ready file, then removes what it set aside.
+  5. The new version opens the snapshot's tabs, writes the nonce once its first page has drawn, and only then deletes the snapshot. It writes the nonce where `--ready-file` says: a file in the temporary folder, not the data folder, which a new version may move, as devEntry does Claudette's ([Renaming to devEntry](#renaming-to-deventry)). Started without `--ready-file`, by a Claudette before 0.7.0, it writes the data folder's `restart-ready`.
 - **If it goes wrong.**
   - **Before Claudette closes** (the check fails, Windows refuses the package, the helper can't start): the tabs come straight back and the dialog says why.
     - If the package is fine but couldn't be installed this way, **Open the installer** (App Installer on Windows) or **Open the disk image** installs it by hand.
     - macOS runs an app opened from Downloads from a temporary, read-only copy (app translocation), and that copy can't be updated. The dialog asks to move Claudette to Applications, or to install by hand.
-  - **The new version doesn't start** (macOS): the helper stops it, puts the old app back and starts that with the same `--restore`. The old app takes the tabs back from the snapshot, which is still there, and says the update didn't finish.
+  - **The new version doesn't start** (macOS): the helper stops it, puts the old app back, and anything else it set aside, and starts the old app with the same `--restore`. The old app takes the tabs back from the snapshot, which is still there, and says the update didn't finish.
   - **Windows doesn't start the new version:** the snapshot waits a day. The next launch within that time takes the tabs from it, even without `--restore`, and says whether the update installed.
 - **MSIX versions** have four parts and no pre-release label (`1.4.0-beta.1` packages as `1.4.0.0`), so a pre-release and its final release have the same package version. Windows won't reinstall the same version, so give the final release a higher version than its pre-releases' packages.
 
@@ -239,10 +240,12 @@ Planned, not started. Decided on 2026-10-30; the name and the icon on 2026-10-31
   - `claudette.json` and `claudette.local.json` in people's projects are read when there's no `deventry.json` or `deventry.local.json`, for good; devEntry never renames them, as they're the project's files. Settings writes `deventry.json` for a project that has neither.
   - Project actions get `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT` beside `CLAUDETTE_WORKTREE` and `CLAUDETTE_MAIN_CHECKOUT`, and the login shell `DEVENTRY_RESOLVING_ENVIRONMENT` beside `CLAUDETTE_RESOLVING_ENVIRONMENT`, as people's scripts and profiles may read them. A release's notes say when the old ones go. `CLAUDETTE_HOME` and `CLAUDETTE_RUN_IN_PLACE` are read too; the variables only Claudette's own tools set are renamed.
   - A thread's deliveries are recognized by the line *"Claudette delivered this message to the sub-thread"* as well as devEntry's, for good, as History reopens sessions written before ([§18](#threads)).
-- **The bridge release**, the last Claudette, at least two weeks before, so installed copies can follow:
-  - Its update check takes a release's `DevEntry-<version>-<arch>` packages as well as `Claudette-…` ones ([Updating Claudette](#updating-claudette)).
-  - On macOS it takes `DevEntry.app` from the disk image, and the helper installs it under its own name and then removes `Claudette.app`. Going back puts `Claudette.app` back.
+- **The bridge release**, the last Claudette, 0.7.0, at least two weeks before, so installed copies can follow. Built on 2026-10-31 ([Updating Claudette](#updating-claudette)):
+  - Its update check finds a release's `DevEntry-<version>-<arch>` packages as it does `Claudette-…` ones, by architecture and kind, as it already did.
+  - On macOS it takes `DevEntry.app` from the disk image, and the helper installs it under its own name beside `Claudette.app`, which it removes once devEntry says it's up. Going back puts `Claudette.app` back, and a `DevEntry.app` that was there before.
+  - It tells the new version where to say it's up (`--ready-file`), in the temporary folder, so devEntry moving the data folder doesn't hide that it started.
   - A copy that skips it still announces the new release, with a link to it. Installing by hand replaces it on Windows, as the identity is the same; on macOS, `DevEntry.app` goes in Applications and `Claudette.app` in the Trash, as the guide's page on updating says.
+- **What devEntry 1.0.0 keeps for the bridge:** the GitHub package's identity and its Application Id `Claudette`, the bundle identifier, and `--ready-file`. Copies before 0.7.0 find devEntry's packages too, since packages are picked by architecture, but they don't pass `--ready-file`, and watch the old data folder's `restart-ready`. So started with `--restore` and no `--ready-file`, 1.0.0 writes the nonce there as well; otherwise such a Mac copy's helper takes devEntry for a failed update and puts Claudette back, and a Windows copy that started devEntry itself says the update didn't finish. That older helper also puts devEntry in `Claudette.app`'s place, under that name, where it runs as it should; whether devEntry then renames its own bundle is still to decide.
 - **The code.** One scripted commit renames the projects and their folders, the namespaces (`DevEntry.Core` and so on), `Claudette.slnx` (`DevEntry.slnx`), the `avares://` addresses, `InternalsVisibleTo`, the snapshots named after them and `.idea/.idea.Claudette`, and restores the lock files. The changes above come after it, then the docs: this document, CLAUDE.md, GUIDE.md, the README, the skills, and an entry in CHANGELOG.md that says what carried over. The changelog's history keeps Claudette. It's done while no pull requests are open. A source build of Claudette doesn't notice devEntry's builds, since it looks for `Claudette.slnx`, so it's restarted by hand once.
 - **Outside the repository**, in this order:
   1. **Well before the day:** the domains hold the name (`deventry.app` and `joulene.com`, both registered), and devEntry is a product of its own in Partner Center, with its name reserved (created 2026-10-31). "Claudette" stays reserved.

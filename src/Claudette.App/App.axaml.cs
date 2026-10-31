@@ -139,7 +139,7 @@ public partial class App : Application
             var started = _mainViewModel.StartAsync();
             if (restored is not null)
             {
-                _ = SignalRestartedAsync(started, opened.Task, _services.Paths, restored.Nonce);
+                _ = SignalRestartedAsync(started, opened.Task, LaunchArguments.ReadyFile(args) ?? _services.Paths.RestartReadyFile, _services.Paths, restored.Nonce);
             }
             // An installed Claudette notes itself for source builds, and takes over an entry one left for it.
             _ = _services.StartAtLogin.RefreshAtLaunchAsync();
@@ -237,11 +237,12 @@ public partial class App : Application
     /// startup checks are done and the page they led to has rendered. Until then that build can still take its tabs
     /// back, so the snapshot is only deleted now.
     /// </summary>
-    private static async Task SignalRestartedAsync(Task started, Task opened, AppPaths paths, string nonce)
+    /// <param name="ready">Where to say so: <c>--ready-file</c>'s path after an update, the data folder's otherwise.</param>
+    private static async Task SignalRestartedAsync(Task started, Task opened, string ready, AppPaths paths, string nonce)
     {
         await Task.WhenAll(started, opened);
         await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
-        RestartHandshake.SignalReady(paths.RestartReadyFile, nonce);
+        RestartHandshake.SignalReady(ready, nonce);
         RestartSnapshot.Delete(paths.RestartFile);
     }
 

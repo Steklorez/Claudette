@@ -3,7 +3,8 @@ namespace Claudette.Core;
 /// <summary>Where Claudette keeps its files. Injected everywhere, so tests use temporary folders (DESIGN.md §15).</summary>
 /// <param name="DataDirectory">Per-machine data: saved tabs, the utility session, logs.</param>
 /// <param name="SettingsDirectory">Settings (DESIGN.md §14, "Storage"). Roams with the user profile on Windows.</param>
-public sealed record AppPaths(string DataDirectory, string SettingsDirectory)
+/// <param name="TempDirectory">For files that outlive a move of the other two: the system's temporary folder, unless given.</param>
+public sealed record AppPaths(string DataDirectory, string SettingsDirectory, string? TempDirectory = null)
 {
     /// <summary>The working folder of the hidden utility session.</summary>
     public string UtilityDirectory => Path.Combine(DataDirectory, "utility");
@@ -40,6 +41,12 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory)
 
     /// <summary>Where the new build says it has started.</summary>
     public string RestartReadyFile => Path.Combine(DataDirectory, "restart-ready");
+
+    /// <summary>
+    /// Where a new version says it has started, after an update (DESIGN.md §2, "Updating Claudette"). It's outside the
+    /// data folder, since the new version may move that, as devEntry does Claudette's; the new version is told the path.
+    /// </summary>
+    public string UpdateReadyFile(string nonce) => Path.Combine(TempDirectory ?? Path.GetTempPath(), $"claudette-update-{nonce}.ready");
 
     /// <summary>Files project actions write for Claudette to read, such as Unity's test results (DESIGN.md §18).</summary>
     public string ProjectJobsDirectory => Path.Combine(DataDirectory, "project-jobs");
@@ -81,5 +88,5 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory)
     }
 
     /// <summary>Everything under one folder, for tests.</summary>
-    public static AppPaths Under(string root) => new(Path.Combine(root, "data"), Path.Combine(root, "settings"));
+    public static AppPaths Under(string root) => new(Path.Combine(root, "data"), Path.Combine(root, "settings"), Path.Combine(root, "temp"));
 }

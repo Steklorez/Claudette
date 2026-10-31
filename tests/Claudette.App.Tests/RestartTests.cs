@@ -103,6 +103,18 @@ public class RestartTests
     }
 
     [Fact]
+    public void After_an_update_the_new_version_is_told_where_to_say_it_is_up()
+    {
+        // Outside the data folder, which the new version may move, as devEntry does Claudette's (DESIGN.md §2).
+        string[] args = [LaunchArguments.RestoreOption, "abc", LaunchArguments.ReadyFileOption, "temp/claudette-update-abc.ready", "--login"];
+
+        Assert.Equal(Path.GetFullPath("temp/claudette-update-abc.ready"), LaunchArguments.ReadyFile(args));
+        Assert.Equal(["--login"], LaunchArguments.WithoutDevelopmentOptions(args));
+        // A Claudette before 0.7.0 doesn't say, and the data folder's restart-ready is used.
+        Assert.Null(LaunchArguments.ReadyFile([LaunchArguments.RestoreOption, "abc"]));
+    }
+
+    [Fact]
     public async Task A_new_build_is_offered_once_it_has_finished()
     {
         await using var h = new TabTestHarness();
