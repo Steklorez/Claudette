@@ -11,14 +11,14 @@ When a tab's folder holds a Unity project (a folder with `ProjectSettings/Projec
 
 ## The editor
 
-Unity needs the exact editor version the project names. Claudette looks, in this order:
+Unity needs the exact editor version the project names. Deventry looks, in this order:
 
 1. The editor you picked with **Choose Unity editor…** (**Choose another Unity editor…** once one is found): the executable, or a version's folder.
 2. Unity Hub's default folder for that version.
 3. Hub's custom install folder, when you set one.
 4. Editors you added to Hub by hand.
 
-When the version isn't installed, the menu's header says so and offers **Choose Unity editor…**. Claudette remembers the pick for the project.
+When the version isn't installed, the menu's header says so and offers **Choose Unity editor…**. Deventry remembers the pick for the project.
 
 ## Actions
 
@@ -37,7 +37,7 @@ The project's menu also has **Code optimization**, with **Release** and **Debug*
 
 ## While Unity has the project open
 
-Unity locks a project while its editor has it open. Claudette notices, and the main action reads **Unity has this project open** and is greyed out. **Run EditMode tests**, **Regenerate the C# solution** and **Clean Library…** are refused with "Unity has this project open, and locks it while it does: close the editor first." A lock left behind by a crashed editor doesn't count.
+Unity locks a project while its editor has it open. Deventry notices, and the main action reads **Unity has this project open** and is greyed out. **Run EditMode tests**, **Regenerate the C# solution** and **Clean Library…** are refused with "Unity has this project open, and locks it while it does: close the editor first." A lock left behind by a crashed editor doesn't count.
 
 ## Settings
 
@@ -45,7 +45,7 @@ On Unity's page in Settings → Project tools, on this machine only. **Open solu
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Recognize Unity projects** | On | Off, Claudette treats a Unity project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
+| **Recognize Unity projects** | On | Off, Deventry treats a Unity project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
 | **Tell Claude about Unity projects** | On | Adds a note to the session with the Unity version and editor, how to run the EditMode tests in batch mode, that `Library`, `Temp` and `obj` are generated and shouldn't be edited, that a `.meta` file moves with its asset, and not to open the editor unless asked. Applies to tabs started after the change. |
 | **Default code optimization** | Release | The optimization for projects that haven't a choice of their own. A project's own choice wins. |
 

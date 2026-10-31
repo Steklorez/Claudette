@@ -48,7 +48,7 @@ A diff compares lines, so some changes look the same on both sides. When one of 
 
 When lines changed too, it reads *"Its line endings changed too: CRLF to LF"*, and two or more at once read like *"Only its line endings (CRLF to LF) and the newline at its end (removed) changed"*. Such a file counts as changed, and **=** is only for a file that's back to how it was in every way.
 
-Claudette reads a file's line endings just before Claude changes it, since Claude Code doesn't report them. For a session it didn't run, such as one opened from History, it doesn't have them, and a change to them isn't told. To change a file's line endings back, open it in its project's Files tab, click the line endings on its chip and choose **CRLF** or **LF** ([The chip](../project-files/editing.md#the-chip)).
+Deventry reads a file's line endings just before Claude changes it, since Claude Code doesn't report them. For a session it didn't run, such as one opened from History, it doesn't have them, and a change to them isn't told. To change a file's line endings back, open it in its project's Files tab, click the line endings on its chip and choose **CRLF** or **LF** ([The chip](../project-files/editing.md#the-chip)).
 
 ## Changed since
 
@@ -65,7 +65,7 @@ The list keeps up by itself:
 - while the tab is on screen, a file Claude changed is looked at again a moment after it changes on disk;
 - when another tab's Claude changes a file this tab lists;
 - when a turn ends, for what its commands did;
-- when you come back to Claudette from another app.
+- when you come back to Deventry from another app.
 
 A tab off screen catches up once you show it.
 
@@ -87,15 +87,15 @@ It also lists each other checkout Claude changed files in, in its own group ([Se
 
 A file whose lines git sees as changed only at their ends says *"Only its line endings changed"*, with what to what when git can tell, or *"they differ from HEAD's"*, as for a file checked out with other line endings than git would commit. Its counts leave those lines out, as its diff does. A file whose only change is that it's now executable, or no longer, says *"Only its mode changed"*.
 
-Claudette asks git half a second after Claude's edits pause, not after each one, and again when a turn ends, when you come back to Claudette, and, while the tab is on screen, when you stage, commit or check out, from a terminal too. It never takes git's lock on your repository's index, so it won't get in the way of your own git commands. Outside a git repository the box isn't there.
+Deventry asks git half a second after Claude's edits pause, not after each one, and again when a turn ends, when you come back to Deventry, and, while the tab is on screen, when you stage, commit or check out, from a terminal too. It never takes git's lock on your repository's index, so it won't get in the way of your own git commands. Outside a git repository the box isn't there.
 
 ## A file whose earlier contents aren't known
 
-Claude Code reports a file's earlier contents as it changes it. For a session Claudette didn't run live, such as one opened from History, it may not have them. The file is then listed as modified without counts, and its row's tip says Claude Code didn't report the earlier content. Its [diff](the-diff-view.md) shows the file as it is now and says so.
+Claude Code reports a file's earlier contents as it changes it. For a session Deventry didn't run live, such as one opened from History, it may not have them. The file is then listed as modified without counts, and its row's tip says Claude Code didn't report the earlier content. Its [diff](the-diff-view.md) shows the file as it is now and says so.
 
-Claude Code leaves a file's earlier contents out of a saved conversation when the file is over 10,000 characters. So while Claudette runs a session, it keeps its own copy of those, and a restored tab or a session opened again from History finds it. Copies not used for 30 days are deleted.
+Claude Code leaves a file's earlier contents out of a saved conversation when the file is over 10,000 characters. So while Deventry runs a session, it keeps its own copy of those, and a restored tab or a session opened again from History finds it. Copies not used for 30 days are deleted.
 
-Claude Code doesn't report the earlier contents of a file a subagent changes at all, so Claudette reads the file just before the subagent changes it, and keeps that too.
+Claude Code doesn't report the earlier contents of a file a subagent changes at all, so Deventry reads the file just before the subagent changes it, and keeps that too.
 
 ## Opening a file's changes
 

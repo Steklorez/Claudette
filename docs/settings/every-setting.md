@@ -14,7 +14,7 @@ The columns:
 - **Setting** is its label, as the app shows it.
 - **Section** is the section of the page it's in, whose **Reset to defaults** puts it back.
 - **Default** is what a new install uses, and what **Reset to defaults** puts back.
-- **Syncs** says whether **Sync Claudette's settings through the library** carries it to your other machines ([Settings sync](../history/settings-sync.md)). **No** means it stays on this machine, and Settings marks it **This computer**.
+- **Syncs** says whether **Sync Deventry's settings through the library** carries it to your other machines ([Settings sync](../history/settings-sync.md)). **No** means it stays on this machine, and Settings marks it **This computer**.
 - **Per tab** says whether [Tab settings…](../tabs/tab-settings.md) can change it for one tab, and under what name. **Own switch** means each tab has a switch of its own, which this setting sets for tabs you open from now on. **No** means every tab uses it.
 
 ## General
@@ -23,20 +23,20 @@ None of this page syncs, and a tab can't change it for itself.
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
-| **Start Claudette when I log in** | Starting and closing | Off (your OS keeps it) | [Starting at login](../away/starting-at-login.md) |
-| **Also restore unpinned tabs when Claudette starts** | Starting and closing | On | [Closing and restoring](../tabs/closing-and-restoring.md) |
+| **Start Deventry when I log in** | Starting and closing | Off (your OS keeps it) | [Starting at login](../away/starting-at-login.md) |
+| **Also restore unpinned tabs when Deventry starts** | Starting and closing | On | [Closing and restoring](../tabs/closing-and-restoring.md) |
 | **Confirm before closing a tab where Claude is working** | Starting and closing | On | [Closing and restoring](../tabs/closing-and-restoring.md) |
 | **Keep this computer awake** | Keeping the computer awake | Off | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
-| **When**: **Only while Claude has work to finish** or **Whenever Claudette is running** | Keeping the computer awake | Only while Claude has work to finish | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
+| **When**: **Only while Claude has work to finish** or **Whenever Deventry is running** | Keeping the computer awake | Only while Claude has work to finish | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
 | **Also while tabs are connected to the Claude app** | Keeping the computer awake | On | [The Claude app](../away/the-claude-app.md) |
 | **Show Claude's service status** | Updates and status | On | [Claude is having problems](../troubleshooting/claude-is-having-problems.md) |
-| **Check for Claudette updates automatically** | Updates and status | On | [Claudette's updates](../updates/claudettes-updates.md) |
-| **Include pre-releases** | Updates and status | Off | [Claudette's updates](../updates/claudettes-updates.md) |
+| **Check for Deventry updates automatically** | Updates and status | On | [Deventry's updates](../updates/deventrys-updates.md) |
+| **Include pre-releases** | Updates and status | Off | [Deventry's updates](../updates/deventrys-updates.md) |
 
-The page also shows Claudette's version and update status, with **Check now**, **Download** and **Release notes**. Those are on [Claudette's updates](../updates/claudettes-updates.md).
+The page also shows Deventry's version and update status, with **Check now**, **Download** and **Release notes**. Those are on [Deventry's updates](../updates/deventrys-updates.md).
 
 {: .note }
-**Also restore unpinned tabs when Claudette starts** is on for new installs from 0.3.0. Settings saved by 0.2.0 or earlier keep it off until you turn it on, or use the **Reset to defaults** of **Starting and closing**.
+**Also restore unpinned tabs when Deventry starts** is on for new installs from 0.3.0. Settings saved by 0.2.0 or earlier keep it off until you turn it on, or use the **Reset to defaults** of **Starting and closing**.
 
 ## Appearance
 
@@ -48,17 +48,17 @@ The page starts with a preview that shows your choices as you make them.
 | **Style** | Look | Standard | Yes | [Styles and themes](styles-and-themes.md#style) |
 | **Density** | Look | Comfortable | Yes | [Styles and themes](styles-and-themes.md#density) |
 | **Full-width conversation** | Look | Off | Yes | [Reading the conversation](../conversation/reading-the-conversation.md) |
-| **Conversation font** | Text | Claudette's default | Yes | [Styles and themes](styles-and-themes.md#fonts) |
+| **Conversation font** | Text | Deventry's default | Yes | [Styles and themes](styles-and-themes.md#fonts) |
 | **Conversation font size** | Text | 14 (from 9 to 28) | Yes | [Styles and themes](styles-and-themes.md#fonts) |
 | **Code font** | Text | Cascadia Mono, Consolas or Menlo | Yes | [Styles and themes](styles-and-themes.md#fonts) |
 | **Code font size** | Text | 13 (from 8 to 28) | Yes | [Styles and themes](styles-and-themes.md#fonts) |
 | **Zoom** | Accessibility | 100% | No | [Accessibility](accessibility.md#zoom) |
 | **Motion** | Accessibility | Follow the system | Yes | [Accessibility](accessibility.md#motion) |
-| **Show Claudette on the composer** | Claudette | On | Yes | [Claudette on the composer](../claudette/claudette-on-the-composer.md) |
-| **Size** | Claudette | Medium (or Small or Large) | Yes | [Claudette on the composer](../claudette/claudette-on-the-composer.md) |
-| **How often** | Claudette | Lively: every 10 to 30 seconds (or Calm: every 30 to 90) | Yes | [Claudette on the composer](../claudette/claudette-on-the-composer.md) |
-| **Shares tips** | Claudette | On | Yes | [Claudette on the composer](../claudette/claudette-on-the-composer.md) |
-| **Games with Claudette** | Claudette | On | Yes | [Games with Claudette](../claudette/games-with-claudette.md) |
+| **Show Joulene on the composer** | Deventry | On | Yes | [Joulene on the composer](../joulene/joulene-on-the-composer.md) |
+| **Size** | Deventry | Medium (or Small or Large) | Yes | [Joulene on the composer](../joulene/joulene-on-the-composer.md) |
+| **How often** | Deventry | Lively: every 10 to 30 seconds (or Calm: every 30 to 90) | Yes | [Joulene on the composer](../joulene/joulene-on-the-composer.md) |
+| **Shares tips** | Deventry | On | Yes | [Joulene on the composer](../joulene/joulene-on-the-composer.md) |
+| **Games with Joulene** | Deventry | On | Yes | [Games with Joulene](../joulene/games-with-joulene.md) |
 
 ## Conversation
 
@@ -187,8 +187,8 @@ None of this page syncs.
 |---|---|---|---|
 | **Extra arguments for every claude process** | Running claude | Empty | [Advanced](advanced.md#extra-arguments-for-claude) |
 | **Log protocol traffic**, with **Open log folder** | Running claude | Off | [Advanced](advanced.md#log-protocol-traffic) |
-| **Claudette's data folder**, with **Open data folder** | Running claude | | [Advanced](advanced.md#the-log-and-data-folders) |
-| What Claude Code sent that Claudette doesn't know, with **Copy diagnostics** | Diagnostics | | [Advanced](advanced.md#diagnostics) |
+| **Deventry's data folder**, with **Open data folder** | Running claude | | [Advanced](advanced.md#the-log-and-data-folders) |
+| What Claude Code sent that Deventry doesn't know, with **Copy diagnostics** | Diagnostics | | [Advanced](advanced.md#diagnostics) |
 
 ## Sessions
 
@@ -196,13 +196,13 @@ None of this page syncs.
 
 | Setting | Section | Default | Per tab | Explained in |
 |---|---|---|---|---|
-| **Folder**, with **Browse…**, **Move library…** and **Use the default folder** | Session library | A folder in Claudette's data folder | No | [The session library](../history/the-session-library.md) |
+| **Folder**, with **Browse…**, **Move library…** and **Use the default folder** | Session library | A folder in Deventry's data folder | No | [The session library](../history/the-session-library.md) |
 | **Sync new tabs to the session library** | Session library | Off | Own switch (**Sync to other machines**) | [Syncing a tab](../history/syncing-a-tab.md) |
 | **Name for this machine** | Session library | The computer's name | No | [The session library](../history/the-session-library.md) |
 | **Delete sessions not used for a while**, with **After going unused for (days)** | Session library | On, after 15 days | No | [The session library](../history/the-session-library.md#keeping-sessions) |
-| **Sync Claudette's settings through the library** | Settings sync | Off | No | [Settings sync](../history/settings-sync.md) |
+| **Sync Deventry's settings through the library** | Settings sync | Off | No | [Settings sync](../history/settings-sync.md) |
 
-The library's **Folder** and **Sync Claudette's settings through the library** aren't put back by **Reset to defaults**.
+The library's **Folder** and **Sync Deventry's settings through the library** aren't put back by **Reset to defaults**.
 
 ## Files and diffs
 
@@ -210,9 +210,9 @@ None of this page syncs, and a tab can't change it for itself.
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
-| **Open files in** | Opening files | Claudette's editor, at the line named (or the app the OS uses) | [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) |
+| **Open files in** | Opening files | Deventry's editor, at the line named (or the app the OS uses) | [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) |
 | **Show a file clicked in a conversation** | Opening files | Beside the conversation (or In its place) | [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) |
-| **Open images in** | Opening files | Claudette's image viewer (or the app the OS uses) | [Images](../conversation/images.md#opening-an-image-claude-names) |
+| **Open images in** | Opening files | Deventry's image viewer (or the app the OS uses) | [Images](../conversation/images.md#opening-an-image-claude-names) |
 | **The explorer is on the** | Project Files tab | Left | [The explorer](../project-files/the-explorer.md) |
 | **Wrap long lines** | Project Files tab | Off | [Editing](../project-files/editing.md) |
 | **Indent new lines with** | Project Files tab | 4 spaces (or 2 spaces, 8 spaces or Tabs) | [Editing](../project-files/editing.md) |
@@ -231,7 +231,7 @@ The first page under **Project tools**: what every kind of project shares. None 
 
 ## Unreal Engine
 
-Each kind of project Claudette knows has a page, which starts with two switches under **Projects**: **Recognize … projects** (off, Claudette treats its projects as plain folders, and their own actions and links still work; the sidebar says *Off* beside the page) and **Tell Claude about … projects**. Its own settings are under **Defaults**. None of them syncs.
+Each kind of project Deventry knows has a page, which starts with two switches under **Projects**: **Recognize … projects** (off, Deventry treats its projects as plain folders, and their own actions and links still work; the sidebar says *Off* beside the page) and **Tell Claude about … projects**. Its own settings are under **Defaults**. None of them syncs.
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
@@ -276,7 +276,7 @@ The second page under **Source control**. None of this page syncs.
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
 | **Keep Perforce logins fresh** | Logins | Off | [Perforce](../project-tools/perforce.md) |
-| **Password source** | Logins | Stored by Claudette (recommended) | [Perforce](../project-tools/perforce.md) |
+| **Password source** | Logins | Stored by Deventry (recommended) | [Perforce](../project-tools/perforce.md) |
 | **Renew the ticket when less is left than (minutes)** | Logins | 30 | [Perforce](../project-tools/perforce.md) |
 | **Request tickets valid on all hosts** | Logins | Off | [Perforce](../project-tools/perforce.md) |
 | **Show changelist on tabs** | Logins | Off | [Perforce](../project-tools/perforce.md) |
@@ -290,4 +290,4 @@ The second page under **Source control**. None of this page syncs.
 
 ## The project's pages
 
-The **Links**, **Actions** and **Tools** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Claudette: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.
+The **Links**, **Actions** and **Tools** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Deventry: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.

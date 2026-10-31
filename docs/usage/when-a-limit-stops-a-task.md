@@ -35,13 +35,13 @@ The bar says why, and offers **Continue when it resets** (or **Continue**, once 
 - You chose **Don't continue**. That's for this reset only: hitting the limit again before it resets doesn't start another wait, and the next window starts fresh.
 - The reset is more than a day away, as a weekly limit's can be.
 - Three continues in a row each ran straight into the limit again. Like Claude Code, it waits again at most twice, then stops. A continue that gets going, or a message from you, starts the count again.
-- The limit reset more than 30 minutes before Claudette noticed, because the computer was asleep or Claudette wasn't running: *Your session limit reset at 15:45 while this computer was asleep or Claudette was closed, so the task didn't continue by itself.*
+- The limit reset more than 30 minutes before Deventry noticed, because the computer was asleep or Deventry wasn't running: *Your session limit reset at 15:45 while this computer was asleep or Deventry was closed, so the task didn't continue by itself.*
 
 ## Ending the wait
 
 Any turn that starts ends it, whether you sent a message or something else started one. Turning the setting off or on while a tab waits changes that wait straight away.
 
-The wait is saved with the tab, so a restart, including one into a new build of Claudette, keeps waiting.
+The wait is saved with the tab, so a restart, including one into a new build of Deventry, keeps waiting.
 
 ## Turning it off
 
@@ -50,7 +50,7 @@ The wait is saved with the tab, so a restart, including one into a new build of 
 
 ## Play a game while you wait
 
-While a limit holds a task, the bar has **Play a game while you wait** under its text, with a menu: **Tic-tac-toe**, **Connect Four**, **Hangman** and **Minesweeper**. The game opens in the Games tool window. See [Games with Claudette](../claudette/games-with-claudette.md).
+While a limit holds a task, the bar has **Play a game while you wait** under its text, with a menu: **Tic-tac-toe**, **Connect Four**, **Hangman** and **Minesweeper**. The game opens in the Games tool window. See [Games with Joulene](../joulene/games-with-joulene.md).
 
 ## Settings
 
@@ -63,4 +63,4 @@ While a limit holds a task, the bar has **Play a game while you wait** under its
 
 - [Alerts](alerts.md), which warn you before you get here.
 - [Tabs that don't use usage credits](tabs-that-dont-use-usage-credits.md), which wait here rather than spend them.
-- [Check-ins on long turns](../composer/check-ins-on-long-turns.md), the other message Claudette sends on its own.
+- [Check-ins on long turns](../composer/check-ins-on-long-turns.md), the other message Deventry sends on its own.

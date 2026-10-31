@@ -7,7 +7,7 @@ summary: "An MCP server can ask you something in the middle of a turn: a missing
 
 # MCP servers asking for input
 
-An MCP server can ask you something in the middle of a turn: a missing detail, a choice, or a sign-in to finish in the browser. This is Claude Code's MCP elicitation (see [Claude Code's MCP docs](https://code.claude.com/docs/en/mcp)). Claudette shows it as a card labeled *Input requested*, and the tab waits on you: its row says *Needs your input*, and a [notification](../away/notifications.md) goes out if Claudette isn't in front.
+An MCP server can ask you something in the middle of a turn: a missing detail, a choice, or a sign-in to finish in the browser. This is Claude Code's MCP elicitation (see [Claude Code's MCP docs](https://code.claude.com/docs/en/mcp)). Deventry shows it as a card labeled *Input requested*, and the tab waits on you: its row says *Needs your input*, and a [notification](../away/notifications.md) goes out if Deventry isn't in front.
 
 The card's title is the server's own, or *tickets asks* for a server called `tickets`. What the server says, and every field it asks for, is its text, shown as text.
 

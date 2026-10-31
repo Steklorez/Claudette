@@ -2,7 +2,7 @@
 <!--
   The site's social card (GUIDE.md, "The site"): the picture a link to deventry.app shows where it's shared,
   1280 by 640. social-card.ps1 draws it to docs/assets/social-card.png. It's the landing page's hero in dark: her and
-  her name, its title, and the README's main window (standard-dark.png) running off the edge.
+  its name, its title, and the README's main window (standard-dark.png) running off the edge.
 -->
 <html lang="en">
 <head>
@@ -35,7 +35,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Her colors across the top, and a warm glow over a field of pixels, as on the landing page. */
+    /* Its colors across the top, and a warm glow over a field of pixels, as on the landing page. */
     body::before { position: absolute; inset: 0 0 auto; z-index: 3; height: 5px; content: ""; background: var(--gradient); }
     body::after {
       position: absolute;
@@ -50,7 +50,7 @@
 
     .copy { position: absolute; z-index: 2; top: 62px; left: 64px; width: 540px; }
 
-    /* Whole pixels a cell, so she stays crisp: her sprite is 12 cells and her name 54 by 8. */
+    /* Whole pixels a cell, so it stays crisp: the icon is 12 cells and the name 54 by 8. */
     .mark { display: flex; align-items: center; gap: 26px; }
     .sprite { width: 96px; height: 96px; image-rendering: pixelated; filter: drop-shadow(0 12px 22px rgba(217, 119, 87, 0.35)); }
     .wordmark { width: 324px; height: 48px; image-rendering: pixelated; }

@@ -9,13 +9,13 @@ summary: "The usage header, the sidebar, the conversation, the tool windows and 
 
 The window has five parts: the usage header across the top, the sidebar on the left, the conversation in the middle, the tool windows on the right and the composer under the conversation. This page names each part and says where to read more.
 
-{% include shot.html name="standard" alt="Claudette's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Claudette herself standing on the message box" %}
+{% include shot.html name="standard" alt="Deventry's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Joulene standing on the message box" %}
 
 ## The header
 
 The header is always visible, and it's the window's title bar: drag its gaps to move the window, and double-click them to maximize it. From left to right it shows:
 
-- **Claudette's logo**, which on Windows is the window's icon: click it for the window menu (Restore, Minimize, Maximize, Close and so on), or double-click it to close the window. Then **the menu**, three lines: **User Guide**, which opens this guide in your browser, then **Ask on Discord**, **Report an issue** ([Reporting an issue](../troubleshooting/reporting-an-issue.md)) and **About Claudette** ([About](../settings/about.md)).
+- **Deventry's logo**, which on Windows is the window's icon: click it for the window menu (Restore, Minimize, Maximize, Close and so on), or double-click it to close the window. Then **the menu**, three lines: **User Guide**, which opens this guide in your browser, then **Ask on Discord**, **Report an issue** ([Reporting an issue](../troubleshooting/reporting-an-issue.md)) and **About Deventry** ([About](../settings/about.md)).
 - **The usage meters.** Your session (5-hour) usage is the most prominent, with the weekly limit and each model's own limit beside it, their reset countdowns, and a short trend that says whether you'll reach the limit. The chevron at its right opens the header up into charts. See [The usage header](../usage/the-usage-header.md).
 - **The processes' total**, when the process monitor is on: the CPU and memory of every tab's processes. See [Processes](../tabs/processes.md).
 - **The cup**, which keeps the computer awake while it steams. See [Keeping the computer awake](../away/keeping-the-computer-awake.md).
@@ -61,11 +61,11 @@ The tool windows are on a strip of icons down the window's right edge, as in Jet
 
 Under the conversation is the message box, with a bar above it and a status line under it. The bar holds the tab's model, effort and permission mode, and its counts: processes, files changed, context and tokens, with **Send** (or **Stop**) at the right. The status line shows the working folder and the tab's status, with **Restart** if it has stopped. See [The composer](../composer/index.md) and [The composer bar](../composer/the-composer-bar.md).
 
-Claudette herself, the pixel mascot, stands on the message box and reacts to what Claude is doing. See [Claudette on the composer](../claudette/claudette-on-the-composer.md).
+Joulene, the pixel mascot, stands on the message box and reacts to what Claude is doing. See [Joulene on the composer](../joulene/joulene-on-the-composer.md).
 
 ## On macOS and Windows
 
 - **macOS:** the menu bar has **Settings…** in the app menu, **File** with **New Tab**, **Open Recent**, **History…** and **Close Tab**, and **Help** with **User Guide**, **Ask on Discord** and **Report an Issue**. The Dock icon's menu lists your recent folders, and its badge counts the tabs that need you.
 - **Windows:** the taskbar button's jump list lists your recent folders, and an overlay on the button counts the tabs that need you.
 
-See [Notifications](../away/notifications.md) for the rest of what Claudette does to get your attention.
+See [Notifications](../away/notifications.md) for the rest of what Deventry does to get your attention.

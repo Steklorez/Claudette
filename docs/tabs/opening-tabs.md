@@ -44,15 +44,15 @@ A folder is added to the recent list, or moved to the top, whenever a tab opens 
 
 - **A group's +** opens a tab in that group's folder without the picker. See [Folder groups](folder-groups.md).
 - **Drop a folder** from Finder or Explorer onto the sidebar.
-- **From the command line:** `Claudette --folder <path>` opens a tab in that folder when Claudette starts. A relative path is taken from where you ran the command, even when Claudette is already running. See [Command line and environment](../reference/command-line-and-environment.md).
+- **From the command line:** `Deventry --folder <path>` opens a tab in that folder when Deventry starts. A relative path is taken from where you ran the command, even when Deventry is already running. See [Command line and environment](../reference/command-line-and-environment.md).
 - **On Windows,** the taskbar's jump list shows your favorites and then recent folders, up to 10, leaving out folders that no longer exist. Windows shows nothing there if **Show recently opened items** is turned off in its Start settings.
 - **On macOS,** **File → Open Recent** and the Dock icon's menu list the same folders. **File → New Tab** and **File → History…** are there too, and **File → Close Tab** closes the selected tab.
 
 Choosing any of these opens a new tab in that folder.
 
-## One Claudette at a time
+## One Deventry at a time
 
-Starting Claudette while it's already running doesn't open a second window. The running Claudette comes to the front, and opens a tab if you gave it a folder. Only your own Claudette is handed the request.
+Starting Deventry while it's already running doesn't open a second window. The running Deventry comes to the front, and opens a tab if you gave it a folder. Only your own Deventry is handed the request.
 
 ## Settings
 
@@ -77,4 +77,4 @@ The **Model**, **Effort** and **Permission mode** under **New tabs start with**,
 ## See also
 
 - [Your first tab](../getting-started/your-first-tab.md), a walk through opening a tab and sending a message.
-- [Closing and restoring](closing-and-restoring.md), for what comes back when Claudette starts.
+- [Closing and restoring](closing-and-restoring.md), for what comes back when Deventry starts.

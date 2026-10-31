@@ -28,7 +28,7 @@ The header has the group's name, then:
 
 ## Opening a file
 
-- A click opens the file in the preview tab, a double-click or `Enter` opens it to stay ([File tabs](file-tabs.md)). An image's double-click, `Enter` or **Open** shows it in Claudette's image window instead, as Settings → Files and diffs → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
+- A click opens the file in the preview tab, a double-click or `Enter` opens it to stay ([File tabs](file-tabs.md)). An image's double-click, `Enter` or **Open** shows it in Deventry's image window instead, as Settings → Files and diffs → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
 - The arrow keys move without opening anything. `Right` and `Left` expand and collapse a folder.
 
 ## Claude's changes in the tree
@@ -55,7 +55,7 @@ A new file is empty and opens to stay, ready to type in. A new folder is selecte
 
 As you type, the line under the box says if the name can't be used, and `Enter` keeps the box until it can: a file or folder with that name is already there, the name is `.` or `..`, or it has a character your system doesn't allow in names. On Windows, that's `< > : " | ? *`, a name ending in a space or a dot, and the names Windows keeps for itself, such as `CON`, `NUL` and `COM1`.
 
-Claudette never writes over a file. If one with the name appears while you type, it stays as it is and the box says so.
+Deventry never writes over a file. If one with the name appears while you type, it stays as it is and the box says so.
 
 ## Renaming
 
@@ -67,7 +67,7 @@ Claudette never writes over a file. If one with the name appears while you type,
 
 Files you have open from it follow it, with any unsaved edits. A folder that was expanded stays expanded.
 
-Claudette renames it on disk, as your file manager would. Git notices the rename by itself. Perforce needs `p4 reconcile`, or **Reconcile Offline Work** in P4V.
+Deventry renames it on disk, as your file manager would. Git notices the rename by itself. Perforce needs `p4 reconcile`, or **Reconcile Offline Work** in P4V.
 
 ## Deleting
 
@@ -98,12 +98,12 @@ In a Perforce workspace, a file's and a folder's menus also have a Perforce sect
 ## Its side and its width
 
 - The explorer is on the left by default. Settings → **Files and diffs** → **The explorer is on the** has **Left** and **Right**, and **Move to the right** (or **Move to the left**) in the explorer's **⋯** menu changes the same setting.
-- Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default. A double-click on the edge goes back to that. The width is the same for every Files tab, and Claudette remembers it.
+- Drag the explorer's edge to make it wider or narrower: at least 180 pixels, 260 by default. A double-click on the edge goes back to that. The width is the same for every Files tab, and Deventry remembers it.
 - In a narrow pane, the explorer narrows first, to leave the editor 360 pixels, down to its own least. Only then does the editor narrow.
 
 ## Hiding it
 
-The button at the start of the file tabs' row, with the tip **Hide the explorer** or **Show the explorer**, hides and shows the explorer. Claudette remembers which. The [command palette](../tabs/the-command-palette.md) has the same command, and **Show only changed files**, while a Files tab has the focus.
+The button at the start of the file tabs' row, with the tip **Hide the explorer** or **Show the explorer**, hides and shows the explorer. Deventry remembers which. The [command palette](../tabs/the-command-palette.md) has the same command, and **Show only changed files**, while a Files tab has the focus.
 
 A Files tab that a conversation opened beside it for its first file starts with its explorer hidden ([Opening files from the conversation](opening-files-from-the-conversation.md)).
 

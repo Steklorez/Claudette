@@ -21,7 +21,7 @@ A file whose extension is `.md`, `.markdown` or another of Markdown's (the chip 
 
 When Claude has changed the file, **Inline changes** and **Side by side** follow as a second part of the bar ([Claude's changes in the editor](claudes-changes-in-the-editor.md)). The five are one choice: picking one leaves whichever was showing.
 
-A Markdown file opens in **Edit**. Each open file keeps its own choice, also after Claudette restarts.
+A Markdown file opens in **Edit**. Each open file keeps its own choice, also after Deventry restarts.
 
 The [command palette](../tabs/the-command-palette.md) has **Preview the file**, **Edit and preview the file** and **Edit the file** while a Markdown file shows.
 
@@ -33,7 +33,7 @@ The preview shows the editor's text, unsaved edits and all, as Claude's replies 
 - A paragraph whose lines are wrapped in the file reads as one paragraph, as in VS Code and on GitHub. End a line with two spaces or a `\` to break it there.
 - Front matter, the block of settings between `---` lines at the top of a page for a site like this one, isn't shown.
 - HTML in the file isn't shown, and Mermaid diagrams and math show as code.
-- A file over 1 MB isn't previewed: it would take Claudette several seconds to draw. The preview says so.
+- A file over 1 MB isn't previewed: it would take Deventry several seconds to draw. The preview says so.
 
 ## Scrolling together
 
@@ -42,7 +42,7 @@ In **Edit and preview**, scrolling either side scrolls the other to the same pla
 ## Links and images
 
 - **A link to a heading** in the file, such as `[Saving](#saving)`, scrolls the preview to it.
-- **A web link** opens in your browser. A link to an image on the web opens in Claudette's image viewer, as Settings → **Files and diffs** → **Open images in** says.
+- **A web link** opens in your browser. A link to an image on the web opens in Deventry's image viewer, as Settings → **Files and diffs** → **Open images in** says.
 - **A link to a file** is read from the Markdown file's own folder, as GitHub reads it. It opens as a file named in Claude's replies does ([Opening files from the conversation](opening-files-from-the-conversation.md)): text in a file tab here, at the line if the link names one (`#L42`); an image in the image viewer; a folder in the explorer; a program in its folder, without running it. If the file isn't there, the preview says so over the file: *Couldn't find specs/shots.md.*
 - **Images** are read from the Markdown file's own folder too. One in the project's folder shows at once. One from the web, or from outside the project's folder, waits for you to click **Load image** or **Show image**, as in Claude's replies, since a file can be written to send data out through an image's address ([Images](../conversation/images.md)). Click an image to see it full size.
 

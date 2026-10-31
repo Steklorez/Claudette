@@ -2,18 +2,18 @@
 title: The session library
 parent: History and syncing
 nav_order: 2
-summary: "The session library is Claudette's own folder of sessions."
+summary: "The session library is Deventry's own folder of sessions."
 ---
 
 # The session library
 
-The session library is Claudette's own folder of sessions. A tab that [syncs](syncing-a-tab.md) copies its session there after every turn, and History lists what's in it next to the sessions Claude Code kept on this computer. If the folder is one a sync client keeps up to date, your other machines see the same sessions and can [pick them up](picking-up-on-another-machine.md).
+The session library is Deventry's own folder of sessions. A tab that [syncs](syncing-a-tab.md) copies its session there after every turn, and History lists what's in it next to the sessions Claude Code kept on this computer. If the folder is one a sync client keeps up to date, your other machines see the same sessions and can [pick them up](picking-up-on-another-machine.md).
 
-Claudette doesn't talk to Google Drive or any other cloud service. It reads and writes files in the folder, and your sync client does the rest.
+Deventry doesn't talk to Google Drive or any other cloud service. It reads and writes files in the folder, and your sync client does the rest.
 
 ## Where the library is
 
-By default it's the `library` folder inside [Claudette's data folder](../privacy/where-claudette-keeps-things.md), where no other machine sees it. To share it, point it at a folder your sync client keeps in sync.
+By default it's the `library` folder inside [Deventry's data folder](../privacy/where-deventry-keeps-things.md), where no other machine sees it. To share it, point it at a folder your sync client keeps in sync.
 
 1. Open Settings → Sessions.
 2. Under **Session library**, beside **Folder**, choose **Browse…** to use another folder from now on, or **Move library…** to copy the sessions already in the library to the new folder and use that.
@@ -27,7 +27,7 @@ Use the same folder, as your sync client sees it, on every machine. The folder's
 
 ### A cloud-synced folder
 
-Transcripts hold your code, command output and anything else Claude read in your projects. When you pick a folder that Google Drive, Dropbox, OneDrive, iCloud Drive or Box is keeping in sync, Claudette says so and asks before using it: *This folder is synced by Dropbox. Session transcripts contain your code, command output and anything else Claude read in your projects, and they'll be uploaded there. Use it anyway?* Choose **Use this folder** to go on, or **Cancel**.
+Transcripts hold your code, command output and anything else Claude read in your projects. When you pick a folder that Google Drive, Dropbox, OneDrive, iCloud Drive or Box is keeping in sync, Deventry says so and asks before using it: *This folder is synced by Dropbox. Session transcripts contain your code, command output and anything else Claude read in your projects, and they'll be uploaded there. Use it anyway?* Choose **Use this folder** to go on, or **Cancel**.
 
 {: .warning }
 Anyone who can read the synced folder can read your sessions. Keep it in an account and a folder only you can reach.
@@ -44,7 +44,7 @@ The library also holds the file that [settings sync](settings-sync.md) uses, a `
 
 Claude Code's sign-in and settings are never copied.
 
-Claudette writes each file under a temporary name and renames it when it's whole, so a sync client never uploads half a file.
+Deventry writes each file under a temporary name and renames it when it's whole, so a sync client never uploads half a file.
 
 ## Naming this machine
 
@@ -54,11 +54,11 @@ Settings → Sessions → **Name for this machine** is the name History shows fo
 
 Claude Code deletes its own transcripts after 30 days by default. The library's copies aren't affected, so for the sessions that sync, the library is also a longer-term archive.
 
-Settings → Sessions → **Delete sessions not used for a while** says how long they stay. It's on to start with, and **After going unused for (days)**, under it, is 15. Once no machine has used or opened a session for that many days, Claudette deletes it from the library. Claudette checks when it starts, then once a day while it's open. Turn the switch off to keep sessions in the library for good.
+Settings → Sessions → **Delete sessions not used for a while** says how long they stay. It's on to start with, and **After going unused for (days)**, under it, is 15. Once no machine has used or opened a session for that many days, Deventry deletes it from the library. Deventry checks when it starts, then once a day while it's open. Turn the switch off to keep sessions in the library for good.
 
 - A session is used when a tab that syncs copies it to the library: after each turn, when you turn syncing on, with **Sync now**, and after you tick files as reviewed.
 - Opening a session from History counts too, even if you don't send anything. History still says which machine last used it.
-- Claudette never deletes a session that's open in a tab that syncs, or one that another machine is using. A library copy of a tab that no longer syncs is deleted like any other.
+- Deventry never deletes a session that's open in a tab that syncs, or one that another machine is using. A library copy of a tab that no longer syncs is deleted like any other.
 
 {: .warning }
 The library is shared, but this setting is each machine's own. A machine set to fewer days deletes sessions from the library for all your machines, and they leave History on every one of them. Give each machine the same number of days, or the fewest you'd want anywhere.
@@ -79,4 +79,4 @@ These settings, like the library's folder, stay on each machine. **Reset to defa
 ## See also
 
 - [Syncing a tab](syncing-a-tab.md) for choosing which sessions go into the library.
-- [Where Claudette keeps things](../privacy/where-claudette-keeps-things.md) and [What leaves this computer](../privacy/what-leaves-this-computer.md) for the whole picture of your data.
+- [Where Deventry keeps things](../privacy/where-deventry-keeps-things.md) and [What leaves this computer](../privacy/what-leaves-this-computer.md) for the whole picture of your data.

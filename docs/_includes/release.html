@@ -1,6 +1,6 @@
 {%- comment -%}
   One release's packages (GUIDE.md, "The Downloads page"): {% include release.html release=r buttons=true %}.
-  package.yml names them Claudette-<version>-<x64|arm64>.<msix|dmg>: the extension says the OS, the name the processor.
+  package.yml names them Deventry-<version>-<x64|arm64>.<msix|dmg>: the extension says the OS, the name the processor.
   Anything else attached to the release is listed under Other files.
 {%- endcomment -%}
 {%- assign release = include.release -%}
@@ -11,7 +11,7 @@
   {%- assign part = kind | split: ":" -%}
   {%- assign suffix = "-" | append: part[1] | append: "." | append: part[0] -%}
   {%- for asset in release.assets -%}
-    {%- if asset.name contains suffix and asset.name contains "Claudette-" -%}
+    {%- if asset.name contains suffix and asset.name contains "Deventry-" -%}
   <a class="btn btn-primary" href="{{ asset.browser_download_url }}">{{ part[2] }}, {{ part[3] }}</a>
     {%- endif -%}
   {%- endfor -%}
@@ -25,7 +25,7 @@
   {%- assign part = kind | split: ":" -%}
   {%- assign suffix = "-" | append: part[1] | append: "." | append: part[0] -%}
   {%- for asset in release.assets -%}
-    {%- if asset.name contains suffix and asset.name contains "Claudette-" %}
+    {%- if asset.name contains suffix and asset.name contains "Deventry-" %}
     <tr>
       <td>{{ part[2] }}, {{ part[3] }}</td>
       <td><a href="{{ asset.browser_download_url }}">{{ asset.name }}</a> ({{ asset.size | divided_by: 1048576.0 | round: 1 }} MB)</td>
@@ -39,7 +39,7 @@
 {%- assign others = "" | split: "" -%}
 {%- for asset in release.assets -%}
   {%- assign ext = asset.name | split: "." | last -%}
-  {%- unless asset.name contains "Claudette-" and ext == "msix" or ext == "dmg" -%}
+  {%- unless asset.name contains "Deventry-" and ext == "msix" or ext == "dmg" -%}
     {%- assign others = others | push: asset -%}
   {%- endunless -%}
 {%- endfor -%}

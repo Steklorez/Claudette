@@ -2,12 +2,12 @@
 title: The Claude app
 parent: Away from your desk
 nav_order: 3
-summary: "A tab can be used from the Claude app on your phone, or at claude.ai/code in a browser, while Claudette keeps running it on your computer."
+summary: "A tab can be used from the Claude app on your phone, or at claude.ai/code in a browser, while Deventry keeps running it on your computer."
 ---
 
 # The Claude app
 
-A tab can be used from the Claude app on your phone, or at claude.ai/code in a browser, while Claudette keeps running it on your computer. You can start a task at your desk, then watch it, send messages and answer its questions from the couch. Claude Code's [Remote Control](https://code.claude.com/docs/en/remote-control) does the work: your tab's Claude Code connects out to claude.ai, the app shows the conversation, and every tool still runs on this computer. Nothing connects in to your computer.
+A tab can be used from the Claude app on your phone, or at claude.ai/code in a browser, while Deventry keeps running it on your computer. You can start a task at your desk, then watch it, send messages and answer its questions from the couch. Claude Code's [Remote Control](https://code.claude.com/docs/en/remote-control) does the work: your tab's Claude Code connects out to claude.ai, the app shows the conversation, and every tool still runs on this computer. Nothing connects in to your computer.
 
 Each tab is its own session in the app, and each tab chooses for itself. It's off unless you turn it on.
 
@@ -28,13 +28,13 @@ Choose **Open in the Claude app** in a connected tab's menu. It opens the sessio
 
 ## Answering from your phone
 
-When you answer a permission prompt, question or plan in the app, the card in Claudette closes and reads *Answered in the Claude app*. It isn't an error, and the tab's *Needs input* status and its notification go.
+When you answer a permission prompt, question or plan in the app, the card in Deventry closes and reads *Answered in the Claude app*. It isn't an error, and the tab's *Needs input* status and its notification go.
 
 ## Pushes to your phone
 
-The app can send a push when a tab needs an answer. Claude Code sends it, so you turn it on there: in Claude Code's `/config`, turn on **Push when actions required**, and **Push when Claude decides** if you like. Claudette doesn't change Claude Code's settings for this. Claude Code's page on [mobile push notifications](https://code.claude.com/docs/en/remote-control#mobile-push-notifications) has the steps.
+The app can send a push when a tab needs an answer. Claude Code sends it, so you turn it on there: in Claude Code's `/config`, turn on **Push when actions required**, and **Push when Claude decides** if you like. Deventry doesn't change Claude Code's settings for this. Claude Code's page on [mobile push notifications](https://code.claude.com/docs/en/remote-control#mobile-push-notifications) has the steps.
 
-Pushes don't arrive while Claudette's window is in front. Claudette tells Claude Code when you're at it, so your phone buzzes only when you're away. Claudette's own [notifications](notifications.md) on the computer are unchanged.
+Pushes don't arrive while Deventry's window is in front. Deventry tells Claude Code when you're at it, so your phone buzzes only when you're away. Deventry's own [notifications](notifications.md) on the computer are unchanged.
 
 ## Disconnecting
 
@@ -49,9 +49,9 @@ Remote Control needs a claude.ai subscription: Pro, Max, Team or Enterprise (on 
 - A custom `ANTHROPIC_BASE_URL`, or a token from `claude setup-token` or in `ANTHROPIC_AUTH_TOKEN`.
 - `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`.
 
-When Claudette can tell your account can't use it, Settings → Claude Code says *Not available:* with the reason, and every tab's switch is disabled. A tab whose switch was already on says why it didn't connect, and can still be turned off. Claude Code checks the rest when a tab connects, such as your plan, your organization's policy and feature flags, and the tab shows its reason. If a policy turns Remote Control off, no tab tries again until Claudette restarts or another account signs in.
+When Deventry can tell your account can't use it, Settings → Claude Code says *Not available:* with the reason, and every tab's switch is disabled. A tab whose switch was already on says why it didn't connect, and can still be turned off. Claude Code checks the rest when a tab connects, such as your plan, your organization's policy and feature flags, and the tab shows its reason. If a policy turns Remote Control off, no tab tries again until Deventry restarts or another account signs in.
 
-A tab that runs under one of Claudette's [API-key accounts](../accounts/api-key-accounts.md) can't connect either, whatever your Default account can do.
+A tab that runs under one of Deventry's [API-key accounts](../accounts/api-key-accounts.md) can't connect either, whatever your Default account can do.
 
 ## Privacy
 
@@ -59,7 +59,7 @@ While a tab is connected, its transcript, with your messages, Claude's replies a
 
 ## Keeping the computer awake
 
-A sleeping computer can't be reached from your phone. While at least one tab is connected, Claudette keeps the computer from sleeping, as long as Settings → General → **Also while tabs are connected to the Claude app** is on (the default). The screen can still turn off. See [Keeping the computer awake](keeping-the-computer-awake.md).
+A sleeping computer can't be reached from your phone. While at least one tab is connected, Deventry keeps the computer from sleeping, as long as Settings → General → **Also while tabs are connected to the Claude app** is on (the default). The screen can still turn off. See [Keeping the computer awake](keeping-the-computer-awake.md).
 
 ## Settings
 

@@ -1,20 +1,21 @@
 ---
-title: claudette.json
+title: deventry.json
 parent: Reference
 nav_order: 5
 summary: "The format of the two files that hold a folder's own actions and links."
+redirect_from: /reference/claudette-json/
 ---
 
-# `claudette.json`
+# `deventry.json`
 
 The format of the two files that hold a folder's own actions and links. [Actions and links](../project-tools/actions-and-links.md) shows how to add them from the app and what they do.
 
-Both files live in the tab's folder, and only there: Claudette doesn't look for them in parent folders.
+Both files live in the tab's folder, and only there: Deventry doesn't look for them in parent folders.
 
-- `claudette.json` is shared. Commit it with the project.
-- `claudette.local.json` is yours alone. Put it in `.gitignore`. It has the same shape, and its entries come after the shared file's.
+- `deventry.json` is shared. Commit it with the project.
+- `deventry.local.json` is yours alone. Put it in `.gitignore`. It has the same shape, and its entries come after the shared file's.
 
-A missing file means nothing, and so does an empty one. Claudette's own repository has a `claudette.json` at its root, with a link to its issues and actions that pull and rebuild it.
+A missing file means nothing, and so does an empty one. Deventry's own repository has a `deventry.json` at its root, with a link to its issues and actions that pull and rebuild it.
 
 ## An example
 
@@ -34,7 +35,7 @@ A missing file means nothing, and so does an empty one. Claudette's own reposito
 }
 ```
 
-The top level is an object with two lists, `actions` and `links`. Other keys are ignored, and kept when Claudette saves the file from Settings.
+The top level is an object with two lists, `actions` and `links`. Other keys are ignored, and kept when Deventry saves the file from Settings.
 
 ## Actions
 
@@ -77,12 +78,12 @@ Any other word in braces makes the link greyed out: "Unknown placeholder …: us
 
 ## What's skipped
 
-Claudette reads both files tolerantly:
+Deventry reads both files tolerantly:
 
 - Comments (`//` and `/* … */`) and trailing commas are fine, and so is a byte order mark at the start.
 - Unknown fields are ignored.
-- An entry it can't use is skipped on its own, with a reason that the project's menu and the Project page show, such as "claudette.json: actions[2] has no command, so it was skipped." The rest of the file still works.
-- A file that isn't JSON is skipped whole, with the parser's reason: "claudette.json isn't valid JSON, so it was skipped: …". So is one whose top level isn't an object: "claudette.json isn't a JSON object, so it was skipped. It should look like { "actions": [ … ], "links": [ … ] }." A file that can't be read at all, because it's locked or you can't open it, says so too.
+- An entry it can't use is skipped on its own, with a reason that the project's menu and the Project page show, such as "deventry.json: actions[2] has no command, so it was skipped." The rest of the file still works.
+- A file that isn't JSON is skipped whole, with the parser's reason: "deventry.json isn't valid JSON, so it was skipped: …". So is one whose top level isn't an object: "deventry.json isn't a JSON object, so it was skipped. It should look like { "actions": [ … ], "links": [ … ] }." A file that can't be read at all, because it's locked or you can't open it, says so too.
 
 These skip an entry:
 
@@ -96,9 +97,9 @@ These skip an entry:
 
 An action for another system or with a missing `ifExists` path isn't skipped with a reason. It just isn't shown.
 
-## When Claudette reads them
+## When Deventry reads them
 
-Claudette doesn't watch the files. It reads them again when you select the tab, when Claudette comes to the front, when a turn ends, when the project's menu opens and after Settings saves. **Refresh** in the menu does it on demand.
+Deventry doesn't watch the files. It reads them again when you select the tab, when Deventry comes to the front, when a turn ends, when the project's menu opens and after Settings saves. **Refresh** in the menu does it on demand.
 
 When you edit entries in Settings, saving replaces only the list you edited, keeps every other key and each entry's other fields, such as `os`, and writes the file indented. **Comments are dropped**, because JSON can't keep them. A file that isn't valid JSON is never overwritten: Settings shows the reason and asks you to fix the file by hand first.
 

@@ -7,7 +7,7 @@ summary: "Claude sometimes stops to ask you something with options to pick from,
 
 # Questions
 
-Claude sometimes stops to ask you something with options to pick from, instead of guessing. The question shows as a card in the conversation, and the tab waits on you: its row says *Needs your input*, and a [notification](../away/notifications.md) goes out if Claudette isn't in front.
+Claude sometimes stops to ask you something with options to pick from, instead of guessing. The question shows as a card in the conversation, and the tab waits on you: its row says *Needs your input*, and a [notification](../away/notifications.md) goes out if Deventry isn't in front.
 
 ## Answering
 

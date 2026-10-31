@@ -26,24 +26,24 @@ A single click on a file in the [explorer](the-explorer.md) opens it in the prev
 - A click selects a tab, and a middle click closes it.
 - Drag a tab to move it along the row.
 - When the tabs don't fit, the row scrolls sideways (the mouse wheel works) and keeps the selected tab in view. The **⋯** at its end, **Every open file**, lists every open file.
-- Drag a tab out of Claudette's window to open its file in a window of its own ([below](#in-a-window-of-its-own)).
+- Drag a tab out of Deventry's window to open its file in a window of its own ([below](#in-a-window-of-its-own)).
 
 ## In a window of its own
 
-A file can leave the Files tab for a window of its own, so you can keep the code on another screen, or beside Claudette, while the conversation has all of Claudette's window. To open one:
+A file can leave the Files tab for a window of its own, so you can keep the code on another screen, or beside Deventry, while the conversation has all of Deventry's window. To open one:
 
 - right-click its tab and choose **Open in a window**;
 - click the window button at the right of the row, before **⋯**, for the file showing;
-- drag its tab out of Claudette's window and let go where you want it;
+- drag its tab out of Deventry's window and let go where you want it;
 - or, with the Files tab focused, choose **Open the file in a window** in the [command palette](../tabs/the-command-palette.md).
 
-The window has the file's name in its title bar, with a dot while it has unsaved edits, and its project's name. Under it, a toolbar has the file's path and **Put back**. The rest is the file as its tab shows it: the editor, Claude's changes, the chip and the Markdown preview, with your edits, the cursor and where you'd scrolled. It follows your zoom, and the Files tab's keys work in it: `Ctrl/Cmd+S` saves it, **Find in files** opens over Claudette's window, and `Ctrl/Cmd+W` puts it back.
+The window has the file's name in its title bar, with a dot while it has unsaved edits, and its project's name. Under it, a toolbar has the file's path and **Put back**. The rest is the file as its tab shows it: the editor, Claude's changes, the chip and the Markdown preview, with your edits, the cursor and where you'd scrolled. It follows your zoom, and the Files tab's keys work in it: `Ctrl/Cmd+S` saves it, **Find in files** opens over Deventry's window, and `Ctrl/Cmd+W` puts it back.
 
 Meanwhile its tab stays in the row, with a small window after its name. Click it, or choose it in **⋯**, to bring the window forward. Opening the file again, from a reply, Changed files or **Go to file**, goes to its window too, at the line. `Ctrl+PageDown` and `Ctrl+PageUp` skip it. When every open file is in a window, the editor's place says so.
 
 To put it back, click **Put back** in the window's toolbar, choose **Put back** on its tab's menu, or close the window. The file shows in its tab again, unsaved edits and all. Closing the file from its tab closes its window, asking first about unsaved edits.
 
-Windows aren't kept: the next time Claudette starts, a file that was in one is back in its tab.
+Windows aren't kept: the next time Deventry starts, a file that was in one is back in its tab.
 
 ## Pinning
 

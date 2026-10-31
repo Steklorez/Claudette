@@ -36,7 +36,7 @@ Settings → Keyboard → **Quick suffixes** lists them. **Edit suffixes…** at
 
 - **Add suffix** adds one. Give it a label, which shows in the menu and on the chip, and the text that's added to the message.
 - The arrows ↑ and ↓ move a suffix, which also sets its number in the menu. **Delete** removes it.
-- **Shortcut**: click the button, then press the keys. **Remove** clears it. Claudette refuses a shortcut another command or suffix already uses.
+- **Shortcut**: click the button, then press the keys. **Remove** clears it. Deventry refuses a shortcut another command or suffix already uses.
 - The section's **Reset to defaults** replaces the list with the five built-in suffixes. Your own are removed.
 
 ### The built-in suffixes

@@ -1,17 +1,18 @@
 ---
-title: Claudette on the composer
-parent: Claudette
+title: Joulene on the composer
+parent: Joulene
 nav_order: 1
-summary: "Claudette stands on the top edge of the message box and does little things now and then, the way a small mascot sits above the message box in the Claude apps."
+summary: "Joulene stands on the top edge of the message box and does little things now and then, the way a small mascot sits above the message box in the Claude apps."
+redirect_from: /claudette/claudette-on-the-composer/
 ---
 
-# Claudette on the composer
+# Joulene on the composer
 
-Claudette stands on the top edge of the message box and does little things now and then, the way a small mascot sits above the message box in the Claude apps. She keeps you company, and what she does follows what your tab is doing.
+Joulene stands on the top edge of the message box and does little things now and then, the way a small mascot sits above the message box in the Claude apps. She keeps you company, and what she does follows what your tab is doing.
 
-![Claudette on the composer: climbing up, looking around, dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up.](../screenshots/joulene.gif)
+![Joulene on the composer: climbing up, looking around, dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up.](../screenshots/joulene.gif)
 
-{% include shot.html name="claudette-standard" alt="Claudette standing on the message box, close up." %}
+{% include shot.html name="deventry-standard" alt="Joulene standing on the message box, close up." %}
 
 ## Where she stands
 
@@ -23,7 +24,7 @@ She's on the selected tab's composer, and follows you from tab to tab.
 
 ## What she does
 
-Standing about, she blinks, looks around, walks a few steps, leans on the edge, sits on it with her legs swinging, stretches, waves, hops, dances, twirls, yawns, taps her foot, tosses a ball, looks puzzled, blows a heart or sneezes. Now and then, at most every three minutes, she looks down, loses her footing, falls off behind the box, and climbs back up.
+Standing about, she blinks, looks around, walks a few steps, leans on the edge, sits on it with her shoes swinging under her gown, stretches, waves, hops, dances, twirls, yawns, taps her foot, tosses a ball, looks puzzled, blows a heart or sneezes. Sometimes her cave appears beside her in a puff: she walks into it, her eyes look out of the dark, and she comes back out to wave before it goes. Now and then, at most every three minutes, she looks down, loses her footing, falls off behind the box, and climbs back up.
 
 ### While Claude works
 
@@ -71,21 +72,21 @@ Now and then she holds up a tip in a bubble: a shortcut as it's bound now, or on
 - **Click** her and she's startled, with a "!" over her head. Click again within a second and a half and she's tipped off the edge, and climbs back up.
 - Poke her ten times within a minute and she turns her back under a storm cloud for a few seconds. Clicks do nothing until she's come round.
 - **Press and drag** to pick her up: she hangs from the pointer, arms up. Let go above the edge and she falls onto it where she is, then walks home. Let go below it and she falls behind the box and climbs back up.
-- **Right-click** her for a menu: the games, below, **Hide Claudette**, and **Claudette settings…**, which opens her settings in Settings → Appearance.
+- **Right-click** her for a menu: the games, below, **Hide Joulene**, and **Joulene settings…**, which opens her settings in Settings → Appearance.
 
 Only her figure takes clicks. The rest of her layer lets them through to the conversation.
 
 ## Her looks
 
-Her hair tie is the color of the tab's folder group in the sidebar, and so are the heart she blows and the ball she tosses ([Folder groups](../tabs/folder-groups.md)). She dresses for the date, by your computer's clock: a witch's hat from October 24, Santa's hat from December 1 to December 26, and a nightcap from 11 at night to 5 in the morning, when she also yawns more.
+The gem in her circlet is the color of the tab's folder group in the sidebar, and so are the heart she blows and the ball she tosses ([Folder groups](../tabs/folder-groups.md)). She dresses for the date, by your computer's clock: a witch's hat from October 24, Santa's hat from December 1 to December 26, and a nightcap from 11 at night to 5 in the morning, when she also yawns more.
 
 ## Games
 
-The right-click menu also has **Play tic-tac-toe**, **Play Connect Four**, **Play hangman** and **Play Minesweeper**. See [Games with Claudette](games-with-claudette.md).
+The right-click menu also has **Play tic-tac-toe**, **Play Connect Four**, **Play hangman** and **Play Minesweeper**. See [Games with Joulene](games-with-joulene.md).
 
 ## Hide her, and bring her back
 
-Choose **Hide Claudette** on her menu, or turn off Settings → Appearance → **Show Claudette on the composer**. Turn the setting back on to bring her back.
+Choose **Hide Joulene** on her menu, or turn off Settings → Appearance → **Show Joulene on the composer**. Turn the setting back on to bring her back.
 
 ## Reduced motion
 
@@ -99,11 +100,11 @@ All of them are in Settings → Appearance.
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Show Claudette on the composer** | On | Shows her, or hides her. |
+| **Show Joulene on the composer** | On | Shows her, or hides her. |
 | **Size** | Medium | **Small**, **Medium** or **Large**: 24, 36 or 48 pixels tall. |
 | **How often** | **Lively: every 10 to 30 seconds** | Or **Calm: every 30 to 90 seconds**. |
 | **Shares tips** | On | Lets her hold up tips. |
-| **Games with Claudette** | On | See [Games with Claudette](games-with-claudette.md). |
+| **Games with Joulene** | On | See [Games with Joulene](games-with-joulene.md). |
 | **Motion** | **Follow the system** | **Reduce motion** stops her. |
 
 **Size**, **How often** and **Shares tips** work while she's shown. These settings sync with the other Appearance settings if you [sync your settings](../history/settings-sync.md).

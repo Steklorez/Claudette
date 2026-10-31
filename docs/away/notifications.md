@@ -7,9 +7,9 @@ summary: "Your OS's notifications when a tab needs you and you aren't looking: a
 
 # Notifications
 
-Claudette sends your operating system's own notifications when something needs you and you aren't looking at it: a tab finished, a prompt is waiting, a tab's Claude Code stopped. Each kind has its own switch.
+Deventry sends your operating system's own notifications when something needs you and you aren't looking at it: a tab finished, a prompt is waiting, a tab's Claude Code stopped. Each kind has its own switch.
 
-On Windows they're toast notifications, on macOS they come from the Notification Center, and on Linux Claudette uses `notify-send`. Without `notify-send` there are no notifications on Linux, and a macOS build run with `dotnet run` has none either, since macOS needs the app itself. Settings → Notifications says so when notifications aren't available.
+On Windows they're toast notifications, on macOS they come from the Notification Center, and on Linux Deventry uses `notify-send`. Without `notify-send` there are no notifications on Linux, and a macOS build run with `dotnet run` has none either, since macOS needs the app itself. Settings → Notifications says so when notifications aren't available.
 
 ## The kinds
 
@@ -31,9 +31,9 @@ A tab's notification carries the tab's name as its title.
 
 ## When they're skipped
 
-- While Claudette is in front and the tab is on screen, selected or beside the one that is, a notification about that tab doesn't come. You're looking at it.
-- Notifications that aren't about one tab, such as usage alerts, sign-in and updates, are skipped while Claudette is in front, because the header, the sign-in banner or the sign-in screen already shows them.
-- A finished project action comes whichever tab is showing, and is skipped only while Claudette is in front, since the sidebar already shows the job.
+- While Deventry is in front and the tab is on screen, selected or beside the one that is, a notification about that tab doesn't come. You're looking at it.
+- Notifications that aren't about one tab, such as usage alerts, sign-in and updates, are skipped while Deventry is in front, because the header, the sign-in banner or the sign-in screen already shows them.
+- A finished project action comes whichever tab is showing, and is skipped only while Deventry is in front, since the sidebar already shows the job.
 - A kind whose switch is off never comes.
 
 ## One for each subject
@@ -42,7 +42,7 @@ A newer notification replaces an older one of the same kind for the same tab. A 
 
 ## Clicking one
 
-A click brings Claudette to the front and goes to what the notification is about.
+A click brings Deventry to the front and goes to what the notification is about.
 
 - A tab's notification selects the tab, and opens its group if it was collapsed.
 - A usage alert opens the [Usage window](../usage/the-usage-window.md).
@@ -51,7 +51,7 @@ A click brings Claudette to the front and goes to what the notification is about
 
 ## Notifications and your phone
 
-These are the notifications on this computer. Pushes to a phone are separate: they come from Claude Code, only when you've turned them on there, and only while Claudette isn't in front. See [The Claude app](the-claude-app.md).
+These are the notifications on this computer. Pushes to a phone are separate: they come from Claude Code, only when you've turned them on there, and only while Deventry isn't in front. See [The Claude app](the-claude-app.md).
 
 ## Settings
 

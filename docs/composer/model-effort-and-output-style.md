@@ -9,7 +9,7 @@ summary: "Two buttons on the left of the composer bar show which model the tab u
 
 Two buttons on the left of the [composer bar](the-composer-bar.md) show which model the tab uses and how hard it thinks. They always show what the session is actually using, including changes you made with `/model` or another slash command.
 
-The list of models and each model's effort levels come from Claude Code, not from a list built into Claudette. [Claude Code's model configuration](https://code.claude.com/docs/en/model-config) describes them.
+The list of models and each model's effort levels come from Claude Code, not from a list built into Deventry. [Claude Code's model configuration](https://code.claude.com/docs/en/model-config) describes them.
 
 ## Switch the model
 

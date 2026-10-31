@@ -25,7 +25,7 @@ What the commands do is Claude Code's: see [Claude Code's commands](https://code
 
 `@` at the start of a word lists the tab's working folder, under **Files and folders**.
 
-- In a git repository the list follows `.gitignore`. Elsewhere Claudette walks the folder, skipping `.git`, `node_modules`, `bin`, `obj` and similar, and stops at 20,000 entries.
+- In a git repository the list follows `.gitignore`. Elsewhere Deventry walks the folder, skipping `.git`, `node_modules`, `bin`, `obj` and similar, and stops at 20,000 entries.
 - Typing narrows it, ignoring case. The best matches are a name that starts with what you typed, then a path that does (`src/de` finds `src/deep/`), then a path segment, then a name or path that contains it, then its letters in order, preferring the starts of words (`tvm` finds `TabViewModel.cs`). With nothing typed, the top of the folder is listed, folders first.
 - Picking a file inserts `@path/to/file `, relative to the working folder. Picking a folder inserts `@folder/` and lists what's inside. A path with spaces is quoted: `@"docs/my notes.md"`.
 - A word that matches nothing says *No matching files*, and an empty folder *No files in this folder*.
@@ -49,11 +49,11 @@ The files in the tab's [extra folders](../tabs/tab-settings.md) are in the list 
 The same `@` list starts with the sessions Claude can message, up to eight, and its heading reads **Sessions and files**. Each is marked by what it is:
 
 - *Sub-thread*, one of this thread's sub-threads.
-- *Tab*, another tab of Claudette's.
+- *Tab*, another tab of Deventry's.
 - *Session · C:\work\api*, another Claude Code session on this machine, such as a terminal's, with its folder.
 - *Subagent · Explore*, one of this tab's subagents, with its type.
 
-Picking one inserts `@name `. When you send, Claudette tells Claude how to reach each one, and the card shows *Told Claude how to reach Art page* under your message. The details are in [Reaching other sessions](../threads/reaching-other-sessions.md), and threads in [What threads are](../threads/what-threads-are.md).
+Picking one inserts `@name `. When you send, Deventry tells Claude how to reach each one, and the card shows *Told Claude how to reach Art page* under your message. The details are in [Reaching other sessions](../threads/reaching-other-sessions.md), and threads in [What threads are](../threads/what-threads-are.md).
 
 ## Keys
 

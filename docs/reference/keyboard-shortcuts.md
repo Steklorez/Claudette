@@ -2,12 +2,12 @@
 title: Keyboard shortcuts
 parent: Reference
 nav_order: 1
-summary: "Every shortcut Claudette handles, with its default on Windows and Linux and on macOS."
+summary: "Every shortcut Deventry handles, with its default on Windows and Linux and on macOS."
 ---
 
 # Keyboard shortcuts
 
-Every shortcut Claudette handles, with its default on Windows and Linux and on macOS. Settings → Keyboard lists the rebindable ones and lets you change them ([Keyboard](../settings/keyboard.md)). The fixed keys at the end can't be changed. A shortcut on a digit, `+` or `-` also answers to the number pad's key.
+Every shortcut Deventry handles, with its default on Windows and Linux and on macOS. Settings → Keyboard lists the rebindable ones and lets you change them ([Keyboard](../settings/keyboard.md)). The fixed keys at the end can't be changed. A shortcut on a digit, `+` or `-` also answers to the number pad's key.
 
 On Windows and Linux, `Ctrl` is the command key. On macOS the command key is `Cmd`, and `Ctrl` is the Control key, which `Ctrl+Tab` and `Ctrl+Shift+Tab` use, and the editor's go-to-line key.
 
@@ -118,8 +118,8 @@ These aren't in the list of rebindable shortcuts.
 
 ### Games
 
-While the Games page has the focus, the number keys play tic-tac-toe's squares (1 to 9 from the top left) and Connect Four's columns (1 to 7), and the letters guess in hangman. In Minesweeper, the arrow keys move between the squares, `Space` or `Enter` opens one and `F` flags it. None of it reaches the message box. See [Games with Claudette](../claudette/games-with-claudette.md).
+While the Games page has the focus, the number keys play tic-tac-toe's squares (1 to 9 from the top left) and Connect Four's columns (1 to 7), and the letters guess in hangman. In Minesweeper, the arrow keys move between the squares, `Space` or `Enter` opens one and `F` flags it. None of it reaches the message box. See [Games with Joulene](../joulene/games-with-joulene.md).
 
 ## See also
 
-- [Keyboard](../settings/keyboard.md), for changing a shortcut and the keys Claudette refuses.
+- [Keyboard](../settings/keyboard.md), for changing a shortcut and the keys Deventry refuses.

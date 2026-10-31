@@ -14,7 +14,7 @@ Several tabs in one folder edit the same files, so one tab's changes can trip an
 1. Right-click a folder group's label and choose **New tab in a worktree**, or use **New tab in a worktree** in the [command palette](the-command-palette.md) for the selected tab.
 2. The tab opens in that folder. Claude Code makes the worktree when it starts, at `.claude/worktrees/<name>` in the repository, on the branch `worktree-<name>`.
 
-Claudette picks the name, two words such as `brisk-otter`, that no other folder, tab or leftover branch there has. The item shows only for a folder in a git repository.
+Deventry picks the name, two words such as `brisk-otter`, that no other folder, tab or leftover branch there has. The item shows only for a folder in a git repository.
 
 ## Working there
 
@@ -47,7 +47,7 @@ A folder's actions marked to run in each new worktree, such as installing depend
 
 ## Cleaning up worktrees
 
-Kept worktrees pile up. Claudette can remove them on its own. Both rules are off by default.
+Kept worktrees pile up. Deventry can remove them on its own. Both rules are off by default.
 
 - Settings → Git → **Worktrees** → **Remove worktrees once everything in them is merged**: a worktree with nothing of its own (no uncommitted changes, and every commit on another branch) goes with its branch, a day after a tab last used it.
 - **Remove worktrees no tab has used for**: *Never* (the default), 7, 14, 30 or 90 days. The worktree goes, and its branch stays when it has commits on no other branch, so nothing committed is lost.
@@ -55,7 +55,7 @@ Kept worktrees pile up. Claudette can remove them on its own. Both rules are off
 
 A cleanup pass never removes a worktree an open tab works in or its session changed files in, one with uncommitted changes or untracked files, or one Claude Code didn't make for a worktree tab. Files git ignores, such as build output, go with a removed worktree. The session stays in History, and opening it finds its folder gone: see [Closing and restoring](closing-and-restoring.md#a-folder-thats-gone).
 
-Claudette looks a minute after it starts and then every hour, while either rule is on.
+Deventry looks a minute after it starts and then every hour, while either rule is on.
 
 ## Settings
 

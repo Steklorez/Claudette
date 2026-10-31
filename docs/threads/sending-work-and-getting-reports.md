@@ -11,7 +11,7 @@ You give the work to the thread's Claude in the thread's own tab, as you would t
 
 ## Sending
 
-The thread's Claude uses Claude Code's own `SendMessage` tool with a sub-thread's name. Claudette sees the call first and delivers the message into that sub-thread's tab itself.
+The thread's Claude uses Claude Code's own `SendMessage` tool with a sub-thread's name. Deventry sees the call first and delivers the message into that sub-thread's tab itself.
 
 By default the thread asks you first. A card in the strip over the thread's composer says *Send this to Art page?*, shows the message, and has two buttons:
 
@@ -32,7 +32,7 @@ To skip the question, turn off **Ask before sending to sub-threads**, in the tab
 
 ## Getting the report
 
-Claudette waits on a sub-thread from the moment it delivers it a message until the turns that message started have ended. When none of the thread's sub-threads is waited on any more, the thread gets one message, *From the sub-threads*, with each one's outcome and last reply. An outcome is one of:
+Deventry waits on a sub-thread from the moment it delivers it a message until the turns that message started have ended. When none of the thread's sub-threads is waited on any more, the thread gets one message, *From the sub-threads*, with each one's outcome and last reply. An outcome is one of:
 
 - Finished.
 - Stopped by you before it finished.

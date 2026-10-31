@@ -1,8 +1,8 @@
-# Claudette's user guide (GUIDE.md). GitHub Pages builds it from docs/ on main and publishes it at the domain in CNAME.
+# Deventry's user guide (GUIDE.md). GitHub Pages builds it from docs/ on main and publishes it at the domain in CNAME.
 # So only GitHub Pages' own plugins (https://pages.github.com/versions/) and no build scripts of ours.
-title: Claudette
-description: How to use Claudette, the desktop app that puts Claude Code in a native window.
-url: https://claudette.dotbunny.com
+title: Deventry
+description: How to use Deventry, the desktop app that puts agents in a native window.
+url: https://deventry.app
 lang: en
 
 # A page's address is a folder, /tabs/opening-tabs/ rather than /tabs/opening-tabs.html (GUIDE.md, "The site").
@@ -21,11 +21,11 @@ redirect_from:
   json: false
 
 # The repository, for site.github: the Downloads page lists its releases.
-repository: dotBunny/Claudette
+repository: dotBunny/Deventry
 
 logo: /assets/deventry.svg
 favicon_ico: /assets/favicon.ico
-color_scheme: claudette-light
+color_scheme: deventry-light
 
 # The picture a link to any page shows where it's shared, which jekyll-seo-tag writes as og:image and twitter:image: the
 # social card, drawn by tools/Deventry.Demo/social-card.ps1 (GUIDE.md, "The site").
@@ -37,7 +37,7 @@ defaults:
         path: /assets/social-card.png
         width: 1280
         height: 640
-        alt: "Claudette: Claude Code in a real desktop window. Every session in a tab, every change in sight."
+        alt: "Deventry: your agents in a real desktop window. Every session in a tab, every change in sight."
 
 search_enabled: true
 search:
@@ -54,17 +54,17 @@ aux_links:
   Home: /
   Downloads: /downloads/
   Discord: /discord/
-  GitHub: https://github.com/dotBunny/Claudette
+  GitHub: https://github.com/dotBunny/Deventry
 
 # The changelog is CHANGELOG.md itself, last in the sidebar (GUIDE.md, "The changelog").
 nav_external_links:
   - title: Changelog
-    url: https://github.com/dotBunny/Claudette/blob/main/CHANGELOG.md
+    url: https://github.com/dotBunny/Deventry/blob/main/CHANGELOG.md
     hide_icon: false
 
 gh_edit_link: true
 gh_edit_link_text: Edit this page on GitHub
-gh_edit_repository: https://github.com/dotBunny/Claudette
+gh_edit_repository: https://github.com/dotBunny/Deventry
 gh_edit_branch: main
 gh_edit_source: docs
 gh_edit_view_mode: edit

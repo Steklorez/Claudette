@@ -7,7 +7,7 @@ summary: "Separate from your plan's limits, each tab has a context window: how m
 
 # Context and compacting
 
-Separate from your plan's limits, each tab has a context window: how much of the conversation Claude can hold at once. Claudette shows how full each tab's is, warns you when it's nearly full, and can compact it for you.
+Separate from your plan's limits, each tab has a context window: how much of the conversation Claude can hold at once. Deventry shows how full each tab's is, warns you when it's nearly full, and can compact it for you.
 
 ## The context indicator
 
@@ -29,7 +29,7 @@ Click the context indicator or the ring to see what's in the window, as Claude C
 
 The breakdown refreshes when the session starts and after each turn.
 
-If this version of Claude Code can't say what's in the window, Claudette shows an estimate from the last call instead: how much is in the context and how much is free, with a note that it's estimated.
+If this version of Claude Code can't say what's in the window, Deventry shows an estimate from the last call instead: how much is in the context and how much is free, with a note that it's estimated.
 
 ## Compacting
 

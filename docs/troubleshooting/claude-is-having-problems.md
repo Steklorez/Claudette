@@ -2,12 +2,12 @@
 title: Claude is having problems
 parent: Troubleshooting
 nav_order: 7
-summary: "When Claude itself has trouble, tabs fail in ways that look like Claudette's fault or yours: retries, overloaded errors, a sign-in that won't finish."
+summary: "When Claude itself has trouble, tabs fail in ways that look like Deventry's fault or yours: retries, overloaded errors, a sign-in that won't finish."
 ---
 
 # Claude is having problems
 
-When Claude itself has trouble, tabs fail in ways that look like Claudette's fault or yours: retries, overloaded errors, a sign-in that won't finish. Claudette reads Claude's public status page and tells you, with a dot in the header and a banner across the top while there's an incident.
+When Claude itself has trouble, tabs fail in ways that look like Deventry's fault or yours: retries, overloaded errors, a sign-in that won't finish. Deventry reads Claude's public status page and tells you, with a dot in the header and a banner across the top while there's an incident.
 
 ## The dot
 
@@ -20,9 +20,9 @@ The dot sits at the right of the header, before your account's name.
 | Red | *Claude has an outage* |
 | Grey | *Status unknown*, or not checked yet |
 
-Hover it for the level, each service Claudette watches and its status, the latest incident and where it's at, any maintenance under way, and when it last checked. Click it to open status.claude.com.
+Hover it for the level, each service Deventry watches and its status, the latest incident and where it's at, any maintenance under way, and when it last checked. Click it to open status.claude.com.
 
-Claudette watches the services it relies on: Claude Code, the Claude API (what Claude Code calls for the model) and claude.ai (sign-in, and the Claude app). The Console and other products don't count.
+Deventry watches the services it relies on: Claude Code, the Claude API (what Claude Code calls for the model) and claude.ai (sign-in, and the Claude app). The Console and other products don't count.
 
 ## The banner
 
@@ -39,7 +39,7 @@ The banner goes by itself when everything is operational again, and the dot stay
 - Every 5 minutes after that. A failed check backs off to 10 minutes, then 20, then 30, and the first good answer goes back to every 5.
 - Straight away, at most once a minute, when a tab's request fails on Anthropic's side: a server error or an overloaded reply that Claude Code retries. A rate limit, a sign-in problem or a bad request is yours, and doesn't trigger a check.
 
-The check reads status.claude.com's public summary. There's no sign-in, and Claudette sends nothing but the request.
+The check reads status.claude.com's public summary. There's no sign-in, and Deventry sends nothing but the request.
 
 ## What to do
 

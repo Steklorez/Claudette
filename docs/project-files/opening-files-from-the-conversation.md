@@ -39,21 +39,21 @@ Close the file when you're done with it, and the Files tab closes too: the conve
 
 - A program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`) still shows in its folder, since opening it would run it.
 - Binary files, and files over 10 MB, open in the OS's app.
-- An image opens in Claudette's image window, as Settings → **Files and diffs** → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
+- An image opens in Deventry's image window, as Settings → **Files and diffs** → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
 - A folder in the project shows in the explorer, expanded and selected. One elsewhere opens in Explorer, Finder or your file manager.
 - A script (`.bat`, `.ps1`, `.sh`, `.py`, `.js`) opens in the editor as text, since showing its text doesn't run it.
 
 ## Using the OS's app instead
 
-Settings → **Files and diffs** → **Open files in** has two choices, **Claudette's editor, at the line named** (the default) and **The app the OS uses for the file**. With the second, every file goes where it went before the Files tab existed, and **Show a file clicked in a conversation** turns off, since it only applies to the editor.
+Settings → **Files and diffs** → **Open files in** has two choices, **Deventry's editor, at the line named** (the default) and **The app the OS uses for the file**. With the second, every file goes where it went before the Files tab existed, and **Show a file clicked in a conversation** turns off, since it only applies to the editor.
 
 ## Settings
 
 | Setting | Default | Where |
 |---|---|---|
-| **Open files in** | **Claudette's editor, at the line named** | Settings → **Files and diffs** |
+| **Open files in** | **Deventry's editor, at the line named** | Settings → **Files and diffs** |
 | **Show a file clicked in a conversation** | **Beside the conversation** (or **In its place**) | Settings → **Files and diffs** |
-| **Open images in** | **Claudette's image viewer** (or **The app the OS uses for the file**) | Settings → **Files and diffs**, explained in [Images](../conversation/images.md#settings) |
+| **Open images in** | **Deventry's image viewer** (or **The app the OS uses for the file**) | Settings → **Files and diffs**, explained in [Images](../conversation/images.md#settings) |
 
 ## Shortcuts
 

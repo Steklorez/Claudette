@@ -7,7 +7,7 @@ summary: "A permission mode decides how much Claude Code asks about before it ac
 
 # Permission modes
 
-A permission mode decides how much Claude Code asks about before it acts. The modes are Claude Code's own ([its permissions docs](https://code.claude.com/docs/en/permissions) describe them); Claudette puts a picker for them on every tab.
+A permission mode decides how much Claude Code asks about before it acts. The modes are Claude Code's own ([its permissions docs](https://code.claude.com/docs/en/permissions) describe them); Deventry puts a picker for them on every tab.
 
 ## Changing a tab's mode
 
@@ -40,7 +40,7 @@ A tab starts in Auto, as a Claude Code session in a terminal does, unless someth
 
 1. The tab's own **Permission mode** in [Tab settings](../tabs/tab-settings.md). Its first choice is named for what you'd get otherwise, such as **Default (Auto)**.
 2. Settings → Tabs → New tabs start with → **Permission mode**.
-3. **Claude Code's default**, the choice that setting starts at, shown as **Claude Code's default (Auto)** once it's known. Claudette reads the settings files Claude Code would: managed settings, the project's `.claude/settings.local.json` and `.claude/settings.json`, then your own `settings.json`. A file that sets `permissions.defaultMode` decides the mode. With none, the tab starts in Auto. If a file turns Auto off, or the model can't use it, the tab starts in Manual.
+3. **Claude Code's default**, the choice that setting starts at, shown as **Claude Code's default (Auto)** once it's known. Deventry reads the settings files Claude Code would: managed settings, the project's `.claude/settings.local.json` and `.claude/settings.json`, then your own `settings.json`. A file that sets `permissions.defaultMode` decides the mode. With none, the tab starts in Auto. If a file turns Auto off, or the model can't use it, the tab starts in Manual.
 
 As in a terminal, a project's own files can't make a tab start in Bypass permissions.
 
@@ -56,4 +56,4 @@ Settings that come only from an organization's managed settings through MDM, the
 ## See also
 
 - [Permission cards](permission-cards.md): what happens when a mode does ask.
-- [How Claudette uses Claude Code](../getting-started/how-claudette-uses-claude-code.md): why your Claude Code settings apply in a tab.
+- [How Deventry uses Claude Code](../getting-started/how-deventry-uses-claude-code.md): why your Claude Code settings apply in a tab.

@@ -27,13 +27,13 @@ A copy of a tab ([Duplicate tab](the-tabs-menu.md#duplicate-tab)) doesn't take y
 
 Other Claude Code sessions message a session by its name, and `claude --resume <name>` in a terminal finds it. With Settings → Claude Code → **Name each tab's session in Claude Code after the tab** on, the tab's name, yours or the generated one, is the session's name there too. It follows a rename, and it's on by default for a new install. A settings file saved by an earlier version keeps the choice it had.
 
-Without it, Claude Code names a session after its folder with two characters added (`claudette-3f`), so every tab in a folder looks alike to the others' Claude.
+Without it, Claude Code names a session after its folder with two characters added (`deventry-3f`), so every tab in a folder looks alike to the others' Claude.
 
 If another session already has a tab's name, Claude Code adds to it. The [info card](the-tab-info-card.md)'s **Reached as** row shows the name other sessions use. See [Reaching other sessions](../threads/reaching-other-sessions.md).
 
 ## Marks
 
-A mark is a small icon of your own on a tab, meaning whatever you want it to. Claudette gives it no meaning.
+A mark is a small icon of your own on a tab, meaning whatever you want it to. Deventry gives it no meaning.
 
 1. Right-click the tab and open **Mark ▸**.
 2. Pick one: **Check**, **Cross**, **Question mark**, **Star**, **Flag** or **Pause**.
@@ -52,7 +52,7 @@ It isn't a mark, and it isn't in the menu. The tab's own mark stays as it was an
 
 ## Pinning a tab
 
-Pin a tab you want back every time Claudette starts.
+Pin a tab you want back every time Deventry starts.
 
 1. Right-click the tab and choose **Pin tab**.
 2. To undo it, choose **Unpin tab** in the same place.
@@ -62,7 +62,7 @@ A pinned tab shows a pin icon and sits at the start of its folder group. It come
 ## Settings
 
 - Settings → Claude Code → **Name each tab's session in Claude Code after the tab**: on by default for a new install.
-- Settings → General → **Also restore unpinned tabs when Claudette starts**, which decides whether tabs you haven't pinned come back too. See [Closing and restoring](closing-and-restoring.md#unpinned-tabs).
+- Settings → General → **Also restore unpinned tabs when Deventry starts**, which decides whether tabs you haven't pinned come back too. See [Closing and restoring](closing-and-restoring.md#unpinned-tabs).
 
 ## See also
 

@@ -9,7 +9,7 @@ summary: "The strip across the top of the window shows how much of your plan's l
 
 The strip across the top of the window shows how much of your plan's limits you've used, how fast you're using them, and when you'll hit the limit at that rate. It's there whichever tab is selected, and it keeps up even when no tab is working.
 
-{% include shot.html name="standard" alt="Claudette's window with the usage header across the top: the session meter and its countdown, a small chart, the weekly meters and the line that says where the session is heading" %}
+{% include shot.html name="standard" alt="Deventry's window with the usage header across the top: the session meter and its countdown, a small chart, the weekly meters and the line that says where the session is heading" %}
 
 ## What's in it
 
@@ -48,8 +48,8 @@ It's one of these:
 
 - *At this rate you'll hit the limit in 1h 05m, 1h 09m before it resets.* In amber or red. At the pace of the last half hour, you'd reach 100% before the window resets.
 - *On track: about 70% used when the session resets.* At that pace, you'd get through the window.
-- *No recent usage.* Nothing has been used lately, so there's no pace to project. Claudette says so instead of carrying on a stale rate.
-- *Not enough data yet.* Claudette needs a few minutes of readings to measure a pace.
+- *No recent usage.* Nothing has been used lately, so there's no pace to project. Deventry says so instead of carrying on a stale rate.
+- *Not enough data yet.* Deventry needs a few minutes of readings to measure a pace.
 - *You've hit the limit.* See [When a limit stops a task](when-a-limit-stops-a-task.md).
 
 The pace is measured over the last 30 minutes by default, so one big turn doesn't swing the projection. Change the window with **Burn rate window (minutes)**.
@@ -64,23 +64,23 @@ If your plan has usage credits, they pay for Claude once a limit is used up, up 
 - **Manage on claude.ai** opens your plan's usage on claude.ai, where you turn usage credits off or change the cap.
 - It has no **Dismiss**. It goes by itself when credits stop paying: the limit resets, credits are turned off or reach the cap, or Claude Code says they aren't paying.
 - It shows whichever tab is selected, one on an [API-key account](../accounts/api-key-accounts.md) too, since your plan's other tabs are still spending them, apart from [those that don't use them](tabs-that-dont-use-usage-credits.md).
-- Just after Claudette starts, it waits for the first reading or the next turn.
+- Just after Deventry starts, it waits for the first reading or the next turn.
 
 An OS notification tells you when credits start paying: see [Alerts](alerts.md).
 
 ## Model meters
 
-**Show model-specific weekly limits** (Settings → Usage, on by default) shows the model meters. Claude Code reports them. If a version of Claude Code stops reporting them, the model meters go away and the rest of the header carries on, unless **If Claude Code stops reporting them, read them from /usage** is on. Then Claudette reads the text Claude Code prints for `/usage` instead. That costs nothing, but it can break when Claude Code changes the wording, so it's off by default.
+**Show model-specific weekly limits** (Settings → Usage, on by default) shows the model meters. Claude Code reports them. If a version of Claude Code stops reporting them, the model meters go away and the rest of the header carries on, unless **If Claude Code stops reporting them, read them from /usage** is on. Then Deventry reads the text Claude Code prints for `/usage` instead. That costs nothing, but it can break when Claude Code changes the wording, so it's off by default.
 
 ## How current the numbers are
 
-Claudette reads your usage when it starts, after each turn (at most once a minute) and every 5 minutes otherwise, and the meters also move as your tabs work. When the numbers are more than 10 minutes old, for example just after launch before the first reading, the header adds *as of 14:02* beside the line under the session meter.
+Deventry reads your usage when it starts, after each turn (at most once a minute) and every 5 minutes otherwise, and the meters also move as your tabs work. When the numbers are more than 10 minutes old, for example just after launch before the first reading, the header adds *as of 14:02* beside the line under the session meter.
 
-Within one window a meter only goes up. A reading lower than the one shown, for the same window, is out of date, so Claudette keeps the higher one.
+Within one window a meter only goes up. A reading lower than the one shown, for the same window, is out of date, so Deventry keeps the higher one.
 
 ## When there are no meters
 
-A sign-in with no plan limits, such as an API key, has no meters, and the header just says **Claudette**. If Claudette can't start tracking usage, the header says **Usage unavailable** and why, and your tabs keep working.
+A sign-in with no plan limits, such as an API key, has no meters, and the header just says **Deventry**. If Deventry can't start tracking usage, the header says **Usage unavailable** and why, and your tabs keep working.
 
 ## Opening the details
 

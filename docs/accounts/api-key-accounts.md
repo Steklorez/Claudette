@@ -21,7 +21,7 @@ The account appears above the form. Now choose where it's used: [a folder's acco
 
 ## Where the key is kept
 
-The key goes only to your computer's credential store: Windows Credential Manager, the macOS Keychain, or the Secret Service through `secret-tool` on Linux. It's never in Claudette's files, a command line, the environment or a log, and it's never synced. When a tab starts, Claude Code asks Claudette for the key, so it doesn't have to be anywhere else.
+The key goes only to your computer's credential store: Windows Credential Manager, the macOS Keychain, or the Secret Service through `secret-tool` on Linux. It's never in Deventry's files, a command line, the environment or a log, and it's never synced. When a tab starts, Claude Code asks Deventry for the key, so it doesn't have to be anywhere else.
 
 On Linux, adding an account is off until `secret-tool` is installed (the `libsecret-tools` package), and Settings says why.
 
@@ -51,7 +51,7 @@ Each account in Settings → Accounts has:
 
 ## If Claude Code refuses the key
 
-A key Claude Code won't use, or can't get, is that tab's own error: *Claude Code couldn't use Work's API key. Check the key in Settings → Accounts, or move the tab to another account.* If Claudette is installed in a folder whose path has a quote, `$`, `%` or a backtick in it, a tab can't use an API-key account, and says why.
+A key Claude Code won't use, or can't get, is that tab's own error: *Claude Code couldn't use Work's API key. Check the key in Settings → Accounts, or move the tab to another account.* If Deventry is installed in a folder whose path has a quote, `$`, `%` or a backtick in it, a tab can't use an API-key account, and says why.
 
 ## What an API key doesn't have
 

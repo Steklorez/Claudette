@@ -67,5 +67,5 @@ You can change the first in Settings → Keyboard.
 
 ## See also
 
-- [Closing and restoring](../tabs/closing-and-restoring.md) for the tabs that come back by themselves when Claudette starts. History is for the ones that don't.
+- [Closing and restoring](../tabs/closing-and-restoring.md) for the tabs that come back by themselves when Deventry starts. History is for the ones that don't.
 - [The session library](the-session-library.md) for what History adds from other machines.

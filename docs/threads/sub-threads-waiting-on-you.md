@@ -7,7 +7,7 @@ summary: "A sub-thread is a whole tab, so it stops for your permission, question
 
 # Sub-threads waiting on you
 
-A sub-thread is a whole tab, so it stops for your permission, questions and plans like any other. Claudette never answers those for you, and the thread's Claude never hears of them. They'd be easy to miss while you're watching the thread, so the thread shows them in a strip over its composer.
+A sub-thread is a whole tab, so it stops for your permission, questions and plans like any other. Deventry never answers those for you, and the thread's Claude never hears of them. They'd be easy to miss while you're watching the thread, so the thread shows them in a strip over its composer.
 
 ## The strip
 

@@ -20,10 +20,10 @@ Only tabs on your plan's account have the choice. A tab on an [API-key account](
 
 ## What the tab does
 
-Claude Code itself can't turn usage credits off for one session, so Claudette does it, in two ways.
+Claude Code itself can't turn usage credits off for one session, so Deventry does it, in two ways.
 
 - **Before sending.** While usage credits pay (the [notice under the header](the-usage-header.md#when-usage-credits-pay) says so), a message you send isn't sent. It waits in the conversation, marked *Queued: sent when the usage limit resets*, with **Send now**, which sends it anyway, paid for with credits, and **Cancel**, which takes it back to the composer. So do the task list's **Continue** and a thread's messages to the tab.
-- **During a turn.** When a turn runs into the limit and credits begin paying for it, Claudette stops the turn. The request that ran into the limit is already paid for, since Claude Code says so only after it. The conversation gets a note: *Usage credits began paying for Claude, and this tab doesn't use them, so Claudette stopped the turn.* Messages that were waiting their turn are held for the reset too. A turn you sent with **Send now** isn't stopped.
+- **During a turn.** When a turn runs into the limit and credits begin paying for it, Deventry stops the turn. The request that ran into the limit is already paid for, since Claude Code says so only after it. The conversation gets a note: *Usage credits began paying for Claude, and this tab doesn't use them, so Deventry stopped the turn.* Messages that were waiting their turn are held for the reset too. A turn you sent with **Send now** isn't stopped.
 
 ## Waiting for the reset
 

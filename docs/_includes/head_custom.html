@@ -1,12 +1,12 @@
 {%- comment -%}
-  Light or dark as the reader's system is (GUIDE.md, "Light and dark"), and again when that changes: Claudette's own
-  schemes, _sass/color_schemes/claudette-*.scss. The pictures follow the same setting through shot.html, so the page has
+  Light or dark as the reader's system is (GUIDE.md, "Light and dark"), and again when that changes: Deventry's own
+  schemes, _sass/color_schemes/deventry-*.scss. The pictures follow the same setting through shot.html, so the page has
   no theme switch of its own.
 {%- endcomment -%}
 <script>
   (function () {
     var dark = window.matchMedia('(prefers-color-scheme: dark)');
-    function follow() { jtd.setTheme(dark.matches ? 'claudette-dark' : 'claudette-light'); }
+    function follow() { jtd.setTheme(dark.matches ? 'deventry-dark' : 'deventry-light'); }
     follow();
     dark.addEventListener('change', follow);
   })();
@@ -18,7 +18,7 @@
 {%- endcomment -%}
 <script>
   (function () {
-    var key = 'claudette-guide-width';
+    var key = 'deventry-guide-width';
     var root = document.documentElement;
     try { root.classList.toggle('full-width', localStorage.getItem(key) === 'full'); } catch (e) { }
     document.addEventListener('click', function (event) {

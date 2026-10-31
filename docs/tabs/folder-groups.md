@@ -30,7 +30,7 @@ A new group takes the first of eight group colors that no open group has.
 2. Pick one of the eight swatches, which closes the picker, or choose any other color with the saturation and brightness square, the hue slider or the hex field (`#12AB34`, or `#1A3`).
 3. The group changes color as you drag or type. Press `Enter` to close the picker.
 
-Claudette remembers the color for the folder on this machine, so the group has it again after a restart, or when you open the folder again after closing its group.
+Deventry remembers the color for the folder on this machine, so the group has it again after a restart, or when you open the folder again after closing its group.
 
 ## Renaming a group
 
@@ -40,7 +40,7 @@ Rename a group when two folders have the same name in different places.
 2. Type a name in the box that opens beside the label, which starts with the label selected and the folder's path under it.
 3. Choose **Rename**, or press `Enter`. **Cancel**, `Esc`, or a click outside leaves the label as it was.
 
-The label shows your name in place of the folder's. Saving the box empty, or with the folder's own label, goes back to the folder's name, as does **Reset name** in the menu while the group has a name. Claudette remembers the name for the folder on this machine.
+The label shows your name in place of the folder's. Saving the box empty, or with the folder's own label, goes back to the folder's name, as does **Reset name** in the menu while the group has a name. Deventry remembers the name for the folder on this machine.
 
 ## Reordering
 
@@ -100,13 +100,13 @@ The sidebar can list every folder Claude Code has sessions in on this machine, s
 1. Open Settings → Tabs → **Claude Code's projects**.
 2. Turn on **Show Claude Code's projects in the sidebar**.
 
-The first time Claudette starts with sessions to show, a card at the top of the sidebar asks instead: **Show them in the sidebar** turns the setting on, and **Not now** leaves it off. Either way it asks only once; the switch is in Settings after that.
+The first time Deventry starts with sessions to show, a card at the top of the sidebar asks instead: **Show them in the sidebar** turns the setting on, and **Not now** leaves it off. Either way it asks only once; the switch is in Settings after that.
 
 With it on:
 
 - **Every folder with sessions is a group**, whether or not a tab is open in it. The ones with nothing open come after the groups with tabs, the most recently used first, and each works like any group: its **+** opens a tab there, and its menu has **New tab here**, **History for this folder** and the rest. A group with nothing open has no **Close group**; it goes when you turn the setting off, or when its folder no longer exists.
-- **Past sessions.** A group with nothing open lists the folder's latest sessions straight away. Once a tab is open in it, they fold away under its tabs into a row such as *12 past sessions*: click it to unfold the latest five, newest first, each with its name and, under it, when it was last used and how many messages it has. Click a session to pick it up in a new tab in the group, as [History](../history/history.md) does. **Show all in History…**, under the five, opens History on the folder when there are more. A session that's open in a tab isn't listed, since its tab is above. Claudette remembers which folders you unfolded.
-- The sessions are the ones History lists: Claude Code's own on this machine, including sessions you started in a terminal, and the session library's. Claudette reads them when it starts, when you turn the setting on, and when it comes to the front, so a session started in a terminal meanwhile shows up.
+- **Past sessions.** A group with nothing open lists the folder's latest sessions straight away. Once a tab is open in it, they fold away under its tabs into a row such as *12 past sessions*: click it to unfold the latest five, newest first, each with its name and, under it, when it was last used and how many messages it has. Click a session to pick it up in a new tab in the group, as [History](../history/history.md) does. **Show all in History…**, under the five, opens History on the folder when there are more. A session that's open in a tab isn't listed, since its tab is above. Deventry remembers which folders you unfolded.
+- The sessions are the ones History lists: Claude Code's own on this machine, including sessions you started in a terminal, and the session library's. Deventry reads them when it starts, when you turn the setting on, and when it comes to the front, so a session started in a terminal meanwhile shows up.
 
 ### Settings
 

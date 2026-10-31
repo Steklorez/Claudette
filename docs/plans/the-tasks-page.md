@@ -7,7 +7,7 @@ summary: "When Claude keeps a task list, writes a plan, or writes a doc on claud
 
 # The Tasks page
 
-When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, a **Tasks** tool window comes, and the tab shows how far the work has got, such as *2 of 5*. The page shows the plan, each task with who has it and what it did, and the docs. Claude's own task list and Plan mode are Claude Code's; this is what Claudette shows of them.
+When Claude keeps a task list, writes a plan, or writes a doc on claude.ai, a **Tasks** tool window comes, and the tab shows how far the work has got, such as *2 of 5*. The page shows the plan, each task with who has it and what it did, and the docs. Claude's own task list and Plan mode are Claude Code's; this is what Deventry shows of them.
 
 {% include shot.html name="tasks-standard" alt="The Tasks page of a thread: the plan in its second version with its changes from the first, seven tasks with two done and who has each, the thread's sub-threads under it in the sidebar, and SendMessage calls in the conversation." %}
 
@@ -23,7 +23,7 @@ Each task shows its state (to do, in progress, done), its number as Claude refer
 
 Under a task, one line says who is working on it when Claude says (a subagent), how long it took and what it used: *Explore · Took 4m · 3 files · 120k tokens*, or *Started 14:05* while it's under way. **3 files** lists the files Claude changed while the task was in progress, and each opens in the diff view as [Changed files](../changes/changed-files.md) shows it. Work a subagent does counts toward its parent's task. Clicking a task that has started goes to where it started in the conversation.
 
-Claude's task list also shows pinned at the top of the conversation, under the line *To-do · 2 of 5 done*. A long list scrolls once it takes two fifths of the conversation's height, so the conversation keeps room under it. Click that line to close the list when it's long: closed, it's the one line, naming the task in progress, such as *To-do · 2 of 5 done · Running the tests*. It stays closed as Claude works through the tasks, and when Claudette restarts, until you open it again. It opens by itself when Claude starts a new list, and closes once every task is done.
+Claude's task list also shows pinned at the top of the conversation, under the line *To-do · 2 of 5 done*. A long list scrolls once it takes two fifths of the conversation's height, so the conversation keeps room under it. Click that line to close the list when it's long: closed, it's the one line, naming the task in progress, such as *To-do · 2 of 5 done · Running the tests*. It stays closed as Claude works through the tasks, and when Deventry restarts, until you open it again. It opens by itself when Claude starts a new list, and closes once every task is done.
 
 ## Tasks in the conversation
 
@@ -57,7 +57,7 @@ When Claude starts a new task list and its latest reply looks like the plan, wit
 
 ## Settings
 
-- Settings → Claude Code → **Give Claude a task list** (on by default). Claude Code gives its task-keeping tools only to some models; newer ones keep track of their work without a written list, so they'd make no tasks and only the plan would show. This gives every model the tools, at the cost of the room their definitions take in the context. Off, Claudette leaves it as your environment has it. It applies to tabs started after the change.
+- Settings → Claude Code → **Give Claude a task list** (on by default). Claude Code gives its task-keeping tools only to some models; newer ones keep track of their work without a written list, so they'd make no tasks and only the plan would show. This gives every model the tools, at the cost of the room their definitions take in the context. Off, Deventry leaves it as your environment has it. It applies to tabs started after the change.
 - Settings → Conversation → Tab rows → **Show task progress** (on by default) shows the *3/7* badge and the task on the row's second line.
 
 ## See also

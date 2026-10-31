@@ -1,35 +1,35 @@
 /*
-  The landing page's look (index.html, _layouts/landing.html): Claudette's colors from her icon (Claude's coral, her
-  hair's rust, her hair tie's raspberry) over Anthropic's ivory or charcoal, by the reader's system. The guide's pages
-  share the palette through _sass/custom/setup.scss.
+  The landing page's look (index.html, _layouts/landing.html): Deventry's colors, blue with rose from Joulene, over a cool
+  white or a blue-black, by the reader's system. The guide's pages share the palette through _sass/custom/setup.scss.
 */
 
 :root {
-  --coral: #d97757;
-  --coral-deep: #b5573a;
-  --rust: #a8492f;
-  --raspberry: #b8336a;
-  --amber: #f0a35e;
-  --gradient: linear-gradient(110deg, var(--amber), var(--coral) 42%, var(--raspberry));
-  --gradient-deep: linear-gradient(110deg, var(--coral-deep), #b4453f 50%, var(--raspberry));
+  --blue: #4a6fc4;
+  --blue-deep: #34539e;
+  --rose-deep: #a85e74;
+  --rose: #cf7f96;
+  --periwinkle: #8a93da;
+  --platinum: #f0dfa6;
+  --gradient: linear-gradient(110deg, var(--blue), var(--periwinkle) 50%, var(--rose));
+  --gradient-deep: linear-gradient(110deg, var(--blue-deep), #6e66a8 50%, var(--rose-deep));
 
-  --bg: #faf9f5;
-  --bg-band: #f3f1ea;
+  --bg: #f7f8fc;
+  --bg-band: #eef1f8;
   --surface: #ffffff;
-  --surface-2: #f6f4ee;
-  --border: #e6e1d6;
-  --border-strong: #d6cfbf;
-  --text: #2a2723;
-  --muted: #6a645a;
-  --heading: #141413;
-  --link: #b5573a;
-  --gradient-text: linear-gradient(110deg, #c9622f, var(--coral-deep) 40%, var(--raspberry));
-  --glow-a: rgba(217, 119, 87, 0.2);
-  --glow-b: rgba(184, 51, 106, 0.12);
-  --dots: rgba(20, 20, 19, 0.07);
-  --frame-shadow: 0 1.6rem 3.6rem rgba(90, 58, 32, 0.16), 0 0 3rem rgba(217, 119, 87, 0.1);
-  --card-shadow: 0 0.8rem 2rem rgba(90, 58, 32, 0.12);
-  --topbar: rgba(250, 249, 245, 0.82);
+  --surface-2: #f2f4fa;
+  --border: #dfe4ee;
+  --border-strong: #c9d1e0;
+  --text: #26304a;
+  --muted: #5e6880;
+  --heading: #131a2c;
+  --link: #34539e;
+  --gradient-text: linear-gradient(110deg, var(--blue-deep), #6e66a8 50%, var(--rose-deep));
+  --glow-a: rgba(74, 111, 196, 0.16);
+  --glow-b: rgba(207, 127, 150, 0.16);
+  --dots: rgba(19, 26, 44, 0.07);
+  --frame-shadow: 0 1.6rem 3.6rem rgba(38, 48, 74, 0.16), 0 0 3rem rgba(74, 111, 196, 0.1);
+  --card-shadow: 0 0.8rem 2rem rgba(38, 48, 74, 0.12);
+  --topbar: rgba(247, 248, 252, 0.82);
   /* Perforce's logo (perforce-logo.html): in full color on a light page, as its brand guidelines say. */
   --perforce-symbol: #4c00ff;
   /* Unreal Engine's logo (unreal-logo.html): Epic's black on a light page, its white on a dark one. */
@@ -43,23 +43,23 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141413;
-    --bg-band: #181716;
-    --surface: #1d1c1a;
-    --surface-2: #242320;
+    --bg: #10141f;
+    --bg-band: #131826;
+    --surface: #182030;
+    --surface-2: #1e2738;
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.15);
-    --text: #e2ded5;
-    --muted: #a39e94;
-    --heading: #faf9f5;
-    --link: #ef9b7b;
-    --gradient-text: var(--gradient);
-    --glow-a: rgba(217, 119, 87, 0.22);
-    --glow-b: rgba(184, 51, 106, 0.18);
+    --text: #dce1ec;
+    --muted: #9ca6bc;
+    --heading: #f5f7fb;
+    --link: #93aeeb;
+    --gradient-text: linear-gradient(110deg, #93aeeb, #b3b4ec 50%, #e29aae);
+    --glow-a: rgba(74, 111, 196, 0.24);
+    --glow-b: rgba(207, 127, 150, 0.16);
     --dots: rgba(255, 255, 255, 0.055);
-    --frame-shadow: 0 1.8rem 4.5rem rgba(0, 0, 0, 0.55), 0 0 4rem rgba(217, 119, 87, 0.12), 0 0 6rem rgba(184, 51, 106, 0.1);
+    --frame-shadow: 0 1.8rem 4.5rem rgba(0, 0, 0, 0.55), 0 0 4rem rgba(74, 111, 196, 0.12), 0 0 6rem rgba(207, 127, 150, 0.1);
     --card-shadow: 0 1rem 2.4rem rgba(0, 0, 0, 0.4);
-    --topbar: rgba(20, 20, 19, 0.78);
+    --topbar: rgba(16, 20, 31, 0.78);
     /* And in white on a dark one: its reversed logo's. */
     --perforce-symbol: #f6f9fd;
     --unreal-logo: #ffffff;
@@ -84,7 +84,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Her colors across the top, as on the guide's pages. */
+/* Its colors across the top, as on the guide's pages. */
 body::before {
   position: fixed;
   inset: 0 0 auto;
@@ -110,7 +110,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .skip { position: absolute; left: -999px; top: 0.5rem; z-index: 100; padding: 0.5rem 1rem; background: var(--surface); border-radius: 8px; }
 .skip:focus { left: 0.5rem; }
 
-/* The header: her name, Home, Docs and Downloads, and GitHub. */
+/* The header: the name, Home, Docs and Downloads, and GitHub. */
 .topbar {
   position: sticky;
   top: 0;
@@ -135,7 +135,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .topnav a[aria-current="page"] { color: var(--heading); background: var(--surface-2); }
 .topbar-links { display: flex; gap: 0.5rem; }
 
-/* Buttons: round pills, the main ones in her colors. */
+/* Buttons: round pills, the main ones in its colors. */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -152,23 +152,23 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .pill:hover { text-decoration: none; transform: translateY(-1px); }
 .pill small { font-weight: 500; opacity: 0.85; margin-left: 0.15rem; }
 .pill-small { padding: 0.45rem 0.95rem; font-size: 0.92rem; }
-.pill-primary { color: #fff; background: var(--gradient-deep); box-shadow: 0 0.6rem 1.6rem rgba(217, 119, 87, 0.32); }
-.pill-primary:hover { filter: brightness(1.08); box-shadow: 0 0.8rem 2rem rgba(217, 119, 87, 0.4); }
+.pill-primary { color: #fff; background: var(--gradient-deep); box-shadow: 0 0.6rem 1.6rem rgba(74, 111, 196, 0.32); }
+.pill-primary:hover { filter: brightness(1.08); box-shadow: 0 0.8rem 2rem rgba(74, 111, 196, 0.4); }
 .pill-outline { color: var(--heading); border-color: var(--border-strong); background: var(--surface); }
-.pill-outline:hover { border-color: var(--coral); }
+.pill-outline:hover { border-color: var(--blue); }
 .pill-ghost { color: var(--heading); border-color: var(--border-strong); }
-.pill-ghost:hover { border-color: var(--coral); }
-.pill-light { color: var(--rust); background: #fff; }
+.pill-ghost:hover { border-color: var(--blue); }
+.pill-light { color: var(--rose-deep); background: #fff; }
 .pill-outline-light { color: #fff; border-color: rgba(255, 255, 255, 0.55); }
 .pill-outline-light:hover { border-color: #fff; background: rgba(255, 255, 255, 0.1); }
 .text-link { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 600; color: var(--muted); }
 .text-link:hover { color: var(--heading); }
 
-.kicker { display: inline-flex; align-items: center; gap: 0.5rem; margin: 0 0 0.9rem; font-size: 0.78rem; font-weight: 750; letter-spacing: 0.16em; text-transform: uppercase; color: var(--coral); }
+.kicker { display: inline-flex; align-items: center; gap: 0.5rem; margin: 0 0 0.9rem; font-size: 0.78rem; font-weight: 750; letter-spacing: 0.16em; text-transform: uppercase; color: var(--blue); }
 .kicker span { font-family: var(--mono); letter-spacing: 0.05em; opacity: 0.8; }
 .gradient-text { background: var(--gradient-text); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 10s ease-in-out infinite alternate; }
 
-/* The hero: her and her name on a warm glow over a field of pixels. */
+/* The hero: the icon and its name on a soft glow over a field of pixels. */
 .hero { position: relative; max-width: 60rem; margin: 0 auto; padding: 4.5rem 1.5rem 2.5rem; text-align: center; isolation: isolate; }
 .hero::before {
   position: absolute;
@@ -183,7 +183,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   mask-image: radial-gradient(ellipse 55% 60% at 50% 35%, #000 40%, transparent 100%);
 }
 .hero-mark { display: flex; align-items: center; justify-content: center; gap: clamp(1rem, 3vw, 2rem); margin-bottom: 2.25rem; }
-.hero-sprite { flex: none; width: clamp(4.5rem, 10vw, 7.5rem); height: auto; image-rendering: pixelated; filter: drop-shadow(0 0.8rem 1.4rem rgba(217, 119, 87, 0.35)); animation: bob 3.2s ease-in-out infinite; }
+.hero-sprite { flex: none; width: clamp(4.5rem, 10vw, 7.5rem); height: auto; image-rendering: pixelated; filter: drop-shadow(0 0.8rem 1.4rem rgba(74, 111, 196, 0.35)); animation: bob 3.2s ease-in-out infinite; }
 .hero-wordmark { min-width: 0; width: clamp(15rem, 52vw, 34rem); height: auto; image-rendering: pixelated; }
 .hero-title { font-size: clamp(2.3rem, 5.4vw, 4.1rem); font-weight: 820; letter-spacing: -0.035em; }
 .hero-lead { max-width: 44rem; margin: 1.4rem auto 0; font-size: clamp(1.05rem, 1.6vw, 1.22rem); color: var(--muted); }
@@ -195,7 +195,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   border: 1px solid transparent;
   border-radius: 1.2rem;
   background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--gradient) border-box;
-  box-shadow: 0 1rem 2.8rem rgba(217, 119, 87, 0.18), 0 0 3rem rgba(184, 51, 106, 0.1);
+  box-shadow: 0 1rem 2.8rem rgba(74, 111, 196, 0.18), 0 0 3rem rgba(207, 127, 150, 0.1);
 }
 .get-label { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 0 0 0.9rem; font-size: 0.88rem; font-weight: 650; color: var(--muted); }
 .get-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
@@ -206,7 +206,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem 1.6rem; margin: 2rem 0 0; padding: 0; list-style: none; font-size: 0.9rem; color: var(--muted); }
 .trust li, .trust a { display: inline-flex; align-items: center; gap: 0.45rem; }
 .trust a { color: inherit; }
-.trust .icon { color: var(--coral); }
+.trust .icon { color: var(--blue); }
 .trust strong { color: var(--text); font-weight: 650; }
 
 /* A screenshot, glowing a little. The window's own title bar is in the picture, so the frame draws none. */
@@ -216,7 +216,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .hero-shot { max-width: 68rem; margin: 1rem auto 0; padding: 0 1.5rem; perspective: 2000px; }
 .frame-hero { border-radius: 1.2rem; }
 
-/* For game developers: a card for each engine Claudette knows, then what else a game's day needs. The systems it runs
+/* For game developers: a card for each engine Deventry knows, then what else a game's day needs. The systems it runs
    on have cards of the same kind, further down. */
 .band.gamedev { padding-top: 7rem; padding-bottom: 0; }
 .engines, .platforms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
@@ -231,10 +231,10 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   background: var(--surface);
   box-shadow: var(--card-shadow);
 }
-/* Her colors along its top, as along the page's. */
+/* Its colors along its top, as along the page's. */
 .engine::before, .platform::before { position: absolute; inset: 0 0 auto; height: 3px; content: ""; background: var(--gradient); }
 .engine-head, .platform-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.1rem; }
-.platform-head .icon { width: 2.8rem; height: 2.8rem; padding: 0.6rem; border-radius: 0.85rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(217, 119, 87, 0.28); }
+.platform-head .icon { width: 2.8rem; height: 2.8rem; padding: 0.6rem; border-radius: 0.85rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(74, 111, 196, 0.28); }
 /* An engine's logo on its card itself, with no tile: Epic's guidelines allow Unreal Engine's only in its black or white,
    Godot's is in its colors on a light page and all white on a dark one, as Unreal Engine's is, and Unity's cube is in
    the headings' color until Unity's logo can take its place. */
@@ -247,22 +247,22 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 .engine ul, .platform ul { display: grid; gap: 0.6rem; margin: 0 0 1.3rem; padding: 0; list-style: none; font-size: 0.95rem; color: var(--muted); }
 /* Each point is a pixel, as she's drawn in them. */
 .engine li, .platform li { position: relative; padding-left: 1.3rem; }
-.engine li::before, .platform li::before { position: absolute; top: 0.6em; left: 0; width: 0.45rem; height: 0.45rem; content: ""; background: var(--coral); }
+.engine li::before, .platform li::before { position: absolute; top: 0.6em; left: 0; width: 0.45rem; height: 0.45rem; content: ""; background: var(--blue); }
 .engine .more, .platform .more { margin-top: auto; }
 .cards.cards-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* Linux from nothing, as a terminal shows it, dark in either theme. Each command's prompt is drawn, so copying takes the
    commands alone, and a line too long for a phone scrolls inside the box. */
-.terminal { max-width: 60rem; margin: 2.4rem auto 0; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 1rem; background: #1d1c1a; box-shadow: var(--card-shadow); }
-.terminal-title { display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.86rem; font-weight: 650; color: #a39e94; background: #242320; }
-.terminal-title .icon { color: var(--coral); }
-.terminal pre { margin: 0; padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.84rem; line-height: 1.75; color: #e2ded5; }
+.terminal { max-width: 60rem; margin: 2.4rem auto 0; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 1rem; background: #182030; box-shadow: var(--card-shadow); }
+.terminal-title { display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.86rem; font-weight: 650; color: #9ca6bc; background: #1e2738; }
+.terminal-title .icon { color: var(--blue); }
+.terminal pre { margin: 0; padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.84rem; line-height: 1.75; color: #dce1ec; }
 .terminal pre code { padding: 0; border: 0; background: none; font-size: inherit; }
-.terminal .cmd::before { content: "$ "; color: var(--coral); user-select: none; }
-.terminal .comment { color: #a39e94; }
-.terminal-foot { margin: 0; padding: 0.85rem 1.1rem 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.92rem; color: #a39e94; }
-.terminal-foot a { color: #ef9b7b; }
-.terminal-foot code { color: #e2ded5; border-color: rgba(255, 255, 255, 0.08); background: #242320; }
+.terminal .cmd::before { content: "$ "; color: var(--blue); user-select: none; }
+.terminal .comment { color: #9ca6bc; }
+.terminal-foot { margin: 0; padding: 0.85rem 1.1rem 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.92rem; color: #9ca6bc; }
+.terminal-foot a { color: #93aeeb; }
+.terminal-foot code { color: #dce1ec; border-color: rgba(255, 255, 255, 0.08); background: #1e2738; }
 
 /* The tour: a step a feature, its words beside its picture, sides alternating. */
 .tour { max-width: var(--width); margin: 0 auto; padding: 7rem 1.5rem 3rem; }
@@ -348,8 +348,8 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   color: var(--text);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
-.card:hover { text-decoration: none; transform: translateY(-3px); border-color: rgba(217, 119, 87, 0.6); box-shadow: var(--card-shadow); }
-.card .icon { width: 2.4rem; height: 2.4rem; margin-bottom: 0.4rem; padding: 0.55rem; border-radius: 0.8rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(217, 119, 87, 0.28); }
+.card:hover { text-decoration: none; transform: translateY(-3px); border-color: rgba(74, 111, 196, 0.6); box-shadow: var(--card-shadow); }
+.card .icon { width: 2.4rem; height: 2.4rem; margin-bottom: 0.4rem; padding: 0.55rem; border-radius: 0.8rem; color: #fff; background: var(--gradient-deep); box-shadow: 0 0.5rem 1.2rem rgba(74, 111, 196, 0.28); }
 .card strong { color: var(--heading); font-size: 1.05rem; }
 .card span { font-size: 0.92rem; color: var(--muted); }
 /* The project tools' cards: each icon beside its title, on the card itself with no tile, as Perforce's guidelines ask of
@@ -370,7 +370,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   text-align: center;
   color: #fff;
   background: var(--gradient-deep);
-  box-shadow: 0 2rem 4rem rgba(184, 51, 106, 0.25);
+  box-shadow: 0 2rem 4rem rgba(207, 127, 150, 0.25);
   isolation: isolate;
 }
 .closing::before { position: absolute; inset: 0; z-index: -1; content: ""; background: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.4px) 0 0 / 20px 20px; }
@@ -437,8 +437,8 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
   .story-index-track { border-radius: 0.7rem; }
 }
 
-/* Phones: the header's links draw closer, and on the smallest her name gives way to her alone, as the hero under it has
-   her name in large. */
+/* Phones: the header's links draw closer, and on the smallest the name gives way to the icon alone, as the hero under it has
+   the name in large. */
 @media (max-width: 419px) {
   .topbar-inner { gap: 0.4rem; padding-inline: 0.75rem; }
   .topnav a { padding-inline: 0.5rem; }

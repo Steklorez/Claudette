@@ -7,7 +7,7 @@ summary: "When Claude has changed a lot of files, it helps to keep track of the 
 
 # Reviewed files
 
-When Claude has changed a lot of files, it helps to keep track of the ones you've read. Tick a file as reviewed, and Claudette remembers, draws it faintly, and tells you when you've been through them all.
+When Claude has changed a lot of files, it helps to keep track of the ones you've read. Tick a file as reviewed, and Deventry remembers, draws it faintly, and tells you when you've been through them all.
 
 ## Ticking a file
 
@@ -30,7 +30,7 @@ Once every file Claude changed in the tab is ticked, the tab's row in the sideba
 
 The icon isn't a mark, so it isn't in the tab's menu, and the tab's own mark comes back as soon as a file isn't reviewed, whether Claude changes one or you untick one. See [Names, marks and pins](../tabs/names-marks-and-pins.md).
 
-Claudette on the composer notices too: she stamps the edge of the box, which leaves a green check mark ([Claudette on the composer](../claudette/claudette-on-the-composer.md)).
+Joulene on the composer notices too: she stamps the edge of the box, which leaves a green check mark ([Joulene on the composer](../joulene/joulene-on-the-composer.md)).
 
 ## What's kept
 

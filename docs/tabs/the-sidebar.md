@@ -90,13 +90,13 @@ A tab with rows under it, such as a thread's sub-threads, subagents, editor logs
 - **The collapsed row** keeps its two lines and adds a small badge to the first: how many rows it hides, then the most urgent of them in its own color. That's `!` for one waiting on you; `✕` for an error, a failed run, or an editor's log that crashed or has errors you haven't looked at; the busy dot while one works; and `•` for one that finished while you were elsewhere. Hover the badge to see what it hides, such as *Collapsed: 2 sub-threads, 1 log and 1 run*, with a line for each one waiting on you or failed.
 - **It opens again by itself** when you go to something under it: a sub-thread from its notification or **Go to tab** in the thread's strip, a log from **Show output…** or its notification, or a subagent's work from the Agents page or its card. It also opens when a sub-thread joins the thread, and when something under it starts waiting on you. A run, an editor's log or a subagent starting doesn't open it, so a big fan-out can stay folded.
 - Collapsing leaves the selection alone: a sub-thread or a log that's showing stays showing. `Ctrl+Tab` and `Ctrl/Cmd+1…9` still count a collapsed thread's sub-threads.
-- The tab stays collapsed when Claudette restarts. Once nothing is left under its row, it forgets, so the next row to come shows.
+- The tab stays collapsed when Deventry restarts. Once nothing is left under its row, it forgets, so the next row to come shows.
 
 On the rail, which lists only a thread's sub-threads under a tab, **Collapse tab** is in the menu of a thread with sub-threads.
 
 ## The top and the foot
 
-At the top, over a line, **New tab** opens the [picker](opening-tabs.md), the clock opens [History](../history/history.md), and the last button collapses the sidebar. Each group's row has its project's icon, which opens the project's menu of actions and links ([Project tools](../project-tools/using-project-tools.md)). The foot, under a line, shows only while there's something in it: the Claude Code and Claudette update badges when there's an update, and a source build's new commits and **New build ready**. **Settings** and **User Guide** are at the header's right ([A tour of the window](../getting-started/a-tour-of-the-window.md#the-header)).
+At the top, over a line, **New tab** opens the [picker](opening-tabs.md), the clock opens [History](../history/history.md), and the last button collapses the sidebar. Each group's row has its project's icon, which opens the project's menu of actions and links ([Project tools](../project-tools/using-project-tools.md)). The foot, under a line, shows only while there's something in it: the Claude Code and Deventry update badges when there's an update, and a source build's new commits and **New build ready**. **Settings** and **User Guide** are at the header's right ([A tour of the window](../getting-started/a-tour-of-the-window.md#the-header)).
 
 ## Resizing and collapsing
 

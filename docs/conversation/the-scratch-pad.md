@@ -42,7 +42,7 @@ A project is known by its git remote and the folder's path inside the repository
 
 ## Syncing to other machines
 
-A pad in a project with a remote is synced through the [session library](../history/the-session-library.md), whichever folder the library is in. It syncs after each save, when the page shows, when Claudette comes to the front, and once a minute. If the library's folder isn't synced to your other machines, the pad stays on this one.
+A pad in a project with a remote is synced through the [session library](../history/the-session-library.md), whichever folder the library is in. It syncs after each save, when the page shows, when Deventry comes to the front, and once a minute. If the library's folder isn't synced to your other machines, the pad stays on this one.
 
 If two machines changed the pad without seeing each other's changes, nothing is lost. A banner over the pad says *DESKTOP-01 also changed this scratch pad (14:05). Which should it keep?*, shows their text and offers:
 
@@ -52,7 +52,7 @@ If two machines changed the pad without seeing each other's changes, nothing is 
 
 Your choice carries over to the other machine without asking again. A sync tool's conflict copy of the file is asked about the same way.
 
-If the library can't be reached, the pad stays saved here, the line under its title turns to the caution color and says why, and Claudette tries again at the next sync. A pad written by a newer Claudette is left alone, and the line says to update.
+If the library can't be reached, the pad stays saved here, the line under its title turns to the caution color and says why, and Deventry tries again at the next sync. A pad written by a newer Deventry is left alone, and the line says to update.
 
 ## What it isn't part of
 

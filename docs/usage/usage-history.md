@@ -2,12 +2,12 @@
 title: Usage history
 parent: Usage and limits
 nav_order: 10
-summary: "Claudette keeps your usage on this machine, in a small database, so the trendline, the charts and the per-tab numbers survive a restart."
+summary: "Deventry keeps your usage on this machine, in a small database, so the trendline, the charts and the per-tab numbers survive a restart."
 ---
 
 # Usage history
 
-Claudette keeps your usage on this machine, in a small database, so the trendline, the charts and the per-tab numbers survive a restart.
+Deventry keeps your usage on this machine, in a small database, so the trendline, the charts and the per-tab numbers survive a restart.
 
 ## What's kept
 
@@ -19,7 +19,7 @@ It never keeps your prompts, replies or code. Those stay in Claude Code's own tr
 
 ## How long it's kept
 
-Settings → Usage → **Keep usage history** sets it: **1 day**, **1 week**, **1 month** (the default), **1 year** or **Forever**. Older records are deleted when Claudette starts and once a day. With **1 day** the weekly chart only covers the last day. The header's meters and projection aren't affected, because they only need the current window and the latest weekly value.
+Settings → Usage → **Keep usage history** sets it: **1 day**, **1 week**, **1 month** (the default), **1 year** or **Forever**. Older records are deleted when Deventry starts and once a day. With **1 day** the weekly chart only covers the last day. The header's meters and projection aren't affected, because they only need the current window and the latest weekly value.
 
 ## Clearing it
 
@@ -40,5 +40,5 @@ The **History** section's **Reset to defaults** leaves **Keep usage history** as
 
 ## See also
 
-- [Where Claudette keeps things](../privacy/where-claudette-keeps-things.md) for where the file is.
+- [Where Deventry keeps things](../privacy/where-deventry-keeps-things.md) for where the file is.
 - [Sharing usage across machines](sharing-usage-across-machines.md).

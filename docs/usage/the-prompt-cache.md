@@ -24,7 +24,7 @@ It's left out entirely when Claude Code isn't caching the tab's prompts, for exa
 
 Hover over the chip for what the cache is, how long it lasts and why, and when it expires, in your local time: *Sent before 14:52, your next message reads this conversation from the cache. After that, Claude reads all of it again at the full price.* On a plan it says the whole read counts toward your usage limits instead.
 
-The line about its length says where it came from: *1-hour cache, as Claude Code usually gives subscriptions*, *5-minute cache, as Claude Code uses with an API key*, *set by CLAUDE_CODE_PROMPT_CACHE_TTL*, or *seen in the last turn*. A plan only gets the hour within its included usage, which Claudette can't tell, so it says *usually*.
+The line about its length says where it came from: *1-hour cache, as Claude Code usually gives subscriptions*, *5-minute cache, as Claude Code uses with an API key*, *set by CLAUDE_CODE_PROMPT_CACHE_TTL*, or *seen in the last turn*. A plan only gets the hour within its included usage, which Deventry can't tell, so it says *usually*.
 
 ## When the clock starts
 
@@ -34,7 +34,7 @@ Clearing or compacting the conversation, switching the model (each model has its
 
 ## How the length is chosen
 
-Claude Code decides how long its cache lasts, and Claudette follows what Claude Code is set to. In order, it goes by Claude Code's own configuration (the variables `FORCE_PROMPT_CACHING_5M`, `CLAUDE_CODE_PROMPT_CACHE_TTL` and `ENABLE_PROMPT_CACHING_1H`, and the `promptCacheTtl` setting, as the tab's `claude` gets them), then by what Claude Code reported for the last request, then by its default: an hour on a plan, five minutes with an API key or a cloud provider. Claude Code's [docs](https://code.claude.com/docs) describe its settings.
+Claude Code decides how long its cache lasts, and Deventry follows what Claude Code is set to. In order, it goes by Claude Code's own configuration (the variables `FORCE_PROMPT_CACHING_5M`, `CLAUDE_CODE_PROMPT_CACHE_TTL` and `ENABLE_PROMPT_CACHING_1H`, and the `promptCacheTtl` setting, as the tab's `claude` gets them), then by what Claude Code reported for the last request, then by its default: an hour on a plan, five minutes with an API key or a cloud provider. Claude Code's [docs](https://code.claude.com/docs) describe its settings.
 
 ## Settings
 

@@ -29,7 +29,7 @@ A sub-thread's Claude is told who a message is from, *From the thread ‹name›
 
 ## Prompts stay yours
 
-Claudette never answers a sub-thread's permission prompts, questions or plans for you, and the thread's Claude never hears of them. They wait for you.
+Deventry never answers a sub-thread's permission prompts, questions or plans for you, and the thread's Claude never hears of them. They wait for you.
 
 ## What threads don't do
 
@@ -40,7 +40,7 @@ Claudette never answers a sub-thread's permission prompts, questions or plans fo
 
 ## Kept with your tabs
 
-Whether a tab is a thread, its **Ask before sending to sub-threads** choice and which thread a tab belongs to are saved with the tabs, so they survive a restart. Work under way when Claudette closes isn't picked up again: a restored thread gets no report for it.
+Whether a tab is a thread, its **Ask before sending to sub-threads** choice and which thread a tab belongs to are saved with the tabs, so they survive a restart. Work under way when Deventry closes isn't picked up again: a restored thread gets no report for it.
 
 Closing a thread leaves its sub-threads open as ordinary tabs, and so does **Stop being a thread**. Neither sends a report for work under way. **Duplicate tab**, **Branch from here** and opening a copy from History start ordinary tabs.
 
