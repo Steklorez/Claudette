@@ -161,65 +161,89 @@ Planned, not started. Tried on a branch on 2026-10-11 against .NET 11 RC1 (SDK `
 - **dotBunny's Discord** is at `/discord/` on the site, a page that only forwards to the server's invite, so Claudette, the site, the README and GitHub's New issue page link there rather than to the invite. An invite can expire or be replaced, and a link in an installed Claudette can't change without a release; this way only `docs/discord.md` changes.
 - **To decide later**, since it's what the user sees: whether Claudette links to the guide in other places too, through `F1` or a link from each Settings page to its chapter; and whether the update dialog links to the version's section of the Changelog page, beside the release on GitHub.
 
-### Renaming to Pagentry
+### Renaming to devEntry
 
-Planned, not started. Decided on 2026-10-30.
+Planned, not started. Decided on 2026-10-30; the name and the icon on 2026-10-31.
 
-- **Why.** Claudette's name is close to Claude's, and her icon is Clawd, Claude Code's mascot, with hair ([Packaging and signing](#packaging-and-signing)), so she could be taken for something of Anthropic's. The app becomes **Pagentry**: *pageantry* with *agent* in it, the show your agents put on. It's a word of its own, so it can be owned: on 2026-10-30 no company, product or open-source project of note used it, and its npm and PyPI names were free. The mascot on the composer becomes **Joulene**, from the joule and lean usage ([§6](#6-token-burn-awareness)), with a nod to Dolly Parton's *Jolene*. Providers besides Claude Code are to come, so Pagentry doesn't call itself an app for Claude Code.
+- **Why.** Claudette's name is close to Claude's, and her icon is Clawd, Claude Code's mascot, with hair ([Packaging and signing](#packaging-and-signing)), so she could be taken for something of Anthropic's. The app becomes **devEntry**: the way in to developing with agents, written the way a developer names things. Its wordmark and brand are *devEntry*; what follows .NET's casing is *DevEntry* (`DevEntry.Core`, `DevEntry.exe`, `DevEntry.app`); and what has to be lowercase is *deventry* (domains, packages, `deventry.json`). It isn't to be registered as a trademark: what matters is that nobody else uses it, and on 2026-10-31 no company, product or project did, and its npm and PyPI names were free. The mascot on the composer becomes **Joulene**, from the joule and lean usage ([§6](#6-token-burn-awareness)), with a nod to Dolly Parton's *Jolene*. Providers besides Claude Code are to come, so devEntry doesn't call itself an app for Claude Code.
 - **What people see.**
-  - Pagentry wherever Claudette names the app: the windows, menus, Settings, About, notifications, the installers, the website and the README. The mascot is Joulene, on the composer ([§5](#claudette-on-the-composer)) and in the games ([§18](#games-with-claudette)), and wherever the app names her, as in *Joulene is thinking…* and **Joulene settings…**.
-  - Where Pagentry says what it is, it names no provider: *the desktop app that puts agents in a native window*. That's the site's description, the MSIX's and the Store's, About's line and the README's first line. The landing page's headline, in place of *Claude Code in a real desktop window*, is *Your agents in a real desktop window*, and the social card's follows it.
-  - Where the guide says how something works with Claude Code today (installing it, signing in, permissions, usage limits), it still names Claude Code, since that's what runs; those pages split by provider when a second one comes. The landing page, Downloads and the Store listing say what Pagentry needs: *Works with Claude Code today, with more providers to come.*
-- **The icon** is Pagentry's own, no longer the mascot, and still to be designed. It keeps what Claudette's icon does ([§10](#10-notifications)). On Windows, the taskbar button's icon stays still and its overlay pulses while tabs work (Claude's spark today, which goes) and shows the hourglass while a usage limit holds a task. On macOS, the Dock icon itself moves, for tabs working, waiting for a limit and needing input, where Claudette types, stands by the hourglass and waves today. Drawn as pixel art, as Joulene is, `build-icons.mjs` makes every size and frame from one sprite, as it does now: the `.ico`, the MSIX's logos, the macOS icon, the SVG (Rider's project icon too), the animations' frames, and the site's logo and favicon. The wordmark spells PAGENTRY with AGENT in the accent color, so the pun reads first, as the name does wherever it's a logo (p**agent**ry); P, G, N, R and Y are new letters.
-- **Her look**, on the composer. Rose and platinum, by Claudette's rule for her colors: one color for her body (face, arms and dress), a darker shade of it (belt and boots), her hair with its edge and a shine, a single accent cell (her clip, where Claudette's tie is) and dark eyes. Brighter colors, and more of them, clashed. Her shape is nothing like Clawd's: a bouffant over an hourglass dress and two boots, not a slab on four legs. Her arms show beside the dress, as her antics need them to, and the right side of her hair, with her clip, falls two cells further than the left and flips out. She stays 12×12 cells.
+  - devEntry wherever Claudette names the app: the windows, menus, Settings, About, notifications, the installers, the website and the README. The mascot is Joulene, on the composer ([§5](#claudette-on-the-composer)) and in the games ([§18](#games-with-claudette)), and wherever the app names her, as in *Joulene is thinking…* and **Joulene settings…**.
+  - Where devEntry says what it is, it names no provider: *the desktop app that puts agents in a native window*. That's the site's description, the MSIX's and the Store's, About's line and the README's first line. The landing page's headline, in place of *Claude Code in a real desktop window*, is *Your agents in a real desktop window*, and the social card's follows it.
+  - Where the guide says how something works with Claude Code today (installing it, signing in, permissions, usage limits), it still names Claude Code, since that's what runs; those pages split by provider when a second one comes. The landing page, Downloads and the Store listing say what devEntry needs: *Works with Claude Code today, with more providers to come.*
+- **The icon** is devEntry's own, no longer the mascot: the mouth of a cave, a burrow for dotBunny, in a grassy stone mound, with a prompt, `>_`, glowing in its dark and waiting for the next line. It keeps what Claudette's icon does ([§10](#10-notifications)), each state in the cave:
+  - **Working:** the cursor types, a character and a blink at a time.
+  - **Waiting for a usage limit:** the prompt rests, and an hourglass stands at the mouth, its sand running and then turning over.
+  - **Needs you:** the prompt turns into a `?` that hops: up a cell and brighter, with a sparkle either side at the top of each hop, twice, then a rest. It catches the eye by moving, not by changing color.
+
+  On Windows, the taskbar button's icon stays still and its overlay shows these (it shows Claude's spark today, which goes); on macOS, the Dock icon itself moves. It's pixel art, 12×12 cells like Joulene, so the taskbar's 24, 36 and 48 px icons are 2, 3 and 4 pixels a cell, and `build-icons.mjs` makes every size and frame from it, as it does now: the `.ico`, the MSIX's logos, the macOS icon, the SVG (Rider's project icon too), the animations' frames, and the site's logo and favicon. Its colors are the ones it was first drawn in, while the brand's palette is open. The prompt, then the `?` at rest:
 
   ```
-  ...hHHHHh...   B body      #CF7F96   H hair       #F0DFA6   K clip  #5B7FD6
-  ..hHSHHHHh..   b its shade #A85E74   h hair edge  #C4A961   E eyes  #141413
-  .hHHHHHHKHh.                         S shine      #FFF8E0
-  .HHHBBBBHHH.
-  .HHBEBBEBHH.
-  .HHBBBBBBHHh
-  .hHHBBBBHHHH
-  .BBBBBBBBBBH
-  .B.BBBBBB.Bh
-  .B.bbbbbb.B.
-  ..BBBBBBBB..
-  ...bb..bb...
+  ....gGGg....   ....gGGg....   g G  grass        #4E7D3E #6FA35A
+  ..gGGgGGGg..   ..gGGgGGGg..   M    stone        #8A7F73
+  .gGMhhMMMGg.   .gGMhhMMMGg.   m h  its shade    #6B5F55
+  .MhhMMMMMMm.   .MhhMMMMMMm.        and highlight #A89E92
+  MhMMMMDDMMMm   MhMMMMDDMMMm   D    the dark     #1E1A22
+  MMMMDDDDDMMm   MMMMDDPPDMMm   e    the ground   #5A4A3C
+  MhMDDDDDDDMm   MhMDDPDDPDMm   P    the prompt   #F0DFA6
+  MMMDPDDDDDmm   MMMDDDDPDDmm        brighter, hopping #FFE7A3
+  MMDDDPDDDDDm   MMDDDDPDDDDm
+  mMDDPDPPPDDm   mMDDDDDDDDDm
+  mmDDDDDDDDmm   mmDDDDPDDDmm
+  eeeeeeeeeeee   eeeeeeeeeeee
   ```
 
-  - Every pose, hat and prop in `build-icons.mjs` is drawn again for her: the 32 poses, the hats fitted to her hair, and the props held at arm height moved, since her arms are lower than Claudette's. The poses keep their names, so `MascotDirector` and `MascotAntics` change only where a prop's place does. She has a new pose, hands on her hips.
+- **The wordmark** is *devEntry*, set as code is, in a monospace face, with *Entry* in the accent color. The pixel wordmark on the landing page spells it too, so its font gains lowercase letters.
+- **Her look**, on the composer. A medieval lady, in the colors of her first sketch, which stay: a rose face and arms, platinum hair falling past her shoulders and longer on the right, a gold circlet, and a blue gown with a gold belt, to the floor. Her shape is nothing like Clawd's slab on four legs. Her arms show at her sides, as her antics need them to. She stays 12×12 cells.
+
+  ```
+  ....jJJj....   B  face and arms  #CF7F96   O  circlet  #E0B84A
+  ..jOOOOOOj..   I  eyes           #141413   N  gown     #3B4E8C
+  .jJJJJJJJJj.   J  hair           #F0DFA6   n  belt     #C4A961
+  .JJJBBBBJJJ.   j  hair's edge    #C4A961
+  .JJBIBBIBJJ.
+  .JJBBBBBBJJj
+  .JJJBBBBJJJJ
+  .JNNNNNNNNJJ
+  .JBNNnnNNBJj
+  .j.NNNNNN.J.
+  ..NNNNNNNN..
+  .NNNNNNNNNN.
+  ```
+
+  - Every pose, hat and prop in `build-icons.mjs` is drawn again for her: the 32 poses, where her walk sways her gown's hem, since her feet don't show; the hats fitted to her hair, in place of the circlet when [the calendar](#claudette-on-the-composer) gives her one; and the props held at arm height moved. The poses keep their names, so `MascotDirector` and `MascotAntics` change only where a prop's place does. She has a new pose, hands on her hips.
+  - **The cave is one of her props**, on the composer's edge: she walks into it, her eyes look out of its dark mouth, and she comes back out to wave. It can take her off to sleep, and bring her back carrying something.
   - The README's animation (`MascotPictureTests`) and the UI snapshots she's in are drawn again from her.
-- **The website.** The same pages, layout and format, with the new name and colors: blue, with rose from her. The variables keep landing.css's roles, the brand's renamed: `--blue` `#4A6FC4`, `--blue-deep` `#34539E`, `--periwinkle` `#8A93DA`, `--rose` `#CF7F96`, `--rose-deep` `#A85E74`, `--platinum` `#F0DFA6`. The light theme is cool white (`#F7F8FC`, text `#26304A`, links `#34539E`), the dark one blue-black (`#10141F`, text `#DCE1EC`, links `#93AEEB`), and the gradient runs blue, periwinkle, rose. The guide's chapter about her moves from `/claudette/` to `/joulene/`, its old pages left as redirects (`redirect_from`), and every picture is taken again.
-  - **The address** becomes `pagentry.dotbunny.com`: a `pagentry` CNAME to `dotbunny.github.io` in dotbunny.com's DNS, at Cloudflare, not proxied until GitHub has issued its certificate; then `docs/CNAME` and the Pages setting, with HTTPS enforced.
-  - **The old address keeps working**, since installed copies, the changelog's entries and the README's links point at it: its `claudette` record becomes a proxied `AAAA 100::` with a Cloudflare redirect rule sending each page, 301, to the same path at `pagentry.dotbunny.com`. Nothing at GitHub claims it any more, so no one else's Pages site can. The rule stays as long as copies that link there are in use.
+- **The website.** The same pages, layout and format, with the new name. The brand's colors are open; the first proposal is blue with rose from Joulene, with the variables keeping landing.css's roles and the brand's renamed: `--blue` `#4A6FC4`, `--blue-deep` `#34539E`, `--periwinkle` `#8A93DA`, `--rose` `#CF7F96`, `--rose-deep` `#A85E74`, `--platinum` `#F0DFA6`, a cool white light theme (`#F7F8FC`, text `#26304A`, links `#34539E`) and a blue-black dark one (`#10141F`, text `#DCE1EC`, links `#93AEEB`). The guide's chapter about her moves from `/claudette/` to `/joulene/`, its old pages left as redirects (`redirect_from`), and every picture is taken again.
+  - **The address** becomes `deventry.dotbunny.com`: a `deventry` CNAME to `dotbunny.github.io` in dotbunny.com's DNS, at Cloudflare, not proxied until GitHub has issued its certificate; then `docs/CNAME` and the Pages setting, with HTTPS enforced. Of devEntry's own domains, `deventry.dev`, `.io`, `.app`, `.ai` and `.co` were free on 2026-10-31; `deventry.com` belongs to a domain investor, with no site on it.
+  - **The old address keeps working**, since installed copies, the changelog's entries and the README's links point at it: its `claudette` record becomes a proxied `AAAA 100::` with a Cloudflare redirect rule sending each page, 301, to the same path at `deventry.dotbunny.com`. Nothing at GitHub claims it any more, so no one else's Pages site can. The rule stays as long as copies that link there are in use.
 - **What doesn't change**, so installed copies update in place and keep what they had:
-  - The MSIX identity `dotBunny.Claudette`, its Application Id `Claudette`, the AppUserModelID and the startup task's `ClaudetteAtLogin`. A package of another identity couldn't update an installed one, and the bridge release (below) starts the new version by its Application Id. Only the display names change, and the executable, to `Pagentry.exe`.
-  - The bundle identifier `com.dotbunny.claudette`, which the update check, notification permission and the Keychain's access to its items follow. The bundle becomes `Pagentry.app`.
+  - The MSIX identity `dotBunny.Claudette`, its Application Id `Claudette`, the AppUserModelID and the startup task's `ClaudetteAtLogin`. A package of another identity couldn't update an installed one, and the bridge release (below) starts the new version by its Application Id. Only the display names change, and the executable, to `DevEntry.exe`.
+  - The bundle identifier `com.dotbunny.claudette`, which the update check, notification permission and the Keychain's access to its items follow. The bundle becomes `DevEntry.app`.
   - The publisher, the Artifact Signing certificate profile and the macOS team, which are dotBunny's, not the app's.
   - What other machines and builds read: the usage-sharing file's `claudette` field ([§6](#6-token-burn-awareness)) and `.claudette-build.json` ([§9](#working-on-claudette)).
-- **What moves the first time Pagentry starts.**
-  - The data and settings folders (`Claudette` or `claudette`, [§14](#14-settings)) are renamed to `Pagentry` or `pagentry`, when the new ones don't exist yet, and the paths saved in them that point into the old folders are rewritten: the default session library and the local copies of sessions.
+- **What moves the first time devEntry starts.**
+  - The data and settings folders (`Claudette` or `claudette`, [§14](#14-settings)) are renamed to `DevEntry` or `deventry`, when the new ones don't exist yet, and the paths saved in them that point into the old folders are rewritten: the default session library and the local copies of sessions.
   - Perforce passwords and accounts' API keys are looked up under the new name first, then the old (Credential Manager's `Claudette/…`, the Keychain's `Claudette` service, `secret-tool`'s `claudette`). One found under the old name is saved under the new and deleted. The bundle identifier stays, so the Keychain doesn't ask.
   - Starting at login ([§9](#starting-at-login)): the Run key's value, the LaunchAgent and `claudette.desktop` take the new name and path.
   - The settings named after her (`appearance.showClaudette`, `claudetteSize`, `claudetteLiveliness`, `claudetteTips` and `gamesWithClaudette`) are named after Joulene (`appearance.showJoulene` and so on), and read from their old keys while the new ones are missing. Another machine on Claudette, syncing settings ([§14](#settings-sync-optional)), keeps its own for those five.
-  - `claudette.json` and `claudette.local.json` in people's projects are read when there's no `pagentry.json` or `pagentry.local.json`, for good; Pagentry never renames them, as they're the project's files. Settings writes `pagentry.json` for a project that has neither.
-  - Project actions get `PAGENTRY_WORKTREE` and `PAGENTRY_MAIN_CHECKOUT` beside `CLAUDETTE_WORKTREE` and `CLAUDETTE_MAIN_CHECKOUT`, and the login shell `PAGENTRY_RESOLVING_ENVIRONMENT` beside `CLAUDETTE_RESOLVING_ENVIRONMENT`, as people's scripts and profiles may read them. A release's notes say when the old ones go. `CLAUDETTE_HOME` and `CLAUDETTE_RUN_IN_PLACE` are read too; the variables only Claudette's own tools set are renamed.
-  - A thread's deliveries are recognized by the line *"Claudette delivered this message to the sub-thread"* as well as Pagentry's, for good, as History reopens sessions written before ([§18](#threads)).
+  - `claudette.json` and `claudette.local.json` in people's projects are read when there's no `deventry.json` or `deventry.local.json`, for good; devEntry never renames them, as they're the project's files. Settings writes `deventry.json` for a project that has neither.
+  - Project actions get `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT` beside `CLAUDETTE_WORKTREE` and `CLAUDETTE_MAIN_CHECKOUT`, and the login shell `DEVENTRY_RESOLVING_ENVIRONMENT` beside `CLAUDETTE_RESOLVING_ENVIRONMENT`, as people's scripts and profiles may read them. A release's notes say when the old ones go. `CLAUDETTE_HOME` and `CLAUDETTE_RUN_IN_PLACE` are read too; the variables only Claudette's own tools set are renamed.
+  - A thread's deliveries are recognized by the line *"Claudette delivered this message to the sub-thread"* as well as devEntry's, for good, as History reopens sessions written before ([§18](#threads)).
 - **The bridge release**, the last Claudette, at least two weeks before, so installed copies can follow:
-  - Its update check takes a release's `Pagentry-<version>-<arch>` packages as well as `Claudette-…` ones ([Updating Claudette](#updating-claudette)).
-  - On macOS it takes `Pagentry.app` from the disk image, and the helper installs it under its own name and then removes `Claudette.app`. Going back puts `Claudette.app` back.
-  - A copy that skips it still announces the new release, with a link to it. Installing by hand replaces it on Windows, as the identity is the same; on macOS, `Pagentry.app` goes in Applications and `Claudette.app` in the Trash, as the guide's page on updating says.
-- **The code.** One scripted commit renames the projects and their folders, the namespaces (`Pagentry.Core` and so on), `Claudette.slnx` (`Pagentry.slnx`), the `avares://` addresses, `InternalsVisibleTo`, the snapshots named after them and `.idea/.idea.Claudette`, and restores the lock files. The changes above come after it, then the docs: this document, CLAUDE.md, GUIDE.md, the README, the skills, and an entry in CHANGELOG.md that says what carried over. The changelog's history keeps Claudette. It's done while no pull requests are open. A source build of Claudette doesn't notice Pagentry's builds, since it looks for `Claudette.slnx`, so it's restarted by hand once.
-- **Outside the repository**, on the day, in this order:
-  1. **Partner Center:** first, well before the day, the trademark registers (USPTO, CIPO, EUIPO) searched for Pagentry, and "Pagentry" reserved for the product (a package's display name must be one of its reserved names). Then a submission with the new package, and the listing's name, text, pictures, website and privacy policy. "Claudette" stays reserved.
-  2. **GitHub:** `dotBunny/Claudette` renamed to `dotBunny/Pagentry`. GitHub redirects its pages, git and the API, and the update check follows the redirect. A repository named `dotBunny/Claudette` must never be made again, a fork included, as for `reapazor/Claudette`. Then the description, homepage, topics, social preview and `ISSUE_TEMPLATE/config.yml`'s links. The `release` environment and its secrets move with the repository.
+  - Its update check takes a release's `DevEntry-<version>-<arch>` packages as well as `Claudette-…` ones ([Updating Claudette](#updating-claudette)).
+  - On macOS it takes `DevEntry.app` from the disk image, and the helper installs it under its own name and then removes `Claudette.app`. Going back puts `Claudette.app` back.
+  - A copy that skips it still announces the new release, with a link to it. Installing by hand replaces it on Windows, as the identity is the same; on macOS, `DevEntry.app` goes in Applications and `Claudette.app` in the Trash, as the guide's page on updating says.
+- **The code.** One scripted commit renames the projects and their folders, the namespaces (`DevEntry.Core` and so on), `Claudette.slnx` (`DevEntry.slnx`), the `avares://` addresses, `InternalsVisibleTo`, the snapshots named after them and `.idea/.idea.Claudette`, and restores the lock files. The changes above come after it, then the docs: this document, CLAUDE.md, GUIDE.md, the README, the skills, and an entry in CHANGELOG.md that says what carried over. The changelog's history keeps Claudette. It's done while no pull requests are open. A source build of Claudette doesn't notice devEntry's builds, since it looks for `Claudette.slnx`, so it's restarted by hand once.
+- **Outside the repository**, in this order:
+  1. **Well before the day:** `deventry.dev` registered, to hold the name, and "devEntry" reserved for the product in Partner Center (a package's display name must be one of its reserved names). "Claudette" stays reserved.
+  2. **GitHub:** `dotBunny/Claudette` renamed to `dotBunny/DevEntry`. GitHub redirects its pages, git and the API, and the update check follows the redirect. A repository named `dotBunny/Claudette` must never be made again, a fork included, as for `reapazor/Claudette`. Then the description, homepage, topics, social preview and `ISSUE_TEMPLATE/config.yml`'s links. The `release` environment and its secrets move with the repository.
   3. **Azure:** a repository renamed after 2026-07-15 gets GitHub's immutable OIDC subject, with the owner's and repository's IDs (dotBunny `5067903`, the repository `1393693845`), so the federated credential for `repo:dotBunny/Claudette:environment:release` stops matching. **Run workflow** once: azure/login's AADSTS70021 error names the subject it was given. A federated credential for that subject goes on the Entra app registration, and the old one comes off once a signed run passes. The Artifact Signing account and certificate profile are unchanged.
   4. **Apple:** nothing. The Developer ID is the team's, and the bundle identifier stays.
   5. **The site's address**, as above.
   6. **The tag**, its signed packages, and the release published.
-  7. **Telling people:** dotBunny's Discord, the release notes, and a line in the README, *formerly Claudette*, so searches for the old name find it.
-- **The version.** Pagentry's first release is 1.0.0. The bridge release is the last 0.x.
+  7. **Partner Center:** a submission with the new package, and the listing's name, text, pictures, website and privacy policy.
+  8. **Telling people:** dotBunny's Discord, the release notes, and a line in the README, *formerly Claudette*, so searches for the old name find it.
+- **The version.** devEntry's first release is 1.0.0. The bridge release is the last 0.x.
 
 ## 3. Main Window
 
