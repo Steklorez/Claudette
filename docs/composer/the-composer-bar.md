@@ -43,8 +43,6 @@ Most of these show only when they apply to the tab.
 
 ## The send key
 
-{% include unreleased.html %}
-
 Just before **Send**, a chip says which key sends your message: *⏎ sends* when it's `Enter`, or *Ctrl+⏎ sends* when it's `Ctrl+Enter` (*⌘⏎ sends* on macOS). It's always there.
 
 Click it to switch between the two. With the keyboard, `Tab` to it and press `Space`. Its tooltip says what each key does and what clicking does, such as *Enter sends, Shift+Enter starts a new line. Click to send with Ctrl+Enter instead.*

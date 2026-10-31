@@ -8,8 +8,6 @@ redirect_from: /tabs/the-side-panel/
 
 # Tool windows
 
-{% include unreleased.html %}
-
 Changed files, the agent map, tasks and the rest are tool windows, as in JetBrains Rider. A strip of icons runs down the window's right edge, one for each window, and a click on one shows its window beside the strip. There's one set for the whole window. They used to be the side panel's pages, which each tab had of its own.
 
 {% include shot.html name="guide/tabs/tool-windows" alt="The tool windows at the right: Changed files above Scratch pad, each with its title, ⋮ and − on its header, and the strip of icons beside them, the two windows' icons filled in." %}

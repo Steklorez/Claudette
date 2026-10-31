@@ -7,8 +7,6 @@ summary: "About Claudette says which Claudette you have, where it is on the web,
 
 # About Claudette
 
-{% include unreleased.html %}
-
 About Claudette is a window of its own. It says which Claudette you have and where to find it on the web, who has contributed to it, whose names and logos it uses, and the open-source libraries, font and artwork it's built with, each with its license. It opens over the window you opened it from, and `Esc` closes it.
 
 {% include shot.html name="guide/settings/about" alt="About Claudette, its own window: Claudette's logo and name, the version, On the web with Website, Source code, Changelog and Privacy policy, Claudette's MIT License, and the Trademarks section with a row for each name and its owner's notice" %}

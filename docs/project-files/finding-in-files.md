@@ -7,8 +7,6 @@ summary: "Find text in a project's files, and replace it, from anywhere in the w
 
 # Finding in files
 
-{% include unreleased.html %}
-
 Find text in a project's files, and replace it, as JetBrains Rider's **Find in Files** does. It works from anywhere in the window, a conversation or a Files tab, and looks in the focused tab's project.
 
 ## Open it

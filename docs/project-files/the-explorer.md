@@ -59,8 +59,6 @@ Claudette never writes over a file. If one with the name appears while you type,
 
 ## Renaming
 
-{% include unreleased.html %}
-
 1. Right-click a file or folder and choose **Rename**, or select it and press `F2`.
 2. A box takes its place with its name in it. For a file, the name up to its extension is selected, so what you type keeps the extension.
 3. Type the new name and press `Enter`.
@@ -72,8 +70,6 @@ Files you have open from it follow it, with any unsaved edits. A folder that was
 Claudette renames it on disk, as your file manager would. Git notices the rename by itself. Perforce needs `p4 reconcile`, or **Reconcile Offline Work** in P4V.
 
 ## Deleting
-
-{% include unreleased.html %}
 
 1. Right-click a file or folder and choose **Delete**, or select it and press `Delete` (`Cmd+Backspace` on macOS).
 2. A question under the explorer's header says what goes and where: *"Delete Brain.cpp? It goes to the Recycle Bin."* For a folder, it says how many files are in it. If a file open from it has unsaved edits, it says those go too.

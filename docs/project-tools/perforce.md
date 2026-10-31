@@ -63,8 +63,6 @@ Claudette reads it from the `p4` commands Claude runs and their output, so it wo
 
 ## In the Files tab
 
-{% include unreleased.html %}
-
 In a Perforce workspace, a project's [Files tab](../project-files/index.md) shows what Perforce has open, and its menus have Perforce's commands. This works whether or not **Keep Perforce logins fresh** is on.
 
 Beside a file's name, the explorer says what it's opened for, in Perforce's own words: *edit*, *add*, *delete*, *move*, or *others* when only someone else has it open. Point at it for the whole of it, such as *Checked out in CL 12345.* Files nobody has open have no mark.
@@ -82,8 +80,6 @@ Right-click a file or folder, or a file's tab, for the Perforce section:
 What Perforce refuses, such as a file someone else has locked, shows under the explorer's header until you dismiss it.
 
 ## Opening files in Perforce
-
-{% include unreleased.html %}
 
 In a workspace, Claudette opens files in Perforce as they change, so you and Claude don't have to. Each of these is a switch in Settings → Perforce → **Opening files in Perforce**, on by default:
 

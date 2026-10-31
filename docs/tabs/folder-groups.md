@@ -95,8 +95,6 @@ Then, under a line:
 
 ## Claude Code's projects
 
-{% include unreleased.html %}
-
 The sidebar can list every folder Claude Code has sessions in on this machine, so you work in your projects straight from the sidebar, as you would from their folders in a terminal, instead of through the new tab picker or History.
 
 1. Open Settings → Tabs → **Claude Code's projects**.

@@ -7,8 +7,6 @@ summary: "Settings → Git, the first page under Source control, holds the branc
 
 # Git
 
-{% include unreleased.html %}
-
 Settings → **Git** is the first page under **Source control** in the Settings sidebar, before [Perforce](../project-tools/perforce.md). It gathers what Claudette does with git:
 
 - **Tab rows**: **Show the git branch**, the branch badge on each tab's row. See [Styles and themes](styles-and-themes.md#what-the-tab-rows-show).
