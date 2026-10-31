@@ -21,7 +21,7 @@ composer's right rather than being caught part-way through falling off it). Then
 - closes History, hides the tool windows, opens starfall's Project Files tab, opens StarfallCharacter.cpp from its explorer and captures the
   window, with Claude's changes marked in the explorer and the editor's gutter, as files-<style>-<theme>.png;
 and closes Deventry by its window, as a user would. Last, it has MascotPictureTests draw Joulene on the composer's
-animation from her art and steps, as claudette.gif, and social-card.ps1 draw the site's social card with the new
+animation from her art and steps, as joulene.gif, and social-card.ps1 draw the site's social card with the new
 standard-dark.png.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
@@ -177,7 +177,7 @@ foreach ($style in 'standard', 'claude') {
 }
 # Joulene on the composer's animation, drawn from her art and steps rather than captured, so it's the same every time.
 Write-Host "Deventry's animation"
-$env:DEVENTRY_MASCOT_GIF = Join-Path $Out 'claudette.gif'
+$env:DEVENTRY_MASCOT_GIF = Join-Path $Out 'joulene.gif'
 try {
     & dotnet test (Join-Path $repo 'tests\Deventry.App.Tests\Deventry.App.Tests.csproj') --filter 'FullyQualifiedName~MascotPictureTests' -v q -nologo | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Drawing her animation failed.' }

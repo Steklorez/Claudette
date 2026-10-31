@@ -18,7 +18,7 @@ public class DevelopmentBuildTests
         Directory.CreateDirectory(Path.Combine(output, "runtimes", "linux-x64", "native"));
         Directory.CreateDirectory(Path.Combine(output, "runtimes", "win-x64", "native"));
         File.WriteAllText(temp.Combine("repo", SourceBuild.SolutionFileName), "<Solution />");
-        File.WriteAllText(Path.Combine(output, "Assets", "claudette.ico"), "icon");
+        File.WriteAllText(Path.Combine(output, "Assets", "deventry.ico"), "icon");
         File.WriteAllText(Path.Combine(output, "runtimes", "linux-x64", "native", "libSkiaSharp.so"), "linux");
         File.WriteAllText(Path.Combine(output, "runtimes", "win-x64", "native", "libSkiaSharp.dll"), "windows");
         foreach (var name in new[] { "Deventry.dll", "Deventry.deps.json", "Deventry.runtimeconfig.json" })
@@ -83,7 +83,7 @@ public class DevelopmentBuildTests
         Assert.Equal(Built, copy.Stamp);
         Assert.Equal(Path.GetFullPath(output), copy.SourceOutput);
         Assert.True(File.Exists(Path.Combine(copy.Directory, "Deventry.dll")));
-        Assert.True(File.Exists(Path.Combine(copy.Directory, "Assets", "claudette.ico")));
+        Assert.True(File.Exists(Path.Combine(copy.Directory, "Assets", "deventry.ico")));
         Assert.True(File.Exists(Path.Combine(copy.Directory, "runtimes", "linux-x64", "native", "libSkiaSharp.so")));
         Assert.False(Directory.Exists(Path.Combine(copy.Directory, "runtimes", "win-x64")));
         Assert.Equal(copy, BuildCopies.Read(copy.Directory));

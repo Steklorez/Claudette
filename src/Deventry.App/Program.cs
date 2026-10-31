@@ -96,7 +96,7 @@ internal sealed class Program
     {
         try
         {
-            var icon = Path.Combine(AppContext.BaseDirectory, "Assets", "claudette.ico");
+            var icon = Path.Combine(AppContext.BaseDirectory, "Assets", "deventry.ico");
             Platform.Notifications.Windows.WindowsAppIdentity.Initialize(File.Exists(icon) ? icon : null);
         }
         catch (Exception ex)

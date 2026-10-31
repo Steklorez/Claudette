@@ -23,7 +23,7 @@ redirect_from:
 # The repository, for site.github: the Downloads page lists its releases.
 repository: dotBunny/Claudette
 
-logo: /assets/claudette.svg
+logo: /assets/deventry.svg
 favicon_ico: /assets/favicon.ico
 color_scheme: claudette-light
 

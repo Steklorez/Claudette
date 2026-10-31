@@ -551,7 +551,7 @@
     <Setter Property="CornerRadius" Value="10" />
   </Style>
   <!-- Games with Joulene (DESIGN.md §18): the boards, the gallows, the letters and the minefield. The user's marks,
-       pieces and flags are blue, hers berry, as her mines are; the pieces that win are ringed in gold. -->
+       pieces and flags are blue, hers rose, as her mines are; the pieces that win are ringed in gold. -->
   <Style Selector="StackPanel.gameheader">
     <Setter Property="Margin" Value="12,10,12,8" />
     <Setter Property="Spacing" Value="8" />

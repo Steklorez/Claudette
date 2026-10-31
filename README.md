@@ -72,7 +72,7 @@ Each setting has a line saying what it does, and the search finds it by what you
 
 ### Claudette keeps you company
 
-![Claudette climbing up onto the message box, then dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up](docs/screenshots/claudette.gif)
+![Claudette climbing up onto the message box, then dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up](docs/screenshots/joulene.gif)
 
 Claudette, the app's pixel mascot, stands on the message box while you work: she hammers while Claude edits, juggles a ball for each subagent, waves when Claude needs you and throws confetti when the task list is done. [Meet her →](https://claudette.dotbunny.com/claudette/)
 

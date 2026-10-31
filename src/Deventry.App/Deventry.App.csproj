@@ -4,7 +4,7 @@
     <RootNamespace>Deventry.App</RootNamespace>
     <AssemblyName>Deventry</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\claudette.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\deventry.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
@@ -42,7 +42,7 @@
     <!-- Deventry's own license, for Settings → About (ThirdPartyNotices.DeventryLicense). -->
     <EmbeddedResource Include="..\..\LICENSE" LogicalName="License.txt" />
     <!-- Also a file next to the app: toasts from an unpackaged Deventry show it (WindowsAppIdentity). -->
-    <Content Include="Assets\claudette.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\deventry.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

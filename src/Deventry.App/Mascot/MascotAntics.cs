@@ -24,7 +24,7 @@ internal static class MascotAntics
 
     private static readonly MascotProp Reaching = new("hands", 0, -1);
 
-    /// <summary>The z's while she sleeps leaning on the edge, over her ponytail.</summary>
+    /// <summary>The z's while she sleeps leaning on the edge, by her head, on her longer side.</summary>
     public static readonly MascotProp SmallZ = new("z", 9, 11);
 
     public static readonly MascotProp BigZ = new("bigZ", 12, 16);
@@ -38,7 +38,7 @@ internal static class MascotAntics
     /// <summary>"!" over her head, at <paramref name="drop"/>.</summary>
     private static MascotProp Bang(double drop) => new("bang", 5, (int)Math.Round(MascotArt.Height - drop) + 1);
 
-    /// <summary>"?" over her ponytail.</summary>
+    /// <summary>"?" by her head, on her longer side.</summary>
     private static readonly MascotProp Question = new("question", 10, 13);
 
     /// <summary>An arrow toward the sidebar, on her left.</summary>
@@ -125,7 +125,7 @@ internal static class MascotAntics
         Step("stand", 0),
     ];
 
-    /// <summary>Sitting on the edge, arms beside her on it and her legs over the front of the box, swinging.</summary>
+    /// <summary>Sitting on the edge, her arms folded on it and her gown over the front of the box, her shoes swinging.</summary>
     public static IEnumerable<MascotStep> Sit(Random random)
     {
         yield return Step("stand", 110, drop: 1);
@@ -347,7 +347,7 @@ internal static class MascotAntics
     /// <summary>Reading: a magnifying glass held out to her right, peering through it.</summary>
     public static IEnumerable<MascotStep> Magnify()
     {
-        static MascotProp At(int bottom) => new("magnifier", 10, bottom);
+        static MascotProp At(int bottom) => new("magnifier", 9, bottom - 1);
         return
         [
             Step("lookRight", 450, props: At(4)),
@@ -362,13 +362,13 @@ internal static class MascotAntics
     /// <summary>Editing: hammering at the edge, then a rest.</summary>
     public static IEnumerable<MascotStep> Hammer()
     {
-        var down = new MascotProp("hammer-down", 11, 0);
+        var down = new MascotProp("hammer-down", 10, 0);
         return
         [
             .. Enumerable.Range(0, 4).SelectMany(_ => new[]
             {
                 Step("waveRight", 240, props: new MascotProp("hammer-up", 10, 4)),
-                Step("typeRight", 120, props: [down, Puff(15, 0)]),
+                Step("stand", 120, props: [down, Puff(14, 0)]),
                 Step("stand", 200, props: down),
             }),
             Step("stand", 900, props: down),
@@ -499,7 +499,7 @@ internal static class MascotAntics
     /// <summary>Every changed file reviewed: she stamps the edge, and leaves a check mark there.</summary>
     public static IEnumerable<MascotStep> Stamp() =>
     [
-        Step("wave", 350, props: new MascotProp("stamp", -3, 8)),
+        Step("wave", 350, props: new MascotProp("stamp", -3, 7)),
         Step("typeLeft", 120, props: [new MascotProp("stamp", -5, 0), Puff(-9, 0)]),
         Step("lookLeft", 1600, props: new MascotProp("check", -7, 0)),
         Step("blink", 140, props: new MascotProp("check", -7, 0)),

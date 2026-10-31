@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>Connect Four against Joulene (DESIGN.md §18, "Games with Joulene"): the user's pieces are blue, hers berry.</summary>
+/// <summary>Connect Four against Joulene (DESIGN.md §18, "Games with Joulene"): the user's pieces are blue, hers rose.</summary>
 public sealed class ConnectFourViewModel : GameViewModel
 {
     private ConnectFour _board = new();

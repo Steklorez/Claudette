@@ -79,7 +79,7 @@ public sealed record MascotSituation
 
 /// <summary>
 /// A prop drawn with her: <see cref="X"/> cells from her left, its bottom row <see cref="Bottom"/> cells above the edge.
-/// <see cref="Front"/> draws it in front of the composer box rather than behind, as her legs dangling over it.
+/// <see cref="Front"/> draws it in front of the composer box rather than behind, as her gown over it while she sits.
 /// </summary>
 public sealed record MascotProp(string Name, int X, int Bottom, bool Front = false);
 

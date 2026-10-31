@@ -9,7 +9,7 @@ summary: "Claudette stands on the top edge of the message box and does little th
 
 Claudette stands on the top edge of the message box and does little things now and then, the way a small mascot sits above the message box in the Claude apps. She keeps you company, and what she does follows what your tab is doing.
 
-![Claudette on the composer: climbing up, looking around, dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up.](../screenshots/claudette.gif)
+![Claudette on the composer: climbing up, looking around, dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up.](../screenshots/joulene.gif)
 
 {% include shot.html name="claudette-standard" alt="Claudette standing on the message box, close up." %}
 

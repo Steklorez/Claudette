@@ -43,7 +43,7 @@ public class AppIconTests
     [Fact]
     public void Every_animation_has_its_frames()
     {
-        foreach (var animation in new[] { AppIconAnimations.Spark, AppIconAnimations.Typing, AppIconAnimations.Waving, AppIconAnimations.Hourglass, AppIconAnimations.Waiting })
+        foreach (var animation in new[] { AppIconAnimations.Prompt, AppIconAnimations.Typing, AppIconAnimations.Asking, AppIconAnimations.Hourglass, AppIconAnimations.Waiting })
         {
             Assert.True(animation.Frames.Count > 1, animation.Name);
             Assert.All(animation.Frames, frame => Assert.Equal([0x89, (byte)'P', (byte)'N', (byte)'G'], frame.Png[..4]));
@@ -51,22 +51,22 @@ public class AppIconTests
     }
 
     [Fact]
-    public async Task While_a_tab_works_the_taskbar_overlay_pulses_the_spark()
+    public async Task While_a_tab_works_the_taskbar_overlay_types_at_the_prompt()
     {
         await using var h = new TabTestHarness();
         h.Notifier.Surface = AppIconSurface.Overlay;
         var tab = await StartWorkingAsync(h);
 
-        var spark = AppIconAnimations.Spark.Frames;
-        Assert.Same(spark[0].Png, h.Notifier.Frame);
+        var prompt = AppIconAnimations.Prompt.Frames;
+        Assert.Same(prompt[0].Png, h.Notifier.Frame);
         Assert.Equal("Claude is working", h.Notifier.FrameDescription);
-        h.Time.Advance(spark[0].Duration);
-        Assert.Same(spark[1].Png, h.Notifier.Frame);
-        foreach (var frame in spark.Skip(1))
+        h.Time.Advance(prompt[0].Duration);
+        Assert.Same(prompt[1].Png, h.Notifier.Frame);
+        foreach (var frame in prompt.Skip(1))
         {
             h.Time.Advance(frame.Duration);
         }
-        Assert.Same(spark[0].Png, h.Notifier.Frame);
+        Assert.Same(prompt[0].Png, h.Notifier.Frame);
 
         h.Transport.EmitTurn("done");
         await TabTestHarness.Eventually(() => tab.Status != TabStatus.Working, "the turn to end");
@@ -76,7 +76,7 @@ public class AppIconTests
     }
 
     [Fact]
-    public async Task On_the_taskbar_the_count_of_tabs_needing_input_takes_the_sparks_place()
+    public async Task On_the_taskbar_the_count_of_tabs_needing_input_takes_the_prompts_place()
     {
         await using var h = new TabTestHarness();
         h.Notifier.Surface = AppIconSurface.Overlay;
@@ -89,11 +89,11 @@ public class AppIconTests
         await AnswerAsync(tab);
         Assert.Equal(TabStatus.Working, tab.Status);
         Assert.Equal(0, h.Notifier.Badge);
-        Assert.Same(AppIconAnimations.Spark.Frames[0].Png, h.Notifier.Frame);
+        Assert.Same(AppIconAnimations.Prompt.Frames[0].Png, h.Notifier.Frame);
     }
 
     [Fact]
-    public async Task With_the_badge_off_the_spark_keeps_going_while_another_tab_needs_input()
+    public async Task With_the_badge_off_the_prompt_keeps_typing_while_another_tab_needs_input()
     {
         await using var h = new TabTestHarness(settings => settings.Notifications.Badge = false);
         h.Notifier.Surface = AppIconSurface.Overlay;
@@ -101,7 +101,7 @@ public class AppIconTests
         h.Services.Notifications.SetTabActivity(needingInput: 1, limited: 0, working: 1);
 
         Assert.Equal(0, h.Notifier.Badge);
-        Assert.Same(AppIconAnimations.Spark.Frames[0].Png, h.Notifier.Frame);
+        Assert.Same(AppIconAnimations.Prompt.Frames[0].Png, h.Notifier.Frame);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public class AppIconTests
         Assert.Same(typing[1].Png, h.Notifier.Frame);
 
         await NeedInputAsync(tab, h);
-        Assert.Same(AppIconAnimations.Waving.Frames[0].Png, h.Notifier.Frame);
+        Assert.Same(AppIconAnimations.Asking.Frames[0].Png, h.Notifier.Frame);
         Assert.Equal("A tab needs your input", h.Notifier.FrameDescription);
         Assert.Equal(1, h.Notifier.Badge);
 
@@ -151,11 +151,11 @@ public class AppIconTests
         await AutoContinueTests.AdvanceToAsync(h, reset + AutoContinueMonitor.Grace);
 
         await TabTestHarness.Eventually(() => !tab.HasLimitWait && tab.Status == TabStatus.Working, "the continue");
-        Assert.Same(AppIconAnimations.Spark.Frames[0].Png, h.Notifier.Frame);
+        Assert.Same(AppIconAnimations.Prompt.Frames[0].Png, h.Notifier.Frame);
     }
 
     [Fact]
-    public async Task On_the_taskbar_the_hourglass_comes_after_the_count_and_before_the_spark()
+    public async Task On_the_taskbar_the_hourglass_comes_after_the_count_and_before_the_prompt()
     {
         await using var h = new TabTestHarness();
         h.Notifier.Surface = AppIconSurface.Overlay;
@@ -169,7 +169,7 @@ public class AppIconTests
         Assert.Null(h.Notifier.Frame);
 
         notifications.SetTabActivity(needingInput: 0, limited: 0, working: 1);
-        Assert.Same(AppIconAnimations.Spark.Frames[0].Png, h.Notifier.Frame);
+        Assert.Same(AppIconAnimations.Prompt.Frames[0].Png, h.Notifier.Frame);
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public class AppIconTests
         Assert.Equal("Waiting for a usage limit to reset", h.Notifier.FrameDescription);
 
         notifications.SetTabActivity(needingInput: 1, limited: 1, working: 0);
-        Assert.Same(AppIconAnimations.Waving.Frames[0].Png, h.Notifier.Frame);
+        Assert.Same(AppIconAnimations.Asking.Frames[0].Png, h.Notifier.Frame);
     }
 
     [Fact]

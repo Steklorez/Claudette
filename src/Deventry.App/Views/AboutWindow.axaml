@@ -7,7 +7,7 @@
         x:Class="Deventry.App.Views.AboutWindow"
         x:DataType="settings:AboutPage"
         Title="About Deventry"
-        Icon="/Assets/claudette.ico"
+        Icon="/Assets/deventry.ico"
         Width="720" Height="720" MinWidth="520" MinHeight="420"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
@@ -35,7 +35,7 @@
       <ScrollViewer HorizontalScrollBarVisibility="Disabled">
         <StackPanel MaxWidth="720" Margin="40,28,40,40" Spacing="28">
           <StackPanel Orientation="Horizontal" Spacing="14">
-            <Image Source="/Assets/claudette.ico" Width="40" Height="40" VerticalAlignment="Center"
+            <Image Source="/Assets/deventry.ico" Width="40" Height="40" VerticalAlignment="Center"
                    RenderOptions.BitmapInterpolationMode="HighQuality" AutomationProperties.Name="Deventry" />
             <StackPanel VerticalAlignment="Center" Spacing="2">
               <TextBlock Text="Deventry" FontSize="22" FontWeight="SemiBold" />

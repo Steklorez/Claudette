@@ -125,9 +125,12 @@ public class AccessibilityTests
 
         h.Services.Settings.Appearance.Motion = MotionSetting.Full;
         h.Services.SaveSettings();
+        // Moving again: of two frames in a row, one isn't the still glyph, which the spinner passes through too.
         h.Time.Advance(WorkingLine.FrameInterval);
-        Assert.NotEqual(WorkingLine.StillGlyph, tab.Working.Glyph);
-        h.Time.Advance(typing[0].Duration);
+        var first = tab.Working.Glyph;
+        h.Time.Advance(WorkingLine.FrameInterval);
+        Assert.True(first != WorkingLine.StillGlyph || tab.Working.Glyph != WorkingLine.StillGlyph, $"{first} then {tab.Working.Glyph}");
+        h.Time.Advance(typing[0].Duration - WorkingLine.FrameInterval);
         Assert.Same(typing[1].Png, h.Notifier.Frame);
     }
 

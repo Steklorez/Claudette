@@ -28,7 +28,7 @@ public static class MascotArt
     /// <summary>The palette letter drawn in the theme's muted text colour rather than one of its own.</summary>
     public const char ThemeColor = 'Z';
 
-    /// <summary>Her hair tie's letter, which takes the colour of the tab's group when it has one.</summary>
+    /// <summary>Her circlet's gem's letter, which takes the colour of the tab's group when it has one.</summary>
     public const char HairTie = 'K';
 
     private static readonly Lazy<Art> Loaded = new(Load);

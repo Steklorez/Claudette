@@ -12,7 +12,7 @@ namespace Deventry.App.Views;
 
 /// <summary>
 /// Joulene on the composer, drawn (DESIGN.md §5): her pose, her hat and her props, cell by cell, in the palette
-/// <c>build-icons.mjs</c> gives them; the z's, "!" and other marks in the theme's muted text colour, and her hair tie in
+/// <c>build-icons.mjs</c> gives them; the z's, "!" and other marks in the theme's muted text colour, and her circlet's gem in
 /// her tab's group's colour. A figure in front of the box draws only the props that go in front of it. Her whole
 /// figure takes clicks, gaps and all.
 /// </summary>

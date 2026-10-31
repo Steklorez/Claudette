@@ -7,7 +7,7 @@
         x:Class="Deventry.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Deventry"
-        Icon="/Assets/claudette.ico"
+        Icon="/Assets/deventry.ico"
         Width="1100" Height="800"
         MinWidth="520" MinHeight="400"
         WindowStartupLocation="CenterScreen"
@@ -185,7 +185,7 @@
               <!-- The window's icon on Windows, with room around it as a title bar's icon has (MainWindow.axaml.cs) -->
               <Border x:Name="HeaderIcon" Background="Transparent" Padding="6" Margin="-2,-6,-4,-6" VerticalAlignment="Center"
                       IsVisible="{Binding MergesTitleBar}">
-                <Image x:Name="HeaderLogo" Source="/Assets/claudette.ico" AutomationProperties.Name="Deventry" Width="18" Height="18"
+                <Image x:Name="HeaderLogo" Source="/Assets/deventry.ico" AutomationProperties.Name="Deventry" Width="18" Height="18"
                        IsHitTestVisible="False" RenderOptions.BitmapInterpolationMode="HighQuality" />
               </Border>
               <Button Name="MainMenu" Classes="flat" VerticalAlignment="Center" ToolTip.Tip="Menu" AutomationProperties.Name="Menu"

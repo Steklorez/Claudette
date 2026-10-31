@@ -13,7 +13,7 @@ public sealed partial class TabViewModel
     /// <summary>Her, for the composer to show; one for every tab.</summary>
     public MascotService Mascot => _services.Mascot;
 
-    /// <summary>The colour of the tab's group in the sidebar, which her hair tie takes; null outside a group.</summary>
+    /// <summary>The colour of the tab's group in the sidebar, which her circlet's gem takes; null outside a group.</summary>
     [ObservableProperty]
     public partial Color? GroupColor { get; internal set; }
 

@@ -187,7 +187,7 @@ public class MascotUiTests
         await scene.UntilAsync(() => scene.Director.Frame.Pose == "lean", "her to sit");
 
         Assert.True(front.Figure.IsVisible);
-        Assert.True(scene.InWindow(front.Figure).Bottom > scene.InWindow(scene.Box).Top, "her legs hang over the box");
+        Assert.True(scene.InWindow(front.Figure).Bottom > scene.InWindow(scene.Box).Top, "her gown hangs over the box");
     }
 
     [AvaloniaFact]

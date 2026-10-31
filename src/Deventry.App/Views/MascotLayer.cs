@@ -19,7 +19,7 @@ namespace Deventry.App.Views;
 /// the box as it grows. It tells her where on the edge she has room (the part nothing sits on, between the corners),
 /// which way the pointer is, and shows what she says in a bubble. A click pokes her; dragging picks her up. The rest of
 /// the layer lets clicks through to what's under it. A second layer after the box (<see cref="IsFront"/>) draws what
-/// goes in front of it, her legs over it while she sits on the edge.
+/// goes in front of it, her gown over it while she sits on the edge.
 /// </summary>
 public sealed class MascotLayer : Control
 {
@@ -44,7 +44,7 @@ public sealed class MascotLayer : Control
     /// <summary>The colour of the z's, the "!" and her other marks: the theme's muted text.</summary>
     public static readonly StyledProperty<IBrush?> ThemeBrushProperty = AvaloniaProperty.Register<MascotLayer, IBrush?>(nameof(ThemeBrush));
 
-    /// <summary>Her hair tie's colour: her tab's group's, or null for her own berry.</summary>
+    /// <summary>Her gem's colour: her tab's group's, or null for her own blue.</summary>
     public static readonly StyledProperty<Color?> HairTieProperty = AvaloniaProperty.Register<MascotLayer, Color?>(nameof(HairTie));
 
     /// <summary>Screen pixels in a cell of her sprite at 100%: Settings → Appearance → her size.</summary>

@@ -183,7 +183,7 @@
 
     <!-- Joulene on the composer (DESIGN.md §5): she stands on the box's top edge, in a layer behind it, so the box hides
          her when she drops behind it and she rises and falls with it as it grows; a layer after it draws what goes in
-         front of it, her legs over it while she sits on the edge. She stands over the conversation's foot, so the
+         front of it, her gown over it while she sits on the edge. She stands over the conversation's foot, so the
          composer doesn't clip what it draws. -->
     <Panel x:Name="ComposerStage">
       <views:MascotLayer x:Name="MascotLayer" Director="{Binding Mascot.Director}" Box="{Binding #ComposerBox}"

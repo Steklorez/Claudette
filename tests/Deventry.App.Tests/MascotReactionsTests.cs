@@ -538,6 +538,6 @@ public class MascotReactionsTests
 
         Assert.NotEmpty(sitting);
         Assert.All(sitting, step => Assert.Equal((true, -2), (Assert.Single(step.Props!).Front, step.Props![0].Bottom)));
-        Assert.True(sitting.Select(s => s.Props![0].Name).Distinct().Count() >= 3, "her legs swing");
+        Assert.True(sitting.Select(s => s.Props![0].Name).Distinct().Count() >= 3, "her shoes swing");
     }
 }
