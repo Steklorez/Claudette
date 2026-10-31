@@ -8,7 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [0.7.0] - 2026-10-31
 
-**This is the last version called Claudette.** The next one, 1.0.0, is **devEntry**: the same app with a new name, and a new mascot on the composer, Joulene. When devEntry is released, this version offers it as an update like any other, and your tabs, settings, History and saved passwords come with you; on a Mac, it arrives in Applications as `DevEntry.app`, in place of `Claudette.app`. If you installed Claudette from the Microsoft Store, devEntry has a listing of its own there to install it from.
+**This is the last version called Claudette.** The next one, 1.0.0, is **Deventry**: the same app with a new name, and a new mascot on the composer, Joulene. When Deventry is released, this version offers it as an update like any other, and your tabs, settings, History and saved passwords come with you; on a Mac, it arrives in Applications as `Deventry.app`, in place of `Claudette.app`. If you installed Claudette from the Microsoft Store, Deventry has a listing of its own there to install it from.
 
 ### Added
 
