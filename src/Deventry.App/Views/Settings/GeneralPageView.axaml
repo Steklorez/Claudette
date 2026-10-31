@@ -44,7 +44,7 @@
               <c:SettingRow.Details>
                 <StackPanel Classes="options">
                   <RadioButton GroupName="KeepAwakeWhen" Content="Only while Claude has work to finish" IsChecked="{Binding KeepAwakeWhileClaudeHasWork}" />
-                  <RadioButton GroupName="KeepAwakeWhen" Content="Whenever Claudette is running" IsChecked="{Binding KeepAwakeWhileClaudetteRuns}" />
+                  <RadioButton GroupName="KeepAwakeWhen" Content="Whenever Deventry is running" IsChecked="{Binding KeepAwakeWhileDeventryRuns}" />
                 </StackPanel>
               </c:SettingRow.Details>
             </c:SettingRow>
@@ -56,7 +56,7 @@
       </c:SettingRow>
     </c:SettingsSection>
 
-    <!-- Claude's service status (DESIGN.md §18) and Claudette's own updates (DESIGN.md §2, "Updating Claudette") -->
+    <!-- Claude's service status (DESIGN.md §18) and Deventry's own updates (DESIGN.md §2, "Updating Deventry") -->
     <c:SettingsSection Key="updates">
       <c:SettingRow Key="general.showServiceStatus">
         <ToggleSwitch IsChecked="{Binding ShowServiceStatus}" />

@@ -5,7 +5,7 @@ namespace Deventry.Core.Protocol;
 
 /// <summary>
 /// A message Claude Code wrote to standard output in stream-json mode. Every message keeps its original JSON in
-/// <see cref="Raw"/>, so fields Claudette doesn't model yet are still available.
+/// <see cref="Raw"/>, so fields Deventry doesn't model yet are still available.
 /// </summary>
 public abstract record ClaudeMessage(string Type, JsonObject Raw);
 
@@ -38,7 +38,7 @@ public sealed record SystemInitMessage(
 
 /// <summary>
 /// Any other <c>system</c> message, such as <c>status</c>, <c>task_started</c> or <c>api_retry</c>. The subtypes
-/// Claudette reads have typed views (<see cref="HookRun"/> and the rest), null for every other subtype.
+/// Deventry reads have typed views (<see cref="HookRun"/> and the rest), null for every other subtype.
 /// </summary>
 public sealed record SystemMessage(string Subtype, JsonObject Raw) : ClaudeMessage("system", Raw)
 {
@@ -201,7 +201,7 @@ public sealed record AuthStatusMessage(bool IsAuthenticating, IReadOnlyList<stri
 /// <summary>A control request from Claude Code, such as <c>can_use_tool</c>.</summary>
 public sealed record ControlRequestMessage(string RequestId, string Subtype, JsonObject Request, JsonObject Raw) : ClaudeMessage("control_request", Raw);
 
-/// <summary>Claude Code's answer to a control request Claudette sent.</summary>
+/// <summary>Claude Code's answer to a control request Deventry sent.</summary>
 public sealed record ControlResponseMessage(string RequestId, bool IsSuccess, JsonObject? Response, string? Error, JsonObject Raw) : ClaudeMessage("control_response", Raw);
 
 /// <summary>Claude Code withdrawing a control request it sent earlier.</summary>
@@ -222,8 +222,8 @@ public sealed record AutocompactStateMessage(bool Enabled, long? EffectiveWindow
 /// </summary>
 public sealed record PromptSuggestionMessage(string Suggestion, JsonObject Raw) : ClaudeMessage("prompt_suggestion", Raw);
 
-/// <summary>A type Claudette knows about and deliberately skips, such as <c>active_goal</c>. Not counted as unknown.</summary>
+/// <summary>A type Deventry knows about and deliberately skips, such as <c>active_goal</c>. Not counted as unknown.</summary>
 public sealed record IgnoredMessage(string MessageType, JsonObject Raw) : ClaudeMessage(MessageType, Raw);
 
-/// <summary>A message type Claudette doesn't know yet. Skipped, and counted for diagnostics (DESIGN.md §16).</summary>
+/// <summary>A message type Deventry doesn't know yet. Skipped, and counted for diagnostics (DESIGN.md §16).</summary>
 public sealed record UnknownMessage(string MessageType, JsonObject Raw) : ClaudeMessage(MessageType, Raw);

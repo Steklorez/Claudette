@@ -1,7 +1,7 @@
 namespace Deventry.App.Mascot;
 
 /// <summary>
-/// The things Claudette on the composer does, as steps (DESIGN.md §5). Her poses and props are in
+/// The things Joulene on the composer does, as steps (DESIGN.md §5). Her poses and props are in
 /// <see cref="MascotArt"/>; a drop is how many cells lower she is than standing on the edge. Falls and jumps go by
 /// gravity, a step every 25 milliseconds; everything else moves a whole cell at a time, as pixel art does.
 /// </summary>

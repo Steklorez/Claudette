@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Prints a version's release notes: its section of CHANGELOG.md, without the heading (DESIGN.md §2, "Packaging and
 # signing"; GUIDE.md, "The changelog"). package.yml drafts each release with them, so the release on GitHub and
-# Claudette's update dialog say what the changelog says.
+# Deventry's update dialog say what the changelog says.
 #
 # A pre-release (1.4.0-beta.1) without a section of its own takes the Unreleased section. A version with no notes
 # fails, so a tag can't draft a release without them.

@@ -6,7 +6,7 @@ public enum LoginEntryState
     Missing,
     Enabled,
 
-    /// <summary>There, but turned off outside Claudette, such as in Task Manager's Startup apps.</summary>
+    /// <summary>There, but turned off outside Deventry, such as in Task Manager's Startup apps.</summary>
     DisabledByUser,
 }
 
@@ -24,34 +24,34 @@ public enum PackageTaskState
 }
 
 /// <summary>
-/// The OS's ways of starting Claudette when the user logs in (DESIGN.md §9, "Starting at login"): a command entry that
-/// any copy of Claudette can write, and, in the MSIX, the package's own startup task. Implemented in Deventry.Platform:
+/// The OS's ways of starting Deventry when the user logs in (DESIGN.md §9, "Starting at login"): a command entry that
+/// any copy of Deventry can write, and, in the MSIX, the package's own startup task. Implemented in Deventry.Platform:
 /// the Run key and <c>StartupTask</c> on Windows, a LaunchAgent on macOS, an XDG autostart file on Linux.
 /// </summary>
 public interface ILoginItems
 {
-    /// <summary>Why Claudette can't start at login here, or null when it can.</summary>
+    /// <summary>Why Deventry can't start at login here, or null when it can.</summary>
     string? UnavailableReason { get; }
 
-    /// <summary>Where the user turns it on and off outside Claudette, such as "Task Manager's Startup apps".</summary>
+    /// <summary>Where the user turns it on and off outside Deventry, such as "Task Manager's Startup apps".</summary>
     string SystemSettingsName { get; }
 
     LoginEntryState ReadEntry();
 
     /// <summary>Makes the command entry start <paramref name="copy"/> with <c>--login</c>, replacing what it started before.</summary>
-    void WriteEntry(ClaudetteCopy copy);
+    void WriteEntry(DeventryCopy copy);
 
     /// <summary>Removes the command entry, if there is one.</summary>
     void DeleteEntry();
 
-    /// <summary>The package's startup task when this Claudette runs from the MSIX, the only one that can change it. Null otherwise.</summary>
+    /// <summary>The package's startup task when this Deventry runs from the MSIX, the only one that can change it. Null otherwise.</summary>
     IPackageStartupTask? PackageTask { get; }
 
     /// <summary>Whether <paramref name="copy"/> is still on this machine.</summary>
-    bool Exists(ClaudetteCopy copy);
+    bool Exists(DeventryCopy copy);
 
     /// <summary>Starts <paramref name="copy"/> with <c>--login</c>, to hand over to it at login.</summary>
-    void Start(ClaudetteCopy copy);
+    void Start(DeventryCopy copy);
 }
 
 /// <summary>The MSIX package's startup task (<c>windows.startupTask</c> in its manifest).</summary>
@@ -65,7 +65,7 @@ public interface IPackageStartupTask
     Task DisableAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>No way to start Claudette at login: tests, other OSes, and a Claudette started with <c>DEVENTRY_HOME</c>.</summary>
+/// <summary>No way to start Deventry at login: tests, other OSes, and a Deventry started with <c>DEVENTRY_HOME</c>.</summary>
 public sealed class NoLoginItems(string reason) : ILoginItems
 {
     public string? UnavailableReason => reason;
@@ -74,7 +74,7 @@ public sealed class NoLoginItems(string reason) : ILoginItems
 
     public LoginEntryState ReadEntry() => LoginEntryState.Missing;
 
-    public void WriteEntry(ClaudetteCopy copy) => throw new InvalidOperationException(reason);
+    public void WriteEntry(DeventryCopy copy) => throw new InvalidOperationException(reason);
 
     public void DeleteEntry()
     {
@@ -82,7 +82,7 @@ public sealed class NoLoginItems(string reason) : ILoginItems
 
     public IPackageStartupTask? PackageTask => null;
 
-    public bool Exists(ClaudetteCopy copy) => copy.ExistsOnDisk();
+    public bool Exists(DeventryCopy copy) => copy.ExistsOnDisk();
 
-    public void Start(ClaudetteCopy copy) => throw new InvalidOperationException(reason);
+    public void Start(DeventryCopy copy) => throw new InvalidOperationException(reason);
 }

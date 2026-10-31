@@ -165,7 +165,7 @@ public class TaskBoardTests
     [Fact]
     public void A_task_list_result_is_the_whole_list_and_a_task_it_hasnt_got_is_gone()
     {
-        Create("c1", "1", "Deleted where Claudette didn't see it");
+        Create("c1", "1", "Deleted where Deventry didn't see it");
         Create("c2", "2", "Kept");
         _list.ApplyToolUse("l1", "TaskList", new JsonObject());
         // Made while the list was being read: the result can't have it yet.

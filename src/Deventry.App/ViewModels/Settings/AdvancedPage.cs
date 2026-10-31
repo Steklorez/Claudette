@@ -19,16 +19,16 @@ public sealed partial class AdvancedPage : SettingsPage
         Section("claude", "Running claude",
         [
             Setting("advanced.extraArguments", "Extra arguments for every claude process", s => s.Advanced.ExtraArguments, (s, v) => s.Advanced.ExtraArguments = v,
-                "Split on spaces and added after Claudette's own. Applies to tabs started after the change.", keywords: ["command line", "flags", "cli"]),
+                "Split on spaces and added after Deventry's own. Applies to tabs started after the change.", keywords: ["command line", "flags", "cli"]),
             Setting("advanced.logProtocol", "Log protocol traffic", s => s.Advanced.LogProtocol, (s, v) => s.Advanced.LogProtocol = v,
                 "Everything each session sends and receives, to help with a bug report. Kept 7 days.",
-                "Logs hold your prompts and file contents. Messages Claudette skips also show in the conversation. Applies to tabs started after the change.",
+                "Logs hold your prompts and file contents. Messages Deventry skips also show in the conversation. Applies to tabs started after the change.",
                 ["debug", "logging", "open log folder"]),
-            Info("advanced.dataFolder", "Claudette's data folder", "Saved tabs, usage history and logs.", keywords: ["open data folder", "files"]),
+            Info("advanced.dataFolder", "Deventry's data folder", "Saved tabs, usage history and logs.", keywords: ["open data folder", "files"]),
         ]);
         Section("diagnostics", "Diagnostics",
         [
-            Info("advanced.diagnostics", "What Claude Code sent that Claudette doesn't know",
+            Info("advanced.diagnostics", "What Claude Code sent that Deventry doesn't know",
                 "Skipped safely; a count here after a Claude Code update is worth a bug report.",
                 keywords: ["copy diagnostics", "unknown messages", "minimum supported claude code version", "bug report", .. ClaudeCodePage.ShowLoginShellSetting ? ["login shell"] : (string[])[]]),
         ]);
@@ -36,7 +36,7 @@ public sealed partial class AdvancedPage : SettingsPage
 
     public override string IconKey => "IconToolBash";
 
-    public override string Description => "How Claudette runs claude, its logs and its files, and what it has noticed this run.";
+    public override string Description => "How Deventry runs claude, its logs and its files, and what it has noticed this run.";
 
     public string ExtraArguments
     {
@@ -73,7 +73,7 @@ public sealed partial class AdvancedPage : SettingsPage
     /// <summary>Whether the computer is kept awake for tabs connected to the Claude app, or why not (DESIGN.md §18).</summary>
     public string KeepAwakeText => Services.KeepAwake.Describe();
 
-    /// <summary>What Claude Code has sent this run that Claudette doesn't know, in words.</summary>
+    /// <summary>What Claude Code has sent this run that Deventry doesn't know, in words.</summary>
     public string DiagnosticsText => DiagnosticsReport(includeHeader: false);
 
     /// <summary><b>Refresh</b>: what the page shows, as it is now.</summary>
@@ -96,7 +96,7 @@ public sealed partial class AdvancedPage : SettingsPage
         var lines = new List<string>();
         if (includeHeader)
         {
-            lines.Add($"Claudette {Services.Build.Description}");
+            lines.Add($"Deventry {Services.Build.Description}");
             lines.Add($"OS: {RuntimeInformation.OSDescription} ({RuntimeInformation.RuntimeIdentifier})");
             lines.Add($"Claude Code: {InstalledVersionText}{(Services.Install is { } install ? $" at {install.Path}" : "")}");
             lines.Add($"Minimum supported Claude Code: {MinimumVersionText}");

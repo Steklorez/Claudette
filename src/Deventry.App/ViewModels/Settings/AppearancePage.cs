@@ -19,7 +19,7 @@ public sealed record MotionChoice(MotionSetting Setting)
     };
 }
 
-/// <summary>Claudette's sizes in Settings → Appearance (DESIGN.md §5, "Claudette on the composer").</summary>
+/// <summary>Joulene's sizes in Settings → Appearance (DESIGN.md §5, "Joulene on the composer").</summary>
 public sealed record JouleneSizeChoice(JouleneSize Size)
 {
     public override string ToString() => Size switch
@@ -30,7 +30,7 @@ public sealed record JouleneSizeChoice(JouleneSize Size)
     };
 }
 
-/// <summary>How often Claudette does something, in Settings → Appearance (DESIGN.md §5, "Claudette on the composer").</summary>
+/// <summary>How often Joulene does something, in Settings → Appearance (DESIGN.md §5, "Joulene on the composer").</summary>
 public sealed record JouleneLivelinessChoice(JouleneLiveliness Liveliness)
 {
     public override string ToString() => Liveliness == JouleneLiveliness.Calm ? "Calm: every 30 to 90 seconds" : "Lively: every 10 to 30 seconds";
@@ -44,7 +44,7 @@ public sealed record ZoomChoice(int Percent)
 
 /// <summary>
 /// Settings → Appearance (DESIGN.md §14): the preview, theme, style, density and width, the fonts, zoom and motion, and
-/// Claudette on the composer with her games.
+/// Joulene on the composer with her games.
 /// </summary>
 public sealed class AppearancePage : SettingsPage
 {
@@ -55,7 +55,7 @@ public sealed class AppearancePage : SettingsPage
             Setting("appearance.theme", "Theme", s => s.Appearance.Theme, (s, v) => s.Appearance.Theme = v,
                 "Light, dark, or as your computer is.", keywords: ["dark mode", "light mode", "colors"]),
             Setting("appearance.style", "Style", s => s.Appearance.Style, (s, v) => s.Appearance.Style = v,
-                "Claudette's own look, or the Claude apps'.",
+                "Deventry's own look, or the Claude apps'.",
                 "Claude looks like the Claude apps: ivory and warm greys, Claude's orange, rounder cards and serif replies. Standard uses neutral greys and your computer's accent color.",
                 ["claude style", "standard", "look", "theme"]),
             Setting("appearance.density", "Density", s => s.Appearance.Density, (s, v) => s.Appearance.Density = v,
@@ -63,14 +63,14 @@ public sealed class AppearancePage : SettingsPage
             Setting("appearance.fullWidthConversation", "Full-width conversation", s => s.Appearance.FullWidthConversation, (s, v) => s.Appearance.FullWidthConversation = v,
                 "Fill the tab's width, rather than stopping at a width that's easy to read.", keywords: ["wide", "narrow", "max width"]),
             Setting("appearance.systemTitleBar", "Use the system's title bar", s => s.Appearance.SystemTitleBar, (s, v) => s.Appearance.SystemTitleBar = v,
-                "Your system's title bar on each window, rather than Claudette's own.",
-                "Claudette's own: the main window's header is its title bar, and its other windows have one in the same style. Drag a title bar's gaps to move the window, and double-click them to maximize it. Linux always has the system's.",
+                "Your system's title bar on each window, rather than Deventry's own.",
+                "Deventry's own: the main window's header is its title bar, and its other windows have one in the same style. Drag a title bar's gaps to move the window, and double-click them to maximize it. Linux always has the system's.",
                 ["title bar", "window frame", "caption"]),
         ]);
         Section("text", "Text",
         [
             Setting("appearance.conversationFont", "Conversation font", s => s.Appearance.ConversationFont, (s, v) => s.Appearance.ConversationFont = v,
-                "Empty uses Claudette's own; one that isn't installed falls back to it.", keywords: ["typeface", "font family"]),
+                "Empty uses Deventry's own; one that isn't installed falls back to it.", keywords: ["typeface", "font family"]),
             Setting("appearance.conversationFontSize", "Conversation font size", s => s.Appearance.ConversationFontSize, (s, v) => s.Appearance.ConversationFontSize = v,
                 keywords: ["text size", "bigger", "smaller"]),
             Setting("appearance.codeFont", "Code font", s => s.Appearance.CodeFont, (s, v) => s.Appearance.CodeFont = v,
@@ -86,22 +86,22 @@ public sealed class AppearancePage : SettingsPage
                 ["scale", "bigger", "magnify"]),
             Setting("appearance.motion", "Motion", s => s.Appearance.Motion, (s, v) => s.Appearance.Motion = v,
                 "Whether the busy dots pulse, the working line twinkles and the icon moves.",
-                "Following the system, motion is reduced when your computer's settings, or Claude Code's prefersReducedMotion, ask for it. Claudette on the composer stands still then too.",
+                "Following the system, motion is reduced when your computer's settings, or Claude Code's prefersReducedMotion, ask for it. Joulene on the composer stands still then too.",
                 ["reduce motion", "animation", "accessibility"]),
         ]);
-        Section("claudette", "Claudette",
+        Section("joulene", "Joulene",
         [
-            Setting("appearance.showJoulene", "Show Claudette on the composer", s => s.Appearance.ShowJoulene, (s, v) => s.Appearance.ShowJoulene = v,
+            Setting("appearance.showJoulene", "Show Joulene on the composer", s => s.Appearance.ShowJoulene, (s, v) => s.Appearance.ShowJoulene = v,
                 "She stands on the message box and does little things every so often.",
                 "She walks about, dances, juggles, sits on the edge, and sometimes falls off behind it. While Claude works she works too, with whatever suits what it's doing, and she points out other tabs that need you. Click her to startle her, drag her about, or right-click to hide her. She stands still when motion is reduced.",
                 ["mascot", "character"]),
-            Setting("appearance.jouleneSize", "Size", s => s.Appearance.JouleneSize, (s, v) => s.Appearance.JouleneSize = v, keywords: ["claudette", "mascot"]),
+            Setting("appearance.jouleneSize", "Size", s => s.Appearance.JouleneSize, (s, v) => s.Appearance.JouleneSize = v, keywords: ["joulene", "mascot"]),
             Setting("appearance.jouleneLiveliness", "How often", s => s.Appearance.JouleneLiveliness, (s, v) => s.Appearance.JouleneLiveliness = v,
-                "How often she does something.", keywords: ["claudette", "mascot", "calm", "lively"]),
+                "How often she does something.", keywords: ["joulene", "mascot", "calm", "lively"]),
             Setting("appearance.jouleneTips", "Shares tips", s => s.Appearance.JouleneTips, (s, v) => s.Appearance.JouleneTips = v,
                 "Now and then she holds up a tip, such as a shortcut you might not know.",
-                "At most every ten minutes, and never while you're typing.", ["claudette", "hints"]),
-            Setting("appearance.gamesWithJoulene", "Games with Claudette", s => s.Appearance.GamesWithJoulene, (s, v) => s.Appearance.GamesWithJoulene = v,
+                "At most every ten minutes, and never while you're typing.", ["joulene", "hints"]),
+            Setting("appearance.gamesWithJoulene", "Games with Joulene", s => s.Appearance.GamesWithJoulene, (s, v) => s.Appearance.GamesWithJoulene = v,
                 "Tic-tac-toe, Connect Four, hangman or Minesweeper against her while Claude works.",
                 "Or while a usage limit holds a task. Start one by right-clicking her, from the command palette, or from the usage limit bar; it opens in the Games tool window. She plays whether or not she's on the composer.",
                 ["play", "tic-tac-toe", "connect four", "hangman", "minesweeper"]),
@@ -129,7 +129,7 @@ public sealed class AppearancePage : SettingsPage
     /// <summary>The preview drawn at the main window's zoom.</summary>
     public double ZoomScale => Settings.Appearance.Zoom / 100.0;
 
-    /// <summary>Screen pixels in a cell of Claudette's sprite, for her size in the preview.</summary>
+    /// <summary>Screen pixels in a cell of Joulene's sprite, for her size in the preview.</summary>
     public double JouleneCell => Settings.Appearance.JouleneSize switch
     {
         Core.Settings.JouleneSize.Small => 2,
@@ -148,7 +148,7 @@ public sealed class AppearancePage : SettingsPage
         OnPropertyChanged(nameof(JouleneCell));
     }
 
-    public override string Description => "How Claudette looks: in every tab, and on this computer's screen.";
+    public override string Description => "How Deventry looks: in every tab, and on this computer's screen.";
 
     public IReadOnlyList<ThemeChoice> Themes { get; } = [ThemeChoice.System, ThemeChoice.Light, ThemeChoice.Dark];
 
@@ -198,7 +198,7 @@ public sealed class AppearancePage : SettingsPage
     /// <summary>The fonts installed here, to pick from; any other name can be typed.</summary>
     public IReadOnlyList<string> InstalledFonts => field ??= Services.Platform.InstalledFonts();
 
-    /// <summary>Empty for Claudette's own font.</summary>
+    /// <summary>Empty for Deventry's own font.</summary>
     public string ConversationFont
     {
         get => Settings.Appearance.ConversationFont ?? "";
@@ -245,9 +245,9 @@ public sealed class AppearancePage : SettingsPage
         set => Set(value?.Setting ?? MotionSetting.System, v => Settings.Appearance.Motion = v);
     }
 
-    // ---- Claudette on the composer (DESIGN.md §5) -----------------------------------------------------------------
+    // ---- Joulene on the composer (DESIGN.md §5) -----------------------------------------------------------------
 
-    /// <summary>Claudette standing on the composer, doing little things now and then (DESIGN.md §5, "Claudette on the composer").</summary>
+    /// <summary>Joulene standing on the composer, doing little things now and then (DESIGN.md §5, "Joulene on the composer").</summary>
     public bool ShowJoulene
     {
         get => Settings.Appearance.ShowJoulene;
@@ -281,7 +281,7 @@ public sealed class AppearancePage : SettingsPage
         set => Set(value, v => Settings.Appearance.JouleneTips = v);
     }
 
-    /// <summary>Tic-tac-toe, Connect Four, hangman and Minesweeper against her (DESIGN.md §18, "Games with Claudette").</summary>
+    /// <summary>Tic-tac-toe, Connect Four, hangman and Minesweeper against her (DESIGN.md §18, "Games with Joulene").</summary>
     public bool GamesWithJoulene
     {
         get => Settings.Appearance.GamesWithJoulene;

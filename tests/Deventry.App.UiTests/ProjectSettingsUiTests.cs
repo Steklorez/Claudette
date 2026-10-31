@@ -227,7 +227,7 @@ public class ProjectSettingsUiTests
         list.ScrollIntoView(settings.NavEntries[^1]);
         UiText.Settle(window);
         Drawn();
-        Assert.Equal(new[] { "Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl }.Order(StringComparer.Ordinal), headings.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { "Deventry", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl }.Order(StringComparer.Ordinal), headings.Order(StringComparer.Ordinal));
         window.Close();
     }
 
@@ -263,7 +263,7 @@ public class ProjectSettingsUiTests
         var save = dialog.GetVisualDescendants().OfType<Button>().Single(b => b.Content as string == "Save");
         Assert.False(save.IsEffectivelyEnabled);
         var dialogText = UiText.Describe(dialog, (h.Root, "{root}"));
-        Assert.Contains("\"\"javascript:\" links don't open from Claudette; only https, http and mailto do.\"", dialogText, StringComparison.Ordinal);
+        Assert.Contains("\"\"javascript:\" links don't open from Deventry; only https, http and mailto do.\"", dialogText, StringComparison.Ordinal);
 
         address.Text = "https://example.com/{folderName}";
         UiText.Settle(window);

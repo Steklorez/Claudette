@@ -12,7 +12,7 @@ public enum ProjectJobState
 }
 
 /// <summary>How a job ended.</summary>
-/// <param name="ExitCode">The process's exit code; null for work Claudette did itself, or a process that never started.</param>
+/// <param name="ExitCode">The process's exit code; null for work Deventry did itself, or a process that never started.</param>
 /// <param name="Message">Why it failed, when there's more to say than the exit code.</param>
 public sealed record ProjectJobResult(ProjectJobState State, int? ExitCode, string? Message = null);
 
@@ -59,7 +59,7 @@ public sealed class ProjectJob
         return job;
     }
 
-    /// <summary>Work Claudette does itself, such as deleting folders. It reports lines and says whether it succeeded.</summary>
+    /// <summary>Work Deventry does itself, such as deleting folders. It reports lines and says whether it succeeded.</summary>
     public static ProjectJob Run(string name, Func<Action<string>, CancellationToken, Task<bool>> work)
     {
         var job = new ProjectJob(name);

@@ -11,7 +11,7 @@ internal static class GroupColors
 {
     /// <summary>
     /// The color for a group opening on <paramref name="folder"/>: the one saved for it, else <see cref="Next"/>. It's
-    /// remembered for the folder, so a color saved under another spelling of the path, or by an older Claudette, is
+    /// remembered for the folder, so a color saved under another spelling of the path, or by an older Deventry, is
     /// saved once now, as the group's folder is written.
     /// </summary>
     /// <param name="open">The colors of the groups already open, in order.</param>

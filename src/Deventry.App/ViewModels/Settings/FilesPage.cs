@@ -45,7 +45,7 @@ public sealed partial class FilesPage : SettingsPage
                 "{left} is the file before Claude's changes (a read-only copy), {right} is the file now; {leftTitle} and {rightTitle} are their titles.",
                 ["custom diff command"]),
             Setting("editor.diffWindowOpen", "Open in the diff window", s => s.Editor.DiffWindowOpen, (s, v) => s.Editor.DiffWindowOpen = v,
-                "The diff window closes when the file opens in Claudette's editor, so the editor isn't hidden behind it.", keywords: ["diff window"]),
+                "The diff window closes when the file opens in Deventry's editor, so the editor isn't hidden behind it.", keywords: ["diff window"]),
         ]);
     }
 

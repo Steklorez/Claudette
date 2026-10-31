@@ -2,7 +2,7 @@ using Deventry.Core.Updates;
 
 namespace Deventry.Core.Tests.Updates;
 
-/// <summary>This copy of Claudette as the Settings sidebar and a bug report give it (DESIGN.md §14, "Version").</summary>
+/// <summary>This copy of Deventry as the Settings sidebar and a bug report give it (DESIGN.md §14, "Version").</summary>
 public class AppBuildTests
 {
     private static readonly AppVersion Version = new(0, 1, 0);
@@ -22,10 +22,10 @@ public class AppBuildTests
     [Fact]
     public void Only_a_source_build_shows_its_commit_in_the_label()
     {
-        Assert.Equal("Claudette 0.1.0 · 842169b", new AppBuild(Version, AppInstallKind.SourceBuild, "842169b").Label);
-        Assert.Equal("Claudette 0.1.0", new AppBuild(Version, AppInstallKind.SourceBuild).Label);
-        Assert.Equal("Claudette 0.1.0", new AppBuild(Version, AppInstallKind.Msix, "842169b").Label);
-        Assert.Equal("Claudette 0.2.0-beta.1", new AppBuild(new AppVersion(0, 2, 0, "beta.1"), AppInstallKind.MacApp, "842169b").Label);
+        Assert.Equal("Deventry 0.1.0 · 842169b", new AppBuild(Version, AppInstallKind.SourceBuild, "842169b").Label);
+        Assert.Equal("Deventry 0.1.0", new AppBuild(Version, AppInstallKind.SourceBuild).Label);
+        Assert.Equal("Deventry 0.1.0", new AppBuild(Version, AppInstallKind.Msix, "842169b").Label);
+        Assert.Equal("Deventry 0.2.0-beta.1", new AppBuild(new AppVersion(0, 2, 0, "beta.1"), AppInstallKind.MacApp, "842169b").Label);
     }
 
     [Theory]
@@ -43,21 +43,21 @@ public class AppBuildTests
     {
         var details = new AppBuild(Version, AppInstallKind.Msix).Details("2.1.284", " Microsoft Windows 10.0.26100 ", "win-x64", ".NET 10.0.1");
 
-        Assert.Equal(["Claudette: 0.1.0 (MSIX)", "Claude Code: 2.1.284", "OS: Microsoft Windows 10.0.26100 (win-x64)", "Runtime: .NET 10.0.1"], details);
+        Assert.Equal(["Deventry: 0.1.0 (MSIX)", "Claude Code: 2.1.284", "OS: Microsoft Windows 10.0.26100 (win-x64)", "Runtime: .NET 10.0.1"], details);
         Assert.Equal("Claude Code: not found", new AppBuild(Version, AppInstallKind.Other).Details(null, "Linux", "linux-x64", ".NET 10.0.1")[1]);
     }
 
     [Fact]
     public void A_new_issue_has_the_outline_and_the_details_in_its_body()
     {
-        var url = AppBuild.NewIssueUrl("dotBunny/Claudette", ["Claudette: 0.1.0 (source build 842169b)", "Claude Code: 2.1.284"]);
+        var url = AppBuild.NewIssueUrl("dotBunny/Deventry", ["Deventry: 0.1.0 (source build 842169b)", "Claude Code: 2.1.284"]);
 
-        const string prefix = "https://github.com/dotBunny/Claudette/issues/new?body=";
+        const string prefix = "https://github.com/dotBunny/Deventry/issues/new?body=";
         Assert.StartsWith(prefix, url, StringComparison.Ordinal);
         var body = Uri.UnescapeDataString(url[prefix.Length..]);
         Assert.StartsWith("**What happened**\n", body, StringComparison.Ordinal);
         Assert.Contains("**Steps to reproduce**", body, StringComparison.Ordinal);
-        Assert.EndsWith("---\nClaudette: 0.1.0 (source build 842169b)\nClaude Code: 2.1.284", body, StringComparison.Ordinal);
+        Assert.EndsWith("---\nDeventry: 0.1.0 (source build 842169b)\nClaude Code: 2.1.284", body, StringComparison.Ordinal);
         // Escaped, so the body can't add query parameters of its own.
         Assert.DoesNotContain(' ', url);
         Assert.DoesNotContain('&', url);

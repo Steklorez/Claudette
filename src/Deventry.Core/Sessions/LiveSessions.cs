@@ -7,7 +7,7 @@ namespace Deventry.Core.Sessions;
 /// A Claude Code session running on this machine, as its entry in Claude Code's sessions folder describes it
 /// (DESIGN.md §13, "Session naming").
 /// </summary>
-/// <param name="Name">What other sessions message it by: a name it was given, or one Claude Code made from its folder (<c>claudette-3f</c>).</param>
+/// <param name="Name">What other sessions message it by: a name it was given, or one Claude Code made from its folder (<c>deventry-3f</c>).</param>
 /// <param name="IsNamed">It was given its name (<c>--name</c>, <c>/rename</c>, <c>rename_session</c>), rather than Claude Code making one up.</param>
 /// <param name="Status">Such as <c>idle</c> or <c>busy</c>; null when the entry doesn't say.</param>
 public sealed record LiveSession(int Pid, string SessionId, string Name, string? Cwd, bool IsNamed, string? Status);

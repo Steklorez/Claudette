@@ -7,14 +7,14 @@ using Deventry.Core.Json;
 namespace Deventry.Usage;
 
 /// <summary>Plan usage one machine shared through the session library, as another machine reads it.</summary>
-/// <param name="Version">The file's format: <see cref="UsageSharing.FileVersion"/> when this Claudette can read it.</param>
+/// <param name="Version">The file's format: <see cref="UsageSharing.FileVersion"/> when this Deventry can read it.</param>
 /// <param name="MachineName">The machine's name when it wrote the file, for the log.</param>
-/// <param name="WrittenBy">The version of Claudette that wrote it, for the log. Null in a file written before it was kept.</param>
+/// <param name="WrittenBy">The version of Deventry that wrote it, for the log. Null in a file written before it was kept.</param>
 /// <param name="Account">Which account it was signed in to: an <see cref="UsageSharing.AccountKey"/>.</param>
-/// <param name="Samples">Empty when the file's format is newer than this Claudette reads.</param>
+/// <param name="Samples">Empty when the file's format is newer than this Deventry reads.</param>
 public sealed record SharedUsage(int Version, string MachineName, string? WrittenBy, string Account, DateTimeOffset Published, IReadOnlyList<UsageSample> Samples)
 {
-    /// <summary>A later Claudette wrote the file in a format this one can't read, so its samples were left out.</summary>
+    /// <summary>A later Deventry wrote the file in a format this one can't read, so its samples were left out.</summary>
     public bool IsNewerFormat => Version > UsageSharing.FileVersion;
 }
 
@@ -36,7 +36,7 @@ public static class UsageSharing
 {
     /// <summary>
     /// The file's format. A change that only adds fields keeps it, since readers ignore fields they don't know; one that
-    /// removes a field or changes what one means takes the next number, and a Claudette that reads an older format keeps
+    /// removes a field or changes what one means takes the next number, and a Deventry that reads an older format keeps
     /// reading it.
     /// </summary>
     public const int FileVersion = 1;
@@ -59,7 +59,7 @@ public static class UsageSharing
     }
 
     /// <summary>The file this machine shares.</summary>
-    /// <param name="writtenBy">This Claudette's version.</param>
+    /// <param name="writtenBy">This Deventry's version.</param>
     public static string Write(string machineName, string writtenBy, string account, DateTimeOffset published, IEnumerable<UsageSample> samples)
     {
         var array = new JsonArray();

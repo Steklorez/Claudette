@@ -3,20 +3,20 @@ using System.Runtime.InteropServices;
 namespace Deventry.Core.LoginItems;
 
 /// <summary>
-/// The .NET a login entry on macOS or Linux starts a build of Claudette with (DESIGN.md §9, "Starting at login"). A
+/// The .NET a login entry on macOS or Linux starts a build of Deventry with (DESIGN.md §9, "Starting at login"). A
 /// build's own program finds .NET where <c>DOTNET_ROOT</c> says, which nothing sets at login, else in the folder
-/// <c>/etc/dotnet/install_location</c> names, else in the OS's usual folder. So when Claudette runs on a .NET elsewhere,
+/// <c>/etc/dotnet/install_location</c> names, else in the OS's usual folder. So when Deventry runs on a .NET elsewhere,
 /// such as the one Microsoft's install script puts in <c>~/.dotnet</c>, the entry starts the build with that .NET's own
 /// <c>dotnet</c> instead.
 /// </summary>
-/// <param name="Host">The <c>dotnet</c> to start a build with: the one of the .NET this Claudette runs on, else the one running it, else <c>dotnet</c> on the <c>PATH</c>.</param>
+/// <param name="Host">The <c>dotnet</c> to start a build with: the one of the .NET this Deventry runs on, else the one running it, else <c>dotnet</c> on the <c>PATH</c>.</param>
 /// <param name="FoundByProgram">Whether a build's own program finds that .NET by itself.</param>
 public sealed record LoginDotnet(string Host, bool FoundByProgram)
 {
     /// <summary>The file that registers a .NET for programs to find, with <c>_x64</c> or the like for one processor's.</summary>
     public const string InstallLocationFile = "/etc/dotnet/install_location";
 
-    /// <summary>The .NET this Claudette runs on.</summary>
+    /// <summary>The .NET this Deventry runs on.</summary>
     public static LoginDotnet Current() => Of(
         Environment.ProcessPath,
         RuntimeEnvironment.GetRuntimeDirectory(),

@@ -13,7 +13,7 @@ public sealed record TreeEntry(string Name, string FullPath, string RelativePath
 
 /// <summary>
 /// Reads a folder for the Project Files tab's explorer (DESIGN.md §18, "Project files", "The explorer"): folders first,
-/// then files, by name ignoring case, without <c>.git</c> or files Claudette is still writing, and with what git ignores
+/// then files, by name ignoring case, without <c>.git</c> or files Deventry is still writing, and with what git ignores
 /// marked.
 /// </summary>
 public static class FolderListing

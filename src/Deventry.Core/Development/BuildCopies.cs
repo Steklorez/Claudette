@@ -4,15 +4,15 @@ using Deventry.Core.Settings;
 
 namespace Deventry.Core.Development;
 
-/// <summary>A copy of one build that Claudette runs from.</summary>
+/// <summary>A copy of one build that Deventry runs from.</summary>
 /// <param name="Directory">The copy.</param>
 /// <param name="SourceOutput">The build output it was copied from.</param>
 /// <param name="Stamp">When that build was written: its newest file's time, in UTC.</param>
 public sealed record BuildCopy(string Directory, string SourceOutput, DateTime Stamp);
 
 /// <summary>
-/// Copies of the app's build output that a source build of Claudette runs from, so the build output itself isn't in
-/// use and can be rebuilt while Claudette runs (DESIGN.md §9, "Working on Claudette"). One folder per build.
+/// Copies of the app's build output that a source build of Deventry runs from, so the build output itself isn't in
+/// use and can be rebuilt while Deventry runs (DESIGN.md §9, "Working on Deventry"). One folder per build.
 /// </summary>
 /// <param name="root">Where the copies go, under the data folder.</param>
 public sealed class BuildCopies(string root)
@@ -52,7 +52,7 @@ public sealed class BuildCopies(string root)
         }
         catch (IOException) when (Read(target) is not null)
         {
-            // Another Claudette copied the same build at the same moment.
+            // Another Deventry copied the same build at the same moment.
             DeleteQuietly(partial);
         }
         return Read(target) ?? copy;

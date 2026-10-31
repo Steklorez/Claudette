@@ -25,7 +25,7 @@
     <!-- The same organization the MSIX names, and the Store and the signing certificate do (DESIGN.md §2, "Packaging"). -->
     <Authors>dotBunny</Authors>
     <Company>dotBunny Inc.</Company>
-    <Product>Claudette</Product>
+    <Product>Deventry</Product>
     <Copyright>Copyright (c) 2026 dotBunny Inc.</Copyright>
   </PropertyGroup>
 </Project>

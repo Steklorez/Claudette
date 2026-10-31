@@ -33,7 +33,7 @@ public sealed class PerforceService(AppServices services, ICredentialStore crede
 
     private PerforceFilesService? _files;
 
-    /// <summary>Where "Stored by Claudette" keeps passwords. Tests replace it.</summary>
+    /// <summary>Where "Stored by Deventry" keeps passwords. Tests replace it.</summary>
     public ICredentialStore Credentials { get; internal set; } = credentials;
 
     public PerforceSettings Settings => services.Settings.Perforce;
@@ -76,7 +76,7 @@ public sealed class PerforceService(AppServices services, ICredentialStore crede
         new(TimeSpan.FromMinutes(Math.Clamp(Settings.RenewBeforeMinutes, 1, 24 * 60)), Settings.AllHostsTickets);
 
     /// <summary>What a stored password is labeled as in the OS credential store.</summary>
-    public static string CredentialLabel(string server, string user) => $"Claudette: Perforce {user} @ {server}";
+    public static string CredentialLabel(string server, string user) => $"Deventry: Perforce {user} @ {server}";
 
     public static string CredentialKey(string server, string user) => $"perforce/{server}/{user}";
 

@@ -1,7 +1,7 @@
 namespace Deventry.Core.Updates;
 
 /// <summary>
-/// This copy of Claudette, as the foot of the Settings sidebar shows it and a bug report gives it (DESIGN.md §14,
+/// This copy of Deventry, as the foot of the Settings sidebar shows it and a bug report gives it (DESIGN.md §14,
 /// "Version"): its version, how it was installed, and for a source build the commit it was built from, so a build of a
 /// checkout can be told from the release with the same version.
 /// </summary>
@@ -14,10 +14,10 @@ public sealed record AppBuild(AppVersion Version, AppInstallKind Kind, string? C
     /// <summary>The configuration it was built in, such as <c>Debug</c> or <c>Release</c>; null when the build didn't record one.</summary>
     public string? Configuration { get; init; }
 
-    /// <summary>"Claudette 0.1.0", or "Claudette 0.1.0 · 842169b" for a source build.</summary>
+    /// <summary>"Deventry 0.1.0", or "Deventry 0.1.0 · 842169b" for a source build.</summary>
     public string Label => Kind == AppInstallKind.SourceBuild && Commit is { } commit
-        ? $"Claudette {Version} · {commit}"
-        : $"Claudette {Version}";
+        ? $"Deventry {Version} · {commit}"
+        : $"Deventry {Version}";
 
     /// <summary>"0.1.0 (MSIX)", "0.1.0 (source build 842169b)".</summary>
     public string Description => Kind switch
@@ -47,7 +47,7 @@ public sealed record AppBuild(AppVersion Version, AppInstallKind Kind, string? C
     }
 
     /// <summary>
-    /// What a bug report needs to know, one line each: Claudette's version, Claude Code's, the OS and the runtime.
+    /// What a bug report needs to know, one line each: Deventry's version, Claude Code's, the OS and the runtime.
     /// Only versions: never paths, names or account details, since it's meant to be pasted in public.
     /// </summary>
     /// <param name="claudeCodeVersion">The Claude Code version found, or null when none was.</param>
@@ -56,7 +56,7 @@ public sealed record AppBuild(AppVersion Version, AppInstallKind Kind, string? C
     /// <param name="runtime">The .NET runtime, such as ".NET 10.0.1".</param>
     public IReadOnlyList<string> Details(string? claudeCodeVersion, string os, string runtimeIdentifier, string runtime) =>
     [
-        $"Claudette: {Description}",
+        $"Deventry: {Description}",
         $"Claude Code: {claudeCodeVersion ?? "not found"}",
         $"OS: {os.Trim()} ({runtimeIdentifier})",
         $"Runtime: {runtime.Trim()}",

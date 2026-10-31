@@ -5,14 +5,14 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.Core.Logging;
 
 /// <summary>
-/// Claudette's own log (DESIGN.md §13, "Diagnostics"): warnings and errors, one line each with the exception after it,
-/// in <c>claudette.log</c> in the log folder. It's kept under <see cref="MaxBytes"/>: when it grows past that, it
-/// becomes <c>claudette.1.log</c>, replacing the one before. Never throws: a log that can't be written is skipped.
+/// Deventry's own log (DESIGN.md §13, "Diagnostics"): warnings and errors, one line each with the exception after it,
+/// in <c>deventry.log</c> in the log folder. It's kept under <see cref="MaxBytes"/>: when it grows past that, it
+/// becomes <c>deventry.1.log</c>, replacing the one before. Never throws: a log that can't be written is skipped.
 /// </summary>
 public sealed class FileLoggerFactory(string directory, TimeProvider time, LogLevel minimum = LogLevel.Warning) : ILoggerFactory
 {
-    public const string FileName = "claudette.log";
-    public const string PreviousFileName = "claudette.1.log";
+    public const string FileName = "deventry.log";
+    public const string PreviousFileName = "deventry.1.log";
     public const long MaxBytes = 2 * 1024 * 1024;
 
     private readonly Lock _lock = new();
@@ -22,7 +22,7 @@ public sealed class FileLoggerFactory(string directory, TimeProvider time, LogLe
     public ILogger CreateLogger(string categoryName) => new FileLogger(this, categoryName);
 
     /// <summary>Only this file: other providers aren't added.</summary>
-    public void AddProvider(ILoggerProvider provider) => throw new NotSupportedException("Claudette's log has one provider.");
+    public void AddProvider(ILoggerProvider provider) => throw new NotSupportedException("Deventry's log has one provider.");
 
     public void Dispose()
     {

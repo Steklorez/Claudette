@@ -15,7 +15,7 @@ public enum ClaudeInstallProblem
     UnsupportedLauncher,
     VersionUnreadable,
     TooOld,
-    /// <summary>The path is the Claude desktop app's, or its own copy of Claude Code, which Claudette doesn't run.</summary>
+    /// <summary>The path is the Claude desktop app's, or its own copy of Claude Code, which Deventry doesn't run.</summary>
     DesktopApp,
 }
 
@@ -44,11 +44,11 @@ public sealed partial class ClaudeLocator(
     IReadOnlyDictionary<string, string?>? environmentOverrides = null,
     ClaudeDesktop? desktop = null)
 {
-    /// <summary>The oldest Claude Code version Claudette supports (DESIGN.md §12, §16). Kept in step with compat/surface.yaml.</summary>
+    /// <summary>The oldest Claude Code version Deventry supports (DESIGN.md §12, §16). Kept in step with compat/surface.yaml.</summary>
     public static readonly Version MinimumVersion = new(2, 1, 284);
 
     /// <summary>
-    /// The newest Claude Code version Claudette has been checked against (DESIGN.md §16, "Tested versions"). Newer
+    /// The newest Claude Code version Deventry has been checked against (DESIGN.md §16, "Tested versions"). Newer
     /// versions are allowed. Kept in step with compat/surface.yaml.
     /// </summary>
     public static readonly Version LastTestedVersion = new(2, 1, 312);
@@ -64,7 +64,7 @@ public sealed partial class ClaudeLocator(
         {
             return OperatingSystem.IsWindows() && FileProbe.FindIn(searchPath, "claude.cmd") is { } cmd
                 ? new ClaudeLocateResult(null, ClaudeInstallProblem.UnsupportedLauncher,
-                    "Claude Code was installed with npm, which Claudette can't start directly yet. Use Install Claude Code to install the native build, or Choose claude… to pick a claude.exe.", cmd)
+                    "Claude Code was installed with npm, which Deventry can't start directly yet. Use Install Claude Code to install the native build, or Choose claude… to pick a claude.exe.", cmd)
                 : new ClaudeLocateResult(null, ClaudeInstallProblem.NotFound, "Claude Code wasn't found.", DesktopInstalled: desktop?.IsInstalled(searchPath) == true);
         }
         // Never run, not even for its version: the app itself would open a window. Checked before the file is, since the
@@ -75,7 +75,7 @@ public sealed partial class ClaudeLocator(
                 return new ClaudeLocateResult(null, ClaudeInstallProblem.DesktopApp, "That's the Claude desktop app, not Claude Code.", path, DesktopInstalled: true);
             case ClaudeDesktopFile.ClaudeCodeCopy:
                 return new ClaudeLocateResult(null, ClaudeInstallProblem.DesktopApp,
-                    "That's the copy of Claude Code the Claude desktop app keeps for its own use. The app replaces it as it updates, so Claudette doesn't run it.",
+                    "That's the copy of Claude Code the Claude desktop app keeps for its own use. The app replaces it as it updates, so Deventry doesn't run it.",
                     path, DesktopInstalled: true);
         }
         if (!File.Exists(path))
@@ -104,7 +104,7 @@ public sealed partial class ClaudeLocator(
         var install = new ClaudeInstall(path, version);
         return version < MinimumVersion
             ? new ClaudeLocateResult(install, ClaudeInstallProblem.TooOld,
-                $"Claude Code {version} is installed. Claudette needs {MinimumVersion} or later.", path)
+                $"Claude Code {version} is installed. Deventry needs {MinimumVersion} or later.", path)
             : new ClaudeLocateResult(install, null, null, path);
     }
 

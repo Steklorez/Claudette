@@ -186,7 +186,7 @@ public class AutoContinueTests
 
         Assert.True(tab.CanContinueAfterLimit);
         Assert.StartsWith("Your session limit reset ", tab.LimitWaitText);
-        Assert.Contains("while this computer was asleep or Claudette was closed", tab.LimitWaitText);
+        Assert.Contains("while this computer was asleep or Deventry was closed", tab.LimitWaitText);
         Assert.DoesNotContain(AutoContinueMonitor.Message, h.Transport.SentUserTexts);
     }
 

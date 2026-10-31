@@ -13,7 +13,7 @@ public sealed class ReplyImageLoaderTests : IDisposable
 
     private const string Url = "https://example.com/chart.png";
 
-    private readonly string _folder = Directory.CreateTempSubdirectory("claudette-replyimages-").FullName;
+    private readonly string _folder = Directory.CreateTempSubdirectory("deventry-replyimages-").FullName;
 
     private readonly FakeTimeProvider _time = new();
 
@@ -81,7 +81,7 @@ public sealed class ReplyImageLoaderTests : IDisposable
     }
 
     [Fact]
-    public async Task A_BMP_loads_too_since_Claudette_shows_one_as_it_does_the_others()
+    public async Task A_BMP_loads_too_since_Deventry_shows_one_as_it_does_the_others()
     {
         var bmp = ViewerImagesTests.Bmp();
         await File.WriteAllBytesAsync(Path.Combine(_folder, "icon.bmp"), bmp, TestContext.Current.CancellationToken);

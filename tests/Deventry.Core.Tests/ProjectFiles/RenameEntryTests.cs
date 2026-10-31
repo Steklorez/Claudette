@@ -9,7 +9,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// </summary>
 public sealed class RenameEntryTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-rename-entry");
+    private readonly TempFolder _temp = new("deventry-rename-entry");
 
     public void Dispose() => _temp.Dispose();
 
@@ -54,7 +54,7 @@ public sealed class RenameEntryTests : IDisposable
         Assert.Equal("think", File.ReadAllText(mind));
 
         var other = Write("AI/Other.cpp", "other");
-        Assert.StartsWith("Claudette couldn't rename it.", RenameEntry.Rename(mind, other));
+        Assert.StartsWith("Deventry couldn't rename it.", RenameEntry.Rename(mind, other));
         Assert.Equal("other", File.ReadAllText(other));
         Assert.Equal("think", File.ReadAllText(mind));
     }
@@ -121,7 +121,7 @@ public sealed class RenameEntryTests : IDisposable
 
         Assert.False(File.Exists(file));
         Assert.False(Directory.Exists(Path.Combine(Project, "AI")));
-        Assert.StartsWith("Claudette couldn't delete it.", DeleteEntry.DeletePermanently(file));
+        Assert.StartsWith("Deventry couldn't delete it.", DeleteEntry.DeletePermanently(file));
     }
 
     [Fact]

@@ -12,7 +12,7 @@ public enum ClaudeBilling
     Subscription,
 
     /// <summary>
-    /// An API key, billed by the token: one of Claudette's API-key accounts, <c>ANTHROPIC_API_KEY</c> or a bearer token,
+    /// An API key, billed by the token: one of Deventry's API-key accounts, <c>ANTHROPIC_API_KEY</c> or a bearer token,
     /// a key helper, or the key a Console sign-in stored.
     /// </summary>
     ApiKey,
@@ -110,8 +110,8 @@ public static class PromptCache
     };
 
     /// <summary>
-    /// How a tab's requests are paid for, from what Claudette knows about its sign-in: the tab runs under one of
-    /// Claudette's API-key accounts; the session's <c>apiKeySource</c> on <c>system/init</c>; the variables its
+    /// How a tab's requests are paid for, from what Deventry knows about its sign-in: the tab runs under one of
+    /// Deventry's API-key accounts; the session's <c>apiKeySource</c> on <c>system/init</c>; the variables its
     /// <c>claude</c> starts with (a bearer token outranks every other sign-in, and <c>-p</c> always uses
     /// <c>ANTHROPIC_API_KEY</c>); then <c>claude auth status</c>. Anything else is taken for a subscription.
     /// </summary>

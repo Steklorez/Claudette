@@ -4,7 +4,7 @@ using Deventry.Core.Sessions;
 namespace Deventry.Core.Threads;
 
 /// <summary>
-/// A <c>SendMessage</c> tool call, as Claudette's PreToolUse hook sees it (DESIGN.md §18, "Threads"). Claude Code calls
+/// A <c>SendMessage</c> tool call, as Deventry's PreToolUse hook sees it (DESIGN.md §18, "Threads"). Claude Code calls
 /// the hook before it looks the recipient up (checked against 2.1.284), so a thread's sub-threads go by their tabs'
 /// names rather than their sessions'.
 /// </summary>

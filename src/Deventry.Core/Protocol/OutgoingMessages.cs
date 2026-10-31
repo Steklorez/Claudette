@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 
 namespace Deventry.Core.Protocol;
 
-/// <summary>Builds the JSON lines Claudette writes to Claude Code's standard input (DESIGN.md §13, "Wire format").</summary>
+/// <summary>Builds the JSON lines Deventry writes to Claude Code's standard input (DESIGN.md §13, "Wire format").</summary>
 public static class OutgoingMessages
 {
     public static JsonObject UserText(string text) => new()
@@ -17,7 +17,7 @@ public static class OutgoingMessages
     /// Stamps a user message with its id and, for one the user typed, its origin (DESIGN.md §13, "Wire format"). Claude
     /// Code echoes the id back, keeps it in the transcript and names it in the replies' <c>user_message_uuid</c>. Since
     /// 2.1.210 a message without <c>origin</c> is unattributed: checks that need a person's prompt, such as the
-    /// <c>ultracode</c> keyword, don't accept it, and <c>queued_turn_count</c> doesn't count it. Messages Claudette
+    /// <c>ultracode</c> keyword, don't accept it, and <c>queued_turn_count</c> doesn't count it. Messages Deventry
     /// sends itself, such as check-ins, carry no origin, as before.
     /// </summary>
     public static JsonObject Stamped(JsonObject message, MessageStamp? stamp)
@@ -121,5 +121,5 @@ public static class OutgoingMessages
 
 /// <summary>What a user message says about itself: its id, and whether the user typed it.</summary>
 /// <param name="Uuid">A new UUID for each message.</param>
-/// <param name="FromUser">The user typed or chose it, rather than Claudette sending it for them (a check-in, say).</param>
+/// <param name="FromUser">The user typed or chose it, rather than Deventry sending it for them (a check-in, say).</param>
 public sealed record MessageStamp(string Uuid, bool FromUser);

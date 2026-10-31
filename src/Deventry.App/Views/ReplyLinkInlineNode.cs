@@ -5,7 +5,7 @@ using Markdig.Syntax.Inlines;
 namespace Deventry.App.Views;
 
 /// <summary>
-/// LiveMarkdown's link node, with images left to Claudette (DESIGN.md §18, "Images in Claude's replies"). LiveMarkdown's
+/// LiveMarkdown's link node, with images left to Deventry (DESIGN.md §18, "Images in Claude's replies"). LiveMarkdown's
 /// own loads any image address by itself, from the web or the disk, through a client of its own, so a reply that was
 /// prompt-injected could send data out in an image's address just by being shown. Here a link is as LiveMarkdown makes
 /// it, and an image is a <see cref="ReplyImageView"/>, which loads only what may. <see cref="App"/> puts it in

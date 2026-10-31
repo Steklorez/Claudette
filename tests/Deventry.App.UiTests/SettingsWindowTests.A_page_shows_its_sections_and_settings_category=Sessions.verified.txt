@@ -23,9 +23,9 @@
 [button] (icon)
 [field] "15"
 "Settings sync"
-"Sync Claudette's settings through the library"
+"Sync Deventry's settings through the library"
 "Syncs Appearance (not the zoom), most of Conversation, what new tabs start with, usage warnings and limits, check-ins, quick suffixes, the process monitor, notifications and keyboard shortcuts. Everything marked This computer stays on each machine."
-[toggle] Sync Claudette's settings through the library
+[toggle] Sync Deventry's settings through the library
 [button] Line up
 [button] Page up
 [button] Page down

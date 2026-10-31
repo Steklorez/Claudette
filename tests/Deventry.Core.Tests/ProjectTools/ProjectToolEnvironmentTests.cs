@@ -10,7 +10,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// </summary>
 public sealed class ProjectToolEnvironmentTests : IDisposable
 {
-    private readonly string _bin = Directory.CreateTempSubdirectory("claudette-projecttools-bin-").FullName;
+    private readonly string _bin = Directory.CreateTempSubdirectory("deventry-projecttools-bin-").FullName;
 
     [Fact]
     public void With_the_login_shells_environment_a_bare_program_is_found_on_its_PATH()
@@ -29,7 +29,7 @@ public sealed class ProjectToolEnvironmentTests : IDisposable
     }
 
     [Fact]
-    public void Without_it_the_program_is_left_for_the_OS_to_find_in_Claudettes_environment()
+    public void Without_it_the_program_is_left_for_the_OS_to_find_in_Deventrys_environment()
     {
         var spec = ProjectToolEnvironment.Apply(new ProcessStartSpec("godot", []));
 

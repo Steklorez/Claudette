@@ -10,7 +10,7 @@
 "Notes"
 "Just me (deventry.local.json)"
 "file:///home/me/notes.txt"
-""file:" links don't open from Claudette; only https, http and mailto do."
+""file:" links don't open from Deventry; only https, http and mailto do."
 "mailto:me@example.com"
 "Just me (deventry.local.json)"
 "mailto:me@example.com"
@@ -26,7 +26,7 @@
 [field] "for example: Board (the address shows when it's empty)"
 "Address"
 [field] "javascript:alert(1)"
-""javascript:" links don't open from Claudette; only https, http and mailto do."
+""javascript:" links don't open from Deventry; only https, http and mailto do."
 "{branch}, {changelist} and {folderName} are filled in from the tab: its git branch, its Perforce changelist and its folder's name."
 "Save in"
 [toggle on] Just me (deventry.local.json)

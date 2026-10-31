@@ -8,7 +8,7 @@ namespace Deventry.Core.Perforce;
 /// <param name="Message">Perforce's own words, such as "Password invalid.".</param>
 public sealed record PerforceLoginResult(bool Succeeded, bool NeedsUserLogin, string Message);
 
-/// <summary>Why a folder is, or isn't, in a workspace Claudette can use (DESIGN.md §18, "Finding the workspace").</summary>
+/// <summary>Why a folder is, or isn't, in a workspace Deventry can use (DESIGN.md §18, "Finding the workspace").</summary>
 public enum PerforceDetectionOutcome
 {
     Workspace,
@@ -36,7 +36,7 @@ public sealed record PerforceDetection(PerforceDetectionOutcome Outcome, Perforc
 /// <param name="environment">
 /// The user environment <c>p4</c> runs with, and whose <c>PATH</c> it's found on (DESIGN.md §13): the same as Claude's
 /// own <c>p4</c> commands get, so <c>P4CONFIG</c>, <c>P4PORT</c> and the like set in a shell profile agree. Null:
-/// Claudette's own.
+/// Deventry's own.
 /// </param>
 public sealed class PerforceClient(IProcessLauncher launcher, TimeProvider timeProvider, string executable = "p4", UserEnvironment? environment = null)
 {

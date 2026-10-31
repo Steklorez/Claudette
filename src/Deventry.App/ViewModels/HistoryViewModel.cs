@@ -65,7 +65,7 @@ public sealed class HistoryEntry
 
     /// <summary>
     /// The session's mark as stored (DESIGN.md §4, "Marks"): the library record's or this machine's, whichever is newer.
-    /// Kept as written, so opening the session keeps a mark a later Claudette added.
+    /// Kept as written, so opening the session keeps a mark a later Deventry added.
     /// </summary>
     public string? MarkKey { get; init; }
 

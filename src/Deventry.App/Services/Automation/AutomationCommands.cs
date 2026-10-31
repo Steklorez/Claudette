@@ -47,7 +47,7 @@ public sealed class AutomationCommands
         _windowButtons = windowButtons ?? (_ => []);
     }
 
-    /// <summary>Claudette's own windows and the popups open over them, found by native handle, or by title.</summary>
+    /// <summary>Deventry's own windows and the popups open over them, found by native handle, or by title.</summary>
     public static AutomationCommands ForApp()
     {
         static IClassicDesktopStyleApplicationLifetime? Desktop() => Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
@@ -100,10 +100,10 @@ public sealed class AutomationCommands
     // ---- Finding the control ------------------------------------------------------------------------------------------
 
     private TopLevel Window(AutomationRequest request) => request.Window != 0
-        ? _findWindow(request.Window) ?? throw new AutomationException($"No window of Claudette's has the handle {request.Window}.")
+        ? _findWindow(request.Window) ?? throw new AutomationException($"No window of Deventry's has the handle {request.Window}.")
         : _findByTitle(request.Title) ?? throw new AutomationException(request.Title is { } title
-            ? $"No window of Claudette's is called '{title}'."
-            : "Claudette has no main window yet.");
+            ? $"No window of Deventry's is called '{title}'."
+            : "Deventry has no main window yet.");
 
     private Control Find(AutomationRequest request)
     {
@@ -152,7 +152,7 @@ public sealed class AutomationCommands
     // ---- The commands -------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// The window as Claudette draws it, at its scale, saved as a PNG: for screenshots on any OS, where there's no
+    /// The window as Deventry draws it, at its scale, saved as a PNG: for screenshots on any OS, where there's no
     /// PrintWindow to capture with. The OS's own frame, where it draws one, isn't in it, nor are popups. The window's
     /// buttons are: Avalonia's on Windows, which are beside the window in the visual Avalonia hosts it in, and macOS's
     /// traffic lights, which AppKit draws over it (<see cref="DrawTrafficLights"/>).

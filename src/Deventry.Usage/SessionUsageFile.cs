@@ -34,15 +34,15 @@ public sealed record SharedTurn(
     string? Account = null);
 
 /// <summary>A synced session's usage: every turn any machine ran in it, with the names of those machines and tabs.</summary>
-/// <param name="Version">The file's format: <see cref="SessionUsageFile.FileVersion"/> when this Claudette can read it.</param>
+/// <param name="Version">The file's format: <see cref="SessionUsageFile.FileVersion"/> when this Deventry can read it.</param>
 /// <param name="Machines">Machine ids and their names.</param>
 /// <param name="Tabs">Tab ids and their names.</param>
-/// <param name="Turns">Empty when the file's format is newer than this Claudette reads.</param>
+/// <param name="Turns">Empty when the file's format is newer than this Deventry reads.</param>
 public sealed record SessionUsage(int Version, IReadOnlyDictionary<string, string> Machines, IReadOnlyDictionary<string, string> Tabs, IReadOnlyList<SharedTurn> Turns)
 {
     public static readonly SessionUsage Empty = new(SessionUsageFile.FileVersion, new Dictionary<string, string>(), new Dictionary<string, string>(), []);
 
-    /// <summary>A later Claudette wrote the file in a format this one can't read, so its turns were left out.</summary>
+    /// <summary>A later Deventry wrote the file in a format this one can't read, so its turns were left out.</summary>
     public bool IsNewerFormat => Version > SessionUsageFile.FileVersion;
 }
 

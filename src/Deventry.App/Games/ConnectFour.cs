@@ -1,7 +1,7 @@
 namespace Deventry.App.Games;
 
 /// <summary>
-/// Connect Four's board (DESIGN.md §18, "Games with Claudette"): seven columns of six, filled from the bottom (row 0).
+/// Connect Four's board (DESIGN.md §18, "Games with Joulene"): seven columns of six, filled from the bottom (row 0).
 /// Four in a row across, up or on a diagonal wins.
 /// </summary>
 public sealed class ConnectFour
@@ -38,7 +38,7 @@ public sealed class ConnectFour
     public GameOutcome Outcome => Winner switch
     {
         Player.You => GameOutcome.Won,
-        Player.Claudette => GameOutcome.Lost,
+        Player.Joulene => GameOutcome.Lost,
         _ => IsFull ? GameOutcome.Draw : GameOutcome.Playing,
     };
 

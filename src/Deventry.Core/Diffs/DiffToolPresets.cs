@@ -27,7 +27,7 @@ public enum DiffToolPlatform
 /// </param>
 public sealed record DiffToolVariant(DiffToolPlatform Platform, IReadOnlyList<string> Paths, IReadOnlyList<string> PathNames, IReadOnlyList<string> Arguments);
 
-/// <summary>A diff tool Claudette knows how to call (DESIGN.md §8).</summary>
+/// <summary>A diff tool Deventry knows how to call (DESIGN.md §8).</summary>
 public sealed record DiffToolPreset(string Id, string Name, IReadOnlyList<DiffToolVariant> Variants)
 {
     public DiffToolVariant? For(DiffToolPlatform platform) => Variants.FirstOrDefault(v => v.Platform == platform);

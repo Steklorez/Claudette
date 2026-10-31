@@ -4,7 +4,7 @@ using Deventry.Core.Settings;
 namespace Deventry.Core.Tests.Demo;
 
 /// <summary>
-/// The demo's folder (DESIGN.md §11, "Demo mode"): Claudette's settings and tabs, the transcripts, and in the app's demo
+/// The demo's folder (DESIGN.md §11, "Demo mode"): Deventry's settings and tabs, the transcripts, and in the app's demo
 /// the projects' folders, empty.
 /// </summary>
 public sealed class DemoHomeTests : IDisposable
@@ -19,10 +19,10 @@ public sealed class DemoHomeTests : IDisposable
         var now = new DateTimeOffset(2026, 10, 30, 15, 0, 0, TimeSpan.FromHours(-4));
         var projects = Path.Combine(_root, "projects");
 
-        var written = await DemoHome.WriteAsync(_root, projects, now, new DemoOptions { ClaudePath = "claudette-itself", Style = AppStyle.Claude }, DemoContent.EmptyFolder);
+        var written = await DemoHome.WriteAsync(_root, projects, now, new DemoOptions { ClaudePath = "deventry-itself", Style = AppStyle.Claude }, DemoContent.EmptyFolder);
 
         var settings = new JsonFileStore<AppSettings>(written.Paths.SettingsFile).Load();
-        Assert.Equal(("claudette-itself", AppStyle.Claude), (settings.ClaudeCode.ClaudePath, settings.Appearance.Style));
+        Assert.Equal(("deventry-itself", AppStyle.Claude), (settings.ClaudeCode.ClaudePath, settings.Appearance.Style));
         // Nothing that would reach the network.
         Assert.False(settings.General.CheckForAppUpdates || settings.General.ShowServiceStatus || settings.ClaudeCode.CheckForUpdates);
         var state = new JsonFileStore<AppState>(written.Paths.StateFile).Load();

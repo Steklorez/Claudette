@@ -1,8 +1,8 @@
 namespace Deventry.App.Games;
 
 /// <summary>
-/// A minefield (DESIGN.md §18, "Games with Claudette"): nine squares by nine, row by row from the top left, with
-/// Claudette's mines under some. She hides them as the user opens the first square, never in it or next to it, so the
+/// A minefield (DESIGN.md §18, "Games with Joulene"): nine squares by nine, row by row from the top left, with
+/// Joulene's mines under some. She hides them as the user opens the first square, never in it or next to it, so the
 /// first square always opens onto some room. Opening every square without a mine wins; opening a mine loses.
 /// </summary>
 public sealed class Minesweeper

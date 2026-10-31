@@ -15,7 +15,7 @@ public class UserEnvironmentTests
     {
         ["PATH"] = "/usr/bin:/bin",
         ["HOME"] = "/Users/me",
-        ["DEVENTRY_HOME"] = "/tmp/claudette-home",
+        ["DEVENTRY_HOME"] = "/tmp/deventry-home",
         ["XPC_SERVICE_NAME"] = "application.com.dotbunny.claudette",
     };
 
@@ -37,27 +37,27 @@ public class UserEnvironmentTests
     // ---- The merge --------------------------------------------------------------------------------------------
 
     [Fact]
-    public void The_login_shells_variables_go_on_top_of_Claudettes_own()
+    public void The_login_shells_variables_go_on_top_of_Deventrys_own()
     {
         var merged = UserEnvironment.Merge(Own, Login);
 
         Assert.Equal("/opt/homebrew/bin:/usr/bin:/bin", merged["PATH"]);
         Assert.Equal("/opt/homebrew", merged["HOMEBREW_PREFIX"]);
         Assert.Equal("ghp_secret-value", merged["GITHUB_TOKEN"]);
-        // Variables only Claudette has are kept.
+        // Variables only Deventry has are kept.
         Assert.Equal("application.com.dotbunny.claudette", merged["XPC_SERVICE_NAME"]);
     }
 
     [Fact]
-    public void Claudettes_own_variables_and_Claude_Codes_session_variables_never_come_from_the_shell()
+    public void Deventrys_own_variables_and_Claude_Codes_session_variables_never_come_from_the_shell()
     {
         var merged = UserEnvironment.Merge(Own, new Dictionary<string, string>(Login) { ["CLAUDETTE_RESOLVING_ENVIRONMENT"] = "1" });
 
-        Assert.Equal("/tmp/claudette-home", merged["DEVENTRY_HOME"]);
+        Assert.Equal("/tmp/deventry-home", merged["DEVENTRY_HOME"]);
         Assert.False(merged.ContainsKey("DEVENTRY_RESOLVING_ENVIRONMENT"));
         Assert.False(merged.ContainsKey("CLAUDETTE_RESOLVING_ENVIRONMENT"));
         Assert.False(merged.ContainsKey("CLAUDE_CODE_ENTRYPOINT"));
-        // What the shell says about itself describes the shell Claudette ran.
+        // What the shell says about itself describes the shell Deventry ran.
         Assert.False(merged.ContainsKey("_"));
         Assert.False(merged.ContainsKey("PWD"));
         Assert.False(merged.ContainsKey("OLDPWD"));
@@ -81,11 +81,11 @@ public class UserEnvironmentTests
         Assert.False(environment.ContainsKey("HOMEBREW_PREFIX"));
         Assert.False(environment.ContainsKey("CLAUDECODE"));
         Assert.False(environment.ContainsKey("CLAUDE_CODE_SESSION_ID"));
-        Assert.Equal("/tmp/claudette-home", environment["DEVENTRY_HOME"]);
+        Assert.Equal("/tmp/deventry-home", environment["DEVENTRY_HOME"]);
     }
 
     [Fact]
-    public void Without_a_base_Claude_starts_from_Claudettes_own_environment()
+    public void Without_a_base_Claude_starts_from_Deventrys_own_environment()
     {
         var environment = ClaudeEnvironment.From(null, new Dictionary<string, string?> { ["ADDED"] = "1" });
 
@@ -117,7 +117,7 @@ public class UserEnvironmentTests
     }
 
     [Fact]
-    public async Task Turned_off_nothing_is_read_and_Claudettes_own_environment_is_used()
+    public async Task Turned_off_nothing_is_read_and_Deventrys_own_environment_is_used()
     {
         var shell = new FakeLoginShell();
         shell.Finish(Used());
@@ -129,7 +129,7 @@ public class UserEnvironmentTests
         Assert.Equal(0, shell.Reads);
         Assert.Equal("Not used: turned off in Settings → Claude Code → Use my login shell's environment.", environment.Describe());
 
-        // Turning it on reads it then; turning it off again goes back to Claudette's own for new processes.
+        // Turning it on reads it then; turning it off again goes back to Deventry's own for new processes.
         enabled = true;
         environment.Start();
         Assert.NotNull(await environment.GetAsync(TestContext.Current.CancellationToken));
@@ -140,7 +140,7 @@ public class UserEnvironmentTests
     }
 
     [Theory]
-    [InlineData(LoginShellOutcome.StartedFromTerminal, "Not used: Claudette was started from a terminal, so it has your shell's environment already.")]
+    [InlineData(LoginShellOutcome.StartedFromTerminal, "Not used: Deventry was started from a terminal, so it has your shell's environment already.")]
     [InlineData(LoginShellOutcome.NotNeededOnWindows, "Not used: not needed on Windows, where apps get your full environment.")]
     public async Task When_it_is_not_needed_the_shell_is_never_run(LoginShellOutcome reason, string description)
     {
@@ -155,24 +155,24 @@ public class UserEnvironmentTests
     }
 
     [Fact]
-    public async Task A_shell_that_times_out_leaves_Claudettes_own_environment()
+    public async Task A_shell_that_times_out_leaves_Deventrys_own_environment()
     {
         var shell = new FakeLoginShell();
         shell.Finish(new LoginShellResult(LoginShellOutcome.TimedOut, "/bin/zsh", TimeSpan.FromSeconds(10), Detail: "didn't finish within 10 s"));
         var environment = new UserEnvironment(shell, () => true, ownEnvironment: Own);
 
         Assert.Null(await environment.GetAsync(TestContext.Current.CancellationToken));
-        Assert.Equal("Not used: /bin/zsh didn't finish within 10 s. New processes get Claudette's own environment.", environment.Describe());
+        Assert.Equal("Not used: /bin/zsh didn't finish within 10 s. New processes get Deventry's own environment.", environment.Describe());
     }
 
     [Fact]
-    public async Task A_shell_reader_that_throws_leaves_Claudettes_own_environment()
+    public async Task A_shell_reader_that_throws_leaves_Deventrys_own_environment()
     {
         var shell = new FakeLoginShell { Failure = new InvalidOperationException("boom") };
         var environment = new UserEnvironment(shell, () => true, ownEnvironment: Own);
 
         Assert.Null(await environment.GetAsync(TestContext.Current.CancellationToken));
-        Assert.Equal("Not used: /bin/zsh failed. New processes get Claudette's own environment.", environment.Describe());
+        Assert.Equal("Not used: /bin/zsh failed. New processes get Deventry's own environment.", environment.Describe());
     }
 
     [Fact]

@@ -8,7 +8,7 @@ using Deventry.Core.Settings;
 
 namespace Deventry.App.Tests;
 
-/// <summary>Restarting a source build of Claudette into its new build, and back if that fails (DESIGN.md §9, "Working on Claudette").</summary>
+/// <summary>Restarting a source build of Deventry into its new build, and back if that fails (DESIGN.md §9, "Working on Deventry").</summary>
 public class RestartTests
 {
     private static readonly DateTime Running = new(2026, 9, 29, 10, 0, 0, DateTimeKind.Utc);
@@ -105,12 +105,12 @@ public class RestartTests
     [Fact]
     public void After_an_update_the_new_version_is_told_where_to_say_it_is_up()
     {
-        // Outside the data folder, which the new version may move, as Deventry does Claudette's (DESIGN.md §2).
-        string[] args = [LaunchArguments.RestoreOption, "abc", LaunchArguments.ReadyFileOption, "temp/claudette-update-abc.ready", "--login"];
+        // Outside the data folder, which the new version may move, as Deventry does Deventry's (DESIGN.md §2).
+        string[] args = [LaunchArguments.RestoreOption, "abc", LaunchArguments.ReadyFileOption, "temp/deventry-update-abc.ready", "--login"];
 
-        Assert.Equal(Path.GetFullPath("temp/claudette-update-abc.ready"), LaunchArguments.ReadyFile(args));
+        Assert.Equal(Path.GetFullPath("temp/deventry-update-abc.ready"), LaunchArguments.ReadyFile(args));
         Assert.Equal(["--login"], LaunchArguments.WithoutDevelopmentOptions(args));
-        // A Claudette before 0.7.0 doesn't say, and the data folder's restart-ready is used.
+        // A Deventry before 0.7.0 doesn't say, and the data folder's restart-ready is used.
         Assert.Null(LaunchArguments.ReadyFile([LaunchArguments.RestoreOption, "abc"]));
     }
 

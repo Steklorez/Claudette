@@ -63,5 +63,5 @@ public sealed partial class TabViewModel
     /// <summary>"Notify me when a check-in is sent" (DESIGN.md §5).</summary>
     private void NotifyCheckIn() =>
         _services.Notifications.Notify(NotificationKind.CheckIn, DisplayName,
-            "Claude has been at this a while, so Claudette asked how it's going.", Id, checkIns: CheckInSettings);
+            "Claude has been at this a while, so Deventry asked how it's going.", Id, checkIns: CheckInSettings);
 }

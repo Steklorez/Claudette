@@ -1,7 +1,7 @@
 namespace Deventry.Core.Settings;
 
 /// <summary>
-/// Which of Claudette's settings sync through the session library (DESIGN.md §14, "Settings sync"), by their paths in
+/// Which of Deventry's settings sync through the session library (DESIGN.md §14, "Settings sync"), by their paths in
 /// <c>settings.json</c>, such as <c>appearance.theme</c>. Settings sync copies these; Settings marks every other setting as
 /// this computer's.
 /// </summary>

@@ -18,7 +18,7 @@ public enum ScratchPadSyncKind
     /// <summary>Both machines changed it without seeing the other's change: the user chooses what it becomes.</summary>
     Conflict,
 
-    /// <summary>A later Claudette wrote the library's copy, so it isn't written over.</summary>
+    /// <summary>A later Deventry wrote the library's copy, so it isn't written over.</summary>
     NewerFormat,
 
     /// <summary>The library couldn't be read or written; this machine's copy is kept for next time.</summary>

@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Settings;
 
 public sealed class SettingsAndStateTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-settings-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-settings-{Guid.NewGuid():N}");
 
     public SettingsAndStateTests() => Directory.CreateDirectory(_root);
 
@@ -30,6 +30,21 @@ public sealed class SettingsAndStateTests : IDisposable
         state.FavoriteFolders.Add("/work/new");
         state.TrustFoldersAlreadyUsed();
         Assert.DoesNotContain("/work/new", state.TrustedFolders!);
+    }
+
+    [Fact]
+    public void Keeping_the_computer_awake_whenever_Deventry_runs_is_saved_as_Claudette_saved_it()
+    {
+        var settings = new AppSettings();
+        settings.General.KeepAwakeWhen = KeepAwakeWhen.DeventryRuns;
+
+        var json = JsonFileStore<AppSettings>.Serialize(settings);
+
+        // Another machine still on Claudette, syncing settings, reads it, and so does a settings file Claudette wrote.
+        Assert.Contains("\"keepAwakeWhen\": \"claudetteRuns\"", json, StringComparison.Ordinal);
+        var path = Path.Combine(_root, "settings.json");
+        File.WriteAllText(path, json);
+        Assert.Equal(KeepAwakeWhen.DeventryRuns, new JsonFileStore<AppSettings>(path).Load().General.KeepAwakeWhen);
     }
 
     [Fact]

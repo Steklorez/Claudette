@@ -11,7 +11,7 @@ public sealed class LoginShellTests : IDisposable
 {
     private const string Marker = "_MK_";
 
-    private readonly string _home = Directory.CreateTempSubdirectory("claudette-loginshell-").FullName;
+    private readonly string _home = Directory.CreateTempSubdirectory("deventry-loginshell-").FullName;
 
     public void Dispose()
     {
@@ -163,7 +163,7 @@ public sealed class LoginShellTests : IDisposable
     // ---- Running it, with a fake launcher ---------------------------------------------------------------------
 
     [Fact]
-    public async Task Runs_the_shell_in_the_home_folder_with_Claudettes_environment_and_reads_its_output()
+    public async Task Runs_the_shell_in_the_home_folder_with_Deventrys_environment_and_reads_its_output()
     {
         var launcher = new FakeLauncher();
         var time = new FakeTimeProvider();
@@ -250,7 +250,7 @@ public sealed class LoginShellTests : IDisposable
         var terminal = await Reader(launcher, new FakeTimeProvider(), new() { ["SHELL"] = "/bin/zsh", ["TERM"] = "xterm-256color" }).ReadAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(LoginShellOutcome.UnsupportedShell, nushell.Outcome);
-        Assert.Contains("isn't a shell Claudette can read", nushell.Detail, StringComparison.Ordinal);
+        Assert.Contains("isn't a shell Deventry can read", nushell.Detail, StringComparison.Ordinal);
         Assert.Equal(LoginShellOutcome.StartedFromTerminal, terminal.Outcome);
         Assert.Empty(launcher.Specs);
     }

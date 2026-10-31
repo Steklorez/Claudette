@@ -117,7 +117,7 @@ public sealed partial class TabViewModel
         {
             _shell.Confirm(
                 "Stop the whole turn?",
-                "Claude Code hasn't given this subagent an ID to stop it by, so Claudette can only stop the whole turn, like the Stop button.",
+                "Claude Code hasn't given this subagent an ID to stop it by, so Deventry can only stop the whole turn, like the Stop button.",
                 "Stop turn",
                 StopAsync);
         }
@@ -145,7 +145,7 @@ public sealed partial class TabViewModel
         }
         AgentTicker.Run(Agents.IsTicking);
         OnSubagentsChanged();
-        // Claudette on the composer juggles a ball for each subagent running (DESIGN.md §5).
+        // Joulene on the composer juggles a ball for each subagent running (DESIGN.md §5).
         TellMascot();
     }
 }

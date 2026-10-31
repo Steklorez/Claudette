@@ -7,7 +7,7 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// Settings → Source control (DESIGN.md §14): Git, then Perforce; the Git page's settings, which keep the keys they had
-/// on Conversation and General; the git Claudette runs; and the Project Files tab's two choices (§18, "Project files").
+/// on Conversation and General; the git Deventry runs; and the Project Files tab's two choices (§18, "Project files").
 /// </summary>
 public class GitSettingsTests
 {
@@ -112,7 +112,7 @@ public class GitSettingsTests
         using var settings = new SettingsViewModel(h.Services, null);
         var page = settings.Git;
 
-        // Set: the next git Claudette runs is that one.
+        // Set: the next git Deventry runs is that one.
         page.GitPath = $"  {gitPath} ";
         await page.Checking;
         Assert.Equal(gitPath, h.Services.Settings.Git.Path);
@@ -145,9 +145,9 @@ public class GitSettingsTests
         await page.Checking;
     }
 
-    /// <summary>Every git Claudette runs is the one Path to git names, from the next run on (DESIGN.md §14).</summary>
+    /// <summary>Every git Deventry runs is the one Path to git names, from the next run on (DESIGN.md §14).</summary>
     [Fact]
-    public async Task Every_git_Claudette_runs_uses_the_path_set()
+    public async Task Every_git_Deventry_runs_uses_the_path_set()
     {
         var launcher = new FakeLauncher { OnStart = (_, process) => process.Exit(0) };
         await using var h = new TabTestHarness(launcher: launcher);

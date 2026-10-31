@@ -1,4 +1,4 @@
-﻿[image] "Claudette"
+﻿[image] "Deventry"
 [toggle] Keep this computer awake
 [button] Claude's service status: Claude has an outage
 [button] Account: me@example.com

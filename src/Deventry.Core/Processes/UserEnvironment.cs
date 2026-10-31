@@ -8,15 +8,15 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Deventry.Core.Processes;
 
 /// <summary>
-/// The environment Claudette starts the user's processes with: <c>claude</c>, and git, <c>p4</c>, diff tools and
+/// The environment Deventry starts the user's processes with: <c>claude</c>, and git, <c>p4</c>, diff tools and
 /// Homebrew, and the <c>PATH</c> they're found on (DESIGN.md §13, "Login shell environment"). On macOS and Linux, when
-/// Claudette wasn't started from a terminal and Settings → Claude Code allows it, the login shell's environment is
-/// read once in the background and merged in, as a terminal would have it. Otherwise it's Claudette's own.
+/// Deventry wasn't started from a terminal and Settings → Claude Code allows it, the login shell's environment is
+/// read once in the background and merged in, as a terminal would have it. Otherwise it's Deventry's own.
 /// </summary>
 /// <remarks>Safe to use from any thread.</remarks>
 public sealed class UserEnvironment
 {
-    /// <summary>What the shell sets about itself. They describe the shell Claudette ran, not the user's setup.</summary>
+    /// <summary>What the shell sets about itself. They describe the shell Deventry ran, not the user's setup.</summary>
     public static readonly IReadOnlySet<string> ShellBookkeeping = new HashSet<string>(StringComparer.Ordinal) { "_", "PWD", "OLDPWD", "SHLVL" };
 
     /// <summary>Deventry's own variables, such as <c>DEVENTRY_HOME</c>, always come from Deventry's environment.</summary>
@@ -35,7 +35,7 @@ public sealed class UserEnvironment
 
     /// <param name="loginShell">Reads the login shell. Null never reads one: tests, and the default.</param>
     /// <param name="isEnabled">Settings → Claude Code → <b>Use my login shell's environment</b>, read each time it matters.</param>
-    /// <param name="ownEnvironment">Claudette's own environment. By default, this process's.</param>
+    /// <param name="ownEnvironment">Deventry's own environment. By default, this process's.</param>
     public UserEnvironment(ILoginShell? loginShell, Func<bool> isEnabled, ILogger? logger = null, IReadOnlyDictionary<string, string>? ownEnvironment = null)
     {
         _loginShell = loginShell;
@@ -45,7 +45,7 @@ public sealed class UserEnvironment
         Probe = new FileProbe(() => PathVariable);
     }
 
-    /// <summary>Claudette's own environment, with no login shell.</summary>
+    /// <summary>Deventry's own environment, with no login shell.</summary>
     public static UserEnvironment Inherited { get; } = new(null, static () => false);
 
     /// <summary>Finds programs on the <see cref="PathVariable"/>, for diff tool presets, P4V and Homebrew.</summary>
@@ -68,7 +68,7 @@ public sealed class UserEnvironment
     }
 
     /// <summary>
-    /// The environment to start a user's process with, or null to start it with Claudette's own. The first call after
+    /// The environment to start a user's process with, or null to start it with Deventry's own. The first call after
     /// the login shell started being read waits for it, up to the shell's timeout.
     /// </summary>
     public async Task<IReadOnlyDictionary<string, string>?> GetAsync(CancellationToken cancellationToken = default)
@@ -97,7 +97,7 @@ public sealed class UserEnvironment
     /// <summary>
     /// <paramref name="spec"/> ready to start as a user's process, once the login shell is read: with its environment,
     /// and a bare program name (<c>git</c>, <c>p4</c>) found on its <c>PATH</c>, because .NET looks for one on
-    /// Claudette's own. Unchanged when the login shell isn't used.
+    /// Deventry's own. Unchanged when the login shell isn't used.
     /// </summary>
     public async Task<ProcessStartSpec> ApplyAsync(ProcessStartSpec spec, CancellationToken cancellationToken = default) =>
         Apply(spec, await GetAsync(cancellationToken).ConfigureAwait(false));
@@ -131,10 +131,10 @@ public sealed class UserEnvironment
     }
 
     /// <summary>
-    /// Claudette's own environment with the login shell's on top: the shell's values win, except for Claudette's own
+    /// Deventry's own environment with the login shell's on top: the shell's values win, except for Deventry's own
     /// variables (<see cref="OwnPrefix"/>), the session variables Claude Code sets for its children (removed for
     /// <c>claude</c> anyway, <see cref="ClaudeEnvironment.SessionVariables"/>) and the shell's
-    /// <see cref="ShellBookkeeping"/>. Variables only Claudette has are kept.
+    /// <see cref="ShellBookkeeping"/>. Variables only Deventry has are kept.
     /// </summary>
     public static IReadOnlyDictionary<string, string> Merge(IReadOnlyDictionary<string, string> own, IReadOnlyDictionary<string, string> login)
     {
@@ -175,7 +175,7 @@ public sealed class UserEnvironment
     {
         if (_loginShell is not { } shell)
         {
-            return "Not used: Claudette has no login shell to read here.";
+            return "Not used: Deventry has no login shell to read here.";
         }
         if (!_isEnabled())
         {
@@ -186,7 +186,7 @@ public sealed class UserEnvironment
             return notNeeded switch
             {
                 LoginShellOutcome.NotNeededOnWindows => "Not used: not needed on Windows, where apps get your full environment.",
-                LoginShellOutcome.StartedFromTerminal => "Not used: Claudette was started from a terminal, so it has your shell's environment already.",
+                LoginShellOutcome.StartedFromTerminal => "Not used: Deventry was started from a terminal, so it has your shell's environment already.",
                 _ => $"Not used: {notNeeded}.",
             };
         }
@@ -196,7 +196,7 @@ public sealed class UserEnvironment
         }
         if (result.Outcome != LoginShellOutcome.Used || _merged is not { } merged)
         {
-            return $"Not used: {result.Shell} {result.Detail ?? "failed"}. New processes get Claudette's own environment.";
+            return $"Not used: {result.Shell} {result.Detail ?? "failed"}. New processes get Deventry's own environment.";
         }
         var took = result.Duration is { } duration ? $", read in {duration.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture)} s" : "";
         var changed = merged.Changed.Count == 0
@@ -244,6 +244,6 @@ public sealed class UserEnvironment
 
     private static StringComparer Comparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
-    /// <param name="Changed">The names whose values differ from Claudette's own, for Diagnostics.</param>
+    /// <param name="Changed">The names whose values differ from Deventry's own, for Diagnostics.</param>
     private sealed record Merged(IReadOnlyDictionary<string, string> Environment, IReadOnlyList<string> Changed);
 }

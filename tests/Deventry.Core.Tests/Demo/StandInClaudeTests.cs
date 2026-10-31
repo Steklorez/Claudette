@@ -6,12 +6,12 @@ using Deventry.Core.Demo;
 namespace Deventry.Core.Tests.Demo;
 
 /// <summary>
-/// Claudette standing in for Claude Code in its demo (DESIGN.md §11, "Demo mode"): it says it's Claude Code, signed in,
+/// Deventry standing in for Claude Code in its demo (DESIGN.md §11, "Demo mode"): it says it's Claude Code, signed in,
 /// and answers a stream-json session as Claude Code would, with canned turns, writing nothing and running nothing.
 /// </summary>
 public sealed class StandInClaudeTests : IDisposable
 {
-    private readonly string _root = Directory.CreateTempSubdirectory("claudette-stand-in").FullName;
+    private readonly string _root = Directory.CreateTempSubdirectory("deventry-stand-in").FullName;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 
@@ -112,7 +112,7 @@ public sealed class StandInClaudeTests : IDisposable
         var standIn = new StandInClaude(input, output, TimeProvider.System, _root, _root, TimeSpan.Zero);
         var running = standIn.RunAsync(["-p", "--input-format", "stream-json", "--output-format", "stream-json", "--resume", "session-1", "--model", "sonnet"]);
 
-        // The control requests Claudette sends, the plan's usage from the demo's file.
+        // The control requests Deventry sends, the plan's usage from the demo's file.
         input.Send(new JsonObject { ["type"] = "control_request", ["request_id"] = "r1", ["request"] = new JsonObject { ["subtype"] = "initialize" } });
         var initialized = await output.NextAsync(m => Type(m) == "control_response");
         Assert.Contains("Sonnet 5.5", initialized.ToJsonString(), StringComparison.Ordinal);
@@ -126,7 +126,7 @@ public sealed class StandInClaudeTests : IDisposable
         var init = first.First(m => Type(m) == "system");
         Assert.Equal(("session-1", "claude-sonnet-5-5"), (init["session_id"]!.GetValue<string>(), init["model"]!.GetValue<string>()));
         Assert.Contains(first, m => Type(m) == "stream_event");
-        Assert.Contains("Claudette's demo", Blocks(first, "text").Single()["text"]!.GetValue<string>(), StringComparison.Ordinal);
+        Assert.Contains("Deventry's demo", Blocks(first, "text").Single()["text"]!.GetValue<string>(), StringComparison.Ordinal);
         Assert.False(first[^1]["is_error"]!.GetValue<bool>());
 
         // Thinking, then an answer.
@@ -149,16 +149,16 @@ public sealed class StandInClaudeTests : IDisposable
         var question = await output.NextAsync(m => Type(m) == "control_request");
         Assert.Equal("AskUserQuestion", question["request"]!["tool_name"]!.GetValue<string>());
         var answered = question["request"]!["input"]!.DeepClone().AsObject();
-        answered["answers"] = new JsonObject { ["Which part of Claudette would you like to look at next?"] = "History" };
+        answered["answers"] = new JsonObject { ["Which part of Deventry would you like to look at next?"] = "History" };
         input.Send(Answer(question["request_id"]!.GetValue<string>(), new JsonObject { ["behavior"] = "allow", ["updatedInput"] = answered }));
         var fourth = await output.TurnAsync();
         Assert.Contains("History", Blocks(fourth, "text").Last()["text"]!.GetValue<string>(), StringComparison.Ordinal);
 
         // And round again.
         input.Send(User("Again"));
-        Assert.Contains("Claudette's demo", Blocks(await output.TurnAsync(), "text").Single()["text"]!.GetValue<string>(), StringComparison.Ordinal);
+        Assert.Contains("Deventry's demo", Blocks(await output.TurnAsync(), "text").Single()["text"]!.GetValue<string>(), StringComparison.Ordinal);
 
-        // Claudette closing its input ends it.
+        // Deventry closing its input ends it.
         input.End();
         Assert.Equal(0, await running.WaitAsync(Waiting.Timeout, TestContext.Current.CancellationToken));
     }

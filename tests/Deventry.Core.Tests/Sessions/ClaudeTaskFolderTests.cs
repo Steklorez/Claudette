@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Sessions;
 /// <summary>The task list Claude Code keeps in its tasks folder (DESIGN.md §5, "Tasks").</summary>
 public sealed class ClaudeTaskFolderTests : IDisposable
 {
-    private readonly TempFolder _config = new("claudette-task-folder");
+    private readonly TempFolder _config = new("deventry-task-folder");
 
     public void Dispose() => _config.Dispose();
 

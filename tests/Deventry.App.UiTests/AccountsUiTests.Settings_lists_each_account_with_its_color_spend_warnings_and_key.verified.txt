@@ -21,7 +21,7 @@
 [button] Change key…
 [button] Remove…
 "Add an API key"
-"Each key is kept in Test Keychain, never in Claudette's files, and never synced. Claude Code asks Claudette for it when a tab starts, so it's never in a command line or the environment."
+"Each key is kept in Test Keychain, never in Deventry's files, and never synced. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment."
 "Name"
 [field] "for example: Work"
 "API key"

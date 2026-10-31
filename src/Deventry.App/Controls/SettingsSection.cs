@@ -31,7 +31,7 @@ public sealed class SettingsSection : ItemsControl
     public static readonly StyledProperty<string> ResetTextProperty = AvaloniaProperty.Register<SettingsSection, string>(nameof(ResetText), "Reset to defaults");
 
     public static readonly StyledProperty<string> ResetTipProperty =
-        AvaloniaProperty.Register<SettingsSection, string>(nameof(ResetTip), "Puts this section's settings back as they were when Claudette was new");
+        AvaloniaProperty.Register<SettingsSection, string>(nameof(ResetTip), "Puts this section's settings back as they were when Deventry was new");
 
     static SettingsSection()
     {

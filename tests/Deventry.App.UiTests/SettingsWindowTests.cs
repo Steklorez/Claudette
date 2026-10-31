@@ -104,7 +104,7 @@ public class SettingsWindowTests
     }
 
     /// <summary>
-    /// Git, the first page of Source control (DESIGN.md §14): the branch switch, worktrees, the git Claudette runs with
+    /// Git, the first page of Source control (DESIGN.md §14): the branch switch, worktrees, the git Deventry runs with
     /// its version under it, and the Files tab's two choices; This computer by each section's heading but Tab rows', which
     /// syncs. The sidebar has Source control after Project tools, with Git's branch icon.
     /// </summary>
@@ -299,8 +299,8 @@ public class SettingsWindowTests
     }
 
     /// <summary>
-    /// About Claudette (DESIGN.md §14, "About") thanks the people outside dotBunny whose work is in Claudette: a row each,
-    /// after Claudette's own, with what they brought, and their GitHub profile and pull requests in the browser.
+    /// About Deventry (DESIGN.md §14, "About") thanks the people outside dotBunny whose work is in Deventry: a row each,
+    /// after Deventry's own, with what they brought, and their GitHub profile and pull requests in the browser.
     /// </summary>
     [AvaloniaFact]
     public async Task About_lists_its_contributors_with_their_GitHub_and_pull_requests()
@@ -311,7 +311,7 @@ public class SettingsWindowTests
         window.Show();
         UiText.Settle(window);
         var sections = window.GetVisualDescendants().OfType<SettingsSection>().Select(s => s.Key).ToList();
-        Assert.Equal(["claudette", "contributors", "trademarks", "licenses"], sections);
+        Assert.Equal(["deventry", "contributors", "trademarks", "licenses"], sections);
 
         var rows = window.GetVisualDescendants().OfType<SettingsSection>().Single(s => s.Key == "contributors").GetVisualDescendants().OfType<SettingRow>().ToList();
         Assert.Equal(AboutPage.ContributorList.Select(c => c.Name), rows.Select(r => r.Title));
@@ -324,7 +324,7 @@ public class SettingsWindowTests
         {
             await ((CommunityToolkit.Mvvm.Input.IAsyncRelayCommand)link.Command!).ExecuteAsync(null);
         }
-        Assert.Equal(["https://github.com/Steklorez", "https://github.com/dotBunny/Claudette/pulls?q=is%3Apr+author%3ASteklorez"], h.Platform.OpenedUrls);
+        Assert.Equal(["https://github.com/Steklorez", "https://github.com/dotBunny/Deventry/pulls?q=is%3Apr+author%3ASteklorez"], h.Platform.OpenedUrls);
         window.Close();
     }
 
@@ -354,7 +354,7 @@ public class SettingsWindowTests
     }
 
     /// <summary>
-    /// About Claudette, a window of its own (DESIGN.md §14, "About"), lists every library with its license, which shows
+    /// About Deventry, a window of its own (DESIGN.md §14, "About"), lists every library with its license, which shows
     /// under its row on request; a license that asks only for a link, such as the Godot logo's, is a link. Godot's page in
     /// Settings' sidebar has its logo, filled, where the other pages' icons are strokes.
     /// </summary>
@@ -366,7 +366,7 @@ public class SettingsWindowTests
         var aboutWindow = new AboutWindow { DataContext = about, Width = 720, Height = 700 };
         aboutWindow.Show();
         UiText.Settle(aboutWindow);
-        Assert.Equal("About Claudette", aboutWindow.Title);
+        Assert.Equal("About Deventry", aboutWindow.Title);
         SettingRow Row(string title) => aboutWindow.GetVisualDescendants().OfType<SettingRow>().Single(r => r.Title == title);
         IEnumerable<Button> Links(SettingRow row) => row.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("settingslink") && b.IsEffectivelyVisible);
 
@@ -544,7 +544,7 @@ public class SettingsWindowTests
         var sidebar = window.GetVisualDescendants().OfType<ListBox>().Single(l => l.Name == "SidebarList");
         Assert.True(version.IsEffectivelyVisible);
         Assert.True(help.IsEffectivelyVisible);
-        Assert.Equal("Claudette 0.1.0 · 842169b", version.GetVisualDescendants().OfType<TextBlock>().Single().Text);
+        Assert.Equal("Deventry 0.1.0 · 842169b", version.GetVisualDescendants().OfType<TextBlock>().Single().Text);
         // The foot sits below the pages, not over them.
         var pagesBottom = sidebar.TranslatePoint(new Point(0, sidebar.Bounds.Height), window)!.Value.Y;
         Assert.True(version.TranslatePoint(default, window)!.Value.Y >= pagesBottom);
@@ -552,7 +552,7 @@ public class SettingsWindowTests
         var menu = Assert.IsType<MenuFlyout>(help.Flyout);
         menu.ShowAt(help);
         UiText.Settle(window);
-        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Claudette"], menu.Items.OfType<MenuItem>().Select(i => i.Header as string));
+        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Deventry"], menu.Items.OfType<MenuItem>().Select(i => i.Header as string));
         Assert.Equal([settings.OpenGuideCommand, settings.OpenDiscordCommand, settings.ReportIssueCommand, settings.ShowAboutCommand],
             menu.Items.OfType<MenuItem>().Select(i => i.Command));
         menu.Hide();
@@ -561,6 +561,6 @@ public class SettingsWindowTests
         UiText.Settle(window);
 
         Assert.Equal("Copied", version.GetVisualDescendants().OfType<TextBlock>().Single().Text);
-        Assert.StartsWith("Claudette: 0.1.0 (source build 842169b)", h.Platform.Clipboard, StringComparison.Ordinal);
+        Assert.StartsWith("Deventry: 0.1.0 (source build 842169b)", h.Platform.Clipboard, StringComparison.Ordinal);
     }
 }

@@ -12,7 +12,7 @@ public sealed class ClaudeAccount
     public string Name { get; set; } = "";
 
     /// <summary>
-    /// How the account signs in, as a word (<see cref="AccountKinds"/>): a kind a later Claudette adds reads as one this
+    /// How the account signs in, as a word (<see cref="AccountKinds"/>): a kind a later Deventry adds reads as one this
     /// one doesn't know, rather than failing the whole file.
     /// </summary>
     public string Kind { get; set; } = AccountKinds.ApiKey;
@@ -38,6 +38,6 @@ public sealed class ClaudeAccount
 /// <summary>The kinds of <see cref="ClaudeAccount"/>, as they're saved.</summary>
 public static class AccountKinds
 {
-    /// <summary>An Anthropic API key, which Claude Code asks Claudette for through its <c>apiKeyHelper</c>.</summary>
+    /// <summary>An Anthropic API key, which Claude Code asks Deventry for through its <c>apiKeyHelper</c>.</summary>
     public const string ApiKey = "apiKey";
 }

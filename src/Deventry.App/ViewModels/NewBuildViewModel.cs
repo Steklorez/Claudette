@@ -6,8 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// The sidebar's entry for a new build of Claudette itself, when running from a source build (DESIGN.md §9, "Working
-/// on Claudette"), and its dialog.
+/// The sidebar's entry for a new build of Deventry itself, when running from a source build (DESIGN.md §9, "Working
+/// on Deventry"), and its dialog.
 /// </summary>
 public sealed partial class NewBuildViewModel : ObservableObject, IDisposable
 {
@@ -27,7 +27,7 @@ public sealed partial class NewBuildViewModel : ObservableObject, IDisposable
         : _restarts.ReadyStamp is null && _restarts.LastError is not null ? "Restart didn't happen"
         : "New build ready";
 
-    public string Title => _restarts.ReadyStamp is null ? "Claudette's build" : "A new build of Claudette is ready";
+    public string Title => _restarts.ReadyStamp is null ? "Deventry's build" : "A new build of Deventry is ready";
 
     public string DetailText => _restarts.ReadyStamp is { } stamp
         ? $"Built at {Time(stamp)} in {_restarts.Build.SourceOutput}. Restarting opens every tab again, resumes its session and keeps what you've typed."

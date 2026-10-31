@@ -49,7 +49,7 @@ public class PlatformChromeTests
         var args = LaunchArguments.WithFullPaths(["--folder", "api", "--source-build", "../bin", "--other", "x"], started);
 
         Assert.Equal(["--folder", Path.Combine(started, "api"), "--source-build", Path.GetFullPath(Path.Combine(started, "..", "bin")), "--other", "x"], args);
-        // The running Claudette that gets them reads the same folder, wherever it runs from.
+        // The running Deventry that gets them reads the same folder, wherever it runs from.
         Assert.Equal(Path.Combine(started, "api"), LaunchArguments.Folder(args));
     }
 

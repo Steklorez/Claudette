@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Draws the site's social card: the picture a link to claudette.dotbunny.com shows where it's shared.
+Draws the site's social card: the picture a link to deventry.app shows where it's shared.
 
 .DESCRIPTION
 GUIDE.md ("The site") says what it is. social-card.html lays it out at 1280 by 640, with the README's main window
@@ -30,7 +30,7 @@ if (-not $browser) { throw 'Drawing the social card needs Microsoft Edge or Goog
 $card = [Uri]::new((Resolve-Path (Join-Path $PSScriptRoot 'social-card.html')).Path).AbsoluteUri
 $Out = [IO.Path]::GetFullPath($Out)
 # A profile of its own, so the browser doesn't hand the page to one already open.
-$browserProfile = Join-Path ([IO.Path]::GetTempPath()) "claudette-social-card-$PID"
+$browserProfile = Join-Path ([IO.Path]::GetTempPath()) "deventry-social-card-$PID"
 Remove-Item $Out -ErrorAction SilentlyContinue
 try {
     # Start-Process, since on Windows the browser is a windowed program, which calling it alone wouldn't wait for.

@@ -305,8 +305,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>What pinning does, for the menu item's tip. True whichever way Also restore unpinned tabs is set.</summary>
     public static string PinMenuTip =>
-        "A pinned tab comes back every time Claudette starts, sits at the start of its group, and stays open on Close group and Close other tabs. "
-        + "Unpinned tabs come back only while Settings → General → Also restore unpinned tabs when Claudette starts is on.";
+        "A pinned tab comes back every time Deventry starts, sits at the start of its group, and stays open on Close group and Close other tabs. "
+        + "Unpinned tabs come back only while Settings → General → Also restore unpinned tabs when Deventry starts is on.";
 
     [RelayCommand]
     private void TogglePin()
@@ -330,7 +330,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>Claude Code is in a turn: working, or waiting on the user within it.</summary>
     public bool IsInTurn => _session?.State == SessionState.Working;
 
-    /// <summary>The next start carries on the turn Claudette's restart cut off (DESIGN.md §9, "Working on Claudette").</summary>
+    /// <summary>The next start carries on the turn Deventry's restart cut off (DESIGN.md §9, "Working on Deventry").</summary>
     private bool _carryOnInterruptedTurn;
 
     /// <summary>
@@ -460,7 +460,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public void OnClaudeVersionsChanged() => OnPropertyChanged(nameof(InfoRows));
 
     /// <summary>
-    /// The tab the keyboard, the header and Claudette on the composer follow: the focused pane's, with tabs side by side
+    /// The tab the keyboard, the header and Joulene on the composer follow: the focused pane's, with tabs side by side
     /// (DESIGN.md §18, "Split panes"). On its own, it's also the one on screen.
     /// </summary>
     [ObservableProperty]
@@ -632,7 +632,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// </summary>
     public bool IsAutoModeAvailable => _startingMode?.AutoModeDisabled != true && CurrentModelInfo?.SupportsAutoMode != false;
 
-    /// <summary>The mode this tab starts in when neither its settings nor Claudette's choose one, once it has started.</summary>
+    /// <summary>The mode this tab starts in when neither its settings nor Deventry's choose one, once it has started.</summary>
     internal string? ClaudeCodeStartingMode => _startingMode is { } starting
         ? starting.Expected == PermissionModeInfo.Auto && !IsAutoModeAvailable ? PermissionModeInfo.Manual : starting.Expected
         : null;
@@ -1075,7 +1075,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _services.SaveState();
     }
 
-    // ---- Restarting into a new build (DESIGN.md §9, "Working on Claudette") -------------------------------
+    // ---- Restarting into a new build (DESIGN.md §9, "Working on Deventry") -------------------------------
 
     /// <summary>
     /// The message typed but not sent, with its one-off quick suffixes, attached images and large pastes, or null when
@@ -1086,7 +1086,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         : new TabDraft(ComposerText, Chips.Where(c => !c.IsKept).Select(c => c.Suffix.Id).ToList(), Attachments.Count > 0 ? DraftImages() : null,
             PastedTexts.Count > 0 ? [.. PastedTexts.Select(p => p.Text)] : null);
 
-    /// <summary>Puts back a draft: from the last time Claudette ran, or the build that restarted into this one.</summary>
+    /// <summary>Puts back a draft: from the last time Deventry ran, or the build that restarted into this one.</summary>
     public void RestoreDraft(TabDraft draft)
     {
         ComposerText = draft.Text;
@@ -1181,7 +1181,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     private static MessageStamp NewStamp(bool fromUser) => new(Guid.NewGuid().ToString(), fromUser);
 
     /// <param name="suffix">Quick suffixes, which Claude Code gets after the message, or beside a slash command (DESIGN.md §5).</param>
-    /// <param name="stamp">The message's id, and whether the user typed it. Without one it's Claudette's own, with no card.</param>
+    /// <param name="stamp">The message's id, and whether the user typed it. Without one it's Deventry's own, with no card.</param>
     private async Task SendRawAsync(string message, IReadOnlyList<MessageImage>? images = null, string? suffix = null, MessageStamp? stamp = null)
     {
         if (stamp is null)
@@ -1231,7 +1231,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         try
         {
             // What was waiting its turn is cancelled with it, and comes back to the composer (DESIGN.md §5): what Claude
-            // Code was holding, and what Claudette was.
+            // Code was holding, and what Deventry was.
             var held = TakeAllHeld();
             var receipt = await _session.InterruptAsync(cancelQueued: true);
             TakeBack([.. held, .. receipt.Cancelled]);
@@ -1272,7 +1272,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>
     /// Messages Claude Code cancelled before they ran: their cards go, and what the user wrote goes back to the
-    /// composer, ahead of anything typed since. Claudette's own (a check-in) just go. Ids Claudette didn't send are
+    /// composer, ahead of anything typed since. Deventry's own (a check-in) just go. Ids Deventry didn't send are
     /// ignored.
     /// </summary>
     private void TakeBack(IReadOnlyCollection<string> ids)
@@ -1567,7 +1567,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             resume = localCopy;
         }
-        // Claude Code runs a folder's own configuration without asking in a session like this one: Claudette asks first.
+        // Claude Code runs a folder's own configuration without asking in a session like this one: Deventry asks first.
         if (_closing.IsCancellationRequested || await AskTrustAsync())
         {
             return;
@@ -1593,7 +1593,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             var environment = new Dictionary<string, string?>(_services.ClaudeVariables);
             if (_carryOnInterruptedTurn && resume is not null)
             {
-                // Only after Claudette's own restart, and only once: Claude Code re-runs the turn without the user.
+                // Only after Deventry's own restart, and only once: Claude Code re-runs the turn without the user.
                 environment["CLAUDE_CODE_RESUME_INTERRUPTED_TURN"] = "1";
                 environment["CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS"] = ((long)RestartSnapshot.MaxAge.TotalMilliseconds).ToString(CultureInfo.InvariantCulture);
             }
@@ -1608,7 +1608,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // The task-tracking tools on every model: Claude Code gives them only older ones (DESIGN.md §5, "Tasks").
                 environment["CLAUDE_CODE_ENABLE_TODO_TOOLS"] = "1";
             }
-            // An API-key account's key comes from Claudette's key helper, and nothing in the environment outranks it
+            // An API-key account's key comes from Deventry's key helper, and nothing in the environment outranks it
             // (DESIGN.md §4, "Accounts").
             var (accountSettings, accountEnvironment) = _services.Accounts.LaunchFor(Account);
             foreach (var (name, value) in accountEnvironment)
@@ -1651,7 +1651,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 PermissionMode = chosenMode ?? (resume is null ? starting.LaunchMode : null),
                 AdditionalArguments = settings.Advanced.ExtraArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries),
                 ProtocolLogPath = _services.ProtocolLogPath(FolderName),
-                // The presence file, among others: no pushes to the phone while Claudette is in front (DESIGN.md §10).
+                // The presence file, among others: no pushes to the phone while Deventry is in front (DESIGN.md §10).
                 EnvironmentOverrides = environment,
             }));
             // Every tab has the threads' hook, so making it a thread later needs no restart (DESIGN.md §18, "Threads"), and
@@ -2107,12 +2107,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
-                // One event Claudette can't show must never take the app, and every tab's claude, down with it
+                // One event Deventry can't show must never take the app, and every tab's claude, down with it
                 // (CLAUDE.md, "Parse tolerantly"). Say so once per kind of event, so a stream of them doesn't flood.
                 _services.Loggers.CreateLogger("Tab").LogError(ex, "Couldn't apply a {Event} event.", sessionEvent.GetType().Name);
                 if (_failedEvents.Add(sessionEvent.GetType().Name))
                 {
-                    _conversation.AddNote($"Claudette couldn't show part of this conversation ({ex.Message}). The session carries on.", NoteKind.Warning);
+                    _conversation.AddNote($"Deventry couldn't show part of this conversation ({ex.Message}). The session carries on.", NoteKind.Warning);
                 }
             }
         }
@@ -2227,7 +2227,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             case SystemNotice { Message.Subtype: "status" } status:
                 // Claude Code reports mode changes it makes itself, such as leaving plan mode.
                 PermissionMode = session.PermissionMode ?? PermissionMode;
-                // And when it's compacting the conversation: Claudette on the composer sweeps up (DESIGN.md §5).
+                // And when it's compacting the conversation: Joulene on the composer sweeps up (DESIGN.md §5).
                 SetCompacting(status.Message.Status?.IsCompacting == true);
                 break;
             case SystemNotice { Message.Subtype: "bridge_state" or "worker_shutting_down" } remote:
@@ -2476,7 +2476,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <param name="killProcesses">Also end every process the session started (DESIGN.md §4, "Cleanup").</param>
     /// <param name="interruptTurn">
-    /// Interrupt a turn first, so it ends cleanly. A restart of Claudette leaves it as it is instead, for Claude Code to
+    /// Interrupt a turn first, so it ends cleanly. A restart of Deventry leaves it as it is instead, for Claude Code to
     /// carry on afterwards.
     /// </param>
     private async Task StopSessionAsync(bool killProcesses = false, bool interruptTurn = true)
@@ -2522,7 +2522,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     }
 
     /// <summary>Closing the tab. By default everything the tab started is stopped too; the user can keep it running.</summary>
-    /// <param name="interruptTurn">Interrupt a turn under way; a restart of Claudette leaves it for Claude Code to carry on.</param>
+    /// <param name="interruptTurn">Interrupt a turn under way; a restart of Deventry leaves it for Claude Code to carry on.</param>
     public async ValueTask CloseAsync(bool killProcesses, bool interruptTurn = true)
     {
         // Before closing stops the draft from being written again: quitting keeps it.

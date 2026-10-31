@@ -602,7 +602,7 @@ internal sealed class FakeProcessTreeTracker(TimeProvider time) : IProcessTreeTr
 /// <summary>A tab wired to a scripted Claude Code, with a fake clock and a temporary data folder.</summary>
 internal sealed class TabTestHarness : IAsyncDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-tabtest-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-tabtest-{Guid.NewGuid():N}");
 
     /// <summary>The version tests run as, unless they pass one.</summary>
     public static readonly Core.Updates.AppVersion TestVersion = new(0, 1, 0);
@@ -610,10 +610,10 @@ internal sealed class TabTestHarness : IAsyncDisposable
     /// <param name="updater">Claude Code's installation, for update tests; when given, update checks are set up too.</param>
     /// <param name="launcher">Starts processes other than Claude Code, which the scripted sessions stand in for.</param>
     /// <param name="dispatcher">The UI thread: an inline stand-in for view model tests, Avalonia's own for rendered UI tests.</param>
-    /// <param name="appInstaller">Installs Claudette's own updates; by default none can be.</param>
-    /// <param name="http">Answers Claudette's own web requests; by default every request fails, so nothing reaches the network.</param>
+    /// <param name="appInstaller">Installs Deventry's own updates; by default none can be.</param>
+    /// <param name="http">Answers Deventry's own web requests; by default every request fails, so nothing reaches the network.</param>
     /// <param name="appVersion">
-    /// Claudette's version; by default <see cref="TestVersion"/> rather than the built one, so the Settings snapshots
+    /// Deventry's version; by default <see cref="TestVersion"/> rather than the built one, so the Settings snapshots
     /// don't change when the version does.
     /// </param>
     /// <param name="loginShell">Stands in for the user's login shell (DESIGN.md §13); by default none is read.</param>
@@ -665,7 +665,7 @@ internal sealed class TabTestHarness : IAsyncDisposable
     public FakeClaudeInstaller Installer { get; } = new();
 
     /// <summary>
-    /// Stands in for the user environment each tab's <c>claude</c> starts from, as far as Claudette reads it (DESIGN.md
+    /// Stands in for the user environment each tab's <c>claude</c> starts from, as far as Deventry reads it (DESIGN.md
     /// §6, "Prompt cache"): empty unless a test sets variables.
     /// </summary>
     public Dictionary<string, string> ClaudeUserEnvironment { get; } = new(StringComparer.Ordinal);
@@ -813,7 +813,7 @@ internal static class SettingsExtensions
     public static QuickSuffix Suffix(this AppServices services, string id) => services.Settings.QuickSuffixes.Single(s => s.Id == id);
 }
 
-/// <summary>Fails every request, so a test that doesn't script Claudette's web requests can't reach the network.</summary>
+/// <summary>Fails every request, so a test that doesn't script Deventry's web requests can't reach the network.</summary>
 public sealed class OfflineHandler : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>

@@ -13,7 +13,7 @@ public sealed partial class ShellViewModel
 {
     /// <summary>
     /// <b>New tab in a worktree</b>: a tab in the group's folder whose Claude Code starts with <c>--worktree</c> and a
-    /// name Claudette picks, so a restart before its first turn opens the same worktree rather than another.
+    /// name Deventry picks, so a restart before its first turn opens the same worktree rather than another.
     /// </summary>
     [RelayCommand]
     private Task NewWorktreeTabAsync(TabGroupViewModel? group) =>

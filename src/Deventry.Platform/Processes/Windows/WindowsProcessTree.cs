@@ -14,7 +14,7 @@ namespace Deventry.Platform.Processes.Windows;
 /// <item>The root goes into its own Job Object, and everything it starts joins the job, so every descendant is tracked
 /// even after its parent exits. The job doesn't have <c>JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE</c>: the user can choose to
 /// leave processes running when a tab closes.</item>
-/// <item>Jobs nest on Windows 8 and later, so this works when Claudette itself runs inside a job (VS Code and many
+/// <item>Jobs nest on Windows 8 and later, so this works when Deventry itself runs inside a job (VS Code and many
 /// terminals do that). If the root still can't be assigned, the tree falls back to walking parent PIDs from a Toolhelp
 /// snapshot and <see cref="IsJobBacked"/> is false.</item>
 /// <item>Each process is read with the process APIs; command lines come from <c>NtQueryInformationProcess</c>. A process
@@ -441,7 +441,7 @@ internal sealed class WindowsProcessTree : ProcessTree
 
     /// <summary>
     /// The working folder, the <c>CurrentDirectory</c> in the process's parameters, read from its PEB; it needs
-    /// PROCESS_VM_READ. Only a 64-bit process's, from a 64-bit Claudette, whose layouts these are; null otherwise, or when
+    /// PROCESS_VM_READ. Only a 64-bit process's, from a 64-bit Deventry, whose layouts these are; null otherwise, or when
     /// it can't be read.
     /// </summary>
     internal static unsafe string? WorkingFolder(SafeProcessHandle handle)

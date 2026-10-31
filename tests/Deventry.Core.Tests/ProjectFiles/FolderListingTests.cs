@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>A folder's entries in the Project Files tab's explorer (DESIGN.md §18, "Project files", "The explorer").</summary>
 public sealed class FolderListingTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-listing");
+    private readonly TempFolder _temp = new("deventry-listing");
 
     public void Dispose() => _temp.Dispose();
 
@@ -128,7 +128,7 @@ public sealed class FolderListingTests : IDisposable
         Write("src/main.c");
         Write("obj");
         // Git isn't asked outside a repository: one that can't run changes nothing.
-        var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
         var entries = await FolderListing.ReadAsync(Project, Project, git, inRepository: false, parentIgnored: false, Token);
 
@@ -140,7 +140,7 @@ public sealed class FolderListingTests : IDisposable
     {
         Write("build/out/app.o");
         Write("build/log.txt");
-        var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
         var entries = await FolderListing.ReadAsync(Project, Path.Combine(Project, "build"), git, inRepository: true, parentIgnored: true, Token);
 
@@ -152,7 +152,7 @@ public sealed class FolderListingTests : IDisposable
     {
         Write("node_modules/x/index.js");
         Write("a.log");
-        var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
         var entries = await FolderListing.ReadAsync(Project, Project, git, inRepository: true, parentIgnored: false, Token);
 

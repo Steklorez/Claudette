@@ -64,7 +64,7 @@ public sealed record ThreadMenuItem(TabViewModel Thread, IRelayCommand<TabViewMo
 /// </summary>
 public sealed partial class TabViewModel
 {
-    /// <summary>How long Claude Code waits for the threads' hook: past the approval window, so Claudette always answers first.</summary>
+    /// <summary>How long Claude Code waits for the threads' hook: past the approval window, so Deventry always answers first.</summary>
     internal static readonly TimeSpan ThreadHookTimeout = ThreadMessages.ApprovalWindow + TimeSpan.FromMinutes(1);
 
     // ---- Who belongs where ----------------------------------------------------------------------------------------
@@ -232,7 +232,7 @@ public sealed partial class TabViewModel
     private HookRegistration ThreadHook() => new("PreToolUse", SendMessageCall.ToolName, OnSendMessageAsync, ThreadHookTimeout);
 
     /// <summary>
-    /// Claude calls <c>SendMessage</c>. For one of this thread's sub-threads, Claudette delivers the message itself,
+    /// Claude calls <c>SendMessage</c>. For one of this thread's sub-threads, Deventry delivers the message itself,
     /// after asking when it should, and stops Claude Code's own delivery; anything else goes on as it would. Called off
     /// the UI thread.
     /// </summary>

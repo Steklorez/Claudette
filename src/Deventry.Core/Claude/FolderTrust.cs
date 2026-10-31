@@ -34,11 +34,11 @@ public enum ProjectSettingKind
 public sealed record ProjectSetting(ProjectSettingKind Kind, string File, string Text);
 
 /// <summary>
-/// Which folders Claudette starts Claude Code in without asking first (DESIGN.md §7, "Folder trust"). Claude Code's own
+/// Which folders Deventry starts Claude Code in without asking first (DESIGN.md §7, "Folder trust"). Claude Code's own
 /// trust dialog never appears in a <c>claude -p</c> session like a tab's, and such a session runs what a folder's
 /// configuration says straight away: its settings' hooks, <c>env</c> and helper commands, its skills' hooks, and the
 /// servers in any <c>.mcp.json</c> from the folder up. So before the first start in a folder it hasn't been told to
-/// trust, Claudette lists those and asks.
+/// trust, Deventry lists those and asks.
 /// </summary>
 public static class FolderTrust
 {

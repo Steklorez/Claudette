@@ -7,8 +7,8 @@ using Deventry.Core.Processes;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// Starting a source build of Claudette (DESIGN.md §9, "Working on Claudette"). It runs from a copy of its build
-/// output, so a Claude Code session working on Claudette can rebuild it while it runs: Windows locks the files of a
+/// Starting a source build of Deventry (DESIGN.md §9, "Working on Deventry"). It runs from a copy of its build
+/// output, so a Claude Code session working on Deventry can rebuild it while it runs: Windows locks the files of a
 /// running program, and replacing them in place elsewhere can crash it.
 /// </summary>
 public static class DevelopmentLaunch
@@ -20,7 +20,7 @@ public static class DevelopmentLaunch
 
     /// <summary>
     /// For a source build started from its build output: copies the build, starts the copy with the same arguments and
-    /// returns true, so this process should exit. False to carry on here: an installed Claudette, a copy already, a
+    /// returns true, so this process should exit. False to carry on here: an installed Deventry, a copy already, a
     /// debugger attached, or the copy couldn't be made.
     /// </summary>
     public static bool TryRunFromCopy(IReadOnlyList<string> args, AppPaths paths, IProcessLauncher launcher)
@@ -53,7 +53,7 @@ public static class DevelopmentLaunch
     }
 
     /// <summary>
-    /// The command that starts the Claudette in <paramref name="directory"/>: its own executable, or
+    /// The command that starts the Deventry in <paramref name="directory"/>: its own executable, or
     /// <c>dotnet Deventry.dll</c> when this one was started that way.
     /// </summary>
     public static ProcessStartSpec Command(string directory, IReadOnlyList<string> args)
@@ -66,7 +66,7 @@ public static class DevelopmentLaunch
         return new ProcessStartSpec(executable, args) { WorkingDirectory = Environment.CurrentDirectory };
     }
 
-    /// <summary>The source build this Claudette is, or null for an installed one.</summary>
+    /// <summary>The source build this Deventry is, or null for an installed one.</summary>
     public static DevelopmentBuild? Current(IReadOnlyList<string> args)
     {
         var here = AppContext.BaseDirectory;

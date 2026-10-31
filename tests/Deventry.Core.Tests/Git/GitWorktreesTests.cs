@@ -9,7 +9,7 @@ namespace Deventry.Core.Tests.Git;
 /// </summary>
 public sealed class GitWorktreesTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-worktrees-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-worktrees-{Guid.NewGuid():N}");
     private readonly string _repo;
     private readonly IsolatedGitLauncher _launcher;
     private readonly GitWorktrees _worktrees;

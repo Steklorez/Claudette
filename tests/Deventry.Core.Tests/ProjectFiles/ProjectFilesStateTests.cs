@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>A Project Files tab as the app's state keeps it (DESIGN.md §18, "Project files").</summary>
 public sealed class ProjectFilesStateTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-project-files-state");
+    private readonly TempFolder _temp = new("deventry-project-files-state");
 
     public void Dispose() => _temp.Dispose();
 

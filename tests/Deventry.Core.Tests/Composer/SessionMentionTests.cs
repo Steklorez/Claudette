@@ -56,11 +56,11 @@ public sealed class SessionMentionTests
     public void One_mention_is_a_sentence_with_where_to_send()
     {
         Assert.Equal(
-            "[Claudette] \"Art page\" in this message is another Claude Code session on this machine, open in another of Claudette's tabs. "
+            "[Deventry] \"Art page\" in this message is another Claude Code session on this machine, open in another of Deventry's tabs. "
             + "To message it, call SendMessage with to: \"Art page\".",
             SessionMentions.Note([ArtPage]));
         Assert.Equal(
-            "[Claudette] \"Find the config loader\" in this message is one of your subagents (Explore). To message it, call SendMessage with to: \"a1b2c3d4\".",
+            "[Deventry] \"Find the config loader\" in this message is one of your subagents (Explore). To message it, call SendMessage with to: \"a1b2c3d4\".",
             SessionMentions.Note([Explorer]));
     }
 
@@ -76,7 +76,7 @@ public sealed class SessionMentionTests
         Assert.Equal([art], resolved.Mentioned);
         Assert.Equal([art], resolved.ById);
         Assert.Equal(
-            $"[Claudette] {id} in this message is the session ID of \"Art page\", another Claude Code session on this machine, open in another of Claudette's tabs. "
+            $"[Deventry] {id} in this message is the session ID of \"Art page\", another Claude Code session on this machine, open in another of Deventry's tabs. "
             + "To message it, call SendMessage with to: \"Art page-joyful-stearns\".",
             SessionMentions.Note(resolved.Mentioned, resolved.ById));
     }
@@ -107,9 +107,9 @@ public sealed class SessionMentionTests
         var note = SessionMentions.Note([Worker, new MentionTarget("Docs", "Docs", MentionKind.SubThread)]);
 
         Assert.Equal(
-            "[Claudette] Who this message names, each of whom you can message with SendMessage:\n"
+            "[Deventry] Who this message names, each of whom you can message with SendMessage:\n"
             + "- \"api-worker\" is another Claude Code session on this machine, working in C:\\work\\api. Its to: \"api-worker\".\n"
-            + "- \"Docs\" is one of this thread's sub-threads: Claudette delivers what you send it, and sends you its result when it finishes. Its to: \"Docs\".",
+            + "- \"Docs\" is one of this thread's sub-threads: Deventry delivers what you send it, and sends you its result when it finishes. Its to: \"Docs\".",
             note);
     }
 

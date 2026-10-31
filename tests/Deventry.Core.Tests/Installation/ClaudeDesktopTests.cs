@@ -12,7 +12,7 @@ public sealed class ClaudeDesktopTests : IDisposable
 {
     private static readonly ProjectToolPaths Windows = new(@"C:\Users\me", @"C:\Users\me\AppData\Roaming", @"C:\Users\me\AppData\Local");
 
-    private readonly TempFolder _temp = new("claudette-desktop");
+    private readonly TempFolder _temp = new("deventry-desktop");
 
     public void Dispose() => _temp.Dispose();
 

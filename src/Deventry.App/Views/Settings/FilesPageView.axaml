@@ -11,7 +11,7 @@
         <c:SettingRow.Details>
           <StackPanel>
             <StackPanel Classes="options">
-              <RadioButton GroupName="OpenFilesIn" Content="Claudette's editor, at the line named" IsChecked="{Binding OpenInEditor}" />
+              <RadioButton GroupName="OpenFilesIn" Content="Deventry's editor, at the line named" IsChecked="{Binding OpenInEditor}" />
               <RadioButton GroupName="OpenFilesIn" Content="The app the OS uses for the file" IsChecked="{Binding OpenInSystem}" />
             </StackPanel>
             <c:SettingRow Key="editor.filesFromConversation" IsEnabled="{Binding OpenInEditor}">
@@ -28,7 +28,7 @@
       <c:SettingRow Key="editor.openImagesIn">
         <c:SettingRow.Details>
           <StackPanel Classes="options">
-            <RadioButton GroupName="OpenImagesIn" Content="Claudette's image viewer" IsChecked="{Binding ImagesInViewer}" />
+            <RadioButton GroupName="OpenImagesIn" Content="Deventry's image viewer" IsChecked="{Binding ImagesInViewer}" />
             <RadioButton GroupName="OpenImagesIn" Content="The app the OS uses for the file" IsChecked="{Binding ImagesInSystem}" />
           </StackPanel>
         </c:SettingRow.Details>

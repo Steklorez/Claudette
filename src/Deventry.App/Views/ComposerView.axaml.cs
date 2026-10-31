@@ -27,7 +27,7 @@ public partial class ComposerView : UserControl
         // Tunnel, so these are seen before the multi-line TextBox turns Enter into a new line.
         Composer.AddHandler(KeyDownEvent, OnComposerKeyDown, RoutingStrategies.Tunnel);
         WireComposerAssist();
-        // Claudette on the composer's home is over Send, or Stop in its place (DESIGN.md §5).
+        // Joulene on the composer's home is over Send, or Stop in its place (DESIGN.md §5).
         MascotLayer.SetHome(SendButton, StopButton);
     }
 
@@ -53,7 +53,7 @@ public partial class ComposerView : UserControl
     internal void ShowSuffixes() => SuffixButton.Flyout?.ShowAt(SuffixButton);
 
     /// <summary>
-    /// What the conversation can show just above the composer: Claudette on the composer keeps clear of it, or ducks
+    /// What the conversation can show just above the composer: Joulene on the composer keeps clear of it, or ducks
     /// behind the box while it spans the box (DESIGN.md §5).
     /// </summary>
     internal void KeepMascotClearOf(IEnumerable<Control> controls) => MascotLayer.KeepClearOf(controls);

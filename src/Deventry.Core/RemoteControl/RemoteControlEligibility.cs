@@ -3,7 +3,7 @@ using Deventry.Core.Auth;
 namespace Deventry.Core.RemoteControl;
 
 /// <summary>
-/// Whether the signed-in account can use Remote Control, from what Claudette already knows: <c>claude auth status</c>
+/// Whether the signed-in account can use Remote Control, from what Deventry already knows: <c>claude auth status</c>
 /// and the environment it gives <c>claude</c> (DESIGN.md §18, "Remote Control"). Remote Control needs a claude.ai
 /// subscription sign-in talking to <c>api.anthropic.com</c>. Anything else Claude Code checks itself when a tab connects
 /// (a policy, feature flags, the plan), and the tab shows its reason.
@@ -12,7 +12,7 @@ public static class RemoteControlEligibility
 {
     public const string BaseUrlVariable = "ANTHROPIC_BASE_URL";
 
-    /// <summary>Why the account can't use Remote Control, or null when it may, or Claudette can't tell yet.</summary>
+    /// <summary>Why the account can't use Remote Control, or null when it may, or Deventry can't tell yet.</summary>
     /// <param name="account">The latest <c>claude auth status</c>; null before the first.</param>
     /// <param name="environment">A variable of the environment <c>claude</c> starts with, or null when it isn't set.</param>
     public static string? Check(AuthStatus? account, Func<string, string?> environment)

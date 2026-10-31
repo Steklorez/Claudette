@@ -14,7 +14,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// </summary>
 public sealed class ProjectTypeTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-project-types");
+    private readonly TempFolder _temp = new("deventry-project-types");
 
     public void Dispose() => _temp.Dispose();
 

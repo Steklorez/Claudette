@@ -16,7 +16,7 @@ public enum HookRunStage
 /// <summary>How a hook's run ended (<c>hook_response</c>'s <c>outcome</c>).</summary>
 public enum HookOutcome
 {
-    /// <summary>Not said, or a value Claudette doesn't know.</summary>
+    /// <summary>Not said, or a value Deventry doesn't know.</summary>
     Unknown,
 
     Success,
@@ -130,7 +130,7 @@ public sealed record StatusNotice(string? Status)
 /// <summary>How much an informational notice matters (its <c>level</c>).</summary>
 public enum NoticeLevel
 {
-    /// <summary>Not said, or a value Claudette doesn't know.</summary>
+    /// <summary>Not said, or a value Deventry doesn't know.</summary>
     Unknown,
 
     Info,

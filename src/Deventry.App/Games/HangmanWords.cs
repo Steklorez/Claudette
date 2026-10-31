@@ -1,7 +1,7 @@
 namespace Deventry.App.Games;
 
 /// <summary>
-/// The words Claudette thinks of for hangman (DESIGN.md §18, "Games with Claudette"): three times in four one from
+/// The words Joulene thinks of for hangman (DESIGN.md §18, "Games with Joulene"): three times in four one from
 /// programming, otherwise an everyday one. Letters A to Z only, spelled the same in British and American English, and
 /// no product names.
 /// </summary>

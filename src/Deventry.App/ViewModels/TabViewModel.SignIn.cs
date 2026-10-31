@@ -105,7 +105,7 @@ public sealed partial class TabViewModel
         _shell.OnAuthenticationRequired();
     }
 
-    /// <summary>Signed out from Claudette: if this tab is running, it restarts on its session after the next sign-in.</summary>
+    /// <summary>Signed out from Deventry: if this tab is running, it restarts on its session after the next sign-in.</summary>
     public void OnSignedOut()
     {
         if (_session is not null && Account is null)

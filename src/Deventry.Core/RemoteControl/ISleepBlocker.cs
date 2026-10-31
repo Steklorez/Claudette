@@ -23,7 +23,7 @@ public interface ISleepBlocker : IDisposable
 }
 
 /// <summary>No way to keep this machine awake: tests, and platforms without one.</summary>
-public sealed class NoSleepBlocker(string reason = "Claudette can't keep this computer awake here.") : ISleepBlocker
+public sealed class NoSleepBlocker(string reason = "Deventry can't keep this computer awake here.") : ISleepBlocker
 {
     public string? UnavailableReason => reason;
 

@@ -94,7 +94,7 @@ public sealed partial class ProjectRunViewModel : LogTabViewModel
 
     public bool IsStopped => State == ProjectJobState.Stopped;
 
-    /// <summary>The process's exit code, once it has ended; null for work Claudette did itself.</summary>
+    /// <summary>The process's exit code, once it has ended; null for work Deventry did itself.</summary>
     public int? ExitCode { get; private set; }
 
     /// <summary>"Build editor is running…", "Build editor succeeded.", "Build editor failed (exit code 6)."</summary>

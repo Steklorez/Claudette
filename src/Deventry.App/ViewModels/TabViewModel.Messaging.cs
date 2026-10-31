@@ -19,7 +19,7 @@ public partial class TabViewModel
 
     /// <summary>
     /// The name the tab's session has in Claude Code: the tab's own, generated or the user's, while Settings → General
-    /// says so. Null leaves the one Claude Code makes from the folder (<c>claudette-3f</c>).
+    /// says so. Null leaves the one Claude Code makes from the folder (<c>deventry-3f</c>).
     /// </summary>
     private string? NameForClaudeCode => _services.Settings.General.RenameInClaudeCode ? State.UserName ?? State.AutoName : null;
 
@@ -89,7 +89,7 @@ public partial class TabViewModel
         {
             claimed.Add(own);
         }
-        // Sub-threads go by the names the thread knows them by: Claudette delivers what's sent to those (DESIGN.md §18).
+        // Sub-threads go by the names the thread knows them by: Deventry delivers what's sent to those (DESIGN.md §18).
         var subThreads = IsThread ? SubThreads.ToArray() : [];
         if (subThreads.Length > 0)
         {

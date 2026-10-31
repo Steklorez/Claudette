@@ -68,11 +68,11 @@ public sealed class ClaudetteEntriesTests : IDisposable
         File.WriteAllText(Path.Combine(build, "Deventry.exe"), "");
         var claudettes = new WindowsLoginItems(new FakeLauncher(), new FakeTimeProvider(), _key + @"\Run", _key + @"\Approved", ClaudetteLoginItems.WindowsValueName);
         var Deventrys = new WindowsLoginItems(new FakeLauncher(), new FakeTimeProvider(), _key + @"\Run", _key + @"\Approved");
-        claudettes.WriteEntry(new ClaudetteCopy(AppInstallKind.Other, build, "0.7.0"));
+        claudettes.WriteEntry(new DeventryCopy(AppInstallKind.Other, build, "0.7.0"));
         var items = ClaudetteLoginItems.CarriedOver(Deventrys, claudettes);
 
         Assert.Equal(LoginEntryState.Enabled, items.ReadEntry());
-        items.WriteEntry(new ClaudetteCopy(AppInstallKind.Other, build, "1.0.0"));
+        items.WriteEntry(new DeventryCopy(AppInstallKind.Other, build, "1.0.0"));
 
         Assert.Equal($"\"{Path.Combine(build, "Deventry.exe")}\" --login", Deventrys.ReadCommand());
         Assert.Null(claudettes.ReadCommand());

@@ -12,7 +12,7 @@ public sealed record InactiveDaysChoice(int Days)
 
 /// <summary>
 /// Settings → Source control → Git (DESIGN.md §14): the branch on each tab's row, cleaning up worktrees, the git
-/// Claudette runs, and what the Project Files tab shows of git. <b>Show the git branch</b> and <b>Worktrees</b> keep their
+/// Deventry runs, and what the Project Files tab shows of git. <b>Show the git branch</b> and <b>Worktrees</b> keep their
 /// keys from Conversation and General, where they were before, so the choices made there carry over.
 /// </summary>
 public sealed partial class GitPage : SettingsPage, IDisposable
@@ -45,9 +45,9 @@ public sealed partial class GitPage : SettingsPage, IDisposable
         [
             Setting("git.path", "Path to git", s => s.Git.Path, (s, v) => s.Git.Path = v,
                 "Empty uses the first git on your PATH, as a terminal does.",
-                "Claudette runs it for Changed files, worktrees, the @ list, what the Files tab dims and a source build's new commits, and for the git difftool. Claude's own git commands, in its Bash tool, run the git Claude Code finds, whatever this says.",
+                "Deventry runs it for Changed files, worktrees, the @ list, what the Files tab dims and a source build's new commits, and for the git difftool. Claude's own git commands, in its Bash tool, run the git Claude Code finds, whatever this says.",
                 ["git.exe", "executable", "binary", "location", "version"]),
-        ], description: "The git Claudette runs to ask about your repositories.");
+        ], description: "The git Deventry runs to ask about your repositories.");
         Section("projectFiles", "Project Files tab",
         [
             Setting("git.newFilesTabsShow", "New Files tabs show", s => s.Git.NewFilesTabsShow, (s, v) => s.Git.NewFilesTabsShow = v,
@@ -63,7 +63,7 @@ public sealed partial class GitPage : SettingsPage, IDisposable
 
     public override string IconKey => "IconBranch";
 
-    public override string Description => "The git branch on tab rows, worktrees, the git Claudette runs, and git in the Files tab.";
+    public override string Description => "The git branch on tab rows, worktrees, the git Deventry runs, and git in the Files tab.";
 
     /// <summary>The window closed: a check still running is dropped. The window's view model is disposed more than once.</summary>
     public void Dispose()
@@ -123,7 +123,7 @@ public sealed partial class GitPage : SettingsPage, IDisposable
             }
             if (Services.State.LastWorktreeCleanup is not { Removed.Count: > 0 } last)
             {
-                return "Nothing removed yet. Claudette looks a minute after it starts, then every hour.";
+                return "Nothing removed yet. Deventry looks a minute after it starts, then every hour.";
             }
             var names = last.Removed.Select(p => Path.GetFileName(Path.TrimEndingDirectorySeparator(p))).ToList();
             return $"Last removed {Core.Formats.List(names)}, {Core.Formats.Ago(Services.Time.GetUtcNow() - last.At)}.";
@@ -159,9 +159,9 @@ public sealed partial class GitPage : SettingsPage, IDisposable
         }
     }
 
-    // ---- The git Claudette runs (DESIGN.md §14, "Path to git") -------------------------------------------------------
+    // ---- The git Deventry runs (DESIGN.md §14, "Path to git") -------------------------------------------------------
 
-    /// <summary>Empty for the first git on the user environment's PATH. Applies to the next git Claudette runs.</summary>
+    /// <summary>Empty for the first git on the user environment's PATH. Applies to the next git Deventry runs.</summary>
     public string GitPath
     {
         get => Settings.Git.Path ?? "";
@@ -198,7 +198,7 @@ public sealed partial class GitPage : SettingsPage, IDisposable
     /// <summary>The latest check of the git set, for tests to wait on.</summary>
     internal Task Checking { get; private set; } = Task.CompletedTask;
 
-    /// <summary>Checked each time the page shows, since git can be installed, moved or updated while Claudette runs.</summary>
+    /// <summary>Checked each time the page shows, since git can be installed, moved or updated while Deventry runs.</summary>
     public override void OnShown() => CheckGit();
 
     /// <summary>Resetting the section puts the path back: the git found then is checked.</summary>

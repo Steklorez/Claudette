@@ -8,7 +8,7 @@ public sealed class StatusFeedException(string message, Exception? inner = null)
 /// <summary>
 /// Claude's public status page (DESIGN.md §18, "Service status"): an Atlassian Statuspage whose v2 summary lists every
 /// component, the open incidents and the scheduled maintenances. Unauthenticated; the request carries nothing but
-/// Claudette's User-Agent.
+/// Deventry's User-Agent.
 /// </summary>
 public sealed class StatusFeed(HttpClient http, string userAgent, string summaryUrl = StatusFeed.SummaryUrl)
 {

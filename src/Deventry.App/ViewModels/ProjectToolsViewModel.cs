@@ -222,7 +222,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     private Task Refresh() => RefreshAsync();
 
     /// <summary>
-    /// Reads the folder's project files again: when the tab is selected, Claudette comes to the front, a turn ends
+    /// Reads the folder's project files again: when the tab is selected, Deventry comes to the front, a turn ends
     /// (Claude may have edited them, or switched branches), and after the in-app editor saves.
     /// </summary>
     public async Task RefreshFileAsync()
@@ -621,7 +621,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     {
         if (_services.ProjectTools.Processes is not { } processes)
         {
-            _host.AddNote($"Claudette can't list the processes on this machine, so it can't end the {kill.What}s.", NoteKind.Warning);
+            _host.AddNote($"Deventry can't list the processes on this machine, so it can't end the {kill.What}s.", NoteKind.Warning);
             return;
         }
         var running = await Task.Run(() => processes.Find(kill.Names));

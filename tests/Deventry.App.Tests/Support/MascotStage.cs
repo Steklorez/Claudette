@@ -4,7 +4,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Deventry.App.Tests.Support;
 
-/// <summary>Claudette on the composer's director on a fake clock, with every frame she shows and when.</summary>
+/// <summary>Joulene on the composer's director on a fake clock, with every frame she shows and when.</summary>
 internal sealed class MascotStage : IDisposable
 {
     /// <summary>Room to walk either side of her home, which is over the Send button, and a free edge wider than her patch.</summary>

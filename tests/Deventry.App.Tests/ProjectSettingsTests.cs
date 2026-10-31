@@ -182,7 +182,7 @@ public class ProjectSettingsTests
         Write(shared, """
             {
               // The team's links and actions.
-              "$schema": "https://example.com/claudette.schema.json",
+              "$schema": "https://example.com/deventry.schema.json",
               "actions": [ { "name": "Test", "command": "make test", "os": ["linux", "macos", "windows"] } ],
               "links": [ { "name": "Board", "url": "https://example.com/board", "note": "kept" } ],
             }
@@ -219,7 +219,7 @@ public class ProjectSettingsTests
         Assert.Equal("https://github.com/org/repo/compare/{branch}?expand=1", root["links"]![1]!["url"]!.GetValue<string>());
         Assert.Equal("make test", root["actions"]![0]!["command"]!.GetValue<string>());
         Assert.Equal(3, root["actions"]![0]!["os"]!.AsArray().Count);
-        Assert.Equal("https://example.com/claudette.schema.json", root["$schema"]!.GetValue<string>());
+        Assert.Equal("https://example.com/deventry.schema.json", root["$schema"]!.GetValue<string>());
         Assert.DoesNotContain("The team's links", File.ReadAllText(shared), StringComparison.Ordinal);
         // The project's menu picks it up, as it does after the actions editor saves.
         await TabTestHarness.Eventually(() => tab.ProjectTools.Links.Select(l => l.Name).SequenceEqual(["Board", "Pull request", "https://mine.example"]), "the new link in the menu");
@@ -258,9 +258,9 @@ public class ProjectSettingsTests
     }
 
     [Theory]
-    [InlineData("file:///etc/hosts", "\"file:\" links don't open from Claudette; only https, http and mailto do.")]
-    [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Claudette; only https, http and mailto do.")]
-    [InlineData("vscode://file/x", "\"vscode:\" links don't open from Claudette; only https, http and mailto do.")]
+    [InlineData("file:///etc/hosts", "\"file:\" links don't open from Deventry; only https, http and mailto do.")]
+    [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Deventry; only https, http and mailto do.")]
+    [InlineData("vscode://file/x", "\"vscode:\" links don't open from Deventry; only https, http and mailto do.")]
     [InlineData("example.com/board", "example.com/board isn't a full web address, such as https://example.com.")]
     [InlineData("https://example.com/{ticket}", "Unknown placeholder {ticket}: use {branch}, {changelist} or {folderName}.")]
     [InlineData("https://github.com/org/repo/compare/{branch}?expand=1", null)]
@@ -298,7 +298,7 @@ public class ProjectSettingsTests
         var rows = settings.Project!.Links;
 
         Assert.Equal(["Hosts", "(can't be read)", "(can't be read)"], rows.Select(r => r.Name));
-        Assert.Equal("\"file:\" links don't open from Claudette; only https, http and mailto do.", rows[0].Warning);
+        Assert.Equal("\"file:\" links don't open from Deventry; only https, http and mailto do.", rows[0].Warning);
         Assert.Equal(["links[1] has no url, so it was skipped.", "links[2] isn't an object, so it was skipped."], rows.Skip(1).Select(r => r.Warning));
         // One that can't be read can only be removed; removing it keeps the others as they were.
         settings.Project.SelectedLink = rows[2];
@@ -323,7 +323,7 @@ public class ProjectSettingsTests
 
         var error = Assert.Single(project.LinkFileErrors);
         Assert.StartsWith("deventry.json isn't valid JSON (", error, StringComparison.Ordinal);
-        Assert.EndsWith("so Claudette won't rewrite it. Fix it by hand first.", error, StringComparison.Ordinal);
+        Assert.EndsWith("so Deventry won't rewrite it. Fix it by hand first.", error, StringComparison.Ordinal);
 
         // The dialog refuses that file, with the reason, and takes the other.
         project.AddLinkCommand.Execute(null);
@@ -793,9 +793,9 @@ public class ProjectSettingsTests
         await using var h = new TabTestHarness();
         using var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal(["Claudette", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
+        Assert.Equal(["Deventry", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl], settings.NavEntries.Where(e => e.IsHeading).Select(e => e.Title));
         // About is a window of its own, not a page (DESIGN.md §14, "About").
-        Assert.Equal(["General", "Appearance", "Conversation", "Notifications", "Keyboard"], PagesUnder(settings, "Claudette"));
+        Assert.Equal(["General", "Appearance", "Conversation", "Notifications", "Keyboard"], PagesUnder(settings, "Deventry"));
         // Advanced is the last of Claude's pages: it's mostly about running Claude Code.
         Assert.Equal(["Claude Code", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, "Claude"));
         Assert.Equal(["Sessions", "Files and diffs"], PagesUnder(settings, "Your work"));
@@ -808,10 +808,10 @@ public class ProjectSettingsTests
         Assert.Equal(pages.Count, pages.Select(e => e.IconKey).Distinct().Count());
         Assert.All(settings.ProjectTypes, page => Assert.Equal(ProjectTypeIcons.For(page.Kind), pages.Single(e => e.Title == page.Title).IconKey));
         Assert.DoesNotContain(settings.ProjectTypes, page => page.IconKey == ProjectTypeIcons.Other);
-        // Unreal Engine's and Godot's are their logos, which their owners let Claudette show, drawn filled; Unity's is drawn
+        // Unreal Engine's and Godot's are their logos, which their owners let Deventry show, drawn filled; Unity's is drawn
         // for what it's known by.
         Assert.Equal([UnrealProvider.KindId, GodotProvider.KindId], settings.ProjectTypes.Where(page => Logos.IsLogo(page.IconKey)).Select(page => page.Kind));
-        // Perforce's page has Perforce's symbol, which Perforce lets Claudette show.
+        // Perforce's page has Perforce's symbol, which Perforce lets Deventry show.
         Assert.Equal(Logos.Perforce, pages.Single(e => e.Title == "Perforce").IconKey);
         Assert.True(Logos.IsLogo(Logos.Perforce));
 

@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// The parts of the OS around the window (DESIGN.md §2, §4, §14). On macOS: <b>About Claudette</b> and <b>Settings…</b>
+/// The parts of the OS around the window (DESIGN.md §2, §4, §14). On macOS: <b>About Deventry</b> and <b>Settings…</b>
 /// in the app menu, a File menu with <b>Open Recent</b>, a Help menu with the user guide, dotBunny's Discord and
 /// <b>Report an Issue</b>, and recent folders in the Dock icon's menu. On Windows: recent folders in the taskbar jump
 /// list. Kept current as folders are opened and shortcuts rebound.
@@ -41,7 +41,7 @@ public sealed class PlatformChrome : IDisposable
             NativeMenu.SetMenu(app,
             [
                 // DESIGN.md §14, "About": its window, as About comes first in a Mac app's menu.
-                new NativeMenuItem("About Claudette")
+                new NativeMenuItem("About Deventry")
                 {
                     Command = new AsyncRelayCommand(() => _main.Shell?.OpenAboutCommand.ExecuteAsync(null) ?? Task.CompletedTask),
                 },

@@ -622,7 +622,7 @@ public class RemoteControlTests
         await TabTestHarness.Eventually(() => tab.RemoteControl.Status.IsConnected, "the connection");
         var prompt = await PromptAsync(h, tab, BashRequest);
 
-        // The phone answered it: Claude Code withdraws Claudette's copy.
+        // The phone answered it: Claude Code withdraws Deventry's copy.
         h.Transport.Emit("""{"type":"control_cancel_request","request_id":"p1"}""");
 
         await TabTestHarness.Eventually(() => !prompt.IsPending, "the withdrawal");
@@ -652,7 +652,7 @@ public class RemoteControlTests
     // ---- The presence file and keeping the computer awake -----------------------------------------------------------
 
     [Fact]
-    public async Task The_presence_file_is_there_while_Claudette_is_in_front_and_every_claude_is_told_about_it()
+    public async Task The_presence_file_is_there_while_Deventry_is_in_front_and_every_claude_is_told_about_it()
     {
         await using var h = new TabTestHarness();
         var path = h.Services.Paths.PresenceFile;
@@ -670,7 +670,7 @@ public class RemoteControlTests
         h.Services.Notifications.SetAppActive(true);
         Assert.True(File.Exists(path));
 
-        // Closing Claudette: nobody is at it any more.
+        // Closing Deventry: nobody is at it any more.
         h.Services.RemoteControl.Dispose();
         Assert.False(File.Exists(path));
     }
@@ -702,7 +702,7 @@ public class RemoteControlTests
         await TabTestHarness.Eventually(() => !h.SleepBlocker.IsBlocking, "the tab to close");
         Assert.Equal([true, false, true, false], h.SleepBlocker.Changes);
 
-        // Closing Claudette lets go of the OS's side too.
+        // Closing Deventry lets go of the OS's side too.
         h.Services.KeepAwake.Dispose();
         Assert.True(h.SleepBlocker.IsDisposed);
     }

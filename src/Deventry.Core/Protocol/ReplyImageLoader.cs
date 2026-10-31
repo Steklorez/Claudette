@@ -7,7 +7,7 @@ public sealed class ReplyImageException(string message, Exception? inner = null)
 
 /// <summary>
 /// Loads an image in a reply (DESIGN.md §18, "Images in Claude's replies") once <see cref="ReplyImageAddress"/> says it
-/// may: a file from the disk, or a web image through Claudette's own client, never LiveMarkdown's. Either is at most
+/// may: a file from the disk, or a web image through Deventry's own client, never LiveMarkdown's. Either is at most
 /// <see cref="MaxBytes"/> and must be a PNG, JPEG, GIF, WebP or BMP by its first bytes, whatever its name or the server
 /// says (<see cref="ViewerImages"/>). A web image link clicked in a reply loads through it too (DESIGN.md §18, "Opening
 /// images").

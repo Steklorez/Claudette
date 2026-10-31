@@ -10,7 +10,7 @@ public sealed partial class DiffToolTests : IDisposable
 {
     private static readonly DiffToolSides Sides = new(@"C:\Temp\x\auth (before).cs", @"C:\My Repo\auth.cs", "auth.cs (before)", "auth.cs (now)");
 
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-difftool-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-difftool-{Guid.NewGuid():N}");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 28, 14, 30, 5, 123, TimeSpan.Zero));
     private readonly FakeProcessLauncher _launcher = new();
 

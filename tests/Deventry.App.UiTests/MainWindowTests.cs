@@ -138,7 +138,7 @@ public class MainWindowTests
     }
 
     /// <summary>
-    /// The header as Rider's (DESIGN.md §3, "Window frame"): Claudette's logo and the menu first, the user guide first in
+    /// The header as Rider's (DESIGN.md §3, "Window frame"): Deventry's logo and the menu first, the user guide first in
     /// the menu, and Settings last; on Windows and macOS it's the window's title bar, its controls taking their own clicks,
     /// unless Settings → Appearance → Use the system's title bar is on, when Settings sits over the strip of icons.
     /// </summary>
@@ -176,9 +176,9 @@ public class MainWindowTests
         var entries = Assert.IsType<MenuFlyout>(menu.Flyout).Items.OfType<MenuItem>().ToList();
         var sections = entries.Where(e => e.Classes.Contains("menusection")).ToList();
         var items = entries.Except(sections).ToList();
-        Assert.Equal(["Help", "Claudette"], sections.Select(s => s.Header as string));
+        Assert.Equal(["Help", "Deventry"], sections.Select(s => s.Header as string));
         Assert.All(sections, s => Assert.False(s.IsEnabled));
-        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Claudette"], items.Select(i => i.Header as string));
+        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Deventry"], items.Select(i => i.Header as string));
         Assert.All(items, i => Assert.IsType<Avalonia.Controls.Shapes.Path>(i.Icon));
         menu.Flyout!.ShowAt(menu);
         await UiText.SettleUntilAsync(window, () => items[0].Command is not null && items[0].IsEffectivelyVisible, "the open menu");
@@ -235,7 +235,7 @@ public class MainWindowTests
         await using var h = new TabTestHarness(s =>
         {
             s.Processes.ShowMonitor = true;
-            s.General.KeepAwakeWhen = KeepAwakeWhen.ClaudetteRuns;
+            s.General.KeepAwakeWhen = KeepAwakeWhen.DeventryRuns;
         }, dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
         h.Trees.Trees[4242].Children.Add((5001, "node"));
@@ -257,7 +257,7 @@ public class MainWindowTests
         Assert.False(cup.IsChecked);
         Assert.False(steam.IsEffectivelyVisible);
         Assert.Equal("Keep this computer awake", AutomationProperties.GetName(cup));
-        Assert.Equal("This computer can sleep.\nClick to keep it awake while Claudette runs.\nRight-click to choose when.", ToolTip.GetTip(cup));
+        Assert.Equal("This computer can sleep.\nClick to keep it awake while Deventry runs.\nRight-click to choose when.", ToolTip.GetTip(cup));
 
         Click(window, cup);
 
@@ -273,7 +273,7 @@ public class MainWindowTests
         menu.Open(cup);
         UiText.Settle(window);
         var items = menu.Items.OfType<MenuItem>().ToArray();
-        Assert.Equal(["Only while Claude has work to finish", "Whenever Claudette is running", "Keep-awake settings…"], items.Select(i => i.Header as string));
+        Assert.Equal(["Only while Claude has work to finish", "Whenever Deventry is running", "Keep-awake settings…"], items.Select(i => i.Header as string));
         Assert.Equal([false, true, false], items.Select(i => i.IsChecked));
         Assert.Equal("General#keepAwake", items[2].CommandParameter);
         ClickMenuItem(window, items[0]);

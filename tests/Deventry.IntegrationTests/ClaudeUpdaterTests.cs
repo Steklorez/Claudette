@@ -10,7 +10,7 @@ namespace Deventry.IntegrationTests;
 /// </summary>
 public sealed class ClaudeUpdaterTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-updates");
+    private readonly TempFolder _root = new("deventry-updates");
 
     public void Dispose() => _root.Dispose();
 
@@ -66,7 +66,7 @@ public sealed class ClaudeUpdaterTests : IDisposable
     }
 
     /// <summary>
-    /// The real <c>claude doctor</c> still prints what Claudette reads. Read-only: it never runs <c>claude update</c>.
+    /// The real <c>claude doctor</c> still prints what Deventry reads. Read-only: it never runs <c>claude update</c>.
     /// </summary>
     [Fact]
     [Trait("Category", "RealCli")]

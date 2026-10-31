@@ -192,7 +192,7 @@ public class ProjectToolsTests
     [Fact]
     public async Task Open_in_Rider_without_Rider_says_so_rather_than_starting_the_editor()
     {
-        Assert.SkipWhen(OperatingSystem.IsMacOS(), "On macOS, open -a finds Rider itself, so Claudette never decides it's missing.");
+        Assert.SkipWhen(OperatingSystem.IsMacOS(), "On macOS, open -a finds Rider itself, so Deventry never decides it's missing.");
         var (h, launcher, _) = UnrealHarness(s => s.ProjectTools.OpenSolutionsWith = SolutionOpener.Rider);
         await using var _h = h;
         h.Services.ProjectTools.Probe = new RiderProbe(installed: false);
@@ -385,7 +385,7 @@ public class ProjectToolsTests
     }
 
     [Fact]
-    public async Task A_finished_job_notifies_only_while_Claudette_isnt_in_front_and_a_click_goes_to_its_tab()
+    public async Task A_finished_job_notifies_only_while_Deventry_isnt_in_front_and_a_click_goes_to_its_tab()
     {
         var (h, launcher, _) = UnrealHarness();
         await using var _h = h;

@@ -14,8 +14,8 @@ public sealed record ProcessStartSpec(string FileName, IReadOnlyList<string> Arg
     public bool TrackProcessTree { get; init; }
 
     /// <summary>
-    /// Start it with this process's standard streams instead of redirected ones, for a program that outlives Claudette,
-    /// such as Claudette starting itself from a copy of its build (DESIGN.md §9). Its output channels are empty.
+    /// Start it with this process's standard streams instead of redirected ones, for a program that outlives Deventry,
+    /// such as Deventry starting itself from a copy of its build (DESIGN.md §9). Its output channels are empty.
     /// </summary>
     public bool Detached { get; init; }
 

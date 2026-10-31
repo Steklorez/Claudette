@@ -4,7 +4,7 @@ using Deventry.Core.Docs;
 namespace Deventry.Core.Tests.Docs;
 
 /// <summary>
-/// What Claudette reads from calls to claude.ai's Docs connector (DESIGN.md §5, "Claude Docs"). The inputs and replies
+/// What Deventry reads from calls to claude.ai's Docs connector (DESIGN.md §5, "Claude Docs"). The inputs and replies
 /// are shaped as the connector sent them to Claude Code 2.1.284, cut down, with made-up ids and addresses.
 /// </summary>
 public class ClaudeDocCallTests

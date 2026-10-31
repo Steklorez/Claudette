@@ -102,7 +102,7 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     [NotifyPropertyChangedFor(nameof(CanRestoreFiles))]
     public partial string? Uuid { get; set; }
 
-    /// <summary>The id Claudette sent the prompt with, which Claude Code echoes back (DESIGN.md §13, "Wire format").</summary>
+    /// <summary>The id Deventry sent the prompt with, which Claude Code echoes back (DESIGN.md §13, "Wire format").</summary>
     public string? SentId { get; set; }
 
     /// <summary>
@@ -114,7 +114,7 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     public partial bool IsQueued { get; set; }
 
     /// <summary>
-    /// Held by Claudette until the turn ends, with Settings → General set to queue messages sent while Claude works
+    /// Held by Deventry until the turn ends, with Settings → General set to queue messages sent while Claude works
     /// (DESIGN.md §5, "Queued messages"): Claude Code hasn't been sent it yet. <b>Send now</b> sends it into the turn.
     /// </summary>
     [ObservableProperty]
@@ -194,10 +194,10 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     /// <summary>The message as it was sent: its text, then its quick suffixes after a blank line.</summary>
     public override string CopyText => !HasSuffix ? Text : Text.Length == 0 ? SuffixText! : $"{Text}\n\n{SuffixText}";
 
-    /// <summary>Sent by Claudette as an automatic check-in (DESIGN.md §5, "Check-ins on long turns").</summary>
+    /// <summary>Sent by Deventry as an automatic check-in (DESIGN.md §5, "Check-ins on long turns").</summary>
     public bool IsCheckIn { get; } = isCheckIn;
 
-    /// <summary>Sent by Claudette once a usage limit reset (DESIGN.md §6, "Continuing after a limit resets").</summary>
+    /// <summary>Sent by Deventry once a usage limit reset (DESIGN.md §6, "Continuing after a limit resets").</summary>
     public bool IsAutoContinue { get; } = isAutoContinue;
 
     /// <summary>
@@ -206,17 +206,17 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     /// </summary>
     public string? Label { get; init; }
 
-    /// <summary>Claudette passed it on for a thread or its sub-threads: taken back, it doesn't go into the composer.</summary>
+    /// <summary>Deventry passed it on for a thread or its sub-threads: taken back, it doesn't go into the composer.</summary>
     public bool IsFromThread { get; init; }
 
-    /// <summary>The label over a message Claudette sent by itself or passed on, or null for one the user sent.</summary>
+    /// <summary>The label over a message Deventry sent by itself or passed on, or null for one the user sent.</summary>
     public string? AutomaticLabel => Label ?? (IsCheckIn ? "Automatic check-in" : IsAutoContinue ? "Automatic continue after the usage limit reset" : null);
 
     /// <summary>Its card's label (DESIGN.md §18, "Conversation cards"): "You", or who sent it when it wasn't the user.</summary>
     public string CardLabel => AutomaticLabel ?? "You";
 
     /// <summary>
-    /// The note on threads Claudette sent after the message (DESIGN.md §18, "Threads"): the card says so in a line, with
+    /// The note on threads Deventry sent after the message (DESIGN.md §18, "Threads"): the card says so in a line, with
     /// the note as its tip.
     /// </summary>
     public string? ThreadNote { get; init; }
@@ -841,15 +841,15 @@ public sealed partial class SubagentItem : ToolUseItem
     public bool IsSucceeded => IsComplete && !IsError && !IsStopped;
 
     /// <summary>
-    /// Claudette's hook refused its <c>Agent</c> call, so it never started (DESIGN.md §5, "Subagents"): its dot is muted,
+    /// Deventry's hook refused its <c>Agent</c> call, so it never started (DESIGN.md §5, "Subagents"): its dot is muted,
     /// it has no cards, and it has no row in the sidebar or the agent map.
     /// </summary>
     public bool IsRefused { get; private set; }
 
-    /// <summary>It started, so it has work to show: every subagent but one Claudette's hook refused.</summary>
+    /// <summary>It started, so it has work to show: every subagent but one Deventry's hook refused.</summary>
     public bool IsStarted => !IsRefused;
 
-    /// <summary>The call came back refused by Claudette's hook, as Settings → Tabs → Subagents says.</summary>
+    /// <summary>The call came back refused by Deventry's hook, as Settings → Tabs → Subagents says.</summary>
     internal void ShowRefused()
     {
         IsComplete = true;
@@ -1058,7 +1058,7 @@ public sealed partial class HookRunItem(string hookId, string hookName, string h
 }
 
 /// <summary>
-/// A message Claudette doesn't know and skipped, shown only while protocol logging is on (DESIGN.md §16): a collapsed
+/// A message Deventry doesn't know and skipped, shown only while protocol logging is on (DESIGN.md §16): a collapsed
 /// row that expands to the raw JSON.
 /// </summary>
 public sealed partial class UnsupportedMessageItem(string messageType, string json) : ConversationItem

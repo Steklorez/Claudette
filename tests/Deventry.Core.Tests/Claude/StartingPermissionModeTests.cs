@@ -3,7 +3,7 @@ using Deventry.Core.Tests.Support;
 
 namespace Deventry.Core.Tests.Claude;
 
-/// <summary>The mode a tab starts in when Claudette doesn't choose one (DESIGN.md §7, "Starting mode").</summary>
+/// <summary>The mode a tab starts in when Deventry doesn't choose one (DESIGN.md §7, "Starting mode").</summary>
 public sealed class StartingPermissionModeTests : IDisposable
 {
     private readonly TempFolder _temp = new();
@@ -133,7 +133,7 @@ public sealed class StartingPermissionModeTests : IDisposable
     }
 
     [Fact]
-    public void Settings_Claudette_cant_read_are_skipped()
+    public void Settings_Deventry_cant_read_are_skipped()
     {
         _temp.Write("project/.claude/settings.local.json", "{ not json");
         _temp.Write("project/.claude/settings.json", """{ "permissions": { "defaultMode": 3, "disableAutoMode": true } }""");

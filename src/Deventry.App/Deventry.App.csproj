@@ -37,11 +37,11 @@
     <AvaloniaResource Include="Assets\**" Exclude="Assets\AppIcon\**;Assets\Mascot\**" />
     <!-- The icon's animation frames (AppIconAnimations), read without Avalonia so view model tests can use them. -->
     <EmbeddedResource Include="Assets\AppIcon\*.png" LogicalName="AppIcon.%(Filename)%(Extension)" />
-    <!-- Claudette on the composer's poses (Mascot/MascotArt), read the same way. -->
+    <!-- Joulene on the composer's poses (Mascot/MascotArt), read the same way. -->
     <EmbeddedResource Include="Assets\Mascot\mascot.json" LogicalName="Mascot.mascot.json" />
-    <!-- Claudette's own license, for Settings → About (ThirdPartyNotices.ClaudetteLicense). -->
+    <!-- Deventry's own license, for Settings → About (ThirdPartyNotices.DeventryLicense). -->
     <EmbeddedResource Include="..\..\LICENSE" LogicalName="License.txt" />
-    <!-- Also a file next to the app: toasts from an unpackaged Claudette show it (WindowsAppIdentity). -->
+    <!-- Also a file next to the app: toasts from an unpackaged Deventry show it (WindowsAppIdentity). -->
     <Content Include="Assets\claudette.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

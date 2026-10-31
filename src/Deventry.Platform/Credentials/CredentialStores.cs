@@ -11,7 +11,7 @@ namespace Deventry.Platform.Credentials;
 public static class CredentialStores
 {
     /// <summary>
-    /// The credential store for the OS Claudette is running on: Windows Credential Manager, the macOS Keychain, or the
+    /// The credential store for the OS Deventry is running on: Windows Credential Manager, the macOS Keychain, or the
     /// Secret Service through <c>secret-tool</c> on Linux. Anything that fails to set up gives an unavailable store.
     /// </summary>
     public static ICredentialStore CreateForCurrentOS(IProcessLauncher launcher, TimeProvider timeProvider, ILoggerFactory? loggerFactory = null)

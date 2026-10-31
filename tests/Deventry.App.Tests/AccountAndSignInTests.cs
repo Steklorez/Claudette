@@ -47,7 +47,7 @@ public class AccountAndSignInTests
     }
 
     [Fact]
-    public async Task No_notification_while_Claudette_is_in_front_and_only_one_for_several_tabs()
+    public async Task No_notification_while_Deventry_is_in_front_and_only_one_for_several_tabs()
     {
         await using var h = new TabTestHarness();
         var account = new AccountViewModel(h.Services);

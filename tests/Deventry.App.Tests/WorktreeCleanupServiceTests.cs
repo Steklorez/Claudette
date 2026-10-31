@@ -57,7 +57,7 @@ public class WorktreeCleanupServiceTests
         Assert.True(FolderHistory.SamePath(path, install.WorkingDirectory!));
         Assert.True(FolderHistory.SamePath(path, install.Environment![CustomProjectAction.WorktreeVariable]));
         Assert.True(FolderHistory.SamePath(h.WorkFolder, install.Environment[CustomProjectAction.MainCheckoutVariable]));
-        // Under Claudette's names too, for scripts written for it.
+        // FromClaudette: under Claudette's names too, for scripts written for it.
         Assert.Equal(install.Environment[CustomProjectAction.WorktreeVariable], install.Environment["CLAUDETTE_WORKTREE"]);
         Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text == "Setting up the new worktree: Install, Copy env.");
         Assert.Equal("Install", tab.ProjectTools.Runs.RunningRun?.Name);

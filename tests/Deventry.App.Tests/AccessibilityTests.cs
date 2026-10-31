@@ -70,7 +70,7 @@ public class AccessibilityTests
         h.SystemMotion.Gate = gate;
         var first = h.Services.ReadMotionPreferencesAsync();
 
-        // Sign-in tells Claudette where Claude Code's settings are while the OS is still being asked.
+        // Sign-in tells Deventry where Claude Code's settings are while the OS is still being asked.
         var config = Path.Combine(h.Root, "claude-config");
         Directory.CreateDirectory(config);
         File.WriteAllText(Path.Combine(config, "settings.json"), """{ "prefersReducedMotion": true }""");

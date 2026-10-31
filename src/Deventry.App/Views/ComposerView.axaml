@@ -60,8 +60,8 @@
       <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
         <StackPanel Spacing="4" VerticalAlignment="Center">
           <TextBlock TextWrapping="Wrap" Text="{Binding LimitWaitText}" />
-          <!-- Something to do until it resets (DESIGN.md §18, "Games with Claudette") -->
-          <Button Classes="flat" Padding="0" HorizontalAlignment="Left" IsVisible="{Binding CanPlayWhileWaiting}" ToolTip.Tip="A game against Claudette, in the Games tool window">
+          <!-- Something to do until it resets (DESIGN.md §18, "Games with Joulene") -->
+          <Button Classes="flat" Padding="0" HorizontalAlignment="Left" IsVisible="{Binding CanPlayWhileWaiting}" ToolTip.Tip="A game against Joulene, in the Games tool window">
             <TextBlock Classes="small" Foreground="{DynamicResource AccentStatusBrush}" Text="Play a game while you wait" />
             <Button.Flyout>
               <MenuFlyout Placement="TopEdgeAlignedLeft">
@@ -181,7 +181,7 @@
       </Button>
     </Grid>
 
-    <!-- Claudette on the composer (DESIGN.md §5): she stands on the box's top edge, in a layer behind it, so the box hides
+    <!-- Joulene on the composer (DESIGN.md §5): she stands on the box's top edge, in a layer behind it, so the box hides
          her when she drops behind it and she rises and falls with it as it grows; a layer after it draws what goes in
          front of it, her legs over it while she sits on the edge. She stands over the conversation's foot, so the
          composer doesn't clip what it draws. -->

@@ -58,7 +58,7 @@ public static class MessageParser
     }
 
     /// <summary>
-    /// Types Claude Code sends that Claudette has seen and has no use for, so they aren't counted as unknown
+    /// Types Claude Code sends that Deventry has seen and has no use for, so they aren't counted as unknown
     /// (compat/surface.yaml).
     /// </summary>
     private static readonly HashSet<string> IgnoredTypes = new(StringComparer.Ordinal) { "active_goal", "command_lifecycle" };

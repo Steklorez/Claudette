@@ -56,7 +56,7 @@ public sealed partial class PerforcePage : SettingsPage
         [
             Setting("perforce.enabled", "Keep Perforce logins fresh", s => s.Perforce.Enabled, (s, v) => s.Perforce.Enabled = v,
                 "In a workspace, log in again before the ticket expires, so p4 commands keep working.",
-                "Claudette tells Claude the tab is in a Perforce workspace. Claude never sees the password. Applies to tabs started after the change.",
+                "Deventry tells Claude the tab is in a Perforce workspace. Claude never sees the password. Applies to tabs started after the change.",
                 ["p4", "ticket", "login"]),
             Setting("perforce.passwordSource", "Password source", s => s.Perforce.PasswordSource, (s, v) => s.Perforce.PasswordSource = v,
                 keywords: ["p4passwd", "password"]),
@@ -86,7 +86,7 @@ public sealed partial class PerforcePage : SettingsPage
             Setting("perforce.showFileState", "Show Perforce state in the Files tab", s => s.Perforce.ShowFileState, (s, v) => s.Perforce.ShowFileState = v,
                 "Beside each file's name: edit, add, delete or move, as Perforce says.",
                 "Asked of Perforce in the background, a folder at a time as it's shown, and again when files change.", ["p4 fstat", "explorer", "status", "opened"]),
-        ], description: "In a Perforce workspace, Claudette opens files in Perforce as they're changed, made, renamed and deleted.");
+        ], description: "In a Perforce workspace, Deventry opens files in Perforce as they're changed, made, renamed and deleted.");
         Section("password", "Stored password",
         [
             Info("perforce.storedPassword", "Save a Perforce password", keywords: ["forget password", "credential manager", "keychain"]),
@@ -144,7 +144,7 @@ public sealed partial class PerforcePage : SettingsPage
 
     public IReadOnlyList<PerforcePasswordSourceChoice> PerforcePasswordSources { get; } =
     [
-        new(PerforcePasswordSource.Stored, "Stored by Claudette (recommended)"),
+        new(PerforcePasswordSource.Stored, "Stored by Deventry (recommended)"),
         new(PerforcePasswordSource.PerforceConfig, "Perforce's own configuration (P4PASSWD)"),
         new(PerforcePasswordSource.AskEachTime, "Ask each time"),
     ];
@@ -215,7 +215,7 @@ public sealed partial class PerforcePage : SettingsPage
         }
     }
 
-    // ---- The stored password ("Stored by Claudette") ---------------------------------------------------------------
+    // ---- The stored password ("Stored by Deventry") ---------------------------------------------------------------
 
     private ICredentialStore Credentials => Services.Perforce.Credentials;
 
@@ -226,7 +226,7 @@ public sealed partial class PerforcePage : SettingsPage
     public string? CredentialStoreUnavailableText => Credentials.IsAvailable ? null : Credentials.UnavailableReason;
 
     public string StoredPasswordNote =>
-        $"Saved in {Credentials.Name} under the server and user, never in Claudette's settings file, and never synced. Claudette also offers to save it the first time a tab logs in.";
+        $"Saved in {Credentials.Name} under the server and user, never in Deventry's settings file, and never synced. Deventry also offers to save it the first time a tab logs in.";
 
     /// <summary>The server to save or forget a password for; starts as the first workspace a tab found.</summary>
     [ObservableProperty]

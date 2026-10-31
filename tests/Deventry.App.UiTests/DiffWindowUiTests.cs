@@ -216,7 +216,7 @@ public class DiffWindowUiTests
 
         public static async Task<DiffFile> CreateAsync(string before, string now)
         {
-            var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"claudette-diff-{Guid.NewGuid():N}");
+            var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"deventry-diff-{Guid.NewGuid():N}");
             Directory.CreateDirectory(folder);
             var path = System.IO.Path.Combine(folder, "auth.cs");
             await File.WriteAllTextAsync(path, now, TestContext.Current.CancellationToken);

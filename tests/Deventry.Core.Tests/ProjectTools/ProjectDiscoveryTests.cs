@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// <summary>Finding a tab folder's projects: in it, below it and above it, within bounds (DESIGN.md §18, "Project tools").</summary>
 public sealed class ProjectDiscoveryTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-discovery");
+    private readonly TempFolder _temp = new("deventry-discovery");
     private readonly UnrealProvider _unreal = new();
 
     public void Dispose() => _temp.Dispose();

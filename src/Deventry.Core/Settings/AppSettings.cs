@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace Deventry.Core.Settings;
 
 /// <summary>
-/// Claudette's settings (DESIGN.md §14). Stored as <c>settings.json</c>; separate from Claude Code's own settings.
+/// Deventry's settings (DESIGN.md §14). Stored as <c>settings.json</c>; separate from Claude Code's own settings.
 /// Categories that belong to later milestones are added with those milestones.
 /// </summary>
 public sealed class AppSettings
@@ -49,7 +49,7 @@ public sealed class AppSettings
 
     public PerforceSettings Perforce { get; set; } = new();
 
-    /// <summary>Settings → Git (DESIGN.md §14): the git Claudette runs, and what the Project Files tab shows of git. Per machine.</summary>
+    /// <summary>Settings → Git (DESIGN.md §14): the git Deventry runs, and what the Project Files tab shows of git. Per machine.</summary>
     public GitSettings Git { get; set; } = new();
 }
 
@@ -61,7 +61,7 @@ public sealed class AppSettings
 public sealed class GitSettings
 {
     /// <summary>
-    /// The git Claudette runs, for everything it asks git; null for the first <c>git</c> on the user environment's
+    /// The git Deventry runs, for everything it asks git; null for the first <c>git</c> on the user environment's
     /// <c>PATH</c>. Claude's own git commands, in its Bash tool, don't use it.
     /// </summary>
     public string? Path { get; set; }
@@ -123,7 +123,7 @@ public sealed class NotificationSettings
 
     /// <summary>
     /// The Dock icon or taskbar button moves while tabs work or wait (DESIGN.md §10): the taskbar overlay's spark, and an
-    /// hourglass while a tab waits for a usage limit to reset (Windows); or Claudette typing, waving while a tab needs
+    /// hourglass while a tab waits for a usage limit to reset (Windows); or Deventry typing, waving while a tab needs
     /// input, and waiting by an hourglass (macOS).
     /// </summary>
     public bool AnimateIcon { get; set; } = true;
@@ -263,7 +263,7 @@ public enum OpenFilesIn
 
 public enum OpenImagesIn
 {
-    /// <summary>Claudette's image window (DESIGN.md §18, "Images from Claude's tools").</summary>
+    /// <summary>Deventry's image window (DESIGN.md §18, "Images from Claude's tools").</summary>
     Viewer,
 
     /// <summary>The app the OS uses for the file, and the browser for a web image.</summary>
@@ -312,7 +312,7 @@ public sealed class GeneralSettings
     /// </summary>
     public bool RenameInClaudeCode { get; set; } = true;
 
-    /// <summary>Check GitHub for new Claudette releases at launch and every few hours (DESIGN.md §2, "Updating Claudette").</summary>
+    /// <summary>Check GitHub for new Deventry releases at launch and every few hours (DESIGN.md §2, "Updating Deventry").</summary>
     public bool CheckForAppUpdates { get; set; } = true;
 
     /// <summary>Offer pre-releases too, not only full releases.</summary>
@@ -355,7 +355,7 @@ public enum WhileWorking
     /// <summary>Sent to Claude Code at once, which gives it to Claude at its next step, inside the turn.</summary>
     Steer,
 
-    /// <summary>Held by Claudette until the turn ends, then sent as the next turn.</summary>
+    /// <summary>Held by Deventry until the turn ends, then sent as the next turn.</summary>
     Queue,
 }
 
@@ -368,8 +368,12 @@ public enum KeepAwakeWhen
     /// </summary>
     ClaudeHasWork,
 
-    /// <summary>Whenever Claudette is running.</summary>
-    ClaudetteRuns,
+    /// <summary>
+    /// Whenever Deventry is running. Saved under Claudette's name for it, which settings files and the synced settings of
+    /// other machines have (DESIGN.md §2, "Renaming to Deventry").
+    /// </summary>
+    [JsonStringEnumMemberName("claudetteRuns")]
+    DeventryRuns,
 }
 
 public sealed class ClaudeCodeSettings
@@ -381,7 +385,7 @@ public sealed class ClaudeCodeSettings
     public bool CheckForUpdates { get; set; } = true;
 
     /// <summary>
-    /// On macOS and Linux, give Claude and the tools Claudette runs the login shell's environment when Claudette wasn't
+    /// On macOS and Linux, give Claude and the tools Deventry runs the login shell's environment when Deventry wasn't
     /// started from a terminal (DESIGN.md §13, "Login shell environment").
     /// </summary>
     public bool UseLoginShellEnvironment { get; set; } = true;
@@ -450,7 +454,7 @@ public enum SubagentUse
     /// <summary>Claude is asked to do the work itself, and to use a subagent only when the user asks for one.</summary>
     Discourage,
 
-    /// <summary>Claude is told it can't, and Claudette's hook refuses every Agent call, even in a running tab.</summary>
+    /// <summary>Claude is told it can't, and Deventry's hook refuses every Agent call, even in a running tab.</summary>
     DontAllow,
 }
 
@@ -499,7 +503,7 @@ public enum ThemeChoice
 /// <summary>Settings → Appearance → Style (DESIGN.md §3, "Visual style").</summary>
 public enum AppStyle
 {
-    /// <summary>Claudette's own look, after Claude Code's VS Code extension: neutral greys and the OS's accent color.</summary>
+    /// <summary>Deventry's own look, after Claude Code's VS Code extension: neutral greys and the OS's accent color.</summary>
     Standard,
 
     /// <summary>The Claude apps' look: ivory and warm greys, Claude's orange, rounder cards and serif replies.</summary>
@@ -517,7 +521,7 @@ public sealed class AppearanceSettings
 
     public double CodeFontSize { get; set; } = 13;
 
-    /// <summary>The conversation's font family, or null for Claudette's own (DESIGN.md §14, "Appearance").</summary>
+    /// <summary>The conversation's font family, or null for Deventry's own (DESIGN.md §14, "Appearance").</summary>
     public string? ConversationFont { get; set; }
 
     /// <summary>The font family for code, commands and diffs, or null for the default monospace fonts.</summary>
@@ -556,8 +560,8 @@ public sealed class AppearanceSettings
     public bool ShowTaskProgressOnTabs { get; set; } = true;
 
     /// <summary>
-    /// Claudette, the app's pixel mascot, standing on the composer and doing little things now and then (DESIGN.md §5,
-    /// "Claudette on the composer"). On by default.
+    /// Joulene, the app's pixel mascot, standing on the composer and doing little things now and then (DESIGN.md §5,
+    /// "Joulene on the composer"). On by default.
     /// </summary>
     public bool ShowJoulene { get; set; } = true;
 
@@ -571,8 +575,8 @@ public sealed class AppearanceSettings
     public bool JouleneTips { get; set; } = true;
 
     /// <summary>
-    /// Tic-tac-toe, Connect Four, hangman and Minesweeper against Claudette, in the Games tool window (DESIGN.md §18, "Games
-    /// with Claudette"). On by default.
+    /// Tic-tac-toe, Connect Four, hangman and Minesweeper against Joulene, in the Games tool window (DESIGN.md §18, "Games
+    /// with Joulene"). On by default.
     /// </summary>
     public bool GamesWithJoulene { get; set; } = true;
 
@@ -632,7 +636,7 @@ public sealed class AppearanceSettings
     public int Zoom { get; set; } = Accessibility.Zoom.Default;
 }
 
-/// <summary>Settings → Appearance → Motion: whether Claudette's animations run.</summary>
+/// <summary>Settings → Appearance → Motion: whether Deventry's animations run.</summary>
 public enum MotionSetting
 {
     /// <summary>Reduced when the OS, or Claude Code's <c>prefersReducedMotion</c>, asks for it.</summary>
@@ -644,7 +648,7 @@ public enum MotionSetting
     Full,
 }
 
-/// <summary>Settings → Appearance → Claudette's size (DESIGN.md §5, "Claudette on the composer").</summary>
+/// <summary>Settings → Appearance → Joulene's size (DESIGN.md §5, "Joulene on the composer").</summary>
 public enum JouleneSize
 {
     Small,
@@ -652,7 +656,7 @@ public enum JouleneSize
     Large,
 }
 
-/// <summary>Settings → Appearance → how often Claudette does something (DESIGN.md §5, "Claudette on the composer").</summary>
+/// <summary>Settings → Appearance → how often Joulene does something (DESIGN.md §5, "Joulene on the composer").</summary>
 public enum JouleneLiveliness
 {
     /// <summary>Every 10 to 30 seconds.</summary>
@@ -720,7 +724,7 @@ public sealed class SessionSettings
     /// </summary>
     public bool SyncNewTabs { get; set; }
 
-    /// <summary>Sync Claudette's settings through the library (DESIGN.md §14, "Settings sync").</summary>
+    /// <summary>Sync Deventry's settings through the library (DESIGN.md §14, "Settings sync").</summary>
     public bool SyncSettings { get; set; }
 }
 
@@ -774,7 +778,7 @@ public sealed class AdvancedSettings
     public string ExtraArguments { get; set; } = "";
 
     /// <summary>
-    /// Writes each session's raw protocol traffic to the log folder, and shows messages Claudette skipped in the
+    /// Writes each session's raw protocol traffic to the log folder, and shows messages Deventry skipped in the
     /// conversation (DESIGN.md §13, "Logging"; §16).
     /// </summary>
     public bool LogProtocol { get; set; }

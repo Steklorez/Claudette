@@ -135,7 +135,7 @@ internal static unsafe partial class Deployment
 
     /// <summary>
     /// Whether this process's package came from the Microsoft Store, which signs what it delivers itself (DESIGN.md §2,
-    /// "Updating Claudette"). False outside a package, and when Windows can't say.
+    /// "Updating Deventry"). False outside a package, and when Windows can't say.
     /// </summary>
     [SupportedOSPlatform("windows10.0.14393")]
     public static bool IsFromStore()

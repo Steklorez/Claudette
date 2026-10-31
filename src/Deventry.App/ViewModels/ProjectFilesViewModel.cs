@@ -310,7 +310,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         return State;
     }
 
-    /// <summary>Every open file's unsaved text, kept on disk now: Claudette is quitting or restarting.</summary>
+    /// <summary>Every open file's unsaved text, kept on disk now: Deventry is quitting or restarting.</summary>
     internal void FlushBackups()
     {
         foreach (var file in OpenFiles)

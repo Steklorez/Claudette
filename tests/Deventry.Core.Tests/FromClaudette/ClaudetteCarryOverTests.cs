@@ -87,7 +87,7 @@ public sealed class ClaudetteCarryOverTests : IDisposable
     [Fact]
     public async Task A_login_entry_under_Claudettes_name_is_written_again_under_Deventrys_as_Deventry_starts()
     {
-        var copy = new ClaudetteCopy(AppInstallKind.Other, _temp.Combine("tools", "Deventry"), "1.0.0");
+        var copy = new DeventryCopy(AppInstallKind.Other, _temp.Combine("tools", "Deventry"), "1.0.0");
         var Deventrys = new FakeLoginItems();
         var claudettes = new FakeLoginItems { Entry = LoginEntryState.Enabled };
         var items = new CarriedOverLoginItems(Deventrys, claudettes);

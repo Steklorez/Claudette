@@ -1,6 +1,6 @@
 namespace Deventry.Core;
 
-/// <summary>Where Claudette keeps its files. Injected everywhere, so tests use temporary folders (DESIGN.md §15).</summary>
+/// <summary>Where Deventry keeps its files. Injected everywhere, so tests use temporary folders (DESIGN.md §15).</summary>
 /// <param name="DataDirectory">Per-machine data: saved tabs, the utility session, logs.</param>
 /// <param name="SettingsDirectory">Settings (DESIGN.md §14, "Storage"). Roams with the user profile on Windows.</param>
 /// <param name="TempDirectory">For files that outlive a move of the other two: the system's temporary folder, unless given.</param>
@@ -33,22 +33,22 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory, st
     /// <summary>Large files' content before Claude's first change, which transcripts leave out (DESIGN.md §8, "Before content").</summary>
     public string BeforeContentDirectory => Path.Combine(DataDirectory, "before-content");
 
-    /// <summary>Copies of a source build that Claudette runs from (DESIGN.md §9, "Working on Claudette").</summary>
+    /// <summary>Copies of a source build that Deventry runs from (DESIGN.md §9, "Working on Deventry").</summary>
     public string BuildCopiesDirectory => Path.Combine(DataDirectory, "builds");
 
-    /// <summary>The state handed to a new build when Claudette restarts into it.</summary>
+    /// <summary>The state handed to a new build when Deventry restarts into it.</summary>
     public string RestartFile => Path.Combine(DataDirectory, "restart.json");
 
     /// <summary>Where the new build says it has started.</summary>
     public string RestartReadyFile => Path.Combine(DataDirectory, "restart-ready");
 
     /// <summary>
-    /// Where a new version says it has started, after an update (DESIGN.md §2, "Updating Claudette"). It's outside the
-    /// data folder, since the new version may move that, as Deventry does Claudette's; the new version is told the path.
+    /// Where a new version says it has started, after an update (DESIGN.md §2, "Updating Deventry"). It's outside the
+    /// data folder, since the new version may move that, as Deventry does Deventry's; the new version is told the path.
     /// </summary>
     public string UpdateReadyFile(string nonce) => Path.Combine(TempDirectory ?? Path.GetTempPath(), $"deventry-update-{nonce}.ready");
 
-    /// <summary>Files project actions write for Claudette to read, such as Unity's test results (DESIGN.md §18).</summary>
+    /// <summary>Files project actions write for Deventry to read, such as Unity's test results (DESIGN.md §18).</summary>
     public string ProjectJobsDirectory => Path.Combine(DataDirectory, "project-jobs");
 
     /// <summary>This machine's copy of each scratch pad (DESIGN.md §18, "Scratch pad").</summary>
@@ -60,11 +60,11 @@ public sealed record AppPaths(string DataDirectory, string SettingsDirectory, st
     /// <summary>The Project Files tabs' unsaved edits, so quitting never loses them (DESIGN.md §18, "Project files").</summary>
     public string EditorBackupsDirectory => Path.Combine(DataDirectory, ProjectFiles.EditorBackups.FolderName);
 
-    /// <summary>Downloaded Claudette releases, one folder per version (DESIGN.md §2, "Updating Claudette").</summary>
+    /// <summary>Downloaded Deventry releases, one folder per version (DESIGN.md §2, "Updating Deventry").</summary>
     public string UpdatesDirectory => Path.Combine(DataDirectory, "updates");
 
     /// <summary>
-    /// There while Claudette's window is in front. Every <c>claude</c> gets it as <c>CLAUDE_CLIENT_PRESENCE_FILE</c>, so
+    /// There while Deventry's window is in front. Every <c>claude</c> gets it as <c>CLAUDE_CLIENT_PRESENCE_FILE</c>, so
     /// Remote Control doesn't push to the phone then (DESIGN.md §10, §18).
     /// </summary>
     public string PresenceFile => Path.Combine(DataDirectory, "presence");

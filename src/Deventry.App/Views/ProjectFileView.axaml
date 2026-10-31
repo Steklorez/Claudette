@@ -83,7 +83,7 @@
       <!-- Binary, too large, gone or unreadable: the OS's app may open it -->
       <StackPanel Classes="nofile" IsVisible="{Binding HasProblem}">
         <TextBlock Text="{Binding ProblemText}" TextWrapping="Wrap" TextAlignment="Center" />
-        <Button HorizontalAlignment="Center" Content="Open in Claudette's image viewer" Click="OnOpenInViewer" IsVisible="{Binding CanOpenInViewer}" />
+        <Button HorizontalAlignment="Center" Content="Open in Deventry's image viewer" Click="OnOpenInViewer" IsVisible="{Binding CanOpenInViewer}" />
         <Button HorizontalAlignment="Center" Content="Open in the OS's app" Click="OnOpenInSystem" />
       </StackPanel>
       <!-- The editor, its preview beside it, or the preview alone ("Markdown preview"); the code-behind sizes the columns

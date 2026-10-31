@@ -11,7 +11,7 @@ using Deventry.App.ViewModels;
 namespace Deventry.App.Views;
 
 /// <summary>
-/// The Games page (DESIGN.md §18, "Games with Claudette"): what it needs beyond bindings, which is the keyboard and
+/// The Games page (DESIGN.md §18, "Games with Joulene"): what it needs beyond bindings, which is the keyboard and
 /// Minesweeper's right-click. While the page has focus, the number keys play tic-tac-toe's squares and Connect Four's
 /// columns, the letters guess in hangman, and F flags the Minesweeper square with the focus. It takes focus when a game
 /// is started, so the keys reach it rather than the composer.

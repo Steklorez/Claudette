@@ -112,12 +112,12 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         TextFileProblem.Binary => "This file isn't text, so it doesn't open here.",
         TextFileProblem.TooLarge => "This file is over 10 MB, too large to open here.",
         TextFileProblem.Missing => "This file isn't there any more.",
-        TextFileProblem.Unreadable => "This file couldn't be read: another program may have it open, or Claudette isn't allowed to.",
+        TextFileProblem.Unreadable => "This file couldn't be read: another program may have it open, or Deventry isn't allowed to.",
         _ => "",
     };
 
     /// <summary>
-    /// It didn't open here and is an image the image window may show, so the note offers <b>Open in Claudette's image
+    /// It didn't open here and is an image the image window may show, so the note offers <b>Open in Deventry's image
     /// viewer</b> (DESIGN.md §18, "Opening images"). Its bytes are checked on the click.
     /// </summary>
     public bool CanOpenInViewer => HasProblem && Problem is TextFileProblem.Binary or TextFileProblem.TooLarge && ViewerImages.HasExtension(Path);
@@ -640,7 +640,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
     /// <summary>When the file was last read or saved: a change of Claude's since then is what the banner is about.</summary>
     private DateTimeOffset _readAt;
 
-    /// <summary>Looks at the file on disk again: it changed there, or might have (a tool call, a turn's end, Claudette in front).</summary>
+    /// <summary>Looks at the file on disk again: it changed there, or might have (a tool call, a turn's end, Deventry in front).</summary>
     internal async Task CheckDiskAsync()
     {
         if (!IsLoaded || Document is not { } document)
@@ -1248,7 +1248,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
         Mode = Mode,
     };
 
-    /// <summary>It closed, or its Files tab did (Claudette quitting too): its window closes with it.</summary>
+    /// <summary>It closed, or its Files tab did (Deventry quitting too): its window closes with it.</summary>
     internal event Action? Closed;
 
     public void Dispose()

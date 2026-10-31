@@ -47,7 +47,7 @@ public sealed class ClaudeSession : IAsyncDisposable
     private readonly Lock _stateLock = new();
     private volatile SessionState _state = SessionState.Starting;
 
-    /// <param name="diagnostics">Counts what Claude Code sends that Claudette doesn't know yet (DESIGN.md §16).</param>
+    /// <param name="diagnostics">Counts what Claude Code sends that Deventry doesn't know yet (DESIGN.md §16).</param>
     /// <param name="showsElicitations">
     /// Sets <see cref="ShowsElicitations"/> before anything is read, so a request that comes while the session starts,
     /// as an MCP server connects, is shown rather than declined.
@@ -101,7 +101,7 @@ public sealed class ClaudeSession : IAsyncDisposable
     /// <summary>The <c>claude</c> process id, for the process monitor (DESIGN.md §4). Null for test transports.</summary>
     public int? ProcessId => _transport.ProcessId;
 
-    /// <summary>Messages of a type Claudette doesn't know yet, skipped so far.</summary>
+    /// <summary>Messages of a type Deventry doesn't know yet, skipped so far.</summary>
     public int UnknownMessageCount => _unknownMessageCount;
 
     /// <summary>Lines that couldn't be parsed, skipped so far.</summary>
@@ -536,7 +536,7 @@ public sealed class ClaudeSession : IAsyncDisposable
                 break;
 
             case AuthStatusMessage auth:
-                // Only sent with the hidden --enable-auth-status flag, which Claudette doesn't pass; it reports cloud
+                // Only sent with the hidden --enable-auth-status flag, which Deventry doesn't pass; it reports cloud
                 // credential helpers such as awsAuthRefresh. One that failed still means Claude Code can't sign in.
                 if (auth.Error is not null)
                 {
@@ -737,7 +737,7 @@ public sealed class ClaudeSession : IAsyncDisposable
 
     /// <summary>
     /// The turn's start, and the session working, as one step: a turn Claude Code starts by itself (a message it held,
-    /// one from the Claude app, a background task that finished) finds no message of Claudette's to have said so first.
+    /// one from the Claude app, a background task that finished) finds no message of Deventry's to have said so first.
     /// The session is working before the turn's start is told, so whatever acts on it finds it working. The events
     /// still come turn's start first, then Working.
     /// </summary>

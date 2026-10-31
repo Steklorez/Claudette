@@ -6,7 +6,7 @@ namespace Deventry.Core.RemoteControl;
 
 /// <summary>
 /// Turning Remote Control on and off for a session, and reading what Claude Code says about it (DESIGN.md §18, "Remote
-/// Control"). Everything here is read tolerantly: a field or state Claudette doesn't know changes nothing.
+/// Control"). Everything here is read tolerantly: a field or state Deventry doesn't know changes nothing.
 /// </summary>
 /// <remarks>
 /// SDK hosts such as the VS Code extension connect with the <c>remote_control</c> control request, which Claude Code
@@ -79,7 +79,7 @@ public static partial class RemoteControlProtocol
         return new RemoteControlStatus(RemoteControlState.Connected, url, text);
     }
 
-    /// <summary>The <c>state</c> of a <c>system/bridge_state</c> message. One Claudette doesn't know is <see cref="RemoteBridgeState.Unknown"/>.</summary>
+    /// <summary>The <c>state</c> of a <c>system/bridge_state</c> message. One Deventry doesn't know is <see cref="RemoteBridgeState.Unknown"/>.</summary>
     public static RemoteBridgeState BridgeState(JsonObject message) => message.GetString("state") switch
     {
         "ready" => RemoteBridgeState.Ready,
@@ -91,7 +91,7 @@ public static partial class RemoteControlProtocol
     };
 
     /// <summary>
-    /// A tab's connection after a <c>system/bridge_state</c> message, or null when it doesn't change. While Claudette
+    /// A tab's connection after a <c>system/bridge_state</c> message, or null when it doesn't change. While Deventry
     /// waits for the answer to connecting, only a policy counts: the answer says the rest, with the address or the reason.
     /// </summary>
     /// <param name="lastUrl">The address this session last connected at, for a link Claude Code brings back by itself.</param>
@@ -119,7 +119,7 @@ public static partial class RemoteControlProtocol
     /// disconnects a session when the organization's policy turns Remote Control off, with the reason
     /// <c>remote_control_disabled</c>: that makes it not available, unless the tab was leaving anyway.
     /// </summary>
-    /// <param name="leaving">Claudette asked Claude Code to disconnect.</param>
+    /// <param name="leaving">Deventry asked Claude Code to disconnect.</param>
     public static RemoteControlStatus? AfterWorkerShuttingDown(RemoteControlStatus current, JsonObject message, bool leaving = false) =>
         !current.IsConnected ? null
         : !leaving && message.GetString("reason") == PolicyShutdownReason ? new RemoteControlStatus(RemoteControlState.Unavailable, Detail: TurnedOffByPolicy)

@@ -71,6 +71,6 @@ public sealed class ProjectToolContext
     /// <summary>The name of Perforce's config file (<c>P4CONFIG</c>), which marks a workspace's root like <c>.git</c>.</summary>
     public string? P4ConfigName { get; init; }
 
-    /// <summary>Where jobs can write files for Claudette to read afterwards, such as Unity's test results. In Claudette's data folder.</summary>
+    /// <summary>Where jobs can write files for Deventry to read afterwards, such as Unity's test results. In Deventry's data folder.</summary>
     public string? JobsDirectory { get; init; }
 }

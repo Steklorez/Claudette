@@ -135,7 +135,7 @@ public sealed class ClaudeUpdateService : IAsyncDisposable
         }
         if (LatestCheck?.Plan is not { CanRun: true } plan)
         {
-            return new ClaudeUpdateResult(false, null, LatestCheck?.Plan.Note ?? "Claudette can't update this installation.");
+            return new ClaudeUpdateResult(false, null, LatestCheck?.Plan.Note ?? "Deventry can't update this installation.");
         }
         IsUpdating = true;
         Changed?.Invoke();

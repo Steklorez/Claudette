@@ -26,8 +26,8 @@ public sealed record SessionUsageFileInfo(string SessionId, string Path, long Le
 public sealed record SessionUsageTexts(string? Main, IReadOnlyList<string> Copies);
 
 /// <summary>
-/// Claudette's session library (DESIGN.md §9, "Session library (sync across machines)"): a folder the user chooses,
-/// possibly one kept up to date by Google Drive, Dropbox or OneDrive. Claudette only reads and writes files; the sync
+/// Deventry's session library (DESIGN.md §9, "Session library (sync across machines)"): a folder the user chooses,
+/// possibly one kept up to date by Google Drive, Dropbox or OneDrive. Deventry only reads and writes files; the sync
 /// client does the rest. Layout:
 /// <code>
 /// &lt;library&gt;/sessions/&lt;session-id&gt;/record.json

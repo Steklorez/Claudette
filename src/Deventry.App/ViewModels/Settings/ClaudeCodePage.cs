@@ -24,7 +24,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
             Setting("claudeCode.checkForUpdates", "Check for Claude Code updates automatically", s => s.ClaudeCode.CheckForUpdates, (s, v) => s.ClaudeCode.CheckForUpdates = v,
                 "At launch and every few hours. Open tabs keep the version they started with.", keywords: ["update claude code", "version"]),
             Setting("claudeCode.claudePath", "Path to claude", s => s.ClaudeCode.ClaudePath, (s, v) => s.ClaudeCode.ClaudePath = v,
-                "Empty finds Claude Code by itself. A change takes effect the next time Claudette starts.", keywords: ["executable", "binary", "location"]),
+                "Empty finds Claude Code by itself. A change takes effect the next time Deventry starts.", keywords: ["executable", "binary", "location"]),
         ]);
         Section("account", "Account",
         [
@@ -34,16 +34,16 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         [
             Setting("general.renameInClaudeCode", "Name each tab's session in Claude Code after the tab", s => s.General.RenameInClaudeCode, (s, v) => s.General.RenameInClaudeCode = v,
                 "So other sessions, and claude --resume <name> in a terminal, find it by name.",
-                "Otherwise Claude Code names it after its folder, such as claudette-3f.", ["session name", "resume"]),
+                "Otherwise Claude Code names it after its folder, such as deventry-3f.", ["session name", "resume"]),
             Setting("claudeCode.askBeforeUsingFolderSettings", "Ask before using a new folder's own configuration", s => s.ClaudeCode.AskBeforeUsingFolderSettings,
                 (s, v) => s.ClaudeCode.AskBeforeUsingFolderSettings = v,
                 "Before Claude Code first starts in a folder you haven't trusted, see what it would run.",
-                "Lists the hooks, commands and MCP servers the folder's configuration would run. Started by Claudette, Claude Code doesn't ask itself.",
+                "Lists the hooks, commands and MCP servers the folder's configuration would run. Started by Deventry, Claude Code doesn't ask itself.",
                 ["folder trust", "hooks", "security"]),
             .. ShowLoginShellSetting
                 ? [Setting("claudeCode.useLoginShellEnvironment", "Use my login shell's environment", s => s.ClaudeCode.UseLoginShellEnvironment, (s, v) => s.ClaudeCode.UseLoginShellEnvironment = v,
-                    "Claude and the tools Claudette runs get the PATH your shell profile sets up, as in a terminal.",
-                    "And the other variables it sets. Not needed when Claudette is started from a terminal.", ["path", "zshrc", "bashrc", "environment variables"])]
+                    "Claude and the tools Deventry runs get the PATH your shell profile sets up, as in a terminal.",
+                    "And the other variables it sets. Not needed when Deventry is started from a terminal.", ["path", "zshrc", "bashrc", "environment variables"])]
                 : Array.Empty<SettingItem>(),
             Setting("claudeCode.keepFileCheckpoints", "Keep copies of files Claude changes, so prompts can be rewound", s => s.ClaudeCode.KeepFileCheckpoints,
                 (s, v) => s.ClaudeCode.KeepFileCheckpoints = v,
@@ -68,7 +68,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
                 "Each tab has Connect to the Claude app in its menu; this sets it for tabs opened from now on. While a tab is connected, its transcript is stored on Anthropic's servers. Needs a claude.ai subscription sign-in. Settings → General can keep the computer awake while tabs are connected.",
                 ["remote control", "phone", "mobile"]),
             Info("claudeCode.pushNotifications", "Push notifications on your phone",
-                "Turn them on in Claude Code's /config: none arrive while Claudette is in front.",
+                "Turn them on in Claude Code's /config: none arrive while Deventry is in front.",
                 "Push when actions required sends one when a tab needs an answer; Push when Claude decides adds the ones Claude chooses to send.",
                 ["mobile", "remote control"]),
         ], description: "Remote Control: a tab here, continued from the Claude app.");
@@ -80,7 +80,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
 
     public override string IconKey => "IconCardClaude";
 
-    public override string Description => "The Claude Code Claudette runs, your account, and how each session starts.";
+    public override string Description => "The Claude Code Deventry runs, your account, and how each session starts.";
 
     // ---- The installed version and the account ----------------------------------------------------------------------
 
@@ -109,7 +109,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
                 : ".")
         : "Claude Code wasn't found.";
 
-    /// <summary>Null (empty) finds Claude Code automatically. Takes effect the next time Claudette starts.</summary>
+    /// <summary>Null (empty) finds Claude Code automatically. Takes effect the next time Deventry starts.</summary>
     public string ClaudePath
     {
         get => Settings.ClaudeCode.ClaudePath ?? "";
@@ -188,7 +188,7 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
 
     // ---- The Claude app (DESIGN.md §18, "Remote Control") --------------------------------------------------------
 
-    /// <summary>The docs' steps for pushes to the phone. Claudette doesn't change Claude Code's settings for them.</summary>
+    /// <summary>The docs' steps for pushes to the phone. Deventry doesn't change Claude Code's settings for them.</summary>
     public const string PushNotificationsDocs = "https://code.claude.com/docs/en/remote-control#mobile-push-notifications";
 
     /// <summary>

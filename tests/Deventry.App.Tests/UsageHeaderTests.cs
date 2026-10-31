@@ -119,7 +119,7 @@ public class UsageHeaderTests
         Assert.Equal(
             $"Your session limit is used up, so your usage credits pay for Claude until it resets {Formats.When(resets, h.Time)}. $12.40 of $50.00 spent this month.",
             header.CreditsNotice);
-        // Already paying when Claudette started: no notification.
+        // Already paying when Deventry started: no notification.
         Assert.DoesNotContain(h.Notifier.Shown, n => n.Title == CreditUse.Title);
 
         await header.OpenCreditsSettingsCommand.ExecuteAsync(null);
@@ -289,7 +289,7 @@ public class UsageHeaderTests
     }
 
     [Fact]
-    public async Task Readings_a_later_Claudette_shared_in_a_newer_format_are_left_out()
+    public async Task Readings_a_later_Deventry_shared_in_a_newer_format_are_left_out()
     {
         await using var first = SharingMachine("me@example.com", out var library);
         await using var second = SharingMachine("me@example.com", out _, library);
@@ -303,7 +303,7 @@ public class UsageHeaderTests
         // closed, the tracker writes nothing more.
         await firstTracker.DisposeAsync();
 
-        // The same file, as a later Claudette that changed what its fields mean would write it. The second machine
+        // The same file, as a later Deventry that changed what its fields mean would write it. The second machine
         // starts after that: a tracker reads the others' files as soon as it's made.
         var file = System.Text.Json.Nodes.JsonNode.Parse(AtomicFile.ReadAllText(shared))!.AsObject();
         file["version"] = Deventry.Usage.UsageSharing.FileVersion + 1;

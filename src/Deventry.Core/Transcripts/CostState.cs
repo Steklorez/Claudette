@@ -7,7 +7,7 @@ namespace Deventry.Core.Transcripts;
 
 /// <summary>
 /// The running totals Claude Code saves in a session's transcript when its process exits normally (a <c>cost-state</c>
-/// entry, undocumented), and starts a later process from when it resumes or forks the session. Claudette reads them so a
+/// entry, undocumented), and starts a later process from when it resumes or forks the session. Deventry reads them so a
 /// resumed tab's first turn counts only what that turn spent (DESIGN.md §6, "Usage history").
 /// </summary>
 public static class CostState

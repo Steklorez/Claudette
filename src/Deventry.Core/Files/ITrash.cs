@@ -6,10 +6,10 @@ public enum TrashOutcome
     /// <summary>It's in the trash, where it can be put back from.</summary>
     Trashed,
 
-    /// <summary>There's no trash it can go to (its drive has none, or the system has none Claudette can use): it's still there.</summary>
+    /// <summary>There's no trash it can go to (its drive has none, or the system has none Deventry can use): it's still there.</summary>
     NoTrash,
 
-    /// <summary>It couldn't be moved, being in use, not Claudette's to move or gone: it's still there, if it was.</summary>
+    /// <summary>It couldn't be moved, being in use, not Deventry's to move or gone: it's still there, if it was.</summary>
     Failed,
 }
 
@@ -36,8 +36,8 @@ public interface ITrash
     Task<TrashResult> MoveToTrashAsync(string path, CancellationToken cancellationToken = default);
 }
 
-/// <summary>A system Claudette has no trash for: everything stays, and deleting asks to delete it for good.</summary>
-public sealed class NoTrash(string reason = "Claudette has no trash to use here.") : ITrash
+/// <summary>A system Deventry has no trash for: everything stays, and deleting asks to delete it for good.</summary>
+public sealed class NoTrash(string reason = "Deventry has no trash to use here.") : ITrash
 {
     public string Name => "the trash";
 

@@ -1,4 +1,4 @@
-﻿[image] "Claudette"
+﻿[image] "Deventry"
 [button] Usage details
   "Session"
   [meter 62%]

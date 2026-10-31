@@ -9,7 +9,7 @@ public sealed class LeaseManagerTests : IDisposable
 {
     private const string Session = "s1";
 
-    private readonly TempFolder _root = new("claudette-lease");
+    private readonly TempFolder _root = new("deventry-lease");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
     private readonly LeaseManager _desktop;
     private readonly LeaseManager _laptop;

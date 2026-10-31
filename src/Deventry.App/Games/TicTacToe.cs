@@ -1,6 +1,6 @@
 namespace Deventry.App.Games;
 
-/// <summary>Tic-tac-toe's board (DESIGN.md §18, "Games with Claudette"): nine squares, row by row from the top left.</summary>
+/// <summary>Tic-tac-toe's board (DESIGN.md §18, "Games with Joulene"): nine squares, row by row from the top left.</summary>
 public sealed class TicTacToe
 {
     public const int Size = 9;
@@ -39,7 +39,7 @@ public sealed class TicTacToe
     public GameOutcome Outcome => Winner switch
     {
         Player.You => GameOutcome.Won,
-        Player.Claudette => GameOutcome.Lost,
+        Player.Joulene => GameOutcome.Lost,
         _ => IsFull ? GameOutcome.Draw : GameOutcome.Playing,
     };
 

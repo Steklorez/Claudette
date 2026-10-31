@@ -5,7 +5,7 @@ namespace Deventry.Demo;
 /// <summary>
 /// Stands in for the Unreal editor, for the guide's picture of an editor's log under its tab (DESIGN.md §18, "Editor
 /// logs"): <c>guide-screenshots.ps1</c> runs a copy of deventry-demo named <c>UnrealEditor</c> with
-/// <c>--stand-in-editor &lt;uproject&gt;</c>, so Claudette sees an Unreal editor with the demo's project open. It writes
+/// <c>--stand-in-editor &lt;uproject&gt;</c>, so Deventry sees an Unreal editor with the demo's project open. It writes
 /// the project's <c>Saved/Logs/&lt;Name&gt;.log</c> as the editor starts one, its times in UTC as Unreal writes them by
 /// default, with a line of each verbosity for the log's filter, then waits, as an open editor does, until it's ended, or
 /// for ten minutes at most, so it never stays behind.

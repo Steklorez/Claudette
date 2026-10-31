@@ -1,7 +1,7 @@
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Games with Claudette (DESIGN.md §18): the Games tool window follows the one game that's open, and the line over the
+/// Games with Joulene (DESIGN.md §18): the Games tool window follows the one game that's open, and the line over the
 /// board says when Claude needs the user.
 /// </summary>
 public sealed partial class ShellViewModel

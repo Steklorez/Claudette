@@ -59,12 +59,12 @@ public interface IAppBadge
 
     /// <summary>
     /// Shows one frame of an animation, a PNG for <see cref="Surface"/>, or none: the overlay goes, or the Dock icon is
-    /// Claudette's own again. On Windows a count, while there is one, stays in front of it.
+    /// Deventry's own again. On Windows a count, while there is one, stays in front of it.
     /// </summary>
     /// <param name="description">What it means, for screen readers (Windows).</param>
     void ShowFrame(byte[]? png, string? description);
 
-    /// <summary>Flashes the taskbar button until Claudette comes to the front (Windows); false stops it.</summary>
+    /// <summary>Flashes the taskbar button until Deventry comes to the front (Windows); false stops it.</summary>
     void Flash(bool on);
 }
 
@@ -111,7 +111,7 @@ public sealed class NullNotifier : INotifier, IAppBadge
 public static class Notifier
 {
     /// <summary>
-    /// The notifier for the OS Claudette is running on. Anything that fails to set up falls back to
+    /// The notifier for the OS Deventry is running on. Anything that fails to set up falls back to
     /// <see cref="NullNotifier"/>: notifications are never worth failing to start over.
     /// </summary>
     /// <param name="launcher">Runs <c>notify-send</c> on Linux.</param>

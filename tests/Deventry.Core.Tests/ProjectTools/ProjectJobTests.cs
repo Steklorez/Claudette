@@ -9,7 +9,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// <summary>Jobs, custom actions and opening solutions (DESIGN.md §18, "Project tools"), with a fake launcher.</summary>
 public sealed class ProjectJobTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-jobs");
+    private readonly TempFolder _temp = new("deventry-jobs");
 
     public void Dispose() => _temp.Dispose();
 
@@ -74,7 +74,7 @@ public sealed class ProjectJobTests : IDisposable
     }
 
     [Fact]
-    public async Task Work_done_in_Claudette_reports_lines_and_can_be_stopped()
+    public async Task Work_done_in_Deventry_reports_lines_and_can_be_stopped()
     {
         var lines = new List<string>();
         var ok = ProjectJob.Run("Clean", (log, _) =>

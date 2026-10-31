@@ -4,7 +4,7 @@ using System.Runtime.Versioning;
 
 namespace Deventry.Platform.Notifications.Windows;
 
-// The few WinRT and shell interfaces Claudette needs, declared by hand so the Platform project stays a plain net10.0
+// The few WinRT and shell interfaces Deventry needs, declared by hand so the Platform project stays a plain net10.0
 // library (no Windows-only target framework or projection package). Method order is the vtable order from the Windows
 // SDK headers (windows.ui.notifications.h, windows.data.xml.dom.h, shobjidl_core.h); each WinRT interface starts with
 // the three IInspectable methods. HSTRINGs are passed as nint (see HString).

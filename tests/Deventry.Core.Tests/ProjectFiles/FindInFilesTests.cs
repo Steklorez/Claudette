@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>Find in files and Replace in files (DESIGN.md §18, "Project files", "Finding in files").</summary>
 public sealed class FindInFilesTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-find");
+    private readonly TempFolder _temp = new("deventry-find");
 
     public void Dispose() => _temp.Dispose();
 

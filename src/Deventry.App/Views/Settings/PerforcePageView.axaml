@@ -14,7 +14,7 @@
         <ComboBox ItemsSource="{Binding PerforcePasswordSources}" SelectedItem="{Binding SelectedPasswordSource}" />
         <c:SettingRow.Details>
           <TextBlock Classes="small warning" TextWrapping="Wrap" IsVisible="{Binding IsPerforceConfigSource}"
-                     Text="P4PASSWD in a P4CONFIG file, in p4 set or in the environment is stored as plain text. Claudette only reads it." />
+                     Text="P4PASSWD in a P4CONFIG file, in p4 set or in the environment is stored as plain text. Deventry only reads it." />
         </c:SettingRow.Details>
       </c:SettingRow>
       <c:SettingRow Key="perforce.renewBeforeMinutes">

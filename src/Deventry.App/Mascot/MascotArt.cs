@@ -14,7 +14,7 @@ public sealed record MascotSprite(IReadOnlyList<string> Rows)
 public sealed record MascotHat(MascotSprite Sprite, int X, int Y);
 
 /// <summary>
-/// Claudette on the composer's poses and props (DESIGN.md §5). <c>packaging/icon/build-icons.mjs</c> draws them from
+/// Joulene on the composer's poses and props (DESIGN.md §5). <c>packaging/icon/build-icons.mjs</c> draws them from
 /// the icon's sprite into <c>Assets/Mascot/mascot.json</c>, embedded as <c>Mascot.mascot.json</c>.
 /// </summary>
 public static class MascotArt
@@ -57,7 +57,7 @@ public static class MascotArt
     private static Art Load()
     {
         using var stream = typeof(MascotArt).Assembly.GetManifestResourceStream("Mascot.mascot.json")
-            ?? throw new InvalidOperationException("Claudette's poses aren't embedded. Run packaging/icon/build-icons.mjs.");
+            ?? throw new InvalidOperationException("Joulene's poses aren't embedded. Run packaging/icon/build-icons.mjs.");
         using var json = JsonDocument.Parse(stream);
         var root = json.RootElement;
         return new Art(

@@ -8,7 +8,7 @@ namespace Deventry.Core.Tests.Composer;
 /// <summary>The composer's <c>@</c> file autocomplete (DESIGN.md §5, "Composer").</summary>
 public sealed class FileMentionTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-mentions");
+    private readonly TempFolder _root = new("deventry-mentions");
     private readonly IsolatedGitLauncher _git;
 
     public FileMentionTests()
@@ -201,7 +201,7 @@ public sealed class FileMentionTests : IDisposable
         _root.Write("plain/obj/project.assets.json", "");
         _root.Write("plain/.git/HEAD", "");
         _root.Write("plain/.github/workflows/ci.yml", "");
-        var git = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var git = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
         var index = new ProjectFileIndex(_root.Combine("plain"), git, TimeProvider.System);
         var paths = (await index.GetAsync()).Select(p => p.Path).ToArray();
@@ -229,7 +229,7 @@ public sealed class FileMentionTests : IDisposable
     {
         _root.Write("cached/one.txt", "");
         var time = new FakeTimeProvider(DateTimeOffset.Parse("2026-09-29T12:00:00Z"));
-        var git = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), time, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var git = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), time, $"deventry-no-such-git-{Guid.NewGuid():N}");
         var index = new ProjectFileIndex(_root.Combine("cached"), git, time) { MaxAge = TimeSpan.FromSeconds(15) };
 
         Assert.Single(await index.GetAsync());

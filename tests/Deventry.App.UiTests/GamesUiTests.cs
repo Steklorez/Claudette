@@ -15,7 +15,7 @@ using Deventry.App.Views;
 namespace Deventry.App.UiTests;
 
 /// <summary>
-/// Games with Claudette rendered (DESIGN.md §18): the Games tool window with each board and the game's menu in its
+/// Games with Joulene rendered (DESIGN.md §18): the Games tool window with each board and the game's menu in its
 /// header, the keyboard while the page has focus, and the ways in: her menu and the usage limit bar.
 /// </summary>
 public class GamesUiTests
@@ -44,7 +44,7 @@ public class GamesUiTests
         UiText.Settle(window);
 
         Assert.Equal("Middle, yours", AutomationProperties.GetName(Squares(page)[4]));
-        Assert.Single(Squares(page), s => AutomationProperties.GetName(s)!.EndsWith(", Claudette's", StringComparison.Ordinal));
+        Assert.Single(Squares(page), s => AutomationProperties.GetName(s)!.EndsWith(", Joulene's", StringComparison.Ordinal));
         var shown = UiText.Describe(page);
 
         // Another window of its group, and the game's controls go; it's still open, and shows again in its window.
@@ -236,7 +236,7 @@ public class GamesUiTests
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         var layer = window.GetVisualDescendants().OfType<MascotLayer>().Single(l => !l.IsFront);
         var menu = layer.Figure.ContextMenu!;
-        Assert.Equal(["Play tic-tac-toe", "Play Connect Four", "Play hangman", "Play Minesweeper", "Hide Claudette", "Claudette settings…"],
+        Assert.Equal(["Play tic-tac-toe", "Play Connect Four", "Play hangman", "Play Minesweeper", "Hide Joulene", "Joulene settings…"],
             menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));
 
         menu.Items.OfType<MenuItem>().Single(i => i.Header as string == "Play Connect Four").Command!.Execute(GameKind.ConnectFour);
@@ -247,7 +247,7 @@ public class GamesUiTests
         h.Services.Settings.Appearance.GamesWithJoulene = false;
         h.Services.SaveSettings();
         UiText.Settle(window);
-        Assert.Equal(["Hide Claudette", "Claudette settings…"], menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));
+        Assert.Equal(["Hide Joulene", "Joulene settings…"], menu.Items.OfType<MenuItem>().Where(i => i.IsVisible).Select(i => i.Header as string));
         Assert.DoesNotContain(menu.Items.OfType<Separator>(), s => s.IsVisible);
         Assert.Empty(window.GetVisualDescendants().OfType<GamesView>());
         window.Close();

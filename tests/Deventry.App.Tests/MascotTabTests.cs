@@ -6,7 +6,7 @@ using Deventry.Core.Settings;
 
 namespace Deventry.App.Tests;
 
-/// <summary>Claudette on the composer (DESIGN.md §5): what the selected tab tells her, and her lines.</summary>
+/// <summary>Joulene on the composer (DESIGN.md §5): what the selected tab tells her, and her lines.</summary>
 public class MascotTabTests
 {
     private const string Init = """{"type":"system","subtype":"init","session_id":"s1","model":"claude-opus-5-5","permissionMode":"default"}""";
@@ -126,7 +126,7 @@ public class MascotTabTests
 
         // Her name typed: she waves back, once.
         await TabTestHarness.Eventually(() => Advance(h) && director.Frame is { Pose: "stand", Drop: 0 }, "her to recover");
-        tab.ComposerText = "hello claudette";
+        tab.ComposerText = "hello joulene";
         Assert.Equal("wave", director.Frame.Pose);
 
         // A huge paste: the crate.

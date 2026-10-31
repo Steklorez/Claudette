@@ -8,7 +8,7 @@ namespace Deventry.App.Services;
 /// folder: the name each tab's session is reached by, for its info card, and the other sessions the composer's
 /// <c>@</c> offers (DESIGN.md §5, "Autocomplete"). Read off the UI thread when a tab's session starts and whenever
 /// Claude Code writes to the folder, which it does as a session starts, ends, is renamed, or starts or ends a turn.
-/// Claudette's own utility session isn't one of them.
+/// Deventry's own utility session isn't one of them.
 /// </summary>
 public sealed class LiveSessionsService(AppServices services, ISystemProcesses? processes) : IDisposable
 {

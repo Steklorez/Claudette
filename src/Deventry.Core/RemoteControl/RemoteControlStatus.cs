@@ -5,7 +5,7 @@ public enum RemoteControlState
 {
     NotConnected,
 
-    /// <summary>Claudette asked Claude Code to connect and is waiting for the answer.</summary>
+    /// <summary>Deventry asked Claude Code to connect and is waiting for the answer.</summary>
     Connecting,
 
     Connected,
@@ -18,7 +18,7 @@ public enum RemoteControlState
 /// <param name="Url">The session on claude.ai, when Claude Code gave its address: what <b>Open in the Claude app</b> opens.</param>
 /// <param name="Detail">
 /// What Claude Code said: why it isn't connected or available, that a connected session is reconnecting, or a reply
-/// Claudette couldn't read as either.
+/// Deventry couldn't read as either.
 /// </param>
 public sealed record RemoteControlStatus(RemoteControlState State, string? Url = null, string? Detail = null)
 {
@@ -32,7 +32,7 @@ public sealed record RemoteControlStatus(RemoteControlState State, string? Url =
 /// <summary>The <c>state</c> of a <c>system/bridge_state</c> message: how Claude Code's link to claude.ai is doing.</summary>
 public enum RemoteBridgeState
 {
-    /// <summary>A state this Claudette doesn't know yet. It changes nothing.</summary>
+    /// <summary>A state this Deventry doesn't know yet. It changes nothing.</summary>
     Unknown,
 
     /// <summary>Registered with claude.ai; devices can find the session.</summary>

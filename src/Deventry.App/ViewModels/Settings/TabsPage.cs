@@ -60,7 +60,7 @@ public static class TabOverrideKeys
 /// </summary>
 public sealed partial class TabsPage : SettingsPage
 {
-    /// <summary>Used until a session has told Claudette which models the installed Claude Code offers.</summary>
+    /// <summary>Used until a session has told Deventry which models the installed Claude Code offers.</summary>
     private static readonly IReadOnlyList<Choice> FallbackModels =
         [new("opus", "Opus"), new("sonnet", "Sonnet"), new("haiku", "Haiku"), new("fable", "Fable")];
 
@@ -80,7 +80,7 @@ public sealed partial class TabsPage : SettingsPage
                 ["default permission mode", "auto", "plan", "accept edits", "bypass"], TabOverrideKeys.PermissionMode),
             Setting("claudeCode.subagents", "Subagents", s => s.ClaudeCode.Subagents, (s, v) => s.ClaudeCode.Subagents = v,
                 "Whether Claude hands parts of its work to subagents.",
-                "Discourage asks it to do the work itself, unless you ask for a subagent. Don't allow tells it it can't, and Claudette turns down any subagent it starts anyway, in tabs already open too.",
+                "Discourage asks it to do the work itself, unless you ask for a subagent. Don't allow tells it it can't, and Deventry turns down any subagent it starts anyway, in tabs already open too.",
                 ["agents", "task tool"], TabOverrideKeys.Subagents),
         ], description: "Each tab can change these for itself, from Tab settings… in its menu.");
         Section("usageLimits", "At a usage limit",
@@ -97,14 +97,14 @@ public sealed partial class TabsPage : SettingsPage
         Section("checkIns", "Check-ins on long turns",
         [
             Setting("checkIns.enabled", "Check in on long turns", s => s.CheckIns.Enabled, (s, v) => s.CheckIns.Enabled = v,
-                "Claudette asks Claude how it's going, so a stuck tab doesn't burn usage unnoticed.", keywords: ["stuck", "long turn"],
+                "Deventry asks Claude how it's going, so a stuck tab doesn't burn usage unnoticed.", keywords: ["stuck", "long turn"],
                 overrideKey: TabOverrideKeys.CheckIns),
             Setting("checkIns.runTimeMinutes", "After the turn has run (minutes)", s => s.CheckIns.RunTimeMinutes, (s, v) => s.CheckIns.RunTimeMinutes = v,
                 "0 turns this off.", keywords: ["check-in"]),
             Setting("checkIns.quietTimeMinutes", "After no output for (minutes)", s => s.CheckIns.QuietTimeMinutes, (s, v) => s.CheckIns.QuietTimeMinutes = v,
                 "0 turns this off.", keywords: ["check-in", "quiet"]),
             Setting("checkIns.message", "Message", s => s.CheckIns.Message, (s, v) => s.CheckIns.Message = v,
-                "What Claudette sends Claude.", keywords: ["check-in message"]),
+                "What Deventry sends Claude.", keywords: ["check-in message"]),
             Setting("checkIns.notify", "Notify me when a check-in is sent", s => s.CheckIns.Notify, (s, v) => s.CheckIns.Notify = v,
                 keywords: ["check-in", "notification"]),
         ]);

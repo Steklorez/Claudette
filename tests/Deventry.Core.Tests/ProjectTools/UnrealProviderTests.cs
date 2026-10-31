@@ -8,7 +8,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// <summary>The Unreal provider's project: its actions, what's enabled, Clean, and the note to Claude (DESIGN.md §18).</summary>
 public sealed class UnrealProviderTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-unrealprovider");
+    private readonly TempFolder _temp = new("deventry-unrealprovider");
     private readonly UnrealProvider _unreal = new();
 
     public void Dispose() => _temp.Dispose();

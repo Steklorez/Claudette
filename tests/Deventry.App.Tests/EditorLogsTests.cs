@@ -734,7 +734,7 @@ public class EditorLogsTests
     public async Task A_unity_editor_already_writing_the_projects_log_has_that_row_alone()
     {
         await using var f = await OpenUnityAsync();
-        // Claudette starts after the move, as when it's opened with the editor open.
+        // Deventry starts after the move, as when it's opened with the editor open.
         f.WriteGlobalLog("Unity Editor version: 6000.5.0f1", MovedSentence, f.ProjectLogAsUnityWritesIt);
         f.StartEditor(4412);
         f.WriteProjectLog(TimeSpan.FromMinutes(1), "Unity Editor version: 6000.5.0f1", "Loading project", "Refreshing");

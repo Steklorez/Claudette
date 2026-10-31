@@ -91,7 +91,7 @@ public sealed record ReplyImageAddress(ReplyImageKind Kind, string Address, stri
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            return Refused(address, "It isn't a path or address Claudette can load.");
+            return Refused(address, "It isn't a path or address Deventry can load.");
         }
         if (IsNetworkPath(full))
         {

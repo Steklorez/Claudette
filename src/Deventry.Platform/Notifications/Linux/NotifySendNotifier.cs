@@ -54,8 +54,8 @@ public sealed class NotifySendNotifier : INotifier
 
     /// <summary><c>--</c> ends the options, so a title starting with a dash is still a title.</summary>
     public static IReadOnlyList<string> Arguments(OsNotification notification, bool withActions) => withActions
-        ? ["--app-name=Claudette", "--action=default=Open", "--wait", "--", notification.Title, notification.Body]
-        : ["--app-name=Claudette", "--", notification.Title, notification.Body];
+        ? ["--app-name=Deventry", "--action=default=Open", "--wait", "--", notification.Title, notification.Body]
+        : ["--app-name=Deventry", "--", notification.Title, notification.Body];
 
     private async Task WatchAsync(OsNotification notification, IRunningProcess process, bool withActions)
     {

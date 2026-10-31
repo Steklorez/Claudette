@@ -63,11 +63,11 @@ public sealed class AppServices : IAsyncDisposable
     /// The OS credential store, for stored Perforce passwords (DESIGN.md §18) and accounts' API keys (§4, "Accounts"). Null
     /// has none.
     /// </param>
-    /// <param name="appInstaller">Installs Claudette's own updates (DESIGN.md §2, "Updating Claudette"). Null can't.</param>
+    /// <param name="appInstaller">Installs Deventry's own updates (DESIGN.md §2, "Updating Deventry"). Null can't.</param>
     /// <param name="httpHandler">
-    /// Sends Claudette's own web requests: the update check and download, and Claude's service status. Tests pass a fake.
+    /// Sends Deventry's own web requests: the update check and download, and Claude's service status. Tests pass a fake.
     /// </param>
-    /// <param name="appVersion">This Claudette's version; by default, the one it was built with.</param>
+    /// <param name="appVersion">This Deventry's version; by default, the one it was built with.</param>
     /// <param name="loginShell">
     /// Reads the login shell's environment for the user's processes (DESIGN.md §13, "Login shell environment"). Null
     /// never reads one: tests.
@@ -88,7 +88,7 @@ public sealed class AppServices : IAsyncDisposable
     /// The OS's trash, for deleting from a Files tab's explorer (DESIGN.md §18, "Project files", "Renaming and deleting").
     /// Null has none, so deleting asks to delete for good: tests.
     /// </param>
-    /// <param name="demo">This Claudette is a demo (DESIGN.md §11, "Demo mode"); null for any other.</param>
+    /// <param name="demo">This Deventry is a demo (DESIGN.md §11, "Demo mode"); null for any other.</param>
     public AppServices(
         AppPaths paths,
         IProcessLauncher launcher,
@@ -115,8 +115,8 @@ public sealed class AppServices : IAsyncDisposable
         Demo = demo;
         AppInstaller = appInstaller ?? new NoAppInstaller();
         AppVersion = appVersion ?? BuiltVersion();
-        LoginItems = loginItems ?? new NoLoginItems("Claudette can't start at login here.");
-        ThisCopy = new ClaudetteCopy(AppInstallKind.Other, Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory), AppVersion.ToString());
+        LoginItems = loginItems ?? new NoLoginItems("Deventry can't start at login here.");
+        ThisCopy = new DeventryCopy(AppInstallKind.Other, Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory), AppVersion.ToString());
         BuildCommit = AppBuild.CommitOf(InformationalVersion());
 #pragma warning disable RS0030 // This is AppServices.Http: the one client, whose handler tests replace.
         Http = new HttpClient(httpHandler ?? new SocketsHttpHandler { AutomaticDecompression = System.Net.DecompressionMethods.All }, disposeHandler: true)
@@ -204,7 +204,7 @@ public sealed class AppServices : IAsyncDisposable
     internal IFolderWatcher FolderWatcher { get; set; } = new FolderWatcher();
 
     /// <summary>
-    /// Claudette's animations stop (DESIGN.md §3, "Accessibility"): Settings → Appearance → Motion says so, or follows
+    /// Deventry's animations stop (DESIGN.md §3, "Accessibility"): Settings → Appearance → Motion says so, or follows
     /// the OS or Claude Code's <c>prefersReducedMotion</c>, which ask for it.
     /// </summary>
     public bool ReduceMotion { get; private set; }
@@ -267,44 +267,44 @@ public sealed class AppServices : IAsyncDisposable
         }
     }
 
-    /// <summary>This Claudette's version, as its releases are tagged.</summary>
+    /// <summary>This Deventry's version, as its releases are tagged.</summary>
     public AppVersion AppVersion { get; }
 
-    /// <summary>Installs a downloaded release over this Claudette, when the way it was installed allows (DESIGN.md §2).</summary>
+    /// <summary>Installs a downloaded release over this Deventry, when the way it was installed allows (DESIGN.md §2).</summary>
     public IAppInstaller AppInstaller { get; }
 
     /// <summary>
-    /// For Claudette's own requests: GitHub's releases, and Claude's public status page. Everything else Claude-related
+    /// For Deventry's own requests: GitHub's releases, and Claude's public status page. Everything else Claude-related
     /// goes through Claude Code.
     /// </summary>
     public HttpClient Http { get; }
 
-    /// <summary>What Claudette's web requests call themselves.</summary>
-    public string UserAgent => $"Claudette/{AppVersion}";
+    /// <summary>What Deventry's web requests call themselves.</summary>
+    public string UserAgent => $"Deventry/{AppVersion}";
 
-    /// <summary>The commit this Claudette was built from, shortened, or null when the build didn't record one.</summary>
+    /// <summary>The commit this Deventry was built from, shortened, or null when the build didn't record one.</summary>
     internal string? BuildCommit { get; set; }
 
-    /// <summary>The configuration this Claudette was built in (Debug, Release), as the .NET SDK records it.</summary>
+    /// <summary>The configuration this Deventry was built in (Debug, Release), as the .NET SDK records it.</summary>
     internal string? BuildConfiguration { get; set; } = typeof(AppServices).Assembly
         .GetCustomAttributes(typeof(System.Reflection.AssemblyConfigurationAttribute), false)
         .OfType<System.Reflection.AssemblyConfigurationAttribute>()
         .FirstOrDefault()?.Configuration is { Length: > 0 } configuration ? configuration : null;
 
     /// <summary>
-    /// Runs from a source build (DESIGN.md §9, "Working on Claudette"), set at launch: its version is the checkout's,
+    /// Runs from a source build (DESIGN.md §9, "Working on Deventry"), set at launch: its version is the checkout's,
     /// so the commit tells it from the release.
     /// </summary>
     public bool IsSourceBuild { get; set; }
 
-    /// <summary>This copy of Claudette, for the foot of the Settings sidebar and bug reports (DESIGN.md §14, "Version").</summary>
+    /// <summary>This copy of Deventry, for the foot of the Settings sidebar and bug reports (DESIGN.md §14, "Version").</summary>
     public AppBuild Build => new(AppVersion, IsSourceBuild ? AppInstallKind.SourceBuild : AppInstaller.Kind, BuildCommit) { Configuration = BuildConfiguration };
 
     /// <summary>The OS's login entry (DESIGN.md §9, "Starting at login").</summary>
     public ILoginItems LoginItems { get; }
 
-    /// <summary>This copy of Claudette, which the login entry may start. Set at launch: a source build by its build output.</summary>
-    public ClaudetteCopy ThisCopy
+    /// <summary>This copy of Deventry, which the login entry may start. Set at launch: a source build by its build output.</summary>
+    public DeventryCopy ThisCopy
     {
         get;
         set
@@ -316,7 +316,7 @@ public sealed class AppServices : IAsyncDisposable
 
     private StartAtLogin? _startAtLogin;
 
-    /// <summary>Settings → General's <b>Start Claudette when I log in</b>, and tidying the entry up at launch.</summary>
+    /// <summary>Settings → General's <b>Start Deventry when I log in</b>, and tidying the entry up at launch.</summary>
     public StartAtLogin StartAtLogin =>
         _startAtLogin ??= new StartAtLogin(LoginItems, ThisCopy, State.LoginItem, SaveState, Loggers.CreateLogger("LoginItems"));
 
@@ -406,10 +406,10 @@ public sealed class AppServices : IAsyncDisposable
     /// <summary>Removing worktree tabs' worktrees on their own, as Settings → General says (DESIGN.md §4, "Cleaning up worktrees").</summary>
     public WorktreeCleanupService Worktrees { get; }
 
-    /// <summary>Claudette on the composer, shared by the tabs (DESIGN.md §5).</summary>
+    /// <summary>Joulene on the composer, shared by the tabs (DESIGN.md §5).</summary>
     public MascotService Mascot { get; }
 
-    /// <summary>The game open against Claudette, shared by the tabs (DESIGN.md §18, "Games with Claudette").</summary>
+    /// <summary>The game open against Joulene, shared by the tabs (DESIGN.md §18, "Games with Joulene").</summary>
     public GameService Games { get; }
 
     public AppPaths Paths { get; }
@@ -419,12 +419,12 @@ public sealed class AppServices : IAsyncDisposable
     /// <summary>Starts processes (DESIGN.md §15): <c>claude</c>, git, diff tools.</summary>
     public IProcessLauncher Launcher => _launcher;
 
-    /// <summary>This Claudette is a demo, on a folder of its own, with a stand-in for Claude Code (DESIGN.md §11, "Demo mode"); null for any other.</summary>
+    /// <summary>This Deventry is a demo, on a folder of its own, with a stand-in for Claude Code (DESIGN.md §11, "Demo mode"); null for any other.</summary>
     public DemoMode? Demo { get; }
 
     /// <summary>
-    /// What every <c>claude</c> Claudette starts has in its environment: where the presence file is (DESIGN.md §18,
-    /// "Remote Control"), and in a demo the variable that has Claudette stand in for Claude Code (DESIGN.md §11, "Demo
+    /// What every <c>claude</c> Deventry starts has in its environment: where the presence file is (DESIGN.md §18,
+    /// "Remote Control"), and in a demo the variable that has Deventry stand in for Claude Code (DESIGN.md §11, "Demo
     /// mode"), which only <c>claude</c> gets.
     /// </summary>
     public IReadOnlyDictionary<string, string?> ClaudeVariables => Demo is null
@@ -435,11 +435,11 @@ public sealed class AppServices : IAsyncDisposable
     public string DemoFolderRoot { get; set; } = Path.GetTempPath();
 
     /// <summary>
-    /// <b>Try the demo</b> (DESIGN.md §11, "Demo mode"): a demo written into a folder of its own and a second Claudette
+    /// <b>Try the demo</b> (DESIGN.md §11, "Demo mode"): a demo written into a folder of its own and a second Deventry
     /// started on it, this one left as it was. Returns the demo's folder.
     /// </summary>
     public Task<string> StartDemoAsync() =>
-        DemoLaunch.StartAsync(this, Environment.ProcessPath ?? throw new InvalidOperationException("Claudette doesn't know where it is."), DemoFolderRoot);
+        DemoLaunch.StartAsync(this, Environment.ProcessPath ?? throw new InvalidOperationException("Deventry doesn't know where it is."), DemoFolderRoot);
 
     /// <summary>
     /// The environment of the user's processes, <c>claude</c>, git, <c>p4</c> and diff tools, with the login shell's
@@ -463,7 +463,7 @@ public sealed class AppServices : IAsyncDisposable
 
     public ClaudeLocator Locator { get; }
 
-    /// <summary>Claudette's settings (DESIGN.md §14). Change them on the UI thread, then call <see cref="SaveSettings"/>.</summary>
+    /// <summary>Deventry's settings (DESIGN.md §14). Change them on the UI thread, then call <see cref="SaveSettings"/>.</summary>
     public AppSettings Settings { get; }
 
     /// <summary>Saved tabs, recent and favorite folders. Change on the UI thread, then call <see cref="SaveState"/>.</summary>
@@ -606,7 +606,7 @@ public sealed class AppServices : IAsyncDisposable
         ClaudeUpdates = new ClaudeUpdateService(this, CreateUpdater(install.Path), install.Version);
     }
 
-    /// <summary>What Claude Code has sent that Claudette doesn't know yet, for Settings → Advanced → Diagnostics (DESIGN.md §16).</summary>
+    /// <summary>What Claude Code has sent that Deventry doesn't know yet, for Settings → Advanced → Diagnostics (DESIGN.md §16).</summary>
     public ProtocolDiagnostics Diagnostics { get; } = new();
 
     /// <summary>A new protocol log for a session when Settings → Advanced turns logging on, otherwise null (DESIGN.md §13).</summary>
@@ -666,7 +666,7 @@ public sealed class AppServices : IAsyncDisposable
     }
 
     /// <summary>
-    /// Set while Claudette hands over to a new build of itself (DESIGN.md §9, "Working on Claudette"): the new build
+    /// Set while Deventry hands over to a new build of itself (DESIGN.md §9, "Working on Deventry"): the new build
     /// owns the settings and state files then, so nothing is written from here, even at shutdown. Setting it drops
     /// saves still waiting; <see cref="FlushAsync"/> first.
     /// </summary>

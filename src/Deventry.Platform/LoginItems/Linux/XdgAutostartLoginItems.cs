@@ -6,11 +6,11 @@ using Deventry.Core.Processes;
 namespace Deventry.Platform.LoginItems.Linux;
 
 /// <summary>
-/// Starting Claudette at login on Linux (DESIGN.md §9, "Starting at login"): <c>deventry.desktop</c> in the XDG
+/// Starting Deventry at login on Linux (DESIGN.md §9, "Starting at login"): <c>deventry.desktop</c> in the XDG
 /// autostart folder, which desktops that follow the Desktop Application Autostart spec run at login. Only file work, so
 /// it's tested on every OS.
 /// </summary>
-/// <param name="dotnet">The .NET a build is started with when its program wouldn't find it: the one Claudette runs on, by default.</param>
+/// <param name="dotnet">The .NET a build is started with when its program wouldn't find it: the one Deventry runs on, by default.</param>
 /// <param name="fileName">The file's name: <c>claudette.desktop</c> for Claudette's.</param>
 public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string autostartDirectory, LoginDotnet? dotnet = null, string fileName = XdgAutostartLoginItems.DefaultFileName) : ILoginItems
 {
@@ -58,7 +58,7 @@ public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string aut
         return LoginEntryState.Enabled;
     }
 
-    public void WriteEntry(ClaudetteCopy copy)
+    public void WriteEntry(DeventryCopy copy)
     {
         Directory.CreateDirectory(autostartDirectory);
         AtomicFile.WriteAllText(FilePath, DesktopEntry(Command(copy)));
@@ -72,9 +72,9 @@ public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string aut
         }
     }
 
-    public bool Exists(ClaudetteCopy copy) => copy.ExistsOnDisk();
+    public bool Exists(DeventryCopy copy) => copy.ExistsOnDisk();
 
-    public void Start(ClaudetteCopy copy)
+    public void Start(DeventryCopy copy)
     {
         var command = Command(copy);
         launcher.Start(new ProcessStartSpec(command.Program, command.Arguments) { Detached = true });
@@ -86,8 +86,8 @@ public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string aut
         return $"""
             [Desktop Entry]
             Type=Application
-            Name=Claudette
-            Comment=A native desktop app for Claude Code
+            Name=Deventry
+            Comment=The desktop app that puts agents in a native window
             Exec={exec}
             Terminal=false
             X-GNOME-Autostart-enabled=true
@@ -119,7 +119,7 @@ public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string aut
         return quoted.Replace("\\", "\\\\").Replace("%", "%%");
     }
 
-    private LoginCommand Command(ClaudetteCopy copy) =>
+    private LoginCommand Command(DeventryCopy copy) =>
         LoginCommand.For(copy, windows: false, _dotnet.Host, _dotnet.FoundByProgram)
         ?? throw new InvalidOperationException("An MSIX can't start on Linux.");
 }

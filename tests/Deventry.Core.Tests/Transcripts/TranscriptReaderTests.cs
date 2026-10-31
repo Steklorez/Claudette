@@ -280,7 +280,7 @@ public class TranscriptReaderTests
     [Fact]
     public void Finds_a_transcript_in_any_project_folder()
     {
-        var root = Path.Combine(Path.GetTempPath(), $"claudette-projects-{Guid.NewGuid():N}");
+        var root = Path.Combine(Path.GetTempPath(), $"deventry-projects-{Guid.NewGuid():N}");
         try
         {
             Directory.CreateDirectory(Path.Combine(root, "C--work-app"));

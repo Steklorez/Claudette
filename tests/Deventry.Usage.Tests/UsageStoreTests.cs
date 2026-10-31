@@ -10,7 +10,7 @@ public sealed class UsageStoreTests : IDisposable
 {
     private static readonly DateTimeOffset Start = new(2026, 9, 28, 18, 0, 0, TimeSpan.Zero);
 
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-usage-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-usage-{Guid.NewGuid():N}");
     private readonly FakeTimeProvider _time = new(Start);
     private readonly List<UsageStore> _stores = [];
 

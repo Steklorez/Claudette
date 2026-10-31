@@ -362,7 +362,7 @@ public class SubagentTests
         Assert.True(answer["continue"]!.GetValue<bool>());
         Assert.Null(h.Factory.Launches.Single().AppendSystemPrompt);
         await SendAsync(tab, "hello");
-        Assert.DoesNotContain(h.Transport.SentUserTexts, t => t.Contains("[Claudette]", StringComparison.Ordinal));
+        Assert.DoesNotContain(h.Transport.SentUserTexts, t => t.Contains("[Deventry]", StringComparison.Ordinal));
     }
 
     [Fact]

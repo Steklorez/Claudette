@@ -9,49 +9,49 @@ namespace Deventry.Core.LoginItems;
 /// <summary>What the machine's state keeps about starting at login (DESIGN.md §9, "Starting at login").</summary>
 public sealed class LoginItemRecord
 {
-    /// <summary>The copy the command entry was last written to start, or null when Claudette hasn't written one.</summary>
-    public ClaudetteCopy? Target { get; set; }
+    /// <summary>The copy the command entry was last written to start, or null when Deventry hasn't written one.</summary>
+    public DeventryCopy? Target { get; set; }
 
     /// <summary>
-    /// The installed Claudette, as it noted itself when it last started: a release, or failing that another build. A
+    /// The installed Deventry, as it noted itself when it last started: a release, or failing that another build. A
     /// source build finds the release to start through it.
     /// </summary>
-    public ClaudetteCopy? Installed { get; set; }
+    public DeventryCopy? Installed { get; set; }
 
     /// <summary>The MSIX's own startup task was on when it last looked. Only the MSIX can see or change the task.</summary>
     public bool InstalledTaskEnabled { get; set; }
 }
 
-/// <summary>Whether Claudette starts at login, as the switch in Settings → General shows it.</summary>
-/// <param name="IsOn">Something starts Claudette at login.</param>
-/// <param name="CanChange">The switch can turn it on or off from this Claudette.</param>
+/// <summary>Whether Deventry starts at login, as the switch in Settings → General shows it.</summary>
+/// <param name="IsOn">Something starts Deventry at login.</param>
+/// <param name="CanChange">The switch can turn it on or off from this Deventry.</param>
 /// <param name="Starts">The copy it starts, or would start once turned on. Null when it can't start here at all.</param>
 /// <param name="Note">Why it can't be changed here, in words.</param>
 /// <param name="Error">What went wrong reading or changing it, in words.</param>
-public sealed record LoginItemStatus(bool IsOn, bool CanChange, ClaudetteCopy? Starts, string? Note = null, string? Error = null);
+public sealed record LoginItemStatus(bool IsOn, bool CanChange, DeventryCopy? Starts, string? Note = null, string? Error = null);
 
 /// <summary>
-/// Starting Claudette when the user logs in (DESIGN.md §9, "Starting at login"): turning it on and off, which copy of
-/// Claudette the entry starts, and tidying the entry up as a Claudette starts. The entry prefers an installed release,
-/// then another build, then a source build (<see cref="ClaudetteCopy.Rank"/>).
+/// Starting Deventry when the user logs in (DESIGN.md §9, "Starting at login"): turning it on and off, which copy of
+/// Deventry the entry starts, and tidying the entry up as a Deventry starts. The entry prefers an installed release,
+/// then another build, then a source build (<see cref="DeventryCopy.Rank"/>).
 /// </summary>
-/// <param name="current">The Claudette that's running.</param>
+/// <param name="current">The Deventry that's running.</param>
 /// <param name="record">The machine's state about it, changed in place.</param>
 /// <param name="save">Saves the state after <paramref name="record"/> changes.</param>
-public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, LoginItemRecord record, Action save, ILogger? logger = null)
+public sealed class StartAtLogin(ILoginItems items, DeventryCopy current, LoginItemRecord record, Action save, ILogger? logger = null)
 {
     private readonly ILogger _logger = logger ?? NullLogger.Instance;
 
-    public ClaudetteCopy Current => current;
+    public DeventryCopy Current => current;
 
     /// <summary>
-    /// The copy the entry should start: the best by rank of the installed Claudette (when it's still here), the copy the
+    /// The copy the entry should start: the best by rank of the installed Deventry (when it's still here), the copy the
     /// entry starts now, and this one. On a tie the earlier wins, so a source build doesn't take the entry from another
     /// checkout's.
     /// </summary>
-    public ClaudetteCopy Preferred()
+    public DeventryCopy Preferred()
     {
-        ClaudetteCopy? best = null;
+        DeventryCopy? best = null;
         foreach (var copy in new[] { record.Installed, record.Target, current })
         {
             if (copy is null || best is not null && copy.Rank <= best.Rank)
@@ -74,7 +74,7 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
     /// For a start at login: a better copy to start instead of this one (the installed release, when this is a source
     /// build), or null to start here.
     /// </summary>
-    public ClaudetteCopy? HandOverAtLogin()
+    public DeventryCopy? HandOverAtLogin()
     {
         if (items.UnavailableReason is not null)
         {
@@ -96,8 +96,8 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
         }
         catch (Exception ex) when (IsExpected(ex))
         {
-            _logger.LogWarning(ex, "Couldn't read whether Claudette starts at login.");
-            return new LoginItemStatus(false, false, null, Error: $"Couldn't tell whether Claudette starts at login: {ex.Message}");
+            _logger.LogWarning(ex, "Couldn't read whether Deventry starts at login.");
+            return new LoginItemStatus(false, false, null, Error: $"Couldn't tell whether Deventry starts at login: {ex.Message}");
         }
     }
 
@@ -124,7 +124,7 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
         {
             // Only the MSIX can turn its startup task off.
             return new LoginItemStatus(true, false, preferred,
-                $"{Capitalize(preferred.Describe())} starts at login. Turn it off in that Claudette, or in {items.SystemSettingsName}.");
+                $"{Capitalize(preferred.Describe())} starts at login. Turn it off in that Deventry, or in {items.SystemSettingsName}.");
         }
         return entry switch
         {
@@ -170,7 +170,7 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
                 }
                 else if (!record.InstalledTaskEnabled)
                 {
-                    // Only the MSIX can turn on its startup task: the entry starts this Claudette, which hands over to
+                    // Only the MSIX can turn on its startup task: the entry starts this Deventry, which hands over to
                     // the MSIX at login, and the MSIX then turns its own task on.
                     Write(current);
                 }
@@ -189,7 +189,7 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
     }
 
     /// <summary>
-    /// Tidies the entry as this Claudette starts, without turning starting at login on or off. An installed Claudette
+    /// Tidies the entry as this Deventry starts, without turning starting at login on or off. An installed Deventry
     /// notes itself, for source builds to find. The MSIX takes over from an entry a source build wrote for it. An entry
     /// whose copy is gone, or that a better copy is here for, starts the copy it should.
     /// </summary>
@@ -250,7 +250,7 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
     }
 
     /// <summary>
-    /// Notes this Claudette as the installed one, unless it's a source build, or a better installed copy is still here.
+    /// Notes this Deventry as the installed one, unless it's a source build, or a better installed copy is still here.
     /// Between two of the same kind, the one that started last wins.
     /// </summary>
     private void NoteInstalled()
@@ -278,7 +278,7 @@ public sealed class StartAtLogin(ILoginItems items, ClaudetteCopy current, Login
         }
     }
 
-    private void Write(ClaudetteCopy copy)
+    private void Write(DeventryCopy copy)
     {
         items.WriteEntry(copy);
         record.Target = copy;

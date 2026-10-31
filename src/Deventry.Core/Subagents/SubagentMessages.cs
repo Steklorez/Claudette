@@ -3,9 +3,9 @@ using Deventry.Core.Settings;
 namespace Deventry.Core.Subagents;
 
 /// <summary>
-/// What Claudette tells Claude about subagents, as Settings → Tabs → Subagents or the tab's own setting says
+/// What Deventry tells Claude about subagents, as Settings → Tabs → Subagents or the tab's own setting says
 /// (DESIGN.md §5, "Subagents"): the note Claude Code starts with, the note on the next message when the setting changes
-/// in a running tab, and the answer to an <c>Agent</c> call Claudette's hook refuses.
+/// in a running tab, and the answer to an <c>Agent</c> call Deventry's hook refuses.
 /// </summary>
 public static class SubagentMessages
 {
@@ -25,20 +25,20 @@ public static class SubagentMessages
             "The user prefers that you don't delegate to subagents. Do the work yourself, in this conversation, with your own tools, "
             + "rather than calling the Agent tool. Use a subagent only when the user asks for one.",
         SubagentUse.DontAllow =>
-            "Subagents are turned off for this session: don't call the Agent tool, because Claudette refuses every call. "
+            "Subagents are turned off for this session: don't call the Agent tool, because Deventry refuses every call. "
             + "Do the work yourself, in this conversation, with your own tools. If the user asks for a subagent, "
-            + "tell them subagents are turned off in Claudette's settings.",
+            + "tell them subagents are turned off in Deventry's settings.",
         _ => null,
     };
 
     /// <summary>The note on the user's next message after the tab's setting changed while its Claude Code ran.</summary>
     public static string ChangeNote(SubagentUse use) => use switch
     {
-        SubagentUse.Discourage => "[Claudette] From now on, the user prefers that you don't delegate to subagents. "
+        SubagentUse.Discourage => "[Deventry] From now on, the user prefers that you don't delegate to subagents. "
             + "Do the work yourself, in this conversation, with your own tools, and use a subagent only when the user asks for one.",
-        SubagentUse.DontAllow => "[Claudette] Subagents are now turned off: don't call the Agent tool, because Claudette refuses every call. "
+        SubagentUse.DontAllow => "[Deventry] Subagents are now turned off: don't call the Agent tool, because Deventry refuses every call. "
             + "Do the work yourself, in this conversation, with your own tools.",
-        _ => "[Claudette] Subagents are allowed again: use the Agent tool whenever handing work to a subagent helps.",
+        _ => "[Deventry] Subagents are allowed again: use the Agent tool whenever handing work to a subagent helps.",
     };
 
     /// <summary>The line under a message that carried <see cref="ChangeNote"/>, with the note as its tip.</summary>
@@ -54,7 +54,7 @@ public static class SubagentMessages
     /// ("PreToolUse:Agent hook error: …"), so the conversation finds the call by this text.
     /// </summary>
     public const string Refused =
-        "Claudette didn't start this subagent: subagents are turned off for this tab in Claudette's settings. "
+        "Deventry didn't start this subagent: subagents are turned off for this tab in Deventry's settings. "
         + "Do this work yourself, in this conversation, with your own tools.";
 
     /// <summary>Whether a tool call's result is the hook's refusal.</summary>

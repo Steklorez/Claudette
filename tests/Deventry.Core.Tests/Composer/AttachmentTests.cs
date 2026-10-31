@@ -11,7 +11,7 @@ public sealed class AttachmentTests : IDisposable
 {
     internal static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
 
-    private readonly TempFolder _root = new("claudette-attach");
+    private readonly TempFolder _root = new("deventry-attach");
 
     public void Dispose() => _root.Dispose();
 

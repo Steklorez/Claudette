@@ -2,7 +2,7 @@ using Deventry.Core.Updates;
 
 namespace Deventry.Core.Tests.Updates;
 
-/// <summary>Reading and ordering Claudette's release versions (DESIGN.md §2, "Updating Claudette").</summary>
+/// <summary>Reading and ordering Deventry's release versions (DESIGN.md §2, "Updating Deventry").</summary>
 public class AppVersionTests
 {
     [Theory]

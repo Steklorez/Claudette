@@ -12,7 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.UiTests;
 
 /// <summary>
-/// The screenshot scripts' commands, carried out by Claudette itself (DESIGN.md §9, "Taking screenshots without the
+/// The screenshot scripts' commands, carried out by Deventry itself (DESIGN.md §9, "Taking screenshots without the
 /// focus"): each finds the control UI Automation saw, by its window, name, id and type, and does to it what a click, a
 /// right-click, a switch, typing, the wheel, the pointer resting or keys would, through its automation peer.
 /// </summary>
@@ -209,7 +209,7 @@ public class AutomationCommandsUiTests
 
     /// <summary>
     /// Without a handle, as a script has on macOS and Linux: the window by its title, or the main window; and capture
-    /// saves the window as Claudette draws it, for screenshots on every OS (.github/workflows/screenshots.yml).
+    /// saves the window as Deventry draws it, for screenshots on every OS (.github/workflows/screenshots.yml).
     /// </summary>
     [AvaloniaFact]
     public void Without_a_handle_the_main_window_or_one_by_its_title_and_capture_saves_its_picture()
@@ -227,7 +227,7 @@ public class AutomationCommandsUiTests
         Assert.Equal(1, clicks);
         Assert.Contains("called 'Nope'", commands.Execute(new() { Verb = "click", Title = "Nope", Name = "Go" }).Error, StringComparison.Ordinal);
 
-        var folder = Directory.CreateTempSubdirectory("claudette-capture").FullName;
+        var folder = Directory.CreateTempSubdirectory("deventry-capture").FullName;
         try
         {
             var path = Path.Combine(folder, "shots", "settings.png");
@@ -247,7 +247,7 @@ public class AutomationCommandsUiTests
     }
 
     /// <summary>
-    /// macOS's traffic lights, which AppKit draws over the window rather than Claudette, are drawn into its picture where
+    /// macOS's traffic lights, which AppKit draws over the window rather than Deventry, are drawn into its picture where
     /// AppKit has them, so the title bar's left isn't a gap: asked for of the window captured, and only that one.
     /// </summary>
     [AvaloniaFact]
@@ -267,7 +267,7 @@ public class AutomationCommandsUiTests
         });
         main.Show();
         UiText.Settle(main);
-        var folder = Directory.CreateTempSubdirectory("claudette-capture").FullName;
+        var folder = Directory.CreateTempSubdirectory("deventry-capture").FullName;
         try
         {
             var path = Path.Combine(folder, "main.png");

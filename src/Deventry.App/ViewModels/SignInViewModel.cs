@@ -209,7 +209,7 @@ public sealed partial class SignInViewModel : ViewModelBase
     [RelayCommand]
     private async Task OpenBrowserAgainAsync()
     {
-        // The command only tells Claudette the address of the page with a code, so that page needs the code field.
+        // The command only tells Deventry the address of the page with a code, so that page needs the code field.
         if (IsUsingCommand)
         {
             ShowCodeEntry = true;

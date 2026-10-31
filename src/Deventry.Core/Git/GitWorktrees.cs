@@ -19,7 +19,7 @@ public sealed record GitWorktreeWork(bool HasChanges, int OwnCommits, bool HasIg
 
 /// <summary>
 /// The worktrees of worktree tabs (DESIGN.md §4, "Worktree tabs"): Claude Code creates them with <c>--worktree</c> and,
-/// in <c>-p</c> mode, leaves them behind, locked; Claudette lists, inspects and removes them. Like
+/// in <c>-p</c> mode, leaves them behind, locked; Deventry lists, inspects and removes them. Like
 /// <see cref="GitWorkingTree"/>, every call returns null or false instead of throwing when git can't answer.
 /// </summary>
 public sealed class GitWorktrees(GitWorkingTree git)
@@ -211,7 +211,7 @@ public sealed class GitWorktrees(GitWorkingTree git)
             if (worktree.IsLocked && Directory.Exists(worktree.Path))
             {
                 // Still there: locked again, so git worktree prune doesn't forget it.
-                await git.RunAsync(mainFolder, ["worktree", "lock", "--reason", "Kept by Claudette: removing it didn't finish", worktree.Path], cancellationToken)
+                await git.RunAsync(mainFolder, ["worktree", "lock", "--reason", "Kept by Deventry: removing it didn't finish", worktree.Path], cancellationToken)
                     .ConfigureAwait(false);
             }
             return removed is null ? "Git couldn't finish removing it." : FirstLine(removed.StandardError) ?? $"git worktree remove failed (exit code {removed.ExitCode}).";

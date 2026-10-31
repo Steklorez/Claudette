@@ -9,7 +9,7 @@ namespace Deventry.Core.Tests.LoginItems;
 /// </summary>
 public sealed class LoginDotnetTests : IDisposable
 {
-    private readonly string _root = Directory.CreateTempSubdirectory("claudette-dotnet-").FullName;
+    private readonly string _root = Directory.CreateTempSubdirectory("deventry-dotnet-").FullName;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 

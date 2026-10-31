@@ -60,7 +60,7 @@ public sealed partial class TabViewModel
     public string? LimitWaitText => LimitWait is not { } wait ? null : wait switch
     {
         { Hold: LimitWaitHold.Missed } =>
-            $"Your {wait.LimitName} reset {When(wait.ResetsAt)} while this computer was asleep or Claudette was closed, so {(HasHeldForCredits ? "your message wasn't sent" : "the task didn't continue")} by itself.",
+            $"Your {wait.LimitName} reset {When(wait.ResetsAt)} while this computer was asleep or Deventry was closed, so {(HasHeldForCredits ? "your message wasn't sent" : "the task didn't continue")} by itself.",
         { HasReset: true } => $"Your {wait.LimitName} has reset.",
         { Hold: LimitWaitHold.None } =>
             $"{LimitReached(wait)} {(HasHeldForCredits ? "Your message is sent" : "The task continues by itself")} when it resets, {When(wait.ResetsAt)}.",
@@ -127,7 +127,7 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>
-    /// Sends the message that continues the task, labeled as sent by Claudette, as a check-in is. A message the tab held
+    /// Sends the message that continues the task, labeled as sent by Deventry, as a check-in is. A message the tab held
     /// for usage credits goes instead, as the user's own message during a wait would have.
     /// </summary>
     private void SendAutoContinue(string message)

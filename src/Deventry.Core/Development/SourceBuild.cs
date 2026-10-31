@@ -1,8 +1,8 @@
 namespace Deventry.Core.Development;
 
 /// <summary>
-/// Claudette running from its own build output in a source checkout, for working on Claudette from Claudette
-/// (DESIGN.md §9, "Working on Claudette").
+/// Deventry running from its own build output in a source checkout, for working on Deventry from Deventry
+/// (DESIGN.md §9, "Working on Deventry").
 /// </summary>
 /// <param name="OutputDirectory">The app's build output, such as <c>src/Deventry.App/bin/Debug/net10.0</c>.</param>
 /// <param name="RepositoryRoot">The checkout: the folder with <c>Deventry.slnx</c>.</param>
@@ -14,7 +14,7 @@ public sealed record SourceBuild(string OutputDirectory, string RepositoryRoot)
 
     /// <summary>
     /// The source build <paramref name="appDirectory"/> is part of: a folder inside a <c>bin</c> folder, below a folder
-    /// with <c>Deventry.slnx</c>. Null for an installed Claudette.
+    /// with <c>Deventry.slnx</c>. Null for an installed Deventry.
     /// </summary>
     public static SourceBuild? Detect(string appDirectory)
     {
@@ -57,8 +57,8 @@ public sealed record SourceBuild(string OutputDirectory, string RepositoryRoot)
     }
 }
 
-/// <summary>A source build of Claudette that's running now, and where its new builds appear.</summary>
+/// <summary>A source build of Deventry that's running now, and where its new builds appear.</summary>
 /// <param name="SourceOutput">The build output that's watched for new builds.</param>
-/// <param name="RunningDirectory">The folder this Claudette runs from: a copy of a build, or the build output itself.</param>
+/// <param name="RunningDirectory">The folder this Deventry runs from: a copy of a build, or the build output itself.</param>
 /// <param name="RunningStamp">When the running build was written: only a newer build counts as new.</param>
 public sealed record DevelopmentBuild(string SourceOutput, string RunningDirectory, DateTime RunningStamp);

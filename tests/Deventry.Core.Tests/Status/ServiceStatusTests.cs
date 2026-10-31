@@ -123,7 +123,7 @@ public class ServiceStatusTests
     }
 
     [Fact]
-    public void Values_Claudette_does_not_know_read_as_unknown_and_an_unknown_incident_status_is_still_open()
+    public void Values_Deventry_does_not_know_read_as_unknown_and_an_unknown_incident_status_is_still_open()
     {
         var incident = IncidentJson("new", status: "escalated", components: Component("code", "Claude Code", "on_fire")).Replace("\"minor\"", "\"severe\"", StringComparison.Ordinal);
         var summary = StatusSummary.TryParse(Summary("catastrophic", Watched(code: "on_fire"), incident))!;
@@ -193,7 +193,7 @@ public class ServiceStatusTests
     {
         Assert.Equal(ServiceLevel.Degraded, Report(Summary(components: Watched(web: "degraded_performance"))).Level);
         Assert.Equal(ServiceLevel.Outage, Report(Summary(components: Watched(api: "major_outage", web: "degraded_performance"))).Level);
-        // Services Claudette doesn't watch don't count.
+        // Services Deventry doesn't watch don't count.
         Assert.Equal(ServiceLevel.Operational, Report(Summary("major", Watched() + "," + Component("gov", "Claude for Government", "major_outage"))).Level);
     }
 
@@ -284,17 +284,17 @@ public class ServiceStatusTests
     // ---- The feed -------------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task The_feed_asks_for_the_summary_with_Claudettes_user_agent()
+    public async Task The_feed_asks_for_the_summary_with_Deventrys_user_agent()
     {
         using var handler = new FakeHttpHandler().OnJson(StatusFeed.SummaryUrl, Incident);
         using var http = new HttpClient(handler);
 
-        var summary = await new StatusFeed(http, "Claudette/1.2.0").GetSummaryAsync(TestContext.Current.CancellationToken);
+        var summary = await new StatusFeed(http, "Deventry/1.2.0").GetSummaryAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(StatusIndicator.Minor, summary.Indicator);
         var request = Assert.Single(handler.Requests);
         Assert.Equal("https://status.claude.com/api/v2/summary.json", request.RequestUri!.ToString());
-        Assert.Equal("Claudette/1.2.0", request.Headers.UserAgent.ToString());
+        Assert.Equal("Deventry/1.2.0", request.Headers.UserAgent.ToString());
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class ServiceStatusTests
         using var handler = new FakeHttpHandler()
             .On(StatusFeed.SummaryUrl, _ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { ReasonPhrase = "Service Unavailable" });
         using var http = new HttpClient(handler);
-        var feed = new StatusFeed(http, "Claudette/1.2.0");
+        var feed = new StatusFeed(http, "Deventry/1.2.0");
 
         var down = await Assert.ThrowsAsync<StatusFeedException>(() => feed.GetSummaryAsync(TestContext.Current.CancellationToken));
         Assert.Equal("status.claude.com answered 503 Service Unavailable.", down.Message);
@@ -313,7 +313,7 @@ public class ServiceStatusTests
         Assert.Equal("status.claude.com's answer couldn't be read.", garbled.Message);
 
         using var offline = new HttpClient(new ThrowingHandler());
-        var unreachable = await Assert.ThrowsAsync<StatusFeedException>(() => new StatusFeed(offline, "Claudette/1.2.0").GetSummaryAsync(TestContext.Current.CancellationToken));
+        var unreachable = await Assert.ThrowsAsync<StatusFeedException>(() => new StatusFeed(offline, "Deventry/1.2.0").GetSummaryAsync(TestContext.Current.CancellationToken));
         Assert.StartsWith("Couldn't reach status.claude.com:", unreachable.Message);
     }
 

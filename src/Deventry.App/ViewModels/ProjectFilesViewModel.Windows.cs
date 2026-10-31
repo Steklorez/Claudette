@@ -103,7 +103,7 @@ public sealed partial class ProjectFilesViewModel
     internal void ShowWindow(ProjectFileViewModel file) => _shell.ShowFileWindow?.Invoke(file);
 
     /// <summary>
-    /// Find in files' or Replace in files' shortcut in a file's window: the popup over Claudette's window, with what the
+    /// Find in files' or Replace in files' shortcut in a file's window: the popup over Deventry's window, with what the
     /// editor has selected, or its find box has.
     /// </summary>
     internal void FindInFilesFrom(ProjectFileViewModel file, bool replace) =>

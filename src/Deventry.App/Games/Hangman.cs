@@ -1,6 +1,6 @@
 namespace Deventry.App.Games;
 
-/// <summary>Where a hangman word comes from, which Claudette says.</summary>
+/// <summary>Where a hangman word comes from, which Joulene says.</summary>
 public enum HangmanCategory
 {
     Programming,
@@ -11,7 +11,7 @@ public enum HangmanCategory
 public sealed record HangmanWord(string Word, HangmanCategory Category);
 
 /// <summary>
-/// A round of hangman (DESIGN.md §18, "Games with Claudette"): Claudette's word, and the letters the user has guessed.
+/// A round of hangman (DESIGN.md §18, "Games with Joulene"): Joulene's word, and the letters the user has guessed.
 /// Six misses lose.
 /// </summary>
 public sealed class Hangman(HangmanWord word)

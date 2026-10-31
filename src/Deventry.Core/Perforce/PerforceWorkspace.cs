@@ -1,7 +1,7 @@
 namespace Deventry.Core.Perforce;
 
 /// <summary>
-/// Where Claudette runs <c>p4</c> for a tab: the tab's folder, so Perforce resolves its settings from the usual
+/// Where Deventry runs <c>p4</c> for a tab: the tab's folder, so Perforce resolves its settings from the usual
 /// sources (P4CONFIG files, <c>p4 set</c>, P4ENVIRO, the environment) the same way Claude's own <c>p4</c> commands do,
 /// plus the server and user from Settings → Perforce's per-folder overrides, if any (DESIGN.md §18).
 /// </summary>
@@ -31,7 +31,7 @@ public sealed record PerforceTarget(string Folder, string? Port = null, string? 
 /// <param name="Client">The workspace (client) name.</param>
 /// <param name="ClientRoot">The workspace's root folder, when it has one.</param>
 /// <param name="ServerAddress">The server's own address, as it reports it.</param>
-/// <param name="UsesSingleSignOn">P4LOGINSSO is set, or the server requires single sign-on: Claudette can't log in by itself.</param>
+/// <param name="UsesSingleSignOn">P4LOGINSSO is set, or the server requires single sign-on: Deventry can't log in by itself.</param>
 public sealed record PerforceWorkspace(
     string? Port,
     string User,
@@ -46,7 +46,7 @@ public sealed record PerforceWorkspace(
 
     /// <summary>
     /// The note added to the session with <c>--append-system-prompt</c>, so Claude knows to use <c>p4</c> here rather
-    /// than assume git, and leaves logging in to Claudette (DESIGN.md §18, "Detecting a Perforce workspace").
+    /// than assume git, and leaves logging in to Deventry (DESIGN.md §18, "Detecting a Perforce workspace").
     /// </summary>
     public string SystemPromptNote(string? user = null)
     {

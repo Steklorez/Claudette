@@ -21,7 +21,7 @@ public sealed class NotificationsPage : SettingsPage
                 keywords: ["version"]),
             Setting("notifications.projectActions", "A project action finishes", s => s.Notifications.ProjectActions, (s, v) => s.Notifications.ProjectActions = v,
                 keywords: ["build", "job", "run"]),
-        ], description: "Only when Claudette isn't in front. Clicking one brings it to the front, on that tab. Check-ins have their own, in Tabs.");
+        ], description: "Only when Deventry isn't in front. Clicking one brings it to the front, on that tab. Check-ins have their own, in Tabs.");
         Section("icon", "The Dock or taskbar icon",
         [
             Setting("notifications.badge", "Show how many tabs need you", s => s.Notifications.Badge, (s, v) => s.Notifications.Badge = v,
@@ -33,7 +33,7 @@ public sealed class NotificationsPage : SettingsPage
 
     public override string IconKey => "IconSettingsNotifications";
 
-    public override string Description => "When Claudette tells you something needs you.";
+    public override string Description => "When Deventry tells you something needs you.";
 
     /// <summary>False when this machine can't show OS notifications, for example a macOS build run outside its app bundle.</summary>
     public bool NotificationsAvailable => Services.Notifications.IsAvailable;

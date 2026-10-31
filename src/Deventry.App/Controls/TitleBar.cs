@@ -6,9 +6,9 @@ using Deventry.App.Services;
 namespace Deventry.App.Controls;
 
 /// <summary>
-/// Whether Claudette's windows draw their own title bars (DESIGN.md §3, "Window frame"), as the main window's header is its
+/// Whether Deventry's windows draw their own title bars (DESIGN.md §3, "Window frame"), as the main window's header is its
 /// title bar: on Windows and macOS (<see cref="IPlatformServices.CanMergeTitleBar"/>), unless Settings → Appearance → Use
-/// the system's title bar is on. Until Claudette has its services, as in tests, windows have the system's.
+/// the system's title bar is on. Until Deventry has its services, as in tests, windows have the system's.
 /// </summary>
 public static class WindowFrame
 {

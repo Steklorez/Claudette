@@ -12,7 +12,7 @@ public sealed class PerforceTicketKeeperTests : IDisposable
     private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-09-28T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture));
     private readonly FakeP4 _p4;
     private readonly PerforceClient _client;
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"claudette-p4-{Guid.NewGuid():N}");
+    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"deventry-p4-{Guid.NewGuid():N}");
     private readonly PerforceLoginGate _gate = new();
     private readonly List<PerforceTicketKeeper> _keepers = [];
 

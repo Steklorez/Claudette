@@ -12,7 +12,7 @@ namespace Deventry.Core.Tests.Composer;
 /// </summary>
 public sealed class MentionFolderTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-mention-folders");
+    private readonly TempFolder _root = new("deventry-mention-folders");
 
     public void Dispose() => _root.Dispose();
 
@@ -165,7 +165,7 @@ public sealed class MentionFolderTests : IDisposable
     {
         _root.Write("work/src/app.cs", "");
         _root.Write("work/node_modules/lib/index.js", "");
-        var noGit = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var noGit = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
         var project = new ProjectFileIndex(Work, noGit, TimeProvider.System);
         await project.GetAsync();
         var reader = new MentionFolderReader(noGit, TimeProvider.System);
@@ -182,7 +182,7 @@ public sealed class MentionFolderTests : IDisposable
     {
         _root.Write("work/src/app.cs", "");
         _root.Write("work/readme.md", "");
-        var noGit = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var noGit = new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
         var project = new ProjectFileIndex(Work, noGit, TimeProvider.System);
 
         Assert.False(project.Contains("readme.md"));

@@ -18,7 +18,7 @@ public sealed partial class ShellViewModel
     /// <summary>
     /// The tab whose Claude changed <paramref name="path"/> last, after <paramref name="since"/>, other than
     /// <paramref name="asking"/>: its name, with how many others did too, or null when none did, so it was you, a
-    /// command or something outside Claudette.
+    /// command or something outside Deventry.
     /// </summary>
     internal string? ChangedSinceBy(TabViewModel asking, string path, DateTimeOffset since)
     {

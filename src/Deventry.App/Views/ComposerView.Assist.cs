@@ -65,7 +65,7 @@ public partial class ComposerView
 
     /// <summary>
     /// While the popup is open: Up and Down move, Enter and Tab pick, Esc closes. Enter with nothing to pick, or on what's
-    /// already typed in full, still sends, so a command Claudette doesn't list can be sent as typed.
+    /// already typed in full, still sends, so a command Deventry doesn't list can be sent as typed.
     /// </summary>
     private bool HandleCompletionKey(KeyEventArgs e)
     {
@@ -190,7 +190,7 @@ public partial class ComposerView
         e.Handled = true;
     }
 
-    /// <summary>A file is over the composer, ready to drop, or no longer is: Claudette on the composer gets ready to catch it.</summary>
+    /// <summary>A file is over the composer, ready to drop, or no longer is: Joulene on the composer gets ready to catch it.</summary>
     private void SetDropping(bool dropping)
     {
         ComposerBox.Classes.Set("dropping", dropping);

@@ -23,8 +23,8 @@ public class NotifierTests
     [Fact]
     public void NotifySend_arguments_end_the_options_before_the_text()
     {
-        Assert.Equal(["--app-name=Claudette", "--action=default=Open", "--wait", "--", "fix login bug", "Allow this command? dotnet test"], NotifySendNotifier.Arguments(Sample, withActions: true));
-        Assert.Equal(["--app-name=Claudette", "--", "-weird title", "body"], NotifySendNotifier.Arguments(Sample with { Title = "-weird title", Body = "body" }, withActions: false));
+        Assert.Equal(["--app-name=Deventry", "--action=default=Open", "--wait", "--", "fix login bug", "Allow this command? dotnet test"], NotifySendNotifier.Arguments(Sample, withActions: true));
+        Assert.Equal(["--app-name=Deventry", "--", "-weird title", "body"], NotifySendNotifier.Arguments(Sample with { Title = "-weird title", Body = "body" }, withActions: false));
     }
 
     [Fact]

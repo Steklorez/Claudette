@@ -7,7 +7,7 @@ using Deventry.App.ViewModels.Settings;
 namespace Deventry.App.Views;
 
 /// <summary>
-/// About Claudette (DESIGN.md §14, "About"), a window of its own over the window it was opened from: the header's menu,
+/// About Deventry (DESIGN.md §14, "About"), a window of its own over the window it was opened from: the header's menu,
 /// Settings' Help, the command palette and the macOS app menu open it. One at a time; opened again, it comes forward.
 /// </summary>
 public partial class AboutWindow : Window

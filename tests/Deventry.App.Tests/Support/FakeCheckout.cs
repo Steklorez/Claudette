@@ -137,7 +137,7 @@ internal sealed class FakeCheckout
             return (1, "Restore complete\nerror CS1002: ; expected");
         }
         Touch(Output, Rebuilt);
-        return (0, "Restore complete\nClaudette -> " + Output);
+        return (0, "Restore complete\nDeventry -> " + Output);
     }
 
     /// <summary>A build output in a checkout, with this platform's native libraries.</summary>

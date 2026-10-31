@@ -34,7 +34,7 @@ public class ClaudeStyleTests
             app.Colors.Apply(AppStyle.Claude);
             UiText.Settle(window);
 
-            // Fluent's window background, Claudette's own tokens and the accent all change, while the app runs.
+            // Fluent's window background, Deventry's own tokens and the accent all change, while the app runs.
             Assert.Equal(Color.Parse("#FAF9F5"), BackgroundOf(window));
             Assert.Equal(Color.Parse("#F5F4ED"), Token(window, "SidebarBrush"));
             Assert.Equal(AppColors.ClaudeAccent, (Color)window.FindResource("SystemAccentColor")!);

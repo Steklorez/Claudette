@@ -25,7 +25,7 @@ public partial class TabViewModel
     public bool IsAskingTrust => TrustRows is not null;
 
     public string TrustText =>
-        $"{FolderName} has its own Claude Code configuration. Started by Claudette, Claude Code doesn't ask about a folder it hasn't been told to trust, so it would run these as it starts and works here:";
+        $"{FolderName} has its own Claude Code configuration. Started by Deventry, Claude Code doesn't ask about a folder it hasn't been told to trust, so it would run these as it starts and works here:";
 
     /// <summary>The tab runs without the folder's own settings: the tab's menu offers to trust it after all.</summary>
     public bool IsWithoutFolderSettings => State.WithoutProjectSettings;

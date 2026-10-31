@@ -3,9 +3,9 @@ namespace Deventry.Core.Perforce;
 /// <summary>Where the password for a Perforce login comes from (Settings → Perforce → Password source, DESIGN.md §18).</summary>
 public enum PerforcePasswordSource
 {
-    /// <summary>Saved by Claudette in the OS credential store; asked for, and saved, when there isn't one yet.</summary>
+    /// <summary>Saved by Deventry in the OS credential store; asked for, and saved, when there isn't one yet.</summary>
     Stored,
-    /// <summary>P4PASSWD from Perforce's own configuration (P4CONFIG, <c>p4 set</c>, the environment). Claudette only reads it.</summary>
+    /// <summary>P4PASSWD from Perforce's own configuration (P4CONFIG, <c>p4 set</c>, the environment). Deventry only reads it.</summary>
     PerforceConfig,
     /// <summary>Asked for each time a login is needed, and never stored.</summary>
     AskEachTime,

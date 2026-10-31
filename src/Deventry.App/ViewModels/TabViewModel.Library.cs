@@ -272,7 +272,7 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// Looks for another machine's turns while the tab's Claude Code runs: a sync client can bring them well after the
-    /// tab started, from a machine that has since closed Claudette and released its lease.
+    /// tab started, from a machine that has since closed Deventry and released its lease.
     /// </summary>
     private UiTicker LibraryCheckTicker => field ??= new(_services.Time, _services.Dispatcher, LibraryCheckInterval, () => _ = CheckLibraryAsync());
 

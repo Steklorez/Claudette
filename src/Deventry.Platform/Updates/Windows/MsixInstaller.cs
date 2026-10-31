@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.Platform.Updates.Windows;
 
 /// <summary>
-/// Updates an MSIX-installed Claudette (DESIGN.md §2, "Updating Claudette") the way Microsoft documents for apps
+/// Updates an MSIX-installed Deventry (DESIGN.md §2, "Updating Deventry") the way Microsoft documents for apps
 /// published outside the Store: <c>RegisterApplicationRestart</c> with the restart's arguments, then
-/// <c>PackageManager.AddPackageAsync</c> with <c>ForceApplicationShutdown</c>. Windows closes Claudette, installs the
+/// <c>PackageManager.AddPackageAsync</c> with <c>ForceApplicationShutdown</c>. Windows closes Deventry, installs the
 /// new version and starts it again with those arguments.
 /// </summary>
 [SupportedOSPlatform("windows10.0.10240")]
@@ -33,7 +33,7 @@ public sealed class MsixInstaller(TimeProvider timeProvider, ILogger logger) : I
             }
             catch (Exception ex) when (ex is InvalidDataException or IOException or System.Xml.XmlException)
             {
-                throw new AppInstallException($"The download isn't a Claudette package: {ex.Message}", inner: ex);
+                throw new AppInstallException($"The download isn't a Deventry package: {ex.Message}", inner: ex);
             }
             var family = Deployment.CurrentFamilyName();
             package.CheckUpdates(family, version, RuntimeInformation.ProcessArchitecture);
@@ -62,7 +62,7 @@ public sealed class MsixInstaller(TimeProvider timeProvider, ILogger logger) : I
             }
             var manager = (IPackageManager)WinRt.ActivateInstance("Windows.Management.Deployment.PackageManager");
             var operation = manager.AddPackageAsync(uri, 0, Deployment.ForceApplicationShutdown);
-            // Normally Windows closes Claudette during this wait.
+            // Normally Windows closes Deventry during this wait.
             while ((status = operation.GetStatus()) == Deployment.AsyncStarted)
             {
                 await Task.Delay(PollInterval, timeProvider, cancellationToken);
@@ -84,11 +84,11 @@ public sealed class MsixInstaller(TimeProvider timeProvider, ILogger logger) : I
             throw new AppInstallException(status == Deployment.AsyncCanceled ? "The update was cancelled." : MsixPackage.DescribeError(error), canOpenPackage: true);
         }
 
-        // Installed without closing Claudette (no running files were in use): start the new version ourselves.
+        // Installed without closing Deventry (no running files were in use): start the new version ourselves.
         Deployment.UnregisterApplicationRestart();
         if (Deployment.CurrentFamilyName() is not { } family)
         {
-            throw new AppInstallException("The update is installed. Open Claudette again to use it.");
+            throw new AppInstallException("The update is installed. Open Deventry again to use it.");
         }
         try
         {

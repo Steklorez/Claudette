@@ -18,7 +18,7 @@ public sealed record SetupInstall(string Command, Func<Action<string>, Task<Clau
 /// </param>
 /// <param name="recheck">Checks the same <c>claude</c> again after a successful update.</param>
 /// <param name="install">
-/// <b>Install Claude Code</b>, when it's missing (DESIGN.md §12, "Installing Claude Code"); after it works, Claudette looks
+/// <b>Install Claude Code</b>, when it's missing (DESIGN.md §12, "Installing Claude Code"); after it works, Deventry looks
 /// for it again. Null when it isn't offered.
 /// </param>
 /// <param name="demo"><b>Try the demo</b>, which needs no Claude Code (DESIGN.md §11, "Demo mode"); null when it isn't offered.</param>

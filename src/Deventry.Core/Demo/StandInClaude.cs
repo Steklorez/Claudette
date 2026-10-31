@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 namespace Deventry.Core.Demo;
 
 /// <summary>
-/// Claudette standing in for Claude Code in its demo (DESIGN.md §11, "Demo mode"): what <c>Program.Main</c> runs when
+/// Deventry standing in for Claude Code in its demo (DESIGN.md §11, "Demo mode"): what <c>Program.Main</c> runs when
 /// started with <see cref="Variable"/> set, which only the demo gives its <c>claude</c>. It answers as Claude Code would,
 /// and nothing else: <c>--version</c>, <c>auth status</c> (signed in to a Max plan), a stream-json session's control
 /// requests (the plan's usage from the demo's file in <c>CLAUDE_CONFIG_DIR</c>), and its messages, each with the next of
@@ -13,13 +13,13 @@ namespace Deventry.Core.Demo;
 /// </summary>
 public sealed class StandInClaude
 {
-    /// <summary>In the environment of the demo's <c>claude</c>: Claudette, started so, stands in for it.</summary>
+    /// <summary>In the environment of the demo's <c>claude</c>: Deventry, started so, stands in for it.</summary>
     public const string Variable = "DEVENTRY_STAND_IN_CLAUDE";
 
     /// <summary>The demo's plan usage, a <c>get_usage</c> answer, in <c>CLAUDE_CONFIG_DIR</c>.</summary>
     public const string UsageFile = "demo-usage.json";
 
-    /// <summary>The Claude Code it says it is: one Claudette supports.</summary>
+    /// <summary>The Claude Code it says it is: one Deventry supports.</summary>
     public const string Version = "2.1.284";
 
     public const string Email = "demo@example.com";
@@ -73,13 +73,13 @@ public sealed class StandInClaude
                 await _output.FlushAsync();
                 return 0;
             case ["auth", ..] or ["update", ..] or ["doctor", ..] or ["install", ..]:
-                await _output.WriteLineAsync("This is Claudette's demo: Claude Code isn't really here.");
+                await _output.WriteLineAsync("This is Deventry's demo: Claude Code isn't really here.");
                 await _output.FlushAsync();
                 return args[0] == "update" ? 0 : 1;
         }
         if (!args.Contains("stream-json"))
         {
-            await _output.WriteLineAsync("This is Claudette's demo: Claude Code isn't really here.");
+            await _output.WriteLineAsync("This is Deventry's demo: Claude Code isn't really here.");
             await _output.FlushAsync();
             return 2;
         }
@@ -151,7 +151,7 @@ public sealed class StandInClaude
                     break;
             }
         }
-        // Standard input closed: Claudette is done with it.
+        // Standard input closed: Deventry is done with it.
         await _turn.CancelAsync();
         _prompts.Clear();
         _promptSignal.Release();
@@ -191,7 +191,7 @@ public sealed class StandInClaude
             await _turn.CancelAsync();
         }
         await WriteAsync(answer is null
-            ? new JsonObject { ["type"] = "control_response", ["response"] = new JsonObject { ["subtype"] = "error", ["request_id"] = requestId, ["error"] = $"Not in Claudette's demo: {subtype}" } }
+            ? new JsonObject { ["type"] = "control_response", ["response"] = new JsonObject { ["subtype"] = "error", ["request_id"] = requestId, ["error"] = $"Not in Deventry's demo: {subtype}" } }
             : new JsonObject { ["type"] = "control_response", ["response"] = new JsonObject { ["subtype"] = "success", ["request_id"] = requestId, ["response"] = answer } });
     }
 
@@ -220,7 +220,7 @@ public sealed class StandInClaude
         return [];
     }
 
-    /// <summary>The demo's plan usage, as the demo wrote it; none without it, which Claudette takes as no plan limits.</summary>
+    /// <summary>The demo's plan usage, as the demo wrote it; none without it, which Deventry takes as no plan limits.</summary>
     private JsonObject? Usage()
     {
         if (_configDirectory is null)
@@ -282,9 +282,9 @@ public sealed class StandInClaude
     private async Task AnswerTurnAsync()
     {
         const string reply = """
-            This is **Claudette's demo**, and I'm a stand-in for Claude: I can't read your projects or run anything, and nothing you send leaves this computer.
+            This is **Deventry's demo**, and I'm a stand-in for Claude: I can't read your projects or run anything, and nothing you send leaves this computer.
 
-            Each message gets the next of a few example turns, so you can see how Claudette shows Claude's work: a reply like this one, one with thinking, one that works with files and asks your permission first, and one that asks you a question. Send another message to see the next.
+            Each message gets the next of a few example turns, so you can see how Deventry shows Claude's work: a reply like this one, one with thinking, one that works with files and asks your permission first, and one that asks you a question. Send another message to see the next.
             """;
         await ReplyAsync(reply);
     }
@@ -295,11 +295,11 @@ public sealed class StandInClaude
         await AssistantAsync(new JsonObject
         {
             ["type"] = "thinking",
-            ["thinking"] = "The demo's next turn shows thinking. Claudette folds it into a quiet row above the reply, which opens to show it. I'll follow it with a reply that has a list and a code block, as a real one would.",
+            ["thinking"] = "The demo's next turn shows thinking. Deventry folds it into a quiet row above the reply, which opens to show it. I'll follow it with a reply that has a list and a code block, as a real one would.",
             ["signature"] = "",
         });
         const string reply = """
-            Here's how a turn like this reads in Claudette:
+            Here's how a turn like this reads in Deventry:
 
             1. **Thinking** sits in a quiet row above the reply. Click it to open it.
             2. **The reply** is Markdown: lists, tables, links and code blocks, each block with **Copy**.
@@ -307,7 +307,7 @@ public sealed class StandInClaude
 
             ```csharp
             // Code blocks keep their language's colors.
-            var greeting = "Hello from Claudette's demo";
+            var greeting = "Hello from Deventry's demo";
             Console.WriteLine(greeting);
             ```
             """;
@@ -322,8 +322,8 @@ public sealed class StandInClaude
         await AssistantAsync(new JsonObject { ["type"] = "text", ["text"] = "I'll look at the README first, then write down what I found." });
         await AssistantAsync(new JsonObject { ["type"] = "tool_use", ["id"] = "toolu_demo_read", ["name"] = "Read", ["input"] = new JsonObject { ["file_path"] = readme } });
         await PauseAsync();
-        await ToolResultAsync("toolu_demo_read", "     1\t# A demo project\n     2\t\n     3\tMade up for Claudette's demo: there are no files here really.\n");
-        var content = "# Notes\n\nThe README says this project is made up for Claudette's demo.\n";
+        await ToolResultAsync("toolu_demo_read", "     1\t# A demo project\n     2\t\n     3\tMade up for Deventry's demo: there are no files here really.\n");
+        var content = "# Notes\n\nThe README says this project is made up for Deventry's demo.\n";
         var input = new JsonObject { ["file_path"] = notes, ["content"] = content };
         await AssistantAsync(new JsonObject { ["type"] = "tool_use", ["id"] = "toolu_demo_write", ["name"] = "Write", ["input"] = input.DeepClone() });
         var answer = await AskAsync(new JsonObject { ["subtype"] = "can_use_tool", ["tool_name"] = "Write", ["input"] = input, ["tool_use_id"] = "toolu_demo_write" });
@@ -343,7 +343,7 @@ public sealed class StandInClaude
         {
             ["questions"] = new JsonArray(new JsonObject
             {
-                ["question"] = "Which part of Claudette would you like to look at next?",
+                ["question"] = "Which part of Deventry would you like to look at next?",
                 ["header"] = "Next",
                 ["multiSelect"] = false,
                 ["options"] = new JsonArray(
@@ -355,7 +355,7 @@ public sealed class StandInClaude
         await AssistantAsync(new JsonObject { ["type"] = "tool_use", ["id"] = "toolu_demo_ask", ["name"] = "AskUserQuestion", ["input"] = input.DeepClone() });
         var answer = await AskAsync(new JsonObject { ["subtype"] = "can_use_tool", ["tool_name"] = "AskUserQuestion", ["input"] = input, ["tool_use_id"] = "toolu_demo_ask" });
         var choice = (answer["response"]?["updatedInput"]?["answers"] as JsonObject)?.Select(a => a.Value?.ToString()).FirstOrDefault(a => a is { Length: > 0 });
-        await ToolResultAsync("toolu_demo_ask", choice is null ? "The user didn't answer." : $"User has answered your questions: \"Which part of Claudette would you like to look at next?\"=\"{choice}\".", isError: choice is null);
+        await ToolResultAsync("toolu_demo_ask", choice is null ? "The user didn't answer." : $"User has answered your questions: \"Which part of Deventry would you like to look at next?\"=\"{choice}\".", isError: choice is null);
         await ReplyAsync(choice switch
         {
             "Usage" => "The usage header across the top shows your plan's session and weekly limits as you go, and how fast you're using them. Click it for the Usage window.",
@@ -436,7 +436,7 @@ public sealed class StandInClaude
         });
     }
 
-    /// <summary>A control request to Claudette, such as a permission: its answer.</summary>
+    /// <summary>A control request to Deventry, such as a permission: its answer.</summary>
     private async Task<JsonObject> AskAsync(JsonObject request)
     {
         var requestId = $"demo_{Interlocked.Increment(ref _requests)}";

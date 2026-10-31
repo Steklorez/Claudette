@@ -5,7 +5,7 @@ namespace Deventry.Core.Sessions;
 
 /// <summary>The two sign-in URLs from <c>claude_authenticate</c> (DESIGN.md §11, "Signing in").</summary>
 /// <param name="AutomaticUrl">Redirects back to a local port Claude Code listens on; sign-in finishes without copying anything.</param>
-/// <param name="ManualUrl">Redirects to a page that shows a code to paste into Claudette.</param>
+/// <param name="ManualUrl">Redirects to a page that shows a code to paste into Deventry.</param>
 public sealed record SignInUrls(string? AutomaticUrl, string? ManualUrl);
 
 /// <summary>
@@ -64,7 +64,7 @@ public sealed class UtilitySession : IAsyncDisposable
     public Task Completion => _session.Completion;
 
     /// <param name="protocolLogPath">Where to log its protocol traffic, or null (DESIGN.md §13, "Logging").</param>
-    /// <param name="environmentOverrides">Applied on top of its clean environment, as for every <c>claude</c> Claudette starts.</param>
+    /// <param name="environmentOverrides">Applied on top of its clean environment, as for every <c>claude</c> Deventry starts.</param>
     public static async Task<UtilitySession> StartAsync(IClaudeSessionFactory factory, string workingDirectory, CancellationToken cancellationToken = default, string? protocolLogPath = null,
         IReadOnlyDictionary<string, string?>? environmentOverrides = null)
     {

@@ -10,7 +10,7 @@ namespace Deventry.Core.Diffs;
 /// sends a file's whole <c>originalFile</c> live, but writes it to the transcript as <c>null</c> when it's over
 /// <see cref="TranscriptLimit"/> characters. So the first change's <c>originalFile</c> is saved here, named by its tool
 /// call's id, and a restored tab, or the session opened again from History, finds it again. A subagent's first change
-/// to a file comes with no <c>originalFile</c> at all, so what Claudette's hook read is kept here too, whatever its
+/// to a file comes with no <c>originalFile</c> at all, so what Deventry's hook read is kept here too, whatever its
 /// size, with a marker when the file wasn't there (DESIGN.md §8, "Subagents' changes").
 /// </summary>
 public sealed partial class BeforeContentStore(string directory, TimeProvider timeProvider)
@@ -87,7 +87,7 @@ public sealed partial class BeforeContentStore(string directory, TimeProvider ti
     }
 
     /// <summary>
-    /// Keeps the line endings the file had before the change <paramref name="toolUseId"/>, as Claudette's hook read them:
+    /// Keeps the line endings the file had before the change <paramref name="toolUseId"/>, as Deventry's hook read them:
     /// its <c>originalFile</c> has <c>\n</c> for a file with Windows ones (DESIGN.md §8, "What the lines don't show").
     /// </summary>
     public void SaveLineEndings(string toolUseId, LineEndingKind lineEndings)

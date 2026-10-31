@@ -12,7 +12,7 @@ public interface IClaudeSessionFactory
     Task<ClaudeSession> StartAsync(ClaudeLaunchOptions options, CancellationToken cancellationToken = default);
 }
 
-/// <param name="environment">The user environment each <c>claude</c> starts from (DESIGN.md §13). Null: Claudette's own.</param>
+/// <param name="environment">The user environment each <c>claude</c> starts from (DESIGN.md §13). Null: Deventry's own.</param>
 public sealed class ClaudeSessionFactory(
     string claudePath,
     IProcessLauncher launcher,

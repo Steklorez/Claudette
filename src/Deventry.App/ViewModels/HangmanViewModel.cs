@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Hangman against Claudette (DESIGN.md §18, "Games with Claudette"): she thinks of a word, mostly from programming,
+/// Hangman against Joulene (DESIGN.md §18, "Games with Joulene"): she thinks of a word, mostly from programming,
 /// and the user guesses its letters. Six misses draw the figure on the gallows, and lose.
 /// </summary>
 public sealed partial class HangmanViewModel : GameViewModel
@@ -70,7 +70,7 @@ public sealed partial class HangmanViewModel : GameViewModel
         Hint = null;
         PatternName = null;
         RefreshLetters();
-        HerTurn(ThinkOfWord, "Claudette is thinking of a word…");
+        HerTurn(ThinkOfWord, "Joulene is thinking of a word…");
     }
 
     private void ThinkOfWord()
@@ -102,7 +102,7 @@ public sealed partial class HangmanViewModel : GameViewModel
         {
             Pattern = Spaced(round.Word);
             PatternName = $"{round.Word.Length} letters: {string.Join(", ", round.Word.ToCharArray())}";
-            Finish(GameOutcome.Lost, $"Claudette wins! It was {round.Word}.");
+            Finish(GameOutcome.Lost, $"Joulene wins! It was {round.Word}.");
             return;
         }
         var left = round.MissesLeft == 1 ? "One miss left" : $"{round.MissesLeft} misses left";

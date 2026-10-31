@@ -8,7 +8,7 @@ public sealed class UpdateDownloadException(string message, Exception? inner = n
 
 /// <summary>
 /// Downloads a release's package into <c>updates/&lt;version&gt;/</c> in the data folder (DESIGN.md §2, "Updating
-/// Claudette"). The file is written under a temporary name and only renamed once its size and SHA-256 digest match what
+/// Deventry"). The file is written under a temporary name and only renamed once its size and SHA-256 digest match what
 /// GitHub reported, so a finished file is always a whole, verified one. A package GitHub reports no digest for isn't
 /// downloaded at all. A package already downloaded isn't fetched again.
 /// </summary>
@@ -17,7 +17,7 @@ public sealed class UpdateDownloader(HttpClient http, string directory, string u
     private const int BufferSize = 81920;
 
     /// <summary>Why a package without a digest isn't downloaded.</summary>
-    public const string NoChecksumMessage = "GitHub published no checksum for this release's package, so Claudette can't check it. Download it from the release page instead.";
+    public const string NoChecksumMessage = "GitHub published no checksum for this release's package, so Deventry can't check it. Download it from the release page instead.";
 
     /// <summary>Downloads <paramref name="asset"/>, reporting progress from 0 to 1. Returns the file's path.</summary>
     public async Task<string> DownloadAsync(ReleaseAsset asset, AppVersion version, IProgress<double>? progress = null, CancellationToken cancellationToken = default)

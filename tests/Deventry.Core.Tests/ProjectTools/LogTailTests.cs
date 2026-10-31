@@ -10,7 +10,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// </summary>
 public sealed class LogTailTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-logtail");
+    private readonly TempFolder _temp = new("deventry-logtail");
 
     public void Dispose() => _temp.Dispose();
 

@@ -43,7 +43,7 @@ jobs:
           global-json-file: global.json
           cache: true
           cache-dependency-path: '**/packages.lock.json'
-      # The version Claudette was last tested with (compat/surface.yaml), so a new Claude Code release can't turn a pull
+      # The version Deventry was last tested with (compat/surface.yaml), so a new Claude Code release can't turn a pull
       # request red; the daily compatibility check tries each new release (DESIGN.md §16). Tried three times, so one
       # failed download doesn't fail the run.
       - name: Install Claude Code

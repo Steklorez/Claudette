@@ -88,7 +88,7 @@ public static class RenameEntry
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return $"Claudette couldn't rename it. {ex.Message}";
+            return $"Deventry couldn't rename it. {ex.Message}";
         }
     }
 

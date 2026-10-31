@@ -8,7 +8,7 @@ namespace Deventry.Platform.LoginItems.Windows;
 
 /// <summary>
 /// The MSIX's startup task, <c>windows.startupTask</c> in packaging/windows/Package.appxmanifest (DESIGN.md §9,
-/// "Starting at login"), through <c>Windows.ApplicationModel.StartupTask</c>. Only a Claudette running from the package
+/// "Starting at login"), through <c>Windows.ApplicationModel.StartupTask</c>. Only a Deventry running from the package
 /// can use it. Call it on one thread: the WinRT objects are polled between awaits, like the MSIX update's.
 /// </summary>
 [SupportedOSPlatform("windows10.0.16299")]

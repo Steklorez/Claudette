@@ -38,7 +38,7 @@ internal static class ProjectToolFixtures
         return settings;
     }
 
-    /// <summary>A <c>.uproject</c> written the way people edit them: a comment, a trailing comma, a field Claudette doesn't know.</summary>
+    /// <summary>A <c>.uproject</c> written the way people edit them: a comment, a trailing comma, a field Deventry doesn't know.</summary>
     public static string UProject(TempFolder temp, string relativePath, string? association = "5.4", bool code = true)
     {
         var name = Path.GetFileNameWithoutExtension(relativePath);

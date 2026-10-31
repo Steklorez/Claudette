@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
 Takes the user guide's screenshots (Windows): the demo from deventry-demo in the Standard style, dark then light, each
-picture cropped to the part of Claudette the page describes.
+picture cropped to the part of Deventry the page describes.
 
 .DESCRIPTION
 GUIDE.md ("Pictures") says what the pictures are. Each shot is a name (<chapter>/<picture>), the steps to it and the part of the window
 to crop to, from the control's UI Automation bounds with a margin; it's saved as <Out>\<chapter>\<picture>-<theme>.png.
-For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so no account and no tokens) four times:
+For each theme, it starts Deventry on the demo (fake-claude as Claude Code, so no account and no tokens) four times:
 - signed out (FAKE_CLAUDE_LOGGED_IN=0), for the sign-in screen;
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
@@ -16,12 +16,12 @@ For each theme, it starts Claudette on the demo (fake-claude as Claude Code, so 
   for its log under the tab and in the main area;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
   a permission waiting (ASK_PERMISSION) and a process for the process monitor (SPAWN).
-Claudette is closed by its window, as a user would, each time.
+Deventry is closed by its window, as a user would, each time.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
-included (DESIGN.md §9, "Taking screenshots without the focus"). Claudette runs with DEVENTRY_UNFOCUSED=1, its windows
+included (DESIGN.md §9, "Taking screenshots without the focus"). Deventry runs with DEVENTRY_UNFOCUSED=1, its windows
 behind yours and never taking the focus, and is driven through its command channel (DEVENTRY_AUTOMATION_PIPE): its
-controls are found through UI Automation, and clicked, typed in and so on by Claudette itself. Captures go through
+controls are found through UI Automation, and clicked, typed in and so on by Deventry itself. Captures go through
 PrintWindow, which doesn't need the windows in view. Screenshots.psm1 has the helpers.
 
 .PARAMETER Projects
@@ -46,7 +46,7 @@ param(
     [string] $Work = (Join-Path ([IO.Path]::GetTempPath()) 'deventry-demo'),
     [string[]] $Only = @(),
     [string[]] $Themes = @('dark', 'light'),
-    # How long Claudette gets to start and restore its tabs before the first click.
+    # How long Deventry gets to start and restore its tabs before the first click.
     [int] $SettleSeconds = 10
 )
 
@@ -56,7 +56,7 @@ New-Item -ItemType Directory -Force $Out | Out-Null
 $Out = (Resolve-Path $Out).Path
 
 Import-Module (Join-Path $PSScriptRoot 'Screenshots.psm1') -Force -DisableNameChecking
-$build = Build-Claudette $repo
+$build = Build-Deventry $repo
 $failed = @()
 
 # Whether any of the shots is one to take.
@@ -68,17 +68,17 @@ function Test-Wanted([string[]] $names) {
     $false
 }
 
-# Starts Claudette on the demo afresh in the theme, runs $steps with $window and $claudette set, and closes it.
-function Use-Claudette([hashtable] $environment, [scriptblock] $steps) {
+# Starts Deventry on the demo afresh in the theme, runs $steps with $window and $deventry set, and closes it.
+function Use-Deventry([hashtable] $environment, [scriptblock] $steps) {
     New-DemoContent $build.Demo $Work $Projects 'standard' $theme
-    $script:claudette = Start-Claudette $build.App $Work $environment
+    $script:deventry = Start-Deventry $build.App $Work $environment
     try {
-        $script:window = $claudette.MainWindowHandle
+        $script:window = $deventry.MainWindowHandle
         Start-Sleep -Seconds $SettleSeconds
         & $steps
     }
     finally {
-        Stop-Claudette $claudette
+        Stop-Deventry $deventry
     }
 }
 
@@ -112,7 +112,7 @@ function Show-Tabs {
 # Opens Settings, which is a window of its own, from its button in the header, and returns it.
 function Open-Settings {
     Invoke-ByText $window 'Settings'
-    $settings = Get-OtherWindow $claudette $window 'the Settings window'
+    $settings = Get-OtherWindow $deventry $window 'the Settings window'
     Start-Sleep -Seconds 2
     $settings
 }
@@ -154,7 +154,7 @@ foreach ($theme in $Themes) {
 
     # Signed out.
     if (Test-Wanted 'getting-started/sign-in') {
-        Use-Claudette @{ FAKE_CLAUDE_LOGGED_IN = '0' } {
+        Use-Deventry @{ FAKE_CLAUDE_LOGGED_IN = '0' } {
             Shot 'getting-started/sign-in' {
                 param($path)
                 Wait-Until { Find-ByText $window 'Sign in' -Optional } 'the sign-in screen' 30
@@ -169,7 +169,7 @@ foreach ($theme in $Themes) {
         'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
         'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts',
         'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
-        Use-Claudette @{} {
+        Use-Deventry @{} {
             Show-Tabs
 
             # The picker, which has the older projects as recent folders.
@@ -205,7 +205,7 @@ foreach ($theme in $Themes) {
                 param($path)
                 Invoke-ByText $window 'Grappling hook'
                 Start-Sleep -Seconds 2
-                # Room above for Claudette, who stands on its edge.
+                # Room above for Deventry, who stands on its edge.
                 Save-Element $window $path (Find-ById $window 'ComposerPanel') @(6, 46, 6, 6)
             }
 
@@ -233,7 +233,7 @@ foreach ($theme in $Themes) {
             Shot 'usage/usage-window' {
                 param($path)
                 Invoke-ByText $window 'Usage details'
-                $usage = Get-OtherWindow $claudette $window 'the Usage window'
+                $usage = Get-OtherWindow $deventry $window 'the Usage window'
                 Start-Sleep -Seconds 3
                 Save-Window $usage $path
                 Close-Window $usage
@@ -288,13 +288,13 @@ foreach ($theme in $Themes) {
             }
 
             # About: the version, its links and license, and the trademarks.
-            # About Claudette, a window of its own, from the header's menu.
+            # About Deventry, a window of its own, from the header's menu.
             Shot 'settings/about' {
                 param($path)
-                $menu = Open-Menu $claudette $window (Find-ByText $window 'Menu') 'About Claudette'
+                $menu = Open-Menu $deventry $window (Find-ByText $window 'Menu') 'About Deventry'
                 Start-Sleep -Seconds 1
-                Send-Click (Find-ByText $menu 'About Claudette')
-                $about = Get-OtherWindow $claudette $window 'the About window'
+                Send-Click (Find-ByText $menu 'About Deventry')
+                $about = Get-OtherWindow $deventry $window 'the About window'
                 Start-Sleep -Seconds 2
                 Save-Window $about $path
                 Close-Window $about
@@ -317,7 +317,7 @@ foreach ($theme in $Themes) {
                 Invoke-ByText $window 'Grappling hook'
                 Start-Sleep -Seconds 2
                 Send-RightClick (Find-ByText $window 'Grappling hook')
-                $menu = Get-OtherWindow $claudette $window 'the tab menu'
+                $menu = Get-OtherWindow $deventry $window 'the tab menu'
                 Start-Sleep -Seconds 1
                 Send-Click (Find-ByText $menu "Tab settings$([char] 0x2026)")
                 Wait-Until { Find-ByPrefix $window 'Settings for ' } 'Tab settings' 20
@@ -334,14 +334,14 @@ foreach ($theme in $Themes) {
                 $row = Find-ByText $window 'Grappling hook'
                 Show-Tip $row
                 try {
-                    Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -ne [IntPtr]::Zero } "the tab's info card" 20
+                    Wait-Until { [WindowShot]::OtherWindow($deventry.Id, $window) -ne [IntPtr]::Zero } "the tab's info card" 20
                     Start-Sleep -Seconds 1
-                    Save-Window ([WindowShot]::OtherWindow($claudette.Id, $window)) $path
+                    Save-Window ([WindowShot]::OtherWindow($deventry.Id, $window)) $path
                 }
                 finally {
                     Hide-Tip $row
                 }
-                Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $window) -eq [IntPtr]::Zero } 'the info card to go' 20
+                Wait-Until { [WindowShot]::OtherWindow($deventry.Id, $window) -eq [IntPtr]::Zero } 'the info card to go' 20
             }
 
             # Its shortcut opens it, and closes it again.
@@ -379,7 +379,7 @@ foreach ($theme in $Themes) {
                 Wait-Until { Find-ById $window 'FindBox' } 'the file finder' 20
                 Set-ElementText (Find-ById $window 'FindBox') 'StarfallCharacter.cpp'
                 Start-Sleep -Seconds 2
-                # A click on what it found opens it, as Enter does; a posted Enter can miss the box once Claudette has
+                # A click on what it found opens it, as Enter does; a posted Enter can miss the box once Deventry has
                 # come to the front.
                 Send-Click (Find-ByText $window 'StarfallCharacter.cpp, in Source\Starfall\Player')
                 Wait-Until { Find-ByText $window 'Close the file' -Optional } 'the file to open' 20
@@ -408,9 +408,9 @@ foreach ($theme in $Themes) {
     }
 
     # The Unreal editor open on starfall, for its log under the tab: a copy of deventry-demo named UnrealEditor stands in
-    # for it, writing the project's log, so Claudette sees an editor with the project on its command line.
+    # for it, writing the project's log, so Deventry sees an editor with the project on its command line.
     if (Test-Wanted 'project-tools/editor-log') {
-        Use-Claudette @{} {
+        Use-Deventry @{} {
             $standIn = Join-Path (Split-Path $build.Demo) 'UnrealEditor.exe'
             Copy-Item $build.Demo $standIn -Force
             $editor = Start-Process $standIn -ArgumentList '--stand-in-editor', ('"' + (Join-Path $Projects 'starfall\Starfall.uproject') + '"') -WindowStyle Hidden -PassThru
@@ -435,10 +435,10 @@ foreach ($theme in $Themes) {
 
     # Sending prompts, which stay in the conversations: each in its own tab.
     if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-card', 'tabs/processes') {
-        Use-Claudette @{} {
+        Use-Deventry @{} {
             Show-Tabs
 
-            # First, as Claudette says "Another tab needs you" over the composer once one does, which a limit shows beside.
+            # First, as Deventry says "Another tab needs you" over the composer once one does, which a limit shows beside.
             Shot 'usage/limit' {
                 param($path)
                 Invoke-ByText $window 'UI on the Input System'

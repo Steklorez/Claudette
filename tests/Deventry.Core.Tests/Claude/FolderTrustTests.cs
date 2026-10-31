@@ -6,7 +6,7 @@ namespace Deventry.Core.Tests.Claude;
 /// <summary>What a folder's own configuration runs in a <c>claude -p</c> session, and which folders are trusted (DESIGN.md §7, "Folder trust").</summary>
 public sealed class FolderTrustTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-trust");
+    private readonly TempFolder _root = new("deventry-trust");
 
     public void Dispose() => _root.Dispose();
 

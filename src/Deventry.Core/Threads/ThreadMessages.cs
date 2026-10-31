@@ -19,7 +19,7 @@ public enum SubThreadOutcome
 public sealed record SubThreadReport(string Name, SubThreadOutcome Outcome, string? Reply, string? Error = null);
 
 /// <summary>
-/// What Claudette tells Claude about threads (DESIGN.md §18, "Threads"): the note on a thread's next message, the
+/// What Deventry tells Claude about threads (DESIGN.md §18, "Threads"): the note on a thread's next message, the
 /// answers its <c>SendMessage</c> calls get, the message a sub-thread receives and the report that comes back.
 /// </summary>
 public static class ThreadMessages
@@ -35,23 +35,23 @@ public static class ThreadMessages
     {
         if (subThreads.Count == 0)
         {
-            return "[Claudette] This tab is now a thread, which can hand work to Claude Code sessions in other tabs: its sub-threads. "
+            return "[Deventry] This tab is now a thread, which can hand work to Claude Code sessions in other tabs: its sub-threads. "
                 + "It has none yet; the user assigns them.";
         }
         var names = string.Join(", ", subThreads.Select(n => $"\"{n}\""));
-        return $"[Claudette] This tab is a thread. Its sub-threads are other tabs, each a Claude Code session of its own: {names}. "
-            + "To give one work, call SendMessage with its name as `to`. Claudette delivers it, as that tab's next turn if it's busy. "
-            + "When every sub-thread you messaged has finished, Claudette sends you their results in one message, "
+        return $"[Deventry] This tab is a thread. Its sub-threads are other tabs, each a Claude Code session of its own: {names}. "
+            + "To give one work, call SendMessage with its name as `to`. Deventry delivers it, as that tab's next turn if it's busy. "
+            + "When every sub-thread you messaged has finished, Deventry sends you their results in one message, "
             + "so don't wait, poll or ask to be told: end your turn once you've handed out the work. "
             + "The user can see and steer each sub-thread, and answers its permission prompts and questions.";
     }
 
     /// <summary>The note on a former thread's next message.</summary>
     public const string NoLongerAThread =
-        "[Claudette] This tab is no longer a thread: it has no sub-threads, and SendMessage reaches other sessions as usual.";
+        "[Deventry] This tab is no longer a thread: it has no sub-threads, and SendMessage reaches other sessions as usual.";
 
     /// <summary>
-    /// The answer to a <c>SendMessage</c> Claudette delivered itself. Claude Code shows the hook's answer as a refusal,
+    /// The answer to a <c>SendMessage</c> Deventry delivered itself. Claude Code shows the hook's answer as a refusal,
     /// so it says plainly that the message went.
     /// </summary>
     /// <param name="waits">The sub-thread is busy, so the message waits for its turn to end.</param>
@@ -60,11 +60,11 @@ public static class ThreadMessages
             ? $"{DeliveredStart} \"{name}\". It's busy, so the message waits there and starts its next turn once the current one ends."
             : $"{DeliveredStart} \"{name}\", where it starts the next turn.")
         + " It went, although this reads as an error: don't send it again. When every sub-thread you've messaged has finished, "
-        + "Claudette sends you their results in one message, so there's no need to wait, poll or ask to be told.";
+        + "Deventry sends you their results in one message, so there's no need to wait, poll or ask to be told.";
 
     /// <summary>The answer to a call that only asked to be told when a sub-thread is idle.</summary>
     public static string NoSubscriptionNeeded(string name) =>
-        $"Nothing was sent. \"{name}\" is one of this thread's sub-threads: Claudette sends you its result when it finishes the work you gave it, "
+        $"Nothing was sent. \"{name}\" is one of this thread's sub-threads: Deventry sends you its result when it finishes the work you gave it, "
         + "so there's no need to ask to be told.";
 
     /// <summary>The answer when the user didn't let the message go.</summary>
@@ -79,7 +79,7 @@ public static class ThreadMessages
     public static string Gone(string name) => $"Not sent: \"{name}\" is no longer one of this thread's sub-threads.";
 
     /// <summary>
-    /// Whether a <c>SendMessage</c> result is Claudette's answer for a message that went, or that didn't need to: the
+    /// Whether a <c>SendMessage</c> result is Deventry's answer for a message that went, or that didn't need to: the
     /// thread's tool row shows it as done, not failed.
     /// </summary>
     public static bool IsDeliveryAnswer(string? text) =>
@@ -92,15 +92,15 @@ public static class ThreadMessages
 
     /// <summary>What a sub-thread receives: the thread's message, saying who it's from and where the answer goes.</summary>
     public static string ForSubThread(string thread, string message) =>
-        $"Message from the thread \"{thread}\", the tab coordinating this work. When you finish, Claudette gives it your final reply, "
+        $"Message from the thread \"{thread}\", the tab coordinating this work. When you finish, Deventry gives it your final reply, "
         + $"so answer here rather than messaging it.\n\n{message}";
 
     /// <summary>The report a thread gets once every sub-thread it messaged has finished: their outcomes and last replies.</summary>
     public static string Report(IReadOnlyList<SubThreadReport> reports)
     {
         var text = new StringBuilder(reports.Count == 1
-            ? "[Claudette] Your sub-thread has finished the work you sent it."
-            : "[Claudette] Your sub-threads have finished the work you sent them.");
+            ? "[Deventry] Your sub-thread has finished the work you sent it."
+            : "[Deventry] Your sub-threads have finished the work you sent them.");
         foreach (var report in reports)
         {
             text.Append("\n\n## ").Append(report.Name).Append("\n\n");

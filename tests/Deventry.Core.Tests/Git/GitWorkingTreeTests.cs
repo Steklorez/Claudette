@@ -11,7 +11,7 @@ public sealed class GitWorkingTreeTests : IDisposable
 {
     private static readonly bool GitInstalled = FileProbe.Instance.FindOnPath(OperatingSystem.IsWindows() ? "git.exe" : "git") is not null;
 
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-git-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-git-{Guid.NewGuid():N}");
     private readonly string _repo;
     private readonly IsolatedGitLauncher _launcher;
     private readonly GitWorkingTree _git;
@@ -39,7 +39,7 @@ public sealed class GitWorkingTreeTests : IDisposable
     [Fact]
     public async Task Without_git_everything_is_empty()
     {
-        var git = new GitWorkingTree(new ProcessLauncher(), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var git = new GitWorkingTree(new ProcessLauncher(), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
         Assert.Null(await git.GetRepositoryRootAsync(_repo, Token));
         Assert.Empty(await git.GetChangesAsync(_repo, Token));
@@ -317,7 +317,7 @@ public sealed class GitWorkingTreeTests : IDisposable
         Assert.Equal("That's a folder. Choose the git program in it.", (await git.CheckAsync(Token)).Problem);
 
         // Nothing set and no git on PATH: say so, rather than fail later.
-        var missing = new GitWorkingTree(launcher, TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}");
+        var missing = new GitWorkingTree(launcher, TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
         Assert.Equal(new GitCheck(null, null, $"No {missing.Executable} was found on your PATH."), await missing.CheckAsync(Token));
 
         launcher.StartFailure = new System.ComponentModel.Win32Exception("not a program");
@@ -412,7 +412,7 @@ public sealed class GitWorkingTreeTests : IDisposable
     private async Task InitAsync()
     {
         await GitAsync("init", "-q");
-        await GitAsync("config", "user.name", "Claudette Tests");
+        await GitAsync("config", "user.name", "Deventry Tests");
         await GitAsync("config", "user.email", "tests@example.invalid");
         await GitAsync("config", "commit.gpgsign", "false");
         await GitAsync("config", "core.autocrlf", "false");

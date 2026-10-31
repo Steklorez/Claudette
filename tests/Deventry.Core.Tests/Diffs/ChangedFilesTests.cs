@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Diffs;
 
 public sealed class ChangedFilesTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-changed-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-changed-{Guid.NewGuid():N}");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
     private readonly ChangedFiles _files;
 
@@ -340,7 +340,7 @@ public sealed class ChangedFilesTests : IDisposable
     [Fact]
     public void Display_paths_are_relative_inside_the_folder_and_full_outside_it()
     {
-        var outside = Path.Combine(Path.GetTempPath(), $"claudette-outside-{Guid.NewGuid():N}", "x.cs");
+        var outside = Path.Combine(Path.GetTempPath(), $"deventry-outside-{Guid.NewGuid():N}", "x.cs");
         Edit("t1", PathOf("auth.cs"), "a");
         Edit("t2", outside, "b");
 

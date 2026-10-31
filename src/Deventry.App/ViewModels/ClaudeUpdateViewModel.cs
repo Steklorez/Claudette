@@ -65,7 +65,7 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     public partial bool IsUpdateScheduled { get; private set; }
 
-    /// <summary>A command to run by hand (apt, dnf, apk, or a package manager Claudette couldn't find).</summary>
+    /// <summary>A command to run by hand (apt, dnf, apk, or a package manager Deventry couldn't find).</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasManualCommand))]
     public partial string? ManualCommand { get; private set; }
@@ -129,14 +129,14 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
             ReadyVersion = available;
             IsReadyInstalled = false;
             DetailText = $"Claude Code {available} is available from {plan?.Method ?? "your package manager"}. You have {installed}."
-                + (installed < ClaudeLocator.LastTestedVersion ? $" Claudette was last tested with {ClaudeLocator.LastTestedVersion}." : "");
+                + (installed < ClaudeLocator.LastTestedVersion ? $" Deventry was last tested with {ClaudeLocator.LastTestedVersion}." : "");
         }
         else if (oldest is not null && installed > oldest)
         {
             ReadyVersion = installed;
             IsReadyInstalled = true;
             DetailText = $"Claude Code {installed} is installed. New tabs use it; open tabs keep running {oldest} until you close them. "
-                + "To move a tab to the new version, close it and open a new one, or reopen its session from History. Pinned tabs pick it up the next time Claudette starts.";
+                + "To move a tab to the new version, close it and open a new one, or reopen its session from History. Pinned tabs pick it up the next time Deventry starts.";
         }
         else
         {
@@ -153,7 +153,7 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
         IsUpdateScheduled = _updates.IsUpdateScheduled;
         ManualCommand = plan is { Kind: ClaudeUpdateKind.Manual } ? plan.CommandText : null;
         Note = CanUpdateOnNextLaunch
-            ? "WinGet can't replace Claude Code while a tab is running it. Update on next launch updates it the next time Claudette starts, before any tab starts."
+            ? "WinGet can't replace Claude Code while a tab is running it. Update on next launch updates it the next time Deventry starts, before any tab starts."
             : plan?.Note;
 
         var doctor = check?.Doctor;
@@ -190,7 +190,7 @@ public sealed partial class ClaudeUpdateViewModel : ViewModelBase, IDisposable
             _services.SaveState();
             _services.Notifications.Notify(NotificationKind.UpdateReady, BadgeText, IsReadyInstalled
                 ? "New tabs use it. Open tabs keep their version until you close them."
-                : $"Update it from Claudette: {Plan?.Method ?? "your package manager"} has it.");
+                : $"Update it from Deventry: {Plan?.Method ?? "your package manager"} has it.");
         }
     }
 

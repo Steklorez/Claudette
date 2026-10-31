@@ -9,7 +9,7 @@ namespace Deventry.Core.Installation;
 
 public enum ClaudeUpdateKind
 {
-    /// <summary>Updates are turned off, or Claudette doesn't know how this installation updates.</summary>
+    /// <summary>Updates are turned off, or Deventry doesn't know how this installation updates.</summary>
     None,
     /// <summary>Native and npm installs: <c>claude update</c>. They also update themselves in the background.</summary>
     SelfUpdate,
@@ -22,11 +22,11 @@ public enum ClaudeUpdateKind
 }
 
 /// <summary>
-/// How to update this Claude Code installation (DESIGN.md §12, the install method table): the command Claudette runs for
+/// How to update this Claude Code installation (DESIGN.md §12, the install method table): the command Deventry runs for
 /// <b>Update now</b>, or the one it shows the user.
 /// </summary>
 /// <param name="Method">The install method in words, for Settings and the update dialog.</param>
-/// <param name="Command">What <b>Update now</b> runs, or null when Claudette doesn't run anything.</param>
+/// <param name="Command">What <b>Update now</b> runs, or null when Deventry doesn't run anything.</param>
 /// <param name="ManualCommand">A command to show instead, for installs that need admin rights.</param>
 /// <param name="Check">
 /// Asks the package manager whether a newer version is available (Homebrew and WinGet only; native installs update
@@ -48,7 +48,7 @@ public sealed partial record ClaudeUpdatePlan(
     public bool CanRun => Command is not null;
 
     /// <summary>
-    /// Windows locks a running executable, so a WinGet upgrade fails while any <c>claude</c> is running; Claudette then
+    /// Windows locks a running executable, so a WinGet upgrade fails while any <c>claude</c> is running; Deventry then
     /// offers <b>Update on next launch</b> (DESIGN.md §12).
     /// </summary>
     public bool NeedsClaudeStopped => Kind == ClaudeUpdateKind.WinGet;

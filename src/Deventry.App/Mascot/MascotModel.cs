@@ -1,6 +1,6 @@
 namespace Deventry.App.Mascot;
 
-/// <summary>What the tab she stands on is doing, which she reacts to (DESIGN.md §5, "Claudette on the composer").</summary>
+/// <summary>What the tab she stands on is doing, which she reacts to (DESIGN.md §5, "Joulene on the composer").</summary>
 public enum MascotMood
 {
     Idle,

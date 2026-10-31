@@ -104,7 +104,7 @@ public static class NewEntry
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return $"Claudette couldn't make it. {ex.Message}";
+            return $"Deventry couldn't make it. {ex.Message}";
         }
     }
 }

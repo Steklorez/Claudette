@@ -40,7 +40,7 @@
           <ToggleButton Content="With later changes" IsChecked="{Binding ShowLaterChanges}" IsVisible="{Binding HasLaterChanges}"
                         ToolTip.Tip="The file has changed since this session's last change to it. Show it as it is now, with those changes too." />
           <Button Content="Open in diff tool" Command="{Binding OpenInDiffToolCommand}" IsVisible="{Binding CanOpenInDiffTool}" />
-          <Button Content="Open" Command="{Binding OpenInEditorCommand}" ToolTip.Tip="As Settings → Files and diffs → Open in the diff window says: the file in Claudette's editor or the OS's app, or the changes in your diff tool" />
+          <Button Content="Open" Command="{Binding OpenInEditorCommand}" ToolTip.Tip="As Settings → Files and diffs → Open in the diff window says: the file in Deventry's editor or the OS's app, or the changes in your diff tool" />
           <!-- DESIGN.md §8, "Reverting": asks first, in place -->
           <Button Content="Revert file" Command="{Binding RevertConfirmation.AskCommand}" ToolTip.Tip="{Binding RevertFileTip}">
             <Button.IsVisible>

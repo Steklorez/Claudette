@@ -11,7 +11,7 @@
     <c:SettingsSection Key="tools">
       <c:SettingRow Key="project.tools" Title="" IsStacked="True">
         <StackPanel Spacing="4" DataContext="{Binding Project}" x:DataType="vm:ProjectSettingsViewModel">
-          <TextBlock Text="No project Claudette knows in this folder." TextWrapping="Wrap" IsVisible="{Binding !HasToolsProject}" />
+          <TextBlock Text="No project Deventry knows in this folder." TextWrapping="Wrap" IsVisible="{Binding !HasToolsProject}" />
           <StackPanel IsVisible="{Binding HasToolsProject}">
             <c:SettingRow Title="{Binding ToolsTitle}" Description="{Binding ToolsKeyText}" Padding="8,4" />
             <c:SettingRow Title="Project in this folder" Padding="8,8" IsVisible="{Binding HasSeveralProjects}">
@@ -23,7 +23,7 @@
             <c:SettingRow Title="{Binding ToolsFixName}" Description="{Binding ToolsFixSource}" Padding="8,8" IsVisible="{Binding HasToolsFix}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button Content="Choose…" Command="{Binding ChooseToolsFixCommand}" ToolTip.Tip="{Binding ToolsFixTitle}" />
-                <Button Content="Clear" Command="{Binding ClearToolsFixCommand}" ToolTip.Tip="Forget the choice, so Claudette looks for it again" />
+                <Button Content="Clear" Command="{Binding ClearToolsFixCommand}" ToolTip.Tip="Forget the choice, so Deventry looks for it again" />
               </StackPanel>
               <c:SettingRow.Details>
                 <StackPanel Spacing="4">

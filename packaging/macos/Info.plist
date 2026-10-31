@@ -4,9 +4,9 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key>
-  <string>Claudette</string>
+  <string>Deventry</string>
   <key>CFBundleDisplayName</key>
-  <string>Claudette</string>
+  <string>Deventry</string>
   <!-- User Notifications need a bundle identifier (DESIGN.md §10). -->
   <key>CFBundleIdentifier</key>
   <string>com.dotbunny.claudette</string>
@@ -29,17 +29,17 @@
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
   <!--
-    Claude Code runs as Claudette's child, so macOS asks about Claudette when it reads a project in one of these places.
+    Claude Code runs as Deventry's child, so macOS asks about Deventry when it reads a project in one of these places.
   -->
   <key>NSDocumentsFolderUsageDescription</key>
-  <string>Claude Code, running in Claudette, reads and edits the projects you open.</string>
+  <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
   <key>NSDesktopFolderUsageDescription</key>
-  <string>Claude Code, running in Claudette, reads and edits the projects you open.</string>
+  <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
   <key>NSDownloadsFolderUsageDescription</key>
-  <string>Claude Code, running in Claudette, reads and edits the projects you open.</string>
+  <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
   <key>NSRemovableVolumesUsageDescription</key>
-  <string>Claude Code, running in Claudette, reads and edits the projects you open.</string>
+  <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
   <key>NSNetworkVolumesUsageDescription</key>
-  <string>Claude Code, running in Claudette, reads and edits the projects you open.</string>
+  <string>Claude Code, running in Deventry, reads and edits the projects you open.</string>
 </dict>
 </plist>

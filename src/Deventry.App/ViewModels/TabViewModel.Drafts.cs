@@ -51,7 +51,7 @@ public sealed partial class TabViewModel
         }
     }
 
-    /// <summary>Puts back the draft saved the last time Claudette ran, if the tab had one.</summary>
+    /// <summary>Puts back the draft saved the last time Deventry ran, if the tab had one.</summary>
     internal void RestoreSavedDraft()
     {
         if (_services.Drafts.Load(Id) is { } draft)

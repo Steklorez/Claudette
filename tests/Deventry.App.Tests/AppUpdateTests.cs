@@ -10,12 +10,12 @@ using Deventry.Core.Updates;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Claudette updating itself from its GitHub releases, and handing its tabs to the new version the way a source build
-/// hands them to a new build (DESIGN.md §2, "Updating Claudette"). GitHub and the installer are fakes.
+/// Deventry updating itself from its GitHub releases, and handing its tabs to the new version the way a source build
+/// hands them to a new build (DESIGN.md §2, "Updating Deventry"). GitHub and the installer are fakes.
 /// </summary>
 public class AppUpdateTests
 {
-    private const string ReleasesUrl = "https://api.github.com/repos/dotBunny/Claudette/releases?per_page=20";
+    private const string ReleasesUrl = "https://api.github.com/repos/dotBunny/Deventry/releases?per_page=20";
 
     private static readonly byte[] Package = [.. Enumerable.Range(0, 5000).Select(i => (byte)i)];
 
@@ -23,8 +23,8 @@ public class AppUpdateTests
 
     private static string Release(string version, bool prerelease = false, string arch = "x64", bool digest = true) => $$"""
         {
-          "tag_name": "v{{version}}", "name": "Claudette {{version}}", "draft": false, "prerelease": {{(prerelease ? "true" : "false")}},
-          "html_url": "https://github.com/dotBunny/Claudette/releases/tag/v{{version}}", "published_at": "2026-09-20T09:30:00Z",
+          "tag_name": "v{{version}}", "name": "Deventry {{version}}", "draft": false, "prerelease": {{(prerelease ? "true" : "false")}},
+          "html_url": "https://github.com/dotBunny/Deventry/releases/tag/v{{version}}", "published_at": "2026-09-20T09:30:00Z",
           "body": "- Better things",
           "assets": [ {
             "name": "Claudette-{{version}}-{{arch}}.msix", "browser_download_url": "https://example.test/{{version}}.msix", "size": {{Package.Length}},
@@ -171,21 +171,21 @@ public class AppUpdateTests
 
         Assert.Equal("1.3.0", s.Updates.Available?.Version.ToString());
         Assert.True(s.Badge.HasBadge);
-        Assert.Equal("Claudette 1.3.0 is available", s.Badge.BadgeText);
+        Assert.Equal("Deventry 1.3.0 is available", s.Badge.BadgeText);
         Assert.Equal("- Better things", s.Badge.NotesText);
-        Assert.Equal("You have Claudette 1.2.0.", s.Badge.CurrentVersionText);
+        Assert.Equal("You have Deventry 1.2.0.", s.Badge.CurrentVersionText);
         Assert.True(s.Badge.CanRestartToUpdate);
         Assert.Equal("Download and restart", s.Badge.RestartLabel);
 
         s.Badge.SkipCommand.Execute(null);
         Assert.False(s.Badge.HasBadge);
         Assert.Equal("1.3.0", s.H.Services.State.SkippedAppUpdate);
-        Assert.Equal("Claudette 1.3.0 is available; you skipped it.", s.Badge.CheckStatusText);
+        Assert.Equal("Deventry 1.3.0 is available; you skipped it.", s.Badge.CheckStatusText);
 
         s.GitHub.Releases.Insert(0, Release("1.3.1"));
         await s.Updates.CheckNowAsync();
         Assert.True(s.Badge.HasBadge);
-        Assert.Equal("Claudette 1.3.1 is available", s.Badge.BadgeText);
+        Assert.Equal("Deventry 1.3.1 is available", s.Badge.BadgeText);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class AppUpdateTests
         await s.Updates.CheckNowAsync();
         Assert.Null(s.Updates.Available);
         Assert.False(s.Badge.HasBadge);
-        Assert.StartsWith("Claudette is up to date.", s.Badge.CheckStatusText);
+        Assert.StartsWith("Deventry is up to date.", s.Badge.CheckStatusText);
 
         s.H.Services.Settings.General.IncludePrereleases = true;
         await s.Updates.CheckNowAsync();
@@ -282,14 +282,14 @@ public class AppUpdateTests
         Assert.Equal([pinned.Id], snapshot.RunningTabIds);
         Assert.Equal("half-typed", snapshot.Drafts[unpinned.Id].Text);
 
-        Assert.Equal("Installing Claudette 1.3.0…", s.Host.ClosedWith);
+        Assert.Equal("Installing Deventry 1.3.0…", s.Host.ClosedWith);
         Assert.Empty(s.H.Shell.AllTabs);
         Assert.True(s.H.Services.SuspendSaving);
         Assert.True(s.Host.Exited);
     }
 
     [Fact]
-    public async Task A_new_version_Claudette_starts_itself_has_to_say_it_is_up()
+    public async Task A_new_version_Deventry_starts_itself_has_to_say_it_is_up()
     {
         await using var s = Create();
         await OpenTabsAsync(s.H);
@@ -306,7 +306,7 @@ public class AppUpdateTests
 
         Assert.True(s.Host.Exited);
         Assert.NotEqual(s.H.Services.Paths.RestartReadyFile, ready);
-        Assert.False(File.Exists(ready), "Claudette tidies the ready file away once it has read it.");
+        Assert.False(File.Exists(ready), "Deventry tidies the ready file away once it has read it.");
     }
 
     [Fact]
@@ -339,14 +339,14 @@ public class AppUpdateTests
         await using var s = Create();
         await OpenTabsAsync(s.H);
         await s.Updates.CheckNowAsync();
-        s.Installer.PrepareFailure = new AppInstallException("The download is Contoso.Other, not Claudette.");
+        s.Installer.PrepareFailure = new AppInstallException("The download is Contoso.Other, not Deventry.");
 
         Assert.False(await s.Updates.InstallAsync());
 
         Assert.Null(s.Host.ClosedWith);
         Assert.Empty(s.Installer.Installed);
         Assert.Equal(2, s.H.Shell.AllTabs.Count());
-        Assert.Equal("The download is Contoso.Other, not Claudette.", s.Badge.ErrorText);
+        Assert.Equal("The download is Contoso.Other, not Deventry.", s.Badge.ErrorText);
         Assert.False(s.Badge.CanOpenPackage);
     }
 
@@ -380,9 +380,9 @@ public class AppUpdateTests
         Assert.True(s.Badge.HasBadge);
         Assert.False(s.Badge.CanRestartToUpdate);
         Assert.False(s.Badge.CanDownload);
-        Assert.Equal("This copy of Claudette can't update itself. Download the new version from its release page.", s.Badge.ManualText);
+        Assert.Equal("This copy of Deventry can't update itself. Download the new version from its release page.", s.Badge.ManualText);
         await s.Badge.OpenReleasePageCommand.ExecuteAsync(null);
-        Assert.Equal(["https://github.com/dotBunny/Claudette/releases/tag/v1.3.0"], s.H.Platform.OpenedUrls);
+        Assert.Equal(["https://github.com/dotBunny/Deventry/releases/tag/v1.3.0"], s.H.Platform.OpenedUrls);
         Assert.DoesNotContain(s.GitHub.Requests, r => r.StartsWith("https://example.test/", StringComparison.Ordinal));
     }
 
@@ -408,7 +408,7 @@ public class AppUpdateTests
         Assert.True(s.Badge.HasBadge);
         Assert.False(s.Badge.CanRestartToUpdate);
         Assert.False(s.Badge.CanDownload);
-        Assert.Equal("GitHub published no checksum for this release's package, so Claudette can't check it. Download it from its release page.", s.Badge.ManualText);
+        Assert.Equal("GitHub published no checksum for this release's package, so Deventry can't check it. Download it from its release page.", s.Badge.ManualText);
         Assert.False(await s.Updates.InstallAsync());
         Assert.DoesNotContain(s.GitHub.Requests, r => r.StartsWith("https://example.test/", StringComparison.Ordinal));
     }
@@ -420,12 +420,12 @@ public class AppUpdateTests
 
         s.Updates.OnRestoredAfterUpdate(new AppUpdateHandover("1.2.0", "1.3.0"));
 
-        Assert.Equal("You have Claudette 1.3.0, updated from 1.2.0.", s.Badge.CurrentVersionText);
+        Assert.Equal("You have Deventry 1.3.0, updated from 1.2.0.", s.Badge.CurrentVersionText);
         Assert.False(s.Badge.HasBadge);
     }
 
     [Fact]
-    public async Task An_update_that_did_not_install_says_so_when_Claudette_opens_again()
+    public async Task An_update_that_did_not_install_says_so_when_Deventry_opens_again()
     {
         await using var s = Create();
 
@@ -433,7 +433,7 @@ public class AppUpdateTests
 
         Assert.True(s.Badge.HasBadge);
         Assert.Equal("Update didn't install", s.Badge.BadgeText);
-        Assert.Equal("The update to Claudette 1.3.0 didn't finish, so this is still 1.2.0. Your tabs are back.", s.Badge.ErrorText);
+        Assert.Equal("The update to Deventry 1.3.0 didn't finish, so this is still 1.2.0. Your tabs are back.", s.Badge.ErrorText);
     }
 
     [Fact]

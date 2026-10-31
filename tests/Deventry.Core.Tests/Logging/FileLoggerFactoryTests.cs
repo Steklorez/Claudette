@@ -5,10 +5,10 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Deventry.Core.Tests.Logging;
 
-/// <summary>Claudette's own log, <c>claudette.log</c> (DESIGN.md §13, "Logging").</summary>
+/// <summary>Deventry's own log, <c>deventry.log</c> (DESIGN.md §13, "Logging").</summary>
 public sealed class FileLoggerFactoryTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-log");
+    private readonly TempFolder _temp = new("deventry-log");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 1, 9, 30, 0, TimeSpan.Zero));
 
     public void Dispose() => _temp.Dispose();

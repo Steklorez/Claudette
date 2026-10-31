@@ -7,7 +7,7 @@ namespace Deventry.Platform.Notifications.Mac;
 /// <summary>
 /// macOS User Notifications (DESIGN.md §10) through <c>UNUserNotificationCenter</c>. It only works in an app bundle
 /// with a bundle identifier: run unbundled (for example with <c>dotnet run</c>), macOS refuses, so this reports itself
-/// unavailable instead. A delegate object, built at runtime, reports clicks and lets notifications show while Claudette
+/// unavailable instead. A delegate object, built at runtime, reports clicks and lets notifications show while Deventry
 /// is in front (the notification service already skips the ones about the tab being looked at).
 /// </summary>
 [SupportedOSPlatform("macos")]
@@ -114,17 +114,17 @@ public sealed unsafe class MacNotifier : INotifier
         }
     }
 
-    /// <summary>An NSObject subclass implementing the two UNUserNotificationCenterDelegate methods Claudette needs.</summary>
+    /// <summary>An NSObject subclass implementing the two UNUserNotificationCenterDelegate methods Deventry needs.</summary>
     private static nint CreateDelegate()
     {
         if (_delegate != 0)
         {
             return _delegate;
         }
-        var cls = ObjC.GetClass("ClaudetteNotificationDelegate");
+        var cls = ObjC.GetClass("DeventryNotificationDelegate");
         if (cls == 0)
         {
-            cls = ObjC.AllocateClassPair(ObjC.GetClass("NSObject"), "ClaudetteNotificationDelegate", 0);
+            cls = ObjC.AllocateClassPair(ObjC.GetClass("NSObject"), "DeventryNotificationDelegate", 0);
             ObjC.AddMethod(cls, ObjC.Sel("userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:"),
                 (nint)(delegate* unmanaged<nint, nint, nint, nint, nint, void>)&DidReceiveResponse, "v@:@@@?");
             ObjC.AddMethod(cls, ObjC.Sel("userNotificationCenter:willPresentNotification:withCompletionHandler:"),

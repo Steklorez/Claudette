@@ -80,8 +80,8 @@ public static class WindowsStartupActivation
     internal const int StartupTaskKind = 1020;
 
     /// <summary>
-    /// True when this MSIX-installed Claudette was started at login by its startup task, which passes no arguments.
-    /// False for any other start, and for a Claudette outside the package.
+    /// True when this MSIX-installed Deventry was started at login by its startup task, which passes no arguments.
+    /// False for any other start, and for a Deventry outside the package.
     /// </summary>
     [System.Runtime.Versioning.SupportedOSPlatform("windows10.0.17763")]
     public static bool StartedByStartupTask()

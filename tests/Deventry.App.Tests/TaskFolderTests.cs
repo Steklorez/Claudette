@@ -86,7 +86,7 @@ public class TaskFolderTests
     {
         var (h, tab) = await StartAsync();
         await using var _ = h;
-        // Claude Code keeps this list somewhere else: it never writes the task to the folder Claudette looks in, which
+        // Claude Code keeps this list somewhere else: it never writes the task to the folder Deventry looks in, which
         // has someone else's.
         Create(h, "c1", "1", "Fix the config", written: false);
         await TabTestHarness.Eventually(() => tab.TodoList.Items.SingleOrDefault()?.Id == "1", "#1 numbered");

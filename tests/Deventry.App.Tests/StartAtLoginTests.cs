@@ -7,15 +7,15 @@ using Deventry.Core.Updates;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Settings → General's <b>Start Claudette when I log in</b>, and launches with <c>--login</c> (DESIGN.md §9, "Starting
+/// Settings → General's <b>Start Deventry when I log in</b>, and launches with <c>--login</c> (DESIGN.md §9, "Starting
 /// at login"). The login entry is the harness's fake.
 /// </summary>
 public sealed class StartAtLoginTests
 {
-    private static readonly ClaudetteCopy MacApp = new(AppInstallKind.MacApp, "/Applications/Deventry.app", "0.2.0");
-    private static readonly ClaudetteCopy Msix = new(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.2.0");
+    private static readonly DeventryCopy MacApp = new(AppInstallKind.MacApp, "/Applications/Deventry.app", "0.2.0");
+    private static readonly DeventryCopy Msix = new(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.2.0");
 
-    private static ClaudetteCopy SourceBuild(TabTestHarness h) => new(AppInstallKind.SourceBuild, Path.Combine(h.Root, "bin"), "0.3.0");
+    private static DeventryCopy SourceBuild(TabTestHarness h) => new(AppInstallKind.SourceBuild, Path.Combine(h.Root, "bin"), "0.3.0");
 
     [Fact]
     public async Task The_switch_turns_starting_at_login_on_and_off()
@@ -26,7 +26,7 @@ public sealed class StartAtLoginTests
         Assert.False(settings.General.StartsAtLogin);
         Assert.True(settings.General.CanChangeStartAtLogin);
         Assert.Equal(
-            "Claudette opens minimized when you log in to this computer. It starts this source build's newest build. Once Claudette is installed, the installed one starts instead.",
+            "Deventry opens minimized when you log in to this computer. It starts this source build's newest build. Once Deventry is installed, the installed one starts instead.",
             settings.General.StartAtLoginText);
 
         settings.General.StartsAtLogin = true;
@@ -42,7 +42,7 @@ public sealed class StartAtLoginTests
     }
 
     [Fact]
-    public async Task A_source_build_starts_the_installed_Claudette_and_says_so()
+    public async Task A_source_build_starts_the_installed_Deventry_and_says_so()
     {
         await using var h = new TabTestHarness();
         h.Services.ThisCopy = SourceBuild(h);
@@ -54,7 +54,7 @@ public sealed class StartAtLoginTests
 
         Assert.Equal(MacApp, h.LoginItems.EntryStarts);
         Assert.Equal(
-            "Claudette opens minimized when you log in to this computer. It starts the installed Claudette 0.2.0 rather than this source build.",
+            "Deventry opens minimized when you log in to this computer. It starts the installed Deventry 0.2.0 rather than this source build.",
             settings.General.StartAtLoginText);
     }
 
@@ -71,7 +71,7 @@ public sealed class StartAtLoginTests
 
         Assert.True(settings.General.StartsAtLogin);
         Assert.False(settings.General.CanChangeStartAtLogin);
-        Assert.Equal("The installed Claudette 0.2.0 starts at login. Turn it off in that Claudette, or in Task Manager's Startup apps.", settings.General.StartAtLoginNote);
+        Assert.Equal("The installed Deventry 0.2.0 starts at login. Turn it off in that Deventry, or in Task Manager's Startup apps.", settings.General.StartAtLoginNote);
     }
 
     [Fact]
@@ -107,11 +107,11 @@ public sealed class StartAtLoginTests
         await using var h = new TabTestHarness();
         var settings = new SettingsViewModel(h.Services, null) { SearchText = "log in" };
 
-        Assert.Contains(settings.SearchResults, r => r is { Category: "General", Label: "Start Claudette when I log in" });
+        Assert.Contains(settings.SearchResults, r => r is { Category: "General", Label: "Start Deventry when I log in" });
     }
 
     [Fact]
-    public async Task A_login_launch_while_Claudette_runs_leaves_it_where_it_is()
+    public async Task A_login_launch_while_Deventry_runs_leaves_it_where_it_is()
     {
         await using var h = new TabTestHarness();
         var main = new MainWindowViewModel(h.Services);
@@ -142,6 +142,6 @@ public sealed class StartAtLoginTests
 
         var copy = LoginLaunch.CurrentCopy([LaunchArguments.SourceBuildOption, output], new AppVersion(0, 3, 0));
 
-        Assert.Equal(new ClaudetteCopy(AppInstallKind.SourceBuild, output, "0.3.0"), copy);
+        Assert.Equal(new DeventryCopy(AppInstallKind.SourceBuild, output, "0.3.0"), copy);
     }
 }

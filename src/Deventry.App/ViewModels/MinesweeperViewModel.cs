@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Minesweeper against Claudette (DESIGN.md Â§18, "Games with Claudette"): she hides her mines in a field of nine by
+/// Minesweeper against Joulene (DESIGN.md §18, "Games with Joulene"): she hides her mines in a field of nine by
 /// nine, and the user opens every square without one. A click opens a square, a right-click or F flags one, and a click
 /// on a number with as many flags around it opens the rest around it. The level is how many mines she hides.
 /// </summary>
@@ -42,7 +42,7 @@ public sealed class MinesweeperViewModel : GameViewModel
         _field = new Minesweeper(Minesweeper.MinesFor(CurrentLevel));
         _closeCall = false;
         Refresh();
-        Status = $"Claudette hid {_field.Mines} mines. Open a square.";
+        Status = $"Joulene hid {_field.Mines} mines. Open a square.";
     }
 
     /// <summary>Another level is another number of mines: a new field, the one in progress dropped uncounted.</summary>
@@ -67,7 +67,7 @@ public sealed class MinesweeperViewModel : GameViewModel
                 Finish(GameOutcome.Won, "You cleared the field: you win!");
                 return;
             case GameOutcome.Lost:
-                Finish(GameOutcome.Lost, "Boom! Claudette wins.");
+                Finish(GameOutcome.Lost, "Boom! Joulene wins.");
                 return;
         }
         if (_field.SafeLeft == 1 && !_closeCall)

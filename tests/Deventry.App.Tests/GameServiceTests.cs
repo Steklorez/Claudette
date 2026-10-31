@@ -7,7 +7,7 @@ using Deventry.Core.Settings;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Games with Claudette (DESIGN.md §18): one game for the whole app on the tabs' Games page, her turn after a moment's
+/// Games with Joulene (DESIGN.md §18): one game for the whole app on the tabs' Games page, her turn after a moment's
 /// thought, the score kept on this machine, and the line over the board while Claude needs the user.
 /// </summary>
 public class GameServiceTests
@@ -83,7 +83,7 @@ public class GameServiceTests
         game.Squares[4].PlayCommand.Execute(null);
 
         Assert.True(game.IsHerTurn);
-        Assert.Equal("Claudette is thinking…", game.Status);
+        Assert.Equal("Joulene is thinking…", game.Status);
         Assert.Equal(Player.You, game.Squares[4].Owner);
         Assert.Equal("Middle, yours", game.Squares[4].Name);
         // While she thinks, a square the user clicks stays empty.
@@ -95,8 +95,8 @@ public class GameServiceTests
         Assert.False(game.IsHerTurn);
         Assert.Equal("Your move.", game.Status);
         var hers = Assert.Single(game.Squares, s => s.IsHers);
-        Assert.Equal($"Claudette took the {TicTacToeViewModel.SquareName(hers.Index)}.", announced.Last());
-        Assert.EndsWith(", Claudette's", hers.Name);
+        Assert.Equal($"Joulene took the {TicTacToeViewModel.SquareName(hers.Index)}.", announced.Last());
+        Assert.EndsWith(", Joulene's", hers.Name);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class GameServiceTests
         var score = h.Services.State.Games.Scores["TicTacToe"];
         Assert.Equal(1, score.Losses + score.Draws);
         Assert.Equal(0, score.Wins);
-        Assert.StartsWith("You 0 · Claudette ", game.ScoreText);
+        Assert.StartsWith("You 0 · Joulene ", game.ScoreText);
         Assert.Equal("Play again", game.NewRoundText);
 
         // The next round she starts.
@@ -150,7 +150,7 @@ public class GameServiceTests
         h.Services.Games.Announcer = announced.Add;
         tab.PlayGame(GameKind.Hangman);
         var game = (HangmanViewModel)h.Services.Games.Game!;
-        Assert.Equal("Claudette is thinking of a word…", game.Status);
+        Assert.Equal("Joulene is thinking of a word…", game.Status);
         // A letter while she thinks of the word is taken, so it doesn't go anywhere else, but guesses nothing.
         Assert.True(game.Press('E'));
         Assert.All(game.Letters, l => Assert.False(l.IsGuessed));
@@ -184,10 +184,10 @@ public class GameServiceTests
         game.Press(misses[5]);
 
         Assert.Equal(GameOutcome.Lost, game.Outcome);
-        Assert.Equal($"Claudette wins! It was {word}.", game.Status);
+        Assert.Equal($"Joulene wins! It was {word}.", game.Status);
         Assert.Equal(string.Join(' ', word.ToCharArray()), game.Pattern);
         Assert.Equal(1, h.Services.State.Games.Scores["Hangman"].Losses);
-        Assert.Equal("You 0 · Claudette 1", game.ScoreText);
+        Assert.Equal("You 0 · Joulene 1", game.ScoreText);
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class GameServiceTests
         h.Services.Games.Announcer = announced.Add;
         tab.PlayGame(GameKind.Minesweeper);
         var game = Assert.IsType<MinesweeperViewModel>(h.Services.Games.Game);
-        Assert.Equal("Claudette hid 13 mines. Open a square.", game.Status);
+        Assert.Equal("Joulene hid 13 mines. Open a square.", game.Status);
         Assert.Equal("Row 1, column 1, not opened", game.Squares[0].Name);
         // The number keys and letters are the squares' own: the page doesn't take them.
         Assert.False(game.Press('1'));
@@ -251,7 +251,7 @@ public class GameServiceTests
         Assert.Equal(GameOutcome.Won, game.Outcome);
         Assert.Equal("You cleared the field: you win!", game.Status);
         Assert.All(mines, m => Assert.True(m.ShowsFlag));
-        Assert.Equal("You 1 · Claudette 0", game.ScoreText);
+        Assert.Equal("You 1 · Joulene 0", game.ScoreText);
         Assert.Equal(1, h.Services.State.Games.Scores["Minesweeper"].Wins);
     }
 
@@ -271,7 +271,7 @@ public class GameServiceTests
         mines[0].OpenCommand.Execute(null);
 
         Assert.Equal(GameOutcome.Lost, game.Outcome);
-        Assert.Equal("Boom! Claudette wins.", game.Status);
+        Assert.Equal("Boom! Joulene wins.", game.Status);
         Assert.True(mines[0].IsExploded);
         Assert.EndsWith(", the mine you opened", mines[0].Name);
         Assert.All(mines.Skip(1), m => Assert.Equal(MinesweeperSquareState.Mine, m.State));
@@ -295,7 +295,7 @@ public class GameServiceTests
 
         game.Level = game.Levels.Single(l => l.Level == GameLevel.Hard);
 
-        Assert.Equal("Claudette hid 16 mines. Open a square.", game.Status);
+        Assert.Equal("Joulene hid 16 mines. Open a square.", game.Status);
         Assert.All(game.Squares, s => Assert.Equal(MinesweeperSquareState.Shut, s.State));
         Assert.False(game.Field.HasMines);
         // The round dropped wasn't counted.
@@ -345,7 +345,7 @@ public class GameServiceTests
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
         tab.PlayGame(GameKind.Hangman);
-        Assert.Contains(h.Shell.PaletteEntries(), e => e.Label == "Play hangman with Claudette");
+        Assert.Contains(h.Shell.PaletteEntries(), e => e.Label == "Play hangman with Joulene");
 
         h.Services.Settings.Appearance.GamesWithJoulene = false;
         h.Services.SaveSettings();
@@ -363,7 +363,7 @@ public class GameServiceTests
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        string[] labels = ["Play tic-tac-toe with Claudette", "Play Connect Four with Claudette", "Play hangman with Claudette", "Play Minesweeper with Claudette"];
+        string[] labels = ["Play tic-tac-toe with Joulene", "Play Connect Four with Joulene", "Play hangman with Joulene", "Play Minesweeper with Joulene"];
         foreach (var (label, type) in labels.Zip(new[] { typeof(TicTacToeViewModel), typeof(ConnectFourViewModel), typeof(HangmanViewModel), typeof(MinesweeperViewModel) }))
         {
             await h.Shell.PaletteEntries().Single(e => e.Label == label).Run();

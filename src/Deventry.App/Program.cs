@@ -17,13 +17,13 @@ internal sealed class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // Claude Code asking for an API-key account's key, through the apiKeyHelper Claudette gave it (DESIGN.md §4,
-        // "Accounts"): print it and exit, before anything that would hand off to the running Claudette or open a window.
+        // Claude Code asking for an API-key account's key, through the apiKeyHelper Deventry gave it (DESIGN.md §4,
+        // "Accounts"): print it and exit, before anything that would hand off to the running Deventry or open a window.
         if (Core.Accounts.ApiKeyHelper.TryGetAccountId(args, out var accountId))
         {
             return ApiKeyHelperLaunch.Run(accountId);
         }
-        // The demo's claude, which Claudette stands in for (DESIGN.md §11, "Demo mode"): the same, before anything else.
+        // The demo's claude, which Deventry stands in for (DESIGN.md §11, "Demo mode"): the same, before anything else.
         if (Demo.StandInClaudeLaunch.IsStandIn)
         {
             return Demo.StandInClaudeLaunch.Run(args);
@@ -32,7 +32,7 @@ internal sealed class Program
         {
             SetWindowsIdentity();
         }
-        // Before anything hands the arguments on, to a running Claudette or a copy of this build.
+        // Before anything hands the arguments on, to a running Deventry or a copy of this build.
         args = LaunchArguments.WithFullPaths(args, Environment.CurrentDirectory);
         // FromClaudette: Claudette's folders and settings become Deventry's, before anything reads them (DESIGN.md §2,
         // "Renaming to Deventry").
@@ -43,8 +43,8 @@ internal sealed class Program
         {
             args = [.. args, LaunchArguments.LoginOption];
         }
-        // One Claudette per user and data folder: a second launch hands its arguments over and exits. A build that
-        // Claudette restarted into takes over instead: the one that started it has stopped listening.
+        // One Deventry per user and data folder: a second launch hands its arguments over and exits. A build that
+        // Deventry restarted into takes over instead: the one that started it has stopped listening.
         var instance = new SingleInstance(paths.DataDirectory);
         var restoring = LaunchArguments.RestoreNonce(args) is not null;
         if (!restoring && instance.TryHandOffAsync(args).GetAwaiter().GetResult())
@@ -88,7 +88,7 @@ internal sealed class Program
     }
 
     /// <summary>
-    /// Toasts, taskbar grouping and the jump list need Claudette's AppUserModelID before the first window exists
+    /// Toasts, taskbar grouping and the jump list need Deventry's AppUserModelID before the first window exists
     /// (DESIGN.md §10). Nothing here is worth failing to start over.
     /// </summary>
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
@@ -101,7 +101,7 @@ internal sealed class Program
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Trace.WriteLine($"Couldn't set Claudette's Windows identity: {ex}");
+            System.Diagnostics.Trace.WriteLine($"Couldn't set Deventry's Windows identity: {ex}");
         }
     }
 

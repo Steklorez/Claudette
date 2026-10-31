@@ -190,7 +190,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// For a clicked notification or another launch: restore the window if minimized and bring it to the front; not while
-    /// Claudette leaves the focus alone (DESIGN.md §9, "Taking screenshots without the focus").
+    /// Deventry leaves the focus alone (DESIGN.md §9, "Taking screenshots without the focus").
     /// </summary>
     private void BringToFront()
     {

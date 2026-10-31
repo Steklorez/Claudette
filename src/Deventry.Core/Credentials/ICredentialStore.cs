@@ -4,7 +4,7 @@ namespace Deventry.Core.Credentials;
 public sealed class CredentialStoreException(string message, Exception? inner = null) : Exception(message, inner);
 
 /// <summary>
-/// The OS credential store: Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux. Claudette
+/// The OS credential store: Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux. Deventry
 /// keeps secrets it must store, such as a Perforce password (DESIGN.md §18) or an account's API key (§4, "Accounts"),
 /// only here: never in its settings files, never synced, never logged. The implementations are in Deventry.Platform.
 /// </summary>
@@ -13,7 +13,7 @@ public interface ICredentialStore
     /// <summary>The store's name as the user knows it, written to go mid-sentence, such as "the macOS Keychain".</summary>
     string Name { get; }
 
-    /// <summary>False when this machine has no store Claudette can use, for example Linux without <c>secret-tool</c>.</summary>
+    /// <summary>False when this machine has no store Deventry can use, for example Linux without <c>secret-tool</c>.</summary>
     bool IsAvailable { get; }
 
     /// <summary>Why <see cref="IsAvailable"/> is false, for Settings.</summary>
@@ -24,7 +24,7 @@ public interface ICredentialStore
     Task<string?> ReadAsync(string key, CancellationToken cancellationToken = default);
 
     /// <summary>Saves <paramref name="secret"/> under <paramref name="key"/>, replacing any saved before.</summary>
-    /// <param name="label">What the OS shows for it, such as "Claudette: Perforce matt @ ssl:perforce:1666".</param>
+    /// <param name="label">What the OS shows for it, such as "Deventry: Perforce matt @ ssl:perforce:1666".</param>
     /// <exception cref="CredentialStoreException">The store couldn't be written.</exception>
     Task WriteAsync(string key, string label, string secret, CancellationToken cancellationToken = default);
 

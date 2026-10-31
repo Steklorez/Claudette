@@ -5,7 +5,7 @@ namespace Deventry.App.Services;
 
 /// <summary>
 /// What the tabs share about Remote Control, the Claude app's connection to them (DESIGN.md §18, "Remote Control"):
-/// whether the account can use it, the presence file that keeps pushes off the phone while Claudette is in front, and
+/// whether the account can use it, the presence file that keeps pushes off the phone while Deventry is in front, and
 /// which tabs are connected, which <see cref="KeepAwakeService"/> keeps the computer awake for. Use on the UI thread.
 /// </summary>
 public sealed class RemoteControlService : IDisposable
@@ -37,7 +37,7 @@ public sealed class RemoteControlService : IDisposable
 
     /// <summary>
     /// What Claude Code said when a policy turned Remote Control off, in any tab. Every tab then stops trying to connect,
-    /// rather than each trying again whenever it starts, until Claudette restarts or another account signs in.
+    /// rather than each trying again whenever it starts, until Deventry restarts or another account signs in.
     /// </summary>
     public string? PolicyReason { get; private set; }
 
@@ -75,12 +75,12 @@ public sealed class RemoteControlService : IDisposable
         }
     }
 
-    /// <summary>The variables every <c>claude</c> Claudette starts gets on top of its environment.</summary>
+    /// <summary>The variables every <c>claude</c> Deventry starts gets on top of its environment.</summary>
     public IReadOnlyDictionary<string, string?> ClaudeVariables => new Dictionary<string, string?> { [PresenceFile.Variable] = _presence.Path };
 
     // ---- Presence (DESIGN.md §10) --------------------------------------------------------------------------------
 
-    /// <summary>The presence file is there while Claudette's window is in front, so Claude Code doesn't push to the phone.</summary>
+    /// <summary>The presence file is there while Deventry's window is in front, so Claude Code doesn't push to the phone.</summary>
     public void SetAppActive(bool active) => _presence.SetPresent(active);
 
     public bool IsPresent => _presence.IsPresent;
@@ -102,7 +102,7 @@ public sealed class RemoteControlService : IDisposable
         }
     }
 
-    /// <summary>At exit: nobody is at Claudette. <see cref="KeepAwakeService"/> lets the computer sleep again itself.</summary>
+    /// <summary>At exit: nobody is at Deventry. <see cref="KeepAwakeService"/> lets the computer sleep again itself.</summary>
     public void Dispose()
     {
         _connectedTabs.Clear();

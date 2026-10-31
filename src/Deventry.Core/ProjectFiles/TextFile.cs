@@ -27,7 +27,7 @@ public enum TextFileProblem
 /// whether it opens read-only and why.
 /// </summary>
 /// <param name="Text">The text, without a byte order mark. Empty when <paramref name="Problem"/> isn't None.</param>
-/// <param name="Encoding">How it's encoded; null when it isn't valid text in an encoding Claudette writes back.</param>
+/// <param name="Encoding">How it's encoded; null when it isn't valid text in an encoding Deventry writes back.</param>
 /// <param name="ReadOnlyReason">Why it can't be edited, or null when it can.</param>
 /// <param name="WriteProtected">
 /// It's read-only only because the file is: what Perforce leaves a file it hasn't checked out as, which checking it out
@@ -56,7 +56,7 @@ public static class TextFile
     public const int LongestEditableLine = 1_000_000;
 
     /// <summary>What a file that's read-only on disk says.</summary>
-    public const string WriteProtectedReason = "Claudette isn't allowed to write this file, so it's shown read-only.";
+    public const string WriteProtectedReason = "Deventry isn't allowed to write this file, so it's shown read-only.";
 
     /// <summary>Whether the file can be written now: it was read-only, and may have been checked out since.</summary>
     public static bool IsWritable(string path)

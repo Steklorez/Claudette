@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>What a game against Claudette gets from <see cref="GameService"/> (DESIGN.md §18, "Games with Claudette").</summary>
+/// <summary>What a game against Joulene gets from <see cref="GameService"/> (DESIGN.md §18, "Games with Joulene").</summary>
 public interface IGameHost
 {
     TimeProvider Time { get; }
@@ -27,10 +27,10 @@ public interface IGameHost
     /// <summary>A word for hangman that hasn't come up lately.</summary>
     HangmanWord NextWord();
 
-    /// <summary>The user made a move: Claudette stays awake.</summary>
+    /// <summary>The user made a move: Joulene stays awake.</summary>
     void Moved();
 
-    /// <summary>Claudette thinks about her move: a "?" over her head.</summary>
+    /// <summary>Joulene thinks about her move: a "?" over her head.</summary>
     void Thinking();
 
     /// <summary>A close call: she blocked a move that would have won, or the user has one miss left. She wipes her brow.</summary>
@@ -50,8 +50,8 @@ public sealed record GameLevelChoice(GameLevel Level, string Label)
 }
 
 /// <summary>
-/// A game against Claudette in the Games tool window (DESIGN.md §18, "Games with Claudette"): its rounds, who
-/// starts each, Claudette's turn after a moment's thought on the injected clock, its level and its score.
+/// A game against Joulene in the Games tool window (DESIGN.md §18, "Games with Joulene"): its rounds, who
+/// starts each, Joulene's turn after a moment's thought on the injected clock, its level and its score.
 /// </summary>
 public abstract partial class GameViewModel : ObservableObject, IDisposable
 {
@@ -89,7 +89,7 @@ public abstract partial class GameViewModel : ObservableObject, IDisposable
 
     public bool IsOver => Outcome != GameOutcome.Playing;
 
-    /// <summary>Claudette is thinking about her move: the user's moves wait.</summary>
+    /// <summary>Joulene is thinking about her move: the user's moves wait.</summary>
     [ObservableProperty]
     public partial bool IsHerTurn { get; private set; }
 
@@ -117,12 +117,12 @@ public abstract partial class GameViewModel : ObservableObject, IDisposable
 
     protected GameLevel CurrentLevel => Host.Level(Kind);
 
-    /// <summary>The user chose another level. Claudette plays it from her next move; a game that sets up by it starts again.</summary>
+    /// <summary>The user chose another level. Joulene plays it from her next move; a game that sets up by it starts again.</summary>
     protected virtual void OnLevelChanged()
     {
     }
 
-    /// <summary>"You 3 · Claudette 2 · Draws 1"; null before the first round is over.</summary>
+    /// <summary>"You 3 · Joulene 2 · Draws 1"; null before the first round is over.</summary>
     public string? ScoreText
     {
         get
@@ -132,7 +132,7 @@ public abstract partial class GameViewModel : ObservableObject, IDisposable
             {
                 return null;
             }
-            var text = $"You {score.Wins} · Claudette {score.Losses}";
+            var text = $"You {score.Wins} · Joulene {score.Losses}";
             return HasDraws ? $"{text} · Draws {score.Draws}" : text;
         }
     }
@@ -162,14 +162,14 @@ public abstract partial class GameViewModel : ObservableObject, IDisposable
         OnScoreChanged();
     }
 
-    /// <summary>Sets the board up for a new round, with the user or Claudette to move first.</summary>
+    /// <summary>Sets the board up for a new round, with the user or Joulene to move first.</summary>
     protected abstract void StartRound(bool youStart);
 
     /// <summary>A key pressed while the page has focus: a number or a letter. True when the game took it.</summary>
     public abstract bool Press(char key);
 
-    /// <summary>Claudette thinks for a moment, then <paramref name="move"/> makes her move.</summary>
-    protected void HerTurn(Action move, string thinking = "Claudette is thinking…")
+    /// <summary>Joulene thinks for a moment, then <paramref name="move"/> makes her move.</summary>
+    protected void HerTurn(Action move, string thinking = "Joulene is thinking…")
     {
         IsHerTurn = true;
         Status = thinking;

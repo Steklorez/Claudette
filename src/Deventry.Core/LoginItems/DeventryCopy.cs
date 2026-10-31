@@ -5,7 +5,7 @@ using Deventry.Core.Updates;
 namespace Deventry.Core.LoginItems;
 
 /// <summary>
-/// One copy of Claudette on this machine, which the login entry can start (DESIGN.md §9, "Starting at login"). A machine
+/// One copy of Deventry on this machine, which the login entry can start (DESIGN.md §9, "Starting at login"). A machine
 /// can have several: an installed release, another build, and source builds in one or more checkouts.
 /// </summary>
 /// <param name="Kind">How it was installed, which decides which copy the entry prefers (<see cref="Rank"/>).</param>
@@ -14,7 +14,7 @@ namespace Deventry.Core.LoginItems;
 /// with <c>Deventry.dll</c>. For a source build that's its build output, not the copy it runs from.
 /// </param>
 /// <param name="Version">Its version, to name it.</param>
-public sealed record ClaudetteCopy(AppInstallKind Kind, string Location, string Version)
+public sealed record DeventryCopy(AppInstallKind Kind, string Location, string Version)
 {
     public const string AssemblyName = "Deventry";
 
@@ -30,7 +30,7 @@ public sealed record ClaudetteCopy(AppInstallKind Kind, string Location, string 
     };
 
     /// <summary>Whether this is the same copy as <paramref name="other"/>, whichever version each was when noted.</summary>
-    public bool IsSameCopy(ClaudetteCopy? other) =>
+    public bool IsSameCopy(DeventryCopy? other) =>
         other is not null && other.Kind == Kind && string.Equals(Trim(other.Location), Trim(Location), PathComparison);
 
     /// <summary>
@@ -45,23 +45,23 @@ public sealed record ClaudetteCopy(AppInstallKind Kind, string Location, string 
     };
 
     /// <summary>
-    /// The copy in words, for the switch: "the installed Claudette 0.3.0", "Claudette 0.3.0 in C:\Tools\Claudette", "the
-    /// source build in D:\Repositories\Claudette".
+    /// The copy in words, for the switch: "the installed Deventry 0.3.0", "Deventry 0.3.0 in C:\Tools\Deventry", "the
+    /// source build in D:\Repositories\Deventry".
     /// </summary>
     public string Describe() => Kind switch
     {
-        AppInstallKind.Msix or AppInstallKind.MacApp => $"the installed Claudette {Version}",
+        AppInstallKind.Msix or AppInstallKind.MacApp => $"the installed Deventry {Version}",
         AppInstallKind.SourceBuild => $"the source build in {SourceBuild.Detect(Location)?.RepositoryRoot ?? Location}",
-        _ => $"Claudette {Version} in {Location}",
+        _ => $"Deventry {Version} in {Location}",
     };
 
-    /// <summary>What sort of copy this is, in words: "installed Claudette", "source build".</summary>
+    /// <summary>What sort of copy this is, in words: "installed Deventry", "source build".</summary>
     [JsonIgnore]
     public string KindName => Kind switch
     {
-        AppInstallKind.Msix or AppInstallKind.MacApp => "installed Claudette",
+        AppInstallKind.Msix or AppInstallKind.MacApp => "installed Deventry",
         AppInstallKind.SourceBuild => "source build",
-        _ => "build of Claudette",
+        _ => "build of Deventry",
     };
 
     private static string Trim(string location) => Path.TrimEndingDirectorySeparator(location);

@@ -7,11 +7,11 @@ namespace Deventry.App.Demo;
 
 /// <summary>
 /// <b>Try the demo</b>, where it's offered (DESIGN.md §11, "Demo mode"): the sign-in screen, the setup screen and About
-/// Claudette. Starts a demo in a window of its own, and says so, or why it couldn't.
+/// Deventry. Starts a demo in a window of its own, and says so, or why it couldn't.
 /// </summary>
 public sealed partial class DemoStarter(AppServices services) : ObservableObject
 {
-    public const string Tip = "Claudette on made-up projects, with a stand-in for Claude: no account needed, and nothing leaves this computer";
+    public const string Tip = "Deventry on made-up projects, with a stand-in for Claude: no account needed, and nothing leaves this computer";
 
     /// <summary>Not in a demo: there's no demo of the demo.</summary>
     public bool IsOffered => services.Demo is null;

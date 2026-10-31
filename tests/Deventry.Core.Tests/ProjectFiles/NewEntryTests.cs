@@ -6,7 +6,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>A new file or folder made from the explorer (DESIGN.md §18, "Project files", "New files and folders").</summary>
 public sealed class NewEntryTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-new-entry");
+    private readonly TempFolder _temp = new("deventry-new-entry");
 
     public void Dispose() => _temp.Dispose();
 
@@ -98,7 +98,7 @@ public sealed class NewEntryTests : IDisposable
 
         var problem = NewEntry.Make(path, isFolder: false);
 
-        Assert.StartsWith("Claudette couldn't make it. ", problem);
+        Assert.StartsWith("Deventry couldn't make it. ", problem);
         Assert.Equal("kept", File.ReadAllText(path));
     }
 }

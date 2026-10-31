@@ -474,7 +474,7 @@ public partial class ProjectFilesView : UserControl
         _tabDrag = null;
     }
 
-    /// <summary>The pointer is past the edge of Claudette's window.</summary>
+    /// <summary>The pointer is past the edge of Deventry's window.</summary>
     private bool IsOutsideWindow(PointerEventArgs e)
     {
         if (TopLevel.GetTopLevel(this) is not { } top)

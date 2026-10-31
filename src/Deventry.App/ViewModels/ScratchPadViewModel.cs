@@ -18,7 +18,7 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
     /// <summary>How long after typing stops the pad is saved.</summary>
     internal static readonly TimeSpan SaveDelay = TimeSpan.FromSeconds(1);
 
-    /// <summary>How long closing Claudette waits for the library before leaving a pad's changes for next time.</summary>
+    /// <summary>How long closing Deventry waits for the library before leaving a pad's changes for next time.</summary>
     internal static readonly TimeSpan FlushSyncTimeout = TimeSpan.FromSeconds(3);
 
     private readonly AppServices _services;
@@ -316,7 +316,7 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Brings this machine's copy and the library's together: when the page shows, when Claudette comes to the front,
+    /// Brings this machine's copy and the library's together: when the page shows, when Deventry comes to the front,
     /// once a minute, and after each save. Only for a pad with a git remote.
     /// </summary>
     public async Task SyncAsync()
@@ -382,7 +382,7 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
     {
         if (result.Kind == ScratchPadSyncKind.NewerFormat)
         {
-            SetProblem("A newer Claudette changed this pad in the session library, so it isn't synced from here. Update Claudette to sync it again.");
+            SetProblem("A newer Deventry changed this pad in the session library, so it isn't synced from here. Update Deventry to sync it again.");
         }
         else
         {
@@ -456,7 +456,7 @@ public sealed partial class ScratchPadViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// For closing Claudette, a restart into a new build, or the last tab in the project closing: saves what's typed,
+    /// For closing Deventry, a restart into a new build, or the last tab in the project closing: saves what's typed,
     /// and syncs it if the library answers within <see cref="FlushSyncTimeout"/>.
     /// </summary>
     public async Task FlushAsync()

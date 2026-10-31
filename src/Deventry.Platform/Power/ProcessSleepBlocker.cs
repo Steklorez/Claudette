@@ -9,7 +9,7 @@ namespace Deventry.Platform.Power;
 /// <summary>
 /// Holds off system sleep with a helper that blocks it for as long as it runs, and ends the helper to let the computer
 /// sleep again (DESIGN.md §9, "Keeping the computer awake"): <c>caffeinate</c> on macOS, <c>systemd-inhibit</c> on Linux. The
-/// helper starts through <see cref="IProcessLauncher"/> with Claudette's own environment, like <c>ps</c> and
+/// helper starts through <see cref="IProcessLauncher"/> with Deventry's own environment, like <c>ps</c> and
 /// <c>notify-send</c>. If it stops by itself, why is kept for Diagnostics.
 /// </summary>
 public sealed class ProcessSleepBlocker : ISleepBlocker
@@ -31,31 +31,31 @@ public sealed class ProcessSleepBlocker : ISleepBlocker
     }
 
     /// <summary>
-    /// <c>caffeinate -i -w &lt;pid&gt;</c>: no idle system sleep until it's ended, or until Claudette itself exits, so a
-    /// Claudette that crashed doesn't keep the Mac awake.
+    /// <c>caffeinate -i -w &lt;pid&gt;</c>: no idle system sleep until it's ended, or until Deventry itself exits, so a
+    /// Deventry that crashed doesn't keep the Mac awake.
     /// </summary>
-    public static ProcessSleepBlocker Caffeinate(IProcessLauncher launcher, int claudetteProcessId, string path = "/usr/bin/caffeinate") =>
-        new(launcher, new ProcessStartSpec(path, ["-i", "-w", claudetteProcessId.ToString(CultureInfo.InvariantCulture)]), "caffeinate");
+    public static ProcessSleepBlocker Caffeinate(IProcessLauncher launcher, int deventryProcessId, string path = "/usr/bin/caffeinate") =>
+        new(launcher, new ProcessStartSpec(path, ["-i", "-w", deventryProcessId.ToString(CultureInfo.InvariantCulture)]), "caffeinate");
 
     /// <summary>
     /// <c>systemd-inhibit --what=sleep …</c>, which holds a logind inhibitor lock while its command runs: a shell loop that
-    /// ends when Claudette does, as <c>caffeinate -w</c> does on macOS, so a Claudette that crashed or was killed doesn't
+    /// ends when Deventry does, as <c>caffeinate -w</c> does on macOS, so a Deventry that crashed or was killed doesn't
     /// keep the computer awake. None without <c>systemd-inhibit</c> on the <c>PATH</c>.
     /// </summary>
-    public static ISleepBlocker SystemdInhibit(IProcessLauncher launcher, int claudetteProcessId, IFileProbe? probe = null) =>
+    public static ISleepBlocker SystemdInhibit(IProcessLauncher launcher, int deventryProcessId, IFileProbe? probe = null) =>
         (probe ?? FileProbe.Instance).FindOnPath("systemd-inhibit") is { } path
-            ? new ProcessSleepBlocker(launcher, new ProcessStartSpec(path, SystemdInhibitArguments(claudetteProcessId)), "systemd-inhibit")
+            ? new ProcessSleepBlocker(launcher, new ProcessStartSpec(path, SystemdInhibitArguments(deventryProcessId)), "systemd-inhibit")
             : new NoSleepBlocker(SystemdInhibitMissing);
 
     /// <summary>
-    /// The inhibitor's command waits while Claudette's process is there (<c>kill -0</c> checks without signalling),
+    /// The inhibitor's command waits while Deventry's process is there (<c>kill -0</c> checks without signalling),
     /// checking every 10 seconds. POSIX <c>sh</c>, rather than GNU <c>tail --pid</c>, which not every distribution has.
     /// </summary>
-    public static IReadOnlyList<string> SystemdInhibitArguments(int claudetteProcessId) =>
+    public static IReadOnlyList<string> SystemdInhibitArguments(int deventryProcessId) =>
     [
-        "--what=sleep", "--who=Claudette", "--why=Claudette is keeping this computer awake", "--mode=block",
-        "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "claudette-awake",
-        claudetteProcessId.ToString(CultureInfo.InvariantCulture),
+        "--what=sleep", "--who=Deventry", "--why=Deventry is keeping this computer awake", "--mode=block",
+        "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "deventry-awake",
+        deventryProcessId.ToString(CultureInfo.InvariantCulture),
     ];
 
     public string? UnavailableReason => null;

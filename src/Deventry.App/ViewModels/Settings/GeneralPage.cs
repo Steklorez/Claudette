@@ -6,7 +6,7 @@ namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
 /// Settings → General (DESIGN.md §14): starting at login and restoring tabs, closing a working tab, keeping the computer
-/// awake, Claude's service status and Claudette's own updates. Cleaning up worktrees is on Git (<see cref="GitPage"/>).
+/// awake, Claude's service status and Deventry's own updates. Cleaning up worktrees is on Git (<see cref="GitPage"/>).
 /// Dispose it with the window.
 /// </summary>
 public sealed partial class GeneralPage : SettingsPage, IDisposable
@@ -19,8 +19,8 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         Section("starting", "Starting and closing",
         [
             // The OS's entry, not settings.json: never reset, and never synced.
-            Setting("state.startAtLogin", "Start Claudette when I log in", null, null, keywords: ["login item", "startup", "launch at login"], machineOnly: true),
-            Setting("sessions.restoreUnpinnedTabs", "Also restore unpinned tabs when Claudette starts", s => s.Sessions.RestoreUnpinnedTabs, (s, v) => s.Sessions.RestoreUnpinnedTabs = v,
+            Setting("state.startAtLogin", "Start Deventry when I log in", null, null, keywords: ["login item", "startup", "launch at login"], machineOnly: true),
+            Setting("sessions.restoreUnpinnedTabs", "Also restore unpinned tabs when Deventry starts", s => s.Sessions.RestoreUnpinnedTabs, (s, v) => s.Sessions.RestoreUnpinnedTabs = v,
                 "Pinned tabs always come back.", keywords: ["reopen", "session restore"]),
             Setting("general.confirmCloseWorkingTab", "Confirm before closing a tab where Claude is working",
                 s => s.General.ConfirmCloseWorkingTab, (s, v) => s.General.ConfirmCloseWorkingTab = v,
@@ -44,11 +44,11 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
                 "A dot in the header, and a banner while Claude has an incident.",
                 "Read from status.claude.com every 5 minutes: Claude Code, the Claude API and claude.ai. Off, it isn't checked at all.",
                 ["outage", "incident", "status page"]),
-            Setting("general.checkForAppUpdates", "Check for Claudette updates automatically", s => s.General.CheckForAppUpdates, (s, v) => s.General.CheckForAppUpdates = v,
-                "From Claudette's releases on GitHub, at launch and every few hours.", keywords: ["version", "upgrade"]),
+            Setting("general.checkForAppUpdates", "Check for Deventry updates automatically", s => s.General.CheckForAppUpdates, (s, v) => s.General.CheckForAppUpdates = v,
+                "From Deventry's releases on GitHub, at launch and every few hours.", keywords: ["version", "upgrade"]),
             Setting("general.includePrereleases", "Include pre-releases", s => s.General.IncludePrereleases, (s, v) => s.General.IncludePrereleases = v,
                 "Try new versions before they're released.", keywords: ["beta", "preview"]),
-            Info("general.version", "Claudette version", keywords: ["update now", "check now", "release notes"]),
+            Info("general.version", "Deventry version", keywords: ["update now", "check now", "release notes"]),
         ]);
         _ = RefreshStartAtLoginAsync();
         Services.KeepAwake.PropertyChanged += OnKeepAwakeChanged;
@@ -56,18 +56,18 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
 
     public override string IconKey => "IconSettings";
 
-    public override string Description => "Starting Claudette, keeping the computer awake, and updates.";
+    public override string Description => "Starting Deventry, keeping the computer awake, and updates.";
 
     // ---- Starting at login (DESIGN.md §9, "Starting at login") ----------------------------------------------------
 
     /// <summary>
-    /// Reads whether Claudette starts at login, as the window opens: Task Manager, System Settings or another copy of
-    /// Claudette may have changed it since (DESIGN.md §9, "Starting at login").
+    /// Reads whether Deventry starts at login, as the window opens: Task Manager, System Settings or another copy of
+    /// Deventry may have changed it since (DESIGN.md §9, "Starting at login").
     /// </summary>
     public async Task RefreshStartAtLoginAsync() => UseLoginItem(await Services.StartAtLogin.ReadAsync());
 
     /// <summary>
-    /// <b>Start Claudette when I log in</b>. It's this machine's, and lives in the OS rather than in settings.json, so
+    /// <b>Start Deventry when I log in</b>. It's this machine's, and lives in the OS rather than in settings.json, so
     /// Reset to defaults leaves it.
     /// </summary>
     public bool StartsAtLogin
@@ -84,17 +84,17 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
 
     public bool CanChangeStartAtLogin => _loginItem?.CanChange == true && !_changingLoginItem;
 
-    /// <summary>What happens at login, and which copy of Claudette starts when it isn't simply this one.</summary>
+    /// <summary>What happens at login, and which copy of Deventry starts when it isn't simply this one.</summary>
     public string StartAtLoginText
     {
         get
         {
-            const string opens = "Claudette opens minimized when you log in to this computer.";
+            const string opens = "Deventry opens minimized when you log in to this computer.";
             var current = Services.ThisCopy;
             return _loginItem?.Starts switch
             {
                 { } starts when !starts.IsSameCopy(current) => $"{opens} It starts {starts.Describe()} rather than this {current.KindName}.",
-                { Kind: AppInstallKind.SourceBuild } => $"{opens} It starts this source build's newest build. Once Claudette is installed, the installed one starts instead.",
+                { Kind: AppInstallKind.SourceBuild } => $"{opens} It starts this source build's newest build. Once Deventry is installed, the installed one starts instead.",
                 _ => opens,
             };
         }
@@ -176,15 +176,15 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         }
     }
 
-    /// <summary>Whenever Claudette is running.</summary>
-    public bool KeepAwakeWhileClaudetteRuns
+    /// <summary>Whenever Deventry is running.</summary>
+    public bool KeepAwakeWhileDeventryRuns
     {
-        get => Settings.General.KeepAwakeWhen == KeepAwakeWhen.ClaudetteRuns;
+        get => Settings.General.KeepAwakeWhen == KeepAwakeWhen.DeventryRuns;
         set
         {
             if (value)
             {
-                SetKeepAwakeWhen(KeepAwakeWhen.ClaudetteRuns);
+                SetKeepAwakeWhen(KeepAwakeWhen.DeventryRuns);
             }
         }
     }
@@ -197,7 +197,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         }
         Settings.General.KeepAwakeWhen = when;
         OnPropertyChanged(nameof(KeepAwakeWhileClaudeHasWork));
-        OnPropertyChanged(nameof(KeepAwakeWhileClaudetteRuns));
+        OnPropertyChanged(nameof(KeepAwakeWhileDeventryRuns));
         Save();
     }
 
@@ -216,14 +216,14 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
     {
         OnPropertyChanged(nameof(KeepAwake));
         OnPropertyChanged(nameof(KeepAwakeWhileClaudeHasWork));
-        OnPropertyChanged(nameof(KeepAwakeWhileClaudetteRuns));
+        OnPropertyChanged(nameof(KeepAwakeWhileDeventryRuns));
     }
 
     public void Dispose() => Services.KeepAwake.PropertyChanged -= OnKeepAwakeChanged;
 
-    // ---- Claudette's own updates (DESIGN.md §2, "Updating Claudette") ---------------------------------------------
+    // ---- Deventry's own updates (DESIGN.md §2, "Updating Deventry") ---------------------------------------------
 
-    /// <summary>Check GitHub for new Claudette releases.</summary>
+    /// <summary>Check GitHub for new Deventry releases.</summary>
     public bool CheckForAppUpdates
     {
         get => Settings.General.CheckForAppUpdates;
@@ -241,7 +241,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         }
     }
 
-    /// <summary>Claudette's version, update status and actions, the same as the sidebar's badge. Null in some tests.</summary>
+    /// <summary>Deventry's version, update status and actions, the same as the sidebar's badge. Null in some tests.</summary>
     public AppUpdateViewModel? AppUpdates { get; internal set; }
 
     public bool HasAppUpdates => AppUpdates is not null && SourceUpdates is null;

@@ -167,7 +167,7 @@ public sealed class ShortcutTips(AppSettings settings) : ObservableObject
     // ---- Send with (DESIGN.md §14), on the composer's send key chip and Send (DESIGN.md §5, "Composer") ------------
 
     /// <summary>
-    /// The glyph the send key chip shows for Enter, on every OS. It's drawn from Inter, which Claudette ships: the OS's
+    /// The glyph the send key chip shows for Enter, on every OS. It's drawn from Inter, which Deventry ships: the OS's
     /// own interface font may not have it (Segoe UI hasn't), and fallback would take it from whichever font has.
     /// </summary>
     public const string ReturnGlyph = "⏎";

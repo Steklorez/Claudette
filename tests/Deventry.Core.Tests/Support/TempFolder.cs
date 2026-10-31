@@ -3,7 +3,7 @@ namespace Deventry.Core.Tests.Support;
 /// <summary>A temporary folder that's deleted when disposed.</summary>
 public sealed class TempFolder : IDisposable
 {
-    public TempFolder(string prefix = "claudette")
+    public TempFolder(string prefix = "deventry")
     {
         Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(Path);

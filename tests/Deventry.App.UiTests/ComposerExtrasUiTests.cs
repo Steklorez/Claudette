@@ -201,7 +201,7 @@ public class ComposerExtrasUiTests
         Assert.Same(group, chip.GetVisualAncestors().OfType<WrapPanel>().First());
         Assert.Equal(group.Children.IndexOf(send) - 1, group.Children.IndexOf(chip));
         Assert.True(chip.Focusable && chip.IsTabStop, "The keyboard should reach the chip, as it does the bar's other buttons");
-        // ⏎ comes from Inter, which Claudette ships, rather than whichever font fallback finds it in.
+        // ⏎ comes from Inter, which Deventry ships, rather than whichever font fallback finds it in.
         var glyph = chip.GetVisualDescendants().OfType<TextBlock>().Single().Inlines!.OfType<Run>().Single(r => r.Classes.Contains("returnkey"));
         Assert.Equal(ShortcutTips.ReturnGlyph, glyph.Text);
         Assert.Contains("fonts:Inter", glyph.FontFamily.ToString(), StringComparison.Ordinal);

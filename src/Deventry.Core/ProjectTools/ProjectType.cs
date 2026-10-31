@@ -1,7 +1,7 @@
 namespace Deventry.Core.ProjectTools;
 
 /// <summary>
-/// A kind of project Claudette knows (DESIGN.md §18, "Project types"): it finds its projects for a tab's folder, says
+/// A kind of project Deventry knows (DESIGN.md §18, "Project types"): it finds its projects for a tab's folder, says
 /// what can be done with one, and declares its settings, which its page in Settings → Project tools draws with its
 /// on and off switch and <b>Tell Claude about …</b>. Unreal Engine, Unity and Godot are the first. Adding one is a class
 /// that implements this, a line in the app's list of them, and its icon (DESIGN.md §18, "Adding a project type").
@@ -38,7 +38,7 @@ public interface IProjectType
 
     /// <summary>
     /// Reads a project and builds its actions. Never throws for a broken project: <see cref="ProjectInfo.Problem"/> says
-    /// what's wrong. Its <see cref="ProjectInfo.SystemPromptNote"/> is always written; Claudette leaves it out when
+    /// what's wrong. Its <see cref="ProjectInfo.SystemPromptNote"/> is always written; Deventry leaves it out when
     /// Settings says not to tell Claude.
     /// </summary>
     ProjectInfo Describe(ProjectCandidate candidate, ProjectToolContext context);

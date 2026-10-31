@@ -6,7 +6,7 @@ using LiveMarkdown.Avalonia;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Opening files in Claudette's editor (DESIGN.md §18, "Project files", "Opening files in the editor"): a file a reply
+/// Opening files in Deventry's editor (DESIGN.md §18, "Project files", "Opening files in the editor"): a file a reply
 /// names opens in its project's Files tab, beside the conversation or in its place, at the line it names; a folder
 /// shows in the explorer; what isn't text, or Settings → Editor, still sends it to the OS's app.
 /// </summary>

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds Claudette as an MSIX package (DESIGN.md §2, "Packaging"), signed when a certificate is given.
+  Builds Deventry as an MSIX package (DESIGN.md §2, "Packaging"), signed when a certificate is given.
 
 .DESCRIPTION
   Publishes the app self-contained for one architecture, lays it out with the manifest and tile images, builds the
@@ -11,8 +11,10 @@
   packages, so for a local test sign with a self-signed certificate whose subject matches -Publisher, given as
   -CertificatePath, and trust that certificate.
 
-  With -StorePublisher, the same layout is packed a second time for the Microsoft Store, into a store folder in the
-  output: the Store wants its own publisher in the manifest, and signs the package itself, so that one stays unsigned.
+  With -StorePublisher and -StoreIdentityName, the same layout is packed a second time for the Microsoft Store, into a
+  store folder in the output: Deventry is a product of its own in Partner Center, whose identity the Store package has,
+  and the Store signs the package itself, so that one stays unsigned. The GitHub package keeps dotBunny.Claudette, so
+  installed copies update (DESIGN.md §2, "Renaming to Deventry").
 
 .EXAMPLE
   ./packaging/windows/build-msix.ps1 -Version 1.2.3 -Architecture x64
@@ -22,9 +24,11 @@ param(
     [ValidateSet('x64', 'arm64')] [string] $Architecture = 'x64',
     # Must match the signing certificate's subject exactly. Releases use the Artifact Signing certificate profile's,
     # "CN=dotBunny, O=dotBunny, L=Peterborough, S=Ontario, C=CA", which the package workflow passes.
-    [string] $Publisher = $(if ($env:MSIX_PUBLISHER) { $env:MSIX_PUBLISHER } else { 'CN=Claudette Development' }),
-    # Partner Center's Package/Identity/Publisher for Claudette (Product management, Product identity).
+    [string] $Publisher = $(if ($env:MSIX_PUBLISHER) { $env:MSIX_PUBLISHER } else { 'CN=Deventry Development' }),
+    # Partner Center's Package/Identity/Publisher and Package/Identity/Name for Deventry (Product management, Product
+    # identity).
     [string] $StorePublisher = $env:MSIX_STORE_PUBLISHER,
+    [string] $StoreIdentityName = $env:MSIX_STORE_IDENTITY_NAME,
     [string] $CertificatePath = $env:WINDOWS_CERTIFICATE_PATH,
     [string] $CertificatePassword = $env:WINDOWS_CERTIFICATE_PASSWORD,
     [string] $TimestampUrl = 'http://timestamp.digicert.com',
@@ -43,7 +47,7 @@ $parts = $Version.Split('-')[0].Split('.')
 while ($parts.Count -lt 3) { $parts += '0' }
 $packageVersion = ($parts[0..2] + '0') -join '.'
 
-Write-Host "Publishing Claudette $Version for win-$Architecture"
+Write-Host "Publishing Deventry $Version for win-$Architecture"
 dotnet publish (Join-Path $root 'src/Deventry.App/Deventry.App.csproj') -c Release -r "win-$Architecture" --self-contained `
     -p:Version=$Version -p:DebugType=portable -o $layout
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
@@ -60,8 +64,9 @@ $assets = Join-Path $layout 'Assets'
 New-Item -ItemType Directory -Force -Path $assets | Out-Null
 Copy-Item -Recurse -Force (Join-Path $PSScriptRoot 'Assets/*') $assets
 $manifest = Join-Path $layout 'AppxManifest.xml'
-function Write-Manifest([string] $publisher) {
+function Write-Manifest([string] $publisher, [string] $identityName = 'dotBunny.Claudette') {
     (Get-Content -Raw -Encoding utf8 (Join-Path $PSScriptRoot 'Package.appxmanifest')) `
+        -replace 'Identity Name="dotBunny\.Claudette"', "Identity Name=`"$([System.Security.SecurityElement]::Escape($identityName))`"" `
         -replace '\$VERSION\$', $packageVersion `
         -replace '\$PUBLISHER\$', [System.Security.SecurityElement]::Escape($publisher) `
         -replace '\$ARCHITECTURE\$', $Architecture |
@@ -85,10 +90,13 @@ function Find-SdkTool([string] $name) {
 $makepri = Find-SdkTool 'makepri.exe'
 $priConfig = Join-Path $work 'priconfig.xml'
 & $makepri createconfig /cf $priConfig /dq en-US /o | Out-Host
-& $makepri new /pr $layout /cf $priConfig /mn (Join-Path $layout 'AppxManifest.xml') /of (Join-Path $layout 'resources.pri') /o | Out-Host
-if ($LASTEXITCODE -ne 0) { throw 'makepri failed' }
+function Write-ResourceIndex {
+    & $makepri new /pr $layout /cf $priConfig /mn (Join-Path $layout 'AppxManifest.xml') /of (Join-Path $layout 'resources.pri') /o | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw 'makepri failed' }
+}
+Write-ResourceIndex
 
-$msix = Join-Path $root "$Output/Claudette-$Version-$Architecture.msix"
+$msix = Join-Path $root "$Output/Deventry-$Version-$Architecture.msix"
 & (Find-SdkTool 'makeappx.exe') pack /d $layout /p $msix /o | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'makeappx failed' }
 
@@ -102,12 +110,16 @@ else {
 }
 Write-Host "Built $msix"
 
-# The Store's copy: the same files, the Store's publisher. The resource index only names the package, which is the same.
-if ($StorePublisher) {
+# The Store's copy: the same files, the Store's identity. The resource index names the package, so it's made again.
+if ($StorePublisher -and -not $StoreIdentityName) {
+    Write-Warning "No Store identity name (MSIX_STORE_IDENTITY_NAME), so no Store package: Deventry's is on its Product identity page in Partner Center."
+}
+elseif ($StorePublisher) {
     $store = Join-Path $root "$Output/store"
     New-Item -ItemType Directory -Force -Path $store | Out-Null
-    Write-Manifest $StorePublisher
-    $storeMsix = Join-Path $store "Claudette-$Version-$Architecture.msix"
+    Write-Manifest $StorePublisher $StoreIdentityName
+    Write-ResourceIndex
+    $storeMsix = Join-Path $store "Deventry-$Version-$Architecture.msix"
     & (Find-SdkTool 'makeappx.exe') pack /d $layout /p $storeMsix /o | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'makeappx failed for the Store package' }
     Write-Host "Built $storeMsix for the Store"

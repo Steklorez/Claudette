@@ -9,7 +9,7 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// A thread and its sub-thread, each a tab running the real <c>claude</c> against the mock Messages API (DESIGN.md §18,
-/// "Threads"): the thread's Claude calls Claude Code's own <c>SendMessage</c>, Claudette's hook delivers it to the
+/// "Threads"): the thread's Claude calls Claude Code's own <c>SendMessage</c>, Deventry's hook delivers it to the
 /// sub-thread, and the sub-thread's reply comes back to the thread. No account and no tokens. Skipped when Claude Code
 /// isn't installed.
 /// </summary>
@@ -48,7 +48,7 @@ public sealed class ThreadRealCliTests
         await Deventry.Tests.Waiting.UntilAsync(
             () => InlineDispatcher.Read(() => plan.Items.OfType<UserMessageItem>().Any(m => m.AutomaticLabel == "From the sub-threads")
                 && plan.Items.ToolCalls().Any(t => t is { Name: "SendMessage", IsComplete: true }))
-                && api.Requests.Any(r => r.LastToolResultText.StartsWith("Claudette delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal)),
+                && api.Requests.Any(r => r.LastToolResultText.StartsWith("Deventry delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal)),
             "the report", TimeSpan.FromSeconds(90));
         var delivered = InlineDispatcher.Read(() => art.Items.OfType<UserMessageItem>().Single(m => m.IsFromThread));
         Assert.Equal("AGENT_REPLY The art page is done.", delivered.Text);
@@ -61,7 +61,7 @@ public sealed class ThreadRealCliTests
         var send = InlineDispatcher.Read(() => plan.Items.ToolCalls().Single(t => t.Name == "SendMessage"));
         Assert.True(send.IsComplete);
         Assert.False(send.IsError);
-        Assert.Contains(api.Requests, r => r.LastToolResultText.StartsWith("Claudette delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal));
+        Assert.Contains(api.Requests, r => r.LastToolResultText.StartsWith("Deventry delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal));
     }
 
     /// <summary>Starts the real <c>claude</c> pointed at the mock, keeping the tab's own variables.</summary>

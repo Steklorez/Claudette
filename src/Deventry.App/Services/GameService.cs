@@ -7,8 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// Games with Claudette (DESIGN.md §18): the one game open, for the whole app, on whichever tab's Games page shows it.
-/// Keeps each game's score and level on this machine, tells Claudette what happens, and says over the board when Claude
+/// Games with Joulene (DESIGN.md §18): the one game open, for the whole app, on whichever tab's Games page shows it.
+/// Keeps each game's score and level on this machine, tells Joulene what happens, and says over the board when Claude
 /// needs the user. Nothing here touches Claude Code.
 /// </summary>
 public sealed partial class GameService : ObservableObject, IGameHost, IDisposable
@@ -30,7 +30,7 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
 
     public GameService(AppServices services) => _services = services;
 
-    /// <summary>Settings → Appearance → <b>Games with Claudette</b>.</summary>
+    /// <summary>Settings → Appearance → <b>Games with Joulene</b>.</summary>
     public bool IsEnabled => _services.Settings.Appearance.GamesWithJoulene;
 
     /// <summary>The game open, or null.</summary>

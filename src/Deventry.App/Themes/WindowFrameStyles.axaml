@@ -1,4 +1,4 @@
-<!-- Claudette's windows' own title bars (DESIGN.md §3, "Window frame"): the TitleBar at the top of each window but the
+<!-- Deventry's windows' own title bars (DESIGN.md §3, "Window frame"): the TitleBar at the top of each window but the
      main one, whose header is its title bar, and the window's buttons Avalonia draws on Windows for all of them. -->
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"

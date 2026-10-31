@@ -54,7 +54,7 @@ public class DiagnosticsTests
 
         await settings.Advanced.CopyDiagnosticsCommand.ExecuteAsync(null);
 
-        Assert.StartsWith("Claudette ", h.Platform.Clipboard, StringComparison.Ordinal);
+        Assert.StartsWith("Deventry ", h.Platform.Clipboard, StringComparison.Ordinal);
         Assert.Contains($"Minimum supported Claude Code: {ClaudeLocator.MinimumVersion}", h.Platform.Clipboard, StringComparison.Ordinal);
         Assert.Contains("hologram ×1", h.Platform.Clipboard, StringComparison.Ordinal);
         Assert.Single(settings.SearchResultsFor("log protocol"));

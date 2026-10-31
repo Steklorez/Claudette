@@ -16,10 +16,10 @@ public static class AppIconAnimations
     /// <summary>The taskbar overlay while tabs work (Windows): Claude's spark, pulsing.</summary>
     public static AppIconAnimation Spark { get; } = Load("spark", "Claude is working", frames: 6, TimeSpan.FromMilliseconds(160));
 
-    /// <summary>The Dock icon while tabs work (macOS): Claudette typing.</summary>
+    /// <summary>The Dock icon while tabs work (macOS): Deventry typing.</summary>
     public static AppIconAnimation Typing { get; } = Load("typing", "Claude is working", frames: 2, TimeSpan.FromMilliseconds(220));
 
-    /// <summary>The Dock icon while a tab needs input (macOS): Claudette waving.</summary>
+    /// <summary>The Dock icon while a tab needs input (macOS): Deventry waving.</summary>
     public static AppIconAnimation Waving { get; } = Load("waving", "A tab needs your input", frames: 2, TimeSpan.FromMilliseconds(450));
 
     /// <summary>
@@ -28,7 +28,7 @@ public static class AppIconAnimations
     /// </summary>
     public static AppIconAnimation Hourglass { get; } = Load("hourglass", "Waiting for a usage limit to reset", SandRunning);
 
-    /// <summary>The Dock icon while a tab waits for a usage limit to reset (macOS): Claudette by the hourglass.</summary>
+    /// <summary>The Dock icon while a tab waits for a usage limit to reset (macOS): Deventry by the hourglass.</summary>
     public static AppIconAnimation Waiting { get; } = Load("waiting", "Waiting for a usage limit to reset", SandRunning);
 
     /// <summary>The hourglass's frames: full, three as the sand runs, empty, and turning over.</summary>

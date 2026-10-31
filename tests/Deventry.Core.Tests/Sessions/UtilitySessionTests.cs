@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Sessions;
 /// <summary>The hidden utility session's local commands, such as <c>/usage</c> (DESIGN.md §6, "Data source").</summary>
 public sealed class UtilitySessionTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-utility");
+    private readonly TempFolder _temp = new("deventry-utility");
     private readonly FakeTimeProvider _time = new();
     private readonly FakeTransport _transport = new();
 

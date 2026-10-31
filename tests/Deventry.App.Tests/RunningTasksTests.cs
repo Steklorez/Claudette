@@ -134,7 +134,7 @@ public class RunningTasksTests
         var tab = await h.OpenTabAsync();
         h.Transport.Emit(Wire.Init());
         h.Transport.Emit(TaskStarted("task-r", null, "remote_agent", "Fix the flaky test in the cloud"));
-        h.Transport.Emit(TaskStarted("task-x", null, "something_new", "A kind Claudette doesn't know"));
+        h.Transport.Emit(TaskStarted("task-x", null, "something_new", "A kind Deventry doesn't know"));
         h.Transport.Emit(TaskStarted("task-a", null, "local_bash", "Watch settings for changes", backgrounded: true, ambient: true));
         h.Transport.Emit(TaskStarted("task-w", null, "local_workflow", "Review every file", backgrounded: false));
 

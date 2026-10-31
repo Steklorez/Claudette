@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-What screenshots.ps1 and guide-screenshots.ps1 share (Windows): building Claudette and the demo, starting Claudette on the
+What screenshots.ps1 and guide-screenshots.ps1 share (Windows): building Deventry and the demo, starting Deventry on the
 demo and closing it, finding its controls through UI Automation and driving them, and capturing its windows with
 PrintWindow.
 
 .DESCRIPTION
 A run leaves the focus, the keyboard and the pointer to the user (DESIGN.md §9, "Taking screenshots without the
-focus"). Claudette runs with DEVENTRY_UNFOCUSED=1, so its windows never take the focus and stay behind the user's, and
+focus"). Deventry runs with DEVENTRY_UNFOCUSED=1, so its windows never take the focus and stay behind the user's, and
 with DEVENTRY_AUTOMATION_PIPE, so it takes commands on that pipe: click, right-click, toggle, set text, show, scroll,
-show a tip, press keys and close a window, each carried out by Claudette itself. Controls are found and read through UI
+show a tip, press keys and close a window, each carried out by Deventry itself. Controls are found and read through UI
 Automation, which only reads, and each command names the control as UI Automation saw it. Nothing here sends the
 mouse's or the keyboard's input, or uses UI Automation's own actions, which Windows lets bring a window to the front.
-The focus watch warns if Claudette came to the front anyway.
+The focus watch warns if Deventry came to the front anyway.
 #>
 $ErrorActionPreference = 'Stop'
 
@@ -134,7 +134,7 @@ public static class WindowShot
 
     /// <summary>
     /// Has the window draw its frame as active, as it does with the focus: without it, Windows draws the title bar
-    /// plainer. Claudette never has the focus to lose again, so it stays drawn that way.
+    /// plainer. Deventry never has the focus to lose again, so it stays drawn that way.
     /// </summary>
     static void DrawActive(IntPtr hwnd)
     {
@@ -161,7 +161,7 @@ public static class WindowShot
 
 }
 
-/// <summary>Notes each step during which a window of Claudette's came to the front: a run leaves the focus to the user.</summary>
+/// <summary>Notes each step during which a window of Deventry's came to the front: a run leaves the focus to the user.</summary>
 public static class FocusWatch
 {
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
@@ -172,7 +172,7 @@ public static class FocusWatch
     static uint last;
     static readonly List<string> taken = new List<string>();
 
-    /// <summary>What the script is doing, to say when Claudette came to the front.</summary>
+    /// <summary>What the script is doing, to say when Deventry came to the front.</summary>
     public static volatile string Step = "";
 
     public static void Start(int processId)
@@ -181,11 +181,11 @@ public static class FocusWatch
         lock (taken) { taken.Clear(); }
         watched = (uint)processId;
         last = 0;
-        Step = "starting Claudette";
+        Step = "starting Deventry";
         timer = new Timer(delegate { Check(); }, null, 0, 100);
     }
 
-    /// <summary>Stops watching; the steps during which Claudette came to the front.</summary>
+    /// <summary>Stops watching; the steps during which Deventry came to the front.</summary>
     public static string[] Stop()
     {
         if (timer != null) { timer.Dispose(); timer = null; }
@@ -299,12 +299,12 @@ function Show-Tree($from, [int] $depth = 12) {
 
 # ---- The command channel (DESIGN.md §9, "Taking screenshots without the focus") ----------------------------------------
 
-# The pipe the Claudette Start-Claudette started takes its commands on.
+# The pipe the Deventry Start-Deventry started takes its commands on.
 $script:pipeName = $null
 
-# Sends $command to Claudette, which carries it out itself and answers; throws with why if it couldn't.
+# Sends $command to Deventry, which carries it out itself and answers; throws with why if it couldn't.
 function Send-Command([hashtable] $command) {
-    if (-not $script:pipeName) { throw "Claudette wasn't started with its command channel (Start-Claudette)." }
+    if (-not $script:pipeName) { throw "Deventry wasn't started with its command channel (Start-Deventry)." }
     $client = New-Object System.IO.Pipes.NamedPipeClientStream('.', $script:pipeName, [System.IO.Pipes.PipeDirection]::InOut)
     try {
         $client.Connect(10000)
@@ -318,9 +318,9 @@ function Send-Command([hashtable] $command) {
     finally {
         $client.Dispose()
     }
-    if (-not $line) { throw "Claudette didn't answer '$($command.verb)'." }
+    if (-not $line) { throw "Deventry didn't answer '$($command.verb)'." }
     $answer = $line | ConvertFrom-Json
-    if (-not $answer.ok) { throw "Claudette couldn't $($command.verb): $($answer.error)" }
+    if (-not $answer.ok) { throw "Deventry couldn't $($command.verb): $($answer.error)" }
     $answer
 }
 
@@ -427,15 +427,15 @@ function Send-WindowKey([IntPtr] $hwnd, [string] $key) {
     Send-Keys $hwnd $key
 }
 
-# What the script is doing, for Stop-Claudette to say if Claudette came to the front meanwhile.
+# What the script is doing, for Stop-Deventry to say if Deventry came to the front meanwhile.
 function Set-Step([string] $name) {
     [FocusWatch]::Step = $name
 }
 
-# Waits for a window of Claudette's other than $main, such as Settings, and puts it behind the user's windows.
-function Get-OtherWindow($claudette, [IntPtr] $main, [string] $what, [int] $seconds = 20) {
-    Wait-Until { [WindowShot]::OtherWindow($claudette.Id, $main) -ne [IntPtr]::Zero } $what $seconds
-    $other = [WindowShot]::OtherWindow($claudette.Id, $main)
+# Waits for a window of Deventry's other than $main, such as Settings, and puts it behind the user's windows.
+function Get-OtherWindow($deventry, [IntPtr] $main, [string] $what, [int] $seconds = 20) {
+    Wait-Until { [WindowShot]::OtherWindow($deventry.Id, $main) -ne [IntPtr]::Zero } $what $seconds
+    $other = [WindowShot]::OtherWindow($deventry.Id, $main)
     [WindowShot]::ToBack($other)
     $other
 }
@@ -454,11 +454,11 @@ function Hide-ToolWindows([IntPtr] $window) {
 # Clicks $element to open its menu and returns where to find the menu's entries, once $entry is there: a window of its
 # own, as a context menu has, or the window it was opened from, whose automation tree has the header's menu's entries
 # (its button is in the title bar), which a click reaches as it does the others.
-function Open-Menu($claudette, [IntPtr] $window, $element, [string] $entry) {
+function Open-Menu($deventry, [IntPtr] $window, $element, [string] $entry) {
     Send-Click $element
     $script:menuRoot = $null
     Wait-Until {
-        $other = [WindowShot]::OtherWindow($claudette.Id, $window)
+        $other = [WindowShot]::OtherWindow($deventry.Id, $window)
         if ($other -ne [IntPtr]::Zero -and (Find-ByText $other $entry -Optional)) { $script:menuRoot = $other }
         elseif (Find-ByText $window $entry -Optional) { $script:menuRoot = $window }
         $null -ne $script:menuRoot
@@ -466,12 +466,12 @@ function Open-Menu($claudette, [IntPtr] $window, $element, [string] $entry) {
     $script:menuRoot
 }
 
-# Waits while the pointer is over Claudette, where a window of it shows past the user's: what's under it would show lit.
+# Waits while the pointer is over Deventry, where a window of it shows past the user's: what's under it would show lit.
 function Wait-PointerAway([IntPtr] $hwnd, [string] $path) {
     $deadline = (Get-Date).AddSeconds(5)
     while ([WindowShot]::PointerOver($hwnd)) {
         if ((Get-Date) -gt $deadline) {
-            Write-Warning "The pointer is over Claudette, so what's under it may show lit in $(Split-Path $path -Leaf)."
+            Write-Warning "The pointer is over Deventry, so what's under it may show lit in $(Split-Path $path -Leaf)."
             return
         }
         Start-Sleep -Milliseconds 250
@@ -511,7 +511,7 @@ function Save-Element([IntPtr] $hwnd, [string] $path, $element, [double[]] $marg
     Save-Rect $hwnd $path $element.Current.BoundingRectangle $margin
 }
 
-# Closes a window of Claudette's, such as Settings, as its close button does.
+# Closes a window of Deventry's, such as Settings, as its close button does.
 function Close-Window([IntPtr] $hwnd) {
     Send-Command @{ verb = 'close'; window = [long] $hwnd } | Out-Null
 }
@@ -549,9 +549,9 @@ function Wait-Until([scriptblock] $condition, [string] $what, [int] $seconds = 6
     }
 }
 
-# Builds Claudette and the demo; returns where their programs are.
-function Build-Claudette([string] $repo) {
-    Write-Host 'Building Claudette and the demo...'
+# Builds Deventry and the demo; returns where their programs are.
+function Build-Deventry([string] $repo) {
+    Write-Host 'Building Deventry and the demo...'
     & dotnet build (Join-Path $repo 'src\Deventry.App\Deventry.App.csproj') -v q -nologo
     if ($LASTEXITCODE -ne 0) { throw 'The build failed.' }
     & dotnet build (Join-Path $repo 'tools\Deventry.Demo\Deventry.Demo.csproj') -v q -nologo
@@ -563,16 +563,16 @@ function Build-Claudette([string] $repo) {
 }
 
 # Makes the demo's content in $work afresh, for the style and theme: still, and without the OS's notifications, which
-# Claudette would send from behind the user's windows.
+# Deventry would send from behind the user's windows.
 function New-DemoContent([string] $demo, [string] $work, [string] $projects, [string] $style, [string] $theme) {
     & $demo $work --theme $theme --style $style --projects $projects --still --quiet | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'deventry-demo failed.' }
 }
 
-# Starts Claudette on the demo in $work (fake-claude as Claude Code, so no account and no tokens), once it has a window
+# Starts Deventry on the demo in $work (fake-claude as Claude Code, so no account and no tokens), once it has a window
 # and takes commands, behind the user's windows and without the focus. $environment adds to what it starts with, such as
 # FAKE_CLAUDE_LOGGED_IN = '0' for the sign-in screen.
-function Start-Claudette([string] $app, [string] $work, [hashtable] $environment = @{}) {
+function Start-Deventry([string] $app, [string] $work, [hashtable] $environment = @{}) {
     $start = New-Object System.Diagnostics.ProcessStartInfo $app
     $start.UseShellExecute = $false
     $start.EnvironmentVariables['DEVENTRY_HOME'] = Join-Path $work 'home'
@@ -582,27 +582,27 @@ function Start-Claudette([string] $app, [string] $work, [hashtable] $environment
     # A source build otherwise copies itself to its data folder and runs from there.
     $start.EnvironmentVariables['DEVENTRY_RUN_IN_PLACE'] = '1'
     $start.EnvironmentVariables['DEVENTRY_UNFOCUSED'] = '1'
-    # Its own pipe each time, so a Claudette left over from a run can't answer for this one.
-    $script:pipeName = "claudette-automation-$([guid]::NewGuid().ToString('N'))"
+    # Its own pipe each time, so a Deventry left over from a run can't answer for this one.
+    $script:pipeName = "deventry-automation-$([guid]::NewGuid().ToString('N'))"
     $start.EnvironmentVariables['DEVENTRY_AUTOMATION_PIPE'] = $script:pipeName
     foreach ($name in $environment.Keys) { $start.EnvironmentVariables[$name] = $environment[$name] }
-    $claudette = [System.Diagnostics.Process]::Start($start)
-    [FocusWatch]::Start($claudette.Id)
-    Wait-Until { $claudette.Refresh(); $claudette.MainWindowHandle -ne [IntPtr]::Zero } 'the window'
-    [WindowShot]::ToBack($claudette.MainWindowHandle)
+    $deventry = [System.Diagnostics.Process]::Start($start)
+    [FocusWatch]::Start($deventry.Id)
+    Wait-Until { $deventry.Refresh(); $deventry.MainWindowHandle -ne [IntPtr]::Zero } 'the window'
+    [WindowShot]::ToBack($deventry.MainWindowHandle)
     Wait-Until { try { Send-Command @{ verb = 'ping' } | Out-Null; $true } catch { $false } } 'the command channel' 30
-    $claudette
+    $deventry
 }
 
 # Closed by its window, so it stops each tab's Claude Code as it would for a user. Says if it came to the front meanwhile.
-function Stop-Claudette($claudette) {
+function Stop-Deventry($deventry) {
     $taken = [FocusWatch]::Stop()
-    if ($taken) { Write-Warning "Claudette came to the front: $($taken -join ', ')." }
-    $claudette.CloseMainWindow() | Out-Null
-    if (-not $claudette.WaitForExit(30000)) { Write-Warning "Claudette (pid $($claudette.Id)) didn't close." }
+    if ($taken) { Write-Warning "Deventry came to the front: $($taken -join ', ')." }
+    $deventry.CloseMainWindow() | Out-Null
+    if (-not $deventry.WaitForExit(30000)) { Write-Warning "Deventry (pid $($deventry.Id)) didn't close." }
 }
 
 Export-ModuleMember -Function Get-Root, Get-Parent, Find-ByText, Find-ByPrefix, Find-ByType, Find-ById, Find-Lowest, Find-LowestByText, Show-Tree, Invoke-ByText, Invoke-Element,
     Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Click, Send-RightClick, Send-Message, Show-Tip, Hide-Tip, Send-Keys,
     Send-WindowKey, Send-Command, Send-ElementCommand, Set-Step, Get-OtherWindow, Open-Menu, Hide-ToolWindows, Wait-PointerAway, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
-    Wait-Until, Build-Claudette, New-DemoContent, Start-Claudette, Stop-Claudette
+    Wait-Until, Build-Deventry, New-DemoContent, Start-Deventry, Stop-Deventry

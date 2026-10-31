@@ -7,7 +7,7 @@ namespace Deventry.Core.Demo;
 /// <summary>
 /// Writes a session's transcript as Claude Code 2.1.284 does (DESIGN.md §9): a line per prompt, per block of Claude's
 /// replies and per tool result, each pointing at the one before, and each subagent's own transcript in
-/// <c>&lt;session-id&gt;/subagents/</c> beside it. Claudette reads them back when the tab is restored.
+/// <c>&lt;session-id&gt;/subagents/</c> beside it. Deventry reads them back when the tab is restored.
 /// </summary>
 /// <param name="agentId">Set for a subagent's transcript, whose entries are all a sidechain.</param>
 internal sealed class DemoTranscript(string sessionId, string folder, string branch, DateTimeOffset start, string? agentId = null)
@@ -188,7 +188,7 @@ internal sealed class DemoTranscript(string sessionId, string folder, string bra
         return this;
     }
 
-    /// <summary>A thread's SendMessage to a sub-thread, which Claudette's hook delivered (DESIGN.md §18, "Threads").</summary>
+    /// <summary>A thread's SendMessage to a sub-thread, which Deventry's hook delivered (DESIGN.md §18, "Threads").</summary>
     public DemoTranscript SendMessage(string to, string summary, string message)
     {
         var answer = ThreadMessages.Delivered(to, waits: false);

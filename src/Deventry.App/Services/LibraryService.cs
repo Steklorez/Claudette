@@ -59,7 +59,7 @@ public sealed record LibraryComparison(LibraryStanding Standing, string? Machine
 
 /// <summary>
 /// The session library (DESIGN.md §9): copies the transcript and record of each tab that syncs into the library folder
-/// after its turns, keeps a lease on those sessions so two machines don't write the same one, and syncs Claudette's
+/// after its turns, keeps a lease on those sessions so two machines don't write the same one, and syncs Deventry's
 /// settings through the library when that's turned on (DESIGN.md §14, "Settings sync").
 /// </summary>
 public sealed class LibraryService : IDisposable
@@ -67,7 +67,7 @@ public sealed class LibraryService : IDisposable
     /// <summary>Claude Code finishes writing the transcript around the result message; give it a moment.</summary>
     internal static readonly TimeSpan SettleDelay = TimeSpan.FromSeconds(1);
 
-    /// <summary>Library retention runs at launch, then this often while Claudette is open.</summary>
+    /// <summary>Library retention runs at launch, then this often while Deventry is open.</summary>
     public static readonly TimeSpan PruneInterval = TimeSpan.FromDays(1);
 
     /// <summary>Copies to the library under way, waiting out <see cref="SettleDelay"/> or writing.</summary>
@@ -250,7 +250,7 @@ public sealed class LibraryService : IDisposable
                 return new LibraryCopyResult.NotHeld();
             }
             // Nor over turns another machine added: a sync client can bring them after this machine started the session,
-            // and the lease that machine released as Claudette closed there says nothing of them.
+            // and the lease that machine released as Deventry closed there says nothing of them.
             var comparison = await CompareTranscriptAsync(record.SessionId, transcript).ConfigureAwait(false);
             switch (comparison.Standing)
             {
@@ -290,7 +290,7 @@ public sealed class LibraryService : IDisposable
 
     /// <summary>
     /// Starts library retention (DESIGN.md §9, "Keeping sessions"): now, then every <see cref="PruneInterval"/>, so a
-    /// Claudette left open for weeks still deletes what's old. Each pass does nothing while the setting is off.
+    /// Deventry left open for weeks still deletes what's old. Each pass does nothing while the setting is off.
     /// </summary>
     public void StartPruning() =>
         _pruneTimer ??= _services.Time.CreateTimer(_ => _services.Dispatcher.Post(() =>

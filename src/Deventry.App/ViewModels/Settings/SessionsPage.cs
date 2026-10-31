@@ -8,7 +8,7 @@ namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
 /// Settings → Sessions (DESIGN.md §14): the session library (DESIGN.md §9), this machine's name in it, and syncing
-/// Claudette's settings through it.
+/// Deventry's settings through it.
 /// </summary>
 public sealed partial class SessionsPage : SettingsPage
 {
@@ -51,7 +51,7 @@ public sealed partial class SessionsPage : SettingsPage
         Section("settingsSync", "Settings sync",
         [
             // Turning it on can ask whose settings win: its own decision, never a reset.
-            Setting("sessions.syncSettings", "Sync Claudette's settings through the library", null, null,
+            Setting("sessions.syncSettings", "Sync Deventry's settings through the library", null, null,
                 keywords: ["settings sync", "other machines", "roaming"]),
         ]);
     }

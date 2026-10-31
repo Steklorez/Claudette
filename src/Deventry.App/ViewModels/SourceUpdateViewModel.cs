@@ -38,18 +38,18 @@ public sealed partial class SourceUpdateViewModel : ObservableObject, IDisposabl
 
     public string BadgeText =>
         _updates.IsPulling ? $"Pulling {Upstream}…"
-        : _updates.IsBuilding ? "Building Claudette…"
+        : _updates.IsBuilding ? "Building Deventry…"
         : _updates.BuildFailed ? "Build failed"
         : !HasNewCommits && _updates.LastError is not null ? "Update didn't happen"
         : NewCommits;
 
     public string Title => _updates.BuildFailed ? "The build of the new commits failed"
         : HasNewCommits ? NewCommits
-        : "Claudette's checkout";
+        : "Deventry's checkout";
 
     public string DetailText => Status is { } status
         ? $"The checkout in {_updates.RepositoryRoot} is on {status.Branch}, which tracks {status.Upstream}."
-            + (_updates.CanBuild ? " Updating pulls the new commits, builds Claudette and restarts into it, with every tab as it was." : "")
+            + (_updates.CanBuild ? " Updating pulls the new commits, builds Deventry and restarts into it, with every tab as it was." : "")
         : $"The checkout in {_updates.RepositoryRoot}.";
 
     /// <summary>The newest of the new commits, newest first.</summary>
@@ -66,7 +66,7 @@ public sealed partial class SourceUpdateViewModel : ObservableObject, IDisposabl
     public string? WhyNotText => _updates.IsBusy ? null : Status?.WhyNotPull;
 
     public string? InPlaceText => !_updates.CanBuild && HasNewCommits && Status?.CanPull == true
-        ? "This build runs in place, so Claudette can't rebuild it while it runs. Pull, then build it yourself."
+        ? "This build runs in place, so Deventry can't rebuild it while it runs. Pull, then build it yourself."
         : null;
 
     private bool CanPull => Status?.CanPull == true && !_updates.IsBusy;

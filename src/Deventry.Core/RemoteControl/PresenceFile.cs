@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Deventry.Core.RemoteControl;
 
 /// <summary>
-/// The file every <c>claude</c> Claudette starts is told about with <c>CLAUDE_CLIENT_PRESENCE_FILE</c> (DESIGN.md §10,
-/// §18). Claude Code skips Remote Control's pushes to the phone while it exists, so it exists only while Claudette's
-/// window is in front: the phone buzzes when you're away from Claudette, not while you're looking at it.
+/// The file every <c>claude</c> Deventry starts is told about with <c>CLAUDE_CLIENT_PRESENCE_FILE</c> (DESIGN.md §10,
+/// §18). Claude Code skips Remote Control's pushes to the phone while it exists, so it exists only while Deventry's
+/// window is in front: the phone buzzes when you're away from Deventry, not while you're looking at it.
 /// </summary>
 public sealed class PresenceFile : IDisposable
 {
@@ -16,7 +16,7 @@ public sealed class PresenceFile : IDisposable
     private readonly ILogger _logger;
     private readonly Lock _lock = new();
 
-    /// <summary>Removes a file left by a Claudette that didn't close cleanly: nobody is looking at it now.</summary>
+    /// <summary>Removes a file left by a Deventry that didn't close cleanly: nobody is looking at it now.</summary>
     public PresenceFile(string path, ILogger? logger = null)
     {
         Path = path;
@@ -29,7 +29,7 @@ public sealed class PresenceFile : IDisposable
     /// <summary>Whether the file is there now.</summary>
     public bool IsPresent { get; private set; }
 
-    /// <summary>Creates the file while the user is at Claudette, and deletes it when they aren't.</summary>
+    /// <summary>Creates the file while the user is at Deventry, and deletes it when they aren't.</summary>
     public void SetPresent(bool present)
     {
         lock (_lock)
@@ -41,7 +41,7 @@ public sealed class PresenceFile : IDisposable
         }
     }
 
-    /// <summary>At exit: nobody is at Claudette any more.</summary>
+    /// <summary>At exit: nobody is at Deventry any more.</summary>
     public void Dispose() => SetPresent(false);
 
     private void Write(bool present)
@@ -61,7 +61,7 @@ public sealed class PresenceFile : IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // At worst the phone buzzes while the user is at Claudette, or doesn't while they're away.
+            // At worst the phone buzzes while the user is at Deventry, or doesn't while they're away.
             _logger.LogWarning(ex, "Couldn't {Action} the presence file.", present ? "create" : "delete");
         }
     }

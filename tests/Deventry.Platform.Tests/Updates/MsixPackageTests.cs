@@ -5,12 +5,12 @@ using Deventry.Platform.Updates.Windows;
 
 namespace Deventry.Platform.Tests.Updates;
 
-/// <summary>Checking a downloaded MSIX before Windows installs it (DESIGN.md §2, "Updating Claudette").</summary>
+/// <summary>Checking a downloaded MSIX before Windows installs it (DESIGN.md §2, "Updating Deventry").</summary>
 public sealed class MsixPackageTests : IDisposable
 {
     private const string Publisher = "CN=dotBunny, O=dotBunny, C=CA";
 
-    private readonly string _folder = Directory.CreateTempSubdirectory("claudette-msix-").FullName;
+    private readonly string _folder = Directory.CreateTempSubdirectory("deventry-msix-").FullName;
 
     private string MakePackage(string name = "dotBunny.Claudette", string publisher = Publisher, string version = "1.3.0.0", string architecture = "x64")
     {
@@ -22,7 +22,7 @@ public sealed class MsixPackageTests : IDisposable
                 <?xml version="1.0" encoding="utf-8"?>
                 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
                   <Identity Name="{name}" Publisher="{publisher}" Version="{version}" ProcessorArchitecture="{architecture}" />
-                  <Properties><DisplayName>Claudette</DisplayName></Properties>
+                  <Properties><DisplayName>Deventry</DisplayName></Properties>
                 </Package>
                 """);
         }
@@ -77,17 +77,17 @@ public sealed class MsixPackageTests : IDisposable
     [Fact]
     public void Another_app_the_wrong_version_or_the_wrong_architecture_is_refused()
     {
-        Assert.Equal("The download is Contoso.Other, not Claudette.", Assert.Throws<AppInstallException>(() =>
+        Assert.Equal("The download is Contoso.Other, not Deventry.", Assert.Throws<AppInstallException>(() =>
             MsixPackage.Read(MakePackage(name: "Contoso.Other")).CheckUpdates(Family(), new AppVersion(1, 3, 0), Architecture.X64)).Message);
         Assert.Equal("The package is version 1.2.9.0, not 1.3.0.0 as the release says.", Assert.Throws<AppInstallException>(() =>
             MsixPackage.Read(MakePackage(version: "1.2.9.0")).CheckUpdates(Family(), new AppVersion(1, 3, 0), Architecture.X64)).Message);
-        Assert.Equal("The package is for arm64, and this Claudette runs on x64.", Assert.Throws<AppInstallException>(() =>
+        Assert.Equal("The package is for arm64, and this Deventry runs on x64.", Assert.Throws<AppInstallException>(() =>
             MsixPackage.Read(MakePackage(architecture: "arm64")).CheckUpdates(Family(), new AppVersion(1, 3, 0), Architecture.X64)).Message);
     }
 
     [Theory]
     [InlineData(unchecked((int)0x800B0109), "Windows doesn't trust the certificate the update is signed with.")]
-    [InlineData(unchecked((int)0x80073D06), "A newer version of Claudette is already installed.")]
+    [InlineData(unchecked((int)0x80073D06), "A newer version of Deventry is already installed.")]
     [InlineData(unchecked((int)0x80004005), "Windows couldn't install the update (error 0x80004005).")]
     public void Deployment_errors_are_put_in_words(int hresult, string expected) => Assert.Equal(expected, MsixPackage.DescribeError(hresult));
 

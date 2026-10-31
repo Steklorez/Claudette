@@ -5,9 +5,9 @@ using Deventry.Core.Processes;
 
 namespace Deventry.Platform.LoginShell;
 
-/// <summary>What reading the login shell needs to know about Claudette's own process. Tests make their own.</summary>
-/// <param name="Environment">Claudette's own environment: the shell starts with it, and <c>$SHELL</c> and <c>TERM</c> come from it.</param>
-/// <param name="HasControllingTerminal">Whether Claudette has a controlling terminal. Only asked on macOS and Linux, without <c>TERM</c>.</param>
+/// <summary>What reading the login shell needs to know about Deventry's own process. Tests make their own.</summary>
+/// <param name="Environment">Deventry's own environment: the shell starts with it, and <c>$SHELL</c> and <c>TERM</c> come from it.</param>
+/// <param name="HasControllingTerminal">Whether Deventry has a controlling terminal. Only asked on macOS and Linux, without <c>TERM</c>.</param>
 /// <param name="HomeDirectory">Where the shell starts, as a new terminal would.</param>
 public sealed record LoginShellHost(
     bool IsWindows,
@@ -61,7 +61,7 @@ public sealed class LoginShellReader : ILoginShell
         NotNeeded = WhyNotNeeded(host);
     }
 
-    /// <summary>The reader for this process. Pass Claudette's plain launcher: the shell isn't a tab's process.</summary>
+    /// <summary>The reader for this process. Pass Deventry's plain launcher: the shell isn't a tab's process.</summary>
     public static LoginShellReader CreateForCurrentOS(IProcessLauncher launcher, TimeProvider timeProvider) =>
         new(launcher, timeProvider, LoginShellHost.Current());
 
@@ -76,7 +76,7 @@ public sealed class LoginShellReader : ILoginShell
     /// Why this run doesn't need the login shell, or null when it does.
     /// <list type="bullet">
     /// <item>Windows: apps get the user's full environment.</item>
-    /// <item>Started from a terminal (<see cref="StartedFromTerminal"/>): Claudette has a shell's environment already.</item>
+    /// <item>Started from a terminal (<see cref="StartedFromTerminal"/>): Deventry has a shell's environment already.</item>
     /// </list>
     /// </summary>
     public static LoginShellOutcome? WhyNotNeeded(LoginShellHost host)
@@ -89,7 +89,7 @@ public sealed class LoginShellReader : ILoginShell
     }
 
     /// <summary>
-    /// <c>TERM</c> is set, or Claudette has a controlling terminal. An app started from the Dock, Finder, <c>open</c>
+    /// <c>TERM</c> is set, or Deventry has a controlling terminal. An app started from the Dock, Finder, <c>open</c>
     /// or a desktop launcher has neither; one started from a terminal (<c>dotnet run</c> included) has both, and its
     /// environment came from the terminal's shell. Either one is enough:
     /// <list type="bullet">
@@ -118,11 +118,11 @@ public sealed class LoginShellReader : ILoginShell
         if (LoginShellOutput.Arguments(Shell, marker) is not { } arguments)
         {
             return new LoginShellResult(LoginShellOutcome.UnsupportedShell, Shell,
-                Detail: $"isn't a shell Claudette can read (it reads {LoginShellOutput.SupportedNames})");
+                Detail: $"isn't a shell Deventry can read (it reads {LoginShellOutput.SupportedNames})");
         }
         var spec = new ProcessStartSpec(Shell, arguments)
         {
-            // Claudette's own environment, without the variables of a Claude Code session it may have been started from.
+            // Deventry's own environment, without the variables of a Claude Code session it may have been started from.
             Environment = ClaudeEnvironment.From(_host.Environment, ResolvingEnvironment()),
             WorkingDirectory = _host.HomeDirectory is { Length: > 0 } home && Directory.Exists(home) ? home : null,
         };

@@ -56,7 +56,7 @@ public sealed class WindowsUnrealEngineRegistry : IUnrealEngineRegistry
     }
 }
 
-/// <summary>The Unreal registry for the OS Claudette runs on: the real one on Windows, none elsewhere.</summary>
+/// <summary>The Unreal registry for the OS Deventry runs on: the real one on Windows, none elsewhere.</summary>
 public static class UnrealEngineRegistries
 {
     public static IUnrealEngineRegistry CreateForCurrentOS() =>

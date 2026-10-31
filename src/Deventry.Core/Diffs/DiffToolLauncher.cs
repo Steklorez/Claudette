@@ -22,8 +22,8 @@ public sealed class DiffToolException(string message, Exception? innerException 
 /// </summary>
 public sealed class DiffToolLauncher
 {
-    private const string SampleBefore = "Claudette diff tool test\nThis line is only on the left.\nThe same on both sides.\n";
-    private const string SampleAfter = "Claudette diff tool test\nThis line is only on the right.\nThe same on both sides.\n";
+    private const string SampleBefore = "Deventry diff tool test\nThis line is only on the left.\nThe same on both sides.\n";
+    private const string SampleAfter = "Deventry diff tool test\nThis line is only on the right.\nThe same on both sides.\n";
 
     // cmd.exe expands these even inside quotes.
     private static readonly SearchValues<char> BatchAlwaysUnsafe = SearchValues.Create("%!\"\r\n");
@@ -41,7 +41,7 @@ public sealed class DiffToolLauncher
     /// <param name="platform">The OS whose preset variants are used. Defaults to this one.</param>
     /// <param name="environment">
     /// The user environment the tool starts with, and whose <c>PATH</c> a custom command's program is found on
-    /// (DESIGN.md §13). Null: Claudette's own.
+    /// (DESIGN.md §13). Null: Deventry's own.
     /// </param>
     public DiffToolLauncher(IProcessLauncher launcher, TimeProvider timeProvider, IFileProbe? probe = null, DiffToolPlatform? platform = null, UserEnvironment? environment = null)
     {

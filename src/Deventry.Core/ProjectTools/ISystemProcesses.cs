@@ -24,7 +24,7 @@ public interface ISystemProcesses
 {
     /// <summary>
     /// The running processes named one of <paramref name="names"/>, ignoring case and <c>.exe</c>. A name ending in
-    /// <c>*</c> matches as a prefix (<c>godot*</c>). Never includes Claudette itself.
+    /// <c>*</c> matches as a prefix (<c>godot*</c>). Never includes Deventry itself.
     /// </summary>
     IReadOnlyList<SystemProcess> Find(IReadOnlyCollection<string> names);
 

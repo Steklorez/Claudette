@@ -27,7 +27,7 @@ public sealed partial class ShellViewModel
     private static readonly IReadOnlyDictionary<string, HistoryEntry[]> NoProjects = new Dictionary<string, HistoryEntry[]>();
 
     /// <summary>
-    /// One read at a time: a read asked for while one runs (Claudette coming to the front again, say) waits and runs once
+    /// One read at a time: a read asked for while one runs (Deventry coming to the front again, say) waits and runs once
     /// after it, so reads don't pile up, and none can land after a newer one. Checked and set together, under the lock.
     /// </summary>
     private readonly Lock _claudeProjectsReads = new();

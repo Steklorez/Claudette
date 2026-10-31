@@ -1,13 +1,13 @@
 <Project>
   <!--
-    The licenses of what Claudette ships, for Settings → About (DESIGN.md §14, "About"): every package the build copies
+    The licenses of what Deventry ships, for Settings → About (DESIGN.md §14, "About"): every package the build copies
     beside the app, read from its nuspec, with Licenses/extras.xml for what isn't a package. Written on every build into
     obj as ThirdPartyNotices.xml and embedded under that name, so the list follows the packages without anyone keeping
     it. A package whose license has no text in Licenses/, or that doesn't say its license, fails the build: someone has
     to look at it first.
   -->
   <PropertyGroup>
-    <!-- Packages the build copies that Claudette never ships: AvaloniaUI.DiagnosticsSupport is in Debug builds only. -->
+    <!-- Packages the build copies that Deventry never ships: AvaloniaUI.DiagnosticsSupport is in Debug builds only. -->
     <ThirdPartyNoticesExclude>AvaloniaUI.DiagnosticsSupport</ThirdPartyNoticesExclude>
   </PropertyGroup>
 
@@ -109,7 +109,7 @@
             }
             else
             {
-                Log.LogError("Third-party notices: {0} {1} doesn't say its license. Name it in {2}, or add the package to ThirdPartyNoticesExclude if Claudette doesn't ship it.",
+                Log.LogError("Third-party notices: {0} {1} doesn't say its license. Name it in {2}, or add the package to ThirdPartyNoticesExclude if Deventry doesn't ship it.",
                     id, version, Path.Combine(LicensesFolder, "extras.xml"));
                 continue;
             }

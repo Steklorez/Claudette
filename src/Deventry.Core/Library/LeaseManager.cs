@@ -18,10 +18,10 @@ public abstract record LeaseStatus
     /// <summary>No lease file: nobody has the session open.</summary>
     public sealed record Free : LeaseStatus;
 
-    /// <summary>This Claudette run holds the lease.</summary>
+    /// <summary>This Deventry run holds the lease.</summary>
     public sealed record Mine : LeaseStatus;
 
-    /// <summary>Another machine, or another Claudette run on this one, is actively using the session.</summary>
+    /// <summary>Another machine, or another Deventry run on this one, is actively using the session.</summary>
     public sealed record HeldByOther(string Machine, DateTimeOffset UpdatedAt) : LeaseStatus;
 
     /// <summary>Someone else held it, but hasn't refreshed the lease in <see cref="LeaseManager.StaleAfter"/>.</summary>
@@ -35,7 +35,7 @@ public abstract record LeaseStatus
 }
 
 /// <summary>What <c>lease.json</c> holds.</summary>
-/// <param name="Owner">A random id for one Claudette run, so two runs on the same machine are told apart.</param>
+/// <param name="Owner">A random id for one Deventry run, so two runs on the same machine are told apart.</param>
 internal sealed record LeaseInfo(string Machine, DateTimeOffset UpdatedAt, string Owner);
 
 /// <summary>What reading <c>lease.json</c> found: a lease, no file, or a file that couldn't be read.</summary>
@@ -81,7 +81,7 @@ public sealed class LeaseManager : IDisposable
 
     public string MachineName { get; }
 
-    /// <summary>Identifies this Claudette run in lease files.</summary>
+    /// <summary>Identifies this Deventry run in lease files.</summary>
     public string OwnerId { get; }
 
     /// <summary>The sessions whose leases this run holds.</summary>

@@ -6,7 +6,7 @@ namespace Deventry.App.Services;
 /// <summary>
 /// Unsent messages on disk (DESIGN.md §5, "Drafts and the stash"): each tab's draft, written a moment after it changes,
 /// and the stash every tab shares. Writes run one after another off the UI thread, in the order they were asked for, and
-/// stop while Claudette hands over to a new build, which owns the files then.
+/// stop while Deventry hands over to a new build, which owns the files then.
 /// </summary>
 public sealed class DraftService
 {
@@ -22,7 +22,7 @@ public sealed class DraftService
         _store = new DraftStore(services.Paths.DraftsDirectory);
     }
 
-    /// <summary>A tab's draft from the last time Claudette ran, or null.</summary>
+    /// <summary>A tab's draft from the last time Deventry ran, or null.</summary>
     public TabDraft? Load(string tabId) => _store.Load(tabId);
 
     /// <summary>Writes a tab's draft, or deletes it when it's null or empty.</summary>

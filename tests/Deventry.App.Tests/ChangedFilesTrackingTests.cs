@@ -74,7 +74,7 @@ public class ChangedFilesTrackingTests
     }
 
     [Fact]
-    public async Task Coming_back_to_Claudette_looks_at_the_disk_again_for_what_you_changed()
+    public async Task Coming_back_to_Deventry_looks_at_the_disk_again_for_what_you_changed()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();

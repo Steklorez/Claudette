@@ -83,7 +83,7 @@ public abstract partial class LogTabViewModel
     }
 
     /// <summary>
-    /// A click on a link: a web address opens in the browser, and a file in Claudette's editor at the line named, or in the
+    /// A click on a link: a web address opens in the browser, and a file in Deventry's editor at the line named, or in the
     /// OS's app, as a file a reply names does; a program shows in its folder rather than running. Clicks don't wait for
     /// each other.
     /// </summary>

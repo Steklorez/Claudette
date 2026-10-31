@@ -62,7 +62,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     /// <summary>The address this session last connected at, for a link Claude Code brings back by itself.</summary>
     private string? _url;
 
-    /// <summary>Claudette stopped the turn or a subagent: a prompt withdrawn now wasn't answered in the Claude app.</summary>
+    /// <summary>Deventry stopped the turn or a subagent: a prompt withdrawn now wasn't answered in the Claude app.</summary>
     private bool _stoppedHere;
 
     internal RemoteControlViewModel(AppServices services, IRemoteControlHost host)
@@ -396,7 +396,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
         switch (answer.State)
         {
             case RemoteControlState.Connected:
-                // A reply Claudette couldn't read as either is shown as it is.
+                // A reply Deventry couldn't read as either is shown as it is.
                 _host.AddNote(answer.Url is null && answer.Detail is { } said ? said : "Connected to the Claude app.", NoteKind.Info, answer.Url);
                 break;
             case RemoteControlState.Unavailable:
@@ -469,7 +469,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
             {
                 if (ReferenceEquals(session, _host.Session))
                 {
-                    // Still connected, as far as Claudette knows.
+                    // Still connected, as far as Deventry knows.
                     _disconnecting = false;
                     OnPropertyChanged(nameof(IsLeaving));
                     OnInfoChanged();
@@ -527,7 +527,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// What Claude Code reports about the connection: <c>system/bridge_state</c> (undocumented; a state Claudette doesn't
+    /// What Claude Code reports about the connection: <c>system/bridge_state</c> (undocumented; a state Deventry doesn't
     /// know changes nothing) and <c>system/worker_shutting_down</c>.
     /// </summary>
     internal void OnNotice(SystemMessage message)
@@ -577,7 +577,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
         _url = null;
     }
 
-    /// <summary>Claudette stopped the turn or a subagent: a prompt Claude Code withdraws now wasn't answered in the Claude app.</summary>
+    /// <summary>Deventry stopped the turn or a subagent: a prompt Claude Code withdraws now wasn't answered in the Claude app.</summary>
     internal void OnStoppedHere() => _stoppedHere = true;
 
     /// <summary>What a prompt Claude Code withdrew says: answered in the Claude app, if it can have been.</summary>

@@ -26,7 +26,7 @@ public enum LimitWaitHold
     /// </summary>
     Repeated,
 
-    /// <summary>The limit reset long before Claudette noticed: the computer slept, or Claudette wasn't running.</summary>
+    /// <summary>The limit reset long before Deventry noticed: the computer slept, or Deventry wasn't running.</summary>
     Missed,
 }
 
@@ -68,7 +68,7 @@ public sealed record LimitWait(DateTimeOffset ResetsAt, string? LimitType, DateT
 
     /// <summary>
     /// "session limit", "weekly limit" or "Opus limit", by the usage header's names for them. Claude Code's own error
-    /// calls the session limit the "5-hour limit" since 2.1.312; Claudette keeps its name, as claude.ai's usage page does.
+    /// calls the session limit the "5-hour limit" since 2.1.312; Deventry keeps its name, as claude.ai's usage page does.
     /// </summary>
     [JsonIgnore]
     public string LimitName => NameOf(LimitType);
@@ -86,7 +86,7 @@ public sealed record LimitWait(DateTimeOffset ResetsAt, string? LimitType, DateT
 
 /// <summary>
 /// Continues a task that a plan usage limit stopped, once the limit resets (DESIGN.md §6, "Continuing after a limit
-/// resets"). Claude Code does this itself only in interactive sessions, not in <c>-p</c> runs like Claudette's.
+/// resets"). Claude Code does this itself only in interactive sessions, not in <c>-p</c> runs like Deventry's.
 /// <list type="bullet">
 /// <item>A turn stopped at the limit: it ended with an API error, and Claude Code sent a <c>rate_limit_event</c> with
 /// <c>status: rejected</c> and a <c>resetsAt</c>, in either order. An <c>errorCode</c> (usage credits needed) or an error
@@ -325,7 +325,7 @@ public sealed class AutoContinueMonitor : IDisposable
             }
             if (now - wait.ContinueAt > MissedAfter)
             {
-                // The computer slept through it, or Claudette wasn't running: the user may not expect the task to go on.
+                // The computer slept through it, or Deventry wasn't running: the user may not expect the task to go on.
                 return SetWait(wait with { Hold = LimitWaitHold.Missed, HasReset = true });
             }
             send = true;

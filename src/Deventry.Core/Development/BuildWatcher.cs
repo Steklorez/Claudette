@@ -1,7 +1,7 @@
 namespace Deventry.Core.Development;
 
 /// <summary>
-/// Watches a source build's output for a newer build (DESIGN.md §9, "Working on Claudette"). A build counts once its
+/// Watches a source build's output for a newer build (DESIGN.md §9, "Working on Deventry"). A build counts once its
 /// files have stopped changing from one check to the next, so one that's still being written isn't offered.
 /// </summary>
 public sealed class BuildWatcher : IDisposable

@@ -35,7 +35,7 @@ public sealed class UsageTracker : IAsyncDisposable
     private Task _historyWrites = Task.CompletedTask;
     private bool _shares;
     private string? _sharedTo;
-    // Machines whose file a later Claudette wrote in a format this one can't read, logged once each. Used under _sharing.
+    // Machines whose file a later Deventry wrote in a format this one can't read, logged once each. Used under _sharing.
     private readonly HashSet<string> _newerFormats = new(StringComparer.Ordinal);
     // Synced sessions' usage files read since the library was chosen, as they were then, so unchanged ones aren't read
     // again. Used under _sharing.
@@ -301,7 +301,7 @@ public sealed class UsageTracker : IAsyncDisposable
                 }
                 else if (usage.IsNewerFormat)
                 {
-                    _logger.LogWarning("Left out the turns in {Path}: a later Claudette wrote it in format {Version}, and this version reads up to {Known}. Update Claudette here to include them.",
+                    _logger.LogWarning("Left out the turns in {Path}: a later Deventry wrote it in format {Version}, and this version reads up to {Known}. Update Deventry here to include them.",
                         file.Path, usage.Version, SessionUsageFile.FileVersion);
                 }
                 else
@@ -322,7 +322,7 @@ public sealed class UsageTracker : IAsyncDisposable
     /// <summary>
     /// What a synced session's usage file in the library should hold (DESIGN.md §6, "Sharing across machines"): the turns
     /// this machine has for it merged with the library's, so no machine's are lost. Null while sharing is off, when the
-    /// library's file already has them all, or when a later Claudette wrote it in a format this one can't read.
+    /// library's file already has them all, or when a later Deventry wrote it in a format this one can't read.
     /// </summary>
     /// <remarks>
     /// After the turns waiting to be recorded, so the turn that just ended is in it. Nothing from before the last clear goes
@@ -364,7 +364,7 @@ public sealed class UsageTracker : IAsyncDisposable
         {
             if (_newerFormats.Add(machineId))
             {
-                _logger.LogWarning("Left out the usage {Machine} shared: Claudette {WrittenBy} wrote it in format {Version}, and this version reads up to {Known}. Update Claudette here to include it.",
+                _logger.LogWarning("Left out the usage {Machine} shared: Deventry {WrittenBy} wrote it in format {Version}, and this version reads up to {Known}. Update Deventry here to include it.",
                     shared.MachineName, shared.WrittenBy ?? "(unknown)", shared.Version, UsageSharing.FileVersion);
             }
             return 0;

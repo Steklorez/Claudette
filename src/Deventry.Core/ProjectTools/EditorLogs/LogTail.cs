@@ -17,7 +17,7 @@ public sealed record LogTailRead(IReadOnlyList<string> Lines, bool Fresh, long S
 
 /// <summary>
 /// Follows a log another program writes (DESIGN.md §18, "Editor logs") without ever holding on to it: each read opens
-/// it for reading only, sharing read, write and delete, reads what's new, and closes it. So between reads Claudette has
+/// it for reading only, sharing read, write and delete, reads what's new, and closes it. So between reads Deventry has
 /// no handle on it at all, and during one the writer can still write it, rename it or delete it. A file that can't be
 /// opened right now (it's missing, or the writer shares nothing) waits for the next read.
 /// </summary>

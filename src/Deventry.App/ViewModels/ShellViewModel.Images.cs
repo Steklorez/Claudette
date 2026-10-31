@@ -14,13 +14,13 @@ public sealed partial class ShellViewModel
     /// <summary>Set by the view: shows an image in a window of its own, which disposes the viewer when it closes.</summary>
     public Action<ImageViewerViewModel>? ShowImageWindow { get; set; }
 
-    /// <summary>Settings → Files and diffs → Open images in is Claudette's image viewer.</summary>
+    /// <summary>Settings → Files and diffs → Open images in is Deventry's image viewer.</summary>
     internal bool OpensImages => _services.Settings.Editor.OpenImagesIn == OpenImagesIn.Viewer;
 
     /// <summary>
     /// A web link clicked in Markdown (DESIGN.md §18, "Opening images"). One whose address ends in an image's extension,
     /// while Settings → Files and diffs → Open images in is the viewer, loads as a web image in Markdown does, through
-    /// Claudette's own client and remembered in <paramref name="images"/>, then shows in the image window. What isn't an
+    /// Deventry's own client and remembered in <paramref name="images"/>, then shows in the image window. What isn't an
     /// image there (a page, an error, more than 20 MB), and any other link, opens in the browser.
     /// </summary>
     internal async Task OpenWebLinkAsync(Uri uri, ReplyImages images)

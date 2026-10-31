@@ -322,7 +322,7 @@ public sealed partial class ProjectRunsViewModel : ViewModelBase
         if (result.State != ProjectJobState.Stopped
             && _services.Notifications.Notify(NotificationKind.ProjectAction, _host.DisplayName, status, _host.Id))
         {
-            // Only when Claudette isn't in front (DESIGN.md §10); a click shows this run's log.
+            // Only when Deventry isn't in front (DESIGN.md §10); a click shows this run's log.
             _notifiedRun = run;
         }
         _host.JobEnded(result.State == ProjectJobState.Succeeded ? action?.ThenOnSuccess : null);

@@ -20,7 +20,7 @@ public enum ClaudeDesktopFile
 /// <summary>
 /// The Claude desktop app, which people take for Claude Code (DESIGN.md §12, "Installing Claude Code"). It isn't: it keeps
 /// a copy of Claude Code for its own use, in a folder per version that it replaces as it updates, and puts no
-/// <c>claude</c> on <c>PATH</c>. Claudette never runs the app or its copy.
+/// <c>claude</c> on <c>PATH</c>. Deventry never runs the app or its copy.
 /// </summary>
 /// <param name="paths">Where other programs keep their files; tests use temporary folders.</param>
 public sealed partial class ClaudeDesktop(ProjectToolPaths paths, ToolOS os)

@@ -36,7 +36,7 @@ public class UsageCreditsTabTests
             tab.LimitWaitText);
         Assert.True(tab.CanUseCreditsNow);
         Assert.True(tab.CanStopContinuing);
-        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text == "Usage credits began paying for Claude, and this tab doesn't use them, so Claudette stopped the turn.");
+        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text == "Usage credits began paying for Claude, and this tab doesn't use them, so Deventry stopped the turn.");
 
         await AutoContinueTests.AdvanceToAsync(h, reset + AutoContinueMonitor.Grace);
 

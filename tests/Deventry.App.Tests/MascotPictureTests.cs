@@ -4,7 +4,7 @@ using Deventry.App.Tests.Support;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// The README's animation of Claudette on the composer (DESIGN.md §5), drawn from her own art and steps, so it always
+/// The README's animation of Joulene on the composer (DESIGN.md §5), drawn from her own art and steps, so it always
 /// shows what she does. With <c>DEVENTRY_MASCOT_GIF=&lt;path&gt;</c> it's written there (<c>screenshots.ps1</c> does);
 /// with <c>DEVENTRY_MASCOT_SHEETS=&lt;folder&gt;</c>, every one of her antics, frame by frame, to look over.
 /// </summary>

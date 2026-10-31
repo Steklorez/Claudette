@@ -1,4 +1,4 @@
-<!-- Games with Claudette (DESIGN.md §18): the Games tool window, the same game whichever tab has the focus; the game
+<!-- Games with Joulene (DESIGN.md §18): the Games tool window, the same game whichever tab has the focus; the game
      to play is chosen in the window's header (ToolPanelView). Made only while it shows. Its look is in
      Themes/ConversationStyles.axaml. -->
 <UserControl xmlns="https://github.com/avaloniaui"
@@ -22,7 +22,7 @@
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
         <TextBlock Text="{Binding Game.Status, FallbackValue={x:Null}}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" />
         <ComboBox Grid.Column="1" ItemsSource="{Binding Game.Levels, FallbackValue={x:Null}}" SelectedItem="{Binding Game.Level, FallbackValue={x:Null}}"
-                  IsVisible="{Binding Game.HasLevels, FallbackValue=False}" AutomationProperties.Name="Level" ToolTip.Tip="How well Claudette plays" />
+                  IsVisible="{Binding Game.HasLevels, FallbackValue=False}" AutomationProperties.Name="Level" ToolTip.Tip="How well Joulene plays" />
       </Grid>
     </StackPanel>
 
@@ -31,7 +31,7 @@
       <StackPanel>
         <ContentControl Content="{Binding Game}">
           <ContentControl.DataTemplates>
-            <!-- Tic-tac-toe: three by three, the user ✕ and Claudette ○ -->
+            <!-- Tic-tac-toe: three by three, the user ✕ and Joulene ○ -->
             <DataTemplate DataType="vm:TicTacToeViewModel">
               <StackPanel Classes="gameboard">
                 <ItemsControl ItemsSource="{Binding Squares}" HorizontalAlignment="Left">

@@ -5,7 +5,7 @@ using Deventry.App.Mascot;
 namespace Deventry.App.Tests.Support;
 
 /// <summary>
-/// Claudette on the composer drawn into pixels without Avalonia, for the README's animation: the composer box's top
+/// Joulene on the composer drawn into pixels without Avalonia, for the README's animation: the composer box's top
 /// edge in the Claude style's dark colours, and her on it, cell by cell, as <c>MascotFigure</c> draws her. Pixels are
 /// indices into <see cref="Palette"/>, as a GIF wants them.
 /// </summary>

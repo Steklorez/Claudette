@@ -26,7 +26,7 @@
 "Check-ins on long turns"
 [button] Reset to defaults
 "Check in on long turns"
-"Claudette asks Claude how it's going, so a stuck tab doesn't burn usage unnoticed."
+"Deventry asks Claude how it's going, so a stuck tab doesn't burn usage unnoticed."
 [toggle on] Check in on long turns
 "After the turn has run (minutes)"
 "0 turns this off."
@@ -39,7 +39,7 @@
 [button] (icon)
 [field] "5"
 "Message"
-"What Claudette sends Claude."
+"What Deventry sends Claude."
 [field] "Everything OK? Give me a one or two sentence status update: what you're doing, and whether you're stuck or waiting on something."
 "Notify me when a check-in is sent"
 [toggle] Notify me when a check-in is sent

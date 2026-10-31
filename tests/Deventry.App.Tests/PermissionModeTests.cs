@@ -47,7 +47,7 @@ public class PermissionModeTests
 
         var tab = await RestoreAsync(h);
 
-        // Without the flag, so Claude Code can bring back plan mode; it came back in Manual, so Claudette switches.
+        // Without the flag, so Claude Code can bring back plan mode; it came back in Manual, so Deventry switches.
         Assert.Equal("s1", h.Factory.Launches[0].Resume);
         Assert.Null(h.Factory.Launches[0].PermissionMode);
         Assert.Equal(["auto"], ModeRequests(h));

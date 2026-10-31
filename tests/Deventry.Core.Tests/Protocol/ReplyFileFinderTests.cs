@@ -8,7 +8,7 @@ namespace Deventry.Core.Tests.Protocol;
 /// <summary>Where the file a reply names is (DESIGN.md §18, "Files named in Claude's replies").</summary>
 public sealed class ReplyFileFinderTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-replyfiles");
+    private readonly TempFolder _root = new("deventry-replyfiles");
     private readonly List<string> _extraFolders = [];
 
     public void Dispose() => _root.Dispose();
@@ -21,7 +21,7 @@ public sealed class ReplyFileFinderTests : IDisposable
 
     /// <summary>The project's files as the walk lists them, without git.</summary>
     private ProjectFileIndex Index() =>
-        new(Folder, new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"claudette-no-such-git-{Guid.NewGuid():N}"), TimeProvider.System);
+        new(Folder, new GitWorkingTree(new IsolatedGitLauncher(_root.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}"), TimeProvider.System);
 
     private static ReplyFileReference Code(string code) => ReplyFileReference.FromCode(code)!;
 

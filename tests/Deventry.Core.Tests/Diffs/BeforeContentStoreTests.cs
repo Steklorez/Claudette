@@ -11,7 +11,7 @@ namespace Deventry.Core.Tests.Diffs;
 /// </summary>
 public sealed class BeforeContentStoreTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-before-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-before-{Guid.NewGuid():N}");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 29, 12, 0, 0, TimeSpan.Zero));
 
     public BeforeContentStoreTests() => Directory.CreateDirectory(_root);

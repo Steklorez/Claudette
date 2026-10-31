@@ -2,13 +2,13 @@ using Deventry.Core.Protocol;
 
 namespace Deventry.Core.Tests.Protocol;
 
-/// <summary>The images Claudette shows itself, and an image file to show (DESIGN.md §18, "Opening images").</summary>
+/// <summary>The images Deventry shows itself, and an image file to show (DESIGN.md §18, "Opening images").</summary>
 public sealed class ViewerImagesTests : IDisposable
 {
     /// <summary>A 1×1 PNG.</summary>
     private static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
 
-    private readonly string _folder = Directory.CreateTempSubdirectory("claudette-viewerimages-").FullName;
+    private readonly string _folder = Directory.CreateTempSubdirectory("deventry-viewerimages-").FullName;
 
     public void Dispose() => Directory.Delete(_folder, recursive: true);
 

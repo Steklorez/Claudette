@@ -53,7 +53,7 @@ public class AutoContinueUiTests
     }
 
     [AvaloniaFact]
-    public async Task Until_the_limit_resets_the_bar_offers_a_game_against_Claudette()
+    public async Task Until_the_limit_resets_the_bar_offers_a_game_against_Deventry()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();

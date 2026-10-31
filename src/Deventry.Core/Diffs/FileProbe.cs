@@ -14,7 +14,7 @@ public interface IFileProbe
 
 /// <summary>The real file system and environment.</summary>
 /// <param name="pathVariable">
-/// The <c>PATH</c> to search. By default, Claudette's own; the user environment's probe searches the one the user's
+/// The <c>PATH</c> to search. By default, Deventry's own; the user environment's probe searches the one the user's
 /// processes get, which can come from the login shell (DESIGN.md §13, "Login shell environment").
 /// </param>
 public sealed class FileProbe(Func<string?>? pathVariable = null) : IFileProbe

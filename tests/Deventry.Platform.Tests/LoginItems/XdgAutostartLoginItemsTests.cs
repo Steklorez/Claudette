@@ -6,12 +6,12 @@ using Deventry.Platform.Tests.Support;
 namespace Deventry.Platform.Tests.LoginItems;
 
 /// <summary>
-/// The XDG autostart file that starts Claudette at login on Linux (DESIGN.md §9, "Starting at login"), written to a
+/// The XDG autostart file that starts Deventry at login on Linux (DESIGN.md §9, "Starting at login"), written to a
 /// temporary folder. Only file work, so it runs on every OS.
 /// </summary>
 public sealed class XdgAutostartLoginItemsTests : IDisposable
 {
-    private readonly string _root = Directory.CreateTempSubdirectory("claudette-autostart-").FullName;
+    private readonly string _root = Directory.CreateTempSubdirectory("deventry-autostart-").FullName;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 
@@ -23,12 +23,12 @@ public sealed class XdgAutostartLoginItemsTests : IDisposable
     [Fact]
     public void The_file_runs_the_build_with_login_and_is_removed_when_turned_off()
     {
-        var build = Directory.CreateDirectory(Path.Combine(_root, "My Apps", "Claudette")).FullName;
+        var build = Directory.CreateDirectory(Path.Combine(_root, "My Apps", "Deventry")).FullName;
         File.WriteAllText(Path.Combine(build, "Deventry"), "");
         var items = new XdgAutostartLoginItems(new FakeLauncher(), Autostart, UsualDotnet);
         Assert.Equal(LoginEntryState.Missing, items.ReadEntry());
 
-        items.WriteEntry(new ClaudetteCopy(AppInstallKind.Other, build, "0.3.0"));
+        items.WriteEntry(new DeventryCopy(AppInstallKind.Other, build, "0.3.0"));
 
         var lines = File.ReadAllLines(items.FilePath);
         Assert.Equal("[Desktop Entry]", lines[0]);
@@ -45,11 +45,11 @@ public sealed class XdgAutostartLoginItemsTests : IDisposable
     [Fact]
     public void A_build_on_a_dotnet_its_program_wouldnt_find_runs_with_that_dotnet()
     {
-        var build = Directory.CreateDirectory(Path.Combine(_root, "Claudette", "bin")).FullName;
+        var build = Directory.CreateDirectory(Path.Combine(_root, "Deventry", "bin")).FullName;
         File.WriteAllText(Path.Combine(build, "Deventry"), "");
         var launcher = new FakeLauncher();
         var items = new XdgAutostartLoginItems(launcher, Autostart, new LoginDotnet("/home/me/.dotnet/dotnet", FoundByProgram: false));
-        var copy = new ClaudetteCopy(AppInstallKind.SourceBuild, build, "0.3.0");
+        var copy = new DeventryCopy(AppInstallKind.SourceBuild, build, "0.3.0");
 
         items.WriteEntry(copy);
         items.Start(copy);
@@ -67,18 +67,18 @@ public sealed class XdgAutostartLoginItemsTests : IDisposable
     {
         var items = new XdgAutostartLoginItems(new FakeLauncher(), Autostart, UsualDotnet);
         Directory.CreateDirectory(Autostart);
-        File.WriteAllText(items.FilePath, $"[Desktop Entry]\nType=Application\nExec=claudette --login\n{line}\n");
+        File.WriteAllText(items.FilePath, $"[Desktop Entry]\nType=Application\nExec=deventry --login\n{line}\n");
 
         Assert.Equal(LoginEntryState.DisabledByUser, items.ReadEntry());
     }
 
     [Theory]
     [InlineData("--login", "--login")]
-    [InlineData("/opt/claudette/Claudette", "/opt/claudette/Claudette")]
-    [InlineData("/home/me/My Apps/Claudette", "\"/home/me/My Apps/Claudette\"")]
-    [InlineData("/home/me/50%/Claudette", "/home/me/50%%/Claudette")]
-    [InlineData("/home/me/it's/Claudette", "\"/home/me/it's/Claudette\"")]
-    [InlineData("/home/me/$HOME/Claudette", "\"/home/me/\\\\$HOME/Claudette\"")]
+    [InlineData("/opt/deventry/Deventry", "/opt/deventry/Deventry")]
+    [InlineData("/home/me/My Apps/Deventry", "\"/home/me/My Apps/Deventry\"")]
+    [InlineData("/home/me/50%/Deventry", "/home/me/50%%/Deventry")]
+    [InlineData("/home/me/it's/Deventry", "\"/home/me/it's/Deventry\"")]
+    [InlineData("/home/me/$HOME/Deventry", "\"/home/me/\\\\$HOME/Deventry\"")]
     [InlineData("a\\b", "\"a\\\\\\\\b\"")]
     [InlineData("", "\"\"")]
     public void Exec_arguments_are_quoted_as_the_Desktop_Entry_spec_says(string argument, string expected)
@@ -92,7 +92,7 @@ public sealed class XdgAutostartLoginItemsTests : IDisposable
         var launcher = new FakeLauncher();
         var items = new XdgAutostartLoginItems(launcher, Autostart, UsualDotnet);
 
-        items.Start(new ClaudetteCopy(AppInstallKind.Other, _root, "0.3.0"));
+        items.Start(new DeventryCopy(AppInstallKind.Other, _root, "0.3.0"));
 
         var spec = Assert.Single(launcher.Specs);
         Assert.True(spec.Detached);

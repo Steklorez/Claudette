@@ -54,7 +54,7 @@ public sealed class ChangedFile
     public bool BeforeKnown { get; }
 
     /// <summary>
-    /// The line endings the file had before Claude's first change, as Claudette's hook read them (DESIGN.md §8, "What
+    /// The line endings the file had before Claude's first change, as Deventry's hook read them (DESIGN.md §8, "What
     /// the lines don't show"): <see cref="Before"/> has <c>\n</c> for a file with Windows ones, as Claude Code reports
     /// it. Null when they aren't known, so a change to them isn't told.
     /// </summary>
@@ -72,7 +72,7 @@ public sealed class ChangedFile
 
     /// <summary>
     /// False when what the latest change left isn't known, such as an Edit to a file whose "before" isn't known: the
-    /// file's changes are then counted against the disk, as they were before Claudette kept its own "after".
+    /// file's changes are then counted against the disk, as they were before Deventry kept its own "after".
     /// </summary>
     public bool AfterKnown { get; private set; }
 
@@ -156,9 +156,9 @@ public sealed class ChangedFiles
     private readonly StringComparer _pathComparer;
     private readonly Dictionary<string, (string ToolName, string? Path, JsonObject Input)> _pending = new(StringComparer.Ordinal);
     private readonly HashSet<string> _applied = new(StringComparer.Ordinal);
-    /// <summary>What Claudette's hook read before a call ran, by tool call id: its real path, and its "before" when it could read it.</summary>
+    /// <summary>What Deventry's hook read before a call ran, by tool call id: its real path, and its "before" when it could read it.</summary>
     private readonly Dictionary<string, (string Path, string? Before, bool Known)> _hooked = new(StringComparer.Ordinal);
-    /// <summary>The line endings Claudette's hook found a file with before the session's own call ran, by tool call id.</summary>
+    /// <summary>The line endings Deventry's hook found a file with before the session's own call ran, by tool call id.</summary>
     private readonly Dictionary<string, LineEndingKind> _hookedLineEndings = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ChangedFile> _byPath;
     private readonly List<ChangedFile> _files = [];
@@ -211,7 +211,7 @@ public sealed class ChangedFiles
     }
 
     /// <summary>
-    /// What a file tool's call is about to change, as Claudette's PreToolUse hook read it before the call ran (DESIGN.md
+    /// What a file tool's call is about to change, as Deventry's PreToolUse hook read it before the call ran (DESIGN.md
     /// §8, "Subagents' changes"): a subagent's result doesn't say. <paramref name="path"/> is the file's real path, which
     /// the call's input may name relative to the subagent's folder. Its <paramref name="before"/> is null when the file
     /// wasn't there, and <paramref name="known"/> false when it couldn't be read. A first change's is kept for replays.
@@ -237,7 +237,7 @@ public sealed class ChangedFiles
     }
 
     /// <summary>
-    /// The line endings a file has before the session's own call changes it, as Claudette's PreToolUse hook read them
+    /// The line endings a file has before the session's own call changes it, as Deventry's PreToolUse hook read them
     /// (DESIGN.md §8, "What the lines don't show"): the call's result reports a file with Windows ones with <c>\n</c>,
     /// so without them a Write that makes it LF can't be told. A first change's are kept for replays.
     /// </summary>

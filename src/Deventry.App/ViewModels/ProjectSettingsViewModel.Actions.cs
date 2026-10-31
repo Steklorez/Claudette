@@ -8,7 +8,7 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// An entry of a project file's <c>actions</c> on Settings' Actions page (DESIGN.md §18, "Custom actions"). It keeps the
-/// entry's JSON as written, so saving keeps fields Claudette doesn't edit, such as <c>os</c>.
+/// entry's JSON as written, so saving keeps fields Deventry doesn't edit, such as <c>os</c>.
 /// </summary>
 public sealed record CustomActionRow(JsonNode? Raw, CustomProjectAction? Action, string? Problem, bool ForThisOS)
 {

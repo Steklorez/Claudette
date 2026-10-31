@@ -7,7 +7,7 @@ namespace Deventry.App.Tests;
 /// <summary>The diff view on what changed that the lines don't show (DESIGN.md §8, "What the lines don't show").</summary>
 public sealed class DiffHiddenChangesTests : IDisposable
 {
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"claudette-hidden-{Guid.NewGuid():N}");
+    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"deventry-hidden-{Guid.NewGuid():N}");
 
     public void Dispose()
     {

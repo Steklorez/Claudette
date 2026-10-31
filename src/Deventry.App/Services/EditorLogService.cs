@@ -112,7 +112,7 @@ public sealed class EditorLogService : IDisposable
         }
         catch (ObjectDisposedException)
         {
-            // Disposed meanwhile: Claudette is closing.
+            // Disposed meanwhile: Deventry is closing.
         }
     }
 

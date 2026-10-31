@@ -5,7 +5,7 @@ namespace Deventry.Core.Tests.History;
 
 public sealed class HistoryIndexTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-history");
+    private readonly TempFolder _root = new("deventry-history");
     private readonly HistoryIndex _index;
 
     public HistoryIndexTests() => _index = new HistoryIndex(_root.Path);

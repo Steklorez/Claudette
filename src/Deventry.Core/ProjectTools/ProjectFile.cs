@@ -70,7 +70,7 @@ public static class ProjectFile
 
     /// <summary>
     /// Where <paramref name="folder"/>'s file is, or is to be written: <c>deventry.json</c> or <c>deventry.local.json</c>,
-    /// or Claudette's name for it in a project that has only that.
+    /// or Deventry's name for it in a project that has only that.
     /// </summary>
     public static string PathFor(string folder, ProjectFileScope scope)
     {
@@ -196,8 +196,8 @@ public static class ProjectFile
         if (!TryParseRoot(text, out var root, out var parseError))
         {
             throw new InvalidOperationException(parseError is null
-                ? $"{FileName(folder, scope)} isn't a JSON object, so Claudette won't rewrite it. Fix it by hand first."
-                : $"{FileName(folder, scope)} isn't valid JSON ({parseError}), so Claudette won't rewrite it. Fix it by hand first.");
+                ? $"{FileName(folder, scope)} isn't a JSON object, so Deventry won't rewrite it. Fix it by hand first."
+                : $"{FileName(folder, scope)} isn't valid JSON ({parseError}), so Deventry won't rewrite it. Fix it by hand first.");
         }
         return root;
     }

@@ -124,7 +124,7 @@ public class ChangesPerTurnTests
 
         Assert.True(h.Shell.SelectedFiles?.OpenFiles.Any(f => f.Path == path));
         Assert.Empty(h.Platform.OpenedFiles);
-        // The diff window stays over Claudette's, so it would hide the file.
+        // The diff window stays over Deventry's, so it would hide the file.
         Assert.True(closed);
     }
 

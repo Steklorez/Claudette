@@ -7,7 +7,7 @@ namespace Deventry.App.Conversation;
 /// <summary>
 /// A tab's conversation as a document to save or share (DESIGN.md §5, "Export"): Markdown, or a single HTML file with
 /// its style inline. Prompts and replies in full; tool calls as one line each with their result's summary, and a
-/// Bash command with its output; thinking, subagents' detail and Claudette's own notes are left out unless asked for.
+/// Bash command with its output; thinking, subagents' detail and Deventry's own notes are left out unless asked for.
 /// </summary>
 public static class ConversationExport
 {
@@ -42,7 +42,7 @@ public static class ConversationExport
             <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <meta name="generator" content="Claudette">
+            <meta name="generator" content="Deventry">
             """).Append("<title>").Append(Encode(OneLine(title))).AppendLine("</title>").Append(Style).AppendLine("</head>").AppendLine("<body>");
         html.Append("<h1>").Append(Encode(OneLine(title))).AppendLine("</h1>");
         if (folder is not null)

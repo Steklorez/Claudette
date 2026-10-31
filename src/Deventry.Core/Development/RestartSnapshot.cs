@@ -5,8 +5,8 @@ using Deventry.Core.Settings;
 namespace Deventry.Core.Development;
 
 /// <summary>
-/// What one build of Claudette hands the next when it restarts into a new build (DESIGN.md §9, "Working on
-/// Claudette"): every open tab, pinned or not, what's typed in each, the selected tab and the window's placement.
+/// What one build of Deventry hands the next when it restarts into a new build (DESIGN.md §9, "Working on
+/// Deventry"): every open tab, pinned or not, what's typed in each, the selected tab and the window's placement.
 /// </summary>
 public sealed class RestartSnapshot
 {
@@ -14,7 +14,7 @@ public sealed class RestartSnapshot
     public static readonly TimeSpan MaxAge = TimeSpan.FromMinutes(10);
 
     /// <summary>
-    /// How long the tabs closed for an update wait to be opened again (DESIGN.md §2, "Updating Claudette"). Windows
+    /// How long the tabs closed for an update wait to be opened again (DESIGN.md §2, "Updating Deventry"). Windows
     /// normally starts the new version itself; if it doesn't, the next launch within this time takes them.
     /// </summary>
     public static readonly TimeSpan UpdateMaxAge = TimeSpan.FromDays(1);
@@ -40,7 +40,7 @@ public sealed class RestartSnapshot
 
     /// <summary>
     /// Tabs that were in a turn, which the restart cut off rather than interrupting: Claude Code carries it on when they
-    /// start again (DESIGN.md §9, "Working on Claudette").
+    /// start again (DESIGN.md §9, "Working on Deventry").
     /// </summary>
     public List<string> InterruptedTabIds { get; set; } = [];
 
@@ -53,7 +53,7 @@ public sealed class RestartSnapshot
 
     /// <summary>
     /// The snapshot in <paramref name="path"/> if it was written for <paramref name="nonce"/> and isn't stale. With no
-    /// nonce, as when Claudette is opened by hand after an update, only an update's snapshot is taken.
+    /// nonce, as when Deventry is opened by hand after an update, only an update's snapshot is taken.
     /// </summary>
     public static RestartSnapshot? Load(string path, string? nonce, DateTimeOffset now)
     {
@@ -109,7 +109,7 @@ public sealed record WindowPlacement(int X, int Y, double Width, double Height, 
 
 /// <summary>
 /// The new build tells the old one it's up by writing the restart's nonce to a file; until then the old build waits,
-/// ready to take its tabs back if the new one fails (DESIGN.md §9, "Working on Claudette").
+/// ready to take its tabs back if the new one fails (DESIGN.md §9, "Working on Deventry").
 /// </summary>
 public static class RestartHandshake
 {

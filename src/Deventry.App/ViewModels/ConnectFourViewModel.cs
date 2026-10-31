@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>Connect Four against Claudette (DESIGN.md §18, "Games with Claudette"): the user's pieces are blue, hers berry.</summary>
+/// <summary>Connect Four against Joulene (DESIGN.md §18, "Games with Joulene"): the user's pieces are blue, hers berry.</summary>
 public sealed class ConnectFourViewModel : GameViewModel
 {
     private ConnectFour _board = new();
@@ -67,9 +67,9 @@ public sealed class ConnectFourViewModel : GameViewModel
     {
         var threat = _board.WinningMove(Player.You);
         var column = ConnectFourOpponent.Choose(_board, CurrentLevel, Host.Random);
-        _board.Drop(column, Player.Claudette);
+        _board.Drop(column, Player.Joulene);
         Refresh();
-        Host.Announce($"Claudette dropped a piece in column {column + 1}.");
+        Host.Announce($"Joulene dropped a piece in column {column + 1}.");
         if (Ended())
         {
             return;
@@ -89,7 +89,7 @@ public sealed class ConnectFourViewModel : GameViewModel
                 Finish(GameOutcome.Won, "Four in a row: you win!");
                 return true;
             case GameOutcome.Lost:
-                Finish(GameOutcome.Lost, "Four in a row: Claudette wins!");
+                Finish(GameOutcome.Lost, "Four in a row: Joulene wins!");
                 return true;
             case GameOutcome.Draw:
                 Finish(GameOutcome.Draw, "The board's full: a draw.");
@@ -166,5 +166,5 @@ public sealed partial class ConnectFourCell : ObservableObject
 
     public bool IsYours => Owner == Player.You;
 
-    public bool IsHers => Owner == Player.Claudette;
+    public bool IsHers => Owner == Player.Joulene;
 }

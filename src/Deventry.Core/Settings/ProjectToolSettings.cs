@@ -38,12 +38,12 @@ public enum SolutionOpener
 }
 
 /// <summary>
-/// One project type's settings on this machine (DESIGN.md §18, "Project types"): whether Claudette recognizes its
+/// One project type's settings on this machine (DESIGN.md §18, "Project types"): whether Deventry recognizes its
 /// projects, whether it tells Claude about them, and the type's own settings by key.
 /// </summary>
 public sealed class ProjectTypeSettings
 {
-    /// <summary>Claudette recognizes this kind of project here; off, a folder with one is just a folder.</summary>
+    /// <summary>Deventry recognizes this kind of project here; off, a folder with one is just a folder.</summary>
     public bool Enabled { get; set; } = true;
 
     /// <summary>A session that starts in one of these projects gets the type's note through <c>--append-system-prompt</c>.</summary>
@@ -62,10 +62,10 @@ public sealed class ProjectToolSettings
     /// <summary>Each project type's switches and settings, by its kind; a type with none here has its defaults.</summary>
     public Dictionary<string, ProjectTypeSettings> Types { get; set; } = new(StringComparer.Ordinal);
 
-    /// <summary>Claudette recognizes projects of <paramref name="kind"/> here: on unless turned off.</summary>
+    /// <summary>Deventry recognizes projects of <paramref name="kind"/> here: on unless turned off.</summary>
     public bool IsEnabled(string kind) => !Types.TryGetValue(kind, out var type) || type.Enabled;
 
-    /// <summary>Claudette tells Claude about projects of <paramref name="kind"/>: on unless turned off.</summary>
+    /// <summary>Deventry tells Claude about projects of <paramref name="kind"/>: on unless turned off.</summary>
     public bool TellsClaude(string kind) => !Types.TryGetValue(kind, out var type) || type.TellClaude;
 
     /// <summary>A type's own setting, or null while it's at its default.</summary>

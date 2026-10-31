@@ -25,7 +25,7 @@ public enum PerforceQuietness
     Asked,
 
     /// <summary>
-    /// Claudette ran it by itself (DESIGN.md §18, "Opening files in Perforce"): a file Perforce doesn't have, or one
+    /// Deventry ran it by itself (DESIGN.md §18, "Opening files in Perforce"): a file Perforce doesn't have, or one
     /// outside the workspace's view, just means there was nothing to do.
     /// </summary>
     Automatic,
@@ -133,7 +133,7 @@ public static class PerforceFileCommands
     /// <summary>
     /// Whether <c>p4 set</c> found a server or a workspace to use for the folder, from its config file, <c>p4 set</c>, the
     /// environment or P4ENVIRO. Without either, <c>p4</c> would try Perforce's defaults (<c>perforce:1666</c>, a workspace
-    /// named after the machine), so Claudette doesn't ask the server (DESIGN.md §18, "Finding the workspace").
+    /// named after the machine), so Deventry doesn't ask the server (DESIGN.md §18, "Finding the workspace").
     /// </summary>
     public static bool IsConfigured(IReadOnlyDictionary<string, string> settings) =>
         settings.ContainsKey("P4PORT") || settings.ContainsKey("P4CLIENT");
@@ -147,7 +147,7 @@ public static class PerforceFileCommands
     {
         if (!result.Ran)
         {
-            return result.TimedOut ? "Perforce didn't answer in time." : "Claudette couldn't run p4.";
+            return result.TimedOut ? "Perforce didn't answer in time." : "Deventry couldn't run p4.";
         }
         var problems = new List<string>();
         foreach (var raw in result.Error.Split('\n'))
@@ -169,7 +169,7 @@ public static class PerforceFileCommands
         return problems.Count == 0 ? null : string.Join(" ", problems.Take(3)) + (problems.Count > 3 ? $" (and {problems.Count - 3} more)" : "");
     }
 
-    /// <summary>The answers that mean the file was already as asked, or (for Claudette's own commands) not Perforce's.</summary>
+    /// <summary>The answers that mean the file was already as asked, or (for Deventry's own commands) not Perforce's.</summary>
     private static bool IsNothingToDo(string line, PerforceQuietness quietness)
     {
         string[] always =

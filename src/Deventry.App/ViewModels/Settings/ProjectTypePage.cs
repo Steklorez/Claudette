@@ -6,7 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
-/// One project type's page in Settings → Project tools (DESIGN.md §18, "Project types"): whether Claudette recognizes
+/// One project type's page in Settings → Project tools (DESIGN.md §18, "Project types"): whether Deventry recognizes
 /// its projects here and tells Claude about them, then the defaults its projects start with, each a row drawn from what
 /// the type declares, so a type needs no view of its own. What every type shares is on <see cref="AllToolsPage"/>. Kept
 /// on each machine, like the diff tool.
@@ -60,7 +60,7 @@ public sealed class ProjectTypePage : SettingsPage
     /// <summary>The key of the section with the type's own settings, after its switches' (<see cref="Kind"/>).</summary>
     public string DefaultsKey => $"{Kind}.defaults";
 
-    /// <summary>Claudette recognizes the type's projects here: its other rows apply.</summary>
+    /// <summary>Deventry recognizes the type's projects here: its other rows apply.</summary>
     public bool IsEnabled => ToolSettings.IsEnabled(Kind);
 
     internal ProjectToolSettings ToolSettings => Settings.ProjectTools;

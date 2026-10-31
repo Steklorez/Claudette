@@ -81,7 +81,7 @@ public sealed partial class ProcessRow : ObservableObject
     /// <summary>Its arguments cut short, ending its second line; the whole command line is in <see cref="Tooltip"/>.</summary>
     public string? ShortArguments => ProcessArguments.Short(CommandLine, Snapshot.ExecutablePath);
 
-    /// <summary>The Bash tool call or background task that started it, when Claudette could tell.</summary>
+    /// <summary>The Bash tool call or background task that started it, when Deventry could tell.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasTool), nameof(ToolText))]
     public partial ToolUseItem? Tool { get; set; }
@@ -426,7 +426,7 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
             $"Stop {row.Name} (PID {row.Pid})?",
             taskId is not null
                 ? "It's a background task Claude started. Claude Code stops it and tells Claude it ended."
-                : "Claudette asks it to close, then ends it if it doesn't. Claude isn't told directly.",
+                : "Deventry asks it to close, then ends it if it doesn't. Claude isn't told directly.",
             "Stop",
             async () =>
             {

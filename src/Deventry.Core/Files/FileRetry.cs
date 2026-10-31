@@ -2,12 +2,12 @@ namespace Deventry.Core.Files;
 
 /// <summary>
 /// Tries a file operation again while another process has the file open: on Windows a rename over a file, or a read of
-/// one, fails while an antivirus scanner, a backup or sync client, the search indexer or another Claudette has it open,
+/// one, fails while an antivirus scanner, a backup or sync client, the search indexer or another Deventry has it open,
 /// which usually lasts milliseconds and sometimes a second or two.
 /// </summary>
 /// <remarks>
 /// This waits in real time, not on an injected <see cref="TimeProvider"/>: it's waiting out another process, which no
-/// clock of Claudette's can hurry, and a fake clock would hang it instead. It only waits after a failure.
+/// clock of Deventry's can hurry, and a fake clock would hang it instead. It only waits after a failure.
 /// </remarks>
 public static class FileRetry
 {

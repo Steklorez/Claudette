@@ -5,7 +5,7 @@ namespace Deventry.Core.ProjectTools;
 /// <summary>What running a project action does (DESIGN.md §18, "Project tools").</summary>
 public enum ProjectActionKind
 {
-    /// <summary>Starts a program that outlives Claudette, such as the editor. Nothing is shown of its output.</summary>
+    /// <summary>Starts a program that outlives Deventry, such as the editor. Nothing is shown of its output.</summary>
     Launch,
 
     /// <summary>A long job: its output goes to the Project page, it can be stopped, and its end is notified.</summary>

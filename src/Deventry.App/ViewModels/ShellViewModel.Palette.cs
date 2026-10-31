@@ -167,13 +167,13 @@ public sealed partial class ShellViewModel
             {
                 Command("Open project files", () => OpenProjectFiles(group));
             }
-            // DESIGN.md §18, "Games with Claudette".
+            // DESIGN.md §18, "Games with Joulene".
             if (_services.Games.IsEnabled)
             {
-                Command("Play tic-tac-toe with Claudette", () => tab.PlayGame(GameKind.TicTacToe));
-                Command("Play Connect Four with Claudette", () => tab.PlayGame(GameKind.ConnectFour));
-                Command("Play hangman with Claudette", () => tab.PlayGame(GameKind.Hangman));
-                Command("Play Minesweeper with Claudette", () => tab.PlayGame(GameKind.Minesweeper));
+                Command("Play tic-tac-toe with Joulene", () => tab.PlayGame(GameKind.TicTacToe));
+                Command("Play Connect Four with Joulene", () => tab.PlayGame(GameKind.ConnectFour));
+                Command("Play hangman with Joulene", () => tab.PlayGame(GameKind.Hangman));
+                Command("Play Minesweeper with Joulene", () => tab.PlayGame(GameKind.Minesweeper));
             }
             Command("Tab settings…", () => OpenTabSettingsCommand.Execute(tab));
             // DESIGN.md §4, "Sidebar": what's under its row.
@@ -252,7 +252,7 @@ public sealed partial class ShellViewModel
         entries.Add(new PaletteEntry("User Guide", "Help", () => HelpLinks.OpenGuideAsync(_services)));
         entries.Add(new PaletteEntry("Ask on Discord", "Help", () => HelpLinks.OpenDiscordAsync(_services)));
         entries.Add(new PaletteEntry("Report an issue", "Help", () => HelpLinks.ReportIssueAsync(_services)));
-        entries.Add(new PaletteEntry("About Claudette", "Help", OpenAboutAsync));
+        entries.Add(new PaletteEntry("About Deventry", "Help", OpenAboutAsync));
         return entries;
     }
 }

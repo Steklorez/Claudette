@@ -19,7 +19,7 @@ public readonly record struct ClaudeWork(int Working, int Background, int Waitin
 
 /// <summary>
 /// Keeps the computer from sleeping (DESIGN.md §9, "Keeping the computer awake"): while Settings → General's <b>Keep
-/// this computer awake</b> is on, only while Claude has work to finish or whenever Claudette runs, and while tabs are
+/// this computer awake</b> is on, only while Claude has work to finish or whenever Deventry runs, and while tabs are
 /// connected to the Claude app (DESIGN.md §18). Only system sleep: the screen can still turn off. The header's cup
 /// shows it and turns the setting on and off. Owns the <see cref="ISleepBlocker"/>. Use on the UI thread.
 /// </summary>
@@ -69,7 +69,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
 
     public bool WhileClaudeHasWork => When == KeepAwakeWhen.ClaudeHasWork;
 
-    public bool WhileClaudetteRuns => When == KeepAwakeWhen.ClaudetteRuns;
+    public bool WhileDeventryRuns => When == KeepAwakeWhen.DeventryRuns;
 
     /// <summary>The cup's menu: when to keep the computer awake, which turns it on too.</summary>
     [RelayCommand]
@@ -96,7 +96,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
     {
         if (_sleep.UnavailableReason is { } reason)
         {
-            yield return $"Claudette can't keep this computer awake here: {reason}";
+            yield return $"Deventry can't keep this computer awake here: {reason}";
             yield break;
         }
         if (IsKeepingAwake)
@@ -113,16 +113,16 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
         }
         yield return IsOn
             ? "Click to let it sleep."
-            : WhileClaudeHasWork ? "Click to keep it awake while Claude has work to finish." : "Click to keep it awake while Claudette runs.";
+            : WhileClaudeHasWork ? "Click to keep it awake while Claude has work to finish." : "Click to keep it awake while Deventry runs.";
         yield return "Right-click to choose when.";
     }
 
     /// <summary>Why sleep is held off, a line each.</summary>
     private IEnumerable<string> Reasons()
     {
-        if (IsOn && WhileClaudetteRuns)
+        if (IsOn && WhileDeventryRuns)
         {
-            yield return "While Claudette runs, as Settings → General says.";
+            yield return "While Deventry runs, as Settings → General says.";
         }
         else if (IsOn && _work.Any)
         {
@@ -193,7 +193,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
     public void OnSettingsChanged() => Update();
 
     private bool Wanted =>
-        (IsOn && (WhileClaudetteRuns || _work.Any || _grace.IsPending))
+        (IsOn && (WhileDeventryRuns || _work.Any || _grace.IsPending))
         || (_connectedTabs > 0 && _services.Settings.ClaudeCode.KeepAwakeWhileConnected);
 
     private void Update()
@@ -207,7 +207,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
     public string Describe()
     {
         var setting = !IsOn ? "Keep this computer awake is off."
-            : WhileClaudetteRuns ? "Keep this computer awake is on, while Claudette runs."
+            : WhileDeventryRuns ? "Keep this computer awake is on, while Deventry runs."
             : _work.Any ? $"Keep this computer awake is on, while Claude has work to finish: {DescribeWork(_work)}."
             : _grace.IsPending ? "Keep this computer awake is on, while Claude has work to finish: it just finished."
             : "Keep this computer awake is on, while Claude has work to finish: it has none.";

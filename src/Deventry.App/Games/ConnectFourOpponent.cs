@@ -1,7 +1,7 @@
 namespace Deventry.App.Games;
 
 /// <summary>
-/// Claudette's Connect Four (DESIGN.md §18, "Games with Claudette"): an alpha-beta search one, four or six moves deep
+/// Joulene's Connect Four (DESIGN.md §18, "Games with Joulene"): an alpha-beta search one, four or six moves deep
 /// (Easy, Normal, Hard), scoring the board by the lines of four each side could still make. On every level she takes a
 /// win in front of her; on Easy she also plays anywhere a third of the time.
 /// </summary>
@@ -26,7 +26,7 @@ public static class ConnectFourOpponent
         {
             throw new InvalidOperationException("There's no move to make.");
         }
-        if (board.WinningMove(Player.Claudette) is { } win)
+        if (board.WinningMove(Player.Joulene) is { } win)
         {
             return win;
         }
@@ -48,7 +48,7 @@ public static class ConnectFourOpponent
             {
                 continue;
             }
-            var row = board.Place(column, Player.Claudette);
+            var row = board.Place(column, Player.Joulene);
             // Each column is searched in full, so equal scores really are equal.
             var score = board.WinsAt(column, row) ? Win : -Search(board, Player.You, depth - 1, -int.MaxValue, int.MaxValue, 1);
             board.Lift(column);

@@ -1,10 +1,10 @@
 name: Screenshots
 
-# The demo as Claudette draws it on each system, Windows, macOS and Linux, to compare how it looks on each: the main
-# window, Settings on Appearance and About Claudette, in each style and theme. Run it from the Actions tab; each system's
-# pictures are an artifact of the run. tools/Deventry.Demo/ci-screenshots.ps1 takes them through Claudette's command
+# The demo as Deventry draws it on each system, Windows, macOS and Linux, to compare how it looks on each: the main
+# window, Settings on Appearance and About Deventry, in each style and theme. Run it from the Actions tab; each system's
+# pictures are an artifact of the run. tools/Deventry.Demo/ci-screenshots.ps1 takes them through Deventry's command
 # channel, so they need no account and no tokens (fake-claude is Claude Code). The README's and the guide's own pictures
-# still come from screenshots.ps1 and guide-screenshots.ps1 on Windows (DESIGN.md §9, "Working on Claudette").
+# still come from screenshots.ps1 and guide-screenshots.ps1 on Windows (DESIGN.md §9, "Working on Deventry").
 on:
   workflow_dispatch:
 
@@ -29,7 +29,7 @@ jobs:
           cache-dependency-path: '**/packages.lock.json'
       - name: Restore
         run: dotnet restore Deventry.slnx --locked-mode
-      # Claudette and the demo, which builds fake-claude beside itself.
+      # Deventry and the demo, which builds fake-claude beside itself.
       - name: Build
         run: |
           dotnet build src/Deventry.App/Deventry.App.csproj --no-restore

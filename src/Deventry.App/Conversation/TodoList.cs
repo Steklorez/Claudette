@@ -807,7 +807,7 @@ public sealed partial class TodoList : ObservableObject
         }
         else if (!_pendingUpdates.Remove(toolUseId))
         {
-            // TodoWrite's, whose list Claude Code doesn't keep for Claudette to look at.
+            // TodoWrite's, whose list Claude Code doesn't keep for Deventry to look at.
             return;
         }
         Answered?.Invoke();

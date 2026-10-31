@@ -5,7 +5,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Deventry.Core.Tests.Development;
 
-/// <summary>Running a source build of Claudette and restarting into its new builds (DESIGN.md §9, "Working on Claudette").</summary>
+/// <summary>Running a source build of Deventry and restarting into its new builds (DESIGN.md §9, "Working on Deventry").</summary>
 public class DevelopmentBuildTests
 {
     private static readonly DateTime Built = new(2026, 9, 29, 10, 0, 0, DateTimeKind.Utc);
@@ -53,12 +53,12 @@ public class DevelopmentBuildTests
     }
 
     [Fact]
-    public void An_installed_Claudette_is_not_a_source_build()
+    public void An_installed_Deventry_is_not_a_source_build()
     {
         using var temp = new TempFolder();
         MakeBuild(temp, Built);
         // Next to the solution, but not a build output.
-        var notBin = temp.Combine("repo", "tools", "Claudette");
+        var notBin = temp.Combine("repo", "tools", "Deventry");
         Directory.CreateDirectory(notBin);
         // A bin folder with no checkout above it.
         var elsewhere = temp.Combine("elsewhere", "bin", "Release");
@@ -246,7 +246,7 @@ public class DevelopmentBuildTests
         var now = new DateTimeOffset(Built);
         new RestartSnapshot { Nonce = "abc", CreatedAt = now, Update = new AppUpdateHandover("1.2.0", "1.3.0") }.Save(path);
 
-        // Windows didn't start the new version, and the user opens Claudette hours later.
+        // Windows didn't start the new version, and the user opens Deventry hours later.
         var later = now.AddHours(5);
         Assert.Equal(new AppUpdateHandover("1.2.0", "1.3.0"), RestartSnapshot.Load(path, null, later)?.Update);
         Assert.NotNull(RestartSnapshot.Load(path, "abc", later));

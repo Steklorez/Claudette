@@ -1,5 +1,5 @@
 ﻿"Git"
-"The git branch on tab rows, worktrees, the git Claudette runs, and git in the Files tab."
+"The git branch on tab rows, worktrees, the git Deventry runs, and git in the Files tab."
 "Tab rows"
 [button] Reset to defaults
 "What each tab's row in the sidebar shows of git. The rest is on Conversation."
@@ -17,12 +17,12 @@
 "Its branch stays when it has commits on no other branch.  "
 [choice] "Never"
 "Last cleanup"
-"Nothing removed yet. Claudette looks a minute after it starts, then every hour."
+"Nothing removed yet. Deventry looks a minute after it starts, then every hour."
 [button] Last cleanup: Clean up now
 "Git"
 "This computer"
 [button] Reset to defaults
-"The git Claudette runs to ask about your repositories."
+"The git Deventry runs to ask about your repositories."
 "Path to git"
 "Empty uses the first git on your PATH, as a terminal does.  "
 [button] Reset Path to git to its default

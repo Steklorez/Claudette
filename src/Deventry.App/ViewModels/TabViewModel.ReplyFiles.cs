@@ -102,8 +102,8 @@ internal enum OpenedPath
     /// <summary>It isn't there.</summary>
     NotFound,
 
-    /// <summary>In Claudette's window: the file in the project's Files tab, or the folder in its explorer.</summary>
-    InClaudette,
+    /// <summary>In Deventry's window: the file in the project's Files tab, or the folder in its explorer.</summary>
+    InDeventry,
 
     /// <summary>In the OS's app for it, or Finder, Explorer or the file manager.</summary>
     Elsewhere,

@@ -97,7 +97,7 @@ public class ClaudeSessionTests
         var (suggested, seen) = await session.ReadUntilAsync<PromptSuggested>();
 
         Assert.Equal("run the tests", suggested.Suggestion);
-        // The empty one isn't published, nor taken for a message Claudette doesn't know.
+        // The empty one isn't published, nor taken for a message Deventry doesn't know.
         Assert.Single(seen.OfType<PromptSuggested>());
         Assert.DoesNotContain(seen, e => e is UnrecognizedMessage);
         Assert.Equal(SessionState.Idle, session.State);
@@ -146,7 +146,7 @@ public class ClaudeSessionTests
     [Fact]
     public async Task A_turn_Claude_Code_starts_by_itself_finds_the_session_working()
     {
-        // A message from the Claude app, say: nothing of Claudette's said the session was working first.
+        // A message from the Claude app, say: nothing of Deventry's said the session was working first.
         await using var session = await StartAsync();
         _transport.Emit("""{"type":"system","subtype":"init","session_id":"s1","model":"claude-sonnet-5-5","permissionMode":"default"}""");
 

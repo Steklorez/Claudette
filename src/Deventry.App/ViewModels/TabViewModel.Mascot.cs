@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>Claudette on the composer (DESIGN.md §5): what she reacts to while this tab is the selected one.</summary>
+/// <summary>Joulene on the composer (DESIGN.md §5): what she reacts to while this tab is the selected one.</summary>
 public sealed partial class TabViewModel
 {
     /// <summary>Her, for the composer to show; one for every tab.</summary>
@@ -81,7 +81,7 @@ public sealed partial class TabViewModel
     /// <summary>Her name typed at the end of the composer's text: she waves back, once.</summary>
     private void GreetMascot(string text)
     {
-        var greeted = text.TrimEnd().EndsWith("claudette", StringComparison.OrdinalIgnoreCase);
+        var greeted = text.TrimEnd().EndsWith("joulene", StringComparison.OrdinalIgnoreCase);
         if (greeted && !_greeted && IsSelected)
         {
             _services.Mascot.Greeted();

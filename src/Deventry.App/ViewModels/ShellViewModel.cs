@@ -160,7 +160,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         OnTabWorkChanged();
         // A closed tab's processes leave the header's total.
         OnTabProcessesSampled();
-        // Claudette on the composer points out the other tabs waiting on the user (DESIGN.md §5).
+        // Joulene on the composer points out the other tabs waiting on the user (DESIGN.md §5).
         SelectedTab?.TellMascot();
         UpdateGameCall();
         TabStatusChanged?.Invoke();
@@ -307,7 +307,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// <summary>Set by the view: opens the Settings window where <see cref="SettingsOpening"/> says, and returns when it closes.</summary>
     public Func<SettingsOpening, Task>? ShowSettingsWindow { get; set; }
 
-    /// <summary>Set by the view: opens About Claudette over the main window, and returns when it closes.</summary>
+    /// <summary>Set by the view: opens About Deventry over the main window, and returns when it closes.</summary>
     public Func<Task>? ShowAboutWindow { get; set; }
 
     /// <summary>
@@ -315,7 +315,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// <see cref="SessionSettings.RestoreUnpinnedTabs"/> is on. Restored tabs start their process when selected.
     /// </summary>
     /// <param name="snapshot">
-    /// After a restart into a new build (DESIGN.md §9, "Working on Claudette"): every tab the build had open, with what
+    /// After a restart into a new build (DESIGN.md §9, "Working on Deventry"): every tab the build had open, with what
     /// was typed in each, and the tabs that were running start again straight away.
     /// </param>
     public void Restore(string? initialFolder, RestartSnapshot? snapshot = null)
@@ -337,7 +337,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             }
             else
             {
-                // What was typed when Claudette last quit (DESIGN.md §5, "Drafts and the stash").
+                // What was typed when Deventry last quit (DESIGN.md §5, "Drafts and the stash").
                 tab.RestoreSavedDraft();
             }
             // A deleted clone, say: shown straight away, not only once the tab is selected (DESIGN.md §9, "Missing folder").
@@ -984,9 +984,9 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         SaveTabs();
     }
 
-    // ---- Restarting into a new build (DESIGN.md §9, "Working on Claudette") -------------------------------------
+    // ---- Restarting into a new build (DESIGN.md §9, "Working on Deventry") -------------------------------------
 
-    /// <summary>The sidebar's entry for a new build of Claudette, when running from a source build.</summary>
+    /// <summary>The sidebar's entry for a new build of Deventry, when running from a source build.</summary>
     [ObservableProperty]
     public partial NewBuildViewModel? NewBuild { get; set; }
 
@@ -994,7 +994,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [ObservableProperty]
     public partial SourceUpdateViewModel? SourceUpdate { get; set; }
 
-    /// <summary>The sidebar's entry for a new release of Claudette (DESIGN.md §2, "Updating Claudette").</summary>
+    /// <summary>The sidebar's entry for a new release of Deventry (DESIGN.md §2, "Updating Deventry").</summary>
     [ObservableProperty]
     public partial AppUpdateViewModel? AppUpdate { get; set; }
 
@@ -1080,7 +1080,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     };
 
     /// <summary>
-    /// Stops every tab for a restart, as closing Claudette does, but keeps them in the saved state: the new build
+    /// Stops every tab for a restart, as closing Deventry does, but keeps them in the saved state: the new build
     /// brings them back, or this one does if the new build doesn't start.
     /// </summary>
     public async Task CloseTabsForRestartAsync()
@@ -1169,11 +1169,11 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand]
     private Task OpenDiscordAsync() => HelpLinks.OpenDiscordAsync(_services);
 
-    /// <summary>A new issue on Claudette's GitHub, with the versions filled in.</summary>
+    /// <summary>A new issue on Deventry's GitHub, with the versions filled in.</summary>
     [RelayCommand]
     private Task ReportIssueAsync() => HelpLinks.ReportIssueAsync(_services);
 
-    /// <summary>About Claudette, a window of its own (DESIGN.md §14, "About").</summary>
+    /// <summary>About Deventry, a window of its own (DESIGN.md §14, "About").</summary>
     [RelayCommand]
     private Task OpenAboutAsync() => ShowAboutWindow?.Invoke() ?? Task.CompletedTask;
 

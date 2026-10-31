@@ -5,7 +5,7 @@ namespace Deventry.IntegrationTests.Support;
 /// <summary>A temporary folder, deleted on dispose.</summary>
 internal sealed class TempFolder : IDisposable
 {
-    public TempFolder(string prefix = "claudette-test")
+    public TempFolder(string prefix = "deventry-test")
     {
         Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(Path);

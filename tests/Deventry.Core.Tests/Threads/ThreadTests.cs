@@ -5,7 +5,7 @@ using Deventry.Core.Threads;
 namespace Deventry.Core.Tests.Threads;
 
 /// <summary>
-/// What a thread's PreToolUse hook reads from a <c>SendMessage</c> call, and the names and texts Claudette gives Claude
+/// What a thread's PreToolUse hook reads from a <c>SendMessage</c> call, and the names and texts Deventry gives Claude
 /// about threads (DESIGN.md §18, "Threads"). The hook input is as Claude Code 2.1.284 sent it.
 /// </summary>
 public class ThreadTests
@@ -92,7 +92,7 @@ public class ThreadTests
         ]);
 
         Assert.Equal("""
-            [Claudette] Your sub-threads have finished the work you sent them.
+            [Deventry] Your sub-threads have finished the work you sent them.
 
             ## Art page
 

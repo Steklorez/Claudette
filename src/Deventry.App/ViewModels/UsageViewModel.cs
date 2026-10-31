@@ -177,7 +177,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         var usage = _services.Settings.Usage;
         foreach (var alert in _alerts.Observe(snapshot, Projection(snapshot), usage.WarnPercent, usage.CriticalPercent))
         {
-            // The line under the header, and an OS notification when Claudette isn't in front (DESIGN.md §6, §10). Usage
+            // The line under the header, and an OS notification when Deventry isn't in front (DESIGN.md §6, §10). Usage
             // credits have their notice there already.
             if (alert.Kind != UsageAlertKind.UsingCredits)
             {

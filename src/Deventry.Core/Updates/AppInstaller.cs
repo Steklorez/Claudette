@@ -2,28 +2,28 @@ using System.Runtime.InteropServices;
 
 namespace Deventry.Core.Updates;
 
-/// <summary>How this copy of Claudette was installed, which decides how it updates (DESIGN.md §2, "Updating Claudette").</summary>
+/// <summary>How this copy of Deventry was installed, which decides how it updates (DESIGN.md §2, "Updating Deventry").</summary>
 public enum AppInstallKind
 {
-    /// <summary>A folder Claudette can't replace itself: a Linux build, or an unpackaged Windows one. The update is offered as a link.</summary>
+    /// <summary>A folder Deventry can't replace itself: a Linux build, or an unpackaged Windows one. The update is offered as a link.</summary>
     Other,
 
-    /// <summary>Run from a checkout's build output. New builds come from the checkout (DESIGN.md §9, "Working on Claudette").</summary>
+    /// <summary>Run from a checkout's build output. New builds come from the checkout (DESIGN.md §9, "Working on Deventry").</summary>
     SourceBuild,
 
     /// <summary>Installed from the MSIX package on Windows.</summary>
     Msix,
 
-    /// <summary><c>Claudette.app</c> on macOS, from the <c>.dmg</c>.</summary>
+    /// <summary><c>Deventry.app</c> on macOS, from the <c>.dmg</c>.</summary>
     MacApp,
 
-    /// <summary>Installed from the Microsoft Store, which updates it: Claudette doesn't check GitHub's releases.</summary>
+    /// <summary>Installed from the Microsoft Store, which updates it: Deventry doesn't check GitHub's releases.</summary>
     Store,
 }
 
 /// <summary>A downloaded package, checked and ready to install.</summary>
 /// <param name="PackagePath">The downloaded file.</param>
-/// <param name="StagedPath">What the installer prepared from it, such as the new <c>Claudette.app</c> next to the old one.</param>
+/// <param name="StagedPath">What the installer prepared from it, such as the new <c>Deventry.app</c> next to the old one.</param>
 /// <param name="InstalledPath">
 /// Where the new version goes, when that's decided now: on macOS, the app under the name it has in the disk image,
 /// <c>Deventry.app</c> beside <c>Claudette.app</c> once the app is renamed (DESIGN.md §2, "Renaming to Deventry").
@@ -33,7 +33,7 @@ public sealed record PreparedInstall(AppVersion Version, string PackagePath, str
 /// <summary>What the caller does once the install has started.</summary>
 public enum InstallOutcome
 {
-    /// <summary>Close now: something outside Claudette finishes the install and starts the new version.</summary>
+    /// <summary>Close now: something outside Deventry finishes the install and starts the new version.</summary>
     ExitNow,
 
     /// <summary>The new version is starting: wait for it to say it's up, then close.</summary>
@@ -48,8 +48,8 @@ public sealed class AppInstallException(string message, bool canOpenPackage = fa
 }
 
 /// <summary>
-/// Installs a downloaded release over this copy of Claudette, the way its platform installs apps: an MSIX update on
-/// Windows, swapping <c>Claudette.app</c> on macOS. Implementations live in Deventry.Platform.
+/// Installs a downloaded release over this copy of Deventry, the way its platform installs apps: an MSIX update on
+/// Windows, swapping <c>Deventry.app</c> on macOS. Implementations live in Deventry.Platform.
 /// </summary>
 public interface IAppInstaller
 {
@@ -59,7 +59,7 @@ public interface IAppInstaller
     bool CanInstall => Kind is AppInstallKind.Msix or AppInstallKind.MacApp;
 
     /// <summary>
-    /// Checks the downloaded package (that it's Claudette, the expected version, and signed as this copy is) and gets it
+    /// Checks the downloaded package (that it's Deventry, the expected version, and signed as this copy is) and gets it
     /// ready, without touching the running app. Throws <see cref="AppInstallException"/>.
     /// </summary>
     Task<PreparedInstall> PrepareAsync(string packagePath, AppVersion version, CancellationToken cancellationToken = default);
@@ -78,10 +78,10 @@ public sealed class NoAppInstaller(AppInstallKind kind = AppInstallKind.Other) :
     public AppInstallKind Kind { get; } = kind;
 
     public Task<PreparedInstall> PrepareAsync(string packagePath, AppVersion version, CancellationToken cancellationToken = default) =>
-        throw new AppInstallException("This copy of Claudette can't install updates itself.");
+        throw new AppInstallException("This copy of Deventry can't install updates itself.");
 
     public Task<InstallOutcome> InstallAsync(PreparedInstall prepared, IReadOnlyList<string> restartArguments, string readyFile, string nonce, CancellationToken cancellationToken = default) =>
-        throw new AppInstallException("This copy of Claudette can't install updates itself.");
+        throw new AppInstallException("This copy of Deventry can't install updates itself.");
 }
 
 /// <summary>A release newer than the running version, and the package in it for this platform, if there is one.</summary>
@@ -103,7 +103,7 @@ public sealed record AvailableUpdate(AppRelease Release, ReleaseAsset? Asset)
     }
 
     /// <summary>
-    /// The package for this install: <c>Claudette-&lt;version&gt;-&lt;arch&gt;.msix</c> or <c>….dmg</c>, as
+    /// The package for this install: <c>Deventry-&lt;version&gt;-&lt;arch&gt;.msix</c> or <c>….dmg</c>, as
     /// <c>.github/workflows/package.yml</c> names them. It's found by its architecture and kind alone, whatever name comes
     /// before them, so Deventry's <c>Deventry-…</c> packages are found too (DESIGN.md §2, "Renaming to Deventry"). Null
     /// when there's none, or this install can't use one.

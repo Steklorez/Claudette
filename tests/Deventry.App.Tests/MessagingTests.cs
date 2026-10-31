@@ -142,7 +142,7 @@ public class MessagingTests
         Assert.Equal(["Art page", "api-worker", "Find the loader"], Titles(plan).Take(3));
         Assert.Equal(["Tab", @"Session · C:\work\api", "Subagent · Explore"], plan.Completions.Items.Take(3).Select(i => i.Detail));
         Assert.Equal("Sessions and files", plan.Completions.Header);
-        // Not this tab's own session, nor Claudette's utility session.
+        // Not this tab's own session, nor Deventry's utility session.
         Assert.DoesNotContain("Plan", Titles(plan));
         Assert.DoesNotContain("utility-64", Titles(plan));
 
@@ -212,8 +212,8 @@ public class MessagingTests
         var sent = h.Transport.SentUserTextsTo(0).Last();
         Assert.Equal(
             "ask s-art what it's doing, and s-other too\n\n"
-            + "[Claudette] Who this message names, each of whom you can message with SendMessage:\n"
-            + "- s-art is the session ID of \"Art page\", another Claude Code session on this machine, open in another of Claudette's tabs. Its to: \"Art page\".\n"
+            + "[Deventry] Who this message names, each of whom you can message with SendMessage:\n"
+            + "- s-art is the session ID of \"Art page\", another Claude Code session on this machine, open in another of Deventry's tabs. Its to: \"Art page\".\n"
             + "- s-other is the session ID of \"api-worker\", another Claude Code session on this machine, working in C:\\work\\api. Its to: \"api-worker\".",
             sent);
         var card = plan.Items.OfType<UserMessageItem>().Last();
@@ -237,7 +237,7 @@ public class MessagingTests
 
     /// <summary>
     /// Two tabs, each on a process of its own: Plan, which ran a subagent, and Art page, whose session Claude Code lists
-    /// with another session and Claudette's utility session. The processes share a PID here, so tabs are found by ID.
+    /// with another session and Deventry's utility session. The processes share a PID here, so tabs are found by ID.
     /// </summary>
     private static async Task<(TabViewModel Plan, TabViewModel Art)> TwoTabsAsync(TabTestHarness h)
     {

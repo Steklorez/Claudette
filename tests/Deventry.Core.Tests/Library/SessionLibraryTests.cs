@@ -12,7 +12,7 @@ public sealed class SessionLibraryTests : IDisposable
 {
     private const string Id = "5d3c1a2b-0000-4000-8000-000000000001";
 
-    private readonly TempFolder _root = new("claudette-library");
+    private readonly TempFolder _root = new("deventry-library");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
     private readonly SessionLibrary _library;
 
@@ -536,7 +536,7 @@ public sealed class SessionLibraryTests : IDisposable
             var (transcript, _) = LocalSession(id);
             await _library.SaveAsync(Record(id, now - TimeSpan.FromDays(20)), transcript, null, Ct);
         }
-        // A field from a later version of Claudette stays.
+        // A field from a later version of Deventry stays.
         var recordPath = Path.Combine(_library.GetSessionFolder("opened"), "record.json");
         var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(recordPath))!.AsObject();
         json["fromLater"] = "kept";
@@ -594,9 +594,9 @@ public sealed class SessionLibraryTests : IDisposable
     }
 
     [Theory]
-    [InlineData(@"C:\Users\me\My Drive\Claudette", "Google Drive")]
+    [InlineData(@"C:\Users\me\My Drive\Deventry", "Google Drive")]
     [InlineData(@"G:\My Drive\sessions", "Google Drive")]
-    [InlineData(@"C:\Users\me\Google Drive\Claudette", "Google Drive")]
+    [InlineData(@"C:\Users\me\Google Drive\Deventry", "Google Drive")]
     [InlineData("/Users/me/Library/CloudStorage/GoogleDrive-me@example.com/My Drive/lib", "Google Drive")]
     [InlineData(@"C:\Users\me\Dropbox\lib", "Dropbox")]
     [InlineData(@"C:\Users\me\Dropbox (Contoso)\lib", "Dropbox")]
@@ -609,8 +609,8 @@ public sealed class SessionLibraryTests : IDisposable
     [InlineData(@"C:\Users\me\Box\lib", "Box")]
     [InlineData("/Users/me/Library/CloudStorage/Box-Box/lib", "Box")]
     [InlineData(@"D:\Projects\Box\lib", null)]
-    [InlineData(@"C:\Users\me\AppData\Local\Claudette\library", null)]
-    [InlineData("/home/me/.local/share/claudette/library", null)]
+    [InlineData(@"C:\Users\me\AppData\Local\Deventry\library", null)]
+    [InlineData("/home/me/.local/share/deventry/library", null)]
     public void Detects_cloud_sync_folders(string path, string? expected)
     {
         var environment = new Dictionary<string, string?> { ["OneDriveCommercial"] = @"E:\Work Sync" };

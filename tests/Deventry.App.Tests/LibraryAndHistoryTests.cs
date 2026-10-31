@@ -460,7 +460,7 @@ public class LibraryAndHistoryTests
         Assert.True(InLibrary("recent"));
         Assert.True(InLibrary("open-1"));
 
-        // Claudette stays open: the next day's pass goes by the days chosen then.
+        // Deventry stays open: the next day's pass goes by the days chosen then.
         h.Services.Settings.Sessions.KeepLibrarySessionDays = 7;
         h.Time.Advance(LibraryService.PruneInterval);
         await TabTestHarness.Eventually(() => !InLibrary("recent"), "the next day's pass");
@@ -565,7 +565,7 @@ public class LibraryAndHistoryTests
         await using var h = new TabTestHarness();
         var first = UserLine("pin-3", "Add the export button", h.WorkFolder);
         h.WriteTranscript("pin-3", first);
-        // The laptop carried the session on, then quit Claudette, which released its lease.
+        // The laptop carried the session on, then quit Deventry, which released its lease.
         var library = await CarriedOnElsewhereAsync(h, "pin-3", first, UserLine("pin-3", "Now the import", h.WorkFolder, "2026-09-28T12:00:00Z"));
         var tab = RestorePinned(h, "pin-3");
 
@@ -710,7 +710,7 @@ public class LibraryAndHistoryTests
         Assert.Contains(Notes(tab), n => n.Text.Contains("Sync stays off", StringComparison.Ordinal));
     }
 
-    /// <summary>A pinned tab that syncs, restored as Claudette starts.</summary>
+    /// <summary>A pinned tab that syncs, restored as Deventry starts.</summary>
     private static TabViewModel RestorePinned(TabTestHarness h, string sessionId)
     {
         h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = sessionId, SyncToLibrary = true }];
@@ -718,7 +718,7 @@ public class LibraryAndHistoryTests
         return h.Shell.AllTabs.Single();
     }
 
-    /// <summary>The session's library copy as LAPTOP-02 left it, with no lease: that machine closed Claudette since. Returns the library's transcript.</summary>
+    /// <summary>The session's library copy as LAPTOP-02 left it, with no lease: that machine closed Deventry since. Returns the library's transcript.</summary>
     private static async Task<string> CarriedOnElsewhereAsync(TabTestHarness h, string sessionId, params string[] lines)
     {
         var source = Path.Combine(h.Root, $"{sessionId}-laptop.jsonl");

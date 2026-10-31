@@ -189,7 +189,7 @@ public class ProcessUsageTests
     [Fact]
     public async Task A_transcript_without_saved_totals_or_that_isnt_there_has_none()
     {
-        using var folder = new TempFolder("claudette-cost-state");
+        using var folder = new TempFolder("deventry-cost-state");
         var path = folder.Combine("s1.jsonl");
         await File.WriteAllTextAsync(path, """{"type":"user","message":{"role":"user","content":"hi"}}""" + "\n", TestContext.Current.CancellationToken);
 

@@ -1,7 +1,7 @@
 namespace Deventry.Core.Library;
 
 /// <summary>
-/// Recognizes folders kept in sync by a cloud storage client, so Claudette can say so before putting transcripts
+/// Recognizes folders kept in sync by a cloud storage client, so Deventry can say so before putting transcripts
 /// there (DESIGN.md §9, "Privacy"). A heuristic over folder names; a false positive only costs a confirmation.
 /// </summary>
 internal static class CloudSyncFolders

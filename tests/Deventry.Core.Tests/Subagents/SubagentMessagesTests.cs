@@ -4,7 +4,7 @@ using Deventry.Core.Subagents;
 
 namespace Deventry.Core.Tests.Subagents;
 
-/// <summary>What Claudette tells Claude about subagents (DESIGN.md §5, "Subagents").</summary>
+/// <summary>What Deventry tells Claude about subagents (DESIGN.md §5, "Subagents").</summary>
 public class SubagentMessagesTests
 {
     [Fact]
@@ -20,7 +20,7 @@ public class SubagentMessagesTests
     {
         Assert.All(Enum.GetValues<SubagentUse>(), use =>
         {
-            Assert.StartsWith("[Claudette] ", SubagentMessages.ChangeNote(use), StringComparison.Ordinal);
+            Assert.StartsWith("[Deventry] ", SubagentMessages.ChangeNote(use), StringComparison.Ordinal);
             Assert.StartsWith("Told Claude ", SubagentMessages.ChangeNoteLine(use), StringComparison.Ordinal);
         });
         Assert.Equal("Told Claude it can use subagents again", SubagentMessages.ChangeNoteLine(SubagentUse.ClaudeDecides));

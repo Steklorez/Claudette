@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Deventry.Core.Updates;
 
-/// <summary>A published release of Claudette on GitHub.</summary>
+/// <summary>A published release of Deventry on GitHub.</summary>
 /// <param name="Notes">The release notes, as GitHub Markdown.</param>
 /// <param name="PageUrl">The release's page on GitHub.</param>
 public sealed record AppRelease(
@@ -26,13 +26,13 @@ public sealed record ReleaseAsset(string Name, string DownloadUrl, long Size, st
 public sealed class ReleaseFeedException(string message, Exception? inner = null) : Exception(message, inner);
 
 /// <summary>
-/// Claudette's releases, from the GitHub REST API (DESIGN.md §2, "Updating Claudette"). Unauthenticated: GitHub allows
-/// 60 requests an hour from one address, and Claudette checks every few hours. Drafts aren't visible without a token,
+/// Deventry's releases, from the GitHub REST API (DESIGN.md §2, "Updating Deventry"). Unauthenticated: GitHub allows
+/// 60 requests an hour from one address, and Deventry checks every few hours. Drafts aren't visible without a token,
 /// so a release is offered once it's published.
 /// </summary>
 public sealed class ReleaseFeed(HttpClient http, string userAgent, string repository = ReleaseFeed.DefaultRepository, string apiBase = "https://api.github.com")
 {
-    public const string DefaultRepository = "dotBunny/Claudette";
+    public const string DefaultRepository = "dotBunny/Deventry";
 
     /// <summary>The releases page, for builds that can't install an update themselves.</summary>
     public string ReleasesPage => $"https://github.com/{repository}/releases";
@@ -62,7 +62,7 @@ public sealed class ReleaseFeed(HttpClient http, string userAgent, string reposi
             if (response.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests
                 && response.Headers.TryGetValues("x-ratelimit-remaining", out var remaining) && remaining.FirstOrDefault() == "0")
             {
-                throw new ReleaseFeedException("GitHub's limit on checks from this network was reached. Claudette tries again later.");
+                throw new ReleaseFeedException("GitHub's limit on checks from this network was reached. Deventry tries again later.");
             }
             if (response.StatusCode == HttpStatusCode.NotFound)
             {

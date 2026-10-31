@@ -3,12 +3,12 @@ using System.Text.Json.Nodes;
 namespace Deventry.Core.Claude;
 
 /// <summary>
-/// The verbs of the working line (DESIGN.md §5, "Working line"): Claudette's own list, changed by Claude Code's
+/// The verbs of the working line (DESIGN.md §5, "Working line"): Deventry's own list, changed by Claude Code's
 /// documented <c>spinnerVerbs</c> setting, so verbs a user added for the terminal show here too.
 /// </summary>
 public static class SpinnerVerbs
 {
-    /// <summary>Claudette's own verbs. Claude Code doesn't publish its built-in list, so this one is Claudette's.</summary>
+    /// <summary>Deventry's own verbs. Claude Code doesn't publish its built-in list, so this one is Deventry's.</summary>
     public static IReadOnlyList<string> BuiltIn { get; } =
     [
         "Accomplishing", "Architecting", "Baking", "Brewing", "Calibrating", "Canoodling", "Churning", "Claudetting",
@@ -33,7 +33,7 @@ public static class SpinnerVerbs
     /// <summary>
     /// The verbs to show: the built-in list, with the <c>spinnerVerbs</c> of the most specific file that sets it.
     /// <c>"append"</c> adds its verbs, <c>"replace"</c> shows only its verbs (an empty list keeps the built-in ones).
-    /// A file that's missing, unreadable or not valid JSON is skipped, as is a value Claudette doesn't understand.
+    /// A file that's missing, unreadable or not valid JSON is skipped, as is a value Deventry doesn't understand.
     /// </summary>
     public static IReadOnlyList<string> Resolve(IEnumerable<string> settingsFiles)
     {
@@ -54,7 +54,7 @@ public static class SpinnerVerbs
         return BuiltIn;
     }
 
-    /// <summary>The file's <c>spinnerVerbs</c>, or null when it has none Claudette can use.</summary>
+    /// <summary>The file's <c>spinnerVerbs</c>, or null when it has none Deventry can use.</summary>
     private static (string Mode, IReadOnlyList<string> Verbs)? Read(string file)
     {
         if (ClaudeSettingsFiles.Read(file)?["spinnerVerbs"] is not JsonObject setting)

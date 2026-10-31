@@ -99,7 +99,7 @@ internal sealed class FakeTransport : IClaudeTransport
         return HoldSends is { } hold ? new ValueTask(hold.Task) : ValueTask.CompletedTask;
     }
 
-    /// <summary>Waits until Claudette sends a line matching <paramref name="match"/> (including one already sent).</summary>
+    /// <summary>Waits until Deventry sends a line matching <paramref name="match"/> (including one already sent).</summary>
     public Task<JsonObject> WaitForSentAsync(Func<JsonObject, bool> match)
     {
         lock (_sent)

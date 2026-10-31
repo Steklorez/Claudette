@@ -129,7 +129,7 @@ public static class FindReplace
             TextFileProblem.Missing => "It isn't there any more.",
             TextFileProblem.Binary => "It isn't text.",
             TextFileProblem.TooLarge => "It's over 10 MB.",
-            TextFileProblem.Unreadable => "It couldn't be read: another program may have it open, or Claudette isn't allowed to.",
+            TextFileProblem.Unreadable => "It couldn't be read: another program may have it open, or Deventry isn't allowed to.",
             _ => null,
         };
         if (problem is null && content.Encoding is null)
@@ -195,7 +195,7 @@ public static class FindReplace
 }
 
 /// <summary>
-/// What happens before Claudette writes files that aren't open in an editor (DESIGN.md §18, "Project files", "Finding in
+/// What happens before Deventry writes files that aren't open in an editor (DESIGN.md §18, "Project files", "Finding in
 /// files"): the one place a workspace that keeps its files read-only until they're opened for edit, as Perforce does,
 /// can check them out first. Replace in files calls it once with every file it's about to write. Until something needs
 /// it, <see cref="NothingBeforeFilesWrite"/> does nothing.

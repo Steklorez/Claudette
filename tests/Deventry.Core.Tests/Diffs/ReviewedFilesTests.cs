@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Diffs;
 /// <summary>Marking changed files as reviewed (DESIGN.md §8, "Reviewed").</summary>
 public sealed class ReviewedFilesTests
 {
-    private static readonly string Root = Path.Combine(Path.GetTempPath(), "claudette-reviewed");
+    private static readonly string Root = Path.Combine(Path.GetTempPath(), "deventry-reviewed");
     private readonly ChangedFiles _changes = new(new FakeTimeProvider());
     private readonly List<ReviewedFile> _marks = [];
     private readonly ReviewedFiles _reviewed;

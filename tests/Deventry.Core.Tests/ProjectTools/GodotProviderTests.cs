@@ -36,7 +36,7 @@ public sealed class GodotProviderTests : IDisposable
         config/features=PoolStringArray( "GLES3" )
         """;
 
-    private readonly TempFolder _temp = new("claudette-godot");
+    private readonly TempFolder _temp = new("deventry-godot");
     private readonly GodotProvider _godot = new();
 
     public void Dispose() => _temp.Dispose();

@@ -22,7 +22,7 @@ public static class PerforceErrors
         || text.Contains("TCP connect to", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Output that means the login needs the user: single sign-on or a second factor, which Claudette doesn't
+    /// Output that means the login needs the user: single sign-on or a second factor, which Deventry doesn't
     /// handle (DESIGN.md §18, "Not covered").
     /// </summary>
     public static bool NeedsUserLogin(string text) =>

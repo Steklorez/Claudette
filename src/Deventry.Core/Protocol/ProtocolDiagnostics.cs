@@ -1,7 +1,7 @@
 namespace Deventry.Core.Protocol;
 
 /// <summary>
-/// What Claudette has seen from Claude Code that it doesn't know yet (DESIGN.md §16, "Staying tolerant at runtime"):
+/// What Deventry has seen from Claude Code that it doesn't know yet (DESIGN.md §16, "Staying tolerant at runtime"):
 /// message types it skipped, top-level fields it hasn't seen before, and lines it couldn't read. Shared by every
 /// session; shown on Settings → Advanced → Diagnostics.
 /// </summary>
@@ -9,7 +9,7 @@ public sealed class ProtocolDiagnostics
 {
     /// <summary>
     /// The top-level fields of each message type in the tested Claude Code version, from the recorded fixtures and the
-    /// fields Claudette reads. A field outside the list is new. Types without a list aren't checked.
+    /// fields Deventry reads. A field outside the list is new. Types without a list aren't checked.
     /// </summary>
     private static readonly Dictionary<string, HashSet<string>> KnownFields = new(StringComparer.Ordinal)
     {
@@ -45,7 +45,7 @@ public sealed class ProtocolDiagnostics
 
     private static HashSet<string> Fields(params string[] names) => new(names, StringComparer.Ordinal);
 
-    /// <summary>A message of a type Claudette doesn't handle, which it skipped.</summary>
+    /// <summary>A message of a type Deventry doesn't handle, which it skipped.</summary>
     public void RecordUnknownMessage(string type)
     {
         lock (_lock)

@@ -12,7 +12,7 @@ public sealed record GitChip(string Text, string? Url)
 
 /// <summary>
 /// The chips for a Bash result's <c>gitOperation</c> (documented: Tool Output Types, Bash): a commit, a push, a merge or
-/// rebase, and what happened to a pull request. A part Claudette doesn't know, or an action, is left out or named plainly.
+/// rebase, and what happened to a pull request. A part Deventry doesn't know, or an action, is left out or named plainly.
 /// </summary>
 public static class GitChips
 {

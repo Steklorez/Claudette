@@ -7,8 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// The sidebar's "Claudette 1.3.0 is available" badge, its dialog, and the updates part of Settings → General
-/// (DESIGN.md §2, "Updating Claudette").
+/// The sidebar's "Deventry 1.3.0 is available" badge, its dialog, and the updates part of Settings → General
+/// (DESIGN.md §2, "Updating Deventry").
 /// </summary>
 public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
 {
@@ -31,18 +31,18 @@ public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
         && ((Available is not null && !_updates.IsSkipped) || _updates.LastError is not null || _updates.IsDownloading || _updates.IsInstalling);
 
     public string BadgeText =>
-        _updates.IsInstalling && !_updates.IsDownloading ? $"Installing Claudette {NewVersion}…"
+        _updates.IsInstalling && !_updates.IsDownloading ? $"Installing Deventry {NewVersion}…"
         : _updates.IsWaitingForIdle ? "Updating when idle…"
-        : _updates.IsDownloading ? $"Downloading Claudette {NewVersion}… {DownloadPercent:0}%"
+        : _updates.IsDownloading ? $"Downloading Deventry {NewVersion}… {DownloadPercent:0}%"
         : Available is null && _updates.LastError is not null ? "Update didn't install"
         : _updates.DownloadedPath is not null ? $"Restart to update to {NewVersion}"
-        : $"Claudette {NewVersion} is available";
+        : $"Deventry {NewVersion} is available";
 
-    public string Title => Available is null ? "Claudette updates" : $"Claudette {NewVersion} is available";
+    public string Title => Available is null ? "Deventry updates" : $"Deventry {NewVersion} is available";
 
     public string CurrentVersionText => _updates.UpdatedFrom is { } from
-        ? $"You have Claudette {_updates.CurrentVersion}, updated from {from}."
-        : $"You have Claudette {_updates.CurrentVersion}.";
+        ? $"You have Deventry {_updates.CurrentVersion}, updated from {from}."
+        : $"You have Deventry {_updates.CurrentVersion}.";
 
     public string? ReleasedText => Available?.Release.PublishedAt is { } at
         ? $"Released {at.ToLocalTime().ToString("d MMMM yyyy", CultureInfo.CurrentCulture)}{(Available.Release.IsPrerelease ? " as a pre-release" : "")}."
@@ -56,9 +56,9 @@ public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
 
     /// <summary>Why there's nothing to install here, when there isn't.</summary>
     public string? ManualText => Available is null ? null
-        : _updates.Kind == AppInstallKind.Other ? "This copy of Claudette can't update itself. Download the new version from its release page."
+        : _updates.Kind == AppInstallKind.Other ? "This copy of Deventry can't update itself. Download the new version from its release page."
         : Available.Asset is null ? "This release has no package for this computer yet. See its release page."
-        : Available.Asset.Sha256 is null ? "GitHub published no checksum for this release's package, so Claudette can't check it. Download it from its release page."
+        : Available.Asset.Sha256 is null ? "GitHub published no checksum for this release's package, so Deventry can't check it. Download it from its release page."
         : null;
 
     public bool HasManualText => ManualText is not null;
@@ -118,9 +118,9 @@ public sealed partial class AppUpdateViewModel : ObservableObject, IDisposable
         : _updates.IsChecking ? "Checking for updates…"
         : _updates.CheckError is { } error ? error
         : _updates.LastChecked is not { } at ? "Not checked yet."
-        : Available is null ? $"Claudette is up to date. Checked at {at.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)}."
-        : _updates.IsSkipped ? $"Claudette {NewVersion} is available; you skipped it."
-        : $"Claudette {NewVersion} is available.";
+        : Available is null ? $"Deventry is up to date. Checked at {at.ToLocalTime().ToString("t", CultureInfo.CurrentCulture)}."
+        : _updates.IsSkipped ? $"Deventry {NewVersion} is available; you skipped it."
+        : $"Deventry {NewVersion} is available.";
 
     public bool CanCheck => _updates.ChecksReleases && !_updates.IsChecking;
 

@@ -232,7 +232,7 @@ public sealed partial class TabGroupViewModel : ObservableObject
         foreach (var tab in e.NewItems?.OfType<TabViewModel>() ?? [])
         {
             tab.PropertyChanged += OnTabPropertyChanged;
-            // Claudette on the composer's hair tie takes the group's colour (DESIGN.md §5).
+            // Joulene on the composer's hair tie takes the group's colour (DESIGN.md §5).
             tab.GroupColor = Color;
         }
         foreach (var tab in e.OldItems?.OfType<TabViewModel>() ?? [])

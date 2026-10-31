@@ -17,7 +17,7 @@ public sealed record ClaudeSettingsFile(string Path, SettingsScope Scope);
 /// <summary>
 /// What Claude Code's settings files say about the permission mode a session starts in (DESIGN.md §7, "Starting
 /// mode"). A terminal or VS Code session starts in auto mode unless a file sets <c>permissions.defaultMode</c>, but a
-/// <c>claude -p</c> session like a tab's starts in Manual, so Claudette asks for auto mode itself.
+/// <c>claude -p</c> session like a tab's starts in Manual, so Deventry asks for auto mode itself.
 /// </summary>
 /// <param name="DefaultMode">
 /// The <c>permissions.defaultMode</c> that takes effect, with <c>manual</c> as <c>default</c>. Null when no file sets
@@ -32,7 +32,7 @@ public sealed record StartingPermissionMode(string? DefaultMode, bool AutoModeDi
     public const string Manual = "default";
 
     /// <summary>
-    /// The mode to launch with when Claudette's settings don't choose one: auto, as a terminal session would start in,
+    /// The mode to launch with when Deventry's settings don't choose one: auto, as a terminal session would start in,
     /// or null to leave it to Claude Code, which applies <see cref="DefaultMode"/>. When auto mode turns out to be
     /// unavailable (the model doesn't support it, or it's off server-side), Claude Code starts in Manual instead.
     /// </summary>
@@ -42,8 +42,8 @@ public sealed record StartingPermissionMode(string? DefaultMode, bool AutoModeDi
     public string Expected => LaunchMode ?? (DefaultMode is null or Auto ? Manual : DefaultMode);
 
     /// <summary>
-    /// The folder of the <c>managed-settings.json</c> an organization deploys, for the OS Claudette runs on. Claude Code
-    /// also takes managed settings from MDM, the registry and the claude.ai console, which Claudette doesn't read.
+    /// The folder of the <c>managed-settings.json</c> an organization deploys, for the OS Deventry runs on. Claude Code
+    /// also takes managed settings from MDM, the registry and the claude.ai console, which Deventry doesn't read.
     /// </summary>
     public static string? ManagedDirectory =>
         OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "ClaudeCode")

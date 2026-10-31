@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Messages Claudette holds until the turn ends (DESIGN.md §5, "Queued messages"), with Settings → General →
+/// Messages Deventry holds until the turn ends (DESIGN.md §5, "Queued messages"), with Settings → General →
 /// <b>Messages sent while Claude works</b> set to <b>Queue</b>: each goes as the next turn, one per turn, rather than
 /// into the turn under way.
 /// </summary>

@@ -45,7 +45,7 @@ internal sealed class WindowsTrash : ITrash
         })
         {
             IsBackground = true,
-            Name = "Claudette's Recycle Bin",
+            Name = "Deventry's Recycle Bin",
         };
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
@@ -161,7 +161,7 @@ internal static partial class FileOperationInterop
 }
 
 // IFileOperation and its progress sink, declared by hand in vtable order from shobjidl_core.h, as WinRtInterop's are.
-// Shell items and strings Claudette doesn't read pass as pointers.
+// Shell items and strings Deventry doesn't read pass as pointers.
 
 [GeneratedComInterface]
 [Guid("947AAB5F-0A5C-4C13-B4D6-4BF7836FC9F8")]

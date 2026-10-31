@@ -23,7 +23,7 @@ mkdir -p "$output"
 rm -rf "$work"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 
-echo "Publishing Claudette $version for osx-$arch"
+echo "Publishing Deventry $version for osx-$arch"
 dotnet publish "$root/src/Deventry.App/Deventry.App.csproj" -c Release -r "osx-$arch" --self-contained \
   -p:Version="$version" -p:DebugType=portable -o "$app/Contents/MacOS"
 # The symbols stay out of the bundle (and its signature), kept beside it to read crash reports' stack traces with.
@@ -62,12 +62,12 @@ else
   echo "warning: MACOS_SIGNING_IDENTITY isn't set, so the app is unsigned and Gatekeeper will block it." >&2
 fi
 
-dmg="$output/Claudette-$version-$arch.dmg"
+dmg="$output/Deventry-$version-$arch.dmg"
 staging="$work/dmg"
 mkdir -p "$staging"
 cp -R "$app" "$staging/"
 ln -s /Applications "$staging/Applications"
-hdiutil create -volname "Claudette" -srcfolder "$staging" -ov -format UDZO "$dmg"
+hdiutil create -volname "Deventry" -srcfolder "$staging" -ov -format UDZO "$dmg"
 
 if [[ -n "$identity" ]]; then
   codesign --force --timestamp --sign "$identity" "$dmg"

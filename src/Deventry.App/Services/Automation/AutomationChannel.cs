@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.App.Services.Automation;
 
 /// <summary>
-/// A command to Claudette from the screenshot scripts (DESIGN.md §9, "Taking screenshots without the focus"): what to
+/// A command to Deventry from the screenshot scripts (DESIGN.md §9, "Taking screenshots without the focus"): what to
 /// do, and to which control, named as UI Automation saw it. <see cref="AutomationCommands"/> carries it out.
 /// </summary>
 public sealed record AutomationRequest
@@ -73,9 +73,9 @@ public sealed record AutomationResponse(bool Ok, string? Error = null, string? V
 
 /// <summary>
 /// The demo's command channel (DESIGN.md §9, "Taking screenshots without the focus"): with
-/// <c>DEVENTRY_AUTOMATION_PIPE</c> set, Claudette takes commands from the screenshot scripts on a named pipe of that
+/// <c>DEVENTRY_AUTOMATION_PIPE</c> set, Deventry takes commands from the screenshot scripts on a named pipe of that
 /// name (a Unix domain socket on macOS and Linux), one JSON line each, and answers each with one. The scripts drive
-/// Claudette this way rather than with the mouse, keys or UI Automation's actions, any of which Windows lets bring a
+/// Deventry this way rather than with the mouse, keys or UI Automation's actions, any of which Windows lets bring a
 /// window to the front. Only this user's processes can connect, one at a time.
 /// </summary>
 public sealed class AutomationChannel : IDisposable

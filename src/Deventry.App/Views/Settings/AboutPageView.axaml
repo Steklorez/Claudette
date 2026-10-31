@@ -4,10 +4,10 @@
              xmlns:c="using:Deventry.App.Controls"
              x:Class="Deventry.App.Views.Settings.AboutPageView" ClipToBounds="False"
              x:DataType="settings:AboutPage">
-  <!-- About (DESIGN.md §14, "About"): which Claudette this is, who has contributed to it, the trademarks it names, and the
+  <!-- About (DESIGN.md §14, "About"): which Deventry this is, who has contributed to it, the trademarks it names, and the
        licenses of what it's built with, each license and notices under its row on request -->
   <StackPanel Spacing="32">
-    <c:SettingsSection Key="claudette">
+    <c:SettingsSection Key="deventry">
       <c:SettingRow Key="about.version" />
       <c:SettingRow Key="about.links">
         <WrapPanel ItemSpacing="12">

@@ -8,7 +8,7 @@ namespace Deventry.Core.Claude;
 public static class ClaudeEnvironment
 {
     /// <summary>
-    /// Variables that Claude Code sets for the processes it starts. If Claudette was itself started from inside a
+    /// Variables that Claude Code sets for the processes it starts. If Deventry was itself started from inside a
     /// Claude Code session, these are inherited and make <c>claude</c> behave as that session's child: in the
     /// milestone 1 spike it ignored the given credentials and reported "Not logged in". User configuration such as
     /// <c>CLAUDE_CONFIG_DIR</c> or <c>CLAUDE_CODE_USE_BEDROCK</c> is deliberately not on this list.

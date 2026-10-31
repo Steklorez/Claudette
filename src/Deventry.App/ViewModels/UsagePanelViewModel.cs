@@ -56,11 +56,11 @@ public sealed record ProjectBurnRow(string Name, string? Folder, string Tokens, 
     /// <summary>What each machine spent on it, a line each, when more than one did (DESIGN.md §6, "Sharing across machines").</summary>
     public string? Split { get; init; }
 
-    /// <summary>Turns recorded before Claudette kept each turn's folder.</summary>
+    /// <summary>Turns recorded before Deventry kept each turn's folder.</summary>
     public bool IsEarlier { get; init; }
 
     public string Tooltip =>
-        (Folder ?? (IsEarlier ? "Turns recorded before Claudette kept each turn's folder." : $"{Name} isn't on this machine."))
+        (Folder ?? (IsEarlier ? "Turns recorded before Deventry kept each turn's folder." : $"{Name} isn't on this machine."))
         + (Split is null ? "" : $"\n{Split}");
 
     /// <summary>
@@ -357,7 +357,7 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            // The history may be closing as Claudette quits, or damaged (it starts again by itself): show what's there.
+            // The history may be closing as Deventry quits, or damaged (it starts again by itself): show what's there.
             return;
         }
         if (generation != _refreshes)

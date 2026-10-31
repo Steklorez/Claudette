@@ -9,7 +9,7 @@ public sealed class TabMarkTests : IDisposable
 {
     private static readonly DateTimeOffset Noon = DateTimeOffset.Parse("2026-10-07T12:00:00Z", CultureInfo.InvariantCulture);
 
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-marks-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-marks-{Guid.NewGuid():N}");
 
     public TabMarkTests() => Directory.CreateDirectory(_root);
 
@@ -30,7 +30,7 @@ public sealed class TabMarkTests : IDisposable
     [InlineData(null)]
     [InlineData("")]
     [InlineData("heart")]
-    public void No_word_or_one_a_later_Claudette_added_reads_as_no_mark(string? key) => Assert.Null(TabMarks.Parse(key));
+    public void No_word_or_one_a_later_Deventry_added_reads_as_no_mark(string? key) => Assert.Null(TabMarks.Parse(key));
 
     [Fact]
     public void A_past_session_has_whichever_mark_was_written_last_of_its_record_and_this_machines()

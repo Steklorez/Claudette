@@ -5,16 +5,16 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// Claudette's own updates (DESIGN.md §2, "Updating Claudette"): checks GitHub releases at launch and every few hours,
+/// Deventry's own updates (DESIGN.md §2, "Updating Deventry"): checks GitHub releases at launch and every few hours,
 /// downloads the package for this platform, and installs it with the same handover a source build uses to restart into
 /// a new build (§9): every tab, draft and the window's placement come back in the new version. If the install fails
-/// before Claudette closes, the tabs come straight back here.
+/// before Deventry closes, the tabs come straight back here.
 /// </summary>
 public sealed class AppUpdateService : IDisposable
 {
     public static readonly TimeSpan CheckInterval = TimeSpan.FromHours(6);
 
-    /// <summary>How long a new version started by Claudette itself has to say it's up.</summary>
+    /// <summary>How long a new version started by Deventry itself has to say it's up.</summary>
     public static readonly TimeSpan StartTimeout = RestartService.StartTimeout;
 
     private static readonly TimeSpan ReadyCheckInterval = TimeSpan.FromMilliseconds(250);
@@ -177,7 +177,7 @@ public sealed class AppUpdateService : IDisposable
         catch (ReleaseFeedException ex)
         {
             error = ex.Message;
-            _logger.LogInformation("Claudette update check: {Error}", ex.Message);
+            _logger.LogInformation("Deventry update check: {Error}", ex.Message);
         }
         var includePrereleases = _services.Settings.General.IncludePrereleases;
         _services.Dispatcher.Post(() =>
@@ -339,7 +339,7 @@ public sealed class AppUpdateService : IDisposable
     {
         if (AppVersion.TryParse(handover.To) is { } target && CurrentVersion < target)
         {
-            LastError = $"The update to Claudette {target} didn't finish, so this is still {CurrentVersion}. Your tabs are back.";
+            LastError = $"The update to Deventry {target} didn't finish, so this is still {CurrentVersion}. Your tabs are back.";
             CanOpenPackage = false;
         }
         else
@@ -374,9 +374,9 @@ public sealed class AppUpdateService : IDisposable
         // From here the new version owns the settings and state files: flush, then stop writing them.
         await _services.FlushAsync();
         _services.SuspendSaving = true;
-        await _host.CloseTabsAsync($"Installing Claudette {prepared.Version}…");
+        await _host.CloseTabsAsync($"Installing Deventry {prepared.Version}…");
         // The new version is told where to say it's up, outside the data folder: it may move that, as Deventry does when
-        // it takes over from Claudette (DESIGN.md §2, "Renaming to Deventry").
+        // it takes over from Deventry (DESIGN.md §2, "Renaming to Deventry").
         var ready = _services.Paths.UpdateReadyFile(nonce);
         try
         {
@@ -386,11 +386,11 @@ public sealed class AppUpdateService : IDisposable
             var outcome = await _installer.InstallAsync(prepared, [LaunchArguments.RestoreOption, nonce, LaunchArguments.ReadyFileOption, ready], ready, nonce);
             if (outcome == InstallOutcome.ExitNow || await WaitForReadyAsync(ready, nonce))
             {
-                _logger.LogInformation("Installing Claudette {Version}.", prepared.Version);
+                _logger.LogInformation("Installing Deventry {Version}.", prepared.Version);
                 _host.Exit();
                 return true;
             }
-            return Recover(snapshot, $"Claudette {prepared.Version} is installed, but didn't start within {StartTimeout.TotalSeconds:0} seconds. Open Claudette again to use it.", false);
+            return Recover(snapshot, $"Deventry {prepared.Version} is installed, but didn't start within {StartTimeout.TotalSeconds:0} seconds. Open Deventry again to use it.", false);
         }
         catch (AppInstallException ex)
         {
@@ -399,7 +399,7 @@ public sealed class AppUpdateService : IDisposable
         catch (Exception ex)
         {
             // Whatever went wrong, the tabs are closed and saving is off: they must come back.
-            _logger.LogError(ex, "Installing Claudette {Version} failed.", prepared.Version);
+            _logger.LogError(ex, "Installing Deventry {Version} failed.", prepared.Version);
             return Recover(snapshot, $"The update couldn't be started: {ex.Message}", true);
         }
     }
@@ -421,7 +421,7 @@ public sealed class AppUpdateService : IDisposable
 
     private bool Recover(RestartSnapshot snapshot, string error, bool canOpenPackage)
     {
-        _logger.LogWarning("Claudette update didn't install: {Error}", error);
+        _logger.LogWarning("Deventry update didn't install: {Error}", error);
         RestartSnapshot.Delete(_services.Paths.RestartFile);
         _services.SuspendSaving = false;
         _resumeListening?.Invoke();

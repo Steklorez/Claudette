@@ -1,11 +1,11 @@
-// deventry-demo: demo content for trying Claudette's UI and for its screenshots, with no account and no tokens.
+// deventry-demo: demo content for trying Deventry's UI and for its screenshots, with no account and no tokens.
 //
 //   deventry-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]
 //
 // Makes, in <folder> (replacing what an earlier run made there):
 //   home/           for DEVENTRY_HOME: settings with fake-claude as Claude Code and the theme and style asked for
-//                   (--still reduces motion, so Claudette on the composer stands still for screenshots, and --quiet
-//                   turns the OS's notifications off, which a Claudette kept behind other windows would send),
+//                   (--still reduces motion, so Joulene on the composer stands still for screenshots, and --quiet
+//                   turns the OS's notifications off, which a Deventry kept behind other windows would send),
 //                   seven tabs over three game projects (Unreal in C++, Unity in C#, Godot): the first with a long
 //                   conversation and changed files, one with every file reviewed, and a thread with two sub-threads,
 //                   a plan, a task list part-way done and three subagents; an API-key account, Studio, which
@@ -17,7 +17,7 @@
 //   projects/       three git repositories, with Claude's changes in their working trees, and the older projects'
 //                   empty folders. --projects puts them elsewhere: the conversation shows their paths, so a short one
 //                   such as C:\Demo reads better.
-// then prints the environment to run Claudette with. A folder it would replace must be empty or one it made.
+// then prints the environment to run Deventry with. A folder it would replace must be empty or one it made.
 //
 //   deventry-demo --stand-in-editor <uproject>
 //
@@ -114,7 +114,7 @@ DemoUsage.Write(written.Paths.UsageDatabase, usage, now.ToUniversalTime(), writt
 
 Console.WriteLine($"""
     Demo content in {folder}, with its projects in {projects}.
-    Run Claudette with these set (the usage history ends now, so the header's projection reads best soon after):
+    Run Deventry with these set (the usage history ends now, so the header's projection reads best soon after):
 
       DEVENTRY_HOME={home}
       CLAUDE_CONFIG_DIR={config}

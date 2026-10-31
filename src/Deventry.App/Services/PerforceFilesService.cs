@@ -55,7 +55,7 @@ public sealed class PerforceFilesService
         return new PerforceContext(folder, tabs.FirstOrDefault()?.Perforce.WorkingChangelist, renewer is null ? null : renewer.Perforce.RenewLoginAsync);
     }
 
-    /// <summary>A command run for a file or a few, by the user or by Claudette.</summary>
+    /// <summary>A command run for a file or a few, by the user or by Deventry.</summary>
     public static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(20);
 
     /// <summary>A folder's states, which only marks wait for.</summary>

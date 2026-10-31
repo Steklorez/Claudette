@@ -1,7 +1,7 @@
 namespace Deventry.App.Games;
 
 /// <summary>
-/// Claudette's tic-tac-toe (DESIGN.md §18, "Games with Claudette"). On every level she takes a win in front of her.
+/// Joulene's tic-tac-toe (DESIGN.md §18, "Games with Joulene"). On every level she takes a win in front of her.
 /// Easy otherwise plays anywhere; Normal blocks the user's wins and plays her best move half the time; Hard, called
 /// Unbeatable, always plays her best move, which never loses.
 /// </summary>
@@ -14,7 +14,7 @@ public static class TicTacToeOpponent
         {
             throw new InvalidOperationException("There's no move to make.");
         }
-        if (board.WinningMove(Player.Claudette) is { } win)
+        if (board.WinningMove(Player.Joulene) is { } win)
         {
             return win;
         }
@@ -59,7 +59,7 @@ public static class TicTacToeOpponent
         var choices = new List<int>();
         foreach (var square in free)
         {
-            board.Set(square, Player.Claudette);
+            board.Set(square, Player.Joulene);
             var score = -Score(board, Player.You, 1);
             board.Set(square, Player.None);
             if (score > best)

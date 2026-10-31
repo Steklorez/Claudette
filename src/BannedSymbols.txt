@@ -31,11 +31,11 @@ M:System.Diagnostics.Process.Start(System.String,System.String);Start processes 
 M:System.Diagnostics.Process.Start(System.String,System.Collections.Generic.IEnumerable{System.String});Start processes through IProcessLauncher
 M:System.Diagnostics.Process.Start(System.Diagnostics.ProcessStartInfo);Start processes through IProcessLauncher
 
-# Claudette's own requests go through AppServices.Http, which tests replace.
+# Deventry's own requests go through AppServices.Http, which tests replace.
 M:System.Net.Http.HttpClient.#ctor;Use AppServices.Http
 M:System.Net.Http.HttpClient.#ctor(System.Net.Http.HttpMessageHandler);Use AppServices.Http
 M:System.Net.Http.HttpClient.#ctor(System.Net.Http.HttpMessageHandler,System.Boolean);Use AppServices.Http
 
-# Child processes get their environment from ClaudeEnvironment or UserEnvironment, never from Claudette's own.
+# Child processes get their environment from ClaudeEnvironment or UserEnvironment, never from Deventry's own.
 M:System.Environment.SetEnvironmentVariable(System.String,System.String);Pass an environment to the process instead
 M:System.Environment.SetEnvironmentVariable(System.String,System.String,System.EnvironmentVariableTarget);Pass an environment to the process instead

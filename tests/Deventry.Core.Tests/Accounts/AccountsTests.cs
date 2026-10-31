@@ -13,11 +13,11 @@ public class AccountsTests
     // ---- The key helper -----------------------------------------------------------------------------------------------
 
     [Fact]
-    public void The_key_helper_is_Claudette_itself_named_in_the_sessions_own_settings()
+    public void The_key_helper_is_Deventry_itself_named_in_the_sessions_own_settings()
     {
-        var settings = ApiKeyHelper.Settings(@"C:\Program Files\Claudette\Deventry.exe", Id);
+        var settings = ApiKeyHelper.Settings(@"C:\Program Files\Deventry\Deventry.exe", Id);
 
-        Assert.Equal($"\"C:\\Program Files\\Claudette\\Deventry.exe\" --api-key-helper {Id}", JsonNode.Parse(settings)!["apiKeyHelper"]!.GetValue<string>());
+        Assert.Equal($"\"C:\\Program Files\\Deventry\\Deventry.exe\" --api-key-helper {Id}", JsonNode.Parse(settings)!["apiKeyHelper"]!.GetValue<string>());
         Assert.Equal(["apiKeyHelper"], JsonNode.Parse(settings)!.AsObject().Select(p => p.Key));
         Assert.True(ApiKeyHelper.TryGetAccountId(["--api-key-helper", Id], out var id));
         Assert.Equal(Id, id);
@@ -25,10 +25,10 @@ public class AccountsTests
 
     [Theory]
     [InlineData("/Applications/Deventry.app/Contents/MacOS/Deventry", true)]
-    [InlineData(@"C:\Users\me\AppData\Local\Claudette\Deventry.exe", true)]
+    [InlineData(@"C:\Users\me\AppData\Local\Deventry\Deventry.exe", true)]
     [InlineData("/home/me/bin/clau\"dette", false)]
-    [InlineData("/home/$USER/Claudette", false)]
-    [InlineData("/home/me/`id`/Claudette", false)]
+    [InlineData("/home/$USER/Deventry", false)]
+    [InlineData("/home/me/`id`/Deventry", false)]
     [InlineData(@"C:\%TEMP%\Deventry.exe", false)]
     [InlineData("", false)]
     public void Only_a_path_a_shell_reads_as_it_is_goes_in_the_command(string path, bool safe)
@@ -118,7 +118,7 @@ public class AccountsTests
     }
 
     [Fact]
-    public void An_account_a_later_Claudette_added_or_one_with_an_unsafe_id_is_left_alone()
+    public void An_account_a_later_Deventry_added_or_one_with_an_unsafe_id_is_left_alone()
     {
         var state = new AppState
         {
@@ -129,7 +129,7 @@ public class AccountsTests
         Assert.Null(AccountState.Find(state, "later"));
         Assert.Null(AccountState.Find(state, "bad id; rm"));
         Assert.Null(AccountState.ForFolder(state, Path.GetTempPath()));
-        // Kept as written, for the Claudette that knows it.
+        // Kept as written, for the Deventry that knows it.
         Assert.Equal(2, state.Accounts.Count);
     }
 

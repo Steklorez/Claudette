@@ -22,7 +22,7 @@ namespace Deventry.IntegrationTests;
 [Trait("Category", "RealCli")]
 public sealed class RealCliTests : IAsyncLifetime
 {
-    private readonly TempFolder _root = new("claudette-realcli");
+    private readonly TempFolder _root = new("deventry-realcli");
     private MockAnthropicApi _api = null!;
     private ClaudeSessionFactory? _factory;
 
@@ -67,7 +67,7 @@ public sealed class RealCliTests : IAsyncLifetime
     public async Task An_api_key_helper_in_the_sessions_own_settings_supplies_the_key_the_api_gets()
     {
         // As an API-key account's tab starts (DESIGN.md §4, "Accounts"): the helper in --settings, and no key in the
-        // environment to outrank it. Claudette's helper is Claudette; any command that prints a key stands in for it.
+        // environment to outrank it. Deventry's helper is Deventry; any command that prints a key stands in for it.
         await using var session = await StartAsync(
             environment: new() { ["ANTHROPIC_API_KEY"] = null },
             settings: """{"apiKeyHelper":"echo sk-ant-helper-123"}""");
@@ -96,9 +96,9 @@ public sealed class RealCliTests : IAsyncLifetime
         Assert.Equal(requests, _api.Requests.Count);
 
         // rename_session: saved in the transcript, where claude --resume and History find it.
-        await session.RenameSessionAsync("Renamed by Claudette", TestContext.Current.CancellationToken);
+        await session.RenameSessionAsync("Renamed by Deventry", TestContext.Current.CancellationToken);
         var transcript = Directory.EnumerateFiles(Path.Combine(Config, "projects"), $"{done.Result.SessionId}.jsonl", SearchOption.AllDirectories).Single();
-        await Waiting.UntilAsync(() => File.ReadAllText(transcript).Contains("\"customTitle\":\"Renamed by Claudette\"", StringComparison.Ordinal), "the name in the transcript");
+        await Waiting.UntilAsync(() => File.ReadAllText(transcript).Contains("\"customTitle\":\"Renamed by Deventry\"", StringComparison.Ordinal), "the name in the transcript");
     }
 
     [Fact]
@@ -751,7 +751,7 @@ public sealed class RealCliTests : IAsyncLifetime
     [Fact]
     public async Task A_turn_cut_off_by_a_restart_carries_on_when_the_session_resumes()
     {
-        // DESIGN.md §9, "Working on Claudette": Claudette's own restart stops a working tab without interrupting it...
+        // DESIGN.md §9, "Working on Deventry": Deventry's own restart stops a working tab without interrupting it...
         string sessionId;
         await using (var first = await StartAsync())
         {
@@ -853,7 +853,7 @@ public sealed class RealCliTests : IAsyncLifetime
     {
         await using var session = await StartAsync();
 
-        // Claudette relies on this rather than resizing images itself (DESIGN.md §5, "Attachments").
+        // Deventry relies on this rather than resizing images itself (DESIGN.md §5, "Attachments").
         await session.SendUserMessageAsync("hello, a big one", [new Core.Protocol.MessageImage("image/png", Gradient(3000, 2000))], TestContext.Current.CancellationToken);
         await session.ReadUntilAsync<TurnCompleted>();
 
@@ -869,7 +869,7 @@ public sealed class RealCliTests : IAsyncLifetime
         var png = Gradient(2000, 2000, noisy: true);
         Assert.True(png.Length > 10 * 1024 * 1024, $"Expected over 10 MB, got {png.Length} bytes.");
 
-        // The 20 MB Claudette allows relies on this (DESIGN.md §5, "Attachments").
+        // The 20 MB Deventry allows relies on this (DESIGN.md §5, "Attachments").
         await session.SendUserMessageAsync("hello, a heavy one", [new Core.Protocol.MessageImage("image/png", png)], TestContext.Current.CancellationToken);
         var (done, _) = await session.ReadUntilAsync<TurnCompleted>();
 
@@ -1200,7 +1200,7 @@ public sealed class RealCliTests : IAsyncLifetime
     [Fact]
     public async Task A_PreToolUse_hook_refuses_subagents_and_Claude_reads_why()
     {
-        const string reason = "Subagents are turned off in Claudette. Do this work yourself.";
+        const string reason = "Subagents are turned off in Deventry. Do this work yourself.";
         var hook = new HookRegistration("PreToolUse", "Agent|Task", (_, _) => Task.FromResult(HookOutputs.Deny(reason)));
         await using var session = await StartAsync(hooks: [hook], appendSystemPrompt: "Don't delegate to subagents.");
 
@@ -1272,7 +1272,7 @@ public sealed class RealCliTests : IAsyncLifetime
         await session.SendUserMessageAsync("/remote-control Test tab", TestContext.Current.CancellationToken);
         var (done, seen) = await session.ReadUntilAsync<TurnCompleted>();
 
-        // DESIGN.md §18: why Claudette connects with the remote_control request. A local command, whatever the account.
+        // DESIGN.md §18: why Deventry connects with the remote_control request. A local command, whatever the account.
         var reply = seen.OfType<AssistantMessageReceived>().Single().Message;
         var text = string.Concat(reply.Content.OfType<Core.Protocol.TextBlock>().Select(b => b.Text));
         Assert.Equal("/remote-control isn't available in this environment.", text);

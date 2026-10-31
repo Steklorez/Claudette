@@ -1,6 +1,6 @@
 namespace Deventry.App.Games;
 
-/// <summary>The games against Claudette (DESIGN.md §18, "Games with Claudette").</summary>
+/// <summary>The games against Joulene (DESIGN.md §18, "Games with Joulene").</summary>
 public enum GameKind
 {
     TicTacToe,
@@ -10,7 +10,7 @@ public enum GameKind
 }
 
 /// <summary>
-/// How well Claudette plays, or in Minesweeper, how many mines she hides. Tic-tac-toe calls the top level Unbeatable, the
+/// How well Joulene plays, or in Minesweeper, how many mines she hides. Tic-tac-toe calls the top level Unbeatable, the
 /// others Hard.
 /// </summary>
 public enum GameLevel
@@ -25,7 +25,7 @@ public enum Player
 {
     None,
     You,
-    Claudette,
+    Joulene,
 }
 
 /// <summary>How a round stands, from the user's side.</summary>
@@ -40,5 +40,5 @@ public enum GameOutcome
 public static class Players
 {
     /// <summary>The one who moves after <paramref name="player"/>.</summary>
-    public static Player Other(this Player player) => player == Player.You ? Player.Claudette : Player.You;
+    public static Player Other(this Player player) => player == Player.You ? Player.Joulene : Player.You;
 }

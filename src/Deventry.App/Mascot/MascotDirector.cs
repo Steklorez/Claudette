@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace Deventry.App.Mascot;
 
 /// <summary>
-/// Claudette on the composer (DESIGN.md §5): what she does, step by step. She stands about and blinks, and every so
+/// Joulene on the composer (DESIGN.md §5): what she does, step by step. She stands about and blinks, and every so
 /// often (<see cref="MascotSpell"/>) does something: walks, looks around, leans or sits on the edge, dances, juggles and
 /// the rest, and now and then falls off behind the box and climbs back up. Her walks tend to take her back home, over
 /// the Send button. She reacts to the tab she's on (<see cref="MascotSituation"/>) and to what happens in it (the

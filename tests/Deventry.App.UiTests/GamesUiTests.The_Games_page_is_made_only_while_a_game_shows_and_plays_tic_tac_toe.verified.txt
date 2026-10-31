@@ -6,7 +6,7 @@
 [button] Middle left, empty
 [button] Middle, yours
 [button] Middle right, empty
-[button] Bottom left, Claudette's
+[button] Bottom left, Joulene's
 [button] Bottom middle, empty
 [button] Bottom right, empty
 [button] New game

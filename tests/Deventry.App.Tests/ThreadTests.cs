@@ -8,7 +8,7 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// Threads (DESIGN.md §18): a tab whose Claude hands work to other tabs in its group through Claude Code's own
-/// <c>SendMessage</c>, which Claudette's PreToolUse hook delivers, and gets one report back once they've finished. Each
+/// <c>SendMessage</c>, which Deventry's PreToolUse hook delivers, and gets one report back once they've finished. Each
 /// tab runs on a scripted process of its own: the thread on the first, its sub-threads on the next.
 /// </summary>
 public class ThreadTests

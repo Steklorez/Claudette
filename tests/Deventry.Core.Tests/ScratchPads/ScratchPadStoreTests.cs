@@ -13,7 +13,7 @@ public sealed class ScratchPadStoreTests : IDisposable
 
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-10-01T12:00:00Z");
 
-    private readonly TempFolder _root = new("claudette-pads");
+    private readonly TempFolder _root = new("deventry-pads");
     private readonly ScratchPadStore _desktop;
     private readonly ScratchPadStore _laptop;
 

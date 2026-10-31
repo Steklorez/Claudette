@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// <summary><c>deventry.json</c> and <c>deventry.local.json</c>: reading, merging, editing and links (DESIGN.md §18).</summary>
 public sealed class ProjectFileTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-projectfile");
+    private readonly TempFolder _temp = new("deventry-projectfile");
 
     public void Dispose() => _temp.Dispose();
 
@@ -249,8 +249,8 @@ public sealed class ProjectFileTests : IDisposable
     [InlineData("  http://swarm.example/changes/{changelist}  ", null)]
     [InlineData("mailto:team@example.com?subject={folderName}", null)]
     [InlineData("", "Type the address to open, such as https://example.com.")]
-    [InlineData("file:///etc/passwd", "\"file:\" links don't open from Claudette; only https, http and mailto do.")]
-    [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Claudette; only https, http and mailto do.")]
+    [InlineData("file:///etc/passwd", "\"file:\" links don't open from Deventry; only https, http and mailto do.")]
+    [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Deventry; only https, http and mailto do.")]
     [InlineData("example.com/{branch}", "example.com/{branch} isn't a full web address, such as https://example.com.")]
     [InlineData("https://example.com/{user}", "Unknown placeholder {user}: use {branch}, {changelist} or {folderName}.")]
     public void An_address_being_edited_is_checked_by_the_rules_links_open_by(string url, string? problem) =>
@@ -270,9 +270,9 @@ public sealed class ProjectFileTests : IDisposable
     }
 
     [Theory]
-    [InlineData("file:///etc/passwd", "\"file:\" links don't open from Claudette; only https, http and mailto do.")]
-    [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Claudette; only https, http and mailto do.")]
-    [InlineData("vscode://file/{folderName}", "\"vscode:\" links don't open from Claudette; only https, http and mailto do.")]
+    [InlineData("file:///etc/passwd", "\"file:\" links don't open from Deventry; only https, http and mailto do.")]
+    [InlineData("javascript:alert(1)", "\"javascript:\" links don't open from Deventry; only https, http and mailto do.")]
+    [InlineData("vscode://file/{folderName}", "\"vscode:\" links don't open from Deventry; only https, http and mailto do.")]
     [InlineData("example.com/board", "example.com/board isn't a full web address, such as https://example.com.")]
     [InlineData("https://example.com/{user}", "Unknown placeholder {user}: use {branch}, {changelist} or {folderName}.")]
     public void Only_https_http_and_mailto_links_open(string url, string reason)

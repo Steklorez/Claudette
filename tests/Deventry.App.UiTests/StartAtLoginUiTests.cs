@@ -6,7 +6,7 @@ using Deventry.Core.Development;
 
 namespace Deventry.App.UiTests;
 
-/// <summary>The main window opening minimized when Claudette starts at login (DESIGN.md §9, "Starting at login").</summary>
+/// <summary>The main window opening minimized when Deventry starts at login (DESIGN.md §9, "Starting at login").</summary>
 public class StartAtLoginUiTests
 {
     [AvaloniaFact]

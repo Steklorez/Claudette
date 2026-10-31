@@ -50,7 +50,7 @@ public sealed record ScratchPadFile
     /// <summary>The folder inside the repository the pad belongs to.</summary>
     public string? PathInRepo { get; init; }
 
-    /// <summary>A later Claudette wrote it in a format this one doesn't know, so it isn't written over.</summary>
+    /// <summary>A later Deventry wrote it in a format this one doesn't know, so it isn't written over.</summary>
     public bool IsNewerFormat => Version > CurrentVersion;
 
     /// <summary>On this machine, the text has changed since it was last the same as the library's.</summary>

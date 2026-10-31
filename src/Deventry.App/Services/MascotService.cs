@@ -6,8 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// Claudette on the composer (DESIGN.md §5): one of her for every tab, on the selected tab's composer, reacting to that
-/// tab. She's there while Settings → Appearance → <b>Show Claudette on the composer</b> is on, as big and as lively as
+/// Joulene on the composer (DESIGN.md §5): one of her for every tab, on the selected tab's composer, reacting to that
+/// tab. She's there while Settings → Appearance → <b>Show Joulene on the composer</b> is on, as big and as lively as
 /// it says, and stands still while motion is reduced. What she says comes from here: tips, and that another tab needs
 /// the user, with the shortcuts as they're bound now.
 /// </summary>
@@ -95,7 +95,7 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
     /// <summary>The user typed in the selected tab's composer, or moved in a game.</summary>
     public void Nudge() => Director?.Nudge();
 
-    // ---- Games with Claudette (DESIGN.md §18) -----------------------------------------------------------------------
+    // ---- Games with Joulene (DESIGN.md §18) -----------------------------------------------------------------------
 
     /// <summary>She thinks about her move.</summary>
     public void GameThinking() => Director?.GameThinking();
@@ -111,7 +111,7 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
     /// <summary>She blocked a winning move, or the user has one miss left.</summary>
     public void GameCloseCall() => Director?.GameCloseCall();
 
-    /// <summary>Her menu's <b>Hide Claudette</b>: turns the setting off. Settings → Appearance brings her back.</summary>
+    /// <summary>Her menu's <b>Hide Joulene</b>: turns the setting off. Settings → Appearance brings her back.</summary>
     [RelayCommand]
     private void Hide()
     {
@@ -139,7 +139,7 @@ public sealed partial class MascotService : ObservableObject, IMascotLines, IDis
             ("", "Up brings back your earlier prompts"),
             ("", "Drop a file on the message box to attach it"),
             ("", "Right-click me if you'd like me to go"),
-            // DESIGN.md §18, "Games with Claudette": while there's a wait.
+            // DESIGN.md §18, "Games with Joulene": while there's a wait.
             (Settings.GamesWithJoulene && _situation.Mood is MascotMood.Working or MascotMood.Resting ? "" : null, "Right-click me for a game while you wait"),
         }.Where(t => t.Shortcut is not null).ToArray();
         if (tips.Length == 0)

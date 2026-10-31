@@ -13,14 +13,14 @@ namespace Deventry.IntegrationTests;
 /// <summary>
 /// The protocol scenarios DESIGN.md §15 lists, run against the real <c>claude</c> and the mock Messages API: a denied
 /// permission, an interrupt, <c>/clear</c>, compaction, API retries, a subagent's edits and Claude moving into a
-/// worktree. Each checks what Claudette sees, and with <c>DEVENTRY_RECORD_FIXTURES=&lt;folder&gt;</c> set also
+/// worktree. Each checks what Deventry sees, and with <c>DEVENTRY_RECORD_FIXTURES=&lt;folder&gt;</c> set also
 /// writes the traffic there as a cleaned protocol fixture
 /// ("record mode"), to check in under <c>tests/Deventry.Core.Tests/Fixtures/protocol/&lt;version&gt;/</c>.
 /// </summary>
 [Trait("Category", "RealCli")]
 public sealed class ProtocolRecordingTests : IAsyncLifetime
 {
-    private readonly TempFolder _root = new("claudette-record");
+    private readonly TempFolder _root = new("deventry-record");
     private MockAnthropicApi _api = null!;
     private ClaudeSessionFactory? _factory;
     private string? _fixtureName;

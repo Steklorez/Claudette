@@ -10,7 +10,7 @@ namespace Deventry.App.Views;
 /// <see cref="ThemeProperty"/> from the <c>CodeColorTheme</c> token rather than LiveMarkdown's own
 /// <see cref="CodeBlock.ColorTheme"/>: LiveMarkdown re-highlights a block whose theme changes by setting its code again
 /// as text, and once the block is shown, a one-line block's text goes to its text block rather than its lines. The
-/// block then lost its colors, and Copy copied nothing, until Claudette restarted (GitHub issue #14).
+/// block then lost its colors, and Copy copied nothing, until Deventry restarted (GitHub issue #14).
 /// </summary>
 internal sealed class CodeBlockTheme : AvaloniaObject
 {

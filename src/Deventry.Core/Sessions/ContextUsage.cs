@@ -93,7 +93,7 @@ public sealed record ContextUsage(
 /// <summary>What a row of <c>/context</c> counts.</summary>
 public enum ContextCategoryKind
 {
-    /// <summary>A kind this version of Claudette doesn't know.</summary>
+    /// <summary>A kind this version of Deventry doesn't know.</summary>
     Unknown,
 
     /// <summary>Something in the window: the system prompt, tools, memory files, messages.</summary>

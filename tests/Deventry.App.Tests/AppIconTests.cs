@@ -125,7 +125,7 @@ public class AppIconTests
         Assert.Same(typing[0].Png, h.Notifier.Frame);
 
         h.Transport.EmitTurn("done");
-        await TabTestHarness.Eventually(() => h.Notifier.Frame is null, "Claudette's own icon");
+        await TabTestHarness.Eventually(() => h.Notifier.Frame is null, "Deventry's own icon");
     }
 
     [Fact]
@@ -257,7 +257,7 @@ public class AppIconTests
     }
 
     [Fact]
-    public async Task The_taskbar_button_flashes_while_a_tab_needs_input_and_Claudette_is_in_the_background()
+    public async Task The_taskbar_button_flashes_while_a_tab_needs_input_and_Deventry_is_in_the_background()
     {
         await using var h = new TabTestHarness();
         var tab = await StartWorkingAsync(h);
@@ -283,7 +283,7 @@ public class AppIconTests
     }
 
     [Fact]
-    public async Task No_flash_while_Claudette_is_in_front()
+    public async Task No_flash_while_Deventry_is_in_front()
     {
         await using var h = new TabTestHarness();
         var tab = await StartWorkingAsync(h);

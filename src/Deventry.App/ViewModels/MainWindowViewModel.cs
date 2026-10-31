@@ -80,7 +80,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>The detailed header's charts, which are the Default plan's: not while an API key's spend shows.</summary>
     public bool ShowsUsageDetails => Usage is { ShowDetails: true } && !ShowsSpend;
 
-    /// <summary>The header just says Claudette: no plan usage to show, and no API key's spend.</summary>
+    /// <summary>The header just says Deventry: no plan usage to show, and no API key's spend.</summary>
     public bool ShowsTitle => !HasUsage && !ShowsSpend;
 
     /// <summary>This is a demo (DESIGN.md §11, "Demo mode"): its banner shows, with <b>Leave demo</b>.</summary>
@@ -98,7 +98,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     public partial bool IsHeaderNarrow { get; set; }
 
     /// <summary>
-    /// The header is the window's title bar, as in JetBrains Rider (DESIGN.md §3, "Window frame"), with Claudette's logo
+    /// The header is the window's title bar, as in JetBrains Rider (DESIGN.md §3, "Window frame"), with Deventry's logo
     /// first: where the platform can (<see cref="IPlatformServices.CanMergeTitleBar"/>), unless Settings → Appearance → Use
     /// the system's title bar is on.
     /// </summary>
@@ -107,7 +107,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>Settings changed: Use the system's title bar applies at once.</summary>
     public void TitleBarSettingChanged() => OnPropertyChanged(nameof(MergesTitleBar));
 
-    /// <summary>The header says Claudette when there's nothing else to show and no logo saying so.</summary>
+    /// <summary>The header says Deventry when there's nothing else to show and no logo saying so.</summary>
     public bool ShowsHeaderTitle => ShowsTitle && !MergesTitleBar;
 
     protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
@@ -189,7 +189,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         }
         if (path != services.Settings.ClaudeCode.ClaudePath)
         {
-            // The user pointed Claudette at claude from the setup screen: remember it. Or it was found by looking, from
+            // The user pointed Deventry at claude from the setup screen: remember it. Or it was found by looking, from
             // the setup screen after the path in Settings didn't work: forget that path, so the next launch looks too.
             services.Settings.ClaudeCode.ClaudePath = path;
             services.SaveSettings();
@@ -204,7 +204,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     }
 
     /// <summary>
-    /// Runs Claude Code's installer, then makes sure Claudette can find what it installed, so the setup screen can say
+    /// Runs Claude Code's installer, then makes sure Deventry can find what it installed, so the setup screen can say
     /// why not before looking again.
     /// </summary>
     private async Task<ClaudeInstallResult> InstallClaudeAsync(Action<string> onOutput)
@@ -220,7 +220,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             var located = await services.Locator.LocateAsync(null);
             return located.IsUsable
                 ? result
-                : new ClaudeInstallResult(false, $"The installer finished, but Claudette still can't use Claude Code: {located.Detail} Restart Claudette, or use Choose claude… to point Claudette at the new claude.");
+                : new ClaudeInstallResult(false, $"The installer finished, but Deventry still can't use Claude Code: {located.Detail} Restart Deventry, or use Choose claude… to point Deventry at the new claude.");
         }
         catch (Exception ex)
         {
@@ -238,7 +238,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             if (!check.Plan.CanRun)
             {
                 return new ClaudeUpdateResult(false, check.InstalledVersion,
-                    check.Plan.ManualCommand is { } manual ? $"Run this to update Claude Code: {manual}" : check.Plan.Note ?? "Claudette can't update this installation.");
+                    check.Plan.ManualCommand is { } manual ? $"Run this to update Claude Code: {manual}" : check.Plan.Note ?? "Deventry can't update this installation.");
             }
             return await Task.Run(() => updater.UpdateAsync(check.Plan, onOutput is null ? null : line => services.Dispatcher.Post(() => onOutput(line))));
         }
@@ -326,7 +326,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             if (restored is not null)
             {
                 // Restarted into this build or release: the tabs the last one had (DESIGN.md §9, "Working on
-                // Claudette"). The window deletes the snapshot once this build is up.
+                // Deventry"). The window deletes the snapshot once this build is up.
                 _shell.Restore(null, restored);
             }
             else
@@ -399,7 +399,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
 
     /// <summary>
     /// A tab reported that Claude Code needs a sign-in (DESIGN.md §11): a banner across all tabs, which stay open, and
-    /// an OS notification if Claudette isn't in front. The account menu catches up with <c>claude auth status</c>.
+    /// an OS notification if Deventry isn't in front. The account menu catches up with <c>claude auth status</c>.
     /// </summary>
     private void ShowSignIn()
     {
@@ -414,12 +414,12 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     public event Action? BringToFrontRequested;
 
     /// <summary>
-    /// Claudette was launched again, for example from the jump list or Open Recent (DESIGN.md §4, "Other ways in"):
+    /// Deventry was launched again, for example from the jump list or Open Recent (DESIGN.md §4, "Other ways in"):
     /// come to the front, and open a tab in the folder it names.
     /// </summary>
     public void OnLaunchedAgain(IReadOnlyList<string> args)
     {
-        // A login entry starting Claudette when it's already running: nothing to do (DESIGN.md §9, "Starting at login").
+        // A login entry starting Deventry when it's already running: nothing to do (DESIGN.md §9, "Starting at login").
         if (LaunchArguments.IsLogin(args))
         {
             return;
@@ -432,7 +432,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     }
 
     /// <summary>
-    /// A notification was clicked (DESIGN.md §10): bring Claudette to the front and go to the tab or screen it was
+    /// A notification was clicked (DESIGN.md §10): bring Deventry to the front and go to the tab or screen it was
     /// about.
     /// </summary>
     internal void OnNotificationActivated(NotificationTarget target)
@@ -469,7 +469,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         }
     }
 
-    // ---- Restarting into a new build (DESIGN.md §9, "Working on Claudette") -----------------------------------
+    // ---- Restarting into a new build (DESIGN.md §9, "Working on Deventry") -----------------------------------
 
     private DevelopmentBuild? _development;
     private Action? _stopListening;
@@ -503,12 +503,12 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         _resumeListening = resumeListening;
     }
 
-    // ---- Claudette's own updates (DESIGN.md §2, "Updating Claudette") --------------------------------------------
+    // ---- Deventry's own updates (DESIGN.md §2, "Updating Deventry") --------------------------------------------
 
     /// <summary>Release checks, downloads and installs.</summary>
     public AppUpdateService? AppUpdates { get; private set; }
 
-    /// <summary>The sidebar's update badge and Settings' Claudette updates section.</summary>
+    /// <summary>The sidebar's update badge and Settings' Deventry updates section.</summary>
     [ObservableProperty]
     public partial AppUpdateViewModel? AppUpdate { get; private set; }
 
@@ -537,7 +537,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         shell.NewBuild = new NewBuildViewModel(Restarts);
         _ = Task.Run(() => new BuildCopies(services.Paths.BuildCopiesDirectory).CleanUp(build.RunningDirectory));
         Restarts.Start();
-        // New commits on the branch the checkout tracks, as an installed Claudette's releases (DESIGN.md §9, "New commits upstream").
+        // New commits on the branch the checkout tracks, as an installed Deventry's releases (DESIGN.md §9, "New commits upstream").
         var updates = SourceUpdates = new SourceUpdateService(services, Restarts);
         SourceUpdate = shell.SourceUpdate = new SourceUpdateViewModel(updates, services.Time);
         services.SettingsChanged += (_, _) => updates.OnSettingsChanged();

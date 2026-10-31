@@ -13,7 +13,7 @@ using SkiaSharp;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Image files and web images clicked open in Claudette's image window, as Settings → Editor → Open images in says, and
+/// Image files and web images clicked open in Deventry's image window, as Settings → Editor → Open images in says, and
 /// an animated GIF plays there (DESIGN.md §18, "Opening images").
 /// </summary>
 public class ImageOpeningTests
@@ -186,7 +186,7 @@ public class ImageOpeningTests
     }
 
     [Fact]
-    public async Task A_web_link_to_an_image_loads_through_Claudettes_client_and_shows_in_the_window()
+    public async Task A_web_link_to_an_image_loads_through_Deventrys_client_and_shows_in_the_window()
     {
         var http = new FakeHttpHandler().OnBytes(Url, TestImages.Png);
         await using var h = new TabTestHarness(http: http);

@@ -26,7 +26,7 @@
       </c:SettingRow>
     </c:SettingsSection>
 
-    <!-- The git Claudette runs, and the version found -->
+    <!-- The git Deventry runs, and the version found -->
     <c:SettingsSection Key="git">
       <c:SettingRow Key="git.path" IsStacked="True">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">

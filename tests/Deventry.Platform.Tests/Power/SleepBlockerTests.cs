@@ -17,7 +17,7 @@ public class SleepBlockerTests
     private readonly FakeLauncher _launcher = new();
 
     [Fact]
-    public async Task Caffeinate_holds_idle_sleep_off_until_its_ended_or_Claudette_exits()
+    public async Task Caffeinate_holds_idle_sleep_off_until_its_ended_or_Deventry_exits()
     {
         var blocker = ProcessSleepBlocker.Caffeinate(_launcher, 4321);
 
@@ -41,7 +41,7 @@ public class SleepBlockerTests
     }
 
     [Fact]
-    public void Systemd_inhibit_blocks_sleep_while_claudette_runs()
+    public void Systemd_inhibit_blocks_sleep_while_deventry_runs()
     {
         var blocker = ProcessSleepBlocker.SystemdInhibit(_launcher, 4242, new Probe("/usr/bin/systemd-inhibit"));
 
@@ -50,10 +50,10 @@ public class SleepBlockerTests
         var spec = Assert.Single(_launcher.Specs);
         Assert.Equal("/usr/bin/systemd-inhibit", spec.FileName);
         Assert.Equal(
-            ["--what=sleep", "--who=Claudette", "--why=Claudette is keeping this computer awake", "--mode=block",
-             "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "claudette-awake", "4242"],
+            ["--what=sleep", "--who=Deventry", "--why=Deventry is keeping this computer awake", "--mode=block",
+             "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "deventry-awake", "4242"],
             spec.Arguments);
-        // Claudette's own environment, like its other helpers.
+        // Deventry's own environment, like its other helpers.
         Assert.Null(spec.Environment);
         blocker.Dispose();
         Assert.False(blocker.IsBlocking);
@@ -128,7 +128,7 @@ public class SleepBlockerTests
     }
 
     [Fact]
-    public async Task The_inhibitors_command_ends_when_claudette_does()
+    public async Task The_inhibitors_command_ends_when_deventry_does()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "The helpers run on macOS and Linux.");
         // The command systemd-inhibit runs, without systemd-inhibit: it waits while the process it watches is there.

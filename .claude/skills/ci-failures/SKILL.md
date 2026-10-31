@@ -1,6 +1,6 @@
 ---
 name: ci-failures
-description: Find out why Claudette's CI failed or why a test is flaky, and fix the cause rather than the symptom. Use when CI is red, a test fails only sometimes or on only one system, or when asked about failing or flaky tests.
+description: Find out why Deventry's CI failed or why a test is flaky, and fix the cause rather than the symptom. Use when CI is red, a test fails only sometimes or on only one system, or when asked about failing or flaky tests.
 ---
 
 # Fix a failing or flaky test
@@ -13,7 +13,7 @@ a fixed delay (CLAUDE.md, "Tests").
 
 - List the CI workflow's failed runs (`ci.yml`; `package.yml` runs it too before a release). Cloud sessions use the
   GitHub tools; locally, where `gh` isn't installed, GitHub's REST API:
-  `curl -s "https://api.github.com/repos/dotBunny/Claudette/actions/workflows/ci.yml/runs?status=failure&per_page=20"`,
+  `curl -s "https://api.github.com/repos/dotBunny/Deventry/actions/workflows/ci.yml/runs?status=failure&per_page=20"`,
   and a run's jobs at `.../actions/runs/<id>/jobs`. Logs and artifacts need a sign-in, so ask the user for them.
 - A failed leg uploads `test-results-<os>`: its `.trx` files and any `*.received.txt`, kept for 7 days. Download and
   unzip each into a folder of its own and summarize it with `node .github/scripts/test-summary.mjs <folder>`.

@@ -9,8 +9,8 @@ namespace Deventry.App.Views;
 
 /// <summary>
 /// The Project Files tabs' files in windows of their own (DESIGN.md §18, "Project files", "A file in a window of its
-/// own"): one window a file, opened over where the file was or centered on Claudette's window, and brought forward when
-/// asked again. Find in files, opened from one, brings Claudette's window forward for its popup.
+/// own"): one window a file, opened over where the file was or centered on Deventry's window, and brought forward when
+/// asked again. Find in files, opened from one, brings Deventry's window forward for its popup.
 /// </summary>
 public partial class ShellView
 {
@@ -37,7 +37,7 @@ public partial class ShellView
 
     /// <summary>
     /// Where a file popped out from a menu, a button or the palette opens: over the editor's place in its Files tab, a
-    /// little down and to the right, at its size; with the Files tab off screen, centered on Claudette's window.
+    /// little down and to the right, at its size; with the Files tab off screen, centered on Deventry's window.
     /// </summary>
     private WindowPlacement NewFileWindowPlace(ProjectFileViewModel file)
     {
@@ -56,7 +56,7 @@ public partial class ShellView
         return new WindowPlacement(x, y, FileWindowSize.Width, FileWindowSize.Height, false);
     }
 
-    /// <summary>Find in files' popup is over Claudette's window: opened from a file's window, that comes forward.</summary>
+    /// <summary>Find in files' popup is over Deventry's window: opened from a file's window, that comes forward.</summary>
     private void BringForwardForFindInFiles()
     {
         if (_shell?.FindInFiles is not null && TopLevel.GetTopLevel(this) is Window { IsActive: false } main && _fileWindows.Values.Any(w => w.IsActive))

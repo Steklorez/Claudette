@@ -36,11 +36,11 @@ public interface IClaudeUpdater
 /// </summary>
 /// <param name="workingDirectory">
 /// Where the commands run. <c>claude doctor</c> reads the settings files of its working folder, so this is a neutral
-/// folder of Claudette's rather than whatever folder Claudette was started from.
+/// folder of Deventry's rather than whatever folder Deventry was started from.
 /// </param>
 /// <param name="environmentOverrides">Applied on top of the cleaned environment (DESIGN.md §13) of every command.</param>
 /// <param name="userEnvironment">
-/// The user environment every command starts from, Homebrew and WinGet too (DESIGN.md §13). Null: Claudette's own.
+/// The user environment every command starts from, Homebrew and WinGet too (DESIGN.md §13). Null: Deventry's own.
 /// </param>
 public sealed class ClaudeUpdater(
     string claudePath,
@@ -104,7 +104,7 @@ public sealed class ClaudeUpdater(
     {
         if (plan.Command is not { } command)
         {
-            return new ClaudeUpdateResult(false, null, plan.Note ?? "Claudette can't run this update.");
+            return new ClaudeUpdateResult(false, null, plan.Note ?? "Deventry can't run this update.");
         }
         ProcessResult result;
         try

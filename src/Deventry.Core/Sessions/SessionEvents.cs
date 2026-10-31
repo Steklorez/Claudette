@@ -48,7 +48,7 @@ public sealed record ElicitationRequested(ElicitationRequest Request) : SessionE
 public sealed record ElicitationCancelled(string RequestId) : SessionEvent;
 
 /// <summary>
-/// A prompt Claudette sent, echoed back with its <c>uuid</c> (<c>--replay-user-messages</c>): the point the conversation
+/// A prompt Deventry sent, echoed back with its <c>uuid</c> (<c>--replay-user-messages</c>): the point the conversation
 /// and its files can be rewound to (DESIGN.md §5, "Rewind and branch").
 /// </summary>
 public sealed record PromptReplayed(UserMessage Message) : SessionEvent;
@@ -79,7 +79,7 @@ public sealed record PromptSuggested(string Suggestion) : SessionEvent;
 /// <summary>Any other <c>system</c> message (status, tasks, retries, …).</summary>
 public sealed record SystemNotice(SystemMessage Message) : SessionEvent;
 
-/// <summary>A message type Claudette doesn't know yet (DESIGN.md §16, "Staying tolerant at runtime").</summary>
+/// <summary>A message type Deventry doesn't know yet (DESIGN.md §16, "Staying tolerant at runtime").</summary>
 public sealed record UnrecognizedMessage(string MessageType, System.Text.Json.Nodes.JsonObject Raw) : SessionEvent;
 
 /// <summary>A line that couldn't be parsed. The session keeps going.</summary>
@@ -89,6 +89,6 @@ public sealed record SessionExited(TransportExit Exit) : SessionEvent;
 
 /// <summary>
 /// The answer to an <c>interrupt</c>: the ids of the messages still waiting to run after it, and of the ones it cancelled
-/// (with <c>cancel_queued</c>). Ids Claudette didn't send, such as a scheduled task's, can be among them.
+/// (with <c>cancel_queued</c>). Ids Deventry didn't send, such as a scheduled task's, can be among them.
 /// </summary>
 public sealed record InterruptReceipt(IReadOnlyList<string> StillQueued, IReadOnlyList<string> Cancelled);

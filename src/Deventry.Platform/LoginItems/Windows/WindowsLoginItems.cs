@@ -10,8 +10,8 @@ using Microsoft.Win32;
 namespace Deventry.Platform.LoginItems.Windows;
 
 /// <summary>
-/// Starting Claudette at login on Windows (DESIGN.md §9, "Starting at login"): a <c>Deventry</c> value under the Run key,
-/// which any copy of Claudette can write, and in the MSIX the package's startup task. Task Manager's Startup apps turns
+/// Starting Deventry at login on Windows (DESIGN.md §9, "Starting at login"): a <c>Deventry</c> value under the Run key,
+/// which any copy of Deventry can write, and in the MSIX the package's startup task. Task Manager's Startup apps turns
 /// a Run value off with a value of the same name under <c>StartupApproved\Run</c>, whose first byte is odd.
 /// </summary>
 /// <param name="runKey">The Run key under HKCU. Tests use a key of their own.</param>
@@ -55,7 +55,7 @@ public sealed class WindowsLoginItems(IProcessLauncher launcher, TimeProvider ti
         return run?.GetValue(ValueName) as string;
     }
 
-    public void WriteEntry(ClaudetteCopy copy)
+    public void WriteEntry(DeventryCopy copy)
     {
         var command = Command(copy);
         using var run = Registry.CurrentUser.CreateSubKey(runKey);
@@ -73,10 +73,10 @@ public sealed class WindowsLoginItems(IProcessLauncher launcher, TimeProvider ti
         approved?.DeleteValue(ValueName, throwOnMissingValue: false);
     }
 
-    public bool Exists(ClaudetteCopy copy) =>
+    public bool Exists(DeventryCopy copy) =>
         copy.Kind == AppInstallKind.Msix ? Deployment.IsFamilyInstalled(copy.Location) : copy.ExistsOnDisk();
 
-    public void Start(ClaudetteCopy copy)
+    public void Start(DeventryCopy copy)
     {
         if (copy.Kind == AppInstallKind.Msix)
         {
@@ -95,7 +95,7 @@ public sealed class WindowsLoginItems(IProcessLauncher launcher, TimeProvider ti
     /// <summary>Quotes an argument so <c>CommandLineToArgvW</c> reads it back as it was.</summary>
     internal static string Quote(string argument) => CommandLines.QuoteForWindows(argument);
 
-    private static LoginCommand Command(ClaudetteCopy copy) =>
+    private static LoginCommand Command(DeventryCopy copy) =>
         LoginCommand.For(copy, windows: true, LoginCommand.DotnetHost(Environment.ProcessPath))
         ?? throw new InvalidOperationException("Only the MSIX's startup task can start it at login.");
 }

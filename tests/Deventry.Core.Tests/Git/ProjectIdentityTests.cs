@@ -10,7 +10,7 @@ public sealed class ProjectIdentityTests : IDisposable
     private const string Sha3 = "0123456789abcdef0123456789abcdef01234567";
     private const string Origin = "git@github.com:Owner/Repo.git";
 
-    private readonly TempFolder _root = new("claudette-git");
+    private readonly TempFolder _root = new("deventry-git");
 
     public void Dispose() => _root.Dispose();
 

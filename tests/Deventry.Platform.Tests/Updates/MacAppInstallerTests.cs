@@ -8,7 +8,7 @@ using Microsoft.Extensions.Time.Testing;
 namespace Deventry.Platform.Tests.Updates;
 
 /// <summary>
-/// Updating <c>Claudette.app</c> from a release's disk image (DESIGN.md §2, "Updating Claudette"). The macOS tools
+/// Updating the app from a release's disk image (DESIGN.md §2, "Updating Deventry"), here one called <c>Claudette.app</c>. The macOS tools
 /// (hdiutil, ditto, codesign, plutil) are scripted; the helper script that swaps the apps runs for real.
 /// </summary>
 public sealed class MacAppInstallerTests : IDisposable
@@ -21,7 +21,7 @@ public sealed class MacAppInstallerTests : IDisposable
 
     private string App => Path.Combine(Applications, "Claudette.app");
 
-    private string Staged => Path.Combine(Applications, ".Claudette-update.app");
+    private string Staged => Path.Combine(Applications, ".Deventry-update.app");
 
     /// <summary>Where Deventry goes, beside Claudette (DESIGN.md §2, "Renaming to Deventry").</summary>
     private string Deventry => Path.Combine(Applications, "Deventry.app");
@@ -188,7 +188,7 @@ public sealed class MacAppInstallerTests : IDisposable
         var error = await Assert.ThrowsAsync<AppInstallException>(() =>
             Installer(new Tools { RunningTeamError = "codesign timed out" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
 
-        Assert.StartsWith("This Claudette's own signature couldn't be read", error.Message, StringComparison.Ordinal);
+        Assert.StartsWith("This Deventry's own signature couldn't be read", error.Message, StringComparison.Ordinal);
         Assert.False(Directory.Exists(Staged));
     }
 
@@ -213,7 +213,7 @@ public sealed class MacAppInstallerTests : IDisposable
             Installer(new Tools { ImageVersion = "1.2.9" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
 
         Assert.StartsWith("The new version's signature didn't check out", signature.Message);
-        Assert.Equal("The disk image holds a different app, not Claudette.", other.Message);
+        Assert.Equal("The disk image holds a different app, not Deventry.", other.Message);
         Assert.Equal("The app in the disk image is version 1.2.9, not 1.3.0 as the release says.", version.Message);
         Assert.False(Directory.Exists(Staged));
     }
@@ -236,11 +236,11 @@ public sealed class MacAppInstallerTests : IDisposable
             Installer(new Tools(), translocated).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
 
         Assert.True(error.CanOpenPackage);
-        Assert.Contains("Move Claudette to Applications", error.Message);
+        Assert.Contains("Move Deventry to Applications", error.Message);
     }
 
     [Fact]
-    public async Task Installing_starts_the_helper_detached_and_Claudette_closes()
+    public async Task Installing_starts_the_helper_detached_and_Deventry_closes()
     {
         var tools = new Tools();
         var launcher = new ScriptedLauncher(spec => Run(tools, spec));
@@ -292,7 +292,7 @@ public sealed class MacAppInstallerTests : IDisposable
     {
         var script = Path.Combine(Updates, "update-helper.sh");
         File.WriteAllText(script, MacAppInstaller.HelperScript());
-        // Stands in for Claudette, quitting shortly after starting the helper.
+        // Stands in for Deventry, quitting shortly after starting the helper.
         using var quitting = Process.Start(new ProcessStartInfo("sleep", "0.3"))!;
         var start = new ProcessStartInfo("/bin/sh")
         {
@@ -311,7 +311,7 @@ public sealed class MacAppInstallerTests : IDisposable
     }
 
     [Fact]
-    public async Task The_helper_swaps_in_the_new_version_once_Claudette_quits_and_it_starts()
+    public async Task The_helper_swaps_in_the_new_version_once_Deventry_quits_and_it_starts()
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
         MakeApp(Staged, "", Version.ToString());

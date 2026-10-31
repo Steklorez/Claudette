@@ -4,7 +4,7 @@ using Deventry.Core.Composer;
 namespace Deventry.Core.Protocol;
 
 /// <summary>
-/// The images Claudette shows itself, in a reply and in its image window (DESIGN.md §18, "Opening images"): PNG, JPEG,
+/// The images Deventry shows itself, in a reply and in its image window (DESIGN.md §18, "Opening images"): PNG, JPEG,
 /// GIF, WebP and BMP, which Skia decodes on every platform. Any other image (SVG, TIFF, PSD) goes to the app the OS uses
 /// for it.
 /// </summary>

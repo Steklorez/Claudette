@@ -9,13 +9,13 @@ using Deventry.Platform;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Demo mode (DESIGN.md §11, "Demo mode"): Try the demo writes one into a folder of its own and starts a second Claudette
-/// on it; the demo's claude is Claudette standing in for Claude Code; Leave demo closes it.
+/// Demo mode (DESIGN.md §11, "Demo mode"): Try the demo writes one into a folder of its own and starts a second Deventry
+/// on it; the demo's claude is Deventry standing in for Claude Code; Leave demo closes it.
 /// </summary>
 public class DemoModeTests
 {
     [Fact]
-    public async Task Try_the_demo_writes_one_and_starts_a_Claudette_on_its_own_folders()
+    public async Task Try_the_demo_writes_one_and_starts_a_Deventry_on_its_own_folders()
     {
         var launcher = new FakeLauncher();
         await using var h = new TabTestHarness(launcher: launcher);
@@ -35,7 +35,7 @@ public class DemoModeTests
         Assert.Equal("1", environment["DEVENTRY_RUN_IN_PLACE"]);
         // Not the stand-in itself: only the demo's claude is.
         Assert.False(environment.ContainsKey(StandInClaude.Variable));
-        // Its claude is the Claudette it started, and the stand-in has the demo's plan usage to answer with.
+        // Its claude is the Deventry it started, and the stand-in has the demo's plan usage to answer with.
         var settings = new JsonFileStore<AppSettings>(AppPaths.Under(Path.Combine(folder, "home")).SettingsFile).Load();
         Assert.Equal(spec.FileName, settings.ClaudeCode.ClaudePath);
         Assert.True(File.Exists(Path.Combine(folder, "claude-config", StandInClaude.UsageFile)));
@@ -60,7 +60,7 @@ public class DemoModeTests
         }
         var crashed = Leftover("crashed");
         var running = Leftover("running");
-        // A running Claudette holds its data folder's claim.
+        // A running Deventry holds its data folder's claim.
         using (new FileStream(Path.Combine(AppPaths.Under(Path.Combine(running, "home")).DataDirectory, SingleInstance.ClaimFileName), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
         {
             await h.Services.StartDemoAsync();

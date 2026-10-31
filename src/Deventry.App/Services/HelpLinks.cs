@@ -4,22 +4,22 @@ using Deventry.Core.Updates;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// Where Claudette sends people for help (DESIGN.md §14, "Version"): the user guide, dotBunny's Discord for questions,
+/// Where Deventry sends people for help (DESIGN.md §14, "Version"): the user guide, dotBunny's Discord for questions,
 /// and a new GitHub issue with the versions filled in for problems. The foot of the Settings sidebar, the command palette
 /// and the macOS Help menu open them in the browser.
 /// </summary>
 public static class HelpLinks
 {
-    /// <summary>Claudette's user guide on the web (DESIGN.md §2, "User Guide").</summary>
-    public const string GuideUrl = "https://claudette.dotbunny.com/guide/";
+    /// <summary>Deventry's user guide on the web (DESIGN.md §2, "User Guide").</summary>
+    public const string GuideUrl = "https://deventry.app/guide/";
 
     /// <summary>
     /// dotBunny's Discord, through the guide's site, which forwards to the invite (<c>docs/discord.md</c>): a new invite
-    /// changes only the site, not Claudette.
+    /// changes only the site, not Deventry.
     /// </summary>
-    public const string DiscordUrl = "https://claudette.dotbunny.com/discord/";
+    public const string DiscordUrl = "https://deventry.app/discord/";
 
-    /// <summary>Claudette's version, Claude Code's, the OS and the runtime: only versions, since it's meant to be posted.</summary>
+    /// <summary>Deventry's version, Claude Code's, the OS and the runtime: only versions, since it's meant to be posted.</summary>
     public static IReadOnlyList<string> VersionDetails(AppServices services) => services.Build.Details(
         services.InstalledClaudeVersion?.ToString(),
         RuntimeInformation.OSDescription,
@@ -30,7 +30,7 @@ public static class HelpLinks
 
     public static Task OpenDiscordAsync(AppServices services) => services.Platform.OpenUrlAsync(DiscordUrl);
 
-    /// <summary>A new issue on Claudette's GitHub with the versions filled in. Nothing is sent until the user submits it.</summary>
+    /// <summary>A new issue on Deventry's GitHub with the versions filled in. Nothing is sent until the user submits it.</summary>
     public static Task ReportIssueAsync(AppServices services) =>
         services.Platform.OpenUrlAsync(AppBuild.NewIssueUrl(ReleaseFeed.DefaultRepository, VersionDetails(services)));
 }

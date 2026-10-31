@@ -5,7 +5,7 @@ namespace Deventry.App.Services;
 
 /// <summary>
 /// The scratch pads (DESIGN.md §18, "Scratch pad"): one per project, the same object for every open tab in it. Keeps the
-/// pads tabs have open, and syncs those with a git remote through the session library once a minute and when Claudette
+/// pads tabs have open, and syncs those with a git remote through the session library once a minute and when Deventry
 /// comes to the front. A pad no tab has open any more is saved and let go.
 /// </summary>
 public sealed class ScratchPadService : IDisposable
@@ -72,7 +72,7 @@ public sealed class ScratchPadService : IDisposable
         }
     }
 
-    /// <summary>Claudette's window came to the front: look for other machines' changes, unless it just did.</summary>
+    /// <summary>Deventry's window came to the front: look for other machines' changes, unless it just did.</summary>
     public void OnAppActivated()
     {
         var now = _services.Time.GetUtcNow();
@@ -102,7 +102,7 @@ public sealed class ScratchPadService : IDisposable
         }
     }
 
-    /// <summary>Saves every pad, for closing Claudette or restarting into a new build.</summary>
+    /// <summary>Saves every pad, for closing Deventry or restarting into a new build.</summary>
     public Task FlushAsync() => Task.WhenAll(_pads.Values.Select(e => e.Pad.FlushAsync()).ToList());
 
     public void Dispose()

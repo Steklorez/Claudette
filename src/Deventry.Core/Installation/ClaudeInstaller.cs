@@ -25,10 +25,10 @@ public interface IClaudeInstaller
 /// <c>curl -fsSL https://claude.ai/install.sh | bash</c> on macOS and Linux. It installs into the user's home with no
 /// admin rights, to <c>~/.local/bin</c>, where <see cref="ClaudeLocator"/> looks. Run through <see cref="IProcessLauncher"/>.
 /// </summary>
-/// <param name="workingDirectory">Where it runs: a neutral folder of Claudette's, as for the update commands.</param>
+/// <param name="workingDirectory">Where it runs: a neutral folder of Deventry's, as for the update commands.</param>
 /// <param name="probe">Finds PowerShell or bash on the user's <c>PATH</c>.</param>
 /// <param name="environmentOverrides">Applied on top of the cleaned environment (DESIGN.md §13): the installer runs <c>claude install</c>.</param>
-/// <param name="userEnvironment">The user environment the installer starts from (DESIGN.md §13). Null: Claudette's own.</param>
+/// <param name="userEnvironment">The user environment the installer starts from (DESIGN.md §13). Null: Deventry's own.</param>
 public sealed partial class ClaudeInstaller(
     ToolOS os,
     string workingDirectory,

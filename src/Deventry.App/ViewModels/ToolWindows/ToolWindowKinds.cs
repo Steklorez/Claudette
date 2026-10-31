@@ -3,7 +3,7 @@ using Deventry.App.Conversation;
 namespace Deventry.App.ViewModels.ToolWindows;
 
 /// <summary>
-/// The tool windows Claudette has (DESIGN.md §3, "Tool windows"), in the order their icons take on the strip at first:
+/// The tool windows Deventry has (DESIGN.md §3, "Tool windows"), in the order their icons take on the strip at first:
 /// the side panel's pages at the right, Scratch pad, Processes and Games splitting it, and Find at the bottom. A feature
 /// adds its kind to <see cref="All"/> and its view to <c>Views/ToolWindowView</c>.
 /// </summary>
@@ -85,7 +85,7 @@ public static class ToolWindowKinds
     };
 
     /// <summary>
-    /// The game against Claudette, while one is open (DESIGN.md §18, "Games with Claudette"). The app's, not a tab's: the
+    /// The game against Joulene, while one is open (DESIGN.md §18, "Games with Joulene"). The app's, not a tab's: the
     /// shell gives it the game.
     /// </summary>
     public static readonly ToolWindowKind Games = new()

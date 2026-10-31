@@ -142,7 +142,7 @@ public sealed partial class ProjectFilesViewModel
                 DeleteAsked?.Invoke();
                 return;
             }
-            failed = result.Outcome == TrashOutcome.Failed ? $"Claudette couldn't move it to {_services.Trash.Name}.{Sentence(result.Reason)}" : null;
+            failed = result.Outcome == TrashOutcome.Failed ? $"Deventry couldn't move it to {_services.Trash.Name}.{Sentence(result.Reason)}" : null;
         }
         if (!ReferenceEquals(Deleting, question))
         {

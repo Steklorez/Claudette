@@ -25,7 +25,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
     public ICredentialStore Credentials { get; internal set; } = credentials;
 
     /// <summary>
-    /// Claudette's own executable, which Claude Code runs as an API-key account's <c>apiKeyHelper</c>
+    /// Deventry's own executable, which Claude Code runs as an API-key account's <c>apiKeyHelper</c>
     /// (<see cref="ApiKeyHelper"/>). Tests replace it.
     /// </summary>
     public string? HelperExecutable { get; internal set; } = Environment.ProcessPath;
@@ -159,7 +159,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
     /// What a tab's <c>claude</c> starts with for <paramref name="account"/>: nothing more for Default; for an API key,
     /// the <c>--settings</c> naming its key helper, and without the variables Claude Code would take over it.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Claudette's path can't go in the helper's command.</exception>
+    /// <exception cref="InvalidOperationException">Deventry's path can't go in the helper's command.</exception>
     public (string? Settings, IReadOnlyDictionary<string, string?> Environment) LaunchFor(ClaudeAccount? account)
     {
         if (account is null)
@@ -168,7 +168,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         }
         if (HelperExecutable is not { } executable || !ApiKeyHelper.IsSafePath(executable))
         {
-            throw new InvalidOperationException($"Claude Code can't be given {account.Name}'s key: Claudette's own path ({HelperExecutable ?? "unknown"}) can't go in a command as it is.");
+            throw new InvalidOperationException($"Claude Code can't be given {account.Name}'s key: Deventry's own path ({HelperExecutable ?? "unknown"}) can't go in a command as it is.");
         }
         return (ApiKeyHelper.Settings(executable, account.Id), ApiKeyHelper.OutrankingVariables.ToDictionary(v => v, string? (_) => null));
     }

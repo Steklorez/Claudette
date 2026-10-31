@@ -463,7 +463,7 @@ public class ProjectFilesTests
         await InlineDispatcher.RunAsync(() => files.ConfirmDeleteCommand.ExecuteAsync(null));
 
         Assert.True(files.IsAskingToDelete);
-        Assert.Equal("Claudette couldn't move it to the Recycle Bin. It's open in another program.", files.Deleting!.Problem);
+        Assert.Equal("Deventry couldn't move it to the Recycle Bin. It's open in another program.", files.Deleting!.Problem);
         Assert.True(files.Deleting.CanConfirm);
         Assert.True(File.Exists(a));
     }

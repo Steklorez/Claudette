@@ -22,7 +22,7 @@ public enum PerforceKeeperEventKind
 {
     /// <summary><c>p4 login -s</c> ran; <see cref="PerforceTicketKeeper.Status"/> is new.</summary>
     Checked,
-    /// <summary>Claudette logged in.</summary>
+    /// <summary>Deventry logged in.</summary>
     LoggedIn,
     /// <summary>There was no password to try: none stored or configured, or the prompt was cancelled.</summary>
     NoPassword,
@@ -97,10 +97,10 @@ public sealed class PerforceTicketKeeper : IDisposable
 
     public PerforceWorkspace Workspace { get; }
 
-    /// <summary>The user Claudette logs in as: the per-folder override, else the workspace's user.</summary>
+    /// <summary>The user Deventry logs in as: the per-folder override, else the workspace's user.</summary>
     public string User => Target.User ?? Workspace.User;
 
-    /// <summary>The server Claudette logs in to, as shown.</summary>
+    /// <summary>The server Deventry logs in to, as shown.</summary>
     public string Server => Target.Port ?? Workspace.Server;
 
     /// <summary>The last <c>p4 login -s</c> result; null before the first check.</summary>
@@ -196,7 +196,7 @@ public sealed class PerforceTicketKeeper : IDisposable
             }
             if (Workspace.UsesSingleSignOn)
             {
-                AwaitUserLogin("This Perforce server uses single sign-on, so Claudette can't log in for you.");
+                AwaitUserLogin("This Perforce server uses single sign-on, so Deventry can't log in for you.");
                 return false;
             }
             if (_userLoginTimer is not null)

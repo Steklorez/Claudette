@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 namespace Deventry.Core.Protocol;
 
 /// <summary>
-/// A user message's <c>origin</c>: who it's from (DESIGN.md §13, "Who a message is from"). Claudette writes
+/// A user message's <c>origin</c>: who it's from (DESIGN.md §13, "Who a message is from"). Deventry writes
 /// <c>{kind: "human"}</c> on what the user typed. Claude Code echoes a message another of the user's sessions sent this
 /// one (cross-session messaging) with <c>{kind: "peer", name, body, from, msg_id, fromMode}</c> (checked against 2.1.284;
 /// DESIGN.md §18, "Threads").

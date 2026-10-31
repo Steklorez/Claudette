@@ -8,7 +8,7 @@ public sealed class ScratchPadProjectTests : IDisposable
 {
     private const string Commit = "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678";
 
-    private readonly TempFolder _root = new("claudette-pad");
+    private readonly TempFolder _root = new("deventry-pad");
 
     public void Dispose() => _root.Dispose();
 

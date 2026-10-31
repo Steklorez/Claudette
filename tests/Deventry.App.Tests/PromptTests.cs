@@ -273,7 +273,7 @@ public class PromptTests
     [Fact]
     public async Task A_prompt_resolved_twice_is_only_counted_off_once()
     {
-        // Answered here as the Claude app answers it: Claude Code withdraws the request Claudette already answered. The
+        // Answered here as the Claude app answers it: Claude Code withdraws the request Deventry already answered. The
         // other prompt still waits.
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();

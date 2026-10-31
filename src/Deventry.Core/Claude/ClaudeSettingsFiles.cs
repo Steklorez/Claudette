@@ -5,7 +5,7 @@ using Deventry.Core.Json;
 namespace Deventry.Core.Claude;
 
 /// <summary>
-/// Claude Code's settings files, as Claudette reads them for the few keys it follows: <c>spinnerVerbs</c>
+/// Claude Code's settings files, as Deventry reads them for the few keys it follows: <c>spinnerVerbs</c>
 /// (<see cref="SpinnerVerbs"/>), the permission mode a session starts in (<see cref="StartingPermissionMode"/>) and the
 /// prompt cache's lifetime (<see cref="Sessions.PromptCacheConfig"/>).
 /// </summary>

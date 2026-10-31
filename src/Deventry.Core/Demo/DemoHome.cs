@@ -8,7 +8,7 @@ namespace Deventry.Core.Demo;
 public sealed record DemoOptions
 {
     /// <summary>
-    /// The demo's Claude Code: <c>fake-claude</c> for the screenshots, Claudette itself in the app's demo, which stands in
+    /// The demo's Claude Code: <c>fake-claude</c> for the screenshots, Deventry itself in the app's demo, which stands in
     /// for it (DESIGN.md §11, "Demo mode").
     /// </summary>
     public required string ClaudePath { get; init; }
@@ -17,24 +17,24 @@ public sealed record DemoOptions
 
     public AppStyle Style { get; init; } = AppStyle.Standard;
 
-    /// <summary>Motion reduced, so Claudette on the composer stands still for a screenshot.</summary>
+    /// <summary>Motion reduced, so Joulene on the composer stands still for a screenshot.</summary>
     public bool Still { get; init; }
 
-    /// <summary>The OS's notifications off, which a Claudette kept behind other windows would send.</summary>
+    /// <summary>The OS's notifications off, which a Deventry kept behind other windows would send.</summary>
     public bool Quiet { get; init; }
 
     /// <summary>Where the window opens; where the OS puts it when null.</summary>
     public WindowPlacement? Window { get; init; }
 }
 
-/// <summary>What a demo was written as: Claudette's folders, Claude Code's, and the tabs.</summary>
+/// <summary>What a demo was written as: Deventry's folders, Claude Code's, and the tabs.</summary>
 public sealed record DemoWritten(AppPaths Paths, string ClaudeConfig, IReadOnlyList<TabState> Tabs);
 
 /// <summary>
-/// A demo's folder, but for its usage history, which <c>Deventry.Usage</c>'s <c>DemoUsage</c> writes: Claudette's settings
+/// A demo's folder, but for its usage history, which <c>Deventry.Usage</c>'s <c>DemoUsage</c> writes: Deventry's settings
 /// and state under <c>home</c> (as <c>DEVENTRY_HOME</c>), the tabs' and History's transcripts under <c>claude-config</c>
 /// (as <c>CLAUDE_CONFIG_DIR</c>), and the projects. <c>tools/Deventry.Demo</c> writes it for the screenshots, with git
-/// repositories and <c>fake-claude</c>; the app's demo with empty folders and Claudette standing in for Claude Code
+/// repositories and <c>fake-claude</c>; the app's demo with empty folders and Deventry standing in for Claude Code
 /// (DESIGN.md §11, "Demo mode").
 /// </summary>
 public static class DemoHome

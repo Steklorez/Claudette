@@ -100,15 +100,15 @@ public sealed partial class ProjectSettingsViewModel
     /// <summary>The folder or program in use, or why there's none: "The engine for EngineAssociation "5.9" wasn't found…".</summary>
     public string ToolsFixCurrent => ToolsFix?.Current ?? ToolsProject?.Problem ?? "Not found on this machine.";
 
-    /// <summary>What's remembered for the project; null when Claudette finds it by itself.</summary>
+    /// <summary>What's remembered for the project; null when Deventry finds it by itself.</summary>
     private string? ChosenFix => ToolsProject is { Fix: { } fix } project ? _services.ProjectTools.State.Get(project.ProjectPath, fix.Key) : null;
 
     /// <summary>Whether it was chosen or found: "Chosen by you.", "Found automatically."</summary>
     public string ToolsFixSource => ChosenFix switch
     {
-        null when ToolsFix?.Current is null => "Not chosen: choose it here, or install it where Claudette looks.",
+        null when ToolsFix?.Current is null => "Not chosen: choose it here, or install it where Deventry looks.",
         null => "Found automatically.",
-        { } chosen when ToolsFix?.Current is { } current && SamePath(chosen, current) => "Chosen by you. Clear forgets it, and Claudette looks for it again.",
+        { } chosen when ToolsFix?.Current is { } current && SamePath(chosen, current) => "Chosen by you. Clear forgets it, and Deventry looks for it again.",
         { } chosen => $"You chose {chosen}, which can't be used now. Clear forgets it.",
     };
 
@@ -144,7 +144,7 @@ public sealed partial class ProjectSettingsViewModel
         await _tab.ProjectTools.RefreshAsync();
     }
 
-    /// <summary><b>Clear</b>: forgets the pick, so Claudette finds the engine, editor or Godot by itself again.</summary>
+    /// <summary><b>Clear</b>: forgets the pick, so Deventry finds the engine, editor or Godot by itself again.</summary>
     [RelayCommand(CanExecute = nameof(CanClearToolsFix))]
     private async Task ClearToolsFixAsync()
     {

@@ -25,7 +25,7 @@ public class ThemeChangeUiTests
 {
     /// <summary>
     /// Code blocks already shown keep their code and take the new theme's syntax colors. LiveMarkdown on its own left a
-    /// one-line block without colors, and with nothing for Copy, until Claudette restarted.
+    /// one-line block without colors, and with nothing for Copy, until Deventry restarted.
     /// </summary>
     [AvaloniaFact]
     public async Task Code_blocks_keep_their_code_and_take_the_new_themes_colors()

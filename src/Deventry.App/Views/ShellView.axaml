@@ -1322,7 +1322,7 @@
           </ItemsControl>
         </ScrollViewer>
 
-        <!-- The update badges (DESIGN.md §12), and a source build's (DESIGN.md §9, "Working on Claudette"), under a line;
+        <!-- The update badges (DESIGN.md §12), and a source build's (DESIGN.md §9, "Working on Deventry"), under a line;
              only while one shows -->
         <Border x:Name="SidebarFoot" Grid.Row="2" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="6" IsVisible="{Binding HasFootBadge}">
           <StackPanel Spacing="2">
@@ -1369,10 +1369,10 @@
                   </Flyout>
                 </Button.Flyout>
             </Button>
-            <!-- A new build of Claudette itself, when it runs from a source build (DESIGN.md §9, "Working on Claudette") -->
+            <!-- A new build of Deventry itself, when it runs from a source build (DESIGN.md §9, "Working on Deventry") -->
             <Button x:Name="NewBuildBadge" Classes="flat side update" DataContext="{Binding NewBuild}" x:DataType="vm:NewBuildViewModel"
                     IsVisible="{Binding HasBadge, FallbackValue=False}" ToolTip.Tip="{Binding BadgeText}" ToolTip.Placement="Right"
-                    AutomationProperties.Name="New build of Claudette">
+                    AutomationProperties.Name="New build of Deventry">
               <StackPanel Orientation="Horizontal" Spacing="10">
                 <Path Classes="icon" Data="{StaticResource IconRestart}" />
                 <TextBlock Classes="badge" Text="{Binding BadgeText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
@@ -1406,7 +1406,7 @@
             <!-- New commits on the branch a source build's checkout tracks (DESIGN.md §9, "New commits upstream"), as releases are for an installed one -->
             <Button x:Name="SourceUpdateBadge" Classes="flat side update" DataContext="{Binding SourceUpdate}" x:DataType="vm:SourceUpdateViewModel"
                     IsVisible="{Binding HasBadge, FallbackValue=False}" ToolTip.Tip="{Binding BadgeText}" ToolTip.Placement="Right"
-                    AutomationProperties.Name="New commits for Claudette">
+                    AutomationProperties.Name="New commits for Deventry">
               <StackPanel Orientation="Horizontal" Spacing="10">
                 <Path Classes="icon" Data="{StaticResource IconUpdate}" />
                 <TextBlock Classes="badge" Text="{Binding BadgeText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
@@ -1467,10 +1467,10 @@
                 </Flyout>
               </Button.Flyout>
             </Button>
-            <!-- A new release of Claudette (DESIGN.md §2, "Updating Claudette"): small and non-blocking, like Claude Code's -->
+            <!-- A new release of Deventry (DESIGN.md §2, "Updating Deventry"): small and non-blocking, like Claude Code's -->
             <Button x:Name="AppUpdateBadge" Classes="flat side update" DataContext="{Binding AppUpdate}" x:DataType="vm:AppUpdateViewModel"
                     IsVisible="{Binding HasBadge, FallbackValue=False}" ToolTip.Tip="{Binding BadgeText}" ToolTip.Placement="Right"
-                    AutomationProperties.Name="Claudette update">
+                    AutomationProperties.Name="Deventry update">
               <StackPanel Orientation="Horizontal" Spacing="10">
                 <Path Classes="icon" Data="{StaticResource IconUpdate}" />
                 <TextBlock Classes="badge" Text="{Binding BadgeText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"

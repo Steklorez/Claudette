@@ -61,7 +61,7 @@ public class QueuedMessageTests
         tab.ComposerText = "second";
         await tab.SendCommand.ExecuteAsync(null);
         var (first, second) = (Card(tab, "first"), Card(tab, "second"));
-        // Claude Code cancels both, and something it ran for another reason, which isn't Claudette's.
+        // Claude Code cancels both, and something it ran for another reason, which isn't Deventry's.
         h.Transport.Answers["interrupt"] = _ => new JsonObject { ["still_queued"] = new JsonArray(), ["cancelled"] = new JsonArray(first.SentId, second.SentId, "scheduled-1") };
         tab.ComposerText = "typed since";
 

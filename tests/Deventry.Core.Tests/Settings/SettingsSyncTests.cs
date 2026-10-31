@@ -10,7 +10,7 @@ public sealed class SettingsSyncTests : IDisposable
     private static readonly string[] Synced = ["appearance", "checkIns", "quickSuffixes", "newTabs.defaultModel", "newTabs.defaultEffort"];
     private static readonly DateTimeOffset T0 = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
 
-    private readonly TempFolder _root = new("claudette-settings-sync");
+    private readonly TempFolder _root = new("deventry-settings-sync");
 
     public void Dispose() => _root.Dispose();
 

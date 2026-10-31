@@ -162,7 +162,7 @@ public sealed class AgentMap
 
     public AgentNode? FindByTask(string taskId) => _byTask.GetValueOrDefault(taskId);
 
-    /// <summary>The agent that made a tool call, whose group holds its card; null when Claudette hasn't seen the call.</summary>
+    /// <summary>The agent that made a tool call, whose group holds its card; null when Deventry hasn't seen the call.</summary>
     public AgentNode? OwnerOf(string toolUseId) => _toolCallOwners.GetValueOrDefault(toolUseId);
 
     /// <summary>A subagent's <c>Agent</c> call appeared in <paramref name="parent"/>'s stream.</summary>
@@ -183,7 +183,7 @@ public sealed class AgentMap
     }
 
     /// <summary>
-    /// Claudette's hook refused the subagent's <c>Agent</c> call, so it never started (DESIGN.md §5, "Subagents"): it
+    /// Deventry's hook refused the subagent's <c>Agent</c> call, so it never started (DESIGN.md §5, "Subagents"): it
     /// leaves the map, and nothing it might have done is counted.
     /// </summary>
     internal void Remove(AgentNode node)
@@ -234,7 +234,7 @@ public sealed class AgentMap
         }
         if (node is null && request.AgentId is not null)
         {
-            // From a subagent Claudette can't place yet: wait for its task_started or the tool call.
+            // From a subagent Deventry can't place yet: wait for its task_started or the tool call.
             _unattributed.Add(prompt);
             return;
         }

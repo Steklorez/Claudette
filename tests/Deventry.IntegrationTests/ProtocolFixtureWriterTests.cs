@@ -9,7 +9,7 @@ public class ProtocolFixtureWriterTests
     [Fact]
     public void A_log_becomes_fixture_lines_without_paths_emails_accounts_or_session_ids()
     {
-        var root = OperatingSystem.IsWindows() ? @"C:\Temp\claudette-record-1234" : "/tmp/claudette-record-1234";
+        var root = OperatingSystem.IsWindows() ? @"C:\Temp\deventry-record-1234" : "/tmp/deventry-record-1234";
         var repo = Path.Combine(root, "repo");
         var project = Path.Combine(root, "config", "projects", repo.Replace('/', '-').Replace('\\', '-').Replace(':', '-'));
         const string session = "3a26fa01-7245-409f-8157-b991380c5155";
@@ -35,7 +35,7 @@ public class ProtocolFixtureWriterTests
         Assert.Equal("<redacted>", init["account"]!["email"]!.GetValue<string>());
         Assert.Equal("<redacted>", init["account"]!["organization"]!.GetValue<string>());
         Assert.EndsWith("session-1.jsonl", lines[2]["msg"]!["tool_use_result"]!["path"]!.GetValue<string>(), StringComparison.Ordinal);
-        Assert.DoesNotContain("claudette-record", lines[2].ToJsonString(), StringComparison.Ordinal);
+        Assert.DoesNotContain("deventry-record", lines[2].ToJsonString(), StringComparison.Ordinal);
         Assert.Equal("Mail user@example.com <ok>", lines[3]["msg"]!["message"]!["content"]![0]!["text"]!.GetValue<string>());
         // Readable, like Claude Code's own output.
         Assert.Contains("<ok>", new ProtocolFixtureWriter([root]).FromProtocolLog(log)[3], StringComparison.Ordinal);

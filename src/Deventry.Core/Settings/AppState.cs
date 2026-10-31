@@ -181,8 +181,8 @@ public sealed class AppState
     public bool UpdateClaudeOnNextLaunch { get; set; }
 
     /// <summary>
-    /// For a source build of Claudette: restart into a new build by itself once no tab is working, instead of asking
-    /// (DESIGN.md §9, "Working on Claudette").
+    /// For a source build of Deventry: restart into a new build by itself once no tab is working, instead of asking
+    /// (DESIGN.md §9, "Working on Deventry").
     /// </summary>
     public bool RestartOnNewBuild { get; set; }
 
@@ -192,7 +192,7 @@ public sealed class AppState
     /// </summary>
     public List<ModelInfo> KnownModels { get; set; } = [];
 
-    /// <summary>The main window's position and size when Claudette last closed on this machine (DESIGN.md §14).</summary>
+    /// <summary>The main window's position and size when Deventry last closed on this machine (DESIGN.md §14).</summary>
     public WindowPlacement? Window { get; set; }
 
     /// <summary>The Claude Code version whose update badge the user dismissed: hidden until a newer one (DESIGN.md §12).</summary>
@@ -201,7 +201,7 @@ public sealed class AppState
     /// <summary>The Claude Code version the last "update ready" notification was for: once per version (DESIGN.md §10).</summary>
     public string? NotifiedClaudeUpdate { get; set; }
 
-    /// <summary>The Claudette release the user chose to skip: not offered again until a newer one (DESIGN.md §2).</summary>
+    /// <summary>The Deventry release the user chose to skip: not offered again until a newer one (DESIGN.md §2).</summary>
     public string? SkippedAppUpdate { get; set; }
 
     /// <summary>
@@ -223,13 +223,13 @@ public sealed class AppState
     public ServiceStatusDismissal? DismissedServiceStatus { get; set; }
 
     /// <summary>
-    /// Which copy of Claudette the login entry starts, and the installed release a source build prefers to it (DESIGN.md
+    /// Which copy of Deventry the login entry starts, and the installed release a source build prefers to it (DESIGN.md
     /// §9, "Starting at login"). Whether the entry is on is the OS's to say.
     /// </summary>
     public LoginItemRecord LoginItem { get; set; } = new();
 
     /// <summary>
-    /// When a tab last worked in each worktree Claude Code made, by its path, or when Claudette first saw one no tab
+    /// When a tab last worked in each worktree Claude Code made, by its path, or when Deventry first saw one no tab
     /// had used; for removing inactive ones (DESIGN.md §4, "Cleaning up worktrees").
     /// </summary>
     public Dictionary<string, DateTimeOffset> WorktreesLastUsed { get; set; } = [];
@@ -237,11 +237,11 @@ public sealed class AppState
     /// <summary>The worktrees the last cleanup removed, and when, for Settings → General to say.</summary>
     public WorktreeCleanupRecord? LastWorktreeCleanup { get; set; }
 
-    /// <summary>Each game's score and level against Claudette (DESIGN.md §18, "Games with Claudette").</summary>
+    /// <summary>Each game's score and level against Joulene (DESIGN.md §18, "Games with Joulene").</summary>
     public GamesState Games { get; set; } = new();
 }
 
-/// <summary>The games against Claudette (DESIGN.md §18, "Games with Claudette"), by game: its score and the level chosen.</summary>
+/// <summary>The games against Joulene (DESIGN.md §18, "Games with Joulene"), by game: its score and the level chosen.</summary>
 public sealed class GamesState
 {
     public Dictionary<string, GameScore> Scores { get; set; } = [];
@@ -250,7 +250,7 @@ public sealed class GamesState
     public Dictionary<string, string> Levels { get; set; } = [];
 }
 
-/// <summary>A game's rounds so far against Claudette, from the user's side.</summary>
+/// <summary>A game's rounds so far against Joulene, from the user's side.</summary>
 public sealed class GameScore
 {
     public int Wins { get; set; }

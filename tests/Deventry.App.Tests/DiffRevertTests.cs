@@ -6,7 +6,7 @@ namespace Deventry.App.Tests;
 /// <summary>Reverting Claude's changes from the diff view (DESIGN.md §8, "Reverting").</summary>
 public sealed class DiffRevertTests : IDisposable
 {
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"claudette-revert-{Guid.NewGuid():N}");
+    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"deventry-revert-{Guid.NewGuid():N}");
 
     private const string Before = "one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\nten\neleven\ntwelve\n";
 

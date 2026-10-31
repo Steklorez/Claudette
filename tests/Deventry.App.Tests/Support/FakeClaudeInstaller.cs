@@ -16,7 +16,7 @@ internal sealed class FakeClaudeInstaller : IClaudeInstaller
 
     public bool Fails { get; set; }
 
-    /// <summary>What installing does besides printing, such as putting a <c>claude</c> where Claudette looks.</summary>
+    /// <summary>What installing does besides printing, such as putting a <c>claude</c> where Deventry looks.</summary>
     public Action? OnInstall { get; set; }
 
     public Task<ClaudeInstallResult> InstallAsync(Action<string>? onOutput = null, CancellationToken cancellationToken = default)

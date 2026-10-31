@@ -32,15 +32,15 @@ public sealed record MsixPackage(string Name, string Publisher, string Version, 
 
     /// <summary>
     /// Checks that the package updates this installation: the same package family (name and publisher), the release's
-    /// version, and this process's architecture. A different publisher would install a second Claudette beside this one.
+    /// version, and this process's architecture. A different publisher would install a second Deventry beside this one.
     /// </summary>
     public void CheckUpdates(string? currentFamily, AppVersion version, System.Runtime.InteropServices.Architecture architecture)
     {
         if (currentFamily is not null && !string.Equals(FamilyName, currentFamily, StringComparison.OrdinalIgnoreCase))
         {
             throw new AppInstallException(Name.Equals(currentFamily.Split('_')[0], StringComparison.OrdinalIgnoreCase)
-                ? $"The update is signed by a different publisher ({Publisher}) than this copy of Claudette, so Windows would install it beside this one instead of updating it."
-                : $"The download is {Name}, not Claudette.");
+                ? $"The update is signed by a different publisher ({Publisher}) than this copy of Deventry, so Windows would install it beside this one instead of updating it."
+                : $"The download is {Name}, not Deventry.");
         }
         if (Version != version.ToPackageVersion())
         {
@@ -49,7 +49,7 @@ public sealed record MsixPackage(string Name, string Publisher, string Version, 
         var arch = architecture == System.Runtime.InteropServices.Architecture.Arm64 ? "arm64" : "x64";
         if (!string.Equals(Architecture, arch, StringComparison.OrdinalIgnoreCase))
         {
-            throw new AppInstallException($"The package is for {Architecture}, and this Claudette runs on {arch}.");
+            throw new AppInstallException($"The package is for {Architecture}, and this Deventry runs on {arch}.");
         }
     }
 
@@ -58,9 +58,9 @@ public sealed record MsixPackage(string Name, string Publisher, string Version, 
     {
         0x800B0109 => "Windows doesn't trust the certificate the update is signed with.",
         0x800B0100 => "The update isn't signed, and Windows only installs signed packages.",
-        0x80073D06 => "A newer version of Claudette is already installed.",
+        0x80073D06 => "A newer version of Deventry is already installed.",
         0x80073CFB => "This version is already installed with different contents.",
-        0x80073D02 => "Claudette's files were in use, so Windows couldn't replace them. Close Claudette and install the update by hand.",
+        0x80073D02 => "Deventry's files were in use, so Windows couldn't replace them. Close Deventry and install the update by hand.",
         0x80073CF0 => "Windows couldn't open the update package.",
         0x80070070 => "There isn't enough disk space to install the update.",
         var code => $"Windows couldn't install the update (error 0x{code:X8}).",

@@ -7,23 +7,23 @@ using Deventry.Core.Updates;
 namespace Deventry.Core.Tests.LoginItems;
 
 /// <summary>
-/// Starting Claudette at login (DESIGN.md §9, "Starting at login"): which copy the entry starts when a machine has an
+/// Starting Deventry at login (DESIGN.md §9, "Starting at login"): which copy the entry starts when a machine has an
 /// installed release, other builds and source builds, and how each copy turns it on, off and tidies it up.
 /// </summary>
 public sealed class StartAtLoginTests
 {
-    private static readonly ClaudetteCopy SourceBuild = new(AppInstallKind.SourceBuild, Path.Combine("D:", "src", "Claudette", "bin"), "0.3.0");
-    private static readonly ClaudetteCopy OtherCheckout = new(AppInstallKind.SourceBuild, Path.Combine("D:", "src", "Claudette-2", "bin"), "0.3.0");
-    private static readonly ClaudetteCopy Msix = new(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.2.0");
-    private static readonly ClaudetteCopy MacApp = new(AppInstallKind.MacApp, "/Applications/Deventry.app", "0.2.0");
-    private static readonly ClaudetteCopy Published = new(AppInstallKind.Other, Path.Combine("C:", "Tools", "Claudette"), "0.2.0");
+    private static readonly DeventryCopy SourceBuild = new(AppInstallKind.SourceBuild, Path.Combine("D:", "src", "Deventry", "bin"), "0.3.0");
+    private static readonly DeventryCopy OtherCheckout = new(AppInstallKind.SourceBuild, Path.Combine("D:", "src", "Deventry-2", "bin"), "0.3.0");
+    private static readonly DeventryCopy Msix = new(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.2.0");
+    private static readonly DeventryCopy MacApp = new(AppInstallKind.MacApp, "/Applications/Deventry.app", "0.2.0");
+    private static readonly DeventryCopy Published = new(AppInstallKind.Other, Path.Combine("C:", "Tools", "Deventry"), "0.2.0");
 
     private readonly FakeLoginItems _items = new();
     private readonly LoginItemRecord _record = new();
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private StartAtLogin As(ClaudetteCopy copy) => new(_items, copy, _record, save: () => { });
+    private StartAtLogin As(DeventryCopy copy) => new(_items, copy, _record, save: () => { });
 
     [Fact]
     public async Task A_source_build_with_nothing_installed_starts_itself()
@@ -83,7 +83,7 @@ public sealed class StartAtLoginTests
         Assert.True(status.IsOn);
         Assert.False(status.CanChange);
         Assert.Equal(Msix, status.Starts);
-        Assert.Equal("The installed Claudette 0.2.0 starts at login. Turn it off in that Claudette, or in Task Manager's Startup apps.", status.Note);
+        Assert.Equal("The installed Deventry 0.2.0 starts at login. Turn it off in that Deventry, or in Task Manager's Startup apps.", status.Note);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class StartAtLoginTests
     [InlineData(PackageTaskState.DisabledByUser, false, "Turned off in Task Manager's Startup apps. Turn it on there.")]
     [InlineData(PackageTaskState.DisabledByPolicy, false, "Turned off by your organization's policy.")]
     [InlineData(PackageTaskState.EnabledByPolicy, true, "Turned on by your organization's policy.")]
-    public async Task The_MSIX_says_when_its_task_is_held_on_or_off_outside_Claudette(PackageTaskState state, bool on, string note)
+    public async Task The_MSIX_says_when_its_task_is_held_on_or_off_outside_Deventry(PackageTaskState state, bool on, string note)
     {
         _items.MsixTask = new FakePackageTask(state);
 
@@ -129,7 +129,7 @@ public sealed class StartAtLoginTests
     }
 
     [Fact]
-    public async Task An_installed_Claudette_notes_itself_and_takes_over_a_source_builds_entry()
+    public async Task An_installed_Deventry_notes_itself_and_takes_over_a_source_builds_entry()
     {
         _items.Install(SourceBuild);
         _items.Entry = LoginEntryState.Enabled;
@@ -197,7 +197,7 @@ public sealed class StartAtLoginTests
     }
 
     [Fact]
-    public async Task Nothing_changes_where_Claudette_cant_start_at_login()
+    public async Task Nothing_changes_where_Deventry_cant_start_at_login()
     {
         _items.UnavailableReason = "Not while DEVENTRY_HOME is set.";
 

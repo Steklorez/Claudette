@@ -50,14 +50,14 @@ public sealed class SystemProcessesTests
     }
 
     [Fact]
-    public void The_real_process_list_finds_a_running_process_by_name_and_never_Claudette_itself()
+    public void The_real_process_list_finds_a_running_process_by_name_and_never_Deventry_itself()
     {
         Assert.SkipUnless(OperatingSystem.IsLinux() || OperatingSystem.IsWindows(), "Reading every process runs ps on macOS, which is covered above.");
         var system = new SystemProcesses(new Core.Processes.ProcessLauncher(), TimeProvider.System);
         var self = Path.GetFileNameWithoutExtension(Environment.ProcessPath)!;
 
         Assert.DoesNotContain(system.Find([self]), p => p.Pid == Environment.ProcessId);
-        Assert.Empty(system.Find(["no-such-process-claudette-test"]));
+        Assert.Empty(system.Find(["no-such-process-deventry-test"]));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class SystemProcessesTests
     {
         // Where a relative -projectPath is read from (DESIGN.md §18, "Editor logs"): the PEB on Windows, /proc/<pid>/cwd
         // on Linux, proc_pidinfo on macOS.
-        var folder = Directory.CreateTempSubdirectory("claudette-cwd").FullName;
+        var folder = Directory.CreateTempSubdirectory("deventry-cwd").FullName;
         var system = new SystemProcesses(new Core.Processes.ProcessLauncher(), TimeProvider.System);
         var (program, arguments, name) = OperatingSystem.IsWindows()
             ? ("ping.exe", new[] { "-n", "60", "127.0.0.1" }, "ping")

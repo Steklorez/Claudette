@@ -15,7 +15,7 @@ public class NotificationTests
         """;
 
     [Fact]
-    public async Task A_finished_turn_notifies_while_Claudette_is_in_the_background()
+    public async Task A_finished_turn_notifies_while_Deventry_is_in_the_background()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
@@ -30,7 +30,7 @@ public class NotificationTests
     }
 
     [Fact]
-    public async Task Nothing_is_sent_about_the_selected_tab_while_Claudette_is_in_front()
+    public async Task Nothing_is_sent_about_the_selected_tab_while_Deventry_is_in_front()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
@@ -43,7 +43,7 @@ public class NotificationTests
     }
 
     [Fact]
-    public async Task A_background_tab_notifies_even_while_Claudette_is_in_front()
+    public async Task A_background_tab_notifies_even_while_Deventry_is_in_front()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
@@ -180,7 +180,7 @@ public class NotificationTests
     }
 
     [Fact]
-    public async Task App_wide_notifications_are_skipped_while_Claudette_is_in_front()
+    public async Task App_wide_notifications_are_skipped_while_Deventry_is_in_front()
     {
         await using var h = new TabTestHarness();
         var notifications = h.Services.Notifications;

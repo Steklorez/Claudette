@@ -245,7 +245,7 @@ public class MessageParserTests
     [InlineData("success", HookOutcome.Success)]
     [InlineData("cancelled", HookOutcome.Cancelled)]
     [InlineData("timed_out", HookOutcome.Unknown)]
-    public void A_hook_outcome_Claudette_does_not_know_reads_as_unknown(string outcome, HookOutcome expected)
+    public void A_hook_outcome_Deventry_does_not_know_reads_as_unknown(string outcome, HookOutcome expected)
     {
         var hook = Parse<SystemMessage>($$"""{"type":"system","subtype":"hook_response","hook_id":"h1","outcome":"{{outcome}}"}""").HookRun;
 

@@ -29,7 +29,7 @@ public sealed record GitChange(string Path, GitChangeKind Kind, string? OldPath,
     public HiddenChanges? Hidden { get; init; }
 }
 
-/// <summary>What <see cref="GitWorkingTree.CheckAsync"/> found: the git Claudette runs and its version, or why it can't run it.</summary>
+/// <summary>What <see cref="GitWorkingTree.CheckAsync"/> found: the git Deventry runs and its version, or why it can't run it.</summary>
 /// <param name="Path">Where it is: the path set, or the first git on the <c>PATH</c>. Null when there's none.</param>
 /// <param name="Version">What <c>git --version</c> says after "git version", such as <c>2.47.1.windows.2</c>.</param>
 /// <param name="Problem">Why it can't be used, written for the user; null when it can.</param>
@@ -37,7 +37,7 @@ public sealed record GitCheck(string? Path, string? Version, string? Problem);
 
 /// <summary>
 /// The "working tree vs HEAD" view of a repository (DESIGN.md §8), which also shows changes made by Bash commands or by
-/// the user, and the one way Claudette runs git: everything it asks git goes through its <c>RunAsync</c>.
+/// the user, and the one way Deventry runs git: everything it asks git goes through its <c>RunAsync</c>.
 /// Runs the git Settings → Git → <b>Path to git</b> names (<see cref="ConfiguredPath"/>), or <c>git</c> from <c>PATH</c>.
 /// Every call has a timeout, and returns null or empty instead of throwing when git is missing, times out, or the folder
 /// isn't in a repository.
@@ -45,7 +45,7 @@ public sealed record GitCheck(string? Path, string? Version, string? Problem);
 /// <param name="gitExecutable">The git to run while no path is set: <c>git</c>, found on <c>PATH</c>.</param>
 /// <param name="environment">
 /// The user environment git runs with, and whose <c>PATH</c> it's found on (DESIGN.md §13), so git and its helpers
-/// (Git LFS, credential helpers) are the ones a terminal would use. Null: Claudette's own.
+/// (Git LFS, credential helpers) are the ones a terminal would use. Null: Deventry's own.
 /// </param>
 public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeProvider, string gitExecutable = GitWorkingTree.DefaultExecutable, UserEnvironment? environment = null)
 {

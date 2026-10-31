@@ -43,7 +43,7 @@
                   </ListBox.ItemTemplate>
                 </ListBox>
               </DataTemplate>
-              <!-- Games: the game open, its menu the games to switch to (DESIGN.md §18, "Games with Claudette") -->
+              <!-- Games: the game open, its menu the games to switch to (DESIGN.md §18, "Games with Joulene") -->
               <DataTemplate DataType="services:GameService">
                 <Button Classes="flat toolchoice" ToolTip.Tip="Play another game" AutomationProperties.Name="{Binding Game.Title, StringFormat='Game: {0}', FallbackValue='Game'}">
                   <StackPanel Orientation="Horizontal" Spacing="5">

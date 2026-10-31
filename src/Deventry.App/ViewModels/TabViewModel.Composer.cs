@@ -81,7 +81,7 @@ public sealed partial class TabViewModel
             PromptSuggestion = null;
         }
         DraftChanged();
-        // Typing wakes Claudette on the composer from a nap, and her name has her wave back (DESIGN.md §5).
+        // Typing wakes Joulene on the composer from a nap, and her name has her wave back (DESIGN.md §5).
         TellMascot(mascot => mascot.Nudge());
         GreetMascot(value);
     }
@@ -259,7 +259,7 @@ public sealed partial class TabViewModel
         AttachmentError = errors.Count > 0 ? string.Join(" ", errors.Distinct(StringComparer.Ordinal)) : null;
         if (errors.Count < paths.Count)
         {
-            // Claudette on the composer catches it (DESIGN.md §5).
+            // Joulene on the composer catches it (DESIGN.md §5).
             TellMascot(mascot => mascot.Caught());
         }
         return mentions.Count > 0 ? string.Join(" ", mentions) + " " : null;
@@ -344,7 +344,7 @@ public sealed partial class TabViewModel
     {
         PastedTexts.Add(new PastedTextAttachment(text));
         SendCommand.NotifyCanExecuteChanged();
-        // Claudette on the composer staggers under it (DESIGN.md §5).
+        // Joulene on the composer staggers under it (DESIGN.md §5).
         TellMascot(mascot => mascot.HeavyPaste());
     }
 
@@ -368,7 +368,7 @@ public sealed partial class TabViewModel
         return pastes;
     }
 
-    /// <summary>The attached images, for the draft a restart into a new build keeps (DESIGN.md §9, "Working on Claudette").</summary>
+    /// <summary>The attached images, for the draft a restart into a new build keeps (DESIGN.md §9, "Working on Deventry").</summary>
     private List<DraftImage> DraftImages() => [.. Attachments.Select(a => new DraftImage(a.Name, a.Data))];
 
     /// <summary>Puts back a draft's images, checked again as when they were attached.</summary>

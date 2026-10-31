@@ -13,7 +13,7 @@ namespace Deventry.App.Services;
 public sealed class ProjectToolsService(AppServices services, ISystemProcesses? processes, IUnrealEngineRegistry registry, ProjectToolPaths paths)
 {
     /// <summary>
-    /// The project types Claudette knows, in the order Settings shows them (DESIGN.md §18, "Project types"). A new one is
+    /// The project types Deventry knows, in the order Settings shows them (DESIGN.md §18, "Project types"). A new one is
     /// a line here, with what it needs given to it.
     /// </summary>
     public static IReadOnlyList<IProjectType> AllTypes(IUnrealEngineRegistry registry) =>
@@ -78,7 +78,7 @@ public sealed class ProjectToolsService(AppServices services, ISystemProcesses? 
         contents.Actions.Select(a => (a, a.ToAction(folder, OS, Shell))).ToArray();
 
     /// <summary>
-    /// Starts a program that outlives Claudette, such as the editor. The returned process is dropped rather than
+    /// Starts a program that outlives Deventry, such as the editor. The returned process is dropped rather than
     /// disposed: disposing it would end it.
     /// </summary>
     /// <param name="extra">Variables added to the environment, such as a new worktree's (DESIGN.md §18, "Setting up a new worktree").</param>

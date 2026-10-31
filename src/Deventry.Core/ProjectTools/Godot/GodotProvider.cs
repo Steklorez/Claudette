@@ -301,7 +301,7 @@ public sealed class GodotProvider : IProjectType
         new ProjectTypePath(PathKey, "Godot executable")
         {
             Description = "Empty finds it. C# projects need the .NET build of Godot.",
-            More = "Claudette looks for godot, godot4, Godot or godot-mono on the PATH, then Godot.app on macOS, or WinGet's and Scoop's places on Windows.",
+            More = "Deventry looks for godot, godot4, Godot or godot-mono on the PATH, then Godot.app on macOS, or WinGet's and Scoop's places on Windows.",
             Keywords = ["godot path", "detect"],
             Placeholder = "Found automatically",
             BrowseTitle = "Choose the Godot executable",

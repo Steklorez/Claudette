@@ -8,7 +8,7 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// Keeping the computer awake (DESIGN.md §9, "Keeping the computer awake"): Settings → General's switch, which the
-/// header's cup turns on and off, only while Claude has work to finish or whenever Claudette runs.
+/// header's cup turns on and off, only while Claude has work to finish or whenever Deventry runs.
 /// </summary>
 public class KeepAwakeTests
 {
@@ -38,10 +38,10 @@ public class KeepAwakeTests
     }
 
     [Fact]
-    public async Task Whenever_Claudette_runs_it_holds_from_the_start_and_the_cup_turns_it_off()
+    public async Task Whenever_Deventry_runs_it_holds_from_the_start_and_the_cup_turns_it_off()
     {
-        await using var h = While(KeepAwakeWhen.ClaudetteRuns);
-        // Claudette starting with it on holds sleep off from the start, and lets go as it closes.
+        await using var h = While(KeepAwakeWhen.DeventryRuns);
+        // Deventry starting with it on holds sleep off from the start, and lets go as it closes.
         var atStart = new FakeSleepBlocker();
         using (new KeepAwakeService(h.Services, atStart))
         {
@@ -55,7 +55,7 @@ public class KeepAwakeTests
         var keepAwake = h.Services.KeepAwake;
         Assert.True(h.SleepBlocker.IsBlocking);
         Assert.Equal(
-            "Keeping this computer awake. The screen can still turn off.\nWhile Claudette runs, as Settings → General says.\nClick to let it sleep.\nRight-click to choose when.",
+            "Keeping this computer awake. The screen can still turn off.\nWhile Deventry runs, as Settings → General says.\nClick to let it sleep.\nRight-click to choose when.",
             keepAwake.Tooltip);
         Assert.Equal("Keep this computer awake: keeping it awake", keepAwake.AccessibleName);
 
@@ -147,10 +147,10 @@ public class KeepAwakeTests
         await using var h = new TabTestHarness();
         var keepAwake = h.Services.KeepAwake;
 
-        keepAwake.ChooseCommand.Execute(KeepAwakeWhen.ClaudetteRuns);
+        keepAwake.ChooseCommand.Execute(KeepAwakeWhen.DeventryRuns);
 
         Assert.True(keepAwake.IsOn);
-        Assert.True(keepAwake.WhileClaudetteRuns);
+        Assert.True(keepAwake.WhileDeventryRuns);
         Assert.False(keepAwake.WhileClaudeHasWork);
         Assert.True(h.SleepBlocker.IsBlocking);
 
@@ -170,7 +170,7 @@ public class KeepAwakeTests
         general.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
         general.KeepAwake = true;
-        general.KeepAwakeWhileClaudetteRuns = true;
+        general.KeepAwakeWhileDeventryRuns = true;
         Assert.True(h.SleepBlocker.IsBlocking);
         Assert.Null(general.KeepAwakeUnavailableText);
 

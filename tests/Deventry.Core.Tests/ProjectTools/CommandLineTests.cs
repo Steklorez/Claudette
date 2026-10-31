@@ -72,7 +72,7 @@ public sealed class CommandLineTests
     [Theory]
     [InlineData(@"D:\", @"D:\")]
     [InlineData(@"D:\My Games\", @"""D:\My Games\\""")]
-    [InlineData(@"C:\Program Files\Claudette", @"""C:\Program Files\Claudette""")]
+    [InlineData(@"C:\Program Files\Deventry", @"""C:\Program Files\Deventry""")]
     [InlineData("", "\"\"")]
     [InlineData("say \"hi\"", "\"say \\\"hi\\\"\"")]
     [InlineData(@"a\""b c", @"""a\\\""b c""")]

@@ -14,14 +14,14 @@ namespace Deventry.App.Views;
 /// <summary>
 /// A Project Files tab's file in a window of its own (DESIGN.md §18, "Project files", "A file in a window of its own"):
 /// its × puts the file back in its tab, it follows Settings → Appearance → Zoom, and the Files tab's keys work in it. It
-/// closes with the file, its Files tab, or Claudette.
+/// closes with the file, its Files tab, or Deventry.
 /// </summary>
 public partial class ProjectFileWindow : Window
 {
     private readonly WindowPlacementTracker _placement;
     private ProjectFileViewModel? _file;
 
-    /// <summary>It has let go of its file: put back, closed, or with Claudette quitting.</summary>
+    /// <summary>It has let go of its file: put back, closed, or with Deventry quitting.</summary>
     private bool _letGo;
 
     private int _zoomPercent = 100;
@@ -30,7 +30,7 @@ public partial class ProjectFileWindow : Window
     {
         InitializeComponent();
         _placement = new WindowPlacementTracker(this);
-        // Back from another editor, perhaps, with the file changed there, as Claudette's window looks again.
+        // Back from another editor, perhaps, with the file changed there, as Deventry's window looks again.
         Activated += (_, _) => _ = _file?.CheckDiskAsync();
         // Tunnel, so the keys work wherever the focus is, as the main window's do.
         AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel);
@@ -125,7 +125,7 @@ public partial class ProjectFileWindow : Window
         }
     }
 
-    /// <summary>The file closed, or its Files tab did, Claudette quitting too.</summary>
+    /// <summary>The file closed, or its Files tab did, Deventry quitting too.</summary>
     private void OnFileClosed() => LetGoAndClose();
 
     private void LetGoAndClose()
@@ -170,7 +170,7 @@ public partial class ProjectFileWindow : Window
     /// <summary>
     /// The Files tab's keys (DESIGN.md §18, "Project files", "Keyboard"): <c>Ctrl/Cmd+S</c> saves the file and
     /// <c>Ctrl/Cmd+Alt+S</c> every file of its Files tab, Find opens the editor's find, the previous and next message go
-    /// through the changes, Find in files and Replace in files open the popup over Claudette's window, and Close tab puts
+    /// through the changes, Find in files and Replace in files open the popup over Deventry's window, and Close tab puts
     /// the file back.
     /// </summary>
     private void OnWindowKeyDown(object? sender, KeyEventArgs e)

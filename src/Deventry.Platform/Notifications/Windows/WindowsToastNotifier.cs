@@ -6,8 +6,8 @@ using Microsoft.Win32;
 namespace Deventry.Platform.Notifications.Windows;
 
 /// <summary>
-/// Claudette's identity on Windows, which toasts, taskbar grouping and the jump list hang off. An MSIX install has
-/// package identity and needs nothing more. Run unpackaged (development), Claudette sets an explicit AppUserModelID for
+/// Deventry's identity on Windows, which toasts, taskbar grouping and the jump list hang off. An MSIX install has
+/// package identity and needs nothing more. Run unpackaged (development), Deventry sets an explicit AppUserModelID for
 /// its process and registers it under <c>HKCU\Software\Classes\AppUserModelId</c>, as the Windows App SDK does, so
 /// toasts can name it.
 /// </summary>
@@ -21,7 +21,7 @@ public static unsafe class WindowsAppIdentity
     public static bool IsPackaged { get; } = HasPackageIdentity();
 
     /// <summary>Call once at startup, before the first window is created.</summary>
-    /// <param name="iconPath">An icon file for toasts sent by an unpackaged Claudette, or null.</param>
+    /// <param name="iconPath">An icon file for toasts sent by an unpackaged Deventry, or null.</param>
     public static void Initialize(string? iconPath)
     {
         if (IsPackaged)
@@ -30,7 +30,7 @@ public static unsafe class WindowsAppIdentity
         }
         WinRt.SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
         using var key = Registry.CurrentUser.CreateSubKey($@"Software\Classes\AppUserModelId\{AppUserModelId}");
-        key.SetValue("DisplayName", "Claudette");
+        key.SetValue("DisplayName", "Deventry");
         if (iconPath is not null)
         {
             key.SetValue("IconUri", iconPath);

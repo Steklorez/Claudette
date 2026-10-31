@@ -67,7 +67,7 @@ public partial class TabView : UserControl
         _main = new ShownList(ConversationScroll, ConversationItems, ScrollMarks);
         _agent = new ShownList(AgentScroll, AgentItems, AgentMarks);
         ComposerPanel.Sent += () => _main.StickToBottom = true;
-        // Claudette on the composer keeps clear of Jump to latest, and ducks while a thread's strip or a dialog sits over
+        // Joulene on the composer keeps clear of Jump to latest, and ducks while a thread's strip or a dialog sits over
         // the composer (DESIGN.md §5).
         ComposerPanel.KeepMascotClearOf([JumpToLatest, ThreadStrip, .. ConversationArea.Children.OfType<Border>().Where(b => b.Classes.Contains("overlay"))]);
         foreach (var list in new[] { _main, _agent })

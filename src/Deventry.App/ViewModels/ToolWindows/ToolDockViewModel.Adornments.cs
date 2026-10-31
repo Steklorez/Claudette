@@ -43,7 +43,7 @@ public sealed partial class ToolDockViewModel
                 "Tasks" when session is not null => (false, false, session.TodoList.PageTip),
                 "Mcp" when session is not null => (false, session.McpServers.Attention is not null, session.McpServers.Attention ?? "MCP servers"),
                 "ScratchPad" => (false, false, "Notes shared by the tabs in this project"),
-                "Games" => (false, false, "Playing against Claudette"),
+                "Games" => (false, false, "Playing against Joulene"),
                 _ => (false, false, (string?)null),
             };
             window.IsBusy = busy;

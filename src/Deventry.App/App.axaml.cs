@@ -51,7 +51,7 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
         Colors = new AppColors(this);
-        // Images in Markdown load only what may, through Claudette's own client (DESIGN.md §18, "Images in Claude's replies"),
+        // Images in Markdown load only what may, through Deventry's own client (DESIGN.md §18, "Images in Claude's replies"),
         // inline code that names a file links to it ("Files named in Claude's replies"), and a file's preview joins the
         // lines of a paragraph wrapped in the file ("Markdown preview").
         MarkdownNode.Edit(pipeline => pipeline
@@ -95,8 +95,8 @@ public partial class App : Application
                 demo: Demo.DemoMode.FromEnvironment());
             if (_services.Demo is not null)
             {
-                // Told apart from the user's own Claudette in the taskbar and the OS's window lists (DESIGN.md §11, "Demo mode").
-                window.Title = "Claudette demo";
+                // Told apart from the user's own Deventry in the taskbar and the OS's window lists (DESIGN.md §11, "Demo mode").
+                window.Title = "Deventry demo";
             }
             // In the background, so the window isn't held up; the first claude start waits for it (DESIGN.md §13).
             _services.UserEnvironment.Start();
@@ -141,11 +141,11 @@ public partial class App : Application
             {
                 var readyFile = LaunchArguments.ReadyFile(args);
                 // FromClaudette: a Claudette before 0.7.0 that updated to this one waits in its own data folder.
-                var claudettes = Core.FromClaudette.ClaudetteReadyFile.AlsoFor(restored.Update is not null, readyFile);
-                _ = SignalRestartedAsync(started, opened.Task, [readyFile ?? _services.Paths.RestartReadyFile, .. claudettes is null ? [] : new[] { claudettes }],
+                var oldReadyFile = Core.FromClaudette.ClaudetteReadyFile.AlsoFor(restored.Update is not null, readyFile);
+                _ = SignalRestartedAsync(started, opened.Task, [readyFile ?? _services.Paths.RestartReadyFile, .. oldReadyFile is null ? [] : new[] { oldReadyFile }],
                     _services.Paths, restored.Nonce);
             }
-            // An installed Claudette notes itself for source builds, and takes over an entry one left for it.
+            // An installed Deventry notes itself for source builds, and takes over an entry one left for it.
             _ = _services.StartAtLogin.RefreshAtLaunchAsync();
         }
 
@@ -170,7 +170,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Logs what nothing else caught, to <c>claudette.log</c> (DESIGN.md §13, "Diagnostics"). An exception on the UI
+    /// Logs what nothing else caught, to <c>deventry.log</c> (DESIGN.md §13, "Diagnostics"). An exception on the UI
     /// thread is logged and handled rather than ending the app, which would leave every tab's <c>claude</c> running
     /// (the Job Objects deliberately don't end them, §4). A faulted task nobody awaited is logged and observed.
     /// </summary>
@@ -187,10 +187,10 @@ public partial class App : Application
             e.SetObserved();
         };
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-            logger.LogCritical(e.ExceptionObject as Exception, "Unhandled exception; Claudette is ending.");
+            logger.LogCritical(e.ExceptionObject as Exception, "Unhandled exception; Deventry is ending.");
     }
 
-    // ---- Restarts: source builds (DESIGN.md §9, "Working on Claudette") and updates (§2, "Updating Claudette") -----
+    // ---- Restarts: source builds (DESIGN.md §9, "Working on Deventry") and updates (§2, "Updating Deventry") -----
 
     /// <summary>
     /// Sets up handing over to a new build or version: the window's placement, closing once it's up, and passing on
@@ -219,7 +219,7 @@ public partial class App : Application
 
     /// <summary>
     /// When an earlier build or version restarted into this one, takes over its tabs and window placement: the snapshot
-    /// named by <c>--restore</c>, or, when Claudette was opened by hand after an update, the update's snapshot.
+    /// named by <c>--restore</c>, or, when Deventry was opened by hand after an update, the update's snapshot.
     /// </summary>
     private RestartSnapshot? RestoreAfterRestart(IReadOnlyList<string> args)
     {
@@ -272,7 +272,7 @@ public partial class App : Application
 
     private const string DefaultMonoFonts = "Cascadia Mono, Consolas, Menlo, monospace";
 
-    /// <summary>The Standard style's code font, Rider's: JetBrains Mono without ligatures, which Claudette ships.</summary>
+    /// <summary>The Standard style's code font, Rider's: JetBrains Mono without ligatures, which Deventry ships.</summary>
     private const string RiderMonoFont = "avares://Deventry/Assets/Fonts#JetBrains Mono NL";
 
     /// <summary>The appearance settings last applied, so unchanged ones aren't applied again.</summary>
@@ -322,7 +322,7 @@ public partial class App : Application
         Resources["ConversationFontSize"] = appearance.ConversationFontSize;
         Resources["CodeFontSize"] = appearance.CodeFontSize;
         // A font that isn't installed falls back to the next name in the list. The Standard style's are Rider's, which
-        // Claudette ships: Inter for the interface and JetBrains Mono for code (DESIGN.md §3, "Visual style").
+        // Deventry ships: Inter for the interface and JetBrains Mono for code (DESIGN.md §3, "Visual style").
         var ui = AppColors.UiFont(appearance.Style);
         Resources["UiFont"] = ui;
         Resources["ConversationFont"] = appearance.ConversationFont is { } conversation ? new FontFamily($"{conversation}, {FontFamily.DefaultFontFamilyName}") : ui;

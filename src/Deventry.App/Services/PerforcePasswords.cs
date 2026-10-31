@@ -4,7 +4,7 @@ using Deventry.Core.Perforce;
 namespace Deventry.App.Services;
 
 /// <summary>What the user typed in the Perforce password prompt.</summary>
-/// <param name="Save">Save it in the OS credential store once it has worked ("Stored by Claudette").</param>
+/// <param name="Save">Save it in the OS credential store once it has worked ("Stored by Deventry").</param>
 public sealed record PerforcePasswordAnswer(string Password, bool Save);
 
 /// <summary>
@@ -26,7 +26,7 @@ public sealed class PerforcePasswords(PerforceService perforce, Func<PerforcePas
         switch (perforce.Settings.PasswordSource)
         {
             case PerforcePasswordSource.PerforceConfig:
-                // Claudette only reads P4PASSWD; once Perforce has refused it, there's nothing else to try.
+                // Deventry only reads P4PASSWD; once Perforce has refused it, there's nothing else to try.
                 return request.Attempt == 1
                     ? await perforce.Client.GetSettingAsync(request.Target.Folder, "P4PASSWD", cancellationToken).ConfigureAwait(false)
                     : null;

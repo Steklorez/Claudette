@@ -3,7 +3,7 @@ using Deventry.Core.Library;
 namespace Deventry.Core.Settings;
 
 /// <summary>
-/// An icon the user puts on a tab to mean something to them (DESIGN.md §4, "Marks"). Claudette gives it no meaning.
+/// An icon the user puts on a tab to mean something to them (DESIGN.md §4, "Marks"). Deventry gives it no meaning.
 /// </summary>
 public enum TabMark
 {
@@ -17,7 +17,7 @@ public enum TabMark
 
 /// <summary>
 /// How a <see cref="TabMark"/> is stored: as a word, in the tab's state, this machine's state and the session
-/// library's record. A word a later Claudette adds reads as no mark here, rather than failing the whole file as an
+/// library's record. A word a later Deventry adds reads as no mark here, rather than failing the whole file as an
 /// unknown enum value would.
 /// </summary>
 public static class TabMarks
@@ -36,7 +36,7 @@ public static class TabMarks
         _ => throw new ArgumentOutOfRangeException(nameof(mark), mark, null),
     };
 
-    /// <summary>The mark a stored word names; null for none, or for a word this Claudette doesn't know.</summary>
+    /// <summary>The mark a stored word names; null for none, or for a word this Deventry doesn't know.</summary>
     public static TabMark? Parse(string? key)
     {
         foreach (var mark in All)

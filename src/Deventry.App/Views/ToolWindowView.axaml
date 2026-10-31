@@ -1,5 +1,5 @@
 <!-- What a tool window shows (DESIGN.md §3, "Tool windows"): a session's page, of the session tab it follows, or what made it,
-     such as the game against Claudette. -->
+     such as the game against Joulene. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:tw="using:Deventry.App.ViewModels.ToolWindows"
@@ -16,7 +16,7 @@
     <!-- The rest show what made them -->
     <ContentControl Content="{Binding Content}" IsVisible="{Binding !Kind.FollowsSession}">
       <ContentControl.DataTemplates>
-        <!-- Games with Claudette (DESIGN.md §18) -->
+        <!-- Games with Joulene (DESIGN.md §18) -->
         <DataTemplate DataType="services:GameService">
           <views:GamesView />
         </DataTemplate>

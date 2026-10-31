@@ -1,8 +1,8 @@
 #!/bin/sh
-# Claudette's update helper for macOS (DESIGN.md §2, "Updating Claudette"). Claudette starts it, detached, once it has
+# Deventry's update helper for macOS (DESIGN.md §2, "Updating Deventry"). Deventry starts it, detached, once it has
 # closed its tabs and written the restart snapshot, then quits. The helper:
 #
-#   1. waits for Claudette to quit,
+#   1. waits for Deventry to quit,
 #   2. puts the new app in place, with the old one set aside (all in the same folder, so each move is a rename): under
 #      the old one's name, or under its own when the app was renamed, as Claudette.app becomes Deventry.app,
 #   3. starts the new version with the restart's arguments, and waits up to 60 seconds for it to write the nonce to the
@@ -46,12 +46,12 @@ go_back() {
   exit 1
 }
 
-# 1. Wait up to 2 minutes for Claudette to quit.
+# 1. Wait up to 2 minutes for Deventry to quit.
 i=0
 while kill -0 "$pid" 2>/dev/null; do
   i=$((i + 1))
   if [ "$i" -ge "$quit_ticks" ]; then
-    echo "Claudette didn't quit, so the update wasn't installed." >&2
+    echo "Deventry didn't quit, so the update wasn't installed." >&2
     exit 1
   fi
   sleep 0.1

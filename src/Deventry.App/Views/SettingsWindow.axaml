@@ -214,7 +214,7 @@
             <!-- DESIGN.md §14, "Search": settings by name, what they do, or other words for them -->
             <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="10,10,10,4" Text="{Binding SearchText}" PlaceholderText="Search settings"
                      AutomationProperties.Name="Search settings" />
-            <!-- DESIGN.md §14, "Version": which Claudette this is, copied with a click, and Help: the user guide, dotBunny's
+            <!-- DESIGN.md §14, "Version": which Deventry this is, copied with a click, and Help: the user guide, dotBunny's
                  Discord, and a bug report with the version filled in -->
             <Border DockPanel.Dock="Bottom" Classes="sidebarfoot">
             <Grid x:Name="SidebarFoot" ColumnDefinitions="*,Auto" Margin="8,4,8,8">
@@ -227,14 +227,14 @@
                 <Path Classes="navicon" Data="{DynamicResource IconHelp}" />
                 <Button.Flyout>
                   <MenuFlyout Placement="TopEdgeAlignedRight">
-                    <MenuItem Header="User Guide" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Claudette's user guide in your browser." />
+                    <MenuItem Header="User Guide" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Deventry's user guide in your browser." />
                     <MenuItem Header="Ask on Discord" Command="{Binding OpenDiscordCommand}"
-                              ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Claudette." />
+                              ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Deventry." />
                     <MenuItem Header="Report an issue" Command="{Binding ReportIssueCommand}"
-                              ToolTip.Tip="Opens a new issue on Claudette's GitHub with the versions filled in. Nothing is sent until you submit it." />
+                              ToolTip.Tip="Opens a new issue on Deventry's GitHub with the versions filled in. Nothing is sent until you submit it." />
                     <Separator />
-                    <MenuItem Header="About Claudette" Command="{Binding ShowAboutCommand}"
-                              ToolTip.Tip="Which Claudette this is, the trademarks it names, and the licenses of what it's built with." />
+                    <MenuItem Header="About Deventry" Command="{Binding ShowAboutCommand}"
+                              ToolTip.Tip="Which Deventry this is, the trademarks it names, and the licenses of what it's built with." />
                   </MenuFlyout>
                 </Button.Flyout>
               </Button>

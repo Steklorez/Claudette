@@ -6,7 +6,7 @@ namespace Deventry.Platform.Shell.Windows;
 /// <summary>
 /// Keeps a window behind every other one, unfocused (DESIGN.md §9, "Taking screenshots without the focus"): each move
 /// in the z-order a window is about to make, which <c>WM_WINDOWPOSCHANGING</c> announces, becomes a move to the bottom
-/// without activating it. So a Claudette window that opens, or would come forward, while the screenshot scripts drive
+/// without activating it. So a Deventry window that opens, or would come forward, while the screenshot scripts drive
 /// it never shows over the user's windows, a fullscreen one included; PrintWindow captures it behind them all the same.
 /// </summary>
 [SupportedOSPlatform("windows")]

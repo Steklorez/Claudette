@@ -2,7 +2,7 @@ namespace Deventry.Core.ProjectFiles;
 
 /// <summary>
 /// What Find in files had last, which it opens with next time (DESIGN.md §18, "Project files", "Finding in files"): kept
-/// in <c>state.json</c>, so it lasts from one run of Claudette to the next.
+/// in <c>state.json</c>, so it lasts from one run of Deventry to the next.
 /// </summary>
 public sealed class FindInFilesState
 {

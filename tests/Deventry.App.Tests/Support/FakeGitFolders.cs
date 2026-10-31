@@ -3,7 +3,7 @@ using Deventry.Core.Git;
 namespace Deventry.App.Tests.Support;
 
 /// <summary>
-/// Git's folders written by hand, which is all Claudette reads to find a working tree and its branch (Core's
+/// Git's folders written by hand, which is all Deventry reads to find a working tree and its branch (Core's
 /// <c>GitInfo</c>): no git runs.
 /// </summary>
 internal static class FakeGitFolders

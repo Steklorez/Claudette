@@ -73,12 +73,12 @@ public class TrashTests
     {
         Assert.SkipUnless((OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()) && Environment.GetEnvironmentVariable("DEVENTRY_TEST_TRASH") == "1",
             "Windows or macOS with DEVENTRY_TEST_TRASH=1 only: it puts two small things in your trash.");
-        var folder = Directory.CreateTempSubdirectory("claudette-trash-").FullName;
+        var folder = Directory.CreateTempSubdirectory("deventry-trash-").FullName;
         try
         {
-            var file = Path.Combine(folder, "Claudette trash test.txt");
-            File.WriteAllText(file, "Claudette's trash test: delete me.");
-            var inside = Path.Combine(folder, "Claudette trash test folder");
+            var file = Path.Combine(folder, "Deventry trash test.txt");
+            File.WriteAllText(file, "Deventry's trash test: delete me.");
+            var inside = Path.Combine(folder, "Deventry trash test folder");
             Directory.CreateDirectory(inside);
             File.WriteAllText(Path.Combine(inside, "a.txt"), "a");
             var trash = Trash.CreateForCurrentOS(_launcher, TimeProvider.System);

@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>Open files' unsaved edits kept in the data folder (DESIGN.md §18, "Project files", "Saving").</summary>
 public sealed class EditorBackupsTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-backups");
+    private readonly TempFolder _temp = new("deventry-backups");
     private readonly FakeTimeProvider _time = new(new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero));
     private readonly EditorBackups _backups;
 

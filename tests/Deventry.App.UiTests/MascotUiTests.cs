@@ -14,7 +14,7 @@ using Deventry.App.Views;
 
 namespace Deventry.App.UiTests;
 
-/// <summary>Claudette on the composer (DESIGN.md §5): where she stands, and what she keeps clear of.</summary>
+/// <summary>Joulene on the composer (DESIGN.md §5): where she stands, and what she keeps clear of.</summary>
 public class MascotUiTests
 {
     [AvaloniaFact]
@@ -242,7 +242,7 @@ public class MascotUiTests
         Assert.False(layer.Figure.IsVisible);
     }
 
-    /// <summary>A shell with one tab and Claudette on, on the fake clock.</summary>
+    /// <summary>A shell with one tab and Joulene on, on the fake clock.</summary>
     private sealed class Scene : IAsyncDisposable
     {
         private Scene(TabTestHarness h, TabViewModel tab, Window window)

@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// For a source build of Claudette (DESIGN.md §9, "New commits upstream"): checks the branch its checkout tracks for new
-/// commits at launch and every hour, as an installed Claudette checks its releases, and pulls and builds them. The build
+/// For a source build of Deventry (DESIGN.md §9, "New commits upstream"): checks the branch its checkout tracks for new
+/// commits at launch and every hour, as an installed Deventry checks its releases, and pulls and builds them. The build
 /// goes to <see cref="RestartService"/>, which restarts into it with every tab as it was.
 /// </summary>
 public sealed class SourceUpdateService : IDisposable
@@ -232,7 +232,7 @@ public sealed class SourceUpdateService : IDisposable
         Changed?.Invoke();
         if (BuildOutput.LatestWrite(source.OutputDirectory) is not { } written || written <= _restarts.Build.RunningStamp)
         {
-            LastError = "The build is the one already running: the new commits didn't change Claudette.";
+            LastError = "The build is the one already running: the new commits didn't change Deventry.";
             Changed?.Invoke();
             return false;
         }

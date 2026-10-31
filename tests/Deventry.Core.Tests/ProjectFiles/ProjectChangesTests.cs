@@ -6,7 +6,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>Several tabs' changed files, merged for the Project Files tab (DESIGN.md §18, "Project files", "Claude's changes").</summary>
 public sealed class ProjectChangesTests
 {
-    private static readonly string Root = Path.Combine(Path.GetTempPath(), "claudette-project-changes");
+    private static readonly string Root = Path.Combine(Path.GetTempPath(), "deventry-project-changes");
     private static readonly DateTimeOffset Start = new(2026, 10, 15, 14, 0, 0, TimeSpan.Zero);
 
     private static string PathOf(string name) => Path.Combine(Root, name);

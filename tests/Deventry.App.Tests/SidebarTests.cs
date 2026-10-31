@@ -34,7 +34,7 @@ public class SidebarTests
 
         await h.Shell.OpenGuideCommand.ExecuteAsync(null);
 
-        Assert.Equal("https://claudette.dotbunny.com/guide/", Assert.Single(h.Platform.OpenedUrls));
+        Assert.Equal("https://deventry.app/guide/", Assert.Single(h.Platform.OpenedUrls));
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public class SidebarTests
         var other = Path.Combine(h.Root, "other");
         Directory.CreateDirectory(other);
         var state = h.Services.State;
-        // Saved under another spelling of the folder's path, and by an older Claudette, as the index of a group color.
+        // Saved under another spelling of the folder's path, and by an older Deventry, as the index of a group color.
         state.FolderColors[h.WorkFolder + Path.DirectorySeparatorChar] = "#12AB34";
         state.GroupColors[other] = 5;
         state.Tabs = [new TabState { Folder = h.WorkFolder }, new TabState { Folder = other }];

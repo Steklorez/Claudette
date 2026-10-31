@@ -10,7 +10,7 @@ namespace Deventry.Platform.Updates;
 public static class AppInstallers
 {
     /// <summary>
-    /// The installer for how this Claudette was installed (DESIGN.md §2, "Updating Claudette"): the MSIX package on
+    /// The installer for how this Deventry was installed (DESIGN.md §2, "Updating Deventry"): the MSIX package on
     /// Windows, or <c>Deventry.app</c> on macOS. A package from the Microsoft Store is the Store's to update. Anything
     /// else, such as a Linux build or an unpackaged Windows one, can't install updates itself, and is offered the release
     /// page instead.

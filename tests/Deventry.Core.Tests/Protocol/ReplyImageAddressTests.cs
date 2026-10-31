@@ -8,7 +8,7 @@ public sealed class ReplyImageAddressTests : IDisposable
     /// <summary>A 1×1 PNG.</summary>
     private const string Png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
-    private readonly string _root = Directory.CreateTempSubdirectory("claudette-replyimages-").FullName;
+    private readonly string _root = Directory.CreateTempSubdirectory("deventry-replyimages-").FullName;
 
     private string Folder => Directory.CreateDirectory(Path.Combine(_root, "project")).FullName;
 

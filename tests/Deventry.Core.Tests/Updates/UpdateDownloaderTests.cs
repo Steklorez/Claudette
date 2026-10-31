@@ -5,10 +5,10 @@ using Deventry.Core.Updates;
 
 namespace Deventry.Core.Tests.Updates;
 
-/// <summary>Downloading a release's package, and only keeping it once it checks out (DESIGN.md §2, "Updating Claudette").</summary>
+/// <summary>Downloading a release's package, and only keeping it once it checks out (DESIGN.md §2, "Updating Deventry").</summary>
 public sealed class UpdateDownloaderTests : IDisposable
 {
-    private const string Url = "https://example.test/Claudette-1.3.0-x64.msix";
+    private const string Url = "https://example.test/Deventry-1.3.0-x64.msix";
 
     private static readonly AppVersion Version = new(1, 3, 0);
 
@@ -19,9 +19,9 @@ public sealed class UpdateDownloaderTests : IDisposable
     private static string Sha256(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 
     private static ReleaseAsset Asset(long? size = null, string? sha256 = "") =>
-        new("Claudette-1.3.0-x64.msix", Url, size ?? Package.Length, sha256 == "" ? Sha256(Package) : sha256);
+        new("Deventry-1.3.0-x64.msix", Url, size ?? Package.Length, sha256 == "" ? Sha256(Package) : sha256);
 
-    private UpdateDownloader Downloader(FakeHttpHandler http) => new(new HttpClient(http), _temp.Path, "Claudette/1.2.0");
+    private UpdateDownloader Downloader(FakeHttpHandler http) => new(new HttpClient(http), _temp.Path, "Deventry/1.2.0");
 
     [Fact]
     public async Task A_package_that_matches_its_checksum_is_kept_and_progress_reaches_the_end()
@@ -31,11 +31,11 @@ public sealed class UpdateDownloaderTests : IDisposable
 
         var path = await Downloader(http).DownloadAsync(Asset(), Version, new SynchronousProgress(reported.Add), TestContext.Current.CancellationToken);
 
-        Assert.Equal(Path.Combine(_temp.Path, "1.3.0", "Claudette-1.3.0-x64.msix"), path);
+        Assert.Equal(Path.Combine(_temp.Path, "1.3.0", "Deventry-1.3.0-x64.msix"), path);
         Assert.Equal(Package, File.ReadAllBytes(path));
         Assert.Equal(1, reported[^1]);
         Assert.True(reported.Count > 2, "progress is reported as it downloads");
-        Assert.Equal("Claudette/1.2.0", Assert.Single(http.Requests).Headers.UserAgent.ToString());
+        Assert.Equal("Deventry/1.2.0", Assert.Single(http.Requests).Headers.UserAgent.ToString());
         Assert.False(File.Exists(path + ".part"));
     }
 
@@ -78,11 +78,11 @@ public sealed class UpdateDownloaderTests : IDisposable
     [Fact]
     public async Task A_file_already_there_is_not_trusted_without_a_checksum()
     {
-        var path = Path.Combine(_temp.Path, "1.3.0", "Claudette-1.3.0-x64.msix");
+        var path = Path.Combine(_temp.Path, "1.3.0", "Deventry-1.3.0-x64.msix");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllBytesAsync(path, Package, TestContext.Current.CancellationToken);
 
-        await Assert.ThrowsAsync<UpdateDownloadException>(() => new UpdateDownloader(new HttpClient(new FakeHttpHandler()), _temp.Path, "Claudette/1.2.0")
+        await Assert.ThrowsAsync<UpdateDownloadException>(() => new UpdateDownloader(new HttpClient(new FakeHttpHandler()), _temp.Path, "Deventry/1.2.0")
             .DownloadAsync(Asset(sha256: null), Version, cancellationToken: TestContext.Current.CancellationToken));
     }
 
@@ -111,11 +111,11 @@ public sealed class UpdateDownloaderTests : IDisposable
     [Fact]
     public void Clean_up_keeps_only_the_versions_asked_for()
     {
-        _temp.Write("1.2.0/Claudette-1.2.0-x64.msix", "old");
-        _temp.Write("1.3.0/Claudette-1.3.0-x64.msix", "new");
+        _temp.Write("1.2.0/Deventry-1.2.0-x64.msix", "old");
+        _temp.Write("1.3.0/Deventry-1.3.0-x64.msix", "new");
         _temp.Write("stray/file", "?");
 
-        new UpdateDownloader(new HttpClient(new FakeHttpHandler()), _temp.Path, "Claudette/1.2.0").CleanUp(v => v > new AppVersion(1, 2, 0));
+        new UpdateDownloader(new HttpClient(new FakeHttpHandler()), _temp.Path, "Deventry/1.2.0").CleanUp(v => v > new AppVersion(1, 2, 0));
 
         Assert.Equal(["1.3.0"], Directory.EnumerateDirectories(_temp.Path).Select(Path.GetFileName));
     }

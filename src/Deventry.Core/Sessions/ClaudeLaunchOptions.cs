@@ -133,7 +133,7 @@ public static class ClaudeArguments
             "--input-format", "stream-json",
             "--output-format", "stream-json",
             "--verbose",
-            // Sends permission prompts to Claudette as can_use_tool control requests.
+            // Sends permission prompts to Deventry as can_use_tool control requests.
             "--permission-prompt-tool", "stdio",
         };
         if (options.IncludePartialMessages)

@@ -11,14 +11,14 @@ namespace Deventry.App.Tests;
 public class VersionFooterTests
 {
     [Fact]
-    public async Task An_installed_Claudette_shows_its_version()
+    public async Task An_installed_Deventry_shows_its_version()
     {
         await using var h = new TabTestHarness(appVersion: new AppVersion(0, 1, 0));
         h.Services.BuildCommit = "842169b";
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal("Claudette 0.1.0", settings.VersionLabel);
-        Assert.StartsWith("Claudette 0.1.0.", settings.VersionTip, StringComparison.Ordinal);
+        Assert.Equal("Deventry 0.1.0", settings.VersionLabel);
+        Assert.StartsWith("Deventry 0.1.0.", settings.VersionTip, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -30,8 +30,8 @@ public class VersionFooterTests
         h.Services.IsSourceBuild = true;
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal("Claudette 0.1.0 · 842169b", settings.VersionLabel);
-        Assert.StartsWith("Claudette 0.1.0 (source build 842169b), built from this checkout.", settings.VersionTip, StringComparison.Ordinal);
+        Assert.Equal("Deventry 0.1.0 · 842169b", settings.VersionLabel);
+        Assert.StartsWith("Deventry 0.1.0 (source build 842169b), built from this checkout.", settings.VersionTip, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -45,8 +45,8 @@ public class VersionFooterTests
         h.Services.IsSourceBuild = true;
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.StartsWith($"Claudette 0.1.0 (source build 842169b), a {configuration} build from this checkout.", settings.VersionTip, StringComparison.Ordinal);
-        Assert.Equal("Claudette 0.1.0 · 842169b", settings.VersionLabel);
+        Assert.StartsWith($"Deventry 0.1.0 (source build 842169b), a {configuration} build from this checkout.", settings.VersionTip, StringComparison.Ordinal);
+        Assert.Equal("Deventry 0.1.0 · 842169b", settings.VersionLabel);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class VersionFooterTests
         await settings.CopyVersionCommand.ExecuteAsync(null);
 
         var lines = h.Platform.Clipboard!.Split(Environment.NewLine);
-        Assert.Equal("Claudette: 0.1.0", lines[0]);
+        Assert.Equal("Deventry: 0.1.0", lines[0]);
         Assert.StartsWith("Claude Code: ", lines[1], StringComparison.Ordinal);
         Assert.StartsWith("OS: ", lines[2], StringComparison.Ordinal);
         Assert.StartsWith("Runtime: .NET", lines[3], StringComparison.Ordinal);
@@ -80,7 +80,7 @@ public class VersionFooterTests
 
         h.Time.Advance(TabViewModel.CopiedFor);
 
-        Assert.Equal("Claudette 0.1.0", settings.VersionLabel);
+        Assert.Equal("Deventry 0.1.0", settings.VersionLabel);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class VersionFooterTests
 
         await settings.OpenGuideCommand.ExecuteAsync(null);
 
-        Assert.Equal("https://claudette.dotbunny.com/guide/", Assert.Single(h.Platform.OpenedUrls));
+        Assert.Equal("https://deventry.app/guide/", Assert.Single(h.Platform.OpenedUrls));
     }
 
     [Fact]
@@ -102,8 +102,8 @@ public class VersionFooterTests
 
         await settings.OpenDiscordCommand.ExecuteAsync(null);
 
-        // The site forwards it to the invite, so a new invite needs no new Claudette.
-        Assert.Equal("https://claudette.dotbunny.com/discord/", Assert.Single(h.Platform.OpenedUrls));
+        // The site forwards it to the invite, so a new invite needs no new Deventry.
+        Assert.Equal("https://deventry.app/discord/", Assert.Single(h.Platform.OpenedUrls));
     }
 
     [Fact]
@@ -119,18 +119,18 @@ public class VersionFooterTests
         };
         var help = h.Shell.PaletteEntries().TakeLast(4).ToList();
 
-        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Claudette"], help.Select(e => e.Label));
+        Assert.Equal(["User Guide", "Ask on Discord", "Report an issue", "About Deventry"], help.Select(e => e.Label));
         Assert.All(help, e => Assert.Equal("Help", e.Group));
         foreach (var entry in help)
         {
             await entry.Run();
         }
-        Assert.Equal("https://claudette.dotbunny.com/guide/", h.Platform.OpenedUrls[0]);
-        Assert.Equal("https://claudette.dotbunny.com/discord/", h.Platform.OpenedUrls[1]);
-        Assert.StartsWith("https://github.com/dotBunny/Claudette/issues/new?body=", h.Platform.OpenedUrls[2], StringComparison.Ordinal);
-        // About Claudette is a window of its own (DESIGN.md §14, "About").
+        Assert.Equal("https://deventry.app/guide/", h.Platform.OpenedUrls[0]);
+        Assert.Equal("https://deventry.app/discord/", h.Platform.OpenedUrls[1]);
+        Assert.StartsWith("https://github.com/dotBunny/Deventry/issues/new?body=", h.Platform.OpenedUrls[2], StringComparison.Ordinal);
+        // About Deventry is a window of its own (DESIGN.md §14, "About").
         Assert.Equal(1, abouts);
-        Assert.Contains("\nClaudette: 0.1.0 (MSIX)\n", Uri.UnescapeDataString(h.Platform.OpenedUrls[2]), StringComparison.Ordinal);
+        Assert.Contains("\nDeventry: 0.1.0 (MSIX)\n", Uri.UnescapeDataString(h.Platform.OpenedUrls[2]), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -142,11 +142,11 @@ public class VersionFooterTests
         await settings.ReportIssueCommand.ExecuteAsync(null);
 
         var url = Assert.Single(h.Platform.OpenedUrls);
-        const string prefix = "https://github.com/dotBunny/Claudette/issues/new?body=";
+        const string prefix = "https://github.com/dotBunny/Deventry/issues/new?body=";
         Assert.StartsWith(prefix, url, StringComparison.Ordinal);
         var body = Uri.UnescapeDataString(url[prefix.Length..]);
-        Assert.Contains("\nClaudette: 0.1.0 (MSIX)\n", body, StringComparison.Ordinal);
-        // Only versions: not where Claudette keeps its data or where anything is installed.
+        Assert.Contains("\nDeventry: 0.1.0 (MSIX)\n", body, StringComparison.Ordinal);
+        // Only versions: not where Deventry keeps its data or where anything is installed.
         Assert.DoesNotContain(h.Services.Paths.DataDirectory, body, StringComparison.Ordinal);
         Assert.DoesNotContain(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar), body, StringComparison.Ordinal);
     }
@@ -161,6 +161,6 @@ public class VersionFooterTests
 
         await settings.Advanced.CopyDiagnosticsCommand.ExecuteAsync(null);
 
-        Assert.StartsWith("Claudette 0.1.0 (source build 842169b)", h.Platform.Clipboard, StringComparison.Ordinal);
+        Assert.StartsWith("Deventry 0.1.0 (source build 842169b)", h.Platform.Clipboard, StringComparison.Ordinal);
     }
 }

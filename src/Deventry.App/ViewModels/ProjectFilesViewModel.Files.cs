@@ -427,7 +427,7 @@ public sealed partial class ProjectFilesViewModel
 
     internal void OnFileSaved(ProjectFileViewModel file) => OnFileModifiedChanged(file);
 
-    /// <summary>Every open file looked at on disk again: the tab shows, Claudette comes to the front, or a turn ended.</summary>
+    /// <summary>Every open file looked at on disk again: the tab shows, Deventry comes to the front, or a turn ended.</summary>
     internal async Task CheckOpenFilesOnDiskAsync()
     {
         foreach (var file in OpenFiles.ToArray())
@@ -471,7 +471,7 @@ public sealed partial class ProjectFilesViewModel
     private Task OpenFileInSystemAsync(ProjectFileViewModel? file) => file is null ? Task.CompletedTask : OpenInSystemAsync(file.Path);
 
     /// <summary>
-    /// <b>Open in Claudette's image viewer</b>, on an image's note that it isn't text (DESIGN.md §18, "Opening images"),
+    /// <b>Open in Deventry's image viewer</b>, on an image's note that it isn't text (DESIGN.md §18, "Opening images"),
     /// whatever Settings → Files and diffs says. One the window can't show after all goes to the OS's app.
     /// </summary>
     [RelayCommand]

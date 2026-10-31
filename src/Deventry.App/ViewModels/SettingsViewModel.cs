@@ -180,7 +180,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     public AllToolsPage AllTools { get; }
 
-    /// <summary>A page for each project type Claudette knows, in its order, after All tools (DESIGN.md §18, "Project types").</summary>
+    /// <summary>A page for each project type Deventry knows, in its order, after All tools (DESIGN.md §18, "Project types").</summary>
     public IReadOnlyList<ProjectTypePage> ProjectTypes { get; }
 
     /// <summary>The project type's page for projects of <paramref name="kind"/>, such as <c>unreal</c>.</summary>
@@ -193,7 +193,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     public AdvancedPage Advanced { get; }
 
-    /// <summary>The categories, in the sidebar's order, with a page for each project type Claudette knows.</summary>
+    /// <summary>The categories, in the sidebar's order, with a page for each project type Deventry knows.</summary>
     public IReadOnlyList<string> Categories { get; }
 
     /// <summary>
@@ -218,14 +218,14 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         init => ClaudeCode.Account = value;
     }
 
-    /// <summary>Claudette's version, update status and actions in General, the same as the sidebar's badge. Null in some tests.</summary>
+    /// <summary>Deventry's version, update status and actions in General, the same as the sidebar's badge. Null in some tests.</summary>
     public AppUpdateViewModel? AppUpdates
     {
         get => General.AppUpdates;
         init => General.AppUpdates = value;
     }
 
-    /// <summary>A source build's new commits upstream in General, the same as the sidebar's badge. Null for an installed Claudette.</summary>
+    /// <summary>A source build's new commits upstream in General, the same as the sidebar's badge. Null for an installed Deventry.</summary>
     public SourceUpdateViewModel? SourceUpdates
     {
         get => General.SourceUpdates;

@@ -59,7 +59,7 @@ public class TabMarkTests
         restored.Services.State.Tabs = [new TabState { Folder = restored.WorkFolder, Mark = "cross" }, new TabState { Folder = restored.WorkFolder, Mark = "heart" }];
         restored.Shell.Restore(null);
 
-        // A mark a later Claudette added shows as none, but stays as it was written.
+        // A mark a later Deventry added shows as none, but stays as it was written.
         Assert.Equal([TabMark.Cross, null], restored.Shell.AllTabs.Select(t => t.Mark));
         Assert.Equal("heart", restored.Shell.AllTabs.Last().State.Mark);
     }

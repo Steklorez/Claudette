@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Files;
 /// <summary>The OS's notifications for the folders the Project Files tab shows (DESIGN.md §18, "Project files").</summary>
 public sealed class FolderWatcherTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-watcher");
+    private readonly TempFolder _temp = new("deventry-watcher");
 
     public void Dispose() => _temp.Dispose();
 

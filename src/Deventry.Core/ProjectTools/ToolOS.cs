@@ -13,7 +13,7 @@ public enum ToolOS
 
 public static class ToolOSExtensions
 {
-    /// <summary>The OS Claudette is running on.</summary>
+    /// <summary>The OS Deventry is running on.</summary>
     public static ToolOS Current { get; } =
         OperatingSystem.IsWindows() ? ToolOS.Windows
         : OperatingSystem.IsMacOS() ? ToolOS.MacOS

@@ -172,7 +172,7 @@ public sealed class ConversationBuilder
     /// </summary>
     public TimeProvider? Time { get; init; }
 
-    /// <summary>Show messages Claudette skipped as rows with their JSON: protocol logging is on (DESIGN.md §16).</summary>
+    /// <summary>Show messages Deventry skipped as rows with their JSON: protocol logging is on (DESIGN.md §16).</summary>
     public bool ShowUnsupportedMessages { get; set; }
 
     /// <summary>Opens an MCP server's link in the browser, for its requests that ask the user to finish something there.</summary>
@@ -256,7 +256,7 @@ public sealed class ConversationBuilder
     /// <summary>The turn under way is one Claude Code carries on after a restart, and the conversation says so.</summary>
     private bool _carriedOnNoted;
 
-    /// <summary>Ids of messages Claudette sent without a card, such as Compact's <c>/compact</c>: their echoes are no prompt's.</summary>
+    /// <summary>Ids of messages Deventry sent without a card, such as Compact's <c>/compact</c>: their echoes are no prompt's.</summary>
     private readonly HashSet<string> _sentWithoutCard = new(StringComparer.Ordinal);
 
     /// <summary>A message went with this id and no card of its own.</summary>
@@ -265,8 +265,8 @@ public sealed class ConversationBuilder
     /// <summary>Takes a prompt's card away: Claude Code cancelled it before it ran (DESIGN.md §5, "Queued messages").</summary>
     public void Remove(UserMessageItem prompt) => Items.Remove(prompt);
 
-    /// <param name="label">Who it's from when it isn't the user, over a message Claudette passes on for a thread (DESIGN.md §18, "Threads").</param>
-    /// <param name="isFromThread">Claudette sends it for a thread or its sub-threads, not the user.</param>
+    /// <param name="label">Who it's from when it isn't the user, over a message Deventry passes on for a thread (DESIGN.md §18, "Threads").</param>
+    /// <param name="isFromThread">Deventry sends it for a thread or its sub-threads, not the user.</param>
     /// <param name="threadNote">The note on threads sent after it, which the card mentions.</param>
     /// <param name="mentionNote">The note on the sessions and agents it names, sent after it, which the card mentions.</param>
     /// <param name="mentioned">Their names, for the card's line about the note.</param>
@@ -457,7 +457,7 @@ public sealed class ConversationBuilder
             case AssistantMessageReceived assistant:
                 if (!_carriedOnNoted && assistant.Message.ResumeReason is not null)
                 {
-                    // A turn Claude Code re-runs, or goes on with, after a restart cut it off (DESIGN.md §9, "Working on Claudette").
+                    // A turn Claude Code re-runs, or goes on with, after a restart cut it off (DESIGN.md §9, "Working on Deventry").
                     _carriedOnNoted = true;
                     AddNote("Carrying on with the turn the restart cut off.");
                 }
@@ -483,7 +483,7 @@ public sealed class ConversationBuilder
                 break;
 
             case PromptReplayed replayed when replayed.Message.Uuid is { } uuid:
-                // A prompt that was sent, echoed back with its id: the id Claudette sent it with. A message Claudette sent
+                // A prompt that was sent, echoed back with its id: the id Deventry sent it with. A message Deventry sent
                 // without a card of its own (Compact) is no prompt's. Otherwise, as for a Claude Code that made its own
                 // id: prompts sent while Claude worked wait their turn, so it's the earliest still without one that reads
                 // the same, else the earliest still without one.
@@ -586,7 +586,7 @@ public sealed class ConversationBuilder
                 break;
 
             case ProtocolError protocolError:
-                AddNote($"Skipped a message Claudette couldn't read: {protocolError.Error}", NoteKind.Warning);
+                AddNote($"Skipped a message Deventry couldn't read: {protocolError.Error}", NoteKind.Warning);
                 break;
 
             case SessionExited exited:
@@ -834,7 +834,7 @@ public sealed class ConversationBuilder
             }
             else if (_toolUses.TryGetValue(result.ToolUseId, out var tool) && tool is SubagentItem refused && result.IsError && SubagentMessages.IsRefusal(result.Text))
             {
-                // Claudette's hook didn't let it start (DESIGN.md §5, "Subagents"): not a subagent that failed.
+                // Deventry's hook didn't let it start (DESIGN.md §5, "Subagents"): not a subagent that failed.
                 if (refused.StartedAt is not null)
                 {
                     refused.CompletedAt = Now();
@@ -847,7 +847,7 @@ public sealed class ConversationBuilder
             }
             else if (_toolUses.TryGetValue(result.ToolUseId, out tool))
             {
-                // A thread's message Claudette delivered itself reads as a refusal to Claude Code, but it went
+                // A thread's message Deventry delivered itself reads as a refusal to Claude Code, but it went
                 // (DESIGN.md §18, "Threads").
                 var failed = result.IsError && !(tool.Name == SendMessageCall.ToolName && ThreadMessages.IsDeliveryAnswer(result.Text));
                 if (tool.StartedAt is not null)

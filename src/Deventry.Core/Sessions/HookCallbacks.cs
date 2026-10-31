@@ -33,7 +33,7 @@ public sealed record HookInput(string? EventName, string? ToolName, JsonObject? 
 public delegate Task<JsonObject> HookCallback(HookInput input, CancellationToken cancellationToken);
 
 /// <summary>
-/// A hook Claudette registers through the <c>hooks</c> field of the <c>initialize</c> request, the way the Agent SDKs
+/// A hook Deventry registers through the <c>hooks</c> field of the <c>initialize</c> request, the way the Agent SDKs
 /// register hook callbacks.
 /// </summary>
 /// <param name="Event">The hook event, such as <c>PreToolUse</c>.</param>

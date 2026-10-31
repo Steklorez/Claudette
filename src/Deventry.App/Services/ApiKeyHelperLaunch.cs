@@ -6,9 +6,9 @@ using Deventry.Platform.Credentials;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// Claudette started by Claude Code as an API-key account's <c>apiKeyHelper</c> (DESIGN.md §4, "Accounts"): it prints
+/// Deventry started by Claude Code as an API-key account's <c>apiKeyHelper</c> (DESIGN.md §4, "Accounts"): it prints
 /// the account's key from the OS credential store, and nothing else, and exits. No window, and no hand-off to a running
-/// Claudette: Claude Code reads the key from this process's output.
+/// Deventry: Claude Code reads the key from this process's output.
 /// </summary>
 internal static class ApiKeyHelperLaunch
 {
@@ -24,7 +24,7 @@ internal static class ApiKeyHelperLaunch
             if (string.IsNullOrEmpty(key))
             {
                 // Plain ASCII: the console's code page may not have an arrow.
-                error.WriteLine($"Claudette has no API key for this account in {store.Name}. Enter it again in Claudette's settings, under Accounts.");
+                error.WriteLine($"Deventry has no API key for this account in {store.Name}. Enter it again in Deventry's settings, under Accounts.");
                 return 1;
             }
             output.Write(key);
@@ -33,7 +33,7 @@ internal static class ApiKeyHelperLaunch
         }
         catch (Exception ex) when (ex is CredentialStoreException or IOException or InvalidOperationException)
         {
-            error.WriteLine($"Claudette couldn't read the API key: {ex.Message}");
+            error.WriteLine($"Deventry couldn't read the API key: {ex.Message}");
             return 1;
         }
     }

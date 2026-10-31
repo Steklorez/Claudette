@@ -67,7 +67,7 @@ public sealed record PerforceFileState(
 
     /// <summary>
     /// Reads <c>p4 -ztag fstat</c>'s records. Tolerant: unknown fields are ignored, a record without a local path is
-    /// skipped, and an action Claudette doesn't know counts as <see cref="PerforceFileStatus.Opened"/>.
+    /// skipped, and an action Deventry doesn't know counts as <see cref="PerforceFileStatus.Opened"/>.
     /// </summary>
     public static IReadOnlyList<PerforceFileState> ParseFstat(string ztag)
     {

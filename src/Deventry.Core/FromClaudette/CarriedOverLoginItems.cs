@@ -20,7 +20,7 @@ public sealed class CarriedOverLoginItems(ILoginItems Deventrys, ILoginItems cla
 
     public LoginEntryState ReadEntry() => Deventrys.ReadEntry() is var entry and not LoginEntryState.Missing ? entry : claudettes.ReadEntry();
 
-    public void WriteEntry(ClaudetteCopy copy)
+    public void WriteEntry(DeventryCopy copy)
     {
         Deventrys.WriteEntry(copy);
         claudettes.DeleteEntry();
@@ -32,7 +32,7 @@ public sealed class CarriedOverLoginItems(ILoginItems Deventrys, ILoginItems cla
         claudettes.DeleteEntry();
     }
 
-    public bool Exists(ClaudetteCopy copy) => Deventrys.Exists(copy);
+    public bool Exists(DeventryCopy copy) => Deventrys.Exists(copy);
 
-    public void Start(ClaudetteCopy copy) => Deventrys.Start(copy);
+    public void Start(DeventryCopy copy) => Deventrys.Start(copy);
 }

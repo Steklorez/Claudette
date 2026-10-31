@@ -33,10 +33,10 @@ public class CredentialStoreTests
     [Fact]
     public async Task Secret_tool_gets_the_secret_on_standard_input()
     {
-        var write = SecretTool.WriteAsync(Key, "Claudette: Perforce matt @ ssl:perforce:1666", "s3cret", TestContext.Current.CancellationToken);
+        var write = SecretTool.WriteAsync(Key, "Deventry: Perforce matt @ ssl:perforce:1666", "s3cret", TestContext.Current.CancellationToken);
         var process = await Started(0);
 
-        Assert.Equal(["store", "--label=Claudette: Perforce matt @ ssl:perforce:1666", "application", "deventry", "key", Key], _launcher.Specs[0].Arguments);
+        Assert.Equal(["store", "--label=Deventry: Perforce matt @ ssl:perforce:1666", "application", "deventry", "key", Key], _launcher.Specs[0].Arguments);
         Assert.Equal(["s3cret"], process.Input);
         Assert.DoesNotContain(_launcher.Specs[0].Arguments, a => a.Contains("s3cret", StringComparison.Ordinal));
         process.Exit(0);
@@ -114,8 +114,8 @@ public class CredentialStoreTests
         var key = $"test/{Guid.NewGuid():N}";
         try
         {
-            await store.WriteAsync(key, "Claudette test", "first", TestContext.Current.CancellationToken);
-            await store.WriteAsync(key, "Claudette test", "pässwörd ✓", TestContext.Current.CancellationToken);
+            await store.WriteAsync(key, "Deventry test", "first", TestContext.Current.CancellationToken);
+            await store.WriteAsync(key, "Deventry test", "pässwörd ✓", TestContext.Current.CancellationToken);
 
             Assert.Equal("pässwörd ✓", await store.ReadAsync(key, TestContext.Current.CancellationToken));
         }
@@ -153,8 +153,8 @@ public class CredentialStoreTests
         var key = $"test/{Guid.NewGuid():N}";
         try
         {
-            await store.WriteAsync(key, "Claudette test", "first", TestContext.Current.CancellationToken);
-            await store.WriteAsync(key, "Claudette test", "pässwörd ✓", TestContext.Current.CancellationToken);
+            await store.WriteAsync(key, "Deventry test", "first", TestContext.Current.CancellationToken);
+            await store.WriteAsync(key, "Deventry test", "pässwörd ✓", TestContext.Current.CancellationToken);
 
             Assert.Equal("pässwörd ✓", await store.ReadAsync(key, TestContext.Current.CancellationToken));
         }

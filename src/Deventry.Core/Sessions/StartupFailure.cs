@@ -5,7 +5,7 @@ namespace Deventry.Core.Sessions;
 /// <summary>What the tab can offer for a startup failure, besides saying why (DESIGN.md §4, "Why it couldn't start").</summary>
 public enum StartupFailureFix
 {
-    /// <summary>Nothing Claudette can do here: the explanation says what to change.</summary>
+    /// <summary>Nothing Deventry can do here: the explanation says what to change.</summary>
     None,
 
     /// <summary>The folder is gone or unreadable: choose where it is now, as for a missing folder.</summary>
@@ -15,7 +15,7 @@ public enum StartupFailureFix
 /// <summary>
 /// Why Claude Code refused to start: the <c>startup_failure_reason</c> on the <c>error_during_execution</c> result it
 /// writes before exiting, with <c>CLAUDE_CODE_STARTUP_FAILURE_RESULTS=1</c> (documented), and its <c>errors</c>, the same
-/// text as its error output. A reason Claudette doesn't know is shown by its errors alone.
+/// text as its error output. A reason Deventry doesn't know is shown by its errors alone.
 /// </summary>
 public sealed record StartupFailure(string Reason, string Errors)
 {
@@ -28,7 +28,7 @@ public sealed record StartupFailure(string Reason, string Errors)
             ? new StartupFailure(reason, string.Join('\n', result.Raw.GetStringList("errors")).Trim())
             : null;
 
-    /// <summary>Why it couldn't start, in a sentence or two, with what to do; null for a reason Claudette doesn't know.</summary>
+    /// <summary>Why it couldn't start, in a sentence or two, with what to do; null for a reason Deventry doesn't know.</summary>
     public string? Explanation => Reason switch
     {
         "org_pin_api_key_conflict" => "Your organization's settings require signing in with its account, but an API key, auth token or apiKeyHelper is set. Remove it, then restart the tab.",

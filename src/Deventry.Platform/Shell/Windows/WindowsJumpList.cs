@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.Platform.Shell.Windows;
 
 /// <summary>
-/// The taskbar jump list (DESIGN.md §4): a "Recent folders" category whose items launch Claudette with
-/// <c>--folder &lt;path&gt;</c>, which a running Claudette picks up (<see cref="SingleInstance"/>). Built with
+/// The taskbar jump list (DESIGN.md §4): a "Recent folders" category whose items launch Deventry with
+/// <c>--folder &lt;path&gt;</c>, which a running Deventry picks up (<see cref="SingleInstance"/>). Built with
 /// <c>ICustomDestinationList</c> and shell links.
 /// </summary>
 [SupportedOSPlatform("windows")]

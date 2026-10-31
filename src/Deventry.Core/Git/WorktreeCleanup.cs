@@ -35,7 +35,7 @@ public enum WorktreeVerdict
 public static class WorktreeCleanup
 {
     /// <param name="work">What it holds, or null when git couldn't tell.</param>
-    /// <param name="lastUsed">When a tab last worked in it, or when Claudette first saw it.</param>
+    /// <param name="lastUsed">When a tab last worked in it, or when Deventry first saw it.</param>
     public static WorktreeVerdict Decide(GitWorktree worktree, GitWorktreeWork? work, DateTimeOffset lastUsed, WorktreeCleanupRules rules, DateTimeOffset now)
     {
         if (worktree.IsMain || GitWorktrees.MainCheckoutOf(worktree.Path) is null || work is not { HasChanges: false })

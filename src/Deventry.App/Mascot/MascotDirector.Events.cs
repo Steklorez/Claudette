@@ -1,7 +1,7 @@
 namespace Deventry.App.Mascot;
 
 /// <summary>
-/// Claudette on the composer's reactions to what happens (DESIGN.md §5): a turn finishing or failing, Claude's tasks
+/// Joulene on the composer's reactions to what happens (DESIGN.md §5): a turn finishing or failing, Claude's tasks
 /// all done, every changed file reviewed, a message sent, a file attached, a huge paste, her name typed, being poked,
 /// a file dragged over the composer, being picked up and carried, and a game against the user (DESIGN.md §18).
 /// </summary>
@@ -58,7 +58,7 @@ public sealed partial class MascotDirector
     /// <summary>The user typed her name: she waves back.</summary>
     public void Greeted() => React(MascotAntics.WaveBack);
 
-    // ---- Games with Claudette (DESIGN.md §18) ---------------------------------------------------------------------
+    // ---- Games with Joulene (DESIGN.md §18) ---------------------------------------------------------------------
 
     /// <summary>She thinks about her move in a game: a "?" over her head.</summary>
     public void GameThinking() => React(MascotAntics.Puzzled);

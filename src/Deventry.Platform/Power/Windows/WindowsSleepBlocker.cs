@@ -8,7 +8,7 @@ namespace Deventry.Platform.Power.Windows;
 /// Holds off system sleep with <c>SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)</c>, and lets it happen
 /// again with <c>ES_CONTINUOUS</c> alone (DESIGN.md §9, "Keeping the computer awake"). The display can still turn off. The state
 /// belongs to the thread that set it and ends with it, so a thread of its own sets and clears it and lives until
-/// Claudette closes, rather than a pool thread that could be reused or retired.
+/// Deventry closes, rather than a pool thread that could be reused or retired.
 /// </summary>
 [SupportedOSPlatform("windows")]
 public sealed partial class WindowsSleepBlocker : ISleepBlocker
@@ -26,7 +26,7 @@ public sealed partial class WindowsSleepBlocker : ISleepBlocker
 
     public WindowsSleepBlocker()
     {
-        _thread = new Thread(Run) { IsBackground = true, Name = "Claudette keep awake" };
+        _thread = new Thread(Run) { IsBackground = true, Name = "Deventry keep awake" };
         _thread.Start();
     }
 

@@ -16,7 +16,7 @@ public sealed class EditorLogTests : IDisposable
 {
     private static readonly DateTimeOffset Start = new(2026, 10, 20, 15, 1, 20, TimeSpan.Zero);
 
-    private readonly TempFolder _temp = new("claudette-editorlogs");
+    private readonly TempFolder _temp = new("deventry-editorlogs");
 
     public void Dispose() => _temp.Dispose();
 
@@ -140,7 +140,7 @@ public sealed class EditorLogTests : IDisposable
         Assert.Equal("Unity (batch mode)", batch.Role);
         Assert.Equal([@"D:\Games\Owl\Logs\import.log"], batch.LogFiles);
         Assert.Equal([@"D:\Logs\owl.log"], Unity(@"-projectPath D:\Games\Owl -logFile D:\Logs\owl.log")!.LogFiles);
-        // To standard output, as Claudette's own jobs run it: no file.
+        // To standard output, as Deventry's own jobs run it: no file.
         Assert.Null(Unity(@"-batchmode -projectPath D:\Games\Owl -runTests -logFile -"));
     }
 

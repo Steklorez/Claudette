@@ -1,4 +1,4 @@
-# Everything Claudette relies on from Claude Code (DESIGN.md §16, "The compatibility surface list").
+# Everything Deventry relies on from Claude Code (DESIGN.md §16, "The compatibility surface list").
 #
 # Rule: code that starts using something new from Claude Code adds an entry here in the same change.
 # The daily compatibility check (compat/check.mjs) matches each `id` against new changelog entries and diffs.
@@ -94,7 +94,7 @@ items:
     docs: https://code.claude.com/docs/en/cli-reference
     test: ClaudeEnvironmentTests, MessagingTests, SessionNameRealCliTests
     # DESIGN.md §13, "Session naming": what other sessions message a tab's session by, and claude --resume finds it by.
-    # A session resumed without it goes back to a name Claude Code makes from the folder (claudette-3f), so every start
+    # A session resumed without it goes back to a name Claude Code makes from the folder (deventry-3f), so every start
     # passes it (checked against 2.1.284). It writes custom-title and agent-name entries to the transcript. Claude Code
     # doesn't check a -p session's --name against other sessions' at startup, so two tabs with one name share it.
   - id: "--no-session-persistence"
@@ -196,7 +196,7 @@ items:
     usedIn: src/Deventry.Core/Processes/UserEnvironment.cs, src/Deventry.Platform/LoginShell/LoginShellReader.cs
     docs: https://code.claude.com/docs/en/tools-reference
     test: UserEnvironmentTests, LoginShellTests
-    fallback: Claude Code sources the shell startup file (~/.zshrc, ~/.bashrc or ~/.profile) only for aliases, functions and shell options ("What persists between commands"), so the PATH and variables its Bash commands get are the ones Claudette starts claude with. That is why Claudette gives claude the login shell's environment on macOS and Linux (DESIGN.md §13, "Login shell environment"). If Claude Code starts taking environment variables from the startup file itself, the login shell environment is redundant for the Bash tool but does no harm, and still matters for finding claude, git and p4.
+    fallback: Claude Code sources the shell startup file (~/.zshrc, ~/.bashrc or ~/.profile) only for aliases, functions and shell options ("What persists between commands"), so the PATH and variables its Bash commands get are the ones Deventry starts claude with. That is why Deventry gives claude the login shell's environment on macOS and Linux (DESIGN.md §13, "Login shell environment"). If Claude Code starts taking environment variables from the startup file itself, the login shell environment is redundant for the Bash tool but does no harm, and still matters for finding claude, git and p4.
 
   # --- Output messages ---------------------------------------------------------------------------------
   - id: "system/init"
@@ -302,7 +302,7 @@ items:
     usedIn: src/Deventry.Core/Protocol/MessageParser.cs, src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests
-    fallback: One with an error means Claude Code needs a sign-in (DESIGN.md §11). 2.1.284 only sends it with the hidden --enable-auth-status flag, which Claudette doesn't pass, to report cloud credential helpers such as awsAuthRefresh, so in practice authentication_failed is what arrives.
+    fallback: One with an error means Claude Code needs a sign-in (DESIGN.md §11). 2.1.284 only sends it with the hidden --enable-auth-status flag, which Deventry doesn't pass, to report cloud credential helpers such as awsAuthRefresh, so in practice authentication_failed is what arrives.
   - id: "control_cancel_request"
     kind: message
     status: undocumented
@@ -372,7 +372,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs
     docs: https://code.claude.com/docs/en/interactive-mode
     test: AutoContinueMonitorTests
-    fallback: Claude Code waits for a usage limit to reset and continues the task by itself only in interactive sessions; -p runs like Claudette's don't get the wait, so Claudette does it, with the same prompt ("Continue from where you left off."). If a later Claude Code continues by itself in -p too, the turn it starts ends Claudette's wait, as any turn that starts does, so the task isn't continued twice.
+    fallback: Claude Code waits for a usage limit to reset and continues the task by itself only in interactive sessions; -p runs like Deventry's don't get the wait, so Deventry does it, with the same prompt ("Continue from where you left off."). If a later Claude Code continues by itself in -p too, the turn it starts ends Deventry's wait, as any turn that starts does, so the task isn't continued twice.
   - id: "parent_tool_use_id"
     kind: field
     status: documented
@@ -434,7 +434,7 @@ items:
     usedIn: src/Deventry.Core/Docs/ClaudeDocCall.cs
     docs: https://code.claude.com/docs/en/mcp
     test: ClaudeDocCallTests
-    fallback: Claude Code names a claude.ai connector's tools mcp__claude_ai_<connector>__<tool> (2.1.284 named the Claude Docs connector's mcp__claude_ai_Claude_Docs__batch, __update, __create and so on). Claudette takes a call with that prefix whose input names a container of kind project as a call to the Docs connector (DESIGN.md §5, "Claude Docs"), whatever the connector is called. If the prefix changes, docs go unlisted and their cards show the connector's reply, as before, and Claude's own reply still has the link once; match the new prefix.
+    fallback: Claude Code names a claude.ai connector's tools mcp__claude_ai_<connector>__<tool> (2.1.284 named the Claude Docs connector's mcp__claude_ai_Claude_Docs__batch, __update, __create and so on). Deventry takes a call with that prefix whose input names a container of kind project as a call to the Docs connector (DESIGN.md §5, "Claude Docs"), whatever the connector is called. If the prefix changes, docs go unlisted and their cards show the connector's reply, as before, and Claude's own reply still has the link once; match the new prefix.
   - id: "artifactUrl"
     kind: field
     status: undocumented
@@ -468,7 +468,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/ClaudeTasks.cs, src/Deventry.App/Conversation/TodoListFolder.cs, src/Deventry.App/Conversation/TodoList.cs
     docs: https://code.claude.com/docs/en/interactive-mode#task-list
     test: ClaudeTaskFolderTests, TaskFolderTests, TaskBoardTests
-    fallback: "The docs name the folder (~/.claude/tasks/<name>, in the config folder) but not what's in it. Claude Code 2.1.301 keeps a <number>.json for each task, with the fields of a TaskList result (id, subject, description, activeForm, owner, status, blocks, blockedBy, and metadata, whose _internal marks one of its own), beside its own .lock and .highwatermark, which aren't read. Claudette reads the folder after each answer to a Task tool's call and whenever it changes, and the tab's list becomes it (DESIGN.md §5). Claude Code can also keep tasks elsewhere, behind a storage layer it has, and names an agent team's list for the team: a folder without the newest task Claude made is left alone. Without the folder the list follows the calls: a number means the newest task with it, a number given again means Claude Code started its list over, and a TaskList result is the whole list."
+    fallback: "The docs name the folder (~/.claude/tasks/<name>, in the config folder) but not what's in it. Claude Code 2.1.301 keeps a <number>.json for each task, with the fields of a TaskList result (id, subject, description, activeForm, owner, status, blocks, blockedBy, and metadata, whose _internal marks one of its own), beside its own .lock and .highwatermark, which aren't read. Deventry reads the folder after each answer to a Task tool's call and whenever it changes, and the tab's list becomes it (DESIGN.md §5). Claude Code can also keep tasks elsewhere, behind a storage layer it has, and names an agent team's list for the team: a folder without the newest task Claude made is left alone. Without the folder the list follows the calls: a number means the newest task with it, a number given again means Claude Code started its list over, and a TaskList result is the whole list."
 
   # --- Control requests (wire names come from the Agent SDK sources) -----------------------------------
   - id: "control_request"
@@ -498,7 +498,7 @@ items:
     usedIn: src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: RestartTests, RealCliTests
-    fallback: Set to 1, once, for a tab Claudette's own restart cut off mid-turn; Claude Code re-runs the turn on resume (checked with 2.1.286). Without it the tab resumes idle, as before.
+    fallback: Set to 1, once, for a tab Deventry's own restart cut off mid-turn; Claude Code re-runs the turn on resume (checked with 2.1.286). Without it the tab resumes idle, as before.
   - id: "CLAUDE_CODE_RESUME_INTERRUPTED_TURN_MAX_AGE_MS"
     kind: env
     status: documented
@@ -547,7 +547,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkcontrolinterruptresponse
     test: QueuedMessageTests, RealCliTests
-    fallback: Read with cancelled from the interrupt receipt. Ids Claudette didn't send are ignored, as the SDK says to.
+    fallback: Read with cancelled from the interrupt receipt. Ids Deventry didn't send are ignored, as the SDK says to.
   - id: "ultracode"
     kind: field
     status: documented
@@ -722,7 +722,7 @@ items:
     usedIn: tools/Deventry.MockApi/MockAnthropicApi.cs
     docs: https://code.claude.com/docs/en/tools-reference
     test: RealCliTests
-    fallback: 2.1.308 holds some tools back, ExitPlanMode and SendMessage among them, until the model loads them with ToolSearch; the mock calls ToolSearch with "select:<name>" (the query form the deferred tools' reminder gives, undocumented) before a tool it means to call, as a model does. Claudette itself doesn't depend on which tools are held back. If the query form changes, follow the reminder's.
+    fallback: 2.1.308 holds some tools back, ExitPlanMode and SendMessage among them, until the model loads them with ToolSearch; the mock calls ToolSearch with "select:<name>" (the query form the deferred tools' reminder gives, undocumented) before a tool it means to call, as a model does. Deventry itself doesn't depend on which tools are held back. If the query form changes, follow the reminder's.
   - id: "deferred tools are now available via ToolSearch"
     kind: behavior
     status: undocumented
@@ -785,7 +785,7 @@ items:
     usedIn: src/Deventry.App/Mascot/MascotModel.cs, src/Deventry.App/Conversation/ToolActivity.cs
     docs: https://code.claude.com/docs/en/settings
     test: MascotTabTests, ToolActivityTests
-    fallback: "Read, Grep, Glob, Edit, MultiEdit, Write, NotebookEdit, Bash, PowerShell, BashOutput, Monitor, WebFetch, WebSearch, Agent and Task, by name, for what the working line says and what Claudette on the composer works with. A renamed tool shows as Using <name> and gets her laptop until it's added."
+    fallback: "Read, Grep, Glob, Edit, MultiEdit, Write, NotebookEdit, Bash, PowerShell, BashOutput, Monitor, WebFetch, WebSearch, Agent and Task, by name, for what the working line says and what Joulene on the composer works with. A renamed tool shows as Using <name> and gets her laptop until it's added."
   - id: "--fork-session"
     kind: flag
     status: documented
@@ -814,7 +814,7 @@ items:
     usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs, src/Deventry.App/ViewModels/TabViewModel.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript#sdkmessageorigin
     test: QuickSuffixMessageTests, TabViewModelTests, RealCliTests
-    fallback: Each message Claudette sends has a uuid, kept by the echo, the transcript and user_message_uuid (checked with 2.1.286); a typed one has origin {kind:"human"}. A Claude Code that made its own ids instead would have each echo matched by its text, then by order, as before.
+    fallback: Each message Deventry sends has a uuid, kept by the echo, the transcript and user_message_uuid (checked with 2.1.286); a typed one has origin {kind:"human"}. A Claude Code that made its own ids instead would have each echo matched by its text, then by order, as before.
   - id: "--replay-user-messages"
     kind: flag
     status: documented
@@ -891,7 +891,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.Core/Sessions/ElicitationRequest.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ClaudeSessionTests
-    fallback: If the wire shape changes, follow the TypeScript SDK's SDKControlElicitationRequest. A request Claudette can't show is declined, as the SDKs do without an onElicitation handler.
+    fallback: If the wire shape changes, follow the TypeScript SDK's SDKControlElicitationRequest. A request Deventry can't show is declined, as the SDKs do without an onElicitation handler.
   - id: "elicitation_complete"
     kind: message
     status: documented
@@ -921,7 +921,7 @@ items:
     # A worktree tab's first start (DESIGN.md §4, "Worktree tabs"). With -p, Claude Code makes
     # <repo>/.claude/worktrees/<name> on the branch worktree-<name>, reports it as system/init's cwd, keeps the transcript
     # under the worktree's folder, and leaves the worktree locked when it exits (checked with 2.1.286). Outside a git
-    # repository it exits with an error and no result, so Claudette offers worktree tabs only for folders in one.
+    # repository it exits with an error and no result, so Deventry offers worktree tabs only for folders in one.
   - id: "--add-dir"
     kind: flag
     status: documented
@@ -935,7 +935,7 @@ items:
     usedIn: src/Deventry.Core/Git/GitWorktrees.cs
     docs: https://code.claude.com/docs/en/worktrees
     test: GitWorktreesTests
-    fallback: Where --worktree puts a worktree and its worktree-<name> branch. Claudette names new worktrees so it doesn't reuse one, groups a session found there with its main checkout, and deletes the branch only when it has the worktree- prefix. If the place changes, the tab still follows system/init's cwd; only grouping from History and naming around existing folders are off.
+    fallback: Where --worktree puts a worktree and its worktree-<name> branch. Deventry names new worktrees so it doesn't reuse one, groups a session found there with its main checkout, and deletes the branch only when it has the worktree- prefix. If the place changes, the tab still follows system/init's cwd; only grouping from History and naming around existing folders are off.
   - id: "set_model"
     kind: control
     status: undocumented
@@ -978,7 +978,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/ContextUsage.cs, src/Deventry.App/ViewModels/ContextBreakdown.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: ContextUsageTests, ContextBreakdownTests
-    fallback: "Each row's kind (used, free, buffer, deferred) says where it goes; an unknown kind is listed without a share of the window. Without a kind (before Agent SDK 0.3.268), isDeferred and the names Free space and Autocompact buffer are used. The bar's colors and order go by the display name; a name Claudette doesn't know gets the Other color, after Messages."
+    fallback: "Each row's kind (used, free, buffer, deferred) says where it goes; an unknown kind is listed without a share of the window. Without a kind (before Agent SDK 0.3.268), isDeferred and the names Free space and Autocompact buffer are used. The bar's colors and order go by the display name; a name Deventry doesn't know gets the Other color, after Messages."
   - id: "memoryFiles"
     kind: field
     status: documented
@@ -1022,7 +1022,7 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/Sessions/UtilitySession.cs, src/Deventry.App/ViewModels/SignInViewModel.cs
     test: FakeClaudeSignInTests, AccountAndSignInTests (against fakes; no real sign-in has completed through it yet)
-    fallback: claude auth login (documented), which Claudette runs whenever claude_authenticate is rejected or gives no address, with the pasted code written to its input (DESIGN.md §11).
+    fallback: claude auth login (documented), which Deventry runs whenever claude_authenticate is rejected or gives no address, with the pasted code written to its input (DESIGN.md §11).
   - id: "claude_oauth_wait_for_completion"
     kind: control
     status: undocumented
@@ -1046,7 +1046,7 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/Sessions/ClaudeSession.cs, src/Deventry.App/ViewModels/TabViewModel.Messaging.cs
     test: RealCliTests, MessagingTests, SessionNameRealCliTests
-    fallback: "Names a running tab's session after the tab when its name changes, while Settings → General → Name each tab's session in Claude Code after the tab is on (DESIGN.md §13). In 2.1.284 it changes the name other sessions message it by at once, gives a name another session has a variant (Art page-joyful-stearns), and writes custom-title and agent-name entries. If it failed, the tab keeps its name in Claudette, and its session takes it with --name at its next start."
+    fallback: "Names a running tab's session after the tab when its name changes, while Settings → General → Name each tab's session in Claude Code after the tab is on (DESIGN.md §13). In 2.1.284 it changes the name other sessions message it by at once, gives a name another session has a variant (Art page-joyful-stearns), and writes custom-title and agent-name entries. If it failed, the tab keeps its name in Deventry, and its session takes it with --name at its next start."
 
   # --- Composer: slash commands, @ mentions and attachments (DESIGN.md §5) --------------------------------
   - id: "slash_commands"
@@ -1096,7 +1096,7 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/Composer/Attachment.cs
     test: RealCliTests
-    fallback: 2.1.284 caps the long edge at 2000 px and re-encodes large images as JPEG (a 12 MB or 20 MB PNG reaches the API under 5 MB base64), so Claudette sends images as they are, up to 20 MB. If that stops, scale images down in Claudette before sending (at most 2000 px on the long edge and 5 MB base64, the Bedrock and Vertex limit).
+    fallback: 2.1.284 caps the long edge at 2000 px and re-encodes large images as JPEG (a 12 MB or 20 MB PNG reaches the API under 5 MB base64), so Deventry sends images as they are, up to 20 MB. If that stops, scale images down in Deventry before sending (at most 2000 px on the long edge and 5 MB base64, the Bedrock and Vertex limit).
   - id: "@path mentions in prompts"
     kind: behavior
     status: documented
@@ -1114,13 +1114,13 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs
     test: RealCliTests
-    fallback: Claudette puts the text after the images. If mentions next to images stop being read, send the images first in a user message with shouldQuery false (documented; Claude Code holds it and merges it into the next message, checked against 2.1.284), then the text as a plain-text message.
+    fallback: Deventry puts the text after the images. If mentions next to images stop being read, send the images first in a user message with shouldQuery false (documented; Claude Code holds it and merges it into the next message, checked against 2.1.284), then the text as a plain-text message.
   - id: "a slash command is read from the last content block, with the blocks before it passed to its prompt"
     kind: behavior
     status: undocumented
     usedIn: src/Deventry.Core/Protocol/OutgoingMessages.cs, src/Deventry.Core/Transcripts/TranscriptPrompts.cs
     test: RealCliTests, QuickSuffixMessageTests, TranscriptReaderTests
-    fallback: Claudette sends a command's quick suffixes in a text block before it, because Claude Code takes everything after the command's name as its arguments. A local command such as /compact records those blocks ahead of its <command-name> echo, which the transcript readers skip. If the blocks stop reaching the command's prompt, append the suffixes to the command after a blank line again (they then arrive as its arguments) and say so in §5.
+    fallback: Deventry sends a command's quick suffixes in a text block before it, because Claude Code takes everything after the command's name as its arguments. A local command such as /compact records those blocks ahead of its <command-name> echo, which the transcript readers skip. If the blocks stop reaching the command's prompt, append the suffixes to the command after a blank line again (they then arrive as its arguments) and say so in §5.
   - id: "image blocks in transcript user entries"
     kind: file
     status: undocumented
@@ -1133,7 +1133,7 @@ items:
     usedIn: src/Deventry.Core/Protocol/ContentBlocks.cs, src/Deventry.Core/Protocol/MessageImage.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/mcp
     test: ToolImagesTests, ToolImageTests, ToolImageRealCliTests
-    fallback: "A tool_result's content can hold base64 image blocks, as the Messages API's do: a Read of an image, a PDF's pages read with pages, a notebook's figures, Bash output that's an image, an MCP tool's image (checked against 2.1.299, live and in transcripts). Claudette shows them under the tool's card (DESIGN.md §18, \"Images from Claude's tools\"). Non-base64 sources are skipped. If images move elsewhere, the cards show only the text, as before."
+    fallback: "A tool_result's content can hold base64 image blocks, as the Messages API's do: a Read of an image, a PDF's pages read with pages, a notebook's figures, Bash output that's an image, an MCP tool's image (checked against 2.1.299, live and in transcripts). Deventry shows them under the tool's card (DESIGN.md §18, \"Images from Claude's tools\"). Non-base64 sources are skipped. If images move elsewhere, the cards show only the text, as before."
   - id: "FileReadOutput"
     kind: field
     status: documented
@@ -1201,7 +1201,7 @@ items:
     status: undocumented
     usedIn: src/Deventry.App/ViewModels/TabViewModel.Composer.cs
     test: RealCliTests
-    fallback: The docs say only "after each turn"; 2.1.284 sends it straight after the result, none after a conversation's first turn, also with nonessential traffic off, and none when promptSuggestionEnabled is false or CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false. Claudette shows one only while the session is idle, so one that came before the result would be dropped. If that happens, keep the newest suggestion from the turn and show it when the turn ends.
+    fallback: The docs say only "after each turn"; 2.1.284 sends it straight after the result, none after a conversation's first turn, also with nonessential traffic off, and none when promptSuggestionEnabled is false or CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false. Deventry shows one only while the session is idle, so one that came before the result would be dropped. If that happens, keep the newest suggestion from the turn and show it when the turn ends.
 
   # --- Transcripts (read when restoring a tab) ----------------------------------------------------------
   - id: "cost-state"
@@ -1210,13 +1210,13 @@ items:
     usedIn: src/Deventry.Core/Transcripts/CostState.cs, src/Deventry.App/ViewModels/TabViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/cost-tracking
     test: ProcessUsageTests, RealCliTests
-    fallback: The docs say Claude Code saves a session's totals to its transcript when a process exits normally and starts a resumed or forked session from them (since 2.1.277); 2.1.284 writes {"type":"cost-state","modelUsage":{…}} lines. Claudette takes the latest one the first result could have grown from as the turn's baseline. Without one, or if the format changes, the baseline is empty and a resumed tab's first turn counts what Claude Code restored too, once.
+    fallback: The docs say Claude Code saves a session's totals to its transcript when a process exits normally and starts a resumed or forked session from them (since 2.1.277); 2.1.284 writes {"type":"cost-state","modelUsage":{…}} lines. Deventry takes the latest one the first result could have grown from as the turn's baseline. Without one, or if the format changes, the baseline is empty and a resumed tab's first turn counts what Claude Code restored too, once.
   - id: "ai-title"
     kind: file
     status: undocumented
     usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/History/HistoryIndex.cs
     test: TranscriptReaderTests, HistoryIndexTests
-    fallback: The format is internal to Claude Code. Without titles, a restored tab keeps the name Claudette saved, and History shows the first prompt.
+    fallback: The format is internal to Claude Code. Without titles, a restored tab keeps the name Deventry saved, and History shows the first prompt.
   - id: "custom-title"
     kind: file
     status: undocumented
@@ -1234,25 +1234,25 @@ items:
     status: undocumented
     usedIn: src/Deventry.App/ViewModels/ChangedFilesViewModel.cs, src/Deventry.Core/Diffs/ChangedFiles.cs
     test: ProtocolRecordingTests, RealCliTests, ChangedFilesTests
-    fallback: "A subagent's Edit and Write come without tool_use_result, live and in its transcript (2.1.302, 2.1.308), and its file_path can be relative to its own folder, so Claudette's PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit reads the file before the call runs, for calls with agent_id (DESIGN.md §8, \"Subagents' changes\"). The hook input's tool_input has the real path. If results start carrying originalFile, it's used and the hook's read is ignored; if the hook stops being called for subagents, their files have an unknown \"before\" again."
+    fallback: "A subagent's Edit and Write come without tool_use_result, live and in its transcript (2.1.302, 2.1.308), and its file_path can be relative to its own folder, so Deventry's PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit reads the file before the call runs, for calls with agent_id (DESIGN.md §8, \"Subagents' changes\"). The hook input's tool_input has the real path. If results start carrying originalFile, it's used and the hook's read is ignored; if the hook stops being called for subagents, their files have an unknown \"before\" again."
   - id: "originalFile over 10,000 characters is null in transcripts"
     kind: behavior
     status: undocumented
     usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.Core/Diffs/BeforeContentStore.cs
     test: RealCliTests, BeforeContentStoreTests, ToolWindowsTests
-    fallback: "In 2.1.284 the live tool_use_result carries the whole originalFile, but the transcript's toolUseResult has null when it's over 10,000 characters (DESIGN.md §8, \"Large files in transcripts\"). Claudette saves the first change's originalFile when it's over BeforeContentStore.TranscriptLimit and reads it back on replay. If the limit drops, files between the new limit and 10,000 characters replay with an unknown \"before\" (modified, without counts) until TranscriptLimit follows it. If transcripts keep it whole again, nothing breaks."
+    fallback: "In 2.1.284 the live tool_use_result carries the whole originalFile, but the transcript's toolUseResult has null when it's over 10,000 characters (DESIGN.md §8, \"Large files in transcripts\"). Deventry saves the first change's originalFile when it's over BeforeContentStore.TranscriptLimit and reads it back on replay. If the limit drops, files between the new limit and 10,000 characters replay with an unknown \"before\" (modified, without counts) until TranscriptLimit follows it. If transcripts keep it whole again, nothing breaks."
   - id: "line endings"
     kind: behavior
     status: undocumented
     usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.Core/Diffs/HiddenChanges.cs, src/Deventry.App/ViewModels/ChangedFilesViewModel.cs
     test: RealCliTests, ChangedFilesTests, ChangedFilesTrackingTests
-    fallback: "In 2.1.302 a Write writes its content as the model gave it, with \\n, so a file with Windows line endings becomes Unix; an Edit keeps CRLF and makes mixed line endings CRLF; and originalFile comes with \\n for a CRLF file (DESIGN.md §8, \"What the lines don't show\"). So Claudette's PreToolUse hook on the file tools reads a file's line endings before each of the session's own calls, and Changed files says when they changed. If Write starts keeping a file's line endings, nothing breaks: there's just nothing to tell. If originalFile starts keeping CRLF, the hook's read still decides, and comparing lines ignores line endings either way."
+    fallback: "In 2.1.302 a Write writes its content as the model gave it, with \\n, so a file with Windows line endings becomes Unix; an Edit keeps CRLF and makes mixed line endings CRLF; and originalFile comes with \\n for a CRLF file (DESIGN.md §8, \"What the lines don't show\"). So Deventry's PreToolUse hook on the file tools reads a file's line endings before each of the session's own calls, and Changed files says when they changed. If Write starts keeping a file's line endings, nothing breaks: there's just nothing to tell. If originalFile starts keeping CRLF, the hook's read still decides, and comparing lines ignores line endings either way."
   - id: "BOM"
     kind: behavior
     status: undocumented
     usedIn: src/Deventry.Core/Diffs/TextFiles.cs, src/Deventry.Core/Diffs/FileAfter.cs, src/Deventry.Core/Diffs/HiddenChanges.cs
     test: RealCliTests, ChangedFilesTests, FileAfterTests
-    fallback: "In 2.1.302 originalFile keeps a file's byte order mark as a leading \\uFEFF, Edit and Write keep the mark on disk, and a Write's result content starts with it though its input's doesn't. Claudette reads files the same way, so they compare alike, and takes a Write's result content when it's the input's with the mark. If Claude Code dropped the mark from originalFile, Changed files would say the mark was added; lines are compared without it, so no line would show as changed."
+    fallback: "In 2.1.302 originalFile keeps a file's byte order mark as a leading \\uFEFF, Edit and Write keep the mark on disk, and a Write's result content starts with it though its input's doesn't. Deventry reads files the same way, so they compare alike, and takes a Write's result content when it's the input's with the mark. If Claude Code dropped the mark from originalFile, Changed files would say the mark was added; lines are compared without it, so no line would show as changed."
   - id: "uuid and parentUuid"
     kind: file
     status: undocumented
@@ -1279,7 +1279,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/LiveSessions.cs, src/Deventry.App/Services/LiveSessionsService.cs, src/Deventry.App/ViewModels/TabViewModel.Messaging.cs
     docs: https://code.claude.com/docs/en/cross-session-messaging
     test: LiveSessionsTests, MessagingTests, SessionNameRealCliTests
-    fallback: "Claude Code keeps an entry for each running session in its config folder's sessions/<pid>.json, which /list-agents reads too (checked against 2.1.284). Claudette reads pid, sessionId, name, nameSource (derived for a name Claude Code made up), cwd and status, for the info card's Reached as row, the other sessions the composer's @ lists, and the session IDs a message names (DESIGN.md §13, §5). The folder's .key files are messaging keys and are never read. Without it, the info card has no Reached as row, and the @ list has Claudette's own tabs (by the name each tab's session was given) and the tab's subagents; Claude can still find other sessions with ListAgents."
+    fallback: "Claude Code keeps an entry for each running session in its config folder's sessions/<pid>.json, which /list-agents reads too (checked against 2.1.284). Deventry reads pid, sessionId, name, nameSource (derived for a name Claude Code made up), cwd and status, for the info card's Reached as row, the other sessions the composer's @ lists, and the session IDs a message names (DESIGN.md §13, §5). The folder's .key files are messaging keys and are never read. Without it, the info card has no Reached as row, and the @ list has Deventry's own tabs (by the name each tab's session was given) and the tab's subagents; Claude can still find other sessions with ListAgents."
   - id: "settings.local.json"
     kind: file
     status: documented
@@ -1374,7 +1374,7 @@ items:
     usedIn: src/Deventry.Core/Library/LibraryFiles.cs, src/Deventry.App/Services/LibraryService.cs, src/Deventry.App/ViewModels/TabViewModel.Library.cs
     docs: https://code.claude.com/docs/en/sessions
     test: RealCliTests
-    fallback: Claudette tells another machine's turns in the library from this machine's by whether one transcript is the start of the other (DESIGN.md §9, "One machine at a time"). If Claude Code wrote a resumed transcript again rather than adding to it, compare the transcripts by their lines' uuids instead of their bytes, or every copy after resuming would look like a session that went on in two places.
+    fallback: Deventry tells another machine's turns in the library from this machine's by whether one transcript is the start of the other (DESIGN.md §9, "One machine at a time"). If Claude Code wrote a resumed transcript again rather than adding to it, compare the transcripts by their lines' uuids instead of their bytes, or every copy after resuming would look like a session that went on in two places.
   - id: "HEAD /api/hello"
     kind: behavior
     status: undocumented
@@ -1407,13 +1407,13 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs
     test: SignInTests, FakeClaudeSignInTests
-    fallback: What claude auth login prints with no terminal attached (2.1.284), followed by the address of the page that shows a code. Claudette takes the first http(s) address in any line of its output, with terminal escape codes removed, so the wording can change. Without one, the command still opens the browser itself and can finish on its own; only Open browser again and Enter a code instead have no page to open.
+    fallback: What claude auth login prints with no terminal attached (2.1.284), followed by the address of the page that shows a code. Deventry takes the first http(s) address in any line of its output, with terminal escape codes removed, so the wording can change. Without one, the command still opens the browser itself and can finish on its own; only Open browser again and Enter a code instead have no page to open.
   - id: "Paste code here if prompted >"
     kind: behavior
     status: undocumented
     usedIn: src/Deventry.Core/Auth/ClaudeLogin.cs
     test: SignInTests, FakeClaudeSignInTests
-    fallback: claude auth login reads the code from its input, one line of code#state that 2.1.284 splits on "#". Claudette writes the code as pasted, trimmed. If the command stops reading its input, the code field can't finish a sign-in, but the browser's automatic redirect still can.
+    fallback: claude auth login reads the code from its input, one line of code#state that 2.1.284 splits on "#". Deventry writes the code as pasted, trimmed. If the command stops reading its input, the code field can't finish a sign-in, but the browser's automatic redirect still can.
   - id: "loginWithClaudeAi"
     kind: field
     status: undocumented
@@ -1467,7 +1467,7 @@ items:
     usedIn: src/Deventry.Core/Accounts/ApiKeyHelper.cs, src/Deventry.App/Services/ApiKeyHelperLaunch.cs
     docs: https://code.claude.com/docs/en/settings-reference
     test: RealCliTests, AccountsTests
-    # An API-key account's tab passes {"apiKeyHelper": "\"<Claudette>\" --api-key-helper <id>"} with --settings. Claude
+    # An API-key account's tab passes {"apiKeyHelper": "\"<Deventry>\" --api-key-helper <id>"} with --settings. Claude
     # Code runs it through a shell, reads the key from its output, caches it for five minutes
     # (CLAUDE_CODE_API_KEY_HELPER_TTL_MS) and runs it again after a 401 or 403.
   - id: "apiKeyHelper outranks a claude.ai sign-in"
@@ -1737,14 +1737,14 @@ items:
     usedIn: src/Deventry.Core/Sessions/PromptCache.cs
     docs: https://code.claude.com/docs/en/env-vars
     test: PromptCacheTests
-    fallback: "ENABLE_PROMPT_CACHING_1H's entry: a subscription's main conversation gets an hour while it's within included usage, and every other request, an API key's or a cloud provider's, five minutes. Claudette can't tell whether a subscription is drawing on usage credits, so its tooltip says usually; it's the last resort, after the configuration and a turn's writes, which show the hour or the five minutes the session really got."
+    fallback: "ENABLE_PROMPT_CACHING_1H's entry: a subscription's main conversation gets an hour while it's within included usage, and every other request, an API key's or a cloud provider's, five minutes. Deventry can't tell whether a subscription is drawing on usage credits, so its tooltip says usually; it's the last resort, after the configuration and a turn's writes, which show the hour or the five minutes the session really got."
   - id: "prompt_cache_likely_expired"
     kind: behavior
     status: documented
     usedIn: src/Deventry.Core/Sessions/PromptCache.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs
     docs: https://code.claude.com/docs/en/hooks
     test: PromptCacheTests
-    fallback: "Not read: Claudette follows the rule this hook field states, that the cache is likely gone once the last response is older than the session's lifetime or a compaction replaced the conversation. So the countdown starts again at each main-agent assistant message and at the result of a turn that made a request; subagents have caches of their own (the sub-agents page), so their messages don't count. A compact_boundary or conversation_reset forgets it, as does switching the model (each model has its own cache, the settings page says) or the account."
+    fallback: "Not read: Deventry follows the rule this hook field states, that the cache is likely gone once the last response is older than the session's lifetime or a compaction replaced the conversation. So the countdown starts again at each main-agent assistant message and at the result of a turn that made a request; subagents have caches of their own (the sub-agents page), so their messages don't count. A compact_boundary or conversation_reset forgets it, as does switching the model (each model has its own cache, the settings page says) or the account."
 
   # --- History and the session library (DESIGN.md §9) --------------------------------------------------
   - id: "isMeta"
@@ -1783,7 +1783,7 @@ items:
     usedIn: src/Deventry.Core/History/HistoryIndex.cs, src/Deventry.Core/Transcripts/TranscriptReader.cs
     docs: https://code.claude.com/docs/en/sessions
     test: HistoryIndexTests
-    fallback: History lists only Claudette's saved tabs and the session library; resuming by session id still works.
+    fallback: History lists only Deventry's saved tabs and the session library; resuming by session id still works.
   - id: "<session-id>/subagents/*.jsonl"
     kind: file
     status: undocumented
@@ -1910,7 +1910,7 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/Transcripts/TranscriptPrompts.cs
     test: TranscriptReaderTests
-    fallback: How a transcript records a background task ending, with <task-id>, <tool-use-id>, <status>, <result> and <usage>. When the model was idle it's a user turn; when it was mid-turn, an entry of type "attachment" whose attachment has type "queued_command" and the notification as its prompt (commandMode "task-notification"; checked against 2.1.284 and 2.1.302). A subagent's report may come separately, as a peer message (<result> then only points to it), which Claudette doesn't need because it reads the subagent's own transcript. If either form changes, a restored tab shows a background subagent as "Didn't finish", and the user-turn form shows as a user message; the entry's origin.kind "task-notification" (documented on SDKUserMessage) still marks it.
+    fallback: How a transcript records a background task ending, with <task-id>, <tool-use-id>, <status>, <result> and <usage>. When the model was idle it's a user turn; when it was mid-turn, an entry of type "attachment" whose attachment has type "queued_command" and the notification as its prompt (commandMode "task-notification"; checked against 2.1.284 and 2.1.302). A subagent's report may come separately, as a peer message (<result> then only points to it), which Deventry doesn't need because it reads the subagent's own transcript. If either form changes, a restored tab shows a background subagent as "Didn't finish", and the user-turn form shows as a user message; the entry's origin.kind "task-notification" (documented on SDKUserMessage) still marks it.
   - id: "agent-<id>.meta.json"
     kind: file
     status: undocumented
@@ -2204,14 +2204,14 @@ items:
     docs: https://code.claude.com/docs/en/setup
     test: none yet (the known locations are in the real home folder)
     # The native installer's launcher, %USERPROFILE%\.local\bin\claude.exe on Windows. Looked in after PATH, so Claude
-    # Code installed from the setup screen is found although Claudette's PATH is from before the install.
+    # Code installed from the setup screen is found although Deventry's PATH is from before the install.
   - id: "claude-desktop"
     kind: command
     status: undocumented
     usedIn: src/Deventry.Core/Installation/ClaudeDesktop.cs
     docs: https://code.claude.com/docs/en/desktop-linux
     test: ClaudeDesktopTests
-    fallback: "The Claude desktop app's command: documented on Linux; on Windows its app execution alias (claude-desktop.exe, seen with 3.6556.2). Only tells Claudette the app is installed. Without it, Windows still sees the app's package folder, and the setup screen at worst leaves out its note about the desktop app."
+    fallback: "The Claude desktop app's command: documented on Linux; on Windows its app execution alias (claude-desktop.exe, seen with 3.6556.2). Only tells Deventry the app is installed. Without it, Windows still sees the app's package folder, and the setup screen at worst leaves out its note about the desktop app."
   - id: "Claude_pzs8sxrjxfjjc"
     kind: file
     status: undocumented
@@ -2333,7 +2333,7 @@ items:
     usedIn: src/Deventry.Core/Sessions/HookCallbacks.cs, src/Deventry.App/ViewModels/TabViewModel.Thread.cs
     docs: https://code.claude.com/docs/en/hooks
     test: ThreadTests, ThreadRealCliTests
-    fallback: "A PreToolUse hook's hookSpecificOutput {hookEventName, permissionDecision: deny, permissionDecisionReason}: the tool doesn't run, Claude gets the reason as the tool's error result, and the turn's result lists the call in permission_denials (checked against 2.1.284). Threads deny SendMessage once Claudette has delivered the message itself."
+    fallback: "A PreToolUse hook's hookSpecificOutput {hookEventName, permissionDecision: deny, permissionDecisionReason}: the tool doesn't run, Claude gets the reason as the tool's error result, and the turn's result lists the call in permission_denials (checked against 2.1.284). Threads deny SendMessage once Deventry has delivered the message itself."
   - id: "PreToolUse hook waits past 60 seconds with a longer timeout"
     kind: behavior
     status: documented
@@ -2347,7 +2347,7 @@ items:
     usedIn: src/Deventry.Core/Protocol/MessageOrigin.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/cross-session-messaging
     test: ThreadTests
-    fallback: "A message another of the user's sessions sent a tab echoes (with --replay-user-messages) as a user message with origin {kind: peer, name, body, from, msg_id, fromMode}, and is kept in the transcript as an isMeta entry with the same origin (checked against 2.1.284). The tab shows it as its own card, from body and name. Without the origin, the echo would be taken for a waiting prompt's, as an echo with an id Claudette didn't send is."
+    fallback: "A message another of the user's sessions sent a tab echoes (with --replay-user-messages) as a user message with origin {kind: peer, name, body, from, msg_id, fromMode}, and is kept in the transcript as an isMeta entry with the same origin (checked against 2.1.284). The tab shows it as its own card, from body and name. Without the origin, the echo would be taken for a waiting prompt's, as an echo with an id Deventry didn't send is."
 
   # --- Subagents: discouraging or refusing them (DESIGN.md §5, "Subagents") ------------------------------
   - id: "PreToolUse hook on Edit|Write|MultiEdit|NotebookEdit before the file is written"
@@ -2414,14 +2414,14 @@ items:
     status: undocumented
     usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     test: RemoteControlProtocolTests, RemoteControlTests, RealCliTests
-    fallback: "system/bridge_state with state (ready, connected, reconnecting, failed, policy_disabled), detail and failure_kind: the connection's progress after remote_control. A state Claudette doesn't know is Unknown and changes nothing. Without the message the tab keeps what the answer to remote_control said until the session ends."
+    fallback: "system/bridge_state with state (ready, connected, reconnecting, failed, policy_disabled), detail and failure_kind: the connection's progress after remote_control. A state Deventry doesn't know is Unknown and changes nothing. Without the message the tab keeps what the answer to remote_control said until the session ends."
   - id: "worker_shutting_down"
     kind: message
     status: documented
     usedIn: src/Deventry.Core/RemoteControl/RemoteControlProtocol.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RemoteControlProtocolTests, RemoteControlTests
-    fallback: A connected tab reads Not connected, with the reason. One arriving while the tab isn't connected (replayed from a resumed session) is ignored. The reason remote_control_disabled (2.1.286, when a policy turns Remote Control off) makes it not available in every tab until Claudette restarts or another account signs in, unless the tab was disconnecting itself. An unknown reason is shown in words.
+    fallback: A connected tab reads Not connected, with the reason. One arriving while the tab isn't connected (replayed from a resumed session) is ignored. The reason remote_control_disabled (2.1.286, when a policy turns Remote Control off) makes it not available in every tab until Deventry restarts or another account signs in, unless the tab was disconnecting itself. An unknown reason is shown in words.
   - id: "/remote-control"
     kind: command
     status: undocumented
@@ -2446,7 +2446,7 @@ items:
     status: undocumented
     usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.App/Conversation/PendingPrompts.cs, src/Deventry.App/ViewModels/RemoteControlViewModel.cs
     test: RemoteControlTests
-    fallback: When a connected device answers a permission prompt, question or plan, 2.1.284 withdraws the host's copy with control_cancel_request (from its injectControlResponse). The card closes and reads "Answered in the Claude app" while the tab is connected and Claudette didn't stop the turn. Without it the card stays open until the turn moves on, as for any withdrawn request.
+    fallback: When a connected device answers a permission prompt, question or plan, 2.1.284 withdraws the host's copy with control_cancel_request (from its injectControlResponse). The card closes and reads "Answered in the Claude app" while the tab is connected and Deventry didn't stop the turn. Without it the card stays open until the turn moves on, as for any withdrawn request.
   - id: "CLAUDE_CLIENT_PRESENCE_FILE"
     kind: env
     status: documented
@@ -2459,7 +2459,7 @@ items:
     usedIn: src/Deventry.App/Views/SettingsWindow.axaml
     docs: https://code.claude.com/docs/en/settings-reference
     test: RemoteControlUiTests
-    fallback: Claudette only names it ("Push when actions required" in /config) and links to the docs; it never writes Claude Code's settings.
+    fallback: Deventry only names it ("Push when actions required" in /config) and links to the docs; it never writes Claude Code's settings.
   - id: "agentPushNotifEnabled"
     kind: field
     status: documented

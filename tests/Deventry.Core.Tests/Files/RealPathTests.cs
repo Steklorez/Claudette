@@ -6,7 +6,7 @@ namespace Deventry.Core.Tests.Files;
 /// <summary>Paths through symbolic links name the folder itself, as git does (DESIGN.md §4, "Cleaning up worktrees").</summary>
 public sealed class RealPathTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-realpath");
+    private readonly TempFolder _temp = new("deventry-realpath");
 
     public void Dispose() => _temp.Dispose();
 

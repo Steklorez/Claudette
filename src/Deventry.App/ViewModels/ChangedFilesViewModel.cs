@@ -270,7 +270,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
 
     /// <summary>
     /// Something other than this tab's Claude may have changed the files: a turn ended (its commands, a commit),
-    /// Claudette came back to the front (the user's own edits), a watched folder changed, or another tab's Claude
+    /// Deventry came back to the front (the user's own edits), a watched folder changed, or another tab's Claude
     /// changed a file listed here. The rows look at the disk again, or git again; a tab in the background does once
     /// it's shown.
     /// </summary>
@@ -468,7 +468,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// <summary>
     /// The diff window's <b>Open</b>, as Settings → Files and diffs → <b>Open in the diff window</b> says (DESIGN.md §8): the file
     /// as <b>Open files in</b> says, the file in the OS's app, or the changes in the diff tool when there's one for them.
-    /// True when the file opened in Claudette's window, which the diff window stays over.
+    /// True when the file opened in Deventry's window, which the diff window stays over.
     /// </summary>
     private async Task<bool> OpenFromDiffAsync(ChangedFileRow row, Func<Task>? inDiffTool)
     {
@@ -481,7 +481,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 await inDiffTool();
                 return false;
             default:
-                return !row.IsMissing && await _host.OpenPathAsync(row.Path) == OpenedPath.InClaudette;
+                return !row.IsMissing && await _host.OpenPathAsync(row.Path) == OpenedPath.InDeventry;
         }
     }
 

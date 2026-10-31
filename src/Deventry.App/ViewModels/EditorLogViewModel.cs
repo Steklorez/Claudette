@@ -107,7 +107,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     [NotifyPropertyChangedFor(nameof(Detail), nameof(Status), nameof(Tip))]
     public partial string Role { get; private set; } = "";
 
-    /// <summary>When its process started, or when Claudette first saw it, if that can't be read.</summary>
+    /// <summary>When its process started, or when Deventry first saw it, if that can't be read.</summary>
     public DateTimeOffset Started { get; private set; }
 
     /// <summary>When its process was seen to have ended; null while it runs.</summary>
@@ -130,7 +130,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     /// <summary>The processes writing it, or that wrote it until they moved to another file.</summary>
     internal IReadOnlyList<LogWriterProcess> Writers => _writers;
 
-    /// <summary>The error lines in its log, those Claudette no longer keeps included.</summary>
+    /// <summary>The error lines in its log, those Deventry no longer keeps included.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Detail), nameof(Counts))]
     public partial int Errors { get; private set; }
@@ -370,7 +370,7 @@ public sealed partial class EditorLogViewModel : LogTabViewModel
     [RelayCommand]
     private void Close() => _host.DismissLog(this);
 
-    /// <summary><b>Open file</b>: the log in Claudette's editor or the OS's app, as Settings → Files and diffs says.</summary>
+    /// <summary><b>Open file</b>: the log in Deventry's editor or the OS's app, as Settings → Files and diffs says.</summary>
     [RelayCommand]
     private async Task OpenFileAsync()
     {

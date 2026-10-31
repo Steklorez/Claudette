@@ -18,7 +18,7 @@ namespace Deventry.App.Views.Editor;
 
 /// <summary>
 /// An open file's editor (DESIGN.md §18, "Project files", "The editor"): AvaloniaEdit showing the file's document, with
-/// Claudette's TextMate coloring, the gutter's change bars and the peek, the current line, folding by indentation, Go to
+/// Deventry's TextMate coloring, the gutter's change bars and the peek, the current line, folding by indentation, Go to
 /// line and find, and the cursor and scroll kept in the file's view model.
 /// </summary>
 public partial class CodeEditor : UserControl

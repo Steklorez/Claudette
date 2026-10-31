@@ -3,7 +3,7 @@ using System.Globalization;
 namespace Deventry.Core.Updates;
 
 /// <summary>
-/// A Claudette version as releases are tagged (DESIGN.md §2, "Updating Claudette"): <c>1.2.3</c>, or a pre-release
+/// A Deventry version as releases are tagged (DESIGN.md §2, "Updating Deventry"): <c>1.2.3</c>, or a pre-release
 /// such as <c>1.2.3-beta.2</c>, compared the way Semantic Versioning orders them. A leading <c>v</c> and build metadata
 /// (<c>+abc123</c>, which .NET adds to the informational version) are ignored.
 /// </summary>

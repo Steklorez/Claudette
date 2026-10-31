@@ -11,7 +11,7 @@ namespace Deventry.Core.Tests.Development;
 /// </summary>
 public sealed class SourceCheckoutTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), $"claudette-checkout-{Guid.NewGuid():N}");
+    private readonly string _root = Path.Combine(Path.GetTempPath(), $"deventry-checkout-{Guid.NewGuid():N}");
     private readonly string _upstream;
     private readonly string _author;
     private readonly string _checkout;
@@ -44,7 +44,7 @@ public sealed class SourceCheckoutTests : IDisposable
     {
         await _launcher.RunAsync(_root, "init", "-q", "--bare", "--initial-branch=main", _upstream);
         await _launcher.RunAsync(_root, "clone", "-q", _upstream, _author);
-        await File.WriteAllTextAsync(Path.Combine(_author, "README.md"), "Claudette\n", Token);
+        await File.WriteAllTextAsync(Path.Combine(_author, "README.md"), "Deventry\n", Token);
         await _launcher.RunAsync(_author, "add", "README.md");
         await CommitAsync(_author, "First");
         await _launcher.RunAsync(_author, "push", "-q", "origin", "HEAD:main");
@@ -198,7 +198,7 @@ public sealed class SourceCheckoutTests : IDisposable
     public async Task The_app_is_built_in_its_configuration_from_the_checkouts_top()
     {
         var root = Path.GetFullPath(Path.Combine(_root, "repo"));
-        var launcher = new FakeProcessLauncher { Respond = _ => new ProcessResult(0, "Restore complete\nClaudette -> bin/Release/net10.0/Deventry.dll", "") };
+        var launcher = new FakeProcessLauncher { Respond = _ => new ProcessResult(0, "Restore complete\nDeventry -> bin/Release/net10.0/Deventry.dll", "") };
         var source = new SourceCheckout(new GitWorkingTree(launcher, TimeProvider.System), launcher, TimeProvider.System);
         var seen = new List<string>();
 

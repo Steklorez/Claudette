@@ -4,7 +4,7 @@ name: Claude Code compatibility check
 # against it, and opens an issue with the changelog, Agent SDK type changes, docs and CLI help diffs, and every change
 # that mentions something in compat/surface.yaml.
 #
-# It also runs the RealCli tests against the oldest Claude Code Claudette supports (surface.yaml's `minimum`), on days
+# It also runs the RealCli tests against the oldest Claude Code Deventry supports (surface.yaml's `minimum`), on days
 # when main has changed, so a change that needs something newer is noticed without spending minutes on every pull
 # request.
 on:
@@ -141,7 +141,7 @@ jobs:
           fi
 
   # The oldest supported Claude Code (ClaudeLocator.MinimumVersion) against the mock API. Only on days main changed:
-  # Claudette's changes are what could stop it working with an older version.
+  # Deventry's changes are what could stop it working with an older version.
   minimum:
     name: Minimum supported Claude Code
     runs-on: ubuntu-latest

@@ -7,7 +7,7 @@ namespace Deventry.App.ViewModels;
 /// <summary>
 /// The git branch on the tab's row (DESIGN.md §4, "Sidebar"): what the tab's folder has checked out, read from its
 /// <c>.git</c> files, at the right of the row's second line. A tab in a worktree shows the worktree's name, and a
-/// detached HEAD its short commit. It's read again when the tab is selected, after each turn, when Claudette comes to
+/// detached HEAD its short commit. It's read again when the tab is selected, after each turn, when Deventry comes to
 /// the front and when the tab's folder changes, since Claude or the user may have switched branches.
 /// </summary>
 public sealed partial class TabViewModel

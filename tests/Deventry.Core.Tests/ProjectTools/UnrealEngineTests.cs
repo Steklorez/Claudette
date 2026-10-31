@@ -8,7 +8,7 @@ namespace Deventry.Core.Tests.ProjectTools;
 /// <summary>Reading <c>.uproject</c> and <c>Build.version</c>, and finding a project's engine (DESIGN.md §18).</summary>
 public sealed class UnrealEngineTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-unreal");
+    private readonly TempFolder _temp = new("deventry-unreal");
 
     public void Dispose() => _temp.Dispose();
 

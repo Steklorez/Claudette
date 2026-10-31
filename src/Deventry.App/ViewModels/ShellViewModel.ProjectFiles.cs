@@ -159,7 +159,7 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// Settings → Files and diffs → Open files in is Claudette's editor, and <paramref name="path"/> is a file it opens: text, not
+    /// Settings → Files and diffs → Open files in is Deventry's editor, and <paramref name="path"/> is a file it opens: text, not
     /// over 10 MB. A program or shortcut that isn't text still shows in its folder, and a script opens as text.
     /// </summary>
     internal bool OpensInEditor(string path)
@@ -194,7 +194,7 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// A folder a reply names, in a group's folder, with Settings → Files and diffs → Open files in Claudette's editor: it shows in
+    /// A folder a reply names, in a group's folder, with Settings → Files and diffs → Open files in Deventry's editor: it shows in
     /// that project's explorer, expanded and selected. False when it isn't in one, or files open in the OS's app.
     /// </summary>
     internal async Task<bool> RevealInProjectFilesAsync(string folder)
@@ -272,19 +272,19 @@ public sealed partial class ShellViewModel
         {
             if (await RevealInProjectFilesAsync(path))
             {
-                return OpenedPath.InClaudette;
+                return OpenedPath.InDeventry;
             }
             await _services.Platform.RevealFolderAsync(path);
         }
         else if (ShownPath(path, folder) is var shown && await Task.Run(() => ImageToView(path, shown)) is { } image)
         {
             ShowImage(image);
-            return OpenedPath.InClaudette;
+            return OpenedPath.InDeventry;
         }
         else if (await Task.Run(() => OpensInEditor(path)))
         {
             await OpenInEditorAsync(path, line, column, endLine, from);
-            return OpenedPath.InClaudette;
+            return OpenedPath.InDeventry;
         }
         else if (ReplyFileReference.IsProgram(path, isExecutable))
         {
@@ -396,7 +396,7 @@ public sealed partial class ShellViewModel
     }
 
     /// <summary>
-    /// Claudette came to the front: every Files tab looks at its open files again, as an editor does, and every tab's
+    /// Deventry came to the front: every Files tab looks at its open files again, as an editor does, and every tab's
     /// Changed files at the disk (DESIGN.md §8), for what the user changed meanwhile.
     /// </summary>
     internal void OnAppActivated()

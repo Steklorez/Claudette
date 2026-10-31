@@ -2,7 +2,7 @@ using System.Globalization;
 
 namespace Deventry.Core;
 
-/// <summary>How Claudette writes times, durations, sizes and names, the same wherever they show.</summary>
+/// <summary>How Deventry writes times, durations, sizes and names, the same wherever they show.</summary>
 public static class Formats
 {
     /// <summary>How long ago: "just now", "5 min ago", "2 h ago", "yesterday", "3 days ago".</summary>

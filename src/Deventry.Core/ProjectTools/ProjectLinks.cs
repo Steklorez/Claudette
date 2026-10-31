@@ -90,7 +90,7 @@ public static partial class ProjectLinks
         }
     }
 
-    private static string NotAllowed(string scheme) => $"\"{scheme}:\" links don't open from Claudette; only https, http and mailto do.";
+    private static string NotAllowed(string scheme) => $"\"{scheme}:\" links don't open from Deventry; only https, http and mailto do.";
 
     [GeneratedRegex(@"\{(\w+)\}")]
     private static partial Regex Placeholder();

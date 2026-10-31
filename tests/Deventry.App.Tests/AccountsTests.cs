@@ -29,7 +29,7 @@ public class AccountsTests
 
         Assert.Equal("Work", work.Name);
         Assert.Equal("sk-ant-work", keys.Secrets[ApiKeyHelper.CredentialKey(work.Id)]);
-        Assert.Equal("Claudette: Claude API key (Work)", keys.Labels[ApiKeyHelper.CredentialKey(work.Id)]);
+        Assert.Equal("Deventry: Claude API key (Work)", keys.Labels[ApiKeyHelper.CredentialKey(work.Id)]);
         Assert.Equal([work, side], h.Services.Accounts.All);
         Assert.Equal([TabGroupViewModel.Palette[0].Color, TabGroupViewModel.Palette[1].Color], h.Services.Accounts.All.Select(AccountsService.ColorOf));
         // Never in the app state.

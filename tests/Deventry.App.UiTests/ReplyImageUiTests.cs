@@ -16,7 +16,7 @@ using LiveMarkdown.Avalonia;
 namespace Deventry.App.UiTests;
 
 /// <summary>
-/// Images in a rendered reply (DESIGN.md §18, "Images in Claude's replies"): Claudette's own view in place of
+/// Images in a rendered reply (DESIGN.md §18, "Images in Claude's replies"): Deventry's own view in place of
 /// LiveMarkdown's loader, so a web image waits for a click and nothing is requested before it.
 /// </summary>
 public class ReplyImageUiTests

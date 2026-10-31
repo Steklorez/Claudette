@@ -52,7 +52,7 @@ public sealed record ClaudeDoctorReport
     public bool AutoUpdatesEnabled => AutoUpdates?.StartsWith("enabled", StringComparison.OrdinalIgnoreCase) == true;
 
     /// <summary>
-    /// <c>DISABLE_UPDATES</c> blocks every update path, including <c>claude update</c>; Claudette then shows the version
+    /// <c>DISABLE_UPDATES</c> blocks every update path, including <c>claude update</c>; Deventry then shows the version
     /// but doesn't offer to update (DESIGN.md §12). <c>DISABLE_AUTOUPDATER</c> only stops the background updater.
     /// </summary>
     public bool UpdatesBlocked => AutoUpdates?.Contains("DISABLE_UPDATES", StringComparison.Ordinal) == true;

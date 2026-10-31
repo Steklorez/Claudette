@@ -16,7 +16,7 @@ namespace Deventry.App.Views.Editor;
 /// The buttons of AvaloniaEdit's find box (its search panel): × and the arrows, and Replace and Replace all. Theirs are
 /// routed commands, run against whatever last had the keyboard anywhere in the app, and asked only as the panel opens
 /// whether they can run, so a find box opened, or used, with the keyboard elsewhere (the explorer, a banner's button)
-/// had a × and arrows that did nothing. Each calls the panel itself instead. And one of Claudette's own before ×:
+/// had a × and arrows that did nothing. Each calls the panel itself instead. And one of Deventry's own before ×:
 /// <b>Find in files</b>, which takes what the box has to Find in files (DESIGN.md §18, "Finding in files").
 /// </summary>
 internal static class SearchPanelButtons

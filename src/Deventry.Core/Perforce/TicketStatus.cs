@@ -16,7 +16,7 @@ public enum TicketState
     NotNeeded,
     /// <summary>The server couldn't be reached; there's nothing to renew until it can.</summary>
     Unreachable,
-    /// <summary>Output Claudette doesn't recognize, or <c>p4</c> couldn't run.</summary>
+    /// <summary>Output Deventry doesn't recognize, or <c>p4</c> couldn't run.</summary>
     Unknown,
 }
 

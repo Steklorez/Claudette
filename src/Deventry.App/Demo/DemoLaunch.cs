@@ -9,22 +9,22 @@ using Deventry.Usage.Demo;
 namespace Deventry.App.Demo;
 
 /// <summary>
-/// This Claudette is a demo (DESIGN.md §11, "Demo mode"), started by another on <see cref="Folder"/>, which goes when it
-/// closes: its banner shows, and its <c>claude</c> is Claudette standing in for Claude Code.
+/// This Deventry is a demo (DESIGN.md §11, "Demo mode"), started by another on <see cref="Folder"/>, which goes when it
+/// closes: its banner shows, and its <c>claude</c> is Deventry standing in for Claude Code.
 /// </summary>
 public sealed record DemoMode(string Folder)
 {
     /// <summary>In a demo's environment: the folder it runs on.</summary>
     public const string Variable = "DEVENTRY_DEMO";
 
-    /// <summary>The demo this is, from the environment it was started with; null for any other Claudette.</summary>
+    /// <summary>The demo this is, from the environment it was started with; null for any other Deventry.</summary>
     public static DemoMode? FromEnvironment() =>
         Environment.GetEnvironmentVariable(Variable) is { Length: > 0 } folder ? new DemoMode(folder) : null;
 }
 
 /// <summary>
 /// <b>Try the demo</b> (DESIGN.md §11, "Demo mode"): writes a demo into a folder of its own in the temporary folder and
-/// starts a second Claudette on it, which leaves this one as it was.
+/// starts a second Deventry on it, which leaves this one as it was.
 /// </summary>
 public static class DemoLaunch
 {
@@ -32,7 +32,7 @@ public static class DemoLaunch
     public const string FolderPrefix = "deventry-demo-";
 
     /// <summary>
-    /// What a Claudette passes on to another that it shouldn't: where its own data is, and the screenshot scripts' ways
+    /// What a Deventry passes on to another that it shouldn't: where its own data is, and the screenshot scripts' ways
     /// of driving it.
     /// </summary>
     private static readonly string[] NotPassedOn =
@@ -63,7 +63,7 @@ public static class DemoLaunch
         environment["DEVENTRY_HOME"] = Path.GetDirectoryName(written.Paths.DataDirectory)!;
         environment["CLAUDE_CONFIG_DIR"] = written.ClaudeConfig;
         environment[DemoMode.Variable] = folder;
-        // A source build would copy itself into the demo's folder first (DESIGN.md §9, "Working on Claudette").
+        // A source build would copy itself into the demo's folder first (DESIGN.md §9, "Working on Deventry").
         environment["DEVENTRY_RUN_IN_PLACE"] = "1";
         _ = services.Launcher.Start(new ProcessStartSpec(app, []) { Environment = environment, Detached = true });
         return folder;
@@ -87,7 +87,7 @@ public static class DemoLaunch
     }
 
     /// <summary>
-    /// The folders of demos that crashed or were killed: the ones no Claudette has open any more, as its lock on its data
+    /// The folders of demos that crashed or were killed: the ones no Deventry has open any more, as its lock on its data
     /// folder says, which the OS lets go of when the process ends. A demo still running keeps its folder.
     /// </summary>
     private static void RemoveLeftovers(string temporary)

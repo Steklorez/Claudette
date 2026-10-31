@@ -6,7 +6,7 @@
              x:DataType="settings:AppearancePage"
              AutomationProperties.Name="Preview">
   <!-- Settings → Appearance's preview (DESIGN.md §14): a little of a tab, drawn by the conversation's own cards and
-       message box, in the style, theme, density, fonts and zoom chosen, with Claudette at her size. It changes as each
+       message box, in the style, theme, density, fonts and zoom chosen, with Joulene at her size. It changes as each
        setting does. -->
   <UserControl.Styles>
     <StyleInclude Source="avares://Deventry/Themes/ConversationStyles.axaml" />
@@ -49,7 +49,7 @@
               <Run Text="Done. The pull now eases off over " /><Run Classes="code" Text="ReleaseTime" /><Run Text=" (0.2 s) once you let go, so you keep your momentum." />
             </TextBlock>
           </controls:Card>
-          <!-- The message box, with Claudette standing on its edge when she's shown -->
+          <!-- The message box, with Joulene standing on its edge when she's shown -->
           <Grid RowDefinitions="Auto,Auto" Margin="0,4,0,0">
             <Panel x:Name="MascotHost" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,40,-1" IsVisible="{Binding ShowJoulene}" />
             <Border Grid.Row="1" Classes="composer">

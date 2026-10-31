@@ -37,12 +37,12 @@ internal static class LoginShellOutput
         ["csh"] = Family.Csh,
     };
 
-    /// <summary>The shells Claudette can read, in words.</summary>
+    /// <summary>The shells Deventry can read, in words.</summary>
     public const string SupportedNames = "bash, zsh, fish, sh, dash, ksh, mksh, yash, tcsh and csh";
 
     /// <summary>
     /// The arguments that make <paramref name="shell"/> a login, interactive shell running <see cref="Command"/>, as
-    /// VS Code does it. Null for a shell Claudette doesn't know how to ask, such as nushell, xonsh or PowerShell.
+    /// VS Code does it. Null for a shell Deventry doesn't know how to ask, such as nushell, xonsh or PowerShell.
     /// </summary>
     public static IReadOnlyList<string>? Arguments(string shell, string marker) =>
         Shells.TryGetValue(Path.GetFileName(shell), out var family)

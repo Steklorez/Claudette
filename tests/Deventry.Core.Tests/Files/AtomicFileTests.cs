@@ -5,7 +5,7 @@ namespace Deventry.Core.Tests.Files;
 
 public sealed class AtomicFileTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-atomic");
+    private readonly TempFolder _temp = new("deventry-atomic");
 
     public void Dispose() => _temp.Dispose();
 

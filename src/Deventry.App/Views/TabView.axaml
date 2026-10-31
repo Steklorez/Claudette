@@ -746,7 +746,7 @@
       </controls:Card>
     </DataTemplate>
 
-    <!-- A note from Claude Code or Claudette: a one-line card, quiet for information, amber for a warning, red for an error -->
+    <!-- A note from Claude Code or Deventry: a one-line card, quiet for information, amber for a warning, red for an error -->
     <DataTemplate DataType="conv:NoteItem">
       <controls:Card Classes="inline" Classes.quiet="{Binding IsInfo}" Classes.warning="{Binding IsWarning}" Classes.error="{Binding IsError}"
                      Label="{Binding KindLabel}" Icon="{Binding KindIcon, Converter={x:Static conv:ToolIcons.Geometry}}">
@@ -761,7 +761,7 @@
       </controls:Card>
     </DataTemplate>
 
-    <!-- Skipped by Claudette, shown while protocol logging is on (DESIGN.md §16) -->
+    <!-- Skipped by Deventry, shown while protocol logging is on (DESIGN.md §16) -->
     <DataTemplate DataType="conv:UnsupportedMessageItem">
       <controls:Card Classes="quiet">
         <Expander Header="{Binding Title}" IsExpanded="{Binding IsExpanded}" Padding="8,4">
@@ -1114,7 +1114,7 @@
         </Border>
       </Border>
 
-      <!-- Perforce password (DESIGN.md §18): "Ask each time", or a first "Stored by Claudette" login. A new prompt
+      <!-- Perforce password (DESIGN.md §18): "Ask each time", or a first "Stored by Deventry" login. A new prompt
            makes a new password box, which takes the focus. -->
       <Border Classes="overlay" IsVisible="{Binding Perforce.HasPrompt}">
         <ContentControl Content="{Binding Perforce.Prompt}" HorizontalAlignment="Center" VerticalAlignment="Center">

@@ -47,7 +47,7 @@ public partial class SettingsWindow : Window
         }
     }
 
-    /// <summary>Help's <b>About Claudette</b>: its window, over Settings (DESIGN.md §14, "About").</summary>
+    /// <summary>Help's <b>About Deventry</b>: its window, over Settings (DESIGN.md §14, "About").</summary>
     private void OnAboutRequested()
     {
         if (_settings is { } settings)

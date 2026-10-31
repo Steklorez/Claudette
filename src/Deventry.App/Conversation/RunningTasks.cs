@@ -9,7 +9,7 @@ namespace Deventry.App.Conversation;
 /// <summary>What a running task is, for its icon and label (DESIGN.md §5, "Running tasks").</summary>
 public enum TaskKind
 {
-    /// <summary>A <c>task_type</c> Claudette doesn't know yet.</summary>
+    /// <summary>A <c>task_type</c> Deventry doesn't know yet.</summary>
     Unknown,
 
     /// <summary>A shell command in the background (<c>local_bash</c>).</summary>
@@ -59,7 +59,7 @@ public sealed partial class RunningTask : ObservableObject
     /// <summary><c>task_type</c>: <c>local_bash</c>, <c>local_agent</c>, <c>remote_agent</c>, …</summary>
     public string? TaskType { get; private set; }
 
-    /// <summary>When Claudette heard it start, from the injected clock.</summary>
+    /// <summary>When Deventry heard it start, from the injected clock.</summary>
     public DateTimeOffset StartedAt { get; }
 
     /// <summary>

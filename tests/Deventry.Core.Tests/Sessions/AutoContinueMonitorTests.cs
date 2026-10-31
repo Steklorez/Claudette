@@ -214,7 +214,7 @@ public sealed class AutoContinueMonitorTests : IDisposable
     public void A_reset_long_missed_waits_for_the_user()
     {
         var reset = Reset;
-        // Saved with the tab before Claudette quit, and restored long after the reset.
+        // Saved with the tab before Deventry quit, and restored long after the reset.
         _time.SetUtcNow(reset + TimeSpan.FromHours(3));
 
         _monitor.Restore(new LimitWait(reset, "five_hour", reset + AutoContinueMonitor.Grace, LimitWaitHold.None));

@@ -24,7 +24,7 @@ public sealed class LiveTests : IAsyncLifetime
 {
     private const string CheapModel = "claude-haiku-4-5";
 
-    private readonly TempFolder _root = new("claudette-live");
+    private readonly TempFolder _root = new("deventry-live");
     private ClaudeInstall? _install;
     private string? _fixtureName;
 

@@ -4,8 +4,8 @@ using Deventry.Core.Demo;
 namespace Deventry.App.Demo;
 
 /// <summary>
-/// Claudette run as its demo's <c>claude</c> (DESIGN.md §11, "Demo mode"): <c>Program.Main</c> runs this before anything
-/// else when <see cref="StandInClaude.Variable"/> is set, so it opens no window and hands nothing to a running Claudette.
+/// Deventry run as its demo's <c>claude</c> (DESIGN.md §11, "Demo mode"): <c>Program.Main</c> runs this before anything
+/// else when <see cref="StandInClaude.Variable"/> is set, so it opens no window and hands nothing to a running Deventry.
 /// </summary>
 internal static class StandInClaudeLaunch
 {

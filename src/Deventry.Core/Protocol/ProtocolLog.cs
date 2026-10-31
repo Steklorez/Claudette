@@ -11,7 +11,7 @@ namespace Deventry.Core.Protocol;
 /// </summary>
 public sealed class ProtocolLog : IDisposable
 {
-    /// <summary>Logs older than this are deleted when Claudette starts.</summary>
+    /// <summary>Logs older than this are deleted when Deventry starts.</summary>
     public static readonly TimeSpan KeepFor = TimeSpan.FromDays(7);
 
     private readonly StreamWriter _writer;

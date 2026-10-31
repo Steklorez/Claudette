@@ -12,7 +12,7 @@ namespace Deventry.Core.Tests.Installation;
 /// </summary>
 public sealed class ClaudeInstallerTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-installer");
+    private readonly TempFolder _temp = new("deventry-installer");
 
     public void Dispose() => _temp.Dispose();
 

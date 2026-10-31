@@ -9,10 +9,10 @@ public enum LoginShellOutcome
     /// <summary>Windows: apps get the user's full environment already.</summary>
     NotNeededOnWindows,
 
-    /// <summary>Claudette was started from a terminal, so it has the shell's environment already.</summary>
+    /// <summary>Deventry was started from a terminal, so it has the shell's environment already.</summary>
     StartedFromTerminal,
 
-    /// <summary>The user's shell isn't one Claudette knows how to ask, such as nushell or PowerShell.</summary>
+    /// <summary>The user's shell isn't one Deventry knows how to ask, such as nushell or PowerShell.</summary>
     UnsupportedShell,
 
     /// <summary>The shell didn't finish in time; its rc files may wait for something.</summary>

@@ -8,12 +8,12 @@ using Deventry.Platform.Tests.Support;
 namespace Deventry.Platform.Tests.LoginItems;
 
 /// <summary>
-/// The LaunchAgent that starts Claudette at login on macOS (DESIGN.md §9, "Starting at login"), written to a temporary
+/// The LaunchAgent that starts Deventry at login on macOS (DESIGN.md §9, "Starting at login"), written to a temporary
 /// folder. Only file work, so it runs on every OS.
 /// </summary>
 public sealed class LaunchAgentLoginItemsTests : IDisposable
 {
-    private readonly string _root = Directory.CreateTempSubdirectory("claudette-launchagent-").FullName;
+    private readonly string _root = Directory.CreateTempSubdirectory("deventry-launchagent-").FullName;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 
@@ -28,7 +28,7 @@ public sealed class LaunchAgentLoginItemsTests : IDisposable
         var items = new LaunchAgentLoginItems(new FakeLauncher(), LaunchAgents, UsualDotnet);
         Assert.Equal(LoginEntryState.Missing, items.ReadEntry());
 
-        items.WriteEntry(new ClaudetteCopy(AppInstallKind.MacApp, "/Applications/R&D/Deventry.app", "0.3.0"));
+        items.WriteEntry(new DeventryCopy(AppInstallKind.MacApp, "/Applications/R&D/Deventry.app", "0.3.0"));
 
         Assert.Equal(Path.Combine(LaunchAgents, "com.dotbunny.claudette.login.plist"), items.AgentPath);
         Assert.Equal(LoginEntryState.Enabled, items.ReadEntry());
@@ -52,7 +52,7 @@ public sealed class LaunchAgentLoginItemsTests : IDisposable
         File.WriteAllText(Path.Combine(build, "Deventry"), "");
         var items = new LaunchAgentLoginItems(new FakeLauncher(), LaunchAgents, UsualDotnet);
 
-        items.WriteEntry(new ClaudetteCopy(AppInstallKind.SourceBuild, build, "0.3.0"));
+        items.WriteEntry(new DeventryCopy(AppInstallKind.SourceBuild, build, "0.3.0"));
 
         var agent = ReadPlist(items.AgentPath);
         Assert.Equal([Path.Combine(build, "Deventry"), "--login"], agent["ProgramArguments"].Elements("string").Select(s => s.Value));
@@ -65,7 +65,7 @@ public sealed class LaunchAgentLoginItemsTests : IDisposable
         File.WriteAllText(Path.Combine(build, "Deventry"), "");
         var items = new LaunchAgentLoginItems(new FakeLauncher(), LaunchAgents, new LoginDotnet("/Users/me/.dotnet/dotnet", FoundByProgram: false));
 
-        items.WriteEntry(new ClaudetteCopy(AppInstallKind.SourceBuild, build, "0.3.0"));
+        items.WriteEntry(new DeventryCopy(AppInstallKind.SourceBuild, build, "0.3.0"));
 
         var agent = ReadPlist(items.AgentPath);
         Assert.Equal(["/Users/me/.dotnet/dotnet", Path.Combine(build, "Deventry.dll"), "--login"], agent["ProgramArguments"].Elements("string").Select(s => s.Value));

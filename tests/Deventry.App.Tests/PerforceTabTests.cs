@@ -234,7 +234,7 @@ public class PerforceTabTests
         await TabTestHarness.Eventually(() => store.Labels.ContainsKey(StoredKey), "the saved password");
 
         Assert.Equal("s3cret", store.Secrets[StoredKey]);
-        Assert.Equal("Claudette: Perforce matt @ ssl:perforce:1666", store.Labels[StoredKey]);
+        Assert.Equal("Deventry: Perforce matt @ ssl:perforce:1666", store.Labels[StoredKey]);
         Assert.Single(p4.Logins);
     }
 
@@ -315,7 +315,7 @@ public class PerforceTabTests
 
         await TabTestHarness.Eventually(() => h.Notifier.Last("NeedsInput:") is not null, "the notification");
         Assert.Equal("Perforce needs you to log in: run p4 login in a terminal, or log in with P4V.", h.Notifier.Last("NeedsInput:")!.Body);
-        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text.Contains("Claudette checks again every minute", StringComparison.Ordinal));
+        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text.Contains("Deventry checks again every minute", StringComparison.Ordinal));
         Assert.Contains("log in yourself", tab.Perforce.StatusText, StringComparison.Ordinal);
         Assert.Empty(p4.Logins);
         Assert.Null(tab.Perforce.Prompt);

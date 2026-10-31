@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// The tab's Perforce password prompt (DESIGN.md §18): for "Ask each time", and for "Stored by Claudette" when nothing is
+/// The tab's Perforce password prompt (DESIGN.md §18): for "Ask each time", and for "Stored by Deventry" when nothing is
 /// saved yet or the saved password was refused. The password is handed over once and not kept.
 /// </summary>
 public sealed partial class PerforcePasswordPrompt(PerforcePasswordRequest request, bool offerToSave, string storeName) : ObservableObject
@@ -88,7 +88,7 @@ internal interface IPerforceHost : ITabAreaHost
 /// </summary>
 public sealed partial class PerforceViewModel : ObservableObject
 {
-    /// <summary>What Claudette sends mid-turn once it has logged in again after a <c>p4</c> command failed.</summary>
+    /// <summary>What Deventry sends mid-turn once it has logged in again after a <c>p4</c> command failed.</summary>
     public const string RetryMessage = "Perforce login renewed. Retry the last p4 command.";
 
     private readonly AppServices _services;
@@ -302,7 +302,7 @@ public sealed partial class PerforceViewModel : ObservableObject
     // ---- Opening Claude's files in Perforce (DESIGN.md §18, "Opening files in Perforce") ----------------------------
 
     /// <summary>
-    /// The changelist Claudette opens files in for this tab: the one the <c>CL</c> badge shows while it's pending, else
+    /// The changelist Deventry opens files in for this tab: the one the <c>CL</c> badge shows while it's pending, else
     /// none, which is the default changelist.
     /// </summary>
     internal long? WorkingChangelist => Changelists.Current is { State: ChangelistState.Pending } current ? current.Number : null;
@@ -451,7 +451,7 @@ public sealed partial class PerforceViewModel : ObservableObject
             else if (!_perforceRetryPending && ReferenceEquals(keeper, _perforceKeeper))
             {
                 _perforceRetryPending = true;
-                _host.AddNote("A p4 command failed because the Perforce login expired. Claudette will ask Claude to retry once it's logged in again.", NoteKind.Warning);
+                _host.AddNote("A p4 command failed because the Perforce login expired. Deventry will ask Claude to retry once it's logged in again.", NoteKind.Warning);
             }
         }
         finally
@@ -498,7 +498,7 @@ public sealed partial class PerforceViewModel : ObservableObject
                 _host.AddNote($"Couldn't log in to Perforce as {who}: {e.Message ?? "the login failed."}", NoteKind.Error);
                 break;
             case PerforceKeeperEventKind.NeedsUserLogin:
-                _host.AddNote($"Perforce needs you to log in as {who} yourself: run p4 login in a terminal, or log in with P4V. {e.Message} Claudette checks again every minute.", NoteKind.Warning);
+                _host.AddNote($"Perforce needs you to log in as {who} yourself: run p4 login in a terminal, or log in with P4V. {e.Message} Deventry checks again every minute.", NoteKind.Warning);
                 _services.Notifications.Notify(NotificationKind.NeedsInput, _host.DisplayName, "Perforce needs you to log in: run p4 login in a terminal, or log in with P4V.", _host.Id);
                 break;
         }

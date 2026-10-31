@@ -17,7 +17,7 @@ public interface IRestartHost
     /// <summary>The open tabs, drafts and window placement, for the new build.</summary>
     RestartSnapshot Capture();
 
-    /// <summary>Shows <paramref name="message"/> in place of the tabs and stops every tab, as closing Claudette does.</summary>
+    /// <summary>Shows <paramref name="message"/> in place of the tabs and stops every tab, as closing Deventry does.</summary>
     Task CloseTabsAsync(string message);
 
     /// <summary>The new build didn't start: brings the tabs back here.</summary>
@@ -28,7 +28,7 @@ public interface IRestartHost
 }
 
 /// <summary>
-/// For a source build of Claudette (DESIGN.md §9, "Working on Claudette"): watches the build output for a new build,
+/// For a source build of Deventry (DESIGN.md §9, "Working on Deventry"): watches the build output for a new build,
 /// and restarts into it, handing over every tab. The old build waits for the new one to say it's up, and takes its
 /// tabs back if it doesn't.
 /// </summary>
@@ -49,7 +49,7 @@ public sealed class RestartService : IDisposable
     private BuildWatcher? _watcher;
     private DateTime? _failedStamp;
 
-    /// <summary>The next build is one Claudette made of new commits: restart into it, now (false) or once idle (true).</summary>
+    /// <summary>The next build is one Deventry made of new commits: restart into it, now (false) or once idle (true).</summary>
     private bool? _restartIntoNext;
 
     /// <param name="stopListening">Stops taking later launches, so the new build can.</param>
@@ -127,7 +127,7 @@ public sealed class RestartService : IDisposable
     }
 
     /// <summary>
-    /// Restarts into the build Claudette just made of new commits upstream (DESIGN.md §9, "New commits upstream"), as
+    /// Restarts into the build Deventry just made of new commits upstream (DESIGN.md §9, "New commits upstream"), as
     /// Restart now does, or Restart when idle. A finished build has stopped changing, so it's looked for now rather than
     /// on the timer.
     /// </summary>
@@ -287,7 +287,7 @@ public sealed class RestartService : IDisposable
             }
             if (process.Exited.IsCompleted)
             {
-                // It may have signalled just before exiting; that still isn't a Claudette that's running.
+                // It may have signalled just before exiting; that still isn't a Deventry that's running.
                 return $"The new build stopped as it started (exit code {await process.Exited}).";
             }
             if (_services.Time.GetUtcNow() - started >= StartTimeout)

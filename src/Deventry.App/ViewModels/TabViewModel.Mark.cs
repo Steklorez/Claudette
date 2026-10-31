@@ -23,7 +23,7 @@ public sealed partial class TabViewModel
     /// <summary>Writes the library record once the mark settles, for a tab that syncs.</summary>
     private UiTimeout MarkSync => field ??= new(_services.Time, _services.Dispatcher);
 
-    /// <summary>The tab's mark, or null for none. A mark a later Claudette added reads as none.</summary>
+    /// <summary>The tab's mark, or null for none. A mark a later Deventry added reads as none.</summary>
     public TabMark? Mark => TabMarks.Parse(State.Mark);
 
     public bool HasMark => Mark is not null;

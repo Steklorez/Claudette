@@ -20,7 +20,7 @@ public sealed record AuthStatus(
 
 /// <summary>Runs Claude Code's documented <c>auth</c> commands.</summary>
 /// <param name="environment">Added to the clean environment of each command. Tests use it for fake-claude's options.</param>
-/// <param name="userEnvironment">The user environment the commands start from (DESIGN.md §13). Null: Claudette's own.</param>
+/// <param name="userEnvironment">The user environment the commands start from (DESIGN.md §13). Null: Deventry's own.</param>
 public sealed class ClaudeAuth(
     string claudePath,
     IProcessLauncher launcher,

@@ -76,8 +76,8 @@ public class ClaudeUpdateTests
         Assert.Equal(New, updates.ReadyVersion);
         Assert.False(updates.IsReadyInstalled);
         Assert.Contains("available from Homebrew (claude-code). You have 2.1.284", updates.DetailText);
-        // Older than the version Claudette was last tested with, so the badge says so (DESIGN.md §16).
-        Assert.EndsWith($"Claudette was last tested with {ClaudeLocator.LastTestedVersion}.", updates.DetailText);
+        // Older than the version Deventry was last tested with, so the badge says so (DESIGN.md §16).
+        Assert.EndsWith($"Deventry was last tested with {ClaudeLocator.LastTestedVersion}.", updates.DetailText);
         Assert.True(updates.CanUpdateNow);
 
         await updates.UpdateNowCommand.ExecuteAsync(null);
@@ -181,7 +181,7 @@ public class ClaudeUpdateTests
         Assert.False(updates.CanUpdateNow);
         Assert.False(updates.HasManualCommand);
         Assert.Contains("DISABLE_UPDATES", updates.Note);
-        // Older than the version Claudette was last tested with: a nudge, not a requirement (DESIGN.md §16).
+        // Older than the version Deventry was last tested with: a nudge, not a requirement (DESIGN.md §16).
         Assert.Equal($"Claude Code 2.1.284, installed with: Native installer. Older than the last tested version ({ClaudeLocator.LastTestedVersion}); updating is recommended",
             updates.VersionText);
     }

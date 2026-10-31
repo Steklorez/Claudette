@@ -4,13 +4,13 @@ using Deventry.Core.Updates;
 namespace Deventry.Platform.Updates.Mac;
 
 /// <summary>
-/// Updates <c>Claudette.app</c> from a release's <c>.dmg</c> (DESIGN.md §2, "Updating Claudette"). Preparing mounts the
+/// Updates <c>Deventry.app</c> from a release's <c>.dmg</c> (DESIGN.md §2, "Updating Deventry"). Preparing mounts the
 /// image, copies the new app next to the running one and checks it: a valid signature from the same team, the same
 /// bundle identifier, and the release's version. Installing hands over to <c>update-helper.sh</c>, which puts the new
-/// app in place once Claudette has quit and starts it. The new app keeps the name it has in the image, so Deventry's
-/// arrives as <c>Deventry.app</c> and <c>Claudette.app</c> goes (DESIGN.md §2, "Renaming to Deventry").
+/// app in place once Deventry has quit and starts it. The new app keeps the name it has in the image, so updating
+/// Claudette to Deventry brings <c>Deventry.app</c> and <c>Claudette.app</c> goes (DESIGN.md §2, "Renaming to Deventry").
 /// </summary>
-/// <param name="appBundle">The running <c>Claudette.app</c>.</param>
+/// <param name="appBundle">The running <c>Deventry.app</c>.</param>
 /// <param name="workDirectory">Where the image is mounted and the helper script written: the updates folder.</param>
 /// <param name="processId">This process, which the helper waits for.</param>
 public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider timeProvider, string appBundle, string workDirectory, int processId, string launchMode = "open") : IAppInstaller
@@ -22,9 +22,9 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
     public AppInstallKind Kind => AppInstallKind.MacApp;
 
     /// <summary>Where the new app is copied: hidden, next to the running one, so swapping them is a rename.</summary>
-    public string StagedPath => Path.Combine(Path.GetDirectoryName(appBundle)!, ".Claudette-update.app");
+    public string StagedPath => Path.Combine(Path.GetDirectoryName(appBundle)!, ".Deventry-update.app");
 
-    /// <summary>The running app's bundle, when this process runs from one: <c>…/Claudette.app/Contents/MacOS/</c>.</summary>
+    /// <summary>The running app's bundle, when this process runs from one: <c>…/Deventry.app/Contents/MacOS/</c>.</summary>
     public static string? FindBundle(string baseDirectory)
     {
         var macOS = new DirectoryInfo(baseDirectory.TrimEnd('/'));
@@ -38,7 +38,7 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
         if (appBundle.Contains("/AppTranslocation/", StringComparison.Ordinal))
         {
             throw new AppInstallException(
-                "macOS is running Claudette from a temporary copy, which can't be updated. Move Claudette to Applications, open it from there and update again, or install this update by hand.",
+                "macOS is running Deventry from a temporary copy, which can't be updated. Move Deventry to Applications, open it from there and update again, or install this update by hand.",
                 canOpenPackage: true);
         }
         var staged = StagedPath;
@@ -48,7 +48,7 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            throw new AppInstallException($"Claudette can't write to {Path.GetDirectoryName(appBundle)}, so it can't update itself there. Install this update by hand.", canOpenPackage: true, ex);
+            throw new AppInstallException($"Deventry can't write to {Path.GetDirectoryName(appBundle)}, so it can't update itself there. Install this update by hand.", canOpenPackage: true, ex);
         }
 
         var mount = Path.Combine(workDirectory, "mount-" + Guid.NewGuid().ToString("N")[..8]);
@@ -92,13 +92,13 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
 
     private async Task VerifyAsync(string staged, AppVersion version, CancellationToken cancellationToken)
     {
-        // The developer this Claudette is signed by, asked first: a check that can't be made refuses the update rather
+        // The developer this Deventry is signed by, asked first: a check that can't be made refuses the update rather
         // than letting it through. The new version must then satisfy a code requirement naming that team, with a
         // certificate Apple issued, which an ad-hoc signature or someone else's certificate doesn't.
         var mine = await TeamAsync(appBundle, cancellationToken);
         if (mine is TeamCheck.Unreadable unreadable)
         {
-            throw new AppInstallException($"This Claudette's own signature couldn't be read, so the new version couldn't be checked against it: {unreadable.Reason}");
+            throw new AppInstallException($"This Deventry's own signature couldn't be read, so the new version couldn't be checked against it: {unreadable.Reason}");
         }
         IReadOnlyList<string> verify = mine is TeamCheck.Signed signed
             ? ["--verify", "--deep", "--strict", $"-R=anchor apple generic and certificate leaf[subject.OU] = \"{signed.Team}\"", staged]
@@ -113,7 +113,7 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
                 if (other != own.Team)
                 {
                     throw new AppInstallException(other is null
-                        ? $"The new version isn't signed by this Claudette's developer ({own.Team}), so it wasn't installed."
+                        ? $"The new version isn't signed by this Deventry's developer ({own.Team}), so it wasn't installed."
                         : $"The new version is signed by a different developer ({other}) than this one ({own.Team}), so it wasn't installed.");
                 }
             }
@@ -122,7 +122,7 @@ public sealed class MacAppInstaller(IProcessLauncher launcher, TimeProvider time
         var plist = Path.Combine(staged, "Contents", "Info.plist");
         if (await PlistValueAsync(plist, "CFBundleIdentifier", cancellationToken) != BundleIdentifier)
         {
-            throw new AppInstallException("The disk image holds a different app, not Claudette.");
+            throw new AppInstallException("The disk image holds a different app, not Deventry.");
         }
         var bundleVersion = AppVersion.TryParse(await PlistValueAsync(plist, "CFBundleShortVersionString", cancellationToken));
         if (bundleVersion != version)

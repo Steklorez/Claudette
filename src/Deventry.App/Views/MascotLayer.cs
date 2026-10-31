@@ -14,7 +14,7 @@ using Deventry.App.Mascot;
 namespace Deventry.App.Views;
 
 /// <summary>
-/// Claudette on the composer (DESIGN.md §5): the layer behind the composer box that she stands in. It sits in the same
+/// Joulene on the composer (DESIGN.md §5): the layer behind the composer box that she stands in. It sits in the same
 /// place as the box, before it, so the box hides whatever of her is below its top edge, and she rises and falls with
 /// the box as it grows. It tells her where on the edge she has room (the part nothing sits on, between the corners),
 /// which way the pointer is, and shows what she says in a bubble. A click pokes her; dragging picks her up. The rest of
@@ -29,16 +29,16 @@ public sealed class MascotLayer : Control
     /// <summary>The composer box she stands on, for its rounded corners.</summary>
     public static readonly StyledProperty<Border?> BoxProperty = AvaloniaProperty.Register<MascotLayer, Border?>(nameof(Box));
 
-    /// <summary>Her menu's <b>Hide Claudette</b>.</summary>
+    /// <summary>Her menu's <b>Hide Joulene</b>.</summary>
     public static readonly StyledProperty<ICommand?> HideCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(HideCommand));
 
-    /// <summary>Her menu's <b>Claudette settings…</b>, given where in Settings to open.</summary>
+    /// <summary>Her menu's <b>Joulene settings…</b>, given where in Settings to open.</summary>
     public static readonly StyledProperty<ICommand?> SettingsCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(SettingsCommand));
 
-    /// <summary>Her menu's games (DESIGN.md §18, "Games with Claudette"), given the <see cref="GameKind"/> to play.</summary>
+    /// <summary>Her menu's games (DESIGN.md §18, "Games with Joulene"), given the <see cref="GameKind"/> to play.</summary>
     public static readonly StyledProperty<ICommand?> PlayCommandProperty = AvaloniaProperty.Register<MascotLayer, ICommand?>(nameof(PlayCommand));
 
-    /// <summary>Her menu has the games: Settings → Appearance → <b>Games with Claudette</b> is on.</summary>
+    /// <summary>Her menu has the games: Settings → Appearance → <b>Games with Joulene</b> is on.</summary>
     public static readonly StyledProperty<bool> CanPlayProperty = AvaloniaProperty.Register<MascotLayer, bool>(nameof(CanPlay));
 
     /// <summary>The colour of the z's, the "!" and her other marks: the theme's muted text.</summary>
@@ -176,7 +176,7 @@ public sealed class MascotLayer : Control
             figure.PointerReleased += OnFigureReleased;
             figure.PointerCaptureLost += (_, _) => LetGo();
             var menu = new ContextMenu();
-            // A game against her (DESIGN.md §18, "Games with Claudette"), while they're on.
+            // A game against her (DESIGN.md §18, "Games with Joulene"), while they're on.
             foreach (var (header, kind) in new[]
             {
                 ("Play tic-tac-toe", GameKind.TicTacToe), ("Play Connect Four", GameKind.ConnectFour), ("Play hangman", GameKind.Hangman),
@@ -191,11 +191,11 @@ public sealed class MascotLayer : Control
             var separator = new Separator();
             separator.Bind(IsVisibleProperty, this.GetObservable(CanPlayProperty));
             menu.Items.Add(separator);
-            var hide = new MenuItem { Header = "Hide Claudette" };
+            var hide = new MenuItem { Header = "Hide Joulene" };
             hide.Bind(MenuItem.CommandProperty, this.GetObservable(HideCommandProperty));
             menu.Items.Add(hide);
             // Her size, how often she does something and her tips, in Settings → Appearance (DESIGN.md §14).
-            var settings = new MenuItem { Header = "Claudette settings…", CommandParameter = $"{ViewModels.SettingsCategory.Appearance}#claudette" };
+            var settings = new MenuItem { Header = "Joulene settings…", CommandParameter = $"{ViewModels.SettingsCategory.Appearance}#joulene" };
             settings.Bind(MenuItem.CommandProperty, this.GetObservable(SettingsCommandProperty));
             menu.Items.Add(settings);
             figure.ContextMenu = menu;

@@ -100,7 +100,7 @@ public sealed class RewindAndBranchTests
         await h.Shell.Confirmation!.ConfirmCommand.ExecuteAsync(null);
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.Status == TabStatus.Idle && tab.IsSettled, "the restart");
 
-        // Claude Code stopped before anything was sent, as when Claudette closes: resuming the original would carry it on.
+        // Claude Code stopped before anything was sent, as when Deventry closes: resuming the original would carry it on.
         h.Transport.Exit(1);
         await TabTestHarness.Eventually(() => tab.CanRestart, "the exit");
         await tab.RestartCommand.ExecuteAsync(null);

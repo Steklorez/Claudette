@@ -2,13 +2,13 @@ using System.Collections.Concurrent;
 
 namespace Deventry.Platform.Tests;
 
-/// <summary>A second launch hands its arguments to the running Claudette (DESIGN.md §4, "Other ways in").</summary>
+/// <summary>A second launch hands its arguments to the running Deventry (DESIGN.md §4, "Other ways in").</summary>
 public class SingleInstanceTests
 {
     [Fact]
     public async Task A_second_launch_hands_its_arguments_to_the_first()
     {
-        var scope = Path.Combine(Path.GetTempPath(), $"claudette-instance-{Guid.NewGuid():N}");
+        var scope = Path.Combine(Path.GetTempPath(), $"deventry-instance-{Guid.NewGuid():N}");
         using var first = new SingleInstance(scope);
         var received = new TaskCompletionSource<IReadOnlyList<string>>(TaskCreationOptions.RunContinuationsAsynchronously);
         first.ArgumentsReceived += args => received.TrySetResult(args);
@@ -25,7 +25,7 @@ public class SingleInstanceTests
     [Fact]
     public async Task A_launch_that_goes_at_once_or_a_handler_that_fails_doesnt_stop_it_listening()
     {
-        var scope = Path.Combine(Path.GetTempPath(), $"claudette-instance-{Guid.NewGuid():N}");
+        var scope = Path.Combine(Path.GetTempPath(), $"deventry-instance-{Guid.NewGuid():N}");
         using var first = new SingleInstance(scope);
         var received = new TaskCompletionSource<IReadOnlyList<string>>(TaskCreationOptions.RunContinuationsAsynchronously);
         first.ArgumentsReceived += args => (args is ["boom"] ? throw new InvalidOperationException("boom") : (Action)(() => received.TrySetResult(args)))();
@@ -49,9 +49,9 @@ public class SingleInstanceTests
     [Fact]
     public async Task Separate_data_folders_are_separate_instances()
     {
-        using var first = new SingleInstance(Path.Combine(Path.GetTempPath(), $"claudette-a-{Guid.NewGuid():N}"));
+        using var first = new SingleInstance(Path.Combine(Path.GetTempPath(), $"deventry-a-{Guid.NewGuid():N}"));
         first.Listen();
-        using var other = new SingleInstance(Path.Combine(Path.GetTempPath(), $"claudette-b-{Guid.NewGuid():N}"));
+        using var other = new SingleInstance(Path.Combine(Path.GetTempPath(), $"deventry-b-{Guid.NewGuid():N}"));
 
         Assert.False(await other.TryHandOffAsync(["--folder", "/x"], TestContext.Current.CancellationToken));
     }
@@ -59,7 +59,7 @@ public class SingleInstanceTests
     [Fact]
     public async Task An_instance_that_stops_listening_lets_another_take_over_and_can_listen_again()
     {
-        var scope = Path.Combine(Path.GetTempPath(), $"claudette-restart-{Guid.NewGuid():N}");
+        var scope = Path.Combine(Path.GetTempPath(), $"deventry-restart-{Guid.NewGuid():N}");
         using var first = new SingleInstance(scope);
         var received = new TaskCompletionSource<IReadOnlyList<string>>(TaskCreationOptions.RunContinuationsAsynchronously);
         first.ArgumentsReceived += args => received.TrySetResult(args);
@@ -85,7 +85,7 @@ public class SingleInstanceTests
     }
 
     [Fact]
-    public async Task Launches_at_the_same_moment_start_one_Claudette()
+    public async Task Launches_at_the_same_moment_start_one_Deventry()
     {
         var scope = NewScope();
         var instances = Enumerable.Range(0, 4).Select(_ => new SingleInstance(scope)).ToArray();
@@ -137,11 +137,11 @@ public class SingleInstanceTests
     }
 
     [Fact]
-    public async Task A_claim_nobody_answers_for_doesnt_stop_Claudette_starting()
+    public async Task A_claim_nobody_answers_for_doesnt_stop_Deventry_starting()
     {
         var scope = NewScope();
         Directory.CreateDirectory(scope);
-        // Held, as by a Claudette that hung before it listened.
+        // Held, as by a Deventry that hung before it listened.
         await using var held = new FileStream(Path.Combine(scope, SingleInstance.ClaimFileName), FileMode.OpenOrCreate,
             FileAccess.ReadWrite, FileShare.None);
         using var instance = new SingleInstance(scope, patience: TimeSpan.FromMilliseconds(300));
@@ -168,14 +168,14 @@ public class SingleInstanceTests
     [Fact]
     public void Pipe_names_are_short_and_stable()
     {
-        var name = SingleInstance.PipeName("/home/me/.local/share/claudette");
+        var name = SingleInstance.PipeName("/home/me/.local/share/deventry");
 
-        Assert.Equal(name, SingleInstance.PipeName("/home/me/.local/share/claudette"));
+        Assert.Equal(name, SingleInstance.PipeName("/home/me/.local/share/deventry"));
         Assert.NotEqual(name, SingleInstance.PipeName("/tmp/dev-home"));
         Assert.True(name.Length <= 32);
     }
 
-    private static string NewScope() => Path.Combine(Path.GetTempPath(), $"claudette-instance-{Guid.NewGuid():N}");
+    private static string NewScope() => Path.Combine(Path.GetTempPath(), $"deventry-instance-{Guid.NewGuid():N}");
 
     /// <summary>The listener starts in the background; give it a moment to be ready.</summary>
     private static async Task<bool> HandOffAsync(SingleInstance instance, string[] args)

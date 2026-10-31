@@ -67,7 +67,7 @@ public static class DeleteEntry
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            return $"Claudette couldn't delete it. {ex.Message}";
+            return $"Deventry couldn't delete it. {ex.Message}";
         }
     }
 

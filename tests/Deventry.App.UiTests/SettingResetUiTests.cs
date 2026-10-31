@@ -33,7 +33,7 @@ public class SettingResetUiTests
         {
             s.Appearance.Style = style;
             s.General.KeepAwake = true;
-            s.General.KeepAwakeWhen = KeepAwakeWhen.ClaudetteRuns;
+            s.General.KeepAwakeWhen = KeepAwakeWhen.DeventryRuns;
         }, dispatcher: new AvaloniaUiDispatcher());
         using var settings = new SettingsViewModel(h.Services, null, host: h.Shell) { SelectedCategory = SettingsCategory.General };
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };

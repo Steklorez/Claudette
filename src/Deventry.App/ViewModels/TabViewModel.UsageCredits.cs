@@ -161,7 +161,7 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// Stops the turn, with what was waiting its turn in Claude Code, which would run on usage credits too: the user's
-    /// messages and the thread's are held for the reset, Claudette's own check-ins dropped.
+    /// messages and the thread's are held for the reset, Deventry's own check-ins dropped.
     /// </summary>
     private async Task StopForCreditsAsync(ClaudeSession session, DateTimeOffset? resetsAt, string? limitType)
     {
@@ -175,7 +175,7 @@ public sealed partial class TabViewModel
             _conversation.AddNote($"Couldn't stop Claude when usage credits began paying for it: {ex.Message}", NoteKind.Error);
             return;
         }
-        _conversation.AddNote("Usage credits began paying for Claude, and this tab doesn't use them, so Claudette stopped the turn.", NoteKind.Warning);
+        _conversation.AddNote("Usage credits began paying for Claude, and this tab doesn't use them, so Deventry stopped the turn.", NoteKind.Warning);
         if (resetsAt is { } reset)
         {
             _autoContinue.StoppedForCredits(reset, limitType);

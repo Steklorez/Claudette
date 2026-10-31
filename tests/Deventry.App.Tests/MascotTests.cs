@@ -4,7 +4,7 @@ using Deventry.App.ViewModels;
 
 namespace Deventry.App.Tests;
 
-/// <summary>Claudette on the composer (DESIGN.md §5): what she does, and when.</summary>
+/// <summary>Joulene on the composer (DESIGN.md §5): what she does, and when.</summary>
 public class MascotTests
 {
     private static readonly MascotRoom Room = MascotStage.DefaultRoom;

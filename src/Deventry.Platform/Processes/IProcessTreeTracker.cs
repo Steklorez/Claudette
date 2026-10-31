@@ -22,7 +22,7 @@ public interface IProcessTreeTracker
 
 public static class ProcessTreeTracker
 {
-    /// <summary>The tracker for the OS Claudette is running on.</summary>
+    /// <summary>The tracker for the OS Deventry is running on.</summary>
     /// <param name="launcher">Runs <c>ps</c> on macOS.</param>
     /// <exception cref="PlatformNotSupportedException">Not Windows, macOS or Linux.</exception>
     public static IProcessTreeTracker CreateForCurrentOS(IProcessLauncher launcher, TimeProvider time, ILoggerFactory? loggerFactory = null)

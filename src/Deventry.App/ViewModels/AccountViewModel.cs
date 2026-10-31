@@ -120,7 +120,7 @@ public sealed partial class AccountViewModel(AppServices services) : ViewModelBa
     public bool CanBeginSignIn => IsSignedOut && !HasSignIn;
 
     /// <summary>
-    /// A tab found Claude Code signed out. Shows the banner, and sends an OS notification unless Claudette is in front
+    /// A tab found Claude Code signed out. Shows the banner, and sends an OS notification unless Deventry is in front
     /// (the notification service skips it then). Once per sign-in: more tabs failing don't notify again.
     /// </summary>
     public void RequireSignIn(bool notify = true)

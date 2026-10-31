@@ -2,11 +2,11 @@ using Deventry.App.Games;
 
 namespace Deventry.App.Tests;
 
-/// <summary>Games with Claudette (DESIGN.md §18): the rules, and how she plays.</summary>
+/// <summary>Games with Joulene (DESIGN.md §18): the rules, and how she plays.</summary>
 public class GamesTests
 {
     private const Player You = Player.You;
-    private const Player Her = Player.Claudette;
+    private const Player Her = Player.Joulene;
 
     // ---- Tic-tac-toe ---------------------------------------------------------------------------------------------------
 

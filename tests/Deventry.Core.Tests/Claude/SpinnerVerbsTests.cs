@@ -15,7 +15,7 @@ public sealed class SpinnerVerbsTests : IDisposable
     private IReadOnlyList<string> Resolve() => SpinnerVerbs.Resolve(SpinnerVerbs.SettingsFiles(Config, Project));
 
     [Fact]
-    public void Without_the_setting_Claudettes_own_verbs_are_used()
+    public void Without_the_setting_Deventrys_own_verbs_are_used()
     {
         Assert.Same(SpinnerVerbs.BuiltIn, Resolve());
         Assert.Contains("Noodling", SpinnerVerbs.BuiltIn);
@@ -54,7 +54,7 @@ public sealed class SpinnerVerbsTests : IDisposable
     }
 
     [Fact]
-    public void Settings_Claudette_cant_read_are_skipped()
+    public void Settings_Deventry_cant_read_are_skipped()
     {
         _temp.Write("config/settings.json", """{ "spinnerVerbs": { "mode": "replace", "verbs": ["User"] } }""");
         _temp.Write("project/.claude/settings.local.json", "{ not json");

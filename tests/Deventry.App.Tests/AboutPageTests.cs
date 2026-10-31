@@ -5,13 +5,13 @@ using Deventry.App.ViewModels.Settings;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Settings → About (DESIGN.md §14, "About"): which Claudette this is and its license, the trademarks it names, and the
+/// Settings → About (DESIGN.md §14, "About"): which Deventry this is and its license, the trademarks it names, and the
 /// licenses of what it ships, which the build writes from the packages (ThirdPartyNotices.targets).
 /// </summary>
 public class AboutPageTests
 {
     [Fact]
-    public void The_build_lists_every_package_Claudette_ships_with_its_license()
+    public void The_build_lists_every_package_Deventry_ships_with_its_license()
     {
         var libraries = ThirdPartyNotices.Load();
         var byName = libraries.ToDictionary(l => l.Name, StringComparer.OrdinalIgnoreCase);
@@ -61,14 +61,14 @@ public class AboutPageTests
     }
 
     [Fact]
-    public async Task About_says_which_Claudette_this_is_its_license_and_the_trademarks_it_names()
+    public async Task About_says_which_Deventry_this_is_its_license_and_the_trademarks_it_names()
     {
         await using var h = new TabTestHarness();
         var about = new AboutPage(new SettingsContext(h.Services));
 
-        Assert.Equal("About Claudette", about.Title);
+        Assert.Equal("About Deventry", about.Title);
         Assert.Equal(h.Services.Build.Label, about.FindSetting("about.version")!.Title);
-        Assert.Equal("Copyright (c) 2026 dotBunny Inc. Claudette is free and open source.", about.FindSetting("about.license")!.Description);
+        Assert.Equal("Copyright (c) 2026 dotBunny Inc. Deventry is free and open source.", about.FindSetting("about.license")!.Description);
         Assert.StartsWith("MIT License", about.LicenseText, StringComparison.Ordinal);
         Assert.Equal(AboutPage.TrademarkNotices.Select(t => t.Names), about.Trademarks.Select(t => t.Title));
         Assert.Contains("Godot Foundation", about.FindSetting("about.trademark.godot")!.Description, StringComparison.Ordinal);
@@ -78,7 +78,7 @@ public class AboutPageTests
         Assert.Contains("Perforce's permission", about.FindSetting("about.trademark.perforce")!.Description, StringComparison.Ordinal);
         Assert.Contains("isn't sponsored by, affiliated with or endorsed by", about.FindGroup("trademarks")!.Description, StringComparison.Ordinal);
         // Who has contributed, each found by their row's key, and the page's sections in order.
-        Assert.Equal(["claudette", "contributors", "trademarks", "licenses"], about.Groups.Select(g => g.Key));
+        Assert.Equal(["deventry", "contributors", "trademarks", "licenses"], about.Groups.Select(g => g.Key));
         Assert.Equal(AboutPage.ContributorList.Select(c => c.Key), about.Contributors.Select(r => r.Key));
         Assert.Equal("Steklorez", about.FindSetting("about.contributor.steklorez")!.Title);
         // Nothing on it to change, so nothing to reset.
@@ -87,7 +87,7 @@ public class AboutPageTests
 
     /// <summary>About is a window of its own (DESIGN.md §14, "About"): not a page of Settings, whose Help asks for the window.</summary>
     [Fact]
-    public async Task About_isnt_a_page_of_Settings_and_Helps_About_Claudette_asks_for_its_window()
+    public async Task About_isnt_a_page_of_Settings_and_Helps_About_Deventry_asks_for_its_window()
     {
         await using var h = new TabTestHarness();
         using var settings = new SettingsViewModel(h.Services, null);
@@ -118,8 +118,8 @@ public class AboutPageTests
         await logo.OpenLicenseCommand.ExecuteAsync(null);
 
         Assert.Equal(
-            ["https://claudette.dotbunny.com/", "https://github.com/dotBunny/Claudette", "https://github.com/dotBunny/Claudette/blob/main/CHANGELOG.md",
-                "https://claudette.dotbunny.com/privacy-policy/", avalonia.Library.Url, "https://creativecommons.org/licenses/by/4.0/"],
+            ["https://deventry.app/", "https://github.com/dotBunny/Deventry", "https://github.com/dotBunny/Deventry/blob/main/CHANGELOG.md",
+                "https://deventry.app/privacy-policy/", avalonia.Library.Url, "https://creativecommons.org/licenses/by/4.0/"],
             h.Platform.OpenedUrls);
         // A license to read is shown under its row; one that asks for a link is opened.
         Assert.True(avalonia.HasLicenseText);

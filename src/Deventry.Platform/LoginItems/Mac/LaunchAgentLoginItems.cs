@@ -6,18 +6,18 @@ using Deventry.Core.Processes;
 namespace Deventry.Platform.LoginItems.Mac;
 
 /// <summary>
-/// Starting Claudette at login on macOS (DESIGN.md §9, "Starting at login"): a LaunchAgent in
+/// Starting Deventry at login on macOS (DESIGN.md §9, "Starting at login"): a LaunchAgent in
 /// <c>~/Library/LaunchAgents</c>, which launchd runs when the user logs in. It runs <c>open -a Deventry.app --args
 /// --login</c> for the app, and a build's own program otherwise, or <c>dotnet Deventry.dll</c> when that program
 /// wouldn't find .NET. A LaunchAgent works on macOS 12, which the app still supports, and for a source build, which has
 /// no bundle; <c>SMAppService</c> needs macOS 13 and a bundle. Only file work, so it's tested on every OS.
 /// </summary>
-/// <param name="dotnet">The .NET a build is started with when its program wouldn't find it: the one Claudette runs on, by default.</param>
+/// <param name="dotnet">The .NET a build is started with when its program wouldn't find it: the one Deventry runs on, by default.</param>
 public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string launchAgentsDirectory, LoginDotnet? dotnet = null) : ILoginItems
 {
     public const string Label = "com.dotbunny.claudette.login";
 
-    /// <summary>The app's bundle identifier, so Login Items names the agent after Claudette.</summary>
+    /// <summary>The app's bundle identifier, so Login Items names the agent after Deventry.</summary>
     private const string BundleIdentifier = "com.dotbunny.claudette";
 
     private readonly LoginDotnet _dotnet = dotnet ?? LoginDotnet.Current();
@@ -33,7 +33,7 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
     /// <summary>Whether the agent is there. Login Items can also turn it off under Allow in the Background, which isn't read.</summary>
     public LoginEntryState ReadEntry() => File.Exists(AgentPath) ? LoginEntryState.Enabled : LoginEntryState.Missing;
 
-    public void WriteEntry(ClaudetteCopy copy)
+    public void WriteEntry(DeventryCopy copy)
     {
         Directory.CreateDirectory(launchAgentsDirectory);
         AtomicFile.WriteAllText(AgentPath, Plist(Command(copy)));
@@ -47,9 +47,9 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
         }
     }
 
-    public bool Exists(ClaudetteCopy copy) => copy.ExistsOnDisk();
+    public bool Exists(DeventryCopy copy) => copy.ExistsOnDisk();
 
-    public void Start(ClaudetteCopy copy)
+    public void Start(DeventryCopy copy)
     {
         var command = Command(copy);
         launcher.Start(new ProcessStartSpec(command.Program, command.Arguments) { Detached = true });
@@ -90,7 +90,7 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
             """;
     }
 
-    private LoginCommand Command(ClaudetteCopy copy) =>
+    private LoginCommand Command(DeventryCopy copy) =>
         LoginCommand.For(copy, windows: false, _dotnet.Host, _dotnet.FoundByProgram)
         ?? throw new InvalidOperationException("An MSIX can't start on macOS.");
 }

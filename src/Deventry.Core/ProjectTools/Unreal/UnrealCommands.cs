@@ -38,7 +38,7 @@ public static class UnrealCommands
     };
 
     /// <summary>
-    /// <b>Launch editor</b>: the editor with the project, detached so it outlives Claudette. DebugGame adds
+    /// <b>Launch editor</b>: the editor with the project, detached so it outlives Deventry. DebugGame adds
     /// <c>-debug</c>, which makes the editor load the project's DebugGame modules.
     /// </summary>
     public static ProcessStartSpec LaunchEditor(string engineRoot, string editorName, string uproject, UnrealConfiguration configuration, ToolOS os)

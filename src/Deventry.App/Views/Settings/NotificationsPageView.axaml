@@ -7,7 +7,7 @@
   <!-- Notifications (DESIGN.md §10) -->
   <StackPanel Spacing="32">
     <TextBlock Classes="small warning" TextWrapping="Wrap" IsVisible="{Binding !NotificationsAvailable}" Margin="0,0,0,-16"
-               Text="Notifications aren't available here. On macOS, Claudette has to run from its app (not with dotnet run); on Linux, it needs notify-send." />
+               Text="Notifications aren't available here. On macOS, Deventry has to run from its app (not with dotnet run); on Linux, it needs notify-send." />
     <c:SettingsSection Key="notify">
       <c:SettingRow Key="notifications.turnFinished">
         <ToggleSwitch IsChecked="{Binding NotifyTurnFinished}" />

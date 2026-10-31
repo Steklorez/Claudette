@@ -7,7 +7,7 @@ namespace Deventry.Core.Json;
 /// Parses JSON into a <see cref="JsonNode"/> tree that can be read without throwing. <see cref="JsonNode.Parse(string, JsonNodeOptions?, JsonDocumentOptions)"/>
 /// accepts an object with a repeated key, then throws an <see cref="ArgumentException"/> the first time that object is
 /// read. Claude Code, like JavaScript's <c>JSON.parse</c>, keeps the last value, so a hand-edited settings file with a
-/// repeated key is valid to it; this keeps the last value too. Use it for every JSON Claudette reads.
+/// repeated key is valid to it; this keeps the last value too. Use it for every JSON Deventry reads.
 /// </summary>
 public static class JsonTree
 {

@@ -98,7 +98,7 @@ public sealed class PromptCacheTests : IDisposable
         var opusOff = Config(("DISABLE_PROMPT_CACHING_OPUS", "1"));
         Assert.Null(Resolve(opusOff, model: "claude-opus-5-5[1m]"));
         Assert.NotNull(Resolve(opusOff, model: "claude-haiku-4-5"));
-        // A model Claudette doesn't know yet only follows DISABLE_PROMPT_CACHING.
+        // A model Deventry doesn't know yet only follows DISABLE_PROMPT_CACHING.
         Assert.NotNull(Resolve(opusOff, model: null));
 
         Assert.Null(Resolve(Config(("DISABLE_PROMPT_CACHING_FABLE", "true")), model: "claude-fable-1"));

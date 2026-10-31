@@ -10,7 +10,7 @@ public sealed record PermissionModeChoice(string Value, string Label, string Des
     public bool IsAuto => Value == PermissionModeInfo.Auto;
 }
 
-/// <summary>Claude Code's permission modes, with the names Claudette shows for them.</summary>
+/// <summary>Claude Code's permission modes, with the names Deventry shows for them.</summary>
 public static class PermissionModeInfo
 {
     /// <summary>Manual mode, whose config value is <c>default</c>.</summary>
@@ -29,7 +29,7 @@ public static class PermissionModeInfo
         new(Bypass, "Bypass permissions", "Skip permission prompts; Claude Code's own deny and ask rules still apply"),
     ];
 
-    /// <summary>"Accept edits" for <c>acceptEdits</c>; modes Claudette doesn't offer (such as <c>dontAsk</c>) keep their name.</summary>
+    /// <summary>"Accept edits" for <c>acceptEdits</c>; modes Deventry doesn't offer (such as <c>dontAsk</c>) keep their name.</summary>
     public static string Label(string? mode) => mode switch
     {
         null or "manual" => "Manual",

@@ -246,7 +246,7 @@ public sealed partial class LogLevelChip(LogVerbosity verbosity, string name, bo
     /// <summary>"Errors", "Display", "Messages".</summary>
     public string Name { get; } = name;
 
-    /// <summary>Its entries in the log, those Claudette no longer keeps included.</summary>
+    /// <summary>Its entries in the log, those Deventry no longer keeps included.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CountText), nameof(HasAny), nameof(AccessibleName))]
     public partial int Count { get; set; }

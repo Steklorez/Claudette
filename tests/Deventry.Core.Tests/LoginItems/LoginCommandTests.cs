@@ -3,17 +3,17 @@ using Deventry.Core.Updates;
 
 namespace Deventry.Core.Tests.LoginItems;
 
-/// <summary>What a login entry runs to start each kind of copy of Claudette (DESIGN.md §9, "Starting at login").</summary>
+/// <summary>What a login entry runs to start each kind of copy of Deventry (DESIGN.md §9, "Starting at login").</summary>
 public sealed class LoginCommandTests : IDisposable
 {
-    private readonly string _root = Directory.CreateTempSubdirectory("claudette-login-").FullName;
+    private readonly string _root = Directory.CreateTempSubdirectory("deventry-login-").FullName;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 
     [Fact]
     public void The_app_is_started_with_open_so_macOS_starts_it_as_an_app()
     {
-        var command = LoginCommand.For(new ClaudetteCopy(AppInstallKind.MacApp, "/Applications/Deventry.app", "0.3.0"), windows: false, "dotnet");
+        var command = LoginCommand.For(new DeventryCopy(AppInstallKind.MacApp, "/Applications/Deventry.app", "0.3.0"), windows: false, "dotnet");
 
         Assert.Equal(new LoginCommand("/usr/bin/open", ["-a", "/Applications/Deventry.app", "--args", "--login"]), command, CommandComparer.Instance);
     }
@@ -25,7 +25,7 @@ public sealed class LoginCommandTests : IDisposable
     {
         File.WriteAllText(Path.Combine(_root, program), "");
 
-        var command = LoginCommand.For(new ClaudetteCopy(AppInstallKind.SourceBuild, _root, "0.3.0"), windows, "dotnet");
+        var command = LoginCommand.For(new DeventryCopy(AppInstallKind.SourceBuild, _root, "0.3.0"), windows, "dotnet");
 
         Assert.Equal(new LoginCommand(Path.Combine(_root, program), ["--login"]), command, CommandComparer.Instance);
     }
@@ -35,7 +35,7 @@ public sealed class LoginCommandTests : IDisposable
     {
         File.WriteAllText(Path.Combine(_root, "Deventry"), "");
 
-        var command = LoginCommand.For(new ClaudetteCopy(AppInstallKind.SourceBuild, _root, "0.3.0"), windows: false, "/home/me/.dotnet/dotnet", programFindsDotnet: false);
+        var command = LoginCommand.For(new DeventryCopy(AppInstallKind.SourceBuild, _root, "0.3.0"), windows: false, "/home/me/.dotnet/dotnet", programFindsDotnet: false);
 
         Assert.Equal(new LoginCommand("/home/me/.dotnet/dotnet", [Path.Combine(_root, "Deventry.dll"), "--login"]), command, CommandComparer.Instance);
     }
@@ -45,7 +45,7 @@ public sealed class LoginCommandTests : IDisposable
     {
         File.WriteAllText(Path.Combine(_root, "Deventry.exe"), "");
 
-        var command = LoginCommand.For(new ClaudetteCopy(AppInstallKind.SourceBuild, _root, "0.3.0"), windows: true, "C:/Users/me/.dotnet/dotnet.exe", programFindsDotnet: false);
+        var command = LoginCommand.For(new DeventryCopy(AppInstallKind.SourceBuild, _root, "0.3.0"), windows: true, "C:/Users/me/.dotnet/dotnet.exe", programFindsDotnet: false);
 
         Assert.Equal(new LoginCommand(Path.Combine(_root, "Deventry.exe"), ["--login"]), command, CommandComparer.Instance);
     }
@@ -53,7 +53,7 @@ public sealed class LoginCommandTests : IDisposable
     [Fact]
     public void A_build_without_a_program_of_its_own_is_started_with_dotnet()
     {
-        var command = LoginCommand.For(new ClaudetteCopy(AppInstallKind.Other, _root, "0.3.0"), windows: true, "/usr/share/dotnet/dotnet");
+        var command = LoginCommand.For(new DeventryCopy(AppInstallKind.Other, _root, "0.3.0"), windows: true, "/usr/share/dotnet/dotnet");
 
         Assert.Equal(new LoginCommand("/usr/share/dotnet/dotnet", [Path.Combine(_root, "Deventry.dll"), "--login"]), command, CommandComparer.Instance);
     }
@@ -61,17 +61,17 @@ public sealed class LoginCommandTests : IDisposable
     [Fact]
     public void The_MSIX_has_no_command_since_only_its_startup_task_starts_it()
     {
-        Assert.Null(LoginCommand.For(new ClaudetteCopy(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.3.0"), windows: true, "dotnet"));
+        Assert.Null(LoginCommand.For(new DeventryCopy(AppInstallKind.Msix, "dotBunny.Claudette_1a2b3c4d5e6f7", "0.3.0"), windows: true, "dotnet"));
     }
 
     // Forward slashes, which every OS reads as separators: backslashes are only separators on Windows.
     [Theory]
     [InlineData("C:/Program Files/dotnet/dotnet.exe", "C:/Program Files/dotnet/dotnet.exe")]
     [InlineData("/usr/local/share/dotnet/dotnet", "/usr/local/share/dotnet/dotnet")]
-    [InlineData("D:/Claudette/Deventry.exe", "dotnet")]
+    [InlineData("D:/Deventry/Deventry.exe", "dotnet")]
     [InlineData("/Applications/Deventry.app/Contents/MacOS/Deventry", "dotnet")]
     [InlineData(null, "dotnet")]
-    public void Dotnet_is_the_one_running_Claudette_when_it_was_started_that_way(string? processPath, string host)
+    public void Dotnet_is_the_one_running_Deventry_when_it_was_started_that_way(string? processPath, string host)
     {
         Assert.Equal(host, LoginCommand.DotnetHost(processPath));
     }
@@ -79,14 +79,14 @@ public sealed class LoginCommandTests : IDisposable
     [Fact]
     public void A_copy_is_there_while_its_files_are()
     {
-        var build = new ClaudetteCopy(AppInstallKind.SourceBuild, _root, "0.3.0");
+        var build = new DeventryCopy(AppInstallKind.SourceBuild, _root, "0.3.0");
         Assert.False(build.ExistsOnDisk());
 
         File.WriteAllText(Path.Combine(_root, "Deventry.dll"), "");
 
         Assert.True(build.ExistsOnDisk());
-        Assert.True(new ClaudetteCopy(AppInstallKind.MacApp, _root, "0.3.0").ExistsOnDisk());
-        Assert.False(new ClaudetteCopy(AppInstallKind.MacApp, Path.Combine(_root, "Deventry.app"), "0.3.0").ExistsOnDisk());
+        Assert.True(new DeventryCopy(AppInstallKind.MacApp, _root, "0.3.0").ExistsOnDisk());
+        Assert.False(new DeventryCopy(AppInstallKind.MacApp, Path.Combine(_root, "Deventry.app"), "0.3.0").ExistsOnDisk());
     }
 
     private sealed class CommandComparer : IEqualityComparer<LoginCommand?>

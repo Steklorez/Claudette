@@ -26,7 +26,7 @@
   <Style Selector="StackPanel.composerarea">
     <Setter Property="MaxWidth" Value="948" />
   </Style>
-  <!-- What Claudette on the composer says (DESIGN.md §5): a small bubble over her head. -->
+  <!-- What Joulene on the composer says (DESIGN.md §5): a small bubble over her head. -->
   <Style Selector="Border.mascotbubble">
     <Setter Property="Background" Value="{DynamicResource ComposerBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
@@ -550,7 +550,7 @@
   <Style Selector="controls|AppearanceScope.claude TextBox.scratchpad">
     <Setter Property="CornerRadius" Value="10" />
   </Style>
-  <!-- Games with Claudette (DESIGN.md §18): the boards, the gallows, the letters and the minefield. The user's marks,
+  <!-- Games with Joulene (DESIGN.md §18): the boards, the gallows, the letters and the minefield. The user's marks,
        pieces and flags are blue, hers berry, as her mines are; the pieces that win are ringed in gold. -->
   <Style Selector="StackPanel.gameheader">
     <Setter Property="Margin" Value="12,10,12,8" />
@@ -588,7 +588,7 @@
     <Setter Property="Stretch" Value="Uniform" />
   </Style>
   <Style Selector="Ellipse.gameo">
-    <Setter Property="Stroke" Value="{DynamicResource GameClaudetteBrush}" />
+    <Setter Property="Stroke" Value="{DynamicResource GameJouleneBrush}" />
     <Setter Property="StrokeThickness" Value="3.5" />
     <Setter Property="Width" Value="28" />
     <Setter Property="Height" Value="28" />
@@ -610,7 +610,7 @@
     <Setter Property="Fill" Value="{DynamicResource GameYouBrush}" />
   </Style>
   <Style Selector="Ellipse.gamepiece.hers">
-    <Setter Property="Fill" Value="{DynamicResource GameClaudetteBrush}" />
+    <Setter Property="Fill" Value="{DynamicResource GameJouleneBrush}" />
   </Style>
   <Style Selector="Ellipse.gamepiece.winning">
     <Setter Property="Stroke" Value="{DynamicResource MarkStarBrush}" />
@@ -688,7 +688,7 @@
     <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
   </Style>
   <Style Selector="Button.minesquare.n4 /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Foreground" Value="{DynamicResource GameClaudetteBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource GameJouleneBrush}" />
   </Style>
   <Style Selector="Button.minesquare.n5 /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
@@ -713,7 +713,7 @@
   <Style Selector="Ellipse.mine">
     <Setter Property="Width" Value="11" />
     <Setter Property="Height" Value="11" />
-    <Setter Property="Fill" Value="{DynamicResource GameClaudetteBrush}" />
+    <Setter Property="Fill" Value="{DynamicResource GameJouleneBrush}" />
   </Style>
   <!-- A code block's Add to scratch pad: in a tab, not in the agent map's own window, which has no pad -->
   <Style Selector="md|CodeBlock /template/ Button#AddToScratchPadButton">
@@ -804,7 +804,7 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
   <!-- The send key chip before Send (DESIGN.md §5, "Composer"): a flat button with muted text, as the bar's counts are.
-       Its ⏎ comes from Inter, which Claudette ships and which has it in every weight, so it reads the same on every OS:
+       Its ⏎ comes from Inter, which Deventry ships and which has it in every weight, so it reads the same on every OS:
        Segoe UI hasn't got it, and fallback would draw it from whichever font has, such as a code font. -->
   <Style Selector="Run.returnkey">
     <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default" />

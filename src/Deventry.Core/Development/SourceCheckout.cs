@@ -43,7 +43,7 @@ public sealed record SourceBuildResult(bool Succeeded, IReadOnlyList<string> Las
 /// <summary>
 /// A source build's checkout (DESIGN.md §9, "New commits upstream"): how it stands against the branch it tracks, pulling
 /// that branch when it's a fast-forward, and building the app. Never merges, rebases, stashes or discards anything: the
-/// checkout is often where Claudette is being worked on. Git never asks for a password, since there's no one to answer.
+/// checkout is often where Deventry is being worked on. Git never asks for a password, since there's no one to answer.
 /// </summary>
 public sealed class SourceCheckout(GitWorkingTree git, IProcessLauncher launcher, TimeProvider time, UserEnvironment? environment = null)
 {
@@ -126,7 +126,7 @@ public sealed class SourceCheckout(GitWorkingTree git, IProcessLauncher launcher
     {
         if (build.ProjectDirectory is not { } project || build.Configuration is not { } configuration)
         {
-            return new SourceBuildResult(false, [], "Claudette can't tell which project and configuration it was built from.");
+            return new SourceBuildResult(false, [], "Deventry can't tell which project and configuration it was built from.");
         }
         var lines = new Queue<string>();
         void Collect(string line)

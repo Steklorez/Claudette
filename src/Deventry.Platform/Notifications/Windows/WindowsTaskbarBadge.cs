@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.Platform.Notifications.Windows;
 
 /// <summary>
-/// Claudette's taskbar button (DESIGN.md §10). Its overlay icon, through <c>ITaskbarList3::SetOverlayIcon</c>, shows the
+/// Deventry's taskbar button (DESIGN.md §10). Its overlay icon, through <c>ITaskbarList3::SetOverlayIcon</c>, shows the
 /// number of tabs needing input, or else a frame of the working animation; Windows takes the button's own icon from the
 /// package or the AppUserModelID, so the overlay is what can change. The app draws both as PNGs; this turns them into
 /// icons. The button flashes through <c>FlashWindowEx</c>.

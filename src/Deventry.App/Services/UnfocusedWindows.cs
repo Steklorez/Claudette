@@ -8,7 +8,7 @@ using Deventry.Platform.Shell.Windows;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// With <c>DEVENTRY_UNFOCUSED=1</c>, Claudette's windows never take the focus (DESIGN.md §9, "Taking screenshots
+/// With <c>DEVENTRY_UNFOCUSED=1</c>, Deventry's windows never take the focus (DESIGN.md §9, "Taking screenshots
 /// without the focus"): the screenshot scripts in <c>tools/Deventry.Demo</c> set it, so a run doesn't take the focus
 /// from whatever the user is doing meanwhile. Every window opens without activating, nothing brings one forward, and
 /// on Windows every window and popup stays behind the user's windows, as it opens and after.

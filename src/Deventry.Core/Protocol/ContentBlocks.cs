@@ -20,7 +20,7 @@ public sealed record ToolResultBlock(string ToolUseId, string Text, bool IsError
     public IReadOnlyList<MessageImage> Images { get; init; } = [];
 }
 
-/// <summary>A block type Claudette doesn't know yet.</summary>
+/// <summary>A block type Deventry doesn't know yet.</summary>
 public sealed record UnknownBlock(string Type, JsonObject Raw) : ContentBlock(Type, Raw);
 
 internal static class ContentBlockParser

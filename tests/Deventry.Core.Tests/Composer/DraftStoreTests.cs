@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.Composer;
 /// <summary>Unsent messages on disk: each tab's draft and the stash (DESIGN.md §5, "Drafts and the stash").</summary>
 public sealed class DraftStoreTests : IDisposable
 {
-    private readonly TempFolder _root = new("claudette-drafts");
+    private readonly TempFolder _root = new("deventry-drafts");
 
     public void Dispose() => _root.Dispose();
 

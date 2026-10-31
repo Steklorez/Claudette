@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>Tic-tac-toe against Claudette (DESIGN.md §18, "Games with Claudette"): the user is ✕, she's ○.</summary>
+/// <summary>Tic-tac-toe against Joulene (DESIGN.md §18, "Games with Joulene"): the user is ✕, she's ○.</summary>
 public sealed class TicTacToeViewModel : GameViewModel
 {
     private static readonly string[] SquareNames =
@@ -73,9 +73,9 @@ public sealed class TicTacToeViewModel : GameViewModel
     {
         var threat = _board.WinningMove(Player.You);
         var square = TicTacToeOpponent.Choose(_board, CurrentLevel, Host.Random);
-        _board.Play(square, Player.Claudette);
+        _board.Play(square, Player.Joulene);
         Refresh();
-        Host.Announce($"Claudette took the {SquareName(square)}.");
+        Host.Announce($"Joulene took the {SquareName(square)}.");
         if (Ended())
         {
             return;
@@ -96,7 +96,7 @@ public sealed class TicTacToeViewModel : GameViewModel
                 Finish(GameOutcome.Won, "You win!");
                 return true;
             case GameOutcome.Lost:
-                Finish(GameOutcome.Lost, "Claudette wins!");
+                Finish(GameOutcome.Lost, "Joulene wins!");
                 return true;
             case GameOutcome.Draw:
                 Finish(GameOutcome.Draw, "A draw.");
@@ -132,7 +132,7 @@ public sealed partial class TicTacToeSquare(TicTacToeViewModel game, int index) 
 
     public bool IsYours => Owner == Player.You;
 
-    public bool IsHers => Owner == Player.Claudette;
+    public bool IsHers => Owner == Player.Joulene;
 
     /// <summary>"Top left, empty", for screen readers.</summary>
     public string Name
@@ -143,7 +143,7 @@ public sealed partial class TicTacToeSquare(TicTacToeViewModel game, int index) 
             var whose = Owner switch
             {
                 Player.You => "yours",
-                Player.Claudette => "Claudette's",
+                Player.Joulene => "Joulene's",
                 _ => "empty",
             };
             return $"{char.ToUpperInvariant(where[0])}{where[1..]}, {whose}";

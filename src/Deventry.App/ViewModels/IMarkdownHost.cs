@@ -4,7 +4,7 @@ using Deventry.Core.Protocol;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// What Markdown shown in Claudette needs from where it shows: the images it may load and the window they open in
+/// What Markdown shown in Deventry needs from where it shows: the images it may load and the window they open in
 /// (DESIGN.md §18, "Images in Claude's replies"), and Copy on its code blocks (DESIGN.md §5, "Copy and times"). A session's
 /// tab is one, for its replies, plans and agents, and so is a Markdown file's preview (DESIGN.md §18, "Markdown preview").
 /// </summary>

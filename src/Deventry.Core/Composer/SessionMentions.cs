@@ -5,10 +5,10 @@ namespace Deventry.Core.Composer;
 
 public enum MentionKind
 {
-    /// <summary>One of this thread's sub-threads (DESIGN.md §18, "Threads"): Claudette delivers what's sent to it.</summary>
+    /// <summary>One of this thread's sub-threads (DESIGN.md §18, "Threads"): Deventry delivers what's sent to it.</summary>
     SubThread,
 
-    /// <summary>The session in another of Claudette's tabs.</summary>
+    /// <summary>The session in another of Deventry's tabs.</summary>
     Tab,
 
     /// <summary>Another Claude Code session on this machine: a terminal's, another app's.</summary>
@@ -188,9 +188,9 @@ public static class SessionMentions
         if (mentioned.Count == 1)
         {
             var target = mentioned[0];
-            return $"[Claudette] {Naming(target, byId)} in this message is {Describe(target, byId)}. To message it, call SendMessage with to: \"{target.Address}\".";
+            return $"[Deventry] {Naming(target, byId)} in this message is {Describe(target, byId)}. To message it, call SendMessage with to: \"{target.Address}\".";
         }
-        var text = new StringBuilder("[Claudette] Who this message names, each of whom you can message with SendMessage:");
+        var text = new StringBuilder("[Deventry] Who this message names, each of whom you can message with SendMessage:");
         foreach (var target in mentioned)
         {
             text.Append($"\n- {Naming(target, byId)} is {Describe(target, byId)}. Its to: \"{target.Address}\".");
@@ -207,8 +207,8 @@ public static class SessionMentions
 
     private static string Describe(MentionTarget target) => target.Kind switch
     {
-        MentionKind.SubThread => "one of this thread's sub-threads: Claudette delivers what you send it, and sends you its result when it finishes",
-        MentionKind.Tab => "another Claude Code session on this machine, open in another of Claudette's tabs",
+        MentionKind.SubThread => "one of this thread's sub-threads: Deventry delivers what you send it, and sends you its result when it finishes",
+        MentionKind.Tab => "another Claude Code session on this machine, open in another of Deventry's tabs",
         MentionKind.Subagent => target.About is { Length: > 0 } type ? $"one of your subagents ({type})" : "one of your subagents",
         _ => target.About is { Length: > 0 } folder ? $"another Claude Code session on this machine, working in {folder}" : "another Claude Code session on this machine",
     };

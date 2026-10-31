@@ -9,7 +9,7 @@ using Deventry.App.UiTests;
 namespace Deventry.App.UiTests;
 
 /// <summary>
-/// Claudette's own application (its styles, resources and templates) on Avalonia's headless platform. Headless drawing
+/// Deventry's own application (its styles, resources and templates) on Avalonia's headless platform. Headless drawing
 /// measures text with fixed metrics, so layout is the same on every OS (DESIGN.md §15, "UI").
 /// </summary>
 public static class TestApp

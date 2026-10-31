@@ -4,7 +4,7 @@ using Deventry.App.Tests.Support;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// Claudette on the composer (DESIGN.md §5): what she does as the tab works, plans, compacts and fails, when other tabs
+/// Joulene on the composer (DESIGN.md §5): what she does as the tab works, plans, compacts and fails, when other tabs
 /// wait, when the user sends, attaches, pastes, types her name, pokes her, drags something over the composer or picks
 /// her up, and what she wears.
 /// </summary>

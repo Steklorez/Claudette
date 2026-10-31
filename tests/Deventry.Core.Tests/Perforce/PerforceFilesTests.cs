@@ -13,7 +13,7 @@ public sealed class PerforceFilesTests : IDisposable
     private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-09-28T12:00:00Z", System.Globalization.CultureInfo.InvariantCulture));
     private readonly FakeP4 _p4;
     private readonly PerforceClient _client;
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"claudette-p4files-{Guid.NewGuid():N}");
+    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"deventry-p4files-{Guid.NewGuid():N}");
 
     public PerforceFilesTests()
     {
@@ -172,7 +172,7 @@ public sealed class PerforceFilesTests : IDisposable
 
         Assert.Null(PerforceFileCommands.Problem(Result("//depot/a.cpp#1 - currently opened for edit", "")));
         Assert.Null(PerforceFileCommands.Problem(Result("a.cpp - can't add existing file", "")));
-        // Claudette's own commands don't complain about files Perforce doesn't have; the user's do.
+        // Deventry's own commands don't complain about files Perforce doesn't have; the user's do.
         Assert.Null(PerforceFileCommands.Problem(Result("", "a.cpp - no such file(s)."), PerforceQuietness.Automatic));
         Assert.Equal("a.cpp - no such file(s).", PerforceFileCommands.Problem(Result("", "a.cpp - no such file(s).")));
         Assert.Equal("//depot/a.cpp - locked by anna@anna-ws", PerforceFileCommands.Problem(Result("", "//depot/a.cpp - locked by anna@anna-ws")));

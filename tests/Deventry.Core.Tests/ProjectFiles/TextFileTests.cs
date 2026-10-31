@@ -7,7 +7,7 @@ namespace Deventry.Core.Tests.ProjectFiles;
 /// <summary>Reading files for the editor and saving them back as they were (DESIGN.md §18, "Project files", "Which files open", "Saving").</summary>
 public sealed class TextFileTests : IDisposable
 {
-    private readonly TempFolder _temp = new("claudette-textfile");
+    private readonly TempFolder _temp = new("deventry-textfile");
 
     public void Dispose() => _temp.Dispose();
 

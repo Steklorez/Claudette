@@ -1,6 +1,6 @@
 namespace Deventry.Core.Status;
 
-/// <summary>The parts of Claude that Claudette relies on, and so watches on the status page.</summary>
+/// <summary>The parts of Claude that Deventry relies on, and so watches on the status page.</summary>
 public enum WatchedService
 {
     /// <summary>Claude Code itself: every tab.</summary>
@@ -42,7 +42,7 @@ public sealed record WatchedServiceStatus(WatchedService Service, ComponentStatu
 /// first.
 /// </param>
 /// <param name="Maintenances">Maintenances in progress on a watched service, or naming no components.</param>
-/// <param name="AsOf">When Claudette read the page.</param>
+/// <param name="AsOf">When Deventry read the page.</param>
 public sealed record ServiceStatusReport(
     ServiceLevel Level,
     IReadOnlyList<WatchedServiceStatus> Services,
@@ -69,7 +69,7 @@ public sealed record ServiceStatusReport(
     /// <summary>What the banner is about, for dismissing it: the incidents' ids, then the maintenances'.</summary>
     public IReadOnlyList<string> BannerIds => [.. Incidents.Select(i => i.Id), .. Maintenances.Select(m => m.Id)];
 
-    /// <summary>The name Claudette shows for a watched service.</summary>
+    /// <summary>The name Deventry shows for a watched service.</summary>
     public static string NameOf(WatchedService service) => service switch
     {
         WatchedService.ClaudeCode => "Claude Code",
@@ -122,7 +122,7 @@ public sealed record ServiceStatusReport(
 
     /// <summary>
     /// Works out the report from the page. The level is the worst of the watched services' statuses; with none of them
-    /// listed (or none with a status Claudette knows), the page's own indicator. An open incident that concerns them
+    /// listed (or none with a status Deventry knows), the page's own indicator. An open incident that concerns them
     /// makes it at least <see cref="ServiceLevel.Degraded"/>, and maintenance under way at least
     /// <see cref="ServiceLevel.Maintenance"/>.
     /// </summary>
@@ -203,7 +203,7 @@ public static class StatusText
         _ => "Unknown",
     };
 
-    /// <summary>Lower case, for "(investigating)"; null when Claudette doesn't know the value.</summary>
+    /// <summary>Lower case, for "(investigating)"; null when Deventry doesn't know the value.</summary>
     public static string? Describe(this IncidentStatus status) => status switch
     {
         IncidentStatus.Investigating => "investigating",

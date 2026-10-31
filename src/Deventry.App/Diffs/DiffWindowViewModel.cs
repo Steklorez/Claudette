@@ -49,7 +49,7 @@ public sealed record SideBySideDiffRow(DiffCell? Left, DiffCell? Right, bool IsH
 
 /// <summary>What the diff view compares, and what it can do with the file.</summary>
 /// <param name="OpenInEditor">
-/// <b>Open</b>: true when the file opened in Claudette's window, such as in the project's Files tab, which the diff
+/// <b>Open</b>: true when the file opened in Deventry's window, such as in the project's Files tab, which the diff
 /// window stays over, so it closes.
 /// </param>
 /// <param name="BeforeKnown">
@@ -244,7 +244,7 @@ public sealed partial class DiffWindowViewModel : ViewModelBase
     {
         if (await Source.OpenInEditor())
         {
-            // Claudette's window has the file now, and this one, which stays over it, would hide it.
+            // Deventry's window has the file now, and this one, which stays over it, would hide it.
             CloseRequested?.Invoke();
         }
     }

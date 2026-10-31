@@ -4,11 +4,11 @@ namespace Deventry.Core.Tests.Support;
 
 /// <summary>
 /// Stands in for the OS's login entry (DESIGN.md §9, "Starting at login"): the entry, the MSIX's startup task and the
-/// copies of Claudette on the machine, kept in memory. Nothing touches the registry or the user's folders.
+/// copies of Deventry on the machine, kept in memory. Nothing touches the registry or the user's folders.
 /// </summary>
 public sealed class FakeLoginItems : ILoginItems
 {
-    private readonly List<ClaudetteCopy> _installed = [];
+    private readonly List<DeventryCopy> _installed = [];
 
     public string? UnavailableReason { get; set; }
 
@@ -17,33 +17,33 @@ public sealed class FakeLoginItems : ILoginItems
     public LoginEntryState Entry { get; set; }
 
     /// <summary>The copy the entry was last written to start, or null when it hasn't been since it was last removed.</summary>
-    public ClaudetteCopy? EntryStarts { get; private set; }
+    public DeventryCopy? EntryStarts { get; private set; }
 
     public int Writes { get; private set; }
 
-    /// <summary>The MSIX's startup task, for a fake Claudette running from the package.</summary>
+    /// <summary>The MSIX's startup task, for a fake Deventry running from the package.</summary>
     public FakePackageTask? MsixTask { get; set; }
 
     public IPackageStartupTask? PackageTask => MsixTask;
 
     /// <summary>The copies handed over to at login.</summary>
-    public List<ClaudetteCopy> Started { get; } = [];
+    public List<DeventryCopy> Started { get; } = [];
 
     /// <summary>What writing the entry throws, to see an error reported.</summary>
     public Exception? WriteFailure { get; set; }
 
-    /// <summary>Puts copies of Claudette on the machine, for <see cref="Exists"/>.</summary>
-    public FakeLoginItems Install(params ClaudetteCopy[] copies)
+    /// <summary>Puts copies of Deventry on the machine, for <see cref="Exists"/>.</summary>
+    public FakeLoginItems Install(params DeventryCopy[] copies)
     {
         _installed.AddRange(copies);
         return this;
     }
 
-    public void Uninstall(ClaudetteCopy copy) => _installed.RemoveAll(copy.IsSameCopy);
+    public void Uninstall(DeventryCopy copy) => _installed.RemoveAll(copy.IsSameCopy);
 
     public LoginEntryState ReadEntry() => Entry;
 
-    public void WriteEntry(ClaudetteCopy copy)
+    public void WriteEntry(DeventryCopy copy)
     {
         if (WriteFailure is { } failure)
         {
@@ -60,9 +60,9 @@ public sealed class FakeLoginItems : ILoginItems
         EntryStarts = null;
     }
 
-    public bool Exists(ClaudetteCopy copy) => _installed.Any(copy.IsSameCopy);
+    public bool Exists(DeventryCopy copy) => _installed.Any(copy.IsSameCopy);
 
-    public void Start(ClaudetteCopy copy) => Started.Add(copy);
+    public void Start(DeventryCopy copy) => Started.Add(copy);
 }
 
 /// <summary>The MSIX's startup task, as Windows keeps it: the user and policies can hold it on or off.</summary>

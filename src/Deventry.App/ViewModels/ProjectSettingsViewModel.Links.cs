@@ -8,7 +8,7 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// A link on Settings' Links page (DESIGN.md §18, "Links"). It keeps the entry's JSON as written, so saving keeps fields
-/// Claudette doesn't edit.
+/// Deventry doesn't edit.
 /// </summary>
 /// <param name="Link">What it reads as; null when it can't be read, when it can only be removed.</param>
 /// <param name="Problem">Why it can't be read.</param>

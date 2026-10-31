@@ -6,11 +6,11 @@ namespace Deventry.Core.Tests.Sessions;
 /// <summary>The Claude Code sessions running on this machine, from Claude Code's sessions folder (DESIGN.md §13, "Session naming").</summary>
 public sealed class LiveSessionsTests : IDisposable
 {
-    private readonly TempFolder _config = new("claudette-live-sessions");
+    private readonly TempFolder _config = new("deventry-live-sessions");
 
     public void Dispose() => _config.Dispose();
 
-    // An entry as Claude Code 2.1.284 writes it, for a tab named by Claudette.
+    // An entry as Claude Code 2.1.284 writes it, for a tab named by Deventry.
     private const string Named = """
         {"pid":47960,"sessionId":"66790aac-38ea-4f5f-96ea-4ba2f713ec83","cwd":"C:\\work\\api","startedAt":1791568495775,"version":"2.1.284",
          "peerProtocol":1,"kind":"interactive","entrypoint":"sdk-cli","messagingSocketPath":"\\\\.\\pipe\\LOCAL\\cc-msg-1d","name":"Docs page",

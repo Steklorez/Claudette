@@ -23,7 +23,7 @@ public sealed class AppColors(Application app)
     /// <summary>Rider's blue.</summary>
     public static readonly Color RiderAccent = Color.Parse("#3574F0");
 
-    /// <summary>The Standard style's interface font, Rider's: Inter, which Claudette ships.</summary>
+    /// <summary>The Standard style's interface font, Rider's: Inter, which Deventry ships.</summary>
     public static readonly FontFamily InterFont = new("fonts:Inter#Inter, $Default");
 
     /// <summary>

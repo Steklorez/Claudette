@@ -11,7 +11,7 @@ namespace Deventry.IntegrationTests;
 /// </summary>
 public sealed class PerforceIntegrationTests : IDisposable
 {
-    private readonly TempFolder _work = new("claudette-p4");
+    private readonly TempFolder _work = new("deventry-p4");
     private readonly ClaudeSessionFactory _factory = new(FakeClaude.Path, new ProcessLauncher(), TimeProvider.System);
 
     public void Dispose() => _work.Dispose();

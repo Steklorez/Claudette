@@ -206,7 +206,7 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
     public string? CredentialStoreUnavailableText => Accounts.Credentials.IsAvailable ? null : Accounts.Credentials.UnavailableReason;
 
     public string KeyNote =>
-        $"Each key is kept in {Accounts.Credentials.Name}, never in Claudette's files, and never synced. Claude Code asks Claudette for it when a tab starts, so it's never in a command line or the environment.";
+        $"Each key is kept in {Accounts.Credentials.Name}, never in Deventry's files, and never synced. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment.";
 
     // ---- Adding an API key --------------------------------------------------------------------------------------------
 

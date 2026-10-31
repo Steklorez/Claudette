@@ -96,7 +96,7 @@ public class ServiceStatusTests
 
         var request = s.Page.Requests[0];
         Assert.Equal("https://status.claude.com/api/v2/summary.json", request.RequestUri!.ToString());
-        Assert.Equal($"Claudette/{TabTestHarness.TestVersion}", request.Headers.UserAgent.ToString());
+        Assert.Equal($"Deventry/{TabTestHarness.TestVersion}", request.Headers.UserAgent.ToString());
         Assert.True(s.Status.IsVisible);
         Assert.Equal(ServiceLevel.Outage, s.Status.Level);
         Assert.True(s.Status.IsOutage);

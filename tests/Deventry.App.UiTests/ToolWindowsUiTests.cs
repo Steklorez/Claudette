@@ -352,7 +352,7 @@ public class ToolWindowsUiTests
     [AvaloniaFact]
     public async Task Reviewed_in_the_diff_window_ticks_the_file_and_closes_the_window()
     {
-        var folder = Path.Combine(Path.GetTempPath(), $"claudette-diff-{Guid.NewGuid():N}");
+        var folder = Path.Combine(Path.GetTempPath(), $"deventry-diff-{Guid.NewGuid():N}");
         var file = Path.Combine(folder, "auth.cs");
         Directory.CreateDirectory(folder);
         await File.WriteAllTextAsync(file, "one\ntwo\n", TestContext.Current.CancellationToken);

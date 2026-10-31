@@ -26,7 +26,7 @@ public sealed record NotificationTarget(NotificationKind Kind, string? TabId);
 
 /// <summary>
 /// Decides which OS notifications to send and routes clicks back (DESIGN.md §10), and keeps the Dock icon or taskbar
-/// button: its badge, its animation and its flash. A notification is skipped when its type is off, or when Claudette is
+/// button: its badge, its animation and its flash. A notification is skipped when its type is off, or when Deventry is
 /// in front and already showing what it's about: the tab it's about is selected, or, for app-wide ones, the header or
 /// screen that already says it. Use on the UI thread.
 /// </summary>
@@ -57,13 +57,13 @@ public sealed class NotificationService : IDisposable
     /// <summary>False when this machine can't show OS notifications (for example an unbundled macOS build).</summary>
     public bool IsAvailable => _notifier.IsAvailable;
 
-    /// <summary>Whether Claudette's window is in front. Set by the main window.</summary>
+    /// <summary>Whether Deventry's window is in front. Set by the main window.</summary>
     public bool IsAppActive { get; private set; }
 
     /// <summary>The ids of the tabs on screen: the selected tab, or the tabs side by side (DESIGN.md §18, "Split panes"). Set by the shell.</summary>
     public Func<IReadOnlyCollection<string>> ShownTabIds { get; set; } = () => [];
 
-    /// <summary>Raised on the UI thread when the user clicks one of Claudette's notifications.</summary>
+    /// <summary>Raised on the UI thread when the user clicks one of Deventry's notifications.</summary>
     public event Action<NotificationTarget>? Activated;
 
     /// <summary>Sends a notification, unless its type is off or the user is already looking at it.</summary>
@@ -77,7 +77,7 @@ public sealed class NotificationService : IDisposable
         {
             return false;
         }
-        // A project action's end is news whichever tab is showing, until Claudette is in front: the sidebar already says it.
+        // A project action's end is news whichever tab is showing, until Deventry is in front: the sidebar already says it.
         if (IsAppActive && (tabId is null || ShownTabIds().Contains(tabId) || kind == NotificationKind.ProjectAction))
         {
             return false;
@@ -122,8 +122,8 @@ public sealed class NotificationService : IDisposable
     }
 
     /// <summary>
-    /// Claudette's window came to the front or went to the back. The presence file follows it, so Remote Control pushes
-    /// to the phone only while the user is away from Claudette (DESIGN.md §10).
+    /// Deventry's window came to the front or went to the back. The presence file follows it, so Remote Control pushes
+    /// to the phone only while the user is away from Deventry (DESIGN.md §10).
     /// </summary>
     public void SetAppActive(bool active)
     {
@@ -150,7 +150,7 @@ public sealed class NotificationService : IDisposable
 
     /// <summary>
     /// The number of tabs with a waiting prompt, question or plan, of tabs a usage limit stopped that wait for it to
-    /// reset, and of tabs working. When more tabs need input while Claudette isn't in front, the taskbar button flashes,
+    /// reset, and of tabs working. When more tabs need input while Deventry isn't in front, the taskbar button flashes,
     /// if that notification is on.
     /// </summary>
     public void SetTabActivity(int needingInput, int limited, int working)

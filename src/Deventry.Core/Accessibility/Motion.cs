@@ -12,14 +12,14 @@ public interface ISystemMotion
     Task<bool> PrefersReducedMotionAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>For an OS Claudette can't ask, and for tests: no preference.</summary>
+/// <summary>For an OS Deventry can't ask, and for tests: no preference.</summary>
 public sealed class NoSystemMotion : ISystemMotion
 {
     public Task<bool> PrefersReducedMotionAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
 }
 
 /// <summary>
-/// Whether Claudette reduces motion (DESIGN.md §3, "Accessibility"): the pulsing busy dots, the working line's
+/// Whether Deventry reduces motion (DESIGN.md §3, "Accessibility"): the pulsing busy dots, the working line's
 /// twinkling glyph, and the animated taskbar and Dock icons.
 /// </summary>
 public static class Motion

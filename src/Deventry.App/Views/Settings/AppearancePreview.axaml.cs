@@ -6,7 +6,7 @@ using Deventry.App.ViewModels.Settings;
 namespace Deventry.App.Views.Settings;
 
 /// <summary>
-/// Settings → Appearance's preview (DESIGN.md §14): a little of a tab in the chosen look. Claudette waves from the
+/// Settings → Appearance's preview (DESIGN.md §14): a little of a tab in the chosen look. Joulene waves from the
 /// message box's edge, at her size.
 /// </summary>
 public partial class AppearancePreview : UserControl
@@ -14,13 +14,13 @@ public partial class AppearancePreview : UserControl
     /// <summary>She waves in the preview, standing still: it shows her size, not what she does.</summary>
     private const string Pose = "wave";
 
-    private readonly MascotFigure _claudette = new(front: false) { Frame = new MascotFrame(Pose, 0, 0, []), IsHitTestVisible = false };
+    private readonly MascotFigure _deventry = new(front: false) { Frame = new MascotFrame(Pose, 0, 0, []), IsHitTestVisible = false };
     private AppearancePage? _page;
 
     public AppearancePreview()
     {
         InitializeComponent();
-        MascotHost.Children.Add(_claudette);
+        MascotHost.Children.Add(_deventry);
         Size(3);
     }
 
@@ -49,8 +49,8 @@ public partial class AppearancePreview : UserControl
 
     private void Size(double cell)
     {
-        _claudette.Cell = cell;
-        _claudette.Width = MascotArt.Width * cell;
-        _claudette.Height = MascotArt.HeightOf(Pose) * cell;
+        _deventry.Cell = cell;
+        _deventry.Width = MascotArt.Width * cell;
+        _deventry.Height = MascotArt.HeightOf(Pose) * cell;
     }
 }
