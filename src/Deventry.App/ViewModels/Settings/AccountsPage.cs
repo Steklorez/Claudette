@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Deventry.App.Services;
 using Deventry.Core.Accounts;
 using Deventry.Core.Credentials;
+using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -162,6 +163,22 @@ public sealed partial class AccountEditor : ObservableObject
     }
 }
 
+/// <summary>One rule in Settings → Accounts → What an organization has turned off (DESIGN.md §18, "Remote Control").</summary>
+public sealed class OrganizationRuleRow(RemoteControlService service, OrganizationRule rule)
+{
+    public OrganizationRule Rule { get; } = rule;
+
+    public string Feature => OrganizationRule.FeatureName(Rule.Feature);
+
+    public string Account => Rule.Organization.Length > 0 ? $"{Rule.Email} ({Rule.Organization})" : Rule.Email;
+
+    public string Reason => Rule.Reason;
+
+    public string Since => $"Since {Rule.Since}";
+
+    public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => service.RemoveRule(rule));
+}
+
 /// <summary>
 /// Settings → Accounts (DESIGN.md §4, "Accounts"): the accounts tabs can run under besides Default, adding an API key,
 /// and which account a folder opened for the first time uses. Each machine sets up its own: nothing here syncs, and keys
@@ -184,10 +201,39 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         [
             Info("state.addAccount", "Add an API key", keywords: ["new account", "api key account", "console"]),
         ]);
+        Section("organizationRules", "What an organization has turned off",
+        [
+            Info("state.organizationRules", "Turned off for an account", keywords: ["remote control", "claude app", "policy", "organization", "admin", "rule", "disabled", "remove"]),
+        ], description: "When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed.");
+        OrganizationRules = [.. RemoteControl.Rules.Select(r => new OrganizationRuleRow(RemoteControl, r))];
         Accounts.Changed += OnAccountsChanged;
+        RemoteControl.RulesChanged += OnRulesChanged;
     }
 
-    public void Dispose() => Accounts.Changed -= OnAccountsChanged;
+    public void Dispose()
+    {
+        Accounts.Changed -= OnAccountsChanged;
+        RemoteControl.RulesChanged -= OnRulesChanged;
+    }
+
+    private RemoteControlService RemoteControl => Services.RemoteControl;
+
+    /// <summary>What organizations turned off for the accounts signed in here, each with <b>Remove</b>.</summary>
+    public ObservableCollection<OrganizationRuleRow> OrganizationRules { get; }
+
+    public bool HasOrganizationRules => OrganizationRules.Count > 0;
+
+    public string NoOrganizationRulesText => "Nothing. If an organization turns a feature off for your account, it's listed here.";
+
+    private void OnRulesChanged()
+    {
+        OrganizationRules.Clear();
+        foreach (var rule in RemoteControl.Rules)
+        {
+            OrganizationRules.Add(new OrganizationRuleRow(RemoteControl, rule));
+        }
+        OnPropertyChanged(nameof(HasOrganizationRules));
+    }
 
     public override string IconKey => "IconCardYou";
 

@@ -237,6 +237,12 @@ public sealed class AppState
     /// <summary>The worktrees the last cleanup removed, and when, for Settings → General to say.</summary>
     public WorktreeCleanupRecord? LastWorktreeCleanup { get; set; }
 
+    /// <summary>
+    /// What accounts' organizations have turned off, which Deventry stopped trying (DESIGN.md §18, "Remote Control";
+    /// Settings → Accounts lists them with a way to remove each). Per machine: it doesn't sync.
+    /// </summary>
+    public List<OrganizationRule> OrganizationRules { get; set; } = [];
+
     /// <summary>Each game's score and level against Joulene (DESIGN.md §18, "Games with Joulene").</summary>
     public GamesState Games { get; set; } = new();
 }

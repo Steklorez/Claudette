@@ -186,7 +186,8 @@ public class RemoteControlTests
         var second = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => second.RemoteControl.Status.State == RemoteControlState.Unavailable, "the second tab");
         Assert.Equal(requests, RemoteRequests(h).Count);
-        Assert.Contains("Not connecting to the Claude app: Remote Control is turned off by a policy.", InlineDispatcher.Read(() => second.Items.OfType<NoteItem>().Select(n => n.Text).ToList()));
+        // The account has a rule by now, which Settings and the switch's tip say, so the tab adds no warning of its own.
+        Assert.DoesNotContain(InlineDispatcher.Read(() => second.Items.OfType<NoteItem>().Select(n => n.Text).ToList()), t => t.StartsWith("Not connecting", StringComparison.Ordinal));
         Assert.False(second.RemoteControl.CanToggle && !second.RemoteControl.IsOn);
 
         // The same account checked again changes nothing; another one may be allowed, so the tabs try again.

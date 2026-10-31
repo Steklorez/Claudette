@@ -1,5 +1,7 @@
 using Deventry.Core.Auth;
 using Deventry.Core.RemoteControl;
+using Deventry.Core.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace Deventry.App.Services;
 
@@ -32,24 +34,80 @@ public sealed class RemoteControlService : IDisposable
     /// <summary>The latest <c>claude auth status</c>, from the account menu. Null until the first.</summary>
     public AuthStatus? Account { get; private set; }
 
-    /// <summary>Why this account can't use Remote Control, or null when it may. A tab's switch is off and disabled then.</summary>
-    public string? UnavailableReason => RemoteControlEligibility.Check(Account, EnvironmentVariable) ?? PolicyReason;
+    /// <summary>
+    /// Why this account can't use Remote Control, or null when it may. A tab's switch is off and disabled then. A rule
+    /// for the account (<see cref="RuleInForce"/>) says it from the first launch on.
+    /// </summary>
+    public string? UnavailableReason => RemoteControlEligibility.Check(Account, EnvironmentVariable) ?? RuleInForce?.Describe() ?? PolicyReason;
 
     /// <summary>
-    /// What Claude Code said when a policy turned Remote Control off, in any tab. Every tab then stops trying to connect,
-    /// rather than each trying again whenever it starts, until Deventry restarts or another account signs in.
+    /// What Claude Code said when a policy turned Remote Control off, in any tab, for an account that isn't known (one
+    /// that is has a rule instead, which outlives this). Every tab then stops trying to connect until Deventry restarts or
+    /// another account signs in.
     /// </summary>
     public string? PolicyReason { get; private set; }
 
-    /// <summary>A tab heard that a policy turned Remote Control off.</summary>
+    /// <summary>
+    /// What the organizations have turned off, as Settings → Accounts lists it (DESIGN.md §18, "Remote Control"). Kept in
+    /// the machine's state, so it holds across restarts.
+    /// </summary>
+    public IReadOnlyList<OrganizationRule> Rules => _services.State.OrganizationRules;
+
+    /// <summary>The rule that keeps the signed-in account from Remote Control, or null when there's none.</summary>
+    public OrganizationRule? RuleInForce => Account is { } account && RemoteControlEligibility.Check(account, EnvironmentVariable) is null
+        ? _services.State.OrganizationRules.FirstOrDefault(r => r.Matches(OrganizationRule.RemoteControl, account.Email, account.OrganizationName))
+        : null;
+
+    /// <summary>Raised when a rule is added or removed, for Settings.</summary>
+    public event Action? RulesChanged;
+
+    /// <summary>
+    /// A tab heard that a policy turned Remote Control off. With the account known that becomes a rule, once, so no tab
+    /// tries on a later launch; without it, it holds until Deventry restarts or another account signs in.
+    /// </summary>
     public void OnTurnedOffByPolicy(string reason)
     {
-        if (PolicyReason is not null)
+        var before = UnavailableReason;
+        PolicyReason ??= reason;
+        if (Account is { Email: { Length: > 0 } email } account
+            && !_services.State.OrganizationRules.Any(r => r.Matches(OrganizationRule.RemoteControl, email, account.OrganizationName)))
+        {
+            _services.State.OrganizationRules.Add(new OrganizationRule
+            {
+                Feature = OrganizationRule.RemoteControl,
+                Email = email,
+                Organization = account.OrganizationName ?? "",
+                Reason = reason,
+                AddedAt = _services.Time.GetUtcNow(),
+            });
+            _services.Loggers.CreateLogger("RemoteControl").LogInformation("Remote Control is turned off for {Email} ({Organization}) by its organization; not trying again: {Reason}", email, account.OrganizationName, reason);
+            _services.SaveState();
+            RulesChanged?.Invoke();
+        }
+        if (UnavailableReason != before)
+        {
+            AvailabilityChanged?.Invoke();
+        }
+    }
+
+    /// <summary>The user removed a rule: tabs may try again, with the account's organization having changed its mind.</summary>
+    public void RemoveRule(OrganizationRule rule)
+    {
+        var before = UnavailableReason;
+        if (!_services.State.OrganizationRules.Remove(rule))
         {
             return;
         }
-        PolicyReason = reason;
-        AvailabilityChanged?.Invoke();
+        if (Account is { } account && rule.Matches(OrganizationRule.RemoteControl, account.Email, account.OrganizationName))
+        {
+            PolicyReason = null;
+        }
+        _services.SaveState();
+        RulesChanged?.Invoke();
+        if (UnavailableReason != before)
+        {
+            AvailabilityChanged?.Invoke();
+        }
     }
 
     public bool IsAvailable => UnavailableReason is null;

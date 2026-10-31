@@ -233,7 +233,11 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
         if (UnavailableReason is { } reason)
         {
             Status = new RemoteControlStatus(RemoteControlState.Unavailable, Detail: reason);
-            _host.AddNote($"Not connecting to the Claude app: {reason}", NoteKind.Warning);
+            if (_services.RemoteControl.RuleInForce is null)
+            {
+                // A rule says it in Settings and the switch's tip, so only the first tab, when it was made, said it aloud.
+                _host.AddNote($"Not connecting to the Claude app: {reason}", NoteKind.Warning);
+            }
             return;
         }
         _ = ConnectAsync(session);

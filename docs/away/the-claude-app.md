@@ -49,7 +49,7 @@ Remote Control needs a claude.ai subscription: Pro, Max, Team or Enterprise (on 
 - A custom `ANTHROPIC_BASE_URL`, or a token from `claude setup-token` or in `ANTHROPIC_AUTH_TOKEN`.
 - `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`.
 
-When Deventry can tell your account can't use it, Settings → Claude Code says *Not available:* with the reason, and every tab's switch is disabled. A tab whose switch was already on says why it didn't connect, and can still be turned off. Claude Code checks the rest when a tab connects, such as your plan, your organization's policy and feature flags, and the tab shows its reason. If a policy turns Remote Control off, no tab tries again until Deventry restarts or another account signs in.
+When Deventry can tell your account can't use it, Settings → Claude Code says *Not available:* with the reason, and every tab's switch is disabled. A tab whose switch was already on says why it didn't connect, and can still be turned off. Claude Code checks the rest when a tab connects, such as your plan, your organization's policy and feature flags, and the tab shows its reason. If your organization's policy turns Remote Control off for your account, Deventry remembers it as a rule for that account: no tab tries again, on this launch or later ones, and a tab's switch says it's your organization's rule and since when. The rule is listed in Settings → Accounts under **What an organization has turned off**; choose **Remove** there when your organization changes its mind, and tabs try again. Another account isn't affected. Rules stay on this machine.
 
 A tab that runs under one of Deventry's [API-key accounts](../accounts/api-key-accounts.md) can't connect either, whatever your Default account can do.
 

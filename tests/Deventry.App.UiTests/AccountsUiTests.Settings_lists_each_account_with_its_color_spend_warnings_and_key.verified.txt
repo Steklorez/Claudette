@@ -27,6 +27,9 @@
 "API key"
 [field] "sk-ant-…"
 [button] Add account
+"What an organization has turned off"
+"When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed."
+"Nothing. If an organization turns a feature off for your account, it's listed here."
 [button] Line up
 [button] Page up
 [button] Page down
