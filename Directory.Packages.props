@@ -11,7 +11,7 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.4" />
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="LiveMarkdown.Avalonia" Version="2.4.3" />
+    <PackageVersion Include="LiveMarkdown.Avalonia" Version="2.5.1" />
     <!-- Also what LiveMarkdown uses; the diff view highlights code with it. -->
     <PackageVersion Include="TextMateSharp" Version="2.0.4" />
     <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.4" />
@@ -20,16 +20,16 @@
     <PackageVersion Include="AvaloniaEdit.TextMate" Version="12.0.0" />
     <!-- The image window's animated GIFs and WebPs (DESIGN.md §18, "Opening images"): Skia's codec, which Avalonia renders
          with. Keep it at the version Avalonia.Skia takes. -->
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp" Version="4.154.0" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
   </ItemGroup>
   <ItemGroup Label="Core">
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
   </ItemGroup>
   <ItemGroup Label="Usage">
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
   </ItemGroup>
   <ItemGroup Label="Tests">
     <!-- xunit.v3 stays on 3.2.x: Avalonia.Headless.XUnit 12.1.3 is built against xunit.v3.extensibility.core 3.2.2. -->
