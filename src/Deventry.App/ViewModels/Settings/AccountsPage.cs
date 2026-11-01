@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Deventry.App.Services;
 using Deventry.Core.Accounts;
 using Deventry.Core.Credentials;
+using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -162,6 +163,22 @@ public sealed partial class AccountEditor : ObservableObject
     }
 }
 
+/// <summary>One rule in Settings → Accounts → What an organization has turned off (DESIGN.md §18, "Remote Control").</summary>
+public sealed class OrganizationRuleRow(RemoteControlService service, OrganizationRule rule)
+{
+    public OrganizationRule Rule { get; } = rule;
+
+    public string Feature => OrganizationRule.FeatureName(Rule.Feature);
+
+    public string Account => Rule.Organization.Length > 0 ? $"{Rule.Email} ({Rule.Organization})" : Rule.Email;
+
+    public string Reason => Rule.Reason;
+
+    public string Since => $"Since {Rule.Since}";
+
+    public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => service.RemoveRule(rule));
+}
+
 /// <summary>
 /// Settings → Accounts (DESIGN.md §4, "Accounts"): the accounts tabs can run under besides Default, adding an API key,
 /// and which account a folder opened for the first time uses. Each machine sets up its own: nothing here syncs, and keys
@@ -178,22 +195,63 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
             // The accounts themselves are the user's, like Perforce's per-folder overrides: only this goes back to Default.
             Setting("state.newFolderAccount", "New folders use", () => Accounts.NewFolderAccount is null, () => Accounts.NewFolderAccount = null,
                 "Which account a folder opened for the first time runs under.", keywords: ["default account", "api key"]),
+            Setting("accounts.warnBeforeOtherAccount", "Warn before continuing a session under another account", s => s.Accounts.WarnBeforeOtherAccount,
+                (s, v) => s.Accounts.WarnBeforeOtherAccount = v,
+                "Ask first when a session started under one account is about to carry on under another.",
+                "Claude Code sends the whole earlier conversation with its requests, so it goes to the account the session continues under, and that account's organization may be able to see it. Claude can't use its earlier thinking from another organization, so its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
+                ["other account", "organization", "work account", "personal account", "resume", "privacy"]),
             Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend"]),
         ], description: "Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");
         Section("addKey", "Add an API key",
         [
             Info("state.addAccount", "Add an API key", keywords: ["new account", "api key account", "console"]),
         ]);
+        Section("organizationRules", "What an organization has turned off",
+        [
+            Info("state.organizationRules", "Turned off for an account", keywords: ["remote control", "claude app", "policy", "organization", "admin", "rule", "disabled", "remove"]),
+        ], description: "When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed.");
+        OrganizationRules = [.. RemoteControl.Rules.Select(r => new OrganizationRuleRow(RemoteControl, r))];
         Accounts.Changed += OnAccountsChanged;
+        RemoteControl.RulesChanged += OnRulesChanged;
     }
 
-    public void Dispose() => Accounts.Changed -= OnAccountsChanged;
+    public void Dispose()
+    {
+        Accounts.Changed -= OnAccountsChanged;
+        RemoteControl.RulesChanged -= OnRulesChanged;
+    }
+
+    private RemoteControlService RemoteControl => Services.RemoteControl;
+
+    /// <summary>What organizations turned off for the accounts signed in here, each with <b>Remove</b>.</summary>
+    public ObservableCollection<OrganizationRuleRow> OrganizationRules { get; }
+
+    public bool HasOrganizationRules => OrganizationRules.Count > 0;
+
+    public string NoOrganizationRulesText => "Nothing. If an organization turns a feature off for your account, it's listed here.";
+
+    private void OnRulesChanged()
+    {
+        OrganizationRules.Clear();
+        foreach (var rule in RemoteControl.Rules)
+        {
+            OrganizationRules.Add(new OrganizationRuleRow(RemoteControl, rule));
+        }
+        OnPropertyChanged(nameof(HasOrganizationRules));
+    }
 
     public override string IconKey => "IconCardYou";
 
     public override string Description => "Accounts tabs can run under besides Claude Code's own sign-in.";
 
     private AccountsService Accounts => Services.Accounts;
+
+    /// <summary>Whether to ask before a session carries on under another account than it started under (DESIGN.md §4).</summary>
+    public bool WarnBeforeOtherAccount
+    {
+        get => Settings.Accounts.WarnBeforeOtherAccount;
+        set => Set(value, v => Settings.Accounts.WarnBeforeOtherAccount = v);
+    }
 
     public ObservableCollection<AccountEditor> Editors { get; }
 

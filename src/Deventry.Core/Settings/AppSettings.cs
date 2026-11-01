@@ -51,6 +51,19 @@ public sealed class AppSettings
 
     /// <summary>Settings → Git (DESIGN.md §14): the git Deventry runs, and what the Project Files tab shows of git. Per machine.</summary>
     public GitSettings Git { get; set; } = new();
+
+    /// <summary>Settings → Accounts (DESIGN.md §4, "Accounts"): what's asked before a session moves to another account.</summary>
+    public AccountSettings Accounts { get; set; } = new();
+}
+
+/// <summary>Settings → Accounts (DESIGN.md §4, "Continuing under another account").</summary>
+public sealed class AccountSettings
+{
+    /// <summary>
+    /// Ask before a session carries on under a different account than the one it was started under, since that account's
+    /// organization is sent the whole earlier conversation.
+    /// </summary>
+    public bool WarnBeforeOtherAccount { get; set; } = true;
 }
 
 /// <summary>

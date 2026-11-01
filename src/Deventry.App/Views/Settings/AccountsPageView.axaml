@@ -11,6 +11,9 @@
       <c:SettingRow Key="state.newFolderAccount">
         <ComboBox ItemsSource="{Binding NewFolderChoices}" SelectedItem="{Binding NewFolderAccount}" />
       </c:SettingRow>
+      <c:SettingRow Key="accounts.warnBeforeOtherAccount">
+        <ToggleSwitch IsChecked="{Binding WarnBeforeOtherAccount}" />
+      </c:SettingRow>
       <!-- The accounts besides Default, each in a box of its own -->
       <c:SettingRow Key="state.accounts" Title="" IsVisible="{Binding HasAccounts}" IsStacked="True">
         <ItemsControl ItemsSource="{Binding Editors}">
@@ -92,6 +95,38 @@
             <Button Classes="accent" Content="Add account" Command="{Binding AddCommand}" HorizontalAlignment="Left" />
           </StackPanel>
           <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding AddStatus}" IsVisible="{Binding AddStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- What an organization has turned off for an account (DESIGN.md §18, "Remote Control"), each a rule to remove -->
+    <c:SettingsSection Key="organizationRules">
+      <c:SettingRow Key="state.organizationRules" Title="" IsStacked="True">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding NoOrganizationRulesText}" IsVisible="{Binding !HasOrganizationRules}" />
+          <ItemsControl ItemsSource="{Binding OrganizationRules}" IsVisible="{Binding HasOrganizationRules}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="10" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="settings:OrganizationRuleRow">
+                <Border Classes="settingsnote">
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <StackPanel Spacing="2">
+                      <TextBlock Text="{Binding Feature}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                      <TextBlock Text="{Binding Account}" TextWrapping="Wrap" />
+                      <TextBlock Classes="small" Text="{Binding Reason}" TextWrapping="Wrap" />
+                      <TextBlock Classes="small muted" Text="{Binding Since}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveCommand}" VerticalAlignment="Top"
+                            AutomationProperties.Name="Remove this rule" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
         </StackPanel>
       </c:SettingRow>
     </c:SettingsSection>

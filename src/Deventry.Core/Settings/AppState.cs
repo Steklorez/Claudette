@@ -237,6 +237,18 @@ public sealed class AppState
     /// <summary>The worktrees the last cleanup removed, and when, for Settings → General to say.</summary>
     public WorktreeCleanupRecord? LastWorktreeCleanup { get; set; }
 
+    /// <summary>
+    /// What accounts' organizations have turned off, which Deventry stopped trying (DESIGN.md §18, "Remote Control";
+    /// Settings → Accounts lists them with a way to remove each). Per machine: it doesn't sync.
+    /// </summary>
+    public List<OrganizationRule> OrganizationRules { get; set; } = [];
+
+    /// <summary>
+    /// The account each session was started under, by session id (DESIGN.md §4, "Continuing under another account"), so
+    /// resuming it under another can warn. Only sessions Deventry saw begin are here: an earlier one has no entry.
+    /// </summary>
+    public Dictionary<string, SessionOrigin> SessionOrigins { get; set; } = [];
+
     /// <summary>Each game's score and level against Joulene (DESIGN.md §18, "Games with Joulene").</summary>
     public GamesState Games { get; set; } = new();
 }
@@ -318,6 +330,12 @@ public sealed class TabState
     /// Connect new tabs to the Claude app. The tab's own state, like <see cref="SyncToLibrary"/>, not an override.
     /// </summary>
     public bool RemoteControl { get; set; }
+
+    /// <summary>
+    /// The session and account the user chose <b>Continue here</b> for, as the session's id, a bar and
+    /// <see cref="SessionOrigin.Key"/>, so the tab isn't asked again (DESIGN.md §4, "Continuing under another account").
+    /// </summary>
+    public string? ConfirmedOtherAccount { get; set; }
 
     public TabOverrides Overrides { get; set; } = new();
 

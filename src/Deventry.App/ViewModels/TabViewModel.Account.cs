@@ -68,6 +68,8 @@ public sealed partial class TabViewModel
     private async Task ApplyAccountAsync(ClaudeAccount? account)
     {
         State.AccountId = account?.Id;
+        // Moving it was the user's choice, so resuming the session doesn't ask about the account (DESIGN.md §4).
+        ConfirmCurrentAccount();
         _services.SaveState();
         AccountChanged();
         if (_session is null)

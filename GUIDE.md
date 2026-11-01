@@ -224,7 +224,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Your Claude sign-in | The **Default** account, the header's account menu, **Plan and billing** or **Console billing**, **Sign out…** and what it stops. | [§11](DESIGN.md#11-sign-in), [Accounts](DESIGN.md#accounts) |
 | API-key accounts | Settings → Accounts: **Add an API key**, where the key is kept, **Change key…**, **Remove…**; on Linux, `secret-tool`. | [Accounts](DESIGN.md#accounts) |
 | A folder's account | A group's **Account ▸**, **New folders use**, the account tags. | [Accounts](DESIGN.md#accounts) |
-| Moving a tab to another account | A tab's **Account ▸**, and what moving it costs. | [Accounts](DESIGN.md#accounts) |
+| Moving a tab to another account | A tab's **Account ▸**, what moving it costs, and the question when a conversation would carry on under another account than it began under (**Continue here**, **New chat with a digest**, **Warn before continuing a session under another account**). | [Accounts](DESIGN.md#accounts), [Continuing under another account](DESIGN.md#continuing-under-another-account) |
 | Spend and its warnings | The header's spend, the warnings, the Usage window's **Accounts**, and what an API-key account doesn't have (plan meters, the Claude app). | [Accounts](DESIGN.md#accounts) |
 
 ### History and syncing (`history/`)
@@ -255,7 +255,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 |---|---|---|
 | Notifications | Each kind and its switch, what they say, when they're skipped, where a click goes. | [§10](DESIGN.md#10-notifications) |
 | The Dock and taskbar icon | The badge, the icon's animation, the taskbar's flash. | [§10](DESIGN.md#10-notifications) |
-| The Claude app | **Connect to the Claude app**, **Open in the Claude app**, the phone icon, pushes to your phone, who can't use it. | [Remote Control](DESIGN.md#remote-control-the-claude-app) |
+| The Claude app | **Connect to the Claude app**, **Open in the Claude app**, the phone icon, pushes to your phone, who can't use it, and what an organization has turned off (Settings → Accounts). | [Remote Control](DESIGN.md#remote-control-the-claude-app) |
 | Keeping the computer awake | Settings → General, the header's cup, when it holds off sleep. | [Keeping the computer awake](DESIGN.md#keeping-the-computer-awake) |
 | Starting at login | **Start Deventry when I log in**, which copy starts, when the switch is turned off elsewhere. | [Starting at login](DESIGN.md#starting-at-login) |
 
