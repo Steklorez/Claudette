@@ -80,7 +80,7 @@ public sealed class RemoteControlService : IDisposable
                 Reason = reason,
                 AddedAt = _services.Time.GetUtcNow(),
             });
-            _services.Loggers.CreateLogger("RemoteControl").LogInformation("Remote Control is turned off for {Email} ({Organization}) by its organization; not trying again: {Reason}", email, account.OrganizationName, reason);
+            _services.Loggers.CreateLogger("RemoteControl").LogInformation("Remote Control is turned off for the signed-in account ({Organization}) by its organization; not trying again: {Reason}", account.OrganizationName, reason);
             _services.SaveState();
             RulesChanged?.Invoke();
         }
