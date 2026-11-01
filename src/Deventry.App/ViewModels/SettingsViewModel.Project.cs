@@ -14,7 +14,7 @@ public sealed record SettingsOpening(string? Category = null, ProjectSettingsVie
 
 /// <summary>
 /// The group below the categories in Settings' sidebar (DESIGN.md §14, "The project's pages"): the selected tab's
-/// project, with its Links, Actions, Tools and Icon pages (<see cref="Settings.ProjectPage"/>). The window isn't modal, so the
+/// project, with its Links, Actions, Tools and Group pages (<see cref="Settings.ProjectPage"/>). The window isn't modal, so the
 /// group follows the selected tab while it's open.
 /// </summary>
 public sealed partial class SettingsViewModel
@@ -25,10 +25,10 @@ public sealed partial class SettingsViewModel
 
     public const string ToolsPage = "Tools";
 
-    public const string IconPage = "Icon";
+    public const string GroupPage = "Group";
 
     /// <summary>The project group's pages, in the sidebar's order.</summary>
-    public static readonly IReadOnlyList<string> ProjectPages = [LinksPage, ActionsPage, ToolsPage, IconPage];
+    public static readonly IReadOnlyList<string> ProjectPages = [LinksPage, ActionsPage, ToolsPage, GroupPage];
 
     /// <summary>The selected tab's project pages; null with no tab open.</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
@@ -50,7 +50,7 @@ public sealed partial class SettingsViewModel
         [
             .. _categoryPages,
             .. project is not null
-                ? [new ProjectLinksPage(_context, project), new ProjectActionsPage(_context, project), new ProjectToolChoicesPage(_context, project), new ProjectIconPage(_context, project)]
+                ? [new ProjectLinksPage(_context, project), new ProjectActionsPage(_context, project), new ProjectToolChoicesPage(_context, project), new ProjectGroupPage(_context, project)]
                 : Array.Empty<SettingsPage>(),
         ];
         old?.Dispose();

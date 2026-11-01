@@ -5,11 +5,13 @@ using Deventry.App.Services;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Development;
 using Deventry.Core.Git;
+using Deventry.Core.ProjectTools;
 using Deventry.Core.Protocol;
 using Deventry.Core.Settings;
 using Deventry.Platform.Processes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 using Deventry.App.ViewModels.ToolWindows;
 
@@ -528,12 +530,12 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.LinksPage) : Task.CompletedTask;
 
     /// <summary>
-    /// <b>Change icon…</b>, in a group's menu: its project's Icon page in Settings (DESIGN.md §4, "Grouped by folder"),
+    /// <b>Change icon…</b>, in a group's menu: its project's Group page in Settings (DESIGN.md §4, "Grouped by folder"),
     /// where a picture can take the place of its dot.
     /// </summary>
     [RelayCommand]
     private Task ChangeGroupIconAsync(TabGroupViewModel? group) =>
-        group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.IconPage) : Task.CompletedTask;
+        group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.GroupPage) : Task.CompletedTask;
 
     /// <summary><b>History for this folder</b>, in a group's menu: History listing only that project's sessions.</summary>
     [RelayCommand]
@@ -863,9 +865,53 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>
     /// <b>Change color…</b> in a group's menu opens this picker (DESIGN.md §4, "Grouped by folder"). What it picks applies
-    /// at once and is remembered for the folder.
+    /// at once and is remembered for the folder on this computer; once it closes on a new color, that's saved in the
+    /// folder's project files too.
     /// </summary>
-    public GroupColorPickerViewModel PickGroupColor(TabGroupViewModel group) => new(group, color => SetGroupColor(group, color));
+    public GroupColorPickerViewModel PickGroupColor(TabGroupViewModel group) =>
+        new(group, color => SetGroupColor(group, color), color => _ = SaveGroupColorAsync(group, color));
+
+    /// <summary>
+    /// The picker closed on a new color (DESIGN.md §4, "Grouped by folder"): it's saved in the folder's
+    /// <c>deventry.json</c>, for everyone who opens the project, or in <c>deventry.local.json</c> when that has a color,
+    /// since that one wins; then the folder's tabs read their files again. A file that can't take it, one that isn't
+    /// JSON say, is left alone, and the color stays remembered on this computer.
+    /// </summary>
+    internal async Task SaveGroupColorAsync(TabGroupViewModel group, Color color)
+    {
+        var folder = group.Folder;
+        var hex = TabGroupViewModel.ToHex(color);
+        try
+        {
+            await Task.Run(() =>
+            {
+                var scope = ProjectFile.ReadColor(folder, ProjectFileScope.Local) is not null ? ProjectFileScope.Local : ProjectFileScope.Shared;
+                ProjectFile.WriteColor(folder, scope, hex);
+            });
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            _services.Loggers.CreateLogger("Groups").LogWarning(ex, "Couldn't save the group's color in {Folder}'s project files.", folder);
+            return;
+        }
+        _services.Dispatcher.Post(() => OnProjectActionsChanged(folder));
+    }
+
+    /// <summary>
+    /// A tab read its folder's project files, which name the group's color (DESIGN.md §4, "Grouped by folder"): the group
+    /// takes it, when the tab is in the group's own folder rather than a worktree of it, and it's remembered on this
+    /// computer as a picked one is.
+    /// </summary>
+    internal void UseProjectColor(TabViewModel tab, string hex)
+    {
+        if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group
+            && FolderHistory.SamePath(tab.Folder, group.Folder)
+            && TabGroupViewModel.TryParseHex(hex, out var color)
+            && group.Color != color)
+        {
+            SetGroupColor(group, color);
+        }
+    }
 
     public void SetGroupColor(TabGroupViewModel group, Color color)
     {

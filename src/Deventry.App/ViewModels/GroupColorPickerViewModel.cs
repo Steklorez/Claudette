@@ -12,14 +12,21 @@ namespace Deventry.App.ViewModels;
 public sealed partial class GroupColorPickerViewModel : ObservableObject
 {
     private readonly Action<Color> _apply;
+    private readonly Action<Color>? _save;
+
+    /// <summary>The color picked since the picker opened, to save as it closes; null while nothing was picked.</summary>
+    private Color? _picked;
 
     /// <summary>Set while one of the color's forms follows another, so the change isn't applied again.</summary>
     private bool _syncing;
 
-    public GroupColorPickerViewModel(TabGroupViewModel group, Action<Color> apply)
+    /// <param name="apply">Each color as it's picked, to show at once.</param>
+    /// <param name="save">The color the picker closes on, when one was picked: saved where it lasts.</param>
+    public GroupColorPickerViewModel(TabGroupViewModel group, Action<Color> apply, Action<Color>? save = null)
     {
         Group = group;
         _apply = apply;
+        _save = save;
         Swatches = TabGroupViewModel.Palette.Select(p => new ColorSwatch(p.Name, p.Color)).ToList();
         _syncing = true;
         HsvColor = group.Color.ToHsv();
@@ -73,6 +80,16 @@ public sealed partial class GroupColorPickerViewModel : ObservableObject
     [RelayCommand]
     private void Finish() => Done?.Invoke();
 
+    /// <summary>The picker closed: the color it was left on is saved, once, rather than each step of a drag.</summary>
+    public void Close()
+    {
+        if (_picked is { } color)
+        {
+            _picked = null;
+            _save?.Invoke(color);
+        }
+    }
+
     private void Apply(Color color, bool fromHsv = false, bool fromHex = false)
     {
         color = Color.FromRgb(color.R, color.G, color.B);
@@ -87,6 +104,7 @@ public sealed partial class GroupColorPickerViewModel : ObservableObject
         }
         _syncing = false;
         MarkSwatch(color);
+        _picked = color;
         _apply(color);
     }
 

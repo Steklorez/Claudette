@@ -409,8 +409,8 @@
                 <DataTemplate DataType="settings:ProjectActionsPage">
                   <pages:ProjectActionsPageView />
                 </DataTemplate>
-                <DataTemplate DataType="settings:ProjectIconPage">
-                  <pages:ProjectIconPageView />
+                <DataTemplate DataType="settings:ProjectGroupPage">
+                  <pages:ProjectGroupPageView />
                 </DataTemplate>
                 <DataTemplate DataType="settings:ProjectToolChoicesPage">
                   <pages:ProjectToolChoicesPageView />

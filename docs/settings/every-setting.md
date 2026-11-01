@@ -290,4 +290,4 @@ The second page under **Source control**. None of this page syncs.
 
 ## The project's pages
 
-The **Links**, **Actions**, **Tools** and **Icon** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Deventry: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.
+The **Links**, **Actions**, **Tools** and **Group** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Deventry: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.

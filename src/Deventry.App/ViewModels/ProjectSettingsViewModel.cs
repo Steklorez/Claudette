@@ -7,7 +7,7 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its <b>Links</b>, <b>Actions</b> and
-/// <b>Icon</b>, from the folder's <c>deventry.json</c> and <c>deventry.local.json</c>, and its <b>Tools</b>, this machine's choices
+/// <b>Group</b>, from the folder's <c>deventry.json</c> and <c>deventry.local.json</c>, and its <b>Tools</b>, this machine's choices
 /// for the project in <c>state.json</c>. Like the rest of Settings, each change is saved as it's made: a file is
 /// rewritten after each add, edit, removal or move, and every tab in the folder reads it again, so the project's menu
 /// follows. Dispose it with the window.
@@ -33,8 +33,8 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
         ];
         // The shared file first when it has actions, since that's where a project's are.
         SelectedProjectActionFile = ProjectActionFiles[_sharedRows.Count > 0 || _localRows.Count == 0 && _actionFileErrors.GetValueOrDefault(ProjectFileScope.Shared) is null ? 0 : 1];
-        LoadIcons();
-        SelectedIconFile = ProjectActionFiles[IconFileToShow()];
+        LoadGroupFiles();
+        SelectedGroupFile = ProjectActionFiles[GroupFileToShow()];
         BuildToolChoices();
         _tab.ProjectTools.PropertyChanged += OnProjectToolsPropertyChanged;
     }

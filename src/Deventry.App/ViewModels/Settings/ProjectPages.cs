@@ -43,20 +43,20 @@ public sealed class ProjectActionsPage : ProjectPage
 }
 
 /// <summary>
-/// The project's <b>Icon</b> (DESIGN.md §4, "Grouped by folder"): the picture its group shows in the sidebar in place of
-/// its colored dot, from either of its files.
+/// The project's <b>Group</b> (DESIGN.md §4, "Grouped by folder"): how its group looks in the sidebar, its color and the
+/// picture in place of its dot, from either of its files.
 /// </summary>
-public sealed class ProjectIconPage : ProjectPage
+public sealed class ProjectGroupPage : ProjectPage
 {
-    public ProjectIconPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.IconPage, project) =>
-        Section("icon", "Icon",
+    public ProjectGroupPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.GroupPage, project) =>
+        Section("group", "Group",
         [
-            Info("project.icon", "The group's icon", keywords: ["picture", "image", "logo", "png", "ico", "dot", "group", "deventry.json"]),
+            Info("project.group", "The group's color and icon", keywords: ["color", "colour", "icon", "picture", "image", "logo", "png", "ico", "dot", "deventry.json"]),
         ]);
 
     public override string IconKey => "IconImage";
 
-    public override string Description => "A picture in place of the group's colored dot in the sidebar.";
+    public override string Description => "How the project's group looks in the sidebar: its color, and a picture in place of its dot.";
 }
 
 /// <summary>

@@ -26,6 +26,9 @@ internal interface IProjectToolsHost : ITabAreaHost
     /// <summary>Settings, on one of this tab's project pages (DESIGN.md §14).</summary>
     Task OpenProjectSettingsAsync(string page, bool startNew);
 
+    /// <summary>The folder's project files name the group's color (DESIGN.md §4, "Grouped by folder"): the group takes it.</summary>
+    void UseGroupColor(string color);
+
     // A run's log is a tab of the panes (DESIGN.md §18, "Project tools", "A run's log"), which the shell keeps.
 
     void RunAdded(ProjectRunViewModel run);
@@ -259,6 +262,10 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     private void UseProjectFile(ProjectFileContents file)
     {
         _projectFile = file;
+        if (file.Color is { } color)
+        {
+            _host.UseGroupColor(color);
+        }
         _customActions = _services.ProjectTools.CustomActions(file, _host.Folder);
     }
 

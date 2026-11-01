@@ -23,6 +23,7 @@ A missing file means nothing, and so does an empty one. Deventry's own repositor
 {
   // Comments and trailing commas are fine.
   "icon": "Assets/logo.png",
+  "color": "#4A6FC4",
   "actions": [
     { "name": "Run tests", "command": "dotnet test", "folder": "src", "mode": "output" },
     { "name": "Open Grafana", "command": "start https://grafana.example", "mode": "launch", "os": ["windows"] },
@@ -36,7 +37,7 @@ A missing file means nothing, and so does an empty one. Deventry's own repositor
 }
 ```
 
-The top level is an object with two lists, `actions` and `links`, and an `icon`, all optional. Other keys are ignored, and kept when Deventry saves the file from Settings.
+The top level is an object with two lists, `actions` and `links`, and a `color` and an `icon`, all optional. Other keys are ignored, and kept when Deventry saves the file from Settings.
 
 ## Actions
 
@@ -77,9 +78,13 @@ An address can have these placeholders. They're filled in from the selected tab 
 
 Any other word in braces makes the link greyed out: "Unknown placeholder …: use {branch}, {changelist} or {folderName}."
 
+## Color
+
+`color` is the folder's group's color in the sidebar, written `#4A6FC4` (or `#4AC`). It wins over the color Deventry remembers on your computer, and the local file's wins over the shared one's. **Change color…** in the group's menu saves it, and the project's **Group** page in Settings moves it or takes it out. One that isn't a color is skipped with a reason. See [Changing a group's color](../tabs/folder-groups.md#changing-a-groups-color).
+
 ## Icon
 
-`icon` is the picture the folder's group shows in the sidebar in place of its colored dot: a PNG, ICO, JPEG, BMP, GIF or WebP of at most 1 MB. Its path is read from the project's folder (`Assets/logo.png`), or it can be a full path. The local file's wins over the shared one's. One that can't be shown, because it isn't there, it's too big, it's another kind of file or it's on a network share, is skipped with a reason, and the group keeps its dot. Settings → the project's **Icon** page sets it. See [A group's icon](../tabs/folder-groups.md#a-groups-icon).
+`icon` is the picture the folder's group shows in the sidebar in place of its colored dot: a PNG, ICO, JPEG, BMP, GIF or WebP of at most 1 MB. Its path is read from the project's folder (`Assets/logo.png`), or it can be a full path. The local file's wins over the shared one's. One that can't be shown, because it isn't there, it's too big, it's another kind of file or it's on a network share, is skipped with a reason, and the group keeps its dot. Settings → the project's **Group** page sets it. See [A group's icon](../tabs/folder-groups.md#a-groups-icon).
 
 ## What's skipped
 

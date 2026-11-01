@@ -544,7 +544,7 @@
                             <MenuItem Header="Change color…" Click="OnChangeGroupColor">
                               <MenuItem.Icon><Ellipse Width="10" Height="10" Fill="{Binding Brush}" /></MenuItem.Icon>
                             </MenuItem>
-                            <!-- A picture of the project's own in place of the group's dot, on its Icon page in Settings (DESIGN.md §4, "Grouped by folder") -->
+                            <!-- A picture of the project's own in place of the group's dot, on its Group page in Settings (DESIGN.md §4, "Grouped by folder") -->
                             <MenuItem Header="Change icon…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ChangeGroupIconCommand}" CommandParameter="{Binding}"
                                       IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconImage}" /></MenuItem.Icon>
@@ -1165,7 +1165,7 @@
                         <MenuItem Header="Change color…" Click="OnChangeGroupColor">
                           <MenuItem.Icon><Ellipse Width="10" Height="10" Fill="{Binding Brush}" /></MenuItem.Icon>
                         </MenuItem>
-                        <!-- A picture of the project's own in place of the group's dot, on its Icon page in Settings (DESIGN.md §4, "Grouped by folder") -->
+                        <!-- A picture of the project's own in place of the group's dot, on its Group page in Settings (DESIGN.md §4, "Grouped by folder") -->
                         <MenuItem Header="Change icon…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ChangeGroupIconCommand}" CommandParameter="{Binding}"
                                   IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconImage}" /></MenuItem.Icon>

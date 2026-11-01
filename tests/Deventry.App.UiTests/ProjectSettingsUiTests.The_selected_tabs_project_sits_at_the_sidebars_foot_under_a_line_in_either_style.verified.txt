@@ -27,4 +27,4 @@
 "Links"
 "Actions"
 "Tools"
-"Icon"
+"Group"

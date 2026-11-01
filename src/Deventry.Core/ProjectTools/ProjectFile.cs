@@ -10,11 +10,13 @@ namespace Deventry.Core.ProjectTools;
 /// <param name="Actions">The actions for this OS, in order. <see cref="ProjectFile.Read"/> also leaves out those whose <c>ifExists</c> is missing.</param>
 /// <param name="Problems">Why entries (or a whole file) were skipped, such as "deventry.json: actions[2] has no command".</param>
 /// <param name="Icon">The picture the folder's group shows in place of its colored dot; null keeps the dot.</param>
-public sealed record ProjectFileContents(IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems, ProjectIcon? Icon = null)
+/// <param name="Color">The folder's group's color, <c>#RRGGBB</c>; null leaves the one remembered on this computer.</param>
+public sealed record ProjectFileContents(
+    IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems, ProjectIcon? Icon = null, string? Color = null)
 {
     public static ProjectFileContents Empty { get; } = new([], [], []);
 
-    public bool IsEmpty => Actions.Count == 0 && Links.Count == 0 && Problems.Count == 0 && Icon is null;
+    public bool IsEmpty => Actions.Count == 0 && Links.Count == 0 && Problems.Count == 0 && Icon is null && Color is null;
 }
 
 /// <summary>
@@ -51,6 +53,7 @@ public sealed record ProjectFileLinkEntry(JsonNode? Raw, ProjectLink? Link, stri
 /// <code>
 /// {
 ///   "icon": "Assets/logo.png",
+///   "color": "#4A6FC4",
 ///   "actions": [
 ///     { "name": "Run tests", "command": "dotnet test", "folder": "src", "mode": "output" },
 ///     { "name": "Open Grafana", "command": "start https://grafana", "mode": "launch", "os": ["windows"] },
@@ -127,7 +130,8 @@ public static class ProjectFile
             [.. shared.Actions.Concat(local.Actions).Where(a => a.IsShownIn(folder))],
             [.. shared.Links, .. local.Links],
             [.. Error(sharedName, sharedError), .. shared.Problems, .. Error(localName, localError), .. local.Problems, .. iconProblem],
-            icon);
+            icon,
+            local.Color ?? shared.Color);
 
         static IEnumerable<string> Error(string file, string? error) => error is null ? [] : [$"{file} couldn't be read: {error}"];
     }
@@ -184,7 +188,27 @@ public static class ProjectFile
                 problems.Add($"{file}: \"icon\" should be a picture's path, such as \"Assets/logo.png\", so it was skipped.");
             }
         }
-        return new ProjectFileContents(actions, links, problems, icon);
+        string? color = null;
+        if (root.TryGetPropertyValue("color", out var colorNode) && colorNode is not null)
+        {
+            color = NormalizeColor(LenientJson.String(root, "color"));
+            if (color is null)
+            {
+                problems.Add($"{file}: \"color\" should be a color such as \"#4A6FC4\", so it was skipped.");
+            }
+        }
+        return new ProjectFileContents(actions, links, problems, icon, color);
+    }
+
+    /// <summary>A color as it's written and kept, <c>#RRGGBB</c>, from <c>#RRGGBB</c> or <c>#RGB</c>, with or without the <c>#</c>; null when it isn't one.</summary>
+    public static string? NormalizeColor(string? text)
+    {
+        var hex = text?.Trim().TrimStart('#') ?? "";
+        if (hex.Length is not (3 or 6) || !hex.All(char.IsAsciiHexDigit))
+        {
+            return null;
+        }
+        return "#" + (hex.Length == 3 ? string.Concat(hex.Select(c => $"{c}{c}")) : hex).ToUpperInvariant();
     }
 
     /// <summary>
@@ -245,31 +269,44 @@ public static class ProjectFile
         return relative == "." || relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? picked : relative.Replace('\\', '/');
     }
 
-    /// <summary>One file's <c>icon</c> as it has it, for Settings' Icon page; null when it has none.</summary>
+    /// <summary>One file's <c>icon</c> as it has it, for Settings' Group page; null when it has none.</summary>
     /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
-    public static string? ReadIcon(string folder, ProjectFileScope scope) =>
-        ReadRoot(folder, scope) is { } root ? LenientJson.String(root, "icon")?.Trim() is { Length: > 0 } icon ? icon : null : null;
+    public static string? ReadIcon(string folder, ProjectFileScope scope) => ReadValue(folder, scope, "icon");
 
     /// <summary>
     /// Sets one file's <c>icon</c>, or takes it out when <paramref name="icon"/> is null, keeping its other keys, as
     /// <see cref="WriteActions"/> does. Creates the file for an icon when there's none.
     /// </summary>
     /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
-    public static void WriteIcon(string folder, ProjectFileScope scope, string? icon)
+    public static void WriteIcon(string folder, ProjectFileScope scope, string? icon) => WriteValue(folder, scope, "icon", icon);
+
+    /// <summary>One file's <c>color</c>, as <c>#RRGGBB</c>; null when it has none, or none that's a color.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static string? ReadColor(string folder, ProjectFileScope scope) => NormalizeColor(ReadValue(folder, scope, "color"));
+
+    /// <summary>Sets one file's <c>color</c> (<c>#RRGGBB</c>), or takes it out when null, as <see cref="WriteIcon"/> does.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static void WriteColor(string folder, ProjectFileScope scope, string? color) =>
+        WriteValue(folder, scope, "color", color is null ? null : NormalizeColor(color) ?? throw new ArgumentException($"{color} isn't a color.", nameof(color)));
+
+    private static string? ReadValue(string folder, ProjectFileScope scope, string key) =>
+        ReadRoot(folder, scope) is { } root && LenientJson.String(root, key)?.Trim() is { Length: > 0 } value ? value : null;
+
+    private static void WriteValue(string folder, ProjectFileScope scope, string key, string? value)
     {
         var root = ReadRoot(folder, scope);
-        if (icon is null && root is null)
+        if (value is null && root is null)
         {
             return;
         }
         root ??= [];
-        if (icon is null)
+        if (value is null)
         {
-            root.Remove("icon");
+            root.Remove(key);
         }
         else
         {
-            root["icon"] = icon;
+            root[key] = value;
         }
         AtomicFile.WriteAllText(PathFor(folder, scope), root.ToJsonString(WriteOptions) + Environment.NewLine);
     }

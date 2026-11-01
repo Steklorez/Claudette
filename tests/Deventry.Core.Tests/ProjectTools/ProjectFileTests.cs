@@ -318,6 +318,56 @@ public sealed class ProjectFileTests : IDisposable
         Assert.Equal(elsewhere, ProjectFile.IconPathFor(folder, elsewhere));
     }
 
+    // ---- The group's color --------------------------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("#4a6fc4", "#4A6FC4")]
+    [InlineData("4A6FC4", "#4A6FC4")]
+    [InlineData(" #1a3 ", "#11AA33")]
+    [InlineData("purple", null)]
+    [InlineData("#12345", null)]
+    [InlineData(null, null)]
+    public void A_color_is_kept_as_six_hex_digits(string? text, string? color) => Assert.Equal(color, ProjectFile.NormalizeColor(text));
+
+    [Fact]
+    public void The_color_is_read_from_either_file_and_the_local_files_wins()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "color": "#4a6fc4" }""");
+        Assert.Equal("#4A6FC4", ProjectFile.Read(folder, ToolOS.Linux).Color);
+
+        _temp.Write("game/deventry.local.json", """{ "color": "#1a3" }""");
+        Assert.Equal("#11AA33", ProjectFile.Read(folder, ToolOS.Linux).Color);
+    }
+
+    [Fact]
+    public void A_color_that_isnt_one_is_skipped_with_a_reason()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "color": "purple" }""");
+
+        var contents = ProjectFile.Read(folder, ToolOS.Linux);
+
+        Assert.Null(contents.Color);
+        Assert.Equal(["deventry.json: \"color\" should be a color such as \"#4A6FC4\", so it was skipped."], contents.Problems);
+    }
+
+    [Fact]
+    public void Saving_the_color_keeps_the_rest_and_taking_it_out_leaves_the_icon()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "icon": "logo.png" }""");
+
+        ProjectFile.WriteColor(folder, ProjectFileScope.Shared, "#1a3");
+        Assert.Equal("#11AA33", ProjectFile.ReadColor(folder, ProjectFileScope.Shared));
+        Assert.Equal("logo.png", ProjectFile.ReadIcon(folder, ProjectFileScope.Shared));
+
+        ProjectFile.WriteColor(folder, ProjectFileScope.Shared, null);
+        Assert.Null(ProjectFile.ReadColor(folder, ProjectFileScope.Shared));
+        Assert.Equal("logo.png", ProjectFile.ReadIcon(folder, ProjectFileScope.Shared));
+        Assert.Throws<ArgumentException>(() => ProjectFile.WriteColor(folder, ProjectFileScope.Shared, "purple"));
+    }
+
     // ---- Links ----------------------------------------------------------------------------------------------------------
 
     [Theory]

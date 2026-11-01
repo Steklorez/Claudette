@@ -10,7 +10,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- **A project's own icon for its group.** Choose a picture (a PNG, ICO, JPEG, BMP, GIF or WebP) on the project's new **Icon** page in Settings, and its group shows it in the sidebar in place of the colored dot. It's saved in the project's `deventry.json`, for everyone who opens it, or in `deventry.local.json`, just for you. **Change icon…** in the group's menu takes you there.
+- **A project's own icon for its group.** Choose a picture (a PNG, ICO, JPEG, BMP, GIF or WebP) on the project's new **Group** page in Settings, and its group shows it in the sidebar in place of the colored dot. It's saved in the project's `deventry.json`, for everyone who opens it, or in `deventry.local.json`, just for you. **Change icon…** in the group's menu takes you there.
+- **A group's color is saved with its project.** The color you pick with **Change color…** is saved in the project's `deventry.json` when you close the picker, so everyone who opens the project sees its group in that color, on every machine. A color in `deventry.local.json` is yours alone and wins. The project's **Group** page in Settings shows where it's saved, and can move it or take it out.
 - **Project settings… in a group's menu** opens Settings at that project's pages, for the group's tab you used last.
 
 ### Changed
