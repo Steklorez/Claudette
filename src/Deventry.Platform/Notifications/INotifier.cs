@@ -61,8 +61,12 @@ public interface IAppBadge
     /// Shows one frame of an animation, a PNG for <see cref="Surface"/>, or none: the overlay goes, or the Dock icon is
     /// Deventry's own again. On Windows a count, while there is one, stays in front of it.
     /// </summary>
+    /// <param name="onDark">
+    /// The frame for a dark taskbar, when it has one (Windows), which shows in place of <paramref name="png"/> while the
+    /// taskbar is dark.
+    /// </param>
     /// <param name="description">What it means, for screen readers (Windows).</param>
-    void ShowFrame(byte[]? png, string? description);
+    void ShowFrame(byte[]? png, byte[]? onDark, string? description);
 
     /// <summary>Flashes the taskbar button until Deventry comes to the front (Windows); false stops it.</summary>
     void Flash(bool on);
@@ -95,7 +99,7 @@ public sealed class NullNotifier : INotifier, IAppBadge
     {
     }
 
-    public void ShowFrame(byte[]? png, string? description)
+    public void ShowFrame(byte[]? png, byte[]? onDark, string? description)
     {
     }
 

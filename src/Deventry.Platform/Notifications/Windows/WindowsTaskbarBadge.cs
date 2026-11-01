@@ -7,7 +7,8 @@ namespace Deventry.Platform.Notifications.Windows;
 /// Deventry's taskbar button (DESIGN.md §10). Its overlay icon, through <c>ITaskbarList3::SetOverlayIcon</c>, shows the
 /// number of tabs needing input, or else a frame of the working animation; Windows takes the button's own icon from the
 /// package or the AppUserModelID, so the overlay is what can change. The app draws both as PNGs; this turns them into
-/// icons. The button flashes through <c>FlashWindowEx</c>.
+/// icons, and shows a frame's version for a dark taskbar while the taskbar is dark (<see cref="TaskbarTheme"/>). The
+/// button flashes through <c>FlashWindowEx</c>.
 /// </summary>
 [SupportedOSPlatform("windows")]
 public sealed unsafe class WindowsTaskbarBadge(Func<nint> windowHandle, Func<int, byte[]?> renderIcon, ILogger logger) : IAppBadge
@@ -24,6 +25,7 @@ public sealed unsafe class WindowsTaskbarBadge(Func<nint> windowHandle, Func<int
     private nint _countIcon;
     private int _count;
     private byte[]? _frame;
+    private byte[]? _frameOnDark;
     private string? _frameDescription;
 
     public AppIconSurface Surface => AppIconSurface.Overlay;
@@ -55,9 +57,10 @@ public sealed unsafe class WindowsTaskbarBadge(Func<nint> windowHandle, Func<int
         _count = count;
     }
 
-    public void ShowFrame(byte[]? png, string? description)
+    public void ShowFrame(byte[]? png, byte[]? onDark, string? description)
     {
         _frame = png;
+        _frameOnDark = onDark;
         _frameDescription = description;
         if (_count == 0)
         {
@@ -103,13 +106,15 @@ public sealed unsafe class WindowsTaskbarBadge(Func<nint> windowHandle, Func<int
 
     private nint FrameIcon()
     {
-        if (_frame is null)
+        // The taskbar's mode is read for each frame, so switching it shows at the next one.
+        var png = _frameOnDark is not null && TaskbarTheme.IsDark() ? _frameOnDark : _frame;
+        if (png is null)
         {
             return 0;
         }
-        if (!_frameIcons.TryGetValue(_frame, out var icon))
+        if (!_frameIcons.TryGetValue(png, out var icon))
         {
-            _frameIcons[_frame] = icon = CreateIcon(_frame);
+            _frameIcons[png] = icon = CreateIcon(png);
         }
         return icon;
     }

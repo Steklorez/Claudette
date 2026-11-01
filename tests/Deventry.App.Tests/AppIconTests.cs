@@ -51,6 +51,18 @@ public class AppIconTests
     }
 
     [Fact]
+    public void The_taskbar_overlays_frames_have_a_version_for_a_dark_taskbar()
+    {
+        foreach (var animation in new[] { AppIconAnimations.Chevrons, AppIconAnimations.Hourglass })
+        {
+            Assert.All(animation.Frames, frame => Assert.Equal([0x89, (byte)'P', (byte)'N', (byte)'G'], frame.OnDark![..4]));
+        }
+        // The Dock's are on their tile, the same on a light or dark Dock.
+        Assert.All(new[] { AppIconAnimations.Working, AppIconAnimations.Asking, AppIconAnimations.Waiting }.SelectMany(animation => animation.Frames),
+            frame => Assert.Null(frame.OnDark));
+    }
+
+    [Fact]
     public async Task While_a_tab_works_the_taskbar_overlays_chevrons_light_in_turn()
     {
         await using var h = new TabTestHarness();
@@ -59,6 +71,7 @@ public class AppIconTests
 
         var chevrons = AppIconAnimations.Chevrons.Frames;
         Assert.Same(chevrons[0].Png, h.Notifier.Frame);
+        Assert.Same(chevrons[0].OnDark, h.Notifier.FrameOnDark);
         Assert.Equal("Claude is working", h.Notifier.FrameDescription);
         h.Time.Advance(chevrons[0].Duration);
         Assert.Same(chevrons[1].Png, h.Notifier.Frame);
