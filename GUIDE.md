@@ -70,7 +70,7 @@ The sidebar groups the chapters into sections (`docs/guide/<section>.md`), in th
 
 ### Home (`docs/index.html`)
 
-The landing page ([The site](#1-the-site)): what Deventry is, the latest release's packages and building it on Linux, what it does for game developers, a tour of its main features with pictures, its two styles, Joulene, the systems it runs on, and where to start. From [§1](DESIGN.md#1-goals) and the README.
+The landing page ([The site](#1-the-site)): what Deventry is, its latest release's packages (until 1.0.0 is out, that it's coming soon, with Claudette's on the Downloads page) and building it on Linux, what it does for game developers, a tour of its main features with pictures, its two styles, Joulene, the systems it runs on, and where to start. From [§1](DESIGN.md#1-goals) and the README.
 
 ### Downloads (`docs/downloads.md`)
 

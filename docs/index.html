@@ -6,9 +6,26 @@ nav_exclude: true
 search_exclude: true
 ---
 {%- comment -%}
-  The landing page (GUIDE.md, "The landing page"). The packages' buttons come from the latest release (site.github).
+  The landing page (GUIDE.md, "The landing page"). The packages' buttons come from Deventry's latest release, 1.0.0 or
+  later (site.github). Until there is one, the card says 1.0.0 is coming soon, and the buttons lead to Claudette's
+  releases, Deventry's name before 1.0.0, on the Downloads page.
 {%- endcomment -%}
-{%- assign latest = site.github.latest_release -%}
+{%- assign latest = nil -%}
+{%- assign claudette = nil -%}
+{%- for release in site.github.releases -%}
+  {%- if release.draft or release.prerelease -%}{%- continue -%}{%- endif -%}
+  {%- assign major = release.tag_name | remove_first: "v" | split: "." | first | plus: 0 -%}
+  {%- if major >= 1 -%}
+    {%- if latest == nil -%}{%- assign latest = release -%}{%- endif -%}
+  {%- elsif claudette == nil -%}
+    {%- assign claudette = release -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if latest -%}
+  {%- assign elsewhere = '/downloads/' | relative_url -%}
+{%- else -%}
+  {%- assign elsewhere = '/downloads/#claudette' | relative_url -%}
+{%- endif -%}
 {%- assign windows = nil -%}
 {%- assign mac = nil -%}
 {%- for asset in latest.assets -%}
@@ -27,12 +44,15 @@ search_exclude: true
 
   <div class="get" id="download">
     <div class="get-card">
-      <p class="get-label">{% include icon.html name="download" %} Download Deventry{% if latest.tag_name %} {{ latest.tag_name | remove_first: "v" }}{% endif %}</p>
+      <p class="get-label">{% include icon.html name="download" %} {% if latest %}Download Deventry {{ latest.tag_name | remove_first: "v" }}{% else %}Deventry 1.0.0 is coming soon{% endif %}</p>
       <div class="get-buttons">
-        <a class="pill pill-primary" href="{% if windows %}{{ windows.browser_download_url }}{% else %}{{ '/downloads/' | relative_url }}{% endif %}">{% include icon.html name="monitor" %}<span>Windows <small>x64</small></span></a>
-        <a class="pill pill-primary" href="{% if mac %}{{ mac.browser_download_url }}{% else %}{{ '/downloads/' | relative_url }}{% endif %}">{% include icon.html name="laptop" %}<span>macOS <small>Apple silicon</small></span></a>
+        <a class="pill pill-primary" href="{% if windows %}{{ windows.browser_download_url }}{% else %}{{ elsewhere }}{% endif %}">{% include icon.html name="monitor" %}<span>Windows <small>x64</small></span></a>
+        <a class="pill pill-primary" href="{% if mac %}{{ mac.browser_download_url }}{% else %}{{ elsewhere }}{% endif %}">{% include icon.html name="laptop" %}<span>macOS <small>Apple silicon</small></span></a>
         <a class="pill pill-outline get-wide" href="{{ '/getting-started/installing-on-linux/' | relative_url }}">{% include icon.html name="terminal" %}<span>Linux <small>build from source</small></span></a>
       </div>
+      {%- unless latest %}
+      <p class="get-soon">Until then, {% if claudette %}Claudette {{ claudette.tag_name | remove_first: "v" }}{% else %}Claudette{% endif %}, Deventry's name before 1.0.0, is on the <a href="{{ '/downloads/#claudette' | relative_url }}">Downloads page</a>.</p>
+      {%- endunless %}
     </div>
     <p class="get-note">Works with <a href="https://code.claude.com/docs/en/setup">Claude Code</a> today, with more providers to come · Windows 10 and 11, macOS 12 or later, Linux on x64 · <a href="{{ '/downloads/' | relative_url }}">Every package</a></p>
   </div>

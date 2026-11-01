@@ -201,6 +201,7 @@ h1, h2, h3 { color: var(--heading); line-height: 1.12; margin: 0; }
 /* Linux, which has no package to download, under the two that do. */
 .get-buttons .get-wide { grid-column: 1 / -1; }
 .get-note { margin: 0.8rem 0 0; font-size: 0.85rem; color: var(--muted); }
+.get-soon { margin: 0.9rem 0 0; font-size: 0.85rem; color: var(--muted); text-align: center; }
 
 .trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem 1.6rem; margin: 2rem 0 0; padding: 0; list-style: none; font-size: 0.9rem; color: var(--muted); }
 .trust li, .trust a { display: inline-flex; align-items: center; gap: 0.45rem; }
