@@ -5,7 +5,6 @@
   </defs>
   <polygon points="512,122 902,512 512,902 122,512" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="132.6" stroke-linejoin="round"/>
   <polygon points="512,122 902,512 512,902 122,512" fill="url(#paint-0)" stroke="url(#paint-0)" stroke-width="62.4" stroke-linejoin="round"/>
-  <polygon points="512,176.6 847.4,512 512,847.4 176.6,512" fill="none" stroke="#FFFFFF" stroke-width="21.45" stroke-linecap="round" stroke-linejoin="round"/>
   <polyline points="352.1,428.15 461.3,512 352.1,595.85" fill="none" stroke="#FFFFFF" stroke-width="60.45" stroke-linecap="round" stroke-linejoin="round"/>
   <polyline points="547.1,595.85 671.9,595.85" fill="none" stroke="#FFFFFF" stroke-width="60.45" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

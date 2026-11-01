@@ -1,7 +1,7 @@
 // Draws Deventry's icon and Joulene (DESIGN.md §2, "Packaging and signing", "Renaming to Deventry"). The icon is a
-// road-work sign: a diamond in Joulene's gown's blue, lit softly from the top, with a prompt, ">_", on it in white, a
-// white border inset and a white edge round it, so it stands on a light or dark background without a tile. It's drawn
-// as shapes, and the same shapes make the SVGs and, drawn here from how far each pixel is from them, every PNG.
+// road-work sign: a diamond in Joulene's gown's blue, lit softly from the top, with a prompt, ">_", on it in white, and a
+// white edge round it, so it stands on a light or dark background without a tile. It's drawn as shapes, and the same
+// shapes make the SVGs and, drawn here from how far each pixel is from them, every PNG.
 // Joulene, the mascot on the composer, is a medieval lady of 12×12 cells, which the app draws cell by cell. Writes:
 //   packaging/icon/deventry.svg               the icon as vectors, also Rider's project icon (.idea/.idea.Deventry/.idea/icon.svg)
 //   packaging/icon/deventry-1024.png          the macOS icon, the sign on a charcoal tile; build-dmg.sh scales it
@@ -98,13 +98,12 @@ function moved(shape, { scale = 1, turn = 0, from = [512, 512], to = from }) {
 const diamond = r => [[512, 512 - r], [512 + r, 512], [512, 512 + r], [512 - r, 512]];
 
 /**
- * The sign, its corners `r` from the middle, with `symbol` on it: its white edge, its blue, its white border inset,
- * and the symbol, drawn for a sign of 400 and scaled to this one.
+ * The sign, its corners `r` from the middle, with `symbol` on it: its white edge, its blue, and the symbol, drawn for a
+ * sign of 400 and scaled to this one.
  */
 const sign = (r, symbol) => [
   { fill: diamond(r), grow: r * 0.17, paint: white },
   { fill: diamond(r), grow: r * 0.08, paint: glow(512 - r, 512 - r, 2 * r) },
-  { ring: diamond(r * 0.86), width: r * 0.055, paint: white },
   ...symbol.map(shape => moved(shape, { scale: r / 400 })),
 ];
 
