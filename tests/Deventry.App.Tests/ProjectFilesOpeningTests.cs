@@ -251,6 +251,27 @@ public class ProjectFilesOpeningTests
     }
 
     [Fact]
+    public async Task A_web_page_a_reply_links_to_opens_in_the_browser_and_one_worked_on_in_the_editor()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var page = Write(Path.Combine(h.WorkFolder, "checks", "overlay.html"), "<!doctype html><title>Overlay</title>\n");
+
+        await OpenLinkAsync(h, tab, "checks/overlay.html");
+
+        // The browser is the app the OS uses for it.
+        Assert.Equal([page], h.Platform.OpenedFiles);
+        Assert.Null(h.Shell.Groups.Single().Files);
+
+        // Opened from where it's being worked on, such as Changed files or a tool card, it's its markup that's wanted.
+        Assert.Equal(OpenedPath.InDeventry, await InlineDispatcher.RunAsync(() => tab.OpenPathAsync(page)));
+        var files = h.Shell.Groups.Single().Files!;
+        await TabTestHarness.Eventually(() => files.Rows.Count > 0, "the explorer");
+        Assert.Equal(page, files.Showing?.Path);
+        Assert.Equal([page], h.Platform.OpenedFiles);
+    }
+
+    [Fact]
     public async Task A_script_opens_as_text_rather_than_running()
     {
         await using var h = new TabTestHarness();

@@ -40,6 +40,7 @@ Close the file when you're done with it, and the Files tab closes too: the conve
 - A program or shortcut that isn't text (`.exe`, `.lnk`, `.app`, `.desktop`) still shows in its folder, since opening it would run it.
 - Binary files, and files over 10 MB, open in the OS's app.
 - An image opens in Deventry's image window, as Settings → **Files and diffs** → **Open images in** says ([Images](../conversation/images.md#opening-an-image-claude-names)).
+- A web page (`.html`, `.htm`, `.xhtml`) that a reply or a Markdown file's preview links to opens in your browser. From Changed files or a tool tile's **Open**, it opens in the editor.
 - A folder in the project shows in the explorer, expanded and selected. One elsewhere opens in Explorer, Finder or your file manager.
 - A script (`.bat`, `.ps1`, `.sh`, `.py`, `.js`) opens in the editor as text, since showing its text doesn't run it.
 

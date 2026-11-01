@@ -15,6 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Joulene on the composer**, in place of Claudette: a medieval lady with platinum hair, a gold circlet and a blue gown. She does everything Claudette did, and now and then visits her cave: it appears beside her, she walks in, peeks out and comes back to wave. Her settings are in Settings → Appearance → **Joulene**, as you had them, and the gem in her circlet takes the colour of the tab's group, as Claudette's hair tie did.
 - **`deventry.json`** holds a project's actions and links. A project's `claudette.json` and `claudette.local.json` still work, and Deventry saves to them; a project with neither gets `deventry.json`.
 - **`DEVENTRY_` environment variables.** Project actions get `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT`, and your login shell `DEVENTRY_RESOLVING_ENVIRONMENT`, beside their `CLAUDETTE_` names for now. `CLAUDETTE_HOME` still works too.
+- **A web page Claude names opens in your browser.** A link in a reply, or a file's name in its code, that's an `.html` page opens in your default browser rather than in Deventry's editor, and so does one linked from a Markdown file's preview. Changed files' and a tool card's **Open** still open it in the editor, to work on it.
 - **In the Microsoft Store**, Deventry has a listing of its own. Install it from there, and everything carries over as it does from a download.
 
 ## [0.7.0] - 2026-10-31

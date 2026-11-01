@@ -68,6 +68,16 @@ public sealed partial record ReplyFileReference(string Text, string Path, int? L
     }
 
     /// <summary>
+    /// A web page, which a link opens in the browser, the app the OS uses for it, rather than in Deventry's editor: a link
+    /// to one means the page, not its markup. The browser shows it in its own sandbox, so it doesn't run as a program does
+    /// (an HTML Application, <c>.hta</c>, is a program).
+    /// </summary>
+    public static bool IsWebPage(string path) =>
+        WebPageExtensions.Contains(System.IO.Path.GetExtension(System.IO.Path.TrimEndingDirectorySeparator(path)));
+
+    private static readonly HashSet<string> WebPageExtensions = new(StringComparer.OrdinalIgnoreCase) { ".html", ".htm", ".xhtml" };
+
+    /// <summary>
     /// Something the OS would run or install rather than show: a program, a script, a shortcut or an installer. A click
     /// shows it in Finder or Explorer instead of opening it, since a reply could be prompt-injected to point at one
     /// under an innocent name. <paramref name="isExecutable"/> says a file without an extension has its execute bit set,
