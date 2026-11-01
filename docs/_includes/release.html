@@ -1,7 +1,8 @@
 {%- comment -%}
   One release's packages (GUIDE.md, "The Downloads page"): {% include release.html release=r buttons=true %}.
-  package.yml names them Deventry-<version>-<x64|arm64>.<msix|dmg>: the extension says the OS, the name the processor.
-  Anything else attached to the release is listed under Other files.
+  package.yml names them Deventry-<version>-<x64|arm64>.<msix|dmg>, and Claudette-<version>-… before 1.0.0, when the app
+  was Claudette: the extension says the OS, the name the processor. Anything else attached to the release is listed under
+  Other files.
 {%- endcomment -%}
 {%- assign release = include.release -%}
 {%- assign kinds = "msix:x64:Windows:x64 (Intel or AMD),msix:arm64:Windows:Arm64,dmg:arm64:macOS:Apple silicon,dmg:x64:macOS:Intel" | split: "," -%}
@@ -11,7 +12,8 @@
   {%- assign part = kind | split: ":" -%}
   {%- assign suffix = "-" | append: part[1] | append: "." | append: part[0] -%}
   {%- for asset in release.assets -%}
-    {%- if asset.name contains suffix and asset.name contains "Deventry-" -%}
+    {%- unless asset.name contains suffix -%}{%- continue -%}{%- endunless -%}
+    {%- if asset.name contains "Deventry-" or asset.name contains "Claudette-" -%}
   <a class="btn btn-primary" href="{{ asset.browser_download_url }}">{{ part[2] }}, {{ part[3] }}</a>
     {%- endif -%}
   {%- endfor -%}
@@ -25,7 +27,8 @@
   {%- assign part = kind | split: ":" -%}
   {%- assign suffix = "-" | append: part[1] | append: "." | append: part[0] -%}
   {%- for asset in release.assets -%}
-    {%- if asset.name contains suffix and asset.name contains "Deventry-" %}
+    {%- unless asset.name contains suffix -%}{%- continue -%}{%- endunless -%}
+    {%- if asset.name contains "Deventry-" or asset.name contains "Claudette-" %}
     <tr>
       <td>{{ part[2] }}, {{ part[3] }}</td>
       <td><a href="{{ asset.browser_download_url }}">{{ asset.name }}</a> ({{ asset.size | divided_by: 1048576.0 | round: 1 }} MB)</td>
@@ -39,7 +42,11 @@
 {%- assign others = "" | split: "" -%}
 {%- for asset in release.assets -%}
   {%- assign ext = asset.name | split: "." | last -%}
-  {%- unless asset.name contains "Deventry-" and ext == "msix" or ext == "dmg" -%}
+  {%- assign package = false -%}
+  {%- if ext == "msix" or ext == "dmg" -%}
+    {%- if asset.name contains "Deventry-" or asset.name contains "Claudette-" -%}{%- assign package = true -%}{%- endif -%}
+  {%- endif -%}
+  {%- unless package -%}
     {%- assign others = others | push: asset -%}
   {%- endunless -%}
 {%- endfor -%}
