@@ -49,8 +49,8 @@ The project menu's **Show in Explorer** is **Show in Finder** on macOS and **Sho
 
 ## Notifications and the icon
 
-- **Windows** shows toasts. The taskbar button's overlay shows the number of tabs needing input, the prompt typing while tabs work and an hourglass while a tab waits for a usage limit, and the button flashes when a tab starts needing you while Deventry isn't in front.
-- **macOS** uses its notification center, which needs `Deventry.app`: a build run with `dotnet run` has no notifications, and Settings says so. The Dock icon has the number as a badge, and the cave on it types, asks with a hopping **?** or waits by an hourglass.
+- **Windows** shows toasts. The taskbar button's overlay shows the number of tabs needing input, chevrons lighting in turn while tabs work and an hourglass while a tab waits for a usage limit, and the button flashes when a tab starts needing you while Deventry isn't in front.
+- **macOS** uses its notification center, which needs `Deventry.app`: a build run with `dotnet run` has no notifications, and Settings says so. The Dock icon has the number as a badge, and the sign on it lights its chevrons, asks with a **?** and a **!** by turns, or shows an hourglass.
 - **Linux** uses `notify-send`. Without it there are no notifications, and Settings says so. The badge and the icon's animation are for the Windows taskbar and the macOS Dock.
 
 See [Notifications](../away/notifications.md) and [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).

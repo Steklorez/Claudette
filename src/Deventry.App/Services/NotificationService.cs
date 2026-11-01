@@ -186,10 +186,10 @@ public sealed class NotificationService : IDisposable
         Animate(!settings.AnimateIcon ? null : _badge.Surface switch
         {
             AppIconSurface.Overlay when count > 0 => null,
-            AppIconSurface.Overlay => _tabsLimited > 0 ? AppIconAnimations.Hourglass : _tabsWorking > 0 ? AppIconAnimations.Prompt : null,
+            AppIconSurface.Overlay => _tabsLimited > 0 ? AppIconAnimations.Hourglass : _tabsWorking > 0 ? AppIconAnimations.Chevrons : null,
             AppIconSurface.Icon => _tabsNeedingInput > 0 ? AppIconAnimations.Asking
                 : _tabsLimited > 0 ? AppIconAnimations.Waiting
-                : _tabsWorking > 0 ? AppIconAnimations.Typing : null,
+                : _tabsWorking > 0 ? AppIconAnimations.Working : null,
             _ => null,
         });
     }

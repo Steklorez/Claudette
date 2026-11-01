@@ -183,7 +183,7 @@ internal static class MascotAntics
     public const int CaveWave = 6;
 
     /// <summary>
-    /// A visit to her cave, the icon's (DESIGN.md §5): it appears on the edge beside her in a puff, she walks into its
+    /// A visit to her cave (DESIGN.md §5): it appears on the edge beside her in a puff, she walks into its
     /// dark mouth, her eyes look out of it, and she comes back out the way she went in, puts her hands on her hips and
     /// waves before it goes in another puff. <paramref name="way"/> is 1 for the cave on her right, -1 on her left; she
     /// ends <see cref="CaveAway"/> less <see cref="CaveWave"/> cells that way. The cave stays where it appeared: a prop

@@ -26,13 +26,13 @@ What it shows, most important first:
 
 | State | Windows (the overlay on the taskbar button) | macOS (the whole Dock icon) |
 |---|---|---|
-| A tab needs your input | The number of tabs | The prompt in the cave turns into a **?** that hops, under the badge's number |
-| A usage limit has stopped a task and hasn't reset | An hourglass, its sand running slowly down before it turns over | The prompt rests, with the hourglass beside the cave |
-| A tab is working | The prompt, its cursor typing | The cursor in the cave types |
+| A tab needs your input | The number of tabs | The sign shows a **?** and a **!** by turns, under the badge's number |
+| A usage limit has stopped a task and hasn't reset | An hourglass, its sand running slowly down before it turns over | The sign shows the hourglass |
+| A tab is working | Chevrons lighting one after another | The sign's prompt becomes chevrons lighting one after another, like an arrow board's |
 
 The hourglass shows whether or not the task will continue by itself, and goes once the limit resets, a turn starts, or you choose **Don't continue** ([When a limit stops a task](../usage/when-a-limit-stops-a-task.md)). It comes before tabs working, since the limit stopped a task and the other tabs are likely to run into it too. It never flashes the taskbar, because nothing needs you.
 
-On Windows the overlay holds one image, so the number of tabs needing input comes first, then the hourglass, then the prompt. The prompt or hourglass comes back once no tab needs input, or at once with the badge off. Windows takes the button's own icon from the app, so only the overlay can move.
+On Windows the overlay holds one image, so the number of tabs needing input comes first, then the hourglass, then the chevrons. The chevrons or hourglass come back once no tab needs input, or at once with the badge off. Windows takes the button's own icon from the app, so only the overlay can move.
 
 With reduced motion, the icon shows its picture without moving. That's Settings → Appearance → **Motion**; see [Accessibility](../settings/accessibility.md).
 

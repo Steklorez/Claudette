@@ -105,7 +105,7 @@ A banner under the header says what's wrong while Claude has an incident. A line
 
 ## The Dock and taskbar icon
 
-On Windows, the taskbar button's overlay shows the number of tabs needing input, the prompt typing while tabs work, and an hourglass while a tab waits for a usage limit. On macOS, the Dock icon shows the number as a badge, and the cave's cursor types, its **?** hops, or its prompt waits by an hourglass. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).
+On Windows, the taskbar button's overlay shows the number of tabs needing input, chevrons lighting in turn while tabs work, and an hourglass while a tab waits for a usage limit. On macOS, the Dock icon shows the number as a badge, and its sign lights its chevrons, shows a **?** and a **!** by turns, or shows an hourglass. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).
 
 ## Accounts, Project files and the conversation
 

@@ -110,17 +110,17 @@ public class AccessibilityTests
         tab.ComposerText = "long job";
         await tab.SendCommand.ExecuteAsync(null);
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "working");
-        var typing = AppIconAnimations.Typing.Frames;
-        Assert.Same(typing[0].Png, h.Notifier.Frame);
+        var working = AppIconAnimations.Working.Frames;
+        Assert.Same(working[0].Png, h.Notifier.Frame);
 
         h.Services.Settings.Appearance.Motion = MotionSetting.Reduce;
         h.Services.SaveSettings();
         for (var i = 0; i < 5; i++)
         {
-            h.Time.Advance(WorkingLine.FrameInterval + typing[0].Duration);
+            h.Time.Advance(WorkingLine.FrameInterval + working[0].Duration);
             Assert.Equal(WorkingLine.StillGlyph, tab.Working.Glyph);
             // Still, but still saying the tab is working.
-            Assert.Same(typing[0].Png, h.Notifier.Frame);
+            Assert.Same(working[0].Png, h.Notifier.Frame);
         }
 
         h.Services.Settings.Appearance.Motion = MotionSetting.Full;
@@ -130,8 +130,8 @@ public class AccessibilityTests
         var first = tab.Working.Glyph;
         h.Time.Advance(WorkingLine.FrameInterval);
         Assert.True(first != WorkingLine.StillGlyph || tab.Working.Glyph != WorkingLine.StillGlyph, $"{first} then {tab.Working.Glyph}");
-        h.Time.Advance(typing[0].Duration - WorkingLine.FrameInterval);
-        Assert.Same(typing[1].Png, h.Notifier.Frame);
+        h.Time.Advance(working[0].Duration - WorkingLine.FrameInterval);
+        Assert.Same(working[1].Png, h.Notifier.Frame);
     }
 
     // ---- Zoom ----------------------------------------------------------------------------------------------------

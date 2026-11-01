@@ -13,17 +13,20 @@ public sealed record AppIconAnimation(string Name, string Description, IReadOnly
 /// </summary>
 public static class AppIconAnimations
 {
-    /// <summary>The taskbar overlay while tabs work (Windows): the cave's prompt in a little window, its cursor typing.</summary>
-    public static AppIconAnimation Prompt { get; } = Load("prompt", "Claude is working", frames: 4, TimeSpan.FromMilliseconds(260));
+    /// <summary>
+    /// The taskbar overlay while tabs work (Windows): a badge in the sign's blue, its three chevrons lighting one after
+    /// another, like an arrow board's.
+    /// </summary>
+    public static AppIconAnimation Chevrons { get; } = Load("chevrons", "Claude is working", ArrowBoard);
 
-    /// <summary>The Dock icon while tabs work (macOS): the cursor in the cave typing.</summary>
-    public static AppIconAnimation Typing { get; } = Load("typing", "Claude is working", frames: 4, TimeSpan.FromMilliseconds(260));
+    /// <summary>The Dock icon while tabs work (macOS): the sign's prompt becomes an arrow board's chevrons, lighting in turn.</summary>
+    public static AppIconAnimation Working { get; } = Load("working", "Claude is working", ArrowBoard);
 
     /// <summary>
-    /// The Dock icon while a tab needs input (macOS): the prompt in the cave turns into a "?" that hops twice, with a
-    /// sparkle either side at the top of each hop, then rests.
+    /// The Dock icon while a tab needs input (macOS): the sign shows a "?" for a second, then a "!", a "?" and a "!"
+    /// quickly, and again.
     /// </summary>
-    public static AppIconAnimation Asking { get; } = Load("asking", "A tab needs your input", frames: 8, TimeSpan.FromMilliseconds(220));
+    public static AppIconAnimation Asking { get; } = Load("asking", "A tab needs your input", Milliseconds(1000, 350, 350, 350));
 
     /// <summary>
     /// The taskbar overlay while a tab waits for a usage limit to reset (Windows): an hourglass whose sand runs slowly
@@ -31,14 +34,16 @@ public static class AppIconAnimations
     /// </summary>
     public static AppIconAnimation Hourglass { get; } = Load("hourglass", "Waiting for a usage limit to reset", SandRunning);
 
-    /// <summary>The Dock icon while a tab waits for a usage limit to reset (macOS): the cave's prompt resting, by the hourglass.</summary>
+    /// <summary>The Dock icon while a tab waits for a usage limit to reset (macOS): the sign shows the hourglass.</summary>
     public static AppIconAnimation Waiting { get; } = Load("waiting", "Waiting for a usage limit to reset", SandRunning);
 
     /// <summary>The hourglass's frames: full, three as the sand runs, empty, and turning over.</summary>
-    private static TimeSpan[] SandRunning => [.. new[] { 800, 700, 700, 700, 1000, 250 }.Select(ms => TimeSpan.FromMilliseconds(ms))];
+    private static TimeSpan[] SandRunning => Milliseconds(800, 700, 700, 700, 1000, 250);
 
-    private static AppIconAnimation Load(string name, string description, int frames, TimeSpan each) =>
-        Load(name, description, [.. Enumerable.Repeat(each, frames)]);
+    /// <summary>The chevrons' frames: one lit, two, all three, held.</summary>
+    private static TimeSpan[] ArrowBoard => Milliseconds(300, 300, 300, 700);
+
+    private static TimeSpan[] Milliseconds(params int[] each) => [.. each.Select(ms => TimeSpan.FromMilliseconds(ms))];
 
     private static AppIconAnimation Load(string name, string description, IReadOnlyList<TimeSpan> durations) =>
         new(name, description, [.. durations.Select((duration, i) => new AppIconFrame(Read($"{name}-{i}.png"), duration))]);
