@@ -163,7 +163,17 @@ public partial class App : Application
             return;
         }
         OpenPopups.Watch();
-        var commands = AutomationCommands.ForApp();
+        var services = _services;
+        var commands = AutomationCommands.ForApp((theme, style) =>
+        {
+            if (services is null)
+            {
+                return;
+            }
+            services.Settings.Appearance.Theme = theme ?? services.Settings.Appearance.Theme;
+            services.Settings.Appearance.Style = style ?? services.Settings.Appearance.Style;
+            services.SaveSettings();
+        });
         _automation = new AutomationChannel(pipe, request => Dispatcher.UIThread.InvokeAsync(() => commands.Execute(request)).GetTask(),
             loggers.CreateLogger("Automation"));
         desktop.Exit += (_, _) => _automation.Dispose();

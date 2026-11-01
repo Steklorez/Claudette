@@ -13,7 +13,8 @@ public sealed record AutomationRequest
 {
     /// <summary>
     /// What to do: <c>ping</c>, <c>click</c>, <c>rightclick</c>, <c>toggle</c>, <c>settext</c>, <c>show</c>,
-    /// <c>scroll</c>, <c>hover</c>, <c>unhover</c>, <c>key</c>, <c>capture</c>, <c>resize</c> or <c>close</c>.
+    /// <c>scroll</c>, <c>hover</c>, <c>unhover</c>, <c>key</c>, <c>capture</c>, <c>resize</c>, <c>close</c> or
+    /// <c>appearance</c>.
     /// </summary>
     public string Verb { get; init; } = "";
 
@@ -61,6 +62,12 @@ public sealed record AutomationRequest
 
     /// <summary>For <c>resize</c>: the window's height, in device-independent pixels.</summary>
     public double? Height { get; init; }
+
+    /// <summary>For <c>appearance</c>: Settings → Appearance → Theme, <c>light</c>, <c>dark</c> or <c>system</c>.</summary>
+    public string? Theme { get; init; }
+
+    /// <summary>For <c>appearance</c>: Settings → Appearance → Style, <c>standard</c> or <c>claude</c>.</summary>
+    public string? Style { get; init; }
 }
 
 /// <summary>What became of a command: done, or why not; and for <c>toggle</c>, whether the switch is on.</summary>

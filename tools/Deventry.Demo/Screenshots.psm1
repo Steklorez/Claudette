@@ -8,10 +8,14 @@ PrintWindow.
 A run leaves the focus, the keyboard and the pointer to the user (DESIGN.md §9, "Taking screenshots without the
 focus"). Deventry runs with DEVENTRY_UNFOCUSED=1, so its windows never take the focus and stay behind the user's, and
 with DEVENTRY_AUTOMATION_PIPE, so it takes commands on that pipe: click, right-click, toggle, set text, show, scroll,
-show a tip, press keys and close a window, each carried out by Deventry itself. Controls are found and read through UI
-Automation, which only reads, and each command names the control as UI Automation saw it. Nothing here sends the
-mouse's or the keyboard's input, or uses UI Automation's own actions, which Windows lets bring a window to the front.
-The focus watch warns if Deventry came to the front anyway.
+show a tip, press keys, close a window and change the theme, each carried out by Deventry itself. Controls are found
+and read through UI Automation, which only reads, and each command names the control as UI Automation saw it. Nothing
+here sends the mouse's or the keyboard's input, or uses UI Automation's own actions, which Windows lets bring a window
+to the front. The focus watch warns if Deventry came to the front anyway.
+
+A picture is taken once its window has stopped changing (Wait-Settled), not after a fixed pause; and one whose path has
+{theme} in it is taken in each theme Set-Themes names, Deventry's theme switched between them through the command
+channel, so the steps to it run once.
 #>
 $ErrorActionPreference = 'Stop'
 
@@ -43,14 +47,87 @@ public static class WindowShot
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(POINT point);
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out RECT value, int size);
+    [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)] static extern int memcmp(byte[] a, byte[] b, UIntPtr count);
+
+    /// <summary>The window's pixels as PrintWindow has them now, or null when it has no size.</summary>
+    static byte[] Grab(IntPtr hwnd)
+    {
+        RECT outer;
+        GetWindowRect(hwnd, out outer);
+        int width = outer.Right - outer.Left, height = outer.Bottom - outer.Top;
+        if (width <= 0 || height <= 0) { return null; }
+        using (var full = new Bitmap(width, height, PixelFormat.Format32bppArgb))
+        {
+            using (var g = Graphics.FromImage(full))
+            {
+                var hdc = g.GetHdc();
+                PrintWindow(hwnd, hdc, 2 /* PW_RENDERFULLCONTENT */);
+                g.ReleaseHdc(hdc);
+            }
+            var data = full.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            try
+            {
+                var bytes = new byte[data.Stride * height];
+                Marshal.Copy(data.Scan0, bytes, 0, bytes.Length);
+                return bytes;
+            }
+            finally { full.UnlockBits(data); }
+        }
+    }
+
+    /// <summary>
+    /// Whether the frames differ only in a line no wider than a text box's caret, which blinks for as long as the box has
+    /// the keyboard's focus, whether or not its window does.
+    /// </summary>
+    static bool OnlyCaret(IntPtr hwnd, byte[] a, byte[] b)
+    {
+        RECT outer;
+        GetWindowRect(hwnd, out outer);
+        int stride = (outer.Right - outer.Left) * 4, left = int.MaxValue, right = -1, top = int.MaxValue, bottom = -1;
+        if (stride <= 0) { return false; }
+        for (int i = 0; i < a.Length; i += 4)
+        {
+            if (a[i] != b[i] || a[i + 1] != b[i + 1] || a[i + 2] != b[i + 2])
+            {
+                int x = (i % stride) / 4, y = i / stride;
+                if (x < left) { left = x; }
+                if (x > right) { right = x; }
+                if (y < top) { top = y; }
+                if (y > bottom) { bottom = y; }
+                if (right - left > 4 || bottom - top > 64) { return false; }
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Waits until the window has drawn the same for <paramref name="quiet"/> milliseconds, looking every
+    /// <paramref name="every"/>, for at most <paramref name="timeout"/>: how long it took, or -1 if it never settled.
+    /// </summary>
+    public static int Settle(IntPtr hwnd, int quiet, int every, int timeout)
+    {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var last = Grab(hwnd);
+        var since = clock.ElapsedMilliseconds;
+        while (clock.ElapsedMilliseconds < timeout)
+        {
+            Thread.Sleep(every);
+            var now = Grab(hwnd);
+            var same = now != null && last != null && now.Length == last.Length
+                && (memcmp(now, last, new UIntPtr((uint) now.Length)) == 0 || OnlyCaret(hwnd, now, last));
+            if (!same) { since = clock.ElapsedMilliseconds; last = now; }
+            else if (clock.ElapsedMilliseconds - since >= quiet) { return (int) clock.ElapsedMilliseconds; }
+        }
+        return -1;
+    }
 
     /// <summary>
     /// The window as it draws itself, without the resize borders and shadow around its frame; down to
     /// <paramref name="bottom"/> on the screen when it isn't zero.
     /// </summary>
-    public static void Save(IntPtr hwnd, string path, int bottom)
+    public static void Save(IntPtr hwnd, string path, int bottom, bool activate = true)
     {
-        DrawActive(hwnd);
+        if (activate) { DrawActive(hwnd); }
         RECT outer, frame;
         GetWindowRect(hwnd, out outer);
         DwmGetWindowAttribute(hwnd, 9 /* DWMWA_EXTENDED_FRAME_BOUNDS */, out frame, Marshal.SizeOf(typeof(RECT)));
@@ -72,9 +149,9 @@ public static class WindowShot
     }
 
     /// <summary>The part of the window from (<paramref name="left"/>, <paramref name="top"/>) to (<paramref name="right"/>, <paramref name="bottom"/>) on the screen.</summary>
-    public static void SaveRegion(IntPtr hwnd, string path, int left, int top, int right, int bottom)
+    public static void SaveRegion(IntPtr hwnd, string path, int left, int top, int right, int bottom, bool activate = true)
     {
-        DrawActive(hwnd);
+        if (activate) { DrawActive(hwnd); }
         RECT outer;
         GetWindowRect(hwnd, out outer);
         using (var full = new Bitmap(outer.Right - outer.Left, outer.Bottom - outer.Top, PixelFormat.Format32bppArgb))
@@ -138,8 +215,14 @@ public static class WindowShot
     /// </summary>
     static void DrawActive(IntPtr hwnd)
     {
-        SendMessage(hwnd, 0x0086 /* WM_NCACTIVATE */, new IntPtr(1), IntPtr.Zero);
+        Activate(hwnd);
         Thread.Sleep(200);
+    }
+
+    /// <summary>Has the window draw its frame as active, without waiting for it to: <see cref="Settle"/> does.</summary>
+    public static void Activate(IntPtr hwnd)
+    {
+        SendMessage(hwnd, 0x0086 /* WM_NCACTIVATE */, new IntPtr(1), IntPtr.Zero);
     }
 
     /// <summary>Puts the window behind every other, without activating it: PrintWindow captures it there all the same.</summary>
@@ -478,10 +561,53 @@ function Wait-PointerAway([IntPtr] $hwnd, [string] $path) {
     }
 }
 
+# Waits until $hwnd has drawn the same for $quiet milliseconds, for at most $seconds: what a fixed pause stood in for.
+function Wait-Settled([IntPtr] $hwnd, [int] $quiet = 400, [int] $seconds = 10) {
+    if ([WindowShot]::Settle($hwnd, $quiet, 100, $seconds * 1000) -lt 0) { Write-Warning "The window was still changing after $seconds s." }
+}
+
+# The themes a picture whose path has {theme} in it is taken in (Set-Themes), and the one Deventry shows now.
+$script:themes = @()
+$script:theme = $null
+
+# Pictures with {theme} in their paths are taken in each of $themes, Deventry showing $current now.
+function Set-Themes([string[]] $themes, [string] $current) {
+    $script:themes = $themes
+    $script:theme = $current
+}
+
+# Changes Settings → Appearance's theme, or style, as Settings would.
+function Set-Appearance([string] $theme = $null, [string] $style = $null) {
+    $command = @{ verb = 'appearance' }
+    if ($theme) { $command.theme = $theme }
+    if ($style) { $command.style = $style }
+    Send-Command $command | Out-Null
+}
+
+# Runs $capture with the path for each theme, the one showing first, once $hwnd has settled in it; a path without
+# {theme} once.
+function Invoke-EachTheme([IntPtr] $hwnd, [string] $path, [scriptblock] $capture) {
+    if (-not $path.Contains('{theme}') -or -not $script:themes) {
+        [WindowShot]::Activate($hwnd)
+        Wait-Settled $hwnd
+        & $capture $path
+        return
+    }
+    foreach ($theme in @($script:theme) + @($script:themes | Where-Object { $_ -ne $script:theme })) {
+        if ($theme -ne $script:theme) {
+            Set-Appearance -theme $theme
+            $script:theme = $theme
+        }
+        [WindowShot]::Activate($hwnd)
+        Wait-Settled $hwnd
+        & $capture $path.Replace('{theme}', $theme)
+    }
+}
+
 # The window as $path, down to $bottom on the screen when that isn't zero.
 function Save-Window([IntPtr] $hwnd, [string] $path, [int] $bottom = 0) {
     Wait-PointerAway $hwnd $path
-    [WindowShot]::Save($hwnd, $path, $bottom)
+    Invoke-EachTheme $hwnd $path { param($to) [WindowShot]::Save($hwnd, $to, $bottom, $false) }
 }
 
 # The part of the screen the controls cover.
@@ -498,8 +624,11 @@ function Save-Rect([IntPtr] $hwnd, [string] $path, [System.Windows.Rect] $rect, 
     if ($margin.Count -eq 1) { $margin = $margin * 4 }
     $scale = [WindowShot]::Scale($hwnd)
     Wait-PointerAway $hwnd $path
-    [WindowShot]::SaveRegion($hwnd, $path, [int] ($rect.Left - $margin[0] * $scale), [int] ($rect.Top - $margin[1] * $scale),
-        [int] ($rect.Right + $margin[2] * $scale), [int] ($rect.Bottom + $margin[3] * $scale))
+    Invoke-EachTheme $hwnd $path {
+        param($to)
+        [WindowShot]::SaveRegion($hwnd, $to, [int] ($rect.Left - $margin[0] * $scale), [int] ($rect.Top - $margin[1] * $scale),
+            [int] ($rect.Right + $margin[2] * $scale), [int] ($rect.Bottom + $margin[3] * $scale), $false)
+    }
 }
 
 # The part of the window the controls cover, with $margin around it (Save-Rect).
@@ -604,5 +733,6 @@ function Stop-Deventry($deventry) {
 
 Export-ModuleMember -Function Get-Root, Get-Parent, Find-ByText, Find-ByPrefix, Find-ByType, Find-ById, Find-Lowest, Find-LowestByText, Show-Tree, Invoke-ByText, Invoke-Element,
     Select-TreeItem, Select-ListItem, Show-Element, Set-ElementText, Set-Toggle, Send-Click, Send-RightClick, Send-Message, Show-Tip, Hide-Tip, Send-Keys,
-    Send-WindowKey, Send-Command, Send-ElementCommand, Set-Step, Get-OtherWindow, Open-Menu, Hide-ToolWindows, Wait-PointerAway, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
+    Send-WindowKey, Send-Command, Send-ElementCommand, Set-Step, Get-OtherWindow, Open-Menu, Hide-ToolWindows, Wait-PointerAway, Wait-Settled,
+    Set-Themes, Set-Appearance, Save-Window, Get-Bounds, Save-Rect, Save-Elements, Save-Element, Close-Window,
     Wait-Until, Build-Deventry, New-DemoContent, Start-Deventry, Stop-Deventry
