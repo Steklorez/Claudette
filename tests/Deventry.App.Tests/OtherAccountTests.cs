@@ -144,6 +144,26 @@ public sealed class OtherAccountTests
     }
 
     [Fact]
+    public async Task Moving_the_tab_with_its_account_menu_doesnt_ask_again()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.Accounts.Credentials = new FakeCredentialStore();
+        var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
+        h.Services.RemoteControl.UseAccount(Signed("me@home.com", "Home"));
+        var tab = await h.OpenTabAsync();
+        h.Transport.EmitTurn();
+        // Idle too: a move confirmed while the tab still says it's working waits for a turn end that's gone by.
+        await TabTestHarness.Eventually(() => h.Services.State.SessionOrigins.ContainsKey("s1") && tab.Status == TabStatus.Idle && tab.IsSettled, "the turn");
+
+        tab.SwitchAccountCommand.Execute(work.Id);
+        await Assert.IsType<ConfirmationViewModel>(h.Shell.Confirmation).ConfirmCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 2 && tab.IsSettled || tab.IsAskingOtherAccount, "the restart");
+
+        Assert.False(tab.IsAskingOtherAccount);
+        Assert.Equal("s1", h.Factory.Launches[1].Resume);
+    }
+
+    [Fact]
     public void The_digest_keeps_prompts_and_answers_and_leaves_out_check_ins()
     {
         var answer = new Deventry.App.Conversation.AssistantTextItem();

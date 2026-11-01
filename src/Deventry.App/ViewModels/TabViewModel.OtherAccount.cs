@@ -90,6 +90,18 @@ public partial class TabViewModel
         await StartAndSendHeldAsync();
     }
 
+    /// <summary>
+    /// The user moved the tab to another account with <b>Account ▸</b>, which asked first: the session carries on there
+    /// without this question too.
+    /// </summary>
+    private void ConfirmCurrentAccount()
+    {
+        if (State.SessionId is { } sessionId && CurrentOrigin() is { } current)
+        {
+            State.ConfirmedOtherAccount = $"{sessionId}|{current.Key}";
+        }
+    }
+
     /// <summary><b>Cancel</b>: nothing is sent and the tab stays as it was, not started; sending a message asks again.</summary>
     [RelayCommand]
     private void CancelOtherAccount()
