@@ -14,8 +14,8 @@ public sealed record AppIconAnimation(string Name, string Description, IReadOnly
 public static class AppIconAnimations
 {
     /// <summary>
-    /// The taskbar overlay while tabs work (Windows): a badge in the sign's blue, its three chevrons lighting one after
-    /// another, like an arrow board's.
+    /// The taskbar overlay while tabs work (Windows): three chevrons in a lighter shade of the sign's blue, lighting one
+    /// after another, like an arrow board's.
     /// </summary>
     public static AppIconAnimation Chevrons { get; } = Load("chevrons", "Claude is working", ArrowBoard);
 

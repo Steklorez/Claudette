@@ -10,8 +10,8 @@
 //   docs/assets/joulene.svg                   Joulene standing, for the guide's pages about her
 //   docs/assets/wordmark.svg                  the name in pixels, for the guide's landing page
 //   packaging/windows/Assets/*.png            the MSIX logos, and the taskbar's unplated sizes
-//   src/Deventry.App/Assets/AppIcon/*.png     the animations' frames (DESIGN.md §10): on the taskbar, a badge in the
-//                                             sign's blue with chevrons lighting or an hourglass running; on the Dock,
+//   src/Deventry.App/Assets/AppIcon/*.png     the animations' frames (DESIGN.md §10): on the taskbar, chevrons
+//                                             lighting or an hourglass running, in a lighter blue; on the Dock,
 //                                             the sign's chevrons lighting, its hourglass running, and a "?" and a "!"
 //                                             taking turns (AppIconAnimations)
 //   src/Deventry.App/Assets/Mascot/mascot.json  Joulene on the composer's poses, props and hats, as cells (DESIGN.md §5)
@@ -126,16 +126,16 @@ const bang = [stroke('M512 376 V534'), dot];
 // both have some. It runs down, rests, and turns over: once sideways, then full at the top again.
 const glass = points('M14 12 H86 V26 Q86 50 55 68 V72 Q86 90 86 114 V128 H14 V114 Q14 90 45 72 V68 Q14 50 14 26 Z');
 const sand = [[4, 0], [3, 1], [2, 2], [1, 3], [0, 4], [0, 4, true]];
-function hourglass([top, bottom, turned], scale, line) {
+function hourglass([top, bottom, turned], scale, line, paint = white) {
   const depth = quarters => (54 * quarters) / 4;
   return [
-    { fill: glass, paint: white, opacity: 0.2 },
-    top > 0 && { fill: rect(0, 70 - depth(top), 100, 70), paint: white, clip: glass },
-    bottom > 0 && { fill: rect(0, 128 - depth(bottom), 100, 128), paint: white, clip: glass },
-    top > 0 && bottom > 0 && { fill: rect(47, 66, 53, 128 - depth(bottom)), paint: white, clip: glass },
-    { ring: glass, width: line, paint: white },
-    { fill: rect(7, 7, 93, 11), grow: 5, paint: white },
-    { fill: rect(7, 129, 93, 133), grow: 5, paint: white },
+    { fill: glass, paint, opacity: 0.2 },
+    top > 0 && { fill: rect(0, 70 - depth(top), 100, 70), paint, clip: glass },
+    bottom > 0 && { fill: rect(0, 128 - depth(bottom), 100, 128), paint, clip: glass },
+    top > 0 && bottom > 0 && { fill: rect(47, 66, 53, 128 - depth(bottom)), paint, clip: glass },
+    { ring: glass, width: line, paint },
+    { fill: rect(7, 7, 93, 11), grow: 5, paint },
+    { fill: rect(7, 129, 93, 133), grow: 5, paint },
   ].filter(Boolean).map(shape => moved(shape, { scale, turn: turned ? 90 : 0, from: [50, 70], to: [512, 512] }));
 }
 
@@ -145,14 +145,14 @@ const mark = symbol => sign(390, symbol);
 const tile = [{ fill: rect(285, 285, 739, 739), grow: 185, paint: { linear: { x1: 100, y1: 100, x2: 924, y2: 924, stops: [[0, '#3A3F47'], [1, '#23262B']] } } }];
 const dock = symbol => [...tile, ...sign(300, symbol)];
 
-// The taskbar overlays (Windows), drawn at 32 px, as Windows wants overlays at twice their 16: a badge in the sign's
-// blue, edged in white, with the chevrons lighting while tabs work, or the hourglass running while one waits.
-const badge = [
-  { fill: rect(288, 288, 736, 736), grow: 256, paint: white },
-  { fill: rect(288, 288, 736, 736), grow: 192, paint: glow(64, 64, 896) },
-];
-const overlayChevrons = on => [8.25, 14.25, 20.25].map((x, i) =>
-  ({ line: [[x, 11.5], [x + 3.5, 16], [x, 20.5]].map(([px, py]) => [px * 32, py * 32]), width: 2.4 * 32, paint: white, opacity: i < on ? 1 : 0.3 }));
+// The taskbar overlays (Windows), drawn at 32 px, as Windows wants overlays at twice their 16: the symbol alone, the
+// chevrons lighting while tabs work or the hourglass running while one waits, with nothing round it. They're in her
+// gem's blue, lighter than the sign's, which holds against a dark taskbar (4.2:1) and a light one (3.5:1).
+const overlayBlue = '#5B7FD6';
+const overlayChevrons = on => [4.5, 13, 21.5].map((x, i) =>
+  ({ line: [[x, 9], [x + 6, 16], [x, 23]].map(([px, py]) => [px * 32, py * 32]), width: 3.2 * 32, paint: overlayBlue, opacity: i < on ? 1 : 0.3 }));
+// The hourglass 24 of the overlay's 32 pixels tall.
+const overlayHourglass = glassFrame => hourglass(glassFrame, (24 * 32) / 140, 10, overlayBlue);
 
 // ── Her cave ─────────────────────────────────────────────────────────────
 // The cave in its grassy mound, the dark of its mouth, and the ground in front of it: one of Joulene's props, which she
@@ -687,10 +687,10 @@ write(`${assets}/Wide310x150Logo.png`, png(render(logo, 108, 310, 150)));
 // 512, where the sign is exactly half its size in the 1024 icon, so the Dock icon doesn't shift when one starts or stops.
 const frames = 'src/Deventry.App/Assets/AppIcon';
 const lit = [1, 2, 3, 3];
-lit.forEach((on, i) => write(`${frames}/chevrons-${i}.png`, png(render([...badge, ...overlayChevrons(on)], 32))));
+lit.forEach((on, i) => write(`${frames}/chevrons-${i}.png`, png(render(overlayChevrons(on), 32))));
 lit.forEach((on, i) => write(`${frames}/working-${i}.png`, png(render(dock(chevrons(on)), 512))));
 [question, bang, question, bang].forEach((symbol, i) => write(`${frames}/asking-${i}.png`, png(render(dock(symbol), 512))));
-sand.forEach((glassFrame, i) => write(`${frames}/hourglass-${i}.png`, png(render([...badge, ...hourglass(glassFrame, 3.3, 11)], 32))));
+sand.forEach((glassFrame, i) => write(`${frames}/hourglass-${i}.png`, png(render(overlayHourglass(glassFrame), 32))));
 sand.forEach((glassFrame, i) => write(`${frames}/waiting-${i}.png`, png(render(dock(hourglass(glassFrame, 2.45, 9)), 512))));
 
 // Joulene on the composer: her poses, props and hats, which the app draws cell by cell (Mascot/MascotArt).
