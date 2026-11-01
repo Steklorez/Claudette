@@ -2,6 +2,7 @@ using System.Security;
 using Deventry.Core.Files;
 using Deventry.Core.LoginItems;
 using Deventry.Core.Processes;
+using Deventry.Platform.Updates.Mac;
 
 namespace Deventry.Platform.LoginItems.Mac;
 
@@ -13,16 +14,17 @@ namespace Deventry.Platform.LoginItems.Mac;
 /// no bundle; <c>SMAppService</c> needs macOS 13 and a bundle. Only file work, so it's tested on every OS.
 /// </summary>
 /// <param name="dotnet">The .NET a build is started with when its program wouldn't find it: the one Deventry runs on, by default.</param>
-public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string launchAgentsDirectory, LoginDotnet? dotnet = null) : ILoginItems
+/// <param name="label">The agent's label and file name: Deventry's, unless it's another app's agent, such as Claudette's.</param>
+/// <param name="bundleIdentifier">The app the agent belongs to, so Login Items names it after the app.</param>
+public sealed class LaunchAgentLoginItems(
+    IProcessLauncher launcher, string launchAgentsDirectory, LoginDotnet? dotnet = null, string label = LaunchAgentLoginItems.Label,
+    string bundleIdentifier = MacAppInstaller.BundleIdentifier) : ILoginItems
 {
-    public const string Label = "com.dotbunny.claudette.login";
-
-    /// <summary>The app's bundle identifier, so Login Items names the agent after Deventry.</summary>
-    private const string BundleIdentifier = "com.dotbunny.claudette";
+    public const string Label = MacAppInstaller.BundleIdentifier + ".login";
 
     private readonly LoginDotnet _dotnet = dotnet ?? LoginDotnet.Current();
 
-    public string AgentPath => Path.Combine(launchAgentsDirectory, Label + ".plist");
+    public string AgentPath => Path.Combine(launchAgentsDirectory, label + ".plist");
 
     public string? UnavailableReason => null;
 
@@ -36,7 +38,7 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
     public void WriteEntry(DeventryCopy copy)
     {
         Directory.CreateDirectory(launchAgentsDirectory);
-        AtomicFile.WriteAllText(AgentPath, Plist(Command(copy)));
+        AtomicFile.WriteAllText(AgentPath, Plist(Command(copy), label, bundleIdentifier));
     }
 
     public void DeleteEntry()
@@ -59,7 +61,7 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
     /// The agent: run once at login, in the user's graphical session. launchd would otherwise stop what the command
     /// starts when it exits, such as the copy a source build runs from, so the process group is left alone.
     /// </summary>
-    public static string Plist(LoginCommand command)
+    public static string Plist(LoginCommand command, string label = Label, string bundleIdentifier = MacAppInstaller.BundleIdentifier)
     {
         var arguments = string.Concat(command.Arguments.Prepend(command.Program).Select(a => $"\n\t\t<string>{SecurityElement.Escape(a)}</string>"));
         return $"""
@@ -68,7 +70,7 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
             <plist version="1.0">
             <dict>
             	<key>Label</key>
-            	<string>{Label}</string>
+            	<string>{label}</string>
             	<key>ProgramArguments</key>
             	<array>{arguments}
             	</array>
@@ -82,7 +84,7 @@ public sealed class LaunchAgentLoginItems(IProcessLauncher launcher, string laun
             	<true/>
             	<key>AssociatedBundleIdentifiers</key>
             	<array>
-            		<string>{BundleIdentifier}</string>
+            		<string>{bundleIdentifier}</string>
             	</array>
             </dict>
             </plist>

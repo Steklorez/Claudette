@@ -26,7 +26,10 @@ public static class LoginItemPlatforms
         }
         if (OperatingSystem.IsMacOS())
         {
-            return new LaunchAgentLoginItems(launcher, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "LaunchAgents"));
+            // FromClaudette: with the LaunchAgent Claudette wrote under its own bundle identifier.
+            var agents = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "LaunchAgents");
+            return FromClaudette.ClaudetteLoginItems.CarriedOver(new LaunchAgentLoginItems(launcher, agents),
+                new LaunchAgentLoginItems(launcher, agents, label: FromClaudette.ClaudetteLoginItems.MacLabel, bundleIdentifier: FromClaudette.ClaudetteLoginItems.MacBundleIdentifier));
         }
         if (OperatingSystem.IsLinux())
         {

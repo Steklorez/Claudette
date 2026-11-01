@@ -50,6 +50,13 @@ Before it installs anything, Deventry checks the download against its size and t
 
 Downloaded packages are kept in the `updates` folder in Deventry's data folder, and a package that's already downloaded isn't fetched again. Packages of the running version and older are deleted at launch.
 
+## Coming from Claudette
+
+Deventry was called Claudette before 1.0.0. The first time it starts, it takes over Claudette's tabs, settings, History, session library, saved passwords and API keys, and starting at login.
+
+- **On Windows**, Claudette updates to Deventry as it updates to any version.
+- **On a Mac**, Claudette can't install Deventry: macOS knows them as two different apps, and Claudette says *The disk image holds a different app, not Claudette.* Install Deventry by hand, once: download it from the [Downloads page](../downloads.md), drag `Deventry.app` to Applications, quit Claudette, and drag `Claudette.app` to the Trash. Because it's a new app to macOS, it asks again whether Deventry may send notifications and use the folders Claude reads, and the first time Deventry reads each password or API key Claudette saved, whether it may use it. Choose **Always Allow**. From then on, Deventry updates itself.
+
 ## Upgrading from 0.1.0
 
 0.1.0 came from before Deventry's repository moved. It announces later versions, with a link to their page, but can't install them. Install the new version by hand from the [Downloads page](../downloads.md). On Windows the new MSIX installs beside 0.1.0's.
