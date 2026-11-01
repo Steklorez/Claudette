@@ -5,7 +5,8 @@ public interface IPlatformServices
 {
     Task<string?> PickFolderAsync(string title);
 
-    Task<string?> PickFileAsync(string title);
+    /// <param name="types">The kinds of file it offers; any file without.</param>
+    Task<string?> PickFileAsync(string title, IReadOnlyList<FileTypeFilter>? types = null);
 
     Task OpenUrlAsync(string url);
 
@@ -60,6 +61,9 @@ public interface IPlatformServices
 
 /// <summary>A kind of file the save dialog offers, such as Markdown (<c>md</c>).</summary>
 public sealed record SaveFileType(string Name, string Extension);
+
+/// <summary>A kind of file the open dialog offers, such as pictures (<c>*.png</c>, <c>*.ico</c>).</summary>
+public sealed record FileTypeFilter(string Name, IReadOnlyList<string> Patterns);
 
 /// <summary>Runs work on the UI thread.</summary>
 public interface IUiDispatcher

@@ -4,6 +4,7 @@
              xmlns:views="using:Deventry.App.Views"
              xmlns:controls="using:Deventry.App.Controls"
              xmlns:conversation="using:Deventry.App.Conversation"
+             xmlns:services="using:Deventry.App.Services"
              x:Class="Deventry.App.Views.ShellView"
              x:DataType="vm:ShellViewModel">
 
@@ -482,7 +483,13 @@
                             <Path Data="{StaticResource IconChevronRight}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="9" Height="9" Stretch="Uniform"
                                   IsVisible="{Binding IsCollapsed}" VerticalAlignment="Center" />
                           </Panel>
-                          <Ellipse DockPanel.Dock="Left" Width="8" Height="8" Fill="{Binding Brush}" VerticalAlignment="Center" Margin="0,0,7,0" />
+                          <!-- The group's dot, or the project's own icon in its place, centered where the dot is (DESIGN.md §4, "Grouped by folder") -->
+                          <Ellipse DockPanel.Dock="Left" Width="8" Height="8" Fill="{Binding Brush}" VerticalAlignment="Center" Margin="0,0,7,0"
+                                   IsVisible="{Binding !ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=True}" />
+                          <Image x:Name="GroupIcon" DockPanel.Dock="Left" Width="14" Height="14" VerticalAlignment="Center" Margin="-3,0,4,0"
+                                 RenderOptions.BitmapInterpolationMode="HighQuality"
+                                 Source="{Binding ProjectTab.ProjectTools.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
+                                 IsVisible="{Binding ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=False}" />
                           <TextBlock DockPanel.Dock="Right" Classes="status alert" Text="{Binding UrgentGlyph}" IsVisible="{Binding IsCollapsed}" VerticalAlignment="Center" Margin="6,0,0,0" />
                           <!-- The account the group's new tabs use, when it isn't Default (DESIGN.md §4, "Accounts") -->
                           <Border x:Name="GroupAccountTag" DockPanel.Dock="Right" Classes="accounttag" Margin="6,0,0,0" IsVisible="{Binding HasLabelAccountTag}"
@@ -514,6 +521,11 @@
                             <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconHistory}" /></MenuItem.Icon>
                             </MenuItem>
+                            <!-- The project's pages in Settings, for the group's tab used last (DESIGN.md §14, "The project's pages") -->
+                            <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenGroupProjectSettingsCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettings}" /></MenuItem.Icon>
+                            </MenuItem>
                             <Separator />
                             <MenuItem Classes="menusection" Header="Group" IsEnabled="False" />
                             <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}">
@@ -531,6 +543,11 @@
                             <!-- Its icon is the group's color as it is now -->
                             <MenuItem Header="Change color…" Click="OnChangeGroupColor">
                               <MenuItem.Icon><Ellipse Width="10" Height="10" Fill="{Binding Brush}" /></MenuItem.Icon>
+                            </MenuItem>
+                            <!-- A picture of the project's own in place of the group's dot, on its Icon page in Settings (DESIGN.md §4, "Grouped by folder") -->
+                            <MenuItem Header="Change icon…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ChangeGroupIconCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconImage}" /></MenuItem.Icon>
                             </MenuItem>
                             <!-- The account the group's new tabs use (DESIGN.md §4, "Accounts") -->
                             <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
@@ -1099,7 +1116,11 @@
                           ToolTip.Tip="{Binding Label}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding Label}"
                           Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                      <Border Width="16" Height="4" CornerRadius="2" Background="{Binding Brush}" VerticalAlignment="Center" />
+                      <Border Width="16" Height="4" CornerRadius="2" Background="{Binding Brush}" VerticalAlignment="Center"
+                              IsVisible="{Binding !ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=True}" />
+                      <Image Width="16" Height="16" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"
+                             Source="{Binding ProjectTab.ProjectTools.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
+                             IsVisible="{Binding ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=False}" />
                       <TextBlock Classes="status alert small" Text="{Binding UrgentGlyph}" IsVisible="{Binding IsCollapsed}" VerticalAlignment="Center" />
                     </StackPanel>
                     <Button.ContextMenu>
@@ -1124,6 +1145,11 @@
                         <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconHistory}" /></MenuItem.Icon>
                         </MenuItem>
+                        <!-- The project's pages in Settings, for the group's tab used last (DESIGN.md §14, "The project's pages") -->
+                        <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenGroupProjectSettingsCommand}" CommandParameter="{Binding}"
+                                  IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettings}" /></MenuItem.Icon>
+                        </MenuItem>
                         <Separator />
                         <MenuItem Classes="menusection" Header="Group" IsEnabled="False" />
                         <MenuItem Header="{Binding CollapseMenuText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}">
@@ -1138,6 +1164,11 @@
                         <!-- Its icon is the group's color as it is now -->
                         <MenuItem Header="Change color…" Click="OnChangeGroupColor">
                           <MenuItem.Icon><Ellipse Width="10" Height="10" Fill="{Binding Brush}" /></MenuItem.Icon>
+                        </MenuItem>
+                        <!-- A picture of the project's own in place of the group's dot, on its Icon page in Settings (DESIGN.md §4, "Grouped by folder") -->
+                        <MenuItem Header="Change icon…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ChangeGroupIconCommand}" CommandParameter="{Binding}"
+                                  IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconImage}" /></MenuItem.Icon>
                         </MenuItem>
                         <!-- The account the group's new tabs use (DESIGN.md §4, "Accounts") -->
                         <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"

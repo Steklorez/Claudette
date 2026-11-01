@@ -519,6 +519,22 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         History = new HistoryViewModel(_services, this);
     }
 
+    /// <summary>
+    /// <b>Project settings…</b>, in a group's menu: Settings at its project's pages (DESIGN.md §14, "The project's pages"),
+    /// for its tab used last, which is selected so the window follows it.
+    /// </summary>
+    [RelayCommand]
+    private Task OpenGroupProjectSettingsAsync(TabGroupViewModel? group) =>
+        group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.LinksPage) : Task.CompletedTask;
+
+    /// <summary>
+    /// <b>Change icon…</b>, in a group's menu: its project's Icon page in Settings (DESIGN.md §4, "Grouped by folder"),
+    /// where a picture can take the place of its dot.
+    /// </summary>
+    [RelayCommand]
+    private Task ChangeGroupIconAsync(TabGroupViewModel? group) =>
+        group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.IconPage) : Task.CompletedTask;
+
     /// <summary><b>History for this folder</b>, in a group's menu: History listing only that project's sessions.</summary>
     [RelayCommand]
     private void OpenHistoryForGroup(TabGroupViewModel? group)

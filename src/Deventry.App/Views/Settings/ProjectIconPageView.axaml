@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:services="using:Deventry.App.Services"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.ProjectIconPageView" ClipToBounds="False"
+             x:DataType="settings:ProjectIconPage">
+  <!-- The tab's project: Icon, the picture its group shows in the sidebar in place of its colored dot (DESIGN.md §4, "Grouped by folder") -->
+  <StackPanel x:Name="IconPage" Spacing="16">
+    <TextBlock Classes="muted small" Text="{Binding Project.ForTabText, FallbackValue=''}" TextWrapping="Wrap" />
+    <c:SettingsSection Key="icon">
+      <c:SettingRow Key="project.icon" Title="" IsStacked="True">
+        <StackPanel Spacing="4" DataContext="{Binding Project}" x:DataType="vm:ProjectSettingsViewModel">
+          <TextBlock TextWrapping="Wrap"
+                     Text="A picture for the group's row in the sidebar, in place of its colored dot: a PNG, ICO, JPEG, BMP, GIF or WebP, up to 1 MB. Saving rewrites the file, so comments in it are dropped." />
+          <c:SettingRow Title="Saved in" Padding="8,8">
+            <ComboBox ItemsSource="{Binding ProjectActionFiles}" SelectedItem="{Binding SelectedIconFile}" MinWidth="260" />
+          </c:SettingRow>
+          <c:SettingRow Title="Icon" Description="{Binding IconText}" Padding="8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Image Width="24" Height="24" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"
+                     Source="{Binding IconPreview, Converter={x:Static services:ImageFiles.GroupIcon}}" IsVisible="{Binding HasIconPreview}" />
+              <Button Content="Choose…" Command="{Binding ChooseIconCommand}" ToolTip.Tip="A picture from the project's folder, or elsewhere on this computer" />
+              <Button Content="Remove" Command="{Binding RemoveIconCommand}" ToolTip.Tip="Take the icon out of this file" />
+            </StackPanel>
+            <c:SettingRow.Details>
+              <StackPanel Spacing="4">
+                <TextBlock Classes="muted small" Text="{Binding IconNote}" TextWrapping="Wrap" IsVisible="{Binding HasIconNote}" />
+                <TextBlock Classes="small error" Text="{Binding IconFileError}" TextWrapping="Wrap" IsVisible="{Binding HasIconFileError}" />
+                <TextBlock Classes="small error" Text="{Binding IconError}" TextWrapping="Wrap" IsVisible="{Binding HasIconError}" />
+              </StackPanel>
+            </c:SettingRow.Details>
+          </c:SettingRow>
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

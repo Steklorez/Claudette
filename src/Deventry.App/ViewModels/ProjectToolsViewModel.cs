@@ -141,6 +141,14 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     public bool HasLinks => _projectFile.Links.Count > 0;
 
+    /// <summary>
+    /// The picture the folder's group shows in the sidebar in place of its colored dot (DESIGN.md §4, "Grouped by
+    /// folder"), from the project files' <c>icon</c>; null keeps the dot.
+    /// </summary>
+    public string? GroupIcon => _projectFile.Icon?.FullPath;
+
+    public bool HasGroupIcon => GroupIcon is not null;
+
     /// <summary>What <c>{branch}</c>, <c>{changelist}</c> and <c>{folderName}</c> are, now.</summary>
     private LinkValues LinkValues() => new(
         Core.Git.GitInfo.TryGetBranch(_host.Folder),
@@ -325,6 +333,8 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
         OnPropertyChanged(nameof(HasFileProblems));
         OnPropertyChanged(nameof(Links));
         OnPropertyChanged(nameof(HasLinks));
+        OnPropertyChanged(nameof(GroupIcon));
+        OnPropertyChanged(nameof(HasGroupIcon));
         OnPropertyChanged(nameof(Details));
         OnPropertyChanged(nameof(Actions));
         OnPropertyChanged(nameof(Menu));

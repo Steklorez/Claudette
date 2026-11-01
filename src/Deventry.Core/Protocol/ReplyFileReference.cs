@@ -115,7 +115,7 @@ public sealed partial record ReplyFileReference(string Text, string Path, int? L
     private static readonly HashSet<char> BadCharacters = ['<', '>', '"', '|', '?', '*', '`'];
 
     /// <summary><c>\\server\share</c> or <c>//server/share</c>, which Windows reaches over the network.</summary>
-    private static bool IsNetworkPath(string path) =>
+    internal static bool IsNetworkPath(string path) =>
         path.Length >= 2 && path[0] is '\\' or '/' && path[1] is '\\' or '/';
 
     /// <summary>The path without a line number: <c>Player.cpp:42</c>, <c>:42:7</c>, <c>:42-51</c>, <c>#L42</c>, <c>#L42-L51</c>.</summary>

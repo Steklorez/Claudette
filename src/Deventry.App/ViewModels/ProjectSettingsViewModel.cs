@@ -6,8 +6,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its <b>Links</b> and <b>Actions</b>,
-/// from the folder's <c>deventry.json</c> and <c>deventry.local.json</c>, and its <b>Tools</b>, this machine's choices
+/// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its <b>Links</b>, <b>Actions</b> and
+/// <b>Icon</b>, from the folder's <c>deventry.json</c> and <c>deventry.local.json</c>, and its <b>Tools</b>, this machine's choices
 /// for the project in <c>state.json</c>. Like the rest of Settings, each change is saved as it's made: a file is
 /// rewritten after each add, edit, removal or move, and every tab in the folder reads it again, so the project's menu
 /// follows. Dispose it with the window.
@@ -33,6 +33,8 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
         ];
         // The shared file first when it has actions, since that's where a project's are.
         SelectedProjectActionFile = ProjectActionFiles[_sharedRows.Count > 0 || _localRows.Count == 0 && _actionFileErrors.GetValueOrDefault(ProjectFileScope.Shared) is null ? 0 : 1];
+        LoadIcons();
+        SelectedIconFile = ProjectActionFiles[IconFileToShow()];
         BuildToolChoices();
         _tab.ProjectTools.PropertyChanged += OnProjectToolsPropertyChanged;
     }
@@ -47,6 +49,11 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
 
     /// <summary>The tab's folder, where the project files are.</summary>
     public string Folder => _tab.Folder;
+
+    /// <summary>The project's icon, which Settings' heading shows in place of the group's dot, as the sidebar does.</summary>
+    public string? GroupIcon => _tab.ProjectTools.GroupIcon;
+
+    public bool HasGroupIcon => GroupIcon is not null;
 
     /// <summary>The group's heading in the sidebar: the project's name when a provider found one, else the folder's.</summary>
     public string Heading => GroupName(_tab);
@@ -85,6 +92,11 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
         {
             OnPropertyChanged(nameof(Heading));
             ToolsChanged();
+        }
+        if (e.PropertyName is nameof(ProjectToolsViewModel.GroupIcon) or null or "")
+        {
+            OnPropertyChanged(nameof(GroupIcon));
+            OnPropertyChanged(nameof(HasGroupIcon));
         }
     }
 }

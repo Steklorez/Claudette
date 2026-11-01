@@ -8,6 +8,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 **Claudette is now Deventry.** The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
 
+### Added
+
+- **A project's own icon for its group.** Choose a picture (a PNG, ICO, JPEG, BMP, GIF or WebP) on the project's new **Icon** page in Settings, and its group shows it in the sidebar in place of the colored dot. It's saved in the project's `deventry.json`, for everyone who opens it, or in `deventry.local.json`, just for you. **Change icon…** in the group's menu takes you there.
+- **Project settings… in a group's menu** opens Settings at that project's pages, for the group's tab you used last.
+
 ### Changed
 
 - **A new name: Deventry**, in its windows, menus, notifications and installers. On a Mac it's `Deventry.app` in Applications, in place of `Claudette.app`; on Windows it updates the Claudette you have. Its website is [deventry.app](https://deventry.app), and the old address takes you there.

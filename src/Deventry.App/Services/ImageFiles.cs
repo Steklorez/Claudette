@@ -57,6 +57,42 @@ public static class ImageFiles
     /// <summary>Image bytes to a bitmap at full size, for the image's own window; null when they can't be decoded.</summary>
     public static readonly IValueConverter Full = new FuncValueConverter<byte[]?, Bitmap?>(data => Decode(data, stream => new Bitmap(stream)));
 
+    /// <summary>A group's icon shows 14 pixels across (16 in the rail), decoded at no more than three times that.</summary>
+    private const int GroupIconSize = 48;
+
+    private static readonly Dictionary<string, (DateTime Written, long Length, Bitmap? Bitmap)> GroupIcons = [];
+
+    /// <summary>
+    /// A project's icon file (DESIGN.md §4, "Grouped by folder") to a small bitmap; null when it can't be read or decoded.
+    /// Each is decoded once while its file stays the same, as the sidebar, the rail and Settings all show it.
+    /// </summary>
+    public static readonly IValueConverter GroupIcon = new FuncValueConverter<string?, Bitmap?>(path => path is null ? null : LoadGroupIcon(path));
+
+    private static Bitmap? LoadGroupIcon(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            lock (GroupIcons)
+            {
+                if (GroupIcons.TryGetValue(path, out var known) && known.Written == info.LastWriteTimeUtc && known.Length == info.Length)
+                {
+                    return known.Bitmap;
+                }
+            }
+            var bitmap = Decode(File.ReadAllBytes(path), stream => Fit(stream, GroupIconSize, GroupIconSize));
+            lock (GroupIcons)
+            {
+                GroupIcons[path] = (info.LastWriteTimeUtc, info.Length, bitmap);
+            }
+            return bitmap;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>The image, scaled down to fit <paramref name="maxWidth"/> by <paramref name="maxHeight"/> pixels when it's larger.</summary>
     private static Bitmap Fit(Stream stream, int maxWidth, int maxHeight)
     {
