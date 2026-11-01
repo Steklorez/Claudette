@@ -45,7 +45,7 @@ public sealed partial class AboutPage : SettingsPage
     public static IReadOnlyList<Contributor> ContributorList { get; } =
     [
         new("Steklorez", "Steklorez",
-            "Claude Code's projects in the sidebar, with their past sessions; your messages set apart from Claude's; collapsing tool calls."),
+            "Claude Code's projects in the sidebar, with their past sessions; your messages set apart from Claude's; collapsing tool calls; remembering what an organization turned off; a warning before a conversation carries on under another account."),
     ];
 
     /// <summary><b>Try the demo</b>, at the window's foot (DESIGN.md §11, "Demo mode").</summary>
