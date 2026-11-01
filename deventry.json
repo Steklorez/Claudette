@@ -28,15 +28,22 @@
       "name": "Build & Host Docs",
       "command": "host-docs.bat",
       "mode": "output",
-      "os": ["windows"],
+      "os": [
+        "windows"
+      ],
       "ifExists": "host-docs.bat"
     },
     {
       "name": "Build & Host Docs",
       "command": "bash ./host-docs.sh",
       "mode": "output",
-      "os": ["macos", "linux"],
+      "os": [
+        "macos",
+        "linux"
+      ],
       "ifExists": "host-docs.sh"
     }
-  ]
+  ],
+  "icon": "src/Deventry.App/Assets/deventry.ico",
+  "color": "#4A6FC4"
 }
