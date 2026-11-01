@@ -673,6 +673,10 @@ Tabs can run Claude Code under accounts besides the one it's signed in to, for p
   - **When a plan limit stops a tab,** offering to continue it under another account with room, or an API key, with what the re-read costs, beside **Continue when it resets**.
   - **Not planned:** Bedrock, Vertex and Foundry accounts; syncing accounts between machines (only their turns' spend is matched, by name); real spend from the Admin API, which needs an organization admin's key.
 
+#### Continuing under another account
+
+Deventry records the account each session starts under in `state.json` (`SessionOrigins`, by session id): an API-key account by id, the Default account by its sign-in email and organization. Resuming a session under another account sends nothing at first: the composer shows a card saying the whole earlier conversation goes to the new account, whose organization can see it, and that Claude can't use its earlier thinking from another organization. Its choices are **Continue here** (remembered for that session and account on the tab), **Use X instead** (back to the account it started under, when that's one of Deventry's), **New chat** (a new session; the held message goes there), **New chat with a digest** (a new session, with the composer holding a digest of the earlier prompts and answers, made locally and sent only when the user sends it) and **Cancel**. Settings → Accounts → **Warn before continuing a session under another account** turns it off. Only sessions Deventry saw begin are known; a copy keeps its source's origin.
+
 ## 5. Conversation View
 
 The conversation is drawn from Claude Code's structured output stream, not from terminal text.

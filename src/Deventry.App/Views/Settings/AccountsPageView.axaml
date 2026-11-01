@@ -11,6 +11,9 @@
       <c:SettingRow Key="state.newFolderAccount">
         <ComboBox ItemsSource="{Binding NewFolderChoices}" SelectedItem="{Binding NewFolderAccount}" />
       </c:SettingRow>
+      <c:SettingRow Key="accounts.warnBeforeOtherAccount">
+        <ToggleSwitch IsChecked="{Binding WarnBeforeOtherAccount}" />
+      </c:SettingRow>
       <!-- The accounts besides Default, each in a box of its own -->
       <c:SettingRow Key="state.accounts" Title="" IsVisible="{Binding HasAccounts}" IsStacked="True">
         <ItemsControl ItemsSource="{Binding Editors}">

@@ -142,6 +142,21 @@
       </StackPanel>
     </Border>
 
+    <!-- The session was started under another account than the one it continues under (DESIGN.md §4, "Continuing under another account") -->
+    <Border Classes="codeblock" IsVisible="{Binding IsAskingOtherAccount}">
+      <StackPanel Spacing="8">
+        <TextBlock Classes="warning" FontWeight="SemiBold" Text="Continue under another account?" />
+        <TextBlock TextWrapping="Wrap" Text="{Binding OtherAccountText}" />
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
+          <Button Classes="accent" Content="Continue here" Command="{Binding ContinueUnderOtherAccountCommand}" />
+          <Button Content="{Binding UseOriginAccountText}" Command="{Binding UseOriginAccountCommand}" IsVisible="{Binding CanUseOriginAccount}" />
+          <Button Content="New chat" Command="{Binding NewChatUnderOtherAccountCommand}" />
+          <Button Content="New chat with a digest" Command="{Binding NewChatWithDigestCommand}" />
+          <Button Content="Cancel" Command="{Binding CancelOtherAccountCommand}" />
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+
     <!-- The folder is gone, for example a deleted clone (DESIGN.md §9, "Missing folder") -->
     <Border Classes="codeblock" IsVisible="{Binding IsFolderMissing}">
       <StackPanel Spacing="8">

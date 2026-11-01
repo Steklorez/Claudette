@@ -195,6 +195,11 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
             // The accounts themselves are the user's, like Perforce's per-folder overrides: only this goes back to Default.
             Setting("state.newFolderAccount", "New folders use", () => Accounts.NewFolderAccount is null, () => Accounts.NewFolderAccount = null,
                 "Which account a folder opened for the first time runs under.", keywords: ["default account", "api key"]),
+            Setting("accounts.warnBeforeOtherAccount", "Warn before continuing a session under another account", s => s.Accounts.WarnBeforeOtherAccount,
+                (s, v) => s.Accounts.WarnBeforeOtherAccount = v,
+                "Ask first when a session started under one account is about to carry on under another.",
+                "Claude Code sends the whole earlier conversation with its requests, so the account it continues under, and its organization, can see it, and Claude can't use its earlier thinking from another organization: its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
+                ["other account", "organization", "work account", "personal account", "resume", "privacy"]),
             Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend"]),
         ], description: "Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");
         Section("addKey", "Add an API key",
@@ -240,6 +245,13 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
     public override string Description => "Accounts tabs can run under besides Claude Code's own sign-in.";
 
     private AccountsService Accounts => Services.Accounts;
+
+    /// <summary>Whether to ask before a session carries on under another account than it started under (DESIGN.md §4).</summary>
+    public bool WarnBeforeOtherAccount
+    {
+        get => Settings.Accounts.WarnBeforeOtherAccount;
+        set => Set(value, v => Settings.Accounts.WarnBeforeOtherAccount = v);
+    }
 
     public ObservableCollection<AccountEditor> Editors { get; }
 

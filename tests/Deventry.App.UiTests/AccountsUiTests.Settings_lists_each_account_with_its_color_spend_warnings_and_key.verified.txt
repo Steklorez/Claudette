@@ -7,6 +7,9 @@
 "New folders use"
 "Which account a folder opened for the first time runs under."
 [choice] "Default"
+"Warn before continuing a session under another account"
+"Ask first when a session started under one account is about to carry on under another.  "
+[toggle on] Warn before continuing a session under another account
 [field] "Work"
 [choice] "Blue"
 "API key"

@@ -1200,7 +1200,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             await EnsureStartedAsync();
             if (_session is null)
             {
-                if (IsAskingTrust)
+                if (IsAskingTrust || IsAskingOtherAccount)
                 {
                     // It waits for the answer about the folder (DESIGN.md §7, "Folder trust").
                     _heldForTrust.Add(pending);
@@ -1568,7 +1568,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             resume = localCopy;
         }
         // Claude Code runs a folder's own configuration without asking in a session like this one: Deventry asks first.
-        if (_closing.IsCancellationRequested || await AskTrustAsync())
+        if (_closing.IsCancellationRequested || resume is not null && AskOtherAccount(State.SessionId) || await AskTrustAsync())
         {
             return;
         }
@@ -2167,6 +2167,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 if (State.SessionId != started.Init.SessionId)
                 {
                     // A new session, a copy's or after /clear: the info card shows its ID, and the name it's reached by.
+                    RecordSessionOrigin(State.SessionId, started.Init.SessionId, _forkAwaitingId);
                     State.SessionId = started.Init.SessionId;
                     OnPropertyChanged(nameof(InfoRows));
                     OnPropertyChanged(nameof(HasSessionId));
