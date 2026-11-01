@@ -137,14 +137,18 @@ public partial class TabViewModel
         await StartAndSendHeldAsync();
     }
 
-    /// <summary><b>New chat</b>: nothing of the earlier conversation goes to the new account; the held message starts a new session.</summary>
+    /// <summary>
+    /// <b>New chat</b>: nothing of the earlier conversation goes to the new account. The tab starts a new session, as
+    /// going back to before the first prompt does, and the earlier conversation stays in History; a message sent while
+    /// it asked goes back to the composer, written for a conversation the new chat doesn't have.
+    /// </summary>
     [RelayCommand]
     private async Task NewChatUnderOtherAccountAsync()
     {
+        var to = _askedCurrent?.Describe();
         CloseOtherAccountCard();
-        Status = TabStatus.NotStarted;
-        await StartNewSessionAsync();
-        await StartAndSendHeldAsync();
+        TakeBackHeldForAccount();
+        await StartNewChatAsync(to);
     }
 
     /// <summary>
@@ -155,14 +159,19 @@ public partial class TabViewModel
     [RelayCommand]
     private async Task NewChatWithDigestAsync()
     {
-        var held = _heldForTrust.Select(m => m.Text).Where(t => t.Trim().Length > 0).ToList();
-        _heldForTrust.Clear();
+        var to = _askedCurrent?.Describe();
         var digest = ConversationDigest(Items);
         CloseOtherAccountCard();
-        Status = TabStatus.NotStarted;
-        await StartNewSessionAsync();
-        ComposerText = string.Join("\n\n", digest.Length > 0 ? [digest, .. held] : held);
+        TakeBackHeldForAccount();
+        await StartNewChatAsync(to);
+        if (digest.Length > 0)
+        {
+            ComposerText = ComposerText.Trim() is { Length: > 0 } held ? $"{digest}\n\n{held}" : digest;
+        }
     }
+
+    private Task StartNewChatAsync(string? account) =>
+        RestartAtAsync(null, null, $"A new chat{(account is null ? "" : $" under {account}")}. The earlier conversation is in History.");
 
     /// <summary>The longest digest <see cref="NewChatWithDigestCommand"/> makes, and the most of one message it keeps.</summary>
     private const int DigestLimit = 6000, DigestMessageLimit = 600;

@@ -116,6 +116,38 @@ public sealed class OtherAccountTests
     }
 
     [Fact]
+    public async Task New_chat_starts_a_session_without_the_earlier_conversation()
+    {
+        await using var h = new TabTestHarness();
+        var tab = Restore(h, Origin("me@home.com", "Home"));
+        await TabTestHarness.Eventually(() => tab.IsAskingOtherAccount, "the question");
+
+        await InlineDispatcher.RunAsync(() => tab.NewChatUnderOtherAccountCommand.ExecuteAsync(null));
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1 && tab.Status == TabStatus.Idle && tab.IsSettled, "the new chat");
+
+        Assert.Null(h.Factory.Launches[0].Resume);
+        var items = InlineDispatcher.Read(() => tab.Items.ToList());
+        Assert.DoesNotContain(items.OfType<UserMessageItem>(), m => m.Text == "Hello");
+        Assert.Contains(items.OfType<NoteItem>(), n => n.Text == "A new chat under the Default account, me@work.com (Work). The earlier conversation is in History.");
+    }
+
+    [Fact]
+    public async Task New_chat_with_a_digest_leaves_it_in_the_composer_of_a_new_session()
+    {
+        await using var h = new TabTestHarness();
+        var tab = Restore(h, Origin("me@home.com", "Home"));
+        await TabTestHarness.Eventually(() => tab.IsAskingOtherAccount, "the question");
+
+        await InlineDispatcher.RunAsync(() => tab.NewChatWithDigestCommand.ExecuteAsync(null));
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1 && tab.Status == TabStatus.Idle && tab.IsSettled, "the new chat");
+
+        Assert.Null(h.Factory.Launches[0].Resume);
+        Assert.StartsWith("Context from an earlier conversation (a digest):", tab.ComposerText, StringComparison.Ordinal);
+        Assert.Contains("Me: Hello", tab.ComposerText, StringComparison.Ordinal);
+        Assert.DoesNotContain(InlineDispatcher.Read(() => tab.Items.OfType<UserMessageItem>().ToList()), m => m.Text == "Hello");
+    }
+
+    [Fact]
     public async Task Cancel_puts_a_message_sent_while_it_asked_back_in_the_composer()
     {
         await using var h = new TabTestHarness();
