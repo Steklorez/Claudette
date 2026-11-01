@@ -7,7 +7,8 @@ name: Package
 # - "Run workflow" builds them for a version you give, without a release.
 # - Pull requests that change packaging build unsigned packages, to check the scripts.
 # - Each Windows run also leaves the Microsoft Store's packages, store-windows-<arch>: the same files with the Store's
-#   publisher, unsigned (the Store signs them), to upload to Partner Center by hand.
+#   publisher, unsigned (the Store signs them), to upload to Partner Center by hand. Only once the repository variable
+#   MSIX_STORE_IDENTITY_NAME holds the Store's identity name, from Partner Center's Product identity page.
 #
 # Signing uses these secrets, kept in the "release" environment (Settings → Environments), whose protection rules should
 # allow only v* tags: then only a tag, not a branch's run of a changed workflow, can reach them. Pull requests build
@@ -153,7 +154,9 @@ jobs:
           path: artifacts/*.msix
           if-no-files-found: error
       # The same package with the Store's publisher, unsigned, to upload to Partner Center. Not part of the release.
+      # Without the Store's identity name there's none, as Build MSIX warns; with it, a missing one fails the run.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: vars.MSIX_STORE_IDENTITY_NAME != ''
         with:
           name: store-windows-${{ matrix.arch }}
           path: artifacts/store/*.msix
