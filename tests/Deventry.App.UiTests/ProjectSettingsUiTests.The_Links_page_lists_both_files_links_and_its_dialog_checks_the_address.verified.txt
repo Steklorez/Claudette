@@ -1,0 +1,36 @@
+﻿"For the tab in {root}/work"
+"Links"
+"Shared links are in deventry.json, committed with the project; yours alone are in deventry.local.json. Saving rewrites the file, so comments in it are dropped."
+"Board"
+"Shared (deventry.json)"
+"https://example.atlassian.net/jira/software/projects/ABC/boards/1"
+"Pull request"
+"Shared (deventry.json)"
+"https://github.com/org/repo/compare/{branch}?expand=1"
+"Notes"
+"Just me (deventry.local.json)"
+"file:///home/me/notes.txt"
+""file:" links don't open from Deventry; only https, http and mailto do."
+"mailto:me@example.com"
+"Just me (deventry.local.json)"
+"mailto:me@example.com"
+[button] Add…
+[button] Edit…
+[button] Remove
+[button] Move up
+[button] Move down
+
+--- Add a link, with an address that won't open ---
+"Add a link"
+"Name"
+[field] "for example: Board (the address shows when it's empty)"
+"Address"
+[field] "javascript:alert(1)"
+""javascript:" links don't open from Deventry; only https, http and mailto do."
+"{branch}, {changelist} and {folderName} are filled in from the tab: its git branch, its Perforce changelist and its folder's name."
+"Save in"
+[toggle on] Just me (deventry.local.json)
+[toggle] Shared with the project (deventry.json)
+"Saving rewrites deventry.local.json in {root}/work, so comments in it are dropped."
+[button] Cancel
+[button] Save

@@ -7,7 +7,7 @@ summary: "A long conversation can run to thousands of cards."
 
 # Finding your way
 
-A long conversation can run to thousands of cards. Claudette marks the ones you are likely to look for, jumps between messages, and has a find bar for the rest.
+A long conversation can run to thousands of cards. Deventry marks the ones you are likely to look for, jumps between messages, and has a find bar for the rest.
 
 ## Marks in the scroll bar
 While the conversation scrolls, its scroll bar marks where things are, as JetBrains Rider's does, each mark as wide as the bar: a thin line while it rests, and wider once you point at it:
@@ -17,7 +17,7 @@ While the conversation scrolls, its scroll bar marks where things are, as JetBra
 - errors, in red;
 - turns that changed files, in the **Modified files** card's color.
 
-Each mark sits where its card is in the conversation's height. Hover one to see what it is, and click it to go there. The marks stay put as you scroll. Just after a long conversation opens, or the window changes width, they settle for a moment while Claudette measures the cards out of view. The scroll bar works as ever: drag its thumb, even over a mark, or click the track between marks to page up or down.
+Each mark sits where its card is in the conversation's height. Hover one to see what it is, and click it to go there. The marks stay put as you scroll. Just after a long conversation opens, or the window changes width, they settle for a moment while Deventry measures the cards out of view. The scroll bar works as ever: drag its thumb, even over a mark, or click the track between marks to page up or down.
 
 ## From message to message
 - `F3` goes to the previous message, and `F4` to the next. They count your messages and Claude's replies, starting from the one at the top of the view. One the top of the view cuts off counts as the previous, so going back begins at its own top.

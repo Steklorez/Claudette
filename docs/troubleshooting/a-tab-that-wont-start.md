@@ -15,7 +15,7 @@ When a tab's Claude Code has stopped, a **Restart** button appears in the status
 
 ## The reasons a tab gives
 
-Claude Code tells Claudette why it refused to start, and the tab puts it in words with what to do, followed by what Claude Code said. The common ones:
+Claude Code tells Deventry why it refused to start, and the tab puts it in words with what to do, followed by what Claude Code said. The common ones:
 
 - **Your organization's settings.** They don't allow the sign-in or the provider this session is set up for, require a sign-in you don't have, or couldn't be loaded or were refused. Check the network or proxy, sign in with another account, or ask an administrator. A tab says, for example, *You're signed in to an organization your organization's settings don't allow. Sign in with another account.*
 - **An API key conflict.** Your organization requires its own sign-in, but an API key, auth token or `apiKeyHelper` is set. Remove it, then restart the tab.
@@ -27,7 +27,7 @@ Claude Code tells Claudette why it refused to start, and the tab puts it in word
 - **A worktree Claude Code won't resume the session in.** Restarting the tab may work.
 - **Claude Code's temporary folder.** It's unsafe or couldn't be created.
 
-A reason Claudette doesn't know yet shows Claude Code's own words.
+A reason Deventry doesn't know yet shows Claude Code's own words.
 
 ## Signed out
 

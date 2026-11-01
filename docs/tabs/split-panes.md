@@ -25,13 +25,13 @@ A pane needs at least 360 pixels, so how many fit depends on the window. Panes t
 
 ## The focused pane
 
-The selected tab is the focused pane's. The keyboard shortcuts, the command palette, the header (the account, the **Tool windows** menu) and Claudette on the composer all follow the focus.
+The selected tab is the focused pane's. The keyboard shortcuts, the command palette, the header (the account, the **Tool windows** menu) and Joulene on the composer all follow the focus.
 
 - Click a pane, or put the cursor in its composer, to focus it.
 - Picking a tab in the sidebar focuses it when it's already on a pane. Any other tab takes the focused pane's place.
 - Each pane has a header line with the tab's name, its folder and **Close pane**. A bar before the name is in its project's color, the same as its group in the sidebar, and the focused pane's header has that color under it.
 
-Every tab in a pane counts as on screen: its Claude starts, its working line runs, its changed files stay fresh, and it isn't marked unread. Claudette skips its [notifications](../away/notifications.md) while Claudette is in front.
+Every tab in a pane counts as on screen: its Claude starts, its working line runs, its changed files stay fresh, and it isn't marked unread. Deventry skips its [notifications](../away/notifications.md) while Deventry is in front.
 
 The [tool windows](tool-windows.md) show the focused pane's tab, and name it over them while other tabs are on screen too.
 
@@ -39,7 +39,7 @@ The [tool windows](tool-windows.md) show the focused pane's tab, and name it ove
 
 Drag the line between two panes to make one wider and the other narrower. The two trade width, and each keeps at least 360 pixels. The line is drawn in the accent color while you point at or drag it. Double-click a line to share the width evenly again.
 
-Opening or closing a pane shares the width evenly again. Claudette remembers which tabs are in panes and how the width is shared, so they come back when it starts again.
+Opening or closing a pane shares the width evenly again. Deventry remembers which tabs are in panes and how the width is shared, so they come back when it starts again.
 
 ## Closing a pane
 

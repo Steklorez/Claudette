@@ -61,7 +61,7 @@ Click a tile to open its detail under the tiles. One tile is open at a time, so 
 - **Edit and Write.** An inline diff of the change. **Open diff** opens the file in the [diff view](../changes/the-diff-view.md): from before Claude's first change to it in this session to the file as it is now, the way Changed files shows it.
 - **Bash.** The command, and its output in a monospace font. What git did shows as chips under the tile: *Committed 1a2b3c4 on main*, *Pushed main*, *Rebased onto origin/main*, *Opened PR #42* (a link to the pull request). A command that reached its time limit says so, and that it carries on in the background; one in the background says *Running in the background* or *Moved to the background*.
 - **Read, Grep, Glob and others.** What the tool was given and what it returned.
-- **Open.** For a call that worked on a file, **Open** opens the file in Claudette's editor or the OS's app ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md)).
+- **Open.** For a call that worked on a file, **Open** opens the file in Deventry's editor or the OS's app ([Opening files from the conversation](../project-files/opening-files-from-the-conversation.md)).
 
 An output over 20,000 characters shows its start, with **Show all (n KB)** to show the rest. A call with nothing more to say reads *Nothing more to show for this call.*
 

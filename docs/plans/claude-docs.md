@@ -7,7 +7,7 @@ summary: "Claude can write a doc on claude.ai with claude.ai's Claude Docs conne
 
 # Claude Docs
 
-Claude can write a doc on claude.ai with claude.ai's **Claude Docs** connector, which comes from your claude.ai account: a task list to work through, a report, notes to keep. The doc lives on claude.ai, where you can read, edit and comment on it. Claudette keeps track of the docs a tab's Claude makes and gives you a link to each.
+Claude can write a doc on claude.ai with claude.ai's **Claude Docs** connector, which comes from your claude.ai account: a task list to work through, a report, notes to keep. The doc lives on claude.ai, where you can read, edit and comment on it. Deventry keeps track of the docs a tab's Claude makes and gives you a link to each.
 
 You don't set anything up. If your account has the connector and Claude uses it, the links appear.
 

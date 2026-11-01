@@ -2,12 +2,12 @@
 title: Trying the demo
 parent: Getting started
 nav_order: 6
-summary: "Look around Claudette on made-up projects, with a stand-in for Claude, without an account."
+summary: "Look around Deventry on made-up projects, with a stand-in for Claude, without an account."
 ---
 
 # Trying the demo
 
-The demo is Claudette on made-up projects, with a stand-in for Claude, so you can see what it's like before you have a Claude subscription, or show it to someone who hasn't. It needs no account and no Claude Code, works offline, and costs nothing.
+The demo is Deventry on made-up projects, with a stand-in for Claude, so you can see what it's like before you have a Claude subscription, or show it to someone who hasn't. It needs no account and no Claude Code, works offline, and costs nothing.
 
 ## Starting it
 
@@ -16,7 +16,7 @@ Choose **Try the demo**:
 - on the sign-in screen, beside **Sign in** ([Signing in](signing-in.md));
 - or on the setup screen, when Claude Code isn't installed or can't be used ([The first launch](the-first-launch.md)).
 
-The demo opens in a window of its own, titled *Claudette demo*. The window you started it from stays as it was: your tabs, or the sign-in screen.
+The demo opens in a window of its own, titled *Deventry demo*. The window you started it from stays as it was: your tabs, or the sign-in screen.
 
 ## What's in it
 
@@ -26,7 +26,7 @@ The projects have no files: their folders are empty, so a diff or the Files tab 
 
 ## Talking to the stand-in
 
-Send a message in any tab on the Default account and the stand-in answers with the next of a few example turns, so you can see how Claudette shows Claude's work:
+Send a message in any tab on the Default account and the stand-in answers with the next of a few example turns, so you can see how Deventry shows Claude's work:
 
 1. A short answer that says what the demo is.
 2. Thinking, then an answer with a list and a code block.

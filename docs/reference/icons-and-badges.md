@@ -2,12 +2,12 @@
 title: Icons and badges
 parent: Reference
 nav_order: 2
-summary: "Every status icon, badge and dot in Claudette's window, what it means, and the page that explains it."
+summary: "Every status icon, badge and dot in Deventry's window, what it means, and the page that explains it."
 ---
 
 # Icons and badges
 
-Every status icon, badge and dot in Claudette's window, what it means, and the page that explains it. Hovering an icon shows a tooltip that says the same.
+Every status icon, badge and dot in Deventry's window, what it means, and the page that explains it. Hovering an icon shows a tooltip that says the same.
 
 {% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing status icons, branches, marks and context rings." %}
 
@@ -66,7 +66,7 @@ The rail shows each group's color, then a square per tab with the first letter o
 
 | Icon | What it means | More |
 |---|---|---|
-| Unreal Engine's logo, a cube or Godot's logo | The group's project, an Unreal Engine, Unity or Godot project, whose menu has its actions and links. A folder when the folder has no project Claudette knows. A busy dot replaces it while a job runs | [Project tools](../project-tools/using-project-tools.md) |
+| Unreal Engine's logo, a cube or Godot's logo | The group's project, an Unreal Engine, Unity or Godot project, whose menu has its actions and links. A folder when the folder has no project Deventry knows. A busy dot replaces it while a job runs | [Project tools](../project-tools/using-project-tools.md) |
 | A folder | **Project files**: the folder's Files tab | [Folder groups](../tabs/folder-groups.md#the-project-files-button) |
 
 ## The foot of the sidebar
@@ -76,8 +76,8 @@ It shows, under a line, only while one of these does.
 | Icon | What it means | More |
 |---|---|---|
 | A Claude Code update badge | A newer Claude Code is available | [Claude Code's updates](../updates/claude-codes-updates.md) |
-| A Claudette update badge | A new Claudette release is available | [Claudette's updates](../updates/claudettes-updates.md) |
-| **New build ready** | A source build of Claudette has a new build to restart into | [Running from source](../getting-started/running-from-source.md) |
+| A Deventry update badge | A new Deventry release is available | [Deventry's updates](../updates/deventrys-updates.md) |
+| **New build ready** | A source build of Deventry has a new build to restart into | [Running from source](../getting-started/running-from-source.md) |
 | *3 new commits on origin/main* | A source build's checkout is behind the branch it tracks | [Running from source](../getting-started/running-from-source.md#when-there-are-new-commits) |
 
 ## The header
@@ -91,8 +91,8 @@ It shows, under a line, only while one of these does.
 | An amber dot | A service is degraded, or under maintenance | |
 | A red dot | A service is in an outage | |
 | A grey dot | The status is unknown, or hasn't been checked yet | |
-| Claudette's logo, first | The window's icon: on Windows a click opens the window menu, and a double-click closes the window; on a Mac it drags the window | [A tour of the window](../getting-started/a-tour-of-the-window.md#the-header) |
-| Three lines, after the logo | The menu: **User Guide**, **Ask on Discord**, **Report an issue** and **About Claudette** | [A tour of the window](../getting-started/a-tour-of-the-window.md#the-header) |
+| Deventry's logo, first | The window's icon: on Windows a click opens the window menu, and a double-click closes the window; on a Mac it drags the window | [A tour of the window](../getting-started/a-tour-of-the-window.md#the-header) |
+| Three lines, after the logo | The menu: **User Guide**, **Ask on Discord**, **Report an issue** and **About Deventry** | [A tour of the window](../getting-started/a-tour-of-the-window.md#the-header) |
 | Sliders, last | **Settings** | [The Settings window](../settings/the-settings-window.md) |
 
 A banner under the header says what's wrong while Claude has an incident. A line under the meters says so when usage is on pace to hit a limit.
@@ -105,7 +105,7 @@ A banner under the header says what's wrong while Claude has an incident. A line
 
 ## The Dock and taskbar icon
 
-On Windows, the taskbar button's overlay shows the number of tabs needing input, Claude's spark while tabs work, and an hourglass while a tab waits for a usage limit. On macOS, the Dock icon shows the number as a badge, and Claudette types, waves or waits by an hourglass. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).
+On Windows, the taskbar button's overlay shows the number of tabs needing input, chevrons lighting in turn while tabs work, and an hourglass while a tab waits for a usage limit. On macOS, the Dock icon shows the number as a badge, and its sign lights its chevrons, shows a **?** and a **!** by turns, or shows an hourglass. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).
 
 ## Accounts, Project files and the conversation
 

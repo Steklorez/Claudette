@@ -1,0 +1,298 @@
+using Deventry.Core.Protocol;
+using Deventry.Core.Tests.Support;
+using Deventry.Core.Transcripts;
+
+namespace Deventry.Core.Tests.Transcripts;
+
+public class TranscriptReaderTests
+{
+    private static Transcript Load(string name = "tools-and-titles") =>
+        TranscriptReader.Read(File.ReadLines(Path.Combine(AppContext.BaseDirectory, "Fixtures", "transcripts", "2.1.284", $"{name}.jsonl")));
+
+    [Fact]
+    public void Each_item_keeps_its_entry_id_and_the_one_before_it()
+    {
+        // Where the conversation can be resumed to rewind or branch (DESIGN.md §5, "Rewind and branch").
+        var transcript = TranscriptReader.Read(
+        [
+            """{"type":"user","uuid":"u-1","parentUuid":null,"message":{"role":"user","content":"first"}}""",
+            """{"type":"assistant","uuid":"a-1","parentUuid":"u-1","message":{"content":[{"type":"text","text":"reply"}]}}""",
+            """{"type":"user","uuid":"u-2","parentUuid":"a-1","message":{"role":"user","content":"second"}}""",
+        ]);
+
+        Assert.Equal([("u-1", null), ("a-1", "u-1"), ("u-2", "a-1")], transcript.Items.Select(i => (i.Uuid, i.ParentUuid)));
+        var reply = Assert.IsType<TranscriptMessage>(transcript.Items[1]);
+        Assert.Equal("a-1", reply.Message.Raw.GetString("uuid"));
+    }
+
+    [Fact]
+    public void Reads_prompts_assistant_messages_and_tool_results_in_order()
+    {
+        var transcript = Load();
+
+        var kinds = transcript.Items.Select(i => i switch
+        {
+            TranscriptPrompt p => $"prompt:{p.Text.Split(' ')[0]}",
+            TranscriptMessage { Message: AssistantMessage a } => $"assistant:{a.Content[0].Type}",
+            TranscriptMessage { Message: UserMessage } => "results",
+            _ => i.GetType().Name,
+        });
+        Assert.Equal(
+            ["prompt:WRITE_FILE", "assistant:tool_use", "results", "assistant:text", "prompt:RUN_BASH", "assistant:tool_use", "results", "assistant:text"],
+            kinds);
+    }
+
+    [Fact]
+    public void Tool_results_carry_the_structured_result()
+    {
+        var results = Load().Items.OfType<TranscriptMessage>().Select(m => m.Message).OfType<UserMessage>().First();
+
+        Assert.Equal("create", results.ToolUseResult?["type"]?.GetValue<string>());
+    }
+
+    [Fact]
+    public void Reads_the_titles()
+    {
+        var transcript = Load();
+
+        Assert.Equal("Mock session title", transcript.AiTitle);
+        Assert.Equal("Renamed by host", transcript.CustomTitle);
+        Assert.Equal("Renamed by host", transcript.Title);
+    }
+
+    [Fact]
+    public void Each_item_carries_the_time_of_its_entry()
+    {
+        // As Claude Code 2.1.284 writes it: every entry has an ISO 8601 timestamp in UTC.
+        var items = Load().Items;
+
+        var prompt = items.OfType<TranscriptPrompt>().First();
+        Assert.Equal(DateTimeOffset.Parse("2026-09-28T22:37:25.604Z", System.Globalization.CultureInfo.InvariantCulture), prompt.Time);
+        Assert.All(items, i => Assert.NotNull(i.Time));
+        // An entry without one has no time.
+        Assert.Null(Assert.Single(TranscriptReader.Read(["""{"type":"user","message":{"role":"user","content":"hello"}}"""]).Items).Time);
+    }
+
+    [Fact]
+    public void Prompts_have_injected_reminders_removed()
+    {
+        var prompts = Load().Items.OfType<TranscriptPrompt>().Select(p => p.Text);
+
+        Assert.All(prompts, p => Assert.DoesNotContain("<system-reminder>", p, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Bad_and_unknown_lines_are_skipped()
+    {
+        var transcript = TranscriptReader.Read(
+        [
+            "not json",
+            """{"type":"brand-new-entry","x":1}""",
+            """{"type":"user","message":{"role":"user","content":"hello"}}""",
+            """{"type":"user","isMeta":true,"message":{"role":"user","content":"hidden"}}""",
+            """{"type":"user","message":{"role":"user","content":"<local-command-stdout>Set model to sonnet</local-command-stdout>"}}""",
+            """{"type":"assistant","isSidechain":true,"message":{"content":[{"type":"text","text":"subagent"}]}}""",
+            """{"type":"user","message":{"role":"user","content":[{"type":"text","text":"[Request interrupted by user]"}]}}""",
+        ]);
+
+        Assert.Equal("hello", Assert.IsType<TranscriptPrompt>(transcript.Items[0]).Text);
+        Assert.Equal("Set model to sonnet", Assert.IsType<TranscriptNote>(transcript.Items[1]).Text);
+        Assert.Equal("Stopped.", Assert.IsType<TranscriptNote>(transcript.Items[2]).Text);
+        Assert.Equal(3, transcript.Items.Count);
+    }
+
+    [Fact]
+    public void A_slash_command_sent_with_a_suffix_is_not_a_prompt()
+    {
+        // As Claude Code 2.1.284 records a local command sent with a quick suffix in a block before it (DESIGN.md §5).
+        var transcript = TranscriptReader.Read(
+        [
+            """{"type":"user","message":{"role":"user","content":[{"type":"text","text":"Ask clarifying questions."},{"type":"text","text":"<command-name>/compact</command-name>\n<command-message>compact</command-message>\n<command-args></command-args>"}]}}""",
+            """{"type":"user","message":{"role":"user","content":"<local-command-stdout>Compacted </local-command-stdout>"}}""",
+        ]);
+
+        Assert.Equal("Compacted", Assert.IsType<TranscriptNote>(Assert.Single(transcript.Items)).Text);
+    }
+
+    [Fact]
+    public void A_background_task_notification_is_read_as_one_not_as_a_prompt()
+    {
+        // As Claude Code 2.1.284 records a background subagent finishing: a user turn it gave the model.
+        var notification = """
+            <task-notification>
+            <task-id>a18958</task-id>
+            <tool-use-id>toolu_2</tool-use-id>
+            <output-file>/tmp/tasks/a18958.output</output-file>
+            <status>completed</status>
+            <summary>Agent "Delegate deeper" finished</summary>
+            <result>Found 3 matches.
+            In src/.</result>
+            <usage><subagent_tokens>1020</subagent_tokens><tool_uses>1</tool_uses><duration_ms>207</duration_ms></usage>
+            </task-notification>
+            """.ReplaceLineEndings("\n"); // a raw string takes the source file's line endings, which are CRLF in a Windows checkout
+        var line = new System.Text.Json.Nodes.JsonObject
+        {
+            ["type"] = "user",
+            ["origin"] = new System.Text.Json.Nodes.JsonObject { ["kind"] = "task-notification" },
+            ["message"] = new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["content"] = notification },
+        }.ToJsonString();
+
+        var item = Assert.IsType<TranscriptTaskNotification>(Assert.Single(TranscriptReader.Read([line]).Items));
+
+        Assert.Equal("a18958", item.TaskId);
+        Assert.Equal("toolu_2", item.ToolUseId);
+        Assert.Equal("completed", item.Status);
+        Assert.Equal("Found 3 matches.\nIn src/.", item.Result);
+        Assert.Equal(1020, item.Tokens);
+        Assert.Equal(1, item.ToolUses);
+        Assert.Equal(207, item.DurationMs);
+    }
+
+    [Fact]
+    public void A_background_task_notification_that_came_mid_turn_is_read_from_its_attachment()
+    {
+        // As Claude Code 2.1.302 records a background subagent finishing while the model was working: no user turn, but
+        // a queued command's attachment, after the subagent's hand-back in one of its own. Other attachments show nothing.
+        var notification = """
+            <task-notification>
+            <task-id>a8981c</task-id>
+            <tool-use-id>toolu_2</tool-use-id>
+            <output-file>/tmp/tasks/a8981c.output</output-file>
+            <status>completed</status>
+            <summary>Agent "Survey the protocol" finished</summary>
+            <note>A task-notification fires each time this agent stops with no live background children of its own.</note>
+            <result>This agent's report was delivered to you as a message from "a8981c" (its SubagentHandback call). Read it there; it is not repeated here.
+            </result>
+            <usage><subagent_tokens>196141</subagent_tokens><tool_uses>80</tool_uses><duration_ms>323768</duration_ms></usage>
+            </task-notification>
+            """.ReplaceLineEndings("\n");
+        static string Attachment(System.Text.Json.Nodes.JsonObject attachment) => new System.Text.Json.Nodes.JsonObject
+        {
+            ["type"] = "attachment",
+            ["isSidechain"] = false,
+            ["timestamp"] = "2026-10-18T15:13:32.061Z",
+            ["attachment"] = attachment,
+        }.ToJsonString();
+
+        var transcript = TranscriptReader.Read(
+        [
+            """{"type":"queue-operation","operation":"enqueue","timestamp":"2026-10-18T15:13:32.061Z","content":"<task-notification>\n<task-id>a8981c</task-id>\n</task-notification>"}""",
+            Attachment(new System.Text.Json.Nodes.JsonObject
+            {
+                ["type"] = "queued_command",
+                ["prompt"] = "<agent-message from=\"a8981c\">\n[Subagent hand-back] The report.\n</agent-message>",
+                ["commandMode"] = "prompt",
+                ["origin"] = new System.Text.Json.Nodes.JsonObject { ["kind"] = "peer", ["from"] = "a8981c", ["handback"] = true },
+                ["isMeta"] = true,
+            }),
+            Attachment(new System.Text.Json.Nodes.JsonObject
+            {
+                ["type"] = "queued_command",
+                ["prompt"] = notification,
+                ["commandMode"] = "task-notification",
+                ["origin"] = new System.Text.Json.Nodes.JsonObject { ["kind"] = "task-notification", ["producer"] = "session-task" },
+                ["usage"] = new System.Text.Json.Nodes.JsonObject { ["totalTokens"] = 196141, ["toolUses"] = 80, ["durationMs"] = 323768 },
+            }),
+            Attachment(new System.Text.Json.Nodes.JsonObject { ["type"] = "total_tokens_reminder", ["text"] = "<total_tokens>14911646 tokens left</total_tokens>" }),
+        ]);
+
+        var item = Assert.IsType<TranscriptTaskNotification>(Assert.Single(transcript.Items));
+        Assert.Equal("a8981c", item.TaskId);
+        Assert.Equal("toolu_2", item.ToolUseId);
+        Assert.Equal("completed", item.Status);
+        Assert.Equal(196141, item.Tokens);
+        Assert.Equal(80, item.ToolUses);
+        Assert.Equal(323768, item.DurationMs);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-18T15:13:32.061Z", System.Globalization.CultureInfo.InvariantCulture), item.Time);
+    }
+
+    [Fact]
+    public async Task Subagent_transcripts_are_merged_in_under_their_agent_call()
+    {
+        // The layout Claude Code 2.1.284 writes: <session>.jsonl, and <session>/subagents/agent-<id>.jsonl with a
+        // .meta.json naming the Agent call. Nested subagents get their own file, pointing at the call in their parent's.
+        using var folder = new TempFolder();
+        var main = folder.Write("s1.jsonl", string.Join('\n',
+            """{"type":"user","timestamp":"2026-09-29T05:00:00.000Z","message":{"role":"user","content":"Look into it"}}""",
+            """{"type":"assistant","timestamp":"2026-09-29T05:00:01.000Z","message":{"content":[{"type":"tool_use","id":"toolu_a","name":"Agent","input":{"description":"Search","prompt":"Search for it"}}]}}""",
+            """{"type":"user","timestamp":"2026-09-29T05:00:09.000Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_a","content":"x"}]},"toolUseResult":{"status":"completed","content":[{"type":"text","text":"Found it."}]}}""",
+            """{"type":"assistant","timestamp":"2026-09-29T05:00:10.000Z","message":{"content":[{"type":"text","text":"All done."}]}}"""));
+        folder.Write("s1/subagents/agent-a1.meta.json", """{"agentType":"general-purpose","description":"Search","toolUseId":"toolu_a","spawnDepth":1}""");
+        folder.Write("s1/subagents/agent-a1.jsonl", string.Join('\n',
+            """{"isSidechain":true,"type":"user","timestamp":"2026-09-29T05:00:01.500Z","message":{"role":"user","content":"Search for it"}}""",
+            """{"isSidechain":true,"type":"assistant","timestamp":"2026-09-29T05:00:02.000Z","message":{"content":[{"type":"tool_use","id":"toolu_b","name":"Agent","input":{"description":"Deeper"}}]}}""",
+            """{"isSidechain":true,"type":"user","timestamp":"2026-09-29T05:00:08.000Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_b","content":"deep"}]}}"""));
+        folder.Write("s1/subagents/agent-a2.meta.json", """{"agentType":"Explore","description":"Deeper","toolUseId":"toolu_b","parentAgentId":"a1","spawnDepth":2}""");
+        folder.Write("s1/subagents/agent-a2.jsonl",
+            """{"isSidechain":true,"type":"assistant","timestamp":"2026-09-29T05:00:05.000Z","message":{"content":[{"type":"text","text":"Deep result"}]}}""");
+        // Without its .meta.json there's no telling where a subagent belongs: skipped.
+        folder.Write("s1/subagents/agent-a3.jsonl",
+            """{"isSidechain":true,"type":"assistant","timestamp":"2026-09-29T05:00:03.000Z","message":{"content":[{"type":"text","text":"orphan"}]}}""");
+
+        var transcript = await TranscriptReader.ReadAsync(main, TestContext.Current.CancellationToken);
+
+        var order = transcript.Items.Select(i => i switch
+        {
+            TranscriptPrompt p => $"prompt {p.Text}",
+            TranscriptMessage { Message: AssistantMessage a } => $"assistant@{a.ParentToolUseId ?? "main"} {a.Content[0].Type}",
+            TranscriptMessage { Message: UserMessage u } => $"results@{u.ParentToolUseId ?? "main"}",
+            _ => i.GetType().Name,
+        });
+        Assert.Equal(
+        [
+            "prompt Look into it",
+            "assistant@main tool_use",
+            "assistant@toolu_a tool_use",
+            "assistant@toolu_b text",
+            "results@toolu_a",
+            "results@main",
+            "assistant@main text",
+        ], order);
+    }
+
+    [Fact]
+    public async Task Reading_up_to_an_entry_stops_there_with_its_subagents_but_keeps_the_title()
+    {
+        // As a resume with --resume-session-at keeps it (DESIGN.md §5, "Rewind and branch"). The point can be an entry
+        // that shows nothing, such as an attachment.
+        using var folder = new TempFolder();
+        var main = folder.Write("s1.jsonl", string.Join('\n',
+            """{"type":"user","uuid":"u1","parentUuid":null,"timestamp":"2026-09-29T05:00:00.000Z","message":{"role":"user","content":"first"}}""",
+            """{"type":"assistant","uuid":"a1","parentUuid":"u1","timestamp":"2026-09-29T05:00:01.000Z","message":{"content":[{"type":"tool_use","id":"toolu_a","name":"Agent","input":{"description":"Search"}}]}}""",
+            """{"type":"user","uuid":"r1","parentUuid":"a1","timestamp":"2026-09-29T05:00:05.000Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_a","content":"x"}]}}""",
+            """{"type":"attachment","uuid":"att1","parentUuid":"r1","isMeta":true,"timestamp":"2026-09-29T05:00:05.500Z"}""",
+            """{"type":"user","uuid":"u2","parentUuid":"att1","timestamp":"2026-09-29T05:00:06.000Z","message":{"role":"user","content":"second"}}""",
+            """{"type":"assistant","uuid":"a2","parentUuid":"u2","timestamp":"2026-09-29T05:00:07.000Z","message":{"content":[{"type":"text","text":"two"}]}}""",
+            """{"type":"ai-title","aiTitle":"Searching","sessionId":"s1"}"""));
+        folder.Write("s1/subagents/agent-a1.meta.json", """{"agentType":"Explore","description":"Search","toolUseId":"toolu_a","spawnDepth":1}""");
+        folder.Write("s1/subagents/agent-a1.jsonl", string.Join('\n',
+            """{"isSidechain":true,"type":"assistant","timestamp":"2026-09-29T05:00:02.000Z","message":{"content":[{"type":"text","text":"looking"}]}}""",
+            """{"isSidechain":true,"type":"assistant","timestamp":"2026-09-29T05:00:08.000Z","message":{"content":[{"type":"text","text":"later"}]}}"""));
+
+        var transcript = await TranscriptReader.ReadAsync(main, "att1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(["u1", "a1", null, "r1"], transcript.Items.Select(i => i.Uuid));
+        Assert.Equal("Searching", transcript.Title);
+        // An entry it doesn't have reads it all.
+        Assert.Equal(7, (await TranscriptReader.ReadAsync(main, "gone", TestContext.Current.CancellationToken)).Items.Count);
+    }
+
+    [Fact]
+    public void Finds_a_transcript_in_any_project_folder()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"deventry-projects-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "C--work-app"));
+            File.WriteAllText(Path.Combine(root, "C--work-app", "abc.jsonl"), "");
+
+            Assert.Equal(Path.Combine(root, "C--work-app", "abc.jsonl"), TranscriptReader.Find(root, "abc"));
+            Assert.Null(TranscriptReader.Find(root, "missing"));
+            Assert.Null(TranscriptReader.Find(Path.Combine(root, "nope"), "abc"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+}

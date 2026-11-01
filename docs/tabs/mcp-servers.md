@@ -7,7 +7,7 @@ summary: "MCP servers give Claude extra tools."
 
 # MCP servers
 
-MCP servers give Claude extra tools. Claude Code runs them, from your own and the project's configuration: see [Claude Code's MCP documentation](https://code.claude.com/docs/en/mcp). Claudette shows each tab's servers in the **MCP** tool window, and lets you reconnect, turn off and sign in to them without leaving the window.
+MCP servers give Claude extra tools. Claude Code runs them, from your own and the project's configuration: see [Claude Code's MCP documentation](https://code.claude.com/docs/en/mcp). Deventry shows each tab's servers in the **MCP** tool window, and lets you reconnect, turn off and sign in to them without leaving the window.
 
 ## The MCP page
 
@@ -35,7 +35,7 @@ The page reads the list from Claude Code when it opens and after each change. **
 
 ## Signing in to a server
 
-1. On a server that says *Needs signing in*, choose **Sign in**. Claudette opens the server's sign-in page in your browser. Only web addresses are opened.
+1. On a server that says *Needs signing in*, choose **Sign in**. Deventry opens the server's sign-in page in your browser. Only web addresses are opened.
 2. Finish in the browser. Claude Code waits on this computer for the browser to come back, then connects the server by itself. **Refresh** shows it.
 3. If the page the browser ends on doesn't load, paste its address into the box that appears under the row (*If the page after signing in didn't load, paste its address here*) and choose **Done**. **Open the sign-in page again** is there too.
 

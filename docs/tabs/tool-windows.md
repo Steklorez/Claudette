@@ -20,12 +20,12 @@ They show the tab you're looking at: its changed files, its agents, its tasks. W
 |---|---|---|
 | **Changed files** | Always. | [Changed files](../changes/changed-files.md) |
 | **Agents** | Always. A dot on its icon shows while subagents are active. | [The agent map](../plans/the-agent-map.md) |
-| **Project** | When the folder holds a project Claudette has tools for. A dot on its icon shows while a job runs. | [Project tools](../project-tools/using-project-tools.md) |
+| **Project** | When the folder holds a project Deventry has tools for. A dot on its icon shows while a job runs. | [Project tools](../project-tools/using-project-tools.md) |
 | **Tasks** | Once Claude keeps a task list or a plan. Its icon's tip says how far it's got, such as *2 of 5 done*. | [The Tasks page](../plans/the-tasks-page.md) |
 | **MCP** | When the session has MCP servers. A warning dot shows on its icon when one needs attention. | [MCP servers](mcp-servers.md) |
 | **Scratch pad** | Always. | [The scratch pad](../conversation/the-scratch-pad.md) |
 | **Processes** | When the process monitor is on for the tab. | [Processes](processes.md) |
-| **Games** | While a game is open. | [Games with Claudette](../claudette/games-with-claudette.md) |
+| **Games** | While a game is open. | [Games with Joulene](../joulene/games-with-joulene.md) |
 | **Find** | Once you keep a search with **Open in Find window**: a tab on its header for each search. It shows them whichever tab you're in. | [Finding in files](../project-files/finding-in-files.md#keep-the-results) |
 
 Each window scrolls and wraps its text at the width shown, so a long file name or an error is never cut off.

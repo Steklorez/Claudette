@@ -128,7 +128,7 @@ async function report() {
   // The report at `limit` characters per diff or log; `cut` says where the whole one is.
   const render = (limit, cut) => {
     const lines = [
-      `Claude Code **${version}** is out. Claudette was last tested with **${from}**.`,
+      `Claude Code **${version}** is out. Deventry was last tested with **${from}**.`,
       '',
       `- Tests: ${testsPassed === null ? 'not run' : testsPassed ? '✅ passed' : '❌ failed'}`,
       `- Changes mentioning something in \`compat/surface.yaml\`: **${matches.length}**`,
@@ -290,7 +290,7 @@ function runUrl() {
 }
 
 async function text(url) {
-  const res = await fetch(url, { headers: { 'user-agent': 'claudette-compat-check' } });
+  const res = await fetch(url, { headers: { 'user-agent': 'deventry-compat-check' } });
   if (!res.ok) throw Object.assign(new Error(`${res.status} ${res.statusText} for ${url}`), { status: res.status });
   return res.text();
 }

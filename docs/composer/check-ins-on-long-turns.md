@@ -2,12 +2,12 @@
 title: Check-ins on long turns
 parent: The composer
 nav_order: 9
-summary: "If a turn runs for a long time, Claudette can ask Claude how it's going, so a tab doesn't sit stuck and burn usage without anyone noticing."
+summary: "If a turn runs for a long time, Deventry can ask Claude how it's going, so a tab doesn't sit stuck and burn usage without anyone noticing."
 ---
 
 # Check-ins on long turns
 
-If a turn runs for a long time, Claudette can ask Claude how it's going, so a tab doesn't sit stuck and burn usage without anyone noticing.
+If a turn runs for a long time, Deventry can ask Claude how it's going, so a tab doesn't sit stuck and burn usage without anyone noticing.
 
 ## When a check-in is sent
 
@@ -27,7 +27,7 @@ The bar goes away by itself if the turn no longer calls for a check-in: Claude s
 
 ## What happens
 
-Claudette sends a message into the session, as if you'd typed it while Claude was working. The default is:
+Deventry sends a message into the session, as if you'd typed it while Claude was working. The default is:
 
 > Everything OK? Give me a one or two sentence status update: what you're doing, and whether you're stuck or waiting on something.
 
@@ -37,7 +37,7 @@ Claude only sees the message between steps. If it's running one long command, su
 
 ## Possibly stuck
 
-If two check-ins in a row get no reply, Claudette stops sending them for that turn. A bar over the box says *Claude hasn't answered two check-ins. It may be stuck.*, with **Stop**, and the tab's row in the sidebar says *Possibly stuck*. What to do about it is in [A tab that seems stuck](../troubleshooting/a-tab-that-seems-stuck.md).
+If two check-ins in a row get no reply, Deventry stops sending them for that turn. A bar over the box says *Claude hasn't answered two check-ins. It may be stuck.*, with **Stop**, and the tab's row in the sidebar says *Possibly stuck*. What to do about it is in [A tab that seems stuck](../troubleshooting/a-tab-that-seems-stuck.md).
 
 ## Limits
 

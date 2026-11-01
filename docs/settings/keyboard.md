@@ -2,12 +2,12 @@
 title: Keyboard
 parent: Settings
 nav_order: 5
-summary: "Settings → Keyboard sets which key sends your message and lists every shortcut Claudette handles."
+summary: "Settings → Keyboard sets which key sends your message and lists every shortcut Deventry handles."
 ---
 
 # Keyboard
 
-Settings → Keyboard sets which key sends your message and lists every shortcut Claudette handles. You can change any of them. [Keyboard shortcuts](../reference/keyboard-shortcuts.md) in the Reference lists them all with their defaults.
+Settings → Keyboard sets which key sends your message and lists every shortcut Deventry handles. You can change any of them. [Keyboard shortcuts](../reference/keyboard-shortcuts.md) in the Reference lists them all with their defaults.
 
 ## Send with
 
@@ -26,7 +26,7 @@ The composer's placeholder says which is in use, and so does the chip just befor
 
 A command you've changed also has **Reset**, which puts its default back. **Remove** clears a command's shortcut, so it's reachable only from menus and buttons, and the page says "None". **Reset to defaults** by the **Shortcuts** heading puts back every shortcut, and the one by **Sending** puts back **Send with**. Tooltips and the composer's placeholder always show the shortcuts in use.
 
-## Shortcuts Claudette refuses
+## Shortcuts Deventry refuses
 
 When the keys you pressed can't be used, the row says why and the old shortcut stays. Press other keys, or `Esc` to give up:
 
@@ -39,7 +39,7 @@ This is one shortcut for all nine digits. To change it, press any digit from 1 t
 
 ## One key for both systems
 
-Claudette stores a shortcut with a primary modifier, which is Ctrl on Windows and Linux and Cmd on macOS. A shortcut synced between a Windows machine and a Mac then means the same thing on both. Only on macOS is Ctrl a modifier of its own, separate from Cmd. On macOS the page writes shortcuts with symbols, such as `⌘⇧H`.
+Deventry stores a shortcut with a primary modifier, which is Ctrl on Windows and Linux and Cmd on macOS. A shortcut synced between a Windows machine and a Mac then means the same thing on both. Only on macOS is Ctrl a modifier of its own, separate from Cmd. On macOS the page writes shortcuts with symbols, such as `⌘⇧H`.
 
 ## Quick suffixes
 

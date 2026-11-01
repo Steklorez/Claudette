@@ -21,7 +21,7 @@ The card counts changes Claude made with its file editing tools, subagents' incl
 
 Click a tile. The [diff view](the-diff-view.md) opens with the file as it was before the turn's first change to it, against how the turn's last change left it.
 
-When Claudette can't tell how the turn left the file, the diff is against how the next turn that changed it found it, or the file as it is now, and the line under the title says so: *"this turn's changes: before it, against the file now"*. Changes you made outside Claude between turns then count toward the earlier turn.
+When Deventry can't tell how the turn left the file, the diff is against how the next turn that changed it found it, or the file as it is now, and the line under the title says so: *"this turn's changes: before it, against the file now"*. Changes you made outside Claude between turns then count toward the earlier turn.
 
 This view only shows the changes. It has no **Revert** or **Reviewed**, which belong to the file's changes as Changed files shows them. A file whose earlier contents aren't known is shown as it is, as in Changed files.
 

@@ -2,19 +2,19 @@
 title: Settings sync
 parent: History and syncing
 nav_order: 5
-summary: "Settings sync keeps Claudette's settings the same on every machine that uses the same session library folder."
+summary: "Settings sync keeps Deventry's settings the same on every machine that uses the same session library folder."
 ---
 
 # Settings sync
 
-Settings sync keeps Claudette's settings the same on every machine that uses the same [session library](the-session-library.md) folder. Change your theme on one machine and the others follow.
+Settings sync keeps Deventry's settings the same on every machine that uses the same [session library](the-session-library.md) folder. Change your theme on one machine and the others follow.
 
 ## Turning it on
 
 1. Open Settings → Sessions.
-2. Turn on **Sync Claudette's settings through the library**. It's off by default.
+2. Turn on **Sync Deventry's settings through the library**. It's off by default.
 
-If the library already holds settings from another machine, Claudette asks: *The library already has settings from another machine. Which should this machine use?*
+If the library already holds settings from another machine, Deventry asks: *The library already has settings from another machine. Which should this machine use?*
 
 - **Use synced settings** takes the library's settings, and every page shows them.
 - **Replace them with this machine's** publishes this machine's settings to the library instead.
@@ -33,7 +33,7 @@ Turning it off keeps the settings as they are on this machine and stops syncing.
 
 ## What stays on each machine
 
-- Whether Claudette starts at login, and the rest of Settings → General.
+- Whether Deventry starts at login, and the rest of Settings → General.
 - The path to `claude`, the login shell setting, and the Claude app settings (Settings → Claude Code).
 - This page's own settings: the machine's name, the library folder, how long library sessions are kept, and whether new tabs sync.
 - Settings → Files and diffs, Settings → Project tools, and Source control's pages but Git's **Show the git branch**: Git's worktrees, path to git and Files tab choices, and Perforce. Program paths and installed tools differ between machines, and a Perforce server, workspace and stored password belong to the machine.
@@ -46,7 +46,7 @@ A stored Perforce password is never in a settings file at all. See [Passwords an
 
 ## How it merges
 
-Claudette compares settings at launch, after each change you make, and once a minute to pick up changes from other machines. Each setting keeps the time it was last changed, and the newest change wins, so edits on two machines don't overwrite each other wholesale. A change on one machine and a different one on another both survive. When both changed the same setting, the newer one wins. Lists, such as quick suffixes, sync as one value.
+Deventry compares settings at launch, after each change you make, and once a minute to pick up changes from other machines. Each setting keeps the time it was last changed, and the newest change wins, so edits on two machines don't overwrite each other wholesale. A change on one machine and a different one on another both survive. When both changed the same setting, the newer one wins. Lists, such as quick suffixes, sync as one value.
 
 The synced settings are one file in the library, `settings-sync.json`.
 
@@ -54,7 +54,7 @@ The synced settings are one file in the library, `settings-sync.json`.
 
 | Setting | Default | Where |
 |---|---|---|
-| **Sync Claudette's settings through the library** | Off | Settings → Sessions |
+| **Sync Deventry's settings through the library** | Off | Settings → Sessions |
 
 No **Reset to defaults** changes it.
 

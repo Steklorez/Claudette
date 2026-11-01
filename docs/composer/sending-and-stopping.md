@@ -45,7 +45,7 @@ Settings → Conversation → **Messages sent while Claude works** chooses what 
 
 **Send them into the turn: Claude reads each at its next step** is the default. Claude Code reads the message at its next tool call, or after the reply it's writing. Until it does, the message's card says *Queued: sent when Claude can take it*, with **Cancel**.
 
-**Queue them: each is sent as the next turn, once this one ends** holds each message in Claudette until the turn ends, then sends them one per turn, oldest first. It's for lining up the next task without turning Claude from the one under way. A held message's card says *Queued: sent when this turn ends*, with two buttons:
+**Queue them: each is sent as the next turn, once this one ends** holds each message in Deventry until the turn ends, then sends them one per turn, oldest first. It's for lining up the next task without turning Claude from the one under way. A held message's card says *Queued: sent when this turn ends*, with two buttons:
 
 - **Send now** sends it into the turn after all.
 - **Cancel** takes it back.
@@ -57,7 +57,7 @@ Some things about queued messages:
 - **Stop** takes back everything waiting, whichever setting is on. So does Claude Code exiting, because held messages can't go to a process that's gone.
 - A turn that a usage limit stopped doesn't send the next held message, because the limit would stop it too. Held messages wait for the next turn to end, or for **Send now**. See [When a limit stops a task](../usage/when-a-limit-stops-a-task.md).
 - A message sent while nothing is working goes at once.
-- Claudette's own messages, [check-ins](check-ins-on-long-turns.md) and continuing after a limit, always go into the turn.
+- Deventry's own messages, [check-ins](check-ins-on-long-turns.md) and continuing after a limit, always go into the turn.
 
 ## Settings
 

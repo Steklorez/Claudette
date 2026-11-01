@@ -84,7 +84,7 @@ To copy a conversation only up to an earlier message, use **Branch from here**. 
 
 The session's ID is what `claude --resume` takes in a terminal. **Copy session ID** puts it on the clipboard. The same ID is on the [info card](the-tab-info-card.md), under **Session**, with a **Copy** button.
 
-Paste it into another tab's message and that tab's Claude can reach this session too: Claudette tells Claude the name to message it by. See [Reaching other sessions](../threads/reaching-other-sessions.md).
+Paste it into another tab's message and that tab's Claude can reach this session too: Deventry tells Claude the name to message it by. See [Reaching other sessions](../threads/reaching-other-sessions.md).
 
 ## Move up and Move down
 

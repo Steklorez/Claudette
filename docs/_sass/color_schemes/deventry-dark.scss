@@ -1,0 +1,18 @@
+// The guide in dark: a blue-black, pale text and a lighter blue (head_custom.html picks it when the system is dark).
+$color-scheme: dark;
+$body-background-color: $de-night;
+$body-heading-color: #f5f7fb;
+$body-text-color: #dce1ec;
+$link-color: #93aeeb;
+$nav-child-link-color: #9ca6bc;
+$sidebar-color: #131826;
+$base-button-color: #1e2738;
+$btn-primary-color: $de-blue-deep;
+$code-background-color: #182030;
+$feedback-color: #131826;
+$table-background-color: #131826;
+$search-background-color: #182030;
+$search-result-preview-color: #9ca6bc;
+$border-color: #263049;
+
+@import "./vendor/accessible-pygments/github-dark";

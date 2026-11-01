@@ -7,7 +7,7 @@ summary: "When Claude Code needs your permission to use a tool, such as running 
 
 # Permission cards
 
-When Claude Code needs your permission to use a tool, such as running a command or editing a file, the tab shows a card in the conversation and waits for you. The tab's row in the [sidebar](../tabs/the-sidebar.md) says *Needs your input*, and if Claudette isn't in front, or the tab isn't the one you're looking at, you also get a [notification](../away/notifications.md).
+When Claude Code needs your permission to use a tool, such as running a command or editing a file, the tab shows a card in the conversation and waits for you. The tab's row in the [sidebar](../tabs/the-sidebar.md) says *Needs your input*, and if Deventry isn't in front, or the tab isn't the one you're looking at, you also get a [notification](../away/notifications.md).
 
 {% include shot.html name="guide/permissions/permission-card" alt="A permission card waiting for an answer." %}
 
@@ -54,7 +54,7 @@ A mark beside the conversation's scroll bar shows where each waiting prompt is, 
 
 ## What never asks
 
-Claudette only shows the prompts Claude Code actually asks for. Claude Code's own allow and deny rules, from its settings files, still apply: a call a rule allows never reaches you, and read-only commands such as `sleep` never ask at all. When a rule or the mode denies a call without asking, the conversation shows a note saying so.
+Deventry only shows the prompts Claude Code actually asks for. Claude Code's own allow and deny rules, from its settings files, still apply: a call a rule allows never reaches you, and read-only commands such as `sleep` never ask at all. When a rule or the mode denies a call without asking, the conversation shows a note saying so.
 
 ## Settings
 

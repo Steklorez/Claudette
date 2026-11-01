@@ -2,12 +2,12 @@
 title: Saving
 parent: Project files
 nav_order: 8
-summary: "Claudette doesn't save for you."
+summary: "Deventry doesn't save for you."
 ---
 
 # Saving
 
-Claudette doesn't save for you. A file with unsaved edits has a dot on its tab until you save it, but its edits are kept safe meanwhile.
+Deventry doesn't save for you. A file with unsaved edits has a dot on its tab until you save it, but its edits are kept safe meanwhile.
 
 ## Saving a file
 
@@ -21,7 +21,7 @@ It writes only if the file is still what you opened or last saved. If something 
 
 ## Unsaved edits are kept
 
-A file's unsaved text is copied to Claudette's data folder a second after you stop typing ([Where Claudette keeps things](../privacy/where-claudette-keeps-things.md)). So quitting Claudette, a crash, or a restart into a new build asks nothing and loses nothing: the file comes back with its edits and its dot. Saving a file, or choosing **Don't save**, removes the copy, and copies no open file has used for 30 days are removed at launch.
+A file's unsaved text is copied to Deventry's data folder a second after you stop typing ([Where Deventry keeps things](../privacy/where-deventry-keeps-things.md)). So quitting Deventry, a crash, or a restart into a new build asks nothing and loses nothing: the file comes back with its edits and its dot. Saving a file, or choosing **Don't save**, removes the copy, and copies no open file has used for 30 days are removed at launch.
 
 ## Closing files with unsaved edits
 
@@ -30,7 +30,7 @@ A file's unsaved text is copied to Claudette's data folder a second after you st
 
 ## When a file changes on disk
 
-An open file is watched. It's also looked at again when a tab of the project changes it with a tool, when one finishes a turn, and when Claudette comes to the front. The change may be Claude's, a `git checkout`, or your other editor.
+An open file is watched. It's also looked at again when a tab of the project changes it with a tool, when one finishes a turn, and when Deventry comes to the front. The change may be Claude's, a `git checkout`, or your other editor.
 
 - **With no unsaved edits**, the file is read again where it was. The cursor, selection, scroll position and folds stay on their lines as near as they can, and Undo takes the change back as one step.
 - **With unsaved edits**, a banner over the editor, in the caution colors, says *Claude changed PlayerController.cpp in refactor auth while you were editing it.* When none of the project's tabs changed it, it says *PlayerController.cpp changed on disk while you were editing it.* It offers:

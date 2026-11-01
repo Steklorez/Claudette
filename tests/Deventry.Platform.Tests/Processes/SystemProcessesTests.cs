@@ -1,0 +1,133 @@
+using Deventry.Core.ProjectTools;
+using Deventry.Platform.Processes;
+using Deventry.Platform.Processes.Unix;
+
+namespace Deventry.Platform.Tests.Processes;
+
+/// <summary>Finding processes by name for project tools (DESIGN.md §18): an editor with a project open, End all editors.</summary>
+public sealed class SystemProcessesTests
+{
+    private const string Editor = "/Users/Shared/Epic Games/UE_5.4/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor";
+
+    [Fact]
+    public void On_macOS_a_program_with_spaces_in_its_path_is_named_by_the_file_that_exists()
+    {
+        var entries = PsOutput.Parse(
+            $"  900     1 204800  12:04.50 Mon Sep 28 09:01:44 2026     {Editor} /Users/matt/My Games/NightOwl/NightOwl.uproject -debug\n" +
+            "  901   900   1024   0:00.00 Mon Sep 28 09:01:45 2026     /Users/Shared/Epic Games/UE_5.4/Engine/Binaries/Mac/ShaderCompileWorker -xyz\n" +
+            "  902     1   1024   0:00.00 Mon Sep 28 09:01:45 2026     /usr/bin/vim notes-about-UnrealEditor.txt\n" +
+            "  903     1   1024   0:00.00 Mon Sep 28 09:01:45 2026     /Applications/Godot.app/Contents/MacOS/Godot --editor\n" +
+            "  904     1   1024   0:00.00 Mon Sep 28 09:01:45 2026     /Applications/Deventry.app/Contents/MacOS/Deventry\n");
+        var files = new HashSet<string> { Editor, "/usr/bin/vim", "/Applications/Godot.app/Contents/MacOS/Godot", "/Applications/Deventry.app/Contents/MacOS/Deventry" };
+
+        var found = SystemProcesses.MatchPs(entries, ["UnrealEditor", "UE4Editor"], self: 904, files.Contains);
+
+        var editor = Assert.Single(found);
+        Assert.Equal((900, "UnrealEditor"), (editor.Pid, editor.Name));
+        Assert.True(SystemProcessNames.CommandLineMentions(editor, "/Users/matt/My Games/NightOwl/NightOwl.uproject"));
+        Assert.Equal([903], SystemProcesses.MatchPs(entries, ["godot*"], self: 904, files.Contains).Select(p => p.Pid));
+        Assert.Empty(SystemProcesses.MatchPs(entries, ["Deventry"], self: 904, files.Contains));
+    }
+
+    [Theory]
+    [InlineData("UnrealEditor.exe", true)]
+    [InlineData("unrealeditor", true)]
+    [InlineData("UnrealEditor-Cmd.exe", false)]
+    [InlineData("UE4Editor", false)]
+    public void Names_match_ignoring_case_and_exe(string name, bool matches)
+    {
+        Assert.Equal(matches, SystemProcessNames.Matches(name, ["UnrealEditor"]));
+        Assert.True(SystemProcessNames.Matches("Godot_v4.3-stable_mono_win64.exe", ["godot*"]));
+    }
+
+    [Fact]
+    public void A_command_line_mentions_a_path_with_either_slash_in_any_case()
+    {
+        var process = new SystemProcess(1, "UnrealEditor", @"""C:\UE\UnrealEditor.exe"" ""d:/games/nightowl/NightOwl.uproject""");
+
+        Assert.True(SystemProcessNames.CommandLineMentions(process, @"D:\Games\NightOwl\NightOwl.uproject"));
+        Assert.False(SystemProcessNames.CommandLineMentions(process with { CommandLine = null }, @"D:\Games\NightOwl\NightOwl.uproject"));
+    }
+
+    [Fact]
+    public void The_real_process_list_finds_a_running_process_by_name_and_never_Deventry_itself()
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux() || OperatingSystem.IsWindows(), "Reading every process runs ps on macOS, which is covered above.");
+        var system = new SystemProcesses(new Core.Processes.ProcessLauncher(), TimeProvider.System);
+        var self = Path.GetFileNameWithoutExtension(Environment.ProcessPath)!;
+
+        Assert.DoesNotContain(system.Find([self]), p => p.Pid == Environment.ProcessId);
+        Assert.Empty(system.Find(["no-such-process-deventry-test"]));
+    }
+
+    [Fact]
+    public void Kill_tree_ends_only_the_process_that_was_found_not_a_later_one_with_its_PID()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "Uses sleep.");
+        var system = new SystemProcesses(new Core.Processes.ProcessLauncher(), TimeProvider.System);
+        using var sleeper = System.Diagnostics.Process.Start("sleep", ["30"])!;
+        try
+        {
+            var started = SystemProcesses.StartTimeOf(sleeper.Id);
+            Assert.NotNull(started);
+
+            // As if the editor found had exited and its PID gone to this process, which started at another time.
+            system.KillTree(new SystemProcess(sleeper.Id, "sleep", "sleep 30", started!.Value.AddMinutes(-5)));
+            Assert.False(sleeper.WaitForExit(500));
+
+            system.KillTree(new SystemProcess(sleeper.Id, "sleep", "sleep 30", started));
+            Assert.True(sleeper.WaitForExit(5000));
+        }
+        finally
+        {
+            if (!sleeper.HasExited)
+            {
+                sleeper.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public void Found_processes_carry_their_working_folder()
+    {
+        // Where a relative -projectPath is read from (DESIGN.md §18, "Editor logs"): the PEB on Windows, /proc/<pid>/cwd
+        // on Linux, proc_pidinfo on macOS.
+        var folder = Directory.CreateTempSubdirectory("deventry-cwd").FullName;
+        var system = new SystemProcesses(new Core.Processes.ProcessLauncher(), TimeProvider.System);
+        var (program, arguments, name) = OperatingSystem.IsWindows()
+            ? ("ping.exe", new[] { "-n", "60", "127.0.0.1" }, "ping")
+            : ("sleep", new[] { "30" }, "sleep");
+        var start = new System.Diagnostics.ProcessStartInfo(program, arguments) { WorkingDirectory = folder, CreateNoWindow = true, RedirectStandardOutput = true };
+        using var process = System.Diagnostics.Process.Start(start)!;
+        try
+        {
+            var found = Assert.Single(system.Find([name]), p => p.Pid == process.Id);
+            Assert.NotNull(found.WorkingFolder);
+            // macOS's temporary folder is a link, /var to /private/var, which the OS gives resolved.
+            Assert.True(Core.Files.RealPath.Same(folder, found.WorkingFolder), $"{found.WorkingFolder} isn't {folder}");
+        }
+        finally
+        {
+            process.Kill();
+            process.WaitForExit();
+            Directory.Delete(folder);
+        }
+    }
+
+    [Fact]
+    public void Found_processes_carry_their_start_time()
+    {
+        Assert.SkipUnless(OperatingSystem.IsLinux(), "Reading every process runs ps on macOS, and Windows has no sleep.");
+        var system = new SystemProcesses(new Core.Processes.ProcessLauncher(), TimeProvider.System);
+        using var sleeper = System.Diagnostics.Process.Start("sleep", ["30"])!;
+        try
+        {
+            var found = Assert.Single(system.Find(["sleep"]), p => p.Pid == sleeper.Id);
+            Assert.Equal(SystemProcesses.StartTimeOf(sleeper.Id), found.StartedAt);
+        }
+        finally
+        {
+            sleeper.Kill();
+        }
+    }
+}

@@ -13,7 +13,7 @@ summary: "Signing in describes the sign-in screen."
 
 Choose **Open browser again**. It reopens the same address. If your default browser or profile isn't the one with your Claude account, copy the address into the right one: choose **Enter a code instead**, which opens the page that shows a code, and paste the code back.
 
-## The browser finished but Claudette didn't notice
+## The browser finished but Deventry didn't notice
 
 The automatic sign-in comes back to a port on your own computer. A firewall, a browser on another device, or a remote session can stop that.
 
@@ -21,7 +21,7 @@ The automatic sign-in comes back to a port on your own computer. A firewall, a b
 2. Sign in on the page that opens. It shows a code.
 3. Copy the whole code, including what follows the `#`, into the field, and choose **Submit code**.
 
-If you paste only part of it, Claude Code may answer *Invalid code. Please make sure the full code was copied.* Claudette keeps waiting, so paste the whole code again.
+If you paste only part of it, Claude Code may answer *Invalid code. Please make sure the full code was copied.* Deventry keeps waiting, so paste the whole code again.
 
 ## It timed out, or Claude Code stopped
 
@@ -36,15 +36,15 @@ Claude Code refuses an account from an organization your own organization's sett
 
 Use **More options** for **Sign in with an Anthropic Console account (API usage billing)** or **Sign in with SSO**. SSO signs in through `claude auth login`.
 
-## I signed in but Claudette still says I'm not
+## I signed in but Deventry still says I'm not
 
-- If you signed in from a terminal, choose **I've already signed in**. Claudette asks Claude Code again.
-- If it still says *Claude Code still reports that you're not signed in.*, Claude Code is looking somewhere else. Check that your terminal and Claudette use the same configuration folder: `CLAUDE_CONFIG_DIR` changes where Claude Code keeps its sign-in.
-- An API key or token in your environment, such as `ANTHROPIC_API_KEY`, can make Claude Code report a sign-in that signing out doesn't remove. Claudette says so after you sign out.
+- If you signed in from a terminal, choose **I've already signed in**. Deventry asks Claude Code again.
+- If it still says *Claude Code still reports that you're not signed in.*, Claude Code is looking somewhere else. Check that your terminal and Deventry use the same configuration folder: `CLAUDE_CONFIG_DIR` changes where Claude Code keeps its sign-in.
+- An API key or token in your environment, such as `ANTHROPIC_API_KEY`, can make Claude Code report a sign-in that signing out doesn't remove. Deventry says so after you sign out.
 
 ## Claude Code is signed out in my terminal too
 
-That's by design. There is one sign-in, Claude Code's, and **Sign out…** in Claudette signs Claude Code out everywhere on the computer, so Claudette asks first. Sign in again from either place.
+That's by design. There is one sign-in, Claude Code's, and **Sign out…** in Deventry signs Claude Code out everywhere on the computer, so Deventry asks first. Sign in again from either place.
 
 ## Messages sent while signed out
 

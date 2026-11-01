@@ -7,7 +7,7 @@ summary: "A tab can do things for the project in its folder: launch the editor, 
 
 # Using project tools
 
-A tab can do things for the project in its folder: launch the editor, generate project files, build, open the solution. Which things you get depends on the project. Claudette knows [Unreal Engine](unreal-engine.md), [Unity](unity.md) and [Godot](godot.md) projects, and a folder can have its own [actions and links](actions-and-links.md). [Perforce](perforce.md) has a page of its own.
+A tab can do things for the project in its folder: launch the editor, generate project files, build, open the solution. Which things you get depends on the project. Deventry knows [Unreal Engine](unreal-engine.md), [Unity](unity.md) and [Godot](godot.md) projects, and a folder can have its own [actions and links](actions-and-links.md). [Perforce](perforce.md) has a page of its own.
 
 {% include shot.html name="guide/project-tools/project-page" alt="The Project tool window for the Unreal project, with the project's details." %}
 
@@ -20,7 +20,7 @@ It's for the group's tab you used last: that tab runs its jobs, and while one ru
 Click the icon to open its menu. From the top, it has:
 
 - A header with the project's name and kind, the engine's version and folder, or what's wrong ("The engine for EngineAssociation "5.9" wasn't found on this machine"). Without a project, it shows the folder's name and path.
-- Notes about entries in `claudette.json` that were skipped, and why.
+- Notes about entries in `deventry.json` that were skipped, and why.
 - **Projects in this folder**, when there are several, as radio items. Your pick is remembered for that folder on this machine.
 - The project's actions.
 - The project's choice, such as Unreal's **Editor configuration**.
@@ -32,13 +32,13 @@ An item that's greyed out says why in its tooltip, for example "Generate project
 
 ## How a project is found
 
-When a tab opens, when its folder changes, when the menu opens and on **Refresh**, Claudette looks for a project in the tab's folder, in its subfolders two levels down (for `Game/NightOwl/NightOwl.uproject`), and in the parent folders up to the repository's root. It skips generated and hidden folders such as `Intermediate`, `Library`, `node_modules` and `bin`. With several projects, the nearest comes first, and the menu's **Projects in this folder** lets you pick another.
+When a tab opens, when its folder changes, when the menu opens and on **Refresh**, Deventry looks for a project in the tab's folder, in its subfolders two levels down (for `Game/NightOwl/NightOwl.uproject`), and in the parent folders up to the repository's root. It skips generated and hidden folders such as `Intermediate`, `Library`, `node_modules` and `bin`. With several projects, the nearest comes first, and the menu's **Projects in this folder** lets you pick another.
 
 ## Running an action
 
 An action is one of four kinds:
 
-- **Launch** starts a program that keeps running on its own, such as the editor. Claudette doesn't track it.
+- **Launch** starts a program that keeps running on its own, such as the editor. Deventry doesn't track it.
 - **Run** is a job, such as a build. It gets a run under the tab's row, with its own log.
 - **Open** opens a file or folder in the OS's app, or a solution in the IDE you chose in Settings.
 - **Destructive** actions, such as deleting folders or ending editors, ask you first.
@@ -52,7 +52,7 @@ Each job is a run. It shows under its tab's row in the sidebar, newest last, wit
 - Click a run to show its log where the conversation is (below). Starting a run doesn't take you away from the conversation.
 - A running one has **Stop** in the place of the × button, so a stray click never ends a build. A finished one has ×, which takes the run and its log away.
 - Right-click a run for **Open beside**, **Close pane**, **Copy output**, **Stop** while it runs, and **Close** once it's done.
-- Runs stay until you close them, whatever the result. Closing the tab takes its runs away, and they aren't saved when Claudette quits or restarts.
+- Runs stay until you close them, whatever the result. Closing the tab takes its runs away, and they aren't saved when Deventry quits or restarts.
 - Launch and Open actions start a program with no output, so they don't make runs.
 
 ## A run's log
@@ -62,7 +62,7 @@ A run's log shows in the main area, in the conversation's place, without the mes
 - At the top: how the run went (running, succeeded, failed with its exit code, or stopped), when it started and how long it took, with **Stay current** and **Wrap lines** (below), **Stop**, which ends the job and every process it started, **Copy**, which copies the whole log, and **Close** once it's done.
 - Under it, the output, following the newest line as it comes. A run keeps its last 5,000 lines, and the log says how many older ones were dropped.
 - Select text and copy it as anywhere else, and `Ctrl/Cmd+F` finds in the log.
-- **Links.** Web addresses open in your browser. Files and folders the log names open with a click, as files Claude names do: in Claudette's [editor](../project-files/opening-files-from-the-conversation.md) at the line an error points to, such as `Source/Player.cpp(42,7)` or `src/main.rs:42:7`, or in the OS's app, as Settings → Files and diffs says. A path is a link only once Claudette finds it, from the folder the action ran in or the tab's, so text that only looks like a path stays plain. A program or script shows in its folder rather than running.
+- **Links.** Web addresses open in your browser. Files and folders the log names open with a click, as files Claude names do: in Deventry's [editor](../project-files/opening-files-from-the-conversation.md) at the line an error points to, such as `Source/Player.cpp(42,7)` or `src/main.rs:42:7`, or in the OS's app, as Settings → Files and diffs says. A path is a link only once Deventry finds it, from the folder the action ran in or the tab's, so text that only looks like a path stays plain. A program or script shows in its folder rather than running.
 - To see the log and the conversation at once, right-click the run and pick **Open beside**, or drag the run onto the conversation. See [Split panes](../tabs/split-panes.md).
 - `Ctrl/Cmd+W` closes a finished run's log. On a running one, it goes back to the tab, so it never stops a build.
 
@@ -83,11 +83,11 @@ The page's tab shows a busy dot while a job runs. It's there when the tab has pr
 
 ## Telling Claude about the project
 
-For Unreal, Unity and Godot projects, Claudette adds a short note to the session when a tab starts: the engine's version and folder, how to build or check the project without the editor, and not to open the editor unless asked. Each engine has its own switch on its page in Settings → Project tools, such as **Tell Claude about Unreal Engine projects**. The tab's [info card](../tabs/the-tab-info-card.md) has a **Project** row that says whether Claude was told.
+For Unreal, Unity and Godot projects, Deventry adds a short note to the session when a tab starts: the engine's version and folder, how to build or check the project without the editor, and not to open the editor unless asked. Each engine has its own switch on its page in Settings → Project tools, such as **Tell Claude about Unreal Engine projects**. The tab's [info card](../tabs/the-tab-info-card.md) has a **Project** row that says whether Claude was told.
 
 ## A project action finishes
 
-When a job finishes or fails while Claudette isn't in front, a notification says so: *"Build editor failed (exit code 6)."* A job you stopped doesn't notify. Click it to see that run's log. The switch is Settings → Notifications → **A project action finishes**, on by default. See [Notifications](../away/notifications.md).
+When a job finishes or fails while Deventry isn't in front, a notification says so: *"Build editor failed (exit code 6)."* A job you stopped doesn't notify. Click it to see that run's log. The switch is Settings → Notifications → **A project action finishes**, on by default. See [Notifications](../away/notifications.md).
 
 ## Settings
 
@@ -98,7 +98,7 @@ When a job finishes or fails while Claudette isn't in front, a notification says
 - **All tools** has what every kind of project shares:
   - **Solutions** → **Open solutions with**: the IDE a solution opens in. See [Unreal Engine](unreal-engine.md#open-solution-and-open-in-rider).
   - **Editor logs** → **Show editor logs under the tab**: the rows for the logs the editor writes. See [Editor logs](editor-logs.md).
-- **Unreal Engine**, **Unity** and **Godot** have a page each, with the engine's icon. Each starts with **Recognize Unreal Engine projects** (or Unity, or Godot), on by default. Turn it off and Claudette treats that engine's projects as plain folders: the project row shows the folder, with no engine actions, editor logs or note to Claude, though the folder's own actions and links still work. The sidebar then says *Off* beside the engine's page, which you can still open to switch it back on. The rest of each page is explained on its engine's page in this guide:
+- **Unreal Engine**, **Unity** and **Godot** have a page each, with the engine's icon. Each starts with **Recognize Unreal Engine projects** (or Unity, or Godot), on by default. Turn it off and Deventry treats that engine's projects as plain folders: the project row shows the folder, with no engine actions, editor logs or note to Claude, though the folder's own actions and links still work. The sidebar then says *Off* beside the engine's page, which you can still open to switch it back on. The rest of each page is explained on its engine's page in this guide:
   - **Unreal Engine**: **Tell Claude about Unreal Engine projects**, then under **Defaults**, **Default editor configuration** and **Project files for**. See [Unreal Engine](unreal-engine.md).
   - **Unity**: **Tell Claude about Unity projects**, then **Default code optimization**. See [Unity](unity.md).
   - **Godot**: **Tell Claude about Godot projects**, then **Godot executable**. See [Godot](godot.md).
@@ -110,9 +110,9 @@ The **Tools** page shows this machine's choices for the tab's project, the same 
 
 - The project, when the folder has several.
 - The project's own choice: Unreal's editor configuration, or Unity's code optimization.
-- What you picked with **Choose…**: Unreal's engine folder, the Unity editor or the Godot executable. It shows what's in use now, and whether you chose it or Claudette found it. **Clear** forgets your pick so Claudette looks again.
+- What you picked with **Choose…**: Unreal's engine folder, the Unity editor or the Godot executable. It shows what's in use now, and whether you chose it or Deventry found it. **Clear** forgets your pick so Deventry looks again.
 
-At its foot, **Open Unreal Engine** (or Unity, or Godot) shows the defaults on that engine's page in Project tools. Without a project, the page says "No project Claudette knows in this folder" and links to **All tools**. These choices are remembered on this machine, keyed by the project, and don't sync. No **Reset to defaults** in Project tools touches them.
+At its foot, **Open Unreal Engine** (or Unity, or Godot) shows the defaults on that engine's page in Project tools. Without a project, the page says "No project Deventry knows in this folder" and links to **All tools**. These choices are remembered on this machine, keyed by the project, and don't sync. No **Reset to defaults** in Project tools touches them.
 
 ## See also
 

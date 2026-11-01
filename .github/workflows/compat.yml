@@ -4,7 +4,7 @@ name: Claude Code compatibility check
 # against it, and opens an issue with the changelog, Agent SDK type changes, docs and CLI help diffs, and every change
 # that mentions something in compat/surface.yaml.
 #
-# It also runs the RealCli tests against the oldest Claude Code Claudette supports (surface.yaml's `minimum`), on days
+# It also runs the RealCli tests against the oldest Claude Code Deventry supports (surface.yaml's `minimum`), on days
 # when main has changed, so a change that needs something newer is noticed without spending minutes on every pull
 # request.
 on:
@@ -97,7 +97,7 @@ jobs:
         timeout-minutes: 25
         run: |
           set -o pipefail
-          dotnet test Claudette.slnx --configuration Release --filter "Category!=Live" --blame-hang-timeout 10m --blame-hang-dump-type none 2>&1 | tee test-output.txt
+          dotnet test Deventry.slnx --configuration Release --filter "Category!=Live" --blame-hang-timeout 10m --blame-hang-dump-type none 2>&1 | tee test-output.txt
 
       # The whole report, and the issue's copy cut to GitHub's 65,536-character limit (a large docs change can match
       # hundreds of ids, and a diff can run to megabytes).
@@ -141,7 +141,7 @@ jobs:
           fi
 
   # The oldest supported Claude Code (ClaudeLocator.MinimumVersion) against the mock API. Only on days main changed:
-  # Claudette's changes are what could stop it working with an older version.
+  # Deventry's changes are what could stop it working with an older version.
   minimum:
     name: Minimum supported Claude Code
     runs-on: ubuntu-latest
@@ -180,4 +180,4 @@ jobs:
         if: steps.changed.outputs.run == 'true'
         run: |
           claude --version
-          dotnet test Claudette.slnx --configuration Release --filter "Category=RealCli" --blame-hang-timeout 10m --blame-hang-dump-type none
+          dotnet test Deventry.slnx --configuration Release --filter "Category=RealCli" --blame-hang-timeout 10m --blame-hang-dump-type none

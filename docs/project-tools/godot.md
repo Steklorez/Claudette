@@ -11,7 +11,7 @@ When a tab's folder holds a Godot project (a folder with `project.godot`), the [
 
 ## Finding Godot
 
-There's no standard place to install Godot, so Claudette looks in this order:
+There's no standard place to install Godot, so Deventry looks in this order:
 
 1. The executable you picked for the project with **Choose Godot executable…** (**Choose another Godot executable…** once one is found).
 2. The path on Godot's page in Settings → Project tools: **Godot executable**.
@@ -23,7 +23,7 @@ The **Detect** button in Settings runs steps 3 to 5 and fills in the path. When 
 
 ## C# projects
 
-A project is a C# project when its features list `C#`, it has a `[dotnet]` or `[mono]` section, or its folder has a `.sln` or `.csproj`. It needs the .NET build of Godot, whose name has `mono` in it. When the Godot Claudette found isn't that build, the menu's header says so.
+A project is a C# project when its features list `C#`, it has a `[dotnet]` or `[mono]` section, or its folder has a `.sln` or `.csproj`. It needs the .NET build of Godot, whose name has `mono` in it. When the Godot Deventry found isn't that build, the menu's header says so.
 
 ## Actions
 
@@ -34,7 +34,7 @@ A project is a C# project when its features list `C#`, it has a `[dotnet]` or `[
 | **Build C#** | C# projects only. A job that runs `dotnet build` on the project's `.sln`, or its `.csproj` when there's no `.sln`. Greyed out until Godot has made them. |
 | **Open solution** | C# projects only. Opens the `.sln` with the IDE chosen in Settings, and is greyed out until Godot has made it. |
 | **Clean .godot…** | Godot 4. Deletes the `.godot` folder, after asking, and warns that Godot reimports every asset next time. Godot 3 has **Clean .import…** instead. |
-| **End all Godot editors…** | Ends every running Godot, whatever its build, and what each started. It asks first and lists each with its project. It never ends Claudette. |
+| **End all Godot editors…** | Ends every running Godot, whatever its build, and what each started. It asks first and lists each with its project. It never ends Deventry. |
 
 ## Settings
 
@@ -42,9 +42,9 @@ On Godot's page in Settings → Project tools, on this machine only. **Open solu
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Recognize Godot projects** | On | Off, Claudette treats a Godot project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
+| **Recognize Godot projects** | On | Off, Deventry treats a Godot project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
 | **Tell Claude about Godot projects** | On | Adds a note to the session with the Godot version, whether it's GDScript or C#, how to check the project and its scripts without the editor, how to build the C# code, and not to open the editor unless asked. Applies to tabs started after the change. |
-| **Godot executable** | Empty, so Claudette finds it | The path to Godot, with **Browse…** and **Detect**. |
+| **Godot executable** | Empty, so Deventry finds it | The path to Godot, with **Browse…** and **Detect**. |
 
 ## See also
 

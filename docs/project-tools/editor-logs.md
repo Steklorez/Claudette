@@ -7,7 +7,7 @@ summary: "While the project's editor runs, its log is a row under the tab, read 
 
 # Editor logs
 
-While the Unreal editor, Unity or Godot has a tab's project open, the log it writes is a row under the tab. Click the row to read the log where the conversation is, as it's written, with its errors and warnings colored, Unreal's lines in tidy columns, and a filter to show only the levels, categories or text you want. The row stays after the editor closes, so you can read what happened, and it picks up the new log when the editor starts again. Claudette only opens the file for a moment each time it reads, so the editor can write, rename or delete it as it always does.
+While the Unreal editor, Unity or Godot has a tab's project open, the log it writes is a row under the tab. Click the row to read the log where the conversation is, as it's written, with its errors and warnings colored, Unreal's lines in tidy columns, and a filter to show only the levels, categories or text you want. The row stays after the editor closes, so you can read what happened, and it picks up the new log when the editor starts again. Deventry only opens the file for a moment each time it reads, so the editor can write, rename or delete it as it always does.
 
 {% include shot.html name="guide/project-tools/editor-log" alt="The sidebar with Starfall.log under the Grappling hook tab, and the Unreal editor's log in the main area: Stay current and Wrap lines beside Open file, a chip for each level with its count, Categories and Filter lines, then the log in columns of time, category, verbosity and message, with an error in red and warnings in amber." %}
 
@@ -29,15 +29,15 @@ Click the row to show the log in the focused pane, as a project run's log is. Ov
 
 - **Stay current** keeps the newest line in view as the editor writes. Scroll up to read something and it turns off, so the log holds still; scroll back to the end, or click it, and it follows again.
 - **Wrap lines** wraps long lines at the width of the pane. Turn it off and they stay on one line, and the log scrolls sideways. The next log you open starts the way you left it.
-- **Open file** opens the log in Claudette's editor or the OS's app, as Settings → Files and diffs says.
+- **Open file** opens the log in Deventry's editor or the OS's app, as Settings → Files and diffs says.
 - **Copy** copies the lines the filter shows, as the file has them.
 - **Close** closes it. See [below](#closing-it).
 
 Under them is the log's [filter](#filtering-the-log), then the log. Error lines are in red and warnings in amber, as the engine marks them: Unreal's `Error:` and `Warning:`, Unity's compiler errors and exceptions, and Godot's `ERROR:` and `WARNING:`. A message's other lines, such as a stack trace under an error, go with it, and stack traces are dimmed. Paths and web addresses are links, as in a run's log. `Ctrl/Cmd+F` finds in it.
 
-Unreal's lines start `[2026.10.20-19.01.22:123][  0]LogBlueprint: Error:`: the time, the frame number, the log category and the verbosity. Claudette shows them in columns: the time in your computer's clock (Unreal writes it in UTC), then the category, the verbosity and the message, each lined up under the one before. The frame number is left out. Only how they look changes: select, copy or find, and you get the line as the file has it.
+Unreal's lines start `[2026.10.20-19.01.22:123][  0]LogBlueprint: Error:`: the time, the frame number, the log category and the verbosity. Deventry shows them in columns: the time in your computer's clock (Unreal writes it in UTC), then the category, the verbosity and the message, each lined up under the one before. The frame number is left out. Only how they look changes: select, copy or find, and you get the line as the file has it.
 
-Claudette keeps the last 20,000 lines. A longer log says so over it, and the rest is in the file, which **Open file** opens.
+Deventry keeps the last 20,000 lines. A longer log says so over it, and the rest is in the file, which **Open file** opens.
 
 To keep the log beside the conversation, right-click its row and choose **Open beside**, or drag the row onto the conversation. See [Split panes](../tabs/split-panes.md).
 
@@ -51,7 +51,7 @@ The bar under the log's header narrows what it shows:
 
 While anything is hidden, the bar says how much is shown, such as *Showing 1,204 of 20,000 lines*.
 
-The levels and categories you hide belong to the project: Claudette remembers them, and the project's next log, such as a commandlet's, starts with them hidden too. Show them all again and they're forgotten. What you type in **Filter lines** is only for that log.
+The levels and categories you hide belong to the project: Deventry remembers them, and the project's next log, such as a commandlet's, starts with them hidden too. Show them all again and they're forgotten. What you type in **Filter lines** is only for that log.
 
 ## When the editor closes, crashes or starts again
 
@@ -61,13 +61,13 @@ The levels and categories you hide belong to the project: Claudette remembers th
 
 ## When Unity moves its log
 
-From Unity 6.5, the editor writes Unity's own `Editor.log`, the one every project shares, only while it starts. Once it has the project open, it carries on in the project's `Logs/Editor.log`, and writes in the shared one that it has moved, and where to. Claudette follows it there:
+From Unity 6.5, the editor writes Unity's own `Editor.log`, the one every project shares, only while it starts. Once it has the project open, it carries on in the project's `Logs/Editor.log`, and writes in the shared one that it has moved, and where to. Deventry follows it there:
 
 - The project's `Logs/Editor.log` gets a row of its own under the same tab, read from its first line, so it has what the editor wrote as it started too.
 - The shared log's row stops where the editor said it moved, so other editors starting later don't add their lines to it. It says *Moved to Logs/Editor.log*, and over its log, *Unity editor moved its log to Logs/Editor.log at 14:31.*
 - When the editor closes, the shared log's row goes, and the project's row stays, *Closed*, with the whole log.
 
-If the editor already had the project open when Claudette started, the project's log is the only row. **Use Global Editor Log** in Unity's preferences, or starting Unity with `-useGlobalLog`, keeps everything in the shared log, and its row carries on as before.
+If the editor already had the project open when Deventry started, the project's log is the only row. **Use Global Editor Log** in Unity's preferences, or starting Unity with `-useGlobalLog`, keeps everything in the shared log, and its row carries on as before.
 
 ## Closing it
 
@@ -76,7 +76,7 @@ Click **×** on the row, **Close** over the log, or press `Ctrl/Cmd+W` while it 
 - While the editor is running, the row goes until the editor next starts, when it comes back with the new log.
 - Once the editor has closed, the row goes for good. The next time the editor starts, it gets a new row.
 
-Logs aren't saved with your tabs. If the editor is still running when Claudette starts again, its row comes back within a few seconds.
+Logs aren't saved with your tabs. If the editor is still running when Deventry starts again, its row comes back within a few seconds.
 
 ## Which tab it's under
 
@@ -95,10 +95,10 @@ When a tab is [collapsed](../tabs/the-sidebar.md#collapsing-a-tab), its logs fol
 | Engine | What gets a row | The log |
 |---|---|---|
 | Unreal Engine | The editor, `UnrealEditor-Cmd` and commandlets (`-run=`), `-game` and `-server` runs, with the project's `.uproject` on their command line. | `Saved/Logs/<project>.log`, or `<project>_2.log` and on while another has that one, or the file `-abslog=` or `LOG=` names. |
-| Unity | The editor and batch mode runs with the project after `-projectPath`, or a relative path such as `.` from the project's folder. | Unity's `Editor.log` (the one **Open Editor log** opens), and from Unity 6.5 the project's `Logs/Editor.log` once the editor has the project open, or the file `-logFile` names. Claudette's own **Run EditMode tests** writes its output to the run instead. |
+| Unity | The editor and batch mode runs with the project after `-projectPath`, or a relative path such as `.` from the project's folder. | Unity's `Editor.log` (the one **Open Editor log** opens), and from Unity 6.5 the project's `Logs/Editor.log` once the editor has the project open, or the file `-logFile` names. Deventry's own **Run EditMode tests** writes its output to the run instead. |
 | Godot | The editor and the game with the project after `--path`, or a relative path such as `.` from the project's folder. | `logs/godot.log` in the project's user data folder, or wherever the project's file logging settings or `--log-file` say. |
 
-Claudette looks at which programs are running every couple of seconds (every five on macOS), so a row appears a moment after the editor starts.
+Deventry looks at which programs are running every couple of seconds (every five on macOS), so a row appears a moment after the editor starts.
 
 ## Settings
 
@@ -106,7 +106,7 @@ In Settings → Project tools → All tools, on this machine only.
 
 | Setting | Default | What it does |
 |---|---|---|
-| **Show editor logs under the tab** | On | Shows the rows. Off, Claudette doesn't look for editors or read their logs, and the rows showing go. |
+| **Show editor logs under the tab** | On | Shows the rows. Off, Deventry doesn't look for editors or read their logs, and the rows showing go. |
 
 ## Shortcuts
 
@@ -117,6 +117,6 @@ In Settings → Project tools → All tools, on this machine only.
 
 ## See also
 
-- [Using project tools](using-project-tools.md) for a project run's log, which is the output of a job Claudette runs.
+- [Using project tools](using-project-tools.md) for a project run's log, which is the output of a job Deventry runs.
 - [Unreal Engine](unreal-engine.md), [Unity](unity.md) and [Godot](godot.md) for each engine's actions, among them opening its log in another app.
 - [The sidebar](../tabs/the-sidebar.md) for the rest of a tab's row.

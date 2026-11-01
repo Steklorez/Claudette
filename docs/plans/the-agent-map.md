@@ -57,7 +57,7 @@ When a subagent is waiting on a prompt, its row is highlighted and clicking it g
 
 ## Stopping a subagent
 
-A subagent that can be stopped has a **■** at the right of its row, shown while the pointer is over the row or it's selected. The details have **Stop subagent…** too, and so does the right-click menu. Claudette asks first. Claude Code then stops that subagent and any it started, tells Claude it was stopped, and the rest of the turn carries on.
+A subagent that can be stopped has a **■** at the right of its row, shown while the pointer is over the row or it's selected. The details have **Stop subagent…** too, and so does the right-click menu. Deventry asks first. Claude Code then stops that subagent and any it started, tells Claude it was stopped, and the rest of the turn carries on.
 
 When Claude Code hasn't given a subagent an ID to stop it by, the button says **Stop turn…** instead and stops the whole turn, like **Stop** does ([Sending and stopping](../composer/sending-and-stopping.md)).
 

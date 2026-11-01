@@ -7,7 +7,7 @@ summary: "The images Claude's tools hand it, shown under their cards, the images
 
 # Images
 
-Claude doesn't make images, but it does see them, and the conversation shows them in two places: under the cards of tools that handed Claude an image, and inside a reply's Markdown. An image file or a link to an image that Claude names opens in Claudette too. Images you attach to your own messages are in [Attachments and large pastes](../composer/attachments-and-large-pastes.md).
+Claude doesn't make images, but it does see them, and the conversation shows them in two places: under the cards of tools that handed Claude an image, and inside a reply's Markdown. An image file or a link to an image that Claude names opens in Deventry too. Images you attach to your own messages are in [Attachments and large pastes](../composer/attachments-and-large-pastes.md).
 
 ## Images from Claude's tools
 
@@ -49,7 +49,7 @@ With motion reduced (Settings → Appearance → **Motion**), an animated image 
 
 ## Images in Claude's replies
 
-A reply's Markdown can include an image. A reply can be steered by anything Claude read, such as a web page or a file in the project, and an image that loaded by itself could send data out in its web address. So Claudette loads only what can't reach another machine, and asks before the rest.
+A reply's Markdown can include an image. A reply can be steered by anything Claude read, such as a web page or a file in the project, and an image that loaded by itself could send data out in its web address. So Deventry loads only what can't reach another machine, and asks before the rest.
 
 - **Right away.** A file in the tab's folder (the worktree, for a tab in one), as long as nothing on the way down from the folder is a link, which could lead anywhere; and an image embedded in the reply itself. A relative path is read from the folder, so a chart Claude just made shows up.
 - **When you click.** An image from the web, or a file anywhere else, shows a placeholder: *Image from example.com, which loads only when you ask.* or *Image at /tmp/chart.png, outside the tab's folder.* Its button is **Load image** for the web and **Show image** for a file. The address is the placeholder's tooltip.
@@ -67,8 +67,8 @@ An image file Claude names, and a link to an image on the web, open in the same 
 
 - **A file named in a reply.** Click a link to the file or its name in code, as in [Files and links in replies](files-and-links-in-replies.md). A file named like an image that isn't one, such as a text file called `notes.png`, opens as any other file does.
 - **Open buttons.** **Open** on a tool card, and **Open** in Changed files, the diff window and a project action's log.
-- **In Project Files.** Double-click an image in the explorer, or select it and press `Enter`. A single click shows it in the preview tab, which says the file isn't text, with **Open in Claudette's image viewer** and **Open in the OS's app**, so you can go down a folder of images without opening a window for each. That button works whatever the setting says.
-- **A link to an image on the web.** A web address ending in an image's name (`…/menu.png`) loads as a reply's web image does, through Claudette itself and within 30 seconds, and then opens in the window, whose **Open in browser** takes you to the address. If what's there isn't an image after all, such as a page or an error, the link opens in your browser. Other web links open in the browser as they always have.
+- **In Project Files.** Double-click an image in the explorer, or select it and press `Enter`. A single click shows it in the preview tab, which says the file isn't text, with **Open in Deventry's image viewer** and **Open in the OS's app**, so you can go down a folder of images without opening a window for each. That button works whatever the setting says.
+- **A link to an image on the web.** A web address ending in an image's name (`…/menu.png`) loads as a reply's web image does, through Deventry itself and within 30 seconds, and then opens in the window, whose **Open in browser** takes you to the address. If what's there isn't an image after all, such as a page or an error, the link opens in your browser. Other web links open in the browser as they always have.
 
 Under the window's title is where the image is: its path in the project (`docs/menu.png`), its whole path elsewhere, or the website. Every menu that has **Open in the OS's app** keeps it.
 
@@ -76,7 +76,7 @@ An image under a tool's tile or shown in a reply opens in the window whatever th
 
 ## Settings
 
-- Settings → Files and diffs → **Open images in**: **Claudette's image viewer** (the default) opens the images above in Claudette's window. **The app the OS uses for the file** opens image files there, and links to images in the browser, as before. See [Every setting](../settings/every-setting.md#files-and-diffs).
+- Settings → Files and diffs → **Open images in**: **Deventry's image viewer** (the default) opens the images above in Deventry's window. **The app the OS uses for the file** opens image files there, and links to images in the browser, as before. See [Every setting](../settings/every-setting.md#files-and-diffs).
 - Settings → Appearance → **Motion**: with motion reduced, an animated image opens still.
 
 ## Not in find or an export
@@ -87,4 +87,4 @@ Find and [Exporting](exporting.md) skip images, since they have no text to find.
 
 - [Tool calls](tool-calls.md) for the tiles the images sit under.
 - [Files and links in replies](files-and-links-in-replies.md) for clicking a file Claude names.
-- [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) for the files that open in Claudette's editor.
+- [Opening files from the conversation](../project-files/opening-files-from-the-conversation.md) for the files that open in Deventry's editor.

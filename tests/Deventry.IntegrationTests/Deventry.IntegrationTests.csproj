@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Deventry.Core\Deventry.Core.csproj" />
+    <ProjectReference Include="..\..\src\Deventry.Usage\Deventry.Usage.csproj" />
+    <ProjectReference Include="..\..\tools\Deventry.MockApi\Deventry.MockApi.csproj" />
+    <ProjectReference Include="..\..\tools\Deventry.FakeClaude\Deventry.FakeClaude.csproj" />
+    <ProjectReference Include="..\..\tools\Deventry.Fixtures\Deventry.Fixtures.csproj" />
+  </ItemGroup>
+</Project>

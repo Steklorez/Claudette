@@ -7,15 +7,15 @@ summary: "A turn can run a long time without being stuck: a test run or a build 
 
 # A tab that seems stuck
 
-A turn can run a long time without being stuck: a test run or a build may take many minutes. A turn that's stuck keeps using your plan's usage and gets nowhere, so Claudette watches for it.
+A turn can run a long time without being stuck: a test run or a build may take many minutes. A turn that's stuck keeps using your plan's usage and gets nowhere, so Deventry watches for it.
 
-## What Claudette does
+## What Deventry does
 
-When a turn has run for a long time, or has produced no output for a while, Claudette asks Claude how it's going.
+When a turn has run for a long time, or has produced no output for a while, Deventry asks Claude how it's going.
 
 1. A bar over the message box counts down: *Checking in with Claude in 30s.* **Send now** sends the question straight away. The ✕ (**Don't check in**) skips it, and the timers start again.
 2. Claude's reply to the check-in appears in the conversation, and the turn carries on.
-3. If two check-ins in a row get no reply, Claudette stops asking for that turn. The tab's row says *Possibly stuck*, and a bar over the message box says *Claude hasn't answered two check-ins. It may be stuck.* with **Stop**.
+3. If two check-ins in a row get no reply, Deventry stops asking for that turn. The tab's row says *Possibly stuck*, and a bar over the message box says *Claude hasn't answered two check-ins. It may be stuck.* with **Stop**.
 
 By default a check-in starts after 15 minutes of running or 5 minutes without output. [Check-ins on long turns](../composer/check-ins-on-long-turns.md) has the whole story.
 
@@ -38,7 +38,7 @@ Settings → Tabs → Check-ins on long turns:
 
 - **Check in on long turns**, on by default.
 - **After the turn has run (minutes)** and **After no output for (minutes)**. Set a time to 0 to turn that trigger off.
-- **Message**, what Claudette asks.
+- **Message**, what Deventry asks.
 - **Notify me when a check-in is sent**, off by default.
 
 A single tab can override them in its **Tab settings…**.

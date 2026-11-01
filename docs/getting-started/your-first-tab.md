@@ -25,9 +25,9 @@ Right-click a folder in the list to add it to your favorites, remove it from the
 
 A group's own **+** in the sidebar opens a tab in that group's folder without the picker. [Opening tabs](../tabs/opening-tabs.md) lists the other ways in, such as dragging a folder onto the sidebar, and `--folder` on the command line.
 
-## If Claudette asks about the folder
+## If Deventry asks about the folder
 
-The first time Claude Code would start in a folder, Claudette checks whether the folder's own configuration would run anything: hooks, helper commands, plugins, or MCP servers from a `.mcp.json`. If it would, a card above the message box asks **Trust this folder?** and lists what it found.
+The first time Claude Code would start in a folder, Deventry checks whether the folder's own configuration would run anything: hooks, helper commands, plugins, or MCP servers from a `.mcp.json`. If it would, a card above the message box asks **Trust this folder?** and lists what it found.
 
 - **Trust this folder** starts Claude Code as usual and remembers the folder.
 - **Start without it** starts Claude Code without that configuration.
@@ -49,7 +49,7 @@ Click the message box, which says *Message Claude…*, and type. `Enter` sends t
 
 ## Closing and coming back
 
-`Ctrl/Cmd+W` closes the tab. Closing one where Claude is working asks first. Pinned tabs come back every time Claudette starts, resuming their sessions: see [Names, marks and pins](../tabs/names-marks-and-pins.md).
+`Ctrl/Cmd+W` closes the tab. Closing one where Claude is working asks first. Pinned tabs come back every time Deventry starts, resuming their sessions: see [Names, marks and pins](../tabs/names-marks-and-pins.md).
 
 ## Settings
 

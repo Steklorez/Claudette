@@ -2,12 +2,12 @@
 title: Your Claude sign-in
 parent: Accounts
 nav_order: 1
-summary: "Claude Code keeps your Claude credentials, not Claudette."
+summary: "Claude Code keeps your Claude credentials, not Deventry."
 ---
 
 # Your Claude sign-in
 
-Claude Code keeps your Claude credentials, not Claudette. Whatever Claude Code is signed in to is the account your tabs run under, and the account whose plan limits the [usage header](../usage/the-usage-header.md) shows.
+Claude Code keeps your Claude credentials, not Deventry. Whatever Claude Code is signed in to is the account your tabs run under, and the account whose plan limits the [usage header](../usage/the-usage-header.md) shows.
 
 ## The account menu
 
@@ -28,7 +28,7 @@ The plan in the header, such as *Max plan*, is a link too. It opens your plan's 
 1. Open the account menu and click **Sign out…**.
 2. Read the question, *Sign out of Claude Code?*, and click **Sign out**. Every tab stops working until you sign in again, and Claude Code is signed out in the terminal too.
 
-Claudette then asks Claude Code again. When it's signed out, the banner *Claude Code needs you to sign in.* shows across all tabs, messages you send are held, and every tab that was running starts again on its session after your next sign-in, since that may be a different account. There's no notification, because you just did it.
+Deventry then asks Claude Code again. When it's signed out, the banner *Claude Code needs you to sign in.* shows across all tabs, messages you send are held, and every tab that was running starts again on its session after your next sign-in, since that may be a different account. There's no notification, because you just did it.
 
 If Claude Code still reports a sign-in afterward, the menu says so: an API key set in the environment or in Claude Code's settings isn't removed by signing out.
 

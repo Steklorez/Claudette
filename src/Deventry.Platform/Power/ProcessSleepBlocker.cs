@@ -1,0 +1,148 @@
+using System.ComponentModel;
+using System.Globalization;
+using Deventry.Core.Diffs;
+using Deventry.Core.Processes;
+using Deventry.Core.RemoteControl;
+
+namespace Deventry.Platform.Power;
+
+/// <summary>
+/// Holds off system sleep with a helper that blocks it for as long as it runs, and ends the helper to let the computer
+/// sleep again (DESIGN.md §9, "Keeping the computer awake"): <c>caffeinate</c> on macOS, <c>systemd-inhibit</c> on Linux. The
+/// helper starts through <see cref="IProcessLauncher"/> with Deventry's own environment, like <c>ps</c> and
+/// <c>notify-send</c>. If it stops by itself, why is kept for Diagnostics.
+/// </summary>
+public sealed class ProcessSleepBlocker : ISleepBlocker
+{
+    public const string SystemdInhibitMissing = "systemd-inhibit wasn't found.";
+
+    private readonly IProcessLauncher _launcher;
+    private readonly ProcessStartSpec _spec;
+    private readonly string _name;
+    private readonly Lock _lock = new();
+    private IRunningProcess? _process;
+    private string? _lastError;
+
+    public ProcessSleepBlocker(IProcessLauncher launcher, ProcessStartSpec spec, string name)
+    {
+        _launcher = launcher;
+        _spec = spec;
+        _name = name;
+    }
+
+    /// <summary>
+    /// <c>caffeinate -i -w &lt;pid&gt;</c>: no idle system sleep until it's ended, or until Deventry itself exits, so a
+    /// Deventry that crashed doesn't keep the Mac awake.
+    /// </summary>
+    public static ProcessSleepBlocker Caffeinate(IProcessLauncher launcher, int deventryProcessId, string path = "/usr/bin/caffeinate") =>
+        new(launcher, new ProcessStartSpec(path, ["-i", "-w", deventryProcessId.ToString(CultureInfo.InvariantCulture)]), "caffeinate");
+
+    /// <summary>
+    /// <c>systemd-inhibit --what=sleep …</c>, which holds a logind inhibitor lock while its command runs: a shell loop that
+    /// ends when Deventry does, as <c>caffeinate -w</c> does on macOS, so a Deventry that crashed or was killed doesn't
+    /// keep the computer awake. None without <c>systemd-inhibit</c> on the <c>PATH</c>.
+    /// </summary>
+    public static ISleepBlocker SystemdInhibit(IProcessLauncher launcher, int deventryProcessId, IFileProbe? probe = null) =>
+        (probe ?? FileProbe.Instance).FindOnPath("systemd-inhibit") is { } path
+            ? new ProcessSleepBlocker(launcher, new ProcessStartSpec(path, SystemdInhibitArguments(deventryProcessId)), "systemd-inhibit")
+            : new NoSleepBlocker(SystemdInhibitMissing);
+
+    /// <summary>
+    /// The inhibitor's command waits while Deventry's process is there (<c>kill -0</c> checks without signalling),
+    /// checking every 10 seconds. POSIX <c>sh</c>, rather than GNU <c>tail --pid</c>, which not every distribution has.
+    /// </summary>
+    public static IReadOnlyList<string> SystemdInhibitArguments(int deventryProcessId) =>
+    [
+        "--what=sleep", "--who=Deventry", "--why=Deventry is keeping this computer awake", "--mode=block",
+        "/bin/sh", "-c", "while kill -0 \"$1\" 2>/dev/null; do sleep 10; done", "deventry-awake",
+        deventryProcessId.ToString(CultureInfo.InvariantCulture),
+    ];
+
+    public string? UnavailableReason => null;
+
+    public bool IsBlocking
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _process is not null;
+            }
+        }
+    }
+
+    public void SetBlocking(bool block)
+    {
+        IRunningProcess? stop = null;
+        lock (_lock)
+        {
+            if (block && _process is null)
+            {
+                try
+                {
+                    _process = _launcher.Start(_spec);
+                    _lastError = null;
+                    _ = WatchAsync(_process);
+                }
+                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException)
+                {
+                    _lastError = $"{_name} couldn't start: {ex.Message}";
+                }
+            }
+            else if (!block && _process is not null)
+            {
+                stop = _process;
+                _process = null;
+            }
+        }
+        // Ending it is what lets the computer sleep again. Watching it disposes of it once it has exited.
+        stop?.Kill();
+    }
+
+    public string Describe()
+    {
+        lock (_lock)
+        {
+            return _process is not null ? $"Keeping the computer awake with {_name}. The screen can still turn off."
+                : _lastError is { } error ? $"Not keeping the computer awake: {error}"
+                : "Not keeping the computer awake now.";
+        }
+    }
+
+    public void Dispose() => SetBlocking(false);
+
+    /// <summary>A helper that stops while it's wanted (logind refused, say) no longer blocks anything: say why.</summary>
+    private async Task WatchAsync(IRunningProcess process)
+    {
+        var lastError = "";
+        var errors = Task.Run(async () =>
+        {
+            await foreach (var line in process.StandardError.ReadAllAsync().ConfigureAwait(false))
+            {
+                if (line.Trim().Length > 0)
+                {
+                    lastError = line.Trim();
+                }
+            }
+        });
+        int exitCode;
+        try
+        {
+            exitCode = await process.Exited.ConfigureAwait(false);
+            await errors.ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException)
+        {
+            exitCode = -1;
+        }
+        lock (_lock)
+        {
+            if (ReferenceEquals(_process, process))
+            {
+                _process = null;
+                _lastError = $"{_name} stopped (exit code {exitCode}){(lastError.Length > 0 ? $": {lastError}" : ".")}";
+            }
+        }
+        await process.DisposeAsync().ConfigureAwait(false);
+    }
+}

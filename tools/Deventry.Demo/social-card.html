@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!--
+  The site's social card (GUIDE.md, "The site"): the picture a link to deventry.app shows where it's shared,
+  1280 by 640. social-card.ps1 draws it to docs/assets/social-card.png. It's the landing page's hero in dark: its icon
+  and its name, its title, and the README's main window (standard-dark.png) running off the edge, with Joulene
+  standing on it as she stands on the composer.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --blue: #4a6fc4;
+      --rose: #cf7f96;
+      --periwinkle: #8a93da;
+      --link: #93aeeb;
+      --gradient: linear-gradient(110deg, var(--blue), var(--periwinkle) 50%, var(--rose));
+      --gradient-text: linear-gradient(110deg, #93aeeb, #b3b4ec 50%, #e29aae);
+      --bg: #10141f;
+      --surface: #182030;
+      --border-strong: rgba(255, 255, 255, 0.15);
+      --text: #dce1ec;
+      --muted: #9ca6bc;
+      --heading: #f5f7fb;
+      --font: system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+      --mono: "Cascadia Mono", "SFMono-Regular", menlo, consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { width: 1280px; height: 640px; margin: 0; overflow: hidden; }
+
+    body {
+      position: relative;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Its colors across the top, and a warm glow over a field of pixels, as on the landing page. */
+    body::before { position: absolute; inset: 0 0 auto; z-index: 3; height: 5px; content: ""; background: var(--gradient); }
+    body::after {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      content: "";
+      background:
+        radial-gradient(closest-side at 22% 34%, rgba(74, 111, 196, 0.24), transparent),
+        radial-gradient(closest-side at 78% 70%, rgba(207, 127, 150, 0.2), transparent),
+        radial-gradient(rgba(255, 255, 255, 0.055) 1.2px, transparent 1.4px) 0 0 / 22px 22px;
+    }
+
+    .copy { position: absolute; z-index: 2; top: 62px; left: 64px; width: 540px; }
+
+    /* The icon, and the name in whole pixels a cell, so it stays crisp: it's 54 cells by 8. */
+    .mark { display: flex; align-items: center; gap: 26px; }
+    .sprite { width: 104px; height: 104px; filter: drop-shadow(0 12px 22px rgba(74, 111, 196, 0.35)); }
+    .wordmark { width: 324px; height: 48px; image-rendering: pixelated; }
+
+    .kicker { margin: 40px 0 14px; font-size: 15px; font-weight: 750; letter-spacing: 0.16em; text-transform: uppercase; color: var(--link); }
+    h1 { margin: 0; font-size: 52px; font-weight: 820; line-height: 1.12; letter-spacing: -0.035em; color: var(--heading); }
+    .gradient-text { background: var(--gradient-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .features { margin: 22px 0 0; font-size: 22px; color: var(--muted); }
+    .features b { margin: 0 0.35em; font-weight: 400; color: var(--link); }
+
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 30px;
+      padding: 16px 22px;
+      border: 1.5px solid transparent;
+      border-radius: 18px;
+      background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--gradient) border-box;
+      box-shadow: 0 16px 44px rgba(74, 111, 196, 0.18), 0 0 48px rgba(207, 127, 150, 0.1);
+    }
+    .card svg { width: 30px; height: 30px; flex: none; color: var(--link); }
+    .card p { margin: 0; font-size: 19px; line-height: 1.35; color: var(--muted); }
+    .card strong { font-weight: 650; color: var(--heading); }
+    code { font-family: var(--mono); font-size: 0.92em; color: var(--heading); }
+
+    .site { position: absolute; z-index: 2; left: 64px; bottom: 50px; margin: 0; font-size: 22px; color: var(--muted); }
+
+    /* The README's main window, in a frame glowing a little, running off the right and the bottom. */
+    .frame {
+      position: absolute;
+      z-index: 1;
+      top: 78px;
+      left: 640px;
+      width: 1201px;
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.55), 0 0 64px rgba(74, 111, 196, 0.14), 0 0 96px rgba(207, 127, 150, 0.12);
+    }
+    .frame img { display: block; width: 100%; }
+
+    /* Joulene on the window's top edge, her hem on it, 6 pixels a cell. */
+    .joulene { position: absolute; z-index: 2; top: 6px; left: 1012px; width: 72px; height: 72px; image-rendering: pixelated; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45)); }
+  </style>
+</head>
+<body>
+  <div class="copy">
+    <div class="mark">
+      <img class="sprite" src="../../docs/assets/deventry.svg" alt="">
+      <img class="wordmark" src="../../docs/assets/wordmark.svg" alt="">
+    </div>
+    <p class="kicker">Your agents, in a real desktop window</p>
+    <h1>Every session in a tab.<br><span class="gradient-text">Every change in sight.</span></h1>
+    <p class="features">Tabs<b>·</b>Agents<b>·</b>Usage<b>·</b>Review<b>·</b>Files</p>
+    <div class="card">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>
+      <p><strong>Runs the real <code>claude</code></strong>, with your settings, <code>CLAUDE.md</code>, MCP servers and hooks</p>
+    </div>
+  </div>
+  <p class="site">deventry.app</p>
+  <div class="frame"><img src="../../docs/screenshots/standard-dark.png" alt=""></div>
+  <img class="joulene" src="../../docs/assets/joulene.svg" alt="">
+</body>
+</html>

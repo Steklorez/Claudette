@@ -2,12 +2,12 @@
 title: Thinking, notes and hooks
 parent: The conversation
 nav_order: 3
-summary: "Between your messages and Claude's replies, the conversation shows Claude's thinking, notices from Claude Code and Claudette, and the hooks that ran."
+summary: "Between your messages and Claude's replies, the conversation shows Claude's thinking, notices from Claude Code and Deventry, and the hooks that ran."
 ---
 
 # Thinking, notes and hooks
 
-Between your messages and Claude's replies, the conversation shows Claude's thinking, notices from Claude Code and Claudette, and the hooks that ran. They are quiet cards, so they stay out of the way of the answer.
+Between your messages and Claude's replies, the conversation shows Claude's thinking, notices from Claude Code and Deventry, and the hooks that ran. They are quiet cards, so they stay out of the way of the answer.
 
 ## Thinking
 
@@ -20,13 +20,13 @@ A **Thinking** card holds what Claude thought before it replied. It starts colla
 
 ## Notes, warnings and errors
 
-Claude Code and Claudette tell you things in one-line cards:
+Claude Code and Deventry tell you things in one-line cards:
 
 - A **Note** is quiet. Most notices are notes.
 - A **Warning** is amber: a notice Claude Code marks as a warning, and a retry (below).
 - An **Error** is red.
 
-Claude Code's own notices include a model fallback (and the context window shrinking from 1M to 200K tokens when it falls back), a hook's message to you, which starts with the hook's name (*PostToolUse:Bash says: …*), and the reason a prompt-submit hook gave for blocking your message. Claudette adds notes of its own, such as the link to a tab's session in the Claude app.
+Claude Code's own notices include a model fallback (and the context window shrinking from 1M to 200K tokens when it falls back), a hook's message to you, which starts with the hook's name (*PostToolUse:Bash says: …*), and the reason a prompt-submit hook gave for blocking your message. Deventry adds notes of its own, such as the link to a tab's session in the Claude app.
 
 ### API retries
 
@@ -34,7 +34,7 @@ When Claude's API answers with an error and Claude Code tries again, one warning
 
 ## Hooks
 
-Hooks are commands Claude Code runs at set points, such as before a tool call. Yours and your project's run inside Claude Code, which tells Claudette about each run. How hooks are set up is in [Claude Code's hooks documentation](https://code.claude.com/docs/en/hooks).
+Hooks are commands Claude Code runs at set points, such as before a tool call. Yours and your project's run inside Claude Code, which tells Deventry about each run. How hooks are set up is in [Claude Code's hooks documentation](https://code.claude.com/docs/en/hooks).
 
 - A hook that fails, or prints something while it runs, gets a **Hook** card with a row such as *PreToolUse hook (Bash) · failed (exit code 2)*. Click the row to see what it printed (up to 20,000 characters). A failed one opens by itself.
 - The rest run quietly and show nothing.

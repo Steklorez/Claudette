@@ -2,12 +2,12 @@
 title: The command palette
 parent: Tabs and sessions
 nav_order: 10
-summary: "The command palette is a box over the window that does anything Claudette has a command for, when you type a few letters of it."
+summary: "The command palette is a box over the window that does anything Deventry has a command for, when you type a few letters of it."
 ---
 
 # The command palette
 
-The command palette is a box over the window that does anything Claudette has a command for, when you type a few letters of it. It also jumps to a tab, opens a folder and goes to a Settings page.
+The command palette is a box over the window that does anything Deventry has a command for, when you type a few letters of it. It also jumps to a tab, opens a folder and goes to a Settings page.
 
 {% include shot.html name="guide/tabs/command-palette" alt="The command palette open over the window, with a list of commands and their shortcuts." %}
 
@@ -28,7 +28,7 @@ Before you type, the list has five kinds of entry, in this order. The kind shows
 - **Tabs**, by name with their folder. Picking one selects it.
 - **Folders**: your favorites, then recent folders. Picking one opens a new tab there.
 - **Settings** pages. Picking one opens Settings there.
-- **Help**: **User Guide** opens this guide, **Ask on Discord** opens dotBunny's Discord, where you can ask questions, and **Report an issue** opens a new issue on GitHub with the versions filled in, all in your browser. **About Claudette** opens [its window](../settings/about.md). See [Reporting an issue](../troubleshooting/reporting-an-issue.md).
+- **Help**: **User Guide** opens this guide, **Ask on Discord** opens dotBunny's Discord, where you can ask questions, and **Report an issue** opens a new issue on GitHub with the versions filled in, all in your browser. **About Deventry** opens [its window](../settings/about.md). See [Reporting an issue](../troubleshooting/reporting-an-issue.md).
 
 ### The commands
 
@@ -60,7 +60,7 @@ For the selected tab:
 - **Stash the message**, while something's typed in the composer
 - **Show changed files**, **Show the agent map**, **Show tasks**, **Show processes**, **Show MCP servers** (when the session has some) and **Show scratch pad**
 - **Open project files**, which opens the project's Files tab. See [Opening project files](../project-files/opening-project-files.md).
-- **Play tic-tac-toe with Claudette**, **Play Connect Four with Claudette**, **Play hangman with Claudette** and **Play Minesweeper with Claudette**, unless the games are turned off. See [Games with Claudette](../claudette/games-with-claudette.md).
+- **Play tic-tac-toe with Joulene**, **Play Connect Four with Joulene**, **Play hangman with Joulene** and **Play Minesweeper with Joulene**, unless the games are turned off. See [Games with Joulene](../joulene/games-with-joulene.md).
 - **Tab settings…**, **Duplicate tab** and **Export conversation…**
 - **Collapse tab** (or **Expand tab**), while the tab has rows under it. See [Collapsing a tab](the-sidebar.md#collapsing-a-tab).
 - **New tab in a worktree**, for a folder in a git repository

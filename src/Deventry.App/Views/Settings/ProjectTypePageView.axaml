@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.ProjectTypePageView" ClipToBounds="False"
+             x:DataType="settings:ProjectTypePage">
+  <!-- A project type's page in Project tools (DESIGN.md §18, "Project types"): its switches, then its defaults, each row
+       drawn from what the type declares, so a type needs no view of its own -->
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="settings:ProjectTypeSwitchRow">
+      <c:SettingRow Key="{Binding Key}" IsEnabled="{Binding IsAvailable}">
+        <ToggleSwitch IsChecked="{Binding IsOn}" />
+      </c:SettingRow>
+    </DataTemplate>
+    <DataTemplate DataType="settings:ProjectTypeChoiceRow">
+      <c:SettingRow Key="{Binding Key}" IsEnabled="{Binding IsAvailable}">
+        <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding Selected}" />
+      </c:SettingRow>
+    </DataTemplate>
+    <DataTemplate DataType="settings:ProjectTypePathRow">
+      <c:SettingRow Key="{Binding Key}" IsEnabled="{Binding IsAvailable}" IsStacked="True">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+          <TextBox Classes="mono" Text="{Binding Value, UpdateSourceTrigger=LostFocus}" PlaceholderText="{Binding Placeholder}"
+                   AutomationProperties.Name="{Binding Item.Title}" />
+          <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseCommand}" />
+          <Button Grid.Column="2" Content="Detect" Command="{Binding DetectCommand}" IsVisible="{Binding CanDetect}"
+                  ToolTip.Tip="Look where it's usually installed" />
+        </Grid>
+        <c:SettingRow.Details>
+          <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding DetectResult}"
+                     IsVisible="{Binding DetectResult, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </c:SettingRow.Details>
+      </c:SettingRow>
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="{Binding Kind}" ItemsSource="{Binding Switches}" />
+    <c:SettingsSection Key="{Binding DefaultsKey}" ItemsSource="{Binding Defaults}" IsVisible="{Binding HasDefaults}" />
+  </StackPanel>
+</UserControl>

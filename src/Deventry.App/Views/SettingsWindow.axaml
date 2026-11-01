@@ -1,0 +1,423 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels"
+        xmlns:views="using:Deventry.App.Views"
+        xmlns:settings="using:Deventry.App.ViewModels.Settings"
+        xmlns:pages="using:Deventry.App.Views.Settings"
+        xmlns:conversation="using:Deventry.App.Conversation"
+        x:Class="Deventry.App.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings"
+        Width="920" Height="720" MinWidth="680" MinHeight="460"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="TextBlock.pagetitle">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="StackPanel.pageheader">
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="10" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,4,0,0" />
+      </Style>
+      <Style Selector="^ Viewbox.perforcelogo, ^ Viewbox.unreallogo, ^ Viewbox.godotlogo">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+    </Style>
+    <!-- Settings → Perforce's title is Perforce's logo, with clear space of half its height around it, as Perforce's brand
+         guidelines say (App.axaml's LogoPerforceSymbol): 14.4 pixels at its 128 -->
+    <Style Selector="StackPanel.pageheader.perforce">
+      <Style Selector="^ TextBlock.pagetitle">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="^ Viewbox.perforcelogo">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="15" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,15,0,0" />
+      </Style>
+    </Style>
+    <!-- Settings → Unreal Engine's title is Epic's horizontal logo, with the clear space Epic's guidelines ask for: its
+         height above and below it, and twice that beside it (App.axaml's LogoUnrealIcon): 26 pixels at its 189 -->
+    <Style Selector="StackPanel.pageheader.unreal">
+      <Style Selector="^ TextBlock.pagetitle">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="^ Viewbox.unreallogo">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="52" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,26,0,0" />
+      </Style>
+    </Style>
+    <!-- Settings → Godot's title is Godot's logo, the small horizontal one its press kit has for less than 100 pixels tall -->
+    <Style Selector="StackPanel.pageheader.godot">
+      <Style Selector="^ TextBlock.pagetitle">
+        <Setter Property="IsVisible" Value="False" />
+      </Style>
+      <Style Selector="^ Viewbox.godotlogo">
+        <Setter Property="IsVisible" Value="True" />
+      </Style>
+      <Style Selector="^ > StackPanel">
+        <Setter Property="Spacing" Value="15" />
+      </Style>
+      <Style Selector="^ > TextBlock">
+        <Setter Property="Margin" Value="0,12,0,0" />
+      </Style>
+    </Style>
+    <!-- The sidebar's lists: each group's heading, then its pages, each with its icon, and the selected tab's project's
+         pages at the foot; the arrow keys go through them all (OnSidebarKeyDown). A heading isn't a page: it can't be
+         picked or focused. -->
+    <Style Selector="ListBox.settingsnav">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="8,0,8,8" />
+    </Style>
+    <!-- As much room under the last category as there is above a group's heading, before the line under them -->
+    <Style Selector="ListBox.categories">
+      <Setter Property="Padding" Value="8,0,8,20" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem" x:DataType="vm:SettingsNavEntry">
+      <Setter Property="Padding" Value="10,6" />
+      <Setter Property="Margin" Value="0,1" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Focusable" Value="{Binding !IsHeading}" />
+      <Setter Property="IsHitTestVisible" Value="{Binding !IsHeading}" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+      <Setter Property="AutomationProperties.ItemStatus" Value="{Binding Tag}" />
+    </Style>
+    <Style Selector="controls|AppearanceScope.claude ListBox.settingsnav ListBoxItem">
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <!-- A search result is named by the setting it finds, as a screen reader reads it. -->
+    <Style Selector="ListBox#SearchResultsList ListBoxItem" x:DataType="vm:SettingsSearchResult">
+      <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <!-- The page showing, picked out as the main window's selected tab is. -->
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter,
+                     ListBox.settingsnav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                     ListBox.settingsnav ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.navheading">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="Margin" Value="0,10,0,0" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <!-- A line across the sidebar over what sits at its foot: the selected tab's project, and the version -->
+    <Style Selector="Border.sidebarfoot">
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="0,1,0,0" />
+    </Style>
+    <!-- The project's heading: what it's for, then its name after its group's color, as the main window's sidebar has
+         the group. Placed as a heading in the list would be, its name lined up with the pages'. -->
+    <Style Selector="StackPanel.projectheading">
+      <Setter Property="Margin" Value="18,17,8,9" />
+      <Setter Property="Spacing" Value="2" />
+    </Style>
+    <Style Selector="StackPanel.projectheading TextBlock.navheading">
+      <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="TextBlock.navcaption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="Ellipse.groupdot">
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Height" Value="8" />
+      <Setter Property="Margin" Value="0,0,7,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Path.navicon">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="StrokeThickness" Value="1.15" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StrokeJoin" Value="Round" />
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
+      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon">
+      <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <!-- A logo (Logos.IsLogo): filled in the same color, where the others are strokes -->
+    <Style Selector="Path.navicon.filled">
+      <Setter Property="Stroke" Value="{x:Null}" />
+      <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.filled">
+      <Setter Property="Fill" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <!-- Except Perforce's symbol (Logos.Perforce), which its brand guidelines allow only in Perforce's colors: in its mono
+         black or white beside the others' gray, and in full color once its page is selected (white still in the dark
+         themes, which have no other) -->
+    <Style Selector="Path.navicon.perforce">
+      <Setter Property="Fill" Value="{DynamicResource PerforceMonoBrush}" />
+      <!-- As tall as it is at 14 wide, so it's centred on the row's name: a stretched shape is drawn at its box's top -->
+      <Setter Property="Height" Value="11.44" />
+    </Style>
+    <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.perforce">
+      <Setter Property="Fill" Value="{DynamicResource PerforceSymbolBrush}" />
+    </Style>
+    <!-- And Unreal Engine's icon (Logos.Unreal), in Epic's black or white, selected or not: its guidelines allow no other -->
+    <Style Selector="Path.navicon.unreal, ListBox.settingsnav ListBoxItem:selected Path.navicon.unreal">
+      <Setter Property="Fill" Value="{DynamicResource UnrealLogoBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Window.Resources>
+    <!-- A row of the sidebar's lists: a group's heading, or a page with its icon -->
+    <DataTemplate x:Key="NavEntryTemplate" DataType="vm:SettingsNavEntry">
+      <Panel>
+        <TextBlock Classes="navheading" Text="{Binding Title}" IsVisible="{Binding IsHeading}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsHeading}">
+          <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
+                Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
+                Classes.perforce="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}}"
+                Classes.unreal="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}}" />
+          <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <!-- A word about the page after its name, such as Off for a project type switched off: the page can still be
+               picked -->
+          <Border Classes="settingchip" Margin="-4,0,0,0" VerticalAlignment="Center"
+                  IsVisible="{Binding Tag, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding Tag}" />
+          </Border>
+        </StackPanel>
+      </Panel>
+    </DataTemplate>
+  </Window.Resources>
+
+  <!-- DESIGN.md §14: a sidebar of pages in groups; changes apply immediately; the window isn't modal. -->
+  <controls:AppearanceScope Classes.claude="{Binding IsClaudeStyle}">
+    <DockPanel>
+      <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): its title -->
+      <controls:TitleBar DockPanel.Dock="Top" />
+      <Grid ColumnDefinitions="220,*">
+        <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+          <DockPanel>
+            <!-- DESIGN.md §14, "Search": settings by name, what they do, or other words for them -->
+            <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="10,10,10,4" Text="{Binding SearchText}" PlaceholderText="Search settings"
+                     AutomationProperties.Name="Search settings" />
+            <!-- DESIGN.md §14, "Version": which Deventry this is, copied with a click, and Help: the user guide, dotBunny's
+                 Discord, and a bug report with the version filled in -->
+            <Border DockPanel.Dock="Bottom" Classes="sidebarfoot">
+            <Grid x:Name="SidebarFoot" ColumnDefinitions="*,Auto" Margin="8,4,8,8">
+              <Button Classes="flat" Command="{Binding CopyVersionCommand}" ToolTip.Tip="{Binding VersionTip}" HorizontalAlignment="Left"
+                      AutomationProperties.Name="Copy version details">
+                <TextBlock Classes="muted small" Text="{Binding VersionLabel}" TextTrimming="CharacterEllipsis" />
+              </Button>
+              <Button x:Name="HelpButton" Grid.Column="1" Classes="flat" Padding="6" ToolTip.Tip="Help: the user guide, Discord, reporting an issue, and About"
+                      AutomationProperties.Name="Help">
+                <Path Classes="navicon" Data="{DynamicResource IconHelp}" />
+                <Button.Flyout>
+                  <MenuFlyout Placement="TopEdgeAlignedRight">
+                    <MenuItem Header="User Guide" Command="{Binding OpenGuideCommand}" ToolTip.Tip="Opens Deventry's user guide in your browser." />
+                    <MenuItem Header="Ask on Discord" Command="{Binding OpenDiscordCommand}"
+                              ToolTip.Tip="Opens dotBunny's Discord in your browser, where you can ask questions about Deventry." />
+                    <MenuItem Header="Report an issue" Command="{Binding ReportIssueCommand}"
+                              ToolTip.Tip="Opens a new issue on Deventry's GitHub with the versions filled in. Nothing is sent until you submit it." />
+                    <Separator />
+                    <MenuItem Header="About Deventry" Command="{Binding ShowAboutCommand}"
+                              ToolTip.Tip="Which Deventry this is, the trademarks it names, and the licenses of what it's built with." />
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
+            </Grid>
+            </Border>
+            <!-- DESIGN.md §14, "The project's pages": the selected tab's project, in view however far the categories scroll,
+                 under Selected project and its name after its group's color; the folder in the name's tooltip -->
+            <Border x:Name="ProjectGroup" DockPanel.Dock="Bottom" Classes="sidebarfoot">
+              <Border.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="HasProject" />
+                  <Binding Path="!IsSearching" />
+                </MultiBinding>
+              </Border.IsVisible>
+              <StackPanel>
+                <StackPanel Classes="projectheading">
+                  <TextBlock Classes="navcaption" Text="Selected project" />
+                  <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding Project.Folder, FallbackValue={x:Null}}">
+                    <Ellipse Classes="groupdot" Fill="{Binding Project.Group.Brush, FallbackValue={x:Null}}"
+                             IsVisible="{Binding Project.Group, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+                    <TextBlock x:Name="ProjectHeading" Classes="navheading" Text="{Binding Project.Heading, FallbackValue=''}" />
+                  </StackPanel>
+                </StackPanel>
+                <ListBox x:Name="ProjectList" Classes="settingsnav" ItemsSource="{Binding ProjectNavEntries}" SelectedItem="{Binding SelectedProjectNavEntry}"
+                         ItemTemplate="{StaticResource NavEntryTemplate}" KeyDown="OnSidebarKeyDown" AutomationProperties.Name="The selected tab's project's pages" />
+              </StackPanel>
+            </Border>
+            <Panel>
+              <ListBox x:Name="SidebarList" Classes="settingsnav categories" ItemsSource="{Binding NavEntries}" SelectedItem="{Binding SelectedNavEntry}"
+                       ItemTemplate="{StaticResource NavEntryTemplate}" KeyDown="OnSidebarKeyDown"
+                       IsVisible="{Binding !IsSearching}" AutomationProperties.Name="Settings pages">
+              </ListBox>
+              <ListBox x:Name="SearchResultsList" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}" Background="Transparent" Padding="8,0"
+                       IsVisible="{Binding IsSearching}" AutomationProperties.Name="Search results">
+                <ListBox.ItemTemplate>
+                  <DataTemplate DataType="vm:SettingsSearchResult">
+                    <StackPanel Spacing="1">
+                      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+                      <TextBlock Classes="muted small" Text="{Binding Where}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <TextBlock Classes="muted small" Text="No settings match." Margin="18,10" TextWrapping="Wrap" VerticalAlignment="Top">
+                <TextBlock.IsVisible>
+                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="IsSearching" />
+                    <Binding Path="!SearchResults.Count" />
+                  </MultiBinding>
+                </TextBlock.IsVisible>
+              </TextBlock>
+            </Panel>
+          </DockPanel>
+        </Border>
+
+        <ScrollViewer x:Name="PageScroller" Grid.Column="1">
+          <!-- The page shown: the selected category's, or one of the project's, under its title. Each is a view in Views/Settings.
+               It fills the space up to 720 pixels, so a setting's control stays near its name, and is centred in a wider window
+               (a stretched control that its MaxWidth stops short is centred). -->
+          <StackPanel MaxWidth="720" Margin="40,28,40,40">
+            <!-- Its title, or Perforce's logo for Settings → Perforce's, 128 pixels wide where Perforce's least is 110, Epic's
+                 for Settings → Unreal Engine's, and Godot's for Settings → Godot's -->
+            <StackPanel Classes="pageheader"
+                        Classes.perforce="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Perforce}, FallbackValue=False}"
+                        Classes.unreal="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}, FallbackValue=False}"
+                        Classes.godot="{Binding CurrentPage.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Godot}, FallbackValue=False}">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
+                <Viewbox Classes="perforcelogo" Width="128" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
+                         AutomationProperties.AccessibilityView="Content">
+                  <Canvas Width="638.98" Height="144.22">
+                    <Path Data="{StaticResource LogoPerforceSymbol}" Fill="{DynamicResource PerforceSymbolBrush}" />
+                    <Path Data="{StaticResource LogoPerforceWordmark}" Fill="{DynamicResource PerforceWordmarkBrush}" />
+                  </Canvas>
+                </Viewbox>
+                <Viewbox Classes="unreallogo" Width="189" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
+                         AutomationProperties.AccessibilityView="Content">
+                  <Canvas Width="3156.27" Height="434.56">
+                    <Path Data="{StaticResource LogoUnrealHorizontal}" Fill="{DynamicResource UnrealLogoBrush}" />
+                  </Canvas>
+                </Viewbox>
+                <Viewbox Classes="godotlogo" Width="91" AutomationProperties.Name="{Binding CurrentPage.Title, FallbackValue=''}"
+                         AutomationProperties.AccessibilityView="Content">
+                  <Canvas Width="885" Height="312.23">
+                    <Path Data="{StaticResource LogoGodotWordmark}" Fill="{DynamicResource GodotWordmarkBrush}" />
+                    <Path Data="{StaticResource LogoGodotJaw}" Fill="{StaticResource GodotWhiteBrush}" />
+                    <Path Data="{StaticResource LogoGodotHead}" Fill="{StaticResource GodotBlueBrush}" />
+                    <Path Data="{StaticResource LogoGodotEyes}" Fill="{StaticResource GodotWhiteBrush}" />
+                    <Path Data="{StaticResource LogoGodotPupils}" Fill="{StaticResource GodotPupilBrush}" />
+                  </Canvas>
+                </Viewbox>
+                <!-- Everything on the page is this computer's: said once, here -->
+                <Border Classes="settingchip" VerticalAlignment="Center" IsVisible="{Binding CurrentPage.IsMachineOnly, FallbackValue=False}"
+                        ToolTip.Tip="Kept on this computer: settings sync leaves everything on this page as it is">
+                  <TextBlock Text="This computer" />
+                </Border>
+              </StackPanel>
+              <TextBlock Classes="muted" Text="{Binding CurrentPage.Description, FallbackValue=''}" TextWrapping="Wrap"
+                         IsVisible="{Binding CurrentPage.Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}" />
+            </StackPanel>
+            <!-- Neither it nor the page views (ClipToBounds="False" on each) cut off the rows, which reach 8 pixels past the page
+                 for their changed bars and highlight. -->
+            <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Margin="0,24,0,0" ClipToBounds="False">
+              <ContentControl.DataTemplates>
+                <DataTemplate DataType="settings:GeneralPage">
+                  <pages:GeneralPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:AppearancePage">
+                  <pages:AppearancePageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ConversationPage">
+                  <pages:ConversationPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:NotificationsPage">
+                  <pages:NotificationsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:KeyboardPage">
+                  <pages:KeyboardPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ClaudeCodePage">
+                  <pages:ClaudeCodePageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:AccountsPage">
+                  <pages:AccountsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:TabsPage">
+                  <pages:TabsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:UsagePage">
+                  <pages:UsagePageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:SessionsPage">
+                  <pages:SessionsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:FilesPage">
+                  <pages:FilesPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:AllToolsPage">
+                  <pages:AllToolsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectTypePage">
+                  <pages:ProjectTypePageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:GitPage">
+                  <pages:GitPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:PerforcePage">
+                  <pages:PerforcePageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:AdvancedPage">
+                  <pages:AdvancedPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectLinksPage">
+                  <pages:ProjectLinksPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectActionsPage">
+                  <pages:ProjectActionsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectToolChoicesPage">
+                  <pages:ProjectToolChoicesPageView />
+                </DataTemplate>
+              </ContentControl.DataTemplates>
+            </ContentControl>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- The project pages' small dialogs: a link, or an action (DESIGN.md §18). The action's is taller than the
+             window opens, so it scrolls. -->
+        <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding Project.HasEditor, FallbackValue=False}">
+          <ScrollViewer Name="EditorScroller" VerticalScrollBarVisibility="Auto">
+            <ContentControl Content="{Binding Project.Editor, FallbackValue={x:Null}}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,16">
+              <ContentControl.DataTemplates>
+                <DataTemplate DataType="vm:ProjectActionEditorViewModel">
+                  <views:ProjectActionEditorView />
+                </DataTemplate>
+                <DataTemplate DataType="vm:ProjectLinkEditorViewModel">
+                  <views:ProjectLinkEditorView />
+                </DataTemplate>
+              </ContentControl.DataTemplates>
+            </ContentControl>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+    </DockPanel>
+  </controls:AppearanceScope>
+</Window>

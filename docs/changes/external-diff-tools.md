@@ -2,22 +2,22 @@
 title: External diff tools
 parent: Reviewing changes
 nav_order: 6
-summary: "If you have a diff tool you prefer, Claudette can open a changed file's diff in it instead of the built-in diff view."
+summary: "If you have a diff tool you prefer, Deventry can open a changed file's diff in it instead of the built-in diff view."
 ---
 
 # External diff tools
 
-If you have a diff tool you prefer, Claudette can open a changed file's diff in it instead of the built-in [diff view](the-diff-view.md).
+If you have a diff tool you prefer, Deventry can open a changed file's diff in it instead of the built-in [diff view](the-diff-view.md).
 
 ## Choosing a tool
 
 1. Open Settings → **Files and diffs**, or choose **Diff tool settings…** on a changed file's right-click menu.
 2. Pick one from the **Diff tool** list:
    - **Built-in diff view**, the default.
-   - A preset, listed with where Claudette found it.
+   - A preset, listed with where Deventry found it.
    - **Custom command…**
 
-Claudette finds presets by looking in each tool's usual install places and on your `PATH` (on macOS and Linux, your login shell's, as `claude` gets), and a preset is listed only if its tool is found. The presets are Beyond Compare, VS Code, WinMerge (on Windows), Kaleidoscope (on macOS), Meld, P4Merge and **Your git difftool**, which uses your git configuration.
+Deventry finds presets by looking in each tool's usual install places and on your `PATH` (on macOS and Linux, your login shell's, as `claude` gets), and a preset is listed only if its tool is found. The presets are Beyond Compare, VS Code, WinMerge (on Windows), Kaleidoscope (on macOS), Meld, P4Merge and **Your git difftool**, which uses your git configuration.
 
 A preset fills in the tool's arguments, including a title for each side (`auth.cs (before)` and `auth.cs (now)`), and opens the left side read-only where the tool supports it.
 
@@ -55,7 +55,7 @@ Click **Test** to open a sample diff in the tool. The page says *Opened a sample
 - The temporary files are deleted when the tab closes.
 
 {: .note }
-On Windows, a `.cmd` or `.bat` tool (VS Code's `code.cmd`, say) runs through `cmd.exe`, where a file name could run commands. Claudette refuses arguments that `cmd.exe` would read as commands, such as `%` or `"`, and says so. A file name that trips this, such as `Q&A.md` in a path without spaces, can still be opened in the built-in view.
+On Windows, a `.cmd` or `.bat` tool (VS Code's `code.cmd`, say) runs through `cmd.exe`, where a file name could run commands. Deventry refuses arguments that `cmd.exe` would read as commands, such as `%` or `"`, and says so. A file name that trips this, such as `Q&A.md` in a path without spaces, can still be opened in the built-in view.
 
 ## Settings
 

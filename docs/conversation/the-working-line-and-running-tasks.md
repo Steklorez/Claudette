@@ -32,11 +32,11 @@ From the start of a turn to its end. It hides while a permission prompt, questio
 
 ### Your own verbs
 
-Claude Code's documented `spinnerVerbs` setting changes the list of verbs: `"append"` adds yours, and `"replace"` shows only yours (an empty list keeps the built-in ones). Claudette reads it from the tab's `.claude/settings.local.json`, then `.claude/settings.json`, then your `settings.json` in Claude Code's folder. The first file that sets it wins. See [Claude Code's settings documentation](https://code.claude.com/docs/en/settings).
+Claude Code's documented `spinnerVerbs` setting changes the list of verbs: `"append"` adds yours, and `"replace"` shows only yours (an empty list keeps the built-in ones). Deventry reads it from the tab's `.claude/settings.local.json`, then `.claude/settings.json`, then your `settings.json` in Claude Code's folder. The first file that sets it wins. See [Claude Code's settings documentation](https://code.claude.com/docs/en/settings).
 
 ## Running tasks
 
-Claude Code keeps some work going after a turn ends, and counts it (*1 running task*). Claudette does too. This is what counts:
+Claude Code keeps some work going after a turn ends, and counts it (*1 running task*). Deventry does too. This is what counts:
 
 - a shell command started with `run_in_background`, or moved to the background later;
 - a Monitor watch;

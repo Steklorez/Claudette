@@ -2,12 +2,12 @@
 title: Git
 parent: Settings
 nav_order: 6
-summary: "Settings → Git, the first page under Source control, holds the branch on tab rows, cleaning up worktrees, the git Claudette runs, and what the Files tab shows of git."
+summary: "Settings → Git, the first page under Source control, holds the branch on tab rows, cleaning up worktrees, the git Deventry runs, and what the Files tab shows of git."
 ---
 
 # Git
 
-Settings → **Git** is the first page under **Source control** in the Settings sidebar, before [Perforce](../project-tools/perforce.md). It gathers what Claudette does with git:
+Settings → **Git** is the first page under **Source control** in the Settings sidebar, before [Perforce](../project-tools/perforce.md). It gathers what Deventry does with git:
 
 - **Tab rows**: **Show the git branch**, the branch badge on each tab's row. See [Styles and themes](styles-and-themes.md#what-the-tab-rows-show).
 - **Worktrees**: removing worktrees no tab works in, and **Clean up now**. See [Worktree tabs](../tabs/worktree-tabs.md).
@@ -18,9 +18,9 @@ Everything but **Show the git branch** stays on this machine; Settings marks tho
 
 ## Path to git
 
-Claudette runs git to ask about your repositories: for Changed files and the diff view, worktree tabs and cleaning them up, the `@` list, what the Files tab dims, and a source build's new commits. It also runs it as the git difftool, when that's your [diff tool](../changes/external-diff-tools.md).
+Deventry runs git to ask about your repositories: for Changed files and the diff view, worktree tabs and cleaning them up, the `@` list, what the Files tab dims, and a source build's new commits. It also runs it as the git difftool, when that's your [diff tool](../changes/external-diff-tools.md).
 
-By default it runs the first `git` on your `PATH`, as a terminal would. To use another, type its path in **Path to git** or click **Browse…**. It's used from the next time Claudette runs git.
+By default it runs the first `git` on your `PATH`, as a terminal would. To use another, type its path in **Path to git** or click **Browse…**. It's used from the next time Deventry runs git.
 
 Under the box, Settings says which git it found and its version, such as *git 2.47.1.windows.2 at C:\Program Files\Git\cmd\git.exe*. When it can't use the one you named, it says why instead: there's no file at that path, it's a folder, or it isn't git.
 

@@ -1,0 +1,423 @@
+using System.Diagnostics;
+using Deventry.Core.Processes;
+using Deventry.Core.Updates;
+using Deventry.Platform.Tests.Support;
+using Deventry.Platform.Updates.Mac;
+using Microsoft.Extensions.Time.Testing;
+
+namespace Deventry.Platform.Tests.Updates;
+
+/// <summary>
+/// Updating the app from a release's disk image (DESIGN.md §2, "Updating Deventry"), here one called <c>Claudette.app</c>. The macOS tools
+/// (hdiutil, ditto, codesign, plutil) are scripted; the helper script that swaps the apps runs for real.
+/// </summary>
+public sealed class MacAppInstallerTests : IDisposable
+{
+    private static readonly AppVersion Version = new(1, 3, 0);
+
+    private readonly string _root = Directory.CreateTempSubdirectory("claudette-mac-").FullName;
+
+    private string Applications => Path.Combine(_root, "Applications");
+
+    private string App => Path.Combine(Applications, "Claudette.app");
+
+    private string Staged => Path.Combine(Applications, ".Deventry-update.app");
+
+    /// <summary>Where Deventry goes, beside Claudette (DESIGN.md §2, "Renaming to Deventry").</summary>
+    private string Deventry => Path.Combine(Applications, "Deventry.app");
+
+    private string Updates => Path.Combine(_root, "updates");
+
+    public MacAppInstallerTests()
+    {
+        MakeApp(App, "old", Version.ToString());
+        Directory.CreateDirectory(Updates);
+    }
+
+    /// <summary>An app bundle whose "Info.plist" is key=value lines, which the scripted plutil reads.</summary>
+    /// <param name="executable">Its program, named as the bundle is: <c>Claudette</c>, or <c>Deventry</c> after the rename.</param>
+    private static void MakeApp(string path, string contents, string version, string bundleId = MacAppInstaller.BundleIdentifier, string executable = "Claudette")
+    {
+        Directory.CreateDirectory(Path.Combine(path, "Contents", "MacOS"));
+        File.WriteAllText(Path.Combine(path, "Contents", "MacOS", executable), contents);
+        File.WriteAllText(Path.Combine(path, "Contents", "Info.plist"), $"CFBundleIdentifier={bundleId}\nCFBundleShortVersionString={version}\n");
+    }
+
+    /// <summary>What the disk image holds, and how the scripted tools answer.</summary>
+    private sealed class Tools
+    {
+        /// <summary>The app in the disk image, by name.</summary>
+        public string ImageApp { get; set; } = "Claudette.app";
+
+        public string ImageVersion { get; set; } = "1.3.0";
+
+        public string ImageBundleId { get; set; } = MacAppInstaller.BundleIdentifier;
+
+        public int SignatureExitCode { get; set; }
+
+        public string? RunningTeam { get; set; } = "TEAM123456";
+
+        public string? ImageTeam { get; set; } = "TEAM123456";
+
+        /// <summary>codesign -dv on the running app fails (a timeout, say) with this message.</summary>
+        public string? RunningTeamError { get; set; }
+
+        public List<string> Commands { get; } = [];
+
+        /// <summary>The code requirement each signature check asked for, or null for none.</summary>
+        public List<string?> Requirements { get; } = [];
+    }
+
+    private MacAppInstaller Installer(Tools tools, string? app = null) =>
+        new(new ScriptedLauncher(spec => Run(tools, spec)), new FakeTimeProvider(), app ?? App, Updates, processId: 4242);
+
+    private (int, string, string) Run(Tools tools, ProcessStartSpec spec)
+    {
+        var args = spec.Arguments;
+        tools.Commands.Add($"{Path.GetFileName(spec.FileName)} {args[0]}");
+        switch (Path.GetFileName(spec.FileName), args[0])
+        {
+            case ("hdiutil", "attach"):
+                MakeApp(Path.Combine(args[^2], tools.ImageApp), "new", tools.ImageVersion, tools.ImageBundleId, Path.GetFileNameWithoutExtension(tools.ImageApp));
+                return (0, "", "");
+            case ("hdiutil", "detach"):
+                Directory.Delete(args[1], recursive: true);
+                return (0, "", "");
+            case ("ditto", _):
+                CopyDirectory(args[0], args[1]);
+                return (0, "", "");
+            case ("codesign", "--verify"):
+                tools.Requirements.Add(args.FirstOrDefault(a => a.StartsWith("-R=", StringComparison.Ordinal)));
+                if (tools.SignatureExitCode != 0)
+                {
+                    return (tools.SignatureExitCode, "", $"{args[^1]}: a sealed resource is missing or invalid");
+                }
+                // A requirement naming a team holds only for an app signed by that team.
+                if (args.FirstOrDefault(a => a.StartsWith("-R=", StringComparison.Ordinal)) is { } requirement
+                    && !requirement.EndsWith($"= \"{tools.ImageTeam}\"", StringComparison.Ordinal))
+                {
+                    return (3, "", $"{args[^1]}: test-requirement: code failed to satisfy specified code requirement(s)");
+                }
+                return (0, "", "");
+            case ("codesign", "-dv"):
+                if (args[^1] == App && tools.RunningTeamError is { } failure)
+                {
+                    return (1, "", failure);
+                }
+                var team = args[^1] == App ? tools.RunningTeam : tools.ImageTeam;
+                return (0, "", $"Executable={args[^1]}/Contents/MacOS/Deventry\nTeamIdentifier={team ?? "not set"}\n");
+            case ("plutil", "-extract"):
+                var line = File.ReadAllLines(args[^1]).FirstOrDefault(l => l.StartsWith(args[1] + "=", StringComparison.Ordinal));
+                return line is null ? (1, "", "No value at that key path") : (0, line[(args[1].Length + 1)..] + "\n", "");
+            default:
+                return (127, "", "unexpected command");
+        }
+    }
+
+    private static void CopyDirectory(string source, string target)
+    {
+        foreach (var directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(directory.Replace(source, target));
+        }
+        Directory.CreateDirectory(target);
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        {
+            File.Copy(file, file.Replace(source, target));
+        }
+    }
+
+    [Fact]
+    public void The_running_bundle_is_found_from_the_programs_folder()
+    {
+        Assert.Equal(App, MacAppInstaller.FindBundle(Path.Combine(App, "Contents", "MacOS") + Path.DirectorySeparatorChar));
+        Assert.Null(MacAppInstaller.FindBundle(Path.Combine(_root, "bin", "Release", "net10.0")));
+    }
+
+    [Fact]
+    public async Task A_new_version_that_checks_out_is_copied_next_to_the_running_one()
+    {
+        var tools = new Tools();
+
+        var prepared = await Installer(tools).PrepareAsync("/downloads/Claudette-1.3.0-arm64.dmg", Version, TestContext.Current.CancellationToken);
+
+        Assert.Equal(Staged, prepared.StagedPath);
+        Assert.Equal(App, prepared.InstalledPath);
+        Assert.Equal("new", File.ReadAllText(Path.Combine(Staged, "Contents", "MacOS", "Claudette")));
+        Assert.Equal("old", File.ReadAllText(Path.Combine(App, "Contents", "MacOS", "Claudette")));
+        Assert.Equal(["hdiutil", "ditto", "hdiutil"], tools.Commands.Take(3).Select(c => c.Split(' ')[0]));
+        Assert.Empty(Directory.EnumerateDirectories(Updates, "mount-*"));
+    }
+
+    [Fact]
+    public async Task A_renamed_app_is_to_go_beside_the_running_one_under_its_own_name()
+    {
+        // Deventry's disk image holds Deventry.app, with Claudette's bundle identifier and team.
+        var prepared = await Installer(new Tools { ImageApp = "Deventry.app" }).PrepareAsync("/downloads/Deventry-1.3.0-arm64.dmg", Version, TestContext.Current.CancellationToken);
+
+        Assert.Equal(Staged, prepared.StagedPath);
+        Assert.Equal(Deventry, prepared.InstalledPath);
+        Assert.Equal("new", File.ReadAllText(Path.Combine(Staged, "Contents", "MacOS", "Deventry")));
+        Assert.False(Directory.Exists(Deventry));
+    }
+
+    [Fact]
+    public async Task A_new_version_from_another_developer_is_refused_and_removed()
+    {
+        var error = await Assert.ThrowsAsync<AppInstallException>(() =>
+            Installer(new Tools { ImageTeam = "OTHERTEAM1" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
+
+        Assert.Equal("The new version is signed by a different developer (OTHERTEAM1) than this one (TEAM123456), so it wasn't installed.", error.Message);
+        Assert.False(Directory.Exists(Staged));
+    }
+
+    [Fact]
+    public async Task The_new_version_must_be_signed_by_this_ones_team_with_an_Apple_certificate()
+    {
+        var tools = new Tools();
+
+        await Installer(tools).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken);
+
+        Assert.Equal(["-R=anchor apple generic and certificate leaf[subject.OU] = \"TEAM123456\""], tools.Requirements);
+    }
+
+    [Fact]
+    public async Task An_update_isnt_installed_when_this_ones_signature_cant_be_read()
+    {
+        // Before, a codesign that failed or timed out gave no team, and the comparison was skipped.
+        var error = await Assert.ThrowsAsync<AppInstallException>(() =>
+            Installer(new Tools { RunningTeamError = "codesign timed out" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
+
+        Assert.StartsWith("This Deventry's own signature couldn't be read", error.Message, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Staged));
+    }
+
+    [Fact]
+    public async Task An_unsigned_build_checks_only_that_the_new_version_is_intact()
+    {
+        var tools = new Tools { RunningTeam = null, ImageTeam = null };
+
+        await Installer(tools).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken);
+
+        Assert.Equal([null], tools.Requirements);
+    }
+
+    [Fact]
+    public async Task A_broken_signature_another_app_or_the_wrong_version_is_refused()
+    {
+        var signature = await Assert.ThrowsAsync<AppInstallException>(() =>
+            Installer(new Tools { SignatureExitCode = 1 }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
+        var other = await Assert.ThrowsAsync<AppInstallException>(() =>
+            Installer(new Tools { ImageBundleId = "com.example.other" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
+        var version = await Assert.ThrowsAsync<AppInstallException>(() =>
+            Installer(new Tools { ImageVersion = "1.2.9" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
+
+        Assert.StartsWith("The new version's signature didn't check out", signature.Message);
+        Assert.Equal("The disk image holds a different app, not Deventry.", other.Message);
+        Assert.Equal("The app in the disk image is version 1.2.9, not 1.3.0 as the release says.", version.Message);
+        Assert.False(Directory.Exists(Staged));
+    }
+
+    [Fact]
+    public async Task An_unsigned_running_app_accepts_any_valid_signature()
+    {
+        var prepared = await Installer(new Tools { RunningTeam = null, ImageTeam = "TEAM123456" }).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken);
+
+        Assert.Equal(Staged, prepared.StagedPath);
+    }
+
+    [Fact]
+    public async Task A_translocated_app_is_sent_to_install_by_hand()
+    {
+        // A macOS path, whatever OS runs the test: it's refused before anything touches the disk.
+        const string translocated = "/private/var/folders/xy/T/AppTranslocation/ABC123/d/Claudette.app";
+
+        var error = await Assert.ThrowsAsync<AppInstallException>(() =>
+            Installer(new Tools(), translocated).PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken));
+
+        Assert.True(error.CanOpenPackage);
+        Assert.Contains("Move Deventry to Applications", error.Message);
+    }
+
+    [Fact]
+    public async Task Installing_starts_the_helper_detached_and_Deventry_closes()
+    {
+        var tools = new Tools();
+        var launcher = new ScriptedLauncher(spec => Run(tools, spec));
+        var installer = new MacAppInstaller(launcher, new FakeTimeProvider(), App, Updates, processId: 4242);
+        var prepared = await installer.PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken);
+
+        var outcome = await installer.InstallAsync(prepared, ["--restore", "n1"], "/data/restart-ready", "n1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(InstallOutcome.ExitNow, outcome);
+        var helper = launcher.Specs[^1];
+        Assert.Equal("/bin/sh", helper.FileName);
+        Assert.True(helper.Detached);
+        Assert.Equal([Path.Combine(Updates, "update-helper.sh"), "4242", App, Staged, App, "/data/restart-ready", "n1", "open", "--restore", "n1"], helper.Arguments);
+        Assert.Equal(MacAppInstaller.HelperScript(), File.ReadAllText(Path.Combine(Updates, "update-helper.sh")));
+    }
+
+    [Fact]
+    public async Task Installing_a_renamed_app_tells_the_helper_where_it_goes()
+    {
+        var tools = new Tools { ImageApp = "Deventry.app" };
+        var launcher = new ScriptedLauncher(spec => Run(tools, spec));
+        var installer = new MacAppInstaller(launcher, new FakeTimeProvider(), App, Updates, processId: 4242);
+        var prepared = await installer.PrepareAsync("/downloads/x.dmg", Version, TestContext.Current.CancellationToken);
+
+        await installer.InstallAsync(prepared, ["--restore", "n1"], "/tmp/ready", "n1", TestContext.Current.CancellationToken);
+
+        Assert.Equal([Path.Combine(Updates, "update-helper.sh"), "4242", App, Staged, Deventry, "/tmp/ready", "n1", "open", "--restore", "n1"], launcher.Specs[^1].Arguments);
+    }
+
+    // ---- The helper script, run for real ----------------------------------------------------------------------------
+
+    /// <summary>An executable that logs how it was started, and optionally says it's up.</summary>
+    /// <param name="executable">Its file name in the bundle: <c>Claudette</c>, or <c>Deventry</c> after the rename.</param>
+    private void MakeExecutable(string app, string executable, string name, bool signalsReady)
+    {
+        var path = Path.Combine(app, "Contents", "MacOS", executable);
+        var log = Path.Combine(_root, "launches.log");
+        var ready = signalsReady ? $"printf '%s' \"$2\" > '{Path.Combine(_root, "restart-ready")}'\n" : "";
+        File.WriteAllText(path, $"#!/bin/sh\necho \"{name} $*\" >> '{log}'\n{ready}");
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+    }
+
+    /// <param name="launches">How many launches the log should hold once the helper is done.</param>
+    /// <param name="installed">Where the new app goes: Claudette.app's place, unless renamed.</param>
+    private async Task<(int ExitCode, string Log)> RunHelperAsync(int readyTicks, int launches, string? installed = null)
+    {
+        var script = Path.Combine(Updates, "update-helper.sh");
+        File.WriteAllText(script, MacAppInstaller.HelperScript());
+        // Stands in for Deventry, quitting shortly after starting the helper.
+        using var quitting = Process.Start(new ProcessStartInfo("sleep", "0.3"))!;
+        var start = new ProcessStartInfo("/bin/sh")
+        {
+            ArgumentList = { script, quitting.Id.ToString(System.Globalization.CultureInfo.InvariantCulture), App, Staged, installed ?? App, Path.Combine(_root, "restart-ready"), "n1", "exec", "--restore", "n1" },
+            Environment = { ["DEVENTRY_UPDATE_READY_TICKS"] = readyTicks.ToString(System.Globalization.CultureInfo.InvariantCulture) },
+            RedirectStandardError = true,
+        };
+        using var helper = Process.Start(start)!;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        await helper.WaitForExitAsync(timeout.Token);
+        // The last launch may still be writing its line.
+        var log = Path.Combine(_root, "launches.log");
+        string Read() => File.Exists(log) ? File.ReadAllText(log) : "";
+        await Waiting.UntilAsync(() => Read().Count(c => c == '\n') >= launches, $"{launches} launches");
+        return (helper.ExitCode, Read());
+    }
+
+    [Fact]
+    public async Task The_helper_swaps_in_the_new_version_once_Deventry_quits_and_it_starts()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
+        MakeApp(Staged, "", Version.ToString());
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "Claudette", "new", signalsReady: true);
+
+        var (exitCode, log) = await RunHelperAsync(readyTicks: 40, launches: 1);
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal("new --restore n1\n", log);
+        Assert.Contains("echo \"new", File.ReadAllText(Path.Combine(App, "Contents", "MacOS", "Claudette")));
+        Assert.False(Directory.Exists(Staged));
+        Assert.False(Directory.Exists(App + ".previous"));
+    }
+
+    [Fact]
+    public async Task The_helper_installs_a_renamed_app_under_its_own_name_and_removes_the_old_one()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
+        // A Deventry.app installed by hand earlier is replaced too.
+        MakeApp(Deventry, "by hand", Version.ToString(), executable: "Deventry");
+        MakeApp(Staged, "", Version.ToString(), executable: "Deventry");
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "Deventry", "new", signalsReady: true);
+
+        var (exitCode, log) = await RunHelperAsync(readyTicks: 40, launches: 1, installed: Deventry);
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal("new --restore n1\n", log);
+        Assert.Contains("echo \"new", File.ReadAllText(Path.Combine(Deventry, "Contents", "MacOS", "Deventry")));
+        Assert.False(Directory.Exists(App));
+        Assert.False(Directory.Exists(Staged));
+        Assert.False(Directory.Exists(App + ".previous"));
+        Assert.False(Directory.Exists(Deventry + ".previous"));
+    }
+
+    [Fact]
+    public async Task When_a_renamed_app_does_not_start_everything_goes_back_as_it_was()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
+        MakeApp(Deventry, "by hand", Version.ToString(), executable: "Deventry");
+        MakeApp(Staged, "", Version.ToString(), executable: "Deventry");
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "Deventry", "new", signalsReady: false);
+
+        var (exitCode, log) = await RunHelperAsync(readyTicks: 4, launches: 2, installed: Deventry);
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal("new --restore n1\nold --restore n1\n", log);
+        Assert.Contains("echo \"old", File.ReadAllText(Path.Combine(App, "Contents", "MacOS", "Claudette")));
+        Assert.Equal("by hand", File.ReadAllText(Path.Combine(Deventry, "Contents", "MacOS", "Deventry")));
+        Assert.False(Directory.Exists(App + ".previous"));
+        Assert.False(Directory.Exists(Deventry + ".previous"));
+    }
+
+    [Fact]
+    public async Task When_the_new_version_does_not_start_the_old_one_comes_back_and_takes_the_tabs()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows(), "The helper runs on macOS; it's tested on Unix.");
+        MakeApp(Staged, "", Version.ToString());
+        MakeExecutable(App, "Claudette", "old", signalsReady: true);
+        MakeExecutable(Staged, "Claudette", "new", signalsReady: false);
+
+        var (exitCode, log) = await RunHelperAsync(readyTicks: 4, launches: 2);
+
+        Assert.Equal(1, exitCode);
+        Assert.Equal("new --restore n1\nold --restore n1\n", log);
+        Assert.Contains("echo \"old", File.ReadAllText(Path.Combine(App, "Contents", "MacOS", "Claudette")));
+        Assert.False(Directory.Exists(App + ".previous"));
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            Directory.Delete(_root, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    /// <summary>Runs each command to completion at once, with the output the test gives.</summary>
+    private sealed class ScriptedLauncher(Func<ProcessStartSpec, (int ExitCode, string Output, string Error)> run) : IProcessLauncher
+    {
+        public List<ProcessStartSpec> Specs { get; } = [];
+
+        public IRunningProcess Start(ProcessStartSpec spec)
+        {
+            Specs.Add(spec);
+            var process = new FakeRunningProcess(Specs.Count);
+            if (spec.Detached)
+            {
+                return process;
+            }
+            var (exitCode, output, error) = run(spec);
+            foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                process.WriteOutput(line);
+            }
+            foreach (var line in error.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                process.WriteError(line);
+            }
+            process.Exit(exitCode);
+            return process;
+        }
+    }
+}

@@ -43,4 +43,4 @@ jobs:
       # The Microsoft Store listing names the privacy policy's old address, which nothing on the site links to (GUIDE.md,
       # "Privacy policy").
       - name: Check the privacy policy's old address
-        run: grep -q 'url=https://claudette.dotbunny.com/privacy-policy/"' _site/privacy-policy.html
+        run: grep -q 'url=https://deventry.app/privacy-policy/"' _site/privacy-policy.html

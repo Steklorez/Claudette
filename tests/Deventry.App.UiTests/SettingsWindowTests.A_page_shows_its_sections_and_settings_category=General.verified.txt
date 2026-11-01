@@ -1,0 +1,41 @@
+﻿"General"
+"This computer"
+"Starting Deventry, keeping the computer awake, and updates."
+"Starting and closing"
+[button] Reset to defaults
+"Start Deventry when I log in"
+"Deventry opens minimized when you log in to this computer."
+[toggle] Start Deventry when I log in
+"Also restore unpinned tabs when Deventry starts"
+"Pinned tabs always come back."
+[toggle on] Also restore unpinned tabs when Deventry starts
+"Confirm before closing a tab where Claude is working"
+"Closing one stops Claude mid-turn."
+[toggle on] Confirm before closing a tab where Claude is working
+"Keeping the computer awake"
+[button] Reset to defaults
+"Keep this computer awake"
+"So a task a usage limit stopped can carry on by itself when the limit resets.  "
+[toggle] Keep this computer awake
+"When"
+[toggle] More
+[toggle on] Only while Claude has work to finish
+[toggle] Whenever Deventry is running
+"Also while tabs are connected to the Claude app"
+"So the Claude app can still reach them. The screen can still turn off."
+[toggle on] Also while tabs are connected to the Claude app
+"Updates and status"
+[button] Reset to defaults
+"Show Claude's service status"
+"A dot in the header, and a banner while Claude has an incident.  "
+[toggle on] Show Claude's service status
+"Check for Deventry updates automatically"
+"From Deventry's releases on GitHub, at launch and every few hours."
+[toggle on] Check for Deventry updates automatically
+"Include pre-releases"
+"Try new versions before they're released."
+[toggle] Include pre-releases
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

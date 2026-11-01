@@ -405,11 +405,11 @@ FodyWeavers.xsd
 # JetBrains Rider, except the project icon (packaging/icon/build-icons.mjs draws it)
 *.sln.iml
 .idea/*
-!.idea/.idea.Claudette/
-.idea/.idea.Claudette/*
-!.idea/.idea.Claudette/.idea/
-.idea/.idea.Claudette/.idea/*
-!.idea/.idea.Claudette/.idea/icon.svg
+!.idea/.idea.Deventry/
+.idea/.idea.Deventry/*
+!.idea/.idea.Deventry/.idea/
+.idea/.idea.Deventry/.idea/*
+!.idea/.idea.Deventry/.idea/icon.svg
 
 ##
 ## Visual studio for Mac

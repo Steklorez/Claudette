@@ -7,7 +7,7 @@ summary: "You can go back to an earlier message: change it and send it again, st
 
 # Rewind and branch
 
-You can go back to an earlier message: change it and send it again, start a new tab from just before it, or put the files Claude changed since back as they were. Claude Code does the work (its [checkpointing documentation](https://code.claude.com/docs/en/checkpointing) describes it), and Claudette gives you the menu.
+You can go back to an earlier message: change it and send it again, start a new tab from just before it, or put the files Claude changed since back as they were. Claude Code does the work (its [checkpointing documentation](https://code.claude.com/docs/en/checkpointing) describes it), and Deventry gives you the menu.
 
 ## The menu
 

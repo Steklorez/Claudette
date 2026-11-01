@@ -1,0 +1,18 @@
+// The guide in light: a cool white and ink blue, with blue links (head_custom.html picks it when the system is light).
+$color-scheme: light;
+$body-background-color: $de-white;
+$body-heading-color: #131a2c;
+$body-text-color: #26304a;
+$link-color: $de-blue-deep;
+$nav-child-link-color: #26304a;
+$sidebar-color: #eef1f8;
+$base-button-color: #e6eaf3;
+$btn-primary-color: $de-blue-deep;
+$code-background-color: #eef1f8;
+$feedback-color: #e6eaf3;
+$table-background-color: #ffffff;
+$search-background-color: #ffffff;
+$search-result-preview-color: #5e6880;
+$border-color: #dfe4ee;
+
+@import "./vendor/accessible-pygments/github-light";

@@ -1,10 +1,21 @@
 # Changelog
 
-What's changed in each version of Claudette, for the people using it.
+What's changed in each version of Deventry, formerly Claudette, for the people using it.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Until 1.0.0, a new feature or a change you'd notice raises the second number (0.2.0 to 0.3.0), and fixes alone the third (0.3.0 to 0.3.1).
 
 ## [Unreleased]
+
+**Claudette is now Deventry.** The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
+
+### Changed
+
+- **A new name: Deventry**, in its windows, menus, notifications and installers. On a Mac it's `Deventry.app` in Applications, in place of `Claudette.app`; on Windows it updates the Claudette you have. Its website is [deventry.app](https://deventry.app), and the old address takes you there.
+- **A new icon**: a road-work sign in Joulene's blue, with a prompt on it. On a Mac, while Claude works, the prompt becomes an arrow board's chevrons, lighting in turn; while a usage limit holds a task, the sign shows an hourglass; and while a tab needs you, it shows a `?` and a `!` by turns. On the Windows taskbar, a little badge in the same blue, its chevrons lighting, takes the place of Claude's spark, and the hourglass is in it too.
+- **Joulene on the composer**, in place of Claudette: a medieval lady with platinum hair, a gold circlet and a blue gown. She does everything Claudette did, and now and then visits her cave: it appears beside her, she walks in, peeks out and comes back to wave. Her settings are in Settings → Appearance → **Joulene**, as you had them, and the gem in her circlet takes the colour of the tab's group, as Claudette's hair tie did.
+- **`deventry.json`** holds a project's actions and links. A project's `claudette.json` and `claudette.local.json` still work, and Deventry saves to them; a project with neither gets `deventry.json`.
+- **`DEVENTRY_` environment variables.** Project actions get `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT`, and your login shell `DEVENTRY_RESOLVING_ENVIRONMENT`, beside their `CLAUDETTE_` names for now. `CLAUDETTE_HOME` still works too.
+- **In the Microsoft Store**, Deventry has a listing of its own. Install it from there, and everything carries over as it does from a download.
 
 ## [0.7.0] - 2026-10-31
 
@@ -271,12 +282,12 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Claudette/compare/v0.7.0...HEAD
-[0.7.0]: https://github.com/dotBunny/Claudette/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/dotBunny/Claudette/compare/v0.5.1...v0.6.0
-[0.5.1]: https://github.com/dotBunny/Claudette/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/dotBunny/Claudette/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/dotBunny/Claudette/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/dotBunny/Claudette/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/dotBunny/Claudette/compare/v0.1.0...v0.2.0
+[Unreleased]: https://github.com/dotBunny/Deventry/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/dotBunny/Deventry/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/dotBunny/Deventry/compare/v0.5.1...v0.6.0
+[0.5.1]: https://github.com/dotBunny/Deventry/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/dotBunny/Deventry/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/dotBunny/Deventry/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/dotBunny/Deventry/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/dotBunny/Deventry/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dotBunny/Claudette/releases/tag/v0.1.0

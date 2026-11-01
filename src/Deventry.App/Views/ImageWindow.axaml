@@ -1,0 +1,78 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels"
+        xmlns:services="using:Deventry.App.Services"
+        x:Class="Deventry.App.Views.ImageWindow"
+        x:DataType="vm:ImageViewerViewModel"
+        Title="{Binding Title}"
+        SizeToContent="WidthAndHeight" MinWidth="420" MinHeight="240" MaxWidth="1400" MaxHeight="900"
+        WindowStartupLocation="CenterOwner">
+  <!-- DESIGN.md §18, "Images from Claude's tools", "Opening images": an image full size, zoomed in and out in steps -->
+  <Window.Styles>
+    <Style Selector="Button.zoom">
+      <Setter Property="Padding" Value="6" />
+    </Style>
+    <!-- At their own size: − is a flat line, which stretching would scale to nothing -->
+    <Style Selector="Button.zoom Path">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="StrokeThickness" Value="1.4" />
+      <Setter Property="Width" Value="12" />
+      <Setter Property="Height" Value="12" />
+      <Setter Property="Stretch" Value="None" />
+    </Style>
+    <Style Selector="Button.zoom:disabled Path">
+      <Setter Property="Opacity" Value="0.4" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): the image's name, which is the
+         window's title, in one row, so the window's buttons are as tall as the main window's -->
+    <controls:TitleBar DockPanel.Dock="Top" />
+    <!-- Under it, the toolbar: where the image came from and its size, what to do with it, and the zoom -->
+    <Border DockPanel.Dock="Top" Classes="windowbar">
+      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+        <TextBlock Classes="muted small" Text="{Binding Details}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Content="{Binding PlayText}" Command="{Binding PlayPauseCommand}" IsVisible="{Binding IsAnimated}"
+                  ToolTip.Tip="Play or pause the animation" />
+          <!-- For an image from a file: its full path, for a terminal or another app -->
+          <Button Command="{Binding CopyPathCommand}" IsVisible="{Binding CanCopyPath}" ToolTip.Tip="Copy the image file's full path to the clipboard">
+            <Panel>
+              <TextBlock Text="Copy path" IsVisible="{Binding !IsPathCopied}" />
+              <TextBlock Classes="muted" Text="Copied" IsVisible="{Binding IsPathCopied}" />
+            </Panel>
+          </Button>
+          <Button Command="{Binding CopyCommand}" ToolTip.Tip="Copy the image to the clipboard">
+            <Panel>
+              <TextBlock Text="Copy image" IsVisible="{Binding !IsCopied}" />
+              <TextBlock Classes="muted" Text="Copied" IsVisible="{Binding IsCopied}" />
+            </Panel>
+          </Button>
+          <Button Content="Save as…" Command="{Binding SaveAsCommand}" />
+          <Button Content="{Binding OpenText}" Command="{Binding OpenCommand}" IsVisible="{Binding CanOpen}"
+                  ToolTip.Tip="{Binding OpenTip}" />
+          <!-- The zoom: the mouse wheel over the image, and +, − and 0, do the same -->
+          <StackPanel Orientation="Horizontal" Spacing="2" Margin="8,0,0,0">
+            <Button Classes="flat zoom" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom out (−)" AutomationProperties.Name="Zoom out">
+              <Path Data="{StaticResource IconMinus}" />
+            </Button>
+            <TextBlock Classes="muted small" Text="{Binding ZoomText}" MinWidth="40" TextAlignment="Center" VerticalAlignment="Center" />
+            <Button Classes="flat zoom" Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom in (+)" AutomationProperties.Name="Zoom in">
+              <Path Data="{StaticResource IconPlus}" />
+            </Button>
+            <Button Classes="flat" Content="Fit" Command="{Binding FitCommand}" ToolTip.Tip="Show the whole image, fitting the window (0)" />
+          </StackPanel>
+        </StackPanel>
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="small error" Text="{Binding Problem}" TextWrapping="Wrap" IsVisible="{Binding HasProblem}" />
+      </Grid>
+    </Border>
+    <!-- Fitting, never larger than it is and smaller to fit the window; zoomed, its size at that step, and dragged
+         about once it's larger than the window. The code behind sets which. -->
+    <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+      <Image x:Name="Picture" Margin="12" Source="{Binding Data, Converter={x:Static services:ImageFiles.Full}}"
+             Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center"
+             AutomationProperties.Name="{Binding Title}" />
+    </ScrollViewer>
+  </DockPanel>
+</Window>

@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.TabSettingsView"
+             x:DataType="vm:TabSettingsViewModel">
+  <!-- Tab settings… (DESIGN.md §14, "Per-tab overrides"): Settings' rows and sections, each change applied as it's made,
+       each section with Use defaults. Done (or Esc) closes it. -->
+  <Border Classes="dialog" Width="600" Padding="0">
+    <DockPanel>
+      <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="24,20,24,8">
+        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis" />
+        <TextBlock Classes="muted small" TextWrapping="Wrap"
+                   Text="These replace the defaults from Settings for this tab only. Each change applies at once." />
+      </StackPanel>
+      <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="24,12">
+        <Button Classes="accent" Content="Done" Command="{Binding DoneCommand}" HorizontalAlignment="Right" IsDefault="True" />
+      </Border>
+      <ScrollViewer MaxHeight="560">
+        <StackPanel Spacing="24" Margin="24,8,24,16">
+          <c:SettingsSection Key="model" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
+            <c:SettingRow Key="tab.model">
+              <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
+            </c:SettingRow>
+            <c:SettingRow Key="tab.effort">
+              <ComboBox ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding SelectedEffort}" />
+            </c:SettingRow>
+            <c:SettingRow Key="tab.permissionMode">
+              <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding SelectedMode}" />
+            </c:SettingRow>
+            <!-- DESIGN.md §5, "Subagents": applies at once, the note to Claude with the next message -->
+            <c:SettingRow Key="tab.subagents">
+              <ComboBox ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding SelectedSubagents}" />
+            </c:SettingRow>
+          </c:SettingsSection>
+
+          <c:SettingsSection Key="limits" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
+            <c:SettingRow Key="tab.continueAfterLimitReset">
+              <ComboBox ItemsSource="{Binding AutoContinueChoices}" SelectedItem="{Binding SelectedAutoContinue}" />
+            </c:SettingRow>
+            <c:SettingRow Key="tab.useUsageCredits" IsVisible="{Binding ShowsUsageCredits}">
+              <ComboBox ItemsSource="{Binding UsageCreditsChoices}" SelectedItem="{Binding SelectedUsageCredits}" />
+            </c:SettingRow>
+          </c:SettingsSection>
+
+          <c:SettingsSection Key="checkIns" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
+            <c:SettingRow Key="tab.checkIns">
+              <ToggleSwitch IsChecked="{Binding UseCustomCheckIns}" />
+              <c:SettingRow.Details>
+                <StackPanel IsVisible="{Binding UseCustomCheckIns}">
+                  <c:SettingRow Title="Check in on long turns">
+                    <ToggleSwitch IsChecked="{Binding CheckInsEnabled}" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="After the turn has run (minutes)" IsEnabled="{Binding CheckInsEnabled}">
+                    <NumericUpDown Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding RunTimeMinutes}" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="After no output for (minutes)" IsEnabled="{Binding CheckInsEnabled}">
+                    <NumericUpDown Minimum="0" Maximum="600" Increment="1" FormatString="0" Value="{Binding QuietTimeMinutes}" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="Message" IsStacked="True" IsEnabled="{Binding CheckInsEnabled}">
+                    <TextBox Text="{Binding CheckInMessage, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="60" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="Notify me when a check-in is sent" IsEnabled="{Binding CheckInsEnabled}">
+                    <ToggleSwitch IsChecked="{Binding NotifyOnCheckIn}" />
+                  </c:SettingRow>
+                </StackPanel>
+              </c:SettingRow.Details>
+            </c:SettingRow>
+          </c:SettingsSection>
+
+          <c:SettingsSection Key="monitor" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
+            <c:SettingRow Key="tab.processMonitor">
+              <ComboBox ItemsSource="{Binding MonitorChoices}" SelectedItem="{Binding SelectedMonitor}" />
+            </c:SettingRow>
+          </c:SettingsSection>
+
+          <!-- Folding each chain of steps (DESIGN.md §18, "Conversation cards"), which the tab's menu sets too -->
+          <c:SettingsSection Key="conversation" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Conversation says">
+            <c:SettingRow Key="tab.foldChains">
+              <ComboBox ItemsSource="{Binding StepsChoices}" SelectedItem="{Binding SelectedSteps}" />
+            </c:SettingRow>
+          </c:SettingsSection>
+
+          <!-- The tab's own: not overrides, so this section has no Use defaults -->
+          <c:SettingsSection Key="thisTab">
+            <!-- The session library (DESIGN.md §9) -->
+            <c:SettingRow Key="tab.syncToLibrary">
+              <ToggleSwitch IsChecked="{Binding SyncToLibrary}" />
+              <c:SettingRow.Details>
+                <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding SyncSizeText}"
+                           IsVisible="{Binding SyncSizeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <!-- Remote Control (DESIGN.md §18) -->
+            <c:SettingRow Key="tab.remoteControl">
+              <ToggleSwitch IsChecked="{Binding RemoteControl}" IsEnabled="{Binding CanChangeRemoteControl}" />
+              <c:SettingRow.Details>
+                <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding RemoteControlUnavailableText}"
+                           IsVisible="{Binding HasRemoteControlUnavailableText}" />
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <!-- Extra folders (DESIGN.md §4): applied as the dialog closes, since Claude Code starts again to use them -->
+            <c:SettingRow Key="tab.extraFolders">
+              <Button Content="Add folder…" Command="{Binding AddExtraFolderCommand}" />
+              <c:SettingRow.Details>
+                <ItemsControl ItemsSource="{Binding ExtraFolders}" IsVisible="{Binding HasExtraFolders}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Classes="small mono" Text="{Binding}" TextTrimming="PathSegmentEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding}" />
+                        <Button Grid.Column="1" Classes="flat" Padding="8" ToolTip.Tip="Remove" AutomationProperties.Name="{Binding StringFormat='Remove {0}'}"
+                                Command="{Binding $parent[UserControl].((vm:TabSettingsViewModel)DataContext).RemoveExtraFolderCommand}" CommandParameter="{Binding}">
+                          <Path Classes="rowicon" Data="{DynamicResource IconClose}" />
+                        </Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </c:SettingRow.Details>
+            </c:SettingRow>
+            <!-- The folder's custom project actions are in Settings, on the tab's Actions page (DESIGN.md §14, §18) -->
+            <c:SettingRow Key="tab.projectActions">
+              <Button Content="Open" Command="{Binding OpenProjectActionsCommand}"
+                      ToolTip.Tip="Open Settings on this folder's actions, from its deventry.json files" />
+            </c:SettingRow>
+          </c:SettingsSection>
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+  </Border>
+</UserControl>

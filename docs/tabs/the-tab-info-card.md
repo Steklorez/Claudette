@@ -44,7 +44,7 @@ A row shows only when the tab has something to say. They come in this order:
 | **Usage limit** | While a usage limit has stopped the tab's task: when it resets, and whether the task continues then. See [When a limit stops a task](../usage/when-a-limit-stops-a-task.md). |
 | **Status** | The same words as the status icon's tip: *Idle*, *Working*, *Needs your input*, or what went wrong. |
 
-**Reached as** is usually the tab's name. It's a variant when another session already had that name, or the one Claude Code made from the folder (`claudette-3f`) while naming is turned off. See [Names, marks and pins](names-marks-and-pins.md#the-name-in-claude-code).
+**Reached as** is usually the tab's name. It's a variant when another session already had that name, or the one Claude Code made from the folder (`deventry-3f`) while naming is turned off. See [Names, marks and pins](names-marks-and-pins.md#the-name-in-claude-code).
 
 ## The Account row
 

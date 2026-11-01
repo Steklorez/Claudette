@@ -1,0 +1,1080 @@
+<!-- A tab's styles (DESIGN.md §3, §5): the conversation, the tool windows and the composer. TabView includes them, so
+     they apply inside each tab, and the "compact" and "claude" classes on the shell's AppearanceScope change them. -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ae="using:AvaloniaEdit"
+        xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels">
+  <!-- "Jump to latest" (DESIGN.md §5): an accent pill lifted off the conversation. A plain button's fill is see-through
+       in the dark theme, so the text under it showed through and it was hard to find. -->
+  <Style Selector="Button.jumplatest">
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Padding" Value="14,6" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.jumplatest /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BoxShadow" Value="0 2 10 0 #59000000" />
+  </Style>
+
+  <!-- The conversation's column: 900 pixels at most, so its lines stay easy to read, as are the to-do list and a
+       thread's strip over and under it, and the composer across the conversation's margins. Settings → Appearance →
+       Full-width conversation (DESIGN.md §14): ShellView takes the "fullwidth" class, and they fill the tab. -->
+  <Style Selector="ItemsControl.conversationlist, StackPanel.column">
+    <Setter Property="MaxWidth" Value="900" />
+  </Style>
+  <Style Selector="StackPanel.composerarea">
+    <Setter Property="MaxWidth" Value="948" />
+  </Style>
+  <!-- What Joulene on the composer says (DESIGN.md §5): a small bubble over her head. -->
+  <Style Selector="Border.mascotbubble">
+    <Setter Property="Background" Value="{DynamicResource ComposerBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="MaxWidth" Value="280" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Border.mascotbubble">
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BoxShadow" Value="0 1 6 0 #22000000" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.fullwidth ItemsControl.conversationlist, controls|AppearanceScope.fullwidth StackPanel.column, controls|AppearanceScope.fullwidth StackPanel.composerarea">
+    <Setter Property="MaxWidth" Value="Infinity" />
+  </Style>
+
+  <!-- Settings → Appearance → Density (DESIGN.md §14): the shell's AppearanceScope takes the "compact" class. The top
+       leaves room for the first message's chip, which sits above it. -->
+  <Style Selector="ItemsControl.conversationlist">
+    <Setter Property="Margin" Value="24,20,24,24" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact ItemsControl.conversationlist">
+    <Setter Property="Margin" Value="20,20,20,14" />
+  </Style>
+  <!-- The conversation is virtualized (DESIGN.md §5): only the items in view have controls. The panel has no spacing
+       of its own, so each item keeps its distance from the next. -->
+  <Style Selector="ItemsControl.conversationlist > ContentPresenter">
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact ItemsControl.conversationlist > ContentPresenter">
+    <Setter Property="Margin" Value="0,0,0,3" />
+  </Style>
+  <!-- A subagent group's items, the same: the panel has no spacing of its own. -->
+  <Style Selector="ItemsControl.subagentitems > ContentPresenter">
+    <Setter Property="Margin" Value="0,0,0,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact ItemsControl.subagentitems > ContentPresenter">
+    <Setter Property="Margin" Value="0,0,0,3" />
+  </Style>
+  <!-- A subagent's work in place of the conversation (DESIGN.md §5, "Subagents"): a header over it, like the find bar,
+       with its type as a small badge; what it handed back as a card after its cards, in the conversation's column;
+       and a bar where the composer was. -->
+  <Style Selector="Border.agentheader">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.agentheader">
+    <Setter Property="Padding" Value="16,3" />
+  </Style>
+  <Style Selector="Border.agenttype">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="6,1" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Border.agenttype">
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <Style Selector="Border.agentprompt">
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Border.agentprompt">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <Style Selector="controls|Card.agentreport">
+    <Setter Property="MaxWidth" Value="900" />
+    <Setter Property="Margin" Value="24,0,24,24" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact controls|Card.agentreport">
+    <Setter Property="Margin" Value="20,0,20,14" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.fullwidth controls|Card.agentreport">
+    <Setter Property="MaxWidth" Value="Infinity" />
+  </Style>
+  <Style Selector="Border.agentbar">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="16,10" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.agentbar">
+    <Setter Property="Padding" Value="16,6" />
+  </Style>
+
+  <!-- Find in the conversation (DESIGN.md §5, "Find"): a bar over the conversation, and the match it shows marked. -->
+  <Style Selector="Border.findbar">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,4" />
+  </Style>
+  <Style Selector="TextBox.findbox">
+    <Setter Property="Width" Value="260" />
+    <Setter Property="MinHeight" Value="26" />
+    <Setter Property="Padding" Value="8,3" />
+  </Style>
+  <Style Selector="ItemsControl.conversationlist > ContentPresenter.findcurrent">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <!-- The conversation's cards (DESIGN.md §18, "Conversation cards"): a stripe down the left edge in the kind's color,
+       over a faint tint of it inside a thin outline, with a header line (icon, label, detail, the card's buttons on
+       hover, the time) and the step under it. The kind is a class; one without its own colors is neutral. -->
+  <Style Selector="controls|Card">
+    <Setter Property="Padding" Value="12,8,12,9" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="StripeBrush" Value="{DynamicResource CardNeutralStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardNeutralTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardNeutralOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardNeutralLabelBrush}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Card" Background="{TemplateBinding TintBrush}" BorderBrush="{TemplateBinding OutlineBrush}" BorderThickness="1"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <!-- The stripe covers the outline's left edge, curving with the corners. -->
+          <Border Name="PART_Stripe" BorderBrush="{TemplateBinding StripeBrush}" BorderThickness="3,0,0,0" Margin="-1,-1,0,-1"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <Grid Name="PART_Body" Margin="{TemplateBinding Padding}" ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowDefinitions="Auto,Auto">
+              <!-- A card that folds: its header line, end to end, which takes a click anywhere along it and lights under the
+                   pointer, as a thinking row does (Card.cs) -->
+              <Border Name="PART_HeaderLine" Grid.ColumnSpan="6" Background="Transparent" CornerRadius="4" Margin="-4,-2"
+                      IsVisible="{TemplateBinding IsCollapsible}" />
+              <Path Name="PART_Icon" Classes="toolicon" Data="{TemplateBinding Icon}" Stroke="{TemplateBinding LabelBrush}" Margin="0,0,6,0"
+                    IsVisible="{TemplateBinding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <TextBlock Name="PART_Label" Grid.Column="1" Classes="small" FontWeight="SemiBold" Foreground="{TemplateBinding LabelBrush}"
+                         Text="{TemplateBinding Label}" VerticalAlignment="Center"
+                         IsVisible="{TemplateBinding Label, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <!-- What shows on the line all the time, after the label: a reply's chain of steps (DESIGN.md §18) -->
+              <ContentPresenter Name="PART_Extra" Grid.Column="2" Content="{TemplateBinding Extra}" ContentTemplate="{TemplateBinding ExtraTemplate}"
+                                Margin="8,-4,0,-4" VerticalAlignment="Center"
+                                IsVisible="{TemplateBinding Extra, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <!-- The detail, and right after it the chevron of a card whose content folds away (a Tool calls card's tiles),
+                   as thinking's comes after its label. The detail gives way first when the line is short. -->
+              <DockPanel Grid.Column="3" HorizontalAlignment="Left">
+                <Button Name="PART_Toggle" DockPanel.Dock="Right" Classes="flat" Padding="2" Margin="4,-3,0,-3" VerticalAlignment="Center"
+                        Command="{TemplateBinding ToggleCommand}" IsVisible="{TemplateBinding IsCollapsible}"
+                        AutomationProperties.Name="Show or hide the calls" ToolTip.Tip="Show or hide the calls">
+                  <Panel>
+                    <Path Classes="toolicon" Data="{DynamicResource IconChevronRight}" IsVisible="{TemplateBinding IsCollapsed}" />
+                    <Path Classes="toolicon" Data="{DynamicResource IconChevronDown}" IsVisible="{TemplateBinding IsCollapsed, Converter={x:Static BoolConverters.Not}}" />
+                  </Panel>
+                </Button>
+                <TextBlock Name="PART_Detail" Classes="muted small" Text="{TemplateBinding Detail}" TextTrimming="CharacterEllipsis"
+                           Margin="8,0,0,0" VerticalAlignment="Center" ToolTip.Tip="{TemplateBinding Detail}"
+                           IsVisible="{TemplateBinding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </DockPanel>
+              <ContentPresenter Name="PART_Actions" Grid.Column="4" Content="{TemplateBinding Actions}" ContentTemplate="{TemplateBinding ActionsTemplate}"
+                                Margin="8,-4,0,-4" VerticalAlignment="Center"
+                                IsVisible="{TemplateBinding Actions, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <TextBlock Name="PART_Time" Grid.Column="5" Classes="muted small" Text="{TemplateBinding TimeText}" ToolTip.Tip="{TemplateBinding TimeTip}"
+                         Background="Transparent" Margin="8,0,0,0" VerticalAlignment="Center"
+                         IsVisible="{TemplateBinding TimeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <ContentPresenter Name="PART_ContentPresenter" Grid.Row="1" Grid.ColumnSpan="6" Margin="0,6,0,0"
+                                Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+            </Grid>
+          </Border>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="controls|Card:headerover /template/ Border#PART_HeaderLine">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- Its chevron is part of the line, lit with it rather than on its own -->
+  <Style Selector="controls|Card /template/ Button#PART_Toggle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="controls|Card.you">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardYouStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardYouTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardYouOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardYouLabelBrush}" />
+  </Style>
+  <Style Selector="controls|Card.claude">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardClaudeStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardClaudeTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardClaudeOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardClaudeLabelBrush}" />
+  </Style>
+  <Style Selector="controls|Card.files">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardFilesStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardFilesTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardFilesOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardFilesLabelBrush}" />
+  </Style>
+  <Style Selector="controls|Card.stats">
+    <Setter Property="StripeBrush" Value="{DynamicResource CardStatsStripeBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardStatsTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardStatsOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource CardStatsLabelBrush}" />
+  </Style>
+  <!-- Waiting on the user (DESIGN.md §7): the caution colors a prompt has always had, warm tints in the Claude style. -->
+  <Style Selector="controls|Card.waiting">
+    <Setter Property="StripeBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <Style Selector="controls|Card.error">
+    <Setter Property="StripeBrush" Value="{DynamicResource ErrorTextBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardErrorTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardErrorOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="controls|Card.warning">
+    <Setter Property="StripeBrush" Value="{DynamicResource MeterWarningBrush}" />
+    <Setter Property="TintBrush" Value="{DynamicResource CardWarningTintBrush}" />
+    <Setter Property="OutlineBrush" Value="{DynamicResource CardWarningOutlineBrush}" />
+    <Setter Property="LabelBrush" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <!-- A one-line card: the step on the header line, after the label. -->
+  <Style Selector="controls|Card.inline /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Grid.Row" Value="0" />
+    <Setter Property="Grid.Column" Value="3" />
+    <Setter Property="Grid.ColumnSpan" Value="1" />
+    <Setter Property="Margin" Value="8,0,0,0" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+  </Style>
+  <Style Selector="controls|Card.inline /template/ TextBlock#PART_Detail">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <!-- On a card of one line that wraps, the label and time stay on its first line. -->
+  <Style Selector="controls|Card.inline /template/ TextBlock#PART_Label, controls|Card.inline /template/ TextBlock#PART_Time">
+    <Setter Property="VerticalAlignment" Value="Top" />
+  </Style>
+  <Style Selector="controls|Card.inline /template/ Path#PART_Icon">
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Margin" Value="0,2,6,0" />
+  </Style>
+  <Style Selector="controls|Card.inline">
+    <Setter Property="Padding" Value="12,5,12,6" />
+  </Style>
+  <Style Selector="controls|Card:headerless /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Grid.Row" Value="0" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+  <!-- A folded chain's line (DESIGN.md §18) is clickable along its whole header. -->
+  <Style Selector="controls|Card.steps">
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <!-- The chain of steps a reply carries, on its header line (DESIGN.md §18): "7 steps · 18m 43s" and a chevron, in a
+       rounded outline, which opens the steps inside the card. -->
+  <Style Selector="Button.stepspill">
+    <Setter Property="Padding" Value="8,2,6,2" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <!-- The open steps inside a reply's card: a box of their own under the reply's text, which scrolls once it's long. On
+       the conversation's own surface, not the reply's tint, so the steps' muted text reads as it does outside the card,
+       however the card is lit by the pointer. -->
+  <Style Selector="Border.stepsbox">
+    <Setter Property="Background" Value="{DynamicResource IslandBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="4" />
+    <Setter Property="Margin" Value="0,8,0,0" />
+  </Style>
+  <!-- A step's line in the open list of a folded chain: quiet, with its time at the right. -->
+  <Style Selector="Button.steprow">
+    <Setter Property="Padding" Value="4,5" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <!-- Folded away (a Tool calls card's tiles): the header line alone, with no gap under it. -->
+  <Style Selector="controls|Card:collapsed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Margin" Value="0" />
+  </Style>
+  <!-- The card's buttons (Copy and so on) show while it's pointed at or has the focus, so the header stays quiet. -->
+  <Style Selector="controls|Card /template/ ContentPresenter#PART_Actions">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="IsHitTestVisible" Value="False" />
+  </Style>
+  <Style Selector="controls|Card:pointerover /template/ ContentPresenter#PART_Actions, controls|Card:focus-within /template/ ContentPresenter#PART_Actions">
+    <Setter Property="Opacity" Value="1" />
+    <Setter Property="IsHitTestVisible" Value="True" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact controls|Card">
+    <Setter Property="Padding" Value="10,4,10,5" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact controls|Card /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Margin" Value="0,3,0,0" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact controls|Card.inline /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Margin" Value="8,0,0,0" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact controls|Card.inline">
+    <Setter Property="Padding" Value="10,2,10,3" />
+  </Style>
+  <!-- Settings → Appearance → Style → Claude (DESIGN.md §3): rounder cards, as the Claude apps' are. -->
+  <Style Selector="controls|AppearanceScope.claude controls|Card">
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="14,9,14,10" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude.compact controls|Card">
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="12,5,12,6" />
+  </Style>
+  <!-- Settings → Conversation → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): a step on the way loses
+       its tint and outline, keeping its stripe, until it's pointed at or has the focus. In the Standard style its text
+       is a little softer too, still at least 4.5:1; the Claude style's muted text is already as soft as it can be. -->
+  <Style Selector="controls|AppearanceScope.quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Border#PART_Card">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="controls|AppearanceScope:not(.claude).quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Grid#PART_Body">
+    <Setter Property="Opacity" Value="0.88" />
+  </Style>
+
+  <!-- Settings → Conversation → Indent your messages and Indent Claude's steps (DESIGN.md §18, "Conversation cards"):
+       your messages' cards start far in from the left, and Claude's thinking, tool calls and subagents a little in, while
+       its replies stay at the left edge, all ending at the column's right edge, so whose turn a card is can be told by
+       its place alone. Each is a setting of its own. -->
+  <Style Selector="controls|AppearanceScope.indentyou controls|Card.you">
+    <Setter Property="Margin" Value="96,0,0,0" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.indentyou.compact controls|Card.you">
+    <Setter Property="Margin" Value="64,0,0,0" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.indentsteps controls|Card.thinking, controls|AppearanceScope.indentsteps controls|Card.tools, controls|AppearanceScope.indentsteps controls|Card.agent, controls|AppearanceScope.indentsteps controls|Card.steps">
+    <Setter Property="Margin" Value="24,0,0,0" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.indentsteps.compact controls|Card.thinking, controls|AppearanceScope.indentsteps.compact controls|Card.tools, controls|AppearanceScope.indentsteps.compact controls|Card.agent, controls|AppearanceScope.indentsteps.compact controls|Card.steps">
+    <Setter Property="Margin" Value="16,0,0,0" />
+  </Style>
+
+  <!-- A tool call's tile in its card, or a changed file's in a Modified files card: raised a little off it, with the open
+       one marked. -->
+  <Style Selector="Button.tile">
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.tile /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CardTileBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardTileBorderBrush}" />
+  </Style>
+  <Style Selector="Button.tile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardTileBorderBrush}" />
+  </Style>
+  <Style Selector="Button.tile.open /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Button.tile">
+    <Setter Property="Padding" Value="6,3" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Button.tile">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <!-- The open tile's detail, under the tiles. -->
+  <Style Selector="Border.tiledetail">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Margin" Value="0,8,0,0" />
+    <Setter Property="Padding" Value="0,8,0,0" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.tiledetail">
+    <Setter Property="Margin" Value="0,4,0,0" />
+    <Setter Property="Padding" Value="0,4,0,0" />
+  </Style>
+  <!-- A thinking card's or a hook's row that opens it, and a subagent's. -->
+  <Style Selector="controls|AppearanceScope.compact controls|ConversationPanel.conversation Button.row">
+    <Setter Property="Padding" Value="4,0" />
+  </Style>
+  <!-- A pane's header, with tabs side by side (DESIGN.md §18, "Split panes"): its group's color in a bar before its name,
+       and under the focused one's, so each pane's project can be told without reading it. -->
+  <Style Selector="Border.paneheader">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,3,6,3" />
+  </Style>
+  <Style Selector="Border.paneheader.focused" x:DataType="vm:IShellTab">
+    <Setter Property="BorderBrush" Value="{Binding PaneColor, Converter={x:Static vm:Converters.ColorBrush}}" />
+    <Setter Property="BorderThickness" Value="0,0,0,2" />
+    <Setter Property="Padding" Value="12,3,6,2" />
+  </Style>
+  <Style Selector="Border.panecolor">
+    <Setter Property="Width" Value="3" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="CornerRadius" Value="1.5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- A project run's log in the main area (DESIGN.md §18, "Project tools", "A run's log"): its status over a divider,
+       then the log, clear of the scroll bar on the right. -->
+  <Style Selector="Border.runheader">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,10,12,10" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.runheader">
+    <Setter Property="Padding" Value="16,6,12,6" />
+  </Style>
+  <Style Selector="TextBlock.runheaderglyph">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Margin" Value="0,1,0,0" />
+  </Style>
+  <!-- A log's switches, Stay current and Wrap lines, and an editor log's level chips: outlined, and picked out as a
+       selected row while they're on, rather than in the accent's fill. -->
+  <Style Selector="ToggleButton.logtoggle, :is(Button).logchip">
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="ToggleButton.logtoggle /template/ ContentPresenter#PART_ContentPresenter, :is(Button).logchip /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.logtoggle:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.logchip:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+    <!-- The view's own text color, not the accent's white -->
+    <Setter Property="Foreground" Value="{Binding $parent[UserControl].Foreground}" />
+  </Style>
+  <Style Selector="ToggleButton.logtoggle:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.logchip:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- A level hidden: its chip is muted, with nothing behind it -->
+  <Style Selector=":is(Button).logchip">
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude :is(Button).logchip, controls|AppearanceScope.claude ToggleButton.logtoggle">
+    <Setter Property="CornerRadius" Value="12" />
+  </Style>
+  <Style Selector=":is(Button).logchip TextBlock.count">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.logchip.error:checked TextBlock.count.some">
+    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.logchip.warning:checked TextBlock.count.some">
+    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <!-- An editor log's filter, under its header -->
+  <Style Selector="Border.logfilter">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,6,12,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.logfilter">
+    <Setter Property="Padding" Value="16,4,12,4" />
+  </Style>
+  <Style Selector="Border.logfilter TextBox.logsearch">
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="Width" Value="200" />
+  </Style>
+  <!-- A log wrapping at the width shown, or not, scrolling sideways -->
+  <Style Selector="ae|TextEditor.runlog">
+    <Setter Property="WordWrap" Value="True" />
+    <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+  </Style>
+  <Style Selector="ae|TextEditor.runlog.nowrap">
+    <Setter Property="WordWrap" Value="False" />
+    <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+  </Style>
+  <!-- A turn's two footer cards, Modified files over Turn statistics, as far apart as any two items. -->
+  <Style Selector="StackPanel.turnfooter">
+    <Setter Property="Spacing" Value="8" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact StackPanel.turnfooter">
+    <Setter Property="Spacing" Value="3" />
+  </Style>
+  <Style Selector="StackPanel.composerarea">
+    <Setter Property="Margin" Value="16,4,16,12" />
+    <Setter Property="Spacing" Value="6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact StackPanel.composerarea">
+    <Setter Property="Margin" Value="12,2,12,6" />
+    <Setter Property="Spacing" Value="3" />
+  </Style>
+  <Style Selector="TextBox#Composer">
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="Padding" Value="2,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact TextBox#Composer">
+    <Setter Property="MinHeight" Value="30" />
+    <Setter Property="Padding" Value="2,3" />
+  </Style>
+
+  <Style Selector="Border.diffline.added">
+    <Setter Property="Background" Value="{DynamicResource DiffAddedBrush}" />
+  </Style>
+  <Style Selector="Border.diffline.removed">
+    <Setter Property="Background" Value="{DynamicResource DiffRemovedBrush}" />
+  </Style>
+  <Style Selector="Border.diffline.hunk">
+    <Setter Property="Background" Value="{DynamicResource DiffHunkBrush}" />
+  </Style>
+  <!-- The scratch pad (DESIGN.md §18, "Scratch pad"): plain text in the code font, so pasted code keeps its columns. -->
+  <Style Selector="StackPanel.scratchpadheader">
+    <Setter Property="Margin" Value="12,0,12,6" />
+    <Setter Property="Spacing" Value="4" />
+  </Style>
+  <Style Selector="TextBox.scratchpad">
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+    <Setter Property="FontSize" Value="{DynamicResource CodeFontSize}" />
+    <Setter Property="Margin" Value="8,0,8,8" />
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact TextBox.scratchpad">
+    <Setter Property="Padding" Value="6,3" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude TextBox.scratchpad">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <!-- Games with Joulene (DESIGN.md §18): the boards, the gallows, the letters and the minefield. The user's marks,
+       pieces and flags are blue, hers rose, as her mines are; the pieces that win are ringed in gold. -->
+  <Style Selector="StackPanel.gameheader">
+    <Setter Property="Margin" Value="12,10,12,8" />
+    <Setter Property="Spacing" Value="8" />
+  </Style>
+  <Style Selector="StackPanel.gameboard">
+    <Setter Property="Margin" Value="12,0,16,0" />
+    <Setter Property="Spacing" Value="10" />
+  </Style>
+  <Style Selector="StackPanel.gamefooter">
+    <Setter Property="Margin" Value="12,14,16,12" />
+    <Setter Property="Spacing" Value="6" />
+  </Style>
+  <Style Selector="Button.gamesquare">
+    <Setter Property="Width" Value="64" />
+    <Setter Property="Height" Value="64" />
+    <Setter Property="Margin" Value="2" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Button.gamesquare">
+    <Setter Property="CornerRadius" Value="12" />
+  </Style>
+  <Style Selector="Button.gamesquare.winning">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+  </Style>
+  <Style Selector="Path.gamex">
+    <Setter Property="Stroke" Value="{DynamicResource GameYouBrush}" />
+    <Setter Property="StrokeThickness" Value="3.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Stretch" Value="Uniform" />
+  </Style>
+  <Style Selector="Ellipse.gameo">
+    <Setter Property="Stroke" Value="{DynamicResource GameJouleneBrush}" />
+    <Setter Property="StrokeThickness" Value="3.5" />
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="28" />
+  </Style>
+  <Style Selector="Button.gamecolumn">
+    <Setter Property="Padding" Value="3" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Button.gamecolumn">
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+  <Style Selector="Ellipse.gamepiece">
+    <Setter Property="Width" Value="24" />
+    <Setter Property="Height" Value="24" />
+    <Setter Property="Fill" Value="{DynamicResource DividerBrush}" />
+  </Style>
+  <Style Selector="Ellipse.gamepiece.yours">
+    <Setter Property="Fill" Value="{DynamicResource GameYouBrush}" />
+  </Style>
+  <Style Selector="Ellipse.gamepiece.hers">
+    <Setter Property="Fill" Value="{DynamicResource GameJouleneBrush}" />
+  </Style>
+  <Style Selector="Ellipse.gamepiece.winning">
+    <Setter Property="Stroke" Value="{DynamicResource MarkStarBrush}" />
+    <Setter Property="StrokeThickness" Value="3" />
+  </Style>
+  <Style Selector="Line.gallows">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="3" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+  </Style>
+  <Style Selector="Line.hanged, Ellipse.hanged">
+    <Setter Property="Stroke" Value="{DynamicResource GameYouBrush}" />
+    <Setter Property="StrokeThickness" Value="2.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+  </Style>
+  <Style Selector="TextBlock.hangmanword">
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="Button.gameletter">
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Button.gameletter">
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <Style Selector="Button.gameletter.found">
+    <Setter Property="Foreground" Value="{DynamicResource OkTextBrush}" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="Button.gameletter.missed">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="Opacity" Value="0.55" />
+  </Style>
+  <!-- Minesweeper: the squares shut are buttons, those open lie flat, their numbers in the classic colors -->
+  <!-- Nine of them fit the right side at its narrowest -->
+  <Style Selector="Button.minesquare">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Margin" Value="1" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Button.minesquare">
+    <Setter Property="CornerRadius" Value="7" />
+  </Style>
+  <Style Selector="Button.minesquare.open /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.minesquare.exploded /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DiffRemovedBrush}" />
+  </Style>
+  <Style Selector="Button.minesquare.n1 /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource GameYouBrush}" />
+  </Style>
+  <Style Selector="Button.minesquare.n2 /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource OkTextBrush}" />
+  </Style>
+  <Style Selector="Button.minesquare.n3 /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="Button.minesquare.n4 /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource GameJouleneBrush}" />
+  </Style>
+  <Style Selector="Button.minesquare.n5 /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <Style Selector="Path.mineflag">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.3" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource GameYouBrush}" />
+    <Setter Property="Fill" Value="{DynamicResource GameYouBrush}" />
+  </Style>
+  <Style Selector="Path.minewrong">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.6" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource ErrorTextBrush}" />
+  </Style>
+  <Style Selector="Ellipse.mine">
+    <Setter Property="Width" Value="11" />
+    <Setter Property="Height" Value="11" />
+    <Setter Property="Fill" Value="{DynamicResource GameJouleneBrush}" />
+  </Style>
+  <!-- A code block's Add to scratch pad: in a tab, not in the agent map's own window, which has no pad -->
+  <Style Selector="md|CodeBlock /template/ Button#AddToScratchPadButton">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+  <!-- The other machine's text, when both changed the pad: room to read it, then it scrolls -->
+  <Style Selector="ScrollViewer.theirtext">
+    <Setter Property="MaxHeight" Value="160" />
+  </Style>
+  <Style Selector="Border.codeblock">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="8,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.codeblock">
+    <Setter Property="Padding" Value="6,3" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Border.codeblock">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <Style Selector="TextBlock.done">
+    <Setter Property="TextDecorations" Value="Strikethrough" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="Border.chip">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="10,2,4,2" />
+  </Style>
+  <Style Selector="Border.chip.kept">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- A box that waits on the user, such as the scratch pad's conflict, in the caution colors (DESIGN.md §7). -->
+  <Style Selector="Border.prompt">
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Margin" Value="0,2" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.prompt">
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Margin" Value="0,1" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Border.prompt">
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <!-- A thread's strip over the composer (DESIGN.md §18, "Threads"): messages waiting to be let go to its sub-threads,
+       and the sub-threads waiting on the user. In the caution colors, as a prompt is. -->
+  <Style Selector="Border.threadstrip">
+    <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="16,6" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Border.threadstrip">
+    <Setter Property="Padding" Value="16,3" />
+  </Style>
+  <Style Selector="Border.threadmessage">
+    <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="MaxHeight" Value="160" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Border.threadmessage">
+    <Setter Property="CornerRadius" Value="12" />
+  </Style>
+
+  <!-- Send and Stop, in both styles (DESIGN.md §3): round, with an arrow for Send, as in the Claude apps, and a drawn
+       square for Stop: the ■ character sits off-center in a circle, by its font's ascent and descent. Send takes the
+       accent and Stop the plain button's colors, so each style colors them its own way. The icons fill the button and
+       have no border, so nothing puts them off the middle (IconSendArrow in App.axaml says why). -->
+  <Style Selector="Button.send, Button.stop">
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <!-- The send key chip before Send (DESIGN.md §5, "Composer"): a flat button with muted text, as the bar's counts are.
+       Its ⏎ comes from Inter, which Deventry ships and which has it in every weight, so it reads the same on every OS:
+       Segoe UI hasn't got it, and fallback would draw it from whichever font has, such as a code font. -->
+  <Style Selector="Run.returnkey">
+    <Setter Property="FontFamily" Value="fonts:Inter#Inter, $Default" />
+  </Style>
+  <!-- Tool card icons (DESIGN.md §5): 12×12 strokes from App.axaml, drawn as they are. -->
+  <Style Selector="Path.toolicon">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="1.1" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- Attached images (DESIGN.md §5, "Attachments") -->
+  <Style Selector="Border.thumbnail">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <!-- An image under a tool's card, which shows full size on a click (DESIGN.md §18, "Images from Claude's tools") -->
+  <Style Selector="Button.toolimage">
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.toolimage:pointerover Border.thumbnail">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="Border.composer.dropping">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- Tool windows (DESIGN.md §3, "Tool windows"), as Rider's: the strip of icons at the window's right, an icon picked
+       out while its window shows; and a window's panel with its header (its title, Find's searches, ⋮ and −). -->
+  <Style Selector="Border.toolstrip">
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Padding" Value="0,6" />
+  </Style>
+  <Style Selector="Button.stripicon">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="MinHeight" Value="0" />
+  </Style>
+  <Style Selector="Button.stripicon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <Style Selector="Button.stripicon.showing /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ToolIconSelectedBrush}" />
+  </Style>
+  <!-- Fitted into its 16 pixels and in the middle of them: a shape stretched into a fixed size draws from its top left,
+       so a glyph taller than wide (Changed files, MCP, Scratch pad) would sit left of the others, and a wider one high. -->
+  <Style Selector="Path.stripglyph">
+    <Setter Property="MaxWidth" Value="16" />
+    <Setter Property="MaxHeight" Value="16" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.3" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="Button.stripicon:pointerover Path.stripglyph, Button.stripicon.showing Path.stripglyph">
+    <Setter Property="Stroke" Value="{DynamicResource ToolIconSelectedTextBrush}" />
+  </Style>
+  <Style Selector="Ellipse.stripdot">
+    <Setter Property="Width" Value="6" />
+    <Setter Property="Height" Value="6" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Margin" Value="0,-3,-3,0" />
+  </Style>
+  <Style Selector="Ellipse.stripdot.busy">
+    <Setter Property="Fill" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="Ellipse.stripdot.warning">
+    <Setter Property="Fill" Value="{DynamicResource WarningTextBrush}" />
+  </Style>
+  <Style Selector="Border.stripdivider">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Margin" Value="10,4" />
+    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+  </Style>
+  <Style Selector="Border.stripdrop">
+    <Setter Property="Height" Value="2" />
+    <Setter Property="CornerRadius" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- A window's panel: an island like the panes', its header a row of 36 -->
+  <Style Selector="Border.toolpanel">
+    <Setter Property="Background" Value="{DynamicResource IslandBrush}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource IslandRadius}" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <!-- Under the header, a line across the panel, as under the sidebar's top row -->
+  <Style Selector="Border.toolheaderline">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+  </Style>
+  <Style Selector="Grid.toolheader">
+    <Setter Property="Height" Value="36" />
+    <Setter Property="Margin" Value="4,0,6,0" />
+  </Style>
+  <Style Selector="TextBlock.tooltitle">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="8,0,10,0" />
+  </Style>
+  <Style Selector="Button.toolaction">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+  <Style Selector="Button.toolaction:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- Drawn on the icons' own 12×12 grid: a line stretched to fit would have no height. -->
+  <Style Selector="Button.toolaction Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.4" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="Button.toolaction Path.filled">
+    <Setter Property="StrokeThickness" Value="0" />
+    <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <!-- A tool window's own tabs in its header, as Find's searches: the one showing filled in, each with its × -->
+  <Style Selector="ListBox.contenttabs">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ListBox.contenttabs ListBoxItem">
+    <Setter Property="Padding" Value="8,3,4,3" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+  <Style Selector="ListBox.contenttabs ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+  </Style>
+  <Style Selector="Button.contenttabclose">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.contenttabclose Path">
+    <Setter Property="Width" Value="7" />
+    <Setter Property="Height" Value="7" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.3" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <!-- A choice beside a tool window's title, as the Games window's game: what's chosen, and a menu of the rest -->
+  <Style Selector="Button.toolchoice">
+    <Setter Property="Padding" Value="8,3,6,3" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+  <Style Selector="Button.toolchoice Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.4" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- Changed files (DESIGN.md §8, "Reviewed"): a small box before each file, and a reviewed file drawn faintly -->
+  <Style Selector="CheckBox.reviewed">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+  </Style>
+  <!-- The status letter, midway between the box and the file's name: its column fits it at any code size. -->
+  <Style Selector="Grid.changedfile > TextBlock.mono">
+    <Setter Property="Margin" Value="8,0" />
+  </Style>
+  <Style Selector="Grid.changedfile.reviewed > TextBlock, Grid.changedfile.reviewed > StackPanel">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+  <!-- A working tree's heading, over the first of its files (DESIGN.md §8, "Working trees") -->
+  <Style Selector="TextBlock.changedgroup">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,0,0,6" />
+  </Style>
+  <!-- Fluent's padding, with the right side wide enough to keep a row's counts clear of the scroll bar -->
+  <Style Selector="ListBox#ChangedFilesList ListBoxItem">
+    <Setter Property="Padding" Value="12,9,16,12" />
+  </Style>
+  <!-- A process's row (DESIGN.md §4): lit under the pointer, so it's plain it has a menu, and while the menu is open, so
+       it's plain which process the menu is for. Its numbers keep clear of the scroll bar on their own (Controls/ShownWidth). -->
+  <Style Selector="Border.processrow">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="4,3,0,3" />
+  </Style>
+  <Style Selector="Border.processrow:pointerover, Border.processrow.menuopen">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- Its arrow, before the name, when processes run under it: as tall as the row, so it's easy to hit, and drawn beside
+       the name's first line. Rows without one keep its room, so names line up under their parent's. -->
+  <Style Selector="Button.processfold">
+    <Setter Property="Padding" Value="0,5,0,0" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.processfold Path">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="1.4" />
+    <Setter Property="Width" Value="9" />
+    <Setter Property="Height" Value="9" />
+    <Setter Property="Stretch" Value="Uniform" />
+  </Style>
+  <!-- An MCP server's row (DESIGN.md §4, "MCP servers"): lit under the pointer, as a process's is, so it's plain which
+       server its buttons are for. The right side keeps its text clear of the scroll bar. -->
+  <Style Selector="Border.mcprow">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="12,5,16,5" />
+  </Style>
+  <Style Selector="Border.mcprow:pointerover">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- The running tasks list (DESIGN.md §5, "Running tasks"), under the chip in the composer bar -->
+  <Style Selector="StackPanel.tasklist">
+    <Setter Property="Spacing" Value="2" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact StackPanel.tasklist">
+    <Setter Property="Spacing" Value="0" />
+  </Style>
+  <Style Selector="Button.taskrow">
+    <Setter Property="Padding" Value="6,4" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.compact Button.taskrow">
+    <Setter Property="Padding" Value="6,2" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude Button.taskrow">
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <!-- The / and @ autocomplete (DESIGN.md §5, "Composer") -->
+  <Style Selector="Button.completion.selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+  </Style>
+  <!-- What git ignores, in a folder typed after @: dimmed, as the Project Files explorer has it -->
+  <Style Selector="Grid.completionrow.ignored">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+</Styles>

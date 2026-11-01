@@ -27,9 +27,9 @@ Each account can warn when its spend passes an amount. They're off until you set
 1. Open Settings → Accounts.
 2. On the account, set **Warn when today's estimated spend passes ($)**, **Warn when this month's estimated spend passes ($)**, or both. An empty box or 0 means no warning.
 
-When the spend passes the amount, you get a notification such as *Studio: $12.40 today*, saying *The estimated spend on Studio's API key passed $10 today.* There's one a day and one a month at most, and Claudette remembers them, so a restart doesn't repeat one. The spend is the header's, so other machines' turns under the same name count. Each machine warns for itself.
+When the spend passes the amount, you get a notification such as *Studio: $12.40 today*, saying *The estimated spend on Studio's API key passed $10 today.* There's one a day and one a month at most, and Deventry remembers them, so a restart doesn't repeat one. The spend is the header's, so other machines' turns under the same name count. Each machine warns for itself.
 
-The warnings are usage alerts, so the switch in Settings → Notifications, **Usage crosses a warning level, is on pace to run out, or resets**, turns them off too, and they're skipped while Claudette is in front: see [Alerts](../usage/alerts.md).
+The warnings are usage alerts, so the switch in Settings → Notifications, **Usage crosses a warning level, is on pace to run out, or resets**, turns them off too, and they're skipped while Deventry is in front: see [Alerts](../usage/alerts.md).
 
 ## In the Usage window
 

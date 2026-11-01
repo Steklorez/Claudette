@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Drawn by packaging/icon/build-icons.mjs; change the sign there. -->
+  <defs>
+    <radialGradient id="paint-0" gradientUnits="userSpaceOnUse" cx="512" cy="278" r="663"><stop offset="0" stop-color="#4D65AF"/><stop offset="0.55" stop-color="#3B4E8C"/><stop offset="1" stop-color="#334379"/></radialGradient>
+  </defs>
+  <polygon points="512,122 902,512 512,902 122,512" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="132.6" stroke-linejoin="round"/>
+  <polygon points="512,122 902,512 512,902 122,512" fill="url(#paint-0)" stroke="url(#paint-0)" stroke-width="62.4" stroke-linejoin="round"/>
+  <polyline points="352.1,428.15 461.3,512 352.1,595.85" fill="none" stroke="#FFFFFF" stroke-width="60.45" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="547.1,595.85 671.9,595.85" fill="none" stroke="#FFFFFF" stroke-width="60.45" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

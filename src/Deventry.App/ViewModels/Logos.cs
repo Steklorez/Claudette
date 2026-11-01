@@ -1,0 +1,31 @@
+namespace Deventry.App.ViewModels;
+
+/// <summary>
+/// The logos Deventry shows in place of an icon it draws, each only where its maker allows it, and as the maker says
+/// (DESIGN.md §14, "About", which names them): keys of App.axaml's geometries, filled as their makers draw them, where
+/// Deventry's own icons are strokes.
+/// </summary>
+public static class Logos
+{
+    /// <summary>
+    /// Godot's logo, which the Godot Foundation's trademark policy lets Deventry use to refer to Godot: its monochrome
+    /// icon in the color of the icons around it, and Settings → Godot's title its whole logo, in color.
+    /// </summary>
+    public const string Godot = "IconProjectGodot";
+
+    /// <summary>
+    /// Perforce's symbol, which Perforce lets Deventry show as its brand guidelines say: only in Perforce's own colors,
+    /// its mono black or white (App.axaml's PerforceMonoBrush) until its page is selected, then in full color
+    /// (PerforceSymbolBrush).
+    /// </summary>
+    public const string Perforce = "LogoPerforceSymbol";
+
+    /// <summary>
+    /// Unreal Engine's icon, which Epic lets Deventry show as its guidelines say: only in Epic's black or white (App.axaml's
+    /// UnrealLogoBrush), selected or not, and at 14 pixels, which Epic allowed in writing.
+    /// </summary>
+    public const string Unreal = "LogoUnrealIcon";
+
+    /// <summary>Whether the icon <paramref name="key"/> names is a logo, drawn filled.</summary>
+    public static bool IsLogo(string? key) => key is Godot or Perforce or Unreal;
+}

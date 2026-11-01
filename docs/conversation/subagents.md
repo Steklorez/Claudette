@@ -50,7 +50,7 @@ A subagent's row stays until you dismiss it. Once it has finished, and you've se
 - **×** on a finished row, or **Dismiss** in its right-click menu, takes it off the sidebar. Its card stays in the conversation, and it stays on the Agents page.
 - **Dismiss earlier subagents**, in a row's right-click menu, takes every dimmed row off at once.
 
-A tab that's restored when Claudette starts brings back rows only for its last turn's subagents.
+A tab that's restored when Deventry starts brings back rows only for its last turn's subagents.
 
 ## Discouraging or turning off subagents
 
@@ -58,7 +58,7 @@ Settings → Tabs → **Subagents** says whether Claude hands parts of its work 
 
 - **Claude decides** (the default): Claude uses them when it judges they help.
 - **Discourage them**: Claude is asked to do the work itself, in the conversation, and to use a subagent only when you ask for one.
-- **Don't allow them**: Claude is told it can't, and Claudette turns down any subagent Claude starts anyway. Its card says *Not started: subagents are turned off for this tab*, and Claude carries on by itself.
+- **Don't allow them**: Claude is told it can't, and Deventry turns down any subagent Claude starts anyway. Its card says *Not started: subagents are turned off for this tab*, and Claude carries on by itself.
 
 It applies at once, in tabs already open too. Claude hears about the change with your next message, and the message's card says so under it, such as *Told Claude to avoid subagents*. One tab can have its own, from its [Tab settings…](../tabs/tab-settings.md).
 

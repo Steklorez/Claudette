@@ -1,11 +1,11 @@
-// Claudette's look for the guide (GUIDE.md, "The site"): her colors (setup.scss), rounder shapes and a little glow.
+// Deventry's look for the guide (GUIDE.md, "The site"): its colors (setup.scss), rounder shapes and a little glow.
 // It's compiled into each scheme, so $color-scheme says which one this is.
 
-$cl-dark: $color-scheme == dark;
+$de-dark: $color-scheme == dark;
 // White text stays readable on these.
-$cl-gradient-deep: linear-gradient(110deg, $cl-coral-deep 0%, #b4453f 50%, $cl-raspberry 100%);
+$de-gradient-deep: linear-gradient(110deg, $de-blue-deep 0%, #6e66a8 50%, $de-rose-deep 100%);
 
-// Her colors across the top of every page.
+// Its colors across the top of every page.
 body::before {
   position: fixed;
   top: 0;
@@ -14,12 +14,12 @@ body::before {
   z-index: 200;
   height: 3px;
   content: "";
-  background: $cl-gradient;
+  background: $de-gradient;
 }
 
-// The sidebar: her icon and name, a warm glow behind them, and a coral bar beside the page you're on.
+// The sidebar: the icon and name, a soft blue glow behind them, and a blue bar beside the page you're on.
 .side-bar {
-  background-image: radial-gradient(circle at 0 0, rgba($cl-coral, if($cl-dark, 0.12, 0.1)), transparent 22rem);
+  background-image: radial-gradient(circle at 0 0, rgba($de-blue, if($de-dark, 0.12, 0.1)), transparent 22rem);
 }
 
 .site-title {
@@ -32,13 +32,12 @@ body::before {
   flex: none;
   width: 2rem;
   height: 2rem;
-  image-rendering: pixelated;
 }
 
 .site-wordmark {
   font-size: 1.4rem;
   color: transparent;
-  background: $cl-gradient;
+  background: $de-gradient;
   background-clip: text;
   -webkit-background-clip: text;
 }
@@ -48,15 +47,15 @@ body::before {
 
   &:hover {
     background-image: none;
-    background-color: rgba($cl-coral, 0.08);
+    background-color: rgba($de-blue, 0.08);
   }
 
   &.active {
     font-weight: 600;
     color: $body-heading-color;
     background-image: none;
-    background-color: rgba($cl-coral, if($cl-dark, 0.14, 0.1));
-    box-shadow: inset 3px 0 0 $cl-coral;
+    background-color: rgba($de-blue, if($de-dark, 0.14, 0.1));
+    box-shadow: inset 3px 0 0 $de-blue;
   }
 }
 
@@ -81,7 +80,7 @@ body::before {
       height: 4px;
       margin-top: 0.7rem;
       content: "";
-      background: $cl-gradient;
+      background: $de-gradient;
       border-radius: 2px;
     }
   }
@@ -103,11 +102,11 @@ body::before {
     }
 
     .symbol {
-      fill: if($cl-dark, #f6f9fd, #4c00ff);
+      fill: if($de-dark, #f6f9fd, #4c00ff);
     }
 
     .wordmark {
-      fill: if($cl-dark, #f6f9fd, #00003a);
+      fill: if($de-dark, #f6f9fd, #00003a);
     }
   }
 
@@ -125,7 +124,7 @@ body::before {
       display: block;
       width: 15rem;
       height: auto;
-      fill: if($cl-dark, #ffffff, #000000);
+      fill: if($de-dark, #ffffff, #000000);
     }
   }
 
@@ -145,7 +144,7 @@ body::before {
     }
 
     .wordmark {
-      fill: if($cl-dark, #eeeeee, #414042);
+      fill: if($de-dark, #eeeeee, #414042);
     }
   }
 
@@ -175,7 +174,7 @@ body::before {
   }
 
   blockquote {
-    border-left-color: $cl-coral;
+    border-left-color: $de-blue;
   }
 
   .note,
@@ -193,12 +192,12 @@ body::before {
     display: block;
     max-width: 100%;
     height: auto;
-    border: 1px solid if($cl-dark, rgba(#fff, 0.1), $border-color);
+    border: 1px solid if($de-dark, rgba(#fff, 0.1), $border-color);
     border-radius: 12px;
     box-shadow: if(
-      $cl-dark,
-      (0 1.2rem 3rem rgba(#000, 0.45), 0 0 3rem rgba($cl-coral, 0.1), 0 0 4rem rgba($cl-raspberry, 0.08)),
-      (0 0.9rem 2.2rem rgba(#5a3a20, 0.14), 0 0 2.5rem rgba($cl-coral, 0.08))
+      $de-dark,
+      (0 1.2rem 3rem rgba(#000, 0.45), 0 0 3rem rgba($de-blue, 0.1), 0 0 4rem rgba($de-rose, 0.08)),
+      (0 0.9rem 2.2rem rgba(#26304a, 0.14), 0 0 2.5rem rgba($de-blue, 0.08))
     );
   }
 
@@ -215,9 +214,9 @@ body::before {
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #fff;
-  background: $cl-gradient-deep;
+  background: $de-gradient-deep;
   border-radius: 999px;
-  box-shadow: 0 0.3rem 1rem rgba($cl-raspberry, 0.25);
+  box-shadow: 0 0.3rem 1rem rgba($de-rose, 0.25);
 }
 
 .btn {
@@ -228,9 +227,9 @@ body::before {
 .btn-primary:hover,
 .btn-primary:focus {
   color: #fff;
-  background: $cl-gradient-deep;
+  background: $de-gradient-deep;
   border: 0;
-  box-shadow: 0 0.4rem 1.2rem rgba($cl-coral, 0.3);
+  box-shadow: 0 0.4rem 1.2rem rgba($de-blue, 0.3);
 }
 
 .btn-primary:hover {
@@ -268,8 +267,8 @@ body::before {
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 
     &:hover {
-      border-color: rgba($cl-coral, 0.6);
-      box-shadow: 0 0.6rem 1.6rem rgba($cl-coral, if($cl-dark, 0.12, 0.15));
+      border-color: rgba($de-blue, 0.6);
+      box-shadow: 0 0.6rem 1.6rem rgba($de-blue, if($de-dark, 0.12, 0.15));
       transform: translateY(-2px);
     }
   }

@@ -1,20 +1,20 @@
 ---
 name: issues
-description: Find work in Claudette's backlog, the open GitHub issues assigned to reapazor. Lists them, suggests one, reads it and proposes a plan, and builds it once the user says go. Use when asked to find work, pick up or look at an issue, check the backlog, or run /issues.
+description: Find work in Deventry's backlog, the open GitHub issues assigned to reapazor. Lists them, suggests one, reads it and proposes a plan, and builds it once the user says go. Use when asked to find work, pick up or look at an issue, check the backlog, or run /issues.
 ---
 
 # Work from the issue list
 
-Claudette's backlog is the open issues on `dotBunny/Claudette` that are **assigned to `reapazor`**. Only those are work to
+Deventry's backlog is the open issues on `dotBunny/Deventry` that are **assigned to `reapazor`**. Only those are work to
 pick up. The repository is public: an issue anyone else filed, or one nobody is assigned to, isn't work until it's
 assigned.
 
 ## 1. List them
 
-- **Cloud sessions** (no `gh`): use the GitHub tools. Search with `repo:dotBunny/Claudette is:issue is:open assignee:reapazor`,
+- **Cloud sessions** (no `gh`): use the GitHub tools. Search with `repo:dotBunny/Deventry is:issue is:open assignee:reapazor`,
   or list open issues and keep the ones whose assignees include `reapazor`.
 - **Locally**, where `gh` isn't installed, GitHub's REST API, which needs no sign-in for this public repository:
-  `curl -s "https://api.github.com/repos/dotBunny/Claudette/issues?assignee=reapazor&state=open&per_page=100"`. It
+  `curl -s "https://api.github.com/repos/dotBunny/Deventry/issues?assignee=reapazor&state=open&per_page=100"`. It
   lists pull requests too: leave out the entries with a `pull_request` field. An issue is `.../issues/<N>`, and its
   comments `.../issues/<N>/comments`.
 
@@ -48,11 +48,11 @@ Once the user picks an issue, or agrees to the suggestion:
 
 Follow CLAUDE.md and DESIGN.md as for any change:
 - Update DESIGN.md in the same change.
-- Add the change's entry under **Unreleased** in `CHANGELOG.md` when people using Claudette would notice it.
+- Add the change's entry under **Unreleased** in `CHANGELOG.md` when people using Deventry would notice it.
 - Add to `compat/surface.yaml` for anything new from Claude Code.
 - Write tests, then run the build and the free suite:
-  - `dotnet build Claudette.slnx`
-  - `dotnet test Claudette.slnx --filter "Category!=Live"`
+  - `dotnet build Deventry.slnx`
+  - `dotnet test Deventry.slnx --filter "Category!=Live"`
 
 Also:
 - Work on the session's branch. When starting one yourself, use `issue-<N>-<short-slug>` from `main`, and once it's in

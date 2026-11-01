@@ -1,0 +1,54 @@
+﻿[image] "Deventry"
+[button] Usage details
+  "Session"
+  [meter 62%]
+  "62%"
+  "resets in 2h 14m"
+  "Not enough data yet."
+  "Weekly"
+  [meter 38%]
+  "38%"
+[button] Expand the usage header
+[toggle] Keep this computer awake
+[button] Account: me@example.com
+[button] Plan usage: Max plan
+[button] New tab
+[button] History
+[button] Collapse the sidebar
+[button] work
+[button] Project tools
+[button] Project files
+[button] New tab in this folder
+[button] (parts below)
+  "work"
+  [button] Close tab
+  "Opus · Default"
+  [button] Context 1%
+"Claude"
+[button] Copy message
+[button] Add to scratch pad
+[button] Show as the plan
+"12:00"
+"Found two problems in Parser.cs."
+"Turn"
+"12:00"
+"Opus"
+[field] "Message Claude…  (Enter to send, Shift+Enter for a new line, Esc to stop)"
+[button] Attach a file
+[button] Suffixes ▾
+[button] Opus ▾
+[button] Default effort ▾
+[button] Manual ▾
+[button] Files (0)
+[button] Context 1%
+"Cache 60m"
+[button] 120 tok
+[button] Enter sends: ⏎ sends
+[button] Send
+[button] Tab info
+"{root}/work"
+"Idle"
+[button] Changed files
+[button] Agents
+[button] Scratch pad
+"work: Claude finished."

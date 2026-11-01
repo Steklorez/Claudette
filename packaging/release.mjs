@@ -1,4 +1,4 @@
-// Claudette's release steps that change files (GUIDE.md, "The changelog", "Releasing"). Node 22+, no dependencies.
+// Deventry's release steps that change files (GUIDE.md, "The changelog", "Releasing"). Node 22+, no dependencies.
 // Run from anywhere in the checkout; each prints what it changed and leaves committing to you.
 //
 //   node packaging/release.mjs prepare [--version X.Y.Z] [--date YYYY-MM-DD]
@@ -11,7 +11,7 @@
 //
 //   node packaging/release.mjs after [--next X.Y.Z]
 //       Steps 3 and 4, once the release is published, for the changelog's latest version. The guide's "New in the next
-//       release" labels go, its examples of the version Claudette shows ("Claudette 0.5.1") become the release's,
+//       release" labels go, its examples of the version Deventry shows ("Deventry 0.5.1") become the release's,
 //       Directory.Build.props moves to the next version to work on (the next second number, or --next), and the lock
 //       files are restored to name it. Wording the script can't safely change, such as "new in the next release" in a
 //       sentence, is listed for you to edit. Pushing the change to main rebuilds the site, whose Downloads page and
@@ -110,7 +110,7 @@ function after() {
   if (!isVersion(next)) fail(`"${next}" isn't a version (X.Y.Z).`);
 
   const label = /^\{% include unreleased\.html %\}$/;
-  const example = new RegExp(`\\bClaudette ${escape(previous ?? released)}\\b`, 'g');
+  const example = new RegExp(`\\bDeventry ${escape(previous ?? released)}\\b`, 'g');
   const older = new Set(releases.slice(1).map(r => r.version));
   const toCheck = [];
   for (const file of docsFiles()) {
@@ -128,7 +128,7 @@ function after() {
     if (previous) {
       doc.lines = doc.lines.map(line => line.replace(example, () => {
         examples++;
-        return `Claudette ${released}`;
+        return `Deventry ${released}`;
       }));
     }
     if (labels || examples) {
@@ -136,12 +136,12 @@ function after() {
       console.log(`${name}: ${[labels && `${labels} label${labels > 1 ? 's' : ''} removed`, examples && `${examples} example${examples > 1 ? 's' : ''} now ${released}`].filter(Boolean).join(', ')}`);
     }
     // What a person words: "new in the next release" in a sentence, the landing page's "Soon" and "Next release".
-    // An earlier release named as Claudette is too: an example that wasn't the last release's, or history.
+    // An earlier release named as Deventry is too: an example that wasn't the last release's, or history.
     doc.lines.forEach((line, i) => {
       if (/next release/i.test(line) || /class="soon"|\bSoon\b/.test(line)) toCheck.push(`${name}:${i + 1}: ${line.trim().slice(0, 160)}`);
-      const named = new Set([...line.matchAll(/\bClaudette (\d+\.\d+\.\d+)\b/g)].map(m => m[1]).filter(v => older.has(v)));
+      const named = new Set([...line.matchAll(/\bDeventry (\d+\.\d+\.\d+)\b/g)].map(m => m[1]).filter(v => older.has(v)));
       for (const version of named) {
-        toCheck.push(`${name}:${i + 1}: names Claudette ${version}, an earlier release: an example to bring up to ${released}, or history?`);
+        toCheck.push(`${name}:${i + 1}: names Deventry ${version}, an earlier release: an example to bring up to ${released}, or history?`);
       }
     });
   }
@@ -159,12 +159,12 @@ function after() {
 
 /** The lock files name the projects' version, and CI restores in locked mode. */
 function restoreLockFiles() {
-  const result = spawnSync('dotnet', ['restore', 'Claudette.slnx', '--force-evaluate'], { cwd: root, encoding: 'utf8', shell: process.platform === 'win32' });
+  const result = spawnSync('dotnet', ['restore', 'Deventry.slnx', '--force-evaluate'], { cwd: root, encoding: 'utf8', shell: process.platform === 'win32' });
   if (result.status === 0) {
     console.log('The lock files are restored for it.');
     return;
   }
-  console.log(`Restoring the lock files failed; run it yourself: dotnet restore Claudette.slnx --force-evaluate\n${(result.stderr || result.stdout || String(result.error ?? '')).trim()}`);
+  console.log(`Restoring the lock files failed; run it yourself: dotnet restore Deventry.slnx --force-evaluate\n${(result.stderr || result.stdout || String(result.error ?? '')).trim()}`);
   process.exitCode = 1;
 }
 

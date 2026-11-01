@@ -27,7 +27,7 @@ Your prompts, replies and code aren't part of it. The usage database itself neve
 - **Tabs in this session window** and the busiest tabs list another machine's tabs as *Fix the loader · Laptop*.
 - **Accounts** counts another machine's API-key turns with this machine's account of the same name. See [Spend and its warnings](../accounts/spend-and-its-warnings.md).
 
-Machines look for each other's usage at launch and once a minute. If another machine runs a newer Claudette whose shared files this one can't read yet, it leaves them out until you update, and says so in its log.
+Machines look for each other's usage at launch and once a minute. If another machine runs a newer Deventry whose shared files this one can't read yet, it leaves them out until you update, and says so in its log.
 
 ## Turning it off
 

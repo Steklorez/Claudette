@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Claudette's MSIX manifest (DESIGN.md §2, "Packaging"). build-msix.ps1 fills in the version, the publisher and the
+  Deventry's MSIX manifest (DESIGN.md §2, "Packaging"). build-msix.ps1 fills in the version, the publisher and the
   architecture. The Identity Name must stay in step with WindowsAppIdentity.AppUserModelId, and Publisher must match
   the signing certificate's subject exactly. PublisherDisplayName is the Store's publisher name.
 -->
@@ -13,13 +13,13 @@
   <Identity Name="dotBunny.Claudette" Publisher="$PUBLISHER$" Version="$VERSION$" ProcessorArchitecture="$ARCHITECTURE$" />
 
   <Properties>
-    <DisplayName>Claudette</DisplayName>
+    <DisplayName>Deventry</DisplayName>
     <PublisherDisplayName>dotBunny</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
-    <Description>A native desktop app for Claude Code.</Description>
+    <Description>The desktop app that puts agents in a native window.</Description>
     <!--
-      Claude Code, and every tool it runs, is a child of Claudette and would share its package container. Without these,
-      their writes under AppData and HKCU would land in Claudette's private copy, out of sight of a terminal claude.
+      Claude Code, and every tool it runs, is a child of Deventry and would share its package container. Without these,
+      their writes under AppData and HKCU would land in Deventry's private copy, out of sight of a terminal claude.
     -->
     <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
     <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
@@ -34,18 +34,18 @@
   </Resources>
 
   <Applications>
-    <Application Id="Claudette" Executable="Claudette.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="Claudette" Description="A native desktop app for Claude Code." BackgroundColor="transparent"
+    <Application Id="Claudette" Executable="Deventry.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Deventry" Description="The desktop app that puts agents in a native window." BackgroundColor="transparent"
                           Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
       </uap:VisualElements>
       <Extensions>
         <!--
-          Start Claudette when I log in (DESIGN.md §9, "Starting at login"). Off until Settings turns it on; TaskId must stay
-          in step with MsixStartupTask.TaskId. Task Manager's Startup apps lists it as Claudette.
+          Start Deventry when I log in (DESIGN.md §9, "Starting at login"). Off until Settings turns it on; TaskId must stay
+          in step with MsixStartupTask.TaskId. Task Manager's Startup apps lists it as Deventry.
         -->
-        <desktop:Extension Category="windows.startupTask" Executable="Claudette.exe" EntryPoint="Windows.FullTrustApplication">
-          <desktop:StartupTask TaskId="ClaudetteAtLogin" Enabled="false" DisplayName="Claudette" />
+        <desktop:Extension Category="windows.startupTask" Executable="Deventry.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="ClaudetteAtLogin" Enabled="false" DisplayName="Deventry" />
         </desktop:Extension>
       </Extensions>
     </Application>

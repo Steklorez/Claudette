@@ -27,7 +27,7 @@ The file is written under a temporary name and then renamed, so a failed export 
 
 ## What's left out
 
-Thinking, and Claudette's other notes.
+Thinking, and Deventry's other notes.
 
 ## See also
 

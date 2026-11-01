@@ -24,7 +24,7 @@ The session's percent and reset, the line that says where it's heading, and a ch
 The tokens each tab has used since the current 5-hour window started, heaviest first: each tab's name, a bar for its share, its tokens, its estimated cost and its turns. It answers which session is burning your limit fastest.
 
 - Costs are Claude Code's estimates at list price, not your bill. On a plan, the limits are what count.
-- A tab you've closed keeps the last name it had, even after a restart. If Claudette doesn't know one, it's *A closed tab*.
+- A tab you've closed keeps the last name it had, even after a restart. If Deventry doesn't know one, it's *A closed tab*.
 - With [usage sharing](sharing-usage-across-machines.md) on, tabs from your other machines show too, as *Fix the loader · Laptop*.
 
 ## Projects
@@ -35,7 +35,7 @@ The tokens, estimated cost and turns for each project, across every tab that wor
 - **This week**, the default
 - **The last 30 days**, as far back as **Keep usage history** goes
 
-A row is named for its folder. When two share a name, the parent folder is added, and hovering shows the full path. Turns from before Claudette noted each turn's folder are one row, **Earlier turns**.
+A row is named for its folder. When two share a name, the parent folder is added, and hovering shows the full path. Turns from before Deventry noted each turn's folder are one row, **Earlier turns**.
 
 With usage sharing on, a project adds up the tabs other machines sync to the [session library](../history/the-session-library.md), matched by the repository and the folder inside it, whatever each machine calls the folder. Hover over a row for what each machine spent, such as *This machine: $3.10 · 12 turns*.
 

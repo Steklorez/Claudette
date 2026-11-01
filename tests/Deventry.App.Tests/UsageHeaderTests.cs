@@ -1,0 +1,489 @@
+using System.Text.Json.Nodes;
+using Deventry.App.Services;
+using Deventry.App.Tests.Support;
+using Deventry.App.ViewModels;
+using Deventry.Core;
+using Deventry.Core.Files;
+using Deventry.Core.Protocol;
+using Deventry.Core.Sessions;
+using Deventry.Usage;
+
+namespace Deventry.App.Tests;
+
+/// <summary>The usage header (DESIGN.md §6), fed by rate-limit events rather than polling.</summary>
+public class UsageHeaderTests
+{
+    [Fact]
+    public async Task A_rate_limit_event_fills_the_meters()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(2).AddMinutes(14);
+
+        tracker.OnRateLimitEvent(Event(0.62, resets, 0.38));
+
+        await TabTestHarness.Eventually(() => header.HasData, "the meters");
+        Assert.Equal("62%", header.Session.PercentText);
+        Assert.Equal("resets in 2h 14m", header.Session.ResetText);
+        var weekly = Assert.Single(header.Weekly);
+        Assert.Equal("Weekly", weekly.Label);
+        Assert.Equal("38%", weekly.PercentText);
+    }
+
+    /// <summary>The compact header's names (DESIGN.md §6, "Compact header"): a first letter, or as many as tell it apart.</summary>
+    [Theory]
+    [InlineData("Session", "", "S")]
+    [InlineData("Weekly", "S", "W")]
+    [InlineData("Fable", "S,W", "F")]
+    [InlineData("Sonnet", "S,W", "So")]
+    [InlineData("opus", "S,W", "O")]
+    public void A_meters_short_name_is_its_first_letter_or_as_many_as_tell_it_apart(string label, string taken, string expected) =>
+        Assert.Equal(expected, MeterViewModel.ShortLabelOf(label, taken.Split(',', StringSplitOptions.RemoveEmptyEntries)));
+
+    [Fact]
+    public async Task Crossing_the_warning_threshold_raises_an_alert()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(3);
+
+        tracker.OnRateLimitEvent(Event(0.70, resets, 0.40));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+        Assert.False(header.HasAlert);
+
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(0.80, resets, 0.41));
+
+        await TabTestHarness.Eventually(() => header.HasAlert, "the alert");
+        Assert.True(header.Session.IsWarning);
+        header.DismissAlertCommand.Execute(null);
+        Assert.False(header.HasAlert);
+    }
+
+    [Fact]
+    public async Task Usage_credits_paying_show_a_notice_until_the_limit_resets_and_notify_once()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(1);
+
+        tracker.OnRateLimitEvent(Event(0.97, resets, 0.60, usingCredits: false));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+        Assert.False(header.IsUsingCredits);
+
+        h.Time.Advance(TimeSpan.FromMinutes(10));
+        tracker.OnRateLimitEvent(Event(1.0, resets, 0.61, usingCredits: true));
+
+        await TabTestHarness.Eventually(() => header.IsUsingCredits, "the notice");
+        Assert.Equal($"Your session limit is used up, so your usage credits pay for Claude until it resets {Formats.When(resets, h.Time)}.", header.CreditsNotice);
+        var notified = Assert.Single(h.Notifier.Shown, n => n.Title == CreditUse.Title);
+        Assert.Equal(header.CreditsNotice, notified.Body);
+        // The notice says it: the dismissible line under the header is for the other alerts.
+        Assert.NotEqual(UsageAlertKind.UsingCredits, header.Alert?.Kind);
+
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(1.0, resets, 0.62, usingCredits: true));
+        Assert.Single(h.Notifier.Shown, n => n.Title == CreditUse.Title);
+
+        // The header's clock notices the reset without a new reading.
+        h.Time.Advance(resets - h.Time.GetUtcNow() + TimeSpan.FromSeconds(30));
+        await TabTestHarness.Eventually(() => !header.IsUsingCredits, "the notice gone");
+        Assert.Null(header.CreditsNotice);
+    }
+
+    [Fact]
+    public async Task The_credits_notice_says_what_get_usage_reports_was_spent()
+    {
+        await using var h = new TabTestHarness();
+        var resets = h.Time.GetUtcNow().AddMinutes(30);
+        h.Transport.Answers["get_usage"] = _ => new JsonObject
+        {
+            ["rate_limits_available"] = true,
+            ["rate_limits"] = new JsonObject
+            {
+                ["limits"] = new JsonArray(
+                    new JsonObject { ["kind"] = "session", ["percent"] = 100, ["resets_at"] = resets.ToString("O") },
+                    new JsonObject { ["kind"] = "weekly_all", ["percent"] = 64, ["resets_at"] = resets.AddDays(2).ToString("O") }),
+                ["extra_usage"] = new JsonObject { ["is_enabled"] = true, ["monthly_limit"] = 5000, ["used_credits"] = 1240, ["utilization"] = 24.8, ["currency"] = "USD" },
+            },
+        };
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+
+        tracker.Start();
+
+        await TabTestHarness.Eventually(() => header.IsUsingCredits, "the notice");
+        Assert.Equal(
+            $"Your session limit is used up, so your usage credits pay for Claude until it resets {Formats.When(resets, h.Time)}. $12.40 of $50.00 spent this month.",
+            header.CreditsNotice);
+        // Already paying when Deventry started: no notification.
+        Assert.DoesNotContain(h.Notifier.Shown, n => n.Title == CreditUse.Title);
+
+        await header.OpenCreditsSettingsCommand.ExecuteAsync(null);
+        Assert.Equal(AccountViewModel.ClaudeUsageUrl, Assert.Single(h.Platform.OpenedUrls));
+    }
+
+    [Fact]
+    public async Task A_stale_reading_does_not_take_the_meter_back_and_the_alert_follows_the_meter()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        // Close enough that the projection doesn't alert too.
+        var resets = h.Time.GetUtcNow().AddMinutes(90);
+        var shown = new List<string>();
+        header.Session.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MeterViewModel.PercentText))
+            {
+                shown.Add(header.Session.PercentText);
+            }
+        };
+
+        tracker.OnRateLimitEvent(Event(0.70, resets, 0.40));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+        h.Time.Advance(TimeSpan.FromMinutes(30));
+        tracker.OnRateLimitEvent(Event(0.756, resets, 0.40));
+        await TabTestHarness.Eventually(() => header.HasAlert, "the alert");
+        Assert.Equal("Session usage passed 75%", header.Alert!.Title);
+        Assert.Equal("You've used 76% of your session limit. It resets in 1h 00m.", header.Alert.Message);
+
+        // get_usage answering from Claude Code's cached reading, then the next real one.
+        h.Time.Advance(TimeSpan.FromMinutes(1));
+        tracker.OnRateLimitEvent(Event(0.70, resets, 0.40));
+        h.Time.Advance(TimeSpan.FromMinutes(29));
+        tracker.OnRateLimitEvent(Event(0.78, resets, 0.40));
+
+        await TabTestHarness.Eventually(() => header.Session.PercentText == "78%", "the next reading");
+        Assert.Equal(["70%", "76%", "78%"], shown);
+        Assert.Equal("Session usage passed 75%", header.Alert!.Title);
+        Assert.Equal("You've used 78% of your session limit. It resets in 30m.", header.Alert.Message);
+    }
+
+    [Fact]
+    public async Task The_projection_alert_follows_the_projection_and_goes_when_the_pace_slows()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(4);
+
+        tracker.OnRateLimitEvent(Event(0.40, resets, 0.30));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+        h.Time.Advance(TimeSpan.FromMinutes(10));
+        tracker.OnRateLimitEvent(Event(0.50, resets, 0.31));
+        await TabTestHarness.Eventually(() => header.HasAlert, "the alert");
+        Assert.Equal("On pace to hit the session limit", header.Alert!.Title);
+        Assert.Equal("At this rate you'll hit the limit in 50m, 3h 00m before it resets.", header.Alert.Message);
+
+        // The header's clock moves the projection on, and the line with it.
+        h.Time.Advance(TimeSpan.FromMinutes(1));
+        await TabTestHarness.Eventually(() => header.Alert?.Message != "At this rate you'll hit the limit in 50m, 3h 00m before it resets.", "the line moved on");
+        Assert.Equal(header.ProjectionText, header.Alert!.Message);
+
+        h.Time.Advance(TimeSpan.FromMinutes(29));
+        tracker.OnRateLimitEvent(Event(0.52, resets, 0.31));
+
+        await TabTestHarness.Eventually(() => !header.HasAlert, "the alert gone");
+        Assert.Equal("On track: about 65% used when the session resets.", header.ProjectionText);
+    }
+
+    [Fact]
+    public async Task The_usage_panel_lists_every_past_session_a_page_at_a_time()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        for (var i = 0; i < 70; i++)
+        {
+            tracker.Store.AddSample(UsageSnapshotAt(h.Time.GetUtcNow(), 10 + (i % 50), h.Time.GetUtcNow().AddMinutes(1)));
+            h.Time.Advance(TimeSpan.FromHours(5));
+        }
+
+        var panel = new UsagePanelViewModel(h.Services, tracker, header, _ => null);
+        await panel.RefreshAsync();
+
+        Assert.Equal(UsagePanelViewModel.SessionsPage, panel.PastSessions.Count);
+        Assert.Equal("Show 30 more (40 left)", panel.MoreSessionsText);
+        panel.ShowMoreSessionsCommand.Execute(null);
+        panel.ShowMoreSessionsCommand.Execute(null);
+        Assert.Equal(70, panel.PastSessions.Count);
+        Assert.False(panel.HasMoreSessions);
+    }
+
+    [Fact]
+    public async Task The_usage_panel_lists_projects_for_the_period_picked()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var now = h.Time.GetUtcNow();
+        var api = Path.Combine(h.Root, "work", "api");
+        var otherApi = Path.Combine(h.Root, "play", "api");
+        tracker.Store.AddTurns(
+        [
+            new TurnRecord(now.AddDays(-20), "tab-1", null, "fable", 5_000, 0, 0, 0, 2, api),
+            new TurnRecord(now.AddDays(-2), "tab-2", null, "fable", 1_000, 0, 0, 0, 0.5, api),
+            new TurnRecord(now.AddHours(-1), "tab-3", null, "fable", 3_000, 0, 0, 0, 1, otherApi),
+            new TurnRecord(now.AddHours(-1), "tab-4", null, "fable", 10, 0, 0, 0, 0),
+        ]);
+
+        var panel = new UsagePanelViewModel(h.Services, tracker, header, _ => null);
+        await panel.RefreshAsync();
+
+        // The week, by default: two folders named api, told apart by their parents, and the turns from before projects.
+        Assert.Equal(["api (play)", "api (work)", "Earlier turns"], panel.Projects.Select(p => p.Name));
+        Assert.Equal(otherApi, panel.Projects[0].Tooltip);
+        Assert.Equal("1 turn", panel.Projects[1].Turns);
+
+        panel.SelectedProjectPeriod = new ProjectPeriodChoice(ProjectPeriod.Month);
+        await panel.RefreshAsync();
+        Assert.Equal(api, panel.Projects[0].Folder);
+        Assert.Equal("2 turns", panel.Projects[0].Turns);
+
+        panel.SelectedProjectPeriod = new ProjectPeriodChoice(ProjectPeriod.SessionWindow);
+        await panel.RefreshAsync();
+        Assert.Equal(["api", "Earlier turns"], panel.Projects.Select(p => p.Name));
+    }
+
+    // ---- Sharing across machines (DESIGN.md §6) --------------------------------------------------------------------
+
+    [Fact]
+    public async Task Machines_signed_in_to_the_same_account_chart_each_others_readings()
+    {
+        await using var first = SharingMachine("me@example.com", out var library);
+        await using var second = SharingMachine("Me@Example.com", out _, library);
+        await using var firstTracker = new UsageTracker(first.Services, new UsageStore(Path.Combine(first.Root, "usage.db"), first.Time));
+        await using var secondTracker = new UsageTracker(second.Services, new UsageStore(Path.Combine(second.Root, "usage.db"), second.Time));
+        using var secondHeader = new UsageViewModel(second.Services, secondTracker);
+        var shared = Path.Combine(library, "usage", first.Services.State.MachineId + ".json");
+
+        // The first machine takes a reading: it's shared straight away.
+        firstTracker.OnRateLimitEvent(Event(0.62, first.Time.GetUtcNow().AddHours(2), 0.38));
+        await TabTestHarness.Eventually(() => File.Exists(shared) && AtomicFile.ReadAllText(shared).Contains("\"session\":62", StringComparison.Ordinal), "the shared reading");
+        Assert.DoesNotContain("example.com", AtomicFile.ReadAllText(shared), StringComparison.OrdinalIgnoreCase);
+
+        await secondTracker.ShareAsync();
+
+        await TabTestHarness.Eventually(() => secondHeader.SessionPoints.Any(p => p.Value == 62), "the other machine's reading in the trendline");
+        Assert.Empty(secondTracker.Store.GetOwnSamples(DateTimeOffset.MinValue));
+    }
+
+    [Fact]
+    public async Task Another_accounts_readings_arent_charted()
+    {
+        await using var first = SharingMachine("me@example.com", out var library);
+        await using var second = SharingMachine("someone.else@example.com", out _, library);
+        await using var firstTracker = new UsageTracker(first.Services, new UsageStore(Path.Combine(first.Root, "usage.db"), first.Time));
+        await using var secondTracker = new UsageTracker(second.Services, new UsageStore(Path.Combine(second.Root, "usage.db"), second.Time));
+        var shared = Path.Combine(library, "usage", first.Services.State.MachineId + ".json");
+        firstTracker.OnRateLimitEvent(Event(0.62, first.Time.GetUtcNow().AddHours(2), 0.38));
+        await TabTestHarness.Eventually(() => File.Exists(shared) && AtomicFile.ReadAllText(shared).Contains("\"session\":62", StringComparison.Ordinal), "the shared reading");
+
+        await secondTracker.ShareAsync();
+
+        Assert.Empty(secondTracker.Store.GetSamples(DateTimeOffset.MinValue, DateTimeOffset.MaxValue));
+    }
+
+    [Fact]
+    public async Task Readings_a_later_Deventry_shared_in_a_newer_format_are_left_out()
+    {
+        await using var first = SharingMachine("me@example.com", out var library);
+        await using var second = SharingMachine("me@example.com", out _, library);
+        await using var firstTracker = new UsageTracker(first.Services, new UsageStore(Path.Combine(first.Root, "usage.db"), first.Time));
+        var shared = Path.Combine(library, "usage", first.Services.State.MachineId + ".json");
+        firstTracker.OnRateLimitEvent(Event(0.62, first.Time.GetUtcNow().AddHours(2), 0.38));
+        await TabTestHarness.Eventually(() => File.Exists(shared) && AtomicFile.ReadAllText(shared).Contains("\"session\":62", StringComparison.Ordinal), "the shared reading");
+        Assert.Contains($"\"claudette\":\"{first.Services.AppVersion}\"", AtomicFile.ReadAllText(shared), StringComparison.Ordinal);
+        // Nothing of the first machine's still being written. The share its tracker started as it was made can write the
+        // reading before the reading's own share has taken its turn, so one more share needn't come after that one:
+        // closed, the tracker writes nothing more.
+        await firstTracker.DisposeAsync();
+
+        // The same file, as a later Deventry that changed what its fields mean would write it. The second machine
+        // starts after that: a tracker reads the others' files as soon as it's made.
+        var file = System.Text.Json.Nodes.JsonNode.Parse(AtomicFile.ReadAllText(shared))!.AsObject();
+        file["version"] = Deventry.Usage.UsageSharing.FileVersion + 1;
+        File.WriteAllText(shared, file.ToJsonString());
+        await using var secondTracker = new UsageTracker(second.Services, new UsageStore(Path.Combine(second.Root, "usage.db"), second.Time));
+        await secondTracker.ShareAsync();
+
+        Assert.Empty(secondTracker.Store.GetSamples(DateTimeOffset.MinValue, DateTimeOffset.MaxValue));
+    }
+
+    [Fact]
+    public async Task Nothing_is_shared_until_it_is_turned_on()
+    {
+        await using var h = SharingMachine("me@example.com", out var library);
+        h.Services.Settings.Usage.ShareThroughLibrary = false;
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        tracker.OnRateLimitEvent(Event(0.62, h.Time.GetUtcNow().AddHours(2), 0.38));
+        await TabTestHarness.Eventually(() => tracker.Store.GetLatestSample() is not null, "the reading");
+        await tracker.ShareAsync(publish: true);
+
+        Assert.False(Directory.Exists(Path.Combine(library, "usage")));
+
+        // Turned on in Settings: shared at once.
+        h.Services.Settings.Usage.ShareThroughLibrary = true;
+        h.Services.SaveSettings();
+        await TabTestHarness.Eventually(() => File.Exists(Path.Combine(library, "usage", h.Services.State.MachineId + ".json")), "the shared file");
+    }
+
+    /// <summary>A machine that shares its usage through <paramref name="library"/>, signed in as <paramref name="email"/>.</summary>
+    private static TabTestHarness SharingMachine(string email, out string library, string? sharedLibrary = null)
+    {
+        var h = new TabTestHarness();
+        library = sharedLibrary ?? Path.Combine(h.Root, "shared-library");
+        h.Services.Settings.Sessions.LibraryFolder = library;
+        h.Services.Settings.Usage.ShareThroughLibrary = true;
+        h.Services.Library.OnSettingsChanged();
+        h.Services.RemoteControl.UseAccount(new Core.Auth.AuthStatus(true, "claude.ai", null, email, "Acme", "max", null, null));
+        return h;
+    }
+
+    private static UsageSnapshot UsageSnapshotAt(DateTimeOffset asOf, double session, DateTimeOffset resetsAt) =>
+        new([new LimitReading(LimitKind.Session, "Session", session, resetsAt, null, false)], asOf, UsageSource.GetUsage);
+
+    [Fact]
+    public async Task A_tab_turn_is_recorded_for_the_usage_panel()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        var recorded = new TaskCompletionSource<string>();
+        tracker.TurnRecorded += id => recorded.TrySetResult(id);
+
+        tracker.OnTurnCompleted("tab-1", "api", Result(100, 20), "/work/api");
+        Assert.Equal("tab-1", await recorded.Task.WaitAsync(Waiting.Timeout, TestContext.Current.CancellationToken));
+
+        var sum = Assert.Single(tracker.Store.GetTokensByTab(h.Time.GetUtcNow().AddHours(-1)));
+        Assert.Equal(("tab-1", "api"), (sum.TabId, sum.Name));
+        Assert.Equal(120, sum.Total);
+        Assert.Equal("/work/api", Assert.Single(tracker.Store.GetTokensByProject(h.Time.GetUtcNow().AddHours(-1))).Project);
+    }
+
+    [Fact]
+    public async Task Names_are_recorded_in_the_order_they_came()
+    {
+        await using var h = new TabTestHarness();
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+
+        // Each rename lands after the turn before it, however the writes are scheduled.
+        for (var i = 0; i < 20; i++)
+        {
+            tracker.OnTurnCompleted($"tab-{i}", "api", Result(100, 20));
+            tracker.OnTabRenamed($"tab-{i}", "refactor auth");
+            tracker.OnTabRenamed($"tab-{i}", $"refactor auth {i}");
+        }
+        await tracker.DisposeAsync();
+
+        Assert.All(tracker.Store.GetTokensByTab(DateTimeOffset.MinValue), s => Assert.Equal($"refactor auth {s.TabId[4..]}", s.Name));
+        Assert.Equal(20, tracker.Store.GetTokensByTab(DateTimeOffset.MinValue).Count);
+        tracker.Store.Dispose();
+    }
+
+    [Fact]
+    public async Task A_tabs_session_window_tokens_are_read_while_its_tokens_flyout_shows_them()
+    {
+        await using var h = new TabTestHarness();
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        var tab = await h.OpenTabAsync();
+        tracker.TurnRecorded += id => h.Shell.OnTurnRecorded(id);
+        // Older than the 5-hour window, but in the week's chart.
+        tracker.Store.AddTurns([new TurnRecord(h.Time.GetUtcNow().AddHours(-8), tab.Id, "s1", "claude-opus-5-5", 1000, 0, 0, 0, 0, null)]);
+
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && tab.IsSettled, "the turn");
+        await TabTestHarness.Eventually(() => tracker.Store.GetTurns(DateTimeOffset.MinValue, DateTimeOffset.MaxValue).Count == 2, "the turn's record");
+        Assert.Null(tab.Context.TokenWindowText);
+
+        tab.Context.IsTokenDetailsOpen = true;
+        await tab.Context.TokenWindowRefresh;
+
+        Assert.Equal("This session window: 120 tok", tab.Context.TokenWindowText);
+        Assert.Equal(2, tab.Context.TurnPoints.Count);
+    }
+
+    [Fact]
+    public async Task A_closed_tab_keeps_its_last_name_in_the_usage_panel()
+    {
+        await using var h = new TabTestHarness();
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        using var header = new UsageViewModel(h.Services, tracker);
+        var panel = new UsagePanelViewModel(h.Services, tracker, header, id => h.Shell.AllTabs.FirstOrDefault(t => t.Id == id)?.DisplayName);
+        var tab = await h.OpenTabAsync();
+        h.Transport.EmitTurn();
+        await Row("work", "the turn");
+        // The tab stops working as the session goes idle just after the turn's result, which can be applied separately:
+        // closing a tab that's still working asks first.
+        await TabTestHarness.Eventually(() => !tab.IsWorking, "the tab to stop working");
+
+        // Renamed after its last turn, then closed: the panel still names it.
+        tab.StartRenameCommand.Execute(null);
+        tab.RenameText = "refactor auth";
+        await tab.CommitRenameCommand.ExecuteAsync(null);
+        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await TabTestHarness.Eventually(() => !h.Shell.AllTabs.Any(), "the tab to close");
+
+        await Row("refactor auth", "the closed tab's last name");
+
+        async Task Row(string name, string what) =>
+            await TabTestHarness.Eventually(() =>
+            {
+                panel.Refresh();
+                return panel.Tabs is [{ } row] && row.Name == name;
+            }, what);
+    }
+
+    [Fact]
+    public void A_row_is_named_after_the_open_tab_then_the_last_name_kept()
+    {
+        var rows = TabBurnRow.From(
+            [
+                new TabTokenSum("open", 300, 0, 0, 0, 0, 1, "its old name"),
+                new TabTokenSum("closed", 200, 0, 0, 0, 0, 1, "fix the build"),
+                new TabTokenSum("recorded-before-names", 100, 0, 0, 0, 0, 1),
+            ],
+            id => id == "open" ? "its new name" : null);
+
+        Assert.Equal(["its new name", "fix the build", "A closed tab"], rows.Select(r => r.Name));
+    }
+
+    private static RateLimitEventMessage Event(double session, DateTimeOffset sessionResets, double weekly, bool? usingCredits = null)
+    {
+        var info = new JsonObject
+        {
+            ["status"] = usingCredits == true ? "rejected" : "allowed",
+            ["unifiedWindows"] = new JsonObject
+            {
+                ["five_hour"] = new JsonObject { ["utilization"] = session, ["resetsAt"] = sessionResets.ToUnixTimeSeconds() },
+                ["seven_day"] = new JsonObject { ["utilization"] = weekly, ["resetsAt"] = sessionResets.AddDays(3).ToUnixTimeSeconds() },
+            },
+        };
+        if (usingCredits is { } paying)
+        {
+            info["isUsingOverage"] = paying;
+            info["rateLimitType"] = "five_hour";
+            info["resetsAt"] = sessionResets.ToUnixTimeSeconds();
+        }
+        return new RateLimitEventMessage(info, new JsonObject { ["type"] = "rate_limit_event", ["rate_limit_info"] = info.DeepClone() });
+    }
+
+    /// <summary>A turn that spent this much.</summary>
+    private static TurnCompleted Result(long input, long output)
+    {
+        var result = (ResultMessage)(MessageParser.TryParse(new JsonObject
+        {
+            ["type"] = "result",
+            ["subtype"] = "success",
+            ["is_error"] = false,
+            ["session_id"] = "s1",
+            ["modelUsage"] = new JsonObject { ["claude-opus-5-5"] = new JsonObject { ["inputTokens"] = input, ["outputTokens"] = output, ["costUSD"] = 0.01 } },
+        }.ToJsonString(), out var message, out _) ? message! : throw new InvalidOperationException());
+        return new TurnCompleted(result, ModelUsageTotals.From(result.ModelUsage));
+    }
+}

@@ -37,7 +37,7 @@ The row stays first. You can't drag it within the group, and **Move up** and **M
 - **Left out of the session tabs' keys.** `Ctrl+Tab`, `Ctrl/Cmd+1` to `9` and `Ctrl/Cmd+J` go only through session tabs and skip it, so opening it never changes their numbers.
 - **It keeps its group.** Closing the group's last session tab leaves the group with only its Files tab. **Close group** closes it too.
 - **It comes back on launch** with the files it had open, as a pinned tab does.
-- **It has nothing a session has.** There's no composer (the [tool windows](../tabs/tool-windows.md) show the group's session tab you used last), no status, usage or notifications. Claudette on the composer stays on the session panes.
+- **It has nothing a session has.** There's no composer (the [tool windows](../tabs/tool-windows.md) show the group's session tab you used last), no status, usage or notifications. Joulene on the composer stays on the session panes.
 
 ## What it doesn't do
 
@@ -52,7 +52,7 @@ Settings → **Files and diffs** holds this tab's settings, each explained where
 | **The explorer is on the** | Left | [The explorer](the-explorer.md) |
 | **Wrap long lines** | off | [Editing](editing.md) |
 | **Indent new lines with** | 4 spaces | [Editing](editing.md) |
-| **Open files in** | Claudette's editor | [Opening files from the conversation](opening-files-from-the-conversation.md) |
+| **Open files in** | Deventry's editor | [Opening files from the conversation](opening-files-from-the-conversation.md) |
 | **Show a file clicked in a conversation** | Beside the conversation | [Opening files from the conversation](opening-files-from-the-conversation.md) |
 
 ## Shortcuts

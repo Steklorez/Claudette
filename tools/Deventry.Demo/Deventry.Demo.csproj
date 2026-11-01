@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>deventry-demo</AssemblyName>
+    <RootNamespace>Deventry.Demo</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Deventry.Core\Deventry.Core.csproj" />
+    <ProjectReference Include="..\..\src\Deventry.Usage\Deventry.Usage.csproj" />
+    <!-- Built next to the tool: the demo's Claude Code, so trying it needs no account and spends no tokens. -->
+    <ProjectReference Include="..\Deventry.FakeClaude\Deventry.FakeClaude.csproj" />
+  </ItemGroup>
+</Project>

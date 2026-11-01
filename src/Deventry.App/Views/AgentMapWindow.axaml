@@ -1,0 +1,33 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels"
+        xmlns:views="using:Deventry.App.Views"
+        x:Class="Deventry.App.Views.AgentMapWindow"
+        x:DataType="vm:TabViewModel"
+        Title="{Binding DisplayName, StringFormat='{}{0} — agents'}"
+        Width="1040" Height="680" MinWidth="560" MinHeight="320"
+        WindowStartupLocation="CenterOwner">
+
+  <!-- The agent map's larger view (DESIGN.md §18): the tree beside the selected agent's prompt and result. -->
+  <DockPanel>
+    <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): the tab's name, in one row, so the
+         window's buttons are as tall as the main window's -->
+    <controls:TitleBar DockPanel.Dock="Top" ShowsTitle="False">
+      <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+    </controls:TitleBar>
+    <!-- Under it, how many agents there are and how they're doing -->
+    <Border DockPanel.Dock="Top" Classes="windowbar">
+      <TextBlock Classes="muted small" Text="{Binding AgentsHeader}" TextWrapping="Wrap" />
+    </Border>
+    <Grid ColumnDefinitions="2*,Auto,3*">
+      <!-- The same subtle background as the side panel, which the tree's selection is drawn against. -->
+      <Border Background="{DynamicResource SubtleBrush}">
+        <views:AgentTree Margin="0,6,0,0" />
+      </Border>
+      <GridSplitter Grid.Column="1" Width="5" Background="Transparent" ResizeDirection="Columns"
+                    BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1,0,0,0" />
+      <views:AgentDetails Grid.Column="2" />
+    </Grid>
+  </DockPanel>
+</Window>

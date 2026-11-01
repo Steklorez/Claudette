@@ -15,16 +15,16 @@ You can give Claude images and files by dropping them on the message box, pastin
 - **Paste** with `Ctrl+V` or `Shift+Insert` (`Cmd+V` on macOS), or **Paste** on the box's right-click menu.
 - **Pick** with the paper clip (**Attach a file**) at the left of the bar.
 
-While you drag a file over the box, Claudette holds her arms up to catch it. See [Claudette on the composer](../claudette/claudette-on-the-composer.md).
+While you drag a file over the box, Joulene holds her arms up to catch it. See [Joulene on the composer](../joulene/joulene-on-the-composer.md).
 
 ## Images
 
-PNG, JPEG, GIF and WebP images work. Claudette goes by what's in the file, not its name.
+PNG, JPEG, GIF and WebP images work. Deventry goes by what's in the file, not its name.
 
 - Each shows as a small thumbnail above the text, with a `×` (**Remove image**) to take it off.
 - They're sent before your text. A message can be only images.
 - Each image can be up to 20 MB, and a message can have up to 20. Past either limit a note under the box says why, such as *Pasted image is 20.1 MB; images can be up to 20 MB.*, and the image isn't attached. The note has a `×` to dismiss it.
-- Claude Code scales images down itself before they reach the API, so a large one is fine within the limit. Claudette sends them as they are.
+- Claude Code scales images down itself before they reach the API, so a large one is fine within the limit. Deventry sends them as they are.
 
 A sent message shows its images as thumbnails above its text. They come back with a restored tab.
 

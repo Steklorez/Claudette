@@ -7,7 +7,7 @@ summary: "After Claude replies, Claude Code can guess what you'll send next."
 
 # Prompt suggestions
 
-After Claude replies, Claude Code can guess what you'll send next. Claudette shows the guess as gray text in the empty message box, as the terminal does ([Claude Code's prompt suggestions](https://code.claude.com/docs/en/interactive-mode#prompt-suggestions)).
+After Claude replies, Claude Code can guess what you'll send next. Deventry shows the guess as gray text in the empty message box, as the terminal does ([Claude Code's prompt suggestions](https://code.claude.com/docs/en/interactive-mode#prompt-suggestions)).
 
 ## Turn them on
 
