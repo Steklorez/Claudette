@@ -1,7 +1,8 @@
 namespace Deventry.App.Services;
 
 /// <summary>One frame of an <see cref="AppIconAnimation"/>: a PNG, and how long it shows.</summary>
-public sealed record AppIconFrame(byte[] Png, TimeSpan Duration);
+/// <param name="OnDark">The taskbar overlay's frame for a dark taskbar (Windows); the Dock's are the same on any.</param>
+public sealed record AppIconFrame(byte[] Png, TimeSpan Duration, byte[]? OnDark = null);
 
 /// <summary>An animation for the Dock icon or the taskbar button's overlay (DESIGN.md §10).</summary>
 /// <param name="Description">What it means, for screen readers.</param>
@@ -9,15 +10,16 @@ public sealed record AppIconAnimation(string Name, string Description, IReadOnly
 
 /// <summary>
 /// The icon's animations (DESIGN.md §10). <c>packaging/icon/build-icons.mjs</c> draws their frames into
-/// <c>Assets/AppIcon</c>, embedded as <c>AppIcon.&lt;name&gt;-&lt;frame&gt;.png</c>.
+/// <c>Assets/AppIcon</c>, embedded as <c>AppIcon.&lt;name&gt;-&lt;frame&gt;.png</c>, and the taskbar overlay's for a
+/// dark taskbar as <c>AppIcon.&lt;name&gt;-dark-&lt;frame&gt;.png</c>.
 /// </summary>
 public static class AppIconAnimations
 {
     /// <summary>
-    /// The taskbar overlay while tabs work (Windows): three chevrons in a lighter shade of the sign's blue, lighting one
-    /// after another, like an arrow board's.
+    /// The taskbar overlay while tabs work (Windows): three chevrons, in her gown's blue on a light taskbar and white on a
+    /// dark one, lighting one after another, like an arrow board's.
     /// </summary>
-    public static AppIconAnimation Chevrons { get; } = Load("chevrons", "Claude is working", ArrowBoard);
+    public static AppIconAnimation Chevrons { get; } = Load("chevrons", "Claude is working", ArrowBoard, onDark: true);
 
     /// <summary>The Dock icon while tabs work (macOS): the sign's prompt becomes an arrow board's chevrons, lighting in turn.</summary>
     public static AppIconAnimation Working { get; } = Load("working", "Claude is working", ArrowBoard);
@@ -32,7 +34,7 @@ public static class AppIconAnimations
     /// The taskbar overlay while a tab waits for a usage limit to reset (Windows): an hourglass whose sand runs slowly
     /// down, rests, and turns over.
     /// </summary>
-    public static AppIconAnimation Hourglass { get; } = Load("hourglass", "Waiting for a usage limit to reset", SandRunning);
+    public static AppIconAnimation Hourglass { get; } = Load("hourglass", "Waiting for a usage limit to reset", SandRunning, onDark: true);
 
     /// <summary>The Dock icon while a tab waits for a usage limit to reset (macOS): the sign shows the hourglass.</summary>
     public static AppIconAnimation Waiting { get; } = Load("waiting", "Waiting for a usage limit to reset", SandRunning);
@@ -45,8 +47,9 @@ public static class AppIconAnimations
 
     private static TimeSpan[] Milliseconds(params int[] each) => [.. each.Select(ms => TimeSpan.FromMilliseconds(ms))];
 
-    private static AppIconAnimation Load(string name, string description, IReadOnlyList<TimeSpan> durations) =>
-        new(name, description, [.. durations.Select((duration, i) => new AppIconFrame(Read($"{name}-{i}.png"), duration))]);
+    private static AppIconAnimation Load(string name, string description, IReadOnlyList<TimeSpan> durations, bool onDark = false) =>
+        new(name, description, [.. durations.Select((duration, i) =>
+            new AppIconFrame(Read($"{name}-{i}.png"), duration, onDark ? Read($"{name}-dark-{i}.png") : null))]);
 
     private static byte[] Read(string file)
     {

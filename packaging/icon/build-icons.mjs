@@ -11,7 +11,7 @@
 //   docs/assets/wordmark.svg                  the name in pixels, for the guide's landing page
 //   packaging/windows/Assets/*.png            the MSIX logos, and the taskbar's unplated sizes
 //   src/Deventry.App/Assets/AppIcon/*.png     the animations' frames (DESIGN.md §10): on the taskbar, chevrons
-//                                             lighting or an hourglass running, in a lighter blue; on the Dock,
+//                                             lighting or an hourglass running, blue or, as -dark-, white; on the Dock,
 //                                             the sign's chevrons lighting, its hourglass running, and a "?" and a "!"
 //                                             taking turns (AppIconAnimations)
 //   src/Deventry.App/Assets/Mascot/mascot.json  Joulene on the composer's poses, props and hats, as cells (DESIGN.md §5)
@@ -146,13 +146,13 @@ const tile = [{ fill: rect(285, 285, 739, 739), grow: 185, paint: { linear: { x1
 const dock = symbol => [...tile, ...sign(300, symbol)];
 
 // The taskbar overlays (Windows), drawn at 32 px, as Windows wants overlays at twice their 16: the symbol alone, the
-// chevrons lighting while tabs work or the hourglass running while one waits, with nothing round it. They're in her
-// gem's blue, lighter than the sign's, which holds against a dark taskbar (4.2:1) and a light one (3.5:1).
-const overlayBlue = '#5B7FD6';
-const overlayChevrons = on => [4.5, 13, 21.5].map((x, i) =>
-  ({ line: [[x, 9], [x + 6, 16], [x, 23]].map(([px, py]) => [px * 32, py * 32]), width: 3.2 * 32, paint: overlayBlue, opacity: i < on ? 1 : 0.3 }));
+// chevrons lighting while tabs work or the hourglass running while one waits, with nothing round it. Each comes in her
+// gown's blue for a light taskbar and in white for a dark one, which the app picks by the taskbar's mode.
+const overlayInk = { light: '#3B4E8C', dark: white };
+const overlayChevrons = (on, ink) => [4.5, 13, 21.5].map((x, i) =>
+  ({ line: [[x, 9], [x + 6, 16], [x, 23]].map(([px, py]) => [px * 32, py * 32]), width: 3.2 * 32, paint: ink, opacity: i < on ? 1 : 0.3 }));
 // The hourglass 24 of the overlay's 32 pixels tall.
-const overlayHourglass = glassFrame => hourglass(glassFrame, (24 * 32) / 140, 10, overlayBlue);
+const overlayHourglass = (glassFrame, ink) => hourglass(glassFrame, (24 * 32) / 140, 10, ink);
 
 // ── Her cave ─────────────────────────────────────────────────────────────
 // The cave in its grassy mound, the dark of its mouth, and the ground in front of it: one of Joulene's props, which she
@@ -687,10 +687,12 @@ write(`${assets}/Wide310x150Logo.png`, png(render(logo, 108, 310, 150)));
 // 512, where the sign is exactly half its size in the 1024 icon, so the Dock icon doesn't shift when one starts or stops.
 const frames = 'src/Deventry.App/Assets/AppIcon';
 const lit = [1, 2, 3, 3];
-lit.forEach((on, i) => write(`${frames}/chevrons-${i}.png`, png(render(overlayChevrons(on), 32))));
+for (const [taskbar, suffix] of [['light', ''], ['dark', '-dark']]) {
+  lit.forEach((on, i) => write(`${frames}/chevrons${suffix}-${i}.png`, png(render(overlayChevrons(on, overlayInk[taskbar]), 32))));
+  sand.forEach((glassFrame, i) => write(`${frames}/hourglass${suffix}-${i}.png`, png(render(overlayHourglass(glassFrame, overlayInk[taskbar]), 32))));
+}
 lit.forEach((on, i) => write(`${frames}/working-${i}.png`, png(render(dock(chevrons(on)), 512))));
 [question, bang, question, bang].forEach((symbol, i) => write(`${frames}/asking-${i}.png`, png(render(dock(symbol), 512))));
-sand.forEach((glassFrame, i) => write(`${frames}/hourglass-${i}.png`, png(render(overlayHourglass(glassFrame), 32))));
 sand.forEach((glassFrame, i) => write(`${frames}/waiting-${i}.png`, png(render(dock(hourglass(glassFrame, 2.45, 9)), 512))));
 
 // Joulene on the composer: her poses, props and hats, which the app draws cell by cell (Mascot/MascotArt).
