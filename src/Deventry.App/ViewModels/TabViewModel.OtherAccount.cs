@@ -212,11 +212,12 @@ public partial class TabViewModel
         {
             return;
         }
+        var now = _services.Time.GetUtcNow();
         if (isCopy && previousId is not null)
         {
             if (origins.TryGetValue(previousId, out var source))
             {
-                origins[sessionId] = source;
+                origins[sessionId] = source.For(now);
             }
             if (State.ConfirmedOtherAccount is { } confirmed && confirmed.StartsWith($"{previousId}|", StringComparison.Ordinal))
             {
@@ -225,8 +226,9 @@ public partial class TabViewModel
         }
         else if (CurrentOrigin() is { } current)
         {
-            origins[sessionId] = current;
+            origins[sessionId] = current.For(now);
         }
+        SessionOrigin.KeepNewest(origins);
         _services.SaveState();
     }
 }

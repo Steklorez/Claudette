@@ -19,6 +19,32 @@ public sealed class SessionOrigin
     /// <summary>The Default account's organization; empty when Claude Code didn't name one.</summary>
     public string Organization { get; set; } = "";
 
+    /// <summary>When the session began, so only the newest are kept (<see cref="KeepNewest"/>).</summary>
+    public DateTimeOffset StartedAt { get; set; }
+
+    /// <summary>
+    /// The most sessions <see cref="AppState.SessionOrigins"/> keeps: about two months of a busy day's sessions, longer
+    /// than Claude Code keeps a transcript to resume by default.
+    /// </summary>
+    public const int MostKept = 2000;
+
+    /// <summary>The same account, for a session begun at <paramref name="startedAt"/>.</summary>
+    public SessionOrigin For(DateTimeOffset startedAt) =>
+        new() { AccountId = AccountId, Name = Name, Email = Email, Organization = Organization, StartedAt = startedAt };
+
+    /// <summary>Drops the oldest past <paramref name="most"/>, so the machine's state doesn't grow with every session begun.</summary>
+    public static void KeepNewest(Dictionary<string, SessionOrigin> origins, int most = MostKept)
+    {
+        if (origins.Count <= most)
+        {
+            return;
+        }
+        foreach (var id in origins.OrderBy(o => o.Value.StartedAt).Take(origins.Count - most).Select(o => o.Key).ToList())
+        {
+            origins.Remove(id);
+        }
+    }
+
     /// <summary>Whether both are the same account: an id, or an email and organization compared ignoring case.</summary>
     public bool IsSameAs(SessionOrigin other) =>
         string.Equals(AccountId, other.AccountId, StringComparison.Ordinal)

@@ -45,7 +45,7 @@ public sealed class OtherAccountTests
         await TabTestHarness.Eventually(() => h.Services.State.SessionOrigins.ContainsKey("s1"), "the record");
 
         var origin = h.Services.State.SessionOrigins["s1"];
-        Assert.Equal(("Me@Home.com", "Home", null), (origin.Email, origin.Organization, origin.AccountId));
+        Assert.Equal(("Me@Home.com", "Home", null, h.Time.GetUtcNow()), (origin.Email, origin.Organization, origin.AccountId, origin.StartedAt));
     }
 
     [Fact]
