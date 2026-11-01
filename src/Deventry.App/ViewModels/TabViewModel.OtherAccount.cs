@@ -57,9 +57,9 @@ public partial class TabViewModel
         _askedCurrent = current;
         var from = origin.Describe(_services.Accounts.Find(origin.AccountId)?.Name);
         var to = current.Describe();
-        OtherAccountText = $"This conversation was started under {from}. It will continue under {to}. Claude Code sends the whole earlier "
-            + $"conversation with its requests, so the organization of {to} can see it, and Claude can't use its earlier thinking from another "
-            + "organization: its next replies may be slower and use more tokens.";
+        OtherAccountText = $"This conversation was started under {from}. Continuing it under {to} sends that account the whole earlier "
+            + "conversation, and its organization may be able to see it. Claude can't use its earlier thinking from another organization, so "
+            + "its next replies may be slower and use more tokens.";
         // Only another of Deventry's accounts can be put back; a different sign-in is Claude Code's to change.
         UseOriginAccountText = origin.AccountId != State.AccountId && (origin.AccountId is null || _services.Accounts.Find(origin.AccountId) is not null)
             ? $"Use {(origin.AccountId is null ? "the Default account" : _services.Accounts.NameOf(origin.AccountId))} instead"

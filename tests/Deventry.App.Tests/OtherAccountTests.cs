@@ -58,9 +58,9 @@ public sealed class OtherAccountTests
 
         Assert.Empty(h.Factory.Launches);
         Assert.Equal(TabStatus.NeedsInput, tab.Status);
-        Assert.Contains("started under the Default account, me@home.com (Home)", tab.OtherAccountText, StringComparison.Ordinal);
-        Assert.Contains("continue under the Default account, me@work.com (Work)", tab.OtherAccountText, StringComparison.Ordinal);
-        Assert.Contains("can see it", tab.OtherAccountText, StringComparison.Ordinal);
+        Assert.Equal("This conversation was started under the Default account, me@home.com (Home). Continuing it under the Default account, "
+            + "me@work.com (Work) sends that account the whole earlier conversation, and its organization may be able to see it. Claude can't use "
+            + "its earlier thinking from another organization, so its next replies may be slower and use more tokens.", tab.OtherAccountText);
         Assert.False(tab.CanUseOriginAccount);
     }
 

@@ -198,7 +198,7 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
             Setting("accounts.warnBeforeOtherAccount", "Warn before continuing a session under another account", s => s.Accounts.WarnBeforeOtherAccount,
                 (s, v) => s.Accounts.WarnBeforeOtherAccount = v,
                 "Ask first when a session started under one account is about to carry on under another.",
-                "Claude Code sends the whole earlier conversation with its requests, so the account it continues under, and its organization, can see it, and Claude can't use its earlier thinking from another organization: its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
+                "Claude Code sends the whole earlier conversation with its requests, so it goes to the account the session continues under, and that account's organization may be able to see it. Claude can't use its earlier thinking from another organization, so its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
                 ["other account", "organization", "work account", "personal account", "resume", "privacy"]),
             Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend"]),
         ], description: "Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");

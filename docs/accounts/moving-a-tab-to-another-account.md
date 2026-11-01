@@ -38,7 +38,7 @@ Do the same and choose **Default**, or the other account. Each move reads the co
 
 {% include unreleased.html %}
 
-Deventry remembers which account each conversation began under. If one would carry on under another, say because its folder now uses another account, you're signed in to Claude with another email, or you opened it from History in a tab on another account, Deventry sends nothing at first. The composer asks **Continue under another account?**, saying which account the conversation began under and which it would continue under: the whole earlier conversation goes to that account, and its organization can see it.
+Deventry remembers which account each conversation began under. If one would carry on under another, say because its folder now uses another account, you're signed in to Claude with another email, or you opened it from History in a tab on another account, Deventry sends nothing at first. The composer asks **Continue under another account?**, saying which account the conversation began under and which it would continue under: the whole earlier conversation goes to that account, and its organization may be able to see it.
 
 - **Continue here** carries on under the new account. The tab doesn't ask again about that conversation and account.
 - **Use Studio instead** moves the tab back to the account the conversation began under. It's there when that's one of your accounts in Deventry, such as Default or an API key, rather than another Claude sign-in.
