@@ -74,7 +74,7 @@ The landing page ([The site](#1-the-site)): what Deventry is, the latest release
 
 ### Downloads (`docs/downloads.md`)
 
-One page, second in the sidebar: the latest release's packages, the next version when a pre-release is newer, and every earlier release. Made from the releases ([Downloads and the changelog](#5-downloads-and-the-changelog)).
+One page, second in the sidebar: the latest release's packages (until Deventry has one, 1.0.0 as coming soon), the next version when a pre-release is newer, every earlier release, and Claudette's releases in a section of their own. Made from the releases ([Downloads and the changelog](#5-downloads-and-the-changelog)).
 
 ### Privacy policy (`docs/privacy-policy.md`)
 
@@ -331,16 +331,18 @@ The Downloads page is made from the repository's releases rather than written, a
 
 ### The Downloads page
 
-- **The latest release** comes first: its version and date, a link to its release on GitHub for what's new in it (its notes are its section of the changelog), a link to the changelog, and a download for each package.
+- **The latest release** of Deventry, 1.0.0 or later, comes first: its version and date, a link to its release on GitHub for what's new in it (its notes are its section of the changelog), a link to the changelog, and a download for each package.
   - **Windows**: **x64 (Intel or AMD)** and **Arm64**, the MSIX files.
   - **macOS**: **Apple silicon** and **Intel**, the `.dmg` files.
   - **Linux**: no package, and a link to Getting started → **Installing on Linux**.
   - Each package shows its file's name and size, and its SHA-256 digest, for anyone who wants to check the file (`Get-FileHash` in PowerShell, `shasum -a 256` on a Mac). Deventry's own updates check it themselves ([Updating Deventry](DESIGN.md#updating-deventry)).
+- **Until Deventry 1.0.0 is out**, its place says *Coming soon*: it's the first version under Deventry's own name, the latest release meanwhile is Claudette's (below), and Claudette updates itself to it on Windows while a Mac installs it by hand once (Updates → **Deventry's updates**, "Coming from Claudette").
 - **Which one you need.** On Windows, Settings → System → About → **System type**. On a Mac, Apple menu → **About This Mac** → **Chip**: an Apple M-series chip is Apple silicon.
 - **The next version**, when a pre-release is newer than the latest release: in a box of its own, marked as a pre-release, saying that Deventry offers pre-releases only with Settings → General → **Include pre-releases**.
-- **Earlier releases**, newest first: each with its date, its packages, and a link to its release. 0.1.0, from before the repository moved, says it can't update itself to a later version, which is installed by hand.
+- **Earlier releases** of Deventry, newest first: each with its date, its packages, and a link to its release. The heading shows once there's more than one.
+- **Claudette**: the releases before 1.0.0, when the app was Claudette, newest first, each as *Claudette 0.7.0* with its date, its packages and a link to its release. 0.1.0, from before the repository moved, says it can't update itself to a later version, which is installed by hand.
 - Then links to Getting started → **What you need** and **Installing**, and to Updates → **Deventry's updates**: once installed, Deventry updates itself.
-- **Which file is which.** `package.yml` names the packages `Deventry-<version>-<x64|arm64>.<msix|dmg>` ([Packaging and signing](DESIGN.md#packaging-and-signing)), as the update check expects. The page reads the OS from the extension and the processor from the name, and lists anything else attached to a release under **Other files**.
+- **Which file is which.** `package.yml` names the packages `Deventry-<version>-<x64|arm64>.<msix|dmg>` ([Packaging and signing](DESIGN.md#packaging-and-signing)), as the update check expects; Claudette's were `Claudette-<version>-…`, which the page knows too. The page reads the OS from the extension and the processor from the name, and lists anything else attached to a release under **Other files**.
 - **The data.** `jekyll-github-metadata`, one of GitHub Pages' own plugins, gives the page the repository's releases as `site.github.releases` and the latest as `site.github.latest_release`, with each package's name, size, SHA-256 digest and download address. `_includes/release.html` lays out one release's packages. The next version is the newest pre-release published after the latest release. Drafts never show, and pre-releases older than the latest release are left out.
 - **When it changes.** The page is built with the site, by GitHub Pages, on a push to `main`, not when a release is published: the change that follows a release ([Releasing](#the-changelog), step 3) brings it up to date. Without the releases, as in a preview with no network, it links to the Releases page on GitHub instead. It needs no JavaScript.
 - The home page's download button goes here, and so does the README's link, once the page is published.
