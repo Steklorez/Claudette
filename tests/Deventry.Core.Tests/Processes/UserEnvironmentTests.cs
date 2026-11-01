@@ -16,7 +16,7 @@ public class UserEnvironmentTests
         ["PATH"] = "/usr/bin:/bin",
         ["HOME"] = "/Users/me",
         ["DEVENTRY_HOME"] = "/tmp/deventry-home",
-        ["XPC_SERVICE_NAME"] = "application.com.dotbunny.claudette",
+        ["XPC_SERVICE_NAME"] = "application.com.dotBunny.Deventry",
     };
 
     private static readonly Dictionary<string, string> Login = new()
@@ -45,7 +45,7 @@ public class UserEnvironmentTests
         Assert.Equal("/opt/homebrew", merged["HOMEBREW_PREFIX"]);
         Assert.Equal("ghp_secret-value", merged["GITHUB_TOKEN"]);
         // Variables only Deventry has are kept.
-        Assert.Equal("application.com.dotbunny.claudette", merged["XPC_SERVICE_NAME"]);
+        Assert.Equal("application.com.dotBunny.Deventry", merged["XPC_SERVICE_NAME"]);
     }
 
     [Fact]

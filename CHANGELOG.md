@@ -8,13 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 **Claudette is now Deventry.** The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
 
+### Added
+
+- **A project's own icon for its group.** Choose a picture (a PNG, ICO, JPEG, BMP, GIF or WebP) on the project's new **Group** page in Settings, and its group shows it in the sidebar in place of the colored dot. It's saved in the project's `deventry.json`, for everyone who opens it, or in `deventry.local.json`, just for you. **Change icon…** in the group's menu takes you there.
+- **A group's color is saved with its project.** The color you pick with **Change color…** is saved in the project's `deventry.json` when you close the picker, so everyone who opens the project sees its group in that color, on every machine. A color in `deventry.local.json` is yours alone and wins. The project's **Group** page in Settings shows where it's saved, and can move it or take it out.
+- **Project settings… in a group's menu** opens Settings at that project's pages, for the group's tab you used last.
+
 ### Changed
 
-- **A new name: Deventry**, in its windows, menus, notifications and installers. On a Mac it's `Deventry.app` in Applications, in place of `Claudette.app`; on Windows it updates the Claudette you have. Its website is [deventry.app](https://deventry.app), and the old address takes you there.
-- **A new icon**: a road-work sign in Joulene's blue, with a prompt on it. On a Mac, while Claude works, the prompt becomes an arrow board's chevrons, lighting in turn; while a usage limit holds a task, the sign shows an hourglass; and while a tab needs you, it shows a `?` and a `!` by turns. On the Windows taskbar, a little badge in the same blue, its chevrons lighting, takes the place of Claude's spark, and the hourglass is in it too.
+- **A new name: Deventry**, in its windows, menus, notifications and installers. On Windows it updates the Claudette you have. On a Mac, Claudette can't update itself to Deventry, so install it by hand this once: download it, drag `Deventry.app` to Applications and `Claudette.app` to the Trash. Everything still comes with you, though macOS asks again whether Deventry may send notifications and use your folders, and, for each password and API key Claudette saved, whether Deventry may use it: choose **Always Allow**. Its website is [deventry.app](https://deventry.app), and the old address takes you there.
+- **A new icon**: a road-work sign in Joulene's blue, with a prompt on it. On a Mac, while Claude works, the prompt becomes an arrow board's chevrons, lighting in turn; while a usage limit holds a task, the sign shows an hourglass; and while a tab needs you, it shows a `?` and a `!` by turns. On the Windows taskbar, the chevrons lighting take the place of Claude's spark, and with the hourglass they're in Joulene's blue on a light taskbar and white on a dark one.
 - **Joulene on the composer**, in place of Claudette: a medieval lady with platinum hair, a gold circlet and a blue gown. She does everything Claudette did, and now and then visits her cave: it appears beside her, she walks in, peeks out and comes back to wave. Her settings are in Settings → Appearance → **Joulene**, as you had them, and the gem in her circlet takes the colour of the tab's group, as Claudette's hair tie did.
 - **`deventry.json`** holds a project's actions and links. A project's `claudette.json` and `claudette.local.json` still work, and Deventry saves to them; a project with neither gets `deventry.json`.
 - **`DEVENTRY_` environment variables.** Project actions get `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT`, and your login shell `DEVENTRY_RESOLVING_ENVIRONMENT`, beside their `CLAUDETTE_` names for now. `CLAUDETTE_HOME` still works too.
+- **A web page Claude names opens in your browser.** A link in a reply, or a file's name in its code, that's an `.html` page opens in your default browser rather than in Deventry's editor, and so does one linked from a Markdown file's preview. Changed files' and a tool card's **Open** still open it in the editor, to work on it.
 - **In the Microsoft Store**, Deventry has a listing of its own. Install it from there, and everything carries over as it does from a download.
 
 ## [0.7.0] - 2026-10-31

@@ -9,12 +9,24 @@ namespace Deventry.Core.ProjectTools;
 /// <summary>What a folder's project files hold, both merged: the shared file's entries, then the local file's.</summary>
 /// <param name="Actions">The actions for this OS, in order. <see cref="ProjectFile.Read"/> also leaves out those whose <c>ifExists</c> is missing.</param>
 /// <param name="Problems">Why entries (or a whole file) were skipped, such as "deventry.json: actions[2] has no command".</param>
-public sealed record ProjectFileContents(IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems)
+/// <param name="Icon">The picture the folder's group shows in place of its colored dot; null keeps the dot.</param>
+/// <param name="Color">The folder's group's color, <c>#RRGGBB</c>; null leaves the one remembered on this computer.</param>
+public sealed record ProjectFileContents(
+    IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems, ProjectIcon? Icon = null, string? Color = null)
 {
     public static ProjectFileContents Empty { get; } = new([], [], []);
 
-    public bool IsEmpty => Actions.Count == 0 && Links.Count == 0 && Problems.Count == 0;
+    public bool IsEmpty => Actions.Count == 0 && Links.Count == 0 && Problems.Count == 0 && Icon is null && Color is null;
 }
+
+/// <summary>
+/// A project's <c>icon</c> (DESIGN.md §4, "Grouped by folder"): the picture its group shows in the sidebar in place of
+/// its colored dot.
+/// </summary>
+/// <param name="Path">As the file has it: from the project's folder (<c>Assets/logo.png</c>), or a full path.</param>
+/// <param name="Scope">The file it's in. The local file's wins.</param>
+/// <param name="FullPath">Where the picture is, once <see cref="ProjectFile.Read"/> has found it there and fit to show.</param>
+public sealed record ProjectIcon(string Path, ProjectFileScope Scope, string? FullPath = null);
 
 /// <summary>One entry of a file's <c>actions</c>, as the editor sees it: the JSON as written, and what it reads as.</summary>
 /// <param name="Raw">The entry as it is in the file. Saving keeps its other fields, such as <c>os</c>.</param>
@@ -40,6 +52,8 @@ public sealed record ProjectFileLinkEntry(JsonNode? Raw, ProjectLink? Link, stri
 /// skipped with a reason rather than failing the file. A missing file means nothing.
 /// <code>
 /// {
+///   "icon": "Assets/logo.png",
+///   "color": "#4A6FC4",
 ///   "actions": [
 ///     { "name": "Run tests", "command": "dotnet test", "folder": "src", "mode": "output" },
 ///     { "name": "Open Grafana", "command": "start https://grafana", "mode": "launch", "os": ["windows"] },
@@ -65,6 +79,15 @@ public static class ProjectFile
         WriteIndented = true,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
+
+    /// <summary>The pictures an <c>icon</c> can be: what Skia decodes on every platform.</summary>
+    public static IReadOnlySet<string> IconExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ".png", ".ico", ".jpg", ".jpeg", ".bmp", ".gif", ".webp",
+    };
+
+    /// <summary>An icon shows 14 pixels across, so a picture over 1 MB is far more than it needs.</summary>
+    public const long IconMaxBytes = 1024 * 1024;
 
     public static string FileName(ProjectFileScope scope) => scope == ProjectFileScope.Shared ? SharedName : LocalName;
 
@@ -94,10 +117,21 @@ public static class ProjectFile
         var localName = Path.GetFileName(localPath);
         var shared = Parse(ReadText(sharedPath, out var sharedError), ProjectFileScope.Shared, os, sharedName);
         var local = Parse(ReadText(localPath, out var localError), ProjectFileScope.Local, os, localName);
+        // The local file's icon wins; one that can't be shown says why, and the group keeps its dot.
+        ProjectIcon? icon = null;
+        string[] iconProblem = [];
+        if ((local.Icon ?? shared.Icon) is { } written)
+        {
+            var (fullPath, problem) = ResolveIcon(folder, written.Path);
+            icon = fullPath is null ? null : written with { FullPath = fullPath };
+            iconProblem = problem is null ? [] : [$"{(written.Scope == ProjectFileScope.Local ? localName : sharedName)}: {problem}"];
+        }
         return new ProjectFileContents(
             [.. shared.Actions.Concat(local.Actions).Where(a => a.IsShownIn(folder))],
             [.. shared.Links, .. local.Links],
-            [.. Error(sharedName, sharedError), .. shared.Problems, .. Error(localName, localError), .. local.Problems]);
+            [.. Error(sharedName, sharedError), .. shared.Problems, .. Error(localName, localError), .. local.Problems, .. iconProblem],
+            icon,
+            local.Color ?? shared.Color);
 
         static IEnumerable<string> Error(string file, string? error) => error is null ? [] : [$"{file} couldn't be read: {error}"];
     }
@@ -142,7 +176,139 @@ public static class ProjectFile
                 problems.Add($"{file}: {entry.Problem}");
             }
         }
-        return new ProjectFileContents(actions, links, problems);
+        ProjectIcon? icon = null;
+        if (root.TryGetPropertyValue("icon", out var iconNode) && iconNode is not null)
+        {
+            if (LenientJson.String(root, "icon")?.Trim() is { Length: > 0 } path)
+            {
+                icon = new ProjectIcon(path, scope);
+            }
+            else
+            {
+                problems.Add($"{file}: \"icon\" should be a picture's path, such as \"Assets/logo.png\", so it was skipped.");
+            }
+        }
+        string? color = null;
+        if (root.TryGetPropertyValue("color", out var colorNode) && colorNode is not null)
+        {
+            color = NormalizeColor(LenientJson.String(root, "color"));
+            if (color is null)
+            {
+                problems.Add($"{file}: \"color\" should be a color such as \"#4A6FC4\", so it was skipped.");
+            }
+        }
+        return new ProjectFileContents(actions, links, problems, icon, color);
+    }
+
+    /// <summary>A color as it's written and kept, <c>#RRGGBB</c>, from <c>#RRGGBB</c> or <c>#RGB</c>, with or without the <c>#</c>; null when it isn't one.</summary>
+    public static string? NormalizeColor(string? text)
+    {
+        var hex = text?.Trim().TrimStart('#') ?? "";
+        if (hex.Length is not (3 or 6) || !hex.All(char.IsAsciiHexDigit))
+        {
+            return null;
+        }
+        return "#" + (hex.Length == 3 ? string.Concat(hex.Select(c => $"{c}{c}")) : hex).ToUpperInvariant();
+    }
+
+    /// <summary>
+    /// Where an <c>icon</c> is, read from <paramref name="folder"/>, or why it can't be the group's: not a picture Deventry
+    /// shows, not there, too big, or on a network share, which is never looked at by itself, since Windows would hand its
+    /// server the user's credentials and a cloned project's file could name any.
+    /// </summary>
+    public static (string? FullPath, string? Problem) ResolveIcon(string folder, string icon)
+    {
+        var network = $"icon {icon} is on a network share, which Deventry doesn't look at by itself.";
+        if (Protocol.ReplyFileReference.IsNetworkPath(icon))
+        {
+            return (null, network);
+        }
+        string full;
+        try
+        {
+            full = Path.GetFullPath(Path.Combine(folder, icon));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return (null, $"icon {icon} isn't a path.");
+        }
+        if (Protocol.ReplyFileReference.IsNetworkPath(full))
+        {
+            return (null, network);
+        }
+        if (!IconExtensions.Contains(Path.GetExtension(full)))
+        {
+            return (null, $"icon {icon} isn't a PNG, ICO, JPEG, BMP, GIF or WebP picture.");
+        }
+        try
+        {
+            var info = new FileInfo(full);
+            if (!info.Exists)
+            {
+                return (null, $"icon {icon} isn't there.");
+            }
+            if (info.Length > IconMaxBytes)
+            {
+                return (null, $"icon {icon} is over 1 MB, far more than an icon needs.");
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return (null, $"icon {icon} couldn't be read: {ex.Message}");
+        }
+        return (full, null);
+    }
+
+    /// <summary>
+    /// How a picture chosen for the icon is written: from the project's folder, with forward slashes, so it's the same on
+    /// every machine; a picture elsewhere by its full path, which only this computer has.
+    /// </summary>
+    public static string IconPathFor(string folder, string picked)
+    {
+        var relative = Path.GetRelativePath(folder, picked);
+        return relative == "." || relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? picked : relative.Replace('\\', '/');
+    }
+
+    /// <summary>One file's <c>icon</c> as it has it, for Settings' Group page; null when it has none.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static string? ReadIcon(string folder, ProjectFileScope scope) => ReadValue(folder, scope, "icon");
+
+    /// <summary>
+    /// Sets one file's <c>icon</c>, or takes it out when <paramref name="icon"/> is null, keeping its other keys, as
+    /// <see cref="WriteActions"/> does. Creates the file for an icon when there's none.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static void WriteIcon(string folder, ProjectFileScope scope, string? icon) => WriteValue(folder, scope, "icon", icon);
+
+    /// <summary>One file's <c>color</c>, as <c>#RRGGBB</c>; null when it has none, or none that's a color.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static string? ReadColor(string folder, ProjectFileScope scope) => NormalizeColor(ReadValue(folder, scope, "color"));
+
+    /// <summary>Sets one file's <c>color</c> (<c>#RRGGBB</c>), or takes it out when null, as <see cref="WriteIcon"/> does.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static void WriteColor(string folder, ProjectFileScope scope, string? color) =>
+        WriteValue(folder, scope, "color", color is null ? null : NormalizeColor(color) ?? throw new ArgumentException($"{color} isn't a color.", nameof(color)));
+
+    private static string? ReadValue(string folder, ProjectFileScope scope, string key) =>
+        ReadRoot(folder, scope) is { } root && LenientJson.String(root, key)?.Trim() is { Length: > 0 } value ? value : null;
+
+    private static void WriteValue(string folder, ProjectFileScope scope, string key, string? value)
+    {
+        var root = ReadRoot(folder, scope);
+        if (value is null && root is null)
+        {
+            return;
+        }
+        root ??= [];
+        if (value is null)
+        {
+            root.Remove(key);
+        }
+        else
+        {
+            root[key] = value;
+        }
+        AtomicFile.WriteAllText(PathFor(folder, scope), root.ToJsonString(WriteOptions) + Environment.NewLine);
     }
 
     /// <summary>Every entry of one file's <c>actions</c>, for the editor, including ones for other OSes and ones it can't read.</summary>

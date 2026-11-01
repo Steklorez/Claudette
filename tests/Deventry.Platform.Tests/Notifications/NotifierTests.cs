@@ -83,6 +83,15 @@ public class NotifierTests
         Assert.NotNull(System.Xml.Linq.XDocument.Parse(xml));
     }
 
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(1, false)]
+    public void The_taskbar_is_dark_unless_Windows_says_it_is_light(int systemUsesLightTheme, bool dark) =>
+        Assert.Equal(dark, TaskbarTheme.IsDark(systemUsesLightTheme));
+
+    [Fact]
+    public void A_Windows_with_no_light_taskbar_has_a_dark_one() => Assert.True(TaskbarTheme.IsDark(null));
+
     [Fact]
     public void Null_notifier_shows_nothing()
     {
@@ -90,7 +99,7 @@ public class NotifierTests
         NullNotifier.Instance.Show(Sample);
         NullNotifier.Instance.SetCount(3);
         Assert.Equal(AppIconSurface.None, NullNotifier.Instance.Surface);
-        NullNotifier.Instance.ShowFrame([1, 2, 3], "Claude is working");
+        NullNotifier.Instance.ShowFrame([1, 2, 3], [4, 5, 6], "Claude is working");
         NullNotifier.Instance.Flash(true);
     }
 

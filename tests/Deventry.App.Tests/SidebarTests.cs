@@ -4,6 +4,7 @@ using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
 using Deventry.App.ViewModels.ToolWindows;
+using Deventry.Core.ProjectTools;
 using Deventry.Core.Protocol;
 using Deventry.Core.Settings;
 
@@ -232,6 +233,59 @@ public class SidebarTests
         Assert.Empty(h.Shell.Groups);
         await h.OpenTabAsync();
         Assert.Equal(Color.FromRgb(0, 255, 0), h.Shell.Groups.Single().Color);
+    }
+
+    [Fact]
+    public async Task Closing_the_picker_saves_the_color_it_was_left_on_in_the_projects_deventry_json()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var group = h.Shell.Groups.Single();
+        var shared = Path.Combine(h.WorkFolder, ProjectFile.SharedName);
+
+        // A drag through the spectrum applies each step at once, and writes nothing to the project yet.
+        var picker = h.Shell.PickGroupColor(group);
+        picker.HsvColor = new HsvColor(1, 30, 1, 1);
+        picker.HsvColor = new HsvColor(1, 120, 1, 1);
+        Assert.False(File.Exists(shared));
+
+        picker.Close();
+
+        await TabTestHarness.Eventually(() => ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Shared) == "#00FF00", "the color in deventry.json");
+        Assert.Equal(Color.FromRgb(0, 255, 0), group.Color);
+    }
+
+    [Fact]
+    public async Task The_picker_saves_in_deventry_local_json_when_that_has_the_color_that_shows()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var group = h.Shell.Groups.Single();
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.LocalName), """{ "color": "#123456" }""");
+        await tab.ProjectTools.RefreshFileAsync();
+        Assert.Equal(Color.Parse("#123456"), group.Color);
+
+        var picker = h.Shell.PickGroupColor(group);
+        picker.PickCommand.Execute(picker.Swatches[2]);
+        picker.Close();
+
+        var picked = TabGroupViewModel.ToHex(TabGroupViewModel.Palette[2].Color);
+        await TabTestHarness.Eventually(() => ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local) == picked, "the color in deventry.local.json");
+        Assert.False(File.Exists(Path.Combine(h.WorkFolder, ProjectFile.SharedName)));
+    }
+
+    [Fact]
+    public async Task A_color_in_the_projects_files_recolors_its_group_and_is_remembered_on_this_computer()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var group = h.Shell.Groups.Single();
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "color": "#1a3" }""");
+
+        await tab.ProjectTools.RefreshFileAsync();
+
+        Assert.Equal(Color.Parse("#11AA33"), group.Color);
+        Assert.Equal("#11AA33", h.Services.State.FolderColors[group.Folder]);
     }
 
     [Fact]

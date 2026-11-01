@@ -189,7 +189,7 @@ public sealed unsafe class MacDockBadge(ILogger logger) : IAppBadge
 
     public AppIconSurface Surface => AppIconSurface.Icon;
 
-    public void ShowFrame(byte[]? png, string? description)
+    public void ShowFrame(byte[]? png, byte[]? onDark, string? description)
     {
         try
         {

@@ -1182,7 +1182,7 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
             LinkProblem = $"Couldn't find {reference.Path}.";
             return;
         }
-        if (await _owner.OpenPathAsync(target, reference.Line, reference.Column, reference.EndLine) == OpenedPath.NotFound)
+        if (await _owner.OpenLinkedPathAsync(target, reference.Line, reference.Column, reference.EndLine) == OpenedPath.NotFound)
         {
             LinkProblem = $"Couldn't find {reference.Path}.";
         }

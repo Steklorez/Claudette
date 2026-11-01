@@ -19,13 +19,18 @@ public sealed class AvaloniaPlatformServices(Func<TopLevel?> topLevel) : IPlatfo
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 
-    public async Task<string?> PickFileAsync(string title)
+    public async Task<string?> PickFileAsync(string title, IReadOnlyList<FileTypeFilter>? types = null)
     {
         if (topLevel() is not { } top)
         {
             return null;
         }
-        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
+        var files = await top.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false,
+            FileTypeFilter = types?.Select(type => new FilePickerFileType(type.Name) { Patterns = type.Patterns }).ToArray(),
+        });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 

@@ -1,7 +1,9 @@
 using System.Xml;
 using System.Xml.Linq;
+using Deventry.Core.FromClaudette;
 using Deventry.Core.LoginItems;
 using Deventry.Core.Updates;
+using Deventry.Platform.FromClaudette;
 using Deventry.Platform.LoginItems.Mac;
 using Deventry.Platform.Tests.Support;
 
@@ -30,10 +32,11 @@ public sealed class LaunchAgentLoginItemsTests : IDisposable
 
         items.WriteEntry(new DeventryCopy(AppInstallKind.MacApp, "/Applications/R&D/Deventry.app", "0.3.0"));
 
-        Assert.Equal(Path.Combine(LaunchAgents, "com.dotbunny.claudette.login.plist"), items.AgentPath);
+        Assert.Equal(Path.Combine(LaunchAgents, "com.dotBunny.Deventry.login.plist"), items.AgentPath);
         Assert.Equal(LoginEntryState.Enabled, items.ReadEntry());
         var agent = ReadPlist(items.AgentPath);
-        Assert.Equal("com.dotbunny.claudette.login", agent["Label"].Value);
+        Assert.Equal("com.dotBunny.Deventry.login", agent["Label"].Value);
+        Assert.Equal(["com.dotBunny.Deventry"], agent["AssociatedBundleIdentifiers"].Elements("string").Select(s => s.Value));
         Assert.Equal(["/usr/bin/open", "-a", "/Applications/R&D/Deventry.app", "--args", "--login"], agent["ProgramArguments"].Elements("string").Select(s => s.Value));
         Assert.Equal("true", agent["RunAtLoad"].Name.LocalName);
         // What the agent starts outlives it: a source build's copy, for one.
@@ -43,6 +46,27 @@ public sealed class LaunchAgentLoginItemsTests : IDisposable
         items.DeleteEntry();
 
         Assert.Equal(LoginEntryState.Missing, items.ReadEntry());
+    }
+
+    [Fact]
+    public void Claudettes_agent_starts_Deventry_at_login_until_Deventry_writes_its_own_in_its_place()
+    {
+        var app = new DeventryCopy(AppInstallKind.MacApp, "/Applications/Deventry.app", "1.0.0");
+        var claudettes = new LaunchAgentLoginItems(new FakeLauncher(), LaunchAgents, UsualDotnet,
+            label: ClaudetteLoginItems.MacLabel, bundleIdentifier: ClaudetteLoginItems.MacBundleIdentifier);
+        claudettes.WriteEntry(new DeventryCopy(AppInstallKind.MacApp, "/Applications/Claudette.app", "0.7.0"));
+        Assert.Equal("com.dotbunny.claudette.login", ReadPlist(claudettes.AgentPath)["Label"].Value);
+        var items = (CarriedOverLoginItems)ClaudetteLoginItems.CarriedOver(new LaunchAgentLoginItems(new FakeLauncher(), LaunchAgents, UsualDotnet), claudettes);
+
+        Assert.True(items.HasOnlyClaudettes);
+        Assert.Equal(LoginEntryState.Enabled, items.ReadEntry());
+
+        items.WriteEntry(app);
+
+        Assert.False(File.Exists(Path.Combine(LaunchAgents, "com.dotbunny.claudette.login.plist")));
+        Assert.Equal(["/usr/bin/open", "-a", "/Applications/Deventry.app", "--args", "--login"],
+            ReadPlist(Path.Combine(LaunchAgents, "com.dotBunny.Deventry.login.plist"))["ProgramArguments"].Elements("string").Select(s => s.Value));
+        Assert.False(items.HasOnlyClaudettes);
     }
 
     [Fact]

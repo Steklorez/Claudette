@@ -13,6 +13,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 using Deventry.App.Controls;
+using Deventry.Core.Settings;
 using Deventry.Platform.Shell.Mac;
 
 namespace Deventry.App.Services.Automation;
@@ -33,14 +34,17 @@ public sealed class AutomationCommands
     private readonly Func<string?, TopLevel?> _findByTitle;
     private readonly Func<IEnumerable<TopLevel>> _popups;
     private readonly Func<TopLevel, IReadOnlyList<MacWindowButton>> _windowButtons;
+    private readonly Action<ThemeChoice?, AppStyle?>? _setAppearance;
 
     /// <param name="findWindow">The window or popup with a native handle; tests give their own.</param>
     /// <param name="popups">The popups open now, which a control may be in whatever window is named.</param>
     /// <param name="findByTitle">The window with a title, or for none the main window, for a request without a handle.</param>
     /// <param name="windowButtons">The OS's buttons over a window, which aren't in what it draws: macOS's traffic lights.</param>
+    /// <param name="setAppearance">Changes Settings → Appearance's theme or style, as Settings would, for <c>appearance</c>.</param>
     public AutomationCommands(Func<long, TopLevel?> findWindow, Func<IEnumerable<TopLevel>>? popups = null, Func<string?, TopLevel?>? findByTitle = null,
-        Func<TopLevel, IReadOnlyList<MacWindowButton>>? windowButtons = null)
+        Func<TopLevel, IReadOnlyList<MacWindowButton>>? windowButtons = null, Action<ThemeChoice?, AppStyle?>? setAppearance = null)
     {
+        _setAppearance = setAppearance;
         _findWindow = findWindow;
         _popups = popups ?? (() => []);
         _findByTitle = findByTitle ?? (_ => null);
@@ -48,7 +52,7 @@ public sealed class AutomationCommands
     }
 
     /// <summary>Deventry's own windows and the popups open over them, found by native handle, or by title.</summary>
-    public static AutomationCommands ForApp()
+    public static AutomationCommands ForApp(Action<ThemeChoice?, AppStyle?>? setAppearance = null)
     {
         static IClassicDesktopStyleApplicationLifetime? Desktop() => Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
         Func<TopLevel, IReadOnlyList<MacWindowButton>>? windowButtons = null;
@@ -59,7 +63,7 @@ public sealed class AutomationCommands
         return new(handle => (Desktop()?.Windows ?? []).Concat(OpenPopups.Roots).FirstOrDefault(t => t.TryGetPlatformHandle()?.Handle == handle),
             () => OpenPopups.Roots,
             title => title is null ? Desktop()?.MainWindow : Desktop()?.Windows.FirstOrDefault(w => w.Title == title),
-            windowButtons);
+            windowButtons, setAppearance);
     }
 
     /// <summary>The traffic lights over a window drawing into its title bar; with the system's, they're in that instead.</summary>
@@ -88,6 +92,7 @@ public sealed class AutomationCommands
                 "capture" => Capture(Window(request), request.Path ?? throw new AutomationException("capture needs a path to save the picture at.")),
                 "resize" => Resize(Window(request), request.Width ?? 0, request.Height ?? 0),
                 "close" => Close(Window(request)),
+                "appearance" => Appearance(request.Theme, request.Style),
                 _ => AutomationResponse.Failed($"There's no command '{request.Verb}'."),
             };
         }
@@ -411,6 +416,38 @@ public sealed class AutomationCommands
         target.RaiseEvent(down);
         target.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyUpEvent, Key = key, KeyModifiers = modifiers, Source = target });
         return AutomationResponse.Done(down.Handled ? "Handled" : "Unhandled");
+    }
+
+    /// <summary>
+    /// Settings → Appearance's theme or style, changed as Settings changes them, so a script takes the same moment in
+    /// each theme without starting Deventry again.
+    /// </summary>
+    private AutomationResponse Appearance(string? theme, string? style)
+    {
+        if (_setAppearance is null)
+        {
+            throw new AutomationException("The appearance can't be changed here.");
+        }
+        if (theme is null && style is null)
+        {
+            throw new AutomationException("appearance needs a theme, a style or both.");
+        }
+        ThemeChoice? themeChoice = null;
+        if (theme is not null)
+        {
+            themeChoice = Enum.TryParse<ThemeChoice>(theme, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+                ? parsed
+                : throw new AutomationException($"There's no theme '{theme}'.");
+        }
+        AppStyle? styleChoice = null;
+        if (style is not null)
+        {
+            styleChoice = Enum.TryParse<AppStyle>(style, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed)
+                ? parsed
+                : throw new AutomationException($"There's no style '{style}'.");
+        }
+        _setAppearance(themeChoice, styleChoice);
+        return AutomationResponse.Done();
     }
 
     private static AutomationResponse Close(TopLevel window)

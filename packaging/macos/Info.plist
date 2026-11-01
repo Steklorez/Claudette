@@ -9,7 +9,7 @@
   <string>Deventry</string>
   <!-- User Notifications need a bundle identifier (DESIGN.md §10). -->
   <key>CFBundleIdentifier</key>
-  <string>com.dotbunny.claudette</string>
+  <string>com.dotBunny.Deventry</string>
   <key>CFBundleExecutable</key>
   <string>Deventry</string>
   <key>CFBundleIconFile</key>

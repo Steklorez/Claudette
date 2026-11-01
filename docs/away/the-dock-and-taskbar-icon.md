@@ -32,7 +32,9 @@ What it shows, most important first:
 
 The hourglass shows whether or not the task will continue by itself, and goes once the limit resets, a turn starts, or you choose **Don't continue** ([When a limit stops a task](../usage/when-a-limit-stops-a-task.md)). It comes before tabs working, since the limit stopped a task and the other tabs are likely to run into it too. It never flashes the taskbar, because nothing needs you.
 
-On Windows the overlay holds one image, so the number of tabs needing input comes first, then the hourglass, then the chevrons. The chevrons or hourglass come back once no tab needs input, or at once with the badge off. Windows takes the button's own icon from the app, so only the overlay can move.
+On Windows the chevrons and the hourglass are blue on a light taskbar and white on a dark one, following the mode Windows uses for the taskbar (Settings → Personalization → Colors).
+
+The overlay holds one image, so the number of tabs needing input comes first, then the hourglass, then the chevrons. The chevrons or hourglass come back once no tab needs input, or at once with the badge off. Windows takes the button's own icon from the app, so only the overlay can move.
 
 With reduced motion, the icon shows its picture without moving. That's Settings → Appearance → **Motion**; see [Accessibility](../settings/accessibility.md).
 

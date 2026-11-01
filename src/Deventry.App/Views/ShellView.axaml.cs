@@ -339,6 +339,8 @@ public partial class ShellView : UserControl
     {
         var picker = shell.PickGroupColor(group);
         picker.Done += flyout.Hide;
+        // Saved in the project's files once, as it closes, however it closes.
+        flyout.Closed += (_, _) => picker.Close();
         return new GroupColorPicker { DataContext = picker };
     });
 

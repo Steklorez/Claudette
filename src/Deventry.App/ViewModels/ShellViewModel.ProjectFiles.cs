@@ -300,6 +300,22 @@ public sealed partial class ShellViewModel
         return OpenedPath.Elsewhere;
     }
 
+    /// <summary>
+    /// Opens a file a link names, in a reply or a Markdown file's preview (DESIGN.md §18, "Files named in Claude's
+    /// replies"): a web page in the browser, the app the OS uses for it, since a link to one means the page; anything else
+    /// as <see cref="OpenPathAsync"/> does. A file worked on elsewhere, from Changed files or a tool card, still opens in
+    /// the editor.
+    /// </summary>
+    internal async Task<OpenedPath> OpenLinkedPathAsync(string path, string folder, TabViewModel? from, int? line = null, int? column = null, int? endLine = null)
+    {
+        if (!ReplyFileReference.IsWebPage(path) || !await Task.Run(() => File.Exists(path)))
+        {
+            return await OpenPathAsync(path, folder, from, line, column, endLine);
+        }
+        await _services.Platform.OpenFileAsync(path);
+        return OpenedPath.Elsewhere;
+    }
+
     /// <summary>A path as it's shown: inside <paramref name="folder"/> from there, else in full.</summary>
     internal static string ShownPath(string path, string folder)
     {

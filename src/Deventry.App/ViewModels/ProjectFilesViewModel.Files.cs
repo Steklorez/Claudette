@@ -499,6 +499,9 @@ public sealed partial class ProjectFilesViewModel
     /// <summary>A file linked from a preview: as a file named in a reply opens, in this project's Files tab or the one holding it.</summary>
     internal Task<OpenedPath> OpenPathAsync(string path, int? line, int? column, int? endLine) => _shell.OpenPathAsync(path, Folder, null, line, column, endLine);
 
+    /// <summary>A file a link in a Markdown file's preview names, as a reply's link opens it: a web page in the browser.</summary>
+    internal Task<OpenedPath> OpenLinkedPathAsync(string path, int? line, int? column, int? endLine) => _shell.OpenLinkedPathAsync(path, Folder, null, line, column, endLine);
+
     /// <summary>A web link in a preview: the browser, or the image window for an image.</summary>
     internal Task OpenWebLinkAsync(Uri uri, Conversation.ReplyImages images) => _shell.OpenWebLinkAsync(uri, images);
 

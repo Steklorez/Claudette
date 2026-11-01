@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Deventry.App.Services.Automation;
+using Deventry.Core.Settings;
 using Deventry.Platform.Shell.Mac;
 using CommunityToolkit.Mvvm.Input;
 
@@ -305,5 +306,28 @@ public class AutomationCommandsUiTests
         Assert.Equal((640.0, 480.0), (main.MaxWidth, main.MaxHeight));
         Assert.Contains("needs a width and a height", commands.Execute(new() { Verb = "resize", Width = 640 }).Error, StringComparison.Ordinal);
         main.Close();
+    }
+
+    /// <summary>
+    /// Appearance changes the theme or the style asked, as Settings would, so a script takes the same moment in each
+    /// theme without starting Deventry again; what it doesn't name stays as it was, and one there isn't is refused.
+    /// </summary>
+    [AvaloniaFact]
+    public void Appearance_changes_the_theme_or_style_asked()
+    {
+        var changes = new List<(ThemeChoice? Theme, AppStyle? Style)>();
+        var commands = new AutomationCommands(_ => null, setAppearance: (theme, style) => changes.Add((theme, style)));
+
+        var light = commands.Execute(new() { Verb = "appearance", Theme = "light" });
+        var claude = commands.Execute(new() { Verb = "appearance", Style = "Claude" });
+
+        Assert.True(light.Ok, light.Error);
+        Assert.True(claude.Ok, claude.Error);
+        Assert.Equal(new (ThemeChoice?, AppStyle?)[] { (ThemeChoice.Light, null), (null, AppStyle.Claude) }, changes);
+        Assert.Contains("no theme 'sepia'", commands.Execute(new() { Verb = "appearance", Theme = "sepia" }).Error, StringComparison.Ordinal);
+        Assert.Contains("no style '7'", commands.Execute(new() { Verb = "appearance", Style = "7" }).Error, StringComparison.Ordinal);
+        Assert.Contains("needs a theme, a style or both", commands.Execute(new() { Verb = "appearance" }).Error, StringComparison.Ordinal);
+        Assert.Equal(2, changes.Count);
+        Assert.False(new AutomationCommands(_ => null).Execute(new() { Verb = "appearance", Theme = "dark" }).Ok);
     }
 }

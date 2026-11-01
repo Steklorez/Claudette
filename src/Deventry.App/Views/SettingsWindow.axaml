@@ -6,6 +6,7 @@
         xmlns:settings="using:Deventry.App.ViewModels.Settings"
         xmlns:pages="using:Deventry.App.Views.Settings"
         xmlns:conversation="using:Deventry.App.Conversation"
+        xmlns:services="using:Deventry.App.Services"
         x:Class="Deventry.App.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
@@ -143,6 +144,13 @@
       <Setter Property="Margin" Value="0,0,7,0" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+    <!-- The project's icon in the dot's place, centered where the dot is, as in the main window's sidebar -->
+    <Style Selector="Image.groupicon">
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
+      <Setter Property="Margin" Value="-3,0,4,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
     <Style Selector="Path.navicon">
       <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
       <Setter Property="StrokeThickness" Value="1.15" />
@@ -253,8 +261,16 @@
                 <StackPanel Classes="projectheading">
                   <TextBlock Classes="navcaption" Text="Selected project" />
                   <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding Project.Folder, FallbackValue={x:Null}}">
-                    <Ellipse Classes="groupdot" Fill="{Binding Project.Group.Brush, FallbackValue={x:Null}}"
-                             IsVisible="{Binding Project.Group, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}" />
+                    <Ellipse Classes="groupdot" Fill="{Binding Project.Group.Brush, FallbackValue={x:Null}}">
+                      <Ellipse.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                          <Binding Path="Project.Group" Converter="{x:Static ObjectConverters.IsNotNull}" FallbackValue="False" />
+                          <Binding Path="!Project.HasGroupIcon" FallbackValue="False" />
+                        </MultiBinding>
+                      </Ellipse.IsVisible>
+                    </Ellipse>
+                    <Image Classes="groupicon" RenderOptions.BitmapInterpolationMode="HighQuality" Source="{Binding Project.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
+                           IsVisible="{Binding Project.HasGroupIcon, FallbackValue=False}" />
                     <TextBlock x:Name="ProjectHeading" Classes="navheading" Text="{Binding Project.Heading, FallbackValue=''}" />
                   </StackPanel>
                 </StackPanel>
@@ -392,6 +408,9 @@
                 </DataTemplate>
                 <DataTemplate DataType="settings:ProjectActionsPage">
                   <pages:ProjectActionsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectGroupPage">
+                  <pages:ProjectGroupPageView />
                 </DataTemplate>
                 <DataTemplate DataType="settings:ProjectToolChoicesPage">
                   <pages:ProjectToolChoicesPageView />

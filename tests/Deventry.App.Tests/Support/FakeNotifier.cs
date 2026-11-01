@@ -17,6 +17,9 @@ internal sealed class FakeNotifier : INotifier, IAppBadge
     /// <summary>The animation frame the icon shows, or null.</summary>
     public byte[]? Frame { get; private set; }
 
+    /// <summary>Its version for a dark taskbar, or null.</summary>
+    public byte[]? FrameOnDark { get; private set; }
+
     public string? FrameDescription { get; private set; }
 
     public bool Flashing { get; private set; }
@@ -39,9 +42,10 @@ internal sealed class FakeNotifier : INotifier, IAppBadge
 
     public void SetCount(int count) => Badge = count;
 
-    public void ShowFrame(byte[]? png, string? description)
+    public void ShowFrame(byte[]? png, byte[]? onDark, string? description)
     {
         Frame = png;
+        FrameOnDark = onDark;
         FrameDescription = description;
     }
 

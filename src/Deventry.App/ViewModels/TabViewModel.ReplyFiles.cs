@@ -19,7 +19,7 @@ public sealed partial class TabViewModel
     /// <summary>
     /// A click on a file a reply names. A file opens in the app the OS uses for it and a folder in Finder or Explorer;
     /// a program, script or shortcut shows in its folder instead, since a reply could be prompt-injected to point at one
-    /// under an innocent name. A name that matches several files offers them in a menu at the click, and one that matches
+    /// under an innocent name, and a web page opens in the browser. A name that matches several files offers them in a menu at the click, and one that matches
     /// none says so.
     /// </summary>
     private async Task OpenFileReferenceAsync(ReplyFileReference reference, object? anchor)
@@ -47,7 +47,7 @@ public sealed partial class TabViewModel
             }
             path = found[chosen];
         }
-        if (await OpenPathAsync(path, reference.Line, reference.Column, reference.EndLine) == OpenedPath.NotFound)
+        if (await _shell.OpenLinkedPathAsync(path, Folder, this, reference.Line, reference.Column, reference.EndLine) == OpenedPath.NotFound)
         {
             _conversation.AddNote($"Couldn't find {reference.Path}.", NoteKind.Warning);
         }

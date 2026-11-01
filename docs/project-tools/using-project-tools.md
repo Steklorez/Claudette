@@ -104,7 +104,7 @@ When a job finishes or fails while Deventry isn't in front, a notification says 
   - **Godot**: **Tell Claude about Godot projects**, then **Godot executable**. See [Godot](godot.md).
 - **Perforce** is the last page in the group. See [Perforce](perforce.md).
 
-After the pages in the Settings window, a group headed by the selected tab's project has three pages: **Links**, **Actions** and **Tools**. The group follows the tab selected in the main window, even while Settings stays open, and each page says which tab in a line at the top.
+After the pages in the Settings window, a group headed by the selected tab's project has four pages: **Links**, **Actions**, **Tools** and **Group**. The group follows the tab selected in the main window, even while Settings stays open, and each page says which tab in a line at the top.
 
 The **Tools** page shows this machine's choices for the tab's project, the same ones the project's menu makes:
 

@@ -11,8 +11,8 @@ using Deventry.Core.Settings;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its Links, Actions and Tools pages, and
-/// the group that heads them. Project files are written in temporary folders; engines are a few files; nothing runs.
+/// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its Links, Actions, Tools and Group
+/// pages, and the group that heads them. Project files are written in temporary folders; engines are a few files; nothing runs.
 /// </summary>
 public class ProjectSettingsTests
 {
@@ -73,8 +73,8 @@ public class ProjectSettingsTests
 
         // The project's pages are a list of their own, at the sidebar's foot, apart from the categories'. The page shown
         // is selected in whichever list has it, and nowhere else; a heading isn't a page.
-        Assert.Equal([SettingsViewModel.LinksPage, SettingsViewModel.ActionsPage, SettingsViewModel.ToolsPage], settings.ProjectNavEntries.Select(e => e.Title));
-        Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage or "work");
+        Assert.Equal([SettingsViewModel.LinksPage, SettingsViewModel.ActionsPage, SettingsViewModel.ToolsPage, SettingsViewModel.GroupPage], settings.ProjectNavEntries.Select(e => e.Title));
+        Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage or SettingsViewModel.GroupPage or "work");
         settings.SelectedProjectNavEntry = settings.ProjectNavEntries.Single(e => e.Title == SettingsViewModel.ToolsPage);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
         Assert.Null(settings.SelectedNavEntry);
@@ -526,6 +526,131 @@ public class ProjectSettingsTests
         Assert.Equal(("Serve", "npm run dev", "launch"), (written["actions"]![0]!["name"]!.GetValue<string>(), written["actions"]![0]!["command"]!.GetValue<string>(), written["actions"]![0]!["mode"]!.GetValue<string>()));
         await TabTestHarness.Eventually(() => tab.ProjectTools.Actions.Count == 1 && sibling.ProjectTools.Actions.Count == 1, "both tabs");
         Assert.Equal(ProjectActionKind.Launch, sibling.ProjectTools.Actions.Single().Kind);
+    }
+
+    // ---- The group's icon --------------------------------------------------------------------------------------------
+
+    /// <summary>A picture with a PNG's first bytes; the project files check only its name and size.</summary>
+    private static string Picture(string path)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+        return path;
+    }
+
+    [Fact]
+    public async Task A_picture_chosen_on_the_Group_page_is_saved_from_the_projects_folder_and_the_group_shows_it()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var logo = Picture(Path.Combine(h.WorkFolder, "Assets", "logo.png"));
+        Write(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "links": [ { "url": "https://example.com" } ] }""");
+        using var settings = await OpenSettingsAsync(h);
+        var project = settings.Project!;
+        Assert.Equal(ProjectFileScope.Shared, project.SelectedGroupFile.Value);
+        Assert.Equal("None in deventry.json: the group shows its colored dot.", project.IconText);
+        Assert.False(project.RemoveIconCommand.CanExecute(null));
+
+        h.Platform.FileToPick = logo;
+        await project.ChooseIconCommand.ExecuteAsync(null);
+
+        // Offered pictures alone, and written from the project's folder, beside what the file had.
+        Assert.Contains("*.png", h.Platform.FileTypesOffered!.Single().Patterns);
+        Assert.Equal("Assets/logo.png", ProjectFile.ReadIcon(h.WorkFolder, ProjectFileScope.Shared));
+        Assert.Single(ProjectFile.Read(h.WorkFolder, ToolOS.Linux).Links);
+        Assert.Equal(("Assets/logo.png", logo, null), (project.IconText, project.IconPreview, project.GroupError));
+        await TabTestHarness.Eventually(() => tab.ProjectTools.GroupIcon == logo, "the group's icon");
+        Assert.Equal(logo, project.GroupIcon);
+
+        project.RemoveIconCommand.Execute(null);
+
+        Assert.Null(ProjectFile.ReadIcon(h.WorkFolder, ProjectFileScope.Shared));
+        await TabTestHarness.Eventually(() => !tab.ProjectTools.HasGroupIcon, "the group's dot again");
+    }
+
+    [Fact]
+    public async Task Use_the_groups_color_saves_it_in_the_chosen_file_and_Remove_takes_it_out()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        using var settings = await OpenSettingsAsync(h);
+        var project = settings.Project!;
+        var group = project.Group!;
+        project.SelectedGroupFile = project.ProjectActionFiles[1];
+        Assert.Equal("None in deventry.local.json: the group has the color remembered on this computer.", project.ColorText);
+        Assert.False(project.RemoveColorCommand.CanExecute(null));
+
+        project.UseGroupColorCommand.Execute(null);
+
+        var color = TabGroupViewModel.ToHex(group.Color);
+        Assert.Equal(color, ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local));
+        Assert.Equal((color, true), (project.ColorText, project.HasColorBrush));
+
+        // Taken out, the group keeps the color it has, remembered on this computer.
+        project.RemoveColorCommand.Execute(null);
+        Assert.Null(ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local));
+        Assert.Equal(color, TabGroupViewModel.ToHex(group.Color));
+    }
+
+    [Fact]
+    public async Task A_picture_that_cant_be_the_icon_isnt_saved_and_the_page_says_why()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        var drawing = Path.Combine(h.WorkFolder, "logo.svg");
+        Write(drawing, "<svg/>");
+        using var settings = await OpenSettingsAsync(h);
+        var project = settings.Project!;
+
+        h.Platform.FileToPick = drawing;
+        await project.ChooseIconCommand.ExecuteAsync(null);
+
+        Assert.Equal($"Icon {drawing} isn't a PNG, ICO, JPEG, BMP, GIF or WebP picture.", project.GroupError);
+        Assert.False(File.Exists(Path.Combine(h.WorkFolder, ProjectFile.SharedName)));
+    }
+
+    [Fact]
+    public async Task The_page_opens_on_the_users_own_icon_which_shows_in_place_of_the_shared_one()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        Picture(Path.Combine(h.WorkFolder, "Assets", "logo.png"));
+        var mine = Picture(Path.Combine(h.WorkFolder, "mine.png"));
+        Write(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "icon": "Assets/logo.png" }""");
+        Write(Path.Combine(h.WorkFolder, ProjectFile.LocalName), """{ "icon": "mine.png" }""");
+        await tab.ProjectTools.RefreshFileAsync();
+        using var settings = await OpenSettingsAsync(h);
+        var project = settings.Project!;
+
+        Assert.Equal((ProjectFileScope.Local, "mine.png"), (project.SelectedGroupFile.Value, project.IconText));
+        Assert.Equal(mine, tab.ProjectTools.GroupIcon);
+
+        project.SelectedGroupFile = project.ProjectActionFiles[0];
+        Assert.Equal("Assets/logo.png", project.IconText);
+        Assert.Equal("deventry.local.json's icon shows in its place, for you.", project.IconNote);
+    }
+
+    [Fact]
+    public async Task A_groups_menu_opens_its_projects_pages_and_its_Group_page_for_its_tab_used_last()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var openings = new List<SettingsOpening>();
+        h.Shell.ShowSettingsWindow = o =>
+        {
+            openings.Add(o);
+            return Task.CompletedTask;
+        };
+        var group = h.Shell.Groups.Single(g => g.Tabs.Contains(tab));
+
+        await h.Shell.OpenGroupProjectSettingsCommand.ExecuteAsync(group);
+        await h.Shell.ChangeGroupIconCommand.ExecuteAsync(group);
+
+        Assert.Equal([SettingsViewModel.LinksPage, SettingsViewModel.GroupPage], openings.Select(o => o.Category));
+        Assert.All(openings, o => Assert.Same(tab, o.Project!.Tab));
+        openings[0].Project!.Dispose();
+        using var settings = new SettingsViewModel(h.Services, null, opening: openings[1]);
+        Assert.IsType<ProjectGroupPage>(settings.CurrentPage);
     }
 
     [Fact]

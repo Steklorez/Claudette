@@ -242,6 +242,132 @@ public sealed class ProjectFileTests : IDisposable
         Assert.Equal("{ broken", File.ReadAllText(broken));
     }
 
+    // ---- The group's icon ---------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void The_icon_is_read_from_the_projects_folder_and_the_local_files_wins()
+    {
+        var folder = _temp.CreateFolder("game");
+        var logo = _temp.Write("game/Assets/logo.png", "png");
+        _temp.Write("game/mine.ico", "ico");
+
+        _temp.Write("game/deventry.json", """{ "icon": "Assets/logo.png" }""");
+        var shared = ProjectFile.Read(folder, ToolOS.Linux);
+        Assert.Equal(new ProjectIcon("Assets/logo.png", ProjectFileScope.Shared, logo), shared.Icon);
+        Assert.Empty(shared.Problems);
+
+        _temp.Write("game/deventry.local.json", """{ "icon": "mine.ico" }""");
+        var local = ProjectFile.Read(folder, ToolOS.Linux).Icon;
+        Assert.Equal(("mine.ico", ProjectFileScope.Local, Path.Combine(folder, "mine.ico")), (local?.Path, local?.Scope, local?.FullPath));
+    }
+
+    [Theory]
+    [InlineData("Assets/logo.svg", "deventry.json: icon Assets/logo.svg isn't a PNG, ICO, JPEG, BMP, GIF or WebP picture.")]
+    [InlineData("Assets/gone.png", "deventry.json: icon Assets/gone.png isn't there.")]
+    [InlineData("Assets/huge.png", "deventry.json: icon Assets/huge.png is over 1 MB, far more than an icon needs.")]
+    [InlineData(@"\\server\share\logo.png", @"deventry.json: icon \\server\share\logo.png is on a network share, which Deventry doesn't look at by itself.")]
+    [InlineData("//server/share/logo.png", "deventry.json: icon //server/share/logo.png is on a network share, which Deventry doesn't look at by itself.")]
+    public void An_icon_that_cant_be_shown_says_why_and_the_group_keeps_its_dot(string icon, string problem)
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/Assets/logo.svg", "<svg/>");
+        _temp.Write("game/Assets/huge.png", new string('x', (int)ProjectFile.IconMaxBytes + 1));
+        _temp.Write("game/deventry.json", new JsonObject { ["icon"] = icon }.ToJsonString());
+
+        var contents = ProjectFile.Read(folder, ToolOS.Linux);
+
+        Assert.Null(contents.Icon);
+        Assert.Equal([problem], contents.Problems);
+    }
+
+    [Fact]
+    public void An_icon_that_isnt_a_path_is_skipped_with_a_reason()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "icon": 42 }""");
+
+        Assert.Equal(["deventry.json: \"icon\" should be a picture's path, such as \"Assets/logo.png\", so it was skipped."], ProjectFile.Read(folder, ToolOS.Linux).Problems);
+    }
+
+    [Fact]
+    public void Saving_the_icon_keeps_the_rest_and_taking_it_out_leaves_no_new_file()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "links": [ { "url": "https://example.com" } ] }""");
+
+        ProjectFile.WriteIcon(folder, ProjectFileScope.Shared, "Assets/logo.png");
+        Assert.Equal("Assets/logo.png", ProjectFile.ReadIcon(folder, ProjectFileScope.Shared));
+        Assert.Equal("https://example.com", ProjectFile.Read(folder, ToolOS.Linux).Links.Single().Url);
+
+        ProjectFile.WriteIcon(folder, ProjectFileScope.Shared, null);
+        Assert.Null(ProjectFile.ReadIcon(folder, ProjectFileScope.Shared));
+        Assert.Single(ProjectFile.Read(folder, ToolOS.Linux).Links);
+
+        // Nothing to take out of a file that isn't there, so it isn't made.
+        ProjectFile.WriteIcon(folder, ProjectFileScope.Local, null);
+        Assert.False(File.Exists(Path.Combine(folder, ProjectFile.LocalName)));
+    }
+
+    [Fact]
+    public void A_picture_in_the_project_is_written_from_its_folder_and_one_elsewhere_in_full()
+    {
+        var folder = _temp.CreateFolder("game");
+        var elsewhere = _temp.Write("pictures/logo.png", "png");
+
+        Assert.Equal("Assets/Icons/logo.png", ProjectFile.IconPathFor(folder, Path.Combine(folder, "Assets", "Icons", "logo.png")));
+        Assert.Equal(elsewhere, ProjectFile.IconPathFor(folder, elsewhere));
+    }
+
+    // ---- The group's color --------------------------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("#4a6fc4", "#4A6FC4")]
+    [InlineData("4A6FC4", "#4A6FC4")]
+    [InlineData(" #1a3 ", "#11AA33")]
+    [InlineData("purple", null)]
+    [InlineData("#12345", null)]
+    [InlineData(null, null)]
+    public void A_color_is_kept_as_six_hex_digits(string? text, string? color) => Assert.Equal(color, ProjectFile.NormalizeColor(text));
+
+    [Fact]
+    public void The_color_is_read_from_either_file_and_the_local_files_wins()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "color": "#4a6fc4" }""");
+        Assert.Equal("#4A6FC4", ProjectFile.Read(folder, ToolOS.Linux).Color);
+
+        _temp.Write("game/deventry.local.json", """{ "color": "#1a3" }""");
+        Assert.Equal("#11AA33", ProjectFile.Read(folder, ToolOS.Linux).Color);
+    }
+
+    [Fact]
+    public void A_color_that_isnt_one_is_skipped_with_a_reason()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "color": "purple" }""");
+
+        var contents = ProjectFile.Read(folder, ToolOS.Linux);
+
+        Assert.Null(contents.Color);
+        Assert.Equal(["deventry.json: \"color\" should be a color such as \"#4A6FC4\", so it was skipped."], contents.Problems);
+    }
+
+    [Fact]
+    public void Saving_the_color_keeps_the_rest_and_taking_it_out_leaves_the_icon()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "icon": "logo.png" }""");
+
+        ProjectFile.WriteColor(folder, ProjectFileScope.Shared, "#1a3");
+        Assert.Equal("#11AA33", ProjectFile.ReadColor(folder, ProjectFileScope.Shared));
+        Assert.Equal("logo.png", ProjectFile.ReadIcon(folder, ProjectFileScope.Shared));
+
+        ProjectFile.WriteColor(folder, ProjectFileScope.Shared, null);
+        Assert.Null(ProjectFile.ReadColor(folder, ProjectFileScope.Shared));
+        Assert.Equal("logo.png", ProjectFile.ReadIcon(folder, ProjectFileScope.Shared));
+        Assert.Throws<ArgumentException>(() => ProjectFile.WriteColor(folder, ProjectFileScope.Shared, "purple"));
+    }
+
     // ---- Links ----------------------------------------------------------------------------------------------------------
 
     [Theory]

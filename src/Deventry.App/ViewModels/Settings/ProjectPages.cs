@@ -43,6 +43,23 @@ public sealed class ProjectActionsPage : ProjectPage
 }
 
 /// <summary>
+/// The project's <b>Group</b> (DESIGN.md §4, "Grouped by folder"): how its group looks in the sidebar, its color and the
+/// picture in place of its dot, from either of its files.
+/// </summary>
+public sealed class ProjectGroupPage : ProjectPage
+{
+    public ProjectGroupPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.GroupPage, project) =>
+        Section("group", "Group",
+        [
+            Info("project.group", "The group's color and icon", keywords: ["color", "colour", "icon", "picture", "image", "logo", "png", "ico", "dot", "deventry.json"]),
+        ]);
+
+    public override string IconKey => "IconImage";
+
+    public override string Description => "How the project's group looks in the sidebar: its color, and a picture in place of its dot.";
+}
+
+/// <summary>
 /// The project's <b>Tools</b> page: this machine's choices for it, as the project menus make them (DESIGN.md §18). Its
 /// entries depend on the project's kind: "Engine folder", "Editor configuration".
 /// </summary>

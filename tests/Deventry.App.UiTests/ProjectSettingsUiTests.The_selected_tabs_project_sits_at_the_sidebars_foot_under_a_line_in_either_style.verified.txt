@@ -27,3 +27,4 @@
 "Links"
 "Actions"
 "Tools"
+"Group"

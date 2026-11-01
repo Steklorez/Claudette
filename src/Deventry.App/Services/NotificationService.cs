@@ -224,7 +224,7 @@ public sealed class NotificationService : IDisposable
         _frame = 0;
         if (animation is null)
         {
-            _badge.ShowFrame(null, null);
+            _badge.ShowFrame(null, null, null);
             return;
         }
         if (still)
@@ -254,7 +254,7 @@ public sealed class NotificationService : IDisposable
             return;
         }
         var frame = animation.Frames[_frame];
-        _badge.ShowFrame(frame.Png, animation.Description);
+        _badge.ShowFrame(frame.Png, frame.OnDark, animation.Description);
         _frameTimer?.Change(frame.Duration, Timeout.InfiniteTimeSpan);
     }
 

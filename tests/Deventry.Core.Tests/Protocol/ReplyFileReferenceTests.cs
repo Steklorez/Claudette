@@ -78,6 +78,16 @@ public sealed class ReplyFileReferenceTests
     public void A_links_address_elsewhere_isnt(string address) => Assert.Null(ReplyFileReference.FromLink(address));
 
     [Theory]
+    [InlineData("report.html", true)]
+    [InlineData(@"C:UsersmeAppDataLocalTempchecksoverlay.HTM", true)]
+    [InlineData("docs/page.xhtml", true)]
+    // An HTML Application runs as a program; markup that isn't a page opens as text.
+    [InlineData("setup.hta", false)]
+    [InlineData("icon.svg", false)]
+    [InlineData("page.html.txt", false)]
+    public void A_web_page_is_known_by_its_extension(string path, bool page) => Assert.Equal(page, ReplyFileReference.IsWebPage(path));
+
+    [Theory]
     [InlineData("Player.cpp:42:7", "Player.cpp", 42, 7, null)]
     [InlineData(@"C:\Work\Player.cpp:42:7", @"C:\Work\Player.cpp", 42, 7, null)]
     [InlineData("Player.cpp:42-50", "Player.cpp", 42, null, 50)]

@@ -469,7 +469,14 @@ internal sealed class NoPlatform : IPlatformServices
     /// <summary>What the file picker returns: null is Cancel.</summary>
     public string? FileToPick { get; set; }
 
-    public Task<string?> PickFileAsync(string title) => Task.FromResult(FileToPick);
+    /// <summary>The kinds of file the last file dialog offered.</summary>
+    public IReadOnlyList<FileTypeFilter>? FileTypesOffered { get; private set; }
+
+    public Task<string?> PickFileAsync(string title, IReadOnlyList<FileTypeFilter>? types = null)
+    {
+        FileTypesOffered = types;
+        return Task.FromResult(FileToPick);
+    }
 
     /// <summary>What the save dialog returns: null is Cancel.</summary>
     public string? SavePathToPick { get; set; }
