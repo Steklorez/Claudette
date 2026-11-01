@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Deventry.App.Conversation;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
 using Deventry.Core.Auth;
@@ -115,6 +116,22 @@ public sealed class OtherAccountTests
     }
 
     [Fact]
+    public async Task Cancel_puts_a_message_sent_while_it_asked_back_in_the_composer()
+    {
+        await using var h = new TabTestHarness();
+        var tab = Restore(h, Origin("me@home.com", "Home"));
+        await TabTestHarness.Eventually(() => tab.IsAskingOtherAccount, "the question");
+        tab.ComposerText = "Carry on";
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
+
+        tab.CancelOtherAccountCommand.Execute(null);
+
+        Assert.Equal("Carry on", tab.ComposerText);
+        Assert.DoesNotContain(InlineDispatcher.Read(() => tab.Items.OfType<UserMessageItem>().ToList()), m => m.Text == "Carry on");
+        Assert.Empty(h.Factory.Launches);
+    }
+
+    [Fact]
     public async Task With_the_setting_off_the_session_just_starts()
     {
         await using var h = new TabTestHarness(s => s.Accounts.WarnBeforeOtherAccount = false);
@@ -166,11 +183,11 @@ public sealed class OtherAccountTests
     [Fact]
     public void The_digest_keeps_prompts_and_answers_and_leaves_out_check_ins()
     {
-        var answer = new Deventry.App.Conversation.AssistantTextItem();
+        var answer = new AssistantTextItem();
         answer.Markdown.Append("Hi there");
         var digest = TabViewModel.ConversationDigest([
-            new Deventry.App.Conversation.UserMessageItem("Hello"),
-            new Deventry.App.Conversation.UserMessageItem("ping", isCheckIn: true),
+            new UserMessageItem("Hello"),
+            new UserMessageItem("ping", isCheckIn: true),
             answer,
         ]);
         Assert.Contains("Me: Hello", digest);

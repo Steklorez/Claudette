@@ -102,13 +102,24 @@ public partial class TabViewModel
         }
     }
 
-    /// <summary><b>Cancel</b>: nothing is sent and the tab stays as it was, not started; sending a message asks again.</summary>
+    /// <summary>
+    /// <b>Cancel</b>: nothing is sent and the tab stays as it was, not started, with a message sent while it asked back
+    /// in the composer; sending a message asks again.
+    /// </summary>
     [RelayCommand]
     private void CancelOtherAccount()
     {
         CloseOtherAccountCard();
-        _heldForTrust.Clear();
+        TakeBackHeldForAccount();
         Status = TabStatus.NotStarted;
+    }
+
+    /// <summary>The messages sent while the tab asked go back to the composer, and their cards go: none was sent.</summary>
+    private void TakeBackHeldForAccount()
+    {
+        var ids = _heldForTrust.Select(m => m.Stamp?.Uuid).OfType<string>().ToList();
+        _heldForTrust.Clear();
+        TakeBack(ids);
     }
 
     /// <summary><b>Use X instead</b>: the tab moves to the account the session started under, and starts.</summary>
