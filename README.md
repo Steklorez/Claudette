@@ -70,7 +70,7 @@ Each setting has a line saying what it does, and the search finds it by what you
   </tr>
 </table>
 
-### Deventry keeps you company
+### Joulene keeps you company
 
 ![Joulene climbing up onto the message box, then dancing, tossing a ball, sitting on the edge, juggling, hammering, bursting into confetti, twirling, blowing a heart and falling off behind the box to climb back up](docs/screenshots/joulene.gif)
 
