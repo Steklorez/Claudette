@@ -1,0 +1,46 @@
+---
+layout: landing
+title: Page not found
+description: There's no page at this address. Start again from Deventry's home page, the docs or the downloads.
+permalink: /404.html
+nav_exclude: true
+search_exclude: true
+sitemap: false
+---
+{%- comment -%}
+  The page not found (GUIDE.md, "The page not found"). GitHub Pages serves it for any address with no page, at that
+  address. The address the reader asked for is the prompt in the message box, where Joulene can't make it out: she
+  looks left and right, as she does in the app when she's puzzled (_includes/joulene-puzzled.svg, drawn by
+  packaging/icon/build-icons.mjs).
+{%- endcomment -%}
+<section class="hero not-found" aria-labelledby="not-found-title">
+  <div class="prompt-box">
+    <div class="prompt-joulene" role="img" aria-label="Joulene standing on the message box, looking left and right with a question mark over her head">{% include joulene-puzzled.svg %}</div>
+    <p class="prompt-text"><span id="prompt-address">Show me a page that isn't here</span><span class="prompt-caret" aria-hidden="true"></span></p>
+    <div class="prompt-status" aria-hidden="true">
+      <span>Pages (0)</span>
+      <span>404 tok</span>
+      <span>↵ sends</span>
+      <span class="prompt-send">{% include icon.html name="arrow-up" %}</span>
+    </div>
+  </div>
+
+  <p class="kicker"><span>404</span> Page not found</p>
+  <h1 class="hero-title" id="not-found-title">That's a bad prompt.</h1>
+  <p class="hero-lead">Joulene read that address twice and still can't make it out: there's no page here. It may have moved, or a letter slipped on the way in. Try again from somewhere she knows.</p>
+  <div class="hero-actions">
+    <a class="pill pill-primary" href="{{ '/' | relative_url }}">{% include icon.html name="home" %}<span>Home</span></a>
+    <a class="pill pill-outline" href="{{ '/guide/' | relative_url }}">{% include icon.html name="book" %}<span>Read the docs</span></a>
+    <a class="pill pill-outline" href="{{ '/downloads/' | relative_url }}">{% include icon.html name="download" %}<span>Downloads</span></a>
+  </div>
+  <p class="not-found-report">Followed a link on this site to get here? <a href="https://github.com/dotBunny/Deventry/issues">Tell us on GitHub</a>, and we'll put it right.</p>
+</section>
+
+<script>
+  // The address asked for, as the prompt that was sent. Without JavaScript the box keeps its words.
+  (function () {
+    var address = location.pathname + location.search;
+    try { address = decodeURI(address); } catch (e) { /* keep it as it came */ }
+    document.getElementById('prompt-address').textContent = location.host + address;
+  })();
+</script>
