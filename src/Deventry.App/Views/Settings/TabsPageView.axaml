@@ -119,6 +119,9 @@
       <c:SettingRow Key="sidebar.showClaudeProjects">
         <ToggleSwitch IsChecked="{Binding ShowClaudeProjects}" />
       </c:SettingRow>
+      <c:SettingRow Key="state.removedPastSessions">
+        <Button Content="{Binding ShowRemovedPastSessionsText}" Command="{Binding ShowRemovedPastSessionsCommand}" IsEnabled="{Binding HasRemovedPastSessions}" />
+      </c:SettingRow>
     </c:SettingsSection>
   </StackPanel>
 </UserControl>

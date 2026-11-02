@@ -554,7 +554,13 @@
                                       ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconCardYou}" /></MenuItem.Icon>
                             </MenuItem>
-                            <Separator IsVisible="{Binding CanClose}" />
+                            <Separator IsVisible="{Binding HasMenuEnd}" />
+                            <!-- The folder's past sessions off the sidebar, in Close group's place for a group showing only them, which goes with
+                                 them (DESIGN.md §4, "Claude Code's projects") -->
+                            <MenuItem Header="{Binding RemovePastSessionsText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).RemoveGroupPastSessionsCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding HasPastSessions}" ToolTip.Tip="{Binding RemovePastSessionsTip}">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconMinus}" /></MenuItem.Icon>
+                            </MenuItem>
                             <MenuItem Header="Close group" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseGroupCommand}" CommandParameter="{Binding}"
                                       IsVisible="{Binding CanClose}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconClose}" /></MenuItem.Icon>
@@ -1074,7 +1080,7 @@
                               <Button Classes="tab tabrow pastsession" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="600" ToolTip.Placement="Right"
                                       AutomationProperties.Name="{Binding AccessibleName}"
                                       Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenPastSessionCommand}" CommandParameter="{Binding}">
-                                <Grid ColumnDefinitions="14,*" ColumnSpacing="6">
+                                <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="6">
                                   <Panel VerticalAlignment="Top" Margin="0,3,0,0">
                                     <Path Data="{StaticResource IconHistory}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Height="11" Stretch="Uniform"
                                           IsVisible="{Binding !HasMark}" />
@@ -1084,7 +1090,22 @@
                                     <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Classes="muted small" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
                                   </StackPanel>
+                                  <!-- On hover, as a tab's close is: takes it off the sidebar, not out of History -->
+                                  <Button Grid.Column="2" Classes="flat closetab" Padding="4" VerticalAlignment="Top"
+                                          ToolTip.Tip="{x:Static vm:PastSessionRow.RemoveTip}" AutomationProperties.Name="{Binding RemoveName}"
+                                          Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).RemovePastSessionCommand}" CommandParameter="{Binding}">
+                                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+                                  </Button>
                                 </Grid>
+                                <Button.ContextMenu>
+                                  <ContextMenu>
+                                    <MenuItem Header="Open in a new tab" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenPastSessionCommand, FallbackValue={x:Null}}"
+                                              CommandParameter="{Binding}" />
+                                    <Separator />
+                                    <MenuItem Header="Remove from the sidebar" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).RemovePastSessionCommand, FallbackValue={x:Null}}"
+                                              CommandParameter="{Binding}" ToolTip.Tip="{x:Static vm:PastSessionRow.RemoveTip}" />
+                                  </ContextMenu>
+                                </Button.ContextMenu>
                               </Button>
                             </DataTemplate>
                           </ItemsControl.ItemTemplate>
@@ -1175,7 +1196,13 @@
                                   ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconCardYou}" /></MenuItem.Icon>
                         </MenuItem>
-                        <Separator IsVisible="{Binding CanClose}" />
+                        <Separator IsVisible="{Binding HasMenuEnd}" />
+                        <!-- The folder's past sessions off the sidebar, in Close group's place for a group showing only them, which goes with
+                             them (DESIGN.md §4, "Claude Code's projects") -->
+                        <MenuItem Header="{Binding RemovePastSessionsText}" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).RemoveGroupPastSessionsCommand}" CommandParameter="{Binding}"
+                                  IsVisible="{Binding HasPastSessions}" ToolTip.Tip="{Binding RemovePastSessionsTip}">
+                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconMinus}" /></MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem Header="Close group" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseGroupCommand}" CommandParameter="{Binding}"
                                   IsVisible="{Binding CanClose}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconClose}" /></MenuItem.Icon>

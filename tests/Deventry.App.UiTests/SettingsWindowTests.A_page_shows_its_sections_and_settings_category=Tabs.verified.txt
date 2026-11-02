@@ -80,6 +80,9 @@
 "Show Claude Code's projects in the sidebar"
 "Every folder Claude Code has sessions in gets a group, with its past sessions under it, tab or no tab.  "
 [toggle] Show Claude Code's projects in the sidebar
+"Past sessions removed from the sidebar"
+"The ones you took off with × or a group's menu. History lists them all the same."
+[button] Past sessions removed from the sidebar: None removed
 [button] Line up
 [button] Page up
 [button] Page down

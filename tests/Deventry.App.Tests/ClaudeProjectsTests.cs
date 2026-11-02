@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
+using Deventry.App.ViewModels.Settings;
 
 namespace Deventry.App.Tests;
 
@@ -178,6 +179,129 @@ public class ClaudeProjectsTests
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
         Assert.Equal(h.WorkFolder, history.SelectedProject!.Folder);
         Assert.Equal(7, history.Groups.Single().Entries.Count);
+    }
+
+    [Fact]
+    public async Task Removing_a_past_session_takes_it_off_the_sidebar_and_removing_a_projects_last_takes_the_project_too()
+    {
+        await using var h = new TabTestHarness(s => s.Sidebar.ShowClaudeProjects = true);
+        h.Services.State.ClaudeProjectsOffered = true;
+        var other = WriteProjects(h);
+        Restore(h);
+        await ProjectsShown(h, 2);
+        var work = InlineDispatcher.Read(() => h.Shell.Groups.Single(g => g.Folder == h.WorkFolder));
+        // Showing only past sessions, the menu's item takes the group with them, in Close group's place.
+        Assert.Equal("Remove from the sidebar", work.RemovePastSessionsText);
+        Assert.False(work.CanClose);
+        Assert.True(work.HasMenuEnd);
+
+        InlineDispatcher.Run(() => h.Shell.RemovePastSessionCommand.Execute(work.PastSessions[0]));
+
+        Assert.Equal(["w2", "w1"], work.PastSessions.Select(r => r.Entry.SessionId));
+        // Remembered as of its last use, so using it again brings it back.
+        Assert.Equal(DateTimeOffset.Parse("2026-09-28T11:00:00Z"), h.Services.State.RemovedPastSessions["w3"]);
+
+        // The other folder's only session: the group, with nothing open, goes with it.
+        var only = InlineDispatcher.Read(() => h.Shell.Groups.Single(g => g.Folder == other));
+        InlineDispatcher.Run(() => h.Shell.RemovePastSessionCommand.Execute(only.PastSessions.Single()));
+        Assert.Equal([h.WorkFolder], InlineDispatcher.Read(() => h.Shell.Groups.Select(g => g.Folder).ToArray()));
+
+        // History still lists every one.
+        var history = h.OpenHistory();
+        await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
+        Assert.Equal(4, history.Groups.Sum(g => g.Entries.Count));
+
+        // Read again, as when Deventry comes to the front: they stay off.
+        InlineDispatcher.Run(h.Shell.RefreshClaudeProjects);
+        await Waiting.NeverAsync(() => InlineDispatcher.Read(() => h.Shell.Groups.Count != 1 || work.PastSessions.Count != 2), "a removed session back");
+    }
+
+    [Fact]
+    public async Task Remove_past_sessions_in_a_groups_menu_takes_them_all_and_the_group_stays_while_a_tab_is_open()
+    {
+        await using var h = new TabTestHarness(s => s.Sidebar.ShowClaudeProjects = true);
+        h.Services.State.ClaudeProjectsOffered = true;
+        WriteProjects(h);
+        Restore(h);
+        await ProjectsShown(h, 2);
+        var tab = await h.OpenTabAsync();
+        var work = InlineDispatcher.Read(() => h.Shell.Groups.Single(g => g.Tabs.Contains(tab)));
+        Assert.Equal(3, work.PastSessions.Count);
+        // With a tab open, the menu's item says it takes only the past sessions.
+        Assert.Equal("Remove past sessions", work.RemovePastSessionsText);
+        Assert.StartsWith("Takes the folder's past sessions off the sidebar; its tabs stay.", work.RemovePastSessionsTip, StringComparison.Ordinal);
+        Assert.True(work.HasMenuEnd);
+
+        InlineDispatcher.Run(() => h.Shell.RemoveGroupPastSessionsCommand.Execute(work));
+
+        Assert.Empty(work.PastSessions);
+        Assert.False(work.IsClaudeProject);
+        Assert.Contains(work, InlineDispatcher.Read(() => h.Shell.Groups.ToArray()));
+        Assert.Equal(["w1", "w2", "w3"], h.Services.State.RemovedPastSessions.Keys.Order(StringComparer.Ordinal));
+
+        // With its tab closed, there's nothing left to keep it.
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => !h.Shell.Groups.Contains(work)), "the group to go");
+        Assert.Equal([Path.Combine(h.Root, "other")], InlineDispatcher.Read(() => h.Shell.Groups.Select(g => g.Folder).ToArray()));
+    }
+
+    [Fact]
+    public async Task A_removed_session_is_back_once_its_used_again_in_a_terminal_or_a_tab()
+    {
+        await using var h = new TabTestHarness(s => s.Sidebar.ShowClaudeProjects = true);
+        h.Services.State.ClaudeProjectsOffered = true;
+        WriteProjects(h);
+        Restore(h);
+        await ProjectsShown(h, 2);
+        var work = InlineDispatcher.Read(() => h.Shell.Groups.Single(g => g.Folder == h.WorkFolder));
+        InlineDispatcher.Run(() => h.Shell.RemoveGroupPastSessionsCommand.Execute(work));
+        await ProjectsShown(h, 1);
+
+        // Picked up in a terminal: a later entry in its transcript brings it, and its folder, back.
+        h.WriteTranscript("w1", UserLine("w1", "Fix the login bug", h.WorkFolder, "2026-09-28T09:00:00Z"),
+            UserLine("w1", "And the logout one", h.WorkFolder, "2026-09-28T11:45:00Z"));
+        InlineDispatcher.Run(h.Shell.RefreshClaudeProjects);
+        await ProjectsShown(h, 2);
+        work = InlineDispatcher.Read(() => h.Shell.Groups.Single(g => g.Folder == h.WorkFolder));
+        Assert.Equal(["w1"], work.PastSessions.Select(r => r.Entry.SessionId));
+        Assert.False(h.Services.State.RemovedPastSessions.ContainsKey("w1"));
+
+        // Opened in a tab from History: it's forgotten at once, so closing the tab lists it again.
+        var history = h.OpenHistory();
+        await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
+        var w3 = history.Groups.SelectMany(g => g.Entries).Single(e => e.SessionId == "w3");
+        await InlineDispatcher.RunAsync(() => history.OpenCommand.ExecuteAsync(w3));
+        await TabTestHarness.Eventually(() => h.Shell.SelectedTab?.State.SessionId == "w3", "the session's tab");
+        Assert.False(h.Services.State.RemovedPastSessions.ContainsKey("w3"));
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(h.Shell.SelectedTab!));
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => work.PastSessions.Count == 2), "the session back in the past sessions");
+        Assert.Equal(["w1", "w3"], work.PastSessions.Select(r => r.Entry.SessionId));
+    }
+
+    [Fact]
+    public async Task Settings_shows_the_removed_sessions_again()
+    {
+        await using var h = new TabTestHarness(s => s.Sidebar.ShowClaudeProjects = true);
+        h.Services.State.ClaudeProjectsOffered = true;
+        WriteProjects(h);
+        Restore(h);
+        await ProjectsShown(h, 2);
+        foreach (var group in InlineDispatcher.Read(() => h.Shell.Groups.ToArray()))
+        {
+            InlineDispatcher.Run(() => h.Shell.RemoveGroupPastSessionsCommand.Execute(group));
+        }
+        Assert.Empty(InlineDispatcher.Read(() => h.Shell.Groups.ToArray()));
+        using var context = new SettingsContext(h.Services);
+        var page = new TabsPage(context);
+        Assert.Equal("Show 4 again", page.ShowRemovedPastSessionsText);
+
+        InlineDispatcher.Run(() => page.ShowRemovedPastSessionsCommand.Execute(null));
+
+        await ProjectsShown(h, 2);
+        Assert.Empty(h.Services.State.RemovedPastSessions);
+        Assert.False(page.HasRemovedPastSessions);
+        Assert.Equal("None removed", page.ShowRemovedPastSessionsText);
+        Assert.Equal(3, InlineDispatcher.Read(() => h.Shell.Groups.Single(g => g.Folder == h.WorkFolder)).PastSessions.Count);
     }
 
     [Fact]

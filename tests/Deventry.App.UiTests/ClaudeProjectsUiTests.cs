@@ -69,6 +69,73 @@ public class ClaudeProjectsUiTests
     }
 
     [AvaloniaFact]
+    public async Task A_past_sessions_x_shows_on_hover_and_takes_it_off_the_sidebar_and_the_last_takes_the_group()
+    {
+        await using var h = new TabTestHarness(s => s.Sidebar.ShowClaudeProjects = true, dispatcher: new AvaloniaUiDispatcher());
+        h.Services.State.ClaudeProjectsOffered = true;
+        WriteSessions(h);
+        h.Shell.Restore(null);
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => h.Shell.Groups.Count == 1 && h.Shell.Groups[0].HasPastSessions, "the project in the sidebar");
+        h.Shell.ClosePicker();
+        UiText.Settle(window);
+        var rows = PastSessionRows(window);
+        Assert.All(rows, row => Assert.Null(RemoveButton(row)));
+
+        // Over the row, its × shows, as a tab's close does.
+        var row = rows[0];
+        window.MouseMove(row.TranslatePoint(new Point(10, row.Bounds.Height / 2), window)!.Value);
+        UiText.Settle(window);
+        var remove = RemoveButton(row)!;
+        Assert.Equal("Remove Add the settings page from the sidebar", Avalonia.Automation.AutomationProperties.GetName(remove));
+
+        Click(window, remove);
+        Assert.Null(h.Shell.SelectedTab);
+        Assert.Equal(["Fix the login bug, 3 h ago · 1 message"], PastSessionRows(window).Select(b => Avalonia.Automation.AutomationProperties.GetName(b)));
+
+        // The last one takes the group, which has nothing open, with it.
+        row = PastSessionRows(window).Single();
+        window.MouseMove(row.TranslatePoint(new Point(10, row.Bounds.Height / 2), window)!.Value);
+        UiText.Settle(window);
+        Click(window, RemoveButton(row)!);
+        Assert.Empty(h.Shell.Groups);
+        Assert.Empty(PastSessionRows(window));
+    }
+
+    [AvaloniaFact]
+    public async Task A_group_showing_only_past_sessions_ends_its_menu_with_remove_from_the_sidebar_which_takes_them_all()
+    {
+        await using var h = new TabTestHarness(s => s.Sidebar.ShowClaudeProjects = true, dispatcher: new AvaloniaUiDispatcher());
+        h.Services.State.ClaudeProjectsOffered = true;
+        WriteSessions(h);
+        h.Shell.Restore(null);
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => h.Shell.Groups.Count == 1 && h.Shell.Groups[0].HasPastSessions, "the project in the sidebar");
+        h.Shell.ClosePicker();
+        UiText.Settle(window);
+        var label = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("grouplabel") && b.IsEffectivelyVisible);
+        var menu = label.ContextMenu!;
+        menu.Open(label);
+        UiText.Settle(window);
+
+        // Under the line at the end, in Close group's place, which a group with nothing open hasn't.
+        var items = menu.Items.OfType<Control>().ToList();
+        var line = items.FindLastIndex(c => c is Separator);
+        Assert.True(items[line].IsVisible);
+        var remove = Assert.IsType<MenuItem>(Assert.Single(items.Skip(line + 1), c => c.IsVisible));
+        Assert.Equal("Remove from the sidebar", remove.Header);
+        Assert.StartsWith("Takes the folder's past sessions, and with them the group, off the sidebar.", ToolTip.GetTip(remove) as string, StringComparison.Ordinal);
+
+        remove.Command!.Execute(remove.CommandParameter);
+        menu.Close();
+        UiText.Settle(window);
+
+        Assert.Empty(h.Shell.Groups);
+        Assert.Empty(PastSessionRows(window));
+        Assert.Equal(["w1", "w2"], h.Services.State.RemovedPastSessions.Keys.Order(StringComparer.Ordinal));
+    }
+
+    [AvaloniaFact]
     public async Task The_offer_sits_at_the_top_of_the_sidebar_and_accepting_it_brings_the_groups()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
@@ -103,6 +170,10 @@ public class ClaudeProjectsUiTests
 
     private static List<Button> PastSessionRows(Window window) =>
         [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("pastsession") && b.IsEffectivelyVisible)];
+
+    /// <summary>A past session row's ×, while it shows; null otherwise.</summary>
+    private static Button? RemoveButton(Button row) =>
+        row.GetVisualDescendants().OfType<Button>().SingleOrDefault(b => b.Classes.Contains("closetab") && b.IsEffectivelyVisible);
 
     private static void Click(Window window, Control target)
     {

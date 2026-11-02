@@ -67,6 +67,12 @@ public sealed class AppState
     public List<string> ExpandedPastSessions { get; set; } = [];
 
     /// <summary>
+    /// Past sessions the user removed from the sidebar, by session id, with when each was last used then (DESIGN.md §4,
+    /// "Claude Code's projects"). One used since comes back. History still lists them all.
+    /// </summary>
+    public Dictionary<string, DateTimeOffset> RemovedPastSessions { get; set; } = [];
+
+    /// <summary>
     /// The sidebar has offered to show Claude Code's projects, or the user chose in Settings (DESIGN.md §4, "Claude
     /// Code's projects"): the offer isn't made again.
     /// </summary>

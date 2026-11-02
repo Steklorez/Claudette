@@ -133,6 +133,10 @@ public sealed partial class TabsPage : SettingsPage
                 "Every folder Claude Code has sessions in gets a group, with its past sessions under it, tab or no tab.",
                 "The sessions are the ones History lists: Claude Code's own on this machine, including ones started in a terminal, and the session library's. A group's past sessions fold away under its tabs; click one to pick it up in a new tab. Turning this off closes the groups that have nothing open.",
                 ["claude projects", "past sessions", "folders", "history", "sidebar"]),
+            // This machine's choices, not a setting: never reset.
+            Info("state.removedPastSessions", "Past sessions removed from the sidebar",
+                "The ones you took off with × or a group's menu. History lists them all the same.",
+                keywords: ["hidden", "removed", "past sessions", "restore", "show again"]),
         ], description: "Work in the folders Claude Code already knows, straight from the sidebar.");
         LoadFavorites();
     }
@@ -281,6 +285,32 @@ public sealed partial class TabsPage : SettingsPage
     {
         get => Settings.Sidebar.ShowClaudeProjects;
         set => Set(value, v => Settings.Sidebar.ShowClaudeProjects = v);
+    }
+
+    /// <summary>How many past sessions are off the sidebar, for the row's button.</summary>
+    public int RemovedPastSessionCount => Services.State.RemovedPastSessions.Count;
+
+    public bool HasRemovedPastSessions => RemovedPastSessionCount > 0;
+
+    public string ShowRemovedPastSessionsText => HasRemovedPastSessions ? $"Show {RemovedPastSessionCount} again" : "None removed";
+
+    /// <summary><b>Show them again</b>: the sidebar lists them once more (the shell follows the state).</summary>
+    [RelayCommand]
+    private void ShowRemovedPastSessions()
+    {
+        Services.State.RemovedPastSessions.Clear();
+        Services.SaveState();
+        OnRemovedPastSessionsChanged();
+    }
+
+    /// <summary>Counted again each time the page shows, since the sidebar removes them while the window stays open.</summary>
+    public override void OnShown() => OnRemovedPastSessionsChanged();
+
+    private void OnRemovedPastSessionsChanged()
+    {
+        OnPropertyChanged(nameof(RemovedPastSessionCount));
+        OnPropertyChanged(nameof(HasRemovedPastSessions));
+        OnPropertyChanged(nameof(ShowRemovedPastSessionsText));
     }
 
     public decimal? ProcessRefreshSeconds

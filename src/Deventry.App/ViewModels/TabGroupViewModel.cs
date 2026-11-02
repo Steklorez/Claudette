@@ -124,7 +124,8 @@ public sealed partial class TabGroupViewModel : ObservableObject
     /// in the sidebar</b> is on, tab or no tab (DESIGN.md §4, "Claude Code's projects").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsProjectOnly), nameof(CanClose), nameof(ShowsPastSessionsFold), nameof(ShowsPastSessionList), nameof(ShowsMorePastSessions))]
+    [NotifyPropertyChangedFor(nameof(IsProjectOnly), nameof(CanClose), nameof(ShowsPastSessionsFold), nameof(ShowsPastSessionList), nameof(ShowsMorePastSessions),
+        nameof(RemovePastSessionsText), nameof(RemovePastSessionsTip), nameof(HasMenuEnd))]
     public partial bool IsClaudeProject { get; set; }
 
     /// <summary>One of Claude Code's projects with nothing open in it: its menu has no <b>Close group</b>.</summary>
@@ -141,7 +142,7 @@ public sealed partial class TabGroupViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPastSessions), nameof(PastSessionsText), nameof(ShownPastSessions), nameof(HasMorePastSessions), nameof(ShowsPastSessionsFold),
-        nameof(ShowsPastSessionList), nameof(ShowsMorePastSessions))]
+        nameof(ShowsPastSessionList), nameof(ShowsMorePastSessions), nameof(HasMenuEnd))]
     public partial IReadOnlyList<PastSessionRow> PastSessions { get; set; } = [];
 
     public bool HasPastSessions => PastSessions.Count > 0;
@@ -172,6 +173,20 @@ public sealed partial class TabGroupViewModel : ObservableObject
     public bool ShowsMorePastSessions => ShowsPastSessionList && HasMorePastSessions;
 
     public string PastSessionsTip => IsPastSessionsExpanded ? "Fold the past sessions away" : "List the past sessions";
+
+    /// <summary>
+    /// The group menu's last section, in <b>Close group</b>'s place for a group showing only past sessions: <b>Remove from
+    /// the sidebar</b>, as the group goes with them; <b>Remove past sessions</b> for one with tabs, which stay.
+    /// </summary>
+    public string RemovePastSessionsText => IsProjectOnly ? "Remove from the sidebar" : "Remove past sessions";
+
+    /// <summary>The line before the menu's last section, which has <b>Remove past sessions</b>, <b>Close group</b>, or both.</summary>
+    public bool HasMenuEnd => CanClose || HasPastSessions;
+
+    /// <summary><see cref="RemovePastSessionsText"/>'s tip: what it does to a group with nothing open, and to one with tabs.</summary>
+    public string RemovePastSessionsTip => IsProjectOnly
+        ? "Takes the folder's past sessions, and with them the group, off the sidebar. History still lists them."
+        : "Takes the folder's past sessions off the sidebar; its tabs stay. History still lists them.";
 
     /// <summary>When the folder's latest session was last used, to order Claude Code's projects by; null with none.</summary>
     public DateTimeOffset? LastSessionActivity { get; set; }
@@ -255,6 +270,9 @@ public sealed partial class TabGroupViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowsPastSessionsFold));
         OnPropertyChanged(nameof(ShowsPastSessionList));
         OnPropertyChanged(nameof(ShowsMorePastSessions));
+        OnPropertyChanged(nameof(RemovePastSessionsText));
+        OnPropertyChanged(nameof(RemovePastSessionsTip));
+        OnPropertyChanged(nameof(HasMenuEnd));
     }
 
     private void OnTabPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -303,6 +321,11 @@ public sealed record PastSessionRow(HistoryEntry Entry, string Detail)
     public string Tip => Entry.HasFirstPrompt ? $"{Entry.Title}\n{Entry.FirstPrompt}" : Entry.Title;
 
     public string AccessibleName => $"{Entry.Title}, {Detail}";
+
+    /// <summary>Its × and the menu's item: they take it off the sidebar, not out of History.</summary>
+    public const string RemoveTip = "Remove from the sidebar. History still lists it, and it's back once you use it again.";
+
+    public string RemoveName => $"Remove {Entry.Title} from the sidebar";
 }
 
 /// <summary>One of the group colors, with the name its swatch has for screen readers and in its tip.</summary>

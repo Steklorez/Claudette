@@ -76,6 +76,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             // Settings → Project tools → All tools → Show editor logs (DESIGN.md §18, "Editor logs").
             FollowEditorLogs();
         };
+        // Settings → Tabs → Show them again: the past sessions removed from the sidebar come back (DESIGN.md §4, "Claude Code's projects").
+        _services.StateChanged += (_, _) => OnRemovedPastSessionsChanged();
         // An account added, renamed or removed, or a folder's changed: the groups' and tabs' tags and menus follow.
         _services.Accounts.Changed += OnAccountsChanged;
         _services.Library.LeaseLost += (sessionId, machine) =>

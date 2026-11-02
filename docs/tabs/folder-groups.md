@@ -103,6 +103,8 @@ Then, under a line:
 
 | Item | What it does |
 |---|---|
+| **Remove from the sidebar** | For one of Claude Code's projects with nothing open in it, in place of **Close group**: takes all of its past sessions off the sidebar at once, and the group with them. See [Removing past sessions](#removing-past-sessions). |
+| **Remove past sessions** | The same for a group with tabs open, which stay. Shown while it lists past sessions. |
 | **Close group** | Closes the group's tabs, except pinned ones. Not shown while the group is one of Claude Code's projects with nothing open in it. |
 
 **Close group** doesn't touch pinned tabs. See [Closing and restoring](closing-and-restoring.md).
@@ -118,13 +120,26 @@ The first time Deventry starts with sessions to show, a card at the top of the s
 
 With it on:
 
-- **Every folder with sessions is a group**, whether or not a tab is open in it. The ones with nothing open come after the groups with tabs, the most recently used first, and each works like any group: its **+** opens a tab there, and its menu has **New tab here**, **History for this folder** and the rest. A group with nothing open has no **Close group**; it goes when you turn the setting off, or when its folder no longer exists.
+- **Every folder with sessions is a group**, whether or not a tab is open in it. The ones with nothing open come after the groups with tabs, the most recently used first, and each works like any group: its **+** opens a tab there, and its menu has **New tab here**, **History for this folder** and the rest. A group with nothing open has no **Close group**; it goes when you turn the setting off, when you [remove its past sessions](#removing-past-sessions), or when its folder no longer exists.
 - **Past sessions.** A group with nothing open lists the folder's latest sessions straight away. Once a tab is open in it, they fold away under its tabs into a row such as *12 past sessions*: click it to unfold the latest five, newest first, each with its name and, under it, when it was last used and how many messages it has. Click a session to pick it up in a new tab in the group, as [History](../history/history.md) does. **Show all in History…**, under the five, opens History on the folder when there are more. A session that's open in a tab isn't listed, since its tab is above. Deventry remembers which folders you unfolded.
 - The sessions are the ones History lists: Claude Code's own on this machine, including sessions you started in a terminal, and the session library's. Deventry reads them when it starts, when you turn the setting on, and when it comes to the front, so a session started in a terminal meanwhile shows up.
+
+### Removing past sessions
+
+{% include unreleased.html %}
+
+To take a session you're done with off the sidebar, point at it and click the **×** at its right, or right-click it and choose **Remove from the sidebar**. To take all of a folder's at once, right-click the group's label: a group showing only past sessions ends its menu with **Remove from the sidebar**, which takes them all and the group with them. A group with tabs open has **Remove past sessions** there instead, and stays, with its tabs. Removing a group's last past session with its **×** hides the project too.
+
+- Only the sidebar forgets them. [History](../history/history.md) still lists every one, and nothing is deleted.
+- A session you use again comes back: open it from History, or pick it up in a terminal or on another computer, and it's listed again, its folder too.
+- A new session in the folder brings the group back, with only the new one listed.
+- Settings → Tabs → **Claude Code's projects** → **Past sessions removed from the sidebar** brings them all back with **Show 12 again**.
+- Deventry remembers what you removed on this computer.
 
 ### Settings
 
 - Settings → Tabs → **Claude Code's projects** → **Show Claude Code's projects in the sidebar**: off until you choose. It belongs to this machine, since the folders differ from one machine to the next.
+- Settings → Tabs → **Claude Code's projects** → **Past sessions removed from the sidebar**: how many you've removed, with a button to show them again. See [Removing past sessions](#removing-past-sessions).
 
 ## The Project files button
 

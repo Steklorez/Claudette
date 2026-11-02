@@ -159,8 +159,9 @@ What each new tab starts with, and the folders you open them in.
 | **Clear recent folders** | New tab picker | | No | No | [Opening tabs](../tabs/opening-tabs.md) |
 | **Favorite folders**, with **Add folder…** | New tab picker | None | No | No | [Opening tabs](../tabs/opening-tabs.md) |
 | **Show Claude Code's projects in the sidebar** | Claude Code's projects | Off | No | No | [Folder groups](../tabs/folder-groups.md#claude-codes-projects) |
+| **Past sessions removed from the sidebar**, with **Show 12 again** | Claude Code's projects | None | No | No | [Folder groups](../tabs/folder-groups.md#removing-past-sessions) |
 
-Your favorite and recent folders belong to this machine. They stay put when settings sync is on, and **Reset to defaults** leaves them.
+Your favorite and recent folders, and the past sessions you removed from the sidebar, belong to this machine. They stay put when settings sync is on, and **Reset to defaults** leaves them.
 
 ## Usage
 

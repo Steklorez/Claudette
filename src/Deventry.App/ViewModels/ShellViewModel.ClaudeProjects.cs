@@ -17,7 +17,8 @@ public sealed record ClaudeProjectsOffer(int FolderCount)
 /// <summary>
 /// Claude Code's projects in the sidebar (DESIGN.md §4, "Claude Code's projects"): with Settings → Tabs → <b>Show Claude
 /// Code's projects in the sidebar</b> on, every folder Claude Code has sessions in has a group, tab or no tab, and every
-/// group ends with its past sessions, read as History reads them. Until the user has chosen, the sidebar offers once.
+/// group ends with its past sessions, read as History reads them, less the ones the user removed from the sidebar. Until
+/// the user has chosen, the sidebar offers once.
 /// </summary>
 public sealed partial class ShellViewModel
 {
@@ -150,7 +151,8 @@ public sealed partial class ShellViewModel
     {
         var open = OpenSessionIds();
         var now = _services.Time.GetUtcNow();
-        var projects = ShowsClaudeProjects ? _claudeProjects : NoProjects;
+        var projects = ShowsClaudeProjects ? ShownProjects(open) : NoProjects;
+        _removedPastSessionsApplied = _services.State.RemovedPastSessions.Count;
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var group in Groups.ToArray())
         {
@@ -183,6 +185,64 @@ public sealed partial class ShellViewModel
         OrderProjectGroups();
         UpdateGroupLabels();
         OnPropertyChanged(nameof(HasTabs));
+    }
+
+    /// <summary>How many removals the sidebar was last laid out with, so a change to them from elsewhere lays it out again.</summary>
+    private int _removedPastSessionsApplied;
+
+    /// <summary>
+    /// The projects last read, without the sessions the user removed from the sidebar; a project left with none goes, so
+    /// a folder with nothing open leaves the sidebar. A removed session used again, opened in a tab or used since (in a
+    /// terminal, or on another machine), is back, and its removal is forgotten.
+    /// </summary>
+    private IReadOnlyDictionary<string, HistoryEntry[]> ShownProjects(HashSet<string> open)
+    {
+        var removed = _services.State.RemovedPastSessions;
+        if (removed.Count == 0)
+        {
+            return _claudeProjects;
+        }
+        // Open in a tab: forgotten before the rest are sorted, so the session counts for its folder now.
+        var used = removed.Keys.Where(open.Contains).ToList();
+        used.ForEach(id => removed.Remove(id));
+        var shown = new Dictionary<string, HistoryEntry[]>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, sessions) in _claudeProjects)
+        {
+            var kept = sessions.Where(e =>
+            {
+                if (!removed.TryGetValue(e.SessionId, out var at))
+                {
+                    return true;
+                }
+                if (e.LastActivity > at)
+                {
+                    used.Add(e.SessionId);
+                    return true;
+                }
+                return false;
+            }).ToArray();
+            if (kept.Length > 0)
+            {
+                shown[key] = kept;
+            }
+        }
+        if (used.Count > 0)
+        {
+            used.ForEach(id => removed.Remove(id));
+            // Counted first, so the save doesn't lay the sidebar out again.
+            _removedPastSessionsApplied = removed.Count;
+            _services.SaveState();
+        }
+        return shown;
+    }
+
+    /// <summary>The state changed: when it was Settings → Tabs bringing the removed sessions back, the sidebar shows them.</summary>
+    private void OnRemovedPastSessionsChanged()
+    {
+        if (_services.State.RemovedPastSessions.Count != _removedPastSessionsApplied)
+        {
+            ApplyClaudeProjects();
+        }
     }
 
     private void LayOutProject(TabGroupViewModel group, HistoryEntry[] sessions, HashSet<string> open, DateTimeOffset now)
@@ -286,4 +346,40 @@ public sealed partial class ShellViewModel
     /// <summary>Resumes a past session in a new tab in its group, as History does (<see cref="SessionOpener"/>).</summary>
     [RelayCommand]
     private Task OpenPastSessionAsync(PastSessionRow? row) => row is null ? Task.CompletedTask : _opener.OpenAsync(row.Entry);
+
+    /// <summary>
+    /// × on a past session's row: takes it off the sidebar on this machine until it's used again. History still lists it.
+    /// A folder left with no past sessions and nothing open leaves the sidebar.
+    /// </summary>
+    [RelayCommand]
+    private void RemovePastSession(PastSessionRow? row)
+    {
+        if (row is not null)
+        {
+            RemovePastSessions([row.Entry]);
+        }
+    }
+
+    /// <summary><b>Remove past sessions</b> in a group's menu: every one the group lists, as × takes each.</summary>
+    [RelayCommand]
+    private void RemoveGroupPastSessions(TabGroupViewModel? group)
+    {
+        if (group is { HasPastSessions: true })
+        {
+            RemovePastSessions(group.PastSessions.Select(r => r.Entry));
+        }
+    }
+
+    /// <summary>Remembers each session as removed as of its last use, so using it again brings it back.</summary>
+    private void RemovePastSessions(IEnumerable<HistoryEntry> entries)
+    {
+        var removed = _services.State.RemovedPastSessions;
+        foreach (var entry in entries)
+        {
+            removed[entry.SessionId] = entry.LastActivity;
+        }
+        // Laid out first, so the save finds the sidebar already counting them.
+        ApplyClaudeProjects();
+        _services.SaveState();
+    }
 }
