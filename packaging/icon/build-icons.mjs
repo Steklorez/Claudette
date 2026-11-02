@@ -9,6 +9,7 @@
 //   docs/assets/deventry.svg, favicon.ico     the user guide's logo and favicon (GUIDE.md, "The site")
 //   docs/assets/joulene.svg                   Joulene standing, for the guide's pages about her
 //   docs/assets/wordmark.svg                  the name in pixels, for the guide's landing page
+//   docs/_includes/joulene-puzzled.svg        Joulene puzzled, for the site's page not found (docs/404.html)
 //   packaging/windows/Assets/*.png            the MSIX logos, and the taskbar's unplated sizes
 //   src/Deventry.App/Assets/AppIcon/*.png     the animations' frames (DESIGN.md §10): on the taskbar, chevrons
 //                                             lighting or an hourglass running, blue or, as -dark-, white; on the Dock,
@@ -590,8 +591,8 @@ function vectors(shapes) {
   ].join('\n');
 }
 
-/** Rows of cells as an SVG, a rectangle for each run of one colour. */
-function cellsSvg(rows, colors) {
+/** Rows of cells as SVG groups, one for each colour with a rectangle for each run of it, `top` cells down. */
+function cellGroups(rows, colors, indent = '  ', top = 0) {
   const byColor = new Map();
   rows.forEach((row, y) => {
     for (let x = 0; x < row.length; ) {
@@ -599,16 +600,47 @@ function cellsSvg(rows, colors) {
       while (end < row.length && row[end] === row[x]) end++;
       if (row[x] !== '.') {
         const fill = colors[row[x]];
-        byColor.set(fill, [...(byColor.get(fill) ?? []), `<rect x="${x}" y="${y}" width="${end - x}" height="1"/>`]);
+        byColor.set(fill, [...(byColor.get(fill) ?? []), `<rect x="${x}" y="${y + top}" width="${end - x}" height="1"/>`]);
       }
       x = end;
     }
   });
-  const groups = [...byColor].map(([fill, rects]) => `  <g fill="${fill}">${rects.join('')}</g>`);
+  return [...byColor].map(([fill, rects]) => `${indent}<g fill="${fill}">${rects.join('')}</g>`);
+}
+
+/** Rows of cells as an SVG, a rectangle for each run of one colour. */
+function cellsSvg(rows, colors) {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges">`,
     '  <!-- Drawn by packaging/icon/build-icons.mjs; change the sprite there. -->',
-    ...groups,
+    ...cellGroups(rows, colors),
+    '</svg>',
+    '',
+  ].join('\n');
+}
+
+// Joulene puzzled, as the app has her when she can't make something out (MascotAntics.Puzzled): looking left, then
+// right, then ahead, and blinking, with a "?" over her longer side, a row above her head. For the site's page not found
+// (docs/404.html), which puts it inline: what her poses share is drawn once, and each pose's own cells are a group,
+// `pose pose-<name>`, that the page's CSS shows in turn. The "?" is in currentColor, the page's muted text.
+function puzzledSvg() {
+  const poses = ['stand', 'lookLeft', 'lookRight', 'blink'].map(name => [name, mascotPoses[name]]);
+  const question = mascotProps.question;
+  const top = question.length + 1;
+  const shared = (y, x) => poses.every(([, rows]) => rows[y][x] === poses[0][1][y][x]);
+  const only = (rows, keep) => rows.map((row, y) => [...row].map((ch, x) => keep(y, x) ? ch : '.').join(''));
+  const width = joulene[0].length + 1;
+  const ink = question.map(row => row.padStart(width, '.'));
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${top + joulene.length}" shape-rendering="crispEdges" aria-hidden="true">`,
+    '  <!-- Drawn by packaging/icon/build-icons.mjs; change the sprite there. -->',
+    ...cellGroups(ink, { Z: 'currentColor' }),
+    ...cellGroups(only(poses[0][1], shared), mascotPalette, '  ', top),
+    ...poses.flatMap(([name, rows]) => [
+      `  <g class="pose pose-${name}">`,
+      ...cellGroups(only(rows, (y, x) => !shared(y, x)), mascotPalette, '    ', top),
+      '  </g>',
+    ]),
     '</svg>',
     '',
   ].join('\n');
@@ -671,6 +703,7 @@ write('docs/assets/deventry.svg', vectors(logo));
 write('docs/assets/joulene.svg', cellsSvg(joulene, mascotPalette));
 write('docs/assets/favicon.ico', ico([16, 32, 48].map(size => render(logo, size))));
 write('docs/assets/wordmark.svg', wordmark());
+write('docs/_includes/joulene-puzzled.svg', puzzledSvg());
 
 // The taskbar's sizes fill their square; the tiles' logos keep the margin Windows' tiles want, the sign two-thirds of
 // the tile's height.

@@ -2,7 +2,8 @@
 {%- comment -%}
   The landing page (index.html): a page of its own, outside the guide's theme, with a header for Home, the Docs and the
   Downloads, and dotBunny's Discord and the repository beside them. Its look is assets/css/landing.css and its motion assets/js/landing.js. It follows the reader's system
-  between light and dark, as the guide does.
+  between light and dark, as the guide does. The page not found (404.html) has it too, so it's served at any address:
+  everything it loads is named from the site's root.
 {%- endcomment -%}
 <html lang="{{ site.lang | default: 'en' }}" class="no-js">
 <head>
@@ -24,7 +25,7 @@
         <span>Deventry</span>
       </a>
       <nav class="topnav" aria-label="Site">
-        <a href="{{ '/' | relative_url }}" aria-current="page">{% include icon.html name="home" %}<span>Home</span></a>
+        <a href="{{ '/' | relative_url }}"{% if page.url == "/" %} aria-current="page"{% endif %}>{% include icon.html name="home" %}<span>Home</span></a>
         <a href="{{ '/guide/' | relative_url }}">{% include icon.html name="book" %}<span>Docs</span></a>
         <a href="{{ '/downloads/' | relative_url }}">{% include icon.html name="download" %}<span>Downloads</span></a>
         <a class="topnav-extra" href="https://github.com/dotBunny/Deventry/blob/main/CHANGELOG.md"><span>Changelog</span></a>
