@@ -871,6 +871,20 @@ items:
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: RealCliTests, ClaudeSessionTests
     fallback: See control_request. Without it, the MCP page lists the servers from system/init's mcp_servers.
+  - id: "mcp_status config.command"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Sessions/McpServers.cs, src/Deventry.Platform/Processes/McpServerProcesses.cs, src/Deventry.App/ViewModels/McpServersViewModel.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: McpServerProcessesTests, ClaudeSessionTests, ToolWindowsTests, RealCliTests
+    fallback: A stdio server's program, checked with 2.1.302. Without it, closing a tab lists its MCP servers' processes with the ones Claude started, as before.
+  - id: "mcp_status config.args"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Sessions/McpServers.cs, src/Deventry.Platform/Processes/McpServerProcesses.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: McpServerProcessesTests, ClaudeSessionTests
+    fallback: A stdio server's arguments, checked with 2.1.302. Without them, its process is known by its program alone.
   - id: "mcp_reconnect"
     kind: control
     status: undocumented

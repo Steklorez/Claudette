@@ -298,8 +298,9 @@ public sealed class ClaudeSession : IAsyncDisposable
     }
 
     /// <summary>The session's MCP servers and how each is connected (DESIGN.md §4, "MCP servers").</summary>
-    public async Task<IReadOnlyList<McpServerStatus>> GetMcpStatusAsync(CancellationToken cancellationToken = default) =>
-        McpServerStatus.ParseList(await SendControlRequestAsync(new JsonObject { ["subtype"] = "mcp_status" }, cancellationToken: cancellationToken)
+    /// <param name="timeout">How long to wait for the answer; <see cref="DefaultControlTimeout"/> by default.</param>
+    public async Task<IReadOnlyList<McpServerStatus>> GetMcpStatusAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default) =>
+        McpServerStatus.ParseList(await SendControlRequestAsync(new JsonObject { ["subtype"] = "mcp_status" }, timeout, cancellationToken)
             .ConfigureAwait(false));
 
     /// <summary>Connects an MCP server again, such as one that failed or needs signing in.</summary>

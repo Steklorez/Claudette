@@ -25,6 +25,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **A web page Claude names opens in your browser.** A link in a reply, or a file's name in its code, that's an `.html` page opens in your default browser rather than in Deventry's editor, and so does one linked from a Markdown file's preview. Changed files' and a tool card's **Open** still open it in the editor, to work on it.
 - **In the Microsoft Store**, Deventry has a listing of its own. Install it from there, and everything carries over as it does from a download.
 
+### Fixed
+
+- **Closing a tab no longer asks about its MCP servers.** A server Claude Code runs as a program, such as Unity's `relay_win`, was listed as a process the tab started, so a tab with one in your settings asked *Close and stop it* every time it closed. MCP servers are Claude Code's own and stop with it; the question now lists only what Claude started, such as a dev server.
+
 ## [0.7.0] - 2026-10-31
 
 **This is the last version called Claudette.** The next one, 1.0.0, is **Deventry**: the same app with a new name, and a new mascot on the composer, Joulene. When Deventry is released, this version offers it as an update like any other, and your tabs, settings, History and saved passwords come with you; on a Mac, it arrives in Applications as `Deventry.app`, in place of `Claudette.app`. If you installed Claudette from the Microsoft Store, Deventry has a listing of its own there to install it from.

@@ -27,6 +27,12 @@ public sealed record McpServerStatus(string Name, McpServerState State, string? 
     /// <summary>A remote server, which can use a sign-in that <c>mcp_clear_auth</c> forgets.</summary>
     public bool IsRemote => Transport is "http" or "sse";
 
+    /// <summary>
+    /// For a server Claude Code runs as a program (<c>stdio</c>), what it runs, to know its process by (DESIGN.md §4,
+    /// "Cleanup"); null for a remote one, or when Claude Code doesn't say.
+    /// </summary>
+    public McpServerLaunch? Launch { get; init; }
+
     /// <summary>The servers in an <c>mcp_status</c> response (<c>mcpServers</c>). Entries without a name are skipped.</summary>
     public static IReadOnlyList<McpServerStatus> ParseList(JsonObject response) =>
         (response.GetArray("mcpServers") ?? response.GetArray("mcp_servers") ?? [])
@@ -45,6 +51,7 @@ public sealed record McpServerStatus(string Name, McpServerState State, string? 
             server.GetArray("tools")?.Count ?? 0)
         {
             Transport = server.GetObject("config")?.GetString("type"),
+            Launch = McpServerLaunch.Parse(server.GetObject("config")),
         }
         : null;
 
@@ -57,6 +64,21 @@ public sealed record McpServerStatus(string Name, McpServerState State, string? 
         "disabled" => McpServerState.Disabled,
         _ => McpServerState.Unknown,
     };
+}
+
+/// <summary>
+/// The program a <c>stdio</c> MCP server runs, and its arguments, from <c>config.command</c> and <c>config.args</c> in
+/// <c>mcp_status</c> (undocumented; checked with Claude Code 2.1.302). Its environment (<c>config.env</c>) isn't read: it
+/// can hold keys. Untrusted text, used only to know the server's process.
+/// </summary>
+public sealed record McpServerLaunch(string Command, IReadOnlyList<string> Arguments)
+{
+    /// <summary>A server's <c>config</c>, when it's a program to run: a remote one has a <c>url</c> instead.</summary>
+    public static McpServerLaunch? Parse(JsonObject? config) =>
+        config?.GetString("command") is { Length: > 0 } command && config.GetString("type") is null or "stdio"
+            ? new McpServerLaunch(command,
+                config.GetArray("args")?.Select(a => a?.GetValueKind() == System.Text.Json.JsonValueKind.String ? a.GetValue<string>() : null).OfType<string>().ToArray() ?? [])
+            : null;
 }
 
 /// <summary>What <c>rewind_files</c> did, or would do with <c>dry_run</c> (DESIGN.md §5, "Rewind and branch").</summary>

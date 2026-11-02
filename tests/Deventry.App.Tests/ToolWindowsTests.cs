@@ -1164,6 +1164,70 @@ public class ToolWindowsTests
         Assert.Empty(h.Shell.AllTabs);
     }
 
+    /// <summary>What Claude Code says of Unity's relay, as a server in the user's own settings (DESIGN.md §4, "Cleanup").</summary>
+    private static void RelayServer(TabTestHarness h) => h.Transport.Answers["mcp_status"] = _ => JsonNode.Parse("""
+        {"mcpServers":[{"name":"unity-mcp","status":"connected","scope":"user",
+          "config":{"type":"stdio","command":"C:\\Users\\me\\.unity/relay\\relay_win.exe","args":["--mcp"]}}]}
+        """)!.AsObject();
+
+    [Fact]
+    public async Task Closing_a_tab_doesnt_ask_about_its_MCP_servers_which_stop_with_Claude_Code()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var tree = h.Trees.Trees[4242];
+        // The relay Claude Code runs for the server, and what the relay started in turn.
+        tree.Children.Add((5001, "relay_win.exe"));
+        tree.CommandLines[5001] = @"C:\Users\me\.unity/relay\relay_win.exe --mcp";
+        tree.Children.Add((5002, "unity-bridge.exe"));
+        tree.Parents[5002] = 5001;
+        RelayServer(h);
+
+        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+
+        Assert.Null(h.Shell.Confirmation);
+        Assert.Empty(h.Shell.AllTabs);
+        Assert.Contains("mcp_status", h.Transport.SentControlSubtypes);
+        // Closed as any tab is: whatever Claude Code left behind is ended.
+        Assert.True(tree.Killed);
+    }
+
+    [Fact]
+    public async Task Closing_a_tab_lists_what_Claude_started_and_not_its_MCP_servers()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var tree = h.Trees.Trees[4242];
+        tree.Children.Add((5001, "relay_win.exe"));
+        tree.CommandLines[5001] = @"C:\Users\me\.unity/relay\relay_win.exe --mcp";
+        // A dev server Claude ran, under the shell its Bash call runs in.
+        tree.Children.Add((5003, "bash.exe"));
+        tree.Children.Add((5004, "node.exe"));
+        tree.Parents[5004] = 5003;
+        RelayServer(h);
+
+        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+
+        var confirmation = Assert.IsType<ConfirmationViewModel>(h.Shell.Confirmation);
+        Assert.Contains("2 processes that are still running: bash.exe (5003), node.exe (5004).", confirmation.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("relay_win", confirmation.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Without_an_answer_about_its_MCP_servers_closing_a_tab_lists_them_as_before()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var tree = h.Trees.Trees[4242];
+        tree.Children.Add((5001, "relay_win.exe"));
+        h.Transport.Answers["mcp_status"] = _ => throw new InvalidOperationException("unsupported: mcp_status");
+
+        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+
+        var confirmation = Assert.IsType<ConfirmationViewModel>(h.Shell.Confirmation);
+        Assert.Contains("relay_win.exe (5001)", confirmation.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Closing_a_tab_normally_stops_everything_it_started()
     {

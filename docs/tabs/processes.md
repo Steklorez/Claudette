@@ -55,7 +55,7 @@ For a background task Claude started, Claude Code stops it and tells Claude it e
 
 ## When a tab closes
 
-Deventry tracks each tab's processes even with the monitor off, so closing a tab can stop what it started. If processes are still running, the close question lists them and offers **Close and stop them** or **Close, leave running**. See [Closing and restoring](closing-and-restoring.md).
+Deventry tracks each tab's processes even with the monitor off, so closing a tab can stop what it started. If processes are still running, the close question lists them and offers **Close and stop them** or **Close, leave running**. It leaves out the tab's MCP servers, which the Processes window lists with the rest: Claude Code started them for itself, and stops them as it closes. See [Closing and restoring](closing-and-restoring.md).
 
 ## Settings
 

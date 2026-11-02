@@ -94,6 +94,29 @@ public sealed partial class McpServersViewModel(Func<ClaudeSession?> session, Fu
     /// <summary>"1 failed" for the panel's button when something needs attention; null otherwise.</summary>
     public string? Attention => Servers.Count(s => s.IsFailed) is var failed and > 0 ? $"{failed} need{(failed == 1 ? "s" : "")} attention" : null;
 
+    /// <summary>How long closing a tab waits for Claude Code to say what its MCP servers run, before listing them with the rest.</summary>
+    internal static readonly TimeSpan LaunchesWait = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// What the session's MCP servers run, asked of Claude Code now, so closing the tab knows their processes from the ones
+    /// Claude started (DESIGN.md §4, "Cleanup"). None without a session, or when Claude Code can't say in time.
+    /// </summary>
+    internal async Task<IReadOnlyList<McpServerLaunch>> LaunchesAsync()
+    {
+        if (session() is not { } current)
+        {
+            return [];
+        }
+        try
+        {
+            return [.. (await current.GetMcpStatusAsync(LaunchesWait)).Select(s => s.Launch).OfType<McpServerLaunch>()];
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return [];
+        }
+    }
+
     [RelayCommand]
     public async Task RefreshAsync()
     {

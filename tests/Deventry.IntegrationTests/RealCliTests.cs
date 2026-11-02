@@ -280,12 +280,14 @@ public sealed class RealCliTests : IAsyncLifetime
         McpServerStatus? broken = null;
         await Waiting.UntilAsync(() =>
         {
-            broken = session.GetMcpStatusAsync(TestContext.Current.CancellationToken).GetAwaiter().GetResult().SingleOrDefault(s => s.Name == "broken");
+            broken = session.GetMcpStatusAsync(cancellationToken: TestContext.Current.CancellationToken).GetAwaiter().GetResult().SingleOrDefault(s => s.Name == "broken");
             return broken is { State: not McpServerState.Pending };
         }, "the server to fail", TimeSpan.FromSeconds(30));
         Assert.Equal(McpServerState.Failed, broken!.State);
 
         Assert.Equal("stdio", broken.Transport);
+        // What it runs, which closing a tab knows its process by (DESIGN.md §4, "Cleanup"; checked with 2.1.302).
+        Assert.Equal("false", broken.Launch?.Command);
 
         // DESIGN.md §4, "MCP servers": the sign-in requests are known (checked with 2.1.286); a stdio server has no sign-in.
         var signIn = await Assert.ThrowsAsync<ControlRequestException>(() => session.SignInToMcpServerAsync("broken", TestContext.Current.CancellationToken));
@@ -294,7 +296,7 @@ public sealed class RealCliTests : IAsyncLifetime
         Assert.Contains("Cannot clear auth", signOut.Message, StringComparison.Ordinal);
 
         await session.SetMcpServerEnabledAsync("broken", false, TestContext.Current.CancellationToken);
-        var after = Assert.Single(await session.GetMcpStatusAsync(TestContext.Current.CancellationToken), s => s.Name == "broken");
+        var after = Assert.Single(await session.GetMcpStatusAsync(cancellationToken: TestContext.Current.CancellationToken), s => s.Name == "broken");
         Assert.Equal(McpServerState.Disabled, after.State);
     }
 

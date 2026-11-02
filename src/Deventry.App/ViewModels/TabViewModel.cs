@@ -2509,7 +2509,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         if (killProcesses)
         {
             // Note the children while claude is still their parent; on macOS and Linux they can't be found afterwards.
-            await Task.Run(ProcessMonitor.RunningChildProcesses);
+            await Task.Run(() => ProcessMonitor.RunningChildProcesses([]));
         }
         // Let claude exit on its own, so it finishes its transcript; then end what it left running, before disposing
         // the session releases the process tree.

@@ -598,8 +598,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             reasons.Add("Claude is still working in it and will be stopped.");
         }
         // Processes the tab started, such as dev servers, are stopped with it unless the user keeps them (DESIGN.md §4).
-        // Listing them scans every process (ps on macOS): not on the UI thread.
-        var running = await Task.Run(tab.ProcessMonitor.RunningChildProcesses);
+        // Its MCP servers aren't among them: they're Claude Code's, which stops them as it exits. Listing them scans every
+        // process (ps on macOS): not on the UI thread.
+        var mcpServers = await tab.McpServers.LaunchesAsync();
+        var running = await Task.Run(() => tab.ProcessMonitor.RunningChildProcesses(mcpServers));
         if (running.Count > 0)
         {
             var names = string.Join(", ", running.Take(5).Select(p => $"{p.Name} ({p.Pid})")) + (running.Count > 5 ? $" and {running.Count - 5} more" : "");

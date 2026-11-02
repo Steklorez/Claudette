@@ -334,6 +334,28 @@ public class ClaudeSessionTests
     }
 
     [Fact]
+    public void A_stdio_servers_program_and_arguments_are_read_but_not_its_environment()
+    {
+        var servers = McpServerStatus.ParseList(JsonNode.Parse("""
+            {"mcpServers":[
+              {"name":"unity-mcp","status":"connected","config":{"type":"stdio","command":"C:\\relay\\relay_win.exe","args":["--mcp",3],"env":{"TOKEN":"secret"}}},
+              {"name":"untyped","status":"connected","config":{"command":"node","args":["server.js"]}},
+              {"name":"remote","status":"connected","config":{"type":"http","url":"https://example.com/mcp"}},
+              {"name":"bare","status":"pending"}
+            ]}
+            """)!.AsObject());
+
+        Assert.Equal(@"C:\relay\relay_win.exe", servers[0].Launch!.Command);
+        Assert.Equal(["--mcp"], servers[0].Launch!.Arguments);
+        Assert.Equal("node", servers[1].Launch!.Command);
+        Assert.Equal(["server.js"], servers[1].Launch!.Arguments);
+        Assert.Null(servers[2].Launch);
+        Assert.Null(servers[3].Launch);
+        // Its environment can hold keys: nothing of it is kept.
+        Assert.DoesNotContain("secret", servers[0].ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Mcp_servers_are_listed_reconnected_and_toggled()
     {
         await using var session = await StartAsync();
@@ -348,7 +370,7 @@ public class ClaudeSessionTests
         _transport.AutoRespond["mcp_reconnect"] = _ => [];
         _transport.AutoRespond["mcp_toggle"] = _ => [];
 
-        var servers = await session.GetMcpStatusAsync(TestContext.Current.CancellationToken);
+        var servers = await session.GetMcpStatusAsync(cancellationToken: TestContext.Current.CancellationToken);
         await session.ReconnectMcpServerAsync("auth", TestContext.Current.CancellationToken);
         await session.SetMcpServerEnabledAsync("tickets", false, TestContext.Current.CancellationToken);
 

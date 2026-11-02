@@ -15,7 +15,7 @@ Click the **×** on the tab's row, press `Ctrl/Cmd+W`, or choose **Close** in th
 
 - *This tab is pinned; closing it also unpins it.*
 - *Claude is still working in it and will be stopped.* This one is asked only while Settings → General → **Confirm before closing a tab where Claude is working** is on, which it is by default.
-- *It started 2 processes that are still running: …*, naming up to five.
+- *It started 2 processes that are still running: …*, naming up to five. The tab's MCP servers aren't among them, though Claude Code runs them as programs too: they're Claude Code's own, and it stops them as it closes.
 
 Choose **Close** to go ahead, or **Cancel**. When there are processes running, the choices are **Close and stop them** and **Close, leave running**. Deventry lets `claude` finish its transcript first, then ends whatever it left behind, unless you chose to leave it running. See [Processes](processes.md).
 

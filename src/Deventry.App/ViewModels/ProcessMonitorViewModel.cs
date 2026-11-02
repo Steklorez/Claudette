@@ -479,12 +479,19 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Processes the tab started that are still running, for the close confirmation.</summary>
-    public IReadOnlyList<ProcessSnapshot> RunningChildProcesses()
+    /// <summary>
+    /// Processes the tab started that are still running, for the close confirmation: not its MCP servers', which are
+    /// Claude Code's own and stop as it exits (DESIGN.md §4, "Cleanup").
+    /// </summary>
+    /// <param name="mcpServers">What the session's MCP servers run; with none, every process is listed.</param>
+    public IReadOnlyList<ProcessSnapshot> RunningChildProcesses(IReadOnlyList<McpServerLaunch> mcpServers)
     {
         try
         {
-            return [.. _tree?.Sample(includeCommandLines: false).Where(s => !s.IsRoot) ?? [], .. _host.ProjectJobProcesses(includeCommandLines: false)];
+            // With their command lines when there are servers to know, by their arguments.
+            var tree = _tree?.Sample(includeCommandLines: mcpServers.Count > 0) ?? [];
+            var servers = McpServerProcesses.Find(tree, mcpServers);
+            return [.. tree.Where(s => !s.IsRoot && !servers.Contains(s.Pid)), .. _host.ProjectJobProcesses(includeCommandLines: false)];
         }
         catch (Exception)
         {
