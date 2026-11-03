@@ -34,9 +34,13 @@ public class UsageCreditsUiTests
         await UiText.SettleUntilAsync(window, () => Notice(window).IsEffectivelyVisible, "the notice");
         var notice = Notice(window);
 
-        // Straight under the header, before the other banners.
-        var dock = Assert.IsType<DockPanel>(notice.Parent);
-        Assert.Equal(1, dock.Children.IndexOf(notice));
+        // Straight under the header, before the other banners, with the islands' gap between it and the page.
+        var banners = Assert.IsType<StackPanel>(notice.Parent);
+        Assert.Equal(0, banners.Children.IndexOf(notice));
+        var dock = Assert.IsType<DockPanel>(banners.Parent);
+        Assert.Equal(1, dock.Children.IndexOf(banners));
+        var page = dock.Children[^1];
+        Assert.Equal(notice.TranslatePoint(new Point(0, notice.Bounds.Height), window)!.Value.Y + 6, page.TranslatePoint(default, window)!.Value.Y, 3);
         var button = Assert.Single(notice.GetVisualDescendants().OfType<Button>());
         Assert.Equal("Manage on claude.ai", button.Content);
         var described = UiText.Describe(notice);
@@ -48,6 +52,10 @@ public class UsageCreditsUiTests
         h.Time.Advance(TimeSpan.FromMinutes(1));
         tracker.OnRateLimitEvent(RateLimitEvent(0.02, resets.AddHours(5), usingCredits: false));
         await UiText.SettleUntilAsync(window, () => !Notice(window).IsEffectivelyVisible, "the notice gone");
+
+        // With no banner left, the gap goes too.
+        usage.DismissAlertCommand.Execute(null);
+        await UiText.SettleUntilAsync(window, () => !banners.IsVisible, "the banners gone");
         window.Close();
 
         await Verify(described);
