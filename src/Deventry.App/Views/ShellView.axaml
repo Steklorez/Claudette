@@ -1664,6 +1664,17 @@
       </ContentControl>
     </Border>
 
+    <!-- Clone a repository (DESIGN.md §4, "Opening a tab") -->
+    <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsCloneOpen}" PointerPressed="OnCloneOverlayPressed">
+      <ContentControl Content="{Binding Clone}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:CloneRepositoryViewModel">
+            <views:CloneRepositoryView />
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </Border>
+
     <!-- Find in files (DESIGN.md §18, "Finding in files") -->
     <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsFindInFilesOpen}" PointerPressed="OnFindInFilesOverlayPressed">
       <ContentControl Content="{Binding FindInFiles}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0">

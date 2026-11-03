@@ -484,6 +484,12 @@ public partial class ShellView : UserControl
             e.Handled = true;
             return;
         }
+        if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && shell.IsCloneOpen)
+        {
+            shell.CloseClone();
+            e.Handled = true;
+            return;
+        }
         // A tool tab's drag, or a window slid out over the panes (DESIGN.md §3, "Tool windows").
         if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && EscapeToolWindows())
         {
@@ -745,6 +751,15 @@ public partial class ShellView : UserControl
         if (ReferenceEquals(e.Source, sender))
         {
             ViewModel?.ClosePicker();
+        }
+    }
+
+    /// <summary>A click outside the clone dialog closes it, unless a clone is running.</summary>
+    private void OnCloneOverlayPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (ReferenceEquals(e.Source, sender))
+        {
+            ViewModel?.CloseClone();
         }
     }
 

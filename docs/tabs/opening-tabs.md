@@ -27,7 +27,24 @@ At the bottom of the picker:
 
 - **Browse…** opens the system's folder picker, for any other folder.
 - **Open from History…** opens [History](../history/history.md), to resume a past session instead of starting a new one. Its shortcut is `Ctrl/Cmd+Shift+H`.
+- **Clone a repository…** fetches a project that isn't on this machine yet. See [Cloning a repository](#cloning-a-repository).
 - **Cancel**, or `Esc`, closes the picker.
+
+## Starting a new project
+
+**New project…** in the picker, or in the command palette, opens a window for a project that doesn't exist yet. **Empty project** makes a new folder: choose the folder to **create in** and type the new folder's **name**. **Start a git repository in it** is on by default, so the folder is a git repository from the start. **Create** makes the folder and opens it as a new tab.
+
+The same window's other choice, **Clone from git**, clones a repository instead, as below.
+
+## Cloning a repository
+
+For a project you don't have a copy of yet, choose **New project…** in the picker and then **Clone from git**, or **Clone a repository…** in the command palette. The window asks for:
+
+- **Repository address**: anything `git clone` takes, such as `https://github.com/org/repo.git`, `git@github.com:org/repo.git` or a path.
+- **Clone into**: the folder the clone goes in. It starts as the folder next to the one you last opened a tab in. **Browse…** picks another.
+- **Folder name**: filled in from the address (`repo.git` becomes `repo`). Change it if you like; clear it and it follows the address again.
+
+**Clone** runs git and, when it's done, opens the clone as a new tab, in its own group. It uses the git from [Settings → Source control → Git](../settings/git.md), and never asks for a password: a private repository needs your credential helper or SSH key set up, as it would for git on the command line. If the clone fails, the dialog stays open with what git said, and nothing is left on disk.
 
 ## Favorites and recent folders
 

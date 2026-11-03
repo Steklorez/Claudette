@@ -129,6 +129,14 @@ public sealed partial class NewTabPickerViewModel : ViewModelBase
     [RelayCommand]
     private void Close() => _shell.ClosePicker();
 
+    /// <summary>"Clone a repository…": the clone dialog takes the picker's place (DESIGN.md §4, "Opening a tab").</summary>
+    [RelayCommand]
+    private void OpenClone() => _shell.OpenCloneCommand.Execute(null);
+
+    /// <summary>"New project…": the new project dialog, on an empty project, takes the picker's place.</summary>
+    [RelayCommand]
+    private void OpenNewProject() => _shell.OpenNewProjectCommand.Execute(null);
+
     /// <summary>"Open from History…" (DESIGN.md §4, "Opening a tab").</summary>
     [RelayCommand]
     private void OpenHistory() => _shell.OpenHistoryCommand.Execute(null);

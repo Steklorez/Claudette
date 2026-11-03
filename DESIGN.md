@@ -565,6 +565,7 @@ The picker shows:
   - When it was last used, and how many tabs are open in it now.
 - **Browse…**, which opens the native folder picker for any other folder.
 - **Open from History…** (a button beside **Browse…**), which opens History ([§9](#history)) to resume a past session instead of starting a new one.
+- **New project…** (beside it), for a project that isn't on this machine yet: an empty one, or a clone of a git repository ([Cloning a repository](#cloning-a-repository)).
 
 Using the picker:
 
@@ -590,6 +591,12 @@ Using the picker:
   - Only the same user's Deventry is handed arguments, and only the same user's launches are read (`CurrentUserOnly` on both ends).
   - A restart into a new build or version (§9, §2) lets go of the lock as it stops listening; the new one waits for the lock and hands nothing on. If it doesn't start, the old one takes the lock back.
 - The macOS menu bar also has **File → New Tab**, **History…** and **Close Tab**, and the app menu has **About Deventry**, which opens Settings → About ([About](#about)), and **Settings…**. Each shows its shortcut from Settings → Keyboard ([§14](#keyboard-shortcuts)). Its **Help** menu has **User Guide**, **Ask on Discord** and **Report an Issue**, as at the foot of Settings' sidebar ([Version](#version)).
+**Cloning a repository.**
+
+- **Clone a repository…**, in the command palette ([Command palette](#command-palette)), and **Clone from git** in **New project…**, take the picker's place: a dialog with the repository's **address** (anything `git clone` takes: `https://`, `git@host:`, a path), the folder to **clone into** (with **Browse…**; it starts as the parent of the folder a tab last opened in, or the home folder), and the clone's **folder name**, filled in from the address (`repo.git` → `repo`) until the user changes it; cleared, it follows the address again. Under them, where the clone will be.
+- **New project…**, in the picker and the command palette, opens that dialog on **Empty project** (its other choice is **Clone from git**): the folder to **create in** and the new folder's **name**, with **Start a git repository in it** (on by default, `git init` in the new folder). **Create** makes the folder and opens it as a new tab; a folder whose `git init` failed still opens, with git's message. The name must be a single folder name not already there, as for a clone.
+- It won't start while the address is empty, the folder to clone into doesn't exist, the name isn't a single folder name, or that folder already has one of that name, and says which.
+- **Clone** runs `git clone` with the git every other git Deventry runs uses (Settings → Git → **Path to git**, [§14](#pages), and the user environment, [§13](#login-shell-environment)), never asking for a password: a repository that needs one fails with git's message. While it runs the button reads **Cloning…**, the fields are locked, and the dialog stays until git finishes (`Esc`, a click outside and **Cancel** wait). A finished clone opens as a new tab, as any folder does, so it joins the recent folders; a failed one leaves the dialog open with what git said, and nothing on disk.
 
 ### Process monitor
 

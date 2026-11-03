@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Start a new project from the new tab picker.** **New project…** makes an empty folder where you choose, a git repository from the start unless you turn that off, and opens it as a new tab; the same window clones a repository instead with **Clone from git**. It's in the command palette too.
+- **Clone a repository…**, from **New project…** in the new tab picker or from the command palette. Paste a git address, choose where to put the clone and what to call its folder (filled in from the address), and the clone opens as a new tab. It runs the git from Settings → Source control → Git, and tells you what git said if it can't. See [Cloning a repository](https://deventry.app/tabs/opening-tabs/#cloning-a-repository).
+
 ## [1.0.0] - 2026-11-04
 
 **Claudette is now Deventry**, an agentic development environment (ADE) for your desktop: made for Claude Code first, with more agents to come, and light on tokens by default. The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
