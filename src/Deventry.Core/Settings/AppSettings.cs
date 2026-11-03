@@ -661,6 +661,12 @@ public sealed class AppearanceSettings
     public MotionSetting Motion { get; set; } = MotionSetting.System;
 
     /// <summary>
+    /// Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar"): how a tab's row says Claude works or waits, the
+    /// status dot alone, or a line under the row as well.
+    /// </summary>
+    public TabActivity TabActivity { get; set; } = TabActivity.Dots;
+
+    /// <summary>
     /// Settings → Appearance → Zoom: the main window's content, in percent (DESIGN.md §3, "Accessibility"). It suits
     /// this machine's screen, so it doesn't sync.
     /// </summary>
@@ -668,6 +674,16 @@ public sealed class AppearanceSettings
 }
 
 /// <summary>Settings → Appearance → Motion: whether Deventry's animations run.</summary>
+/// <summary>Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar").</summary>
+public enum TabActivity
+{
+    /// <summary>The status dot before the name: it pulses while Claude works.</summary>
+    Dots,
+
+    /// <summary>Also a line under the row: a highlight runs along it while Claude works, and the row blinks orange while it waits.</summary>
+    Bars,
+}
+
 public enum MotionSetting
 {
     /// <summary>Reduced when the OS, or Claude Code's <c>prefersReducedMotion</c>, asks for it.</summary>

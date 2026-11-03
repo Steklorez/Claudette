@@ -83,6 +83,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(AllFilesReviewed));
         OnPropertyChanged(nameof(ShowsMarkIcon));
         OnPropertyChanged(nameof(MarkTip));
+        RowLeadChanged();
     }
 
     /// <summary>
