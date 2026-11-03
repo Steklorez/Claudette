@@ -25,6 +25,12 @@
       "ifExists": "src/Deventry.App/Deventry.App.csproj"
     },
     {
+      "name": "Run All Tests",
+      "command": "dotnet test Deventry.slnx --filter \"Category!=Live\"",
+      "mode": "output",
+      "ifExists": "Deventry.slnx"
+    },
+    {
       "name": "Build & Host Docs",
       "command": "host-docs.bat",
       "mode": "output",
