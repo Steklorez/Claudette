@@ -506,66 +506,78 @@
           </Grid>
         </Border>
 
-        <!-- Usage credits pay for Claude (DESIGN.md §6, "Usage credits"): no Dismiss, it goes when they stop paying -->
-        <Border Name="CreditsNotice" DockPanel.Dock="Top" Classes="statusbanner" IsVisible="{Binding Usage.IsUsingCredits, FallbackValue=False}">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
-              <Run FontWeight="SemiBold" Text="Using usage credits." />
-              <Run Text="{Binding Usage.CreditsNotice, FallbackValue=''}" />
-            </TextBlock>
-            <Button Grid.Column="1" Classes="flat" Content="Manage on claude.ai" Command="{Binding Usage.OpenCreditsSettingsCommand, FallbackValue={x:Null}}"
-                    VerticalAlignment="Center" ToolTip.Tip="Your plan's usage on claude.ai, in your browser: where usage credits are turned off or capped" />
-          </Grid>
-        </Border>
+        <!-- The banners under the header, stacked, with the islands' gap below the last (DESIGN.md §3, "Visual style"):
+             shown while any of them is, so the gap goes with them -->
+        <StackPanel Name="Banners" DockPanel.Dock="Top" Margin="0,0,0,6">
+          <StackPanel.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+              <Binding Path="Usage.IsUsingCredits" FallbackValue="False" />
+              <Binding Path="IsDemo" />
+              <Binding Path="ServiceStatus.ShowBanner" />
+              <Binding Path="Account.NeedsSignIn" />
+              <Binding Path="Usage.HasAlert" FallbackValue="False" />
+            </MultiBinding>
+          </StackPanel.IsVisible>
 
-        <!-- A demo (DESIGN.md §11, "Demo mode"): what it is, and the way out -->
-        <Border Name="DemoBanner" DockPanel.Dock="Top" Classes="statusbanner info" IsVisible="{Binding IsDemo}">
-          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
-              <Run FontWeight="SemiBold" Text="This is a demo," />
-              <Run Text="with made-up projects and a stand-in for Claude. Nothing in it reaches Claude or your account." />
-            </TextBlock>
-            <Button Grid.Column="1" Classes="flat" Content="Leave demo" Command="{Binding LeaveDemoCommand}" VerticalAlignment="Center"
-                    ToolTip.Tip="Close the demo; what it made goes with it" />
-          </Grid>
-        </Border>
+          <!-- Usage credits pay for Claude (DESIGN.md §6, "Usage credits"): no Dismiss, it goes when they stop paying -->
+          <Border Name="CreditsNotice" Classes="statusbanner" IsVisible="{Binding Usage.IsUsingCredits, FallbackValue=False}">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+                <Run FontWeight="SemiBold" Text="Using usage credits." />
+                <Run Text="{Binding Usage.CreditsNotice, FallbackValue=''}" />
+              </TextBlock>
+              <Button Grid.Column="1" Classes="flat" Content="Manage on claude.ai" Command="{Binding Usage.OpenCreditsSettingsCommand, FallbackValue={x:Null}}"
+                      VerticalAlignment="Center" ToolTip.Tip="Your plan's usage on claude.ai, in your browser: where usage credits are turned off or capped" />
+            </Grid>
+          </Border>
 
-        <!-- Claude has an incident, or maintenance (DESIGN.md §18, "Service status"), until dismissed or over -->
-        <Border Name="ServiceStatusBanner" DockPanel.Dock="Top" Classes="statusbanner" Classes.info="{Binding ServiceStatus.IsInfoBanner}"
-                IsVisible="{Binding ServiceStatus.ShowBanner}">
-          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
-            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
-              <Run FontWeight="SemiBold" Text="{Binding ServiceStatus.BannerTitle}" />
-              <Run Text="{Binding ServiceStatus.BannerText}" />
-            </TextBlock>
-            <Button Grid.Column="1" Classes="flat" Content="Status page" Command="{Binding ServiceStatus.OpenBannerLinkCommand}" VerticalAlignment="Center" />
-            <Button Grid.Column="2" Classes="flat" Content="Dismiss" Command="{Binding ServiceStatus.DismissBannerCommand}" VerticalAlignment="Center" />
-          </Grid>
-        </Border>
+          <!-- A demo (DESIGN.md §11, "Demo mode"): what it is, and the way out -->
+          <Border Name="DemoBanner" Classes="statusbanner info" IsVisible="{Binding IsDemo}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+                <Run FontWeight="SemiBold" Text="This is a demo," />
+                <Run Text="with made-up projects and a stand-in for Claude. Nothing in it reaches Claude or your account." />
+              </TextBlock>
+              <Button Grid.Column="1" Classes="flat" Content="Leave demo" Command="{Binding LeaveDemoCommand}" VerticalAlignment="Center"
+                      ToolTip.Tip="Close the demo; what it made goes with it" />
+            </Grid>
+          </Border>
 
-        <!-- Claude Code needs a sign-in mid-session (DESIGN.md §11): a banner across all tabs, which stay open -->
-        <Border DockPanel.Dock="Top" IsVisible="{Binding Account.NeedsSignIn}" Background="{DynamicResource CautionBackgroundBrush}"
-                BorderBrush="{DynamicResource CautionBorderBrush}" BorderThickness="0,0,0,1" Padding="16,6">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
-              <Run FontWeight="SemiBold" Text="Claude Code needs you to sign in." />
-              <Run Text="Messages you send wait until you have." />
-            </TextBlock>
-            <Button Grid.Column="1" Classes="accent" Content="Sign in" Command="{Binding Account.BeginSignInCommand}" />
-          </Grid>
-        </Border>
+          <!-- Claude has an incident, or maintenance (DESIGN.md §18, "Service status"), until dismissed or over -->
+          <Border Name="ServiceStatusBanner" Classes="statusbanner" Classes.info="{Binding ServiceStatus.IsInfoBanner}"
+                  IsVisible="{Binding ServiceStatus.ShowBanner}">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+              <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+                <Run FontWeight="SemiBold" Text="{Binding ServiceStatus.BannerTitle}" />
+                <Run Text="{Binding ServiceStatus.BannerText}" />
+              </TextBlock>
+              <Button Grid.Column="1" Classes="flat" Content="Status page" Command="{Binding ServiceStatus.OpenBannerLinkCommand}" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Classes="flat" Content="Dismiss" Command="{Binding ServiceStatus.DismissBannerCommand}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
 
-        <!-- A usage alert, until OS notifications arrive (milestone 7) -->
-        <Border DockPanel.Dock="Top" IsVisible="{Binding Usage.HasAlert, FallbackValue=False}" Background="{DynamicResource CautionBackgroundBrush}"
-                BorderBrush="{DynamicResource CautionBorderBrush}" BorderThickness="0,0,0,1" Padding="16,6">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
-              <Run FontWeight="SemiBold" Text="{Binding Usage.Alert.Title, FallbackValue=''}" />
-              <Run Text="{Binding Usage.Alert.Message, FallbackValue=''}" />
-            </TextBlock>
-            <Button Grid.Column="1" Classes="flat" Content="Dismiss" Command="{Binding Usage.DismissAlertCommand}" />
-          </Grid>
-        </Border>
+          <!-- Claude Code needs a sign-in mid-session (DESIGN.md §11): a banner across all tabs, which stay open -->
+          <Border Classes="statusbanner" IsVisible="{Binding Account.NeedsSignIn}">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+                <Run FontWeight="SemiBold" Text="Claude Code needs you to sign in." />
+                <Run Text="Messages you send wait until you have." />
+              </TextBlock>
+              <Button Grid.Column="1" Classes="accent" Content="Sign in" Command="{Binding Account.BeginSignInCommand}" />
+            </Grid>
+          </Border>
+
+          <!-- A usage alert, until OS notifications arrive (milestone 7) -->
+          <Border Classes="statusbanner" IsVisible="{Binding Usage.HasAlert, FallbackValue=False}">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock TextWrapping="Wrap" VerticalAlignment="Center">
+                <Run FontWeight="SemiBold" Text="{Binding Usage.Alert.Title, FallbackValue=''}" />
+                <Run Text="{Binding Usage.Alert.Message, FallbackValue=''}" />
+              </TextBlock>
+              <Button Grid.Column="1" Classes="flat" Content="Dismiss" Command="{Binding Usage.DismissAlertCommand}" />
+            </Grid>
+          </Border>
+        </StackPanel>
 
         <ContentControl Content="{Binding CurrentPage}" Background="{DynamicResource PageBackgroundBrush}" />
       </DockPanel>
