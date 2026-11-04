@@ -1,21 +1,26 @@
 // Deventry's release steps that change files (GUIDE.md, "The changelog", "Releasing"). Node 22+, no dependencies.
 // Run from anywhere in the checkout; each prints what it changed and leaves committing to you.
 //
-//   node packaging/release.mjs prepare [--version X.Y.Z] [--date YYYY-MM-DD]
-//       Step 1, before tagging. CHANGELOG.md's Unreleased section becomes the version, dated today, under a new empty
-//       Unreleased, and the links at the bottom compare Unreleased with it and it with the release before. The version
-//       is the one Directory.Build.props names, or --version, which Directory.Build.props then names too (a patch
-//       release, 0.5.1, while 0.6.0 is being worked on). It must follow the changelog's rule: until 1.0.0, a section
-//       with Added, Changed, Deprecated or Removed raises the second number, and Fixed or Security alone the third.
-//       Then tag the change vX.Y.Z (step 2).
+// main holds what's released and dev what's being worked on (CLAUDE.md, "Backlog"), so each step names its branch.
 //
-//   node packaging/release.mjs after [--next X.Y.Z]
-//       Steps 3 and 4, once the release is published, for the changelog's latest version. The guide's "New in the next
-//       release" labels go, its examples of the version Deventry shows ("Deventry 0.5.1") become the release's,
-//       Directory.Build.props moves to the next version to work on (the next second number, or --next), and the lock
-//       files are restored to name it. Wording the script can't safely change, such as "new in the next release" in a
-//       sentence, is listed for you to edit. Pushing the change to main rebuilds the site, whose Downloads page and
-//       download buttons list the release by themselves.
+//   node packaging/release.mjs prepare [--version X.Y.Z] [--date YYYY-MM-DD]
+//       Step 1, on dev, before the release is merged into main and tagged. CHANGELOG.md's Unreleased section becomes the
+//       version, dated today, under a new empty Unreleased, and the links at the bottom compare Unreleased with it and it
+//       with the release before. The version is the one Directory.Build.props names, or --version, which
+//       Directory.Build.props then names too (a patch release, 0.5.1, while 0.6.0 is being worked on). Until 1.0.0 it
+//       must follow the changelog's rule: a section with Added, Changed, Deprecated or Removed raises the second number,
+//       and Fixed or Security alone the third. Then merge dev into main and tag the merge vX.Y.Z (step 2).
+//
+//   node packaging/release.mjs after
+//       Step 3, on main, once the release is published, for the changelog's latest version. The guide's "New in the next
+//       release" labels go, and its examples of the version Deventry shows ("Deventry 0.5.1") become the release's.
+//       Wording the script can't safely change, such as "new in the next release" in a sentence, is listed for you to
+//       edit. Pushing the change to main rebuilds the site, whose Downloads page and download buttons list the release
+//       by themselves.
+//
+//   node packaging/release.mjs next [--next X.Y.Z]
+//       Step 4, on dev, once main is merged into it. Directory.Build.props moves to the next version to work on (the
+//       release's next second number, or --next), and the lock files are restored to name it.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,8 +38,9 @@ for (let i = 0; i < rest.length; i += 2) opts[rest[i].replace(/^--/, '')] = rest
 switch (mode) {
   case 'prepare': prepare(); break;
   case 'after': after(); break;
+  case 'next': next(); break;
   default:
-    console.error('Usage: node packaging/release.mjs prepare [--version X.Y.Z] [--date YYYY-MM-DD] | after [--next X.Y.Z]');
+    console.error('Usage: node packaging/release.mjs prepare [--version X.Y.Z] [--date YYYY-MM-DD] | after | next [--next X.Y.Z]');
     process.exit(2);
 }
 
@@ -78,7 +84,7 @@ function prepare() {
     console.log(`Directory.Build.props: ${version}.`);
     restoreLockFiles();
   }
-  console.log(`\nNext: commit, tag the commit v${version} and push the tag (step 2).`);
+  console.log(`\nNext: commit on dev, merge dev into main, tag the merge v${version} and push the tag (step 2).`);
 }
 
 /** Until 1.0.0, Added, Changed, Deprecated or Removed raise the second number, and Fixed or Security alone the third. */
@@ -100,14 +106,17 @@ function checkRule(version, latest, section) {
 
 // --- Steps 3 and 4 ---------------------------------------------------------------------------------------
 
-function after() {
+/** The changelog's released versions, newest first, or a failure when it has none. */
+function releasedVersions() {
   const releases = versionHeadings(readLines(changelogPath).lines);
   if (releases.length === 0) fail('CHANGELOG.md has no released version.');
+  return releases;
+}
+
+function after() {
+  const releases = releasedVersions();
   const released = releases[0].version;
   const previous = releases[1]?.version;
-  const [major, minor] = released.split('.').map(Number);
-  const next = opts.next ?? `${major}.${minor + 1}.0`;
-  if (!isVersion(next)) fail(`"${next}" isn't a version (X.Y.Z).`);
 
   const label = /^\{% include unreleased\.html %\}$/;
   const example = new RegExp(`\\bDeventry ${escape(previous ?? released)}\\b`, 'g');
@@ -146,15 +155,25 @@ function after() {
     });
   }
 
-  if (propsVersion() !== next) {
-    setPropsVersion(next);
-    console.log(`Directory.Build.props: ${next}.`);
-    restoreLockFiles();
-  }
   if (toCheck.length > 0) {
     console.log(`\nCheck these by hand:\n${toCheck.map(line => `  ${line}`).join('\n')}`);
   }
-  console.log(`\nNext: commit, and push to main to rebuild the site (step 3).`);
+  console.log(`\nNext: commit on main, and push it to rebuild the site (step 3). Then merge main into dev and run next there (step 4).`);
+}
+
+function next() {
+  const released = releasedVersions()[0].version;
+  const [major, minor] = released.split('.').map(Number);
+  const version = opts.next ?? `${major}.${minor + 1}.0`;
+  if (!isVersion(version)) fail(`"${version}" isn't a version (X.Y.Z).`);
+  if (propsVersion() === version) {
+    console.log(`Directory.Build.props already names ${version}.`);
+    return;
+  }
+  setPropsVersion(version);
+  console.log(`Directory.Build.props: ${version}.`);
+  restoreLockFiles();
+  console.log(`\nNext: commit on dev (step 4).`);
 }
 
 /** The lock files name the projects' version, and CI restores in locked mode. */

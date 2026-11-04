@@ -11,7 +11,7 @@ does. Check one against the other.
 
 The pull request is merged on GitHub, so its author keeps the credit. What the review finds is fixed in
 `review/pr-<N>`, which the user builds and tries, and which goes back to the contributor's branch once they approve it.
-So `review/pr-<N>` only ever holds the pull request's commits, merges of `origin/main`, and the fixes.
+So `review/pr-<N>` only ever holds the pull request's commits, merges of `origin/dev`, and the fixes.
 
 ## 1. Fetch it into a branch of its own
 
@@ -30,12 +30,13 @@ git fetch origin pull/<N>/head:review/pr-<N>
 git worktree add ../Deventry-pr<N> review/pr-<N>
 ```
 
-Note how far behind `main` it is (`git merge-base review/pr-<N> origin/main`, then `git log --oneline <base>..origin/main`).
+Note its base, which should be `dev` (CLAUDE.md, "Backlog"): one opened against `main` is changed to `dev`
+on GitHub before it's merged, which the user does. Note how far behind `dev` it is (`git merge-base review/pr-<N> origin/dev`, then `git log --oneline <base>..origin/dev`).
 
 ## 2. Read the whole change
 
-- Read the net change: `git diff origin/main...review/pr-<N>` (three dots: the pull request's own changes, whatever
-  merges of `main` it carries). Read every file, docs and tests included, not only the description's highlights.
+- Read the net change: `git diff origin/dev...review/pr-<N>` (three dots: the pull request's own changes, whatever
+  merges of `dev` it carries). Read every file, docs and tests included, not only the description's highlights.
 - Read the commits one by one too (`git log -p --first-parent`): a change can hide in a merge commit's conflict
   resolution, or in a commit the description doesn't mention.
 - Read the code round each change, not just the lines that changed: what binds to a property that now means something
@@ -65,7 +66,7 @@ these first, and if any is there, stop and tell the user before building:
 - **Hiding.** `BannedSymbols.txt` edits, `#pragma warning disable` (RS0030 above all), `unsafe`, new P/Invoke,
   reflection or `Assembly.Load`, base64 or encoded strings, binaries other than the guide's and README's pictures, and
   invisible characters:
-  `git diff origin/main...review/pr-<N> | grep -nP '[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}\x{FEFF}]'`
+  `git diff origin/dev...review/pr-<N> | grep -nP '[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}\x{FEFF}]'`
   (a BOM at the start of a `.verified.txt` is usual).
 - **The author.** A first-time contributor, a new account, or commits whose author isn't the pull request's: worth
   saying, not a finding by itself.
@@ -74,12 +75,12 @@ Say what you checked even when nothing turned up.
 
 ## 4. Build and test it on top of what lands first
 
-- `git fetch origin`, then merge `origin/main` into `review/pr-<N>` (never rebase: the contributor's commits stay
-  theirs). Only what's on `origin/main`: whatever goes into this branch goes to the contributor's.
-- When the user says other work lands first that isn't on `origin/main` yet, such as another pull request, merge it into
+- `git fetch origin`, then merge `origin/dev` into `review/pr-<N>` (never rebase: the contributor's commits stay
+  theirs). Only what's on `origin/dev`: whatever goes into this branch goes to the contributor's.
+- When the user says other work lands first that isn't on `origin/dev` yet, such as another pull request, merge it into
   a second branch, `review/pr-<N>-on-<other>`, made from `review/pr-<N>`, to build and test the two together. If
   another session is working on it, ask that session for its head, and merge again when it moves. Once it's on
-  `origin/main`, merge `origin/main` into `review/pr-<N>` instead.
+  `origin/dev`, merge `origin/dev` into `review/pr-<N>` instead.
 - `dotnet build Deventry.slnx`, then the projects the change touches, and `tests/Deventry.App.UiTests` when it
   changes a view, a style or a color token: `dotnet test <project> --filter "Category!=RealCli&Category!=Live"`.
 - A test that fails only here is still a bug: CI and other contributors run in other time zones, cultures and systems.
