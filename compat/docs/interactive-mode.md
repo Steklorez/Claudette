@@ -287,10 +287,12 @@ To get back a draft you cleared with `Ctrl+C`, press `Up`, either right away or 
 
 ### Reverse search with Ctrl+R
 
-Press `Ctrl+R` to interactively search through your command history. In [fullscreen rendering](https://code.claude.com/docs/en/fullscreen.md), `Ctrl+R` opens a search dialog instead: type to filter, press `Up` and `Down` to move through matches, and press `Ctrl+S` to cycle the scope through this session, this project, and all projects. Press `Enter` or `Tab` to place a match in the prompt input, or `Esc` to cancel. The steps below describe the classic renderer's inline search:
+Press `Ctrl+R` to interactively search through your command history. In [fullscreen rendering](https://code.claude.com/docs/en/fullscreen.md), `Ctrl+R` opens a search dialog instead. Type to filter in the dialog, and press `Up` and `Down` to move through the list of matches, with a preview pane showing the start of the highlighted match.
+
+In the dialog, press `Ctrl+S` to cycle the scope through this session, this project, and all projects. Press `Enter` or `Tab` to place a match in the prompt input, or `Esc` to cancel. The steps below describe the classic renderer's inline search:
 
 1. **Start search**: press `Ctrl+R` to activate reverse history search
-2. **Type query**: enter text to search for in previous commands. The search term is highlighted in matching results
+2. **Type query**: enter text to search for in previous commands. The current match appears in the prompt input.
 3. **Navigate matches**: press `Ctrl+R` again to cycle through older matches
 4. **Search scope**: the inline search always searches prompts from all projects
 5. **Accept match**:
@@ -299,8 +301,6 @@ Press `Ctrl+R` to interactively search through your command history. In [fullscr
 6. **Cancel search**:
    * Press `Ctrl+C` to cancel and restore your original input
    * Press `Backspace` on empty search to cancel
-
-The inline search scans your full prompt history, newest first, with duplicates collapsed to the newest occurrence. The fullscreen dialog searches your whole prompt history in the selected scope, newest first, with duplicates collapsed to the newest occurrence: the most recent prompts appear immediately, and matches from older prompts fill in as Claude Code loads the rest. Matching prompts display with the search term highlighted, so you can find and reuse previous inputs.
 
 Accepting a match or canceling the search takes effect immediately, even while Claude Code is still loading the history.
 
@@ -537,41 +537,41 @@ Spell checking is off by default, and Claude Code checks nothing in [screen read
 
 Claude Code reads the [`spellcheck`](https://code.claude.com/docs/en/settings-reference#spellcheck) setting from three places, and ignores it in a project's `.claude/settings.json` and `.claude/settings.local.json`. Turn it on from whichever one you use:
 
-**User settings**
+> [tab] User settings
+>
+> Add `spellcheck` to `~/.claude/settings.json`. It applies in every project you open, like the rest of your [user settings](https://code.claude.com/docs/en/settings.md#where-settings-live):
+>
+> ```json theme={null}
+> {
+>   "spellcheck": { "enabled": true }
+> }
+> ```
 
-Add `spellcheck` to `~/.claude/settings.json`. It applies in every project you open, like the rest of your [user settings](https://code.claude.com/docs/en/settings.md#where-settings-live):
+> [tab] Command line
+>
+> Save `spellcheck` in a JSON file, such as `spellcheck.json`:
+>
+> ```json theme={null}
+> {
+>   "spellcheck": { "enabled": true }
+> }
+> ```
+>
+> Then pass the file to `--settings`. It applies to that session only:
+>
+> ```bash theme={null}
+> claude --settings spellcheck.json
+> ```
 
-```json theme={null}
-{
-  "spellcheck": { "enabled": true }
-}
-```
-
-**Command line**
-
-Save `spellcheck` in a JSON file, such as `spellcheck.json`:
-
-```json theme={null}
-{
-  "spellcheck": { "enabled": true }
-}
-```
-
-Then pass the file to `--settings`. It applies to that session only:
-
-```bash theme={null}
-claude --settings spellcheck.json
-```
-
-**Managed settings**
-
-Add `spellcheck` to one of your organization's [managed settings sources](https://code.claude.com/docs/en/permissions.md#managed-settings). It applies to every user who receives those settings, and they can't turn it off:
-
-```json theme={null}
-{
-  "spellcheck": { "enabled": true }
-}
-```
+> [tab] Managed settings
+>
+> Add `spellcheck` to one of your organization's [managed settings sources](https://code.claude.com/docs/en/permissions.md#managed-settings). It applies to every user who receives those settings, and they can't turn it off:
+>
+> ```json theme={null}
+> {
+>   "spellcheck": { "enabled": true }
+> }
+> ```
 
 To check that spell checking is on, type a misspelled word and a space. Claude Code underlines the word. If it doesn't, see [When Claude Code underlines nothing](#when-claude-code-underlines-nothing). To turn spell checking off again, set `enabled` to `false` in the same place, or remove `spellcheck`.
 
@@ -708,7 +708,13 @@ Once the answer appears, the overlay accepts these keys.
 
 In an attached [background session](https://code.claude.com/docs/en/agent-view.md#attach-to-a-session), `Left` detaches and returns you to agent view, even while the answer is still arriving. The side question keeps running while you're away. The next time you attach to the session, the overlay reopens with the side question, or with its answer. Before v2.1.257, `Left` didn't detach there.
 
-`/btw` sees your full conversation but has no tools. A [subagent](https://code.claude.com/docs/en/sub-agents.md) has tools and starts from the prompt it receives, or, for a [fork](https://code.claude.com/docs/en/sub-agents.md#fork-the-current-conversation), from a copy of this conversation. Use `/btw` to ask about what Claude already knows from this session; use a subagent to go find out something new.
+`/btw` sees your full conversation, or the [subagent transcript you have open](#ask-btw-about-a-subagent), but has no tools. A [subagent](https://code.claude.com/docs/en/sub-agents.md) has tools and starts from the prompt it receives. A [fork](https://code.claude.com/docs/en/sub-agents.md#fork-the-current-conversation) starts from a copy of this conversation. Use `/btw` to ask about what Claude already knows from this session; use a subagent to go find out something new.
+
+### Ask /btw about a subagent
+
+With a [subagent's transcript open](https://code.claude.com/docs/en/sub-agents.md#observe-and-steer-running-forks), Claude answers `/btw` from that transcript instead of the main conversation, so you can ask what the subagent did. A later `/btw` from that transcript sees only the side questions you asked from it. Requires Claude Code v2.1.314 or later.
+
+From an [agent team](https://code.claude.com/docs/en/agent-teams.md) teammate's transcript, Claude answers from the main conversation.
 
 ## Task list
 
@@ -749,7 +755,9 @@ Keep the session open. What happens next depends on how the wait ends:
 * **After your computer slept**: if it slept for more than about 30 minutes and the limit reset while it slept, the first line reads `Your usage limit has reset` and the second reads `Press enter to continue`. Press `Enter` to continue. After a shorter sleep, or one that ended before the reset, Claude Code continues on its own.
 * **Early**: when you finish adding [usage credits](https://code.claude.com/docs/en/costs.md#add-usage-credits-to-your-subscription) with `/usage-credits`, sign back in after `/upgrade`, or switch models with `/model` during the wait, Claude Code checks whether usage is available again and continues right away if it is. It doesn't check after an upgrade or purchase you make in a browser on your own. Under [`opusplan`](https://code.claude.com/docs/en/model-config#opusplan-model-setting) and other model settings that run plan mode on a different model, Claude Code waits for the reset instead.
 
-The continued task runs like any other turn. Claude Code still asks for [permissions](https://code.claude.com/docs/en/permissions.md) as usual, so the task can stop on a prompt while you're away. If it hits the limit again, Claude Code re-arms the wait on its own at most twice in a row, then stops and shows `Automatic continue stopped after repeated usage-limit hits · /rate-limit-options to try again`.
+In the continued task, Claude Code still asks for [permissions](https://code.claude.com/docs/en/permissions.md) as usual, so the task can stop on a prompt while you're away. If the task hits the limit again, the wait starts again.
+
+After three automatic continuations, automatic continue stops and the `Automatic continue stopped after repeated usage-limit hits` notification appears. Run `/rate-limit-options` to choose what to do next. When you send another prompt, or pick a wait from that menu, the count starts over. Automatic continue also stops after three continuations for a [`/goal`](https://code.claude.com/docs/en/goal) or [session-scoped scheduled task](https://code.claude.com/docs/en/scheduled-tasks.md) that runs through several reset windows.
 
 ### Cancel the wait
 
