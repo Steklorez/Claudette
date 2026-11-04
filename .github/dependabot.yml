@@ -19,6 +19,9 @@ updates:
         versions: ['>= 4']
       - dependency-name: Verify.XunitV3
         versions: ['>= 33']
+      # SkiaSharp stays at the version Avalonia.Skia takes, which brings Linux's native library (Directory.Packages.props).
+      - dependency-name: SkiaSharp
+        versions: ['>= 4']
 
   # Workflows pin actions by commit; Dependabot moves the pin and the version comment together.
   - package-ecosystem: github-actions
