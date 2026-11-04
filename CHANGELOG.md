@@ -8,7 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- **See at a glance which tabs are working.** Settings → Appearance → **Tab activity** → **Colored rows**: a soft highlight runs across a tab's row while Claude works, a tab waiting for you flashes orange, a tab Claude finished in while you were elsewhere keeps a pale green wash until you open it, and one that stopped with an error a red one. A starting tab's name shimmers until it's ready. The status icons go, and the status dots stay the default.
+- **See at a glance which tabs are working.** Settings → Appearance → **Tab activity** → **Colored rows**: a soft highlight runs across a tab's row while Claude works, or its subagents still do in the background, a tab waiting for you flashes orange, a tab Claude finished in while you were elsewhere keeps a pale green wash until you open it, and one that stopped with an error a red one. A starting tab's name shimmers until it's ready. The status icons go, and the status dots stay the default.
 
 ## [1.0.0] - 2026-11-04
 

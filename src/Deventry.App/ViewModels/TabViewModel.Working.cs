@@ -80,11 +80,17 @@ public sealed partial class TabViewModel
     /// <summary>Shown while Claude works; hidden while a prompt waits on the user, though the turn's time runs on.</summary>
     public bool IsWorkingLineShown => Status == TabStatus.Working;
 
-    /// <summary>The line under the row with its running highlight (Settings → Appearance → Tab activity, DESIGN.md §4).</summary>
-    public bool ShowsWorkBar => Status == TabStatus.Working && _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars;
+    /// <summary>
+    /// The row's running highlight (Settings → Appearance → Tab activity, DESIGN.md §4): while Claude works, and while its
+    /// subagents do after the turn that started them in the background has ended.
+    /// </summary>
+    public bool ShowsWorkBar => UsesBars && (Status == TabStatus.Working || HasActiveAgents && Status is TabStatus.Idle or TabStatus.Unread);
 
-    /// <summary>A still green line under a row Claude finished in while the user wasn't looking, with Tab activity's bars.</summary>
-    public bool ShowsDoneBar => _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars
+    /// <summary>
+    /// A still green wash on a row Claude finished in while the user wasn't looking, with Tab activity's bars; it waits
+    /// for the subagents still running in the background.
+    /// </summary>
+    public bool ShowsDoneBar => UsesBars && !HasActiveAgents
         && (Status == TabStatus.Unread || State.Unseen && Status is TabStatus.NotStarted or TabStatus.Starting or TabStatus.Idle or TabStatus.Exited);
 
     private bool UsesBars => _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars;
