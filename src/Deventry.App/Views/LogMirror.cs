@@ -323,7 +323,7 @@ internal sealed class LogMirror
                 // Wrapped or not, the lines are other heights: back to the same place.
                 ComeBack();
                 break;
-            case nameof(EditorLogViewModel.CategoryColumn) or nameof(EditorLogViewModel.HasTimeColumn):
+            case nameof(EditorLogViewModel.CategoryColumn) or nameof(EditorLogViewModel.HasTimeColumn) or nameof(EditorLogViewModel.ShowsColumns):
                 UpdateIndentation();
                 _editor.TextArea.TextView.Redraw();
                 break;
@@ -434,7 +434,7 @@ internal sealed class LogColumnsGenerator(Func<int, LogLine?> lineAt, Func<Edito
     {
         base.StartGeneration(context);
         _parts.Clear();
-        if (log() is not { HasCategories: true } editorLog || lineAt(context.VisualLine.FirstDocumentLine.LineNumber)?.Columns is not { } columns)
+        if (log() is not { ShowsColumns: true } editorLog || lineAt(context.VisualLine.FirstDocumentLine.LineNumber)?.Columns is not { } columns)
         {
             return;
         }

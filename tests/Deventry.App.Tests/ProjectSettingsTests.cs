@@ -978,6 +978,28 @@ public class ProjectSettingsTests
         Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot"], settings.SearchResults.Select(r => r.Category).Distinct());
     }
 
+    /// <summary>Unity's Prefer JSON logging is a switch among its defaults, on to begin with, kept only once it's changed (issue #92).</summary>
+    [Fact]
+    public async Task Unitys_page_has_Prefer_JSON_logging_on_by_default()
+    {
+        await using var h = new TabTestHarness();
+        using var settings = new SettingsViewModel(h.Services, null);
+        var unity = settings.ProjectType(UnityProvider.KindId);
+
+        var row = Assert.IsType<ProjectTypeSwitchRow>(unity.Defaults.Single(r => r.Item.Title == "Prefer JSON logging"));
+        Assert.Equal("projectTools.types.unity.values.preferJsonLogging", row.Key);
+        Assert.True(row.IsOn);
+        Assert.True(UnityProvider.PreferJson.IsOn(h.Services.Settings.ProjectTools, UnityProvider.KindId));
+
+        row.IsOn = false;
+        Assert.Equal("false", h.Services.Settings.ProjectTools.Value(UnityProvider.KindId, UnityProvider.PreferJsonKey));
+        Assert.False(UnityProvider.PreferJson.IsOn(h.Services.Settings.ProjectTools, UnityProvider.KindId));
+
+        // Back on, nothing's kept: it's the default again.
+        row.IsOn = true;
+        Assert.Null(h.Services.Settings.ProjectTools.Value(UnityProvider.KindId, UnityProvider.PreferJsonKey));
+    }
+
     [Fact]
     public async Task A_project_type_switched_off_says_Off_in_the_sidebar_and_its_page_can_still_be_picked()
     {

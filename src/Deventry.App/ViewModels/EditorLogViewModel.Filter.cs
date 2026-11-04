@@ -34,8 +34,14 @@ public sealed partial class EditorLogViewModel
     /// <summary>A chip for each of the engine's levels, in its order: Errors, Warnings, then Display, Log and Verbose, or Messages.</summary>
     public IReadOnlyList<LogLevelChip> Levels { get; private set; } = [];
 
-    /// <summary>Its lines have Unreal's categories, which the Categories menu filters by.</summary>
-    public bool HasCategories => _source.HasCategories;
+    /// <summary>
+    /// Its lines have categories, which the Categories menu filters by: Unreal's, and those a Unity JSON log's entries name
+    /// (DESIGN.md §18, "Editor logs", "Unity's JSON log").
+    /// </summary>
+    public bool HasCategories => _source.HasCategories || Categories.Count > 0;
+
+    /// <summary>Its lines show in columns, the time, the category and the level, as Unreal's and a Unity JSON log's do.</summary>
+    public bool ShowsColumns => HasCategories || HasTimeColumn;
 
     /// <summary>The categories its entries are in, by name.</summary>
     public ObservableCollection<LogCategoryChoice> Categories { get; } = [];
@@ -74,6 +80,7 @@ public sealed partial class EditorLogViewModel
 
     /// <summary>Its lines have times, so Unreal's columns start with one.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsColumns))]
     public partial bool HasTimeColumn { get; private set; }
 
     /// <summary>Some lines are hidden: a level or a category is, or there's text to filter by.</summary>
@@ -146,6 +153,8 @@ public sealed partial class EditorLogViewModel
         {
             FindCategories();
             OnPropertyChanged(nameof(CategoriesLabel));
+            OnPropertyChanged(nameof(HasCategories));
+            OnPropertyChanged(nameof(ShowsColumns));
         }
         OnPropertyChanged(nameof(ShownNote));
     }

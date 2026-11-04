@@ -251,6 +251,7 @@ Each kind of project Deventry knows has a page, which starts with two switches u
 | **Recognize Unity projects** | Projects | On | [Unity](../project-tools/unity.md) |
 | **Tell Claude about Unity projects** | Projects | On | [Unity](../project-tools/unity.md) |
 | **Default code optimization** | Defaults | Release (or Debug) | [Unity](../project-tools/unity.md) |
+| **Prefer JSON logging** | Defaults | On | [Editor logs](../project-tools/editor-logs.md#unitys-json-log) |
 
 ## Godot
 

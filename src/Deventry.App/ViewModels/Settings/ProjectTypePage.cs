@@ -84,6 +84,7 @@ public sealed class ProjectTypePage : SettingsPage
         {
             ProjectTypeChoice choice => new ProjectTypeChoiceRow(this, item, choice),
             ProjectTypePath path => new ProjectTypePathRow(this, item, path),
+            ProjectTypeToggle toggle => new ProjectTypeSwitchRow(this, item, () => toggle.IsOn(settings, Kind), on => settings.SetValue(Kind, toggle.Key, toggle.ValueFor(on))),
             _ => throw new NotSupportedException($"Settings can't show a {setting.GetType().Name} yet."),
         };
     }

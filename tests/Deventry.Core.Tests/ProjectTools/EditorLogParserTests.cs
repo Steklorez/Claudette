@@ -195,6 +195,44 @@ public sealed class EditorLogParserTests
         Assert.Equal(2, counts[LogVerbosity.Log]);
     }
 
+    // ---- Unity's JSON log (issue #92) -----------------------------------------------------------------------------------
+
+    [Fact]
+    public void A_unity_JSON_line_is_one_entry_in_columns_with_its_message_and_stack_trace_under_it()
+    {
+        var (lines, counts) = Parse(UnityLogs.Parser(Zone),
+            """{"timestamp":"2026-11-04T19:01:22.123Z","level":"Error","category":"Scripting","message":"Can't find Player\nIn the scene","stackTrace":["Player:Start () (at Assets/Player.cs:12)",""]}""",
+            """{"time":"2026-11-04T19:01:23.000Z","Severity":"warning","msg":"Shader has no fallback"}""",
+            """{"timestamp":"2026-11-04T19:01:24.000Z","logType":"Log","message":"Refresh done","stack":"Asset:Refresh ()\nEditor:Tick ()"}""",
+            "A plain line of text, as Editor.log's",
+            """{"no":"message"}""");
+
+        Assert.Equal(
+            ["[2026-11-04T19:01:22.123Z] Scripting: Error: Can't find Player", "In the scene", "Player:Start () (at Assets/Player.cs:12)",
+             "[2026-11-04T19:01:23.000Z] Warning: Shader has no fallback",
+             "[2026-11-04T19:01:24.000Z] Refresh done", "Asset:Refresh ()", "Editor:Tick ()",
+             "A plain line of text, as Editor.log's", """{"no":"message"}"""],
+            lines.Select(l => l.Text));
+        Assert.Equal([0, 3, 4, 7, 8], lines.Index().Where(l => !l.Item.Continues).Select(l => l.Index));
+        Assert.Equal([2, 5, 6], lines.Index().Where(l => l.Item.IsTrace).Select(l => l.Index));
+        Assert.Equal([LogVerbosity.Error, LogVerbosity.Error, LogVerbosity.Error, LogVerbosity.Warning, LogVerbosity.Log, LogVerbosity.Log, LogVerbosity.Log, LogVerbosity.Log, LogVerbosity.Log],
+            lines.Select(l => l.Verbosity));
+        Assert.Equal("Scripting", lines[0].Category);
+        Assert.Null(lines[3].Category);
+
+        // Its columns: the time in the machine's (four hours behind UTC), the category, the level, then the message.
+        var first = lines[0].Columns!;
+        Assert.Equal(("15:01:22.123", "[2026-11-04T19:01:22.123Z] ".Length, "Scripting".Length), (first.Time, first.PrefixLength, first.CategoryLength));
+        Assert.Equal("Error", lines[0].Text.Substring(first.TagStart, first.TagLength));
+        Assert.Equal("Can't find Player", lines[0].Text[first.MessageStart..]);
+        Assert.True(lines[1].Columns!.IsCarriedOn);
+        Assert.Equal(-1, lines[4].Columns!.TagStart);
+        Assert.Null(lines[7].Columns);
+
+        Assert.Equal((1, 1, 3), (counts.Errors, counts.Warnings, counts[LogVerbosity.Log]));
+        Assert.Equal(1, counts.Categories["Scripting"]);
+    }
+
     // ---- Godot --------------------------------------------------------------------------------------------------------
 
     [Fact]

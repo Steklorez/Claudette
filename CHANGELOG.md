@@ -20,6 +20,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **Fold the Modified files card.** Click its header line, or the chevron after its count, and a turn's Modified files card folds to that line, as a Tool calls card does. Settings → Conversation → **Show modified files collapsed** starts them folded, and right-clicking one gives **Collapse all modified files** and **Expand all modified files** for the tab. See [Folding the files](https://deventry.app/conversation/the-end-of-a-turn/#folding-the-files).
 
+- **Unity's JSON log.** When Unity 6 writes its JSON log, `Editor.jsonl`, with its logging framework's JSON logging on, the tab shows that one in place of `Editor.log`: each entry with its time, category and level in columns, its stack trace under it, and the log's **Categories** filter for the categories it names. Settings → Project tools → Unity → **Prefer JSON logging**, on to begin with, turns it off. See [Unity's JSON log](https://deventry.app/project-tools/editor-logs/#unitys-json-log).
+
 ### Changed
 
 - **The Games icon is always on the strip.** While games are on, its icon stays at the window's right, game or no game, so you can start one at any time: with none open, its window lists the four, each with your score so far. **Done playing** goes back to that list. See [Games with Joulene](https://deventry.app/joulene/games-with-joulene/).

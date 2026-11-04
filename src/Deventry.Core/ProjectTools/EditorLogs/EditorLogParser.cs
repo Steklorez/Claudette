@@ -20,6 +20,20 @@ public abstract class EditorLogParser(Func<string, LogLineLevel> classify, Func<
     /// </summary>
     public void Add(string line, bool kept = true)
     {
+        foreach (var shown in Expand(line))
+        {
+            AddShown(shown, kept);
+        }
+    }
+
+    /// <summary>
+    /// The lines a line of the file shows as: itself, or for a format that packs a whole entry into one line, such as
+    /// Unity's JSON log, its message's lines and its stack trace's.
+    /// </summary>
+    protected virtual IEnumerable<string> Expand(string line) => [line];
+
+    private void AddShown(string line, bool kept)
+    {
         if (isCrash(line))
         {
             _counts.Crashed = true;
