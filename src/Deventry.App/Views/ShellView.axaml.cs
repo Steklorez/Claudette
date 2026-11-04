@@ -335,15 +335,6 @@ public partial class ShellView : UserControl
     /// <b>Change color…</b> in a group's menu opens its color picker beside the group's label, in the sidebar or the rail
     /// (DESIGN.md §4, "Grouped by folder").
     /// </summary>
-    private void OnChangeGroupColor(object? sender, RoutedEventArgs e) => ShowBesideGroupLabel(sender, (shell, group, flyout) =>
-    {
-        var picker = shell.PickGroupColor(group);
-        picker.Done += flyout.Hide;
-        // Saved in the project's files once, as it closes, however it closes.
-        flyout.Closed += (_, _) => picker.Close();
-        return new GroupColorPicker { DataContext = picker };
-    });
-
     /// <summary><b>Rename…</b> in a group's menu opens its name beside the group's label, in the sidebar or the rail.</summary>
     private void OnRenameGroup(object? sender, RoutedEventArgs e) => ShowBesideGroupLabel(sender, (shell, group, flyout) =>
     {
@@ -412,6 +403,7 @@ public partial class ShellView : UserControl
         if (_shell is not null)
         {
             _shell.ShowSettingsWindow = ShowSettingsAsync;
+            _shell.ShowProjectSettingsWindow = ShowProjectSettingsAsync;
             _shell.ShowAboutWindow = () => this.FindAncestorOfType<Window>() is { DataContext: MainWindowViewModel main } owner
                 ? AboutWindow.ShowAsync(main.Services, owner)
                 : Task.CompletedTask;
@@ -806,7 +798,6 @@ public partial class ShellView : UserControl
         }
         if (this.FindAncestorOfType<Window>() is not { } owner || owner.DataContext is not MainWindowViewModel main)
         {
-            opening.Project?.Dispose();
             return Task.CompletedTask;
         }
         var settings = new SettingsViewModel(main.Services, main.AccountText, main.Updates, opening, _shell)
@@ -818,6 +809,32 @@ public partial class ShellView : UserControl
         var window = new SettingsWindow { DataContext = settings };
         _settingsWindow = window;
         window.Closed += (_, _) => _settingsWindow = null;
+        window.Show(owner);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>The project settings windows open, one for each folder (DESIGN.md §14, "The project's settings").</summary>
+    private readonly List<ProjectSettingsWindow> _projectSettingsWindows = [];
+
+    /// <summary>
+    /// A folder's project settings, in a window of their own, not modal, beside this one. Asked for again, the folder's
+    /// window comes to the front at the page asked for. They close with this window.
+    /// </summary>
+    private Task ShowProjectSettingsAsync(ProjectSettingsOpening opening)
+    {
+        if (_projectSettingsWindows.FirstOrDefault(w => w.DataContext is ProjectSettingsWindowViewModel open && FolderHistory.SamePath(open.Project.Folder, opening.Folder)) is { } existing)
+        {
+            ((ProjectSettingsWindowViewModel)existing.DataContext!).Open(opening.Page, opening.StartNew);
+            UnfocusedWindows.Activate(existing);
+            return Task.CompletedTask;
+        }
+        if (this.FindAncestorOfType<Window>() is not { DataContext: MainWindowViewModel main } owner || _shell?.ProjectSettingsFor(opening.Folder) is not { } project)
+        {
+            return Task.CompletedTask;
+        }
+        var window = new ProjectSettingsWindow { DataContext = new ProjectSettingsWindowViewModel(main.Services, project, opening.Page, opening.StartNew) };
+        _projectSettingsWindows.Add(window);
+        window.Closed += (_, _) => _projectSettingsWindows.Remove(window);
         window.Show(owner);
         return Task.CompletedTask;
     }

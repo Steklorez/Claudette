@@ -1,23 +1,19 @@
 namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
-/// One of the selected tab's project pages, below the categories (DESIGN.md §14, "The project's pages"). The pages
-/// show <see cref="Project"/>, which holds what they edit; their search entries are named with the project's group
-/// ("NightOwl → Links"), worked out as the search runs, since the project can be found after the window opens. Nothing
-/// on them is a setting with a default: they have no <b>Reset to defaults</b>.
+/// One of a project's pages, in its own window (DESIGN.md §14, "The project's settings"). The pages show
+/// <see cref="Project"/>, which holds what they edit. Nothing on them is a setting with a default: they have no
+/// <b>Reset to defaults</b>.
 /// </summary>
 public abstract class ProjectPage(SettingsContext context, string title, ProjectSettingsViewModel project) : SettingsPage(context, title)
 {
     public ProjectSettingsViewModel Project { get; } = project;
-
-    protected override SettingsSearchResult Entry(string key, string label, string? description, string? section, IEnumerable<string> words) =>
-        base.Entry(key, label, description, section, words) with { Group = Project.Heading };
 }
 
 /// <summary>The project's <b>Links</b> (DESIGN.md §18, "Links"), from both of its files.</summary>
 public sealed class ProjectLinksPage : ProjectPage
 {
-    public ProjectLinksPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.LinksPage, project) =>
+    public ProjectLinksPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, ProjectSettingsWindowViewModel.LinksPage, project) =>
         Section("links", "Links",
         [
             Info("project.links", "Web links for this project", keywords: ["add a link", "url", "bookmark", "deventry.json"]),
@@ -31,7 +27,7 @@ public sealed class ProjectLinksPage : ProjectPage
 /// <summary>The project's <b>Actions</b> (DESIGN.md §18, "Custom actions"), the editor that was in Tab settings….</summary>
 public sealed class ProjectActionsPage : ProjectPage
 {
-    public ProjectActionsPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.ActionsPage, project) =>
+    public ProjectActionsPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, ProjectSettingsWindowViewModel.ActionsPage, project) =>
         Section("actions", "Actions",
         [
             Info("project.actions", "Commands of your own", keywords: ["add an action", "project actions", "deventry.json", "command"]),
@@ -48,7 +44,7 @@ public sealed class ProjectActionsPage : ProjectPage
 /// </summary>
 public sealed class ProjectGroupPage : ProjectPage
 {
-    public ProjectGroupPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.GroupPage, project) =>
+    public ProjectGroupPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, ProjectSettingsWindowViewModel.GroupPage, project) =>
         Section("group", "Group",
         [
             Info("project.group", "The group's color and icon", keywords: ["color", "colour", "icon", "picture", "image", "logo", "png", "ico", "dot", "deventry.json"]),
@@ -65,7 +61,7 @@ public sealed class ProjectGroupPage : ProjectPage
 /// </summary>
 public sealed class ProjectToolChoicesPage : ProjectPage
 {
-    public ProjectToolChoicesPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, SettingsViewModel.ToolsPage, project) =>
+    public ProjectToolChoicesPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, ProjectSettingsWindowViewModel.ToolsPage, project) =>
         Section("tools", "This project on this computer",
         [
             Info("project.tools", "This project's engine, editor or Godot executable", keywords: ["choose", "engine folder", "unity editor", "editor configuration"]),
@@ -74,10 +70,4 @@ public sealed class ProjectToolChoicesPage : ProjectPage
     public override string IconKey => "IconSettingsTools";
 
     public override string Description => "This computer's choices for the project, as its menu makes them.";
-
-    public override IEnumerable<SettingsSearchResult> SearchEntries =>
-    [
-        .. base.SearchEntries,
-        .. Project.ToolsSearchLabels.Select(label => Entry("project.tools", label, null, null, [label])),
-    ];
 }

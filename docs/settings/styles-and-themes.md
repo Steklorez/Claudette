@@ -1,7 +1,7 @@
 ---
 title: Styles and themes
 parent: Settings
-nav_order: 3
+nav_order: 4
 summary: "Deventry has two looks, Standard and Claude, and each comes in light and dark."
 ---
 

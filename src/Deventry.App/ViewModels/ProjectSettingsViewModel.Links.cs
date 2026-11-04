@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// A link on Settings' Links page (DESIGN.md §18, "Links"). It keeps the entry's JSON as written, so saving keeps fields
+/// A link on the project's Links page (DESIGN.md §18, "Links"). It keeps the entry's JSON as written, so saving keeps fields
 /// Deventry doesn't edit.
 /// </summary>
 /// <param name="Link">What it reads as; null when it can't be read, when it can only be removed.</param>
@@ -47,7 +47,7 @@ public sealed record ProjectLinkRow(JsonNode? Raw, ProjectLink? Link, string? Pr
 }
 
 /// <summary>
-/// Settings → the tab's project → <b>Links</b> (DESIGN.md §14, §18): the links of both files in the order the project's
+/// The project's settings → <b>Links</b> (DESIGN.md §14, §18): the links of both files in the order the project's
 /// menu shows them, the shared file's first. Each can be added, edited, removed or moved within its file, and the file is
 /// saved at once. Only <c>links</c> is rewritten; a file that isn't valid JSON is left alone.
 /// </summary>

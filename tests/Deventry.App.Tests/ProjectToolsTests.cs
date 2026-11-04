@@ -142,12 +142,12 @@ public class ProjectToolsTests
         Assert.Equal(Waits, actions["Run tests"].DisabledReason);
         Assert.True(actions["Grafana"].IsEnabled);
         Assert.True(actions["End all Unreal editors…"].IsEnabled);
-        // No output to show without a tab, and no project pages in Settings to add to yet.
+        // No output to show without a tab; the folder's project settings are there all the same.
         var menu = InlineDispatcher.Read(() => tools.Menu.Select(e => e.Label).ToArray());
         Assert.Contains(ShowFolder, menu);
         Assert.Contains("Refresh", menu);
+        Assert.Contains("Add an action…", menu);
         Assert.DoesNotContain("Show output…", menu);
-        Assert.DoesNotContain("Add an action…", menu);
 
         // A tab opening in the group brings its own tools, whose jobs run under it.
         var tab = await h.OpenTabAsync();

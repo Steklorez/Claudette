@@ -1,7 +1,5 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Headless.XUnit;
-using Avalonia.Media;
 using Avalonia.VisualTree;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
@@ -54,7 +52,6 @@ public class SidebarMenusUiTests
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        var group = h.Shell.Groups.Single();
         var menu = GroupLabel(window).ContextMenu!;
 
         Assert.Contains("sectioned", menu.Classes);
@@ -64,13 +61,9 @@ public class SidebarMenusUiTests
         Assert.Equal("Group", SectionOf(menu, "Rename…"));
         Assert.Null(SectionOf(menu, "Close group"));
         AssertIcons(menu);
-        // Change color's icon is the group's color.
-        menu.Open(GroupLabel(window));
-        UiText.Settle(window);
-        var color = menu.Items.OfType<MenuItem>().Single(m => m.Header as string == "Change color…");
-        Assert.Equal(Assert.IsAssignableFrom<ISolidColorBrush>(group.Brush).Color,
-            Assert.IsAssignableFrom<ISolidColorBrush>(Assert.IsType<Ellipse>(color.Icon).Fill).Color);
-        menu.Close();
+        // The group's color and icon are on its project's Group page, which Project settings… opens (issue #109).
+        Assert.Equal("Folder", SectionOf(menu, "Project settings…"));
+        Assert.DoesNotContain(menu.Items.OfType<MenuItem>(), m => m.Header as string is "Change color…" or "Change icon…");
 
         h.Shell.Layout.ToggleSidebarCommand.Execute(null);
         UiText.Settle(window);

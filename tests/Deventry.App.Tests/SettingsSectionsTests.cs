@@ -140,29 +140,6 @@ public class SettingsSectionsTests
         Assert.False(setting.IsHighlighted);
     }
 
-    /// <summary>The window isn't modal (DESIGN.md §14): its project pages follow the tab selected in the main window.</summary>
-    [Fact]
-    public async Task The_project_pages_follow_the_selected_tab_while_settings_is_open()
-    {
-        await using var h = new TabTestHarness();
-        var first = await h.OpenTabAsync();
-        var other = Directory.CreateDirectory(Path.Combine(h.Root, "other")).FullName;
-        await h.Shell.OpenFolderAsync(other);
-        var second = h.Shell.SelectedTab!;
-        h.Shell.SelectedTab = first;
-        using var settings = new SettingsViewModel(h.Services, null, host: h.Shell) { SelectedCategory = SettingsViewModel.LinksPage };
-        Assert.Same(first, settings.Project!.Tab);
-        Assert.Equal("work", settings.Project.Heading);
-
-        h.Shell.SelectedTab = second;
-
-        Assert.Same(second, settings.Project!.Tab);
-        Assert.Equal("other", settings.Project.Heading);
-        Assert.Equal(SettingsViewModel.LinksPage, settings.SelectedProjectNavEntry?.Title);
-        var links = Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
-        Assert.Same(settings.Project, links.Project);
-    }
-
     [Fact]
     public async Task Settings_opens_where_it_was_last_left()
     {

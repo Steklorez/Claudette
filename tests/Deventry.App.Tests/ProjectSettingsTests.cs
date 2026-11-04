@@ -11,8 +11,9 @@ using Deventry.Core.Settings;
 namespace Deventry.App.Tests;
 
 /// <summary>
-/// The selected tab's project in Settings (DESIGN.md §14, "The project's pages"): its Links, Actions, Tools and Group
-/// pages, and the group that heads them. Project files are written in temporary folders; engines are a few files; nothing runs.
+/// A project's settings, in their own window (DESIGN.md §14, "The project's settings"): its Links, Actions, Tools and
+/// Group pages, opened from a tab's or a group's menu. Project files are written in temporary folders; engines are a few
+/// files; nothing runs.
 /// </summary>
 public class ProjectSettingsTests
 {
@@ -22,18 +23,32 @@ public class ProjectSettingsTests
 
     private static string[] Names(JsonNode root, string key) => [.. root[key]!.AsArray().Select(e => e!["name"]?.GetValue<string>() ?? "")];
 
-    /// <summary>Opens Settings the way the gear does, and makes the window's view model from what the shell asked for.</summary>
-    private static async Task<SettingsViewModel> OpenSettingsAsync(TabTestHarness h)
+    /// <summary>
+    /// Opens a tab's project settings the way its menu does (the selected tab's without one), and makes the window's view
+    /// model from what the shell asked for.
+    /// </summary>
+    private static async Task<ProjectSettingsWindowViewModel> OpenSettingsAsync(TabTestHarness h, TabViewModel? tab = null)
     {
-        SettingsOpening? opening = null;
-        h.Shell.ShowSettingsWindow = o =>
+        var opening = await OpeningAsync(h, () => h.Shell.OpenTabProjectSettingsCommand.ExecuteAsync(tab ?? h.Shell.SelectedTab));
+        return Window(h, opening!);
+    }
+
+    /// <summary>What the shell asked its view to open while <paramref name="open"/> ran; null for nothing.</summary>
+    private static async Task<ProjectSettingsOpening?> OpeningAsync(TabTestHarness h, Func<Task> open)
+    {
+        ProjectSettingsOpening? opening = null;
+        h.Shell.ShowProjectSettingsWindow = o =>
         {
             opening = o;
             return Task.CompletedTask;
         };
-        await h.Shell.OpenSettingsCommand.ExecuteAsync(null);
-        return new SettingsViewModel(h.Services, null, opening: opening);
+        await open();
+        return opening;
     }
+
+    /// <summary>The window's view model, as the view makes it for <paramref name="opening"/>.</summary>
+    private static ProjectSettingsWindowViewModel Window(TabTestHarness h, ProjectSettingsOpening opening) =>
+        new(h.Services, h.Shell.ProjectSettingsFor(opening.Folder)!, opening.Page, opening.StartNew);
 
     /// <summary>A tab that isn't started: its folder is gone, so selecting it doesn't start a session.</summary>
     private static TabViewModel AddUnstartedTab(TabTestHarness h, string name)
@@ -48,102 +63,58 @@ public class ProjectSettingsTests
     // ---- The group -------------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task The_group_follows_the_selected_tab_is_named_after_its_project_and_is_hidden_with_no_tab()
+    public async Task A_tabs_menu_opens_its_folders_project_settings_in_a_window_named_after_its_project()
     {
         await using var h = new TabTestHarness();
 
-        using (var none = await OpenSettingsAsync(h))
-        {
-            Assert.False(none.HasProject);
-            Assert.Empty(none.ProjectNavEntries);
-            Assert.Equal("General", none.SelectedCategory);
-            Assert.Same(none.General, none.CurrentPage);
-        }
-
         var tab = await h.OpenTabAsync();
-        using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
-        Assert.Same(tab, project.Tab);
+        using var settings = await OpenSettingsAsync(h, tab);
+        var project = settings.Project;
         Assert.Equal("work", project.Heading);
+        Assert.Equal("work · Project settings", project.WindowTitle);
         Assert.Equal(h.WorkFolder, project.Folder);
-        Assert.Equal($"For the tab in {h.WorkFolder}", project.ForTabText);
 
-        // Its heading has the color of the tab's group in the main window.
+        // Its heading has the color of the folder's group in the main window.
         Assert.Same(h.Shell.Groups.Single(g => g.Tabs.Contains(tab)), project.Group);
 
-        // The project's pages are a list of their own, at the sidebar's foot, apart from the categories'. The page shown
-        // is selected in whichever list has it, and nowhere else; a heading isn't a page.
-        Assert.Equal([SettingsViewModel.LinksPage, SettingsViewModel.ActionsPage, SettingsViewModel.ToolsPage, SettingsViewModel.GroupPage], settings.ProjectNavEntries.Select(e => e.Title));
-        Assert.DoesNotContain(settings.NavEntries, e => e.Title is SettingsViewModel.LinksPage or SettingsViewModel.ActionsPage or SettingsViewModel.ToolsPage or SettingsViewModel.GroupPage or "work");
-        settings.SelectedProjectNavEntry = settings.ProjectNavEntries.Single(e => e.Title == SettingsViewModel.ToolsPage);
+        // Its pages, in its sidebar; it opens at Links, and a page picked there shows.
+        Assert.Equal([ProjectSettingsWindowViewModel.LinksPage, ProjectSettingsWindowViewModel.ActionsPage, ProjectSettingsWindowViewModel.ToolsPage, ProjectSettingsWindowViewModel.GroupPage],
+            settings.NavEntries.Select(e => e.Title));
+        Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
+        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == ProjectSettingsWindowViewModel.ToolsPage);
         Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        Assert.Null(settings.SelectedNavEntry);
-        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.IsHeading && e.Title == SettingsSidebar.ProjectTools);
-        Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-        Assert.Equal(SettingsViewModel.ToolsPage, settings.SelectedProjectNavEntry?.Title);
-        settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == "Appearance");
-        Assert.Same(settings.Appearance, settings.CurrentPage);
-        Assert.Null(settings.SelectedProjectNavEntry);
+        Assert.Equal(ProjectSettingsWindowViewModel.ToolsPage, settings.SelectedNavEntry?.Title);
 
-        // A provider finds a project: the group is named after it, in this window and the next.
+        // A provider finds a project: the window is named after it.
         UnrealFixture.Write(h.Root, h.WorkFolder);
         await tab.ProjectTools.RefreshAsync();
         await TabTestHarness.Eventually(() => project.Heading == "NightOwl", "the project's name");
-        using (var next = await OpenSettingsAsync(h))
-        {
-            Assert.Equal("NightOwl", next.Project!.Heading);
-        }
+        Assert.Equal("NightOwl · Project settings", project.WindowTitle);
 
-        // Another tab selected: the next window follows it; this one keeps its tab.
+        // Another tab's menu opens its own folder's.
         var other = AddUnstartedTab(h, "elsewhere");
-        h.Shell.SelectedTab = other;
-        using var third = await OpenSettingsAsync(h);
-        Assert.Same(other, third.Project!.Tab);
-        Assert.Equal("elsewhere", third.Project.Heading);
-        Assert.Same(tab, project.Tab);
+        using var third = await OpenSettingsAsync(h, other);
+        Assert.Equal((other.Folder, "elsewhere"), (third.Project.Folder, third.Project.Heading));
+        Assert.Equal(h.WorkFolder, project.Folder);
     }
 
+    /// <summary>The project's pages left Settings for their own window: Settings neither lists them nor finds them.</summary>
     [Fact]
-    public async Task Search_finds_the_project_pages_by_their_names_and_the_projects()
+    public async Task Settings_has_no_project_pages()
     {
         var (h, _, _) = ProjectToolsTests.UnrealHarness();
         await using var _h = h;
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
-        using var settings = await OpenSettingsAsync(h);
+        using var settings = new SettingsViewModel(h.Services, null, host: h.Shell);
 
+        Assert.DoesNotContain(settings.Pages, p => p is ProjectPage);
+        Assert.DoesNotContain(settings.NavEntries, e => e.Title is ProjectSettingsWindowViewModel.LinksPage or ProjectSettingsWindowViewModel.ActionsPage
+            or ProjectSettingsWindowViewModel.ToolsPage or ProjectSettingsWindowViewModel.GroupPage or "NightOwl");
         settings.SearchText = "web links";
-        var links = Assert.Single(settings.SearchResults);
-        Assert.Equal((SettingsViewModel.LinksPage, "NightOwl → Links"), (links.Category, links.Where));
-        Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
-
-        settings.SearchText = "links";
-        Assert.All(settings.SearchResults, r => Assert.Equal(SettingsViewModel.LinksPage, r.Category));
-
-        settings.SearchText = "add an action";
-        // The entry with the words together comes first, before one that only has each of them.
-        Assert.Equal(SettingsViewModel.ActionsPage, settings.SearchResults[0].Category);
-
-        settings.SearchText = "engine";
-        Assert.Contains(settings.SearchResults, r => r is { Category: SettingsViewModel.ToolsPage, Label: "Engine folder" });
-        settings.SelectedSearchResult = settings.SearchResults.First(r => r.Category == SettingsViewModel.ToolsPage);
-        Assert.IsType<ProjectToolChoicesPage>(settings.CurrentPage);
-
-        settings.SearchText = "editor configuration";
-        Assert.Contains(settings.SearchResults, r => r.Category == SettingsViewModel.ToolsPage);
-        Assert.Contains(settings.SearchResults, r => r is { Category: "Unreal Engine", Where: "Unreal Engine → Defaults" });
-
-        // The project's name finds its pages too; the categories read as before.
-        settings.SearchText = "nightowl actions";
-        Assert.All(settings.SearchResults, r => Assert.Equal(SettingsViewModel.ActionsPage, r.Category));
+        Assert.Empty(settings.SearchResults);
         settings.SearchText = "theme";
         Assert.Equal("Appearance → Look", settings.SearchResults[0].Where);
-
-        // No tab, no project pages to find.
-        await using var empty = new TabTestHarness();
-        using var none = await OpenSettingsAsync(empty);
-        none.SearchText = "web links";
-        Assert.Empty(none.SearchResults);
     }
 
     [Fact]
@@ -157,7 +128,7 @@ public class ProjectSettingsTests
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         h.Services.ProjectTools.Remember(uproject, UnrealProvider.ConfigurationKey, "DebugGame");
         h.Services.Settings.ProjectTools.SetValue(UnrealProvider.KindId, UnrealProvider.ConfigurationKey, nameof(UnrealConfiguration.DebugGame));
-        using var settings = await OpenSettingsAsync(h);
+        using var settings = new SettingsViewModel(h.Services, null);
         var before = File.ReadAllText(shared);
 
         settings.ProjectType(UnrealProvider.KindId).ResetAllSections();
@@ -191,7 +162,7 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Links.Count == 2, "the tab's links");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
 
         Assert.Equal(["Board", "https://mine.example"], project.Links.Select(r => r.Name));
         Assert.Equal(["Shared (deventry.json)", "Just me (deventry.local.json)"], project.Links.Select(r => r.FileText));
@@ -272,7 +243,7 @@ public class ProjectSettingsTests
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
         project.AddLinkCommand.Execute(null);
         var editor = Assert.IsType<ProjectLinkEditorViewModel>(project.Editor);
         Assert.Equal(ProjectLinks.PlaceholderHint, editor.PlaceholderHint);
@@ -295,7 +266,7 @@ public class ProjectSettingsTests
             """);
         await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        var rows = settings.Project!.Links;
+        var rows = settings.Project.Links;
 
         Assert.Equal(["Hosts", "(can't be read)", "(can't be read)"], rows.Select(r => r.Name));
         Assert.Equal("\"file:\" links don't open from Deventry; only https, http and mailto do.", rows[0].Warning);
@@ -319,7 +290,7 @@ public class ProjectSettingsTests
         Write(shared, broken);
         await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
 
         var error = Assert.Single(project.LinkFileErrors);
         Assert.StartsWith("deventry.json isn't valid JSON (", error, StringComparison.Ordinal);
@@ -374,8 +345,8 @@ public class ProjectSettingsTests
             """);
         var tab = await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedCategory = SettingsViewModel.ActionsPage;
-        var project = settings.Project!;
+        settings.SelectedPage = ProjectSettingsWindowViewModel.ActionsPage;
+        var project = settings.Project;
         Assert.IsType<ProjectActionsPage>(settings.CurrentPage);
         Assert.Equal(ProjectFileScope.Local, project.SelectedProjectActionFile.Value);
         Assert.Equal(["First", "Elsewhere"], project.ProjectActions.Select(r => r.Name));
@@ -435,8 +406,8 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Actions.Select(a => a.Label).SequenceEqual(["Build"]), "the tab's actions");
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedCategory = SettingsViewModel.ActionsPage;
-        var project = settings.Project!;
+        settings.SelectedPage = ProjectSettingsWindowViewModel.ActionsPage;
+        var project = settings.Project;
         Assert.Equal(["Build", "Play"], project.ProjectActions.Select(r => r.Name));
         Assert.EndsWith("  · only when Build/Game exists", project.ProjectActions[1].Detail, StringComparison.Ordinal);
 
@@ -481,7 +452,7 @@ public class ProjectSettingsTests
     }
 
     [Fact]
-    public async Task Add_an_action_from_the_menu_opens_Settings_on_the_Actions_page_with_the_dialog_that_asks_for_the_file()
+    public async Task Add_an_action_from_the_menu_opens_the_project_settings_on_Actions_with_the_dialog_that_asks_for_the_file()
     {
         await using var h = new TabTestHarness();
         Write(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "links": [ { "name": "Board", "url": "https://example.com/board" } ] }""");
@@ -489,24 +460,17 @@ public class ProjectSettingsTests
         var sibling = new TabViewModel(h.Services, h.Shell, new TabState { Folder = h.WorkFolder }, isRestored: false);
         await sibling.ProjectTools.RefreshAsync();
         h.Shell.Groups.Single().Tabs.Add(sibling);
-        // From the menu of a tab that isn't selected: Settings follows the selected tab, so it's selected first.
-        h.Shell.SelectedTab = AddUnstartedTab(h, "elsewhere");
-        SettingsOpening? opening = null;
-        h.Shell.ShowSettingsWindow = o =>
-        {
-            opening = o;
-            return Task.CompletedTask;
-        };
+        // From the menu of a tab that isn't selected: the window is for its folder, whichever tab is selected.
+        var elsewhere = AddUnstartedTab(h, "elsewhere");
+        h.Shell.SelectedTab = elsewhere;
 
-        await tab.ProjectTools.AddActionCommand.ExecuteAsync(null);
+        var opening = await OpeningAsync(h, () => tab.ProjectTools.AddActionCommand.ExecuteAsync(null));
 
-        Assert.Same(tab, h.Shell.SelectedTab);
-        Assert.NotNull(opening);
-        Assert.Equal((SettingsViewModel.ActionsPage, true), (opening.Category, opening.StartNew));
-        Assert.Same(tab, opening.Project!.Tab);
-        using var settings = new SettingsViewModel(h.Services, null, opening: opening);
+        Assert.Same(elsewhere, h.Shell.SelectedTab);
+        Assert.Equal((h.WorkFolder, ProjectSettingsWindowViewModel.ActionsPage, true), (opening!.Folder, opening.Page, opening.StartNew));
+        using var settings = Window(h, opening);
         Assert.IsType<ProjectActionsPage>(settings.CurrentPage);
-        var editor = Assert.IsType<ProjectActionEditorViewModel>(settings.Project!.Editor);
+        var editor = Assert.IsType<ProjectActionEditorViewModel>(settings.Project.Editor);
         Assert.Equal("Add an action", editor.Title);
         Assert.True(editor.AsksForFile);
         Assert.True(editor.SaveToLocal);
@@ -526,6 +490,11 @@ public class ProjectSettingsTests
         Assert.Equal(("Serve", "npm run dev", "launch"), (written["actions"]![0]!["name"]!.GetValue<string>(), written["actions"]![0]!["command"]!.GetValue<string>(), written["actions"]![0]!["mode"]!.GetValue<string>()));
         await TabTestHarness.Eventually(() => tab.ProjectTools.Actions.Count == 1 && sibling.ProjectTools.Actions.Count == 1, "both tabs");
         Assert.Equal(ProjectActionKind.Launch, sibling.ProjectTools.Actions.Single().Kind);
+
+        // Asked for again while the window is open, it comes to that page with another new one started.
+        settings.Open(ProjectSettingsWindowViewModel.LinksPage, startNew: true);
+        Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
+        Assert.IsType<ProjectLinkEditorViewModel>(settings.Project.Editor);
     }
 
     // ---- The group's icon --------------------------------------------------------------------------------------------
@@ -546,7 +515,7 @@ public class ProjectSettingsTests
         var logo = Picture(Path.Combine(h.WorkFolder, "Assets", "logo.png"));
         Write(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "links": [ { "url": "https://example.com" } ] }""");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
         Assert.Equal(ProjectFileScope.Shared, project.SelectedGroupFile.Value);
         Assert.Equal("None in deventry.json: the group shows its colored dot.", project.IconText);
         Assert.False(project.RemoveIconCommand.CanExecute(null));
@@ -569,27 +538,37 @@ public class ProjectSettingsTests
     }
 
     [Fact]
-    public async Task Use_the_groups_color_saves_it_in_the_chosen_file_and_Remove_takes_it_out()
+    public async Task Choose_picks_the_groups_color_at_once_and_saves_it_in_the_chosen_file_as_it_closes_and_Remove_takes_it_out()
     {
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
         var group = project.Group!;
         project.SelectedGroupFile = project.ProjectActionFiles[1];
         Assert.Equal("None in deventry.local.json: the group has the color remembered on this computer.", project.ColorText);
         Assert.False(project.RemoveColorCommand.CanExecute(null));
+        Assert.True(project.CanChooseColor);
 
-        project.UseGroupColorCommand.Execute(null);
+        // The picker opens on the group's color; each pick shows on the group at once, and nothing's written yet.
+        var picker = project.PickColor()!;
+        Assert.Equal(TabGroupViewModel.ToHex(group.Color), picker.Hex);
+        picker.HsvColor = new Avalonia.Media.HsvColor(1, 30, 1, 1);
+        picker.PickCommand.Execute(picker.Swatches[3]);
+        Assert.Equal(TabGroupViewModel.Palette[3].Color, group.Color);
+        Assert.Equal("#A66BFF", h.Services.State.FolderColors[group.Folder]);
+        Assert.Null(ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local));
 
-        var color = TabGroupViewModel.ToHex(group.Color);
-        Assert.Equal(color, ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local));
-        Assert.Equal((color, true), (project.ColorText, project.HasColorBrush));
+        // Closed, the color it was left on is saved in the chosen file, once.
+        picker.Close();
+        Assert.Equal("#A66BFF", ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local));
+        Assert.Equal(("#A66BFF", true), (project.ColorText, project.HasColorBrush));
+        Assert.False(File.Exists(Path.Combine(h.WorkFolder, ProjectFile.SharedName)));
 
         // Taken out, the group keeps the color it has, remembered on this computer.
         project.RemoveColorCommand.Execute(null);
         Assert.Null(ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Local));
-        Assert.Equal(color, TabGroupViewModel.ToHex(group.Color));
+        Assert.Equal("#A66BFF", TabGroupViewModel.ToHex(group.Color));
     }
 
     [Fact]
@@ -600,7 +579,7 @@ public class ProjectSettingsTests
         var drawing = Path.Combine(h.WorkFolder, "logo.svg");
         Write(drawing, "<svg/>");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
 
         h.Platform.FileToPick = drawing;
         await project.ChooseIconCommand.ExecuteAsync(null);
@@ -620,7 +599,7 @@ public class ProjectSettingsTests
         Write(Path.Combine(h.WorkFolder, ProjectFile.LocalName), """{ "icon": "mine.png" }""");
         await tab.ProjectTools.RefreshFileAsync();
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
 
         Assert.Equal((ProjectFileScope.Local, "mine.png"), (project.SelectedGroupFile.Value, project.IconText));
         Assert.Equal(mine, tab.ProjectTools.GroupIcon);
@@ -631,49 +610,44 @@ public class ProjectSettingsTests
     }
 
     [Fact]
-    public async Task A_groups_menu_opens_its_projects_pages_and_its_Group_page_for_its_tab_used_last()
+    public async Task A_groups_menu_opens_its_folders_project_settings_tab_or_no_tab()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        var openings = new List<SettingsOpening>();
-        h.Shell.ShowSettingsWindow = o =>
-        {
-            openings.Add(o);
-            return Task.CompletedTask;
-        };
         var group = h.Shell.Groups.Single(g => g.Tabs.Contains(tab));
 
-        await h.Shell.OpenGroupProjectSettingsCommand.ExecuteAsync(group);
-        await h.Shell.ChangeGroupIconCommand.ExecuteAsync(group);
+        var opening = await OpeningAsync(h, () => h.Shell.OpenGroupProjectSettingsCommand.ExecuteAsync(group));
 
-        Assert.Equal([SettingsViewModel.LinksPage, SettingsViewModel.GroupPage], openings.Select(o => o.Category));
-        Assert.All(openings, o => Assert.Same(tab, o.Project!.Tab));
-        openings[0].Project!.Dispose();
-        using var settings = new SettingsViewModel(h.Services, null, opening: openings[1]);
-        Assert.IsType<ProjectGroupPage>(settings.CurrentPage);
+        Assert.Equal((h.WorkFolder, ProjectSettingsWindowViewModel.LinksPage, false), (opening!.Folder, opening.Page, opening.StartNew));
+        using (var settings = Window(h, opening))
+        {
+            Assert.Same(group, settings.Project.Group);
+        }
+
+        // With its Files tab open and no session tab, the folder's own project tools stand in for a tab's.
+        h.Shell.OpenProjectFilesCommand.Execute(group);
+        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        Assert.Null(group.ProjectTab);
+        opening = await OpeningAsync(h, () => h.Shell.OpenGroupProjectSettingsCommand.ExecuteAsync(group));
+        using var tabless = Window(h, opening!);
+        Assert.Equal((h.WorkFolder, "work"), (tabless.Project.Folder, tabless.Project.Heading));
+        Assert.Same(group, tabless.Project.Group);
     }
 
     [Fact]
-    public async Task Add_a_link_from_the_menu_opens_Settings_on_the_Links_page_with_the_dialog_that_asks_for_the_file()
+    public async Task Add_a_link_from_the_menu_opens_the_project_settings_on_Links_with_the_dialog_that_asks_for_the_file()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        SettingsOpening? opening = null;
-        h.Shell.ShowSettingsWindow = o =>
-        {
-            opening = o;
-            return Task.CompletedTask;
-        };
 
         // A folder with no project has the entry too: the project's row is there for every tab.
         Assert.Same(tab.ProjectTools.AddLinkCommand, InlineDispatcher.Read(() => tab.ProjectTools.Menu.Single(e => e.Label == "Add a link…")).Command);
-        await tab.ProjectTools.AddLinkCommand.ExecuteAsync(null);
+        var opening = await OpeningAsync(h, () => tab.ProjectTools.AddLinkCommand.ExecuteAsync(null));
 
-        Assert.NotNull(opening);
-        Assert.Equal((SettingsViewModel.LinksPage, true), (opening.Category, opening.StartNew));
-        using var settings = new SettingsViewModel(h.Services, null, opening: opening);
+        Assert.Equal((ProjectSettingsWindowViewModel.LinksPage, true), (opening!.Page, opening.StartNew));
+        using var settings = Window(h, opening);
         Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
-        var editor = Assert.IsType<ProjectLinkEditorViewModel>(settings.Project!.Editor);
+        var editor = Assert.IsType<ProjectLinkEditorViewModel>(settings.Project.Editor);
         Assert.Equal("Add a link", editor.Title);
         Assert.True(editor.AsksForFile);
         Assert.True(editor.SaveToLocal);
@@ -694,23 +668,15 @@ public class ProjectSettingsTests
         await using var _h = h;
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
-        SettingsOpening? opening = null;
-        h.Shell.ShowSettingsWindow = o =>
-        {
-            opening = o;
-            return Task.CompletedTask;
-        };
         h.Shell.OpenTabSettingsCommand.Execute(tab);
         var tabSettings = h.Shell.TabSettings!;
 
-        Assert.Equal("In Settings → NightOwl → Actions.", tabSettings.ProjectActionsText);
-        await tabSettings.OpenProjectActionsCommand.ExecuteAsync(null);
+        Assert.Equal("In NightOwl's project settings, on Actions.", tabSettings.ProjectActionsText);
+        var opening = await OpeningAsync(h, () => tabSettings.OpenProjectActionsCommand.ExecuteAsync(null));
 
-        Assert.Equal((SettingsViewModel.ActionsPage, false), (opening!.Category, opening.StartNew));
-        Assert.Same(tab, opening.Project!.Tab);
+        Assert.Equal((tab.Folder, ProjectSettingsWindowViewModel.ActionsPage, false), (opening!.Folder, opening.Page, opening.StartNew));
         // Tab settings stays open behind the window, with nothing applied yet.
         Assert.Same(tabSettings, h.Shell.TabSettings);
-        opening.Project.Dispose();
     }
 
     // ---- Tools -----------------------------------------------------------------------------------------------------------
@@ -723,7 +689,7 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
 
         Assert.True(project.HasToolsProject);
         Assert.Equal("NightOwl · Unreal Engine", project.ToolsTitle);
@@ -779,7 +745,7 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
 
         Assert.True(project.HasSeveralProjects);
         Assert.Equal(["Beta (Beta.uproject)", $"Alpha ({Path.Combine("Alpha", "Alpha.uproject")})"], project.ProjectChoices.Select(c => c.Label));
@@ -804,7 +770,7 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
         var root = tab.ProjectTools.Project!.ProjectPath;
 
         Assert.Equal(("Code optimization", "Release"), (project.ToolsChoiceLabel, project.SelectedToolsChoice!.Value));
@@ -844,7 +810,7 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         using var settings = await OpenSettingsAsync(h);
-        var project = settings.Project!;
+        var project = settings.Project;
         var file = tab.ProjectTools.Project!.ProjectPath;
 
         Assert.Equal("Night Owl", project.Heading);
@@ -875,17 +841,21 @@ public class ProjectSettingsTests
         await using var h = new TabTestHarness();
         await h.OpenTabAsync();
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedCategory = SettingsViewModel.ToolsPage;
+        settings.SelectedPage = ProjectSettingsWindowViewModel.ToolsPage;
 
-        Assert.False(settings.Project!.HasToolsProject);
+        Assert.False(settings.Project.HasToolsProject);
         Assert.False(settings.Project.HasToolsFix);
-        Assert.Empty(settings.Project.ToolsSearchLabels);
         Assert.Equal("Open All tools", settings.Project.DefaultsLinkText);
+        SettingsOpening? opening = null;
+        h.Shell.ShowSettingsWindow = o =>
+        {
+            opening = o;
+            return Task.CompletedTask;
+        };
 
-        settings.ShowProjectToolsDefaultsCommand.Execute(null);
+        await settings.Project.ShowToolsDefaultsCommand.ExecuteAsync(null);
 
-        Assert.Same(settings.AllTools, settings.CurrentPage);
-        Assert.Equal(SettingsCategory.AllTools, settings.SelectedNavEntry?.Title);
+        Assert.Equal(SettingsCategory.AllTools, opening?.Category);
     }
 
     [Fact]
@@ -896,14 +866,22 @@ public class ProjectSettingsTests
         var tab = await h.OpenTabAsync();
         await TabTestHarness.Eventually(() => tab.ProjectTools.Project is not null, "the project");
         using var settings = await OpenSettingsAsync(h);
-        settings.SelectedCategory = SettingsViewModel.ToolsPage;
+        settings.SelectedPage = ProjectSettingsWindowViewModel.ToolsPage;
 
-        Assert.Equal("The defaults every Unreal Engine project starts with are on its page in Project tools.", settings.Project!.DefaultsText);
+        Assert.Equal("The defaults every Unreal Engine project starts with are on its page in Project tools.", settings.Project.DefaultsText);
         Assert.Equal("Open Unreal Engine", settings.Project.DefaultsLinkText);
-        settings.ShowProjectToolsDefaultsCommand.Execute(null);
+        SettingsOpening? opening = null;
+        h.Shell.ShowSettingsWindow = o =>
+        {
+            opening = o;
+            return Task.CompletedTask;
+        };
 
-        Assert.Same(settings.ProjectType(UnrealProvider.KindId), settings.CurrentPage);
-        Assert.Equal("Unreal Engine", settings.SelectedNavEntry?.Title);
+        await settings.Project.ShowToolsDefaultsCommand.ExecuteAsync(null);
+
+        Assert.Equal("Unreal Engine", opening?.Category);
+        using var shown = new SettingsViewModel(h.Services, null, opening: opening);
+        Assert.Same(shown.ProjectType(UnrealProvider.KindId), shown.CurrentPage);
     }
 
     // ---- Project tools in the sidebar (DESIGN.md §14, §18 "Project types") ------------------------------------------

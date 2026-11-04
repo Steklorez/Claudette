@@ -1,7 +1,7 @@
 ---
 title: Git
 parent: Settings
-nav_order: 6
+nav_order: 7
 summary: "Settings → Git, the first page under Source control, holds the branch on tab rows, cleaning up worktrees, the git Deventry runs, and what the Files tab shows of git."
 ---
 

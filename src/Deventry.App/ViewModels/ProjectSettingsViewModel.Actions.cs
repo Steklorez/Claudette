@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// An entry of a project file's <c>actions</c> on Settings' Actions page (DESIGN.md §18, "Custom actions"). It keeps the
+/// An entry of a project file's <c>actions</c> on the project's Actions page (DESIGN.md §18, "Custom actions"). It keeps the
 /// entry's JSON as written, so saving keeps fields Deventry doesn't edit, such as <c>os</c>.
 /// </summary>
 public sealed record CustomActionRow(JsonNode? Raw, CustomProjectAction? Action, string? Problem, bool ForThisOS)
@@ -39,7 +39,7 @@ public sealed record CustomActionRow(JsonNode? Raw, CustomProjectAction? Action,
 }
 
 /// <summary>
-/// Settings → the tab's project → <b>Actions</b> (DESIGN.md §14, §18): the actions editor that was in Tab settings…, a
+/// The project's settings → <b>Actions</b> (DESIGN.md §14, §18): the actions editor that was in Tab settings…, a
 /// choice of the two files and the chosen file's actions. Entries for other OSes are listed, marked "only on …", entries
 /// with <c>ifExists</c> are marked "only when … exists" whether it does or not, and entries that can't be read are
 /// listed with their reason and can only be removed. Each change saves the file at once.
@@ -91,8 +91,8 @@ public sealed partial class ProjectSettingsViewModel
     public bool CanEditProjectActionFile => ProjectActionFileError is null;
 
     public string ProjectActionsNote => Scope == ProjectFileScope.Shared
-        ? $"{ProjectFile.FileName(Folder, ProjectFileScope.Shared)} in {_tab.FolderName} is shared: commit it with the project. Saving rewrites it, so comments in it are dropped."
-        : $"{ProjectFile.FileName(Folder, ProjectFileScope.Local)} in {_tab.FolderName} is just yours: add it to .gitignore. Saving rewrites it, so comments in it are dropped.";
+        ? $"{ProjectFile.FileName(Folder, ProjectFileScope.Shared)} in {FolderName} is shared: commit it with the project. Saving rewrites it, so comments in it are dropped."
+        : $"{ProjectFile.FileName(Folder, ProjectFileScope.Local)} in {FolderName} is just yours: add it to .gitignore. Saving rewrites it, so comments in it are dropped.";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EditProjectActionCommand), nameof(RemoveProjectActionCommand), nameof(MoveProjectActionUpCommand), nameof(MoveProjectActionDownCommand))]

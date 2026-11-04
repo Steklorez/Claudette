@@ -1,5 +1,4 @@
-﻿"For the tab in {root}/work"
-"Links"
+﻿"Links"
 "Shared links are in deventry.json, committed with the project; yours alone are in deventry.local.json. Saving rewrites the file, so comments in it are dropped."
 "Board"
 "Shared (deventry.json)"

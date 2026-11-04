@@ -59,7 +59,7 @@ Claude Code takes extra folders when it starts, so changing them starts it again
 
 ## Project actions
 
-A folder's own actions belong to the folder, not the tab. The dialog's **Project actions** row says where they are (*In Settings → ‹project› → Actions.*) and has an **Open** button that goes there. See [Actions and links](../project-tools/actions-and-links.md).
+A folder's own actions belong to the folder, not the tab. The dialog's **Project actions** row says where they are (*In ‹project›'s project settings, on Actions.*) and has an **Open** button that opens them there. See [Actions and links](../project-tools/actions-and-links.md).
 
 ## See also
 

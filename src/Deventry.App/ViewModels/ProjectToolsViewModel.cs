@@ -29,7 +29,7 @@ internal interface IProjectToolsHost : ITabAreaHost
     /// <summary>The tab's Perforce changelist, for <c>{changelist}</c> in links (DESIGN.md §18, "Links").</summary>
     long? CurrentChangelist { get; }
 
-    /// <summary>Settings, on one of this tab's project pages (DESIGN.md §14).</summary>
+    /// <summary>The folder's project settings, in their window, at one of its pages (DESIGN.md §14, "The project's settings").</summary>
     Task OpenProjectSettingsAsync(string page, bool startNew);
 
     /// <summary>The folder's project files name the group's color (DESIGN.md §4, "Grouped by folder"): the group takes it.</summary>
@@ -186,11 +186,11 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             ? action with { DisabledReason = "Open a tab here to run it: its output shows under the tab." }
             : Runs.ForJob(action);
 
-    /// <summary>The project row's menu. Without a tab there's no output to show, nor project pages in Settings to add to.</summary>
+    /// <summary>The project row's menu. Without a tab there's no output to show.</summary>
     public IReadOnlyList<ProjectMenuEntry> Menu => ProjectMenu.Build(
         Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools && _host.CanRunJobs, Runs.HasRuns, ForAction, Folder,
         _menuCommands ??= new ProjectMenuCommands(RunActionCommand, ChooseProjectCommand, ChooseOptionCommand, FixCommand, OpenLinkCommand,
-            ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand), canEdit: _host.CanRunJobs);
+            ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand));
 
     /// <summary>The folder the row stands for: the project's, else the tab's, which the row is named after.</summary>
     public string Folder => Project?.Root ?? _host.Folder;
@@ -417,18 +417,18 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     // ---- Custom actions (DESIGN.md §18, "Custom actions") --------------------------------------------------------
 
     /// <summary>
-    /// <b>Add an action…</b>: Settings opens on this tab's Actions page (DESIGN.md §14) with a new action started. Its
-    /// dialog asks which file the action goes in, then it joins the end of that file's <c>actions</c>.
+    /// <b>Add an action…</b>: the project's settings open on their Actions page (DESIGN.md §14) with a new action started.
+    /// Its dialog asks which file the action goes in, then it joins the end of that file's <c>actions</c>.
     /// </summary>
     [RelayCommand]
-    private Task AddAction() => _host.OpenProjectSettingsAsync(SettingsViewModel.ActionsPage, startNew: true);
+    private Task AddAction() => _host.OpenProjectSettingsAsync(ProjectSettingsWindowViewModel.ActionsPage, startNew: true);
 
     /// <summary>
-    /// <b>Add a link…</b>: Settings opens on this tab's Links page (DESIGN.md §14) with a new link started. Its dialog
-    /// asks which file the link goes in.
+    /// <b>Add a link…</b>: the project's settings open on their Links page (DESIGN.md §14) with a new link started. Its
+    /// dialog asks which file the link goes in.
     /// </summary>
     [RelayCommand]
-    private Task AddLink() => _host.OpenProjectSettingsAsync(SettingsViewModel.LinksPage, startNew: true);
+    private Task AddLink() => _host.OpenProjectSettingsAsync(ProjectSettingsWindowViewModel.LinksPage, startNew: true);
 
     /// <summary>A folder's project files changed through the in-app editor, here or in another tab in the same folder.</summary>
     internal void ReloadCustomActions() => _ = RefreshFileAsync();

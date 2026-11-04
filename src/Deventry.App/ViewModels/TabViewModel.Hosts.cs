@@ -67,7 +67,7 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     bool IProjectToolsHost.CanRunJobs => true;
 
-    Task IProjectToolsHost.OpenProjectSettingsAsync(string page, bool startNew) => _shell.OpenProjectSettingsAsync(this, page, startNew);
+    Task IProjectToolsHost.OpenProjectSettingsAsync(string page, bool startNew) => _shell.OpenProjectSettingsAsync(Folder, page, startNew);
 
     void IProjectToolsHost.UseGroupColor(string color) => _shell.UseProjectColor(this, color);
 

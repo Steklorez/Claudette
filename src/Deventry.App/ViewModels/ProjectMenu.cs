@@ -90,11 +90,9 @@ internal static class ProjectMenu
     /// <param name="hasRuns">A job has run in the tab, so <b>Show output…</b> has a log to show.</param>
     /// <param name="forJob">How an action shows as things are: while a job runs, other jobs wait.</param>
     /// <param name="folder">The folder <b>Show in Explorer</b> opens: the project's, else the tab's.</param>
-    /// <param name="canEdit">The menu offers <b>Add an action…</b> and <b>Add a link…</b>.</param>
     public static IReadOnlyList<ProjectMenuEntry> Build(
         ProjectInfo? project, IReadOnlyList<ProjectCandidate> candidates, IReadOnlyList<ProjectAction> customActions,
-        IReadOnlyList<ResolvedLink> links, bool hasTools, bool hasRuns, Func<ProjectAction, ProjectAction> forJob, string folder, ProjectMenuCommands commands,
-        bool canEdit = true)
+        IReadOnlyList<ResolvedLink> links, bool hasTools, bool hasRuns, Func<ProjectAction, ProjectAction> forJob, string folder, ProjectMenuCommands commands)
     {
         var entries = new List<ProjectMenuEntry>();
         void Separator()
@@ -189,11 +187,8 @@ internal static class ProjectMenu
                 Command = commands.ShowOutput,
             });
         }
-        if (canEdit)
-        {
-            entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Add an action…", Tip = "A command of your own for this folder", Command = commands.AddAction });
-            entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Add a link…", Tip = "A web page of your own for this folder", Command = commands.AddLink });
-        }
+        entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Add an action…", Tip = "A command of your own for this folder", Command = commands.AddAction });
+        entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Add a link…", Tip = "A web page of your own for this folder", Command = commands.AddLink });
         entries.Add(new ProjectMenuEntry { Kind = ProjectMenuKind.Command, Label = "Refresh", Tip = "Look for the project and its files again", Command = commands.Refresh });
         return entries;
     }

@@ -80,7 +80,7 @@ Any other word in braces makes the link greyed out: "Unknown placeholder …: us
 
 ## Color
 
-`color` is the folder's group's color in the sidebar, written `#4A6FC4` (or `#4AC`). It wins over the color Deventry remembers on your computer, and the local file's wins over the shared one's. **Change color…** in the group's menu saves it, and the project's **Group** page in Settings moves it or takes it out. One that isn't a color is skipped with a reason. See [Changing a group's color](../tabs/folder-groups.md#changing-a-groups-color).
+`color` is the folder's group's color in the sidebar, written `#4A6FC4` (or `#4AC`). It wins over the color Deventry remembers on your computer, and the local file's wins over the shared one's. The project's **Group** page, in its [project settings](../settings/project-settings.md), picks it, saves it in either file, or takes it out. One that isn't a color is skipped with a reason. See [Changing a group's color](../tabs/folder-groups.md#changing-a-groups-color).
 
 ## Icon
 

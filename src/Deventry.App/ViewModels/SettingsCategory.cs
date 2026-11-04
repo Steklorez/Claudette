@@ -6,8 +6,8 @@ namespace Deventry.App.ViewModels;
 /// <summary>
 /// The Settings window's categories, by the names its sidebar shows (DESIGN.md §14). Use these rather than the names
 /// written out, so a page, its search entries and a link to it can't disagree. Each project type's page is named by the
-/// type (<see cref="IProjectType.Name"/>), and the selected tab's project pages by the project
-/// (<see cref="SettingsViewModel.ProjectPages"/>).
+/// type (<see cref="IProjectType.Name"/>). A project's own pages are in a window of their own
+/// (<see cref="ProjectSettingsWindowViewModel.PageNames"/>).
 /// </summary>
 public static class SettingsCategory
 {

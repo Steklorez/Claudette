@@ -41,8 +41,7 @@ internal sealed class FolderProjectToolsHost(ShellViewModel shell, TabGroupViewM
     {
     }
 
-    // Settings' project pages are a tab's until they have a window of their own; the menu doesn't offer them here.
-    public Task OpenProjectSettingsAsync(string page, bool startNew) => Task.CompletedTask;
+    public Task OpenProjectSettingsAsync(string page, bool startNew) => shell.OpenProjectSettingsAsync(group.Folder, page, startNew);
 
     public void UseGroupColor(string color) => shell.UseProjectColor(group, color);
 

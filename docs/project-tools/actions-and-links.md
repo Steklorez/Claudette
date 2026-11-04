@@ -16,7 +16,7 @@ You can write the files by hand, which [Reference](../reference/deventry-json.md
 
 ## Add an action
 
-1. Open the project's menu and choose **Add an action…**. Settings opens on the project's **Actions** page with a dialog.
+1. Open the project's menu and choose **Add an action…**. The project's settings open on their **Actions** page with a dialog.
 2. Fill in **Name** and **Command**. The command runs through your shell: `cmd.exe` on Windows, and your `$SHELL` (or `/bin/sh`) on macOS and Linux.
 3. Set **Working folder** if the command shouldn't run in the tab's folder. It's relative to that folder.
 4. Optionally, set **Only show when this exists** to a file or folder, relative to the tab's folder, such as the build the action runs. The action shows only while it exists. **Browse…** picks one, and several are separated by semicolons.
@@ -31,7 +31,7 @@ Actions run when you click them, without asking, whichever file they're in. A pr
 
 ## Add a link
 
-1. Choose **Add a link…** in the project's menu. Settings opens on the project's **Links** page with a dialog.
+1. Choose **Add a link…** in the project's menu. The project's settings open on their **Links** page with a dialog.
 2. Type the **Name**, which can be empty (the menu then shows the address), and the **Address**.
 3. Choose which file it goes in, as for an action, and **Save**.
 
@@ -40,9 +40,9 @@ Links show under **Links** in the project's menu, each marked ↗, the shared fi
 - Only `https`, `http` and `mailto` links open. Anything else, such as a `file:` address, shows greyed out with the reason, and never opens.
 - An address can use placeholders, filled in from the selected tab and escaped for a web address: `{branch}` (the git branch), `{changelist}` (the Perforce changelist Claude is working in) and `{folderName}` (the tab's folder name). A link whose placeholder can't be filled right now is greyed out and says why, for example "No git branch." For example, `https://github.com/org/repo/compare/{branch}?expand=1` opens a pull request for the tab's branch.
 
-## Edit them in Settings
+## Edit them in the project's settings
 
-After the pages in the Settings window's sidebar, a group headed by the project's name has **Actions** and **Links** pages.
+The project's [settings](../settings/project-settings.md), from **Project settings…** in its group's or a tab's menu, have **Actions** and **Links** pages.
 
 - **Actions**: choose which file to work on, then use **Add…**, **Edit…**, **Remove**, **Move up**, **Move down** and **Open file**, which opens the file in your editor for anything the page doesn't cover. Entries for other operating systems are listed and marked "only on …", entries with a file they wait for are marked "only when … exists", and entries for new worktrees are marked "runs in each new worktree". An entry that can't be read is listed with its reason, and can only be removed.
 - **Links**: the links of both files in the order the menu shows them, each with its address and its file. **Add…**, **Edit…**, **Remove**, **Move up** and **Move down** work as for actions, and a link moves within its own file. A link the menu won't open is listed with the reason.
@@ -51,7 +51,7 @@ Each change is saved as you make it, and every tab in the folder reads the files
 
 ## When Deventry reads the files again
 
-Deventry doesn't watch the files. It reads them again when you select the tab, when Deventry comes to the front, when a turn ends (Claude may have edited them), when the project's menu opens, and after Settings saves. **Refresh** in the menu does it on demand. An entry it can't use is skipped with a reason, which the menu and the Project page show, such as "deventry.json: actions[2] has no command, so it was skipped."
+Deventry doesn't watch the files. It reads them again when you select the tab, when Deventry comes to the front, when a turn ends (Claude may have edited them), when the project's menu opens, and after the project's settings save. **Refresh** in the menu does it on demand. An entry it can't use is skipped with a reason, which the menu and the Project page show, such as "deventry.json: actions[2] has no command, so it was skipped."
 
 ## Setting up each new worktree
 

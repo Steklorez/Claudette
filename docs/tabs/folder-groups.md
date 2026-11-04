@@ -26,19 +26,20 @@ Click a group's label to collapse it to just the label, and click again to expan
 
 A new group takes the first of eight group colors that no open group has.
 
-1. Right-click the group's label, in the full sidebar or the rail, and choose **Change color…**.
-2. Pick one of the eight swatches, which closes the picker, or choose any other color with the saturation and brightness square, the hue slider or the hex field (`#12AB34`, or `#1A3`).
-3. The group changes color as you drag or type. Press `Enter` to close the picker.
+1. Right-click the group's label, in the full sidebar or the rail, and choose **Project settings…**, then pick **Group**.
+2. Under **Saved in**, choose **Shared with the project** (`deventry.json`, for everyone who opens the project) or **Just me** (`deventry.local.json`). Yours shows in place of the shared one, and the page opens on yours when it has a color.
+3. Beside **Color**, choose **Choose…**. Pick one of the eight swatches, which closes the picker, or choose any other color with the saturation and brightness square, the hue slider or the hex field (`#12AB34`, or `#1A3`).
+4. The group changes color as you drag or type. Press `Enter` to close the picker.
 
-When you close the picker, Deventry saves the color in the project's `deventry.json`, so everyone who opens the project sees its group in that color, on every machine. If the project's `deventry.local.json` already has a color, it's saved there instead, since yours wins over the shared one. A folder without either file gets a `deventry.json`.
+When you close the picker, Deventry saves the color in the file you chose, so with `deventry.json` everyone who opens the project sees its group in that color, on every machine. A folder without the file gets one.
 
-Deventry also remembers the color for the folder on this machine, so the group has it again after a restart, or when you open the folder again after closing its group. The project's **Group** page in Settings shows which file has the color, and can save it in the other file or take it out: **Saved in**, then **Use the group's color** or **Remove**.
+Deventry also remembers the color for the folder on this machine, so the group has it again after a restart, or when you open the folder again after closing its group. **Remove** takes the color out of the file, and the group keeps the color it has, remembered on this machine.
 
 ## A group's icon
 
 A project can have a picture of its own in place of the group's colored dot: its logo, say, so you know the group at a glance. The rail shows it too, in place of the group's bar.
 
-1. Right-click the group's label, in the full sidebar or the rail, and choose **Change icon…**. Settings opens at the project's **Group** page.
+1. Right-click the group's label, in the full sidebar or the rail, and choose **Project settings…**, then pick **Group**.
 2. Under **Saved in**, choose **Shared with the project** (`deventry.json`, for everyone who opens the project) or **Just me** (`deventry.local.json`). Yours shows in place of the shared one.
 3. Choose **Choose…** and pick a PNG, ICO, JPEG, BMP, GIF or WebP of at most 1 MB. One in the project's folder is saved from there, so it works on every machine; one elsewhere is saved by its full path, which only this computer has.
 
@@ -70,7 +71,7 @@ Dragging a group by its label moves it among the pinned groups, or among the oth
 
 ## The group's menu
 
-Right-click a group's label, in the full sidebar or the rail. The menu's items are in sections under small titles, as in the header's **≡** menu, with an icon before each; **Change color…**'s is the group's color. The rail's menu has no **Pin to the top**.
+Right-click a group's label, in the full sidebar or the rail. The menu's items are in sections under small titles, as in the header's **≡** menu, with an icon before each. The rail's menu has no **Pin to the top**.
 
 **Tabs**
 
@@ -85,7 +86,7 @@ Right-click a group's label, in the full sidebar or the rail. The menu's items a
 |---|---|
 | **Open project files** | Opens the folder's Files tab. See [The Project files button](#the-project-files-button). |
 | **History for this folder** | Opens [History](../history/history.md) listing only this folder's sessions. |
-| **Project settings…** | Opens Settings at the project's pages, **Links**, **Actions**, **Tools** and **Group**, for the group's tab you used last. See [The project's pages](../settings/the-settings-window.md#the-projects-pages). |
+| **Project settings…** | Opens the folder's [project settings](../settings/project-settings.md) in their own window: **Links**, **Actions**, **Tools**, and **Group**, where its color and icon are set. Tab or no tab. |
 
 **Group**
 
@@ -95,8 +96,6 @@ Right-click a group's label, in the full sidebar or the rail. The menu's items a
 | **Pin to the top** or **Unpin from the top** | Pins the group to the top of the sidebar, or lets it go. See [Pinning a group](#pinning-a-group). |
 | **Rename…** | Names the group. See above. |
 | **Reset name** | Goes back to the folder's name. Shown while the group has a name. |
-| **Change color…** | Picks the group's color, and saves it with the project. See above. |
-| **Change icon…** | Opens the project's **Group** page in Settings, to show a picture in place of the dot. See [A group's icon](#a-groups-icon). |
 | **Account ▸** | Picks the account the group's new tabs use. Shown once there's an account besides Default. See [A folder's account](../accounts/a-folders-account.md). |
 
 Then, under a line:

@@ -100,6 +100,9 @@ public sealed partial class TabGroupViewModel : ObservableObject
     /// <summary>The folder's project tools while no tab is open; null until they're first asked for.</summary>
     internal ProjectToolsViewModel? FolderTools { get; private set; }
 
+    /// <summary>The folder's own project tools, made now if they weren't: for the project's settings, with or without a tab.</summary>
+    internal ProjectToolsViewModel? OwnFolderTools => FolderTools ??= MakeFolderTools?.Invoke(this);
+
     /// <summary>Makes <see cref="FolderTools"/>, which the shell sets as it makes the group.</summary>
     internal Func<TabGroupViewModel, ProjectToolsViewModel>? MakeFolderTools { get; set; }
 

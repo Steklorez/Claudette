@@ -7,7 +7,6 @@
              x:DataType="settings:ProjectToolChoicesPage">
   <!-- The tab's project: Tools, this machine's choices for it, as the project menus make them (DESIGN.md §18) -->
   <StackPanel x:Name="ToolsPage" Spacing="16">
-    <TextBlock Classes="muted small" Text="{Binding Project.ForTabText, FallbackValue=''}" TextWrapping="Wrap" />
     <c:SettingsSection Key="tools">
       <c:SettingRow Key="project.tools" Title="" IsStacked="True">
         <StackPanel Spacing="4" DataContext="{Binding Project}" x:DataType="vm:ProjectSettingsViewModel">
@@ -40,7 +39,7 @@
     <StackPanel Spacing="2">
       <TextBlock Classes="muted small" TextWrapping="Wrap" Text="{Binding Project.DefaultsText, FallbackValue=''}" />
       <Button Classes="settingslink" Content="{Binding Project.DefaultsLinkText, FallbackValue=''}"
-              Command="{Binding $parent[Window].((vm:SettingsViewModel)DataContext).ShowProjectToolsDefaultsCommand}" />
+              Command="{Binding Project.ShowToolsDefaultsCommand}" />
     </StackPanel>
   </StackPanel>
 </UserControl>

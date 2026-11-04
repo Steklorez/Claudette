@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Settings → the tab's project → <b>Group</b> (DESIGN.md §4, "Grouped by folder"; §14): how the folder's group looks in
+/// The project's settings → <b>Group</b> (DESIGN.md §4, "Grouped by folder"; §14): how the folder's group looks in
 /// the sidebar, its color and the picture in place of its dot, in <c>deventry.json</c> for everyone who opens the
 /// project or in <c>deventry.local.json</c> for the user alone, whose wins. Each change is saved at once, as on the other
 /// pages, and only <c>color</c> or <c>icon</c> is rewritten; a file that isn't valid JSON is left alone.
@@ -71,19 +71,19 @@ public sealed partial class ProjectSettingsViewModel
 
     public bool HasColorNote => ColorNote is not null;
 
-    private bool CanUseGroupColor => CanEditGroupFile && Group is not null;
+    /// <summary><b>Choose…</b> beside the color: the folder has a group in the sidebar to color, and the chosen file can take it.</summary>
+    public bool CanChooseColor => CanEditGroupFile && Group is not null;
 
     private bool CanRemoveColor => CanEditGroupFile && ColorHex is not null;
 
-    /// <summary><b>Use the group's color</b>: the color the group has now, as Change color… left it, saved in the chosen file.</summary>
-    [RelayCommand(CanExecute = nameof(CanUseGroupColor))]
-    private void UseGroupColor()
-    {
-        if (Group is { } group)
-        {
-            SaveGroup(() => ProjectFile.WriteColor(Folder, GroupScope, TabGroupViewModel.ToHex(group.Color)));
-        }
-    }
+    /// <summary>
+    /// <b>Choose…</b>: the group's color picker, opening on the color the group has now. What it picks shows on the group
+    /// at once and is remembered on this computer; the color it closes on is saved in the chosen file. Null when there's
+    /// no group to color.
+    /// </summary>
+    public GroupColorPickerViewModel? PickColor() => Group is { } group && CanEditGroupFile
+        ? new(group, color => _shell.SetGroupColor(group, color), color => SaveGroup(() => ProjectFile.WriteColor(Folder, GroupScope, TabGroupViewModel.ToHex(color))))
+        : null;
 
     /// <summary><b>Remove</b>: the chosen file's color goes; the group keeps the color it has, remembered on this computer.</summary>
     [RelayCommand(CanExecute = nameof(CanRemoveColor))]
@@ -201,7 +201,7 @@ public sealed partial class ProjectSettingsViewModel
         {
             OnPropertyChanged(name);
         }
-        UseGroupColorCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanChooseColor));
         RemoveColorCommand.NotifyCanExecuteChanged();
         ChooseIconCommand.NotifyCanExecuteChanged();
         RemoveIconCommand.NotifyCanExecuteChanged();

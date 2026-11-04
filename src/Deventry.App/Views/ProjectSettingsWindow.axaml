@@ -1,0 +1,132 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels"
+        xmlns:views="using:Deventry.App.Views"
+        xmlns:settings="using:Deventry.App.ViewModels.Settings"
+        xmlns:pages="using:Deventry.App.Views.Settings"
+        xmlns:conversation="using:Deventry.App.Conversation"
+        xmlns:services="using:Deventry.App.Services"
+        x:Class="Deventry.App.Views.ProjectSettingsWindow"
+        x:DataType="vm:ProjectSettingsWindowViewModel"
+        Title="{Binding Project.WindowTitle}"
+        Width="860" Height="660" MinWidth="620" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <!-- The project's heading over its pages: its name after its group's color, or its own icon in the dot's place, as
+         the main window's sidebar has the group, and its folder under it -->
+    <Style Selector="StackPanel.projectheading">
+      <Setter Property="Margin" Value="18,14,8,10" />
+      <Setter Property="Spacing" Value="2" />
+    </Style>
+    <Style Selector="TextBlock.projectname">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.projectfolder">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="TextTrimming" Value="PathSegmentEllipsis" />
+    </Style>
+    <Style Selector="Ellipse.groupdot">
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Height" Value="8" />
+      <Setter Property="Margin" Value="0,0,7,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- The project's icon in the dot's place, centered where the dot is, as in the main window's sidebar -->
+    <Style Selector="Image.groupicon">
+      <Setter Property="Width" Value="14" />
+      <Setter Property="Height" Value="14" />
+      <Setter Property="Margin" Value="-3,0,4,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </Window.Styles>
+
+  <!-- DESIGN.md §14, "The project's settings": a folder's project, its pages in a sidebar; changes are saved as they're
+       made; the window isn't modal. -->
+  <controls:AppearanceScope Classes.claude="{Binding IsClaudeStyle}">
+    <DockPanel>
+      <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): its title -->
+      <controls:TitleBar DockPanel.Dock="Top" />
+      <Grid ColumnDefinitions="200,*">
+        <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Classes="projectheading" ToolTip.Tip="{Binding Project.Folder}">
+              <StackPanel Orientation="Horizontal">
+                <Ellipse Classes="groupdot" Fill="{Binding Project.Group.Brush, FallbackValue={x:Null}}">
+                  <Ellipse.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="Project.Group" Converter="{x:Static ObjectConverters.IsNotNull}" />
+                      <Binding Path="!Project.HasGroupIcon" />
+                    </MultiBinding>
+                  </Ellipse.IsVisible>
+                </Ellipse>
+                <Image Classes="groupicon" RenderOptions.BitmapInterpolationMode="HighQuality"
+                       Source="{Binding Project.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
+                       IsVisible="{Binding Project.HasGroupIcon}" />
+                <TextBlock x:Name="ProjectHeading" Classes="projectname" Text="{Binding Project.Heading}" />
+              </StackPanel>
+              <TextBlock Classes="projectfolder" Text="{Binding Project.Folder}" />
+            </StackPanel>
+            <ListBox x:Name="PageList" Classes="settingsnav" ItemsSource="{Binding NavEntries}" SelectedItem="{Binding SelectedNavEntry}"
+                     AutomationProperties.Name="The project's settings">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:SettingsNavEntry">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Classes="navicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}" />
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DockPanel>
+        </Border>
+
+        <ScrollViewer x:Name="PageScroller" Grid.Column="1">
+          <!-- The page shown, under its title, as a Settings page is: up to 720 pixels wide, centred in a wider window -->
+          <StackPanel MaxWidth="720" Margin="40,28,40,40">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="pagetitle" Text="{Binding CurrentPage.Title, FallbackValue=''}" />
+              <TextBlock Classes="muted" Text="{Binding CurrentPage.Description, FallbackValue=''}" TextWrapping="Wrap" />
+            </StackPanel>
+            <ContentControl x:Name="PageHost" Content="{Binding CurrentPage}" Margin="0,24,0,0" ClipToBounds="False">
+              <ContentControl.DataTemplates>
+                <DataTemplate DataType="settings:ProjectLinksPage">
+                  <pages:ProjectLinksPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectActionsPage">
+                  <pages:ProjectActionsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectGroupPage">
+                  <pages:ProjectGroupPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:ProjectToolChoicesPage">
+                  <pages:ProjectToolChoicesPageView />
+                </DataTemplate>
+              </ContentControl.DataTemplates>
+            </ContentControl>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- The pages' small dialogs: a link, or an action (DESIGN.md §18). The action's is taller than the window opens,
+             so it scrolls. -->
+        <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding Project.HasEditor}">
+          <ScrollViewer Name="EditorScroller" VerticalScrollBarVisibility="Auto">
+            <ContentControl Content="{Binding Project.Editor}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,16">
+              <ContentControl.DataTemplates>
+                <DataTemplate DataType="vm:ProjectActionEditorViewModel">
+                  <views:ProjectActionEditorView />
+                </DataTemplate>
+                <DataTemplate DataType="vm:ProjectLinkEditorViewModel">
+                  <views:ProjectLinkEditorView />
+                </DataTemplate>
+              </ContentControl.DataTemplates>
+            </ContentControl>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+    </DockPanel>
+  </controls:AppearanceScope>
+</Window>

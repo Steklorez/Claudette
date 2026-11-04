@@ -1,7 +1,7 @@
 ---
 title: Every setting
 parent: Settings
-nav_order: 2
+nav_order: 3
 summary: "A table for each page in the Settings window, in the order its sidebar lists them."
 ---
 
@@ -289,6 +289,6 @@ The second page under **Source control**. None of this page syncs.
 | A password for a server and user, with **Save password** and **Forget password** | Stored password | None | [Perforce](../project-tools/perforce.md) |
 | Each folder's server and user, with **Add folder…** | Per-folder server and user | None | [Perforce](../project-tools/perforce.md) |
 
-## The project's pages
+## A project's settings
 
-The **Links**, **Actions**, **Tools** and **Group** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Deventry: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.
+A project's **Links**, **Actions**, **Tools** and **Group** pages aren't in this list. They belong to a project rather than to Deventry, in a window of their own: [Project settings](project-settings.md) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.
