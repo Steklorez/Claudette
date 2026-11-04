@@ -847,6 +847,14 @@ public sealed class ConversationBuilder
             {
                 credited.Task.AddFile(credited.Path, result.ToolUseId);
             }
+            if (!result.IsError && _toolUses.TryGetValue(result.ToolUseId, out var stop) && stop.Name is "TaskStop" or "KillShell"
+                && (stop.Input["task_id"] ?? stop.Input["shell_id"]) is JsonValue stopped && stopped.TryGetValue<string>(out var stoppedId))
+            {
+                // Claude stopped a background task, a subagent maybe (DESIGN.md §5, "Running tasks"): it's over once
+                // Claude Code says so, with or without the task_notification it doesn't always send then.
+                _agents?.FindByTask(stoppedId)?.OnTaskEnded("stopped", null, null);
+                _tasks?.OnStoppedByClaude(stoppedId);
+            }
             if (_todoToolUses.Remove(result.ToolUseId))
             {
                 _todoList?.ApplyToolResult(result.ToolUseId, result.Text, message.ToolUseResult);
