@@ -48,7 +48,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
                 "From Deventry's releases on GitHub, at launch and every few hours.", keywords: ["version", "upgrade"]),
             Setting("general.includePrereleases", "Include pre-releases", s => s.General.IncludePrereleases, (s, v) => s.General.IncludePrereleases = v,
                 "Try new versions before they're released.", keywords: ["beta", "preview"]),
-            Info("general.version", "Deventry version", keywords: ["update now", "check now", "release notes"]),
+            Info("general.version", "Deventry version", keywords: ["update now", "check now", "release notes", "restart into new builds"]),
         ]);
         _ = RefreshStartAtLoginAsync();
         Services.KeepAwake.PropertyChanged += OnKeepAwakeChanged;
