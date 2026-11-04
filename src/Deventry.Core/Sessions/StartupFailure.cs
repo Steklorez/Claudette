@@ -50,6 +50,8 @@ public sealed record StartupFailure(string Reason, string Errors)
         "bypass_root" => "Bypass permissions mode can't be used while running as root. Choose another permission mode in Tab settings, then restart the tab.",
         "org_config_required_unavailable" => "Your organization's policy and settings, which it requires before a session starts, couldn't be loaded. Check the network or proxy, then restart the tab.",
         "org_config_refused" => "Anthropic refused your organization's policy and settings for this sign-in: it expired or was revoked, or your organization doesn't allow Claude Code for this account. Sign in again, or ask an admin.",
+        "config_file_invalid" => "One of Claude Code's configuration files isn't valid JSON, and Claude Code won't start until it's repaired. What Claude Code said names the file, and how to restore it. Fix it, then restart the tab.",
+        "sandbox_required_unavailable" => "Your settings require Claude Code's sandbox, and it can't run here, for example because bubblewrap isn't installed or this system isn't supported. Make it available, or have the requirement changed, then restart the tab.",
         _ => null,
     };
 

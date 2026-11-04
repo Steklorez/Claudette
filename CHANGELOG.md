@@ -39,6 +39,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **`DEVENTRY_` environment variables.** Project actions get `DEVENTRY_WORKTREE` and `DEVENTRY_MAIN_CHECKOUT`, and your login shell `DEVENTRY_RESOLVING_ENVIRONMENT`, beside their `CLAUDETTE_` names for now. `CLAUDETTE_HOME` still works too.
 - **A web page Claude names opens in your browser.** A link in a reply, or a file's name in its code, that's an `.html` page opens in your default browser rather than in Deventry's editor, and so does one linked from a Markdown file's preview. Changed files' and a tool card's **Open** still open it in the editor, to work on it.
 - **In the Microsoft Store**, Deventry has a listing of its own. Install it from there, and everything carries over as it does from a download.
+- **A tab says why it won't start** when one of Claude Code's configuration files isn't valid JSON, such as `~/.claude.json` after a full disk, or when a sandbox your settings require can't run, with what to do.
+- Tested with Claude Code 2.1.318.
 
 ### Fixed
 

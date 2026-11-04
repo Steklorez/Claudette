@@ -20,6 +20,8 @@ Claude Code tells Deventry why it refused to start, and the tab puts it in words
 - **Your organization's settings.** They don't allow the sign-in or the provider this session is set up for, require a sign-in you don't have, or couldn't be loaded or were refused. Check the network or proxy, sign in with another account, or ask an administrator. A tab says, for example, *You're signed in to an organization your organization's settings don't allow. Sign in with another account.*
 - **An API key conflict.** Your organization requires its own sign-in, but an API key, auth token or `apiKeyHelper` is set. Remove it, then restart the tab.
 - **A proxy setting that isn't a URL.** Fix or unset it, then restart the tab.
+- **A configuration file that isn't valid JSON.** Claude Code won't start until it's repaired, such as `~/.claude.json` after a crash or a full disk. What Claude Code said names the file and how to restore it from its backup. Fix it, then restart the tab.
+- **A sandbox that can't run.** Your settings require Claude Code's sandbox, and it can't run here, for example because `bubblewrap` isn't installed on Linux. Make it available, or have the requirement changed.
 - **Git for Windows missing.** Claude Code needs Git Bash to run commands on Windows. Install it from [git-scm.com](https://git-scm.com/downloads/win), then restart the tab.
 - **Claude Code too old.** Update it in Settings → Claude Code, then restart the tab. See [Claude Code's updates](../updates/claude-codes-updates.md).
 - **Bypass permissions mode as root.** Claude Code won't use that mode as root. Choose another permission mode in the tab's **Tab settings…**, then restart.
