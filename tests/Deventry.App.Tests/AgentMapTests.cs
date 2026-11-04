@@ -337,11 +337,23 @@ public class AgentMapTests
         Assert.True(tab.HasActiveAgents);
         Assert.True(tab.ShowsWorkBar);
         Assert.False(tab.ShowsDoneBar);
+        // Its row under the tab runs the same highlight.
+        var row = tab.SubagentRows.Single();
+        Assert.True(row.ShowsWorkBar);
+        Assert.False(row.ShowsDoneBar);
 
         h.Transport.Emit(Wire.Notification("task-bg", "bg", "completed", "Slept well.", tokens: 1200, toolUses: 1, durationMs: 20500));
 
         await TabTestHarness.Eventually(() => !tab.HasActiveAgents, "the notification");
         Assert.False(tab.ShowsWorkBar);
+        Assert.False(row.ShowsWorkBar);
+        Assert.True(row.ShowsDoneBar);
+        Assert.False(row.ShowsErrorBar);
+
+        // Looking at its work once it has ended takes the green away, as opening a tab does.
+        InlineDispatcher.Read(() => { row.OpenCommand.Execute(null); return 0; });
+        Assert.True(row.IsSeen);
+        Assert.False(row.ShowsDoneBar);
     }
 
     [Fact]

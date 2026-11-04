@@ -963,6 +963,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnPropertyChanged(nameof(ShowsStatusGlyph));
         OnPropertyChanged(nameof(ShowsErrorBar));
         OnPropertyChanged(nameof(ShowsStartingShimmer));
+        foreach (var row in SubagentRows)
+        {
+            row.ActivityChanged();
+        }
         RowLeadChanged();
         _conversation.ExpandThinking = State.ExpandThinking ?? _services.Settings.Appearance.ExpandThinking;
         _conversation.CollapseToolCalls = State.CollapseToolCalls ?? _services.Settings.Appearance.CollapseToolCalls;

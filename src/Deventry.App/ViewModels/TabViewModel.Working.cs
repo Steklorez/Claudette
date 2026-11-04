@@ -93,7 +93,7 @@ public sealed partial class TabViewModel
     public bool ShowsDoneBar => UsesBars && !HasActiveAgents
         && (Status == TabStatus.Unread || State.Unseen && Status is TabStatus.NotStarted or TabStatus.Starting or TabStatus.Idle or TabStatus.Exited);
 
-    private bool UsesBars => _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars;
+    internal bool UsesBars => _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars;
 
     /// <summary>The status icon before the name: only with Tab activity's dots; with its bars the row says it all.</summary>
     public bool ShowsStatusGlyph => !UsesBars;

@@ -920,6 +920,12 @@
                                     <Button Classes="flat agentrow" Classes.showing="{Binding IsShowing}" Classes.earlier="{Binding Node.IsEarlier}"
                                             Margin="{Binding Indent, Converter={x:Static vm:Converters.LeftMargin}}" Command="{Binding OpenCommand}"
                                             ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding Node.Title}">
+                                      <Panel>
+                                      <!-- With Tab activity's colored rows, the tab row's washes for the subagent (DESIGN.md §4, "Sidebar") -->
+                                      <controls:WorkBar Classes="rowglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
+                                      <Border Classes="rowglow waitglow" IsVisible="{Binding ShowsWaitBlink}" />
+                                      <Border Classes="rowglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
+                                      <Border Classes="rowglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
                                       <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
                                         <TextBlock Classes="status runglyph" Classes.busy="{Binding Node.IsRunning}" Classes.alert="{Binding Node.IsWaiting}"
                                                    Classes.ok="{Binding Node.IsDone}" Classes.failed="{Binding Node.IsFailed}"
@@ -944,6 +950,7 @@
                                           </Button>
                                         </Panel>
                                       </Grid>
+                                      </Panel>
                                       <Button.ContextMenu>
                                         <ContextMenu>
                                           <MenuItem Header="Show its work" Command="{Binding OpenCommand}" />

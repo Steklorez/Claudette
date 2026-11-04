@@ -39,13 +39,54 @@ public sealed partial class SubagentRowViewModel : ObservableObject
 
     public string Tip => $"{Node.AgentType} subagent: {Node.Title}\n{Node.StatusText}" + (Node.IsEarlier ? "\nFrom an earlier turn" : "");
 
+    /// <summary>
+    /// With Tab activity's colored rows (DESIGN.md §4, "Sidebar"), the same washes as the tab's row: a highlight running
+    /// across it while the subagent works, an orange wash blinking while it waits on the user, and a still green or red
+    /// one, fading out to the right, once it's done or failed.
+    /// </summary>
+    public bool ShowsWorkBar => _tab.UsesBars && Node.IsRunning;
+
+    public bool ShowsWaitBlink => _tab.UsesBars && Node.IsWaiting;
+
+    public bool ShowsDoneBar => _tab.UsesBars && Node.IsDone && !IsSeen;
+
+    public bool ShowsErrorBar => _tab.UsesBars && Node.IsFailed && !IsSeen;
+
+    /// <summary>
+    /// The user has looked at its work since it ended, as a tab's green wash goes once it's opened: its row's green or red
+    /// wash goes too. Looking while it still runs doesn't count.
+    /// </summary>
+    public bool IsSeen { get; private set; }
+
+    private void MarkSeenIfEnded()
+    {
+        if (!IsSeen && Node.IsSettled && IsShowing)
+        {
+            IsSeen = true;
+            ActivityChanged();
+        }
+    }
+
+    /// <summary>Its status, or Settings → Appearance → Tab activity, changed: the washes follow.</summary>
+    internal void ActivityChanged()
+    {
+        OnPropertyChanged(nameof(ShowsWorkBar));
+        OnPropertyChanged(nameof(ShowsWaitBlink));
+        OnPropertyChanged(nameof(ShowsDoneBar));
+        OnPropertyChanged(nameof(ShowsErrorBar));
+    }
+
     /// <summary>The tab has rows from earlier turns, for the menu's <b>Dismiss earlier subagents</b>.</summary>
     public bool CanDismissEarlier => _tab.HasEarlierSubagents;
 
     internal void EarlierChanged() => OnPropertyChanged(nameof(CanDismissEarlier));
 
     [RelayCommand]
-    private void Open() => _tab.ViewAgent(Node);
+    private void Open()
+    {
+        _tab.ViewAgent(Node);
+        MarkSeenIfEnded();
+    }
 
     [RelayCommand]
     private void Dismiss() => _tab.DismissSubagent(Node);
@@ -56,12 +97,22 @@ public sealed partial class SubagentRowViewModel : ObservableObject
     [RelayCommand]
     private void Stop() => _tab.StopAgentCommand.Execute(Node);
 
-    internal void ShowingChanged() => OnPropertyChanged(nameof(IsShowing));
+    internal void ShowingChanged()
+    {
+        OnPropertyChanged(nameof(IsShowing));
+        MarkSeenIfEnded();
+    }
 
     internal void Detach() => Node.PropertyChanged -= OnNodeChanged;
 
     private void OnNodeChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(AgentNode.Status))
+        {
+            ActivityChanged();
+            // Ending while its work is in front of the user: they've seen it end.
+            MarkSeenIfEnded();
+        }
         if (e.PropertyName is nameof(AgentNode.IsSettled) or nameof(AgentNode.IsEarlier) or nameof(AgentNode.StatusText) or nameof(AgentNode.AgentType))
         {
             OnPropertyChanged(nameof(CanDismiss));
