@@ -6,7 +6,7 @@ description: Download Deventry for Windows or macOS, or build it on Linux.
 
 # Downloads
 
-Deventry comes as an MSIX package for Windows and a `.dmg` for macOS, each for two kinds of processor. On Linux, build it from source: [Installing on Linux](getting-started/installing-on-linux.md) takes a few commands. Install [Claude Code](https://code.claude.com/docs) first: Deventry runs it in every tab.
+Deventry comes as an MSIX package for Windows and a `.dmg` for macOS, each for two kinds of processor. On Linux, build it from source: [Installing on Linux](getting-started/installing-on-linux.md) takes a few commands. Deventry is made for [Claude Code](https://code.claude.com/docs) first, with more agents to come: install it first, and Deventry runs it in every tab.
 
 {% comment %}
   GitHub Pages builds this page with the repository's releases (site.github, from jekyll-github-metadata), newest first.

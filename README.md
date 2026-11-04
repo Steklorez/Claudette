@@ -1,8 +1,8 @@
 # Deventry
 
-> This was made for our own usage, its not meant for everyone and is opinionated. The core pillar is to minimize token usage by default.
+> This was made for our own usage, it's not meant for everyone and is opinionated. The core pillar is to minimize token usage by default.
 
-**The desktop app that puts agents in a native window**, formerly Claudette. Deventry puts [Claude Code](https://code.claude.com/docs) in a real desktop window today, with more providers to come: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time, so you never have to run `/usage` again.
+**An agentic development environment (ADE) for your desktop**, formerly Claudette. Deventry is made for [Claude Code](https://code.claude.com/docs) first, with more agents to come, and puts it in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time, so you never have to run `/usage` again. It's light on tokens out of the box: it asks Claude for little on its own, and whatever else would spend them waits for you to turn it on.
 
 It isn't a reimplementation. Each tab runs the real `claude` CLI, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions, and Deventry draws it as proper native UI instead of a terminal. It runs on Windows, macOS and Linux (from source for now), and every change is built and tested on all three. Built with .NET 10 and Avalonia.
 

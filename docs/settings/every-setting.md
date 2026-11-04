@@ -149,7 +149,7 @@ What each new tab starts with, and the folders you open them in.
 | **Permission mode** | New tabs start with | Claude Code's default, named with the mode it gives | Yes | Yes (**Permission mode**) | [Permission modes](../permissions/permission-modes.md) |
 | **Subagents** | New tabs start with | Claude decides | No | Yes (**Subagents**) | [Subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents) |
 | **Continue tasks when a usage limit resets** | At a usage limit | On | Yes | Yes | [When a limit stops a task](../usage/when-a-limit-stops-a-task.md) |
-| **Use usage credits once a limit is used up** | At a usage limit | On | Yes | Yes (**Use usage credits**, and the tab's menu) | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
+| **Use usage credits once a limit is used up** | At a usage limit | Off | Yes | Yes (**Use usage credits**, and the tab's menu) | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
 | **Check in on long turns** | Check-ins on long turns | On | Yes | Yes (**Use different check-ins for this tab**) | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
 | **After the turn has run (minutes)** | Check-ins on long turns | 15 (0 turns it off) | Yes | Yes | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
 | **After no output for (minutes)** | Check-ins on long turns | 5 (0 turns it off) | Yes | Yes | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |

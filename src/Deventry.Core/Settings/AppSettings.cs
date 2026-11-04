@@ -205,10 +205,10 @@ public sealed class UsageSettings
     public bool ContinueAfterLimitReset { get; set; } = true;
 
     /// <summary>
-    /// Tabs carry on with usage credits once a limit is used up; off, a tab stops and waits for the limit to reset
-    /// instead (DESIGN.md §6, "Tabs that don't use usage credits"). Each tab can override it.
+    /// Tabs carry on with usage credits once a limit is used up; off, the default, a tab stops and waits for the limit
+    /// to reset instead (DESIGN.md §6, "Tabs that don't use usage credits"). Each tab can override it.
     /// </summary>
-    public bool UseUsageCredits { get; set; } = true;
+    public bool UseUsageCredits { get; set; }
 
     public RetentionPeriod KeepHistory { get; set; } = RetentionPeriod.OneMonth;
 

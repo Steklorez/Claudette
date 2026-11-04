@@ -22,7 +22,7 @@
 [toggle on] Continue tasks when a usage limit resets
 "Use usage credits once a limit is used up"
 "Off, tabs stop at the limit instead, and wait for it to reset.  "
-[toggle on] Use usage credits once a limit is used up
+[toggle] Use usage credits once a limit is used up
 "Check-ins on long turns"
 [button] Reset to defaults
 "Check in on long turns"

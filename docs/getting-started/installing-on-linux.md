@@ -86,7 +86,7 @@ cat > ~/.local/share/applications/deventry.desktop <<EOF
 [Desktop Entry]
 Type=Application
 Name=Deventry
-Comment=Claude Code in a desktop window
+Comment=An agentic development environment for your desktop
 Exec=$HOME/.dotnet/dotnet $HOME/Deventry/src/Deventry.App/bin/Release/net10.0/Deventry.dll
 Icon=$HOME/Deventry/packaging/icon/deventry-1024.png
 Categories=Development;

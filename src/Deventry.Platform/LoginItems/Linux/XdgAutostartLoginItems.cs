@@ -87,7 +87,7 @@ public sealed class XdgAutostartLoginItems(IProcessLauncher launcher, string aut
             [Desktop Entry]
             Type=Application
             Name=Deventry
-            Comment=The desktop app that puts agents in a native window
+            Comment=An agentic development environment for your desktop
             Exec={exec}
             Terminal=false
             X-GNOME-Autostart-enabled=true

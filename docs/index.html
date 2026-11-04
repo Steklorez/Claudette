@@ -1,7 +1,7 @@
 ---
 layout: landing
 title: Deventry
-description: Your agents in a real desktop window. Every session in its own tab, every change ready to review, and your plan's usage on screen the whole time.
+description: An agentic development environment (ADE) for your desktop, made for Anthropic's Claude Code and light on tokens by default. Every session in its own tab, every change ready to review, and your plan's usage on screen the whole time.
 nav_exclude: true
 search_exclude: true
 ---
@@ -38,9 +38,9 @@ search_exclude: true
     <img class="hero-sprite" src="{{ '/assets/deventry.svg' | relative_url }}" alt="" width="120" height="120">
     <img class="hero-wordmark" src="{{ '/assets/wordmark.svg' | relative_url }}" alt="" width="540" height="80">
   </div>
-  <p class="kicker">Your agents, in a real desktop window</p>
+  <p class="kicker">Agentic development, in a real desktop window</p>
   <h1 class="hero-title">Every session in a tab.<br><span class="gradient-text">Every change in sight.</span></h1>
-  <p class="hero-lead">Deventry runs the real Claude Code, with your settings, <code>CLAUDE.md</code>, MCP servers and hooks, and draws it as a native app: a tab for each session, every change ready to review, and your plan's usage on screen the whole time.</p>
+  <p class="hero-lead">Deventry is an agentic development environment, an ADE, for your desktop. It runs Anthropic's Claude Code, the real <code>claude</code> with your settings, <code>CLAUDE.md</code>, MCP servers and hooks, as a native app: a tab for each session, every change ready to review, and your plan's usage on screen the whole time. Out of the box, it spends as few of your tokens as it can.</p>
 
   <div class="get" id="download">
     <div class="get-card">
@@ -54,7 +54,7 @@ search_exclude: true
       <p class="get-soon">Until then, {% if claudette %}Claudette {{ claudette.tag_name | remove_first: "v" }}{% else %}Claudette{% endif %}, Deventry's name before 1.0.0, is on the <a href="{{ '/downloads/#claudette' | relative_url }}">Downloads page</a>.</p>
       {%- endunless %}
     </div>
-    <p class="get-note">Works with <a href="https://code.claude.com/docs/en/setup">Claude Code</a> today, with more providers to come · Windows 10 and 11, macOS 12 or later, Linux on x64 · <a href="{{ '/downloads/' | relative_url }}">Every package</a></p>
+    <p class="get-note">Made for <a href="https://code.claude.com/docs/en/setup">Claude Code</a> first, with more agents to come · Windows 10 and 11, macOS 12 or later, Linux on x64 · <a href="{{ '/downloads/' | relative_url }}">Every package</a></p>
   </div>
 
   <div class="hero-actions">
@@ -65,6 +65,7 @@ search_exclude: true
 
   <ul class="trust">
     <li>{% include icon.html name="terminal" %} Runs the real <code>claude</code></li>
+    <li><a href="#lean">{% include icon.html name="gauge" %} <strong>Light on tokens</strong> by default</a></li>
     <li>{% include icon.html name="shield" %} <strong>No analytics</strong></li>
     <li>{% include icon.html name="code" %} MIT licensed</li>
     <li><a href="#platforms">{% include icon.html name="monitor" %} Windows, macOS and Linux</a></li>
@@ -77,6 +78,23 @@ search_exclude: true
     {% include picture.html name="standard" alt="Deventry's window: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files page in the side panel, the plan's usage in the header, and Joulene standing on the message box" width=2224 height=1427 eager=true %}
   </div>
 </div>
+
+<section class="band lean" id="lean" aria-labelledby="lean-title">
+  <div class="section-head" data-reveal>
+    <p class="kicker">{% include icon.html name="gauge" %} Light on tokens</p>
+    <h2 id="lean-title">Your tokens go to your work.<br><span class="gradient-text">Not to the window.</span></h2>
+    <p>Deventry asks Claude for very little on its own: a short title for each new session, and a check-in on a turn that runs long or goes quiet. Whatever else would spend tokens waits for you to turn it on, and keeping an eye on your usage spends none.</p>
+  </div>
+  <div class="cards cards-3">
+    <a class="card" href="{{ '/composer/prompt-suggestions/' | relative_url }}" data-reveal>{% include icon.html name="sparkles" %}<strong>Extras wait for you</strong><span>Prompt suggestions and subagents' progress summaries each take a model call of their own, so they're off until you turn them on.</span></a>
+    <a class="card" href="{{ '/usage/tabs-that-dont-use-usage-credits/' | relative_url }}" data-reveal>{% include icon.html name="coins" %}<strong>Credits kept for later</strong><span>Once a limit's used up, tabs wait for the reset rather than spend your usage credits, unless you say a tab may.</span></a>
+    <a class="card" href="{{ '/usage/the-prompt-cache/' | relative_url }}" data-reveal>{% include icon.html name="timer" %}<strong>The cache, counted down</strong><span>A chip shows how long the prompt cache has left, so you know when your next message reads the conversation for a fraction of the cost.</span></a>
+    <a class="card" href="{{ '/composer/check-ins-on-long-turns/' | relative_url }}" data-reveal>{% include icon.html name="activity" %}<strong>No turn left burning</strong><span>A turn that runs long or goes quiet gets a check-in, so a stuck tab doesn't burn your usage without anyone noticing.</span></a>
+    <a class="card" href="{{ '/usage/context-and-compacting/' | relative_url }}" data-reveal>{% include icon.html name="chart-pie" %}<strong>Context at a glance</strong><span>A ring on each tab's row shows how full its context is, counted without spending a token, with what fills it a click away.</span></a>
+    <a class="card" href="{{ '/conversation/subagents/#discouraging-or-turning-off-subagents' | relative_url }}" data-reveal>{% include icon.html name="users" %}<strong>Subagents your way</strong><span>Let Claude decide, discourage subagents, or turn them off, for every tab or just one.</span></a>
+  </div>
+  <p class="band-more" data-reveal><a class="more" href="{{ '/getting-started/how-deventry-uses-claude-code/#what-deventry-asks-claude-code-for-on-its-own' | relative_url }}">What Deventry asks Claude Code for {% include icon.html name="arrow-right" %}</a></p>
+</section>
 
 <section class="band gamedev" id="game-dev" aria-labelledby="gamedev-title">
   <div class="section-head" data-reveal>

@@ -55,7 +55,7 @@ public sealed partial class AboutPage : SettingsPage
     {
         Section("deventry", "Deventry",
         [
-            Info("about.version", Services.Build.Label, "The desktop app that puts agents in a native window, made by dotBunny.", keywords: ["version", "dotBunny"]),
+            Info("about.version", Services.Build.Label, "An agentic development environment (ADE) for your desktop, made by dotBunny.", keywords: ["version", "dotBunny"]),
             Info("about.links", "On the web", "The website and user guide, the source code, what changed in each version, and the privacy policy.",
                 keywords: ["website", "github", "source code", "changelog", "privacy policy"]),
             Info("about.license", "MIT License", $"{ThirdPartyNotices.DeventryCopyright.TrimEnd('.')}. Deventry is free and open source.",

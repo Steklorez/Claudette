@@ -1,13 +1,13 @@
 ---
 title: Overview
 nav_order: 1
-description: How to use every part of Deventry, the desktop app that puts Claude Code in a native window.
+description: How to use every part of Deventry, the agentic development environment (ADE) for your desktop.
 permalink: /guide/
 ---
 
 # The Deventry guide
 
-Deventry puts [Claude Code](https://code.claude.com/docs) in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time. Each tab runs the real `claude`, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions. This guide shows how to use every part of it.
+Deventry is an agentic development environment, an ADE, for your desktop. It puts [Claude Code](https://code.claude.com/docs), its first agent, in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time. Each tab runs the real `claude`, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions. This guide shows how to use every part of it.
 
 {% include shot.html name="standard" alt="Deventry's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Joulene standing on the message box" %}
 

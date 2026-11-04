@@ -7,12 +7,12 @@ summary: "Once a limit is used up, a tab can stop and wait for the reset rather 
 
 # Tabs that don't use usage credits
 
-If your plan has usage credits turned on, they pay for Claude once your session or weekly limit is used up, for every tab alike. You can keep them for the work that matters: a tab that doesn't use them stops instead, and waits for the limit to reset, as it would at a limit with no credits behind it.
+If your plan has usage credits turned on, they pay for Claude once your session or weekly limit is used up. Deventry keeps them for the work that matters: a tab that doesn't use them stops instead, and waits for the limit to reset, as it would at a limit with no credits behind it. By default no tab uses them, so you choose the ones that may.
 
 ## Choosing
 
-- **For every tab:** Settings → Tabs → **Use usage credits once a limit is used up**. It's on by default.
-- **For one tab:** **Use usage credits** in the tab's menu, a check item. Untick it on the tabs that can wait, or turn the setting off and tick it on the ones that can't. **Tab settings…** has the same choice, also named **Use usage credits**: see [Tab settings](../tabs/tab-settings.md).
+- **For every tab:** Settings → Tabs → **Use usage credits once a limit is used up**. It's off by default. Settings from before Deventry 1.0.0, Claudette's among them, keep it on, as it was then.
+- **For one tab:** **Use usage credits** in the tab's menu, a check item. Tick it on the tabs that can't wait, or turn the setting on and untick it on the ones that can. **Tab settings…** has the same choice, also named **Use usage credits**: see [Tab settings](../tabs/tab-settings.md).
 
 The menu keeps the tab's own choice only while it differs from Settings, so ticking it back to what Settings says leaves the tab following Settings again, and the dot beside **Tab settings…** goes.
 
@@ -39,7 +39,7 @@ Either way, the tab waits for the limit to reset exactly as it does after a usag
 
 | Setting | Default | Where |
 |---|---|---|
-| **Use usage credits once a limit is used up** | On | Settings → Tabs → At a usage limit |
+| **Use usage credits once a limit is used up** | Off | Settings → Tabs → At a usage limit |
 | **Use usage credits** | Follows the setting | The tab's menu, or **Tab settings…** |
 
 ## See also

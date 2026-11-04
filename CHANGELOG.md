@@ -6,7 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-**Claudette is now Deventry.** The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
+## [1.0.0] - 2026-11-04
+
+**Claudette is now Deventry**, an agentic development environment (ADE) for your desktop: made for Claude Code first, with more agents to come, and light on tokens by default. The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
 
 ### Added
 
@@ -26,6 +28,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- **Tabs don't spend usage credits unless you say so.** Once your session or weekly limit is used up, a tab now stops and waits for the reset rather than let your plan's usage credits pay for it. Turn on Settings → Tabs → **Use usage credits once a limit is used up** for every tab, or tick **Use usage credits** in a tab's menu for the ones that can't wait. Settings carried over from Claudette keep it on, as it was. See [Tabs that don't use usage credits](https://deventry.app/usage/tabs-that-dont-use-usage-credits/).
 - **The Games icon is always on the strip.** While games are on, its icon stays at the window's right, game or no game, so you can start one at any time: with none open, its window lists the four, each with your score so far. **Done playing** goes back to that list. See [Games with Joulene](https://deventry.app/joulene/games-with-joulene/).
 - **Project settings have a window of their own.** **Project settings…**, in a group's menu and now in each tab's, opens the project's links, actions, tools, and its group's color and icon in a window beside the main one, one for each project, even for a group with nothing open in it. **Add a link…** and **Add an action…** open it too. They're no longer at the foot of Settings' sidebar, and a group's color is picked there now, in place of **Change color…** in the group's menu. See [Project settings](https://deventry.app/settings/project-settings/).
 - **The project's menu for a folder with nothing open.** A group in the sidebar with no tab open, such as one of Claude Code's projects showing only its past sessions, now has its project's icon and menu, in place of a button that opened the folder: launch the editor, open the solution or a link from there. Builds and other actions with output need a tab open to run in. See [A folder with no tab open](https://deventry.app/project-tools/using-project-tools/#a-folder-with-no-tab-open).
@@ -308,7 +311,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Deventry/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Deventry/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/dotBunny/Deventry/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/dotBunny/Deventry/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/dotBunny/Deventry/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/dotBunny/Deventry/compare/v0.5.0...v0.5.1

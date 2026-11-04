@@ -1,7 +1,7 @@
 # Deventry's user guide (GUIDE.md). GitHub Pages builds it from docs/ on main and publishes it at the domain in CNAME.
 # So only GitHub Pages' own plugins (https://pages.github.com/versions/) and no build scripts of ours.
 title: Deventry
-description: How to use Deventry, the desktop app that puts agents in a native window.
+description: How to use Deventry, the agentic development environment (ADE) for your desktop.
 url: https://deventry.app
 lang: en
 
@@ -37,7 +37,7 @@ defaults:
         path: /assets/social-card.png
         width: 1280
         height: 640
-        alt: "Deventry: your agents in a real desktop window. Every session in a tab, every change in sight."
+        alt: "Deventry: agentic development, in a real desktop window. Every session in a tab, every change in sight."
 
 search_enabled: true
 search:

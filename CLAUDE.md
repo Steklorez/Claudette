@@ -1,6 +1,6 @@
 # Deventry
 
-A .NET desktop app that puts agents in a native window, formerly Claudette: today it wraps Claude Code in a native GUI, one tab per Claude Code session, with live usage-limit tracking. Its mascot on the composer is Joulene.
+A .NET agentic development environment (ADE) for the desktop, formerly Claudette: today it wraps Claude Code, its first agent, in a native GUI, one tab per Claude Code session, with live usage-limit tracking. Its mascot on the composer is Joulene.
 
 [DESIGN.md](DESIGN.md) is the spec. `§n` always means a section of DESIGN.md.
 

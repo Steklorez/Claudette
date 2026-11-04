@@ -21,8 +21,9 @@ public class UsageCreditsTabTests
     {
         await using var h = new TabTestHarness();
         var tab = await WorkingAsync(h);
-        tab.ToggleUseUsageCreditsCommand.Execute(null);
+        // Tabs don't use them unless Settings or the tab says so.
         Assert.False(tab.UsesUsageCredits);
+        Assert.Null(tab.State.Overrides.UseUsageCredits);
         var reset = h.Time.GetUtcNow() + TimeSpan.FromHours(2);
 
         h.Transport.Emit(PaidByCredits(reset));
@@ -47,7 +48,7 @@ public class UsageCreditsTabTests
     [Fact]
     public async Task A_tab_that_uses_them_carries_on()
     {
-        await using var h = new TabTestHarness();
+        await using var h = new TabTestHarness(s => s.Usage.UseUsageCredits = true);
         var tab = await WorkingAsync(h);
         Assert.True(tab.UsesUsageCredits);
 
@@ -196,19 +197,19 @@ public class UsageCreditsTabTests
         Assert.True(tab.HasUsageCreditsMenu);
 
         tab.ToggleUseUsageCreditsCommand.Execute(null);
-        Assert.False(tab.State.Overrides.UseUsageCredits);
+        Assert.True(tab.State.Overrides.UseUsageCredits);
         Assert.True(tab.HasOverrides);
 
         tab.ToggleUseUsageCreditsCommand.Execute(null);
         Assert.Null(tab.State.Overrides.UseUsageCredits);
         Assert.False(tab.HasOverrides);
 
-        // Settings → Usage turned off: tabs follow it, and one can turn them back on.
+        // Settings → Tabs turned on: tabs follow it, and one can turn them back off.
         var settings = new SettingsViewModel(h.Services, null);
-        settings.Tabs.UseUsageCredits = false;
-        await TabTestHarness.Eventually(() => !tab.UsesUsageCredits, "the tab to follow Settings");
+        settings.Tabs.UseUsageCredits = true;
+        await TabTestHarness.Eventually(() => tab.UsesUsageCredits, "the tab to follow Settings");
         tab.ToggleUseUsageCreditsCommand.Execute(null);
-        Assert.True(tab.State.Overrides.UseUsageCredits);
+        Assert.False(tab.State.Overrides.UseUsageCredits);
     }
 
     [Fact]
@@ -218,13 +219,13 @@ public class UsageCreditsTabTests
         var tab = await h.OpenTabAsync();
         var settings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.True(settings.ShowsUsageCredits);
-        Assert.Equal("Default (on)", settings.SelectedUsageCredits.Label);
+        Assert.Equal("Default (off)", settings.SelectedUsageCredits.Label);
 
-        settings.SelectedUsageCredits = settings.UsageCreditsChoices.Single(c => c.Label == "Off");
+        settings.SelectedUsageCredits = settings.UsageCreditsChoices.Single(c => c.Label == "On");
         await settings.DoneCommand.ExecuteAsync(null);
 
-        Assert.False(tab.State.Overrides.UseUsageCredits);
-        Assert.False(tab.UsesUsageCredits);
+        Assert.True(tab.State.Overrides.UseUsageCredits);
+        Assert.True(tab.UsesUsageCredits);
         settings = new TabSettingsViewModel(h.Services, tab, () => { });
         settings.UseAllDefaults();
         await settings.DoneCommand.ExecuteAsync(null);
