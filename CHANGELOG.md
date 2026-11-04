@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **See which subagents are still running.** While any of a tab's subagents works, even after Claude's turn has ended, its row in the sidebar says how many with a **running** chip; click it to see them. Each subagent's row says what it's doing in blue while it runs, and how it ended in green once it's done.
+
 ## [1.0.0] - 2026-11-04
 
 **Claudette is now Deventry**, an agentic development environment (ADE) for your desktop: made for Claude Code first, with more agents to come, and light on tokens by default. The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.

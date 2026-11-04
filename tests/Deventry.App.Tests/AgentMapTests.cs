@@ -319,6 +319,35 @@ public class AgentMapTests
     }
 
     [Fact]
+    public async Task A_tabs_row_counts_its_running_subagents_after_the_turn_and_its_chip_shows_them()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Wire.Init());
+        h.Transport.Emit(Wire.Agent("bg", "Long job", "RUN_BASH sleep 20", background: true));
+        h.Transport.Emit(Wire.TaskStarted("task-bg", "bg", backgrounded: true));
+        h.Transport.Emit(Wire.Result("bg", "Async agent launched successfully.", toolUseResult: new JsonObject
+        {
+            ["isAsync"] = true, ["status"] = "async_launched", ["agentId"] = "task-bg", ["description"] = "Long job", ["prompt"] = "RUN_BASH sleep 20",
+        }));
+        h.Transport.Emit(Wire.TurnResult());
+
+        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any() && tab.IsSettled, "the turn to end");
+        Assert.True(tab.HasActiveAgents);
+        Assert.Equal("1 running", tab.AgentsBadge);
+        Assert.Equal("1 subagent running. Click to see it.", tab.AgentsBadgeTip);
+
+        tab.ToggleRowsCollapsedCommand.Execute(null);
+        Assert.True(tab.AreRowsCollapsed);
+        tab.ShowAgentsFromRowCommand.Execute(null);
+        Assert.False(tab.AreRowsCollapsed);
+        Assert.True(tab.ShowsSubagentRows);
+
+        h.Transport.Emit(Wire.Notification("task-bg", "bg", "completed", "Slept well.", tokens: 1200, toolUses: 1, durationMs: 20500));
+        await TabTestHarness.Eventually(() => !tab.HasActiveAgents, "the notification");
+    }
+
+    [Fact]
     public async Task Running_time_ticks_from_the_injected_clock()
     {
         await using var h = new TabTestHarness();
