@@ -346,14 +346,14 @@
       "deventry.platform": {
         "type": "Project",
         "dependencies": {
-          "Deventry.Core": "[1.0.0, )",
+          "Deventry.Core": "[1.1.0, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.14, )"
         }
       },
       "deventry.usage": {
         "type": "Project",
         "dependencies": {
-          "Deventry.Core": "[1.0.0, )",
+          "Deventry.Core": "[1.1.0, )",
           "Microsoft.Data.Sqlite": "[10.0.14, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.14, )"
         }

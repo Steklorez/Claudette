@@ -441,9 +441,9 @@
           "AvaloniaEdit.TextMate": "[12.0.0, )",
           "AvaloniaUI.DiagnosticsSupport": "[2.2.3, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "Deventry.Core": "[1.0.0, )",
-          "Deventry.Platform": "[1.0.0, )",
-          "Deventry.Usage": "[1.0.0, )",
+          "Deventry.Core": "[1.1.0, )",
+          "Deventry.Platform": "[1.1.0, )",
+          "Deventry.Usage": "[1.1.0, )",
           "LiveMarkdown.Avalonia": "[2.5.1, )",
           "SkiaSharp": "[3.119.4, )",
           "TextMateSharp": "[2.0.5, )",
@@ -459,14 +459,14 @@
       "deventry.platform": {
         "type": "Project",
         "dependencies": {
-          "Deventry.Core": "[1.0.0, )",
+          "Deventry.Core": "[1.1.0, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.14, )"
         }
       },
       "deventry.usage": {
         "type": "Project",
         "dependencies": {
-          "Deventry.Core": "[1.0.0, )",
+          "Deventry.Core": "[1.1.0, )",
           "Microsoft.Data.Sqlite": "[10.0.14, )",
           "Microsoft.Extensions.Logging.Abstractions": "[10.0.14, )"
         }
