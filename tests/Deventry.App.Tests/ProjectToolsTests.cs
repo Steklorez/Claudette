@@ -102,6 +102,60 @@ public class ProjectToolsTests
         Assert.Same(second, group.ProjectTab);
     }
 
+    /// <summary>
+    /// A group with no tab open, one of Claude Code's projects listing only its past sessions, finds its folder's project
+    /// and files as a tab does and shows their menu; a job has no tab to run under, so it waits for one (DESIGN.md §18,
+    /// "Project tools", issue #111).
+    /// </summary>
+    [Fact]
+    public async Task A_group_with_no_tab_open_has_its_projects_menu_and_its_jobs_wait_for_a_tab()
+    {
+        var (h, _, uproject) = UnrealHarness(s => s.Sidebar.ShowClaudeProjects = true);
+        await using var _h = h;
+        h.Services.State.ClaudeProjectsOffered = true;
+        Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(uproject)!, "Intermediate"));
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "color": "#4A6FC4", "actions": [{ "name": "Run tests", "command": "dotnet test" }, { "name": "Grafana", "command": "start https://grafana.example", "mode": "launch" }] }""");
+        h.WriteTranscript("w1", new System.Text.Json.Nodes.JsonObject
+        {
+            ["type"] = "user",
+            ["message"] = new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["content"] = "Fix it" },
+            ["cwd"] = h.WorkFolder,
+            ["sessionId"] = "w1",
+            ["timestamp"] = "2026-09-28T09:00:00Z",
+        }.ToJsonString());
+        InlineDispatcher.Run(() => h.Shell.Restore(null));
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => h.Shell.Groups.Any(g => g.IsProjectOnly)), "the project in the sidebar");
+        var group = InlineDispatcher.Read(() => h.Shell.Groups.Single());
+
+        var tools = InlineDispatcher.Read(() => group.ProjectTools)!;
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tools.Project is not null && tools.Actions.Count > 0), "the folder's project");
+
+        Assert.Null(group.ProjectTab);
+        Assert.Equal("NightOwl · Unreal Engine", tools.HeaderTitle);
+        // The folder's own color, from its deventry.json, as a tab's reading would give it.
+        Assert.Equal("#4A6FC4", TabGroupViewModel.ToHex(InlineDispatcher.Read(() => group.Color)));
+        // Jobs and deleting folders, which run as a job, wait for a tab; what starts or opens something doesn't.
+        const string Waits = "Open a tab here to run it: its output shows under the tab.";
+        var actions = InlineDispatcher.Read(() => tools.Actions.ToDictionary(a => a.Label));
+        Assert.Equal(Waits, actions["Build editor"].DisabledReason);
+        Assert.Equal(Waits, actions["Clean intermediates…"].DisabledReason);
+        Assert.Equal(Waits, actions["Run tests"].DisabledReason);
+        Assert.True(actions["Grafana"].IsEnabled);
+        Assert.True(actions["End all Unreal editors…"].IsEnabled);
+        // No output to show without a tab, and no project pages in Settings to add to yet.
+        var menu = InlineDispatcher.Read(() => tools.Menu.Select(e => e.Label).ToArray());
+        Assert.Contains(ShowFolder, menu);
+        Assert.Contains("Refresh", menu);
+        Assert.DoesNotContain("Show output…", menu);
+        Assert.DoesNotContain("Add an action…", menu);
+
+        // A tab opening in the group brings its own tools, whose jobs run under it.
+        var tab = await h.OpenTabAsync();
+        Assert.Same(tab.ProjectTools, InlineDispatcher.Read(() => group.ProjectTools));
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.Actions.Any(a => a.Label == "Run tests")), "the tab's actions");
+        Assert.True(InlineDispatcher.Read(() => tab.ProjectTools.Actions.Single(a => a.Label == "Run tests")).IsEnabled);
+    }
+
     [Fact]
     public async Task Without_a_project_or_actions_the_icon_names_the_folder_and_offers_the_first_action_and_link()
     {

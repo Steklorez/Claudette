@@ -12,10 +12,16 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>What project tools need from their tab.</summary>
+/// <summary>What project tools need from their tab, or from a folder's group with no tab open (<see cref="FolderProjectToolsHost"/>).</summary>
 internal interface IProjectToolsHost : ITabAreaHost
 {
     string FolderName { get; }
+
+    /// <summary>
+    /// A tab has these tools, so a job can run under its row with its log. A group with no tab open has nowhere to show
+    /// one, so its jobs wait for a tab (DESIGN.md §18, "Project tools").
+    /// </summary>
+    bool CanRunJobs { get; }
 
     /// <summary>The folder of the tab's group.</summary>
     string GroupFolder { get; }
@@ -169,13 +175,22 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     public IReadOnlyList<ProjectDetail> Details => Project?.Details ?? [];
 
     /// <summary>The project's actions and the folder's own, for the Project page's buttons.</summary>
-    public IReadOnlyList<ProjectAction> Actions => [.. Project?.Actions.Select(Runs.ForJob) ?? [], .. _customActions.Select(c => Runs.ForJob(c.Action))];
+    public IReadOnlyList<ProjectAction> Actions => [.. Project?.Actions.Select(ForAction) ?? [], .. _customActions.Select(c => ForAction(c.Action))];
 
-    /// <summary>The project row's menu.</summary>
+    /// <summary>
+    /// How an action shows as things are: while a job runs, the other jobs wait; and with no tab open in the group, a job
+    /// has no row to run under, so it waits for one (DESIGN.md §18, "Project tools").
+    /// </summary>
+    private ProjectAction ForAction(ProjectAction action) =>
+        !_host.CanRunJobs && action.IsEnabled && (action.Kind == ProjectActionKind.Run || action.Destructive is DeleteFolders)
+            ? action with { DisabledReason = "Open a tab here to run it: its output shows under the tab." }
+            : Runs.ForJob(action);
+
+    /// <summary>The project row's menu. Without a tab there's no output to show, nor project pages in Settings to add to.</summary>
     public IReadOnlyList<ProjectMenuEntry> Menu => ProjectMenu.Build(
-        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools, Runs.HasRuns, Runs.ForJob, Folder,
+        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools && _host.CanRunJobs, Runs.HasRuns, ForAction, Folder,
         _menuCommands ??= new ProjectMenuCommands(RunActionCommand, ChooseProjectCommand, ChooseOptionCommand, FixCommand, OpenLinkCommand,
-            ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand));
+            ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand), canEdit: _host.CanRunJobs);
 
     /// <summary>The folder the row stands for: the project's, else the tab's, which the row is named after.</summary>
     public string Folder => Project?.Root ?? _host.Folder;
@@ -497,7 +512,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
         {
             return;
         }
-        action = Runs.ForJob(action);
+        action = ForAction(action);
         if (!action.IsEnabled)
         {
             _host.AddNote($"{action.Label}: {action.DisabledReason}", NoteKind.Warning);

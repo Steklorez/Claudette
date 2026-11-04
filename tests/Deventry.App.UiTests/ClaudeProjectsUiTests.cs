@@ -41,12 +41,11 @@ public class ClaudeProjectsUiTests
         h.Shell.ClosePicker();
         UiText.Settle(window);
 
-        // Nothing open to fold them under: listed straight away, with no fold. No tab, so no project tools: the folder's
-        // button stands in their place and opens the folder.
+        // Nothing open to fold them under: listed straight away, with no fold. No tab, but the folder's project tools all
+        // the same, as a tab's would be (issue #111).
         Assert.Null(Fold(window));
-        var folderButton = window.GetVisualDescendants().OfType<Button>().Single(b => b is { Name: "GroupFolderButton", IsEffectivelyVisible: true });
-        Assert.Equal("Open the folder", Avalonia.Automation.AutomationProperties.GetName(folderButton));
-        Assert.DoesNotContain(window.GetVisualDescendants().OfType<Button>(), b => b is { Name: "ProjectButton", IsEffectivelyVisible: true });
+        var projectButton = window.GetVisualDescendants().OfType<Button>().Single(b => b is { Name: "ProjectButton", IsEffectivelyVisible: true });
+        Assert.Same(h.Shell.Groups.Single().FolderTools, projectButton.GetVisualDescendants().OfType<ContentControl>().First().Content);
         var rows = PastSessionRows(window);
         Assert.Equal(2, rows.Count);
         var shown = UiText.Describe(GroupList(window), (h.Root, "{root}"));
@@ -56,8 +55,8 @@ public class ClaudeProjectsUiTests
         await UiText.SettleUntilAsync(window, () => h.Shell.SelectedTab?.State.SessionId == "w2", "the session's tab");
         Assert.Equal("Add the settings page", h.Shell.SelectedTab!.DisplayName);
         var fold = Fold(window)!;
-        // With a tab open, its project tools take the folder button's place.
-        Assert.False(folderButton.IsEffectivelyVisible);
+        // With a tab open, the button has its project tools.
+        Assert.Same(h.Shell.SelectedTab.ProjectTools, projectButton.GetVisualDescendants().OfType<ContentControl>().First().Content);
         Assert.Equal("1 past session", Avalonia.Automation.AutomationProperties.GetName(fold));
         Assert.Empty(PastSessionRows(window));
 

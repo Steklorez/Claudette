@@ -387,9 +387,9 @@ public partial class ShellView : UserControl
     private void OnProjectMenuOpened(object? sender, EventArgs e)
     {
         _projectMenu = sender as Flyout;
-        if (_projectMenu?.Target?.DataContext is TabGroupViewModel { ProjectTab: { } tab })
+        if (_projectMenu?.Target?.DataContext is TabGroupViewModel { ProjectTools: { } tools })
         {
-            tab.ProjectTools.RefreshCommand.Execute(null);
+            tools.RefreshCommand.Execute(null);
         }
     }
 

@@ -73,6 +73,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             {
                 tab.OnSettingsChanged();
             }
+            foreach (var group in Groups)
+            {
+                group.FolderTools?.OnSettingsChanged();
+            }
             // Settings → Project tools → All tools → Show editor logs (DESIGN.md §18, "Editor logs").
             FollowEditorLogs();
         };
@@ -485,6 +489,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             Name = GroupNames.Saved(state, folder),
         };
         group.IsPinned = state.PinnedGroups.Any(p => FolderHistory.SamePath(p, folder));
+        group.MakeFolderTools = MakeFolderTools;
         SetUpGroupAccount(group);
         Groups.Add(group);
         // A pinned group goes up among the pinned ones, and the others keep their place.
@@ -492,6 +497,17 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         UpdateGroupLabels();
         OnPropertyChanged(nameof(HasTabs));
         return group;
+    }
+
+    /// <summary>
+    /// A group's project tools while it has no session tab open (DESIGN.md §18, "Project tools"): its folder's project
+    /// and files, found as a tab's are, whose jobs wait for a tab.
+    /// </summary>
+    private ProjectToolsViewModel MakeFolderTools(TabGroupViewModel group)
+    {
+        var tools = new ProjectToolsViewModel(_services, new FolderProjectToolsHost(this, group));
+        _ = tools.RefreshAsync();
+        return tools;
     }
 
     /// <summary>A group with neither a session tab nor its Project Files tab leaves the sidebar.</summary>
@@ -908,10 +924,16 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// </summary>
     internal void UseProjectColor(TabViewModel tab, string hex)
     {
-        if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group
-            && FolderHistory.SamePath(tab.Folder, group.Folder)
-            && TabGroupViewModel.TryParseHex(hex, out var color)
-            && group.Color != color)
+        if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group && FolderHistory.SamePath(tab.Folder, group.Folder))
+        {
+            UseProjectColor(group, hex);
+        }
+    }
+
+    /// <summary>The group's folder's project files name its color, read with no tab open: the group takes it.</summary>
+    internal void UseProjectColor(TabGroupViewModel group, string hex)
+    {
+        if (TabGroupViewModel.TryParseHex(hex, out var color) && group.Color != color)
         {
             SetGroupColor(group, color);
         }
@@ -1301,6 +1323,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         foreach (var tab in AllTabs.Where(t => FolderHistory.SamePath(t.Folder, folder)))
         {
             tab.ProjectTools.ReloadCustomActions();
+        }
+        foreach (var group in Groups.Where(g => FolderHistory.SamePath(g.Folder, folder)))
+        {
+            group.FolderTools?.ReloadCustomActions();
         }
     }
 
