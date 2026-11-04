@@ -46,6 +46,91 @@ public class MarkdownPreviewTests
 
     private static PlainEditorDocument Text(ProjectFileViewModel file) => (PlainEditorDocument)file.Document!;
 
+    // ---- Finding in the preview (issue #97) ------------------------------------------------------------------------
+
+    [Fact]
+    public void Find_looks_in_each_blocks_lines_with_the_editors_options()
+    {
+        string[] blocks = ["Starfall is a shooter", "Saving\nSave often: saves are small", "starfall"];
+        IReadOnlyList<PreviewMatch> Find(string text, bool matchCase = false, bool words = false, bool regex = false) =>
+            PreviewFind.Find(blocks, FindMatcher.Create(new FindQuery(text, matchCase, words, regex)));
+
+        Assert.Equal([new PreviewMatch(0, 0, 8), new PreviewMatch(2, 0, 8)], Find("starfall"));
+        Assert.Equal([new PreviewMatch(0, 0, 8)], Find("Starfall", matchCase: true));
+        // Line by line within a block: the second line starts after the first's line break.
+        Assert.Equal([new PreviewMatch(1, 0, 3), new PreviewMatch(1, 7, 3), new PreviewMatch(1, 19, 3)], Find("sav"));
+        Assert.Equal([new PreviewMatch(1, 7, 4)], Find("save", words: true));
+        Assert.Equal([new PreviewMatch(1, 19, 5)], Find(@"sa\w+s\b", regex: true));
+    }
+
+    [Fact]
+    public void Next_and_previous_go_round_the_matches_and_the_count_says_where_it_is()
+    {
+        var find = new PreviewFind();
+        var current = 0;
+        find.CurrentChanged += () => current++;
+        find.Query = "alpha";
+        Assert.Equal("No results", find.CountText);
+
+        find.Found(3);
+        Assert.Equal((0, "1 of 3"), (find.Current, find.CountText));
+        find.NextCommand.Execute(null);
+        find.NextCommand.Execute(null);
+        find.NextCommand.Execute(null);
+        Assert.Equal((0, "1 of 3"), (find.Current, find.CountText));
+        find.PreviousCommand.Execute(null);
+        Assert.Equal("3 of 3", find.CountText);
+        // Fewer found after an edit: it stays within them.
+        find.Found(2);
+        Assert.Equal("2 of 2", find.CountText);
+        Assert.True(current >= 4);
+
+        // A regular expression that isn't one says so, and looks for nothing.
+        find.IsRegex = true;
+        find.Query = "(";
+        Assert.True(find.HasProblem);
+        Assert.Null(find.Matcher);
+        Assert.Equal("", find.CountText);
+        find.Query = "";
+        Assert.Equal("", find.CountText);
+    }
+
+    [Fact]
+    public async Task Ctrl_F_finds_in_the_preview_when_it_shows_alone_or_has_the_keyboard_else_in_the_editor()
+    {
+        await using var h = new TabTestHarness();
+        var (_, file) = await OpenAsync(h, Write(Path.Combine(h.WorkFolder, "README.md"), Readme));
+        var editorFinds = 0;
+        file.FindRequested += _ => editorFinds++;
+
+        // Edit: the editor's.
+        Assert.True(file.FindHere());
+        Assert.Equal(1, editorFinds);
+        Assert.False(file.PreviewFind.IsOpen);
+
+        // Preview: the preview's, which takes the keyboard.
+        var focused = 0;
+        file.PreviewFind.FocusRequested += () => focused++;
+        file.IsPreviewMode = true;
+        Assert.True(file.FindHere());
+        Assert.Equal((1, true, 1), (editorFinds, file.PreviewFind.IsOpen, focused));
+
+        // Edit and preview: whichever has the keyboard.
+        file.PreviewFind.Close();
+        file.IsEditAndPreviewMode = true;
+        var previewHasKeyboard = false;
+        file.PreviewHasKeyboard = () => previewHasKeyboard;
+        Assert.True(file.FindHere());
+        Assert.Equal((2, false), (editorFinds, file.PreviewFind.IsOpen));
+        previewHasKeyboard = true;
+        Assert.True(file.FindHere());
+        Assert.Equal((2, true), (editorFinds, file.PreviewFind.IsOpen));
+
+        // Back to the editor alone, the preview's find goes with the preview.
+        file.IsEditMode = true;
+        Assert.False(file.PreviewFind.IsOpen);
+    }
+
     // ---- The modes -------------------------------------------------------------------------------------------------
 
     [Fact]

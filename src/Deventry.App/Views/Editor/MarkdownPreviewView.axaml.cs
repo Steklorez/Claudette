@@ -1,5 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Deventry.App.Editor;
 using Deventry.App.ViewModels;
@@ -13,7 +16,8 @@ namespace Deventry.App.Views.Editor;
 /// A Markdown file's preview (DESIGN.md §18, "Markdown preview"): LiveMarkdown's renderer in a scroller, Copy on its
 /// code blocks, a heading a link named, and the line at its top. It keeps that line where it is as the preview changes
 /// (an edit above it, an image loading, a narrower pane), and tells its file's view when the user scrolls, so the editor
-/// beside it can follow.
+/// beside it can follow. <c>Ctrl/Cmd+F</c> in it finds in its text (<see cref="PreviewFind"/>), with the matches marked
+/// over it (<see cref="PreviewFindLayer"/>).
 /// </summary>
 public partial class MarkdownPreviewView : UserControl
 {
@@ -58,18 +62,68 @@ public partial class MarkdownPreviewView : UserControl
         {
             _file.Markdown.Shown -= OnShown;
             _file.HeadingRequested -= ScrollToHeading;
+            _file.PreviewFind.FocusRequested -= FocusFindBox;
+            _file.PreviewHasKeyboard = null;
         }
         _file = DataContext as ProjectFileViewModel;
         if (_file is not null)
         {
             _file.Markdown.Shown += OnShown;
             _file.HeadingRequested += ScrollToHeading;
+            _file.PreviewFind.FocusRequested += FocusFindBox;
+            // Ctrl/Cmd+F finds in whichever side has the keyboard (DESIGN.md §18, "Markdown preview", "Finding in the preview").
+            _file.PreviewHasKeyboard = () => IsKeyboardFocusWithin;
         }
+        FindLayer.Attach(_file?.PreviewFind, Renderer, Scroller);
         _map = null;
         _topLine = null;
     }
 
-    private void OnShown() => _changed = true;
+    private void OnShown()
+    {
+        _changed = true;
+        FindLayer.ContentChanged();
+    }
+
+    /// <summary>The find box takes the keyboard, with what it has selected to type over.</summary>
+    private void FocusFindBox() => Dispatcher.UIThread.Post(() =>
+    {
+        FindBox.Focus();
+        FindBox.SelectAll();
+    });
+
+    /// <summary>In the find box: Enter for the next match, Shift+Enter for the one before, Esc closes it.</summary>
+    private void OnFindKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (_file?.PreviewFind is not { } find)
+        {
+            return;
+        }
+        if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.None)
+        {
+            find.NextCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.Shift)
+        {
+            find.PreviousCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
+        {
+            CloseFind();
+            e.Handled = true;
+        }
+    }
+
+    private void OnCloseFind(object? sender, RoutedEventArgs e) => CloseFind();
+
+    /// <summary>The box goes, and the keyboard goes back to the preview, where it was.</summary>
+    private void CloseFind()
+    {
+        _file?.PreviewFind.Close();
+        Scroller.Focus();
+    }
 
     /// <summary>Once what changed has laid out, the map is made again and the line at the top kept there.</summary>
     private void OnLayoutUpdated(object? sender, EventArgs e)

@@ -647,11 +647,8 @@ public partial class ShellView : UserControl
         }
         if (@is(KeyboardShortcuts.Find))
         {
-            if (files.Showing is { ShowsEditor: true } showing)
-            {
-                showing.RequestFind(replace: false);
-            }
-            else
+            // In the editor, or a Markdown file's preview; with neither, a file by name.
+            if (files.Showing?.FindHere() != true)
             {
                 files.StartFind();
             }

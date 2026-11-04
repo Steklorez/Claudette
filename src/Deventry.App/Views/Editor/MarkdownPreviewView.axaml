@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:editor="using:Deventry.App.Views.Editor"
              xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
              x:Class="Deventry.App.Views.Editor.MarkdownPreviewView"
              x:DataType="vm:ProjectFileViewModel"
@@ -8,14 +9,49 @@
              FontFamily="{DynamicResource ConversationFont}">
   <!-- A Markdown file rendered (DESIGN.md §18, "Markdown preview"), as Claude's replies are; its look is in
        Themes/ProjectFilesStyles.axaml. -->
-  <Panel>
-    <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding !Markdown.IsTooLarge}">
-      <Border x:Name="Page" Classes="markdownpage">
-        <!-- A paragraph's lines wrapped in the file are joined, as VS Code and GitHub show it (Views/SoftBreakInlineNode) -->
-        <md:MarkdownRenderer x:Name="Renderer" Classes="joinsoftbreaks" UpdateProducer="{Binding Markdown}" LinkCommand="{Binding OpenLinkCommand}" />
-      </Border>
-    </ScrollViewer>
-    <TextBlock Classes="muted" Margin="16" TextWrapping="Wrap" IsVisible="{Binding Markdown.IsTooLarge}"
-               Text="This file is over 1 MB, too large to preview." />
-  </Panel>
+  <DockPanel>
+    <!-- Find in the preview (DESIGN.md §18, "Markdown preview", "Finding in the preview"): as the editor's find box, Enter
+         for the next match, Shift+Enter the one before, Esc closes -->
+    <Border x:Name="FindBar" DockPanel.Dock="Top" Classes="findbar" IsVisible="{Binding PreviewFind.IsOpen}"
+            TextElement.FontSize="{Binding $parent[Window].FontSize, FallbackValue=14}" TextElement.FontFamily="{DynamicResource UiFont}">
+      <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+        <TextBox x:Name="FindBox" Classes="findbox" PlaceholderText="Find in the preview" Text="{Binding PreviewFind.Query}"
+                 AutomationProperties.Name="Find in the preview" KeyDown="OnFindKeyDown" />
+        <ToggleButton Classes="flat findoption" Content="Aa" IsChecked="{Binding PreviewFind.MatchCase}" ToolTip.Tip="Match case"
+                      AutomationProperties.Name="Match case" />
+        <ToggleButton Classes="flat findoption" Content="W" IsChecked="{Binding PreviewFind.WholeWords}" ToolTip.Tip="Whole words"
+                      AutomationProperties.Name="Whole words" />
+        <ToggleButton Classes="flat findoption" Content=".*" IsChecked="{Binding PreviewFind.IsRegex}" ToolTip.Tip="Regular expression"
+                      AutomationProperties.Name="Regular expression" />
+        <TextBlock Classes="muted small" Text="{Binding PreviewFind.CountText}" VerticalAlignment="Center" MinWidth="64" TextAlignment="Center"
+                   IsVisible="{Binding !PreviewFind.HasProblem}" />
+        <TextBlock Classes="small error" Text="Not a regular expression" VerticalAlignment="Center" ToolTip.Tip="{Binding PreviewFind.Problem}"
+                   IsVisible="{Binding PreviewFind.HasProblem}" />
+        <Button Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding PreviewFind.PreviousCommand}"
+                ToolTip.Tip="Previous match (Shift+Enter)" AutomationProperties.Name="Previous match">
+          <Path Data="{StaticResource IconChevronUp}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="12" Height="12" Stretch="None" />
+        </Button>
+        <Button Classes="flat" Padding="6,4" VerticalAlignment="Center" Command="{Binding PreviewFind.NextCommand}"
+                ToolTip.Tip="Next match (Enter)" AutomationProperties.Name="Next match">
+          <Path Data="{StaticResource IconChevronDown}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="12" Height="12" Stretch="None" />
+        </Button>
+        <Button Classes="flat" Padding="6,4" VerticalAlignment="Center" Click="OnCloseFind"
+                ToolTip.Tip="Close (Esc)" AutomationProperties.Name="Close find">
+          <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+        </Button>
+      </StackPanel>
+    </Border>
+    <Panel>
+      <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding !Markdown.IsTooLarge}">
+        <Border x:Name="Page" Classes="markdownpage">
+          <!-- A paragraph's lines wrapped in the file are joined, as VS Code and GitHub show it (Views/SoftBreakInlineNode) -->
+          <md:MarkdownRenderer x:Name="Renderer" Classes="joinsoftbreaks" UpdateProducer="{Binding Markdown}" LinkCommand="{Binding OpenLinkCommand}" />
+        </Border>
+      </ScrollViewer>
+      <!-- The matches, over the text -->
+      <editor:PreviewFindLayer x:Name="FindLayer" Fill="{DynamicResource FindHighlightBrush}" Current="{DynamicResource AccentStatusBrush}" />
+      <TextBlock Classes="muted" Margin="16" TextWrapping="Wrap" IsVisible="{Binding Markdown.IsTooLarge}"
+                 Text="This file is over 1 MB, too large to preview." />
+    </Panel>
+  </DockPanel>
 </UserControl>

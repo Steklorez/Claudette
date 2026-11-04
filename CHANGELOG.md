@@ -22,6 +22,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **Unity's JSON log.** When Unity 6 writes its JSON log, `Editor.jsonl`, with its logging framework's JSON logging on, the tab shows that one in place of `Editor.log`: each entry with its time, category and level in columns, its stack trace under it, and the log's **Categories** filter for the categories it names. Settings → Project tools → Unity → **Prefer JSON logging**, on to begin with, turns it off. See [Unity's JSON log](https://deventry.app/project-tools/editor-logs/#unitys-json-log).
 
+- **Find in a Markdown file's preview.** `Ctrl+F` (`⌘F`) in the preview finds text in it, as in the editor: every match marked, the one you're on outlined, *3 of 12*, `Enter` and `Shift+Enter` to go from one to the next, and **Aa**, **W** and **.\*** for match case, whole words and regular expressions. In **Edit and preview** it finds on whichever side has the keyboard. See [Finding in the preview](https://deventry.app/project-files/markdown-files/#finding-in-the-preview).
+
 ### Changed
 
 - **The Games icon is always on the strip.** While games are on, its icon stays at the window's right, game or no game, so you can start one at any time: with none open, its window lists the four, each with your score so far. **Done playing** goes back to that list. See [Games with Joulene](https://deventry.app/joulene/games-with-joulene/).

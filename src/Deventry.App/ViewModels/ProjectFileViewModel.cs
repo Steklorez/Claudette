@@ -906,6 +906,11 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
             Diff = null;
         }
         UpdatePreview();
+        if (!ShowsPreview)
+        {
+            // Find in the preview goes with it.
+            PreviewFind.Close();
+        }
         _owner.OnFileStateChanged();
     }
 
@@ -1231,6 +1236,31 @@ public sealed partial class ProjectFileViewModel : ViewModelBase, IMarkdownHost,
     }
 
     internal void RequestFind(bool replace) => FindRequested?.Invoke(replace);
+
+    /// <summary>Finding in a Markdown file's preview (DESIGN.md §18, "Markdown preview", "Finding in the preview").</summary>
+    public PreviewFind PreviewFind => field ??= new();
+
+    /// <summary>Set by the preview's view: whether the keyboard is in the preview, rather than in the editor beside it.</summary>
+    internal Func<bool>? PreviewHasKeyboard { get; set; }
+
+    /// <summary>
+    /// <c>Ctrl/Cmd+F</c> on the file: finds in the preview while it shows alone, or beside the editor with the keyboard in
+    /// it; else in the editor. False where there's neither to find in, as in the diff views.
+    /// </summary>
+    internal bool FindHere()
+    {
+        if (ShowsPreview && (!ShowsEditor || PreviewHasKeyboard?.Invoke() == true))
+        {
+            PreviewFind.Open();
+            return true;
+        }
+        if (ShowsEditor)
+        {
+            RequestFind(replace: false);
+            return true;
+        }
+        return false;
+    }
 
     internal void RequestGoToLine() => GoToLineRequested?.Invoke();
 

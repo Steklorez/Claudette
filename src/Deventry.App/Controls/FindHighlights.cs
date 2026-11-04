@@ -111,7 +111,7 @@ public sealed class FindHighlights : Control
     /// The text as <paramref name="layout"/> laid it out, each character at the index its hit tests use: a run without
     /// text of its own, such as an inline control or a line's end, stands as placeholders the query can't match.
     /// </summary>
-    private static string LaidOutText(TextLayout layout)
+    internal static string LaidOutText(TextLayout layout)
     {
         if (layout.TextLines.Count == 0)
         {
