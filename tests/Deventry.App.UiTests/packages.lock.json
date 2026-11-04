@@ -437,7 +437,7 @@
           "Avalonia.Controls.ColorPicker": "[12.1.5, )",
           "Avalonia.Desktop": "[12.1.5, )",
           "Avalonia.Fonts.Inter": "[12.1.5, )",
-          "Avalonia.Themes.Fluent": "[12.1.4, )",
+          "Avalonia.Themes.Fluent": "[12.1.5, )",
           "AvaloniaEdit.TextMate": "[12.0.0, )",
           "AvaloniaUI.DiagnosticsSupport": "[2.2.3, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
@@ -446,8 +446,8 @@
           "Deventry.Usage": "[1.0.0, )",
           "LiveMarkdown.Avalonia": "[2.5.1, )",
           "SkiaSharp": "[3.119.4, )",
-          "TextMateSharp": "[2.0.4, )",
-          "TextMateSharp.Grammars": "[2.0.4, )"
+          "TextMateSharp": "[2.0.5, )",
+          "TextMateSharp.Grammars": "[2.0.5, )"
         }
       },
       "deventry.core": {
@@ -526,11 +526,11 @@
       },
       "Avalonia.Themes.Fluent": {
         "type": "CentralTransitive",
-        "requested": "[12.1.4, )",
-        "resolved": "12.1.4",
-        "contentHash": "vx7P4as07WLQqA2mhMy4iBsqhkWEGwZI7g9Rd2DlJgz3uKS2tSvY6nZqHq3sWMFDBYBT65jkTsetPrgV8oprsQ==",
+        "requested": "[12.1.5, )",
+        "resolved": "12.1.5",
+        "contentHash": "FGjtJEpeVIbth+u4r507c9nbm1NQWLTvT3RC4e/yqDceRC4crAl37zVUloElA6rexDz69y0WvDfMLGX+t12yBQ==",
         "dependencies": {
-          "Avalonia": "12.1.4"
+          "Avalonia": "12.1.5"
         }
       },
       "AvaloniaEdit.TextMate": {
@@ -605,20 +605,20 @@
       },
       "TextMateSharp": {
         "type": "CentralTransitive",
-        "requested": "[2.0.4, )",
-        "resolved": "2.0.4",
-        "contentHash": "5Pvn+A4zb1IF+ACAVhgw1aGf9kTyx6j7v5hdup7nCS89Nzby8KQAlCfQ54VC/GAsEoQwh4zKa5MKlAaql8nkPg==",
+        "requested": "[2.0.5, )",
+        "resolved": "2.0.5",
+        "contentHash": "nzoxbQsoB1jNtZVTF+bwc4/hbC3L8RDvWkjvV00p5o0MzViyHYPFxWo3wUXIrpH00it6cEFw7h6hbT9jJX0aeg==",
         "dependencies": {
           "Onigwrap": "1.0.11"
         }
       },
       "TextMateSharp.Grammars": {
         "type": "CentralTransitive",
-        "requested": "[2.0.4, )",
-        "resolved": "2.0.4",
-        "contentHash": "jzOY00q5u5Vs4L9n2m2PnRZDGwWt2uwkOLh7qlVdCx1kkGSn5eaW5XgnYCyTzEbsCwLV2xlEolnNkr/wuIMAbA==",
+        "requested": "[2.0.5, )",
+        "resolved": "2.0.5",
+        "contentHash": "s7YZZokJxVtKeWyU3xc11lDJwZpKZfRZt82+5YVALZr+R4bhhxd9o2yDqyywyAMQvYBMIug7IDcmGa/T/MUXbA==",
         "dependencies": {
-          "TextMateSharp": "2.0.4"
+          "TextMateSharp": "2.0.5"
         }
       }
     }
