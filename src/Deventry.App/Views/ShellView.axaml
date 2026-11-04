@@ -929,7 +929,7 @@
                                       <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
                                         <TextBlock Classes="status runglyph" Classes.busy="{Binding Node.IsRunning}" Classes.alert="{Binding Node.IsWaiting}"
                                                    Classes.ok="{Binding Node.IsDone}" Classes.failed="{Binding Node.IsFailed}"
-                                                   Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                                                   Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="{Binding ShowsStatusGlyph}" />
                                         <StackPanel Grid.Column="1">
                                           <DockPanel>
                                             <Path DockPanel.Dock="Left" Classes="agentrowicon" Data="{StaticResource IconToolAgent}" />

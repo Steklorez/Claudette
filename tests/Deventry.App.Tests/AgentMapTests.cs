@@ -340,6 +340,8 @@ public class AgentMapTests
         // Its row under the tab runs the same highlight.
         var row = tab.SubagentRows.Single();
         Assert.True(row.ShowsWorkBar);
+        // No status glyph with colored rows, as on the tab's row: the wash says it.
+        Assert.False(row.ShowsStatusGlyph);
         Assert.False(row.ShowsDoneBar);
 
         h.Transport.Emit(Wire.Notification("task-bg", "bg", "completed", "Slept well.", tokens: 1200, toolUses: 1, durationMs: 20500));

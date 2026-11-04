@@ -48,6 +48,9 @@ public sealed partial class SubagentRowViewModel : ObservableObject
 
     public bool ShowsWaitBlink => _tab.UsesBars && Node.IsWaiting;
 
+    /// <summary>The status glyph before the row's icon: only with Tab activity's dots, as on the tab's row; with colored rows the wash says it.</summary>
+    public bool ShowsStatusGlyph => !_tab.UsesBars;
+
     public bool ShowsDoneBar => _tab.UsesBars && Node.IsDone && !IsSeen;
 
     public bool ShowsErrorBar => _tab.UsesBars && Node.IsFailed && !IsSeen;
@@ -74,6 +77,7 @@ public sealed partial class SubagentRowViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowsWaitBlink));
         OnPropertyChanged(nameof(ShowsDoneBar));
         OnPropertyChanged(nameof(ShowsErrorBar));
+        OnPropertyChanged(nameof(ShowsStatusGlyph));
     }
 
     /// <summary>The tab has rows from earlier turns, for the menu's <b>Dismiss earlier subagents</b>.</summary>
