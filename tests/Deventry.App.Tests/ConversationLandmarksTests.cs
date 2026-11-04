@@ -24,6 +24,29 @@ public class ConversationLandmarksTests
         Assert.Equal("1 file changed", ConversationLandmarks.Describe(turn));
     }
 
+    /// <summary>
+    /// Settings → Conversation → Marks in the scroll bar (issue #99): your messages unless they're turned off, and Claude's
+    /// answers, its replies that a tool call didn't follow, once they're turned on.
+    /// </summary>
+    [Fact]
+    public void Your_messages_and_Claudes_answers_are_marked_as_settings_say()
+    {
+        var answer = new AssistantTextItem();
+        answer.Append("All the tests pass.");
+        var carriedOn = new AssistantTextItem { IsIntermediate = true };
+        carriedOn.Append("Let me read the file.");
+        var you = new UserMessageItem("fix it");
+
+        Assert.Null(ConversationLandmarks.KindOf(answer));
+        Assert.Equal(LandmarkKind.Answer, ConversationLandmarks.KindOf(answer, answers: true));
+        Assert.Null(ConversationLandmarks.KindOf(carriedOn, answers: true));
+        // One that hasn't said anything yet has nothing to go back to.
+        Assert.Null(ConversationLandmarks.KindOf(new AssistantTextItem(), answers: true));
+        Assert.Equal(LandmarkKind.Prompt, ConversationLandmarks.KindOf(you, answers: true));
+        Assert.Null(ConversationLandmarks.KindOf(you, yourMessages: false, answers: true));
+        Assert.Equal("Claude: All the tests pass.", ConversationLandmarks.Describe(answer));
+    }
+
     [Fact]
     public void F3_and_F4_go_between_your_messages_and_Claudes_replies()
     {

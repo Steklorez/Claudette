@@ -72,6 +72,8 @@ The page starts with a preview that shows your choices as you make them.
 | **Show thinking expanded** | Steps and replies | Off | Yes | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
 | **Show subagents' work** | Steps and replies | Under the tab in the sidebar | Yes | No | [Subagents](../conversation/subagents.md#subagents-under-their-tab) |
 | **Show every hook run** | Steps and replies | Off | No | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
+| **Mark your messages** | Marks in the scroll bar | On | Yes | No | [Finding your way](../conversation/finding-your-way.md#marks-in-the-scroll-bar) |
+| **Mark Claude's answers** | Marks in the scroll bar | Off | Yes | No | [Finding your way](../conversation/finding-your-way.md#marks-in-the-scroll-bar) |
 | **Show fun words** | While Claude works | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Show what Claude is doing** | While Claude works | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Messages sent while Claude works** | While Claude works | Send them into the turn (the other choice queues them) | No | No | [Sending and stopping](../composer/sending-and-stopping.md) |

@@ -259,6 +259,11 @@ public partial class TabView : UserControl
         {
             OnShownListChanged();
         }
+        else if (e.PropertyName is nameof(TabViewModel.MarksYourMessages) or nameof(TabViewModel.MarksClaudesAnswers))
+        {
+            UpdateMarks(_main);
+            UpdateMarks(_agent);
+        }
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -383,7 +388,7 @@ public partial class TabView : UserControl
             var brushes = new Dictionary<LandmarkKind, IBrush>();
             for (var i = 0; i < items.Count; i++)
             {
-                if (ConversationLandmarks.KindOf(items[i]) is not { } kind)
+                if (ConversationLandmarks.KindOf(items[i], _tab.MarksYourMessages, _tab.MarksClaudesAnswers) is not { } kind)
                 {
                     continue;
                 }
@@ -404,6 +409,7 @@ public partial class TabView : UserControl
         this.FindResource(ActualThemeVariant, kind switch
         {
             LandmarkKind.Prompt => "CardYouStripeBrush",
+            LandmarkKind.Answer => "CardClaudeStripeBrush",
             LandmarkKind.Waiting => "MeterWarningBrush",
             LandmarkKind.Error => "ErrorTextBrush",
             _ => "CardFilesStripeBrush",

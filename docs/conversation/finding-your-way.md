@@ -13,9 +13,12 @@ A long conversation can run to thousands of cards. Deventry marks the ones you a
 While the conversation scrolls, its scroll bar marks where things are, as JetBrains Rider's does, each mark as wide as the bar: a thin line while it rests, and wider once you point at it:
 
 - your messages, in the **You** card's color;
+- Claude's answers, in the **Claude** card's color, once you turn them on: its replies to you, not the ones it carried on after with a tool call;
 - prompts waiting for you, in amber;
 - errors, in red;
 - turns that changed files, in the **Modified files** card's color.
+
+Settings → Conversation → **Marks in the scroll bar** has **Mark your messages** (on to begin with) and **Mark Claude's answers** (off). A change shows in every tab at once.
 
 Each mark sits where its card is in the conversation's height. Hover one to see what it is, and click it to go there. The marks stay put as you scroll. Just after a long conversation opens, or the window changes width, they settle for a moment while Deventry measures the cards out of view. The scroll bar works as ever: drag its thumb, even over a mark, or click the track between marks to page up or down.
 

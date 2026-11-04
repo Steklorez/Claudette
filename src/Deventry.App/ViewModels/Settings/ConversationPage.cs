@@ -45,6 +45,15 @@ public sealed class ConversationPage : SettingsPage
             Setting("claudeCode.showAllHookRuns", "Show every hook run", s => s.ClaudeCode.ShowAllHookRuns, (s, v) => s.ClaudeCode.ShowAllHookRuns = v,
                 "Off, only hooks that fail, or print something while they run, get a row.", keywords: ["hooks"]),
         ]);
+        Section("scrollMarks", "Marks in the scroll bar",
+        [
+            Setting("appearance.markYourMessages", "Mark your messages", s => s.Appearance.MarkYourMessages, (s, v) => s.Appearance.MarkYourMessages = v,
+                "A mark in your messages' color beside the scroll bar where each one is, to click to go there.",
+                keywords: ["scroll bar", "ticks", "marks", "you", "prompts", "minimap"]),
+            Setting("appearance.markClaudesAnswers", "Mark Claude's answers", s => s.Appearance.MarkClaudesAnswers, (s, v) => s.Appearance.MarkClaudesAnswers = v,
+                "A mark in Claude's color where each of its answers is: its replies to you, not the ones it carried on after with a tool call.",
+                keywords: ["scroll bar", "ticks", "marks", "claude", "replies", "responses", "answers", "minimap"]),
+        ], description: "Waiting prompts, errors and turns that changed files are always marked.");
         Section("working", "While Claude works",
         [
             Setting("appearance.funWorkingWords", "Show fun words", s => s.Appearance.FunWorkingWords, (s, v) => s.Appearance.FunWorkingWords = v,
@@ -121,6 +130,20 @@ public sealed class ConversationPage : SettingsPage
     {
         get => Settings.Appearance.CollapseToolCalls;
         set => Set(value, v => Settings.Appearance.CollapseToolCalls = v);
+    }
+
+    /// <summary>The scroll bar marks your messages (DESIGN.md §18, "Conversation cards").</summary>
+    public bool MarkYourMessages
+    {
+        get => Settings.Appearance.MarkYourMessages;
+        set => Set(value, v => Settings.Appearance.MarkYourMessages = v);
+    }
+
+    /// <summary>The scroll bar marks Claude's answers (DESIGN.md §18, "Conversation cards").</summary>
+    public bool MarkClaudesAnswers
+    {
+        get => Settings.Appearance.MarkClaudesAnswers;
+        set => Set(value, v => Settings.Appearance.MarkClaudesAnswers = v);
     }
 
     public bool ExpandThinking

@@ -34,6 +34,16 @@
       </c:SettingRow>
     </c:SettingsSection>
 
+    <!-- What the conversation's scroll bar marks (DESIGN.md §18, "Conversation cards", "Marks in the scroll bar") -->
+    <c:SettingsSection Key="scrollMarks">
+      <c:SettingRow Key="appearance.markYourMessages">
+        <ToggleSwitch IsChecked="{Binding MarkYourMessages}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.markClaudesAnswers">
+        <ToggleSwitch IsChecked="{Binding MarkClaudesAnswers}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
     <!-- The working line (DESIGN.md §5, "Working line") and queued messages (DESIGN.md §5, "Queued messages") -->
     <c:SettingsSection Key="working">
       <c:SettingRow Key="appearance.funWorkingWords">

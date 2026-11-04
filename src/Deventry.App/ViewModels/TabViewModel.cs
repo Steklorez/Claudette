@@ -931,6 +931,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
     }
 
+    /// <summary>The conversation's scroll bar marks your messages, as Settings → Conversation says (DESIGN.md §18, "Conversation cards").</summary>
+    public bool MarksYourMessages => _services.Settings.Appearance.MarkYourMessages;
+
+    /// <summary>The conversation's scroll bar marks Claude's answers, as Settings → Conversation says.</summary>
+    public bool MarksClaudesAnswers => _services.Settings.Appearance.MarkClaudesAnswers;
+
     /// <summary>Settings changed, for example the quick suffix list was edited.</summary>
     public void OnSettingsChanged()
     {
@@ -947,6 +953,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnUsageCreditsChoiceChanged();
         Perforce.OnSettingsChanged();
         ProjectTools.OnSettingsChanged();
+        OnPropertyChanged(nameof(MarksYourMessages));
+        OnPropertyChanged(nameof(MarksClaudesAnswers));
         OnGamesSettingsChanged();
         OnSubagentDisplayChanged();
         OnBranchChanged();

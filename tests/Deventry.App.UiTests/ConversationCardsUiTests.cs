@@ -436,6 +436,51 @@ public sealed class ConversationCardsUiTests
         window.Close();
     }
 
+    /// <summary>
+    /// Settings → Conversation → Marks in the scroll bar (issue #99): Claude's answers get marks in its color once turned
+    /// on, the replies it carried on after with a tool call don't, and your messages' go once turned off, at once.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_scroll_bar_marks_Claudes_answers_and_your_messages_as_settings_say()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.Items.Add(new UserMessageItem("Fix the build"));
+        var carriedOn = new AssistantTextItem { IsStreaming = false, IsIntermediate = true };
+        carriedOn.Append("Let me look at the log.");
+        tab.Items.Add(carriedOn);
+        for (var i = 0; i < 150; i++)
+        {
+            tab.Items.Add(new NoteItem($"Note {i}", NoteKind.Info));
+        }
+        var answer = new AssistantTextItem { IsStreaming = false };
+        answer.Append("The build passes now.");
+        tab.Items.Add(answer);
+        for (var i = 0; i < 150; i++)
+        {
+            tab.Items.Add(new NoteItem($"Later note {i}", NoteKind.Info));
+        }
+        UiText.Settle(window);
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var marks = view.GetVisualDescendants().OfType<ScrollMarks>().Single(m => m.Name == "ScrollMarks");
+        await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 1, "your message's mark");
+        Assert.Equal([0], marks.Marks.Select(m => m.Index));
+
+        h.Services.Settings.Appearance.MarkClaudesAnswers = true;
+        h.Services.SaveSettings();
+        await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 2, "the answer's mark");
+        Assert.Equal([0, 152], marks.Marks.Select(m => m.Index));
+        Assert.Equal("Claude: The build passes now.", marks.Marks[1].Tip);
+        Assert.Equal(((ISolidColorBrush)view.FindResource(view.ActualThemeVariant, "CardClaudeStripeBrush")!).Color, ((ISolidColorBrush)marks.Marks[1].Brush).Color);
+
+        h.Services.Settings.Appearance.MarkYourMessages = false;
+        h.Services.SaveSettings();
+        await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 1, "only the answer's mark");
+        Assert.Equal([152], marks.Marks.Select(m => m.Index));
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task An_open_thinking_card_ends_where_the_thinking_does_whatever_blank_lines_it_ends_with()
     {
