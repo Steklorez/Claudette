@@ -71,11 +71,11 @@ The sidebar groups the chapters into sections (`docs/guide/<section>.md`), in th
 
 ### Home (`docs/index.html`)
 
-The landing page ([The site](#1-the-site)): what Deventry is, an ADE made for Claude Code first, its latest release's packages (until 1.0.0 is out, that it's coming soon, with Claudette's on the Downloads page) and building it on Linux, how light it is on tokens by default, what it does for game developers, a tour of its main features with pictures, its two styles, Joulene, the systems it runs on, and where to start. From [§1](DESIGN.md#1-goals) and the README.
+The landing page ([The site](#1-the-site)): what Deventry is, an ADE made for Claude Code first, its latest release's packages and building it on Linux, how light it is on tokens by default, what it does for game developers, a tour of its main features with pictures, its two styles, Joulene, the systems it runs on, and where to start. From [§1](DESIGN.md#1-goals) and the README.
 
 ### Downloads (`docs/downloads.md`)
 
-One page, second in the sidebar: the latest release's packages (until Deventry has one, 1.0.0 as coming soon), the next version when a pre-release is newer, every earlier release, and Claudette's releases in a section of their own. Made from the releases ([Downloads and the changelog](#5-downloads-and-the-changelog)).
+One page, second in the sidebar: the latest release's packages, the next version when a pre-release is newer, every earlier release, and Claudette's releases in a section of their own. Made from the releases ([Downloads and the changelog](#5-downloads-and-the-changelog)).
 
 ### Privacy policy (`docs/privacy-policy.md`)
 
@@ -338,7 +338,7 @@ The Downloads page is made from the repository's releases rather than written, a
   - **macOS**: **Apple silicon** and **Intel**, the `.dmg` files.
   - **Linux**: no package, and a link to Getting started → **Installing on Linux**.
   - Each package shows its file's name and size, and its SHA-256 digest, for anyone who wants to check the file (`Get-FileHash` in PowerShell, `shasum -a 256` on a Mac). Deventry's own updates check it themselves ([Updating Deventry](DESIGN.md#updating-deventry)).
-- **Until Deventry 1.0.0 is out**, its place says *Coming soon*: it's the first version under Deventry's own name, the latest release meanwhile is Claudette's (below), and Claudette updates itself to it on Windows while a Mac installs it by hand once (Updates → **Deventry's updates**, "Coming from Claudette").
+- **Coming from Claudette.** Claudette updates itself to Deventry on Windows, and a Mac installs Deventry by hand once (Updates → **Deventry's updates**, "Coming from Claudette"). Until 1.0.0 was out, the latest release's place said *Coming soon*.
 - **Which one you need.** On Windows, Settings → System → About → **System type**. On a Mac, Apple menu → **About This Mac** → **Chip**: an Apple M-series chip is Apple silicon.
 - **The next version**, when a pre-release is newer than the latest release: in a box of its own, marked as a pre-release, saying that Deventry offers pre-releases only with Settings → General → **Include pre-releases**.
 - **Earlier releases** of Deventry, newest first: each with its date, its packages, and a link to its release. The heading shows once there's more than one.

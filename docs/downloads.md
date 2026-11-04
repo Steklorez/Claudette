@@ -32,11 +32,6 @@ Deventry comes as an MSIX package for Windows and a `.dmg` for macOS, each for t
 Released {{ latest.published_at | date: "%-d %B %Y" }}. [What's new]({{ latest.html_url }}), and every version's changes in the [changelog](https://github.com/dotBunny/Deventry/blob/main/CHANGELOG.md).
 
 {% include release.html release=latest buttons=true %}
-{% else %}
-## Deventry 1.0.0
-{: #latest }
-
-**Coming soon.** Deventry 1.0.0 is the first version under Deventry's own name. Until it's out, the latest release is [Claudette's](#claudette), below: Deventry's name before 1.0.0. On Windows, Claudette updates itself to Deventry when it's released; on a Mac, install Deventry by hand that once ([Coming from Claudette](updates/deventrys-updates.md#coming-from-claudette)).
 {% endif %}
 
 - **Windows:** **x64** for most PCs with an Intel or AMD processor, **Arm64** for a Snapdragon or other Arm processor. Settings → System → About → **System type** says which yours is.
@@ -86,7 +81,7 @@ Released {{ release.published_at | date: "%-d %B %Y" }}. [Its notes]({{ release.
 ## Claudette
 {: #claudette }
 
-Before 1.0.0, Deventry was called Claudette. These are Claudette's releases, newest first. Each still updates itself to the latest version, Deventry's once it's out, except on a Mac, where Deventry is installed by hand once ([Coming from Claudette](updates/deventrys-updates.md#coming-from-claudette)).
+Before 1.0.0, Deventry was called Claudette. These are Claudette's releases, newest first. Each still updates itself to Deventry's latest version, except on a Mac, where Deventry is installed by hand once ([Coming from Claudette](updates/deventrys-updates.md#coming-from-claudette)).
 
 {% for release in releases %}
 {%- assign major = release.tag_name | remove_first: "v" | split: "." | first | plus: 0 -%}

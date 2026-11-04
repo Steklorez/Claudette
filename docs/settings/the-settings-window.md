@@ -72,7 +72,7 @@ No **Reset to defaults** touches a project's files or the choices Deventry remem
 
 ## The version and Help
 
-The foot of the sidebar shows which Deventry this is, such as "Deventry 0.7.0". A copy built from a source checkout adds the commit it was built from.
+The foot of the sidebar shows which Deventry this is, such as "Deventry 1.0.0". A copy built from a source checkout adds the commit it was built from.
 
 - **Click the version** to copy the versions for a bug report: Deventry's, and how it was installed, Claude Code's, your OS and the .NET runtime it runs on. It says "Copied" for two seconds. It holds only versions, never paths, names or account details, so it's safe to post.
 - **Help**, the question mark beside it, has:

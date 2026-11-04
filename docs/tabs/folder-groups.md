@@ -125,8 +125,6 @@ With it on:
 
 ### Removing past sessions
 
-{% include unreleased.html %}
-
 To take a session you're done with off the sidebar, point at it and click the **×** at its right, or right-click it and choose **Remove from the sidebar**. To take all of a folder's at once, right-click the group's label: a group showing only past sessions ends its menu with **Remove from the sidebar**, which takes them all and the group with them. A group with tabs open has **Remove past sessions** there instead, and stays, with its tabs. Removing a group's last past session with its **×** hides the project too.
 
 - Only the sidebar forgets them. [History](../history/history.md) still lists every one, and nothing is deleted.

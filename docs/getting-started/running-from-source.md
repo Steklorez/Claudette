@@ -64,7 +64,7 @@ Stop Deventry by closing its window, not by killing the process. Closing interru
 
 ## Which build is this
 
-The foot of the Settings sidebar shows the version and, for a source build, the commit it was built from, such as `Deventry 0.7.0 · 842169b`. Hover it to see which configuration it was built in. Click it to copy the versions for a bug report: see [Reporting an issue](../troubleshooting/reporting-an-issue.md).
+The foot of the Settings sidebar shows the version and, for a source build, the commit it was built from, such as `Deventry 1.0.0 · 842169b`. Hover it to see which configuration it was built in. Click it to copy the versions for a bug report: see [Reporting an issue](../troubleshooting/reporting-an-issue.md).
 
 ## Keeping it apart from your own Deventry
 
