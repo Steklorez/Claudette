@@ -51,6 +51,11 @@ public sealed partial class SubagentRowViewModel : ObservableObject
     /// <summary>The status glyph before the row's icon: only with Tab activity's dots, as on the tab's row; with colored rows the wash says it.</summary>
     public bool ShowsStatusGlyph => !_tab.UsesBars;
 
+    /// <summary>The glyph's column: none with colored rows, so the row and its wash start at the agents icon.</summary>
+    public Avalonia.Controls.GridLength GlyphWidth => new(ShowsStatusGlyph ? 12 : 0);
+
+    public double GlyphSpacing => ShowsStatusGlyph ? 6 : 0;
+
     public bool ShowsDoneBar => _tab.UsesBars && Node.IsDone && !IsSeen;
 
     public bool ShowsErrorBar => _tab.UsesBars && Node.IsFailed && !IsSeen;
@@ -78,6 +83,8 @@ public sealed partial class SubagentRowViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowsDoneBar));
         OnPropertyChanged(nameof(ShowsErrorBar));
         OnPropertyChanged(nameof(ShowsStatusGlyph));
+        OnPropertyChanged(nameof(GlyphWidth));
+        OnPropertyChanged(nameof(GlyphSpacing));
     }
 
     /// <summary>The tab has rows from earlier turns, for the menu's <b>Dismiss earlier subagents</b>.</summary>

@@ -280,6 +280,10 @@
     <Style Selector="Border.rowglow">
       <Setter Property="CornerRadius" Value="4" />
     </Style>
+    <!-- A subagent's row: the wash starts at its icon, under its tab's name, rather than out in the row's padding -->
+    <Style Selector="controls|WorkBar.agentglow, Border.agentglow">
+      <Setter Property="Margin" Value="-2,-2,-4,-2" />
+    </Style>
     <Style Selector=":is(Window).reducemotion controls|WorkBar">
       <Setter Property="IsStill" Value="True" />
     </Style>
