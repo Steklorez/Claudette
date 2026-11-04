@@ -69,6 +69,7 @@ The page starts with a preview that shows your choices as you make them.
 | **Indent Claude's steps** | Steps and replies | Off | Yes | No | [Reading the conversation](../conversation/reading-the-conversation.md#indent-your-messages) |
 | **Fold each chain of steps** | Steps and replies | Off | Yes | **Steps** | [Tool calls](../conversation/tool-calls.md#folding-a-chain-of-steps) |
 | **Show tool calls collapsed** | Steps and replies | Off | Yes | No | [Tool calls](../conversation/tool-calls.md#folding-the-calls) |
+| **Show modified files collapsed** | Steps and replies | Off | Yes | No | [The end of a turn](../conversation/the-end-of-a-turn.md#folding-the-files) |
 | **Show thinking expanded** | Steps and replies | Off | Yes | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
 | **Show subagents' work** | Steps and replies | Under the tab in the sidebar | Yes | No | [Subagents](../conversation/subagents.md#subagents-under-their-tab) |
 | **Show every hook run** | Steps and replies | Off | No | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |

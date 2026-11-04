@@ -361,6 +361,12 @@ public sealed class TabState
     /// </summary>
     public bool? CollapseToolCalls { get; set; }
 
+    /// <summary>
+    /// Whether new Modified files cards in this tab start collapsed, as <b>Collapse all modified files</b> or <b>Expand all
+    /// modified files</b> last left it, or null for Settings → Conversation, as <see cref="CollapseToolCalls"/>.
+    /// </summary>
+    public bool? CollapseModifiedFiles { get; set; }
+
     public TokenTotals Tokens { get; set; } = new();
 
     /// <summary>

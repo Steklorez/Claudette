@@ -102,6 +102,25 @@ public sealed class ConversationBuilder
     private bool _collapseToolCalls;
 
     /// <summary>
+    /// Start new Modified files cards collapsed to their header line (Settings → Conversation, or the tab's own choice from
+    /// a card's menu), as <see cref="CollapseToolCalls"/> starts Tool calls cards.
+    /// </summary>
+    public bool CollapseModifiedFiles { get; set; }
+
+    /// <summary>
+    /// <b>Collapse all modified files</b> or <b>Expand all modified files</b> (DESIGN.md §18): every Modified files card,
+    /// and the ones still to come.
+    /// </summary>
+    public void CollapseAllModifiedFiles(bool collapsed)
+    {
+        CollapseModifiedFiles = collapsed;
+        foreach (var turn in Items.OfType<TurnSummaryItem>())
+        {
+            turn.IsFilesCollapsed = collapsed;
+        }
+    }
+
+    /// <summary>
     /// Fold each run of steps into one line (Settings → Conversation → Fold each chain of steps). A subagent's builder
     /// asks the builder that made it.
     /// </summary>
@@ -972,6 +991,7 @@ public sealed class ConversationBuilder
         AddTurnDocs();
         if (TurnSummaryItem.For(result, usage, _modelName, toolCalls) is { } summary)
         {
+            summary.IsFilesCollapsed = CollapseModifiedFiles;
             if (Clock is { } clock)
             {
                 summary.Stamp(Now(), clock);

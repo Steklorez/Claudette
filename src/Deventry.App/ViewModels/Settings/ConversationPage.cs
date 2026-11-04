@@ -32,6 +32,10 @@ public sealed class ConversationPage : SettingsPage
                 "Each Tool calls card starts as its header line, rather than with its tiles open.",
                 "A click on a card's header line, or the chevron after its count, opens it. Right-click a card for Collapse all tool calls or Expand all tool calls, which changes every card in that tab and the ones to come, as thinking's menu does.",
                 ["tools", "tiles", "fold", "expand", "collapse"]),
+            Setting("appearance.collapseModifiedFiles", "Show modified files collapsed", s => s.Appearance.CollapseModifiedFiles, (s, v) => s.Appearance.CollapseModifiedFiles = v,
+                "Each Modified files card at the end of a turn starts as its header line, rather than with its files' tiles open.",
+                "A click on a card's header line, or the chevron after its count, opens it. Right-click a card for Collapse all modified files or Expand all modified files, which changes every card in that tab and the ones to come.",
+                ["files", "changed", "tiles", "fold", "expand", "collapse", "turn"]),
             Setting("appearance.foldChains", "Fold each chain of steps", s => s.Appearance.FoldChains, (s, v) => s.Appearance.FoldChains = v,
                 "Claude's thinking and tool calls between two messages fold into one, such as “7 steps · 18m 43s” on Claude's reply, which opens them inside the card.",
                 "A click on the line opens a list of the steps, a line each, which scrolls once it's long; each line opens to what Claude thought or what the call did. While Claude works, the last step stays under the line. Each tab can fold its steps or show them all for itself, from Steps in its menu or the message box's bar.",
@@ -144,6 +148,13 @@ public sealed class ConversationPage : SettingsPage
     {
         get => Settings.Appearance.MarkClaudesAnswers;
         set => Set(value, v => Settings.Appearance.MarkClaudesAnswers = v);
+    }
+
+    /// <summary>Modified files cards start folded to their header line (DESIGN.md §18, "Conversation cards").</summary>
+    public bool CollapseModifiedFiles
+    {
+        get => Settings.Appearance.CollapseModifiedFiles;
+        set => Set(value, v => Settings.Appearance.CollapseModifiedFiles = v);
     }
 
     public bool ExpandThinking

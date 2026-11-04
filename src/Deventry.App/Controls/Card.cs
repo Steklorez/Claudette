@@ -52,6 +52,8 @@ public sealed class Card : ContentControl
 
     public static readonly StyledProperty<ICommand?> ToggleCommandProperty = AvaloniaProperty.Register<Card, ICommand?>(nameof(ToggleCommand));
 
+    public static readonly StyledProperty<string> ToggleTipProperty = AvaloniaProperty.Register<Card, string>(nameof(ToggleTip), "Show or hide the calls");
+
     static Card()
     {
         IsCollapsedProperty.Changed.AddClassHandler<Card>((card, e) => card.PseudoClasses.Set(":collapsed", e.GetNewValue<bool>()));
@@ -177,6 +179,13 @@ public sealed class Card : ContentControl
     {
         get => GetValue(ToggleCommandProperty);
         set => SetValue(ToggleCommandProperty, value);
+    }
+
+    /// <summary>The chevron's tip and name for a screen reader: what it shows or hides, such as the calls or the files.</summary>
+    public string ToggleTip
+    {
+        get => GetValue(ToggleTipProperty);
+        set => SetValue(ToggleTipProperty, value);
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)

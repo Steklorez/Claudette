@@ -170,7 +170,7 @@
               <DockPanel Grid.Column="3" HorizontalAlignment="Left">
                 <Button Name="PART_Toggle" DockPanel.Dock="Right" Classes="flat" Padding="2" Margin="4,-3,0,-3" VerticalAlignment="Center"
                         Command="{TemplateBinding ToggleCommand}" IsVisible="{TemplateBinding IsCollapsible}"
-                        AutomationProperties.Name="Show or hide the calls" ToolTip.Tip="Show or hide the calls">
+                        AutomationProperties.Name="{TemplateBinding ToggleTip}" ToolTip.Tip="{TemplateBinding ToggleTip}">
                   <Panel>
                     <Path Classes="toolicon" Data="{DynamicResource IconChevronRight}" IsVisible="{TemplateBinding IsCollapsed}" />
                     <Path Classes="toolicon" Data="{DynamicResource IconChevronDown}" IsVisible="{TemplateBinding IsCollapsed, Converter={x:Static BoolConverters.Not}}" />

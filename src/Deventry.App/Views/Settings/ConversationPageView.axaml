@@ -19,6 +19,9 @@
       <c:SettingRow Key="appearance.collapseToolCalls">
         <ToggleSwitch IsChecked="{Binding CollapseToolCalls}" />
       </c:SettingRow>
+      <c:SettingRow Key="appearance.collapseModifiedFiles">
+        <ToggleSwitch IsChecked="{Binding CollapseModifiedFiles}" />
+      </c:SettingRow>
       <c:SettingRow Key="appearance.foldChains">
         <ToggleSwitch IsChecked="{Binding FoldChains}" />
       </c:SettingRow>

@@ -634,6 +634,12 @@ public sealed class AppearanceSettings
     public bool CollapseToolCalls { get; set; }
 
     /// <summary>
+    /// New Modified files cards start collapsed to their header line, as Tool calls cards can (DESIGN.md §18, "Conversation
+    /// cards"); a card's menu changes it for its tab. Off by default.
+    /// </summary>
+    public bool CollapseModifiedFiles { get; set; }
+
+    /// <summary>
     /// Each run of steps on the way (thinking, tool calls, subagents) between two messages folds into one, which the
     /// reply after it carries in its header and opens inside its card (DESIGN.md §18, "Conversation cards"). Off by default.
     /// </summary>

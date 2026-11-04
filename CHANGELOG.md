@@ -18,6 +18,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **Claude's answers in the scroll bar.** Settings → Conversation → **Marks in the scroll bar** → **Mark Claude's answers** marks each of Claude's answers in the conversation's scroll bar, in its card's color, to click to go back to it: its replies to you, not the ones it carried on after with a tool call. **Mark your messages** beside it turns your messages' marks off. See [Marks in the scroll bar](https://deventry.app/conversation/finding-your-way/#marks-in-the-scroll-bar).
 
+- **Fold the Modified files card.** Click its header line, or the chevron after its count, and a turn's Modified files card folds to that line, as a Tool calls card does. Settings → Conversation → **Show modified files collapsed** starts them folded, and right-clicking one gives **Collapse all modified files** and **Expand all modified files** for the tab. See [Folding the files](https://deventry.app/conversation/the-end-of-a-turn/#folding-the-files).
+
 ### Changed
 
 - **Project settings have a window of their own.** **Project settings…**, in a group's menu and now in each tab's, opens the project's links, actions, tools, and its group's color and icon in a window beside the main one, one for each project, even for a group with nothing open in it. **Add a link…** and **Add an action…** open it too. They're no longer at the foot of Settings' sidebar, and a group's color is picked there now, in place of **Change color…** in the group's menu. See [Project settings](https://deventry.app/settings/project-settings/).

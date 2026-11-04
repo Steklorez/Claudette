@@ -229,6 +229,43 @@ public class TabViewModelTests
         Assert.False(tab.State.CollapseToolCalls);
     }
 
+    /// <summary>The Modified files card folds as a Tool calls card does (issue #98): for the tab alone, and its cards to come.</summary>
+    [Fact]
+    public async Task Collapse_all_modified_files_holds_for_the_tab_alone_and_leaves_Settings_as_they_are()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        tab.ComposerText = "go";
+        await tab.SendCommand.ExecuteAsync(null);
+        h.Transport.EmitTurn("Done.");
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Any()), "the turn's footer");
+        var first = InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Single());
+        Assert.False(first.IsFilesCollapsed);
+        first.ToggleFilesCommand.Execute(null);
+        Assert.True(first.IsFilesCollapsed);
+        first.ToggleFilesCommand.Execute(null);
+
+        tab.CollapseAllModifiedFilesCommand.Execute(null);
+
+        Assert.True(first.IsFilesCollapsed);
+        Assert.True(tab.State.CollapseModifiedFiles);
+        Assert.False(h.Services.Settings.Appearance.CollapseModifiedFiles);
+        // A change in Settings doesn't undo the tab's choice: new cards start collapsed.
+        tab.OnSettingsChanged();
+        tab.ComposerText = "again";
+        await tab.SendCommand.ExecuteAsync(null);
+        h.Transport.EmitTurn("Again.");
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Count()) == 2, "a second footer");
+        Assert.True(InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Last()).IsFilesCollapsed);
+        // A copy of the tab keeps it.
+        Assert.True(tab.CopyState(CopyPoint.Whole).CollapseModifiedFiles);
+
+        tab.ExpandAllModifiedFilesCommand.Execute(null);
+
+        Assert.All(InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().ToList()), t => Assert.False(t.IsFilesCollapsed));
+        Assert.False(tab.State.CollapseModifiedFiles);
+    }
+
     [Fact]
     public async Task A_restored_tab_shows_its_thinking_as_it_was_left()
     {

@@ -1174,6 +1174,17 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
 
     public string FilesText => Files.Count == 1 ? "1 file changed" : $"{Files.Count} files changed";
 
+    /// <summary>
+    /// The Modified files card shows only its header line, not its tiles (Settings → Conversation → Show modified files
+    /// collapsed, or the chevron's own choice), as a Tool calls card folds (DESIGN.md §18, "Conversation cards").
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsFilesCollapsed { get; set; }
+
+    /// <summary>The chevron: folds the files' tiles away, or brings them back.</summary>
+    [RelayCommand]
+    private void ToggleFiles() => IsFilesCollapsed = !IsFilesCollapsed;
+
     /// <summary>The footer for a turn's result; null when the result says none of those.</summary>
     /// <param name="spent">What the turn spent, by model: the models it names.</param>
     /// <param name="modelName">Turns a model id into a display name.</param>
