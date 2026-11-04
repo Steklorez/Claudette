@@ -78,7 +78,7 @@ public class ProjectSettingsTests
         Assert.Same(h.Shell.Groups.Single(g => g.Tabs.Contains(tab)), project.Group);
 
         // Its pages, in its sidebar; it opens at Links, and a page picked there shows.
-        Assert.Equal([ProjectSettingsWindowViewModel.LinksPage, ProjectSettingsWindowViewModel.ActionsPage, ProjectSettingsWindowViewModel.ToolsPage, ProjectSettingsWindowViewModel.GroupPage],
+        Assert.Equal([ProjectSettingsWindowViewModel.LinksPage, ProjectSettingsWindowViewModel.ActionsPage, ProjectSettingsWindowViewModel.SolutionPage, ProjectSettingsWindowViewModel.ToolsPage, ProjectSettingsWindowViewModel.GroupPage],
             settings.NavEntries.Select(e => e.Title));
         Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
         settings.SelectedNavEntry = settings.NavEntries.Single(e => e.Title == ProjectSettingsWindowViewModel.ToolsPage);
@@ -495,6 +495,49 @@ public class ProjectSettingsTests
         settings.Open(ProjectSettingsWindowViewModel.LinksPage, startNew: true);
         Assert.IsType<ProjectLinksPage>(settings.CurrentPage);
         Assert.IsType<ProjectLinkEditorViewModel>(settings.Project.Editor);
+    }
+
+    // ---- The solution (issue #112) -------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task The_Solution_page_saves_a_file_from_the_projects_folder_and_the_menu_offers_it()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var sln = Path.Combine(h.WorkFolder, "Code", "Game.sln");
+        Write(sln, "");
+        using var settings = await OpenSettingsAsync(h);
+        settings.SelectedPage = ProjectSettingsWindowViewModel.SolutionPage;
+        Assert.IsType<ProjectSolutionPage>(settings.CurrentPage);
+        var project = settings.Project;
+        Assert.Equal(ProjectFileScope.Shared, project.SelectedSolutionFile.Value);
+        Assert.Equal("None in deventry.json.", project.SolutionText);
+        Assert.False(project.RemoveSolutionCommand.CanExecute(null));
+
+        h.Platform.FileToPick = sln;
+        await project.ChooseSolutionCommand.ExecuteAsync(null);
+
+        // Offered solutions first, and written from the project's folder.
+        Assert.Contains("*.sln", h.Platform.FileTypesOffered![0].Patterns);
+        Assert.Equal("Code/Game.sln", ProjectFile.ReadSolution(h.WorkFolder, ProjectFileScope.Shared));
+        Assert.Equal("Code/Game.sln", project.SolutionText);
+        Assert.Contains("as Open Game.sln, its main action", project.SolutionNote, StringComparison.Ordinal);
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.MainAction?.Label) == "Open Game.sln", "the menu's solution");
+
+        // The user's own file's shows in place of the shared one's.
+        project.SelectedSolutionFile = project.ProjectActionFiles[1];
+        Write(Path.Combine(h.WorkFolder, "Mine.sln"), "");
+        h.Platform.FileToPick = Path.Combine(h.WorkFolder, "Mine.sln");
+        await project.ChooseSolutionCommand.ExecuteAsync(null);
+        project.SelectedSolutionFile = project.ProjectActionFiles[0];
+        Assert.Equal("deventry.local.json's solution shows in its place, for you.", project.SolutionNote);
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.MainAction?.Label) == "Open Mine.sln", "the user's solution");
+
+        project.RemoveSolutionCommand.Execute(null);
+        Assert.Null(ProjectFile.ReadSolution(h.WorkFolder, ProjectFileScope.Shared));
+        project.SelectedSolutionFile = project.ProjectActionFiles[1];
+        project.RemoveSolutionCommand.Execute(null);
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.MainAction) is null, "no solution");
     }
 
     // ---- The group's icon --------------------------------------------------------------------------------------------

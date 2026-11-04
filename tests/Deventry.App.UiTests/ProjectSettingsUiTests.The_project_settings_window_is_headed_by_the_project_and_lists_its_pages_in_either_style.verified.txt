@@ -3,5 +3,6 @@
 
 "Links"
 "Actions"
+"Solution"
 "Tools"
 "Group"

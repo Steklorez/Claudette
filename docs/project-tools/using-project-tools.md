@@ -25,7 +25,7 @@ Click the icon to open its menu. From the top, it has:
 - The project's actions.
 - The project's choice, such as Unreal's **Editor configuration**.
 - The project's fix, such as **Choose engine folder…**.
-- Your own actions, then your **Links**. See [Actions and links](actions-and-links.md).
+- The project's solution, **Open NightOwl.sln**, when its [project settings](../settings/project-settings.md) name one, then your own actions, then your **Links**. See [Actions and links](actions-and-links.md).
 - **Show in Explorer** (**Show in Finder** on macOS, **Show in file manager** on Linux), which opens the project's folder, **Show output…**, which shows the newest run's log once an action has run, **Add an action…**, **Add a link…** and **Refresh**.
 
 An item that's greyed out says why in its tooltip, for example "Generate project files first." The menu looks at the project's files again each time it opens, so it's current. **Refresh** does the same on demand.

@@ -318,6 +318,63 @@ public sealed class ProjectFileTests : IDisposable
         Assert.Equal(elsewhere, ProjectFile.IconPathFor(folder, elsewhere));
     }
 
+    // ---- The project's solution (issue #112) ---------------------------------------------------------------------------
+
+    [Fact]
+    public void The_solution_is_read_from_either_file_and_the_local_files_wins()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "solution": "NightOwl.sln" }""");
+        Assert.Equal(new ProjectSolution("NightOwl.sln", ProjectFileScope.Shared), ProjectFile.Read(folder, ToolOS.Linux).Solution);
+
+        _temp.Write("game/deventry.local.json", """{ "solution": "Tools/Tools.slnx" }""");
+        Assert.Equal(new ProjectSolution("Tools/Tools.slnx", ProjectFileScope.Local), ProjectFile.Read(folder, ToolOS.Linux).Solution);
+
+        _temp.Write("game/deventry.json", """{ "solution": 7 }""");
+        Assert.Equal(["deventry.json: \"solution\" should be a file's path, such as \"NightOwl.sln\", so it was skipped."], ProjectFile.Read(folder, ToolOS.Linux).Problems);
+    }
+
+    [Fact]
+    public void A_solution_opens_with_the_IDE_another_file_with_the_systems_app_and_one_that_isnt_there_says_so()
+    {
+        var folder = _temp.CreateFolder("game");
+        var sln = _temp.Write("game/NightOwl.sln", "");
+        var project = _temp.Write("game/Code/Game.csproj", "");
+
+        var open = new ProjectSolution("NightOwl.sln", ProjectFileScope.Shared).ToAction(folder, "deventry.json");
+        Assert.Equal((ProjectSolution.ActionId, "Open NightOwl.sln", ProjectActionKind.Open), (open.Id, open.Label, open.Kind));
+        Assert.Equal((sln, true, true), (open.OpenPath, open.OpenWithIde, open.IsEnabled));
+
+        // Any file that defines the project, with the app the system has for it.
+        var other = new ProjectSolution("Code/Game.csproj", ProjectFileScope.Local).ToAction(folder, "deventry.local.json");
+        Assert.Equal(("Open Game.csproj", project, false), (other.Label, other.OpenPath, other.OpenWithIde));
+
+        // A workspace that's a folder, as Xcode's is.
+        _temp.CreateFolder("game/NightOwl.xcworkspace");
+        var workspace = new ProjectSolution("NightOwl.xcworkspace", ProjectFileScope.Shared).ToAction(folder, "deventry.json");
+        Assert.Equal((true, true), (workspace.IsEnabled, workspace.OpenWithIde));
+
+        var gone = new ProjectSolution("Gone.sln", ProjectFileScope.Shared).ToAction(folder, "deventry.json");
+        Assert.Equal((null, "deventry.json's solution, Gone.sln, isn't there."), (gone.OpenPath, gone.DisabledReason));
+        var share = new ProjectSolution(@"\\server\share\NightOwl.sln", ProjectFileScope.Shared).ToAction(folder, "deventry.json");
+        Assert.Equal(@"deventry.json's solution, \\server\share\NightOwl.sln, is on a network share, which Deventry doesn't look at by itself.", share.DisabledReason);
+    }
+
+    [Fact]
+    public void Saving_the_solution_keeps_the_rest_and_is_written_from_the_projects_folder()
+    {
+        var folder = _temp.CreateFolder("game");
+        _temp.Write("game/deventry.json", """{ "links": [ { "url": "https://example.com" } ] }""");
+
+        ProjectFile.WriteSolution(folder, ProjectFileScope.Shared, ProjectFile.SolutionPathFor(folder, Path.Combine(folder, "Code", "Game.sln")));
+        Assert.Equal("Code/Game.sln", ProjectFile.ReadSolution(folder, ProjectFileScope.Shared));
+        Assert.Equal("https://example.com", ProjectFile.Read(folder, ToolOS.Linux).Links.Single().Url);
+
+        ProjectFile.WriteSolution(folder, ProjectFileScope.Shared, null);
+        Assert.Null(ProjectFile.ReadSolution(folder, ProjectFileScope.Shared));
+        Assert.Single(ProjectFile.Read(folder, ToolOS.Linux).Links);
+    }
+
     // ---- The group's color --------------------------------------------------------------------------------------------
 
     [Theory]

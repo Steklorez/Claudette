@@ -99,6 +99,9 @@
                 <DataTemplate DataType="settings:ProjectActionsPage">
                   <pages:ProjectActionsPageView />
                 </DataTemplate>
+                <DataTemplate DataType="settings:ProjectSolutionPage">
+                  <pages:ProjectSolutionPageView />
+                </DataTemplate>
                 <DataTemplate DataType="settings:ProjectGroupPage">
                   <pages:ProjectGroupPageView />
                 </DataTemplate>

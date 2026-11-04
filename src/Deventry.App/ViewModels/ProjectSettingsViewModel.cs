@@ -38,6 +38,8 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
         SelectedProjectActionFile = ProjectActionFiles[_sharedRows.Count > 0 || _localRows.Count == 0 && _actionFileErrors.GetValueOrDefault(ProjectFileScope.Shared) is null ? 0 : 1];
         LoadGroupFiles();
         SelectedGroupFile = ProjectActionFiles[GroupFileToShow()];
+        LoadSolutionFiles();
+        SelectedSolutionFile = ProjectActionFiles[SolutionFileToShow()];
         BuildToolChoices();
         _tools.PropertyChanged += OnProjectToolsPropertyChanged;
     }
@@ -92,6 +94,7 @@ public sealed partial class ProjectSettingsViewModel : ViewModelBase, IDisposabl
         {
             OnPropertyChanged(nameof(Heading));
             OnPropertyChanged(nameof(WindowTitle));
+            OnPropertyChanged(nameof(SolutionNote));
             ToolsChanged();
         }
         if (e.PropertyName is nameof(ProjectToolsViewModel.GroupIcon) or null or "")

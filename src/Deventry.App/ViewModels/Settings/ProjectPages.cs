@@ -39,6 +39,23 @@ public sealed class ProjectActionsPage : ProjectPage
 }
 
 /// <summary>
+/// The project's <b>Solution</b> (DESIGN.md §18, "deventry.json"): the file that defines it, usually its solution, which
+/// its menu offers to open, from either of its files.
+/// </summary>
+public sealed class ProjectSolutionPage : ProjectPage
+{
+    public ProjectSolutionPage(SettingsContext context, ProjectSettingsViewModel project) : base(context, ProjectSettingsWindowViewModel.SolutionPage, project) =>
+        Section("solution", "Solution",
+        [
+            Info("project.solution", "The project's solution", keywords: ["solution", "sln", "slnx", "workspace", "project file", "deventry.json"]),
+        ]);
+
+    public override string IconKey => "IconToolRead";
+
+    public override string Description => "The file that defines the project, usually its solution, which the project's menu opens.";
+}
+
+/// <summary>
 /// The project's <b>Group</b> (DESIGN.md §4, "Grouped by folder"): how its group looks in the sidebar, its color and the
 /// picture in place of its dot, from either of its files.
 /// </summary>

@@ -156,6 +156,50 @@ public class ProjectToolsTests
         Assert.True(InlineDispatcher.Read(() => tab.ProjectTools.Actions.Single(a => a.Label == "Run tests")).IsEnabled);
     }
 
+    /// <summary>
+    /// The project files' solution (DESIGN.md §18, "deventry.json", issue #112): the menu offers to open it, before the
+    /// folder's own actions, and without a project type it's the main action. A solution opens with the IDE Settings
+    /// names, the system's own app by default.
+    /// </summary>
+    [Fact]
+    public async Task A_folders_solution_is_in_its_menu_and_its_main_action_without_a_project_type()
+    {
+        await using var h = new TabTestHarness();
+        var sln = Path.Combine(h.WorkFolder, "Tools.sln");
+        File.WriteAllText(sln, "");
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "solution": "Tools.sln", "actions": [{ "name": "Test", "command": "dotnet test" }] }""");
+
+        var tab = await h.OpenTabAsync();
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.Actions.Any(a => a.Label == "Open Tools.sln")), "the solution");
+
+        Assert.True(tab.ProjectTools.HasTools);
+        Assert.Null(tab.ProjectTools.Project);
+        Assert.Equal("Open Tools.sln", tab.ProjectTools.MainAction?.Label);
+        Assert.Equal(["Open Tools.sln", "Test", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh"],
+            InlineDispatcher.Read(() => tab.ProjectTools.Menu.Where(e => e.IsButton).Select(e => e.Label).ToArray()));
+
+        await InlineDispatcher.RunAsync(() => tab.ProjectTools.RunMainActionCommand.ExecuteAsync(null));
+        Assert.Equal([sln], h.Platform.OpenedFiles);
+    }
+
+    /// <summary>A project type's own Open solution stays, beside the folder's, and the type's main action stays its own.</summary>
+    [Fact]
+    public async Task A_project_types_own_solution_stays_beside_the_folders_and_its_main_action_stays_its_own()
+    {
+        var (h, _, _) = UnrealHarness();
+        await using var _h = h;
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.LocalName), """{ "solution": "Missing.sln" }""");
+
+        var tab = await OpenWithProjectAsync(h);
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.Actions.Any(a => a.Id == ProjectSolution.ActionId)), "the folder's solution");
+
+        var actions = InlineDispatcher.Read(() => tab.ProjectTools.Actions);
+        Assert.Contains(actions, a => a.Id == "open-solution");
+        var folders = actions.Single(a => a.Id == ProjectSolution.ActionId);
+        Assert.Equal(("Open Missing.sln", "deventry.local.json's solution, Missing.sln, isn't there."), (folders.Label, folders.DisabledReason));
+        Assert.Equal("launch-editor", tab.ProjectTools.MainAction?.Id);
+    }
+
     [Fact]
     public async Task Without_a_project_or_actions_the_icon_names_the_folder_and_offers_the_first_action_and_link()
     {

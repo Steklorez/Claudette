@@ -69,6 +69,12 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     private ProjectDetection _projectDetection = ProjectDetection.None;
     private ProjectFileContents _projectFile = ProjectFileContents.Empty;
     private IReadOnlyList<(CustomProjectAction Custom, ProjectAction Action)> _customActions = [];
+
+    /// <summary><b>Open NightOwl.sln</b>, for the project files' <c>solution</c> (DESIGN.md §18, "deventry.json"); null without one.</summary>
+    private ProjectAction? _solutionAction;
+
+    /// <summary>The folder's own actions from its project files: its solution's first, then its custom actions.</summary>
+    private IEnumerable<ProjectAction> FolderActions => [.. _solutionAction is { } solution ? [solution] : Array.Empty<ProjectAction>(), .. _customActions.Select(c => c.Action)];
     private ProjectMenuCommands? _menuCommands;
     private string? _noteSent;
     private string _settingsSeen = "";
@@ -107,7 +113,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     /// actions, or a deventry.json whose entries were skipped (the menu says why). The sidebar's project row shows
     /// either way.
     /// </summary>
-    public bool HasTools => Project is not null || _customActions.Count > 0 || _projectFile.Problems.Count > 0;
+    public bool HasTools => Project is not null || _solutionAction is not null || _customActions.Count > 0 || _projectFile.Problems.Count > 0;
 
     /// <summary>"NightOwl · UE 5.4", or without a version, its name.</summary>
     private static string NameAndVersion(ProjectInfo project) => project.ShortVersion is { } version ? $"{project.Name} · {version}" : project.Name;
@@ -175,7 +181,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     public IReadOnlyList<ProjectDetail> Details => Project?.Details ?? [];
 
     /// <summary>The project's actions and the folder's own, for the Project page's buttons.</summary>
-    public IReadOnlyList<ProjectAction> Actions => [.. Project?.Actions.Select(ForAction) ?? [], .. _customActions.Select(c => ForAction(c.Action))];
+    public IReadOnlyList<ProjectAction> Actions => [.. Project?.Actions.Select(ForAction) ?? [], .. FolderActions.Select(ForAction)];
 
     /// <summary>
     /// How an action shows as things are: while a job runs, the other jobs wait; and with no tab open in the group, a job
@@ -188,7 +194,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
 
     /// <summary>The project row's menu. Without a tab there's no output to show.</summary>
     public IReadOnlyList<ProjectMenuEntry> Menu => ProjectMenu.Build(
-        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools && _host.CanRunJobs, Runs.HasRuns, ForAction, Folder,
+        Project, _projectDetection.Candidates, FolderActions.ToArray(), Links, HasTools && _host.CanRunJobs, Runs.HasRuns, ForAction, Folder,
         _menuCommands ??= new ProjectMenuCommands(RunActionCommand, ChooseProjectCommand, ChooseOptionCommand, FixCommand, OpenLinkCommand,
             ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand));
 
@@ -199,7 +205,11 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     [RelayCommand]
     private Task ShowFolderAsync() => _services.Platform.RevealFolderAsync(Folder);
 
-    public ProjectAction? MainAction => Project?.MainAction ?? _customActions.Select(c => c.Action).FirstOrDefault();
+    /// <summary>
+    /// <b>Run the project's main action</b> (<c>Ctrl/Cmd+Shift+E</c>): the project type's, such as Launch editor; without a
+    /// project type, opening the project files' solution, else the folder's first action.
+    /// </summary>
+    public ProjectAction? MainAction => Project?.MainAction ?? FolderActions.FirstOrDefault();
 
     // ---- Detection ----------------------------------------------------------------------------------------------
 
@@ -282,6 +292,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             _host.UseGroupColor(color);
         }
         _customActions = _services.ProjectTools.CustomActions(file, _host.Folder);
+        _solutionAction = file.Solution?.ToAction(_host.Folder, ProjectFile.FileName(_host.Folder, file.Solution.Scope));
     }
 
     private Task OnUiThreadAsync(Action action)
