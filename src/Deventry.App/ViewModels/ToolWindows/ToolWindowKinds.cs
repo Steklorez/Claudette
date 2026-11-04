@@ -85,8 +85,8 @@ public static class ToolWindowKinds
     };
 
     /// <summary>
-    /// The game against Joulene, while one is open (DESIGN.md §18, "Games with Joulene"). The app's, not a tab's: the
-    /// shell gives it the game.
+    /// The game against Joulene, or the games to start one, while games are on (DESIGN.md §18, "Games with Joulene"). The
+    /// app's, not a tab's: the shell gives it the games.
     /// </summary>
     public static readonly ToolWindowKind Games = new()
     {

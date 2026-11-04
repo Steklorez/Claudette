@@ -36,7 +36,7 @@ public class ToolWindowsUiTests
         UiText.Settle(window);
         var strip = window.GetVisualDescendants().OfType<ToolStripView>().Single(s => s.IsEffectivelyVisible);
         var icons = strip.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("stripicon")).ToList();
-        Assert.Equal(["Changed files", "Agents", "Scratch pad"], icons.Select(AutomationProperties.GetName));
+        Assert.Equal(["Changed files", "Agents", "Scratch pad", "Games"], icons.Select(AutomationProperties.GetName));
         // Their tips say what each holds now.
         Assert.Equal("Agents · Claude hasn't started any subagents in this tab.", ToolTip.GetTip(icons[1]));
         // Down the strip, the split group's under a line.
@@ -111,7 +111,7 @@ public class ToolWindowsUiTests
 
         // Changed files and Scratch pad are taller than wide, Agents as wide as tall.
         var icons = window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("stripicon") && b.IsEffectivelyVisible).ToList();
-        Assert.Equal(["Changed files", "Agents", "Scratch pad"], icons.Select(AutomationProperties.GetName));
+        Assert.Equal(["Changed files", "Agents", "Scratch pad", "Games"], icons.Select(AutomationProperties.GetName));
         foreach (var icon in icons)
         {
             var glyph = icon.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single(p => p.Classes.Contains("stripglyph"));

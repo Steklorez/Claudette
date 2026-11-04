@@ -21,14 +21,15 @@ namespace Deventry.App.UiTests;
 public class GamesUiTests
 {
     [AvaloniaFact]
-    public async Task The_Games_page_is_made_only_while_a_game_shows_and_plays_tic_tac_toe()
+    public async Task The_Games_page_is_made_only_while_it_shows_and_plays_tic_tac_toe()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         h.Services.Random = new Random(4);
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         Assert.Empty(window.GetVisualDescendants().OfType<GamesView>());
-        Assert.DoesNotContain(PageTabs(window), t => t == "Games");
+        // Its icon is on the strip, game or no game (issue #96).
+        Assert.Contains("Games", PageTabs(window));
 
         tab.PlayGame(GameKind.TicTacToe);
         UiText.Settle(window);
@@ -57,8 +58,12 @@ public class GamesUiTests
         Assert.Single(Squares(page), s => AutomationProperties.GetName(s)!.EndsWith(", yours", StringComparison.Ordinal));
 
         // Done playing: the page and its tab go.
+        // Done playing: the game ends, and the window lists the games, its icon still there.
         Click(window, page.GetVisualDescendants().OfType<Button>().Single(b => b.Content as string == "Done playing"));
-        Assert.DoesNotContain(PageTabs(window), t => t == "Games");
+        UiText.Settle(window);
+        Assert.False(h.Services.Games.IsOpen);
+        Assert.Contains("Games", PageTabs(window));
+        Assert.True(window.GetVisualDescendants().OfType<GamesView>().Single().GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "GameChoices").IsEffectivelyVisible);
         window.Close();
 
         await Verify(shown);
@@ -254,6 +259,38 @@ public class GamesUiTests
     }
 
     /// <summary>The tool windows' icons on the strip, by name.</summary>
+    /// <summary>
+    /// With no game open, the Games window lists the four, each with its score so far, and a click on one starts it there
+    /// (issue #96); its header has its title alone.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task With_no_game_open_the_Games_window_lists_the_games_to_start_one()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        h.Services.State.Games.Scores[nameof(GameKind.ConnectFour)] = new Core.Settings.GameScore { Wins = 2, Losses = 1 };
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+
+        h.ShowToolWindow(ToolWindowKinds.Games);
+        UiText.Settle(window);
+
+        var page = window.GetVisualDescendants().OfType<GamesView>().Single();
+        var choices = page.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("gamechoice")).ToList();
+        Assert.Equal(["Play Tic-tac-toe", "Play Connect Four: You 2 · Joulene 1 · Draws 0", "Play Hangman", "Play Minesweeper"],
+            choices.Select(b => AutomationProperties.GetName(b)));
+        Assert.DoesNotContain(window.GetVisualDescendants().OfType<Button>(), b => b.Classes.Contains("toolchoice") && b.IsEffectivelyVisible);
+        var shown = UiText.Describe(page);
+
+        Click(window, choices[3]);
+        UiText.Settle(window);
+
+        Assert.IsType<MinesweeperViewModel>(h.Services.Games.Game);
+        Assert.False(page.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Name == "GameChoices").IsEffectivelyVisible);
+        Assert.Contains(window.GetVisualDescendants().OfType<Button>(), b => b.Classes.Contains("toolchoice") && b.IsEffectivelyVisible);
+        window.Close();
+        await Verify(shown);
+    }
+
     private static List<string?> PageTabs(Window window) =>
         [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("stripicon") && b.IsEffectivelyVisible).Select(AutomationProperties.GetName)];
 

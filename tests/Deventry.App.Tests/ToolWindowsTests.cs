@@ -26,7 +26,8 @@ public class ToolWindowsTests
         var dock = h.Shell.ToolWindows;
 
         Assert.Equal(["Changed files", "Agents"], Icons(dock.Top));
-        Assert.Equal(["Scratch pad"], Icons(dock.Split));
+        // Games is there while games are on, game or no game (issue #96).
+        Assert.Equal(["Scratch pad", "Games"], Icons(dock.Split));
         Assert.Empty(Icons(dock.Bottom));
         Assert.True(dock.HasStrip);
         Assert.True(dock.HasDivider);
@@ -138,7 +139,8 @@ public class ToolWindowsTests
     [Fact]
     public async Task Dragging_an_icon_along_the_strip_moves_it_before_the_icon_at_its_place()
     {
-        await using var h = new TabTestHarness();
+        // Without games, whose icon would stay under the line.
+        await using var h = new TabTestHarness(s => s.Appearance.GamesWithJoulene = false);
         await h.OpenTabAsync();
         var dock = h.Shell.ToolWindows;
         var (files, pad) = (dock.For(ToolWindowKinds.Files), dock.For(ToolWindowKinds.ScratchPad));
@@ -179,7 +181,7 @@ public class ToolWindowsTests
 
         Assert.Equal(480, dock.RightWidth);
         Assert.Equal(["Agents", "Changed files"], Icons(dock.Top));
-        Assert.Equal(["Scratch pad"], Icons(dock.Split));
+        Assert.Equal(["Scratch pad", "Games"], Icons(dock.Split));
     }
 
     [Fact]

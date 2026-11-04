@@ -1,0 +1,14 @@
+﻿"Play a game against Joulene"
+[button] Play Tic-tac-toe
+  "Tic-tac-toe"
+  "Three in a row on a board of three by three."
+[button] Play Connect Four: You 2 · Joulene 1 · Draws 0
+  "Connect Four"
+  "Four in a row, dropping pieces into seven columns."
+  "You 2 · Joulene 1 · Draws 0"
+[button] Play Hangman
+  "Hangman"
+  "Guess the word Joulene thought of, a letter at a time."
+[button] Play Minesweeper
+  "Minesweeper"
+  "Open every square without one of Joulene's mines."

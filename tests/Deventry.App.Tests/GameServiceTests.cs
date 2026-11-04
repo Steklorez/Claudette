@@ -12,13 +12,20 @@ namespace Deventry.App.Tests;
 /// </summary>
 public class GameServiceTests
 {
+    /// <summary>
+    /// The Games window's icon is on the strip while games are on, game or no game (issue #96): with none open it lists
+    /// them, and Done playing goes back to the list.
+    /// </summary>
     [Fact]
-    public async Task Starting_a_game_shows_the_Games_window_which_goes_when_the_game_ends()
+    public async Task Starting_a_game_shows_the_Games_window_which_lists_the_games_again_when_it_ends()
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
         var games = h.ToolWindow(ToolWindowKinds.Games);
-        Assert.False(games.IsAvailable);
+        Assert.True(games.IsAvailable);
+        Assert.True(h.Services.Games.IsChoosing);
+        Assert.Equal(["Tic-tac-toe", "Connect Four", "Hangman", "Minesweeper"], h.Services.Games.Choices.Select(c => c.Name));
+        Assert.All(h.Services.Games.Choices, c => Assert.False(c.HasScore));
 
         tab.PlayGame(GameKind.TicTacToe);
 
@@ -42,8 +49,38 @@ public class GameServiceTests
         h.Services.Games.CloseCommand.Execute(null);
 
         Assert.False(h.Services.Games.IsOpen);
-        Assert.False(games.IsAvailable);
-        Assert.False(h.IsShowing(ToolWindowKinds.Games));
+        Assert.True(h.Services.Games.IsChoosing);
+        Assert.True(games.IsAvailable);
+
+        // From the list, a game starts in the window.
+        var hangman = h.Services.Games.Choices.Single(c => c.Kind == GameKind.Hangman);
+        Assert.Equal("Play Hangman", hangman.AccessibleName);
+        hangman.Start.Execute(hangman.Kind);
+        Assert.IsType<HangmanViewModel>(h.Services.Games.Game);
+    }
+
+    /// <summary>A game's score so far shows in the list, as the game shows it; turning games off takes the icon away.</summary>
+    [Fact]
+    public async Task The_list_has_each_games_score_and_turning_games_off_takes_the_icon_away()
+    {
+        await using var h = new TabTestHarness();
+        await h.OpenTabAsync();
+        h.Services.State.Games.Scores[nameof(GameKind.TicTacToe)] = new GameScore { Wins = 3, Losses = 2, Draws = 1 };
+        h.Services.State.Games.Scores[nameof(GameKind.Hangman)] = new GameScore { Wins = 4, Losses = 1 };
+
+        var choices = h.Services.Games.Choices.ToDictionary(c => c.Kind);
+        Assert.Equal("You 3 · Joulene 2 · Draws 1", choices[GameKind.TicTacToe].ScoreText);
+        Assert.Equal("You 4 · Joulene 1", choices[GameKind.Hangman].ScoreText);
+        Assert.Equal("Play Hangman: You 4 · Joulene 1", choices[GameKind.Hangman].AccessibleName);
+        Assert.Null(choices[GameKind.Minesweeper].ScoreText);
+
+        var games = h.ToolWindow(ToolWindowKinds.Games);
+        h.Services.Settings.Appearance.GamesWithJoulene = false;
+        h.Services.SaveSettings();
+        await TabTestHarness.Eventually(() => !games.IsAvailable, "the icon gone");
+        h.Services.Settings.Appearance.GamesWithJoulene = true;
+        h.Services.SaveSettings();
+        await TabTestHarness.Eventually(() => games.IsAvailable, "the icon back");
     }
 
     [Fact]
@@ -63,9 +100,10 @@ public class GameServiceTests
         Assert.True(games.IsAvailable);
         Assert.Same(h.Services.Games, games.Content);
 
-        // Ending it takes the window away.
+        // Ending it leaves the window, which lists the games.
         h.Services.Games.Close();
-        Assert.False(games.IsAvailable);
+        Assert.True(games.IsAvailable);
+        Assert.True(h.Services.Games.IsChoosing);
     }
 
     [Fact]

@@ -14,6 +14,7 @@ While Claude works, or a usage limit holds a task, you can play a game against J
 
 Any of these shows the **Games** tool window:
 
+- Click its icon, the controller, on the strip at the window's right, under the line. It's always there while games are on; with no game open, the window lists the four, each with your score so far: click one to start it.
 - Right-click Joulene and choose **Play tic-tac-toe**, **Play Connect Four**, **Play hangman** or **Play Minesweeper**.
 - Open the [command palette](../tabs/the-command-palette.md) and choose **Play tic-tac-toe with Joulene**, **Play Connect Four with Joulene**, **Play hangman with Joulene** or **Play Minesweeper with Joulene**.
 - When a usage limit stops a task, choose **Play a game while you wait** on the limit bar over the message box ([When a limit stops a task](../usage/when-a-limit-stops-a-task.md)).
@@ -22,10 +23,10 @@ Now and then, while Claude works or a limit holds the task, one of her tips says
 
 ## One game at a time
 
-There's one game for the whole app. It follows you from tab to tab, as she does, so the Games tool window shows it whichever tab is in front. Its icon is on the strip only while a game is open.
+There's one game for the whole app. It follows you from tab to tab, as she does, so the Games tool window shows it whichever tab is in front. Its icon is on the strip whenever games are on, game or no game, so you can start one at any time.
 
 - The game's name beside the window's title, such as **Hangman ▾**, has a menu of the games: choose another to switch to it. A round in progress is dropped, and not counted.
-- **Done playing** ends the game, and the window goes.
+- **Done playing** ends the game, and the window lists the games again.
 
 ## The games
 

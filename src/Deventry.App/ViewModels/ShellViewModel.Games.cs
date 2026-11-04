@@ -1,15 +1,23 @@
+using Deventry.App.Services;
+
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Games with Joulene (DESIGN.md §18): the Games tool window follows the one game that's open, and the line over the
-/// board says when Claude needs the user.
+/// Games with Joulene (DESIGN.md §18): the Games tool window, its icon on the strip while games are on, follows the one
+/// game that's open or lists them, and the line over the board says when Claude needs the user.
 /// </summary>
 public sealed partial class ShellViewModel
 {
     private void WatchGames()
     {
         _services.Games.Announcer = Announce;
-        _services.Games.OpenChanged += OnGameOpenChanged;
+        _services.Games.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(GameService.IsEnabled) or null or "")
+            {
+                OnGamesEnabledChanged();
+            }
+        };
     }
 
     /// <summary>

@@ -43,9 +43,11 @@
                   </ListBox.ItemTemplate>
                 </ListBox>
               </DataTemplate>
-              <!-- Games: the game open, its menu the games to switch to (DESIGN.md §18, "Games with Joulene") -->
+              <!-- Games: the game open, its menu the games to switch to (DESIGN.md §18, "Games with Joulene"); with none open,
+                   the window lists them, and the header has its title alone -->
               <DataTemplate DataType="services:GameService">
-                <Button Classes="flat toolchoice" ToolTip.Tip="Play another game" AutomationProperties.Name="{Binding Game.Title, StringFormat='Game: {0}', FallbackValue='Game'}">
+                <Button Classes="flat toolchoice" ToolTip.Tip="Play another game" AutomationProperties.Name="{Binding Game.Title, StringFormat='Game: {0}', FallbackValue='Game'}"
+                        IsVisible="{Binding IsOpen}">
                   <StackPanel Orientation="Horizontal" Spacing="5">
                     <TextBlock Text="{Binding Game.Title, FallbackValue=''}" VerticalAlignment="Center" />
                     <Path Data="{StaticResource IconChevronDown}" />
