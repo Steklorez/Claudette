@@ -369,15 +369,15 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         }
     }
 
-    // ---- Project actions (DESIGN.md §18, "Custom actions"): in Settings, on the tab's Actions page --------------------
+    // ---- Project actions (DESIGN.md §18, "Custom actions"): in the project's settings, on their Actions page ---------
 
-    /// <summary>"In Settings → NightOwl → Actions": the group is named after the tab's project.</summary>
-    public string ProjectActionsText => $"In Settings → {ProjectSettingsViewModel.GroupName(_tab)} → Actions.";
+    /// <summary>"In NightOwl's project settings, on Actions.": named after the tab's project.</summary>
+    public string ProjectActionsText => $"In {_tab.ProjectTools.Project?.Name ?? _tab.FolderName}'s project settings, on Actions.";
 
-    /// <summary>Opens Settings on the tab's Actions page. This dialog stays open behind it.</summary>
+    /// <summary>Opens the project's settings on their Actions page. This dialog stays open behind it.</summary>
     [RelayCommand]
     private Task OpenProjectActionsAsync() =>
-        _shell?.OpenProjectSettingsAsync(_tab, SettingsViewModel.ActionsPage) ?? Task.CompletedTask;
+        _shell?.OpenProjectSettingsAsync(_tab.Folder, ProjectSettingsWindowViewModel.ActionsPage) ?? Task.CompletedTask;
 
     /// <summary><b>Done</b> (or Esc): the changes have applied already; the extra folders apply now, then it closes.</summary>
     [RelayCommand]

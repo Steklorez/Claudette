@@ -12,10 +12,16 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
 
-/// <summary>What project tools need from their tab.</summary>
+/// <summary>What project tools need from their tab, or from a folder's group with no tab open (<see cref="FolderProjectToolsHost"/>).</summary>
 internal interface IProjectToolsHost : ITabAreaHost
 {
     string FolderName { get; }
+
+    /// <summary>
+    /// A tab has these tools, so a job can run under its row with its log. A group with no tab open has nowhere to show
+    /// one, so its jobs wait for a tab (DESIGN.md §18, "Project tools").
+    /// </summary>
+    bool CanRunJobs { get; }
 
     /// <summary>The folder of the tab's group.</summary>
     string GroupFolder { get; }
@@ -23,7 +29,7 @@ internal interface IProjectToolsHost : ITabAreaHost
     /// <summary>The tab's Perforce changelist, for <c>{changelist}</c> in links (DESIGN.md §18, "Links").</summary>
     long? CurrentChangelist { get; }
 
-    /// <summary>Settings, on one of this tab's project pages (DESIGN.md §14).</summary>
+    /// <summary>The folder's project settings, in their window, at one of its pages (DESIGN.md §14, "The project's settings").</summary>
     Task OpenProjectSettingsAsync(string page, bool startNew);
 
     /// <summary>The folder's project files name the group's color (DESIGN.md §4, "Grouped by folder"): the group takes it.</summary>
@@ -63,6 +69,12 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     private ProjectDetection _projectDetection = ProjectDetection.None;
     private ProjectFileContents _projectFile = ProjectFileContents.Empty;
     private IReadOnlyList<(CustomProjectAction Custom, ProjectAction Action)> _customActions = [];
+
+    /// <summary><b>Open NightOwl.sln</b>, for the project files' <c>solution</c> (DESIGN.md §18, "deventry.json"); null without one.</summary>
+    private ProjectAction? _solutionAction;
+
+    /// <summary>The folder's own actions from its project files: its solution's first, then its custom actions.</summary>
+    private IEnumerable<ProjectAction> FolderActions => [.. _solutionAction is { } solution ? [solution] : Array.Empty<ProjectAction>(), .. _customActions.Select(c => c.Action)];
     private ProjectMenuCommands? _menuCommands;
     private string? _noteSent;
     private string _settingsSeen = "";
@@ -101,7 +113,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     /// actions, or a deventry.json whose entries were skipped (the menu says why). The sidebar's project row shows
     /// either way.
     /// </summary>
-    public bool HasTools => Project is not null || _customActions.Count > 0 || _projectFile.Problems.Count > 0;
+    public bool HasTools => Project is not null || _solutionAction is not null || _customActions.Count > 0 || _projectFile.Problems.Count > 0;
 
     /// <summary>"NightOwl · UE 5.4", or without a version, its name.</summary>
     private static string NameAndVersion(ProjectInfo project) => project.ShortVersion is { } version ? $"{project.Name} · {version}" : project.Name;
@@ -169,11 +181,20 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     public IReadOnlyList<ProjectDetail> Details => Project?.Details ?? [];
 
     /// <summary>The project's actions and the folder's own, for the Project page's buttons.</summary>
-    public IReadOnlyList<ProjectAction> Actions => [.. Project?.Actions.Select(Runs.ForJob) ?? [], .. _customActions.Select(c => Runs.ForJob(c.Action))];
+    public IReadOnlyList<ProjectAction> Actions => [.. Project?.Actions.Select(ForAction) ?? [], .. FolderActions.Select(ForAction)];
 
-    /// <summary>The project row's menu.</summary>
+    /// <summary>
+    /// How an action shows as things are: while a job runs, the other jobs wait; and with no tab open in the group, a job
+    /// has no row to run under, so it waits for one (DESIGN.md §18, "Project tools").
+    /// </summary>
+    private ProjectAction ForAction(ProjectAction action) =>
+        !_host.CanRunJobs && action.IsEnabled && (action.Kind == ProjectActionKind.Run || action.Destructive is DeleteFolders)
+            ? action with { DisabledReason = "Open a tab here to run it: its output shows under the tab." }
+            : Runs.ForJob(action);
+
+    /// <summary>The project row's menu. Without a tab there's no output to show.</summary>
     public IReadOnlyList<ProjectMenuEntry> Menu => ProjectMenu.Build(
-        Project, _projectDetection.Candidates, _customActions.Select(c => c.Action).ToArray(), Links, HasTools, Runs.HasRuns, Runs.ForJob, Folder,
+        Project, _projectDetection.Candidates, FolderActions.ToArray(), Links, HasTools && _host.CanRunJobs, Runs.HasRuns, ForAction, Folder,
         _menuCommands ??= new ProjectMenuCommands(RunActionCommand, ChooseProjectCommand, ChooseOptionCommand, FixCommand, OpenLinkCommand,
             ShowOutputCommand, AddActionCommand, AddLinkCommand, RefreshCommand, ShowFolderCommand));
 
@@ -184,7 +205,11 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     [RelayCommand]
     private Task ShowFolderAsync() => _services.Platform.RevealFolderAsync(Folder);
 
-    public ProjectAction? MainAction => Project?.MainAction ?? _customActions.Select(c => c.Action).FirstOrDefault();
+    /// <summary>
+    /// <b>Run the project's main action</b> (<c>Ctrl/Cmd+Shift+E</c>): the project type's, such as Launch editor; without a
+    /// project type, opening the project files' solution, else the folder's first action.
+    /// </summary>
+    public ProjectAction? MainAction => Project?.MainAction ?? FolderActions.FirstOrDefault();
 
     // ---- Detection ----------------------------------------------------------------------------------------------
 
@@ -267,6 +292,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
             _host.UseGroupColor(color);
         }
         _customActions = _services.ProjectTools.CustomActions(file, _host.Folder);
+        _solutionAction = file.Solution?.ToAction(_host.Folder, ProjectFile.FileName(_host.Folder, file.Solution.Scope));
     }
 
     private Task OnUiThreadAsync(Action action)
@@ -402,18 +428,18 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
     // ---- Custom actions (DESIGN.md §18, "Custom actions") --------------------------------------------------------
 
     /// <summary>
-    /// <b>Add an action…</b>: Settings opens on this tab's Actions page (DESIGN.md §14) with a new action started. Its
-    /// dialog asks which file the action goes in, then it joins the end of that file's <c>actions</c>.
+    /// <b>Add an action…</b>: the project's settings open on their Actions page (DESIGN.md §14) with a new action started.
+    /// Its dialog asks which file the action goes in, then it joins the end of that file's <c>actions</c>.
     /// </summary>
     [RelayCommand]
-    private Task AddAction() => _host.OpenProjectSettingsAsync(SettingsViewModel.ActionsPage, startNew: true);
+    private Task AddAction() => _host.OpenProjectSettingsAsync(ProjectSettingsWindowViewModel.ActionsPage, startNew: true);
 
     /// <summary>
-    /// <b>Add a link…</b>: Settings opens on this tab's Links page (DESIGN.md §14) with a new link started. Its dialog
-    /// asks which file the link goes in.
+    /// <b>Add a link…</b>: the project's settings open on their Links page (DESIGN.md §14) with a new link started. Its
+    /// dialog asks which file the link goes in.
     /// </summary>
     [RelayCommand]
-    private Task AddLink() => _host.OpenProjectSettingsAsync(SettingsViewModel.LinksPage, startNew: true);
+    private Task AddLink() => _host.OpenProjectSettingsAsync(ProjectSettingsWindowViewModel.LinksPage, startNew: true);
 
     /// <summary>A folder's project files changed through the in-app editor, here or in another tab in the same folder.</summary>
     internal void ReloadCustomActions() => _ = RefreshFileAsync();
@@ -497,7 +523,7 @@ public sealed partial class ProjectToolsViewModel : ViewModelBase, IProjectRunsH
         {
             return;
         }
-        action = Runs.ForJob(action);
+        action = ForAction(action);
         if (!action.IsEnabled)
         {
             _host.AddNote($"{action.Label}: {action.DisabledReason}", NoteKind.Warning);

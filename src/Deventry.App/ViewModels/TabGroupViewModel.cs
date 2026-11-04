@@ -90,6 +90,22 @@ public sealed partial class TabGroupViewModel : ObservableObject
     /// </summary>
     public TabViewModel? ProjectTab => _usedTab is { } used && Tabs.Contains(used) ? used : Tabs.FirstOrDefault();
 
+    /// <summary>
+    /// The project tools the project's icon on the group's row shows (DESIGN.md §18, "Project tools"): its
+    /// <see cref="ProjectTab"/>'s, or with no session tab open, the folder's own, which the shell makes the first time
+    /// they're asked for and keeps for when the group's tabs close again.
+    /// </summary>
+    public ProjectToolsViewModel? ProjectTools => ProjectTab?.ProjectTools ?? (FolderTools ??= MakeFolderTools?.Invoke(this));
+
+    /// <summary>The folder's project tools while no tab is open; null until they're first asked for.</summary>
+    internal ProjectToolsViewModel? FolderTools { get; private set; }
+
+    /// <summary>The folder's own project tools, made now if they weren't: for the project's settings, with or without a tab.</summary>
+    internal ProjectToolsViewModel? OwnFolderTools => FolderTools ??= MakeFolderTools?.Invoke(this);
+
+    /// <summary>Makes <see cref="FolderTools"/>, which the shell sets as it makes the group.</summary>
+    internal Func<TabGroupViewModel, ProjectToolsViewModel>? MakeFolderTools { get; set; }
+
     /// <summary><paramref name="tab"/>, one of the group's, was selected: its project tools are the group's from now on.</summary>
     internal void Used(TabViewModel tab)
     {
@@ -99,6 +115,7 @@ public sealed partial class TabGroupViewModel : ObservableObject
         }
         _usedTab = tab;
         OnPropertyChanged(nameof(ProjectTab));
+        OnPropertyChanged(nameof(ProjectTools));
     }
 
     /// <summary>
@@ -257,6 +274,7 @@ public sealed partial class TabGroupViewModel : ObservableObject
         OnPropertyChanged(nameof(UrgentGlyph));
         OnPropertyChanged(nameof(Summary));
         OnPropertyChanged(nameof(ProjectTab));
+        OnPropertyChanged(nameof(ProjectTools));
         OnProjectOnlyChanged();
     }
 

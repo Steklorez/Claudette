@@ -1,7 +1,7 @@
 ---
 title: Advanced
 parent: Settings
-nav_order: 7
+nav_order: 8
 summary: "Settings → Advanced is for the things you reach for when something isn't working, or when you want claude to start with an option Deventry doesn't have a setting for."
 ---
 

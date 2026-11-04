@@ -69,6 +69,14 @@ From Unity 6.5, the editor writes Unity's own `Editor.log`, the one every projec
 
 If the editor already had the project open when Deventry started, the project's log is the only row. **Use Global Editor Log** in Unity's preferences, or starting Unity with `-useGlobalLog`, keeps everything in the shared log, and its row carries on as before.
 
+## Unity's JSON log
+
+Unity 6's logging framework can write its log as JSON too: turn on **Enable logging framework**, then **Enable JSON logging**, in Unity's Preferences, and restart the editor. It then writes `Editor.jsonl` beside `Editor.log`, in the project's `Logs` folder, with an entry on each line.
+
+While Settings → Project tools → Unity → **Prefer JSON logging** is on, as it is to begin with, Deventry follows `Editor.jsonl` in place of `Editor.log` whenever the editor is writing one, so the tab has one row for it, not two. Each entry shows as Unreal's lines do, in columns: its time in your time zone, its category, its level, then its message, with its other lines and its stack trace under it. The log's **Categories ▾** filters by the categories the entries name. Turn the setting off to follow `Editor.log` as before.
+
+Unity hasn't documented the fields of its JSON log yet, so Deventry reads them by the names such logs use; a line it can't read as an entry shows as it is.
+
 ## Closing it
 
 Click **×** on the row, **Close** over the log, or press `Ctrl/Cmd+W` while it has the focus.
@@ -95,7 +103,7 @@ When a tab is [collapsed](../tabs/the-sidebar.md#collapsing-a-tab), its logs fol
 | Engine | What gets a row | The log |
 |---|---|---|
 | Unreal Engine | The editor, `UnrealEditor-Cmd` and commandlets (`-run=`), `-game` and `-server` runs, with the project's `.uproject` on their command line. | `Saved/Logs/<project>.log`, or `<project>_2.log` and on while another has that one, or the file `-abslog=` or `LOG=` names. |
-| Unity | The editor and batch mode runs with the project after `-projectPath`, or a relative path such as `.` from the project's folder. | Unity's `Editor.log` (the one **Open Editor log** opens), and from Unity 6.5 the project's `Logs/Editor.log` once the editor has the project open, or the file `-logFile` names. Deventry's own **Run EditMode tests** writes its output to the run instead. |
+| Unity | The editor and batch mode runs with the project after `-projectPath`, or a relative path such as `.` from the project's folder. | Unity's `Editor.log` (the one **Open Editor log** opens), and from Unity 6.5 the project's `Logs/Editor.log` once the editor has the project open, or the file `-logFile` names. With **Prefer JSON logging**, `Editor.jsonl` beside it while the editor writes one ([above](#unitys-json-log)). Deventry's own **Run EditMode tests** writes its output to the run instead. |
 | Godot | The editor and the game with the project after `--path`, or a relative path such as `.` from the project's folder. | `logs/godot.log` in the project's user data folder, or wherever the project's file logging settings or `--log-file` say. |
 
 Deventry looks at which programs are running every couple of seconds (every five on macOS), so a row appears a moment after the editor starts.

@@ -5,13 +5,11 @@ using Deventry.App.Services;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Development;
 using Deventry.Core.Git;
-using Deventry.Core.ProjectTools;
 using Deventry.Core.Protocol;
 using Deventry.Core.Settings;
 using Deventry.Platform.Processes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.Logging;
 
 using Deventry.App.ViewModels.ToolWindows;
 
@@ -72,6 +70,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             foreach (var tab in AllTabs)
             {
                 tab.OnSettingsChanged();
+            }
+            foreach (var group in Groups)
+            {
+                group.FolderTools?.OnSettingsChanged();
             }
             // Settings → Project tools → All tools → Show editor logs (DESIGN.md §18, "Editor logs").
             FollowEditorLogs();
@@ -282,7 +284,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.State.SelectedTabId = SavedId(newValue);
         _services.SaveState();
         UpdateGameCall();
-        TellSettingsOfProjectTab();
         // The project's icon on the group's row follows the tab worked in (DESIGN.md §18, "Project tools").
         if ((SelectedTab ?? (SelectedLog is { } log ? TabOf(log) : null)) is { } used)
         {
@@ -485,6 +486,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             Name = GroupNames.Saved(state, folder),
         };
         group.IsPinned = state.PinnedGroups.Any(p => FolderHistory.SamePath(p, folder));
+        group.MakeFolderTools = MakeFolderTools;
         SetUpGroupAccount(group);
         Groups.Add(group);
         // A pinned group goes up among the pinned ones, and the others keep their place.
@@ -492,6 +494,17 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         UpdateGroupLabels();
         OnPropertyChanged(nameof(HasTabs));
         return group;
+    }
+
+    /// <summary>
+    /// A group's project tools while it has no session tab open (DESIGN.md §18, "Project tools"): its folder's project
+    /// and files, found as a tab's are, whose jobs wait for a tab.
+    /// </summary>
+    private ProjectToolsViewModel MakeFolderTools(TabGroupViewModel group)
+    {
+        var tools = new ProjectToolsViewModel(_services, new FolderProjectToolsHost(this, group));
+        _ = tools.RefreshAsync();
+        return tools;
     }
 
     /// <summary>A group with neither a session tab nor its Project Files tab leaves the sidebar.</summary>
@@ -522,22 +535,6 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         Picker = null;
         History = new HistoryViewModel(_services, this);
     }
-
-    /// <summary>
-    /// <b>Project settings…</b>, in a group's menu: Settings at its project's pages (DESIGN.md §14, "The project's pages"),
-    /// for its tab used last, which is selected so the window follows it.
-    /// </summary>
-    [RelayCommand]
-    private Task OpenGroupProjectSettingsAsync(TabGroupViewModel? group) =>
-        group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.LinksPage) : Task.CompletedTask;
-
-    /// <summary>
-    /// <b>Change icon…</b>, in a group's menu: its project's Group page in Settings (DESIGN.md §4, "Grouped by folder"),
-    /// where a picture can take the place of its dot.
-    /// </summary>
-    [RelayCommand]
-    private Task ChangeGroupIconAsync(TabGroupViewModel? group) =>
-        group?.ProjectTab is { } tab ? OpenProjectSettingsAsync(tab, SettingsViewModel.GroupPage) : Task.CompletedTask;
 
     /// <summary><b>History for this folder</b>, in a group's menu: History listing only that project's sessions.</summary>
     [RelayCommand]
@@ -868,50 +865,22 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     }
 
     /// <summary>
-    /// <b>Change color…</b> in a group's menu opens this picker (DESIGN.md §4, "Grouped by folder"). What it picks applies
-    /// at once and is remembered for the folder on this computer; once it closes on a new color, that's saved in the
-    /// folder's project files too.
-    /// </summary>
-    public GroupColorPickerViewModel PickGroupColor(TabGroupViewModel group) =>
-        new(group, color => SetGroupColor(group, color), color => _ = SaveGroupColorAsync(group, color));
-
-    /// <summary>
-    /// The picker closed on a new color (DESIGN.md §4, "Grouped by folder"): it's saved in the folder's
-    /// <c>deventry.json</c>, for everyone who opens the project, or in <c>deventry.local.json</c> when that has a color,
-    /// since that one wins; then the folder's tabs read their files again. A file that can't take it, one that isn't
-    /// JSON say, is left alone, and the color stays remembered on this computer.
-    /// </summary>
-    internal async Task SaveGroupColorAsync(TabGroupViewModel group, Color color)
-    {
-        var folder = group.Folder;
-        var hex = TabGroupViewModel.ToHex(color);
-        try
-        {
-            await Task.Run(() =>
-            {
-                var scope = ProjectFile.ReadColor(folder, ProjectFileScope.Local) is not null ? ProjectFileScope.Local : ProjectFileScope.Shared;
-                ProjectFile.WriteColor(folder, scope, hex);
-            });
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
-        {
-            _services.Loggers.CreateLogger("Groups").LogWarning(ex, "Couldn't save the group's color in {Folder}'s project files.", folder);
-            return;
-        }
-        _services.Dispatcher.Post(() => OnProjectActionsChanged(folder));
-    }
-
-    /// <summary>
     /// A tab read its folder's project files, which name the group's color (DESIGN.md §4, "Grouped by folder"): the group
     /// takes it, when the tab is in the group's own folder rather than a worktree of it, and it's remembered on this
     /// computer as a picked one is.
     /// </summary>
     internal void UseProjectColor(TabViewModel tab, string hex)
     {
-        if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group
-            && FolderHistory.SamePath(tab.Folder, group.Folder)
-            && TabGroupViewModel.TryParseHex(hex, out var color)
-            && group.Color != color)
+        if (Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group && FolderHistory.SamePath(tab.Folder, group.Folder))
+        {
+            UseProjectColor(group, hex);
+        }
+    }
+
+    /// <summary>The group's folder's project files name its color, read with no tab open: the group takes it.</summary>
+    internal void UseProjectColor(TabGroupViewModel group, string hex)
+    {
+        if (TabGroupViewModel.TryParseHex(hex, out var color) && group.Color != color)
         {
             SetGroupColor(group, color);
         }
@@ -1223,7 +1192,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     /// <summary>Opens Settings where it was last left, or brings it to the front if it's open.</summary>
     [RelayCommand]
-    private Task OpenSettingsAsync() => ShowSettingsAsync(null, ProjectTab);
+    private Task OpenSettingsAsync() => ShowSettingsAsync(null);
 
     // ---- The header's menu (DESIGN.md §3): Settings, the user guide, then Help's others ----------------------------
 
@@ -1247,7 +1216,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// Opens Settings at a category, and brings the setting or section with <paramref name="key"/> into view: the quick
     /// suffixes from the suffix menu's <b>Edit suffixes…</b>, say.
     /// </summary>
-    internal Task OpenSettingsAtAsync(string category, string? key = null) => ShowSettingsAsync(category, ProjectTab, key: key);
+    internal Task OpenSettingsAtAsync(string category, string? key = null) => ShowSettingsAsync(category, key);
 
     /// <summary>A feature's own "…settings" entry (DESIGN.md §14): Settings at the category and setting it names.</summary>
     [RelayCommand]
@@ -1261,28 +1230,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         return OpenSettingsAtAsync(parts[0], parts.Length > 1 ? parts[1] : null);
     }
 
-    /// <summary>
-    /// Opens Settings at one of <paramref name="tab"/>'s project pages (DESIGN.md §14, "The project's pages"): Actions for
-    /// <b>Add an action…</b> and Links for <b>Add a link…</b>, with a new one started. The Settings window follows the
-    /// selected tab, so the tab is selected first when it isn't.
-    /// </summary>
-    internal Task OpenProjectSettingsAsync(TabViewModel tab, string page, bool startNew = false)
-    {
-        if (!ReferenceEquals(SelectedTab, tab) && AllTabs.Contains(tab))
-        {
-            SelectedTab = tab;
-        }
-        return ShowSettingsAsync(page, tab, startNew);
-    }
-
-    /// <summary>The window gets the project pages of the tab selected as it opens; with no tab, there are none.</summary>
-    private Task ShowSettingsAsync(string? category, TabViewModel? tab, bool startNew = false, string? key = null)
-    {
-        _settingsProjectTab = tab;
-        return ShowSettingsWindow is { } show
-            ? show(new SettingsOpening(category, tab is null ? null : new ProjectSettingsViewModel(_services, tab, this), startNew, key))
-            : Task.CompletedTask;
-    }
+    private Task ShowSettingsAsync(string? category, string? key = null) =>
+        ShowSettingsWindow is { } show ? show(new SettingsOpening(category, key)) : Task.CompletedTask;
 
     [RelayCommand]
     private void OpenTabSettings(TabViewModel? tab)
@@ -1301,6 +1250,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         foreach (var tab in AllTabs.Where(t => FolderHistory.SamePath(t.Folder, folder)))
         {
             tab.ProjectTools.ReloadCustomActions();
+        }
+        foreach (var group in Groups.Where(g => FolderHistory.SamePath(g.Folder, folder)))
+        {
+            group.FolderTools?.ReloadCustomActions();
         }
     }
 

@@ -32,9 +32,11 @@ The sidebar lists the pages in groups:
 - **Your work**: Sessions, and Files and diffs.
 - **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Deventry knows, Unreal Engine, Unity and Godot, each with its own icon (Unreal Engine's and Godot's are their logos). A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
 - **Source control**: [Git](git.md), with a branch for its icon, then [Perforce](../project-tools/perforce.md), with Perforce's logo.
-- At the foot, under a line, the [selected tab's project](#the-projects-pages), and under another line the [version and Help](#the-version-and-help).
+- At the foot, under a line, the [version and Help](#the-version-and-help).
 
-The arrow keys go up and down through every page. [Every setting](every-setting.md) has a table for each.
+A project's own settings, its links, actions and the like, are in a window of their own: see [Project settings](project-settings.md).
+
+The arrow keys go up and down through the pages. [Every setting](every-setting.md) has a table for each.
 
 Each page starts with a line saying what's on it, then its sections. In the Claude style each section is a card.
 
@@ -66,18 +68,7 @@ Each section has **Reset to defaults** by its heading, which puts that section's
 - **Perforce** leaves its stored password and its per-folder servers and users.
 - **Keyboard**'s **Quick suffixes** puts the five built-in suffixes back, which deletes your own, so it asks first.
 
-No **Reset to defaults** touches a project's files or the choices Deventry remembers for a project, and the project's pages have none.
-
-## The project's pages
-
-At the foot of the sidebar, above the version, is a group for the project of the tab selected in the main window, headed **Selected project**. It stays there however far you scroll the pages above it. Under the heading is the project's name when Deventry found one ("NightOwl"), otherwise the folder's name, after a dot in the color of the tab's group in the main window, or the project's icon in its place. Hover the name for the folder's path. Select another tab while Settings is open and the group follows it. With no tab open, the group isn't there, and while you search it's hidden with the pages. Each page begins with a line saying which tab it's for.
-
-- **Links** lists the project's web links, from `deventry.json` and `deventry.local.json`, with **Add…**, **Edit…**, **Remove**, **Move up** and **Move down**.
-- **Actions** is the same for the project's own actions, with **Open file**.
-- **Group** is how the project's group looks in the sidebar, in either file: its color, with **Use the group's color** and **Remove**, and the picture in place of its dot, with **Choose…** and **Remove**. See [Changing a group's color](../tabs/folder-groups.md#changing-a-groups-color) and [A group's icon](../tabs/folder-groups.md#a-groups-icon).
-- **Tools** holds this machine's choices for the project: which project file when the folder has several, its editor configuration or code optimization, and the engine folder, Unity editor or Godot executable you picked, each with **Clear** to forget the pick. Without a project it says "No Unreal, Unity or Godot project in this folder". The defaults every project starts with are on its kind's page in Project tools, which **Open Unreal Engine** (or Unity, or Godot) at the foot of the page shows; without a project, **Open All tools**.
-
-Each change is saved as you make it, to the file it belongs to, and the project's menu follows at once. Saving rewrites the file, so comments in it are dropped. A file that isn't valid JSON is never rewritten: the page shows why, and you fix the file by hand. [Actions and links](../project-tools/actions-and-links.md) explains what they do. The project's menu has **Add a link…** and **Add an action…**, which open Settings on these pages with a new entry started.
+No **Reset to defaults** touches a project's files or the choices Deventry remembers for a project, which are in its [project settings](project-settings.md).
 
 ## The version and Help
 

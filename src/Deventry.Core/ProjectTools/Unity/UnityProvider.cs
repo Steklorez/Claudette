@@ -15,6 +15,20 @@ public sealed class UnityProvider : IProjectType
     /// <summary>Where a project's code optimization is kept in its memory, and the default for every project in Settings.</summary>
     public const string OptimizationKey = "codeOptimization";
 
+    /// <summary>Settings → Unity → <b>Prefer JSON logging</b>'s key (DESIGN.md §18, "Editor logs", "Unity's JSON log").</summary>
+    public const string PreferJsonKey = "preferJsonLogging";
+
+    /// <summary>
+    /// <b>Prefer JSON logging</b>: an editor that writes its JSON Lines log too has that one followed, in place of its text
+    /// log. On by default; Unity writes one only with its JSON logging turned on.
+    /// </summary>
+    public static readonly ProjectTypeToggle PreferJson = new(PreferJsonKey, "Prefer JSON logging", Default: true)
+    {
+        Description = "When Unity writes its JSON log, Editor.jsonl, show that one under the tab, in place of Editor.log.",
+        More = "Unity writes it beside Editor.log once Enable logging framework and Enable JSON logging are on in its Preferences, after the editor restarts. Each entry shows with its time, category and level in columns, its stack trace under it.",
+        Keywords = ["json", "jsonl", "editor log", "logging framework", "structured"],
+    };
+
     /// <summary>The editor's process name (<c>Unity.exe</c> on Windows); Unity Hub is another process and isn't counted.</summary>
     public static readonly IReadOnlyList<string> EditorProcessNames = ["Unity"];
 
@@ -35,6 +49,7 @@ public sealed class UnityProvider : IProjectType
             Description = "For projects that haven't been given their own in the project's menu.",
             Keywords = ["release", "debug"],
         },
+        PreferJson,
     ];
 
     /// <summary>What the editor makes and keeps: the imported assets, its scratch, its logs, the package cache.</summary>
@@ -183,7 +198,7 @@ public sealed class UnityProvider : IProjectType
             },
             Problem = problem,
             SystemPromptNote = SystemPromptNote(project, editor, os),
-            Logs = UnityLogs.Source(project, context.Paths, os),
+            Logs = UnityLogs.Source(project, context.Paths, os, PreferJson.IsOn(context.Settings, KindId)),
         };
     }
 

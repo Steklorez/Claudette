@@ -10,22 +10,42 @@ using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
 using Deventry.App.Views;
+using Deventry.Core.ProjectTools;
 
 namespace Deventry.App.UiTests;
 
-/// <summary>A folder group's color picker, from Change color… in the group's menu (DESIGN.md §4, "Grouped by folder").</summary>
+/// <summary>
+/// A folder group's color picker, from <b>Choose…</b> on its project's Group page (DESIGN.md §4, "Grouped by folder"),
+/// which took the place of <b>Change color…</b> in the group's menu.
+/// </summary>
 public class GroupColorUiTests
 {
     [AvaloniaFact]
-    public async Task Change_color_opens_a_picker_beside_the_group_that_recolors_it_as_you_pick()
+    public async Task Choose_on_the_Group_page_opens_a_picker_that_recolors_the_group_as_you_pick()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         await h.OpenTabAsync();
-        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        var shell = UiText.Show(new ShellView { DataContext = h.Shell });
         var group = h.Shell.Groups.Single();
-        var label = GroupLabel(window);
+        var label = shell.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("grouplabel") && b.IsEffectivelyVisible);
 
-        var flyout = OpenPicker(window, label);
+        // The group's menu leaves its color and icon to the project's settings (issue #109).
+        label.ContextMenu!.Open(label);
+        UiText.Settle(shell);
+        var headers = label.ContextMenu.Items.OfType<MenuItem>().Select(m => m.Header as string).ToList();
+        label.ContextMenu.Close();
+        Assert.Contains("Project settings…", headers);
+        Assert.DoesNotContain("Change color…", headers);
+        Assert.DoesNotContain("Change icon…", headers);
+
+        var settings = new ProjectSettingsWindowViewModel(h.Services, h.Shell.ProjectSettingsFor(h.WorkFolder)!, ProjectSettingsWindowViewModel.GroupPage);
+        var window = new ProjectSettingsWindow { DataContext = settings, Width = 860, Height = 660 };
+        window.Show();
+        UiText.Settle(window);
+        var choose = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "ChooseColor");
+        choose.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        UiText.Settle(window);
+        var flyout = Assert.IsType<Flyout>(FlyoutBase.GetAttachedFlyout(choose));
         var picker = Assert.IsType<GroupColorPicker>(flyout.Content);
         await UiText.SettleUntilAsync(window, () => picker.IsEffectivelyVisible, "the picker");
         var shown = UiText.Describe(picker);
@@ -41,44 +61,25 @@ public class GroupColorUiTests
         Assert.Equal("Saturation and brightness", AutomationProperties.GetName(spectrum));
         Assert.Equal("Hue", AutomationProperties.GetName(hue));
 
-        // A hex code recolors the group's dot and line as it's typed, and moves the spectrum.
+        // A hex code recolors the group's dot in the sidebar as it's typed, and moves the spectrum; nothing's saved yet.
         var hex = picker.GetVisualDescendants().OfType<TextBox>().Single();
         hex.Text = "#12AB34";
         UiText.Settle(window);
+        UiText.Settle(shell);
         Assert.Equal(Color.Parse("#12AB34"), group.Color);
         Assert.Equal(Color.Parse("#12AB34"), spectrum.Color);
         Assert.Equal(Color.Parse("#12AB34"), ((ISolidColorBrush)label.GetVisualDescendants().OfType<Ellipse>().Single().Fill!).Color);
         Assert.DoesNotContain(swatches, s => s.Classes.Contains("selected"));
+        Assert.Null(ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Shared));
 
-        // A swatch applies and closes the picker.
+        // A swatch applies and closes the picker, which saves the color in the file the page shows.
         swatches[2].Command!.Execute(swatches[2].CommandParameter);
         UiText.Settle(window);
         Assert.False(flyout.IsOpen);
         Assert.Equal(TabGroupViewModel.Palette[2].Color, group.Color);
+        Assert.Equal(TabGroupViewModel.ToHex(TabGroupViewModel.Palette[2].Color), ProjectFile.ReadColor(h.WorkFolder, ProjectFileScope.Shared));
 
-        // The rail's group menu opens it too, beside the rail's group.
-        h.Shell.Layout.ToggleSidebarCommand.Execute(null);
-        UiText.Settle(window);
-        var rail = GroupLabel(window);
-        Assert.NotSame(label, rail);
-        var railFlyout = OpenPicker(window, rail);
-        await UiText.SettleUntilAsync(window, () => railFlyout.IsOpen, "the rail's picker");
-        railFlyout.Hide();
-
+        window.Close();
         await Verify(shown);
-    }
-
-    private static Button GroupLabel(Window window) =>
-        window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("grouplabel") && b.IsEffectivelyVisible);
-
-    private static Flyout OpenPicker(Window window, Button label)
-    {
-        label.ContextMenu!.Open(label);
-        UiText.Settle(window);
-        var item = label.ContextMenu.Items.OfType<MenuItem>().Single(m => m.Header as string == "Change color…");
-        item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        label.ContextMenu.Close();
-        UiText.Settle(window);
-        return Assert.IsType<Flyout>(FlyoutBase.GetAttachedFlyout(label));
     }
 }

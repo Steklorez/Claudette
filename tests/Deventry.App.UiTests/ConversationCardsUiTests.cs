@@ -165,6 +165,62 @@ public sealed class ConversationCardsUiTests
         window.Close();
     }
 
+    /// <summary>
+    /// The Modified files card folds to its header line as a Tool calls card does (issue #98): the chevron after its count,
+    /// or a click anywhere on the header line; the setting starts new ones folded.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_Modified_files_card_folds_to_its_header_line_and_the_setting_starts_new_ones_folded()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        TurnSummaryItem Footer()
+        {
+            var turn = new TurnSummaryItem("3s");
+            turn.Files = [new TurnFileRow(turn, new Core.Diffs.TurnFileChange("src/a.cs", null, IsNew: true, BeforeKnown: true), "src/a.cs")];
+            return turn;
+        }
+        var first = Footer();
+        tab.Items.Add(first);
+        await UiText.SettleUntilAsync(window, () => Named(window, "files").Count == 1 && VisibleTiles(window) == 1, "the Modified files card");
+
+        var card = Named(window, "files")[0];
+        Assert.True(card.IsCollapsible);
+        var toggle = Toggle(card);
+        Assert.Equal("Show or hide the files", AutomationProperties.GetName(toggle));
+        // The chevron comes after the count, as a Tool calls card's does.
+        var detail = card.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "PART_Detail");
+        Assert.Equal("1 file changed", detail.Text);
+        Assert.True(toggle.TranslatePoint(default, card)!.Value.X > detail.TranslatePoint(default, card)!.Value.X);
+
+        toggle.Command!.Execute(null);
+        UiText.Settle(window);
+        Assert.True(first.IsFilesCollapsed);
+        Assert.Equal(0, VisibleTiles(window));
+        Assert.True(card.IsEffectivelyVisible);
+
+        // A click on the header line's far end brings the tiles back.
+        var line = card.GetVisualDescendants().OfType<Border>().First(b => b.Name == "PART_HeaderLine");
+        var end = line.TranslatePoint(new Point(line.Bounds.Width - 4, line.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(end, MouseButton.Left);
+        window.MouseUp(end, MouseButton.Left);
+        UiText.Settle(window);
+        Assert.False(first.IsFilesCollapsed);
+        Assert.Equal(1, VisibleTiles(window));
+
+        // The setting starts the cards to come collapsed, and leaves the ones there as they are.
+        h.Services.Settings.Appearance.CollapseModifiedFiles = true;
+        h.Services.SaveSettings();
+        tab.ComposerText = "go";
+        await tab.SendCommand.ExecuteAsync(null);
+        h.Transport.EmitTurn("Done.");
+        await UiText.SettleUntilAsync(window, () => tab.Items.OfType<TurnSummaryItem>().Count() == 2, "a second footer");
+        Assert.False(first.IsFilesCollapsed);
+        Assert.True(tab.Items.OfType<TurnSummaryItem>().Last().IsFilesCollapsed);
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task A_chain_of_steps_folds_into_one_line_and_then_into_the_replys_header_which_opens_it_inside_the_card()
     {
@@ -433,6 +489,51 @@ public sealed class ConversationCardsUiTests
         await UiText.SettleUntilAsync(window, () => list.ContainerFromItem(first) is { } shown && IsAtTheTop(shown, view), "back to the first");
         window.KeyPressQwerty(PhysicalKey.F4, OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control);
         await UiText.SettleUntilAsync(window, () => UiText.Describe(view).Contains("Later note 149", StringComparison.Ordinal), "the latest");
+        window.Close();
+    }
+
+    /// <summary>
+    /// Settings → Conversation → Marks in the scroll bar (issue #99): Claude's answers get marks in its color once turned
+    /// on, the replies it carried on after with a tool call don't, and your messages' go once turned off, at once.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_scroll_bar_marks_Claudes_answers_and_your_messages_as_settings_say()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.Items.Add(new UserMessageItem("Fix the build"));
+        var carriedOn = new AssistantTextItem { IsStreaming = false, IsIntermediate = true };
+        carriedOn.Append("Let me look at the log.");
+        tab.Items.Add(carriedOn);
+        for (var i = 0; i < 150; i++)
+        {
+            tab.Items.Add(new NoteItem($"Note {i}", NoteKind.Info));
+        }
+        var answer = new AssistantTextItem { IsStreaming = false };
+        answer.Append("The build passes now.");
+        tab.Items.Add(answer);
+        for (var i = 0; i < 150; i++)
+        {
+            tab.Items.Add(new NoteItem($"Later note {i}", NoteKind.Info));
+        }
+        UiText.Settle(window);
+        var view = window.GetVisualDescendants().OfType<TabView>().Single();
+        var marks = view.GetVisualDescendants().OfType<ScrollMarks>().Single(m => m.Name == "ScrollMarks");
+        await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 1, "your message's mark");
+        Assert.Equal([0], marks.Marks.Select(m => m.Index));
+
+        h.Services.Settings.Appearance.MarkClaudesAnswers = true;
+        h.Services.SaveSettings();
+        await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 2, "the answer's mark");
+        Assert.Equal([0, 152], marks.Marks.Select(m => m.Index));
+        Assert.Equal("Claude: The build passes now.", marks.Marks[1].Tip);
+        Assert.Equal(((ISolidColorBrush)view.FindResource(view.ActualThemeVariant, "CardClaudeStripeBrush")!).Color, ((ISolidColorBrush)marks.Marks[1].Brush).Color);
+
+        h.Services.Settings.Appearance.MarkYourMessages = false;
+        h.Services.SaveSettings();
+        await UiText.SettleUntilAsync(window, () => marks.Marks.Count == 1, "only the answer's mark");
+        Assert.Equal([152], marks.Marks.Select(m => m.Index));
         window.Close();
     }
 

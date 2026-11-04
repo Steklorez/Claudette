@@ -169,7 +169,7 @@ public partial class ProjectFileWindow : Window
 
     /// <summary>
     /// The Files tab's keys (DESIGN.md §18, "Project files", "Keyboard"): <c>Ctrl/Cmd+S</c> saves the file and
-    /// <c>Ctrl/Cmd+Alt+S</c> every file of its Files tab, Find opens the editor's find, the previous and next message go
+    /// <c>Ctrl/Cmd+Alt+S</c> every file of its Files tab, Find opens the editor's find or the preview's, the previous and next message go
     /// through the changes, Find in files and Replace in files open the popup over Deventry's window, and Close tab puts
     /// the file back.
     /// </summary>
@@ -190,9 +190,10 @@ public partial class ProjectFileWindow : Window
         {
             file.Files.SaveAllCommand.Execute(null);
         }
-        else if (Is(KeyboardShortcuts.Find) && file.ShowsEditor)
+        else if (Is(KeyboardShortcuts.Find) && (file.ShowsEditor || file.ShowsPreview))
         {
-            file.RequestFind(replace: false);
+            // In the editor, or a Markdown file's preview, whichever has the keyboard.
+            file.FindHere();
         }
         else if (Is(KeyboardShortcuts.PreviousMessage))
         {

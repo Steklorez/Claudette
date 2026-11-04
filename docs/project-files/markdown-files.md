@@ -39,6 +39,12 @@ The preview shows the editor's text, unsaved edits and all, as Claude's replies 
 
 In **Edit and preview**, scrolling either side scrolls the other to the same place, so the line at the top of the editor is at the top of the preview. Switching between **Edit** and **Preview** keeps your place too.
 
+## Finding in the preview
+
+Press `Ctrl/Cmd+F` in **Preview**, or in **Edit and preview** with the keyboard in the preview, and a find box shows over it, as in the editor. Type what to look for: every match is marked, the one it's on outlined, and it says where it is, such as *3 of 12*. **Aa** matches case, **W** whole words, and **.\*** takes a regular expression. `Enter` goes to the next match and `Shift+Enter` to the one before, scrolling it into view; `Esc` closes the box. With the keyboard in the editor, `Ctrl/Cmd+F` finds in the editor instead.
+
+A match is within a line of the preview: it doesn't run on from one paragraph, or one line of a code block, into the next.
+
 ## Links and images
 
 - **A link to a heading** in the file, such as `[Saving](#saving)`, scrolls the preview to it.

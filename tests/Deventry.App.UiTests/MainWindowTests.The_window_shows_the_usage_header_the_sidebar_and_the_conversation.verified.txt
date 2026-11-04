@@ -51,4 +51,5 @@
 [button] Changed files
 [button] Agents
 [button] Scratch pad
+[button] Games
 "work: Claude finished."

@@ -231,6 +231,44 @@ public sealed class EditorLogTests : IDisposable
         Assert.Equal([global], UnityLogs.Writer(new SystemProcess(1, "Unity", $"Unity -projectPath \"{root}\""), root, global, os)!.LogFiles);
     }
 
+    /// <summary>
+    /// With Prefer JSON logging on, an editor writing its JSON Lines log beside its text log has that one followed, which
+    /// doesn't move (issue #92): the project's own, or the one beside a -logFile, written since it started.
+    /// </summary>
+    [Fact]
+    public void With_JSON_logging_preferred_a_unity_editor_writing_its_JSON_log_is_followed_there()
+    {
+        var os = ToolOSExtensions.Current;
+        var root = _temp.CreateFolder("Owl");
+        var json = Path.Combine(root, "Logs", "Editor.jsonl");
+        var global = _temp.Combine("Editor.log");
+        EditorLogWriter Writer(bool prefer, string arguments = "") =>
+            UnityLogs.Writer(Process(1, "Unity", $"Unity -projectPath \"{root}\" {arguments}", Start), root, global, os, prefer)!;
+
+        // None yet: the text log, as ever.
+        Assert.Equal([global], Writer(prefer: true).LogFiles);
+
+        // One left by an earlier session doesn't count.
+        Directory.CreateDirectory(Path.GetDirectoryName(json)!);
+        File.WriteAllText(json, "{}\n");
+        File.SetLastWriteTimeUtc(json, Start.UtcDateTime.AddHours(-1));
+        Assert.Equal([global], Writer(prefer: true).LogFiles);
+
+        // Written since it started: followed in place of the machine's text log, and it doesn't move.
+        File.SetLastWriteTimeUtc(json, Start.UtcDateTime.AddMinutes(1));
+        Assert.Equal([json], Writer(prefer: true).LogFiles);
+        Assert.False(Writer(prefer: true).CanMove);
+        // Not preferred, the text log.
+        Assert.Equal([global], Writer(prefer: false).LogFiles);
+        Assert.True(Writer(prefer: false).CanMove);
+
+        // Beside a -logFile, the one named after it.
+        var named = Path.Combine(root, "editor.jsonl");
+        File.WriteAllText(named, "{}\n");
+        File.SetLastWriteTimeUtc(named, Start.UtcDateTime.AddMinutes(1));
+        Assert.Equal([named], Writer(prefer: true, "-logFile editor.log").LogFiles);
+    }
+
     private static IReadOnlyList<LogMoveLine> Moves(LogMoveReader reader, params string[] lines) => reader.Read(lines, fresh: false, final: false);
 
     [Fact]

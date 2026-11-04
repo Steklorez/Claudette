@@ -616,10 +616,28 @@ public sealed class AppearanceSettings
     public bool QuietSteps { get; set; } = true;
 
     /// <summary>
+    /// The scroll bar marks where each of your messages is (DESIGN.md §18, "Conversation cards", "Marks in the scroll
+    /// bar"). On by default.
+    /// </summary>
+    public bool MarkYourMessages { get; set; } = true;
+
+    /// <summary>
+    /// The scroll bar marks where each of Claude's answers is: its replies that a tool call didn't follow (DESIGN.md §18,
+    /// "Conversation cards", "Marks in the scroll bar"). Off by default.
+    /// </summary>
+    public bool MarkClaudesAnswers { get; set; }
+
+    /// <summary>
     /// New Tool calls cards start collapsed to their header line, with a chevron to open them, as thinking rows start
     /// collapsed (DESIGN.md §18, "Conversation cards"); a card's menu changes it for its tab. Off by default.
     /// </summary>
     public bool CollapseToolCalls { get; set; }
+
+    /// <summary>
+    /// New Modified files cards start collapsed to their header line, as Tool calls cards can (DESIGN.md §18, "Conversation
+    /// cards"); a card's menu changes it for its tab. Off by default.
+    /// </summary>
+    public bool CollapseModifiedFiles { get; set; }
 
     /// <summary>
     /// Each run of steps on the way (thinking, tool calls, subagents) between two messages folds into one, which the

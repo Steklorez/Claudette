@@ -6,6 +6,9 @@ public enum LandmarkKind
     /// <summary>A message the user sent.</summary>
     Prompt,
 
+    /// <summary>One of Claude's answers: a reply that a tool call didn't follow.</summary>
+    Answer,
+
     /// <summary>A permission prompt, question, plan or MCP server's request still waiting.</summary>
     Waiting,
 
@@ -22,10 +25,16 @@ public enum LandmarkKind
 /// </summary>
 public static class ConversationLandmarks
 {
-    /// <summary>The mark an item gets in the scroll bar; null for none.</summary>
-    public static LandmarkKind? KindOf(ConversationItem item) => item switch
+    /// <summary>
+    /// The mark an item gets in the scroll bar; null for none. Your messages and Claude's answers are marked as Settings →
+    /// Conversation → <b>Marks in the scroll bar</b> says.
+    /// </summary>
+    /// <param name="yourMessages">Mark the messages you sent.</param>
+    /// <param name="answers">Mark Claude's answers: its replies that a tool call didn't follow.</param>
+    public static LandmarkKind? KindOf(ConversationItem item, bool yourMessages = true, bool answers = false) => item switch
     {
-        UserMessageItem => LandmarkKind.Prompt,
+        UserMessageItem => yourMessages ? LandmarkKind.Prompt : null,
+        AssistantTextItem { IsIntermediate: false } reply when answers && reply.Markdown.Length > 0 => LandmarkKind.Answer,
         PromptItem { IsPending: true } or McpInputItem { IsPending: true } => LandmarkKind.Waiting,
         NoteItem { IsError: true } or HookRunItem { IsFailed: true } => LandmarkKind.Error,
         TurnSummaryItem { HasFiles: true } => LandmarkKind.Files,
@@ -36,6 +45,7 @@ public static class ConversationLandmarks
     public static string Describe(ConversationItem item) => item switch
     {
         UserMessageItem user => $"{(user.AutomaticLabel ?? "Your message")}: {OneLine(user.Text)}",
+        AssistantTextItem reply => $"Claude: {OneLine(reply.Text)}",
         PromptItem or McpInputItem => "Waiting for your answer",
         NoteItem note => $"Error: {OneLine(note.Text)}",
         HookRunItem hook => $"{hook.Title} failed",

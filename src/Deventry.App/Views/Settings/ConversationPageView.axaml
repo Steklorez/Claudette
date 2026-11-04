@@ -19,6 +19,9 @@
       <c:SettingRow Key="appearance.collapseToolCalls">
         <ToggleSwitch IsChecked="{Binding CollapseToolCalls}" />
       </c:SettingRow>
+      <c:SettingRow Key="appearance.collapseModifiedFiles">
+        <ToggleSwitch IsChecked="{Binding CollapseModifiedFiles}" />
+      </c:SettingRow>
       <c:SettingRow Key="appearance.foldChains">
         <ToggleSwitch IsChecked="{Binding FoldChains}" />
       </c:SettingRow>
@@ -31,6 +34,16 @@
       </c:SettingRow>
       <c:SettingRow Key="claudeCode.showAllHookRuns">
         <ToggleSwitch IsChecked="{Binding ShowAllHookRuns}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- What the conversation's scroll bar marks (DESIGN.md §18, "Conversation cards", "Marks in the scroll bar") -->
+    <c:SettingsSection Key="scrollMarks">
+      <c:SettingRow Key="appearance.markYourMessages">
+        <ToggleSwitch IsChecked="{Binding MarkYourMessages}" />
+      </c:SettingRow>
+      <c:SettingRow Key="appearance.markClaudesAnswers">
+        <ToggleSwitch IsChecked="{Binding MarkClaudesAnswers}" />
       </c:SettingRow>
     </c:SettingsSection>
 

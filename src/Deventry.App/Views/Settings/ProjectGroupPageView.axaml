@@ -6,9 +6,8 @@
              xmlns:c="using:Deventry.App.Controls"
              x:Class="Deventry.App.Views.Settings.ProjectGroupPageView" ClipToBounds="False"
              x:DataType="settings:ProjectGroupPage">
-  <!-- The tab's project: Group, how its group looks in the sidebar, its color and its icon (DESIGN.md §4, "Grouped by folder") -->
+  <!-- The project's Group: how its group looks in the sidebar, its color and its icon (DESIGN.md §4, "Grouped by folder") -->
   <StackPanel x:Name="GroupPage" Spacing="16">
-    <TextBlock Classes="muted small" Text="{Binding Project.ForTabText, FallbackValue=''}" TextWrapping="Wrap" />
     <c:SettingsSection Key="group">
       <c:SettingRow Key="project.group" Title="" IsStacked="True">
         <StackPanel Spacing="4" DataContext="{Binding Project}" x:DataType="vm:ProjectSettingsViewModel">
@@ -23,8 +22,8 @@
           <c:SettingRow Title="Color" Description="{Binding ColorText}" Padding="8,8">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <Border Width="16" Height="16" CornerRadius="8" VerticalAlignment="Center" Background="{Binding ColorBrush}" IsVisible="{Binding HasColorBrush}" />
-              <Button Content="Use the group's color" Command="{Binding UseGroupColorCommand}"
-                      ToolTip.Tip="Save the color the group has now, as Change color… in its menu left it" />
+              <Button x:Name="ChooseColor" Content="Choose…" Click="OnChooseColor" IsEnabled="{Binding CanChooseColor}"
+                      ToolTip.Tip="Pick the group's color: it shows on the group at once, and is saved in this file as the picker closes" />
               <Button Content="Remove" Command="{Binding RemoveColorCommand}" ToolTip.Tip="Take the color out of this file" />
             </StackPanel>
             <c:SettingRow.Details>

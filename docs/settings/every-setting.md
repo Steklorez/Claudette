@@ -1,7 +1,7 @@
 ---
 title: Every setting
 parent: Settings
-nav_order: 2
+nav_order: 3
 summary: "A table for each page in the Settings window, in the order its sidebar lists them."
 ---
 
@@ -69,9 +69,12 @@ The page starts with a preview that shows your choices as you make them.
 | **Indent Claude's steps** | Steps and replies | Off | Yes | No | [Reading the conversation](../conversation/reading-the-conversation.md#indent-your-messages) |
 | **Fold each chain of steps** | Steps and replies | Off | Yes | **Steps** | [Tool calls](../conversation/tool-calls.md#folding-a-chain-of-steps) |
 | **Show tool calls collapsed** | Steps and replies | Off | Yes | No | [Tool calls](../conversation/tool-calls.md#folding-the-calls) |
+| **Show modified files collapsed** | Steps and replies | Off | Yes | No | [The end of a turn](../conversation/the-end-of-a-turn.md#folding-the-files) |
 | **Show thinking expanded** | Steps and replies | Off | Yes | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
 | **Show subagents' work** | Steps and replies | Under the tab in the sidebar | Yes | No | [Subagents](../conversation/subagents.md#subagents-under-their-tab) |
 | **Show every hook run** | Steps and replies | Off | No | No | [Thinking, notes and hooks](../conversation/thinking-notes-and-hooks.md) |
+| **Mark your messages** | Marks in the scroll bar | On | Yes | No | [Finding your way](../conversation/finding-your-way.md#marks-in-the-scroll-bar) |
+| **Mark Claude's answers** | Marks in the scroll bar | Off | Yes | No | [Finding your way](../conversation/finding-your-way.md#marks-in-the-scroll-bar) |
 | **Show fun words** | While Claude works | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Show what Claude is doing** | While Claude works | On | Yes | No | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Messages sent while Claude works** | While Claude works | Send them into the turn (the other choice queues them) | No | No | [Sending and stopping](../composer/sending-and-stopping.md) |
@@ -248,6 +251,7 @@ Each kind of project Deventry knows has a page, which starts with two switches u
 | **Recognize Unity projects** | Projects | On | [Unity](../project-tools/unity.md) |
 | **Tell Claude about Unity projects** | Projects | On | [Unity](../project-tools/unity.md) |
 | **Default code optimization** | Defaults | Release (or Debug) | [Unity](../project-tools/unity.md) |
+| **Prefer JSON logging** | Defaults | On | [Editor logs](../project-tools/editor-logs.md#unitys-json-log) |
 
 ## Godot
 
@@ -289,6 +293,6 @@ The second page under **Source control**. None of this page syncs.
 | A password for a server and user, with **Save password** and **Forget password** | Stored password | None | [Perforce](../project-tools/perforce.md) |
 | Each folder's server and user, with **Add folder…** | Per-folder server and user | None | [Perforce](../project-tools/perforce.md) |
 
-## The project's pages
+## A project's settings
 
-The **Links**, **Actions**, **Tools** and **Group** pages at the end of the sidebar aren't in this list. They belong to a project rather than to Deventry: [the Settings window](the-settings-window.md#the-projects-pages) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.
+A project's **Links**, **Actions**, **Tools** and **Group** pages aren't in this list. They belong to a project rather than to Deventry, in a window of their own: [Project settings](project-settings.md) says how they work, and [Actions and links](../project-tools/actions-and-links.md) what they hold.

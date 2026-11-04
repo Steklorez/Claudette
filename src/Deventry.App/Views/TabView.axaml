@@ -828,12 +828,22 @@
 
     <!-- A turn's footer (DESIGN.md §18, "Conversation cards"): a Modified files card with a tile for each file the turn
          changed, laid out as a Tool calls card's are, which opens the turn's changes to it (DESIGN.md §8, "Changes per
-         turn"), and a Turn statistics card. -->
+         turn"), and a Turn statistics card. The files fold away to the header line, as a Tool calls card's tiles do. -->
     <DataTemplate DataType="conv:TurnSummaryItem">
       <StackPanel Classes="turnfooter">
         <controls:Card Classes="files" Label="Modified files" Icon="{StaticResource IconCardFiles}" Detail="{Binding FilesText}"
-                       TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" IsVisible="{Binding HasFiles}">
-          <ItemsControl ItemsSource="{Binding Files}">
+                       TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" IsVisible="{Binding HasFiles}"
+                       IsCollapsible="True" IsCollapsed="{Binding IsFilesCollapsed}" ToggleCommand="{Binding ToggleFilesCommand}" ToggleTip="Show or hide the files">
+          <!-- Every Modified files card in the tab, and the ones to come, without changing Settings, as a Tool calls card's menu (DESIGN.md §18). -->
+          <controls:Card.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Collapse all modified files" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).CollapseAllModifiedFilesCommand}"
+                        ToolTip.Tip="Collapse every Modified files card in this tab, and start new ones collapsed" />
+              <MenuItem Header="Expand all modified files" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ExpandAllModifiedFilesCommand}"
+                        ToolTip.Tip="Expand every Modified files card in this tab, and start new ones expanded" />
+            </ContextMenu>
+          </controls:Card.ContextMenu>
+          <ItemsControl ItemsSource="{Binding Files}" IsVisible="{Binding !IsFilesCollapsed}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <controls:TilesPanel />

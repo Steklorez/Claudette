@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// Settings → the tab's project → <b>Tools</b> (DESIGN.md §14, §18): the choices this machine remembers for the tab's
+/// The project's settings → <b>Tools</b> (DESIGN.md §14, §18): the choices this machine remembers for the folder's
 /// project, the same <c>ProjectToolState</c> values the project menus change. Only those its provider has: the project
 /// when the folder has several, the per-project choice (Unreal's editor configuration, Unity's code optimization) and
 /// what's picked with <b>Choose…</b> (Unreal's engine folder, the Unity editor, the Godot executable), with
@@ -16,13 +16,13 @@ public sealed partial class ProjectSettingsViewModel
     private IReadOnlyList<SettingChoice<string>> _projectChoices = [];
     private IReadOnlyList<SettingChoice<string>> _choiceOptions = [];
 
-    private ProjectInfo? ToolsProject => _tab.ProjectTools.Project;
+    private ProjectInfo? ToolsProject => _tools.Project;
 
-    /// <summary>A provider found a project for the tab's folder.</summary>
+    /// <summary>A provider found a project for the folder.</summary>
     public bool HasToolsProject => ToolsProject is not null;
 
     /// <summary>"NightOwl · Unreal Engine".</summary>
-    public string ToolsTitle => _tab.ProjectTools.HeaderTitle;
+    public string ToolsTitle => _tools.HeaderTitle;
 
     /// <summary>What the choices are kept by: the project's file (a <c>.uproject</c>, <c>project.godot</c>) or folder.</summary>
     public string ToolsKeyText => ToolsProject is { } project ? $"Remembered on this machine for {project.ProjectPath}." : "";
@@ -37,6 +37,11 @@ public sealed partial class ProjectSettingsViewModel
 
     /// <summary>The link to them: the project's kind's page, or All tools without a project.</summary>
     public string DefaultsLinkText => ToolsProject is { } project ? $"Open {project.KindName}" : $"Open {SettingsCategory.AllTools}";
+
+    /// <summary>Settings, at the defaults every project of the folder's kind starts with: its type's page in Project tools, or All tools.</summary>
+    [RelayCommand]
+    private Task ShowToolsDefaultsAsync() =>
+        _shell.OpenSettingsAtAsync(_services.ProjectTools.Detector.Types.FirstOrDefault(t => t.Kind == ToolsKind)?.Name ?? SettingsCategory.AllTools);
 
     // ---- The project, when the folder has several --------------------------------------------------------------------
 
@@ -57,7 +62,7 @@ public sealed partial class ProjectSettingsViewModel
             }
             _services.ProjectTools.State.ChooseProject(Folder, value.Value);
             _services.SaveState();
-            _ = _tab.ProjectTools.RefreshAsync();
+            _ = _tools.RefreshAsync();
         }
     }
 
@@ -81,7 +86,7 @@ public sealed partial class ProjectSettingsViewModel
                 return;
             }
             _services.ProjectTools.Remember(project.ProjectPath, choice.Key, value.Value);
-            _ = _tab.ProjectTools.RefreshAsync();
+            _ = _tools.RefreshAsync();
         }
     }
 
@@ -141,7 +146,7 @@ public sealed partial class ProjectSettingsViewModel
         ToolsFixError = null;
         _services.ProjectTools.Remember(project.ProjectPath, fix.Key, path);
         ToolsChanged();
-        await _tab.ProjectTools.RefreshAsync();
+        await _tools.RefreshAsync();
     }
 
     /// <summary><b>Clear</b>: forgets the pick, so Deventry finds the engine, editor or Godot by itself again.</summary>
@@ -155,22 +160,18 @@ public sealed partial class ProjectSettingsViewModel
         ToolsFixError = null;
         _services.ProjectTools.Remember(project.ProjectPath, fix.Key, null);
         ToolsChanged();
-        await _tab.ProjectTools.RefreshAsync();
+        await _tools.RefreshAsync();
     }
 
     private bool CanClearToolsFix() => ChosenFix is not null;
 
-    /// <summary>For the search box: what this project's Tools page has, such as "Engine folder".</summary>
-    public IReadOnlyList<string> ToolsSearchLabels =>
-        [.. new[] { ToolsProject?.Choice?.Label, ToolsFix?.Name }.OfType<string>().Where(l => l.Length > 0)];
-
     private void BuildToolChoices()
     {
-        _projectChoices = [.. _tab.ProjectTools.Candidates.Select(c => new SettingChoice<string>(c.Path, $"{c.Name} ({RelativeToFolder(c.Path)})"))];
+        _projectChoices = [.. _tools.Candidates.Select(c => new SettingChoice<string>(c.Path, $"{c.Name} ({RelativeToFolder(c.Path)})"))];
         _choiceOptions = ToolsProject?.Choice is { } choice ? [.. choice.Options.Select(o => new SettingChoice<string>(o.Value, o.Label))] : [];
     }
 
-    /// <summary>The tab's project was found again, or a choice changed: the page shows it as it is now.</summary>
+    /// <summary>The folder's project was found again, or a choice changed: the page shows it as it is now.</summary>
     private void ToolsChanged()
     {
         BuildToolChoices();
@@ -192,7 +193,6 @@ public sealed partial class ProjectSettingsViewModel
         OnPropertyChanged(nameof(ToolsFixTitle));
         OnPropertyChanged(nameof(ToolsFixCurrent));
         OnPropertyChanged(nameof(ToolsFixSource));
-        OnPropertyChanged(nameof(ToolsSearchLabels));
         ClearToolsFixCommand.NotifyCanExecuteChanged();
     }
 

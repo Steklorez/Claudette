@@ -35,10 +35,35 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
 
     /// <summary>The game open, or null.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsOpen), nameof(IsTicTacToe), nameof(IsConnectFour), nameof(IsHangman), nameof(IsMinesweeper))]
+    [NotifyPropertyChangedFor(nameof(IsOpen), nameof(IsChoosing), nameof(Choices), nameof(IsTicTacToe), nameof(IsConnectFour), nameof(IsHangman), nameof(IsMinesweeper))]
     public partial GameViewModel? Game { get; private set; }
 
     public bool IsOpen => Game is not null;
+
+    /// <summary>No game is open: the Games window lists them to start one (DESIGN.md §18, "Games with Joulene").</summary>
+    public bool IsChoosing => Game is null;
+
+    /// <summary>The games, in the order the menus have them, each with its score so far, for the list with none open.</summary>
+    public IReadOnlyList<GameChoice> Choices =>
+    [
+        Choice(GameKind.TicTacToe, "Tic-tac-toe", "Three in a row on a board of three by three.", draws: true),
+        Choice(GameKind.ConnectFour, "Connect Four", "Four in a row, dropping pieces into seven columns.", draws: true),
+        Choice(GameKind.Hangman, "Hangman", "Guess the word Joulene thought of, a letter at a time.", draws: false),
+        Choice(GameKind.Minesweeper, "Minesweeper", "Open every square without one of Joulene's mines.", draws: false),
+    ];
+
+    private GameChoice Choice(GameKind kind, string name, string description, bool draws)
+    {
+        var score = Score(kind);
+        var text = score.Wins + score.Losses + score.Draws == 0
+            ? null
+            : draws ? $"You {score.Wins} · Joulene {score.Losses} · Draws {score.Draws}" : $"You {score.Wins} · Joulene {score.Losses}";
+        return new GameChoice(kind, name, description, text, StartChoiceCommand);
+    }
+
+    /// <summary>A game picked from the list: it starts, and takes the keyboard as a game started elsewhere does.</summary>
+    [RelayCommand]
+    private void StartChoice(GameKind kind) => Start(kind);
 
     public bool IsTicTacToe => Game?.Kind == GameKind.TicTacToe;
 
@@ -47,9 +72,6 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
     public bool IsHangman => Game?.Kind == GameKind.Hangman;
 
     public bool IsMinesweeper => Game?.Kind == GameKind.Minesweeper;
-
-    /// <summary>A game opened or closed: the tabs' Games pages come or go.</summary>
-    public event Action? OpenChanged;
 
     /// <summary>The shell's live region for screen readers.</summary>
     public Action<string>? Announcer { get; set; }
@@ -78,10 +100,6 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
             _ => new TicTacToeViewModel(this),
         };
         old?.Dispose();
-        if (old is null)
-        {
-            OpenChanged?.Invoke();
-        }
         return Game;
     }
 
@@ -89,7 +107,7 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
     [RelayCommand]
     private void Switch(GameKind kind) => Start(kind);
 
-    /// <summary><b>Done playing</b>: the game ends, and the Games page goes.</summary>
+    /// <summary><b>Done playing</b>: the game ends, and the Games window lists the games again.</summary>
     [RelayCommand]
     public void Close()
     {
@@ -99,7 +117,6 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
         }
         Game = null;
         game.Dispose();
-        OpenChanged?.Invoke();
     }
 
     /// <summary>Whether the page should take the keyboard as it shows: once, just after a game is started.</summary>
@@ -227,4 +244,14 @@ public sealed partial class GameService : ObservableObject, IGameHost, IDisposab
         Game?.Dispose();
         Game = null;
     }
+}
+
+/// <summary>A game in the Games window's list while none is open: its name, a line about it, its score so far and how to start it.</summary>
+/// <param name="ScoreText">"You 3 · Joulene 2 · Draws 1"; null before its first round is over.</param>
+public sealed record GameChoice(GameKind Kind, string Name, string Description, string? ScoreText, System.Windows.Input.ICommand Start)
+{
+    public bool HasScore => ScoreText is not null;
+
+    /// <summary>What a screen reader reads for its button.</summary>
+    public string AccessibleName => ScoreText is { } score ? $"Play {Name}: {score}" : $"Play {Name}";
 }

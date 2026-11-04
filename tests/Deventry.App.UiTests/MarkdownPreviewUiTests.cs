@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Deventry.App.Services;
@@ -132,6 +134,57 @@ public sealed class MarkdownPreviewUiTests
         await UiText.SettleUntilAsync(window, () => Math.Abs(FromTop(window, Block(window, "Paragraph 50.")!)) < 3, "the preview's place");
         file.IsEditMode = true;
         await UiText.SettleUntilAsync(window, () => view.GetDocumentLineByVisualTop(view.ScrollOffset.Y)?.LineNumber == 101, "the editor's place");
+        window.Close();
+    }
+
+    /// <summary>
+    /// Find in the preview (issue #97): Ctrl/Cmd+F in Preview shows its find box, every match is marked over the text in
+    /// the find color and the one it's on outlined too, Enter goes on to the next, bringing it into view, and Esc closes it.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Find_in_the_preview_marks_every_match_and_goes_from_one_to_the_next()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (file, window) = await ShowAsync(h, "LONG.md", Long + "\nThe last paragraph says paragraph again.\n");
+        file.IsPreviewMode = true;
+        await UiText.SettleUntilAsync(window, () => Block(window, "Paragraph 1.") is not null, "the preview");
+
+        window.KeyPressQwerty(PhysicalKey.F, OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control);
+        UiText.Settle(window);
+        var preview = Preview(window);
+        var bar = preview.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "FindBar");
+        var box = preview.GetVisualDescendants().OfType<TextBox>().Single(t => t.Name == "FindBox");
+        Assert.True(file.PreviewFind.IsOpen);
+        Assert.True(bar.IsEffectivelyVisible);
+        await UiText.SettleUntilAsync(window, () => box.IsKeyboardFocusWithin, "the find box");
+
+        box.Text = "paragraph 12.";
+        var layer = preview.GetVisualDescendants().OfType<PreviewFindLayer>().Single();
+        await UiText.SettleUntilAsync(window, () => file.PreviewFind.Count == 1 && layer.Marks.Count == 1, "one match, marked");
+        Assert.Equal("1 of 1", file.PreviewFind.CountText);
+        Assert.True(layer.Marks[0].IsCurrent);
+
+        // Every "paragraph", the last one's two among them: the first is the one it's on.
+        box.Text = "paragraph";
+        await UiText.SettleUntilAsync(window, () => file.PreviewFind.Count == 122, "every paragraph");
+        Assert.Equal("1 of 122", file.PreviewFind.CountText);
+        Assert.Single(layer.Marks, m => m.IsCurrent);
+
+        // Shift+Enter goes round to the last, at the end, which comes into view.
+        box.Focus();
+        window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.Shift);
+        await UiText.SettleUntilAsync(window, () => file.PreviewFind.CountText == "122 of 122", "the last");
+        await UiText.SettleUntilAsync(window, () => layer.Marks.Any(m => m.IsCurrent), $"the last in view ({layer.Marks.Count} marks, offset {Scroller(window).Offset.Y})");
+        var last = layer.Marks.Single(m => m.IsCurrent).Rect;
+        Assert.InRange(last.Y, 0, layer.Bounds.Height);
+        // Match case finds the last paragraph's two alone.
+        file.PreviewFind.MatchCase = true;
+        await UiText.SettleUntilAsync(window, () => file.PreviewFind.Count == 2, "only the lowercase ones");
+
+        window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        UiText.Settle(window);
+        Assert.False(file.PreviewFind.IsOpen);
+        Assert.Empty(layer.Marks);
         window.Close();
     }
 

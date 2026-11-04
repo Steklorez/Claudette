@@ -65,7 +65,9 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 
     long? IProjectToolsHost.CurrentChangelist => Perforce.CurrentChangelist;
 
-    Task IProjectToolsHost.OpenProjectSettingsAsync(string page, bool startNew) => _shell.OpenProjectSettingsAsync(this, page, startNew);
+    bool IProjectToolsHost.CanRunJobs => true;
+
+    Task IProjectToolsHost.OpenProjectSettingsAsync(string page, bool startNew) => _shell.OpenProjectSettingsAsync(Folder, page, startNew);
 
     void IProjectToolsHost.UseGroupColor(string color) => _shell.UseProjectColor(this, color);
 

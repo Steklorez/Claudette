@@ -11,12 +11,14 @@ namespace Deventry.Core.ProjectTools;
 /// <param name="Problems">Why entries (or a whole file) were skipped, such as "deventry.json: actions[2] has no command".</param>
 /// <param name="Icon">The picture the folder's group shows in place of its colored dot; null keeps the dot.</param>
 /// <param name="Color">The folder's group's color, <c>#RRGGBB</c>; null leaves the one remembered on this computer.</param>
+/// <param name="Solution">The project's own solution, or another file that defines it, which its menu opens; null for none.</param>
 public sealed record ProjectFileContents(
-    IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems, ProjectIcon? Icon = null, string? Color = null)
+    IReadOnlyList<CustomProjectAction> Actions, IReadOnlyList<ProjectLink> Links, IReadOnlyList<string> Problems, ProjectIcon? Icon = null, string? Color = null,
+    ProjectSolution? Solution = null)
 {
     public static ProjectFileContents Empty { get; } = new([], [], []);
 
-    public bool IsEmpty => Actions.Count == 0 && Links.Count == 0 && Problems.Count == 0 && Icon is null && Color is null;
+    public bool IsEmpty => Actions.Count == 0 && Links.Count == 0 && Problems.Count == 0 && Icon is null && Color is null && Solution is null;
 }
 
 /// <summary>
@@ -54,6 +56,7 @@ public sealed record ProjectFileLinkEntry(JsonNode? Raw, ProjectLink? Link, stri
 /// {
 ///   "icon": "Assets/logo.png",
 ///   "color": "#4A6FC4",
+///   "solution": "NightOwl.sln",
 ///   "actions": [
 ///     { "name": "Run tests", "command": "dotnet test", "folder": "src", "mode": "output" },
 ///     { "name": "Open Grafana", "command": "start https://grafana", "mode": "launch", "os": ["windows"] },
@@ -131,7 +134,8 @@ public static class ProjectFile
             [.. shared.Links, .. local.Links],
             [.. Error(sharedName, sharedError), .. shared.Problems, .. Error(localName, localError), .. local.Problems, .. iconProblem],
             icon,
-            local.Color ?? shared.Color);
+            local.Color ?? shared.Color,
+            local.Solution ?? shared.Solution);
 
         static IEnumerable<string> Error(string file, string? error) => error is null ? [] : [$"{file} couldn't be read: {error}"];
     }
@@ -197,7 +201,19 @@ public static class ProjectFile
                 problems.Add($"{file}: \"color\" should be a color such as \"#4A6FC4\", so it was skipped.");
             }
         }
-        return new ProjectFileContents(actions, links, problems, icon, color);
+        ProjectSolution? solution = null;
+        if (root.TryGetPropertyValue("solution", out var solutionNode) && solutionNode is not null)
+        {
+            if (LenientJson.String(root, "solution")?.Trim() is { Length: > 0 } path)
+            {
+                solution = new ProjectSolution(path, scope);
+            }
+            else
+            {
+                problems.Add($"{file}: \"solution\" should be a file's path, such as \"NightOwl.sln\", so it was skipped.");
+            }
+        }
+        return new ProjectFileContents(actions, links, problems, icon, color, solution);
     }
 
     /// <summary>A color as it's written and kept, <c>#RRGGBB</c>, from <c>#RRGGBB</c> or <c>#RGB</c>, with or without the <c>#</c>; null when it isn't one.</summary>
@@ -268,6 +284,17 @@ public static class ProjectFile
         var relative = Path.GetRelativePath(folder, picked);
         return relative == "." || relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? picked : relative.Replace('\\', '/');
     }
+
+    /// <summary>How a file chosen for the <c>solution</c> is written: as <see cref="IconPathFor"/> writes a picture.</summary>
+    public static string SolutionPathFor(string folder, string picked) => IconPathFor(folder, picked);
+
+    /// <summary>One file's <c>solution</c> as it has it, for the project's Solution page; null when it has none.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static string? ReadSolution(string folder, ProjectFileScope scope) => ReadValue(folder, scope, "solution");
+
+    /// <summary>Sets one file's <c>solution</c>, or takes it out when null, as <see cref="WriteIcon"/> does.</summary>
+    /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>
+    public static void WriteSolution(string folder, ProjectFileScope scope, string? solution) => WriteValue(folder, scope, "solution", solution);
 
     /// <summary>One file's <c>icon</c> as it has it, for Settings' Group page; null when it has none.</summary>
     /// <exception cref="InvalidOperationException">The file exists but isn't JSON.</exception>

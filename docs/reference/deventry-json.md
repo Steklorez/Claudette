@@ -80,11 +80,15 @@ Any other word in braces makes the link greyed out: "Unknown placeholder …: us
 
 ## Color
 
-`color` is the folder's group's color in the sidebar, written `#4A6FC4` (or `#4AC`). It wins over the color Deventry remembers on your computer, and the local file's wins over the shared one's. **Change color…** in the group's menu saves it, and the project's **Group** page in Settings moves it or takes it out. One that isn't a color is skipped with a reason. See [Changing a group's color](../tabs/folder-groups.md#changing-a-groups-color).
+`color` is the folder's group's color in the sidebar, written `#4A6FC4` (or `#4AC`). It wins over the color Deventry remembers on your computer, and the local file's wins over the shared one's. The project's **Group** page, in its [project settings](../settings/project-settings.md), picks it, saves it in either file, or takes it out. One that isn't a color is skipped with a reason. See [Changing a group's color](../tabs/folder-groups.md#changing-a-groups-color).
+
+## Solution
+
+`solution` is the file that defines the project, usually its solution, such as `NightOwl.sln`: its path from the project's folder, or a full path. The local file's wins over the shared one's. The project's menu has **Open NightOwl.sln** for it, before your own actions. A solution or workspace (`.sln`, `.slnx`, `.code-workspace` or `.xcworkspace`) opens with the app Settings → Project tools → All tools → **Open solutions with** says, your system's own by default; any other file opens with the app your system has for it. It sits beside an Unreal, Unity or Godot project's own **Open solution**, and in a folder Deventry finds no such project in, it's what **Run the project's main action** (`Ctrl/Cmd+Shift+E`) does. While the file isn't there, the entry is greyed out and says so. The project's **Solution** page, in its [project settings](../settings/project-settings.md), sets it.
 
 ## Icon
 
-`icon` is the picture the folder's group shows in the sidebar in place of its colored dot: a PNG, ICO, JPEG, BMP, GIF or WebP of at most 1 MB. Its path is read from the project's folder (`Assets/logo.png`), or it can be a full path. The local file's wins over the shared one's. One that can't be shown, because it isn't there, it's too big, it's another kind of file or it's on a network share, is skipped with a reason, and the group keeps its dot. Settings → the project's **Group** page sets it. See [A group's icon](../tabs/folder-groups.md#a-groups-icon).
+`icon` is the picture the folder's group shows in the sidebar in place of its colored dot: a PNG, ICO, JPEG, BMP, GIF or WebP of at most 1 MB. Its path is read from the project's folder (`Assets/logo.png`), or it can be a full path. The local file's wins over the shared one's. One that can't be shown, because it isn't there, it's too big, it's another kind of file or it's on a network share, is skipped with a reason, and the group keeps its dot. The project's **Group** page, in its [project settings](../settings/project-settings.md), sets it. See [A group's icon](../tabs/folder-groups.md#a-groups-icon).
 
 ## What's skipped
 

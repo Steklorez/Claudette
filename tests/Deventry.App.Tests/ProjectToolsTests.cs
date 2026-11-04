@@ -102,6 +102,104 @@ public class ProjectToolsTests
         Assert.Same(second, group.ProjectTab);
     }
 
+    /// <summary>
+    /// A group with no tab open, one of Claude Code's projects listing only its past sessions, finds its folder's project
+    /// and files as a tab does and shows their menu; a job has no tab to run under, so it waits for one (DESIGN.md §18,
+    /// "Project tools", issue #111).
+    /// </summary>
+    [Fact]
+    public async Task A_group_with_no_tab_open_has_its_projects_menu_and_its_jobs_wait_for_a_tab()
+    {
+        var (h, _, uproject) = UnrealHarness(s => s.Sidebar.ShowClaudeProjects = true);
+        await using var _h = h;
+        h.Services.State.ClaudeProjectsOffered = true;
+        Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(uproject)!, "Intermediate"));
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "color": "#4A6FC4", "actions": [{ "name": "Run tests", "command": "dotnet test" }, { "name": "Grafana", "command": "start https://grafana.example", "mode": "launch" }] }""");
+        h.WriteTranscript("w1", new System.Text.Json.Nodes.JsonObject
+        {
+            ["type"] = "user",
+            ["message"] = new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["content"] = "Fix it" },
+            ["cwd"] = h.WorkFolder,
+            ["sessionId"] = "w1",
+            ["timestamp"] = "2026-09-28T09:00:00Z",
+        }.ToJsonString());
+        InlineDispatcher.Run(() => h.Shell.Restore(null));
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => h.Shell.Groups.Any(g => g.IsProjectOnly)), "the project in the sidebar");
+        var group = InlineDispatcher.Read(() => h.Shell.Groups.Single());
+
+        var tools = InlineDispatcher.Read(() => group.ProjectTools)!;
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tools.Project is not null && tools.Actions.Count > 0), "the folder's project");
+
+        Assert.Null(group.ProjectTab);
+        Assert.Equal("NightOwl · Unreal Engine", tools.HeaderTitle);
+        // The folder's own color, from its deventry.json, as a tab's reading would give it.
+        Assert.Equal("#4A6FC4", TabGroupViewModel.ToHex(InlineDispatcher.Read(() => group.Color)));
+        // Jobs and deleting folders, which run as a job, wait for a tab; what starts or opens something doesn't.
+        const string Waits = "Open a tab here to run it: its output shows under the tab.";
+        var actions = InlineDispatcher.Read(() => tools.Actions.ToDictionary(a => a.Label));
+        Assert.Equal(Waits, actions["Build editor"].DisabledReason);
+        Assert.Equal(Waits, actions["Clean intermediates…"].DisabledReason);
+        Assert.Equal(Waits, actions["Run tests"].DisabledReason);
+        Assert.True(actions["Grafana"].IsEnabled);
+        Assert.True(actions["End all Unreal editors…"].IsEnabled);
+        // No output to show without a tab; the folder's project settings are there all the same.
+        var menu = InlineDispatcher.Read(() => tools.Menu.Select(e => e.Label).ToArray());
+        Assert.Contains(ShowFolder, menu);
+        Assert.Contains("Refresh", menu);
+        Assert.Contains("Add an action…", menu);
+        Assert.DoesNotContain("Show output…", menu);
+
+        // A tab opening in the group brings its own tools, whose jobs run under it.
+        var tab = await h.OpenTabAsync();
+        Assert.Same(tab.ProjectTools, InlineDispatcher.Read(() => group.ProjectTools));
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.Actions.Any(a => a.Label == "Run tests")), "the tab's actions");
+        Assert.True(InlineDispatcher.Read(() => tab.ProjectTools.Actions.Single(a => a.Label == "Run tests")).IsEnabled);
+    }
+
+    /// <summary>
+    /// The project files' solution (DESIGN.md §18, "deventry.json", issue #112): the menu offers to open it, before the
+    /// folder's own actions, and without a project type it's the main action. A solution opens with the IDE Settings
+    /// names, the system's own app by default.
+    /// </summary>
+    [Fact]
+    public async Task A_folders_solution_is_in_its_menu_and_its_main_action_without_a_project_type()
+    {
+        await using var h = new TabTestHarness();
+        var sln = Path.Combine(h.WorkFolder, "Tools.sln");
+        File.WriteAllText(sln, "");
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.SharedName), """{ "solution": "Tools.sln", "actions": [{ "name": "Test", "command": "dotnet test" }] }""");
+
+        var tab = await h.OpenTabAsync();
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.Actions.Any(a => a.Label == "Open Tools.sln")), "the solution");
+
+        Assert.True(tab.ProjectTools.HasTools);
+        Assert.Null(tab.ProjectTools.Project);
+        Assert.Equal("Open Tools.sln", tab.ProjectTools.MainAction?.Label);
+        Assert.Equal(["Open Tools.sln", "Test", ShowFolder, "Show output…", "Add an action…", "Add a link…", "Refresh"],
+            InlineDispatcher.Read(() => tab.ProjectTools.Menu.Where(e => e.IsButton).Select(e => e.Label).ToArray()));
+
+        await InlineDispatcher.RunAsync(() => tab.ProjectTools.RunMainActionCommand.ExecuteAsync(null));
+        Assert.Equal([sln], h.Platform.OpenedFiles);
+    }
+
+    /// <summary>A project type's own Open solution stays, beside the folder's, and the type's main action stays its own.</summary>
+    [Fact]
+    public async Task A_project_types_own_solution_stays_beside_the_folders_and_its_main_action_stays_its_own()
+    {
+        var (h, _, _) = UnrealHarness();
+        await using var _h = h;
+        File.WriteAllText(Path.Combine(h.WorkFolder, ProjectFile.LocalName), """{ "solution": "Missing.sln" }""");
+
+        var tab = await OpenWithProjectAsync(h);
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => tab.ProjectTools.Actions.Any(a => a.Id == ProjectSolution.ActionId)), "the folder's solution");
+
+        var actions = InlineDispatcher.Read(() => tab.ProjectTools.Actions);
+        Assert.Contains(actions, a => a.Id == "open-solution");
+        var folders = actions.Single(a => a.Id == ProjectSolution.ActionId);
+        Assert.Equal(("Open Missing.sln", "deventry.local.json's solution, Missing.sln, isn't there."), (folders.Label, folders.DisabledReason));
+        Assert.Equal("launch-editor", tab.ProjectTools.MainAction?.Id);
+    }
+
     [Fact]
     public async Task Without_a_project_or_actions_the_icon_names_the_folder_and_offers_the_first_action_and_link()
     {

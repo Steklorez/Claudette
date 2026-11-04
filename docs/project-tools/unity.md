@@ -48,6 +48,7 @@ On Unity's page in Settings → Project tools, on this machine only. **Open solu
 | **Recognize Unity projects** | On | Off, Deventry treats a Unity project's folder as a plain folder: no engine actions, editor logs or note to Claude, though its own actions and links still work. |
 | **Tell Claude about Unity projects** | On | Adds a note to the session with the Unity version and editor, how to run the EditMode tests in batch mode, that `Library`, `Temp` and `obj` are generated and shouldn't be edited, that a `.meta` file moves with its asset, and not to open the editor unless asked. Applies to tabs started after the change. |
 | **Default code optimization** | Release | The optimization for projects that haven't a choice of their own. A project's own choice wins. |
+| **Prefer JSON logging** | On | When Unity writes its JSON log, `Editor.jsonl`, show that one under the tab in place of `Editor.log`. See [Unity's JSON log](editor-logs.md#unitys-json-log). |
 
 ## See also
 

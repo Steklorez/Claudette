@@ -1,7 +1,7 @@
 ---
 title: About Deventry
 parent: Settings
-nav_order: 8
+nav_order: 9
 summary: "About Deventry says which Deventry you have, where it is on the web, who has contributed to it, the trademarks it names, and the licenses of what it's built with."
 ---
 

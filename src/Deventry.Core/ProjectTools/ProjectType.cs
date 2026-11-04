@@ -70,6 +70,18 @@ public sealed record ProjectTypeChoice(string Key, string Title, IReadOnlyList<P
     public override string? DefaultValue => Default;
 }
 
+/// <summary>On or off, shown as a switch: Unity's <b>Prefer JSON logging</b>.</summary>
+public sealed record ProjectTypeToggle(string Key, string Title, bool Default) : ProjectTypeSetting(Key, Title)
+{
+    public override string? DefaultValue => Default ? "true" : "false";
+
+    /// <summary>Whether it's on: what's kept, else its default.</summary>
+    public bool IsOn(Settings.ProjectToolSettings settings, string kind) => bool.TryParse(ValueIn(settings, kind), out var on) ? on : Default;
+
+    /// <summary>What's kept for <paramref name="on"/>: nothing at its default, so only a change is written.</summary>
+    public string? ValueFor(bool on) => on == Default ? null : on ? "true" : "false";
+}
+
 /// <summary>A program or folder, typed or picked with <b>Browse…</b>, and found with <b>Detect</b> when the type can: the Godot executable.</summary>
 public sealed record ProjectTypePath(string Key, string Title) : ProjectTypeSetting(Key, Title)
 {

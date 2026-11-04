@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.ProjectSolutionPageView" ClipToBounds="False"
+             x:DataType="settings:ProjectSolutionPage">
+  <!-- The project's Solution: the file that defines it, which its menu opens (DESIGN.md §18, "deventry.json") -->
+  <StackPanel x:Name="SolutionPage" Spacing="16">
+    <c:SettingsSection Key="solution">
+      <c:SettingRow Key="project.solution" Title="" IsStacked="True">
+        <StackPanel Spacing="4" DataContext="{Binding Project}" x:DataType="vm:ProjectSettingsViewModel">
+          <TextBlock TextWrapping="Wrap"
+                     Text="The file that defines the project, usually its solution. The project's menu offers to open it: a solution with the app Settings → Project tools → All tools says, the system's own by default, any other file with the app your system uses for it. Saving rewrites the file, so comments in it are dropped." />
+          <c:SettingRow Title="Saved in" Padding="8,8">
+            <ComboBox ItemsSource="{Binding ProjectActionFiles}" SelectedItem="{Binding SelectedSolutionFile}" MinWidth="260" />
+            <c:SettingRow.Details>
+              <TextBlock Classes="small error" Text="{Binding SolutionFileError}" TextWrapping="Wrap" IsVisible="{Binding HasSolutionFileError}" />
+            </c:SettingRow.Details>
+          </c:SettingRow>
+          <c:SettingRow Title="Solution" Description="{Binding SolutionText}" Padding="8,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Choose…" Command="{Binding ChooseSolutionCommand}"
+                      ToolTip.Tip="A solution or workspace (.sln, .slnx, .code-workspace), or any file that defines the project, from its folder or elsewhere" />
+              <Button Content="Remove" Command="{Binding RemoveSolutionCommand}" ToolTip.Tip="Take the solution out of this file" />
+            </StackPanel>
+            <c:SettingRow.Details>
+              <TextBlock Classes="muted small" Text="{Binding SolutionNote}" TextWrapping="Wrap" IsVisible="{Binding HasSolutionNote}" />
+            </c:SettingRow.Details>
+          </c:SettingRow>
+          <TextBlock Classes="small error" Text="{Binding SolutionError}" TextWrapping="Wrap" IsVisible="{Binding HasSolutionError}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

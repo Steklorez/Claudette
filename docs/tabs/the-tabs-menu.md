@@ -21,6 +21,7 @@ In the order the menu has them.
 | **Clear mark** | Takes the mark off. Shown while the tab has one. | [Names, marks and pins](names-marks-and-pins.md#marks) |
 | **Duplicate tab** | Opens a copy of the tab. | [Below](#duplicate-tab) |
 | **Tab settings…** | The tab's own model, effort, mode and more. A dot on its icon means the tab has its own settings. | [Tab settings](tab-settings.md) |
+| **Project settings…** | The tab's folder's links, actions, tools, and its group's color and icon, in a window of their own. | [Project settings](../settings/project-settings.md) |
 
 ### View
 

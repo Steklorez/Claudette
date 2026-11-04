@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
 using Deventry.App.Services;
 using Deventry.App.ViewModels.Settings;
 using Deventry.Core.Settings;
@@ -10,9 +9,6 @@ namespace Deventry.App.ViewModels;
 /// <summary>A setting or section found by the Settings search box (DESIGN.md §14).</summary>
 public sealed record SettingsSearchResult(string Category, string Label)
 {
-    /// <summary>The sidebar group the category is in, for the tab's project pages: "NightOwl".</summary>
-    public string? Group { get; init; }
-
     /// <summary>The section of the page it's in: "Look".</summary>
     public string? Section { get; init; }
 
@@ -25,9 +21,13 @@ public sealed record SettingsSearchResult(string Category, string Label)
     /// <summary>The words it's found by: its name, its line, what's behind More, and other words for it.</summary>
     public IReadOnlyList<string> Words { get; init; } = [];
 
-    /// <summary>Where it is, as the results list says: "Appearance → Look", or "NightOwl → Links".</summary>
-    public string Where => Group is not null ? $"{Group} → {Category}" : Section is not null && Section != Label ? $"{Category} → {Section}" : Category;
+    /// <summary>Where it is, as the results list says: "Appearance → Look".</summary>
+    public string Where => Section is not null && Section != Label ? $"{Category} → {Section}" : Category;
 }
+
+/// <summary>Where the Settings window opens (DESIGN.md §14): a category, and a setting to bring into view.</summary>
+/// <param name="Key">The setting or section to scroll to and pick out, such as <c>usage.warnPercent</c>.</param>
+public sealed record SettingsOpening(string? Category = null, string? Key = null);
 
 /// <summary>A choice in one of Settings' dropdowns, with its label.</summary>
 public sealed record SettingChoice<T>(T Value, string Label)
@@ -36,17 +36,11 @@ public sealed record SettingChoice<T>(T Value, string Label)
 }
 
 /// <summary>
-/// What the Settings window follows of the main window (DESIGN.md §14): the selected tab, whose project has pages of its
-/// own, the tabs that have their own settings, and the page it showed last.
+/// What the Settings window follows of the main window (DESIGN.md §14): the tabs that have their own settings, and the
+/// page it showed last.
 /// </summary>
 public interface ISettingsHost
 {
-    /// <summary>The selected tab's project pages, made fresh; null with no tab open.</summary>
-    ProjectSettingsViewModel? SelectedTabProject();
-
-    /// <summary>Raised when another tab is selected, or the last one closes.</summary>
-    event Action? SelectedTabChanged;
-
     /// <summary>The open tabs whose Tab settings… override a setting, by its override key.</summary>
     IReadOnlyList<string> TabsWithOwn(string overrideKey);
 
@@ -56,9 +50,9 @@ public interface ISettingsHost
 
 /// <summary>
 /// The Settings window (DESIGN.md §14): the sidebar's pages in their groups, the search box, and the page being shown.
-/// Each category is a page of its own (<see cref="SettingsPage"/>), with its sections and settings; below the categories,
-/// the selected tab's project has its pages too (<see cref="Project"/>), which follow the selected tab while the window
-/// is open. Changes apply immediately; there's no Save button. Dispose it when the window closes.
+/// Each category is a page of its own (<see cref="SettingsPage"/>), with its sections and settings. A project's own
+/// settings are in a window of their own (<see cref="ProjectSettingsWindowViewModel"/>). Changes apply immediately;
+/// there's no Save button. Dispose it when the window closes.
 /// </summary>
 public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 {
@@ -72,11 +66,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     private readonly List<SettingsPage> _categoryPages;
     private UiTimeout HighlightWait => field ??= new(_services.Time, _services.Dispatcher);
 
-    /// <param name="opening">
-    /// Where the window opens, and the project pages of the tab that was selected (DESIGN.md §14). Without it, it opens
-    /// where it was last left, or at General, with the host's project pages or none.
-    /// </param>
-    /// <param name="host">The main window, whose selected tab the project pages follow; null in some tests.</param>
+    /// <param name="opening">Where the window opens (DESIGN.md §14). Without it, it opens where it was last left, or at General.</param>
+    /// <param name="host">The main window, whose tabs' own settings the pages count; null in some tests.</param>
     public SettingsViewModel(AppServices services, string? accountText, ClaudeUpdateViewModel? updates = null, SettingsOpening? opening = null, ISettingsHost? host = null)
     {
         _services = services;
@@ -107,13 +98,10 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         {
             page.RefreshItems();
         }
-        UseProject(opening?.Project ?? host?.SelectedTabProject());
+        Pages = _categoryPages;
+        BuildNav();
         _context.SettingsSaved += OnSettingsChanged;
         _context.AllPagesChanged += OnSettingsChanged;
-        if (host is not null)
-        {
-            host.SelectedTabChanged += OnSelectedTabChanged;
-        }
 
         var category = opening?.Category ?? host?.LastSettingsPage;
         if (category is not null && Pages.Any(p => p.Title == category))
@@ -124,24 +112,12 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         {
             Highlight(key);
         }
-        if (opening?.StartNew == true)
-        {
-            if (CurrentPage is ProjectLinksPage)
-            {
-                Project?.StartNewLink();
-            }
-            else if (CurrentPage is ProjectActionsPage)
-            {
-                Project?.StartNewAction();
-            }
-        }
     }
 
     public void Dispose()
     {
         if (_host is not null)
         {
-            _host.SelectedTabChanged -= OnSelectedTabChanged;
             _host.LastSettingsPage = SelectedCategory;
         }
         HighlightWait.Dispose();
@@ -149,7 +125,6 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         ClaudeCode.Dispose();
         Accounts.Dispose();
         Git.Dispose();
-        Project?.Dispose();
         _context.Dispose();
     }
 
@@ -196,20 +171,11 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     /// <summary>The categories, in the sidebar's order, with a page for each project type Deventry knows.</summary>
     public IReadOnlyList<string> Categories { get; }
 
-    /// <summary>
-    /// Every page, in the sidebar's order: the categories' (<see cref="Categories"/>), then the selected tab's project
-    /// pages (<see cref="ProjectPages"/>), which there are none of with no tab open.
-    /// </summary>
-    public IReadOnlyList<SettingsPage> Pages { get; private set; } = [];
+    /// <summary>Every page, in the sidebar's order (<see cref="Categories"/>).</summary>
+    public IReadOnlyList<SettingsPage> Pages { get; }
 
     /// <summary>The sidebar's list: each group's heading and its pages.</summary>
     public ObservableCollection<SettingsNavEntry> NavEntries { get; } = [];
-
-    /// <summary>
-    /// The selected tab's project's pages, in a list of their own at the foot of the sidebar, above the version, so they
-    /// stay in view however far the categories scroll (DESIGN.md §14, "The project's pages"); empty with no tab open.
-    /// </summary>
-    public ObservableCollection<SettingsNavEntry> ProjectNavEntries { get; } = [];
 
     /// <summary>The account in Claude Code, with <b>Sign in</b> and <b>Sign out</b> wired to the header's (DESIGN.md §11). Null in some tests.</summary>
     public AccountViewModel? Account
@@ -251,41 +217,28 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(SelectedNavEntry), nameof(SelectedProjectNavEntry))]
+    [NotifyPropertyChangedFor(nameof(CurrentPage), nameof(SelectedNavEntry))]
     public partial string SelectedCategory { get; set; } = SettingsCategory.General;
 
-    /// <summary>The page the window shows: the selected category's, or one of the project's. Null for a page there isn't.</summary>
+    /// <summary>The page the window shows: the selected category's. Null for a page there isn't.</summary>
     public SettingsPage? CurrentPage => Pages.FirstOrDefault(p => p.Title == SelectedCategory);
 
     partial void OnSelectedCategoryChanged(string value) => CurrentPage?.OnShown();
 
-    /// <summary>
-    /// The categories' selection: the current page's entry, or none while one of the project's pages shows. A heading
-    /// isn't a choice, and leaves the page as it is.
-    /// </summary>
+    /// <summary>The sidebar's selection: the current page's entry. A heading isn't a choice, and leaves the page as it is.</summary>
     public SettingsNavEntry? SelectedNavEntry
     {
         get => NavEntries.FirstOrDefault(e => !e.IsHeading && e.Category == SelectedCategory);
-        set => Select(value);
-    }
-
-    /// <summary>The project's pages' selection: the current page's entry, or none while a category shows.</summary>
-    public SettingsNavEntry? SelectedProjectNavEntry
-    {
-        get => ProjectNavEntries.FirstOrDefault(e => e.Category == SelectedCategory);
-        set => Select(value);
-    }
-
-    /// <summary>Shows a page picked in either list; anything else (a heading, or a list emptied as it's filled again) leaves it as it is.</summary>
-    private void Select(SettingsNavEntry? value, [CallerMemberName] string? list = null)
-    {
-        if (value is { IsHeading: false } entry)
+        set
         {
-            SelectedCategory = entry.Category;
-        }
-        else
-        {
-            OnPropertyChanged(list);
+            if (value is { IsHeading: false } entry)
+            {
+                SelectedCategory = entry.Category;
+            }
+            else
+            {
+                OnPropertyChanged();
+            }
         }
     }
 
@@ -300,13 +253,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
                 NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey, page.NavTag));
             }
         }
-        ProjectNavEntries.Clear();
-        foreach (var page in Pages.OfType<ProjectPage>())
-        {
-            ProjectNavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey));
-        }
         OnPropertyChanged(nameof(SelectedNavEntry));
-        OnPropertyChanged(nameof(SelectedProjectNavEntry));
     }
 
     // ---- Going to a setting (DESIGN.md §14: search and links bring one into view) --------------------------------------
@@ -370,24 +317,9 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     /// <summary>Another window asked for Settings while it's open: it comes to <paramref name="opening"/>'s page and setting.</summary>
     public void Open(SettingsOpening opening)
     {
-        if (opening.Project is { } project)
-        {
-            UseProject(project);
-        }
         if (opening.Category is { } category)
         {
             Show(category, opening.Key);
-        }
-        if (opening.StartNew)
-        {
-            if (CurrentPage is ProjectLinksPage)
-            {
-                Project?.StartNewLink();
-            }
-            else if (CurrentPage is ProjectActionsPage)
-            {
-                Project?.StartNewAction();
-            }
         }
     }
 
@@ -403,8 +335,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Each page's sections and settings whose words have every word typed, the ones named by them first, then the ones
-    /// with the words together, in the sidebar's order; then the project pages', named with the project's group ("NightOwl → Links"). The page showing
-    /// follows the first, unless it has one of its own.
+    /// with the words together, in the sidebar's order. The page showing follows the first, unless it has one of its own.
     /// </summary>
     partial void OnSearchTextChanged(string value)
     {
@@ -415,7 +346,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
             return;
         }
         bool Has(string text, string word) => text.Contains(word, StringComparison.OrdinalIgnoreCase);
-        bool Finds(SettingsSearchResult r) => words.All(w => r.Words.Any(text => Has(text, w)) || Has(r.Category, w) || r.Section is { } s && Has(s, w) || r.Group is { } g && Has(g, w));
+        bool Finds(SettingsSearchResult r) => words.All(w => r.Words.Any(text => Has(text, w)) || Has(r.Category, w) || r.Section is { } s && Has(s, w));
         bool Named(SettingsSearchResult r) => words.All(w => Has(r.Label, w));
         var phrase = string.Join(' ', words);
         bool Phrase(SettingsSearchResult r) => r.Words.Any(text => Has(text, phrase));

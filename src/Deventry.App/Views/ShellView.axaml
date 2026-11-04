@@ -100,22 +100,22 @@
     <!-- Its square on the rail. -->
     <!-- The project's icon on its group's row and in the rail (DESIGN.md §18, "Project tools"): its kind's, or a folder's
          without a project; a busy dot in its place while a job runs -->
-    <DataTemplate x:Key="ProjectIcon" DataType="vm:TabViewModel">
+    <DataTemplate x:Key="ProjectIcon" DataType="vm:ProjectToolsViewModel">
       <Panel Width="14" Height="14">
-        <Path Classes="projecticon" Data="{Binding ProjectTools.IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
-              Classes.filled="{Binding ProjectTools.IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
-              Classes.unreal="{Binding ProjectTools.IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}}"
-              IsVisible="{Binding !ProjectTools.Runs.IsJobRunning}" />
+        <Path Classes="projecticon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
+              Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
+              Classes.unreal="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}}"
+              IsVisible="{Binding !Runs.IsJobRunning}" />
         <TextBlock Classes="status busy" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   IsVisible="{Binding ProjectTools.Runs.IsJobRunning}" />
+                   IsVisible="{Binding Runs.IsJobRunning}" />
       </Panel>
     </DataTemplate>
     <!-- The project's menu (DESIGN.md §18, "Project tools"): the project and what's wrong with deventry.json, then its
          actions and links -->
-    <DataTemplate x:Key="ProjectMenu" DataType="vm:TabViewModel">
+    <DataTemplate x:Key="ProjectMenu" DataType="vm:ProjectToolsViewModel">
       <StackPanel x:Name="ProjectMenu" MinWidth="300" MaxWidth="440" Spacing="1">
-        <TextBlock Text="{Binding ProjectTools.HeaderTitle}" FontWeight="SemiBold" Margin="8,2,8,0" />
-        <ItemsControl ItemsSource="{Binding ProjectTools.HeaderLines}" Margin="8,0,8,2">
+        <TextBlock Text="{Binding HeaderTitle}" FontWeight="SemiBold" Margin="8,2,8,0" />
+        <ItemsControl ItemsSource="{Binding HeaderLines}" Margin="8,0,8,2">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="x:String">
               <TextBlock Classes="muted small" Text="{Binding}" TextWrapping="Wrap" />
@@ -123,7 +123,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <!-- Entries of deventry.json that were skipped, and why (DESIGN.md §18) -->
-        <ItemsControl ItemsSource="{Binding ProjectTools.FileProblems}" Margin="8,0,8,2" IsVisible="{Binding ProjectTools.HasFileProblems}">
+        <ItemsControl ItemsSource="{Binding FileProblems}" Margin="8,0,8,2" IsVisible="{Binding HasFileProblems}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="x:String">
               <TextBlock Classes="small warning" Text="{Binding}" TextWrapping="Wrap" />
@@ -131,7 +131,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <Separator Margin="0,2" />
-        <ItemsControl ItemsSource="{Binding ProjectTools.Menu}">
+        <ItemsControl ItemsSource="{Binding Menu}">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:ProjectMenuEntry">
               <Panel>
@@ -485,11 +485,11 @@
                           </Panel>
                           <!-- The group's dot, or the project's own icon in its place, centered where the dot is (DESIGN.md §4, "Grouped by folder") -->
                           <Ellipse DockPanel.Dock="Left" Width="8" Height="8" Fill="{Binding Brush}" VerticalAlignment="Center" Margin="0,0,7,0"
-                                   IsVisible="{Binding !ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=True}" />
+                                   IsVisible="{Binding !ProjectTools.HasGroupIcon, FallbackValue=True}" />
                           <Image x:Name="GroupIcon" DockPanel.Dock="Left" Width="14" Height="14" VerticalAlignment="Center" Margin="-3,0,4,0"
                                  RenderOptions.BitmapInterpolationMode="HighQuality"
-                                 Source="{Binding ProjectTab.ProjectTools.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
-                                 IsVisible="{Binding ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=False}" />
+                                 Source="{Binding ProjectTools.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
+                                 IsVisible="{Binding ProjectTools.HasGroupIcon, FallbackValue=False}" />
                           <TextBlock DockPanel.Dock="Right" Classes="status alert" Text="{Binding UrgentGlyph}" IsVisible="{Binding IsCollapsed}" VerticalAlignment="Center" Margin="6,0,0,0" />
                           <!-- The account the group's new tabs use, when it isn't Default (DESIGN.md §4, "Accounts") -->
                           <Border x:Name="GroupAccountTag" DockPanel.Dock="Right" Classes="accounttag" Margin="6,0,0,0" IsVisible="{Binding HasLabelAccountTag}"
@@ -521,9 +521,9 @@
                             <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconHistory}" /></MenuItem.Icon>
                             </MenuItem>
-                            <!-- The project's pages in Settings, for the group's tab used last (DESIGN.md §14, "The project's pages") -->
-                            <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenGroupProjectSettingsCommand}" CommandParameter="{Binding}"
-                                      IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <!-- The folder's project settings, in their own window: its links, actions, tools, and its group's color and icon
+                                 (DESIGN.md §14, "The project's settings") -->
+                            <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenGroupProjectSettingsCommand}" CommandParameter="{Binding}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettings}" /></MenuItem.Icon>
                             </MenuItem>
                             <Separator />
@@ -540,15 +540,6 @@
                             </MenuItem>
                             <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
                                       IsVisible="{Binding HasName}" />
-                            <!-- Its icon is the group's color as it is now -->
-                            <MenuItem Header="Change color…" Click="OnChangeGroupColor">
-                              <MenuItem.Icon><Ellipse Width="10" Height="10" Fill="{Binding Brush}" /></MenuItem.Icon>
-                            </MenuItem>
-                            <!-- A picture of the project's own in place of the group's dot, on its Group page in Settings (DESIGN.md §4, "Grouped by folder") -->
-                            <MenuItem Header="Change icon…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ChangeGroupIconCommand}" CommandParameter="{Binding}"
-                                      IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
-                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconImage}" /></MenuItem.Icon>
-                            </MenuItem>
                             <!-- The account the group's new tabs use (DESIGN.md §4, "Accounts") -->
                             <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
                                       ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}">
@@ -568,27 +559,17 @@
                           </ContextMenu>
                         </Button.ContextMenu>
                       </Button>
-                        <!-- The project's tools and links (DESIGN.md §18, "Project tools"), from the group's tab used last: a click
-                           opens its menu -->
+                        <!-- The project's tools and links (DESIGN.md §18, "Project tools"), from the group's tab used last, or
+                           with no tab open, the folder's own: a click opens its menu -->
                       <Button x:Name="ProjectButton" Grid.Column="1" Classes="flat" Padding="5" VerticalAlignment="Center"
-                              IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}"
-                              ToolTip.Tip="{Binding ProjectTab.ProjectTools.ButtonTip, FallbackValue={x:Null}}" AutomationProperties.Name="Project tools">
-                        <ContentControl Content="{Binding ProjectTab}" ContentTemplate="{StaticResource ProjectIcon}" />
+                              IsVisible="{Binding ProjectTools, Converter={x:Static ObjectConverters.IsNotNull}}"
+                              ToolTip.Tip="{Binding ProjectTools.ButtonTip, FallbackValue={x:Null}}" AutomationProperties.Name="Project tools">
+                        <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectIcon}" />
                         <Button.Flyout>
                           <Flyout Placement="RightEdgeAlignedTop" Opened="OnProjectMenuOpened">
-                            <ContentControl Content="{Binding ProjectTab}" ContentTemplate="{StaticResource ProjectMenu}" />
+                            <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectMenu}" />
                           </Flyout>
                         </Button.Flyout>
-                      </Button>
-                      <!-- With no tab open there are no project tools to show: the folder's icon in their place, which opens
-                           the folder in the file manager, so every group's buttons line up -->
-                      <Button x:Name="GroupFolderButton" Grid.Column="1" Classes="flat" Padding="5" VerticalAlignment="Center"
-                              IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNull}}"
-                              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).RevealGroupFolderCommand}" CommandParameter="{Binding}"
-                              ToolTip.Tip="Open the folder" AutomationProperties.Name="Open the folder">
-                        <Panel Width="14" Height="14">
-                          <Path Classes="projecticon" Data="{StaticResource IconToolFolder}" />
-                        </Panel>
                       </Button>
                       <!-- The group's Project Files tab (DESIGN.md §18, "Project files"): opens it, or selects it -->
                       <Button x:Name="ProjectFilesButton" Grid.Column="2" Classes="flat" Padding="6" ToolTip.Tip="Project files" AutomationProperties.Name="Project files"
@@ -808,6 +789,11 @@
                                                    HorizontalAlignment="Right" VerticalAlignment="Top" ToolTip.Tip="This tab has its own settings" />
                                         </Panel>
                                       </MenuItem.Icon>
+                                    </MenuItem>
+                                    <!-- Its folder's project settings, in their own window (DESIGN.md §14, "The project's settings") -->
+                                    <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTabProjectSettingsCommand}" CommandParameter="{Binding}"
+                                              ToolTip.Tip="This folder's links, actions, tools, and its group's color and icon">
+                                      <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettingsTools}" /></MenuItem.Icon>
                                     </MenuItem>
                                     <Separator />
                                     <MenuItem Classes="menusection" Header="View" IsEnabled="False" />
@@ -1138,10 +1124,10 @@
                           Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ToggleGroupCollapsedCommand}" CommandParameter="{Binding}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                       <Border Width="16" Height="4" CornerRadius="2" Background="{Binding Brush}" VerticalAlignment="Center"
-                              IsVisible="{Binding !ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=True}" />
+                              IsVisible="{Binding !ProjectTools.HasGroupIcon, FallbackValue=True}" />
                       <Image Width="16" Height="16" VerticalAlignment="Center" RenderOptions.BitmapInterpolationMode="HighQuality"
-                             Source="{Binding ProjectTab.ProjectTools.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
-                             IsVisible="{Binding ProjectTab.ProjectTools.HasGroupIcon, FallbackValue=False}" />
+                             Source="{Binding ProjectTools.GroupIcon, Converter={x:Static services:ImageFiles.GroupIcon}, FallbackValue={x:Null}}"
+                             IsVisible="{Binding ProjectTools.HasGroupIcon, FallbackValue=False}" />
                       <TextBlock Classes="status alert small" Text="{Binding UrgentGlyph}" IsVisible="{Binding IsCollapsed}" VerticalAlignment="Center" />
                     </StackPanel>
                     <Button.ContextMenu>
@@ -1166,9 +1152,9 @@
                         <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconHistory}" /></MenuItem.Icon>
                         </MenuItem>
-                        <!-- The project's pages in Settings, for the group's tab used last (DESIGN.md §14, "The project's pages") -->
-                        <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenGroupProjectSettingsCommand}" CommandParameter="{Binding}"
-                                  IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <!-- The folder's project settings, in their own window: its links, actions, tools, and its group's color and icon
+                             (DESIGN.md §14, "The project's settings") -->
+                        <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenGroupProjectSettingsCommand}" CommandParameter="{Binding}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettings}" /></MenuItem.Icon>
                         </MenuItem>
                         <Separator />
@@ -1182,15 +1168,6 @@
                         </MenuItem>
                         <MenuItem Header="Reset name" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ResetGroupNameCommand}" CommandParameter="{Binding}"
                                   IsVisible="{Binding HasName}" />
-                        <!-- Its icon is the group's color as it is now -->
-                        <MenuItem Header="Change color…" Click="OnChangeGroupColor">
-                          <MenuItem.Icon><Ellipse Width="10" Height="10" Fill="{Binding Brush}" /></MenuItem.Icon>
-                        </MenuItem>
-                        <!-- A picture of the project's own in place of the group's dot, on its Group page in Settings (DESIGN.md §4, "Grouped by folder") -->
-                        <MenuItem Header="Change icon…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).ChangeGroupIconCommand}" CommandParameter="{Binding}"
-                                  IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}">
-                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconImage}" /></MenuItem.Icon>
-                        </MenuItem>
                         <!-- The account the group's new tabs use (DESIGN.md §4, "Accounts") -->
                         <MenuItem Header="Account" ItemsSource="{Binding AccountMenu}" IsVisible="{Binding HasAccountMenu}"
                                   ItemContainerTheme="{StaticResource AccountMenuItemTheme}" ItemTemplate="{StaticResource AccountMenuItemTemplate}">
@@ -1213,12 +1190,12 @@
                   <!-- The project's tools and links (DESIGN.md §18, "Project tools"), as on the group's row -->
                   <Button x:Name="ProjectSquare" Classes="flat" Width="38" Height="28" Padding="0" HorizontalAlignment="Center"
                           HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                          IsVisible="{Binding ProjectTab, Converter={x:Static ObjectConverters.IsNotNull}}"
-                          ToolTip.Tip="{Binding ProjectTab.ProjectTools.ButtonTip, FallbackValue={x:Null}}" ToolTip.Placement="Right" AutomationProperties.Name="Project tools">
-                    <ContentControl Content="{Binding ProjectTab}" ContentTemplate="{StaticResource ProjectIcon}" />
+                          IsVisible="{Binding ProjectTools, Converter={x:Static ObjectConverters.IsNotNull}}"
+                          ToolTip.Tip="{Binding ProjectTools.ButtonTip, FallbackValue={x:Null}}" ToolTip.Placement="Right" AutomationProperties.Name="Project tools">
+                    <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectIcon}" />
                     <Button.Flyout>
                       <Flyout Placement="RightEdgeAlignedTop" Opened="OnProjectMenuOpened">
-                        <ContentControl Content="{Binding ProjectTab}" ContentTemplate="{StaticResource ProjectMenu}" />
+                        <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectMenu}" />
                       </Flyout>
                     </Button.Flyout>
                   </Button>
@@ -1258,6 +1235,11 @@
                               <MenuItem Classes="menusection" Header="Tab" IsEnabled="False" />
                               <MenuItem Header="Rename" Command="{Binding StartRenameCommand}">
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconToolEdit}" /></MenuItem.Icon>
+                              </MenuItem>
+                              <!-- Its folder's project settings, in their own window (DESIGN.md §14, "The project's settings") -->
+                              <MenuItem Header="Project settings…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTabProjectSettingsCommand}" CommandParameter="{Binding}"
+                                        ToolTip.Tip="This folder's links, actions, tools, and its group's color and icon">
+                                <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettingsTools}" /></MenuItem.Icon>
                               </MenuItem>
                               <MenuItem Header="{Binding PinMenuText}" Command="{Binding TogglePinCommand}" ToolTip.Tip="{x:Static vm:TabViewModel.PinMenuTip}">
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPin}" /></MenuItem.Icon>

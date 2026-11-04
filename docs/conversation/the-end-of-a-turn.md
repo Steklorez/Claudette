@@ -16,6 +16,9 @@ A turn that changed files ends with a **Modified files** card. The header says *
 
 Click a tile to open that turn's changes to the file in the [diff view](../changes/the-diff-view.md): the file as it was before the turn's first change, against how the turn left it. If no later turn changed the file, the diff is against the file as it is now, and the header says so. Changes you made yourself between turns count toward the turn before them. This diff only shows: there is no **Revert** or **Reviewed** in it. Those belong to [Changed files](../changes/changed-files.md), which lists everything since the session started. [Changes per turn](../changes/changes-per-turn.md) has more.
 
+### Folding the files
+A turn that changed many files has a big card. Click anywhere on its header line, which lights up under the pointer, or the chevron after *3 files changed*, and the card folds to that line; a second click brings the tiles back. It works as a [Tool calls card](tool-calls.md#folding-the-calls) does: Settings → Conversation → **Show modified files collapsed** starts new cards folded, and right-clicking a Modified files card gives **Collapse all modified files** and **Expand all modified files**, which fold or open every one in the tab and start the ones still to come the same way, without changing Settings. The tab remembers which you chose.
+
 ## Turn
 A **Turn** card, one quiet line, comes next: how long the turn took, tokens in and out, the model, how much came from the prompt cache, and how many tool calls every agent made. For example: *1m 04s · 75.2k in · 904 out · Opus 5.5 · 62k from cache · 7 tool calls*. The time the turn ended is at the right.
 

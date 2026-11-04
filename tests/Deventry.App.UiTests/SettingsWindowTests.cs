@@ -160,7 +160,7 @@ public class SettingsWindowTests
         await Waiting.UntilAsync(() => tab.ProjectTools.Project is not null, "the project", poll: () => Dispatcher.UIThread.RunJobs());
         var updates = new ClaudeUpdateViewModel(h.Services, h.Services.ClaudeUpdates!, () => h.Shell.RunningVersions);
         await h.Services.ClaudeUpdates!.CheckNowAsync();
-        using var settings = new SettingsViewModel(h.Services, "me@example.com", updates, new SettingsOpening(Project: new ProjectSettingsViewModel(h.Services, tab, h.Shell)));
+        using var settings = new SettingsViewModel(h.Services, "me@example.com", updates, host: h.Shell);
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
 
@@ -179,7 +179,7 @@ public class SettingsWindowTests
         }
         window.Close();
 
-        Assert.Equal([.. settings.Categories, .. SettingsViewModel.ProjectPages], settings.Pages.Select(p => p.Title));
+        Assert.Equal(settings.Categories, settings.Pages.Select(p => p.Title));
         Assert.Empty(missing);
         Assert.Empty(lost);
     }

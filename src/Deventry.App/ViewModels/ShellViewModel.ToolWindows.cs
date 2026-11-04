@@ -36,10 +36,11 @@ public sealed partial class ShellViewModel
                 FollowFocusedTab();
             }
         };
-        // The game is the app's: its window shows whichever tab has the focus, while one is open.
+        // The game is the app's: its window shows whichever tab has the focus, and its icon is there while games are on,
+        // to start one at any time (DESIGN.md §18, "Games with Joulene").
         var games = ToolWindows.For(ToolWindowKinds.Games);
         games.Content = _services.Games;
-        games.IsAvailable = _services.Games.IsOpen;
+        games.IsAvailable = _services.Games.IsEnabled;
         // So are the searches kept in the Find window: its icon is on the strip while there are any.
         var find = ToolWindows.For(ToolWindowKinds.Find);
         find.Content = FindResults;
@@ -82,8 +83,8 @@ public sealed partial class ShellViewModel
         session?.ShowToolWindows(ToolWindows.ShowingKinds);
     }
 
-    /// <summary>A game opened or closed: its window comes, or goes with the game.</summary>
-    private void OnGameOpenChanged() => ToolWindows.For(ToolWindowKinds.Games).IsAvailable = _services.Games.IsOpen;
+    /// <summary>Games were turned on or off in Settings: their window's icon comes, or goes.</summary>
+    private void OnGamesEnabledChanged() => ToolWindows.For(ToolWindowKinds.Games).IsAvailable = _services.Games.IsEnabled;
 
     /// <summary>The command palette's entries for the tool windows: each that has one and has its icon, shown.</summary>
     private IEnumerable<PaletteEntry> ToolWindowEntries() =>

@@ -1,7 +1,7 @@
 ---
 title: Accessibility
 parent: Settings
-nav_order: 4
+nav_order: 5
 summary: "Deventry works with screen readers, scales to a size you can read, and can hold still."
 ---
 

@@ -15,18 +15,25 @@ public static partial class UnityLogs
     /// <summary>How the line saying the log moved to the project's starts, wherever it is in the line.</summary>
     public const string MovedLine = "Logs moved to project-relative";
 
-    public static EditorLogSource Source(UnityProject project, ProjectToolPaths paths, ToolOS os) => new()
+    /// <param name="preferJson">
+    /// Settings → Unity → <b>Prefer JSON logging</b>: follow the JSON Lines log Unity writes beside its log, when it writes
+    /// one (DESIGN.md §18, "Editor logs", "Unity's JSON log").
+    /// </param>
+    public static EditorLogSource Source(UnityProject project, ProjectToolPaths paths, ToolOS os, bool preferJson = false) => new()
     {
         ProcessNames = UnityProvider.EditorProcessNames,
-        Match = process => Writer(process, project.Root, UnityEditors.EditorLog(paths, os), os),
+        Match = process => Writer(process, project.Root, UnityEditors.EditorLog(paths, os), os, preferJson),
         Classify = Classify,
         IsCrash = IsCrash,
-        NewParser = _ => Parser(),
+        NewParser = zone => Parser(zone),
         NewMoveReader = () => new MoveReader(project.Root, os),
     };
 
-    /// <summary>A reader for one of Unity's logs.</summary>
-    public static EditorLogParser Parser() => new LineParser();
+    /// <summary>A reader for one of Unity's logs, its JSON Lines' times read in <paramref name="zone"/>, the machine's by default.</summary>
+    public static EditorLogParser Parser(TimeZoneInfo? zone = null) => new LineParser(zone ?? TimeZoneInfo.Local);
+
+    /// <summary>The extension of Unity's JSON Lines log, beside its text log: <c>Editor.jsonl</c>.</summary>
+    public const string JsonExtension = ".jsonl";
 
     /// <summary>The project's own log, which Unity 6.5 and later write once the editor has it open: <c>Logs/Editor.log</c>.</summary>
     public static string ProjectLog(string root, ToolOS os) => os.Join(root, "Logs", "Editor.log");
@@ -37,7 +44,8 @@ public static partial class UnityLogs
     /// 6.5's editor does once it has the project open; else <paramref name="editorLog"/>, the machine's, which can move
     /// to the project's unless <c>-useGlobalLog</c> keeps it there.
     /// </summary>
-    public static EditorLogWriter? Writer(SystemProcess process, string root, string? editorLog, ToolOS os)
+    /// <param name="preferJson">Follow the JSON Lines log beside it instead, while the process writes one.</param>
+    public static EditorLogWriter? Writer(SystemProcess process, string root, string? editorLog, ToolOS os, bool preferJson = false)
     {
         var commandLine = process.CommandLine;
         if (!Opens(process, root, os))
@@ -71,7 +79,44 @@ public static partial class UnityLogs
                 canMove = log is not null;
             }
         }
-        return log is null ? null : new EditorLogWriter(CommandLineOptions.Has(commandLine, "-batchmode") ? "Unity (batch mode)" : "Unity editor", [log]) { CanMove = canMove };
+        if (log is null)
+        {
+            return null;
+        }
+        var role = CommandLineOptions.Has(commandLine, "-batchmode") ? "Unity (batch mode)" : "Unity editor";
+        if (preferJson && JsonLog(log, root, canMove, process.StartedAt, os) is { } json)
+        {
+            // The JSON log has it all, in its own file that doesn't move.
+            return new EditorLogWriter(role, [json]);
+        }
+        return new EditorLogWriter(role, [log]) { CanMove = canMove };
+    }
+
+    /// <summary>
+    /// The JSON Lines log a process writes beside <paramref name="log"/>, as Unity 6's logging framework does with its
+    /// JSON logging on (<c>Editor.jsonl</c> beside <c>Editor.log</c>): the one beside its log, or while it's still on the
+    /// machine's log, the project's own, where the framework writes, first. Only one written since the process started
+    /// counts, so one left by an earlier session with JSON logging on since turned off isn't taken; without the start
+    /// time, one that's there does.
+    /// </summary>
+    public static string? JsonLog(string log, string root, bool canMove, DateTimeOffset? started, ToolOS os)
+    {
+        string[] candidates = canMove
+            ? [os.Join(root, "Logs", "Editor" + JsonExtension), System.IO.Path.ChangeExtension(log, JsonExtension)]
+            : [System.IO.Path.ChangeExtension(log, JsonExtension)];
+        return candidates.FirstOrDefault(path => started is null ? Exists(path) : WrittenSince(path, started));
+    }
+
+    private static bool Exists(string path)
+    {
+        try
+        {
+            return File.Exists(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -241,10 +286,44 @@ public static partial class UnityLogs
     /// says what a script's message is: <c>LogWarning</c> a warning, <c>LogError</c>, <c>LogException</c> and
     /// <c>LogAssertion</c> an error. A blank line carries on the entry before it.
     /// </summary>
-    private sealed partial class LineParser() : EditorLogParser(Classify, IsCrash)
+    private sealed partial class LineParser(TimeZoneInfo zone) : EditorLogParser(Classify, IsCrash)
     {
+        /// <summary>What the line being shown is, while a JSON line's are shown one by one; null for a line of text.</summary>
+        private LineRead? _json;
+
+        /// <summary>
+        /// A line of Unity's JSON log (DESIGN.md §18, "Editor logs", "Unity's JSON log") shows as its entry: its message's
+        /// first line in columns, the time, the category and the level, as Unreal's lines are, then its message's other
+        /// lines and its stack trace's under it. Any other line, as the text log's are.
+        /// </summary>
+        protected override IEnumerable<string> Expand(string line)
+        {
+            if (UnityJsonLine.Read(line, zone) is not { } entry)
+            {
+                yield return line;
+                yield break;
+            }
+            _json = new LineRead(Starts: true, Verbosity: entry.Verbosity, Category: entry.Category, Columns: entry.Columns);
+            yield return entry.First;
+            foreach (var more in entry.More)
+            {
+                _json = new LineRead(Starts: false, Columns: LogColumns.CarriedOn);
+                yield return more;
+            }
+            foreach (var frame in entry.Trace)
+            {
+                _json = new LineRead(Starts: false, Columns: LogColumns.CarriedOn, IsTrace: true);
+                yield return frame;
+            }
+            _json = null;
+        }
+
         protected override LineRead Read(string line, LogVerbosity? open)
         {
+            if (_json is { } json)
+            {
+                return json;
+            }
             if (open is null)
             {
                 return new LineRead(Starts: true);

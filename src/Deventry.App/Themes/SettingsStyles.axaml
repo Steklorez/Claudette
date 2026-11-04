@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:Deventry.App.Controls">
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels">
   <!-- The Settings window's and Tab settings…' look (DESIGN.md §14): sections of rows, each a setting's title, one line of
        what it does and its control at the right. Standard takes VS Code's settings editor as its reference: flat rows
        under headings, a changed setting marked by a bar at its left. The Claude style ("claude", which both windows' AppearanceScope takes)
@@ -340,5 +341,91 @@
   <!-- A text box for a path or a command. -->
   <Style Selector="TextBox.mono">
     <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
+  </Style>
+  <!-- ==== The sidebar of the Settings and project settings windows ===================================================== -->
+  <!-- A page's title, over the page -->
+  <Style Selector="TextBlock.pagetitle">
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <!-- The sidebar's list: each group's heading, then its pages, each with its icon. A heading isn't a page: it can't be
+       picked or focused. -->
+  <Style Selector="ListBox.settingsnav">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="8,0,8,8" />
+  </Style>
+  <!-- As much room under the last category as there is above a group's heading, before the line under them -->
+  <Style Selector="ListBox.categories">
+    <Setter Property="Padding" Value="8,0,8,20" />
+  </Style>
+  <Style Selector="ListBox.settingsnav ListBoxItem" x:DataType="vm:SettingsNavEntry">
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Margin" Value="0,1" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Focusable" Value="{Binding !IsHeading}" />
+    <Setter Property="IsHitTestVisible" Value="{Binding !IsHeading}" />
+    <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+    <Setter Property="AutomationProperties.ItemStatus" Value="{Binding Tag}" />
+  </Style>
+  <Style Selector="controls|AppearanceScope.claude ListBox.settingsnav ListBoxItem">
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+  <Style Selector="ListBox.settingsnav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+  </Style>
+  <!-- The page showing, picked out as the main window's selected tab is. -->
+  <Style Selector="ListBox.settingsnav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter,
+                   ListBox.settingsnav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                   ListBox.settingsnav ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}" />
+  </Style>
+  <Style Selector="TextBlock.navheading">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="Margin" Value="0,10,0,0" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <!-- A line across the sidebar over what sits at its foot: the version -->
+  <Style Selector="Border.sidebarfoot">
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+  </Style>
+  <Style Selector="Path.navicon">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="1.15" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon">
+    <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- A logo (Logos.IsLogo): filled in the same color, where the others are strokes -->
+  <Style Selector="Path.navicon.filled">
+    <Setter Property="Stroke" Value="{x:Null}" />
+    <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.filled">
+    <Setter Property="Fill" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <!-- Except Perforce's symbol (Logos.Perforce), which its brand guidelines allow only in Perforce's colors: in its mono
+       black or white beside the others' gray, and in full color once its page is selected (white still in the dark
+       themes, which have no other) -->
+  <Style Selector="Path.navicon.perforce">
+    <Setter Property="Fill" Value="{DynamicResource PerforceMonoBrush}" />
+    <!-- As tall as it is at 14 wide, so it's centred on the row's name: a stretched shape is drawn at its box's top -->
+    <Setter Property="Height" Value="11.44" />
+  </Style>
+  <Style Selector="ListBox.settingsnav ListBoxItem:selected Path.navicon.perforce">
+    <Setter Property="Fill" Value="{DynamicResource PerforceSymbolBrush}" />
+  </Style>
+  <!-- And Unreal Engine's icon (Logos.Unreal), in Epic's black or white, selected or not: its guidelines allow no other -->
+  <Style Selector="Path.navicon.unreal, ListBox.settingsnav ListBoxItem:selected Path.navicon.unreal">
+    <Setter Property="Fill" Value="{DynamicResource UnrealLogoBrush}" />
   </Style>
 </Styles>

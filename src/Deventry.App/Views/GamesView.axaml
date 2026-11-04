@@ -9,7 +9,33 @@
              x:Class="Deventry.App.Views.GamesView"
              x:DataType="services:GameService"
              Focusable="True">
-  <DockPanel>
+  <Panel>
+  <!-- With no game open, the games to start one, each with its score so far (DESIGN.md §18, "Games with Joulene") -->
+  <ScrollViewer x:Name="GameChoices" HorizontalScrollBarVisibility="Disabled" IsVisible="{Binding IsChoosing}">
+    <StackPanel Classes="gameheader" Spacing="8">
+      <TextBlock Text="Play a game against Joulene" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <ItemsControl ItemsSource="{Binding Choices}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="4" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="services:GameChoice">
+            <Button Classes="flat row gamechoice" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                    Command="{Binding Start}" CommandParameter="{Binding Kind}" AutomationProperties.Name="{Binding AccessibleName}">
+              <StackPanel Spacing="1">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                <TextBlock Classes="muted small" Text="{Binding Description}" TextWrapping="Wrap" />
+                <TextBlock Classes="muted small" Text="{Binding ScoreText}" IsVisible="{Binding HasScore}" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </StackPanel>
+  </ScrollViewer>
+  <DockPanel IsVisible="{Binding IsOpen}">
     <StackPanel DockPanel.Dock="Top" Classes="gameheader">
       <!-- A tab waits on the user: the game stays as it is -->
       <Border Classes="codeblock" IsVisible="{Binding HasCall}">
@@ -161,10 +187,11 @@
             <Button Content="{Binding Game.NewRoundText, FallbackValue={x:Null}}" Command="{Binding Game.NewRoundCommand, FallbackValue={x:Null}}" />
             <Button Grid.Column="1" Classes="flat" Content="Reset score" Command="{Binding Game.ResetScoreCommand, FallbackValue={x:Null}}"
                     IsVisible="{Binding Game.HasScore, FallbackValue=False}" ToolTip.Tip="Start this game's score again from nothing" />
-            <Button Grid.Column="3" Classes="flat" Content="Done playing" Command="{Binding CloseCommand}" ToolTip.Tip="End the game. The Games page goes until you start another." />
+            <Button Grid.Column="3" Classes="flat" Content="Done playing" Command="{Binding CloseCommand}" ToolTip.Tip="End the game, and go back to the list of games." />
           </Grid>
         </StackPanel>
       </StackPanel>
     </ScrollViewer>
   </DockPanel>
+  </Panel>
 </UserControl>

@@ -125,6 +125,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             ExpandThinking = state.ExpandThinking ?? services.Settings.Appearance.ExpandThinking,
             CollapseToolCalls = state.CollapseToolCalls ?? services.Settings.Appearance.CollapseToolCalls,
+            CollapseModifiedFiles = state.CollapseModifiedFiles ?? services.Settings.Appearance.CollapseModifiedFiles,
             FoldChains = state.Overrides.FoldChains ?? services.Settings.Appearance.FoldChains,
             ShowUnsupportedMessages = services.Settings.Advanced.LogProtocol,
             ShowAllHookRuns = services.Settings.ClaudeCode.ShowAllHookRuns,
@@ -931,6 +932,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
     }
 
+    /// <summary>The conversation's scroll bar marks your messages, as Settings → Conversation says (DESIGN.md §18, "Conversation cards").</summary>
+    public bool MarksYourMessages => _services.Settings.Appearance.MarkYourMessages;
+
+    /// <summary>The conversation's scroll bar marks Claude's answers, as Settings → Conversation says.</summary>
+    public bool MarksClaudesAnswers => _services.Settings.Appearance.MarkClaudesAnswers;
+
     /// <summary>Settings changed, for example the quick suffix list was edited.</summary>
     public void OnSettingsChanged()
     {
@@ -938,6 +945,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnPropertyChanged(nameof(SuffixMenu));
         _conversation.ExpandThinking = State.ExpandThinking ?? _services.Settings.Appearance.ExpandThinking;
         _conversation.CollapseToolCalls = State.CollapseToolCalls ?? _services.Settings.Appearance.CollapseToolCalls;
+        _conversation.CollapseModifiedFiles = State.CollapseModifiedFiles ?? _services.Settings.Appearance.CollapseModifiedFiles;
         OnFoldChainsChanged();
         _conversation.ShowAllHookRuns = _services.Settings.ClaudeCode.ShowAllHookRuns;
         _conversation.ShowUnsupportedMessages = _services.Settings.Advanced.LogProtocol;
@@ -947,6 +955,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnUsageCreditsChoiceChanged();
         Perforce.OnSettingsChanged();
         ProjectTools.OnSettingsChanged();
+        OnPropertyChanged(nameof(MarksYourMessages));
+        OnPropertyChanged(nameof(MarksClaudesAnswers));
         OnGamesSettingsChanged();
         OnSubagentDisplayChanged();
         OnBranchChanged();
@@ -990,6 +1000,24 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     {
         _conversation.CollapseAllToolCalls(collapsed);
         State.CollapseToolCalls = collapsed;
+        _services.SaveState();
+    }
+
+    /// <summary>
+    /// A Modified files card's menu (DESIGN.md §18, "Conversation cards"): collapses every Modified files card in the tab to
+    /// its header line, and new ones start collapsed, whatever Settings → Conversation says.
+    /// </summary>
+    [RelayCommand]
+    private void CollapseAllModifiedFiles() => SetAllModifiedFiles(true);
+
+    /// <summary>A Modified files card's menu: expands every Modified files card in the tab, and new ones start expanded.</summary>
+    [RelayCommand]
+    private void ExpandAllModifiedFiles() => SetAllModifiedFiles(false);
+
+    private void SetAllModifiedFiles(bool collapsed)
+    {
+        _conversation.CollapseAllModifiedFiles(collapsed);
+        State.CollapseModifiedFiles = collapsed;
         _services.SaveState();
     }
 
