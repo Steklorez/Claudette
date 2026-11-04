@@ -3,18 +3,18 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup Label="App">
-    <PackageVersion Include="Avalonia" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageVersion Include="Avalonia" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.5" />
     <!-- The spectrum and hue slider of a folder group's color picker. -->
-    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.5" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.5" />
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="LiveMarkdown.Avalonia" Version="2.5.1" />
     <!-- Also what LiveMarkdown uses; the diff view highlights code with it. -->
-    <PackageVersion Include="TextMateSharp" Version="2.0.4" />
-    <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.4" />
+    <PackageVersion Include="TextMateSharp" Version="2.0.5" />
+    <PackageVersion Include="TextMateSharp.Grammars" Version="2.0.5" />
     <!-- The Project Files tab's editor (DESIGN.md §18, "Project files"). AvaloniaEdit.TextMate takes TextMateSharp 2.0.3 or later. -->
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageVersion Include="AvaloniaEdit.TextMate" Version="12.0.0" />
@@ -38,7 +38,7 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
-    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.5" />
     <!-- 32.0.x is the last Verify.XunitV3 built against xunit.v3 3.2.x; 33 needs xunit.v3 4. -->
     <PackageVersion Include="Verify.XunitV3" Version="32.0.1" />
   </ItemGroup>
