@@ -297,6 +297,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     public bool IsPickerOpen => Picker is not null;
 
+    /// <summary><b>Clone a repository…</b>, open over the window (DESIGN.md §4, "Opening a tab").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCloneOpen))]
+    public partial CloneRepositoryViewModel? Clone { get; set; }
+
+    public bool IsCloneOpen => Clone is not null;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasConfirmation))]
     public partial ConfirmationViewModel? Confirmation { get; set; }
@@ -396,6 +403,31 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     private void NewTab() => Picker = new NewTabPickerViewModel(_services, this);
 
     public void ClosePicker() => Picker = null;
+
+    /// <summary><b>Clone a repository…</b>: from the picker or the command palette (DESIGN.md §4, "Opening a tab").</summary>
+    [RelayCommand]
+    private void OpenClone()
+    {
+        Picker = null;
+        Clone = new CloneRepositoryViewModel(_services, this);
+    }
+
+    /// <summary><b>New project…</b>: the same dialog, starting on an empty project (DESIGN.md §4, "Opening a tab").</summary>
+    [RelayCommand]
+    private void OpenNewProject()
+    {
+        Picker = null;
+        Clone = new CloneRepositoryViewModel(_services, this, empty: true);
+    }
+
+    /// <summary>Closes the clone dialog; while a clone runs, it stays until git finishes.</summary>
+    public void CloseClone()
+    {
+        if (Clone is not { IsCloning: true })
+        {
+            Clone = null;
+        }
+    }
 
     /// <summary>
     /// Opens a new tab in <paramref name="folder"/> and selects it, which starts its session. Every way to a new tab

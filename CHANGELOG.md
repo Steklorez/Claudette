@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Start a new project from the new tab picker.** **New project…** makes an empty folder where you choose, a git repository from the start unless you turn that off, and opens it as a new tab; the same window clones a repository instead with **Clone from git**. It's in the command palette too.
+- **Clone a repository…**, from **New project…** in the new tab picker or from the command palette. Paste a git address, choose where to put the clone and what to call its folder (filled in from the address), and the clone opens as a new tab. It runs the git from Settings → Source control → Git, and tells you what git said if it can't. See [Cloning a repository](https://deventry.app/tabs/opening-tabs/#cloning-a-repository).
 - **See at a glance which tabs are working.** Settings → Appearance → **Tab activity** → **Colored rows**: a soft highlight runs across a tab's row while Claude works, or its subagents still do in the background, a tab waiting for you flashes orange, a tab Claude finished in while you were elsewhere keeps a pale green wash until you open it, and one that stopped with an error a red one. A starting tab's name shimmers until it's ready. Each subagent's row under its tab is colored the same way by what the subagent is doing. The status icons go, and the status dots stay the default.
 
 ## [1.0.0] - 2026-11-04
