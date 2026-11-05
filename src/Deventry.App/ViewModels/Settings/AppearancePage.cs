@@ -19,6 +19,12 @@ public sealed record MotionChoice(MotionSetting Setting)
     };
 }
 
+/// <summary>Settings → Appearance → Tab activity's choices (DESIGN.md §4, "Sidebar").</summary>
+public sealed record TabActivityChoice(TabActivity Activity)
+{
+    public override string ToString() => Activity == TabActivity.Bars ? "Colored rows" : "Status dots";
+}
+
 /// <summary>Joulene's sizes in Settings → Appearance (DESIGN.md §5, "Joulene on the composer").</summary>
 public sealed record JouleneSizeChoice(JouleneSize Size)
 {
@@ -84,6 +90,10 @@ public sealed class AppearancePage : SettingsPage
                 "Everything in the main window, bigger or smaller.",
                 "Ctrl and + or −, or Ctrl+0, change it too (Cmd on a Mac). Each computer keeps its own, to suit its screen.",
                 ["scale", "bigger", "magnify"]),
+            Setting("appearance.tabActivity", "Tab activity", s => s.Appearance.TabActivity, (s, v) => s.Appearance.TabActivity = v,
+                "How the sidebar shows that Claude is working in a tab, or waiting for you.",
+                "Status dots: the dot before the tab's name pulses while Claude works. Colored rows: no status icons; a soft highlight runs across the row while Claude works, the row flashes orange while it waits for your answer, a pale green wash marks a tab it finished in while you weren't looking, until you open it, and a red one a tab that stopped with an error. A tab's name shimmers while its session starts.",
+                ["working", "busy", "waiting", "progress", "bar", "dot", "sidebar", "activity"]),
             Setting("appearance.motion", "Motion", s => s.Appearance.Motion, (s, v) => s.Appearance.Motion = v,
                 "Whether the busy dots pulse, the working line twinkles and the icon moves.",
                 "Following the system, motion is reduced when your computer's settings, or Claude Code's prefersReducedMotion, ask for it. Joulene on the composer stands still then too.",
@@ -233,6 +243,15 @@ public sealed class AppearancePage : SettingsPage
     {
         get => ZoomChoices.FirstOrDefault(c => c.Percent == Settings.Appearance.Zoom) ?? new ZoomChoice(Settings.Appearance.Zoom);
         set => Set(value?.Percent ?? Core.Accessibility.Zoom.Default, v => Settings.Appearance.Zoom = v);
+    }
+
+    public IReadOnlyList<TabActivityChoice> TabActivityChoices { get; } = [new(Core.Settings.TabActivity.Dots), new(Core.Settings.TabActivity.Bars)];
+
+    /// <summary>Whether a working or waiting tab also gets a line under its row in the sidebar (DESIGN.md §4, "Sidebar").</summary>
+    public TabActivityChoice TabActivity
+    {
+        get => TabActivityChoices.FirstOrDefault(c => c.Activity == Settings.Appearance.TabActivity) ?? TabActivityChoices[0];
+        set => Set(value?.Activity ?? Core.Settings.TabActivity.Dots, v => Settings.Appearance.TabActivity = v);
     }
 
     public IReadOnlyList<MotionChoice> MotionChoices { get; } =

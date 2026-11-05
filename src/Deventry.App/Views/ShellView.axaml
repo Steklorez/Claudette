@@ -603,10 +603,23 @@
                                 <ToolTip.Tip>
                                   <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InfoCard}" />
                                 </ToolTip.Tip>
-                                <Grid ColumnDefinitions="14,*" ColumnSpacing="6">
+                                <Panel>
+                                <!-- What Claude is doing, behind the row with Tab activity's colored rows (DESIGN.md §4, "Sidebar"): a soft
+                                     highlight running across it while Claude works, an orange wash blinking while it waits for the user,
+                                     and a still green or red one, fading out to the right, once it finished unseen or stopped with an error -->
+                                <controls:WorkBar Classes="rowglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
+                                <Border Classes="rowglow waitglow" IsVisible="{Binding ShowsWaitBlink}" />
+                                <Border Classes="rowglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
+                                <Border Classes="rowglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
+                                <Grid ColumnSpacing="{Binding RowLeadSpacing}">
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="{Binding RowLeadWidth}" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
                                   <TextBlock Classes="status" Classes.busy="{Binding IsBusyStatus}" Classes.alert="{Binding IsAlertStatus}"
                                              Classes.failed="{Binding IsErrorStatus}" Classes.unread="{Binding IsUnread}"
-                                             Text="{Binding StatusGlyph}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                                             Text="{Binding StatusGlyph}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Center" VerticalAlignment="Top"
+                                             IsVisible="{Binding ShowsStatusGlyph}" />
                                   <!-- The user's own mark (DESIGN.md §4, "Marks"), or the reviewed icon over it: under the status
                                        icon, level with the second line. The border gives the tip somewhere to hover. -->
                                   <Border x:Name="RowMark" Background="Transparent" IsVisible="{Binding ShowsMarkIcon}" HorizontalAlignment="Center" VerticalAlignment="Bottom"
@@ -678,7 +691,8 @@
                                           <TextBlock Text="{Binding RowAccountTag.Name, FallbackValue=''}" />
                                         </Border>
                                         <Panel>
-                                          <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsRenaming}" />
+                                          <!-- Its session starting, with Tab activity's bars: the name shimmers until it's ready -->
+                                          <TextBlock Classes="tabname" Classes.starting="{Binding ShowsStartingShimmer}" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsRenaming}" />
                                           <TextBox Text="{Binding RenameText}" IsVisible="{Binding IsRenaming}" Padding="4,1" MinHeight="0"
                                                    KeyDown="OnRenameKeyDown" LostFocus="OnRenameLostFocus" AttachedToVisualTree="OnRenameAttached" />
                                         </Panel>
@@ -758,6 +772,7 @@
                                     </Grid>
                                   </StackPanel>
                                 </Grid>
+                                </Panel>
                                 <Button.ContextMenu>
                                   <ContextMenu Classes="sectioned">
                                     <!-- In sections, as Themes/MenuStyles.axaml draws them (DESIGN.md §4, "Sidebar"): the tab, how it shows, its session,
@@ -905,10 +920,21 @@
                                     <Button Classes="flat agentrow" Classes.showing="{Binding IsShowing}" Classes.earlier="{Binding Node.IsEarlier}"
                                             Margin="{Binding Indent, Converter={x:Static vm:Converters.LeftMargin}}" Command="{Binding OpenCommand}"
                                             ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding Node.Title}">
-                                      <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
+                                      <Panel>
+                                      <!-- With Tab activity's colored rows, the tab row's washes for the subagent (DESIGN.md §4, "Sidebar") -->
+                                      <controls:WorkBar Classes="rowglow agentglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
+                                      <Border Classes="rowglow agentglow waitglow" IsVisible="{Binding ShowsWaitBlink}" />
+                                      <Border Classes="rowglow agentglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
+                                      <Border Classes="rowglow agentglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
+                                      <Grid ColumnSpacing="{Binding GlyphSpacing}">
+                                        <Grid.ColumnDefinitions>
+                                          <ColumnDefinition Width="{Binding GlyphWidth}" />
+                                          <ColumnDefinition Width="*" />
+                                          <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
                                         <TextBlock Classes="status runglyph" Classes.busy="{Binding Node.IsRunning}" Classes.alert="{Binding Node.IsWaiting}"
                                                    Classes.ok="{Binding Node.IsDone}" Classes.failed="{Binding Node.IsFailed}"
-                                                   Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                                                   Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="{Binding ShowsStatusGlyph}" />
                                         <StackPanel Grid.Column="1">
                                           <DockPanel>
                                             <Path DockPanel.Dock="Left" Classes="agentrowicon" Data="{StaticResource IconToolAgent}" />
@@ -929,6 +955,7 @@
                                           </Button>
                                         </Panel>
                                       </Grid>
+                                      </Panel>
                                       <Button.ContextMenu>
                                         <ContextMenu>
                                           <MenuItem Header="Show its work" Command="{Binding OpenCommand}" />

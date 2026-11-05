@@ -322,7 +322,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     // ---- Status (DESIGN.md §4, "Status icon") ------------------------------------------------------------
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusGlyph), nameof(StatusTip), nameof(InfoRows), nameof(IsWorking), nameof(NeedsInput), nameof(IsBusyStatus), nameof(IsAlertStatus), nameof(IsErrorStatus), nameof(IsUnread), nameof(RowDetail), nameof(ShowTaskBadge), nameof(CanSyncNow), nameof(SyncNowTip))]
+    [NotifyPropertyChangedFor(nameof(StatusGlyph), nameof(StatusTip), nameof(InfoRows), nameof(IsWorking), nameof(NeedsInput), nameof(IsBusyStatus), nameof(IsAlertStatus), nameof(ShowsWorkBar), nameof(ShowsWaitBlink), nameof(ShowsDoneBar), nameof(ShowsStatusGlyph), nameof(ShowsErrorBar), nameof(ShowsStartingShimmer), nameof(IsErrorStatus), nameof(IsUnread), nameof(RowDetail), nameof(ShowTaskBadge), nameof(CanSyncNow), nameof(SyncNowTip))]
     [NotifyCanExecuteChangedFor(nameof(StopCommand), nameof(SendCommand), nameof(RestartCommand), nameof(CompactCommand), nameof(SyncNowCommand))]
     public partial TabStatus Status { get; set; }
 
@@ -510,6 +510,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             if (Status == TabStatus.Unread)
             {
                 Status = TabStatus.Idle;
+            }
+            if (State.Unseen)
+            {
+                State.Unseen = false;
+                _services.SaveState();
+                OnPropertyChanged(nameof(ShowsDoneBar));
             }
             RefreshMessageTimes();
             _ = EnsureStartedAsync();
@@ -939,10 +945,29 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public bool MarksClaudesAnswers => _services.Settings.Appearance.MarkClaudesAnswers;
 
     /// <summary>Settings changed, for example the quick suffix list was edited.</summary>
+    /// <summary>Whether the row's lead column has anything in it changed, with Tab activity or the mark.</summary>
+    private void RowLeadChanged()
+    {
+        OnPropertyChanged(nameof(HasRowLead));
+        OnPropertyChanged(nameof(RowLeadWidth));
+        OnPropertyChanged(nameof(RowLeadSpacing));
+    }
+
     public void OnSettingsChanged()
     {
         OnPropertyChanged(nameof(AvailableSuffixes));
         OnPropertyChanged(nameof(SuffixMenu));
+        OnPropertyChanged(nameof(ShowsWorkBar));
+        OnPropertyChanged(nameof(ShowsWaitBlink));
+        OnPropertyChanged(nameof(ShowsDoneBar));
+        OnPropertyChanged(nameof(ShowsStatusGlyph));
+        OnPropertyChanged(nameof(ShowsErrorBar));
+        OnPropertyChanged(nameof(ShowsStartingShimmer));
+        foreach (var row in SubagentRows)
+        {
+            row.ActivityChanged();
+        }
+        RowLeadChanged();
         _conversation.ExpandThinking = State.ExpandThinking ?? _services.Settings.Appearance.ExpandThinking;
         _conversation.CollapseToolCalls = State.CollapseToolCalls ?? _services.Settings.Appearance.CollapseToolCalls;
         _conversation.CollapseModifiedFiles = State.CollapseModifiedFiles ?? _services.Settings.Appearance.CollapseModifiedFiles;
