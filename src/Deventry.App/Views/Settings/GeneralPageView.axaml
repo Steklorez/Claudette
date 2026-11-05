@@ -74,6 +74,7 @@
         <c:SettingRow.Details>
           <StackPanel Spacing="8" DataContext="{Binding SourceUpdates}" x:DataType="vm:SourceUpdateViewModel">
             <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
+            <CheckBox IsChecked="{Binding RestartAutomatically}" Content="Restart into new builds by itself when no tab is working" />
             <TextBlock Classes="muted small" Text="{Binding WhyNotText}" TextWrapping="Wrap" IsVisible="{Binding WhyNotText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
