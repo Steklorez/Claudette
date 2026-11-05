@@ -163,6 +163,8 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(AgentsBadge));
         OnPropertyChanged(nameof(AgentsBadgeTip));
         OnPropertyChanged(nameof(AgentsButtonText));
+        OnPropertyChanged(nameof(ShowsWorkBar));
+        OnPropertyChanged(nameof(ShowsDoneBar));
         if (SelectedAgent is { } selected && !Agents.Contains(selected))
         {
             // Gone after /clear.

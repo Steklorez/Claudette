@@ -338,6 +338,12 @@ public sealed class TabState
     public bool RemoteControl { get; set; }
 
     /// <summary>
+    /// Claude finished a turn in the tab and the user hasn't opened it since (DESIGN.md §4, "Sidebar"), kept so the
+    /// sidebar still says so after Deventry restarts, when the tab comes back not started.
+    /// </summary>
+    public bool Unseen { get; set; }
+
+    /// <summary>
     /// The session and account the user chose <b>Continue here</b> for, as the session's id, a bar and
     /// <see cref="SessionOrigin.Key"/>, so the tab isn't asked again (DESIGN.md §4, "Continuing under another account").
     /// </summary>

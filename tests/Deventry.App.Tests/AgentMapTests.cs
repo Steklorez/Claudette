@@ -370,6 +370,46 @@ public class AgentMapTests
     }
 
     [Fact]
+    public async Task With_colored_rows_a_tab_runs_its_highlight_while_a_background_subagent_works_after_the_turn()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.Settings.Appearance.TabActivity = Deventry.Core.Settings.TabActivity.Bars;
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Wire.Init());
+        h.Transport.Emit(Wire.Agent("bg", "Long job", "RUN_BASH sleep 20", background: true));
+        h.Transport.Emit(Wire.TaskStarted("task-bg", "bg", backgrounded: true));
+        h.Transport.Emit(Wire.Result("bg", "Async agent launched successfully.", toolUseResult: new JsonObject
+        {
+            ["isAsync"] = true, ["status"] = "async_launched", ["agentId"] = "task-bg", ["description"] = "Long job", ["prompt"] = "RUN_BASH sleep 20",
+        }));
+        h.Transport.Emit(Wire.TurnResult());
+
+        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any() && tab.IsSettled, "the turn to end");
+        Assert.True(tab.HasActiveAgents);
+        Assert.True(tab.ShowsWorkBar);
+        Assert.False(tab.ShowsDoneBar);
+        // Its row under the tab runs the same highlight.
+        var row = tab.SubagentRows.Single();
+        Assert.True(row.ShowsWorkBar);
+        // No status glyph with colored rows, as on the tab's row: the wash says it.
+        Assert.False(row.ShowsStatusGlyph);
+        Assert.False(row.ShowsDoneBar);
+
+        h.Transport.Emit(Wire.Notification("task-bg", "bg", "completed", "Slept well.", tokens: 1200, toolUses: 1, durationMs: 20500));
+
+        await TabTestHarness.Eventually(() => !tab.HasActiveAgents, "the notification");
+        Assert.False(tab.ShowsWorkBar);
+        Assert.False(row.ShowsWorkBar);
+        Assert.True(row.ShowsDoneBar);
+        Assert.False(row.ShowsErrorBar);
+
+        // Looking at its work once it has ended takes the green away, as opening a tab does.
+        InlineDispatcher.Read(() => { row.OpenCommand.Execute(null); return 0; });
+        Assert.True(row.IsSeen);
+        Assert.False(row.ShowsDoneBar);
+    }
+
+    [Fact]
     public async Task Running_time_ticks_from_the_injected_clock()
     {
         await using var h = new TabTestHarness();

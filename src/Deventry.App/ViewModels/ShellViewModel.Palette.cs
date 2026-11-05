@@ -68,6 +68,8 @@ public sealed partial class ShellViewModel
             entries.Add(new PaletteEntry(label, "Command", run, shortcutId is null ? null : Tips.Text(shortcutId)));
 
         Command("New tab", NewTab, KeyboardShortcuts.NewTab);
+        Command("New project…", OpenNewProject);
+        Command("Clone a repository…", OpenClone);
         Command("Open from History…", OpenHistory, KeyboardShortcuts.History);
         AsyncCommand("Settings", OpenSettingsAsync, KeyboardShortcuts.Settings);
         Command(Layout.IsSidebarCollapsed ? "Expand the sidebar" : "Collapse the sidebar", () => Layout.ToggleSidebarCommand.Execute(null), KeyboardShortcuts.ToggleSidebar);

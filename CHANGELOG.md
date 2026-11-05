@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Start a new project from the new tab picker.** **New project…** makes an empty folder where you choose, a git repository from the start unless you turn that off, and opens it as a new tab; the same window clones a repository instead with **Clone from git**. It's in the command palette too.
+- **Clone a repository…**, from **New project…** in the new tab picker or from the command palette. Paste a git address, choose where to put the clone and what to call its folder (filled in from the address), and the clone opens as a new tab. It runs the git from Settings → Source control → Git, and tells you what git said if it can't. See [Cloning a repository](https://deventry.app/tabs/opening-tabs/#cloning-a-repository).
+- **See at a glance which tabs are working.** Settings → Appearance → **Tab activity** → **Colored rows**: a soft highlight runs across a tab's row while Claude works, or its subagents still do in the background, a tab waiting for you flashes orange, a tab Claude finished in while you were elsewhere keeps a pale green wash until you open it, and one that stopped with an error a red one. A starting tab's name shimmers until it's ready. Each subagent's row under its tab is colored the same way by what the subagent is doing. The status icons go, and the status dots stay the default.
 - **See which subagents are still running.** While any of a tab's subagents works, even after Claude's turn has ended, its row in the sidebar says how many with a **running** chip; click it to see them. Each subagent's row says what it's doing in blue while it runs, and how it ended in green once it's done.
 
 ### Fixed
@@ -36,6 +39,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- **Restart into new builds by itself is in Settings too.** A source build's updates in Settings → General have the switch that **New build ready**'s dialog has, so it can be turned off without catching the badge before the next restart.
 - **Tabs don't spend usage credits unless you say so.** Once your session or weekly limit is used up, a tab now stops and waits for the reset rather than let your plan's usage credits pay for it. Turn on Settings → Tabs → **Use usage credits once a limit is used up** for every tab, or tick **Use usage credits** in a tab's menu for the ones that can't wait. Settings carried over from Claudette keep it on, as it was. See [Tabs that don't use usage credits](https://deventry.app/usage/tabs-that-dont-use-usage-credits/).
 - **The Games icon is always on the strip.** While games are on, its icon stays at the window's right, game or no game, so you can start one at any time: with none open, its window lists the four, each with your score so far. **Done playing** goes back to that list. See [Games with Joulene](https://deventry.app/joulene/games-with-joulene/).
 - **Project settings have a window of their own.** **Project settings…**, in a group's menu and now in each tab's, opens the project's links, actions, tools, and its group's color and icon in a window beside the main one, one for each project, even for a group with nothing open in it. **Add a link…** and **Add an action…** open it too. They're no longer at the foot of Settings' sidebar, and a group's color is picked there now, in place of **Change color…** in the group's menu. See [Project settings](https://deventry.app/settings/project-settings/).

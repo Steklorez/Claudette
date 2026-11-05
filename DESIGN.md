@@ -495,6 +495,8 @@ In both styles, text in a different font or size beside other text sits on its b
 
 ### Sidebar
 
+Settings → Appearance → **Tab activity** chooses how a tab's row shows what Claude is doing: **Status dots** (the default), the status icon alone, or **Colored rows**, with no status icons at all: washes behind the row's text, faint enough for it to read. While Claude works, and while subagents it started in the background still do after its turn has ended, a soft blue highlight runs across the row from left to right, about every two seconds; while it waits for the user (a permission, a question, a plan), an orange wash blinks; once it has finished in a tab the user isn't looking at, its subagents too, a pale green wash, strongest at the left and fading out to the right, stays until the tab is opened (through a restart too); a tab whose Claude Code stopped with an error has the same in red; and while a tab's session starts, its name shimmers. A subagent's row under its tab has the same washes for the subagent: the highlight while it runs, the orange blink while it waits on the user, and green or red once it's done or failed, until its work is opened; as on the tab's row, it has no status glyph. A tab that's ready, not started or stopped has nothing, and with no icon the name takes the icon's column. With motion reduced the highlight holds still as a blue wash, and the orange stops blinking.
+
 The tabs are listed in a sidebar on the left of the window, rather than a strip across the top, so long session names, a status line and many tabs all fit.
 
 - **A tab's row** has two lines:
@@ -565,6 +567,7 @@ The picker shows:
   - When it was last used, and how many tabs are open in it now.
 - **Browse…**, which opens the native folder picker for any other folder.
 - **Open from History…** (a button beside **Browse…**), which opens History ([§9](#history)) to resume a past session instead of starting a new one.
+- **New project…** (beside it), for a project that isn't on this machine yet: an empty one, or a clone of a git repository ([Cloning a repository](#cloning-a-repository)).
 
 Using the picker:
 
@@ -590,6 +593,12 @@ Using the picker:
   - Only the same user's Deventry is handed arguments, and only the same user's launches are read (`CurrentUserOnly` on both ends).
   - A restart into a new build or version (§9, §2) lets go of the lock as it stops listening; the new one waits for the lock and hands nothing on. If it doesn't start, the old one takes the lock back.
 - The macOS menu bar also has **File → New Tab**, **History…** and **Close Tab**, and the app menu has **About Deventry**, which opens Settings → About ([About](#about)), and **Settings…**. Each shows its shortcut from Settings → Keyboard ([§14](#keyboard-shortcuts)). Its **Help** menu has **User Guide**, **Ask on Discord** and **Report an Issue**, as at the foot of Settings' sidebar ([Version](#version)).
+**Cloning a repository.**
+
+- **Clone a repository…**, in the command palette ([Command palette](#command-palette)), and **Clone from git** in **New project…**, take the picker's place: a dialog with the repository's **address** (anything `git clone` takes: `https://`, `git@host:`, a path), the folder to **clone into** (with **Browse…**; it starts as the parent of the folder a tab last opened in, or the home folder), and the clone's **folder name**, filled in from the address (`repo.git` → `repo`) until the user changes it; cleared, it follows the address again. Under them, where the clone will be.
+- **New project…**, in the picker and the command palette, opens that dialog on **Empty project** (its other choice is **Clone from git**): the folder to **create in** and the new folder's **name**, with **Start a git repository in it** (on by default, `git init` in the new folder). **Create** makes the folder and opens it as a new tab; a folder whose `git init` failed still opens, with git's message. The name must be a single folder name not already there, as for a clone.
+- It won't start while the address is empty, the folder to clone into doesn't exist, the name isn't a single folder name, or that folder already has one of that name, and says which.
+- **Clone** runs `git clone` with the git every other git Deventry runs uses (Settings → Git → **Path to git**, [§14](#pages), and the user environment, [§13](#login-shell-environment)), never asking for a password: a repository that needs one fails with git's message. While it runs the button reads **Cloning…**, the fields are locked, and the dialog stays until git finishes (`Esc`, a click outside and **Cancel** wait). A finished clone opens as a new tab, as any folder does, so it joins the recent folders; a failed one leaves the dialog open with what git said, and nothing on disk.
 
 ### Process monitor
 
@@ -1854,7 +1863,7 @@ Deventry can host the Claude Code session that works on Deventry's own source. W
 - **Offering the restart.** **New build ready** appears at the foot of the sidebar ([§4](#sidebar)). Its dialog says when the build was made, and offers:
   - **Restart now.** A working tab's turn isn't interrupted but left as it is, and Claude Code carries it on after the restart (below).
   - **Restart when idle**, while a tab is working: it waits until no tab is starting, working or waiting on the user.
-  - **Restart into new builds by itself when no tab is working**, remembered on this machine. With it on, a Claude Code session that rebuilds Deventry sees the restart as soon as its turn ends.
+  - **Restart into new builds by itself when no tab is working**, remembered on this machine and off until turned on. With it on, a Claude Code session that rebuilds Deventry sees the restart as soon as its turn ends. Settings → General has it too, in the source build's updates: with it on, the badge goes as soon as the restart happens, so the dialog is hard to reach to turn it off.
 - **New commits upstream.** A source build checks the branch its checkout tracks (its upstream, such as `origin/main`) for new commits, as an installed Deventry checks its releases ([§2](#updating-deventry)), so a checkout of `main` keeps up with `main` as a release keeps up with releases.
   - **Checking.** At launch and every hour while **Check for Deventry updates automatically** is on, and with **Check now**, both in Settings → General, whose updates section says what the last check found. A check is `git fetch` in the checkout, with the user's git, environment and credential helper (§13, "Login shell environment"), and never asks for a password (`GIT_TERMINAL_PROMPT=0`, `GCM_INTERACTIVE=never`): a remote that needs one fails the check, which says what git said. A checkout on no branch, or on one without an upstream, isn't checked, and Settings says so.
   - **Offering them.** A badge at the foot of the sidebar, beside **New build ready**: *"3 new commits on origin/main"*. Its dialog lists them, newest first, with their subjects, authors and when they were committed (the newest 20, then *"and 12 more"*), and offers:

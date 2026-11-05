@@ -271,6 +271,50 @@
     <Style Selector="Arc.contextarc.critical">
       <Setter Property="Stroke" Value="{DynamicResource MeterCriticalBrush}" />
     </Style>
+    <!-- Tab activity's colored rows (DESIGN.md §4, "Sidebar"): washes behind the row, faint enough for its text; still
+         when motion is reduced -->
+    <Style Selector="controls|WorkBar.rowglow, Border.rowglow">
+      <Setter Property="Margin" Value="-6,-2,-4,-2" />
+      <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="Border.rowglow">
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <!-- A subagent's row: the wash starts at its icon, under its tab's name, rather than out in the row's padding -->
+    <Style Selector="controls|WorkBar.agentglow, Border.agentglow">
+      <Setter Property="Margin" Value="-2,-2,-4,-2" />
+    </Style>
+    <Style Selector=":is(Window).reducemotion controls|WorkBar">
+      <Setter Property="IsStill" Value="True" />
+    </Style>
+    <Style Selector="Border.waitglow">
+      <Setter Property="Background" Value="{DynamicResource WaitGlowBrush}" />
+    </Style>
+    <Style Selector="Border.doneglow">
+      <Setter Property="Background" Value="{DynamicResource DoneGlowBrush}" />
+    </Style>
+    <Style Selector="Border.errorglow">
+      <Setter Property="Background" Value="{DynamicResource ErrorGlowBrush}" />
+    </Style>
+    <Style Selector=":is(Window):not(.reducemotion) Border.waitglow">
+      <Style.Animations>
+        <Animation Duration="0:0:0.9" IterationCount="INFINITE" PlaybackDirection="Alternate" Easing="SineEaseInOut">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1" /></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.25" /></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="TextBlock.tabname.starting">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+    <Style Selector=":is(Window):not(.reducemotion) TextBlock.tabname.starting">
+      <Style.Animations>
+        <Animation Duration="0:0:0.8" IterationCount="INFINITE" PlaybackDirection="Alternate" Easing="SineEaseInOut">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1" /></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.25" /></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
     <!-- A row's close button shows on hover and on the selected tab, so the list stays quiet and names get the room. -->
     <Style Selector="Button.tab Button.closetab">
       <Setter Property="IsVisible" Value="False" />
@@ -785,6 +829,18 @@
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A000000" />
           <SolidColorBrush x:Key="MeterBrush" Color="#3574F0" />
           <SolidColorBrush x:Key="MeterWarningBrush" Color="#D98A00" />
+          <LinearGradientBrush x:Key="WaitGlowBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#2EE5850B" />
+            <GradientStop Offset="1" Color="#00E5850B" />
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="DoneGlowBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#2E107C10" />
+            <GradientStop Offset="1" Color="#00107C10" />
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="ErrorGlowBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#2EC42B1C" />
+            <GradientStop Offset="1" Color="#00C42B1C" />
+          </LinearGradientBrush>
           <SolidColorBrush x:Key="MeterCriticalBrush" Color="#C42B1C" />
           <!-- The detailed usage header's charts (DESIGN.md §6): model-specific weekly limits beside the accent line, and
                the page behind the charts, for the ring around a marker. Checked apart from the accent and each other,
@@ -900,6 +956,18 @@
           <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FFFFFF" />
           <SolidColorBrush x:Key="MeterBrush" Color="#548AF7" />
           <SolidColorBrush x:Key="MeterWarningBrush" Color="#F2B233" />
+          <LinearGradientBrush x:Key="WaitGlowBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#33F2B233" />
+            <GradientStop Offset="1" Color="#00F2B233" />
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="DoneGlowBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#336CCB5F" />
+            <GradientStop Offset="1" Color="#006CCB5F" />
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="ErrorGlowBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#33FF6B61" />
+            <GradientStop Offset="1" Color="#00FF6B61" />
+          </LinearGradientBrush>
           <SolidColorBrush x:Key="MeterCriticalBrush" Color="#FF6B61" />
           <SolidColorBrush x:Key="ChartModelBrush" Color="#199E70" />
           <SolidColorBrush x:Key="ChartModel2Brush" Color="#9D6FE8" />
