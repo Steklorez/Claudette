@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **See at a glance which tabs are working.** Settings → Appearance → **Tab activity** → **Colored rows**: a soft highlight runs across a tab's row while Claude works, or its subagents still do in the background, a tab waiting for you flashes orange, a tab Claude finished in while you were elsewhere keeps a pale green wash until you open it, and one that stopped with an error a red one. A starting tab's name shimmers until it's ready. Each subagent's row under its tab is colored the same way by what the subagent is doing. The status icons go, and the status dots stay the default.
+
 ## [1.0.0] - 2026-11-04
 
 **Claudette is now Deventry**, an agentic development environment (ADE) for your desktop: made for Claude Code first, with more agents to come, and light on tokens by default. The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.

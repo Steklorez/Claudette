@@ -495,6 +495,8 @@ In both styles, text in a different font or size beside other text sits on its b
 
 ### Sidebar
 
+Settings → Appearance → **Tab activity** chooses how a tab's row shows what Claude is doing: **Status dots** (the default), the status icon alone, or **Colored rows**, with no status icons at all: washes behind the row's text, faint enough for it to read. While Claude works, and while subagents it started in the background still do after its turn has ended, a soft blue highlight runs across the row from left to right, about every two seconds; while it waits for the user (a permission, a question, a plan), an orange wash blinks; once it has finished in a tab the user isn't looking at, its subagents too, a pale green wash, strongest at the left and fading out to the right, stays until the tab is opened (through a restart too); a tab whose Claude Code stopped with an error has the same in red; and while a tab's session starts, its name shimmers. A subagent's row under its tab has the same washes for the subagent: the highlight while it runs, the orange blink while it waits on the user, and green or red once it's done or failed, until its work is opened; as on the tab's row, it has no status glyph. A tab that's ready, not started or stopped has nothing, and with no icon the name takes the icon's column. With motion reduced the highlight holds still as a blue wash, and the orange stops blinking.
+
 The tabs are listed in a sidebar on the left of the window, rather than a strip across the top, so long session names, a status line and many tabs all fit.
 
 - **A tab's row** has two lines:
