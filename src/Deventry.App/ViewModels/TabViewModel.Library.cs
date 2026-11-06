@@ -244,8 +244,8 @@ public sealed partial class TabViewModel
     /// never write the same session (DESIGN.md §9, "One machine at a time").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsReadOnly), nameof(CanSyncNow), nameof(SyncNowTip))]
-    [NotifyCanExecuteChangedFor(nameof(SendCommand), nameof(SyncNowCommand))]
+    [NotifyPropertyChangedFor(nameof(IsReadOnly), nameof(CanSyncNow), nameof(SyncNowTip), nameof(CanRestart))]
+    [NotifyCanExecuteChangedFor(nameof(SendCommand), nameof(SyncNowCommand), nameof(RestartCommand))]
     public partial string? TakenOverBy { get; set; }
 
     public bool IsReadOnly => TakenOverBy is not null;

@@ -1539,7 +1539,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     // ---- Lifecycle -----------------------------------------------------------------------------------------
 
-    public bool CanRestart => Status is TabStatus.Exited or TabStatus.Error && !IsFolderMissing && !IsSessionMissing;
+    public bool CanRestart => Status is TabStatus.Exited or TabStatus.Error && !IsFolderMissing && !IsSessionMissing && !IsReadOnly;
 
     [RelayCommand(CanExecute = nameof(CanRestart))]
     private Task RestartAsync()
@@ -1552,7 +1552,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>Starts the process if it isn't running: restored tabs start on first selection or message.</summary>
     public async Task EnsureStartedAsync()
     {
-        if (_closing.IsCancellationRequested || _session is not null || IsSessionMissing || Status == TabStatus.Error && (!Directory.Exists(Folder) || WaitsForSignIn))
+        // A read-only tab's session carries on elsewhere, so it never starts here again: shown again, say, after its start
+        // found that (DESIGN.md §9, "One machine at a time").
+        if (_closing.IsCancellationRequested || _session is not null || IsReadOnly || IsSessionMissing || Status == TabStatus.Error && (!Directory.Exists(Folder) || WaitsForSignIn))
         {
             return;
         }
