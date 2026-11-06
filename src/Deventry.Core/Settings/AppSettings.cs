@@ -82,7 +82,10 @@ public sealed class GitSettings
     /// <summary>What a Project Files tab compares files with when it opens with nothing saved; each tab then has its own.</summary>
     public FilesTabChanges NewFilesTabsShow { get; set; } = FilesTabChanges.ClaudesChanges;
 
-    /// <summary>What the Project Files tab's explorer does with what git ignores (outside a repository, the folders the <c>@</c> list skips).</summary>
+    /// <summary>
+    /// What the Project Files tab's explorer does with what git or Perforce's P4IGNORE ignores (outside both, the folders
+    /// the <c>@</c> list skips). Settings → Files and diffs → <b>Ignored files</b>, which was Git's and keeps its key.
+    /// </summary>
     public IgnoredFiles IgnoredFiles { get; set; } = IgnoredFiles.Dimmed;
 }
 
@@ -96,7 +99,7 @@ public enum FilesTabChanges
     GitHead,
 }
 
-/// <summary>Settings → Git → <b>Files git ignores</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+/// <summary>Settings → Files and diffs → <b>Ignored files</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
 public enum IgnoredFiles
 {
     /// <summary>In the tree, drawn dimmed.</summary>
@@ -257,6 +260,19 @@ public sealed class EditorSettings
     public int IndentSize { get; set; } = 4;
 
     public bool IndentWithTabs { get; set; }
+
+    /// <summary>What the Project Files tab's explorer does with dotfiles and the files the OS hides.</summary>
+    public HiddenFiles HiddenFiles { get; set; } = HiddenFiles.Dimmed;
+}
+
+/// <summary>Settings → Files and diffs → <b>Hidden files</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+public enum HiddenFiles
+{
+    /// <summary>In the tree, drawn dimmed.</summary>
+    Dimmed,
+
+    /// <summary>Left out of the tree.</summary>
+    Hidden,
 }
 
 public enum ExplorerSide
@@ -661,10 +677,10 @@ public sealed class AppearanceSettings
     public MotionSetting Motion { get; set; } = MotionSetting.System;
 
     /// <summary>
-    /// Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar"): how a tab's row says Claude works or waits, the
-    /// status dot alone, or a line under the row as well.
+    /// Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar"): how a tab's row says Claude works or waits, with
+    /// colored rows (the default) or the status dots.
     /// </summary>
-    public TabActivity TabActivity { get; set; } = TabActivity.Dots;
+    public TabActivity TabActivity { get; set; } = TabActivity.Bars;
 
     /// <summary>
     /// Settings → Appearance → Zoom: the main window's content, in percent (DESIGN.md §3, "Accessibility"). It suits
@@ -680,7 +696,7 @@ public enum TabActivity
     /// <summary>The status dot before the name: it pulses while Claude works.</summary>
     Dots,
 
-    /// <summary>Also a line under the row: a highlight runs along it while Claude works, and the row blinks orange while it waits.</summary>
+    /// <summary>Colored rows, with no status dots: a highlight runs across the row while Claude works, and the row blinks orange while it waits.</summary>
     Bars,
 }
 

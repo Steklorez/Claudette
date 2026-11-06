@@ -276,7 +276,7 @@ public sealed partial class ProjectFilesViewModel : ViewModelBase, IShellTab, IA
         {
             file.OnWordWrapChanged();
         }
-        FollowIgnoredFilesSetting();
+        FollowFileVisibilitySettings();
         OnPerforceSettingsChanged();
     }
 

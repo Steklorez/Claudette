@@ -54,12 +54,6 @@
           </StackPanel>
         </c:SettingRow.Details>
       </c:SettingRow>
-      <c:SettingRow Key="git.ignoredFiles">
-        <StackPanel Orientation="Horizontal" Spacing="16">
-          <RadioButton GroupName="IgnoredFiles" Content="Dimmed" IsChecked="{Binding IgnoredFilesDimmed}" />
-          <RadioButton GroupName="IgnoredFiles" Content="Hidden" IsChecked="{Binding IgnoredFilesHidden}" />
-        </StackPanel>
-      </c:SettingRow>
     </c:SettingsSection>
   </StackPanel>
 </UserControl>

@@ -91,8 +91,11 @@ public class GitSettingsTests
         Assert.False(git.FindGroup("tabRows")!.ShowsMachineMark);
         Assert.False(git.FindSetting("appearance.showBranchOnTabs")!.IsMachineOnly);
         Assert.All(["worktrees", "git", "projectFiles"], key => Assert.True(git.FindGroup(key)!.ShowsMachineMark, key));
-        Assert.All(["git.path", "git.newFilesTabsShow", "git.ignoredFiles"], key => Assert.True(git.FindSetting(key)!.IsMachineOnly, key));
+        Assert.All(["git.path", "git.newFilesTabsShow"], key => Assert.True(git.FindSetting(key)!.IsMachineOnly, key));
         Assert.All(git.Items.Where(i => i.Key.StartsWith("git.", StringComparison.Ordinal)), i => Assert.False(i.ShowsMachineMark));
+        // Ignored files moved to Files and diffs, beside Hidden files, keeping its key; both this computer's.
+        Assert.Null(git.FindSetting("git.ignoredFiles"));
+        Assert.All(["git.ignoredFiles", "editor.hiddenFiles"], key => Assert.True(settings.Files.FindSetting(key)!.IsMachineOnly, key));
     }
 
     [Fact]
@@ -217,8 +220,8 @@ public class GitSettingsTests
     }
 
     /// <summary>
-    /// <b>Files git ignores</b>: dimmed by default; hidden, they leave the tree of every open Files tab at once, and come
-    /// back dimmed. Outside a repository, as here, those are the folders the <c>@</c> list skips.
+    /// <b>Ignored files</b>, on Settings → Files and diffs: dimmed by default; hidden, they leave the tree of every open
+    /// Files tab at once, and come back dimmed. Outside a repository, as here, those are the folders the <c>@</c> list skips.
     /// </summary>
     [Fact]
     public async Task Hidden_ignored_files_leave_the_tree_at_once_and_come_back_dimmed()
@@ -233,12 +236,12 @@ public class GitSettingsTests
         Assert.Contains(("src", false), Tree());
         using var settings = new SettingsViewModel(h.Services, null);
 
-        InlineDispatcher.Run(() => settings.Git.IgnoredFilesHidden = true);
+        InlineDispatcher.Run(() => settings.Files.IgnoredFilesHidden = true);
         Assert.Equal(IgnoredFiles.Hidden, h.Services.Settings.Git.IgnoredFiles);
         await TabTestHarness.Eventually(() => Tree().All(r => r.Item1 != "node_modules"), "node_modules hidden");
         Assert.Contains(("src", false), Tree());
 
-        InlineDispatcher.Run(() => settings.Git.IgnoredFilesDimmed = true);
+        InlineDispatcher.Run(() => settings.Files.IgnoredFilesDimmed = true);
         await TabTestHarness.Eventually(() => Tree().Contains(("node_modules", true)), "node_modules back, dimmed");
     }
 

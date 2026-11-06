@@ -323,16 +323,17 @@ internal sealed class LogMirror
                 // Wrapped or not, the lines are other heights: back to the same place.
                 ComeBack();
                 break;
-            case nameof(EditorLogViewModel.CategoryColumn) or nameof(EditorLogViewModel.HasTimeColumn) or nameof(EditorLogViewModel.ShowsColumns):
+            case nameof(EditorLogViewModel.CategoryColumn) or nameof(EditorLogViewModel.HasTimeColumn) or nameof(EditorLogViewModel.ShowsColumns)
+                or nameof(EditorLogViewModel.ThreadColumn) or nameof(EditorLogViewModel.HasThreadColumn):
                 UpdateIndentation();
                 _editor.TextArea.TextView.Redraw();
                 break;
         }
     }
 
-    /// <summary>A wrapped line's rows after the first start under its message, in Unreal's columns.</summary>
+    /// <summary>A wrapped line's rows after the first start under its message, in the columns.</summary>
     private void UpdateIndentation() =>
-        _editor.Options.WordWrapIndentation = _log is EditorLogViewModel { HasCategories: true } log
+        _editor.Options.WordWrapIndentation = _log is EditorLogViewModel { ShowsColumns: true } log
             ? _editor.TextArea.TextView.WideSpaceWidth * LogColumnsGenerator.MessageColumn(log)
             : 0;
 
@@ -356,8 +357,8 @@ internal sealed class LogMirror
 
 /// <summary>
 /// Colors an editor's log (DESIGN.md §18, "Editor logs", "Its lines"): an error's lines in the error color and a
-/// warning's in the warning color, stack traces and verbose lines muted, and in Unreal's columns the time muted, the
-/// category in the accent and the verbosity in its level's color. A run's lines have nothing to color.
+/// warning's in the warning color, stack traces and verbose lines muted, and in the columns the time and the thread
+/// muted, the category in the accent and the verbosity in its level's color. A run's lines have nothing to color.
 /// </summary>
 internal sealed class LogLineColorizer(Func<int, LogLine?> lineAt, Func<string, IBrush?> token) : DocumentColorizingTransformer
 {
@@ -389,6 +390,10 @@ internal sealed class LogLineColorizer(Func<int, LogLine?> lineAt, Func<string, 
         {
             Color(line.Offset + columns.TagStart, line.Offset + columns.TagStart + columns.TagLength, tag);
         }
+        if (columns.ThreadStart >= 0 && token("MutedTextBrush") is { } thread)
+        {
+            Color(line.Offset + columns.ThreadStart, line.Offset + Math.Min(line.Length, columns.ThreadStart + columns.ThreadLength), thread);
+        }
     }
 
     private void Color(int start, int end, IBrush brush) => ChangeLinePart(start, end, element => element.TextRunProperties.SetForegroundBrush(brush));
@@ -408,8 +413,9 @@ internal sealed class LogLineColorizer(Func<int, LogLine?> lineAt, Func<string, 
 /// <summary>
 /// Shows an Unreal log's lines in columns (DESIGN.md §18, "Editor logs", "Its lines"): in place of
 /// <c>[2026.10.20-19.01.22:123][  0]</c> the time in the machine's, then the category, padded to the longest's width,
-/// then the verbosity, padded to its own, then the message. Only what's drawn changes: the document keeps the file's
-/// text, which is what's selected, copied and found. A line carrying an entry on is indented to its message.
+/// then the verbosity, padded to its own, then, in a Unity log with <c>-timestamps</c>, the thread in place of Unity's
+/// own time and thread, padded to the longest's, then the message. Only what's drawn changes: the document keeps the
+/// file's text, which is what's selected, copied and found. A line carrying an entry on is indented to its message.
 /// </summary>
 internal sealed class LogColumnsGenerator(Func<int, LogLine?> lineAt, Func<EditorLogViewModel?> log) : VisualLineElementGenerator
 {
@@ -426,9 +432,11 @@ internal sealed class LogColumnsGenerator(Func<int, LogLine?> lineAt, Func<Edito
     private readonly List<(int Start, int Length, string Text)> _parts = [];
 
     /// <summary>Where the message starts, in characters.</summary>
-    public static int MessageColumn(EditorLogViewModel log) => TimeWidth(log) + log.CategoryColumn + Gap + TagColumn + Gap;
+    public static int MessageColumn(EditorLogViewModel log) => TimeWidth(log) + log.CategoryColumn + Gap + TagColumn + Gap + ThreadWidth(log);
 
     private static int TimeWidth(EditorLogViewModel log) => log.HasTimeColumn ? TimeColumn + Gap : 0;
+
+    private static int ThreadWidth(EditorLogViewModel log) => log.HasThreadColumn ? log.ThreadColumn + Gap : 0;
 
     public override void StartGeneration(ITextRunConstructionContext context)
     {
@@ -465,6 +473,24 @@ internal sealed class LogColumnsGenerator(Func<int, LogLine?> lineAt, Func<Edito
         if (hasTag)
         {
             _parts.Add((columns.TagStart + columns.TagLength, 2, Spaces(Math.Max(1, TagColumn - columns.TagLength + Gap))));
+        }
+        if (columns.ThreadStart >= 0)
+        {
+            // In place of Unity's own time and thread: the thread alone.
+            _parts.Add((columns.ThreadStart, columns.ThreadLength, (columns.Thread ?? "").PadRight(editorLog.ThreadColumn) + Spaces(Gap)));
+        }
+        else if (editorLog.HasThreadColumn)
+        {
+            // The thread's column is blank, after whatever comes before the message.
+            var blankThread = Spaces(editorLog.ThreadColumn + Gap);
+            if (_parts.Count > 0)
+            {
+                _parts[^1] = _parts[^1] with { Text = _parts[^1].Text + blankThread };
+            }
+            else
+            {
+                _parts.Add((0, 0, blankThread));
+            }
         }
     }
 

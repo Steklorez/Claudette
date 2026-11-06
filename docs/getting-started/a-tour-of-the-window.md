@@ -28,7 +28,7 @@ A banner can run across the top, under the header: Claude's service status when 
 
 ## The sidebar
 
-The sidebar lists your tabs, one row each, grouped by working folder. A row shows a status icon (idle, working, needs your input, finished while you were away, or an error), the tab's name, its model and effort, and its git branch, mark and context ring. See [The sidebar](../tabs/the-sidebar.md), [Folder groups](../tabs/folder-groups.md) and [Icons and badges](../reference/icons-and-badges.md).
+The sidebar lists your tabs, one row each, grouped by working folder. A row is colored by what the tab is doing (working, needs your input, finished while you were away, or an error), and shows the tab's name, its model and effort, and its git branch, mark and context ring. See [The sidebar](../tabs/the-sidebar.md), [Folder groups](../tabs/folder-groups.md) and [Icons and badges](../reference/icons-and-badges.md).
 
 - **New tab** and **History** are at the top: see [Your first tab](your-first-tab.md) and [History](../history/history.md).
 - Each folder's group has its project's icon on its row, with its actions and links ([Project tools](../project-tools/using-project-tools.md)).

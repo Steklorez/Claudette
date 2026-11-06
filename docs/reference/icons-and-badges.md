@@ -9,11 +9,22 @@ summary: "Every status icon, badge and dot in Deventry's window, what it means, 
 
 Every status icon, badge and dot in Deventry's window, what it means, and the page that explains it. Hovering an icon shows a tooltip that says the same.
 
-{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing status icons, branches, marks and context rings." %}
+{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
 
-## A tab's status icon
+## What a tab is doing
 
-The icon at the start of a tab's row. See [The sidebar](../tabs/the-sidebar.md).
+A tab's row is colored by what Claude is doing in it, with faint washes behind its text. See [The sidebar](../tabs/the-sidebar.md#what-the-tab-is-doing).
+
+| The row | What it means |
+|---|---|
+| A soft highlight running across it | Claude is working on a turn, or subagents it started in the background still are. With reduced motion on, it holds still. |
+| An orange wash, blinking | A permission prompt, question or plan is waiting. See [Permission cards](../permissions/permission-cards.md). |
+| A pale green wash, fading out to the right | A turn ended while you were looking at another tab. It goes once you open the tab. |
+| A pale red wash, fading out to the right | Claude Code stopped with an error, or couldn't start. The row and the info card say why. See [A tab that won't start](../troubleshooting/a-tab-that-wont-start.md). |
+| The name shimmering | Its Claude Code is starting. |
+| Nothing | Idle, not started yet, or not running. |
+
+With Settings → Appearance → **Tab activity** → **Status dots**, an icon at the start of the row says it instead:
 
 | Icon | Tooltip | What it means |
 |---|---|---|
@@ -31,7 +42,7 @@ A collapsed group shows only the most urgent status of its tabs.
 
 | Icon | What it means | More |
 |---|---|---|
-| A check mark, cross, question mark, star, flag or pause sign under the status icon | The mark you gave the tab, each in its own color | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
+| A check mark, cross, question mark, star, flag or pause sign at the start of the second line, or under the status icon | The mark you gave the tab, each in its own color | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
 | A green disc with a check cut out of it, in the mark's place | Every file Claude changed in this session is ticked as reviewed (*All changed files reviewed*) | [Reviewed files](../changes/reviewed-files.md) |
 | A pin | The tab is pinned, so it comes back every launch | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
 | A sync icon | *Synced to the session library*, with how much the session takes there (*· 312 MB*) | [Syncing a tab](../history/syncing-a-tab.md) |

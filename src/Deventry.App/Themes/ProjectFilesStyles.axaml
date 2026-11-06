@@ -41,8 +41,8 @@
   <Style Selector="controls|AppearanceScope.claude ListBox.explorerlist ListBoxItem">
     <Setter Property="CornerRadius" Value="8" />
   </Style>
-  <!-- What git ignores, dimmed. -->
-  <Style Selector="Panel.explorerrow.ignored">
+  <!-- What git or P4IGNORE ignores, and what's hidden, dimmed. -->
+  <Style Selector="Panel.explorerrow.ignored, Panel.explorerrow.hidden">
     <Setter Property="Opacity" Value="0.5" />
   </Style>
   <!-- A file Claude deleted, in Show only changed files. -->
@@ -219,9 +219,11 @@
   <Style Selector="Button.filetab:not(.showing) TextBlock.tablabel">
     <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
   </Style>
-  <!-- The preview tab, in italics: the next file opened from the explorer takes its place. -->
+  <!-- The preview tab, in italics: the next file opened from the explorer takes its place. Inter has no italic face, so
+       they're Inter slanted, whose tall letters lean past the name's width: unclipped, a last d keeps its top. -->
   <Style Selector="Button.filetab.preview TextBlock.tablabel">
     <Setter Property="FontStyle" Value="Italic" />
+    <Setter Property="ClipToBounds" Value="False" />
   </Style>
   <Style Selector="Button.filetab Button.closefile">
     <Setter Property="Opacity" Value="0" />

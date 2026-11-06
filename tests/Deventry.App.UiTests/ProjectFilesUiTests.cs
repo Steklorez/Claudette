@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Deventry.App.Services;
@@ -95,6 +96,46 @@ public sealed class ProjectFilesUiTests
     }
 
     /// <summary>
+    /// What's hidden and what's ignored drawn dimmed, and the explorer's ⋯ ticking <b>Show ignored files</b> and <b>Show
+    /// hidden files</b>, which take them out of the tree (DESIGN.md §18, "The explorer").
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Hidden_and_ignored_rows_are_dimmed_and_the_explorers_menu_ticks_them_and_takes_them_out()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, ".editorconfig"), "");
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "node_modules"));
+        Write(Path.Combine(h.WorkFolder, "app.js"), "");
+        h.Shell.OpenProjectFilesCommand.Execute(h.Shell.Groups.Single());
+        var files = h.Shell.Groups.Single().Files!;
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1400, 800);
+        await UiText.SettleUntilAsync(window, () => files.Rows.Count == 3, "the explorer");
+        Panel? RowOf(string name) => View(window).GetVisualDescendants().OfType<Panel>()
+            .SingleOrDefault(p => p.Classes.Contains("explorerrow") && p.DataContext is ExplorerRow row && row.Name == name);
+
+        Assert.Equal(0.5, RowOf(".editorconfig")!.Opacity);
+        Assert.Equal(0.5, RowOf("node_modules")!.Opacity);
+        Assert.Equal(1, RowOf("app.js")!.Opacity);
+
+        var more = View(window).GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "More explorer actions");
+        var menu = Assert.IsType<MenuFlyout>(more.Flyout);
+        menu.ShowAt(more);
+        UiText.Settle(window);
+        MenuItem Item(string header) => menu.Items.OfType<MenuItem>().Single(i => i.Header as string == header);
+        Assert.Equal((true, true), (Item("Show ignored files").IsChecked, Item("Show hidden files").IsChecked));
+
+        Item("Show hidden files").Command!.Execute(null);
+        menu.Hide();
+        await UiText.SettleUntilAsync(window, () => files.Rows.Count == 2, "the hidden file gone");
+
+        Assert.Null(RowOf(".editorconfig"));
+        Assert.NotNull(RowOf("node_modules"));
+        Assert.False(Item("Show hidden files").IsChecked);
+        window.Close();
+    }
+
+    /// <summary>
     /// A file popped out by the row's button (DESIGN.md §18, "A file in a window of its own"): its window has the editor,
     /// colored, and the toolbar's Put back; the tab keeps its tab, marked, and lets go of the editor until it's put back.
     /// </summary>
@@ -142,6 +183,27 @@ public sealed class ProjectFilesUiTests
         Assert.Equal(File.ReadAllText(player), Editor(window).Document.Text);
         window.Close();
         await Verify(shown);
+    }
+
+    /// <summary>
+    /// The preview tab's name is in italics (DESIGN.md §18, "Preview"), and whole (#126): Inter has no italic face, so its
+    /// italics are Inter slanted, whose tall letters lean past the name's width, and the label clipped there, cutting the
+    /// top off the d of the-crawl.md. Headless drawing has no slant to see, so this checks that the label doesn't clip.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_preview_tabs_name_is_in_italics_that_draw_past_its_width()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, files, _, window) = await ShowAsync(h);
+        var crawl = Write(Path.Combine(h.WorkFolder, "the-crawl.md"), "# The crawl\n");
+
+        var file = await files.OpenFileAsync(crawl, preview: true);
+        UiText.Settle(window);
+
+        Assert.True(file.IsPreview);
+        var label = View(window).GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("tablabel") && t.Text == "the-crawl.md");
+        Assert.Equal((FontStyle.Italic, false), (label.FontStyle, label.ClipToBounds));
+        window.Close();
     }
 
     [AvaloniaFact]

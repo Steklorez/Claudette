@@ -182,6 +182,60 @@ public class ProjectFilesTests
         await TabTestHarness.Eventually(() => files.Rows.Any(r => r.Name == "b.txt"), "the new file");
     }
 
+    /// <summary>
+    /// Hidden files (DESIGN.md §18, "The explorer"): dotfiles, and what's in a hidden folder, are dimmed by default. The
+    /// explorer's <b>Show hidden files</b> takes them out of the tree, saving Settings → Files and diffs → <b>Hidden
+    /// files</b>, and brings them back dimmed.
+    /// </summary>
+    [Fact]
+    public async Task Hidden_files_are_dimmed_and_Show_hidden_files_takes_them_out_and_brings_them_back()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, ".editorconfig"), "");
+        Write(Path.Combine(h.WorkFolder, ".github", "workflows", "ci.yml"), "");
+        Write(Path.Combine(h.WorkFolder, "readme.md"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        IReadOnlyList<(string, bool)> Tree() => InlineDispatcher.Read(() => files.Rows.Select(r => (r.Name, r.IsHidden)).ToList());
+        await TabTestHarness.Eventually(() => Tree().Contains(("readme.md", false)), "the files");
+        Assert.Contains((".editorconfig", true), Tree());
+        Assert.True(files.ShowsHiddenFiles);
+        // What's in a hidden folder is hidden too.
+        var github = InlineDispatcher.Read(() => files.Rows.Single(r => r.Name == ".github"));
+        await InlineDispatcher.RunAsync(() => files.ToggleRowCommand.ExecuteAsync(github));
+        Assert.Contains(("workflows", true), Tree());
+
+        InlineDispatcher.Run(() => files.ToggleShowHiddenFilesCommand.Execute(null));
+
+        Assert.Equal(HiddenFiles.Hidden, h.Services.Settings.Editor.HiddenFiles);
+        Assert.False(files.ShowsHiddenFiles);
+        await TabTestHarness.Eventually(() => Tree() is var tree && tree.Contains(("readme.md", false)) && tree.All(r => !r.Item2), "the hidden files gone");
+
+        InlineDispatcher.Run(() => files.ToggleShowHiddenFilesCommand.Execute(null));
+
+        Assert.Equal(HiddenFiles.Dimmed, h.Services.Settings.Editor.HiddenFiles);
+        await TabTestHarness.Eventually(() => Tree().Contains((".editorconfig", true)), "the hidden files back, dimmed");
+    }
+
+    [Fact]
+    public async Task Show_ignored_files_takes_what_is_ignored_out_of_the_tree_and_Settings_says_so()
+    {
+        await using var h = new TabTestHarness();
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "node_modules"));
+        Write(Path.Combine(h.WorkFolder, "app.js"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        IReadOnlyList<string> Names() => InlineDispatcher.Read(() => files.Rows.Select(r => r.Name).ToList());
+        await TabTestHarness.Eventually(() => Names().Contains("node_modules"), "node_modules, dimmed");
+        using var settings = new SettingsViewModel(h.Services, null);
+        Assert.True(settings.Files.IgnoredFilesDimmed);
+
+        InlineDispatcher.Run(() => files.ToggleShowIgnoredFilesCommand.Execute(null));
+
+        Assert.Equal(IgnoredFiles.Hidden, h.Services.Settings.Git.IgnoredFiles);
+        Assert.False(files.ShowsIgnoredFiles);
+        Assert.True(settings.Files.IgnoredFilesHidden);
+        await TabTestHarness.Eventually(() => !Names().Contains("node_modules") && Names().Contains("app.js"), "node_modules hidden");
+    }
+
     // ---- New files and folders ---------------------------------------------------------------------------------------
 
     [Fact]

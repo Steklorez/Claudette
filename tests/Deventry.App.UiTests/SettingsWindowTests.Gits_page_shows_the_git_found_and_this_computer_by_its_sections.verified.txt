@@ -37,10 +37,6 @@
 "What a Files tab marks as changed when it first opens. Each changes its own with its explorer's ⋯ menu.  "
 [toggle on] Claude's changes
 [toggle] Changes against git HEAD
-"Files git ignores"
-"How the explorer shows them. A change applies to open Files tabs at once.  "
-[toggle on] Dimmed
-[toggle] Hidden
 [button] Line up
 [button] Page up
 [button] Page down

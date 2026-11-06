@@ -61,7 +61,9 @@ public sealed class LogLine(string text)
 /// <summary>
 /// Where an Unreal line's parts are (DESIGN.md §18, "Editor logs", "Its lines"), so it can be shown in columns, the
 /// time, the category and the verbosity, with the file's text kept underneath:
-/// <c>[2026.10.20-19.01.22:123][  0]LogBlueprint: Error: Can't connect pins</c>.
+/// <c>[2026.10.20-19.01.22:123][  0]LogBlueprint: Error: Can't connect pins</c>. A Unity line's are too, its JSON log's
+/// and the time and thread Unity's <c>-timestamps</c> puts before a line, <c>2026-11-06T12:45:48.327Z|0x9484|</c>,
+/// which are shown as the thread column.
 /// </summary>
 /// <param name="PrefixLength">The time and frame in their brackets, <c>[2026.10.20-19.01.22:123][  0]</c>; 0 when it has none.</param>
 /// <param name="Time">What's shown for them: <c>15:01:22.123</c> in the machine's time; null when it has none.</param>
@@ -69,7 +71,14 @@ public sealed class LogLine(string text)
 /// <param name="TagStart">Where its verbosity starts, <c>Error</c>; -1 when it has none, as a Log line has.</param>
 /// <param name="TagLength">Its verbosity's.</param>
 /// <param name="MessageStart">Where the message starts, after the <c>": "</c> that ends the category or the verbosity.</param>
-public sealed record LogColumns(int PrefixLength, string? Time, int CategoryLength, int TagStart, int TagLength, int MessageStart)
+/// <param name="ThreadStart">
+/// Where what's drawn as the thread column starts, just before the message: Unity's own time and thread before a JSON
+/// entry's message, whose time the time column has already, or the thread after a text line's time; -1 when it has none.
+/// </param>
+/// <param name="ThreadLength">Its length, up to the message.</param>
+/// <param name="Thread">The thread it shows, <c>0x9484</c>; null when Unity wrote only the time.</param>
+public sealed record LogColumns(int PrefixLength, string? Time, int CategoryLength, int TagStart, int TagLength, int MessageStart,
+    int ThreadStart = -1, int ThreadLength = 0, string? Thread = null)
 {
     /// <summary>A line that carries on an entry shown in columns: it's indented to the message's.</summary>
     public static LogColumns CarriedOn { get; } = new(0, null, 0, -1, 0, 0);

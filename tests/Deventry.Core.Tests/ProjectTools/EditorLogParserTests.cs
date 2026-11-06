@@ -233,6 +233,60 @@ public sealed class EditorLogParserTests
         Assert.Equal(1, counts.Categories["Scripting"]);
     }
 
+    // ---- Unity's -timestamps (issue #122) -------------------------------------------------------------------------------
+
+    [Fact]
+    public void A_unity_JSON_messages_own_time_and_thread_are_the_thread_column_and_the_message_starts_after_them()
+    {
+        var (lines, _) = Parse(UnityLogs.Parser(Zone),
+            """{"timestamp":"2026-11-05T13:14:55.764279000Z","level":"Log","message":"2026-11-05T13:14:55.764Z|0x9b98|Start HTTP server: port:7800"}""",
+            """{"timestamp":"2026-11-05T13:14:56.000Z","level":"Error","category":"Scripting","message":"2026-11-05T13:14:56.000Z|0x9b98|Can't compile"}""",
+            """{"timestamp":"2026-11-05T13:14:57.000Z","message":"2026-11-05T13:14:57.000Z|Only the time"}""",
+            """{"timestamp":"2026-11-05T13:14:58.000Z","message":"No stamp"}""");
+
+        // What's copied and found is the entry as it's written, Unity's stamp and all.
+        Assert.Equal("[2026-11-05T13:14:55.764279000Z] 2026-11-05T13:14:55.764Z|0x9b98|Start HTTP server: port:7800", lines[0].Text);
+        var first = lines[0].Columns!;
+        // The time column is the entry's, in the machine's time; Unity's own is drawn as the thread.
+        Assert.Equal("09:14:55.764", first.Time);
+        Assert.Equal(("0x9b98", "2026-11-05T13:14:55.764Z|0x9b98|"), (first.Thread, lines[0].Text.Substring(first.ThreadStart, first.ThreadLength)));
+        Assert.Equal("Start HTTP server: port:7800", lines[0].Text[first.MessageStart..]);
+        // After the category and the level too.
+        var error = lines[1].Columns!;
+        Assert.Equal(("Error", "0x9b98", "Can't compile"), (lines[1].Text.Substring(error.TagStart, error.TagLength), error.Thread, lines[1].Text[error.MessageStart..]));
+        Assert.Equal(error.TagStart + "Error: ".Length, error.ThreadStart);
+        // Only the time: no thread, but the stamp still isn't the message's.
+        Assert.Equal((null, "Only the time"), (lines[2].Columns!.Thread, lines[2].Text[lines[2].Columns!.MessageStart..]));
+        Assert.Equal(-1, lines[3].Columns!.ThreadStart);
+    }
+
+    [Fact]
+    public void A_unity_text_line_with_timestamps_shows_its_time_and_thread_in_columns_and_is_read_after_them()
+    {
+        var (lines, counts) = Parse(UnityLogs.Parser(Zone),
+            "Unity Editor version:    6000.0.23f1",
+            "2026-11-05T13:14:55.764Z|0x9b98|Refreshing native plugins compatible for Editor in 3.07 ms",
+            "2026-11-05T13:14:56.000Z|0x9b98|NullReferenceException: Object reference not set to an instance of an object",
+            "2026-11-05T13:14:56.001Z|0x9b98|Player.Update () (at Assets/Scripts/Player.cs:20)",
+            "",
+            "2026-11-05T13:14:57.000Z|0x1a2b3c|Assets/Scripts/Player.cs(12,5): error CS0246: The type 'Foo' could not be found");
+
+        // Read after the stamp: the exception and the compiler's error are errors, the frame carries the exception on.
+        Assert.Equal([LogVerbosity.Log, LogVerbosity.Log, LogVerbosity.Error, LogVerbosity.Error, LogVerbosity.Error, LogVerbosity.Error], lines.Select(l => l.Verbosity));
+        Assert.Equal([0, 1, 2, 5], lines.Index().Where(l => !l.Item.Continues).Select(l => l.Index));
+        Assert.True(lines[3].IsTrace);
+        Assert.Equal(2, counts.Errors);
+
+        // A line from before the stamps has no columns; one without a stamp after them is indented to the message.
+        Assert.Null(lines[0].Columns);
+        Assert.True(lines[4].Columns!.IsCarriedOn);
+        var stamped = lines[1].Columns!;
+        Assert.Equal(("09:14:55.764", "2026-11-05T13:14:55.764Z|".Length), (stamped.Time, stamped.PrefixLength));
+        Assert.Equal(("0x9b98", "0x9b98|"), (stamped.Thread, lines[1].Text.Substring(stamped.ThreadStart, stamped.ThreadLength)));
+        Assert.Equal("Refreshing native plugins compatible for Editor in 3.07 ms", lines[1].Text[stamped.MessageStart..]);
+        Assert.Equal("0x1a2b3c", lines[5].Columns!.Thread);
+    }
+
     // ---- Godot --------------------------------------------------------------------------------------------------------
 
     [Fact]
