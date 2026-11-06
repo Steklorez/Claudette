@@ -455,8 +455,10 @@ public sealed class ConversationBuilder
     {
         if (ParentOf(sessionEvent) is { } parent)
         {
-            // Subagent traffic belongs in that subagent's group, however deep.
-            if (FindSubagent(parent) is { } child)
+            // Subagent traffic belongs in that subagent's group, however deep. A fork's transcript starts with the call
+            // that started it and its result, from the conversation it was given: that's the fork itself, not a subagent of
+            // its own.
+            if (FindSubagent(parent) is { } child && !IsOwnCall(sessionEvent, parent))
             {
                 child.Apply(WithoutParent(sessionEvent));
             }
@@ -1065,6 +1067,14 @@ public sealed class ConversationBuilder
         AssistantMessageReceived a => a.Message.ParentToolUseId,
         ToolResultsReceived r => r.Message.ParentToolUseId,
         _ => null,
+    };
+
+    /// <summary>The <c>Agent</c> call that started the subagent <paramref name="parent"/>, or its result, inside its own traffic.</summary>
+    private static bool IsOwnCall(SessionEvent sessionEvent, string parent) => sessionEvent switch
+    {
+        AssistantMessageReceived a => a.Message.Content.OfType<ToolUseBlock>().Any(b => b.Id == parent),
+        ToolResultsReceived r => r.Message.Content.OfType<ToolResultBlock>().Any(b => b.ToolUseId == parent),
+        _ => false,
     };
 
     private static SessionEvent WithoutParent(SessionEvent sessionEvent) => sessionEvent switch

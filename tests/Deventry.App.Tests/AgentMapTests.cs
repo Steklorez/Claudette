@@ -700,6 +700,41 @@ public class AgentMapTests
     }
 
     [Fact]
+    public async Task A_forks_transcript_doesnt_make_the_call_that_started_it_a_subagent_of_its_own()
+    {
+        await using var h = new TabTestHarness();
+        var path = h.WriteTranscript("s1",
+            Wire.Entry("user", "2026-09-28T10:00:00Z", new JsonObject { ["role"] = "user", ["content"] = "Fix the tests" }),
+            Wire.Entry("assistant", "2026-09-28T10:00:01Z", Wire.Message(Wire.AgentBlock("f1", "Fix the tests", "Fix them", "fork", background: true))),
+            Wire.Entry("user", "2026-09-28T10:00:02Z", Wire.ResultMessage("f1", "Async agent launched successfully."), new JsonObject { ["status"] = "async_launched", ["agentId"] = "task-f" }),
+            Wire.Entry("user", "2026-09-28T10:00:20Z", new JsonObject
+            {
+                ["role"] = "user",
+                ["content"] = "<task-notification>\n<task-id>task-f</task-id>\n<tool-use-id>f1</tool-use-id>\n<status>completed</status>\n<summary>Agent \"Fix the tests\" finished</summary>\n<result>Fixed.</result>\n</task-notification>",
+            }));
+        var subagents = Path.Combine(Path.GetDirectoryName(path)!, "s1", "subagents");
+        Directory.CreateDirectory(subagents);
+        File.WriteAllText(Path.Combine(subagents, "agent-task-f.meta.json"), """{"agentType":"fork","isFork":true,"description":"Fix the tests","toolUseId":"f1","spawnDepth":1}""");
+        // A fork is given the conversation so far, so its own transcript starts with the call that started it.
+        File.WriteAllLines(Path.Combine(subagents, "agent-task-f.jsonl"),
+        [
+            Wire.Entry("assistant", "2026-09-28T10:00:01Z", Wire.Message(Wire.AgentBlock("f1", "Fix the tests", "Fix them", "fork", background: true)), sidechain: true),
+            Wire.Entry("user", "2026-09-28T10:00:02Z", Wire.ResultMessage("f1", "Fork started — that fork is you."), sidechain: true),
+            Wire.Entry("assistant", "2026-09-28T10:00:05Z", Wire.Message(new JsonObject { ["type"] = "text", ["text"] = "Fixed." }), sidechain: true),
+        ]);
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "s1" }];
+        h.Shell.Restore(null);
+        var tab = h.Shell.AllTabs.Single();
+
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.Agents.HasSubagents, "the restored conversation");
+        Assert.Equal("f1()", MapTree(tab.Agents.Root));
+        Assert.Equal(GroupTree(tab.Items), MapTree(tab.Agents.Root));
+        var fork = tab.Agents.Find("f1")!;
+        Assert.Equal(AgentStatus.Done, fork.Status);
+        Assert.Equal("Fixed.", fork.ResultText);
+    }
+
+    [Fact]
     public async Task A_restored_tab_shows_the_finished_tree_without_live_status()
     {
         await using var h = new TabTestHarness();
