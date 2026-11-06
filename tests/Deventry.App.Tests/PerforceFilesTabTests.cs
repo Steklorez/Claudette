@@ -181,6 +181,85 @@ public class PerforceFilesTabTests
         Assert.EndsWith("#have", print.Arguments[^1], StringComparison.Ordinal);
     }
 
+    // ---- What P4IGNORE ignores ----------------------------------------------------------------------------------------
+
+    private static IReadOnlyList<FakeP4Run> IgnoreAsks(FakeP4 p4) => [.. p4.Runs.Where(r => r.Command == "ignores")];
+
+    [Fact]
+    public async Task What_P4IGNORE_ignores_is_dimmed_once_Perforce_says_so_without_the_tree_waiting()
+    {
+        var (h, p4) = Harness();
+        await using var _h = h;
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "Binaries", "Win64"));
+        Write(Path.Combine(h.WorkFolder, "Game.sln"));
+        Write(Path.Combine(h.WorkFolder, "Source", "Player.cpp"));
+        // A rule for what's in Binaries, and one for the solution itself.
+        p4.IgnoredNames.UnionWith(["Binaries/", "Game.sln"]);
+        p4.HoldIgnores = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var (_, files) = await OpenFilesAsync(h);
+
+        // The tree is there before Perforce answers.
+        Assert.Equal(["Binaries", "Source", "Game.sln"], InlineDispatcher.Read(() => files.Rows.Select(r => r.Name).Where(n => n is "Binaries" or "Source" or "Game.sln").ToList()));
+        Assert.DoesNotContain(InlineDispatcher.Read(() => files.Rows.ToList()), r => r.IsIgnored);
+        await TabTestHarness.Eventually(() => IgnoreAsks(p4).Count > 0, "the ask");
+
+        p4.HoldIgnores.SetResult();
+
+        await TabTestHarness.Eventually(() => Row(files, "Binaries").IsIgnored && Row(files, "Game.sln").IsIgnored, "the ignored entries, dimmed");
+        Assert.False(Row(files, "Source").IsIgnored);
+        // A folder is asked about as itself and as a name in it, so a rule for what's in it counts.
+        Assert.Contains(IgnoreAsks(p4)[0].Arguments, a => a.StartsWith(Path.Combine(h.WorkFolder, "Binaries") + Path.DirectorySeparatorChar, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task What_P4IGNORE_ignores_is_asked_about_once_and_not_inside_an_ignored_folder()
+    {
+        var (h, p4) = Harness();
+        await using var _h = h;
+        Write(Path.Combine(h.WorkFolder, "Saved", "Logs", "Game.log"));
+        Write(Path.Combine(h.WorkFolder, "Source", "Player.cpp"));
+        p4.IgnoredNames.Add("Saved");
+        var (_, files) = await OpenFilesAsync(h);
+        await TabTestHarness.Eventually(() => Row(files, "Saved").IsIgnored, "Saved, dimmed");
+        var asked = IgnoreAsks(p4).Count;
+
+        // What's in an ignored folder is ignored too, without asking.
+        await InlineDispatcher.RunAsync(() => files.ToggleRowCommand.ExecuteAsync(Row(files, "Saved")));
+        Assert.True(Row(files, "Logs").IsIgnored);
+        // The folder read again after a change on disk asks only about what's new.
+        var added = Write(Path.Combine(h.WorkFolder, "notes.md"));
+        h.FolderWatcher.Changed(added);
+        h.Time.Advance(ProjectFilesViewModel.RefreshDelay);
+        await TabTestHarness.Eventually(() => IgnoreAsks(p4).Count > asked, "the ask about the new file");
+
+        Assert.Equal(["-i", added], IgnoreAsks(p4)[^1].Arguments);
+        Assert.False(Row(files, "notes.md").IsIgnored);
+    }
+
+    [Fact]
+    public async Task A_changed_p4ignore_has_everything_asked_about_again_and_hidden_ignored_files_leave_the_tree()
+    {
+        var (h, p4) = Harness();
+        await using var _h = h;
+        h.Services.Settings.Git.IgnoredFiles = IgnoredFiles.Hidden;
+        Write(Path.Combine(h.WorkFolder, "Intermediate", "Build.obj"));
+        Write(Path.Combine(h.WorkFolder, "Source", "Player.cpp"));
+        var (_, files) = await OpenFilesAsync(h);
+        await TabTestHarness.Eventually(() => IgnoreAsks(p4).Count > 0 && InlineDispatcher.Read(() => files.Rows.Any(r => r.Name == "Intermediate")), "the tree");
+
+        lock (p4.IgnoredNames)
+        {
+            p4.IgnoredNames.Add("Intermediate");
+        }
+        var rules = Write(Path.Combine(h.WorkFolder, ".p4ignore"), "Intermediate\n");
+        h.FolderWatcher.Changed(rules);
+        h.Time.Advance(ProjectFilesViewModel.RefreshDelay);
+
+        await TabTestHarness.Eventually(() => InlineDispatcher.Read(() => files.Rows.All(r => r.Name != "Intermediate")), "Intermediate gone");
+        Assert.Contains(InlineDispatcher.Read(() => files.Rows.ToList()), r => r.Name == "Source");
+    }
+
     // ---- Opening files in Perforce, from the Files tab ----------------------------------------------------------------
 
     [Fact]

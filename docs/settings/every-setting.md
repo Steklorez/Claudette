@@ -220,6 +220,8 @@ None of this page syncs, and a tab can't change it for itself.
 | **The explorer is on the** | Project Files tab | Left | [The explorer](../project-files/the-explorer.md) |
 | **Wrap long lines** | Project Files tab | Off | [Editing](../project-files/editing.md) |
 | **Indent new lines with** | Project Files tab | 4 spaces (or 2 spaces, 8 spaces or Tabs) | [Editing](../project-files/editing.md) |
+| **Ignored files** | Project Files tab | Dimmed (or Hidden) | [The explorer](../project-files/the-explorer.md#the-tree) |
+| **Hidden files** | Project Files tab | Dimmed (or Hidden) | [The explorer](../project-files/the-explorer.md#the-tree) |
 | **Diff tool**: the built-in view, a tool installed here, or a custom command | Diff tool | Built-in diff view | [External diff tools](../changes/external-diff-tools.md) |
 | **Command** (for a custom command), with **Test** | Diff tool | Empty | [External diff tools](../changes/external-diff-tools.md) |
 | **Open in the diff window** | Diff tool | Opens the file, as Open files in says (or in the app the OS uses, or the changes in the diff tool) | [The diff view](../changes/the-diff-view.md#opening-the-file) |
@@ -272,7 +274,6 @@ The first page under **Source control**. A tab can't change any of it for itself
 | **Remove worktrees no tab has used for** | Worktrees | Never (or 7, 14, 30 or 90 days), with **Clean up now** | No | [Worktree tabs](../tabs/worktree-tabs.md) |
 | **Path to git**, with **Browse…** | Git | Empty: the first git on your `PATH` | No | [Git](git.md) |
 | **New Files tabs show** | Project Files tab | Claude's changes (or Changes against git HEAD) | No | [Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md#what-the-changes-are-against) |
-| **Files git ignores** | Project Files tab | Dimmed (or Hidden) | No | [The explorer](../project-files/the-explorer.md) |
 
 ## Perforce
 

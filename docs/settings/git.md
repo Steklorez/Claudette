@@ -12,7 +12,7 @@ Settings → **Git** is the first page under **Source control** in the Settings 
 - **Tab rows**: **Show the git branch**, the branch badge on each tab's row. See [Styles and themes](styles-and-themes.md#what-the-tab-rows-show).
 - **Worktrees**: removing worktrees no tab works in, and **Clean up now**. See [Worktree tabs](../tabs/worktree-tabs.md).
 - **Git**: **Path to git**, below.
-- **Project Files tab**: **New Files tabs show**, which [Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md#what-the-changes-are-against) explains, and **Files git ignores**, which [The explorer](../project-files/the-explorer.md#the-tree) explains.
+- **Project Files tab**: **New Files tabs show**, which [Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md#what-the-changes-are-against) explains. What the explorer does with ignored files is Settings → Files and diffs → **Ignored files**, since Perforce's P4IGNORE counts too ([The explorer](../project-files/the-explorer.md#the-tree)).
 
 Everything but **Show the git branch** stays on this machine; Settings marks those sections *This computer*.
 

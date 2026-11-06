@@ -54,10 +54,6 @@ public sealed partial class GitPage : SettingsPage, IDisposable
                 "What a Files tab marks as changed when it first opens. Each changes its own with its explorer's ⋯ menu.",
                 "Changes against git HEAD also shows what you, commands and closed tabs changed. Outside a git repository, a Files tab shows Claude's changes.",
                 ["against git head", "claude's changes", "explorer", "files tab", "diff"]),
-            Setting("git.ignoredFiles", "Files git ignores", s => s.Git.IgnoredFiles, (s, v) => s.Git.IgnoredFiles = v,
-                "How the explorer shows them. A change applies to open Files tabs at once.",
-                "Outside a git repository, the folders the @ list skips, such as node_modules, bin and obj.",
-                ["gitignore", ".gitignore", "ignored", "explorer", "hide", "dim", "node_modules"]),
         ], description: "What each folder group's tab of its project's files shows of git.");
     }
 
@@ -267,44 +263,6 @@ public sealed partial class GitPage : SettingsPage, IDisposable
         Settings.Git.NewFilesTabsShow = changes;
         OnPropertyChanged(nameof(NewFilesTabsShowClaudesChanges));
         OnPropertyChanged(nameof(NewFilesTabsShowGitHead));
-        Save();
-    }
-
-    /// <summary><b>Files git ignores</b> are dimmed in the explorer.</summary>
-    public bool IgnoredFilesDimmed
-    {
-        get => Settings.Git.IgnoredFiles == IgnoredFiles.Dimmed;
-        set
-        {
-            if (value)
-            {
-                SetIgnoredFiles(IgnoredFiles.Dimmed);
-            }
-        }
-    }
-
-    /// <summary><b>Files git ignores</b> are left out of the explorer.</summary>
-    public bool IgnoredFilesHidden
-    {
-        get => Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
-        set
-        {
-            if (value)
-            {
-                SetIgnoredFiles(IgnoredFiles.Hidden);
-            }
-        }
-    }
-
-    private void SetIgnoredFiles(IgnoredFiles files)
-    {
-        if (Settings.Git.IgnoredFiles == files)
-        {
-            return;
-        }
-        Settings.Git.IgnoredFiles = files;
-        OnPropertyChanged(nameof(IgnoredFilesDimmed));
-        OnPropertyChanged(nameof(IgnoredFilesHidden));
         Save();
     }
 }

@@ -82,7 +82,10 @@ public sealed class GitSettings
     /// <summary>What a Project Files tab compares files with when it opens with nothing saved; each tab then has its own.</summary>
     public FilesTabChanges NewFilesTabsShow { get; set; } = FilesTabChanges.ClaudesChanges;
 
-    /// <summary>What the Project Files tab's explorer does with what git ignores (outside a repository, the folders the <c>@</c> list skips).</summary>
+    /// <summary>
+    /// What the Project Files tab's explorer does with what git or Perforce's P4IGNORE ignores (outside both, the folders
+    /// the <c>@</c> list skips). Settings → Files and diffs → <b>Ignored files</b>, which was Git's and keeps its key.
+    /// </summary>
     public IgnoredFiles IgnoredFiles { get; set; } = IgnoredFiles.Dimmed;
 }
 
@@ -96,7 +99,7 @@ public enum FilesTabChanges
     GitHead,
 }
 
-/// <summary>Settings → Git → <b>Files git ignores</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+/// <summary>Settings → Files and diffs → <b>Ignored files</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
 public enum IgnoredFiles
 {
     /// <summary>In the tree, drawn dimmed.</summary>
@@ -257,6 +260,19 @@ public sealed class EditorSettings
     public int IndentSize { get; set; } = 4;
 
     public bool IndentWithTabs { get; set; }
+
+    /// <summary>What the Project Files tab's explorer does with dotfiles and the files the OS hides.</summary>
+    public HiddenFiles HiddenFiles { get; set; } = HiddenFiles.Dimmed;
+}
+
+/// <summary>Settings → Files and diffs → <b>Hidden files</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+public enum HiddenFiles
+{
+    /// <summary>In the tree, drawn dimmed.</summary>
+    Dimmed,
+
+    /// <summary>Left out of the tree.</summary>
+    Hidden,
 }
 
 public enum ExplorerSide

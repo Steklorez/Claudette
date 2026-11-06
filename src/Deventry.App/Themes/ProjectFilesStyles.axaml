@@ -41,8 +41,8 @@
   <Style Selector="controls|AppearanceScope.claude ListBox.explorerlist ListBoxItem">
     <Setter Property="CornerRadius" Value="8" />
   </Style>
-  <!-- What git ignores, dimmed. -->
-  <Style Selector="Panel.explorerrow.ignored">
+  <!-- What git or P4IGNORE ignores, and what's hidden, dimmed. -->
+  <Style Selector="Panel.explorerrow.ignored, Panel.explorerrow.hidden">
     <Setter Property="Opacity" Value="0.5" />
   </Style>
   <!-- A file Claude deleted, in Show only changed files. -->
