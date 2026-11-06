@@ -40,9 +40,8 @@ public class TabMarkUiTests
         Assert.NotNull(icon.Data);
         Assert.Equal(Brush(window, "WarningTextBrush"), (icon.Stroke as ISolidColorBrush)?.Color);
         var status = row.GetVisualDescendants().OfType<TextBlock>().First(t => t.Classes.Contains("status"));
-        var detail = row.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == tab.RowDetail);
         Assert.True(InRow(mark, row).Top >= InRow(status, row).Bottom - 0.5, "The mark isn't under the status icon.");
-        Assert.True(InRow(mark, row).Top < InRow(detail, row).Bottom && InRow(detail, row).Top < InRow(mark, row).Bottom, "The mark isn't level with the second line.");
+        AssertLevelWithTheRing(mark, row);
         Assert.True(Math.Abs(InRow(mark, row).Center.X - InRow(status, row).Center.X) < 0.5, "The mark isn't under the status icon.");
         Assert.Equal(height, row.Bounds.Height, precision: 3);
 
@@ -89,7 +88,7 @@ public class TabMarkUiTests
         Assert.Equal(nameLeft, InRow(name, row).Left, precision: 3);
         Assert.True(InRow(detail, row).Left >= InRow(mark, row).Right, "The second line doesn't start after the mark.");
         Assert.True(InRow(mark, row).Top >= InRow(name, row).Bottom - 0.5, "The mark isn't under the name's line.");
-        Assert.True(InRow(mark, row).Top < InRow(detail, row).Bottom && InRow(detail, row).Top < InRow(mark, row).Bottom, "The mark isn't level with the second line.");
+        AssertLevelWithTheRing(mark, row);
         Assert.Equal(height, row.Bounds.Height, precision: 3);
 
         tab.SetMark(null);
@@ -255,6 +254,22 @@ public class TabMarkUiTests
             ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = id, ["content"] = "The file has been updated." }) },
             ["tool_use_result"] = new JsonObject { ["filePath"] = path, ["oldString"] = "a", ["newString"] = "b", ["originalFile"] = "a\n" },
         });
+    }
+
+    /// <summary>
+    /// The row's mark is centered on the second line, as the context ring at its end is, and drawn, its stroke too, within
+    /// the ring's height: it never reaches below the line's other things.
+    /// </summary>
+    private static void AssertLevelWithTheRing(Border mark, Button row)
+    {
+        var ring = row.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "ContextRing");
+        Assert.True(ring.IsEffectivelyVisible);
+        var circle = InRow(ring.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Ellipse>().Single(), row);
+        var icon = mark.GetVisualDescendants().OfType<MarkIcon>().Single();
+        var drawn = InRow(icon, row).Inflate(icon.StrokeThickness / 2);
+        // Half a pixel either way: the ring rounds its 13 pixels in its button's 16 to whole ones.
+        Assert.True(Math.Abs(drawn.Center.Y - circle.Center.Y) <= 0.5, $"The mark isn't centered on the second line: {drawn} against the ring's {circle}.");
+        Assert.True(drawn.Top >= circle.Top && drawn.Bottom <= circle.Bottom, $"The mark is taller than the context ring: {drawn} against {circle}.");
     }
 
     private static MenuItem[] Items(MenuItem menu) => menu.GetRealizedContainers().OfType<MenuItem>().ToArray();

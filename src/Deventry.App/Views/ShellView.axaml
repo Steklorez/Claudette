@@ -622,9 +622,10 @@
                                              IsVisible="{Binding ShowsStatusGlyph}" />
                                   <!-- The user's own mark (DESIGN.md §4, "Marks"), or the reviewed icon over it: under the status
                                        icon, level with the second line, or with Tab activity's colored rows before the second line
-                                       alone, the name keeping the row's width. The border gives the tip somewhere to hover. -->
-                                  <Border x:Name="RowMark" Grid.RowSpan="2" Background="Transparent" IsVisible="{Binding ShowsMarkIcon}" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                          Margin="0,0,0,2" ToolTip.Tip="{Binding MarkTip}" AutomationProperties.Name="{Binding MarkTip}">
+                                       alone, the name keeping the row's width. Centered on that line as its context ring is, and
+                                       smaller, so it stays within the ring's height. The border gives the tip somewhere to hover. -->
+                                  <Border x:Name="RowMark" Grid.Row="1" Background="Transparent" IsVisible="{Binding ShowsMarkIcon}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          ToolTip.Tip="{Binding MarkTip}" AutomationProperties.Name="{Binding MarkTip}">
                                     <views:MarkIcon Mark="{Binding Mark}" IsReviewed="{Binding AllFilesReviewed}" />
                                   </Border>
                                   <Grid Grid.Column="{Binding NameLineColumn}" Grid.ColumnSpan="{Binding NameLineSpan}" ColumnDefinitions="*,Auto">

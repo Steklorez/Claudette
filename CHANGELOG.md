@@ -17,6 +17,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **Unity's log with `-timestamps` reads in columns.** The time and thread Unity puts before each line (`2026-11-06T12:45:48.327Z|0x9484|`) are no longer part of the message: the time is in the time column, in your time zone, and the thread has a column of its own before the message, in `Editor.log` and in Unity's JSON log, where the time no longer shows twice. Copying a line still gives it as the file has it. See [Editor logs](https://deventry.app/project-tools/editor-logs/).
 
+### Fixed
+
+- **A tab's mark sits level with its second line.** In the sidebar, a tab's mark is centered on its row's second line, as the context ring at its end is, instead of hanging below the line.
+
 ## [1.0.0] - 2026-11-04
 
 **Claudette is now Deventry**, an agentic development environment (ADE) for your desktop: made for Claude Code first, with more agents to come, and light on tokens by default. The same app, with a new name, a new icon and a new mascot on the composer, Joulene. Everything comes with you: the first time Deventry starts, it takes over Claudette's tabs, settings, History, session library and saved passwords and API keys, and if Claudette started when you logged in, Deventry does instead.
