@@ -474,12 +474,13 @@
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
 
-    <!-- A tab's mark (DESIGN.md §4, "Marks"), drawn by MarkIcon: each in its own color. The check, cross and question
-         mark are lines; the star, flag and pause sign are filled. -->
+    <!-- A tab's mark (DESIGN.md §4, "Marks"), drawn by MarkIcon: each in its own color, all at one scale from the grid
+         their icons are drawn on, which MarkIcon fits to the box, so none is stretched taller than the others. The check,
+         cross and question mark are lines; the star, flag and pause sign are filled. -->
     <Style Selector="Path.mark">
       <Setter Property="Width" Value="10" />
       <Setter Property="Height" Value="10" />
-      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="Stretch" Value="None" />
       <Setter Property="StrokeThickness" Value="1.5" />
       <Setter Property="StrokeLineCap" Value="Round" />
       <Setter Property="StrokeJoin" Value="Round" />
