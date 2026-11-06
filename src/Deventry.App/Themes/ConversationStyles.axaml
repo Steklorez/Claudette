@@ -403,6 +403,12 @@
     <Setter Property="Margin" Value="0,4,0,0" />
     <Setter Property="Padding" Value="0,4,0,0" />
   </Style>
+  <!-- What Claude thought, in a thinking card or a step's line: in italics, which lean past the text's width (Inter has
+       no italic face, so they're Inter slanted) and would lose a tall last letter's top if the text clipped there. -->
+  <Style Selector="SelectableTextBlock.thought">
+    <Setter Property="FontStyle" Value="Italic" />
+    <Setter Property="ClipToBounds" Value="False" />
+  </Style>
   <!-- A thinking card's or a hook's row that opens it, and a subagent's. -->
   <Style Selector="controls|AppearanceScope.compact controls|ConversationPanel.conversation Button.row">
     <Setter Property="Padding" Value="4,0" />

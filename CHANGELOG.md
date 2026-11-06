@@ -20,6 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Fixed
 
 - **A tab's mark sits level with its second line.** In the sidebar, a tab's mark is centered on its row's second line, as the context ring at its end is, instead of hanging below the line.
+- **Italics keep their last letter whole.** A preview tab's name in the Files tab, such as *the-crawl.md*, no longer loses the top of its last letter, and neither do Claude's thinking or italics in replies and in a Markdown file's preview, as in a table's cell.
 
 ## [1.0.0] - 2026-11-04
 

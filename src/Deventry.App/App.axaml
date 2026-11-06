@@ -44,9 +44,13 @@
     <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     <!-- LiveMarkdown brings its own fonts (Arial for text, Consolas for code); use the conversation's and code's from
          Settings → Appearance instead. Later styles win, so these follow the include. -->
-    <!-- Claude's replies: the conversation font, or a serif in the Claude style (DESIGN.md §3, "Visual style"). -->
+    <!-- Claude's replies: the conversation font, or a serif in the Claude style (DESIGN.md §3, "Visual style"). Italics
+         lean past the width the text was measured at, Inter's most, which has no italic face and is slanted, so the text
+         doesn't clip there: a table's cell is as wide as its text, and *optional* in one lost its l's top. Text wraps to
+         its block, so nothing else draws past it; a code block's scroll viewer clips its code. -->
     <Style Selector="md|MarkdownTextBlock">
       <Setter Property="FontFamily" Value="{DynamicResource ReplyFont}" />
+      <Setter Property="ClipToBounds" Value="False" />
     </Style>
     <!-- Syntax colors for the theme: LiveMarkdown's default is DarkPlus, in light mode too. Set through
          views:CodeBlockTheme, which re-highlights a block that's already shown without losing its code. -->
