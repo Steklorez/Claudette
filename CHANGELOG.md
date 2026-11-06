@@ -23,7 +23,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **A tab's mark sits level with its second line, and is smaller.** In the sidebar, a tab's mark is centered on its row's second line, as the context ring at its end is, instead of hanging below the line. Every mark is drawn at the same scale, smaller than before, so the question mark no longer stands taller than the others, in the sidebar, the rail, the tab's menu and History.
 - **Italics keep their last letter whole.** A preview tab's name in the Files tab, such as *the-crawl.md*, no longer loses the top of its last letter, and neither do Claude's thinking or italics in replies and in a Markdown file's preview, as in a table's cell.
 - **A subagent Claude stops is shown as stopped.** One Claude stopped in the background kept running in its tab, with the tab's running tasks counting it, until the tab's session restarted.
-- **A read-only tab stays read-only.** A tab that became read-only because its session carried on on another machine started Claude Code again when you went back to it, or from its **Restart**, and held the session, so the other machine was told it was open here. It now stays read-only, with no **Restart**.
+- **A read-only tab stays read-only.** A tab that became read-only because its session carried on on another machine started Claude Code again when you went back to it, or from its **Restart**, and held the session, so the other machine was told it was open here. It now stays read-only, with no **Restart**, and says to close it and open the session again from History to carry on here, since opening it from History while the tab is open only goes to the tab.
 
 ## [1.0.0] - 2026-11-04
 

@@ -250,7 +250,11 @@ public sealed partial class TabViewModel
 
     public bool IsReadOnly => TakenOverBy is not null;
 
-    public string ReadOnlyText => $"This session continued on {TakenOverBy}. The tab is read-only here; open it again from History to continue on this machine.";
+    /// <summary>
+    /// The banner in place of the composer. History only selects a tab already open on the session, so carrying it on here
+    /// takes closing this one first.
+    /// </summary>
+    public string ReadOnlyText => $"This session continued on {TakenOverBy}. The tab is read-only here; to continue on this machine, close it and open the session again from History.";
 
     public Task OnTakenOverAsync(string machine) => BecomeReadOnlyAsync(machine, $"This session was taken over by {machine}.");
 
