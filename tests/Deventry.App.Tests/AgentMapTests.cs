@@ -333,9 +333,23 @@ public class AgentMapTests
         h.Transport.Emit(Wire.TurnResult());
 
         await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any() && tab.IsSettled, "the turn to end");
-        Assert.True(tab.HasActiveAgents);
+        Assert.True(tab.ShowsAgentsBadge);
         Assert.Equal("1 running", tab.AgentsBadge);
         Assert.Equal("1 subagent running. Click to see it.", tab.AgentsBadgeTip);
+        // The chip counts it, so the row's count of tasks still running leaves it out.
+        Assert.Equal(0, tab.RowTaskCount);
+        Assert.False(tab.ShowTaskBadge);
+
+        // Off in Settings: no chip, and the count has the subagent again, as nothing else on the row says it works.
+        h.Services.Settings.Appearance.ShowRunningSubagentsOnTabs = false;
+        tab.OnSettingsChanged();
+        Assert.False(tab.ShowsAgentsBadge);
+        Assert.Equal(1, tab.RowTaskCount);
+        Assert.True(tab.ShowTaskBadge);
+        Assert.Equal("1 agent still running", tab.TaskBadgeTip);
+        h.Services.Settings.Appearance.ShowRunningSubagentsOnTabs = true;
+        tab.OnSettingsChanged();
+        Assert.True(tab.ShowsAgentsBadge);
 
         tab.ToggleRowsCollapsedCommand.Execute(null);
         Assert.True(tab.AreRowsCollapsed);

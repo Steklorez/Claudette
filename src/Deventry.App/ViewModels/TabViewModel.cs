@@ -989,6 +989,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnBranchChanged();
         RefreshPromptCache();
         OnPropertyChanged(nameof(ShowTaskProgressBadge));
+        OnPropertyChanged(nameof(ShowsAgentsBadge));
+        OnRowTasksChanged();
         OnPropertyChanged(nameof(RowDetail));
         // Naming sessions after their tabs turned on: a running one takes its name now (DESIGN.md §13).
         SyncClaudeName();

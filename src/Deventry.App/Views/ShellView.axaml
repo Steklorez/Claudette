@@ -688,7 +688,7 @@
                                       <!-- Tasks still running once the turn is over (DESIGN.md §4, "Sidebar"; §5, "Running tasks") -->
                                       <Border x:Name="TaskBadge" DockPanel.Dock="Left" Classes="taskbadge" IsVisible="{Binding ShowTaskBadge}" VerticalAlignment="Center" Margin="0,0,5,0"
                                               ToolTip.Tip="{Binding TaskBadgeTip}" AutomationProperties.Name="{Binding TaskBadgeTip}">
-                                        <TextBlock Text="{Binding RunningTaskCount}" />
+                                        <TextBlock Text="{Binding RowTaskCount}" />
                                       </Border>
                                       <!-- What the collapsed row hides: how many rows, and the most urgent of them (DESIGN.md §4, "Sidebar") -->
                                       <Border x:Name="FoldBadge" DockPanel.Dock="Right" Classes="foldbadge" Margin="5,0,0,0" VerticalAlignment="Center" IsVisible="{Binding AreRowsCollapsed}"
@@ -727,7 +727,7 @@
                                     <DockPanel>
                                       <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0">
                                         <!-- Subagents still running, the turn over or not (DESIGN.md §4, "Sidebar"): shows them -->
-                                        <Button x:Name="AgentsBadge" Classes="flat rowbadge" IsVisible="{Binding HasActiveAgents}" Command="{Binding ShowAgentsFromRowCommand}"
+                                        <Button x:Name="AgentsBadge" Classes="flat rowbadge" IsVisible="{Binding ShowsAgentsBadge}" Command="{Binding ShowAgentsFromRowCommand}"
                                                 ToolTip.Tip="{Binding AgentsBadgeTip}" AutomationProperties.Name="{Binding AgentsBadgeTip}">
                                           <Border Classes="rowbadge agents">
                                             <StackPanel Orientation="Horizontal" Spacing="3">

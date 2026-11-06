@@ -32,8 +32,10 @@ public sealed partial class TabViewModel
 
     /// <summary>
     /// The row's chip while subagents run (DESIGN.md §4, "Sidebar"): how many, so a tab whose turn has ended but whose
-    /// background subagents still work says so.
+    /// background subagents still work says so. Settings → Conversation → Show running subagents.
     /// </summary>
+    public bool ShowsAgentsBadge => _services.Settings.Appearance.ShowRunningSubagentsOnTabs && HasActiveAgents;
+
     public string AgentsBadge => $"{Agents.ActiveCount} running";
 
     public string AgentsBadgeTip => Agents.ActiveCount == 1 ? "1 subagent running. Click to see it." : $"{Agents.ActiveCount} subagents running. Click to see them.";
@@ -160,8 +162,10 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(AgentsHeader));
         OnPropertyChanged(nameof(HasAgents));
         OnPropertyChanged(nameof(HasActiveAgents));
+        OnPropertyChanged(nameof(ShowsAgentsBadge));
         OnPropertyChanged(nameof(AgentsBadge));
         OnPropertyChanged(nameof(AgentsBadgeTip));
+        OnRowTasksChanged();
         OnPropertyChanged(nameof(AgentsButtonText));
         OnPropertyChanged(nameof(ShowsWorkBar));
         OnPropertyChanged(nameof(ShowsDoneBar));
