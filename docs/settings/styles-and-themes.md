@@ -74,7 +74,9 @@ Pick a font from the list of the ones installed, or type a name. Leave a font em
 
 ## What the tab rows show
 
-Three switches decide what a tab's row in the sidebar carries, beside its status icon: two in Settings → Conversation → Tab rows, and the branch's in Settings → Git → Tab rows. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
+Settings → Appearance → **Tab activity** decides how a tab's row shows what Claude is doing: **Colored rows**, the default, washes the row in a color for it, a highlight running across it while Claude works; **Status dots** puts an icon at the row's start instead. See [What the tab is doing](../tabs/the-sidebar.md#what-the-tab-is-doing).
+
+Three switches decide what else the row carries: two in Settings → Conversation → Tab rows, and the branch's in Settings → Git → Tab rows. [The sidebar](../tabs/the-sidebar.md) explains the rest of the row.
 
 - **Show context** puts a small ring on the row that fills as the tab's context window does. It turns amber when Claude Code is about to compact the conversation, and red when it's nearly full ([Context and compacting](../usage/context-and-compacting.md)).
 - **Show the git branch** shows the branch the tab's folder has checked out, such as `main`, at the right of the row's second line. A tab in a worktree shows the worktree's name instead. It's on the [Git](git.md) page, with the rest of what Deventry does with git.

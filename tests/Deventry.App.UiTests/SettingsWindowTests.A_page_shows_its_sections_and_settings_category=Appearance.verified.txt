@@ -51,7 +51,7 @@
 [choice] "100%"
 "Tab activity"
 "How the sidebar shows that Claude is working in a tab, or waiting for you.  "
-[choice] "Status dots"
+[choice] "Colored rows"
 "Motion"
 "Whether the busy dots pulse, the working line twinkles and the icon moves.  "
 [choice] "Follow the system"

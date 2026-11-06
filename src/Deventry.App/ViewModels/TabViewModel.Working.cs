@@ -108,6 +108,14 @@ public sealed partial class TabViewModel
 
     public double RowLeadSpacing => HasRowLead ? 6 : 0;
 
+    /// <summary>
+    /// Where the row's name line starts: after the status icon, or with Tab activity's bars over the lead column too,
+    /// so a mark, under it level with the second line, moves only that line over.
+    /// </summary>
+    public int NameLineColumn => ShowsStatusGlyph ? 1 : 0;
+
+    public int NameLineSpan => ShowsStatusGlyph ? 1 : 2;
+
     /// <summary>A still red line under a tab whose Claude Code stopped with an error, with Tab activity's bars.</summary>
     public bool ShowsErrorBar => Status == TabStatus.Error && UsesBars;
 

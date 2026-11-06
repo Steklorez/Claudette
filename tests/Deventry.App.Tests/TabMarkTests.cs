@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -197,6 +198,35 @@ public class TabMarkTests
         }, "the record");
 
         SessionRecord Record() => h.Services.Library.Library.List().Single(e => e.Record.SessionId == "s1").Record;
+    }
+
+    [Fact]
+    public async Task With_colored_rows_a_mark_moves_only_the_second_line_over_and_with_status_dots_it_sits_under_the_icon()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+
+        // Colored rows, the default: no status icon, so the name line has the row's whole width.
+        Assert.Equal(TabActivity.Bars, h.Services.Settings.Appearance.TabActivity);
+        Assert.False(tab.ShowsStatusGlyph);
+        Assert.Equal(0, tab.RowLeadWidth.Value);
+        Assert.Equal((0, 2), (tab.NameLineColumn, tab.NameLineSpan));
+
+        // A mark takes the lead column on the second line alone: the name line still spans it.
+        Pick(tab, TabMark.Star);
+        Assert.Equal(14, tab.RowLeadWidth.Value);
+        Assert.Equal((0, 2), (tab.NameLineColumn, tab.NameLineSpan));
+
+        // Status dots: the name line starts after the status icon, and the mark sits under it.
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
+        h.Services.Settings.Appearance.TabActivity = TabActivity.Dots;
+        h.OnUiThread(tab.OnSettingsChanged);
+        Assert.True(tab.ShowsStatusGlyph);
+        Assert.Equal(14, tab.RowLeadWidth.Value);
+        Assert.Equal((1, 1), (tab.NameLineColumn, tab.NameLineSpan));
+        Assert.Contains(nameof(TabViewModel.NameLineColumn), changed);
+        Assert.Contains(nameof(TabViewModel.NameLineSpan), changed);
     }
 
     /// <summary>Picks a mark from the tab's menu, as clicking its item does.</summary>

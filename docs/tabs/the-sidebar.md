@@ -9,7 +9,7 @@ summary: "The sidebar lists your tabs down the left of the window, grouped by wo
 
 The sidebar lists your tabs down the left of the window, grouped by working folder, so long session names, a status line and many tabs all fit. Each tab is one row with two lines.
 
-{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing status icons, branches, marks and context rings." %}
+{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
 
 ## A tab's row
 
@@ -21,9 +21,26 @@ The first line holds the tab's name, with small icons before it. The second line
 - The close button shows on the row you hover and on the selected tab.
 - A tab in Bypass permissions mode has a thin outline around its row. See [Permission modes](../permissions/permission-modes.md).
 
-## Status icons
+## What the tab is doing
 
-The icon at the start of the row says what the tab is doing. Hover it for the words.
+A tab's row is colored by what Claude is doing in it, with faint washes behind its text that fill the row.
+
+| The row | Meaning |
+|---|---|
+| A soft highlight running across it | Claude is working, or subagents it started in the background still are. |
+| An orange wash, blinking | Needs your input: a permission prompt, a question or a plan is waiting. |
+| A pale green wash, fading out to the right | Finished while you were in another tab. It stays until you open the tab, through a restart too. |
+| A pale red wash, fading out to the right | An error. The row's second line says what went wrong. |
+| The name shimmering | Starting. |
+| Nothing | Idle, not started yet, or not running. A restored tab doesn't start its `claude` until you first select it. |
+
+With reduced motion on, the highlight holds still and the orange doesn't blink. A subagent's row under its tab is colored the same way by what the subagent is doing.
+
+A tab's [mark](names-marks-and-pins.md#marks) sits at the start of the second line, which moves over to make room for it.
+
+### Status dots
+
+Settings → Appearance → **Tab activity** → **Status dots** leaves the row uncolored and puts an icon at its start instead. Hover it for the words.
 
 | Icon | Meaning |
 |---|---|
@@ -34,7 +51,7 @@ The icon at the start of the row says what the tab is doing. Hover it for the wo
 | `✕` | An error, or the process exited. The row's second line says what went wrong. |
 | none | Idle. |
 
-A tab's [mark](names-marks-and-pins.md#marks) sits under the status icon, level with the second line.
+The mark then sits under the status icon, level with the second line.
 
 ## The second line
 
@@ -105,6 +122,8 @@ At the top, over a line, **New tab** opens the [picker](opening-tabs.md), the cl
 - **Narrow windows.** Below 900 pixels wide the sidebar collapses to the rail by itself, and expands again when the window is wider. If you expand it by hand in a narrow window, it stays open until the window is widened.
 
 ## Settings
+
+Settings → Appearance → **Tab activity**: **Colored rows**, the default, or **Status dots**. See [What the tab is doing](#what-the-tab-is-doing).
 
 Settings → Conversation → Tab rows:
 

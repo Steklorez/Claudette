@@ -661,10 +661,10 @@ public sealed class AppearanceSettings
     public MotionSetting Motion { get; set; } = MotionSetting.System;
 
     /// <summary>
-    /// Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar"): how a tab's row says Claude works or waits, the
-    /// status dot alone, or a line under the row as well.
+    /// Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar"): how a tab's row says Claude works or waits, with
+    /// colored rows (the default) or the status dots.
     /// </summary>
-    public TabActivity TabActivity { get; set; } = TabActivity.Dots;
+    public TabActivity TabActivity { get; set; } = TabActivity.Bars;
 
     /// <summary>
     /// Settings → Appearance → Zoom: the main window's content, in percent (DESIGN.md §3, "Accessibility"). It suits
@@ -680,7 +680,7 @@ public enum TabActivity
     /// <summary>The status dot before the name: it pulses while Claude works.</summary>
     Dots,
 
-    /// <summary>Also a line under the row: a highlight runs along it while Claude works, and the row blinks orange while it waits.</summary>
+    /// <summary>Colored rows, with no status dots: a highlight runs across the row while Claude works, and the row blinks orange while it waits.</summary>
     Bars,
 }
 

@@ -272,17 +272,16 @@
       <Setter Property="Stroke" Value="{DynamicResource MeterCriticalBrush}" />
     </Style>
     <!-- Tab activity's colored rows (DESIGN.md §4, "Sidebar"): washes behind the row, faint enough for its text; still
-         when motion is reduced -->
+         when motion is reduced. Each fills its row to the edges and corners its hover and selection have, out over the
+         row's padding, in either density and style. -->
     <Style Selector="controls|WorkBar.rowglow, Border.rowglow">
-      <Setter Property="Margin" Value="-6,-2,-4,-2" />
+      <Setter Property="Margin" Value="{Binding $parent[Button].Padding, Converter={x:Static vm:Converters.Outset}}" />
+      <Setter Property="Border.CornerRadius" Value="{Binding $parent[Button].CornerRadius}" />
       <Setter Property="IsHitTestVisible" Value="False" />
-    </Style>
-    <Style Selector="Border.rowglow">
-      <Setter Property="CornerRadius" Value="4" />
     </Style>
     <!-- A subagent's row: the wash starts at its icon, under its tab's name, rather than out in the row's padding -->
     <Style Selector="controls|WorkBar.agentglow, Border.agentglow">
-      <Setter Property="Margin" Value="-2,-2,-4,-2" />
+      <Setter Property="Margin" Value="{Binding $parent[Button].Padding, Converter={x:Static vm:Converters.OutsetFromIcon}}" />
     </Style>
     <Style Selector=":is(Window).reducemotion controls|WorkBar">
       <Setter Property="IsStill" Value="True" />

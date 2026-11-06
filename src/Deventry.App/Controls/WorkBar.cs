@@ -15,6 +15,8 @@ public sealed class WorkBar : Control
 
     public static readonly StyledProperty<bool> IsStillProperty = AvaloniaProperty.Register<WorkBar, bool>(nameof(IsStill));
 
+    public static readonly StyledProperty<CornerRadius> CornerRadiusProperty = Border.CornerRadiusProperty.AddOwner<WorkBar>();
+
     /// <summary>How long the highlight takes to run along the line once.</summary>
     private static readonly TimeSpan Lap = TimeSpan.FromSeconds(2.2);
 
@@ -27,7 +29,7 @@ public sealed class WorkBar : Control
 
     static WorkBar()
     {
-        AffectsRender<WorkBar>(BarBrushProperty, IsStillProperty);
+        AffectsRender<WorkBar>(BarBrushProperty, IsStillProperty, CornerRadiusProperty);
     }
 
     /// <summary>The highlight's color; the line under it is the same, faint.</summary>
@@ -35,6 +37,13 @@ public sealed class WorkBar : Control
     {
         get => GetValue(BarBrushProperty);
         set => SetValue(BarBrushProperty, value);
+    }
+
+    /// <summary>Its row's corners, so it fills the row as the row's hover does.</summary>
+    public CornerRadius CornerRadius
+    {
+        get => GetValue(CornerRadiusProperty);
+        set => SetValue(CornerRadiusProperty, value);
     }
 
     /// <summary>No running highlight: Settings → Appearance → Motion, or the system, asks for less motion.</summary>
@@ -91,7 +100,8 @@ public sealed class WorkBar : Control
         {
             return;
         }
-        const double radius = 4, peak = 0.22;
+        var rect = new RoundedRect(bounds, CornerRadius);
+        const double peak = 0.22;
         Color Faded(double alpha) => Color.FromArgb((byte)(alpha * 255), color.R, color.G, color.B);
         if (IsStill)
         {
@@ -101,10 +111,10 @@ public sealed class WorkBar : Control
                 EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
                 GradientStops = { new GradientStop(Faded(peak), 0), new GradientStop(Faded(0), 1) },
             };
-            context.DrawRectangle(wash, null, bounds, radius, radius);
+            context.DrawRectangle(wash, null, rect);
             return;
         }
-        context.DrawRectangle(new SolidColorBrush(color, 0.05), null, bounds, radius, radius);
+        context.DrawRectangle(new SolidColorBrush(color, 0.05), null, rect);
         // The highlight: a soft band centred on the phase, coming in again at the left as it leaves at the right.
         var centre = _phase * (1 + Glow) - Glow / 2;
         var brush = new LinearGradientBrush
@@ -118,6 +128,6 @@ public sealed class WorkBar : Control
                 new GradientStop(Faded(0), Math.Clamp(centre + Glow / 2, 0, 1)),
             },
         };
-        context.DrawRectangle(brush, null, bounds, radius, radius);
+        context.DrawRectangle(brush, null, rect);
     }
 }

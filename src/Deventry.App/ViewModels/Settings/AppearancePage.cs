@@ -92,7 +92,7 @@ public sealed class AppearancePage : SettingsPage
                 ["scale", "bigger", "magnify"]),
             Setting("appearance.tabActivity", "Tab activity", s => s.Appearance.TabActivity, (s, v) => s.Appearance.TabActivity = v,
                 "How the sidebar shows that Claude is working in a tab, or waiting for you.",
-                "Status dots: the dot before the tab's name pulses while Claude works. Colored rows: no status icons; a soft highlight runs across the row while Claude works, the row flashes orange while it waits for your answer, a pale green wash marks a tab it finished in while you weren't looking, until you open it, and a red one a tab that stopped with an error. A tab's name shimmers while its session starts.",
+                "Colored rows: no status icons; a soft highlight runs across the row while Claude works, the row flashes orange while it waits for your answer, a pale green wash marks a tab it finished in while you weren't looking, until you open it, and a red one a tab that stopped with an error. A tab's name shimmers while its session starts. Status dots: the dot before the tab's name pulses while Claude works.",
                 ["working", "busy", "waiting", "progress", "bar", "dot", "sidebar", "activity"]),
             Setting("appearance.motion", "Motion", s => s.Appearance.Motion, (s, v) => s.Appearance.Motion = v,
                 "Whether the busy dots pulse, the working line twinkles and the icon moves.",
@@ -245,13 +245,13 @@ public sealed class AppearancePage : SettingsPage
         set => Set(value?.Percent ?? Core.Accessibility.Zoom.Default, v => Settings.Appearance.Zoom = v);
     }
 
-    public IReadOnlyList<TabActivityChoice> TabActivityChoices { get; } = [new(Core.Settings.TabActivity.Dots), new(Core.Settings.TabActivity.Bars)];
+    public IReadOnlyList<TabActivityChoice> TabActivityChoices { get; } = [new(Core.Settings.TabActivity.Bars), new(Core.Settings.TabActivity.Dots)];
 
-    /// <summary>Whether a working or waiting tab also gets a line under its row in the sidebar (DESIGN.md §4, "Sidebar").</summary>
+    /// <summary>Whether the sidebar shows a working or waiting tab with its row's colors or a status dot (DESIGN.md §4, "Sidebar").</summary>
     public TabActivityChoice TabActivity
     {
         get => TabActivityChoices.FirstOrDefault(c => c.Activity == Settings.Appearance.TabActivity) ?? TabActivityChoices[0];
-        set => Set(value?.Activity ?? Core.Settings.TabActivity.Dots, v => Settings.Appearance.TabActivity = v);
+        set => Set(value?.Activity ?? Core.Settings.TabActivity.Bars, v => Settings.Appearance.TabActivity = v);
     }
 
     public IReadOnlyList<MotionChoice> MotionChoices { get; } =

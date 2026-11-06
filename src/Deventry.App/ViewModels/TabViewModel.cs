@@ -951,6 +951,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         OnPropertyChanged(nameof(HasRowLead));
         OnPropertyChanged(nameof(RowLeadWidth));
         OnPropertyChanged(nameof(RowLeadSpacing));
+        OnPropertyChanged(nameof(NameLineColumn));
+        OnPropertyChanged(nameof(NameLineSpan));
     }
 
     public void OnSettingsChanged()

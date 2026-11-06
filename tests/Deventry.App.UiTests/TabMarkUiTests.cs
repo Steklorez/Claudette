@@ -22,7 +22,7 @@ public class TabMarkUiTests
     [AvaloniaFact]
     public async Task The_mark_sits_under_the_status_icon_level_with_the_second_line_without_making_the_row_taller()
     {
-        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await using var h = new TabTestHarness(settings => settings.Appearance.TabActivity = TabActivity.Dots, dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
         var row = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("tabrow"));
@@ -63,6 +63,38 @@ public class TabMarkUiTests
         tab.SetMark(null);
         UiText.Settle(window);
         Assert.False(railMark.IsEffectivelyVisible);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task With_colored_rows_the_mark_moves_only_the_second_line_over_and_the_name_keeps_its_place()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        var row = window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("tabrow"));
+        var mark = row.GetVisualDescendants().OfType<Border>().Single(b => b.Name == "RowMark");
+        var name = row.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("tabname"));
+        var detail = row.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Text == tab.RowDetail);
+        var height = row.Bounds.Height;
+        var nameLeft = InRow(name, row).Left;
+        // No status icon, and nothing in its column: both lines start at the row's content.
+        Assert.Equal(row.Padding.Left, nameLeft, precision: 3);
+        Assert.Equal(nameLeft, InRow(detail, row).Left, precision: 3);
+
+        tab.SetMark(TabMark.Question);
+        UiText.Settle(window);
+
+        Assert.True(mark.IsEffectivelyVisible);
+        Assert.Equal(nameLeft, InRow(name, row).Left, precision: 3);
+        Assert.True(InRow(detail, row).Left >= InRow(mark, row).Right, "The second line doesn't start after the mark.");
+        Assert.True(InRow(mark, row).Top >= InRow(name, row).Bottom - 0.5, "The mark isn't under the name's line.");
+        Assert.True(InRow(mark, row).Top < InRow(detail, row).Bottom && InRow(detail, row).Top < InRow(mark, row).Bottom, "The mark isn't level with the second line.");
+        Assert.Equal(height, row.Bounds.Height, precision: 3);
+
+        tab.SetMark(null);
+        UiText.Settle(window);
+        Assert.Equal(nameLeft, InRow(detail, row).Left, precision: 3);
         window.Close();
     }
 
