@@ -851,8 +851,12 @@ public sealed class ConversationBuilder
                 && (stop.Input["task_id"] ?? stop.Input["shell_id"]) is JsonValue stopped && stopped.TryGetValue<string>(out var stoppedId))
             {
                 // Claude stopped a background task, a subagent maybe (DESIGN.md §5, "Running tasks"): it's over once
-                // Claude Code says so, with or without the task_notification it doesn't always send then.
-                _agents?.FindByTask(stoppedId)?.OnTaskEnded("stopped", null, null);
+                // Claude Code says so, with or without the task_notification it doesn't always send then. One that
+                // finished first stays as it ended.
+                if (_agents?.FindByTask(stoppedId) is { IsActive: true } stoppedAgent)
+                {
+                    stoppedAgent.OnTaskEnded("stopped", null, null);
+                }
                 _tasks?.OnStoppedByClaude(stoppedId);
             }
             if (_todoToolUses.Remove(result.ToolUseId))

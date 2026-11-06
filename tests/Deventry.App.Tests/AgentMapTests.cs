@@ -370,6 +370,27 @@ public class AgentMapTests
     }
 
     [Fact]
+    public async Task A_TaskStop_that_comes_after_the_subagent_finished_leaves_it_done()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        h.Transport.Emit(Wire.Init());
+        h.Transport.Emit(Wire.Agent("bg", "Long job", "RUN_BASH sleep 20", background: true));
+        h.Transport.Emit(Wire.TaskStarted("task-bg", "bg", backgrounded: true));
+        h.Transport.Emit(Wire.Result("bg", "Async agent launched successfully.", toolUseResult: new JsonObject
+        {
+            ["isAsync"] = true, ["status"] = "async_launched", ["agentId"] = "task-bg", ["description"] = "Long job", ["prompt"] = "RUN_BASH sleep 20",
+        }));
+        h.Transport.Emit(Wire.Notification("task-bg", "bg", "completed", "Slept well.", tokens: 1200, toolUses: 1, durationMs: 20500));
+        h.Transport.Emit(Wire.Tool(null, "stop", "TaskStop", new JsonObject { ["task_id"] = "task-bg" }));
+        h.Transport.Emit(Wire.Result("stop", "{\"message\":\"Successfully stopped task: task-bg\"}"));
+        h.Transport.Emit(Wire.TurnResult());
+
+        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().Any() && tab.IsSettled, "the turn to end");
+        Assert.Equal(AgentStatus.Done, tab.Agents.Find("bg")!.Status);
+    }
+
+    [Fact]
     public async Task With_colored_rows_a_tab_runs_its_highlight_while_a_background_subagent_works_after_the_turn()
     {
         await using var h = new TabTestHarness();
