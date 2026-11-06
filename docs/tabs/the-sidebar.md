@@ -77,6 +77,7 @@ Small icons before the name and bordered badges at the right of the second line 
 | Phone | The tab is connected to the Claude app. It dims while it connects. | [The Claude app](../away/the-claude-app.md) |
 | `⚙` | A process the tab started is using CPU. | [Processes](processes.md) |
 | A number | Tasks (subagents and background tasks) still running after the turn ended. Hover it for which. | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
+| Agents icon and `2 running` | Subagents still running, in the turn or after it. Click it to see them: their rows come out from under a collapsed tab, or the Agents window opens. | [Subagents](../conversation/subagents.md#subagents-that-run-in-the-background) |
 | `3/7` | How many of Claude's tasks are done. Click it to open the Tasks page. | [The Tasks page](../plans/the-tasks-page.md) |
 | Branch name | The git branch the folder has checked out, such as `main`. Click it for **Copy branch name**. A worktree tab shows the worktree's name. | [Worktree tabs](worktree-tabs.md) |
 | `CL 12345` | The Perforce changelist. | [Perforce](../project-tools/perforce.md) |

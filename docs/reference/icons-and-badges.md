@@ -51,6 +51,7 @@ A collapsed group shows only the most urgent status of its tabs.
 | A phone | *Connected to the Claude app*. It's dimmed while connecting or reconnecting | [The Claude app](../away/the-claude-app.md) |
 | A gear | A process the tab started is using CPU | [Processes](../tabs/processes.md) |
 | A small number | Subagents and tasks still running after the turn ended, such as *1 agent and 2 tasks still running* | [The agent map](../plans/the-agent-map.md) |
+| The agents icon with *2 running* | Subagents still running, in the turn or after it. A click shows them | [Subagents](../conversation/subagents.md#subagents-that-run-in-the-background) |
 | `3/7` | How many of Claude's tasks are done. A click opens the Tasks page | [The Tasks page](../plans/the-tasks-page.md) |
 | A small bordered badge with a name, such as `main` | The git branch (or the worktree's name, or a short commit on a detached HEAD). A click offers **Copy branch name** | [The sidebar](../tabs/the-sidebar.md) |
 | `CL 12345` | The Perforce changelist Claude is working in, with **Show changelist on tabs** on | [Perforce](../project-tools/perforce.md) |
