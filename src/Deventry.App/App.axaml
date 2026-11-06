@@ -360,6 +360,13 @@
     <Style Selector="TextBlock.rundetail">
       <Setter Property="FontSize" Value="11" />
     </Style>
+    <!-- A subagent's row says what it's doing in the accent while it runs, and how it ended in green once it's done -->
+    <Style Selector="TextBlock.rundetail.running">
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <Style Selector="TextBlock.rundetail.done">
+      <Setter Property="Foreground" Value="{DynamicResource OkTextBrush}" />
+    </Style>
     <!-- A tab's editor logs, under its row before its runs (DESIGN.md §18, "Editor logs"): rows as runs have, with the log
          icon in the accent while its process runs, and muted once it has ended. -->
     <Style Selector="ItemsControl.logs">
