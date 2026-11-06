@@ -77,6 +77,8 @@ While Settings → Project tools → Unity → **Prefer JSON logging** is on, as
 
 Unity hasn't documented the fields of its JSON log yet, so Deventry reads them by the names such logs use; a line it can't read as an entry shows as it is.
 
+When Unity is started with `-timestamps`, it puts its time and the thread that wrote the line before each line, `2026-11-06T12:45:48.327Z|0x9484|`, in `Editor.log` and in its JSON log's messages. Deventry shows them in columns rather than in the message: the time in your time zone, then the thread, then the message, lined up under the one before. A JSON entry already has its own time, so Unity's copy of it isn't shown twice. As with Unreal's columns, select, copy or find, and you get the line as the file has it.
+
 ## Closing it
 
 Click **×** on the row, **Close** over the log, or press `Ctrl/Cmd+W` while it has the focus.

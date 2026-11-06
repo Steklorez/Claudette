@@ -283,6 +283,64 @@ public class ProjectToolsUiTests
         await Verify(described);
     }
 
+    /// <summary>
+    /// A Unity log written with <c>-timestamps</c> (DESIGN.md §18, "Editor logs", "Its lines", issue #122): each line's
+    /// time and thread in columns, the thread's as wide as the longest, and the messages lined up after them, with the
+    /// file's text underneath.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_unity_log_with_timestamps_shows_each_lines_time_and_thread_in_columns_before_its_message()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: new FakeLauncher());
+        var os = Core.ProjectTools.ToolOSExtensions.Current == Core.ProjectTools.ToolOS.Windows ? Core.ProjectTools.ToolOS.Windows : Core.ProjectTools.ToolOS.Linux;
+        h.Services.ProjectTools.OS = os;
+        h.Services.ProjectTools.Paths = new Core.ProjectTools.ProjectToolPaths(Path.Combine(h.Root, "home"), LocalAppData: Path.Combine(h.Root, "local"));
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "ProjectSettings"));
+        File.WriteAllText(Path.Combine(h.WorkFolder, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.0.23f1\n");
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "Assets"));
+        var processes = new FakeSystemProcesses();
+        h.Services.ProjectTools.Processes = processes;
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Project is { Logs: not null }, "the project");
+        var unityLog = Core.ProjectTools.Unity.UnityEditors.EditorLog(h.Services.ProjectTools.Paths, os)!;
+        Directory.CreateDirectory(Path.GetDirectoryName(unityLog)!);
+        File.WriteAllLines(unityLog,
+        [
+            "2026-11-05T13:14:55.764Z|0x9b98|Refreshing native plugins",
+            "2026-11-05T13:14:56.000Z|0x1a2b3c|Start HTTP server: port:7800",
+            "",
+            "2026-11-05T13:14:56.100Z|0x9b98|Domain Reload Profiling: 1881ms",
+        ]);
+        processes.Start(new Core.ProjectTools.SystemProcess(4412, "Unity", $"\"C:\\Unity\\6000.0.23f1\\Editor\\Unity.exe\" -projectPath \"{h.WorkFolder}\"", h.Time.GetUtcNow()));
+        h.Time.Advance(TimeSpan.FromSeconds(EditorLogService.ReadsPerCheck));
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Logs.Count == 1 && tab.ProjectTools.Logs[0].Output.Count == 4, "the log");
+        var editorLog = tab.ProjectTools.Logs[0];
+        editorLog.OpenCommand.Execute(null);
+        UiText.Settle(window);
+        var editor = Shown<EditorLogView>(window).FindControl<TextEditor>("Log")!;
+        var textView = editor.TextArea.TextView;
+        await UiText.SettleUntilAsync(window, () => textView.VisualLinesValid && textView.VisualLines.Count == 4, "the lines");
+
+        Assert.True(editorLog.HasThreadColumn);
+        Assert.Equal("0x1a2b3c".Length, editorLog.ThreadColumn);
+        AvaloniaEdit.Rendering.VisualLine Line(int number) => textView.VisualLines.Single(l => l.FirstDocumentLine.LineNumber == number);
+        double MessageX(int number, string message)
+        {
+            var text = editor.Document.GetText(editor.Document.GetLineByNumber(number));
+            return textView.GetVisualPosition(new TextViewPosition(number, text.IndexOf(message, StringComparison.Ordinal) + 1), AvaloniaEdit.Rendering.VisualYPosition.LineTop).X;
+        }
+        // Unity's time is drawn as the time column, and its thread as the thread's.
+        Assert.Equal("2026-11-05T13:14:55.764Z|".Length, Line(1).Elements[0].DocumentLength);
+        Assert.Equal("0x9b98|".Length, Line(1).Elements[1].DocumentLength);
+        // Every message starts in the same place, after the columns.
+        var message = MessageX(1, "Refreshing");
+        Assert.Equal(message, MessageX(2, "Start HTTP"));
+        Assert.Equal(message, MessageX(4, "Domain Reload"));
+        Assert.Equal(LogColumnsGenerator.MessageColumn(editorLog) * textView.WideSpaceWidth, message, 3);
+        Assert.Equal("2026-11-05T13:14:55.764Z|0x9b98|Refreshing native plugins", editor.Document.GetText(editor.Document.GetLineByNumber(1)));
+    }
+
     [AvaloniaFact]
     public async Task A_logs_long_lines_wrap_and_its_links_open_with_a_click()
     {
