@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.Core;
 using Deventry.Core.Files;
@@ -12,7 +14,7 @@ namespace Deventry.App.ViewModels;
 /// tool's result, a reply, or an image file or web image clicked. It has <b>Copy image</b>, <b>Save as…</b> and, for a
 /// file, <b>Copy path</b> and <b>Open</b> (<b>Open in browser</b> for a web image). An animated GIF or WebP plays, with <b>Pause</b> and
 /// <b>Play</b>; with motion reduced it opens on its first frame. It opens fitting the window, and zooms in and out in
-/// steps.
+/// steps. Opened from the Media window, it has <b>Clear</b>, or <b>Restore</b> for one that's cleared.
 /// </summary>
 public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
 {
@@ -20,14 +22,24 @@ public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
     private readonly UiTimeout _copied;
     private readonly UiTimeout _pathCopied;
     private readonly UiTimeout _nextFrame;
+    private readonly MediaEntry? _media;
+    private readonly Action<MediaEntry>? _toggleCleared;
 
     /// <summary>How many times it has played through since <b>Play</b>.</summary>
     private int _plays;
 
-    public ImageViewerViewModel(ToolImage image, AppServices services)
+    /// <param name="media">Its tile in the Media window, when it was opened from there.</param>
+    /// <param name="toggleCleared">Clears <paramref name="media"/>, or restores it.</param>
+    public ImageViewerViewModel(ToolImage image, AppServices services, MediaEntry? media = null, Action<MediaEntry>? toggleCleared = null)
     {
         Image = image;
         _services = services;
+        if (media is not null && toggleCleared is not null)
+        {
+            _media = media;
+            _toggleCleared = toggleCleared;
+            media.PropertyChanged += OnMediaChanged;
+        }
         _copied = new UiTimeout(services.Time, services.Dispatcher);
         _pathCopied = new UiTimeout(services.Time, services.Dispatcher);
         _nextFrame = new UiTimeout(services.Time, services.Dispatcher);
@@ -67,6 +79,32 @@ public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
     public string OpenTip => Image.FilePath is null && IsWebImage
         ? "Open the image's address in your browser"
         : "Open the file in the app your system uses for it";
+
+    /// <summary>Opened from the Media window: it can be cleared there, or restored (DESIGN.md §18, "Media", "Clearing").</summary>
+    public bool CanClear => _media is not null;
+
+    /// <summary><b>Clear</b>, or <b>Restore</b> once it's cleared.</summary>
+    public string ClearText => _media?.ClearText ?? "Clear";
+
+    public string ClearTip => _media?.ClearTip ?? "";
+
+    [RelayCommand]
+    private void ToggleCleared()
+    {
+        if (_media is { } media)
+        {
+            _toggleCleared?.Invoke(media);
+        }
+    }
+
+    private void OnMediaChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MediaEntry.IsCleared))
+        {
+            OnPropertyChanged(nameof(ClearText));
+            OnPropertyChanged(nameof(ClearTip));
+        }
+    }
 
     /// <summary>Its frames, for an animated GIF or WebP; null for a still image.</summary>
     public ImageAnimation? Animation { get; }
@@ -273,6 +311,10 @@ public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
     /// <summary>The window closed.</summary>
     public void Dispose()
     {
+        if (_media is not null)
+        {
+            _media.PropertyChanged -= OnMediaChanged;
+        }
         _copied.Dispose();
         _pathCopied.Dispose();
         _nextFrame.Dispose();

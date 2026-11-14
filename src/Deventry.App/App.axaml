@@ -637,6 +637,8 @@
 
       <!-- Small vector icons, so they look the same on every platform. -->
       <StreamGeometry x:Key="IconClose">M2,2 L10,10 M10,2 L2,10</StreamGeometry>
+      <!-- Back where it was: restoring what the Media window cleared (DESIGN.md §18, "Media", "Clearing") -->
+      <StreamGeometry x:Key="IconRestore">M4.5,2.5 L2,5 L4.5,7.5 M2,5 L7.5,5 C9.2,5 10.5,6.3 10.5,8 C10.5,9.7 9.2,10.5 7.5,10.5 L6,10.5</StreamGeometry>
       <!-- A square, filled: Stop on a running project run in the sidebar (DESIGN.md §18). -->
       <StreamGeometry x:Key="IconStop">M2,2 L10,2 L10,10 L2,10 Z</StreamGeometry>
       <!-- 32×32, the size of the round Send and Stop buttons (DESIGN.md §3), so they're drawn about the

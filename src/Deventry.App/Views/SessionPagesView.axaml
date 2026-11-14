@@ -367,36 +367,33 @@
       </DockPanel>
 
       <!-- Media (DESIGN.md §18, "Media"): the conversation's images, video and sound, the user's and the agent's, newest
-           first, each section folding to its header. A tile opens what it shows; its menu has the rest. -->
+           first, each section folding to its header. A tile opens what it shows; its X clears it, and its menu has the rest.
+           What's cleared is under a line, in a Cleared group for each, folded until opened. -->
       <ScrollViewer x:Name="MediaPage" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
-        <ItemsControl ItemsSource="{Binding Media.Sections}" Margin="12,0,16,12">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Spacing="12" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate DataType="conv:MediaSection">
-              <StackPanel Spacing="6">
-                <Button Classes="flat row mediasection" Command="{Binding ToggleCommand}" AutomationProperties.Name="{Binding ToggleName}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Panel VerticalAlignment="Center">
-                      <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
-                      <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
-                    </Panel>
-                    <TextBlock x:Name="SectionTitle" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <TextBlock Classes="muted small" Text="{Binding CountText}" controls:Baseline.AlignWith="{Binding #SectionTitle}" />
-                  </StackPanel>
-                </Button>
-                <TextBlock Classes="muted small" Text="{Binding EmptyText}" TextWrapping="Wrap" Margin="4,0" IsVisible="{Binding ShowsEmptyText}" />
-                <ItemsControl ItemsSource="{Binding Entries}" IsVisible="{Binding IsExpanded}">
-                  <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                      <WrapPanel ItemSpacing="6" LineSpacing="8" />
-                    </ItemsPanelTemplate>
-                  </ItemsControl.ItemsPanel>
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="conv:MediaEntry">
+        <ScrollViewer.DataTemplates>
+          <!-- Its space below is its own, so a Cleared group that's hidden, with nothing in it, leaves none -->
+          <DataTemplate DataType="conv:MediaSection">
+            <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding IsShown}">
+              <Button Classes="flat row mediasection" Command="{Binding ToggleCommand}" AutomationProperties.Name="{Binding ToggleName}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Panel VerticalAlignment="Center">
+                    <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+                    <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
+                  </Panel>
+                  <TextBlock x:Name="SectionTitle" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" Text="{Binding CountText}" controls:Baseline.AlignWith="{Binding #SectionTitle}" />
+                </StackPanel>
+              </Button>
+              <TextBlock Classes="muted small" Text="{Binding EmptyText}" TextWrapping="Wrap" Margin="4,0" IsVisible="{Binding ShowsEmptyText}" />
+              <ItemsControl ItemsSource="{Binding Entries}" IsVisible="{Binding IsExpanded}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel ItemSpacing="6" LineSpacing="8" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="conv:MediaEntry">
+                    <Panel Classes="mediatileframe">
                       <Button Classes="flat mediatile" Classes.menuopen="{Binding #MediaMenu.IsOpen}" ToolTip.Tip="{Binding Tip}" AutomationProperties.Name="{Binding OpenName}"
                               Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenMediaCommand}" CommandParameter="{Binding}">
                         <StackPanel Spacing="3">
@@ -418,6 +415,7 @@
                                       IsVisible="{Binding IsFile}" />
                             <MenuItem Header="Show in conversation" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ShowMediaInConversationCommand}" CommandParameter="{Binding}"
                                       IsVisible="{Binding CanShowInConversation}" />
+                            <MenuItem Header="{Binding ClearText}" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleMediaClearedCommand}" CommandParameter="{Binding}" />
                             <Separator IsVisible="{Binding IsFile}" />
                             <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).RevealMediaCommand}" CommandParameter="{Binding}"
                                       IsVisible="{Binding IsFile}" />
@@ -426,13 +424,30 @@
                           </ContextMenu>
                         </Button.ContextMenu>
                       </Button>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </StackPanel>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                      <!-- Its X, which clears it, or once cleared its arrow, which restores it: at the thumbnail's corner while the
+                           pointer is over the tile or it has the focus (DESIGN.md §18, "Media", "Clearing") -->
+                      <Button Classes="flat mediaclear" ToolTip.Tip="{Binding ClearTip}" AutomationProperties.Name="{Binding ClearName}"
+                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleMediaClearedCommand}" CommandParameter="{Binding}">
+                        <Panel>
+                          <Path Data="{StaticResource IconClose}" IsVisible="{Binding !IsCleared}" />
+                          <Path Data="{StaticResource IconRestore}" IsVisible="{Binding IsCleared}" />
+                        </Panel>
+                      </Button>
+                    </Panel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ScrollViewer.DataTemplates>
+        <StackPanel>
+          <ItemsControl ItemsSource="{Binding Media.Sections}" Margin="12,0,16,0" />
+          <!-- What's cleared, under a line as the window's header is over the sections; a Cleared group once it has anything -->
+          <StackPanel IsVisible="{Binding Media.HasCleared}">
+            <Border Classes="mediadivider" />
+            <ItemsControl ItemsSource="{Binding Media.ClearedSections}" Margin="12,0,16,0" />
+          </StackPanel>
+        </StackPanel>
       </ScrollViewer>
 
       <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad"), once the tab has used it -->

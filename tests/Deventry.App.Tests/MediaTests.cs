@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
 using Deventry.App.Tests.Support;
@@ -193,6 +194,128 @@ public sealed class MediaTests
 
         Assert.Equal(("Expand User", false), (gallery.User.ToggleName, gallery.User.ShowsEmptyText));
         Assert.True(gallery.Agent.IsExpanded);
+        // The Cleared groups start folded, and show only once they have anything.
+        Assert.All(gallery.ClearedSections, s => Assert.Equal((false, false, true), (s.IsExpanded, s.IsShown, s.IsCleared)));
+        Assert.Equal(["User (Cleared)", "Agent (Cleared)"], gallery.ClearedSections.Select(s => s.Title));
+        Assert.True(gallery.User.IsShown);
+    }
+
+    [Fact]
+    public async Task A_tiles_X_moves_it_to_its_sections_Cleared_group_folded_and_back()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        await SendAsync(tab, "What's wrong in this?", TestImages.Png);
+        h.Transport.Emit(Wire.Tool(null, "t1", "mcp__playwright__browser_take_screenshot", []));
+        h.Transport.Emit(ImageResult("t1", parent: null));
+        await TabTestHarness.Eventually(() => tab.Media.User.Count == 1 && tab.Media.Agent.Count == 1, "the attachment and the screenshot");
+        var screenshot = InlineDispatcher.Read(() => tab.Media.Agent.Entries.Single());
+        Assert.Equal(("Clear Image", "Clear", "Move it to Agent (Cleared)"), (screenshot.ClearName, screenshot.ClearText, screenshot.ClearTip));
+        Assert.False(InlineDispatcher.Read(() => tab.Media.HasCleared));
+
+        InlineDispatcher.Run(() => tab.ToggleMediaClearedCommand.Execute(screenshot));
+
+        var media = tab.Media;
+        Assert.Empty(InlineDispatcher.Read(() => media.Agent.Entries.ToArray()));
+        Assert.Same(screenshot, InlineDispatcher.Read(() => media.AgentCleared.Entries.Single()));
+        Assert.Equal((true, false, true, false), (screenshot.IsCleared, media.AgentCleared.IsExpanded, media.AgentCleared.IsShown, media.UserCleared.IsShown));
+        Assert.Equal(("Restore Image", "Restore", "Move it back to Agent"), (screenshot.ClearName, screenshot.ClearText, screenshot.ClearTip));
+        // The user's attachment stays where it is; the window's icon stays, and says what's cleared.
+        Assert.Single(InlineDispatcher.Read(() => media.User.Entries.ToArray()));
+        Assert.Equal("User 1 · Agent 0 · Cleared 1", InlineDispatcher.Read(() => h.ToolWindow(ToolWindowKinds.Media).Tip));
+        Assert.True(InlineDispatcher.Read(() => h.ToolWindow(ToolWindowKinds.Media).IsAvailable));
+        // Kept with the tab.
+        Assert.StartsWith("agent:image:", Assert.Single(InlineDispatcher.Read(() => tab.State.ClearedMedia.ToArray())), StringComparison.Ordinal);
+
+        InlineDispatcher.Run(() => tab.ToggleMediaClearedCommand.Execute(screenshot));
+
+        Assert.Same(screenshot, InlineDispatcher.Read(() => media.Agent.Entries.Single()));
+        Assert.Empty(InlineDispatcher.Read(() => media.AgentCleared.Entries.ToArray()));
+        Assert.False(screenshot.IsCleared);
+        Assert.False(InlineDispatcher.Read(() => media.HasCleared));
+        Assert.Empty(InlineDispatcher.Read(() => tab.State.ClearedMedia.ToArray()));
+    }
+
+    [Fact]
+    public async Task The_image_window_opened_from_a_tile_clears_it_and_restores_it()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var bug = WriteFile(h, "shots/bug.png", TestImages.Png);
+        await SendAsync(tab, "See shots/bug.png");
+        await TabTestHarness.Eventually(() => tab.Media.User.Count == 1, "the file");
+        var entry = InlineDispatcher.Read(() => tab.Media.User.Entries.Single());
+        var shown = new List<ImageViewerViewModel>();
+        h.Shell.ShowImageWindow = shown.Add;
+
+        await InlineDispatcher.RunAsync(() => tab.OpenMediaCommand.ExecuteAsync(entry));
+        var viewer = Assert.Single(shown);
+        Assert.Equal((true, "Clear", "Move it to User (Cleared)"), (viewer.CanClear, viewer.ClearText, viewer.ClearTip));
+
+        InlineDispatcher.Run(() => viewer.ToggleClearedCommand.Execute(null));
+
+        Assert.Equal(bug, InlineDispatcher.Read(() => tab.Media.UserCleared.Entries.Single().Path));
+        Assert.Equal(("Restore", "Move it back to User"), (viewer.ClearText, viewer.ClearTip));
+        InlineDispatcher.Run(() => viewer.ToggleClearedCommand.Execute(null));
+        Assert.Same(entry, InlineDispatcher.Read(() => tab.Media.User.Entries.Single()));
+        Assert.Equal("Clear", viewer.ClearText);
+
+        // An image opened from anywhere else has no button for it.
+        InlineDispatcher.Run(() => h.Shell.ShowImage(entry.Image ?? ShellViewModel.ImageFile(bug, "shots/bug.png")!));
+        Assert.False(shown[^1].CanClear);
+        foreach (var opened in shown)
+        {
+            opened.Dispose();
+        }
+    }
+
+    [Fact]
+    public async Task A_cleared_file_Claude_writes_again_is_back_where_it_came_from()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var plot = WriteFile(h, "out/plot.png", TestImages.Png);
+        h.Transport.Emit(Wire.Tool(null, "t1", "Write", new JsonObject { ["file_path"] = plot, ["content"] = "" }));
+        h.Transport.Emit(Wire.Result("t1", "File created"));
+        await TabTestHarness.Eventually(() => tab.Media.Agent.Count == 1, "the plot");
+        InlineDispatcher.Run(() => tab.ToggleMediaClearedCommand.Execute(tab.Media.Agent.Entries.Single()));
+        Assert.Equal(1, InlineDispatcher.Read(() => tab.Media.AgentCleared.Count));
+
+        h.Transport.Emit(Wire.Tool(null, "t2", "Write", new JsonObject { ["file_path"] = plot, ["content"] = "" }));
+        h.Transport.Emit(Wire.Result("t2", "File written"));
+
+        await TabTestHarness.Eventually(() => tab.Media.Agent.Count == 1 && tab.Media.AgentCleared.Count == 0, "the plot back in Agent");
+        Assert.Equal("t2", Assert.IsType<ToolUseItem>(InlineDispatcher.Read(() => tab.Media.Agent.Entries.Single().Item)).ToolUseId);
+        Assert.Empty(InlineDispatcher.Read(() => tab.State.ClearedMedia.ToArray()));
+    }
+
+    [Fact]
+    public async Task What_is_cleared_stays_cleared_when_the_tab_is_restored_until_it_is_seen_again()
+    {
+        await using var h = new TabTestHarness();
+        h.WriteTranscript("s1",
+            Entry("user", "u1", null, "Take a screenshot"),
+            Entry("assistant", "a1", "u1", new JsonArray(new JsonObject
+            {
+                ["type"] = "tool_use", ["id"] = "t1", ["name"] = "mcp__playwright__browser_take_screenshot", ["input"] = new JsonObject(),
+            })),
+            Entry("user", "r1", "a1", new JsonArray(ScreenshotBlock("t1"))));
+        // As the tab kept it: the screenshot's bytes (DESIGN.md §18, "Media", "Clearing").
+        var cleared = "agent:image:" + Convert.ToHexString(SHA256.HashData(TestImages.Png));
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "s1", ClearedMedia = [cleared] }];
+        h.Shell.Restore(null);
+        h.Start();
+        var tab = h.Shell.AllTabs.Single();
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled && tab.Media.AgentCleared.Count == 1, "the restored tab's cleared screenshot");
+
+        Assert.Empty(InlineDispatcher.Read(() => tab.Media.Agent.Entries.ToArray()));
+        Assert.True(InlineDispatcher.Read(() => tab.Media.AgentCleared.Entries.Single().IsCleared));
+
+        // The same screenshot taken again: it's back in Agent, and no longer kept as cleared.
+        h.Transport.Emit(Wire.Tool(null, "t2", "mcp__playwright__browser_take_screenshot", []));
+        h.Transport.Emit(ImageResult("t2", parent: null));
+        await TabTestHarness.Eventually(() => tab.Media.Agent.Count == 1 && tab.Media.AgentCleared.Count == 0, "the screenshot back in Agent");
+        Assert.Empty(InlineDispatcher.Read(() => tab.State.ClearedMedia.ToArray()));
     }
 
     private static async Task SendAsync(TabViewModel tab, string text, byte[]? image = null)
@@ -224,19 +347,22 @@ public sealed class MediaTests
         ["message"] = new JsonObject
         {
             ["role"] = "user",
-            ["content"] = new JsonArray(new JsonObject
-            {
-                ["type"] = "tool_result",
-                ["tool_use_id"] = toolUseId,
-                ["content"] = new JsonArray(new JsonObject
-                {
-                    ["type"] = "image",
-                    ["source"] = new JsonObject { ["type"] = "base64", ["data"] = Convert.ToBase64String(TestImages.Png), ["media_type"] = "image/png" },
-                }),
-            }),
+            ["content"] = new JsonArray(ScreenshotBlock(toolUseId)),
         },
         ["parent_tool_use_id"] = parent,
     }.ToJsonString();
+
+    /// <summary>The <c>tool_result</c> block of a screenshot.</summary>
+    private static JsonObject ScreenshotBlock(string toolUseId) => new()
+    {
+        ["type"] = "tool_result",
+        ["tool_use_id"] = toolUseId,
+        ["content"] = new JsonArray(new JsonObject
+        {
+            ["type"] = "image",
+            ["source"] = new JsonObject { ["type"] = "base64", ["data"] = Convert.ToBase64String(TestImages.Png), ["media_type"] = "image/png" },
+        }),
+    };
 
     private static string Entry(string type, string uuid, string? parent, JsonNode content) => new JsonObject
     {
