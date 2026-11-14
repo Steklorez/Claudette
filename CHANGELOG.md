@@ -6,6 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-14
+
 ### Added
 
 - **Unload idle tabs to save memory.** Settings → General → **Unload idle tabs to save memory** stops Claude Code in a tab left idle for an hour, or as long as you choose. The tab and its conversation stay as they are, and your next message picks the session up where it was. A tab where Claude is working, waiting for you, or still running something it started, such as a dev server, stays loaded. Off by default. See [Closing and restoring tabs](https://deventry.app/tabs/closing-and-restoring/#settings).
@@ -363,7 +365,8 @@ The first public release.
 - The Standard and Claude styles, in light and dark, with compact density, zoom, reduced motion and screen readers' announcements.
 - Packages for Windows (MSIX) and macOS (`.dmg`), for x64 and Arm.
 
-[Unreleased]: https://github.com/dotBunny/Deventry/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/dotBunny/Deventry/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/dotBunny/Deventry/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/dotBunny/Deventry/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/dotBunny/Deventry/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/dotBunny/Deventry/compare/v0.5.1...v0.6.0
