@@ -478,6 +478,12 @@ public sealed class TabState
     public List<string> CollapsedChangedFolders { get; set; } = [];
 
     /// <summary>
+    /// What's cleared in the Media window (DESIGN.md §18, "Media", "Clearing"): <c>user:</c> or <c>agent:</c> and the
+    /// entry's key, its file or its bytes. Oldest first; a key leaves it when the entry is put back, or seen again.
+    /// </summary>
+    public List<string> ClearedMedia { get; set; } = [];
+
+    /// <summary>
     /// A usage limit stopped the tab's last turn, and it waits for the limit to reset (DESIGN.md §6, "Continuing after a
     /// limit resets"), so a restart keeps waiting.
     /// </summary>

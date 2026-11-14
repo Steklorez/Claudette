@@ -59,6 +59,64 @@ public class MediaUiTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public async Task A_tiles_X_clears_it_under_a_line_into_a_folded_group_and_its_arrow_restores_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1200, 800);
+        Assert.True(tab.AddImage(TestImages.Png, "Pasted image"));
+        tab.ComposerText = "What's wrong here?";
+        await tab.SendCommand.ExecuteAsync(null);
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "assistant",
+            ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject
+            {
+                ["type"] = "tool_use", ["id"] = "t1", ["name"] = "mcp__playwright__browser_take_screenshot", ["input"] = new JsonObject(),
+            }) },
+        });
+        h.Transport.Emit(ScreenshotResult("t1"));
+        await UiText.SettleUntilAsync(window, () => tab.Media.User.Count == 1 && tab.Media.Agent.Count == 1, "the media");
+        h.ShowToolWindow(ToolWindowKinds.Media);
+        UiText.Settle(window);
+        Assert.False(Divider(window).IsEffectivelyVisible);
+
+        // There, but not seen, until the pointer is over its tile or it has the focus.
+        var clear = ClearButton(window, "Clear Image");
+        Assert.Equal(0, clear.Opacity);
+        // Round, with its outline, as an attached image's X is in the composer.
+        Assert.Equal((new Avalonia.CornerRadius(9), new Avalonia.Thickness(1)), (clear.CornerRadius, clear.BorderThickness));
+        clear.Focus();
+        UiText.Settle(window);
+        Assert.Equal(1, clear.Opacity);
+
+        clear.Command!.Execute(clear.CommandParameter);
+        UiText.Settle(window);
+
+        // Under the line, in Agent (Cleared), folded.
+        Assert.True(Divider(window).IsEffectivelyVisible);
+        Assert.Equal(["Open Attached image"], Tiles(window).Select(AutomationProperties.GetName));
+        Assert.False(Header(window, "Expand User (Cleared)", visible: false).IsEffectivelyVisible);
+        Header(window, "Expand Agent (Cleared)").Command!.Execute(null);
+        UiText.Settle(window);
+        Assert.Equal(["Open Attached image", "Open Image"], Tiles(window).Select(AutomationProperties.GetName));
+
+        var restore = ClearButton(window, "Restore Image");
+        restore.Command!.Execute(restore.CommandParameter);
+        UiText.Settle(window);
+
+        Assert.False(Divider(window).IsEffectivelyVisible);
+        Assert.Equal(["Open Attached image", "Open Image"], Tiles(window).Select(AutomationProperties.GetName));
+        window.Close();
+    }
+
+    private static Button ClearButton(Window window, string name) =>
+        window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("mediaclear") && b.IsEffectivelyVisible && AutomationProperties.GetName(b) == name);
+
+    private static Border Divider(Window window) =>
+        window.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("mediadivider"));
+
     private static List<Button> StripIcons(Window window, string title) =>
         [.. window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("stripicon") && b.IsEffectivelyVisible && AutomationProperties.GetName(b) == title)];
 
@@ -67,8 +125,9 @@ public class MediaUiTests
 
     private static Image TileImage(Button tile) => tile.GetVisualDescendants().OfType<Image>().Single();
 
-    private static Button Header(Window window, string name) =>
-        window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("mediasection") && AutomationProperties.GetName(b) == name);
+    private static Button Header(Window window, string name, bool visible = true) =>
+        window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("mediasection") && AutomationProperties.GetName(b) == name
+            && (!visible || b.IsEffectivelyVisible));
 
     private static string ScreenshotResult(string toolUseId) => new JsonObject
     {

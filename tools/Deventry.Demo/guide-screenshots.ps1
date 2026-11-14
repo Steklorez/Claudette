@@ -181,7 +181,7 @@ if (Test-Wanted 'getting-started/sign-in') {
 
 # As the demo is.
 if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
-    'conversation/scratch-pad', 'conversation/media', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
+    'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
     'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'away/remote-clients', 'away/remote-clients-discord',
     'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
     Use-Deventry @{} {
@@ -408,6 +408,22 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
             Wait-Settled $window 1000
             $panel = Find-ByText $window 'Tool window at the right'
             Save-Rect $window $path (Get-PanelRect (Find-Lowest $panel)) 0
+        }
+
+        # The same with the sound cleared: under a line, Agent (Cleared) opened on it, and a chart's X showing, as it does
+        # under the pointer or with the focus. Then the sound restored, as it was.
+        Shot 'conversation/media-cleared' {
+            param($path)
+            Show-SidePage 'Pool particle emitters' 'Media' 'Media'
+            Invoke-Element (Find-ByText $window 'Clear burst.wav') "burst.wav's X"
+            Wait-Until { Find-ByText $window 'Expand Agent (Cleared)' -Optional } 'Agent (Cleared)' 20
+            Invoke-ByText $window 'Expand Agent (Cleared)'
+            Wait-Until { Find-ByText $window 'Restore burst.wav' -Optional } 'the cleared sound' 20
+            Send-ElementCommand 'focus' (Find-ByText $window 'Clear frame-times-before.png') | Out-Null
+            Wait-Settled $window 1000
+            $panel = Find-ByText $window 'Tool window at the right'
+            Save-Rect $window $path (Get-PanelRect (Find-Lowest $panel)) 0
+            Invoke-ByText $window 'Restore burst.wav'
         }
 
         # Last, as it takes the layout with it: the group's Files tab, with a changed file open to show Claude's marks.

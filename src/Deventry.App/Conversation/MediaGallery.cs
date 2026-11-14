@@ -94,33 +94,65 @@ public sealed partial class MediaEntry : ObservableObject
     /// <summary>"Open bug.png", its tile's name for a screen reader.</summary>
     public string OpenName => $"Open {Name}";
 
+    /// <summary>Whose it is: the section it's in, or that its Cleared group is under.</summary>
+    public MediaSource Source { get; internal set; }
+
+    /// <summary>In its section's Cleared group (DESIGN.md §18, "Media", "Clearing").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ClearName), nameof(ClearTip), nameof(ClearText))]
+    public partial bool IsCleared { get; internal set; }
+
+    /// <summary>"Clear bug.png" or "Restore bug.png": its tile's X, for a screen reader.</summary>
+    public string ClearName => $"{ClearText} {Name}";
+
+    /// <summary><b>Clear</b>, or <b>Restore</b> once it's cleared: its menu's and the image window's button.</summary>
+    public string ClearText => IsCleared ? "Restore" : "Clear";
+
+    /// <summary>Where clearing or restoring it moves it to, for its X's and the image window's tooltips.</summary>
+    public string ClearTip => IsCleared ? $"Move it back to {SourceTitle}" : $"Move it to {SourceTitle} (Cleared)";
+
+    private string SourceTitle => Source == MediaSource.User ? "User" : "Agent";
+
     /// <summary>Its tile's tooltip: its name, where it came from and when, and its file.</summary>
     public string Tip { get; internal set; } = "";
 }
 
-/// <summary>A section of the Media window, the user's or the agent's (DESIGN.md §18, "Media"), which folds to its header.</summary>
+/// <summary>
+/// A section of the Media window, the user's or the agent's, or what's cleared from it (DESIGN.md §18, "Media"), which
+/// folds to its header.
+/// </summary>
 public sealed partial class MediaSection : ObservableObject
 {
     private readonly Dictionary<string, MediaEntry> _byKey = new(StringComparer.Ordinal);
 
-    internal MediaSection(MediaSource source, string title, string emptyText)
+    internal MediaSection(MediaSource source, string title, string emptyText, bool cleared = false)
     {
         Source = source;
         Title = title;
         EmptyText = emptyText;
+        IsCleared = cleared;
+        // A Cleared group starts folded.
+        IsExpanded = !cleared;
         Entries.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(Count));
             OnPropertyChanged(nameof(CountText));
             OnPropertyChanged(nameof(IsEmpty));
             OnPropertyChanged(nameof(ShowsEmptyText));
+            OnPropertyChanged(nameof(IsShown));
         };
     }
 
     public MediaSource Source { get; }
 
-    /// <summary><i>User</i> or <i>Agent</i>.</summary>
+    /// <summary><i>User</i> or <i>Agent</i>, or <i>User (Cleared)</i> or <i>Agent (Cleared)</i>.</summary>
     public string Title { get; }
+
+    /// <summary>What's cleared from the user's or the agent's section (DESIGN.md §18, "Media", "Clearing").</summary>
+    public bool IsCleared { get; }
+
+    /// <summary>User and Agent always; a Cleared group once it has anything.</summary>
+    public bool IsShown => !IsCleared || !IsEmpty;
 
     /// <summary>What it says while it has nothing.</summary>
     public string EmptyText { get; }
@@ -171,6 +203,21 @@ public sealed partial class MediaSection : ObservableObject
         return true;
     }
 
+    /// <summary>What's here for <paramref name="key"/>, its file or its bytes.</summary>
+    internal MediaEntry? Find(string key) => _byKey.GetValueOrDefault(key);
+
+    /// <summary>Whether <paramref name="entry"/> is here, rather than a newer one for its file or image.</summary>
+    internal bool Contains(MediaEntry entry) => _byKey.TryGetValue(entry.Key, out var here) && here == entry;
+
+    internal void Remove(MediaEntry entry)
+    {
+        if (Contains(entry))
+        {
+            _byKey.Remove(entry.Key);
+            Entries.Remove(entry);
+        }
+    }
+
     internal void Clear()
     {
         _byKey.Clear();
@@ -184,10 +231,14 @@ public sealed partial class MediaSection : ObservableObject
 /// a tool's result (a Read of an image, a PDF's pages, an MCP tool's screenshot), and the media files a tool wrote, read or
 /// ran a command on, or a reply names, Claude's and its subagents'. <see cref="ConversationBuilder"/> tells it as the
 /// conversation is built, read back, cleared and rewound. A file named is looked for off the UI thread, only where that
-/// can't reach another machine (<see cref="ReplyFileFinder"/>), and counts once it's there.
+/// can't reach another machine (<see cref="ReplyFileFinder"/>), and counts once it's there. What the user clears goes to
+/// its section's Cleared group, and stays there, kept with the tab, until they restore it or it's seen again.
 /// </summary>
 public sealed partial class MediaGallery : ObservableObject
 {
+    /// <summary>How many cleared files and images a tab remembers: the oldest are forgotten first.</summary>
+    internal const int MostCleared = 1000;
+
     // The conversation it belongs to was cleared since a file was looked for, or a thumbnail made: drop what comes back.
     private int _generation;
     private long _order;
@@ -197,12 +248,16 @@ public sealed partial class MediaGallery : ObservableObject
     {
         User = new MediaSection(MediaSource.User, "User", "Images you attach, and the media files your messages name.");
         Agent = new MediaSection(MediaSource.Agent, "Agent", "Images Claude's tools see, and the media files Claude makes, reads or names.");
+        UserCleared = new MediaSection(MediaSource.User, "User (Cleared)", "", cleared: true);
+        AgentCleared = new MediaSection(MediaSource.Agent, "Agent (Cleared)", "", cleared: true);
         Sections = [User, Agent];
-        foreach (var section in Sections)
+        ClearedSections = [UserCleared, AgentCleared];
+        foreach (var section in Sections.Concat(ClearedSections))
         {
             section.Entries.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(HasAnything));
+                OnPropertyChanged(nameof(HasCleared));
                 OnPropertyChanged(nameof(Tip));
             };
         }
@@ -212,14 +267,39 @@ public sealed partial class MediaGallery : ObservableObject
 
     public MediaSection Agent { get; }
 
+    /// <summary>What's cleared from <see cref="User"/> (DESIGN.md §18, "Media", "Clearing").</summary>
+    public MediaSection UserCleared { get; }
+
+    /// <summary>What's cleared from <see cref="Agent"/>.</summary>
+    public MediaSection AgentCleared { get; }
+
     /// <summary>The user's, then the agent's.</summary>
     public IReadOnlyList<MediaSection> Sections { get; }
 
-    /// <summary>The window's icon shows while there's anything (DESIGN.md §3, "Tool windows").</summary>
-    public bool HasAnything => User.Count + Agent.Count > 0;
+    /// <summary>Under them, past a line: what's cleared from the user's, then from the agent's.</summary>
+    public IReadOnlyList<MediaSection> ClearedSections { get; }
 
-    /// <summary>What the icon's tip says after the title: <i>User 2 · Agent 5</i>.</summary>
-    public string Tip => string.Create(CultureInfo.CurrentCulture, $"User {User.Count} · Agent {Agent.Count}");
+    /// <summary>The window's icon shows while there's anything (DESIGN.md §3, "Tool windows"), cleared or not.</summary>
+    public bool HasAnything => User.Count + Agent.Count + ClearedCount > 0;
+
+    /// <summary>Anything is cleared: the line and the Cleared groups show.</summary>
+    public bool HasCleared => ClearedCount > 0;
+
+    private int ClearedCount => UserCleared.Count + AgentCleared.Count;
+
+    /// <summary>What the icon's tip says after the title: <i>User 2 · Agent 5</i>, and <i>· Cleared 3</i> with any.</summary>
+    public string Tip => HasCleared
+        ? string.Create(CultureInfo.CurrentCulture, $"User {User.Count} · Agent {Agent.Count} · Cleared {ClearedCount}")
+        : string.Create(CultureInfo.CurrentCulture, $"User {User.Count} · Agent {Agent.Count}");
+
+    /// <summary>
+    /// What's cleared, kept with the tab (<see cref="Core.Settings.TabState.ClearedMedia"/>): <c>user:</c> or
+    /// <c>agent:</c> and an entry's key, oldest first.
+    /// </summary>
+    public List<string> Cleared { get; set; } = [];
+
+    /// <summary><see cref="Cleared"/> changed, for the tab to save it.</summary>
+    public Action? ClearedChanged { get; set; }
 
     /// <summary>Says what "today" is in a tile's tooltip.</summary>
     public TimeProvider? Time { get; set; }
@@ -242,11 +322,48 @@ public sealed partial class MediaGallery : ObservableObject
     /// <summary>The section for <paramref name="source"/>.</summary>
     public MediaSection SectionOf(MediaSource source) => source == MediaSource.User ? User : Agent;
 
+    /// <summary>The Cleared group for <paramref name="source"/>.</summary>
+    public MediaSection ClearedOf(MediaSource source) => source == MediaSource.User ? UserCleared : AgentCleared;
+
+    /// <summary>
+    /// A tile's X, its menu's <b>Clear</b> or <b>Restore</b>, and the image window's button (DESIGN.md §18, "Media",
+    /// "Clearing"): moves <paramref name="entry"/> to its section's Cleared group, or back, and remembers it with the tab.
+    /// One seen again since, and so no longer here, stays as it is.
+    /// </summary>
+    public void ToggleCleared(MediaEntry entry)
+    {
+        var from = entry.IsCleared ? ClearedOf(entry.Source) : SectionOf(entry.Source);
+        if (!from.Contains(entry))
+        {
+            return;
+        }
+        from.Remove(entry);
+        entry.IsCleared = !entry.IsCleared;
+        (entry.IsCleared ? ClearedOf(entry.Source) : SectionOf(entry.Source)).Put(entry);
+        SetCleared(ClearedKey(entry.Source, entry.Key), entry.IsCleared);
+    }
+
+    private void SetCleared(string key, bool cleared)
+    {
+        Cleared.RemoveAll(k => k == key);
+        if (cleared)
+        {
+            Cleared.Add(key);
+            if (Cleared.Count > MostCleared)
+            {
+                Cleared.RemoveRange(0, Cleared.Count - MostCleared);
+            }
+        }
+        ClearedChanged?.Invoke();
+    }
+
+    private static string ClearedKey(MediaSource source, string key) => (source == MediaSource.User ? "user:" : "agent:") + key;
+
     /// <summary>
     /// The user's message: the images attached to it (DESIGN.md §5, "Attachments"), then the media files it names, in
-    /// <paramref name="named"/>.
+    /// <paramref name="named"/>. <paramref name="live"/> is false for one read back from the transcript.
     /// </summary>
-    internal void AddMessage(UserMessageItem message, IReadOnlyList<ReplyFileReference> named, DateTimeOffset? at)
+    internal void AddMessage(UserMessageItem message, IReadOnlyList<ReplyFileReference> named, DateTimeOffset? at, bool live = true)
     {
         var images = message.Images;
         var first = Reserve(images.Count + named.Count);
@@ -254,28 +371,28 @@ public sealed partial class MediaGallery : ObservableObject
         {
             var name = images.Count == 1 ? "Attached image" : string.Create(CultureInfo.InvariantCulture, $"Attached image {i + 1}");
             var image = new ToolImage(images[i], "Your message", name, ToolImages.SaveName("attached-image", images[i].MediaType), null, null);
-            AddImage(MediaSource.User, image, "Attached", message, at, first - i);
+            AddImage(MediaSource.User, image, "Attached", message, at, first - i, live);
         }
-        AddNamed(MediaSource.User, named, "Named in your message", message, at, first - images.Count);
+        AddNamed(MediaSource.User, named, "Named in your message", message, at, first - images.Count, live);
     }
 
     /// <summary>
     /// A tool call whose result is back: the images in it (DESIGN.md §18, "Images from Claude's tools"), then the media
     /// files in <paramref name="named"/>, which it read, wrote or ran a command on.
     /// </summary>
-    internal void AddToolResult(ToolUseItem tool, IReadOnlyList<ReplyFileReference> named)
+    internal void AddToolResult(ToolUseItem tool, IReadOnlyList<ReplyFileReference> named, bool live = true)
     {
         var first = Reserve(tool.Images.Count + named.Count);
         for (var i = 0; i < tool.Images.Count; i++)
         {
-            AddImage(MediaSource.Agent, tool.Images[i], tool.Name, tool, tool.StartedAt, first - i);
+            AddImage(MediaSource.Agent, tool.Images[i], tool.Name, tool, tool.StartedAt, first - i, live);
         }
-        AddNamed(MediaSource.Agent, named, tool.Name, tool, tool.StartedAt, first - tool.Images.Count);
+        AddNamed(MediaSource.Agent, named, tool.Name, tool, tool.StartedAt, first - tool.Images.Count, live);
     }
 
     /// <summary>A whole reply, Claude's or a subagent's: the media files it names, in <paramref name="named"/>.</summary>
-    internal void AddReply(AssistantTextItem reply, IReadOnlyList<ReplyFileReference> named) =>
-        AddNamed(MediaSource.Agent, named, "Named in a reply", reply, reply.SentAt, Reserve(named.Count));
+    internal void AddReply(AssistantTextItem reply, IReadOnlyList<ReplyFileReference> named, bool live = true) =>
+        AddNamed(MediaSource.Agent, named, "Named in a reply", reply, reply.SentAt, Reserve(named.Count), live);
 
     /// <summary>
     /// Places for <paramref name="count"/> entries from one message, call or reply, after everything before it: the first
@@ -291,7 +408,7 @@ public sealed partial class MediaGallery : ObservableObject
     /// The media files <paramref name="references"/> name, each once it's found on disk, at the places from
     /// <paramref name="first"/> down, however long the looking takes. <paramref name="origin"/> says where they're from.
     /// </summary>
-    private void AddNamed(MediaSource source, IReadOnlyList<ReplyFileReference> references, string origin, ConversationItem item, DateTimeOffset? at, long first)
+    private void AddNamed(MediaSource source, IReadOnlyList<ReplyFileReference> references, string origin, ConversationItem item, DateTimeOffset? at, long first, bool live)
     {
         if (references.Count == 0 || FindFile is not { } find)
         {
@@ -309,11 +426,11 @@ public sealed partial class MediaGallery : ObservableObject
             {
                 continue;
             }
-            _ = AddFoundAsync(finding, source, origin, item, at, first - i, generation);
+            _ = AddFoundAsync(finding, source, origin, item, at, first - i, generation, live);
         }
     }
 
-    private async Task AddFoundAsync(Task<IReadOnlyList<string>> finding, MediaSource source, string origin, ConversationItem item, DateTimeOffset? at, long order, int generation)
+    private async Task AddFoundAsync(Task<IReadOnlyList<string>> finding, MediaSource source, string origin, ConversationItem item, DateTimeOffset? at, long order, int generation, bool live)
     {
         string? path;
         try
@@ -336,18 +453,18 @@ public sealed partial class MediaGallery : ObservableObject
                 return;
             }
             var entry = new MediaEntry(kind, System.IO.Path.GetFileName(path), origin, path, null, item, at, PathKey(path), order);
-            if (Put(source, entry) && kind == MediaKind.Image && ViewerImages.HasExtension(path) && ThumbnailOfFile is { } make)
+            if (Put(source, entry, live) && kind == MediaKind.Image && ViewerImages.HasExtension(path) && ThumbnailOfFile is { } make)
             {
                 MakeThumbnail(entry, () => make(path));
             }
         });
     }
 
-    private void AddImage(MediaSource source, ToolImage image, string origin, ConversationItem item, DateTimeOffset? at, long order)
+    private void AddImage(MediaSource source, ToolImage image, string origin, ConversationItem item, DateTimeOffset? at, long order, bool live)
     {
         var key = image.FilePath is { } path ? PathKey(path) : BytesKey(image.Image.Data);
         var entry = new MediaEntry(MediaKind.Image, image.Name, origin, image.FilePath, image, item, at, key, order);
-        if (!Put(source, entry))
+        if (!Put(source, entry, live))
         {
             return;
         }
@@ -361,10 +478,36 @@ public sealed partial class MediaGallery : ObservableObject
         }
     }
 
-    private bool Put(MediaSource source, MediaEntry entry)
+    /// <summary>
+    /// Puts <paramref name="entry"/> in its section, or its Cleared group if it's cleared, in place of what's there for its
+    /// file or image, unless that's newer. Read back from the transcript, a cleared one stays cleared: everything read back
+    /// came before it was cleared, as anything after would have restored it. Seen again live, it's restored.
+    /// </summary>
+    private bool Put(MediaSource source, MediaEntry entry, bool live)
     {
         entry.Tip = TipOf(entry);
-        return SectionOf(source).Put(entry);
+        entry.Source = source;
+        var shown = SectionOf(source);
+        var cleared = ClearedOf(source);
+        var known = shown.Find(entry.Key) ?? cleared.Find(entry.Key);
+        if (known is not null && known.Order > entry.Order)
+        {
+            return false;
+        }
+        var key = ClearedKey(source, entry.Key);
+        var isCleared = Cleared.Contains(key);
+        if (isCleared && live)
+        {
+            SetCleared(key, false);
+            isCleared = false;
+        }
+        if (known is not null)
+        {
+            shown.Remove(known);
+            cleared.Remove(known);
+        }
+        entry.IsCleared = isCleared;
+        return (isCleared ? cleared : shown).Put(entry);
     }
 
     /// <summary>"bug.png", then "Read · 14:02", then where its file is.</summary>
@@ -406,11 +549,14 @@ public sealed partial class MediaGallery : ObservableObject
         }, CancellationToken.None, TaskContinuationOptions.LongRunning, TaskScheduler.Default);
     }
 
-    /// <summary>The conversation was cleared, or rewound and read back: it starts again.</summary>
+    /// <summary>
+    /// The conversation was cleared, or rewound and read back: it starts again. What's cleared is kept, for what's read
+    /// back.
+    /// </summary>
     internal void Clear()
     {
         _generation++;
-        foreach (var section in Sections)
+        foreach (var section in Sections.Concat(ClearedSections))
         {
             section.Clear();
         }

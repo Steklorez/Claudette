@@ -344,6 +344,8 @@ public sealed partial class TabViewModel
             // A copy has the same changes, so keeps their marks (DESIGN.md §8, "Reviewed").
             ReviewedFiles = sessionId is null ? [] : Copy(State.ReviewedFiles) ?? [],
             AllFilesReviewed = sessionId is not null && State.AllFilesReviewed,
+            // And the same media, so what's cleared stays cleared (DESIGN.md §18, "Media", "Clearing").
+            ClearedMedia = sessionId is null ? [] : [.. State.ClearedMedia],
             // In the same worktree, with the same extra folders (DESIGN.md §4, "Worktree tabs").
             WorktreeOf = State.WorktreeOf,
             NewWorktree = State.NewWorktree,

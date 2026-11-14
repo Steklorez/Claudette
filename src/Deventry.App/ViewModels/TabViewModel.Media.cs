@@ -26,6 +26,9 @@ public sealed partial class TabViewModel
         Media.ThumbnailOf = MediaThumbnails.FromBytes;
         Media.ThumbnailOfFile = MediaThumbnails.FromFile;
         Media.ShownPath = ShownPath;
+        // What's cleared stays cleared with the tab (DESIGN.md §18, "Media", "Clearing").
+        Media.Cleared = State.ClearedMedia;
+        Media.ClearedChanged = _services.SaveState;
     }
 
     /// <summary>
@@ -37,7 +40,7 @@ public sealed partial class TabViewModel
     {
         if (entry?.Image is { } image)
         {
-            _shell.ShowImage(image);
+            _shell.ShowImage(image, entry, Media.ToggleCleared);
             return;
         }
         if (entry?.Path is not { } path)
@@ -47,7 +50,7 @@ public sealed partial class TabViewModel
         var shown = ShownPath(path);
         if (entry.IsImage && ViewerImages.HasExtension(path) && await Task.Run(() => ShellViewModel.ImageFile(path, shown)) is { } file)
         {
-            _shell.ShowImage(file);
+            _shell.ShowImage(file, entry, Media.ToggleCleared);
             return;
         }
         await OpenMediaInSystemAsync(entry);
@@ -70,6 +73,19 @@ public sealed partial class TabViewModel
             case { } item:
                 ScrollTo(item);
                 break;
+        }
+    }
+
+    /// <summary>
+    /// A tile's X, and its menu's <b>Clear</b> or <b>Restore</b> (DESIGN.md §18, "Media", "Clearing"): to its section's
+    /// Cleared group, or back.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleMediaCleared(MediaEntry? entry)
+    {
+        if (entry is not null)
+        {
+            Media.ToggleCleared(entry);
         }
     }
 

@@ -318,7 +318,7 @@ public sealed class ConversationBuilder
             Mentioned = mentioned ?? [],
             SubagentNote = subagentNote?.Note,
             SubagentNoteText = subagentNote?.Line,
-        }, Now());
+        }, Now(), live: !IsReplaying);
 
     /// <summary>
     /// A prompt from a transcript, sent at <paramref name="sentAt"/>: null when its entry has no time. Its entry's
@@ -326,12 +326,12 @@ public sealed class ConversationBuilder
     /// </summary>
     public UserMessageItem ReplayUserMessage(string text, IReadOnlyList<MessageImage> images, DateTimeOffset? sentAt, string? uuid = null, string? parentUuid = null)
     {
-        var item = AddUser(new UserMessageItem(text) { Images = images, Uuid = uuid, ResumeAt = parentUuid ?? _lastEntryUuid }, sentAt);
+        var item = AddUser(new UserMessageItem(text) { Images = images, Uuid = uuid, ResumeAt = parentUuid ?? _lastEntryUuid }, sentAt, live: false);
         _lastEntryUuid = uuid ?? _lastEntryUuid;
         return item;
     }
 
-    private UserMessageItem AddUser(UserMessageItem item, DateTimeOffset? sentAt)
+    private UserMessageItem AddUser(UserMessageItem item, DateTimeOffset? sentAt, bool live)
     {
         _blocks.Close();
         _blocks.ForgetLastText();
@@ -346,7 +346,7 @@ public sealed class ConversationBuilder
         // The user's media (DESIGN.md §18, "Media"): not a check-in's, a continue's or a thread's, which Deventry sent.
         if (_media is not null && !item.IsCheckIn && !item.IsAutoContinue && !item.IsFromThread)
         {
-            _media.AddMessage(item, MediaFiles.InText(item.Text), sentAt);
+            _media.AddMessage(item, MediaFiles.InText(item.Text), sentAt, live);
         }
         return item;
     }
@@ -522,7 +522,7 @@ public sealed class ConversationBuilder
                     Label = origin.Name is { Length: > 0 } sender ? $"From the session {sender}" : "From another session",
                     Uuid = peer.Message.Uuid,
                     ResumeAt = _lastEntryUuid,
-                }, Now());
+                }, Now(), live: !IsReplaying);
                 _lastEntryUuid = peer.Message.Uuid ?? _lastEntryUuid;
                 break;
 
@@ -707,7 +707,7 @@ public sealed class ConversationBuilder
                     if (_media is not null && _blocks.LastText is { } whole)
                     {
                         // The media files a reply names (DESIGN.md §18, "Media"), once it's whole.
-                        _media.AddReply(whole, MediaFiles.InText(text.Text));
+                        _media.AddReply(whole, MediaFiles.InText(text.Text), live: !IsReplaying);
                     }
                     break;
 
@@ -962,7 +962,7 @@ public sealed class ConversationBuilder
                 [new ReplyFileReference(path, path)],
             _ => [],
         };
-        _media.AddToolResult(tool, named);
+        _media.AddToolResult(tool, named, live: !IsReplaying);
     }
 
     /// <summary>

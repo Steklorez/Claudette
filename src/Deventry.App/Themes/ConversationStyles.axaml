@@ -1293,6 +1293,38 @@
     <Setter Property="HorizontalAlignment" Value="Center" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
+  <!-- A tile's X, which clears it, or its arrow, which restores it (DESIGN.md §18, "Media", "Clearing"): round at the
+       thumbnail's top-right, as an attached image's X is in the composer, there while the pointer is over the tile or it
+       has the focus. Hidden by its opacity rather than IsVisible, so the keyboard still reaches it. -->
+  <Style Selector="Button.mediaclear">
+    <Setter Property="Padding" Value="4" />
+    <Setter Property="Margin" Value="3" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="CornerRadius" Value="9" />
+    <Setter Property="Background" Value="{DynamicResource ComposerBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+  <Style Selector="Panel.mediatileframe:pointerover Button.mediaclear, Panel.mediatileframe:focus-within Button.mediaclear">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="Button.mediaclear Path">
+    <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="StrokeThickness" Value="1.4" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Width" Value="7" />
+    <Setter Property="Height" Value="7" />
+    <Setter Property="Stretch" Value="Uniform" />
+  </Style>
+  <!-- The line over what's cleared, as the window's header has under it -->
+  <Style Selector="Border.mediadivider">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+  </Style>
   <!-- The running tasks list (DESIGN.md §5, "Running tasks"), under the chip in the composer bar -->
   <Style Selector="StackPanel.tasklist">
     <Setter Property="Spacing" Value="2" />
