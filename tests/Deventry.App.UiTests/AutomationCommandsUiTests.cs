@@ -138,6 +138,17 @@ public class AutomationCommandsUiTests
     }
 
     [AvaloniaFact]
+    public void The_keyboard_focus_goes_to_a_control_found_by_its_id()
+    {
+        var page = Open();
+
+        Assert.True(page.Run(new() { Verb = "focus", Window = MainHandle, Id = "Box" }).Ok);
+
+        Assert.True(page.Box.IsFocused);
+        page.Window.Close();
+    }
+
+    [AvaloniaFact]
     public void A_right_click_opens_the_context_menu_whose_item_is_then_clicked_in_its_popup()
     {
         var page = Open();

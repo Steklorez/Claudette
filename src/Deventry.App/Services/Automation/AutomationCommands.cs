@@ -85,6 +85,7 @@ public sealed class AutomationCommands
                 "toggle" => Toggle(Find(request), request.On ?? throw new AutomationException("toggle needs on: true or false.")),
                 "settext" => SetText(Find(request), request.Text ?? ""),
                 "show" => Show(Find(request)),
+                "focus" => Focus(Find(request)),
                 "scroll" => Scroll(Find(request), request.Lines),
                 "hover" => Tip(Find(request), true),
                 "unhover" => Tip(Find(request), false),
@@ -377,6 +378,14 @@ public sealed class AutomationCommands
         target.BringIntoView();
         return AutomationResponse.Done();
     }
+
+    /// <summary>
+    /// Gives the control the keyboard focus, as a click would, without the focus ring Tab shows or bringing its window
+    /// forward: what shows only under the pointer or with the focus, such as a Media tile's X, shows as it would under
+    /// the pointer.
+    /// </summary>
+    private static AutomationResponse Focus(Control target) =>
+        target.Focus() ? AutomationResponse.Done() : throw new AutomationException($"'{Describe(target)}' can't take the focus.");
 
     /// <summary>Scrolls the scroll viewer that is the control, or is around it, by lines: down, or up for fewer than none.</summary>
     private static AutomationResponse Scroll(Control target, int lines)
