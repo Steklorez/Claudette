@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Deventry.Core.Claude;
+using Deventry.Core.Files;
 using Deventry.Core.Json;
 using Deventry.Core.Protocol;
 
@@ -98,7 +99,7 @@ public static partial class ClaudeTaskFolder
                 {
                     continue;
                 }
-                if (JsonTree.ParseObject(File.ReadAllText(file)) is not { } entry)
+                if (JsonTree.ParseObject(SharedFile.ReadAllText(file)) is not { } entry)
                 {
                     return null;
                 }

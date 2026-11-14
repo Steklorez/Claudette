@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Deventry.Core.Files;
 using Deventry.Core.Json;
 
 namespace Deventry.Core.Claude;
@@ -41,7 +42,7 @@ public static class ClaudeSettingsFiles
         try
         {
             return File.Exists(file)
-                ? JsonTree.Parse(File.ReadAllText(file), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }) as JsonObject
+                ? JsonTree.Parse(SharedFile.ReadAllText(file), new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }) as JsonObject
                 : null;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)

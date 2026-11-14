@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Deventry.Core.Files;
 using Deventry.Core.Protocol;
 
 namespace Deventry.Core.Sessions;
@@ -53,7 +54,7 @@ public static class LiveSessions
             string json;
             try
             {
-                json = File.ReadAllText(file);
+                json = SharedFile.ReadAllText(file);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
