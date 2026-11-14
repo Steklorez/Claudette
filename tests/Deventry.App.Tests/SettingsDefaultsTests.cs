@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
 using Deventry.Core.Settings;
@@ -199,8 +200,8 @@ public class SettingsDefaultsTests
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
         Assert.False(tab.HasOverrides);
-        var changed = new List<string?>();
-        tab.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         await tab.ChooseEffortCommand.ExecuteAsync("high");
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Deventry.App.Games;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -646,8 +647,8 @@ public class GameServiceTests
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
         Assert.False(tab.CanPlayWhileWaiting);
-        var changed = new List<string?>();
-        tab.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         var reset = h.Time.GetUtcNow() + TimeSpan.FromHours(2);
         await AutoContinueTests.HitLimitAsync(h, tab, reset);

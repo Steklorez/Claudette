@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
@@ -36,8 +37,8 @@ public class MessageCopyAndTimeTests
         // The next day, looking at the tab again gives the time its day.
         h.Time.Advance(TimeSpan.FromDays(1));
         tab.IsSelected = false;
-        var changed = new List<string?>();
-        prompt.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        prompt.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
         tab.IsSelected = true;
         Assert.Contains(nameof(MessageItem.TimeText), changed);
         Assert.Equal("Mon 12:00", prompt.TimeText);

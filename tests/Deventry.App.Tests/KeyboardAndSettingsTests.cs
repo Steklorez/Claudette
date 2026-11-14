@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Avalonia.Input;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
@@ -257,8 +258,8 @@ public class KeyboardAndSettingsTests
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        var changed = new List<string?>();
-        tab.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         tab.ToggleSuffixCommand.Execute(h.Services.Suffix("clarify"));
         Assert.True(tab.SuffixMenu.Single(m => m.Suffix.Id == "clarify").IsOn);

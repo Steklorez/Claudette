@@ -355,6 +355,9 @@ public class PerforceFilesTabTests
         File.SetAttributes(path, FileAttributes.ReadOnly);
         p4.Has(path, "Speed\n");
         await h.OpenTabAsync();
+        // Found first, while Perforce answers: it's the check-out that fails. Found after, the folder would be in no
+        // workspace Deventry knows, and the file only read-only.
+        await h.Services.Perforce.Files.WorkspaceForAsync(h.WorkFolder, Token);
 
         var find = await ReplaceAllAsync(h, "Speed", "MaxSpeed", () => p4.Unreachable = true);
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
@@ -359,8 +360,8 @@ public class ProjectFilesTests
         Assert.Equal(("Brain.cpp", 5, "File name", 1), (box.NameText, box.SelectedLength, box.Placeholder, box.Depth));
 
         box.NameText = "Mind.h";
-        var told = new List<string?>();
-        files.PropertyChanged += (_, e) => told.Add(e.PropertyName);
+        var told = new ConcurrentQueue<string?>();
+        files.PropertyChanged += (_, e) => told.Enqueue(e.PropertyName);
         await InlineDispatcher.RunAsync(() => files.CommitNamingCommand.ExecuteAsync(null));
 
         var moved = Path.Combine(h.WorkFolder, "Source", "Mind.h");
