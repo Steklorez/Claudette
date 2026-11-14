@@ -478,7 +478,9 @@
               <Button x:Name="TasksChip" Classes="flat" IsVisible="{Binding HasRunningTasks}" ToolTip.Tip="Work Claude Code keeps running in the background"
                       AutomationProperties.Name="{Binding RunningTasksText}">
                 <StackPanel Orientation="Horizontal" Spacing="4">
-                  <TextBlock Classes="status busy" Text="●" FontSize="9" VerticalAlignment="Center" />
+                  <!-- Busy, and so pulsing, only while there are tasks: the hidden chip never gets its template, so the dot
+                       isn't in the window, and a pulse there would count as shown and keep the app drawing frames. -->
+                  <TextBlock Classes="status" Classes.busy="{Binding HasRunningTasks}" Text="●" FontSize="9" VerticalAlignment="Center" />
                   <TextBlock Classes="muted small" Text="{Binding RunningTasksText}" />
                 </StackPanel>
                 <Button.Flyout>

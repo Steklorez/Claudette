@@ -140,7 +140,7 @@
               Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
               Classes.unreal="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}}"
               IsVisible="{Binding !Runs.IsJobRunning}" />
-        <TextBlock Classes="status busy" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <TextBlock Classes="status" Classes.busy="{Binding Runs.IsJobRunning}" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
                    IsVisible="{Binding Runs.IsJobRunning}" />
       </Panel>
     </DataTemplate>
@@ -723,7 +723,8 @@
                                      highlight running across it while Claude works, an orange wash blinking while it waits for the user,
                                      and a still green or red one, fading out to the right, once it finished unseen or stopped with an error -->
                                 <controls:WorkBar Classes="rowglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
-                                <Border Classes="rowglow waitglow" IsVisible="{Binding ShowsWaitBlink}" />
+                                <!-- Blinking only while it shows: a blink hidden with IsVisible is paused, but keeps the app drawing frames. -->
+                                <Border Classes="rowglow" Classes.waitglow="{Binding ShowsWaitBlink}" IsVisible="{Binding ShowsWaitBlink}" />
                                 <Border Classes="rowglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
                                 <Border Classes="rowglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
                                 <!-- Just found with Find a tab (DESIGN.md §4, "Find a tab"): a few soft pulses of the accent -->
@@ -784,7 +785,7 @@
                                               ToolTip.Tip="{Binding RemoteControl.StatusTip}" AutomationProperties.Name="{Binding RemoteControl.StatusTip}">
                                         <Path Data="{StaticResource IconPhone}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="7" Height="10" Stretch="Uniform" />
                                       </Border>
-                                      <TextBlock DockPanel.Dock="Left" Classes="status busy small" Text="⚙" IsVisible="{Binding ProcessMonitor.HasBusyProcesses}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                      <TextBlock DockPanel.Dock="Left" Classes="status small" Classes.busy="{Binding ProcessMonitor.HasBusyProcesses}" Text="⚙" IsVisible="{Binding ProcessMonitor.HasBusyProcesses}" VerticalAlignment="Center" Margin="0,0,5,0"
                                                  ToolTip.Tip="A process this tab started is using CPU" />
                                       <!-- Tasks still running once the turn is over (DESIGN.md §4, "Sidebar"; §5, "Running tasks") -->
                                       <Border x:Name="TaskBadge" DockPanel.Dock="Left" Classes="taskbadge" IsVisible="{Binding ShowTaskBadge}" VerticalAlignment="Center" Margin="0,0,5,0"
@@ -1055,7 +1056,7 @@
                                       <Panel>
                                       <!-- With Tab activity's colored rows, the tab row's washes for the subagent (DESIGN.md §4, "Sidebar") -->
                                       <controls:WorkBar Classes="rowglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
-                                      <Border Classes="rowglow waitglow" IsVisible="{Binding ShowsWaitBlink}" />
+                                      <Border Classes="rowglow" Classes.waitglow="{Binding ShowsWaitBlink}" IsVisible="{Binding ShowsWaitBlink}" />
                                       <Border Classes="rowglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
                                       <Border Classes="rowglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
                                       <Grid ColumnSpacing="{Binding GlyphSpacing}">
