@@ -103,6 +103,22 @@ public class MessagingTests
     }
 
     [Fact]
+    public async Task A_name_written_once_Claude_Code_has_made_its_sessions_folder_is_found()
+    {
+        await using var h = new TabTestHarness();
+        // A first run: Claude Code makes its sessions folder as its first session starts, here after the tab's look.
+        h.Services.ClaudeConfigDirectory = Path.Combine(h.Root, "claude-config");
+        Directory.CreateDirectory(h.Services.ClaudeConfigDirectory);
+        var tab = await h.OpenTabAsync();
+        h.Transport.EmitTurn();
+        await TabTestHarness.Eventually(() => Row(tab, "Session") == "s1", "the session's ID");
+
+        new SessionsFolder(h).Add(4242, "s1", "Art page", h.WorkFolder);
+
+        await TabTestHarness.Eventually(() => Row(tab, "Reached as") == "Art page", "the name Claude Code wrote");
+    }
+
+    [Fact]
     public async Task The_tabs_menu_copies_the_session_id_once_there_is_one()
     {
         await using var h = new TabTestHarness();

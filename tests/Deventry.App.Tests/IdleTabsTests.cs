@@ -68,9 +68,12 @@ public class IdleTabsTests
         tree.Children.Add((5001, "node"));
 
         h.Time.Advance(TimeSpan.FromMinutes(61));
-        // The unload looks for the tab's processes, leaving out its MCP servers, which it asks Claude Code for.
+        // The unload looks for the tab's processes, leaving out its MCP servers, which it asks Claude Code for. Once it has
+        // looked, it would have unloaded: it didn't. A minute's look while it was still looking would pass the tab by, so
+        // the next minute below comes after it.
         await TabTestHarness.Eventually(() => h.Transport.SentControlSubtypes.Contains("mcp_status"), "the look for processes");
-        await Waiting.NeverAsync(() => tab.Status == TabStatus.NotStarted, "an unload leaving the server to no one");
+        await TabTestHarness.Eventually(() => !tab.IsUnloading, "the look for processes to end");
+        Assert.NotEqual(TabStatus.NotStarted, tab.Status);
         Assert.True(tab.IsProcessRunning);
 
         // Once it's gone, the tab unloads.
