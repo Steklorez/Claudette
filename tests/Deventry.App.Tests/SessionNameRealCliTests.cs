@@ -40,7 +40,7 @@ public sealed class SessionNameRealCliTests
 
         // Claude Code's sessions folder has each under its tab's name.
         await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => art.ReachedAs == "Art page" && plan.ReachedAs == "Plan"),
-            "the sessions' names", TimeSpan.FromSeconds(30));
+            "the sessions' names");
         Assert.Contains(InlineDispatcher.Read(plan.MentionTargets), t => t is { Name: "Art page", Address: "Art page", Kind: MentionKind.Tab });
 
         // Not a thread: Claude Code delivers it itself, to the session it knows as Art page.
@@ -48,7 +48,7 @@ public sealed class SessionNameRealCliTests
         await plan.SendCommand.ExecuteAsync(null);
 
         await Deventry.Tests.Waiting.UntilAsync(
-            () => InlineDispatcher.Read(() => art.Items.OfType<UserMessageItem>().Any(m => m.AutomaticLabel == "From the session Plan")), "the message", TimeSpan.FromSeconds(90));
+            () => InlineDispatcher.Read(() => art.Items.OfType<UserMessageItem>().Any(m => m.AutomaticLabel == "From the session Plan")), "the message");
         var received = InlineDispatcher.Read(() => art.Items.OfType<UserMessageItem>().Single(m => m.AutomaticLabel == "From the session Plan"));
         Assert.Contains("The build is green.", received.Text, StringComparison.Ordinal);
     }

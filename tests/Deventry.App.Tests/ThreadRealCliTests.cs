@@ -49,7 +49,7 @@ public sealed class ThreadRealCliTests
             () => InlineDispatcher.Read(() => plan.Items.OfType<UserMessageItem>().Any(m => m.AutomaticLabel == "From the sub-threads")
                 && plan.Items.ToolCalls().Any(t => t is { Name: "SendMessage", IsComplete: true }))
                 && api.Requests.Any(r => r.LastToolResultText.StartsWith("Deventry delivered this message to the sub-thread \"Art page\"", StringComparison.Ordinal)),
-            "the report", TimeSpan.FromSeconds(90));
+            "the report");
         var delivered = InlineDispatcher.Read(() => art.Items.OfType<UserMessageItem>().Single(m => m.IsFromThread));
         Assert.Equal("AGENT_REPLY The art page is done.", delivered.Text);
         Assert.Equal("From the thread Plan", delivered.AutomaticLabel);
