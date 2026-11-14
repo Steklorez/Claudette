@@ -165,7 +165,7 @@ public sealed class AppServices : IAsyncDisposable
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
         // Settings → Git → Path to git, read as each run starts (DESIGN.md §14).
-        Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment) { ConfiguredPath = () => Settings.Git.Path };
+        Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment, logger: Loggers.CreateLogger("Git")) { ConfiguredPath = () => Settings.Git.Path };
         MentionFolders = new MentionFolderReader(Git, timeProvider);
         Library = new LibraryService(this);
         ScratchPads = new ScratchPadService(this);
