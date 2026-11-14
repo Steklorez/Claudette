@@ -2,6 +2,7 @@ using Deventry.Core.Files;
 using Deventry.Core.Git;
 using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 namespace Deventry.App.ViewModels;
 
@@ -75,6 +76,8 @@ public sealed partial class ShellViewModel
         || t.State is { NewWorktree: { } pending, WorktreeOf: { } of } && RealPath.Same(of, main)
            && RealPath.Same(GitWorktrees.PathFor(root, pending), path));
 
+    private ILogger WorktreesLog => field ??= _services.Loggers.CreateLogger("Worktrees");
+
     /// <summary>The selected tab's group folder can have worktrees: the palette offers one.</summary>
     private bool CanOpenWorktreeTab(TabViewModel tab) => Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { CanMakeWorktrees: true };
 
@@ -88,20 +91,33 @@ public sealed partial class ShellViewModel
         var found = new List<(string Main, GitWorktree Worktree, GitWorktreeWork? Work)>();
         foreach (var state in closed)
         {
-            if (state.WorktreeOf is not { } main || !Directory.Exists(main) || await _services.Git.GetRepositoryRootAsync(main) is not { } root)
+            if (state.WorktreeOf is not { } main)
             {
+                continue;
+            }
+            // Why a worktree isn't offered, or what's in one that is: the log is where it's said.
+            if (!Directory.Exists(main) || await _services.Git.GetRepositoryRootAsync(main) is not { } root)
+            {
+                WorktreesLog.LogDebug("No worktree offer for {Folder}: its main checkout {Main} isn't a repository now.", state.Folder, main);
                 continue;
             }
             var path = state.NewWorktree is { } name ? GitWorktrees.PathFor(root, name) : state.Folder;
             if (!Directory.Exists(path) || found.Any(f => RealPath.Same(f.Worktree.Path, path)) || IsWorktreeInUse(main, root, path))
             {
+                WorktreesLog.LogDebug("No worktree offer for {Path}: {Why}.", path,
+                    !Directory.Exists(path) ? "it isn't there" : IsWorktreeInUse(main, root, path) ? "an open tab works in it" : "it's offered already");
                 continue;
             }
             var worktrees = new GitWorktrees(_services.Git);
-            if (await worktrees.FindAsync(main, path) is { } worktree)
+            if (await worktrees.FindAsync(main, path) is not { } worktree)
             {
-                found.Add((main, worktree, await worktrees.InspectAsync(worktree)));
+                WorktreesLog.LogDebug("No worktree offer for {Path}: git doesn't list it as a worktree of {Main}.", path, main);
+                continue;
             }
+            var work = await worktrees.InspectAsync(worktree);
+            WorktreesLog.LogDebug("Worktree {Path} holds {Work}.", path, work is null ? "what git couldn't count"
+                : $"changes: {work.HasChanges}, commits of its own: {work.OwnCommits}, ignored files: {work.HasIgnoredFiles}");
+            found.Add((main, worktree, work));
         }
         if (found.Count == 1)
         {
