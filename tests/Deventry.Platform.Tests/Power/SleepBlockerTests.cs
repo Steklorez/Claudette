@@ -159,17 +159,19 @@ public class SleepBlockerTests
 
     [Fact]
     [SupportedOSPlatform("windows")]
-    public async Task SetThreadExecutionState_is_set_and_cleared_on_Windows()
+    public void SetThreadExecutionState_is_set_and_cleared_on_Windows()
     {
         Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows only.");
         using var blocker = new WindowsSleepBlocker();
 
+        // Read as SetBlocking returns, as the cup reads it: before its thread has run, the state is already what was asked.
         blocker.SetBlocking(true);
-        await Eventually(() => blocker.IsBlocking);
+        Assert.True(blocker.IsBlocking);
         Assert.StartsWith("Keeping the computer awake", blocker.Describe(), StringComparison.Ordinal);
 
         blocker.SetBlocking(false);
-        await Eventually(() => !blocker.IsBlocking);
+        Assert.False(blocker.IsBlocking);
+        Assert.Equal("Not keeping the computer awake now.", blocker.Describe());
     }
 
     private static Task Eventually(Func<bool> condition) => Waiting.UntilAsync(condition);
