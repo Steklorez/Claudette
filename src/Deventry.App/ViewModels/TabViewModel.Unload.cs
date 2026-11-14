@@ -20,6 +20,9 @@ public sealed partial class TabViewModel
     /// <summary>Its claude is running, and nothing in it would notice it stopping: no turn, prompt, task or connection.</summary>
     internal bool CanUnload(TimeSpan idleFor) => _unloading is null && IsIdleFor(idleFor);
 
+    /// <summary>An unload is under way: a minute's look for idle tabs passes this one by until it's done.</summary>
+    internal bool IsUnloading => _unloading is not null;
+
     private bool IsIdleFor(TimeSpan idleFor) =>
         _session is not null && _starting is null && !_closing.IsCancellationRequested
         && Status is TabStatus.Idle or TabStatus.Unread
