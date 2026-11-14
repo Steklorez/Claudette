@@ -115,13 +115,27 @@ public class ProjectToolsUiTests
             UiText.Settle(window);
         }
         var (actions, links) = (Row(menu, "Actions"), Row(menu, "Links"));
+        // Where the pointer is, whether these are still the menu's rows, and which submenus are open where.
+        string State()
+        {
+            static string Place(Visual v, Visual to) => $"{v.TranslatePoint(default, to)} {v.Bounds.Size}";
+            string Kept(Button row, string name)
+            {
+                var now = menu.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible && AutomationProperties.GetName(b) == name).ToList();
+                return $"{name} {now.Contains(row)} of {now.Count}";
+            }
+            var open = Submenu(actions).IsOpen && Submenu(actions).Child is Visual sub ? $", Actions' submenu at {Place(sub, root)}" : "";
+            return $"pointer over Links {links.IsPointerOver}, over Actions {actions.IsPointerOver}; still the menu's rows: {Kept(actions, "Actions")}, "
+                + $"{Kept(links, "Links")}; open: Actions {Submenu(actions).IsOpen}, Links {Submenu(links).IsOpen}; Links at {Place(links, root)}{open}";
+        }
 
         PointAt(root, actions);
         Assert.True(Submenu(actions).IsOpen);
-        // From Actions to Links: Links opens in its place.
+        // From Actions to Links: Links opens in its place. (Seen failing once each on Windows and macOS, and not
+        // reproduced: what the menu was like then says why.)
         PointAt(root, links);
-        Assert.False(Submenu(actions).IsOpen);
-        Assert.True(Submenu(links).IsOpen);
+        Assert.False(Submenu(actions).IsOpen, State());
+        Assert.True(Submenu(links).IsOpen, State());
         // The rest of the menu closes it.
         PointAt(root, Row(menu, "Refresh"));
         Assert.False(Submenu(links).IsOpen);
