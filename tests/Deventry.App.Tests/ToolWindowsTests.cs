@@ -716,22 +716,22 @@ public class ToolWindowsTests
         await File.WriteAllTextAsync(yours, "mine\n", TestContext.Current.CancellationToken);
         EmitEdit(h, "e1", claudes);
         await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.Count == 1, "the changed file");
-        tab.ChangedFiles.ToggleFileReviewedCommand.Execute(tab.ChangedFiles.Files[0]);
+        InlineDispatcher.Run(() => tab.ChangedFiles.ToggleFileReviewedCommand.Execute(tab.ChangedFiles.Files[0]));
 
-        tab.ChangedFiles.ShowGitChanges = true;
+        // Turned on as a click does: the listing runs git off the UI thread and comes back to it, adding the rows before
+        // it writes the summary that ticking below writes too, so it's the summary that's waited for.
+        InlineDispatcher.Run(() => tab.ChangedFiles.ShowGitChanges = true);
 
-        // Turned on from here, the listing finishes off the UI thread, adding the rows before it writes the summary that
-        // ticking below writes too: it's the summary that's waited for.
         await TabTestHarness.Eventually(() => tab.ChangedFiles.Summary.StartsWith("2 files changed", StringComparison.Ordinal), "the working tree");
-        Assert.Equal([("a.cs", true), ("notes.md", false)], tab.ChangedFiles.Files.Select(r => (r.FileName, r.IsReviewed)).OrderBy(r => r.FileName));
+        Assert.Equal([("a.cs", true), ("notes.md", false)], InlineDispatcher.Read(() => tab.ChangedFiles.Files.Select(r => (r.FileName, r.IsReviewed)).OrderBy(r => r.FileName).ToArray()));
 
         // A file only you changed stays reviewed until Claude changes it.
-        tab.ChangedFiles.ToggleFileReviewedCommand.Execute(tab.ChangedFiles.Files.Single(r => r.FileName == "notes.md"));
-        Assert.Equal("2 files changed · 2 reviewed", tab.ChangedFiles.Summary);
+        InlineDispatcher.Run(() => tab.ChangedFiles.ToggleFileReviewedCommand.Execute(tab.ChangedFiles.Files.Single(r => r.FileName == "notes.md")));
+        Assert.Equal("2 files changed · 2 reviewed", InlineDispatcher.Read(() => tab.ChangedFiles.Summary));
         EmitEdit(h, "e2", yours);
         // Git is asked once the edits pause.
         await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.SingleOrDefault(r => r.FileName == "notes.md") is { LatestChange: "e2", IsReviewed: false }, "Claude's change", poll: () => h.Time.Advance(ChangedFilesViewModel.GitRefreshDelay));
-        Assert.True(tab.ChangedFiles.Files.Single(r => r.FileName == "a.cs").IsReviewed);
+        Assert.True(InlineDispatcher.Read(() => tab.ChangedFiles.Files.Single(r => r.FileName == "a.cs").IsReviewed));
     }
 
     [Fact]

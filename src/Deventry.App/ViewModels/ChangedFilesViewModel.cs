@@ -12,6 +12,7 @@ using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 namespace Deventry.App.ViewModels;
 
@@ -269,7 +270,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
 
     partial void OnShowGitChangesChanged(bool value)
     {
-        _ = RefreshAsync();
+        RefreshInBackground();
         UpdateWatches();
     }
 
@@ -541,7 +542,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         if (ShowGitChanges)
         {
             // Once the edits pause.
-            GitRefreshWait.Restart(GitRefreshDelay, () => _ = RefreshAsync());
+            GitRefreshWait.Restart(GitRefreshDelay, RefreshInBackground);
             return;
         }
         if (_refreshQueued)
@@ -552,9 +553,29 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         _services.Dispatcher.Post(() =>
         {
             _refreshQueued = false;
-            _ = RefreshAsync();
+            RefreshInBackground();
         });
     }
+
+    /// <summary>
+    /// A refresh nobody waits for: one that fails says so in the log, rather than leaving the rows as they were without a
+    /// word.
+    /// </summary>
+    private void RefreshInBackground() => _ = RefreshOrSayWhyAsync();
+
+    private async Task RefreshOrSayWhyAsync()
+    {
+        try
+        {
+            await RefreshAsync();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Logger.LogWarning(ex, "Changed files couldn't list the changes in {Folder}.", _host.Folder);
+        }
+    }
+
+    private ILogger Logger => field ??= _services.Loggers.CreateLogger("ChangedFiles");
 
     [RelayCommand]
     internal async Task RefreshAsync()
@@ -588,6 +609,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 catch (OperationCanceledException)
                 {
                     // A newer refresh took over.
+                    Logger.LogDebug("The working tree's listing {Generation} was overtaken by a newer one.", generation);
                     return;
                 }
                 var from = tree ?? folder;
@@ -625,6 +647,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
         if (generation != _refreshGeneration)
         {
+            Logger.LogDebug("Changed files' listing {Generation} was overtaken by {Latest}: its rows are dropped.", generation, _refreshGeneration);
             return;
         }
         // Marks on files Claude has changed since are forgotten (DESIGN.md §8, "Reviewed").

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -48,16 +49,17 @@ public sealed class BranchBadgeTests
         await using var h = new TabTestHarness();
         MakeRepository(h.WorkFolder);
         var tab = await h.OpenTabAsync();
-        var changes = new List<string?>();
-        tab.PropertyChanged += (_, e) => changes.Add(e.PropertyName);
+        // Raised on whichever thread the turn's end comes on.
+        var changes = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changes.Enqueue(e.PropertyName);
 
         tab.ComposerText = "switch to the feature branch";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         SetHead(h.WorkFolder, "ref: refs/heads/feature/auth");
         h.Transport.EmitTurn();
 
         await TabTestHarness.Eventually(() => tab.BranchBadge == "feature/auth", "the new branch");
-        Assert.Contains(nameof(TabViewModel.BranchBadge), changes);
+        Assert.Contains(nameof(TabViewModel.BranchBadge), changes.ToArray());
     }
 
     [Fact]
@@ -117,7 +119,7 @@ public sealed class BranchBadgeTests
         var worktree = GitWorktrees.PathFor(h.WorkFolder, name);
         await GitAsync(h.WorkFolder, "worktree", "add", "-q", "-b", GitWorktrees.BranchPrefix + name, worktree);
         tab.ComposerText = "go";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         h.Transport.Emit(new JsonObject { ["type"] = "system", ["subtype"] = "init", ["session_id"] = "s1", ["model"] = "claude-opus-5-5", ["cwd"] = worktree });
         h.Transport.Emit("""{"type":"result","subtype":"success","is_error":false,"session_id":"s1"}""");
         await TabTestHarness.Eventually(() => tab.Folder == worktree, "the turn in the worktree");
