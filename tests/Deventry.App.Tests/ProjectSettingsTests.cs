@@ -966,7 +966,7 @@ public class ProjectSettingsTests
         Assert.Equal(["General", "Appearance", "Conversation", "Notifications", "Keyboard"], PagesUnder(settings, "Deventry"));
         // Advanced is the last of Claude's pages: it's mostly about running Claude Code.
         Assert.Equal(["Claude Code", "Accounts", "Tabs", "Usage", "Advanced"], PagesUnder(settings, "Claude"));
-        Assert.Equal(["Sessions", "Files and diffs"], PagesUnder(settings, "Your work"));
+        Assert.Equal(["Sessions", "Files and diffs", "Timed messages"], PagesUnder(settings, "Your work"));
         Assert.Equal(["All tools", "Unreal Engine", "Unity", "Godot"], PagesUnder(settings, SettingsSidebar.ProjectTools));
         Assert.Equal(["Git", "Perforce"], PagesUnder(settings, SettingsSidebar.SourceControl));
         // What every ticket provider shares, then a page for each provider (DESIGN.md §18, "Tickets").

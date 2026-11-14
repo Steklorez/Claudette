@@ -379,9 +379,14 @@
                   <Path Data="{StaticResource IconCup}" StrokeThickness="1.3" StrokeJoin="Round" Stretch="None" />
                   <Path Name="KeepAwakeSteam" Data="{StaticResource IconSteam}" StrokeThickness="1.1" StrokeLineCap="Round" Stretch="None"
                         IsVisible="{Binding KeepAwake.IsKeepingAwake}" />
+                  <!-- A small clock at its corner while a timed message is on (DESIGN.md §18, "Timed messages") -->
+                  <Path Name="KeepAwakeClock" Data="{StaticResource IconCupClock}" StrokeThickness="1" StrokeLineCap="Round" Stretch="None"
+                        IsVisible="{Binding TimedMessages.HasAny}" />
                 </Panel>
                 <ToggleButton.ContextMenu>
-                  <ContextMenu>
+                  <!-- In sections: the timed messages, which OnKeepAwakeMenuOpening puts first, then keeping awake -->
+                  <ContextMenu Name="KeepAwakeMenu" Classes="sectioned" Opening="OnKeepAwakeMenuOpening" Opened="OnKeepAwakeMenuOpened" Closed="OnKeepAwakeMenuClosed">
+                    <MenuItem Classes="menusection" Header="Keep awake" IsEnabled="False" />
                     <MenuItem Header="Only while Claude has work to finish" ToggleType="Radio" IsChecked="{Binding KeepAwake.WhileClaudeHasWork, Mode=OneWay}"
                               Command="{Binding KeepAwake.ChooseCommand}" CommandParameter="{x:Static settings:KeepAwakeWhen.ClaudeHasWork}" />
                     <MenuItem Header="Whenever Deventry is running" ToggleType="Radio" IsChecked="{Binding KeepAwake.WhileDeventryRuns, Mode=OneWay}"
@@ -389,6 +394,7 @@
                     <Separator />
                     <!-- Settings → General, at keeping the computer awake (DESIGN.md §14) -->
                     <MenuItem Header="Keep-awake settings…" Command="{Binding Shell.OpenSettingCommand, FallbackValue={x:Null}}" CommandParameter="General#keepAwake" />
+                    <MenuItem Header="Timed messages settings…" Command="{Binding Shell.OpenSettingCommand, FallbackValue={x:Null}}" CommandParameter="Timed messages" />
                   </ContextMenu>
                 </ToggleButton.ContextMenu>
               </ToggleButton>

@@ -258,6 +258,9 @@
                 <DataTemplate DataType="settings:FilesPage">
                   <pages:FilesPageView />
                 </DataTemplate>
+                <DataTemplate DataType="settings:TimedMessagesPage">
+                  <pages:TimedMessagesPageView />
+                </DataTemplate>
                 <DataTemplate DataType="settings:AllToolsPage">
                   <pages:AllToolsPageView />
                 </DataTemplate>

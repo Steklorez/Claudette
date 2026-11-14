@@ -37,6 +37,8 @@ public static class SettingsCategory
 
     public const string Files = "Files and diffs";
 
+    public const string TimedMessages = "Timed messages";
+
     public const string AllTools = "All tools";
 
     public const string Git = "Git";
@@ -72,7 +74,7 @@ public static class SettingsSidebar
     [
         ("Deventry", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard]),
         ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
-        ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files]),
+        ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files, SettingsCategory.TimedMessages]),
         (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name)]),
         (SourceControl, [SettingsCategory.Git, SettingsCategory.Perforce]),
         (Tickets, [SettingsCategory.AllTicketProviders, .. providers.Select(p => p.Name)]),

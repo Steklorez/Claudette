@@ -159,6 +159,47 @@ public sealed partial class TimedMessagesService : ObservableObject, IDisposable
         _services.State.TimedMessagesSkipped.Remove(id);
     }
 
+    // ---- The editor, asked for from outside Settings --------------------------------------------------------------
+
+    private TimedMessage? _editorRequest;
+
+    /// <summary>An editor was asked for (<see cref="RequestEditor"/>): Settings → Timed messages, if it's open, takes it.</summary>
+    public event Action? EditorRequested;
+
+    /// <summary>
+    /// Settings → Timed messages opens on an editor for <paramref name="message"/>: a new one, or a copy of one to change.
+    /// The cup's menu, a group's menu and the command palette ask, then open the page.
+    /// </summary>
+    public void RequestEditor(TimedMessage message)
+    {
+        _editorRequest = message;
+        EditorRequested?.Invoke();
+    }
+
+    /// <summary>The editor asked for, once: the page takes it as it opens, or when told.</summary>
+    public TimedMessage? TakeEditorRequest()
+    {
+        var message = _editorRequest;
+        _editorRequest = null;
+        return message;
+    }
+
+    /// <summary>A new message in <paramref name="folder"/>, weekdays at 7:00, for the editor to fill in.</summary>
+    public static TimedMessage NewMessage(string? folder) => new() { Folder = folder ?? "" };
+
+    /// <summary>The next times <paramref name="schedule"/> gives from now, up to <paramref name="count"/>, for the editor.</summary>
+    public IReadOnlyList<DateTimeOffset> NextTimes(TimedSchedule schedule, int count)
+    {
+        var times = new List<DateTimeOffset>(count);
+        var after = Time.GetUtcNow();
+        while (times.Count < count && schedule.Next(after, Time.LocalTimeZone) is { } next)
+        {
+            times.Add(next);
+            after = next;
+        }
+        return times;
+    }
+
     // ---- Sending them ---------------------------------------------------------------------------------------------
 
     /// <summary>Looks at the time: sends what's due, skips what's too late, and sets the next timer and wake.</summary>
@@ -244,6 +285,13 @@ public sealed partial class TimedMessagesService : ObservableObject, IDisposable
     {
         var line = text.Trim().ReplaceLineEndings(" ");
         return line.Length > 120 ? line[..117] + "…" : line;
+    }
+
+    /// <summary>The wake helper was installed or removed: the next wake is set again, through it or not.</summary>
+    internal void SetWakeAgain()
+    {
+        _wakeSet = false;
+        Check();
     }
 
     /// <summary>The timer to the next time (or to holding sleep off before it), the wake, and keeping the computer awake.</summary>

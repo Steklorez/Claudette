@@ -29,6 +29,9 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>The header's cup: whether the computer is kept awake, and the switch for it (DESIGN.md §9, "Keeping the computer awake").</summary>
     public KeepAwakeService KeepAwake { get; } = services.KeepAwake;
 
+    /// <summary>The timed messages, for the cup's clock and menu (DESIGN.md §18, "Timed messages").</summary>
+    public TimedMessagesService TimedMessages { get; } = services.TimedMessages;
+
     /// <summary>The signed-in email and plan, or null when signed out.</summary>
     public string? AccountText => Account.IsSignedIn ? Account.Summary : null;
 

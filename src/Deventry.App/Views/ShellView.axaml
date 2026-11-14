@@ -613,6 +613,11 @@
                                       IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconBranch}" /></MenuItem.Icon>
                             </MenuItem>
+                            <!-- A message sent at a time, to a new tab here (DESIGN.md §18, "Timed messages") -->
+                            <MenuItem Header="Add a timed message…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewTimedMessageInGroupCommand}" CommandParameter="{Binding}"
+                                      ToolTip.Tip="A message Deventry sends at a time you choose, to a new tab in this folder">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconClock}" /></MenuItem.Icon>
+                            </MenuItem>
                             <Separator />
                             <MenuItem Classes="menusection" Header="Folder" IsEnabled="False" />
                             <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}">
