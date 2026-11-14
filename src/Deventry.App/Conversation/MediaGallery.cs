@@ -154,6 +154,9 @@ public sealed partial class MediaSection : ObservableObject
     /// <summary>User and Agent always; a Cleared group once it has anything.</summary>
     public bool IsShown => !IsCleared || !IsEmpty;
 
+    /// <summary>Its header's menu: <b>Clear all</b>, or <b>Restore all</b> on a Cleared group's.</summary>
+    public string AllText => IsCleared ? "Restore all" : "Clear all";
+
     /// <summary>What it says while it has nothing.</summary>
     public string EmptyText { get; }
 
@@ -332,17 +335,46 @@ public sealed partial class MediaGallery : ObservableObject
     /// </summary>
     public void ToggleCleared(MediaEntry entry)
     {
+        if (Move(entry))
+        {
+            ClearedChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// A section header's <b>Clear all</b>, or <b>Restore all</b> on a Cleared group's: everything in
+    /// <paramref name="section"/> to its Cleared group, or back, remembered with the tab once for them all.
+    /// </summary>
+    public void ToggleAll(MediaSection section)
+    {
+        var moved = false;
+        // Oldest first, so the newest are the last forgotten when there are more than the tab remembers.
+        foreach (var entry in section.Entries.Reverse().ToArray())
+        {
+            moved |= Move(entry);
+        }
+        if (moved)
+        {
+            ClearedChanged?.Invoke();
+        }
+    }
+
+    /// <summary>Moves <paramref name="entry"/> to its section's Cleared group, or back; false when it's no longer here.</summary>
+    private bool Move(MediaEntry entry)
+    {
         var from = entry.IsCleared ? ClearedOf(entry.Source) : SectionOf(entry.Source);
         if (!from.Contains(entry))
         {
-            return;
+            return false;
         }
         from.Remove(entry);
         entry.IsCleared = !entry.IsCleared;
         (entry.IsCleared ? ClearedOf(entry.Source) : SectionOf(entry.Source)).Put(entry);
         SetCleared(ClearedKey(entry.Source, entry.Key), entry.IsCleared);
+        return true;
     }
 
+    /// <summary>Remembers <paramref name="key"/> as cleared, or forgets it; the caller tells <see cref="ClearedChanged"/>.</summary>
     private void SetCleared(string key, bool cleared)
     {
         Cleared.RemoveAll(k => k == key);
@@ -354,7 +386,6 @@ public sealed partial class MediaGallery : ObservableObject
                 Cleared.RemoveRange(0, Cleared.Count - MostCleared);
             }
         }
-        ClearedChanged?.Invoke();
     }
 
     private static string ClearedKey(MediaSource source, string key) => (source == MediaSource.User ? "user:" : "agent:") + key;
@@ -499,6 +530,7 @@ public sealed partial class MediaGallery : ObservableObject
         if (isCleared && live)
         {
             SetCleared(key, false);
+            ClearedChanged?.Invoke();
             isCleared = false;
         }
         if (known is not null)

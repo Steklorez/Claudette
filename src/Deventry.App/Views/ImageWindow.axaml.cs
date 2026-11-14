@@ -103,6 +103,7 @@ public partial class ImageWindow : Window
         if (_viewer is not null)
         {
             _viewer.PropertyChanged -= OnViewerChanged;
+            _viewer.CloseRequested -= Close;
         }
         _viewer = DataContext as ImageViewerViewModel;
         if (_viewer is null)
@@ -110,6 +111,8 @@ public partial class ImageWindow : Window
             return;
         }
         _viewer.PropertyChanged += OnViewerChanged;
+        // Clear, opened from the Media window (DESIGN.md §18, "Media", "Clearing").
+        _viewer.CloseRequested += Close;
         if (_viewer.IsAnimated)
         {
             // Avalonia shows a GIF's first frame by itself, but not every animated WebP's.
@@ -333,6 +336,7 @@ public partial class ImageWindow : Window
         if (_viewer is not null)
         {
             _viewer.PropertyChanged -= OnViewerChanged;
+            _viewer.CloseRequested -= Close;
         }
         base.OnClosed(e);
         if (_frame is not null)

@@ -237,6 +237,35 @@ public sealed class MediaTests
     }
 
     [Fact]
+    public async Task A_sections_header_clears_all_it_has_and_its_Cleared_groups_restores_all()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+        var plot = WriteFile(h, "out/plot.png", TestImages.Png);
+        h.Transport.Emit(Wire.Tool(null, "t1", "mcp__playwright__browser_take_screenshot", []));
+        h.Transport.Emit(ImageResult("t1", parent: null));
+        h.Transport.Emit(Wire.Tool(null, "t2", "Write", new JsonObject { ["file_path"] = plot, ["content"] = "" }));
+        h.Transport.Emit(Wire.Result("t2", "File created"));
+        await TabTestHarness.Eventually(() => tab.Media.Agent.Count == 2, "the screenshot and the plot");
+        var media = tab.Media;
+        var newestFirst = InlineDispatcher.Read(() => media.Agent.Entries.ToArray());
+        Assert.Equal(("Clear all", "Restore all"), (media.Agent.AllText, media.AgentCleared.AllText));
+
+        InlineDispatcher.Run(() => tab.ToggleMediaSectionCommand.Execute(media.Agent));
+
+        Assert.Empty(InlineDispatcher.Read(() => media.Agent.Entries.ToArray()));
+        Assert.Equal(newestFirst, InlineDispatcher.Read(() => media.AgentCleared.Entries.ToArray()));
+        Assert.All(newestFirst, e => Assert.True(e.IsCleared));
+        Assert.Equal(2, InlineDispatcher.Read(() => tab.State.ClearedMedia.Count));
+
+        InlineDispatcher.Run(() => tab.ToggleMediaSectionCommand.Execute(media.AgentCleared));
+
+        Assert.Equal(newestFirst, InlineDispatcher.Read(() => media.Agent.Entries.ToArray()));
+        Assert.Empty(InlineDispatcher.Read(() => media.AgentCleared.Entries.ToArray()));
+        Assert.Empty(InlineDispatcher.Read(() => tab.State.ClearedMedia.ToArray()));
+    }
+
+    [Fact]
     public async Task The_image_window_opened_from_a_tile_clears_it_and_restores_it()
     {
         await using var h = new TabTestHarness();
@@ -250,15 +279,20 @@ public sealed class MediaTests
 
         await InlineDispatcher.RunAsync(() => tab.OpenMediaCommand.ExecuteAsync(entry));
         var viewer = Assert.Single(shown);
-        Assert.Equal((true, "Clear", "Move it to User (Cleared)"), (viewer.CanClear, viewer.ClearText, viewer.ClearTip));
+        Assert.Equal((true, "Clear", "Move it to User (Cleared), and close this window"), (viewer.CanClear, viewer.ClearText, viewer.ClearTip));
+        var closes = 0;
+        viewer.CloseRequested += () => closes++;
 
         InlineDispatcher.Run(() => viewer.ToggleClearedCommand.Execute(null));
 
+        // Cleared, and the window closes with it.
         Assert.Equal(bug, InlineDispatcher.Read(() => tab.Media.UserCleared.Entries.Single().Path));
+        Assert.Equal(1, closes);
+        // Opened from a cleared tile, Restore puts it back and leaves the window open.
         Assert.Equal(("Restore", "Move it back to User"), (viewer.ClearText, viewer.ClearTip));
         InlineDispatcher.Run(() => viewer.ToggleClearedCommand.Execute(null));
         Assert.Same(entry, InlineDispatcher.Read(() => tab.Media.User.Entries.Single()));
-        Assert.Equal("Clear", viewer.ClearText);
+        Assert.Equal(("Clear", 1), (viewer.ClearText, closes));
 
         // An image opened from anywhere else has no button for it.
         InlineDispatcher.Run(() => h.Shell.ShowImage(entry.Image ?? ShellViewModel.ImageFile(bug, "shots/bug.png")!));
