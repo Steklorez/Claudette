@@ -379,9 +379,9 @@
                   <Path Data="{StaticResource IconCup}" StrokeThickness="1.3" StrokeJoin="Round" Stretch="None" />
                   <Path Name="KeepAwakeSteam" Data="{StaticResource IconSteam}" StrokeThickness="1.1" StrokeLineCap="Round" Stretch="None"
                         IsVisible="{Binding KeepAwake.IsKeepingAwake}" />
-                  <!-- A small clock at its corner while a timed message is on (DESIGN.md §18, "Timed messages") -->
-                  <Path Name="KeepAwakeClock" Data="{StaticResource IconCupClock}" StrokeThickness="1" StrokeLineCap="Round" Stretch="None"
-                        IsVisible="{Binding TimedMessages.HasAny}" />
+                  <!-- A clock's hands in its body while a timed message is on (DESIGN.md §18, "Timed messages") -->
+                  <Path Name="KeepAwakeClock" Data="{StaticResource IconCupClock}" StrokeThickness="1.1" StrokeLineCap="Round" StrokeJoin="Round"
+                        Stretch="None" IsVisible="{Binding TimedMessages.HasAny}" />
                 </Panel>
                 <ToggleButton.ContextMenu>
                   <!-- In sections: the timed messages, which OnKeepAwakeMenuOpening puts first, then keeping awake -->

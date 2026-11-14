@@ -29,7 +29,7 @@ Right-click the cup to choose between them, under **Keep awake** in its menu. Ch
 
 The cup sits in the usage header, after the processes' total. It takes the accent color while the setting is on, and steams while sleep is being held off, for any reason. Its tooltip says what's happening and why, for example *Keeping this computer awake. The screen can still turn off.* and *While Claude has work to finish: 2 tabs working, 1 tab waiting for a usage limit to reset.*
 
-While any [timed message](timed-messages.md) is on, the cup has a small clock at its corner. Sleep is held off from just before a timed message's time until its tab's turn has finished, whatever the setting says.
+While any [timed message](timed-messages.md) is on, the cup has a clock's two hands in its body. Sleep is held off from just before a timed message's time until its tab's turn has finished, whatever the setting says.
 
 Tabs connected to the [Claude app](the-claude-app.md) also keep the computer awake while Settings → General → **Also while tabs are connected to the Claude app** is on, and so does a bot of [Remote clients](remote-clients.md) while it's on, as long as **Also while a remote client is on** is. The cup steams for those too, and the tooltip names them.
 

@@ -59,7 +59,7 @@ If the computer couldn't be woken, a message noticed when it wakes is still sent
 
 ## The cup
 
-While any timed message is on, the [cup](keeping-the-computer-awake.md#the-cup) in the usage header has a small clock at its corner, and its tooltip ends with the next one: *Next timed message: Morning triage in starfall, tomorrow at 7:00 AM.*
+While any timed message is on, the [cup](keeping-the-computer-awake.md#the-cup) in the usage header has a clock's two hands in its body, and its tooltip ends with the next one: *Next timed message: Morning triage in starfall, tomorrow at 7:00 AM.*
 
 {% include shot.html name="guide/away/timed-messages-cup" alt="The cup's menu, in two sections. Timed messages: Morning triage · starfall · Mon at 7:00 AM, then Add a timed message…. Keep awake: Only while Claude has work to finish, Whenever Deventry is running, Keep-awake settings… and Timed messages settings…." %}
 
