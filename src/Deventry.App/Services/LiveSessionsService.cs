@@ -82,28 +82,39 @@ public sealed class LiveSessionsService(AppServices services, ISystemProcesses? 
     }
 
     /// <summary>
-    /// Watches the sessions folder once Claude Code has made it. Claude Code writes a rename there just after it answers
-    /// <c>rename_session</c>, so a read straight after the answer can come too soon (checked against 2.1.284).
+    /// Watches the sessions folder, called before each read so nothing written after the read is missed. Claude Code
+    /// writes a rename there just after it answers <c>rename_session</c>, so a read straight after the answer can come too
+    /// soon (checked against 2.1.284). It makes the folder as its first session starts, which can be after the tab's
+    /// read: until then the config folder is watched for it.
     /// </summary>
     private void Watch(string? configDirectory)
     {
-        var folder = configDirectory is null ? null : LiveSessions.Folder(configDirectory);
+        if (configDirectory is null)
+        {
+            return;
+        }
+        var folder = LiveSessions.Folder(configDirectory);
+        var exists = Directory.Exists(folder);
+        var target = exists ? folder : configDirectory;
         lock (_lock)
         {
-            if (_disposed || folder is null || folder == _watched && _watcher is not null || !Directory.Exists(folder))
+            if (_disposed || target == _watched && _watcher is not null || !exists && !Directory.Exists(configDirectory))
             {
                 return;
             }
             _watcher?.Dispose();
             _watcher = null;
-            _watched = folder;
+            _watched = target;
             try
             {
-                var watcher = new FileSystemWatcher(folder, "*.json") { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite };
+                var watcher = exists
+                    ? new FileSystemWatcher(folder, "*.json") { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite }
+                    : new FileSystemWatcher(configDirectory, Path.GetFileName(folder)) { NotifyFilter = NotifyFilters.DirectoryName };
                 watcher.Created += OnFolderChanged;
                 watcher.Changed += OnFolderChanged;
                 watcher.Deleted += OnFolderChanged;
                 watcher.Renamed += OnFolderChanged;
+                watcher.Error += OnWatchError;
                 watcher.EnableRaisingEvents = true;
                 _watcher = watcher;
             }
@@ -115,6 +126,23 @@ public sealed class LiveSessionsService(AppServices services, ISystemProcesses? 
     }
 
     private void OnFolderChanged(object sender, FileSystemEventArgs e) => Refresh();
+
+    /// <summary>
+    /// The watcher lost track, its buffer overflowing on a busy disk or its folder going: watched afresh and read whole, so
+    /// what it missed is found.
+    /// </summary>
+    private void OnWatchError(object sender, ErrorEventArgs e)
+    {
+        lock (_lock)
+        {
+            if (sender == _watcher)
+            {
+                _watcher.Dispose();
+                _watcher = null;
+            }
+        }
+        Refresh();
+    }
 
     public void Dispose()
     {
