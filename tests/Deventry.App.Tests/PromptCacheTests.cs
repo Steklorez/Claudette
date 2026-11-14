@@ -134,11 +134,13 @@ public class PromptCacheTests
         await FinishTurnAsync(h, tab, oneHour: 5_000);
         Assert.Equal("Cache 60m", tab.PromptCacheText);
 
-        tab.IsSelected = false;
+        // On the UI thread, as selecting another tab is: the settings read as the session started can still come back
+        // there, and must see the tab as it is.
+        InlineDispatcher.Run(() => tab.IsSelected = false);
         h.Time.Advance(TimeSpan.FromMinutes(5));
         Assert.Equal("Cache 60m", tab.PromptCacheText);
 
-        tab.IsSelected = true;
+        InlineDispatcher.Run(() => tab.IsSelected = true);
         Assert.Equal("Cache 55m", tab.PromptCacheText);
         h.Time.Advance(TimeSpan.FromMinutes(1));
         Assert.Equal("Cache 54m", tab.PromptCacheText);
