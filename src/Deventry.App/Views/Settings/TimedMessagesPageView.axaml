@@ -1,0 +1,164 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.TimedMessagesPageView" ClipToBounds="False"
+             x:DataType="settings:TimedMessagesPage">
+  <!-- Timed messages (DESIGN.md §18, "Timed messages"): the messages, the editor for one, and waking the computer -->
+  <StackPanel Spacing="32">
+    <c:SettingsSection Key="messages">
+      <c:SettingRow Key="state.timedMessages" Title="" IsStacked="True">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding NoneText}" IsVisible="{Binding !HasRows}" />
+          <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding HasRows}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="10" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="settings:TimedMessageRowViewModel">
+                <Border Classes="settingsnote">
+                  <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Classes="small" Text="{Binding Detail}" TextWrapping="Wrap" />
+                        <TextBlock Classes="small muted" Text="{Binding NextText}" />
+                        <TextBlock Classes="small warning" Text="{Binding Skipped}" TextWrapping="Wrap" IsVisible="{Binding HasSkipped}" />
+                      </StackPanel>
+                      <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsOn}" VerticalAlignment="Top" OnContent="On" OffContent="Off"
+                                    AutomationProperties.Name="{Binding Name, StringFormat='{}{0} on'}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !Removal.IsOpen}">
+                      <Button Content="Edit…" Command="{Binding EditCommand}" />
+                      <Button Content="Delete…" Command="{Binding Removal.AskCommand}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8" IsVisible="{Binding Removal.IsOpen}">
+                      <TextBlock TextWrapping="Wrap" Text="{Binding RemoveText}" />
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Classes="accent" Content="Delete" Command="{Binding Removal.ConfirmCommand}" />
+                        <Button Content="Cancel" Command="{Binding Removal.CancelCommand}" />
+                      </StackPanel>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Content="Add a timed message…" Command="{Binding AddCommand}" HorizontalAlignment="Left" IsVisible="{Binding !IsEditing}" />
+
+          <!-- The editor: one message at a time, on the page -->
+          <Border Classes="settingsnote" IsVisible="{Binding IsEditing}">
+            <ContentControl Content="{Binding Editor}">
+              <ContentControl.ContentTemplate>
+                <DataTemplate DataType="settings:TimedMessageEditor">
+                  <StackPanel Spacing="10">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                    <c:SettingRow Title="Name" Padding="8,4">
+                      <TextBox Text="{Binding Name}" PlaceholderText="for example: Morning triage" AutomationProperties.Name="Name" />
+                    </c:SettingRow>
+                    <c:SettingRow Title="Project" Padding="8,4">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <ComboBox ItemsSource="{Binding FolderChoices}" SelectedItem="{Binding Folder}" HorizontalAlignment="Stretch"
+                                  PlaceholderText="Choose a folder" AutomationProperties.Name="Project folder" />
+                        <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseCommand}" />
+                      </Grid>
+                    </c:SettingRow>
+                    <c:SettingRow Title="Message" Padding="8,4" IsStacked="True">
+                      <TextBox Text="{Binding Text}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72"
+                               PlaceholderText="What Claude is asked, as you'd type it" AutomationProperties.Name="Message" />
+                    </c:SettingRow>
+                    <c:SettingRow Title="Opens in" Padding="8,4">
+                      <StackPanel Orientation="Horizontal" Spacing="16">
+                        <RadioButton GroupName="TimedOpensIn" Content="A new tab" IsChecked="{Binding InFolder}" />
+                        <RadioButton GroupName="TimedOpensIn" Content="A new tab in a worktree" IsChecked="{Binding InWorktree}"
+                                     ToolTip.Tip="A worktree of its own, named after the message, so its changes don't meet the main checkout's" />
+                      </StackPanel>
+                    </c:SettingRow>
+                    <c:SettingRow Title="Mode" Padding="8,4">
+                      <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding SelectedMode}" MinWidth="200" AutomationProperties.Name="Mode" />
+                    </c:SettingRow>
+                    <TextBlock Classes="small warning" TextWrapping="Wrap" IsVisible="{Binding IsBypass}" Margin="8,0"
+                               Text="Bypass permissions: Claude won't ask before running commands or changing files, and nobody may be there to stop it." />
+                    <c:SettingRow Title="Model" Padding="8,4">
+                      <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" MinWidth="200" AutomationProperties.Name="Model" />
+                    </c:SettingRow>
+                    <c:SettingRow Title="Effort" Padding="8,4">
+                      <ComboBox ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding SelectedEffort}" MinWidth="200" AutomationProperties.Name="Effort" />
+                    </c:SettingRow>
+                    <c:SettingRow Title="When" Padding="8,4" IsStacked="True">
+                      <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                          <RadioButton GroupName="TimedWhen" Content="Once" IsChecked="{Binding IsOnce}" />
+                          <RadioButton GroupName="TimedWhen" Content="On days" IsChecked="{Binding IsDays}" />
+                          <RadioButton GroupName="TimedWhen" Content="Advanced" IsChecked="{Binding IsCron}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsOnce}">
+                          <CalendarDatePicker SelectedDate="{Binding Date}" AutomationProperties.Name="Date" />
+                          <TimePicker SelectedTime="{Binding Time}" AutomationProperties.Name="Time" />
+                        </StackPanel>
+                        <StackPanel Spacing="8" IsVisible="{Binding IsDays}">
+                          <TimePicker SelectedTime="{Binding Time}" AutomationProperties.Name="Time" />
+                          <ItemsControl ItemsSource="{Binding Days}">
+                            <ItemsControl.ItemsPanel>
+                              <ItemsPanelTemplate>
+                                <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                              </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate DataType="settings:DayToggle">
+                                <ToggleButton Content="{Binding Label}" IsChecked="{Binding IsOn}" MinWidth="48" />
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Classes="flat" Content="Every day" Command="{Binding EveryDayCommand}" />
+                            <Button Classes="flat" Content="Weekdays" Command="{Binding WeekdaysCommand}" />
+                          </StackPanel>
+                        </StackPanel>
+                        <StackPanel Spacing="4" IsVisible="{Binding IsCron}">
+                          <TextBox Classes="mono" Text="{Binding Cron}" PlaceholderText="0 7 * * MON-FRI" AutomationProperties.Name="Cron expression" />
+                          <TextBlock Classes="small muted" TextWrapping="Wrap"
+                                     Text="Minute, hour, day of the month, month and day of the week, in this computer's time." />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasDates}">
+                          <TextBlock Text="From" VerticalAlignment="Center" />
+                          <CalendarDatePicker SelectedDate="{Binding From}" AutomationProperties.Name="From" />
+                          <TextBlock Text="Until" VerticalAlignment="Center" />
+                          <CalendarDatePicker SelectedDate="{Binding Until}" AutomationProperties.Name="Until" />
+                        </StackPanel>
+                        <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding Preview}" />
+                      </StackPanel>
+                    </c:SettingRow>
+                    <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding Problem}" Margin="8,0"
+                               IsVisible="{Binding Problem, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button Classes="accent" Content="{Binding SaveText}" Command="{Binding SaveCommand}" IsEnabled="{Binding CanSave}" />
+                      <Button Content="Cancel" Command="{Binding CancelCommand}" />
+                    </StackPanel>
+                  </StackPanel>
+                </DataTemplate>
+              </ContentControl.ContentTemplate>
+            </ContentControl>
+          </Border>
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- Waking the computer for them: Windows' own timer, or the helper on macOS and Linux -->
+    <c:SettingsSection Key="wake">
+      <c:SettingRow Key="state.wakeComputer" Title="" IsStacked="True">
+        <StackPanel Spacing="8">
+          <TextBlock TextWrapping="Wrap" Text="{Binding WakeText}" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Install the wake helper…" Command="{Binding InstallHelperCommand}" IsVisible="{Binding CanInstallHelper}" />
+            <Button Content="Remove the wake helper…" Command="{Binding RemoveHelperCommand}" IsVisible="{Binding CanRemoveHelper}" />
+          </StackPanel>
+          <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding WakeStatus}" IsVisible="{Binding WakeStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

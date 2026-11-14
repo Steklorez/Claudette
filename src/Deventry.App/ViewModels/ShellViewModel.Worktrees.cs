@@ -22,7 +22,9 @@ public sealed partial class ShellViewModel
     /// <summary>Opens a new tab that works in a new worktree of <paramref name="folder"/>'s repository, and selects it.</summary>
     /// <param name="opened">Runs on the new tab before it's selected and started, such as making it a sub-thread.</param>
     /// <param name="named">The worktree's name, such as a ticket's <c>issue-142</c>; <c>-2</c> and on are added when it's taken. Two words Deventry picks without it.</param>
-    public async Task OpenWorktreeTabAsync(string folder, Action<TabViewModel>? opened = null, string? named = null)
+    /// <param name="overrides">The tab's own model, effort and mode, set before it's made, which reads them.</param>
+    /// <param name="select">Select the new tab; false leaves the tab the user is in selected, unless none is.</param>
+    public async Task OpenWorktreeTabAsync(string folder, Action<TabViewModel>? opened = null, string? named = null, TabOverrides? overrides = null, bool select = true)
     {
         if (!Directory.Exists(folder))
         {
@@ -50,11 +52,15 @@ public sealed partial class ShellViewModel
             NewWorktree = name,
             SyncToLibrary = _services.Settings.Sessions.SyncNewTabs,
             RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            Overrides = overrides ?? new(),
         };
         var tab = new TabViewModel(_services, this, state, isRestored: false);
         AddTab(tab);
         opened?.Invoke(tab);
-        SelectedTab = tab;
+        if (select || Selected is null)
+        {
+            SelectedTab = tab;
+        }
         SaveTabs();
         await tab.EnsureStartedAsync();
     }

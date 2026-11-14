@@ -45,6 +45,25 @@ public static class Formats
             : $"on {local.ToString("ddd", CultureInfo.CurrentCulture)} at {local.ToString("t", CultureInfo.CurrentCulture)}";
     }
 
+    /// <summary>
+    /// A time to come, in the clock's time zone: "today at 7:00 AM", "tomorrow at 7:00 AM", "Tue at 7:00 AM" within the
+    /// week, else "Nov 28 at 7:00 AM", as a timed message's next time reads (DESIGN.md §18, "Timed messages").
+    /// </summary>
+    public static string Upcoming(DateTimeOffset time, TimeProvider clock)
+    {
+        var culture = CultureInfo.CurrentCulture;
+        var local = TimeZoneInfo.ConvertTime(time, clock.LocalTimeZone);
+        var today = TimeZoneInfo.ConvertTime(clock.GetUtcNow(), clock.LocalTimeZone).Date;
+        var at = local.ToString("t", culture);
+        return (local.Date - today).Days switch
+        {
+            0 => $"today at {at}",
+            1 => $"tomorrow at {at}",
+            > 1 and < 7 => $"{local.ToString("ddd", culture)} at {at}",
+            _ => $"{TimedMessages.TimedSchedule.Day(DateOnly.FromDateTime(local.Date), culture)} at {at}",
+        };
+    }
+
     /// <summary>A folder's own name, with or without a separator at its end; the whole path when it has none (a drive's root).</summary>
     public static string FolderName(string path) =>
         Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) is { Length: > 0 } name ? name : path;

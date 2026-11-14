@@ -73,6 +73,9 @@ public sealed partial class AdvancedPage : SettingsPage
     /// <summary>Whether the computer is kept awake for tabs connected to the Claude app, or why not (DESIGN.md §18).</summary>
     public string KeepAwakeText => Services.KeepAwake.Describe();
 
+    /// <summary>How many timed messages, the next, and the wake that's set for it (DESIGN.md §18, "Timed messages").</summary>
+    public string TimedMessagesText => Services.TimedMessages.Describe();
+
     /// <summary>Each remote client's state, how many accounts are paired, and why it isn't connected (DESIGN.md §18). Never a token or a message.</summary>
     public string RemoteClientsText => Services.RemoteClients.Describe();
 
@@ -87,6 +90,7 @@ public sealed partial class AdvancedPage : SettingsPage
         OnPropertyChanged(nameof(InstalledVersionText));
         OnPropertyChanged(nameof(LoginShellText));
         OnPropertyChanged(nameof(KeepAwakeText));
+        OnPropertyChanged(nameof(TimedMessagesText));
         OnPropertyChanged(nameof(RemoteClientsText));
     }
 
@@ -108,6 +112,7 @@ public sealed partial class AdvancedPage : SettingsPage
             lines.Add($"Claude app (Remote Control): new tabs {(_claudeCode.ConnectNewTabsToClaudeApp ? "connect" : "don't connect")}; "
                 + (_claudeCode.RemoteControlUnavailableText ?? "available for this account") + ".");
             lines.Add($"Keeping the computer awake: {KeepAwakeText}");
+            lines.Add($"Timed messages: {TimedMessagesText}");
             lines.Add(RemoteClientsText);
             lines.Add($"Protocol logging: {(LogProtocol ? "on" : "off")}");
             lines.Add("");

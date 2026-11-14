@@ -22,6 +22,7 @@ using Deventry.Core.Remote;
 using Deventry.Core.RemoteControl;
 using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
+using Deventry.Core.TimedMessages;
 using Deventry.Core.Updates;
 using Deventry.Platform.Notifications;
 using Deventry.Platform.Processes;
@@ -93,6 +94,9 @@ public sealed class AppServices : IAsyncDisposable
     /// Whether the user is at the computer, for when the remote clients send messages (DESIGN.md §18, "Remote clients").
     /// Null can't tell: tests.
     /// </param>
+    /// <param name="wakeTimer">
+    /// Wakes the computer for the next timed message (DESIGN.md §18, "Timed messages"). Null can't: tests.
+    /// </param>
     /// <param name="demo">This Deventry is a demo (DESIGN.md §11, "Demo mode"); null for any other.</param>
     public AppServices(
         AppPaths paths,
@@ -116,6 +120,7 @@ public sealed class AppServices : IAsyncDisposable
         ISystemMotion? systemMotion = null,
         ITrash? trash = null,
         IUserPresence? userPresence = null,
+        IWakeTimer? wakeTimer = null,
         DemoMode? demo = null)
     {
         Demo = demo;
@@ -177,6 +182,7 @@ public sealed class AppServices : IAsyncDisposable
         Accounts = new AccountsService(this, credentials ?? new UnavailableCredentialStore());
         RemoteClients = new RemoteClientsService(this, credentials ?? new UnavailableCredentialStore(), userPresence ?? new NoUserPresence());
         Tickets = new TicketsService(this, credentials ?? new UnavailableCredentialStore());
+        TimedMessages = new TimedMessagesService(this, wakeTimer ?? new NoWakeTimer());
         ProjectTools = new ProjectToolsService(this, systemProcesses, unrealRegistry ?? NoUnrealEngineRegistry.Instance, otherPrograms);
         ServiceStatus = new ServiceStatusService(this);
         LiveSessions = new LiveSessionsService(this, systemProcesses);
@@ -383,6 +389,9 @@ public sealed class AppServices : IAsyncDisposable
     /// this computer awake</b>, which the header's cup turns on and off, and tabs connected to the Claude app.
     /// </summary>
     public KeepAwakeService KeepAwake { get; }
+
+    /// <summary>The timed messages, sent at their times while Deventry runs (DESIGN.md §18, "Timed messages").</summary>
+    public TimedMessagesService TimedMessages { get; }
 
     /// <summary>The OS's trash, which a Files tab's explorer deletes to (DESIGN.md §18, "Project files", "Renaming and deleting").</summary>
     public ITrash Trash { get; }
@@ -794,6 +803,7 @@ public sealed class AppServices : IAsyncDisposable
         await RemoteClients.DisposeAsync();
         Notifications.Dispose();
         RemoteControl.Dispose();
+        TimedMessages.Dispose();
         KeepAwake.Dispose();
         ServiceStatus.Dispose();
         LiveSessions.Dispose();

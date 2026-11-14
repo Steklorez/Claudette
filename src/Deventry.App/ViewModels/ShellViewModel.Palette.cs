@@ -70,6 +70,8 @@ public sealed partial class ShellViewModel
         Command("New tab", NewTab, KeyboardShortcuts.NewTab);
         Command("New project…", OpenNewProject);
         Command("Clone a repository…", OpenClone);
+        // DESIGN.md §18, "Timed messages".
+        AsyncCommand("Add a timed message…", NewTimedMessageAsync);
         Command("Open from History…", OpenHistory, KeyboardShortcuts.History);
         // DESIGN.md §4, "Find a tab".
         if (Groups.Any(g => g.Tabs.Count > 0))

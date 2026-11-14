@@ -657,7 +657,7 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher()), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
             appInstaller: appInstaller, httpHandler: http ?? new OfflineHandler(), appVersion: appVersion ?? TestVersion, loginShell: loginShell,
             projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion,
-            trash: Trash, userPresence: Presence, demo: demo);
+            trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, demo: demo);
         Services.Notifications.UseBadge(Notifier);
         // The machine running the tests doesn't decide whether the Claude app is available (its ANTHROPIC_BASE_URL, say).
         Services.RemoteControl.EnvironmentVariable = _ => null;
@@ -709,6 +709,9 @@ internal sealed class TabTestHarness : IAsyncDisposable
 
     /// <summary>Stands in for keeping the computer awake while tabs are connected to the Claude app (DESIGN.md §18).</summary>
     public FakeSleepBlocker SleepBlocker { get; } = new();
+
+    /// <summary>Stands in for waking the computer for a timed message (DESIGN.md §18, "Timed messages").</summary>
+    public FakeWakeTimer WakeTimer { get; } = new();
 
     /// <summary>Stands in for the OS's reduce-motion setting (DESIGN.md §3, "Accessibility").</summary>
     public FakeSystemMotion SystemMotion { get; } = new();

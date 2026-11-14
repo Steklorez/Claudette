@@ -93,6 +93,8 @@ public partial class App : Application
                 systemMotion: SystemMotion.CreateForCurrentOS(launcher, TimeProvider.System),
                 trash: Trash.CreateForCurrentOS(launcher, TimeProvider.System),
                 userPresence: UserPresences.CreateForCurrentOS(launcher, TimeProvider.System),
+                // A demo never wakes the computer: its timed messages are pictures (DESIGN.md §11, "Demo mode").
+                wakeTimer: Demo.DemoMode.FromEnvironment() is null ? WakeTimers.CreateForCurrentOS(launcher, TimeProvider.System) : null,
                 // The guide's pictures of the Tickets tab: the demo's GitHub issues, answered without the network (DESIGN.md §18, "Tickets").
                 httpHandler: Environment.GetEnvironmentVariable(Core.Demo.DemoTickets.Variable) is { Length: > 0 }
                     ? new Core.Demo.DemoTickets(TimeProvider.System) { InnerHandler = new System.Net.Http.SocketsHttpHandler { AutomaticDecompression = System.Net.DecompressionMethods.All } }

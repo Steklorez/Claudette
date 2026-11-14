@@ -44,7 +44,7 @@ public sealed class ToolImageRealCliTests
         await tab.SendCommand.ExecuteAsync(null);
 
         await Deventry.Tests.Waiting.UntilAsync(
-            () => InlineDispatcher.Read(() => tab.Items.ToolCalls().Any(t => t is { Name: "Read", IsComplete: true })), "the Read's result", TimeSpan.FromSeconds(60));
+            () => InlineDispatcher.Read(() => tab.Items.ToolCalls().Any(t => t is { Name: "Read", IsComplete: true })), "the Read's result");
         var card = InlineDispatcher.Read(() => tab.Items.ToolCalls().Single(t => t.Name == "Read"));
         Assert.False(card.IsError, card.ResultSummary);
         var image = Assert.Single(card.Images);
