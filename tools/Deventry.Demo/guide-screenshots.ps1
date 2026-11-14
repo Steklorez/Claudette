@@ -564,5 +564,37 @@ if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-
     }
 }
 
+# A timed message (DESIGN.md §18, "Timed messages"), made as starfall's group menu makes one: Settings opens on the
+# editor, with the group's folder in it. Then the cup's menu, which lists it.
+if (Test-Wanted 'away/timed-messages', 'away/timed-messages-cup') {
+    Use-Deventry @{} {
+        Shot 'away/timed-messages' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'starfall')
+            $menu = Get-OtherWindow $deventry $window "the group's menu"
+            Send-Click (Find-ByText $menu "Add a timed message$([char] 0x2026)")
+            $settings = Get-OtherWindow $deventry $window 'the Settings window'
+            Wait-Until { Find-ByText $settings 'New timed message' -Optional } 'the editor' 20
+            Set-ElementText (Find-ByType $settings 'Edit' 'Name') 'Morning triage'
+            Set-ElementText (Find-ByType $settings 'Edit' 'Message') 'Triage the issues filed overnight: label each, and say which need me first.'
+            Wait-Settled $settings
+            Save-Window $settings $path
+            Invoke-ByText $settings 'Add'
+            Wait-Until { -not (Find-ByText $settings 'New timed message' -Optional) } 'the message added' 20
+            Close-Other $settings
+        }
+
+        Shot 'away/timed-messages-cup' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'Keep this computer awake')
+            $menu = Get-OtherWindow $deventry $window "the cup's menu"
+            Wait-Until { Find-ByText $menu 'Timed messages' -Optional } 'the timed messages in the menu' 20
+            Wait-Settled $menu
+            Save-Window $menu $path
+            Send-WindowKey $menu 'Escape'
+        }
+    }
+}
+
 if ($failed) { Write-Warning "Not taken: $($failed -join ', ')." }
 Write-Host "Saved to $Out"

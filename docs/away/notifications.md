@@ -24,6 +24,7 @@ Every switch is on by default. They're under **Notify me when** in Settings → 
 | **Claude Code needs me to sign in** | Claude Code asks to sign in again. | *Your tabs are waiting until you sign in again.* |
 | **A Claude Code update is ready** | An update to Claude Code has been installed or is waiting for you ([Claude Code's updates](../updates/claude-codes-updates.md)). | The version, and what to do. It comes once for each version. |
 | **A project action finishes** | A long [project action](../project-tools/using-project-tools.md), such as a build, ended or failed. | *Build editor failed (exit code 6).* A job you stopped doesn't notify. |
+| **A timed message is sent or skipped** | A [timed message](timed-messages.md) was sent to its tab, is waiting for you to trust the folder, couldn't be sent, or was skipped because the computer slept through its time. | *Timed message sent: Morning triage in starfall*, or why it wasn't. |
 
 A tab's notification carries the tab's name as its title.
 
@@ -64,6 +65,7 @@ These are the notifications on this computer. Pushes to a phone are separate: th
 | **Claude Code needs me to sign in** | On | Settings → Notifications |
 | **A Claude Code update is ready** | On | Settings → Notifications |
 | **A project action finishes** | On | Settings → Notifications |
+| **A timed message is sent or skipped** | On | Settings → Notifications |
 | **Notify me when a check-in is sent** | Off | Settings → Tabs → Check-ins on long turns |
 
 The badge and the icon's animation are in [The Dock and taskbar icon](the-dock-and-taskbar-icon.md). **Reset to defaults** in the **Notify me when** section turns every one back on. Notification settings [sync](../history/settings-sync.md) between your machines.

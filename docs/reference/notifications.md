@@ -20,6 +20,7 @@ The switches are in Settings → Notifications, except check-ins, which are in S
 | Sign-in | **Claude Code needs me to sign in** | *"Claude Code needs you to sign in"*: *"Your tabs are waiting until you sign in again."* | The sign-in dialog |
 | A Claude Code update | **A Claude Code update is ready** | That the update is ready, and that new tabs use it while open tabs keep their version until they close. Once per version. | The update dialog |
 | A project action | **A project action finishes** | The job's result: *"Build editor failed (exit code 6)."* Only while Deventry isn't in front. A job you stopped doesn't notify. | The tab, with the Project page on that run's log |
+| A timed message | **A timed message is sent or skipped** | *"Timed message sent: Morning triage in starfall"*; *"Timed message waiting: Morning triage"*, *"Waiting for you to trust starfall."*; *"Timed message not sent"* with why; or *"Timed message skipped: Morning triage"*, *"Its time, today at 7:00 AM, went by while the computer was asleep."* | The message's tab, if it has one |
 | A check-in | **Notify me when a check-in is sent**, in Settings → Tabs, off by default | *"Claude has been at this a while, so Deventry asked how it's going."* A tab can override the switch. | The tab |
 
 Two more switches in Settings → Notifications, under **The Dock or taskbar icon**, are about the icon, not notifications: **Show how many tabs need you** and **Animate it while tabs work or wait**. See [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md).

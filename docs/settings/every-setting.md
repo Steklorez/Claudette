@@ -98,6 +98,7 @@ The page starts with a preview that shows your choices as you make them.
 | **Claude Code needs me to sign in** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
 | **A Claude Code update is ready** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
 | **A project action finishes** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
+| **A timed message is sent or skipped** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
 | **Show how many tabs need you** | The Dock or taskbar icon | On | Yes | [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md) |
 | **Animate it while tabs work or wait** | The Dock or taskbar icon | On | Yes | [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md) |
 
@@ -229,6 +230,15 @@ None of this page syncs, and a tab can't change it for itself.
 | **Diff tool**: the built-in view, a tool installed here, or a custom command | Diff tool | Built-in diff view | [External diff tools](../changes/external-diff-tools.md) |
 | **Command** (for a custom command), with **Test** | Diff tool | Empty | [External diff tools](../changes/external-diff-tools.md) |
 | **Open in the diff window** | Diff tool | Opens the file, as Open files in says (or in the app the OS uses, or the changes in the diff tool) | [The diff view](../changes/the-diff-view.md#opening-the-file) |
+
+## Timed messages
+
+None of this page syncs, so two machines never send the same message, and a tab can't change it for itself.
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| The messages, each with its switch, **Edit…** and **Delete…**, and **Add a timed message…** | Timed messages | None | [Timed messages](../away/timed-messages.md) |
+| **Install the wake helper…** and **Remove the wake helper…** (macOS and Linux) | Waking the computer | Not installed | [Timed messages](../away/timed-messages.md#if-the-computer-is-asleep) |
 
 ## All tools
 
