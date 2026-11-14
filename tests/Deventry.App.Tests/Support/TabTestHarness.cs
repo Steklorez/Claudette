@@ -653,8 +653,10 @@ internal sealed class TabTestHarness : IAsyncDisposable
         // Other programs' folders (the Epic launcher's, Unity Hub's) are empty ones here, never the real ones (DESIGN.md §18).
         var otherPrograms = new Core.ProjectTools.ProjectToolPaths(Path.Combine(_root, "home"), Path.Combine(_root, "appdata"), Path.Combine(_root, "localappdata"),
             Path.Combine(_root, "programdata"), Path.Combine(_root, "programfiles"), Path.Combine(_root, "applications"));
-        // Real processes, or the test's, but never p4 unless the test's is FakeP4 (NoRealP4Launcher says why).
-        Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher()), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
+        // Real processes, or the test's, but never p4 unless the test's is FakeP4 (NoRealP4Launcher says why). A real one's
+        // output is read to its end however long a busy machine takes to get to it: two seconds after it exited, a
+        // starved thread pool had read none of git's error. Nothing the tests start leaves a process holding it open.
+        Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher(outputDrainTime: Waiting.Timeout)), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
             appInstaller: appInstaller, httpHandler: http ?? new OfflineHandler(), appVersion: appVersion ?? TestVersion, loginShell: loginShell,
             projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion,
             trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, demo: demo, loggerFactory: new TestOutputLoggers());
