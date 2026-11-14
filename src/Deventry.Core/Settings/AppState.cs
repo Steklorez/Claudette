@@ -54,6 +54,15 @@ public sealed class AppState
     /// </summary>
     public Dictionary<string, string> FolderAccounts { get; set; } = [];
 
+    /// <summary>
+    /// The time each timed message was last sent or skipped for, by its id (DESIGN.md §18, "Timed messages"), so a
+    /// restart never sends one twice for the same time.
+    /// </summary>
+    public Dictionary<string, DateTimeOffset> TimedMessagesHandled { get; set; } = [];
+
+    /// <summary>The time each timed message was last skipped for, by its id, until it's next sent: the cup's menu says so.</summary>
+    public Dictionary<string, DateTimeOffset> TimedMessagesSkipped { get; set; } = [];
+
     /// <summary>The account a folder opened for the first time uses; null for the Default account.</summary>
     public string? NewFolderAccount { get; set; }
 

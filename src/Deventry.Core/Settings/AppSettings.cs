@@ -49,6 +49,9 @@ public sealed class AppSettings
     /// <summary>Settings → Remote clients (DESIGN.md §18): the tabs from a phone, through a Telegram bot. Per machine.</summary>
     public RemoteClientSettings RemoteClients { get; set; } = new();
 
+    /// <summary>Settings → Timed messages (DESIGN.md §18, "Timed messages"). Per machine.</summary>
+    public TimedMessageSettings TimedMessages { get; set; } = new();
+
     public KeyboardSettings Keyboard { get; set; } = new();
 
     public AdvancedSettings Advanced { get; set; } = new();
