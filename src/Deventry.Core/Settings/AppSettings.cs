@@ -143,6 +143,9 @@ public sealed class NotificationSettings
     /// <summary>A long project action, such as a build, finished or failed (DESIGN.md §18, "Project tools").</summary>
     public bool ProjectActions { get; set; } = true;
 
+    /// <summary>A timed message was sent, or skipped (DESIGN.md §18, "Timed messages").</summary>
+    public bool TimedMessages { get; set; } = true;
+
     /// <summary>The number of tabs needing input on the Dock icon or taskbar button.</summary>
     public bool Badge { get; set; } = true;
 

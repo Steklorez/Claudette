@@ -19,6 +19,8 @@ public enum NotificationKind
     CheckIn,
     /// <summary>A long project action, such as a build, finished or failed (DESIGN.md §18, "Project tools").</summary>
     ProjectAction,
+    /// <summary>A timed message was sent, or skipped (DESIGN.md §18, "Timed messages").</summary>
+    TimedMessage,
 }
 
 /// <summary>Where clicking a notification goes: a tab, or an app-wide screen.</summary>
@@ -104,6 +106,7 @@ public sealed class NotificationService : IDisposable
             NotificationKind.UpdateReady => settings.UpdateReady,
             NotificationKind.CheckIn => (checkIns ?? _services.Settings.CheckIns).Notify,
             NotificationKind.ProjectAction => settings.ProjectActions,
+            NotificationKind.TimedMessage => settings.TimedMessages,
             _ => false,
         };
     }

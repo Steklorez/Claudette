@@ -179,10 +179,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// (DESIGN.md §9, "Keeping the computer awake"): turns running, not waiting on the user, tasks and agents running in
     /// the background, and tasks waiting for a usage limit to reset to carry on by themselves.
     /// </summary>
-    internal void OnTabWorkChanged() => _services.KeepAwake.SetWork(new ClaudeWork(
-        AllTabs.Count(t => t.Status == TabStatus.Working),
-        AllTabs.Sum(t => t.RunningTaskCount),
-        AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit)));
+    internal void OnTabWorkChanged()
+    {
+        _services.KeepAwake.SetWork(new ClaudeWork(
+            AllTabs.Count(t => t.Status == TabStatus.Working),
+            AllTabs.Sum(t => t.RunningTaskCount),
+            AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit)));
+        // A timed message's tab holds sleep off through its first turn (DESIGN.md §18, "Timed messages").
+        _services.TimedMessages.OnTabWork(AllTabs);
+    }
 
     // ---- Every tab's processes, in the header (DESIGN.md §4, "Process monitor") -------------------------------------
 
@@ -391,6 +396,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _ = _services.Drafts.KeepOnlyAsync(state.Tabs.Select(t => t.Id).ToHashSet(StringComparer.Ordinal));
         // Worktrees no tab needs any more go, as Settings → General says (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.Start();
+        // Timed messages are sent from now on, while Deventry runs (DESIGN.md §18, "Timed messages").
+        _services.TimedMessages.Start(this);
         // Settings changed on other machines (DESIGN.md §14, "Settings sync").
         _ = _services.Library.SyncSettingsAsync();
         if (initialFolder is not null)
@@ -442,7 +449,12 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// Claude app or not as Settings → Claude Code says (DESIGN.md §18, "Remote Control").
     /// </summary>
     /// <param name="opened">Runs on the new tab before it's selected and started, such as making it a sub-thread.</param>
-    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null)
+    /// <param name="overrides">The tab's own model, effort and mode, set before it's made, which reads them.</param>
+    /// <param name="select">
+    /// Select the new tab, as opening one does; false leaves the tab the user is in selected, as a timed message's does
+    /// (DESIGN.md §18, "Timed messages"), unless none is.
+    /// </param>
+    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null, TabOverrides? overrides = null, bool select = true)
     {
         if (!Directory.Exists(folder))
         {
@@ -455,11 +467,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             Folder = normalized,
             SyncToLibrary = _services.Settings.Sessions.SyncNewTabs,
             RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            Overrides = overrides ?? new(),
         };
         var tab = new TabViewModel(_services, this, state, isRestored: false);
         AddTab(tab);
         opened?.Invoke(tab);
-        SelectedTab = tab;
+        if (select || Selected is null)
+        {
+            SelectedTab = tab;
+        }
         SaveTabs();
         return tab.EnsureStartedAsync();
     }

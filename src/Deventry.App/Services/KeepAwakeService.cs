@@ -34,7 +34,11 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
     private readonly AppServices _services;
     private readonly ISleepBlocker _sleep;
     private readonly UiTimeout _grace;
+    private readonly UiTimeout _timedGrace;
     private ClaudeWork _work;
+    private bool _timedDue;
+    private int _timedWorking;
+    private string? _nextTimedMessage;
     private int _connectedTabs;
     private bool _remoteClientOn;
 
@@ -43,6 +47,7 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
         _services = services;
         _sleep = sleep;
         _grace = new UiTimeout(services.Time, services.Dispatcher);
+        _timedGrace = new UiTimeout(services.Time, services.Dispatcher);
         Update();
     }
 
@@ -116,6 +121,20 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
             ? "Click to let it sleep."
             : WhileClaudeHasWork ? "Click to keep it awake while Claude has work to finish." : "Click to keep it awake while Deventry runs.";
         yield return "Right-click to choose when.";
+        if (_nextTimedMessage is { } next)
+        {
+            yield return next;
+        }
+    }
+
+    /// <summary>The next timed message, for the end of the tip (DESIGN.md §18, "Timed messages", "The header's cup").</summary>
+    public void SetNextTimedMessage(string? line)
+    {
+        if (line != _nextTimedMessage)
+        {
+            _nextTimedMessage = line;
+            OnPropertyChanged(nameof(Tooltip));
+        }
     }
 
     /// <summary>Why sleep is held off, a line each.</summary>
@@ -140,6 +159,14 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
         if (WhileRemoteClient)
         {
             yield return "A remote client is on: a sleeping computer can't answer it.";
+        }
+        if (_timedDue)
+        {
+            yield return "A timed message is due.";
+        }
+        if (_timedWorking > 0 || _timedGrace.IsPending)
+        {
+            yield return _timedWorking > 1 ? $"{_timedWorking} timed messages' tabs are working." : "A timed message's tab is working.";
         }
     }
 
@@ -209,13 +236,41 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
 
     private bool WhileRemoteClient => _remoteClientOn && _services.Settings.RemoteClients.KeepAwake;
 
+    /// <summary>
+    /// A timed message is due within a couple of minutes, and how many timed messages' tabs are working on their first
+    /// turn (DESIGN.md §18, "Timed messages", "Keeping the computer awake for it"). Sleep is held off for them, and two
+    /// minutes after, whatever <b>Keep this computer awake</b> says: Windows puts a computer a timer woke back to sleep
+    /// a couple of minutes later unless something holds it.
+    /// </summary>
+    public void SetTimedMessages(bool due, int working)
+    {
+        if (due == _timedDue && working == _timedWorking)
+        {
+            return;
+        }
+        if (_timedWorking > 0 && working == 0)
+        {
+            _timedGrace.Restart(Grace, Update);
+        }
+        else if (working > 0)
+        {
+            _timedGrace.Cancel();
+        }
+        _timedDue = due;
+        _timedWorking = working;
+        Update();
+    }
+
+    private bool ForTimedMessages => _timedDue || _timedWorking > 0 || _timedGrace.IsPending;
+
     /// <summary>Settings → General, or Settings → Claude Code's <b>Keep this computer awake while tabs are connected</b>, may have changed.</summary>
     public void OnSettingsChanged() => Update();
 
     private bool Wanted =>
         (IsOn && (WhileDeventryRuns || _work.Any || _grace.IsPending))
         || (_connectedTabs > 0 && _services.Settings.ClaudeCode.KeepAwakeWhileConnected)
-        || WhileRemoteClient;
+        || WhileRemoteClient
+        || ForTimedMessages;
 
     private void Update()
     {
@@ -242,13 +297,15 @@ public sealed partial class KeepAwakeService : ObservableObject, IDisposable
         var remote = !_remoteClientOn ? "" : _services.Settings.RemoteClients.KeepAwake
             ? " A remote client is on."
             : " A remote client is on; keeping the computer awake for it is turned off in Settings → General.";
-        return $"{setting} {tabs}{connected}{remote} {_sleep.Describe()}";
+        var timed = !ForTimedMessages ? "" : _timedDue ? " A timed message is due." : " A timed message's tab is working.";
+        return $"{setting} {tabs}{connected}{remote}{timed} {_sleep.Describe()}";
     }
 
     /// <summary>At exit: the computer can sleep again.</summary>
     public void Dispose()
     {
         _grace.Dispose();
+        _timedGrace.Dispose();
         _sleep.SetBlocking(false);
         _sleep.Dispose();
     }

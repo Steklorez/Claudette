@@ -1268,7 +1268,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// clients"): its card, the notes Claude should have after it, and held, queued or sent as the tab stands.
     /// </summary>
     /// <param name="typed">What was typed, before any large pastes went after it.</param>
-    private async Task SendTypedAsync(string text, string typed, string? suffixText, IReadOnlyList<MessageImage> images, IReadOnlyList<string> pastes, string? via)
+    /// <param name="label">Over its card, for one the user didn't type here just now, such as a timed message (DESIGN.md §18, "Timed messages").</param>
+    private async Task SendTypedAsync(string text, string typed, string? suffixText, IReadOnlyList<MessageImage> images, IReadOnlyList<string> pastes, string? via,
+        string? label = null)
     {
         TellMascot(mascot => mascot.MessageSent());
         _autoContinue.UserSent();
@@ -1283,7 +1285,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         var mentions = OutgoingMessages.IsSlashCommand(text) ? null : ResolveMentions(text);
         var mentionNote = mentions is null ? null : SessionMentions.Note(mentions.Mentioned, mentions.ById);
         var card = _conversation.AddUserMessage(text, suffixText, images: images, threadNote: threadNote, mentionNote: mentionNote,
-            mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray(), subagentNote: subagentNote is { } told ? (told.Note, told.Line) : null, via: via);
+            mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray(), subagentNote: subagentNote is { } told ? (told.Note, told.Line) : null, via: via, label: label);
         card.SubagentsToldBefore = subagentNote?.Before;
         foreach (var note in new[] { threadNote, subagentNote?.Note, mentionNote })
         {

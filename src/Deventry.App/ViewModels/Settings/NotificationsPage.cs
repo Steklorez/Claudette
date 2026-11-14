@@ -21,6 +21,8 @@ public sealed class NotificationsPage : SettingsPage
                 keywords: ["version"]),
             Setting("notifications.projectActions", "A project action finishes", s => s.Notifications.ProjectActions, (s, v) => s.Notifications.ProjectActions = v,
                 keywords: ["build", "job", "run"]),
+            Setting("notifications.timedMessages", "A timed message is sent or skipped", s => s.Notifications.TimedMessages, (s, v) => s.Notifications.TimedMessages = v,
+                keywords: ["schedule", "scheduled", "timer", "morning"]),
         ], description: "Only when Deventry isn't in front. Clicking one brings it to the front, on that tab. Check-ins have their own, in Tabs.");
         Section("icon", "The Dock or taskbar icon",
         [
@@ -79,6 +81,13 @@ public sealed class NotificationsPage : SettingsPage
     {
         get => Settings.Notifications.ProjectActions;
         set => Set(value, v => Settings.Notifications.ProjectActions = v);
+    }
+
+    /// <summary><b>A timed message is sent or skipped</b> (DESIGN.md §18, "Timed messages").</summary>
+    public bool NotifyTimedMessages
+    {
+        get => Settings.Notifications.TimedMessages;
+        set => Set(value, v => Settings.Notifications.TimedMessages = v);
     }
 
     public bool ShowBadge
