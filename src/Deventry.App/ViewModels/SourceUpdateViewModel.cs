@@ -89,6 +89,21 @@ public sealed partial class SourceUpdateViewModel : ObservableObject, IDisposabl
 
     public bool IsBusy => _updates.IsBusy;
 
+    /// <summary>
+    /// Restart into new builds by itself once no tab is working, as New build ready's dialog offers. It's here too
+    /// because that dialog is hard to reach while it's on: the badge it opens from is gone again as soon as the
+    /// restart happens.
+    /// </summary>
+    public bool RestartAutomatically
+    {
+        get => _updates.RestartAutomatically;
+        set
+        {
+            _updates.RestartAutomatically = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string BuildOutput => string.Join('\n', _updates.BuildLines);
 
     public bool HasBuildOutput => _updates.BuildLines.Count > 0;

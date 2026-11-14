@@ -1,5 +1,6 @@
 using Deventry.Core.Diffs;
 using Deventry.Core.Perforce;
+using Deventry.Core.ProjectFiles;
 using Deventry.Core.Settings;
 
 namespace Deventry.App.Services;
@@ -201,6 +202,63 @@ public sealed class PerforceFilesService
             return state with { Path = path };
         }
         return PerforceFileCommands.Problem(result, PerforceQuietness.Automatic) is null ? PerforceFileState.NotInDepotAt(path) : null;
+    }
+
+    // ---- What P4IGNORE ignores (DESIGN.md §18, "The explorer") ----------------------------------------------------
+
+    /// <summary>Which of the explorer's entries Perforce's P4IGNORE rules ignore, which it marks them from.</summary>
+    public PerforceIgnoreCache Ignores { get; } = new(ChangedFiles.PlatformPathComparer);
+
+    /// <summary>What P4IGNORE ignores in these folders changed what they show: raised on the UI thread.</summary>
+    public event Action<IReadOnlyCollection<string>>? IgnoresChanged;
+
+    /// <summary>
+    /// A name inside a folder, asked about with the folder: a rule for what's in a folder, as <c>Binaries/</c> is, ignores
+    /// what's in it but not the folder's own path.
+    /// </summary>
+    internal const string FolderProbe = "deventry-p4ignore-probe";
+
+    /// <summary>
+    /// Asks Perforce which of <paramref name="folder"/>'s entries its P4IGNORE rules ignore, those not asked about since
+    /// the last forget, in <c>p4 ignores -i</c>, off the UI thread, and keeps the answers; <see cref="IgnoresChanged"/>
+    /// says when one changes what's shown. A folder is asked about as itself and as a name inside it. Nothing is asked in a
+    /// folder that's ignored, whose entries are too; and nothing is kept when Perforce can't say, so the next read asks again.
+    /// </summary>
+    public async Task RefreshIgnoresAsync(string projectFolder, string folder, CancellationToken cancellationToken = default)
+    {
+        var generation = Ignores.Generation;
+        if (Ignores.IsIgnored(folder) == true)
+        {
+            return;
+        }
+        var entries = await Task.Run(() => FolderListing.Read(folder, folder).Where(e => !Ignores.Knows(e.FullPath)).ToArray(), cancellationToken).ConfigureAwait(false);
+        if (entries.Length == 0)
+        {
+            return;
+        }
+        var asked = entries.SelectMany(e => e.IsFolder ? [e.FullPath, Path.Combine(e.FullPath, FolderProbe)] : new[] { e.FullPath }).ToArray();
+        var target = _perforce.TargetFor(projectFolder);
+        // By name in the folder asked about, as the states are: Perforce may write the path another way.
+        var ignored = new HashSet<string>(ChangedFiles.PlatformPathComparer);
+        foreach (var batch in Batches(asked))
+        {
+            var result = await Task.Run(() => Client.RunCommandAsync(target, PerforceFileCommands.Ignores(batch), StatusTimeout, cancellationToken), cancellationToken)
+                .ConfigureAwait(false);
+            if (!result.Ran || result.IsConnectionFailure || result.NeedsLogin)
+            {
+                return;
+            }
+            foreach (var path in PerforceFileCommands.ParseIgnored(result.Output))
+            {
+                var trimmed = Path.TrimEndingDirectorySeparator(path);
+                var name = Path.GetFileName(trimmed);
+                ignored.Add(name == FolderProbe ? Path.GetFileName(Path.GetDirectoryName(trimmed) ?? "") : name);
+            }
+        }
+        if (Ignores.Complete(generation, entries.Select(e => (e.FullPath, ignored.Contains(e.Name)))))
+        {
+            _services.Dispatcher.Post(() => IgnoresChanged?.Invoke([folder]));
+        }
     }
 
     /// <summary>The folders whose states a command on these paths changed, and which are kept: asked about again.</summary>

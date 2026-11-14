@@ -68,7 +68,16 @@ public sealed partial class ShellViewModel
             entries.Add(new PaletteEntry(label, "Command", run, shortcutId is null ? null : Tips.Text(shortcutId)));
 
         Command("New tab", NewTab, KeyboardShortcuts.NewTab);
+        Command("New project…", OpenNewProject);
+        Command("Clone a repository…", OpenClone);
+        // DESIGN.md §18, "Timed messages".
+        AsyncCommand("Add a timed message…", NewTimedMessageAsync);
         Command("Open from History…", OpenHistory, KeyboardShortcuts.History);
+        // DESIGN.md §4, "Find a tab".
+        if (Groups.Any(g => g.Tabs.Count > 0))
+        {
+            Command("Find a tab…", OpenTabSearch, KeyboardShortcuts.FindTab);
+        }
         AsyncCommand("Settings", OpenSettingsAsync, KeyboardShortcuts.Settings);
         Command(Layout.IsSidebarCollapsed ? "Expand the sidebar" : "Collapse the sidebar", () => Layout.ToggleSidebarCommand.Execute(null), KeyboardShortcuts.ToggleSidebar);
         var zoom = _services.Settings.Appearance.Zoom;
@@ -106,6 +115,11 @@ public sealed partial class ShellViewModel
                 Command("Go to line…", showing.RequestGoToLine);
                 // DESIGN.md §18, "A file in a window of its own".
                 Command("Open the file in a window", () => files.PopOut(showing));
+                // DESIGN.md §18, "Project files", "The editor": the bar's Wrap lines.
+                if (showing.ShowsEditor)
+                {
+                    Command(showing.WordWrap ? "Stop wrapping the file's lines" : "Wrap the file's lines", () => showing.WordWrap = !showing.WordWrap);
+                }
                 // DESIGN.md §18, "Markdown preview": the modes that aren't showing.
                 if (showing.IsMarkdown)
                 {
@@ -171,9 +185,10 @@ public sealed partial class ShellViewModel
             if (_services.Games.IsEnabled)
             {
                 Command("Play tic-tac-toe with Joulene", () => tab.PlayGame(GameKind.TicTacToe));
-                Command("Play Connect Four with Joulene", () => tab.PlayGame(GameKind.ConnectFour));
+                Command("Play Four in a Row with Joulene", () => tab.PlayGame(GameKind.FourInARow));
                 Command("Play hangman with Joulene", () => tab.PlayGame(GameKind.Hangman));
                 Command("Play Minesweeper with Joulene", () => tab.PlayGame(GameKind.Minesweeper));
+                Command("Play Pipeline with Joulene", () => tab.PlayGame(GameKind.Pipeline));
             }
             Command("Tab settings…", () => OpenTabSettingsCommand.Execute(tab));
             // DESIGN.md §4, "Sidebar": what's under its row.
@@ -243,7 +258,7 @@ public sealed partial class ShellViewModel
                 "Folder", () => OpenFolderAsync(folder), Detail: folder));
         }
 
-        foreach (var category in SettingsSidebar.Categories(_services.ProjectTools.Detector.Types))
+        foreach (var category in SettingsSidebar.Categories(_services.ProjectTools.Detector.Types, _services.RemoteClients.Types, _services.Tickets.Types))
         {
             entries.Add(new PaletteEntry(category, "Settings", () => OpenSettingsAtAsync(category)));
         }

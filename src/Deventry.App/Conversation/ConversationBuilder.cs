@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Deventry.Core.Diffs;
 using Deventry.Core.Docs;
+using Deventry.Core.Media;
 using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 using Deventry.Core.Subagents;
@@ -45,6 +46,7 @@ public sealed class ConversationBuilder
     private string? _lastEntryUuid;
     private AgentMap? _agents;
     private RunningTasks? _tasks;
+    private MediaGallery? _media;
 
     // The agent whose stream this builder shows: the main agent, or the subagent whose group it fills.
     private AgentNode? _agent;
@@ -241,6 +243,16 @@ public sealed class ConversationBuilder
     }
 
     /// <summary>
+    /// The Media window's gallery (DESIGN.md §18, "Media"): the images the conversation has, and the media files it names,
+    /// the user's and every agent's.
+    /// </summary>
+    public MediaGallery? Media
+    {
+        get => _media;
+        init => _media = value;
+    }
+
+    /// <summary>
     /// The tab is in Plan mode, where Claude Code lets Claude change only its plan file: the main agent's Write or Edit to
     /// a Markdown file is the plan's draft (DESIGN.md §5, "Tasks").
     /// </summary>
@@ -290,21 +302,23 @@ public sealed class ConversationBuilder
     /// <param name="mentionNote">The note on the sessions and agents it names, sent after it, which the card mentions.</param>
     /// <param name="mentioned">Their names, for the card's line about the note.</param>
     /// <param name="subagentNote">The note on subagents sent after it, and the card's line about it (DESIGN.md §5, "Subagents").</param>
+    /// <param name="via">The remote client the user sent it from (DESIGN.md §18, "Remote clients").</param>
     public UserMessageItem AddUserMessage(string text, string? suffixText = null, bool isCheckIn = false, IReadOnlyList<MessageImage>? images = null, bool isAutoContinue = false,
         string? label = null, bool isFromThread = false, string? threadNote = null, string? mentionNote = null, IReadOnlyList<string>? mentioned = null,
-        (string Note, string Line)? subagentNote = null) =>
+        (string Note, string Line)? subagentNote = null, string? via = null) =>
         AddUser(new UserMessageItem(text, suffixText, isCheckIn, isAutoContinue)
         {
             Images = images ?? [],
             ResumeAt = _lastEntryUuid,
             Label = label,
             IsFromThread = isFromThread,
+            Via = via,
             ThreadNote = threadNote,
             MentionNote = mentionNote,
             Mentioned = mentioned ?? [],
             SubagentNote = subagentNote?.Note,
             SubagentNoteText = subagentNote?.Line,
-        }, Now());
+        }, Now(), live: !IsReplaying);
 
     /// <summary>
     /// A prompt from a transcript, sent at <paramref name="sentAt"/>: null when its entry has no time. Its entry's
@@ -312,12 +326,12 @@ public sealed class ConversationBuilder
     /// </summary>
     public UserMessageItem ReplayUserMessage(string text, IReadOnlyList<MessageImage> images, DateTimeOffset? sentAt, string? uuid = null, string? parentUuid = null)
     {
-        var item = AddUser(new UserMessageItem(text) { Images = images, Uuid = uuid, ResumeAt = parentUuid ?? _lastEntryUuid }, sentAt);
+        var item = AddUser(new UserMessageItem(text) { Images = images, Uuid = uuid, ResumeAt = parentUuid ?? _lastEntryUuid }, sentAt, live: false);
         _lastEntryUuid = uuid ?? _lastEntryUuid;
         return item;
     }
 
-    private UserMessageItem AddUser(UserMessageItem item, DateTimeOffset? sentAt)
+    private UserMessageItem AddUser(UserMessageItem item, DateTimeOffset? sentAt, bool live)
     {
         _blocks.Close();
         _blocks.ForgetLastText();
@@ -328,6 +342,11 @@ public sealed class ConversationBuilder
         if (!item.IsCheckIn && !item.IsAutoContinue)
         {
             _agents?.BeginExchange();
+        }
+        // The user's media (DESIGN.md §18, "Media"): not a check-in's, a continue's or a thread's, which Deventry sent.
+        if (_media is not null && !item.IsCheckIn && !item.IsAutoContinue && !item.IsFromThread)
+        {
+            _media.AddMessage(item, MediaFiles.InText(item.Text), sentAt, live);
         }
         return item;
     }
@@ -429,6 +448,7 @@ public sealed class ConversationBuilder
         if (_parent is null)
         {
             _todoList?.Clear();
+            _media?.Clear();
         }
         _agents?.Clear();
         _tasks?.OnConversationCleared();
@@ -446,9 +466,14 @@ public sealed class ConversationBuilder
 
     public void Apply(SessionEvent sessionEvent)
     {
+        var count = Items.Count;
         ApplyCore(sessionEvent);
-        // A step may have joined a run, or a message ended it: the run at the end folds as it should.
-        Runs.Update();
+        // A step may have joined a run, or a message ended it: the run at the end folds as it should. A piece of streamed
+        // text or thinking that only adds to the row it streams into changes no run, and they come many times a second.
+        if (sessionEvent is not (TextDelta or ThinkingDelta) || Items.Count != count)
+        {
+            Runs.Update();
+        }
     }
 
     private void ApplyCore(SessionEvent sessionEvent)
@@ -497,7 +522,7 @@ public sealed class ConversationBuilder
                     Label = origin.Name is { Length: > 0 } sender ? $"From the session {sender}" : "From another session",
                     Uuid = peer.Message.Uuid,
                     ResumeAt = _lastEntryUuid,
-                }, Now());
+                }, Now(), live: !IsReplaying);
                 _lastEntryUuid = peer.Message.Uuid ?? _lastEntryUuid;
                 break;
 
@@ -679,6 +704,11 @@ public sealed class ConversationBuilder
                     }
                     _blocks.CloseText();
                     _agent?.OnText(text.Text);
+                    if (_media is not null && _blocks.LastText is { } whole)
+                    {
+                        // The media files a reply names (DESIGN.md §18, "Media"), once it's whole.
+                        _media.AddReply(whole, MediaFiles.InText(text.Text), live: !IsReplaying);
+                    }
                     break;
 
                 case ToolUseBlock toolUse:
@@ -730,6 +760,7 @@ public sealed class ConversationBuilder
                         // Its traffic fills its group and its node in the agent map, under this agent.
                         child._agents = _agents;
                         child._tasks = _tasks;
+                        child._media = _media;
                         child._agent = _agent is not null ? _agents?.Add(_agent, subagent) : null;
                         _subagents[toolUse.Id] = child;
                         _toolUses[toolUse.Id] = subagent;
@@ -847,6 +878,18 @@ public sealed class ConversationBuilder
             {
                 credited.Task.AddFile(credited.Path, result.ToolUseId);
             }
+            if (!result.IsError && _toolUses.TryGetValue(result.ToolUseId, out var stop) && stop.Name is "TaskStop" or "KillShell"
+                && (stop.Input["task_id"] ?? stop.Input["shell_id"]) is JsonValue stopped && stopped.TryGetValue<string>(out var stoppedId))
+            {
+                // Claude stopped a background task, a subagent maybe (DESIGN.md §5, "Running tasks"): it's over once
+                // Claude Code says so, with or without the task_notification it doesn't always send then. One that
+                // finished first stays as it ended.
+                if (_agents?.FindByTask(stoppedId) is { IsActive: true } stoppedAgent)
+                {
+                    stoppedAgent.OnTaskEnded("stopped", null, null);
+                }
+                _tasks?.OnStoppedByClaude(stoppedId);
+            }
             if (_todoToolUses.Remove(result.ToolUseId))
             {
                 _todoList?.ApplyToolResult(result.ToolUseId, result.Text, message.ToolUseResult);
@@ -878,6 +921,7 @@ public sealed class ConversationBuilder
                 {
                     tool.Images = ToolImages.From(tool.Name, tool.Input, result, message.ToolUseResult);
                 }
+                AddToolMedia(tool);
                 if (!failed && ClaudeDocCall.MayBe(tool.Name))
                 {
                     ShowDoc(tool, result.Text);
@@ -898,6 +942,27 @@ public sealed class ConversationBuilder
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// A call's media, once its result is back (DESIGN.md §18, "Media"): the images in its result, or else the media file
+    /// it read, wrote or edited, or the ones its command names, when they're there.
+    /// </summary>
+    private void AddToolMedia(ToolUseItem tool)
+    {
+        if (_media is null)
+        {
+            return;
+        }
+        // A Read of an image has the image itself, which is what Claude saw.
+        IReadOnlyList<ReplyFileReference> named = tool.Images.Count > 0 ? [] : tool.Name switch
+        {
+            "Bash" or "PowerShell" when tool.Input.GetString("command") is { } command => MediaFiles.InCommand(command),
+            "Read" or "Write" or "Edit" or "MultiEdit" when tool.Input.GetString("file_path") is { Length: > 0 } path && MediaFiles.KindOf(path) is not null =>
+                [new ReplyFileReference(path, path)],
+            _ => [],
+        };
+        _media.AddToolResult(tool, named, live: !IsReplaying);
     }
 
     /// <summary>

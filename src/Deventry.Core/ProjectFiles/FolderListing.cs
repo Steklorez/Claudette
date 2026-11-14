@@ -9,17 +9,22 @@ namespace Deventry.Core.ProjectFiles;
 /// <param name="IsIgnored">Git ignores it (outside a repository: a folder the <c>@</c> list skips); drawn dimmed.</param>
 /// <param name="IsLink">A symbolic link or junction.</param>
 /// <param name="LeadsUp">A link to a folder above it in the tree, which isn't expanded, so the tree can't go round forever.</param>
-public sealed record TreeEntry(string Name, string FullPath, string RelativePath, bool IsFolder, bool IsIgnored = false, bool IsLink = false, bool LeadsUp = false);
+/// <param name="IsHidden">A dotfile, or one the OS hides, or in a hidden folder; drawn dimmed.</param>
+public sealed record TreeEntry(string Name, string FullPath, string RelativePath, bool IsFolder, bool IsIgnored = false, bool IsLink = false, bool LeadsUp = false,
+    bool IsHidden = false);
 
 /// <summary>
 /// Reads a folder for the Project Files tab's explorer (DESIGN.md §18, "Project files", "The explorer"): folders first,
 /// then files, by name ignoring case, without <c>.git</c> or files Deventry is still writing, and with what git ignores
-/// marked.
+/// and what's hidden marked.
 /// </summary>
 public static class FolderListing
 {
-    /// <summary>The entries of <paramref name="folder"/>, inside <paramref name="root"/>, without asking git.</summary>
-    public static IReadOnlyList<TreeEntry> Read(string root, string folder)
+    /// <summary>
+    /// The entries of <paramref name="folder"/>, inside <paramref name="root"/>, without asking git; with everything in it
+    /// hidden when <paramref name="parentHidden"/>.
+    /// </summary>
+    public static IReadOnlyList<TreeEntry> Read(string root, string folder, bool parentHidden = false)
     {
         var entries = new List<TreeEntry>();
         DirectoryInfo directory;
@@ -37,7 +42,7 @@ public static class FolderListing
                 var isFolder = (child.Attributes & FileAttributes.Directory) != 0;
                 var isLink = child.LinkTarget is not null || (child.Attributes & FileAttributes.ReparsePoint) != 0;
                 entries.Add(new TreeEntry(child.Name, child.FullName, Relative(root, child.FullName), isFolder, IsLink: isLink,
-                    LeadsUp: isFolder && isLink && LinkLeadsUp(child, root)));
+                    LeadsUp: isFolder && isLink && LinkLeadsUp(child, root), IsHidden: parentHidden || IsHidden(child)));
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -50,12 +55,13 @@ public static class FolderListing
 
     /// <summary>
     /// <see cref="Read"/>, with what git ignores marked; outside a repository, the folders the <c>@</c> list skips
-    /// (<c>node_modules</c>, <c>bin</c>, <c>obj</c> and the like). Everything under an ignored folder is ignored too.
+    /// (<c>node_modules</c>, <c>bin</c>, <c>obj</c> and the like). Everything under an ignored folder is ignored too, and
+    /// everything under a hidden one hidden.
     /// </summary>
-    public static async Task<IReadOnlyList<TreeEntry>> ReadAsync(string root, string folder, GitWorkingTree git, bool inRepository, bool parentIgnored,
+    public static async Task<IReadOnlyList<TreeEntry>> ReadAsync(string root, string folder, GitWorkingTree git, bool inRepository, bool parentIgnored, bool parentHidden,
         CancellationToken cancellationToken = default)
     {
-        var entries = await Task.Run(() => Read(root, folder), cancellationToken).ConfigureAwait(false);
+        var entries = await Task.Run(() => Read(root, folder, parentHidden), cancellationToken).ConfigureAwait(false);
         if (parentIgnored)
         {
             return [.. entries.Select(e => e with { IsIgnored = true })];
@@ -72,6 +78,12 @@ public static class FolderListing
         }
         return [.. entries.Select(e => ignored.Contains(e.IsFolder ? e.RelativePath + "/" : e.RelativePath) || ignored.Contains(e.RelativePath) ? e with { IsIgnored = true } : e)];
     }
+
+    /// <summary>
+    /// Hidden: a name that starts with a dot, on every system, so a project's tree looks the same on each; or one the OS
+    /// hides, Windows' Hidden attribute and macOS's hidden flag, which .NET reads as <see cref="FileAttributes.Hidden"/>.
+    /// </summary>
+    public static bool IsHidden(FileSystemInfo entry) => entry.Name.StartsWith('.') || (entry.Attributes & FileAttributes.Hidden) != 0;
 
     /// <summary>Folders first, then files; by name, ignoring case, then by case so the order is stable.</summary>
     public static int Compare(TreeEntry a, TreeEntry b)

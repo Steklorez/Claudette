@@ -48,6 +48,18 @@
       <c:SettingRow Key="editor.indent">
         <ComboBox ItemsSource="{Binding IndentChoices}" SelectedItem="{Binding SelectedIndent}" />
       </c:SettingRow>
+      <c:SettingRow Key="git.ignoredFiles">
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <RadioButton GroupName="IgnoredFiles" Content="Dimmed" IsChecked="{Binding IgnoredFilesDimmed}" />
+          <RadioButton GroupName="IgnoredFiles" Content="Hidden" IsChecked="{Binding IgnoredFilesHidden}" />
+        </StackPanel>
+      </c:SettingRow>
+      <c:SettingRow Key="editor.hiddenFiles">
+        <StackPanel Orientation="Horizontal" Spacing="16">
+          <RadioButton GroupName="HiddenFiles" Content="Dimmed" IsChecked="{Binding HiddenFilesDimmed}" />
+          <RadioButton GroupName="HiddenFiles" Content="Hidden" IsChecked="{Binding HiddenFilesHidden}" />
+        </StackPanel>
+      </c:SettingRow>
     </c:SettingsSection>
 
     <c:SettingsSection Key="diffTool">

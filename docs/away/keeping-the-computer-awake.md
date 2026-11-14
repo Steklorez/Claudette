@@ -1,7 +1,7 @@
 ---
 title: Keeping the computer awake
 parent: Away from your desk
-nav_order: 4
+nav_order: 5
 summary: "Long tasks outlast the time before a computer goes to sleep."
 ---
 
@@ -23,13 +23,15 @@ Then choose when it applies:
 - **Only while Claude has work to finish** (the default once it's on). That means a tab is running a turn (not one waiting for you, since you may not be there to answer), Claude Code is keeping tasks or agents running in the background in any tab, or a task is waiting for a usage limit to reset so it can carry on by itself. A task that won't continue, because you chose **Don't continue** or the reset is more than a day away, doesn't count. When there's no work left, Deventry holds on for two more minutes, since the next turn often starts right after, and then lets the computer sleep as your OS settings say.
 - **Whenever Deventry is running**, from when it starts until it closes.
 
-Right-click the cup to choose between them. Choosing turns the setting on too. The same menu's **Keep-awake settings…** opens Settings → General.
+Right-click the cup to choose between them, under **Keep awake** in its menu. Choosing turns the setting on too. The same menu's **Keep-awake settings…** opens Settings → General. The menu's first section is your [timed messages](timed-messages.md).
 
 ## The cup
 
 The cup sits in the usage header, after the processes' total. It takes the accent color while the setting is on, and steams while sleep is being held off, for any reason. Its tooltip says what's happening and why, for example *Keeping this computer awake. The screen can still turn off.* and *While Claude has work to finish: 2 tabs working, 1 tab waiting for a usage limit to reset.*
 
-Tabs connected to the [Claude app](the-claude-app.md) also keep the computer awake while Settings → General → **Also while tabs are connected to the Claude app** is on, and the cup steams for that too. The tooltip names it.
+While any [timed message](timed-messages.md) is on, the cup has a clock's two hands in its body. Sleep is held off from just before a timed message's time until its tab's turn has finished, whatever the setting says.
+
+Tabs connected to the [Claude app](the-claude-app.md) also keep the computer awake while Settings → General → **Also while tabs are connected to the Claude app** is on, and so does a bot of [Remote clients](remote-clients.md) while it's on, as long as **Also while a remote client is on** is. The cup steams for those too, and the tooltip names them.
 
 ## When it can't
 
@@ -44,8 +46,11 @@ Settings → Advanced → Diagnostics shows whether the setting is on, what Deve
 | **Keep this computer awake** | Off | Settings → General, or the cup |
 | **Only while Claude has work to finish** / **Whenever Deventry is running** | **Only while Claude has work to finish** | Settings → General, or the cup's menu |
 | **Also while tabs are connected to the Claude app** | On | Settings → General |
+| **Also while a remote client is on** | On | Settings → General |
 
 ## See also
 
 - [The usage header](../usage/the-usage-header.md), where the cup lives.
 - [The Claude app](the-claude-app.md).
+- [Remote clients](remote-clients.md).
+- [Timed messages](timed-messages.md), which the cup shows too.

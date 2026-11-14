@@ -138,6 +138,7 @@ public sealed partial class ProjectFilesViewModel
         _perforceStarted = true;
         _showedPerforceState = ShowsPerforceState;
         PerforceFiles.StatusesChanged += OnPerforceStatusesChanged;
+        PerforceFiles.IgnoresChanged += OnPerforceIgnoresChanged;
         _ = FindPerforceAsync();
     }
 
@@ -161,6 +162,7 @@ public sealed partial class ProjectFilesViewModel
         }
         ApplyPerforceEverywhere();
         RefreshPerforce(ShownFolders());
+        RefreshIgnores([Folder, .. Rows.Where(r => r.IsExpanded && r is not NameRow).Select(r => r.FullPath)]);
     }
 
     /// <summary>The folders whose files show: the project's, the expanded ones', and the open files'.</summary>
@@ -221,6 +223,72 @@ public sealed partial class ProjectFilesViewModel
                     break;
             }
         });
+    }
+
+    // ---- What P4IGNORE ignores (DESIGN.md §18, "The explorer") ----------------------------------------------------
+
+    /// <summary>The folders whose ignored entries are being asked about, on the UI thread: true when another ask is wanted once it's answered.</summary>
+    private readonly Dictionary<string, bool> _ignoresAsking = new(PathComparer);
+
+    /// <summary>
+    /// Asks Perforce what its P4IGNORE rules ignore in these folders of the tree, off the UI thread, about the entries it
+    /// hasn't been asked about: when a folder is read and once the workspace is found. Nothing waits for it, whatever
+    /// Settings → Perforce says of the marks; a folder an answer changes is read again, from the cache.
+    /// </summary>
+    private void RefreshIgnores(IEnumerable<string> folders)
+    {
+        if (_perforce is null || _disposed)
+        {
+            return;
+        }
+        foreach (var folder in folders.Distinct(PathComparer).ToArray())
+        {
+            // One ask a folder at a time: one asked for meanwhile follows it, once.
+            if (_ignoresAsking.TryGetValue(folder, out _))
+            {
+                _ignoresAsking[folder] = true;
+                continue;
+            }
+            _ignoresAsking[folder] = false;
+            _ = RefreshIgnoresFolderAsync(folder);
+        }
+    }
+
+    private async Task RefreshIgnoresFolderAsync(string folder)
+    {
+        await PerforceFiles.RefreshIgnoresAsync(Folder, folder).ConfigureAwait(false);
+        _services.Dispatcher.Post(() =>
+        {
+            if (_ignoresAsking.Remove(folder, out var again) && again)
+            {
+                RefreshIgnores([folder]);
+            }
+        });
+    }
+
+    /// <summary>Perforce said what P4IGNORE ignores in these folders, and it changed what they show: those in the tree are read again.</summary>
+    private void OnPerforceIgnoresChanged(IReadOnlyCollection<string> folders)
+    {
+        if (_disposed || _perforce is null)
+        {
+            return;
+        }
+        var shown = folders.Where(f => PathComparer.Equals(f, Folder) || Rows.Any(r => r.IsExpanded && PathComparer.Equals(r.FullPath, f))).ToArray();
+        if (shown.Length == 0)
+        {
+            return;
+        }
+        _foldersToRead.UnionWith(shown);
+        _ = ReadQueuedFoldersAsync();
+    }
+
+    /// <summary>A P4IGNORE file may have changed, or <b>Refresh</b>: what it ignores is asked about again, marked as it was meanwhile.</summary>
+    private void ForgetIgnores()
+    {
+        if (_perforce is not null)
+        {
+            PerforceFiles.Ignores.Forget();
+        }
     }
 
     /// <summary>The server didn't answer: one quiet line, not an error for each folder.</summary>
@@ -672,6 +740,7 @@ public sealed partial class ProjectFilesViewModel
         if (_perforceStarted)
         {
             PerforceFiles.StatusesChanged -= OnPerforceStatusesChanged;
+            PerforceFiles.IgnoresChanged -= OnPerforceIgnoresChanged;
         }
     }
 }

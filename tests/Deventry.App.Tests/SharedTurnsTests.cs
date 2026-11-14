@@ -31,12 +31,13 @@ public class SharedTurnsTests
         await LibraryHasAsync(desk, "s1", turns: 2);
         var lapTab = await lap.Harness.OpenTabAsync();
         lap.Harness.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() => lap.Tracker.Store.GetTurns(DateTimeOffset.MinValue, DateTimeOffset.MaxValue).Count == 1, "the laptop's own turn");
-        var imported = new TaskCompletionSource();
-        lap.Tracker.TurnsImported += _ => imported.TrySetResult();
+        // Its own turn, by its tab: the share the laptop makes as it starts may already have brought the desktop's in, when
+        // it ran late enough on a busy machine.
+        await TabTestHarness.Eventually(() => lap.Tracker.Store.GetTurns(DateTimeOffset.MinValue, DateTimeOffset.MaxValue, lapTab.Id).Count == 1, "the laptop's own turn");
 
         await lap.Tracker.ShareAsync();
-        await imported.Task.WaitAsync(Waiting.Timeout, TestContext.Current.CancellationToken);
+        // The desktop's two, from this share or that one.
+        await TabTestHarness.Eventually(() => lap.Tracker.Store.GetTurns(DateTimeOffset.MinValue, DateTimeOffset.MaxValue).Count == 3, "the desktop's turns");
         using var header = new UsageViewModel(lap.Harness.Services, lap.Tracker);
         var panel = new UsagePanelViewModel(lap.Harness.Services, lap.Tracker, header, id => id == lapTab.Id ? "Laptop tab" : null);
         await panel.RefreshAsync();
@@ -196,10 +197,9 @@ public class SharedTurnsTests
         SessionUsage? usage = null;
         await TabTestHarness.Eventually(() =>
         {
-            machine.Harness.Time.Advance(TimeSpan.FromSeconds(1));
             usage = File.Exists(file) ? SessionUsageFile.Read(AtomicFile.ReadAllText(file)) : null;
             return usage?.Turns.Count == turns;
-        }, $"{turns} turns in the library");
+        }, $"{turns} turns in the library", poll: () => machine.Harness.Time.Advance(TimeSpan.FromSeconds(1)));
         return usage!;
     }
 

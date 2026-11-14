@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -18,6 +19,7 @@ public class ContextRingTests
             new TabState { Folder = h.WorkFolder, IsPinned = true },
         ];
         h.Shell.Restore(null);
+        h.Start();
         var selected = h.Shell.SelectedTab!;
         var waiting = h.Shell.AllTabs.Single(t => t != selected);
         await TabTestHarness.Eventually(() => selected.Status == TabStatus.Idle && selected.IsSettled, "the selected tab to start");
@@ -96,8 +98,8 @@ public class ContextRingTests
         var settings = new SettingsViewModel(h.Services, null);
         Assert.True(settings.Conversation.ShowContextOnTabs);
         Assert.True(tab.Context.ShowRing);
-        var changed = new List<string?>();
-        tab.Context.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        tab.Context.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         settings.Conversation.ShowContextOnTabs = false;
 

@@ -5,6 +5,8 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Deventry.App.Services;
@@ -13,6 +15,7 @@ using Deventry.App.ViewModels;
 using Deventry.App.Views;
 using Deventry.App.Views.Editor;
 using Deventry.Core.Settings;
+using TextMateSharp.Model;
 
 namespace Deventry.App.UiTests;
 
@@ -95,6 +98,46 @@ public sealed class ProjectFilesUiTests
     }
 
     /// <summary>
+    /// What's hidden and what's ignored drawn dimmed, and the explorer's ⋯ ticking <b>Show ignored files</b> and <b>Show
+    /// hidden files</b>, which take them out of the tree (DESIGN.md §18, "The explorer").
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Hidden_and_ignored_rows_are_dimmed_and_the_explorers_menu_ticks_them_and_takes_them_out()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        await h.OpenTabAsync();
+        Write(Path.Combine(h.WorkFolder, ".editorconfig"), "");
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "node_modules"));
+        Write(Path.Combine(h.WorkFolder, "app.js"), "");
+        h.Shell.OpenProjectFilesCommand.Execute(h.Shell.Groups.Single());
+        var files = h.Shell.Groups.Single().Files!;
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1400, 800);
+        await UiText.SettleUntilAsync(window, () => files.Rows.Count == 3, "the explorer");
+        Panel? RowOf(string name) => View(window).GetVisualDescendants().OfType<Panel>()
+            .SingleOrDefault(p => p.Classes.Contains("explorerrow") && p.DataContext is ExplorerRow row && row.Name == name);
+
+        Assert.Equal(0.5, RowOf(".editorconfig")!.Opacity);
+        Assert.Equal(0.5, RowOf("node_modules")!.Opacity);
+        Assert.Equal(1, RowOf("app.js")!.Opacity);
+
+        var more = View(window).GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "More explorer actions");
+        var menu = Assert.IsType<MenuFlyout>(more.Flyout);
+        menu.ShowAt(more);
+        UiText.Settle(window);
+        MenuItem Item(string header) => menu.Items.OfType<MenuItem>().Single(i => i.Header as string == header);
+        Assert.Equal((true, true), (Item("Show ignored files").IsChecked, Item("Show hidden files").IsChecked));
+
+        Item("Show hidden files").Command!.Execute(null);
+        menu.Hide();
+        await UiText.SettleUntilAsync(window, () => files.Rows.Count == 2, "the hidden file gone");
+
+        Assert.Null(RowOf(".editorconfig"));
+        Assert.NotNull(RowOf("node_modules"));
+        Assert.False(Item("Show hidden files").IsChecked);
+        window.Close();
+    }
+
+    /// <summary>
     /// A file popped out by the row's button (DESIGN.md §18, "A file in a window of its own"): its window has the editor,
     /// colored, and the toolbar's Put back; the tab keeps its tab, marked, and lets go of the editor until it's put back.
     /// </summary>
@@ -144,6 +187,27 @@ public sealed class ProjectFilesUiTests
         await Verify(shown);
     }
 
+    /// <summary>
+    /// The preview tab's name is in italics (DESIGN.md §18, "Preview"), and whole (#126): Inter has no italic face, so its
+    /// italics are Inter slanted, whose tall letters lean past the name's width, and the label clipped there, cutting the
+    /// top off the d of the-crawl.md. Headless drawing has no slant to see, so this checks that the label doesn't clip.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_preview_tabs_name_is_in_italics_that_draw_past_its_width()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, files, _, window) = await ShowAsync(h);
+        var crawl = Write(Path.Combine(h.WorkFolder, "the-crawl.md"), "# The crawl\n");
+
+        var file = await files.OpenFileAsync(crawl, preview: true);
+        UiText.Settle(window);
+
+        Assert.True(file.IsPreview);
+        var label = View(window).GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("tablabel") && t.Text == "the-crawl.md");
+        Assert.Equal((FontStyle.Italic, false), (label.FontStyle, label.ClipToBounds));
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task A_click_on_a_changes_bar_shows_what_was_there_under_it()
     {
@@ -184,9 +248,109 @@ public sealed class ProjectFilesUiTests
 
         Assert.DoesNotContain(window.GetVisualDescendants().OfType<CodeEditor>(), e => e.IsEffectivelyVisible);
         var shown = UiText.Describe(View(window));
-        Assert.Contains("[button] Revert", shown, StringComparison.Ordinal);
+        // The change's own, in the diff, besides the bar's.
+        Assert.Contains("[button] Revert", UiText.Describe(window.GetVisualDescendants().OfType<DiffLines>().Single(d => d.IsEffectivelyVisible)), StringComparison.Ordinal);
         Assert.Contains("[toggle] Whole file", shown, StringComparison.Ordinal);
         Assert.Contains("[toggle on] Inline changes", shown, StringComparison.Ordinal);
+        window.Close();
+    }
+
+    /// <summary>
+    /// The bar's <b>Revert Claude's changes</b>, <b>Revert</b> and <b>Save</b> (DESIGN.md §18, "Project files", "Saving"):
+    /// at its end, the last two dimmed until the file's edited and Save in the accent then; Revert asks under the bar
+    /// before the edits go; and in a narrow pane they take a line of their own under the rest, still at the end.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Save_and_Revert_sit_at_the_bars_end_and_Revert_asks_under_it_first()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        // Wide enough for the bar's one line: headless text is wider than Inter.
+        var (_, files, player, window) = await ShowAsync(h, width: 2400);
+        var file = files.Showing!;
+        Button Named(string name) => View(window).GetVisualDescendants().OfType<Button>().Single(b => b.Name == name);
+        Point Middle(Control c) => c.TranslatePoint(new Point(c.Bounds.Width / 2, c.Bounds.Height / 2), window)!.Value;
+        void Click(Control c)
+        {
+            window.MouseDown(Middle(c), MouseButton.Left);
+            window.MouseUp(Middle(c), MouseButton.Left);
+            UiText.Settle(window);
+        }
+        var bar = View(window).GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("modebar") && b.IsEffectivelyVisible);
+        var (save, revert, claude) = (Named("SaveButton"), Named("RevertButton"), Named("RevertClaudeChangesButton"));
+        double Right(Control c) => c.TranslatePoint(new Point(c.Bounds.Width, 0), window)!.Value.X;
+        double Top(Control c) => c.TranslatePoint(default, window)!.Value.Y;
+
+        Assert.Equal(Right(bar) - bar.Padding.Right, Right(save), 1);
+        Assert.True(Right(claude) < Right(revert) && Right(revert) < Right(save));
+        Assert.True(claude.IsEffectivelyEnabled);
+        Assert.False(save.IsEffectivelyEnabled || revert.IsEffectivelyEnabled);
+        Assert.DoesNotContain("accent", save.Classes);
+        // On the bar's one line, centered on it with the rest.
+        Assert.Equal(Middle(Named("ReviewedButton")).Y, Middle(save).Y, 1);
+
+        Editor(window).Document.Insert(0, "// ");
+        UiText.Settle(window);
+        Assert.True(save.IsEffectivelyEnabled && revert.IsEffectivelyEnabled);
+        Assert.Contains("accent", save.Classes);
+
+        Click(revert);
+        var question = View(window).GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("filebanner") && b.IsEffectivelyVisible);
+        Assert.Contains("\"Discard your edits to Player.cpp?\"", UiText.Describe(question), StringComparison.Ordinal);
+        Assert.True(Top(question) > Top(bar));
+        Click(Named("ConfirmRevertButton"));
+        await UiText.SettleUntilAsync(window, () => !file.IsModified, "the file read again");
+
+        Assert.Equal(File.ReadAllText(player), Editor(window).Document.Text);
+        Assert.False(question.IsEffectivelyVisible);
+        Assert.DoesNotContain("accent", save.Classes);
+
+        // Narrow, they go under the rest of the bar, still at its end.
+        window.Width = 1400;
+        UiText.Settle(window);
+        Assert.True(Top(save) > Top(Named("ReviewedButton")) + 10);
+        Assert.Equal(Right(bar) - bar.Padding.Right, Right(save), 1);
+        window.Close();
+    }
+
+    /// <summary>
+    /// The bar's <b>Wrap lines</b> while the editor shows (DESIGN.md §18, "Project files", "The editor"): a click wraps the
+    /// file's lines and <c>Alt+Z</c> unwraps them, each following the other; the diff modes have the diff's instead; and a
+    /// file with no changes has the bar for it alone.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Wrap_lines_in_the_bar_and_Alt_Z_wrap_the_files_lines_and_follow_each_other()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var (_, files, _, window) = await ShowAsync(h);
+        var file = files.Showing!;
+        var editor = Editor(window);
+        Avalonia.Controls.Primitives.ToggleButton? Wrap() => View(window).GetVisualDescendants().OfType<Avalonia.Controls.Primitives.ToggleButton>()
+            .SingleOrDefault(b => b.Name == "EditorWrapButton" && b.IsEffectivelyVisible);
+        Point Middle(Control c) => c.TranslatePoint(new Point(c.Bounds.Width / 2, c.Bounds.Height / 2), window)!.Value;
+        Assert.Equal((false, false), (editor.WordWrap, Wrap()!.IsChecked));
+
+        window.MouseDown(Middle(Wrap()!), MouseButton.Left);
+        window.MouseUp(Middle(Wrap()!), MouseButton.Left);
+        UiText.Settle(window);
+
+        Assert.Equal((true, true), (editor.WordWrap, file.WordWrap));
+        editor.TextArea.Focus();
+        window.KeyPressQwerty(PhysicalKey.Z, RawInputModifiers.Alt);
+        window.KeyReleaseQwerty(PhysicalKey.Z, RawInputModifiers.Alt);
+        UiText.Settle(window);
+        Assert.Equal((false, false, false), (editor.WordWrap, file.WordWrap, Wrap()!.IsChecked));
+
+        file.Mode = Core.ProjectFiles.FileViewMode.Inline;
+        await UiText.SettleUntilAsync(window, () => file.Diff is { IsLoading: false }, "the diff");
+        Assert.Null(Wrap());
+        Assert.Contains("[toggle] Wrap lines", UiText.Describe(View(window)), StringComparison.Ordinal);
+
+        await files.OpenFileAsync(Write(Path.Combine(h.WorkFolder, "notes.txt"), "a\n"), preview: false);
+        UiText.Settle(window);
+        var bar = View(window).GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("modebar") && b.IsEffectivelyVisible);
+        var shown = UiText.Describe(bar);
+        Assert.Contains("[toggle] Wrap lines", shown, StringComparison.Ordinal);
+        Assert.DoesNotContain("Edit", shown, StringComparison.Ordinal);
         window.Close();
     }
 
@@ -536,5 +700,32 @@ public sealed class ProjectFilesUiTests
         var tab = Array.FindIndex(shown, l => l.Contains(h.Shell.AllTabs.Single().DisplayName, StringComparison.Ordinal) && l.Contains('"'));
         Assert.True(files >= 0 && files < tab, string.Join('\n', shown));
         window.Close();
+    }
+
+    /// <summary>
+    /// The tokenizer's changes reach the editor's coloring on the UI thread, so nothing on the tokenizer's own thread asks
+    /// for Avalonia's UI thread: one that asked after its test had ended took the next test's, failing it on CI.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task The_tokenizers_changes_reach_the_coloring_on_the_UI_thread()
+    {
+        var heard = new List<(bool OnUiThread, int Line)>();
+        var relay = new TextMateColoring.OnUiThread(new Heard(e => heard.Add((Dispatcher.UIThread.CheckAccess(), e.Ranges[0].FromLineNumber))));
+
+        await Task.Factory.StartNew(() =>
+        {
+            foreach (var line in new[] { 1, 2, 3 })
+            {
+                relay.ModelTokensChanged(new ModelTokensChangedEvent(new TextMateSharp.Model.Range(line), null!));
+            }
+        }, TestContext.Current.CancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal([(true, 1), (true, 2), (true, 3)], heard);
+    }
+
+    private sealed class Heard(Action<ModelTokensChangedEvent> heard) : IModelTokensChangedListener
+    {
+        public void ModelTokensChanged(ModelTokensChangedEvent e) => heard(e);
     }
 }

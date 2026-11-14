@@ -75,6 +75,9 @@ public sealed class ProcessLauncher(TimeProvider? timeProvider = null, TimeSpan?
         private readonly SemaphoreSlim _writeLock = new(1, 1);
         private readonly Task<int> _exited;
 
+        /// <summary>The input is to be closed, once no line is being written.</summary>
+        private bool _closeAsked;
+
         private readonly bool _redirected;
         private readonly TimeProvider _time;
         private readonly TimeSpan _drain;
@@ -118,22 +121,55 @@ public sealed class ProcessLauncher(TimeProvider? timeProvider = null, TimeSpan?
             finally
             {
                 _writeLock.Release();
+                // Asked to close while this line was being written: closed now it's done.
+                CloseIfAsked();
             }
         }
 
+        /// <summary>
+        /// Closes the input, ending it for the process. A line being written goes whole first: closing under it throws
+        /// (<c>StreamWriter</c> refuses while it's writing), and would cut the line off. Its write closes the input once
+        /// it's done, or fails as the process ends.
+        /// </summary>
         public void CloseStandardInput()
         {
             if (!_redirected)
             {
                 return;
             }
+            Volatile.Write(ref _closeAsked, true);
+            CloseIfAsked();
+        }
+
+        /// <summary>
+        /// Closes the input if it's been asked for and no line is being written: by whoever gets the lock, the closer or the
+        /// write that held it, which looks again after letting it go, so neither misses the other.
+        /// </summary>
+        private void CloseIfAsked()
+        {
+            try
+            {
+                if (!Volatile.Read(ref _closeAsked) || !_writeLock.Wait(0))
+                {
+                    return;
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Disposed: the input went with it.
+                return;
+            }
             try
             {
                 _process.StandardInput.Close();
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException)
             {
-                // The process already exited and closed the pipe.
+                // The process already exited and closed the pipe, or was disposed.
+            }
+            finally
+            {
+                _writeLock.Release();
             }
         }
 

@@ -35,12 +35,14 @@ Choose **Continue anyway**, or cancel, push or pull the code to get it in step, 
 
 A tab that syncs keeps a small claim on its session in the library, refreshed every minute, so two machines don't write the same session at once. A claim that hasn't been refreshed for 10 minutes counts as stale.
 
+So does a claim Deventry left on this machine when it crashed or was ended: nothing has the session open, so opening it from History carries it on here without asking, and a tab brought back at launch starts as usual.
+
 If you open a session from History that another machine is actively using, Deventry asks *"…" is open on DESKTOP-01*, and offers:
 
 - **Open a copy**, which starts a new session that begins as a copy. Both go their own way.
 - **Take over**, which continues the session here. The tab on the other machine becomes read-only the next time it syncs.
 
-A tab that was taken over stops its Claude Code, says *This session was taken over by DESKTOP-01.*, and becomes read-only. It reads *This session continued on DESKTOP-01. The tab is read-only here; open it again from History to continue on this machine.* A tab restored at launch that finds its session was taken over while Deventry was closed does the same instead of starting.
+A tab that was taken over stops its Claude Code, says *This session was taken over by DESKTOP-01.*, and becomes read-only. It reads *This session continued on DESKTOP-01. The tab is read-only here; to continue on this machine, close it and open the session again from History.* It doesn't start Claude Code again, and has no **Restart**. A tab restored at launch that finds its session was taken over while Deventry was closed does the same instead of starting.
 
 A tab that doesn't sync ignores all of this.
 
@@ -53,7 +55,7 @@ Your sync client may still be bringing the other machine's turns when Deventry s
 - **While Claude waits**, it checks the library once a minute. When the other machine's turns arrive, the tab starts Claude Code again from them and shows them in the conversation. What you're typing stays in the composer.
 - **When you send your first message** in the tab, it checks first. If the other machine's turns have arrived, your message isn't sent: the tab shows them and says *Your message wasn't sent, so you can read it again against what's new. It's still in the composer.* Send it again when you're ready.
 
-If the session went on in both places, with turns on this machine the library never got, neither machine's turns are written over. Deventry keeps this machine's in the library as a copy of their own, which History lists under this machine's name beside the other machine's (see [Conflict copies](#conflict-copies)), and the tab becomes read-only, saying *LAPTOP-02 carried this session on too, so copying this tab's turns to the session library would lose the ones made there.* Open whichever you want to go on with from History.
+If the session went on in both places, with turns on this machine the library never got, neither machine's turns are written over. Deventry keeps this machine's in the library as a copy of their own, which History lists under this machine's name beside the other machine's (see [Conflict copies](#conflict-copies)), and the tab becomes read-only, saying *LAPTOP-02 carried this session on too, so copying this tab's turns to the session library would lose the ones made there.* Close the tab, then open whichever you want to go on with from History.
 
 Turning on **Sync to other machines** for a session in that state leaves it off, and says why, rather than making the tab read-only.
 

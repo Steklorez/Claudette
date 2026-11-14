@@ -52,6 +52,9 @@
           <Button Content="Save as…" Command="{Binding SaveAsCommand}" />
           <Button Content="{Binding OpenText}" Command="{Binding OpenCommand}" IsVisible="{Binding CanOpen}"
                   ToolTip.Tip="{Binding OpenTip}" />
+          <!-- Opened from the Media window: to its section's Cleared group, or back (DESIGN.md §18, "Media", "Clearing") -->
+          <Button Content="{Binding ClearText}" Command="{Binding ToggleClearedCommand}" IsVisible="{Binding CanClear}"
+                  ToolTip.Tip="{Binding ClearTip}" />
           <!-- The zoom: the mouse wheel over the image, and +, − and 0, do the same -->
           <StackPanel Orientation="Horizontal" Spacing="2" Margin="8,0,0,0">
             <Button Classes="flat zoom" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom out (−)" AutomationProperties.Name="Zoom out">

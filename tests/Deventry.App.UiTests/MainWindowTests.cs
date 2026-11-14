@@ -272,11 +272,14 @@ public class MainWindowTests
         var menu = Assert.IsType<ContextMenu>(cup.ContextMenu);
         menu.Open(cup);
         UiText.Settle(window);
-        var items = menu.Items.OfType<MenuItem>().ToArray();
-        Assert.Equal(["Only while Claude has work to finish", "Whenever Deventry is running", "Keep-awake settings…"], items.Select(i => i.Header as string));
-        Assert.Equal([false, true, false], items.Select(i => i.IsChecked));
-        Assert.Equal("General#keepAwake", items[2].CommandParameter);
-        ClickMenuItem(window, items[0]);
+        // In sections: the timed messages (DESIGN.md §18), none yet, then keeping awake.
+        Assert.Equal(["Timed messages", "Keep awake"], menu.Items.OfType<MenuItem>().Where(i => i.Classes.Contains("menusection")).Select(i => i.Header as string));
+        var items = menu.Items.OfType<MenuItem>().Where(i => !i.Classes.Contains("menusection")).ToArray();
+        Assert.Equal(["Add a timed message…", "Only while Claude has work to finish", "Whenever Deventry is running", "Keep-awake settings…", "Timed messages settings…"],
+            items.Select(i => i.Header as string));
+        Assert.Equal([false, false, true, false, false], items.Select(i => i.IsChecked));
+        Assert.Equal("General#keepAwake", items[3].CommandParameter);
+        ClickMenuItem(window, items[1]);
         menu.Close();
 
         Assert.Equal(KeepAwakeWhen.ClaudeHasWork, h.Services.Settings.General.KeepAwakeWhen);

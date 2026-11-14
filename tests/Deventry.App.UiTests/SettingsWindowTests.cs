@@ -44,6 +44,30 @@ public class SettingsWindowTests
     }
 
     /// <summary>
+    /// Files and diffs has the explorer's <b>Ignored files</b>, which was Git's, beside <b>Hidden files</b>, both dimmed by
+    /// default (DESIGN.md §18, "The explorer"). The page lists the diff tools installed here, so it isn't a snapshot.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Files_and_diffs_has_Ignored_files_and_Hidden_files_for_the_explorer()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = SettingsCategory.Files };
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+        string Row(string key) => UiText.Describe(window.GetVisualDescendants().OfType<SettingRow>().Single(r => r.Key == key));
+
+        var ignored = Row("git.ignoredFiles");
+        var hidden = Row("editor.hiddenFiles");
+
+        Assert.Contains("\"Ignored files\"", ignored, StringComparison.Ordinal);
+        Assert.Contains("[toggle on] Dimmed", ignored, StringComparison.Ordinal);
+        Assert.Contains("\"Hidden files\"", hidden, StringComparison.Ordinal);
+        Assert.Contains("[toggle on] Dimmed", hidden, StringComparison.Ordinal);
+        window.Close();
+    }
+
+    /// <summary>
     /// A page is a column at most 720 pixels wide (DESIGN.md §14): it fills a window narrower than that, so its rows use
     /// the room, and is centred in a wider one, so a control stays near its name.
     /// </summary>

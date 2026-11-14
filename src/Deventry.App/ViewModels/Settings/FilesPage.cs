@@ -33,6 +33,15 @@ public sealed partial class FilesPage : SettingsPage
                 () => Settings.Editor.IndentSize == new EditorSettings().IndentSize && Settings.Editor.IndentWithTabs == new EditorSettings().IndentWithTabs,
                 () => (Settings.Editor.IndentSize, Settings.Editor.IndentWithTabs) = (new EditorSettings().IndentSize, new EditorSettings().IndentWithTabs),
                 "In a file that has no indentation to go by; one that does is indented as it is.", keywords: ["indentation", "tabs", "spaces"]),
+            // Git's before, so it keeps its key.
+            Setting("git.ignoredFiles", "Ignored files", s => s.Git.IgnoredFiles, (s, v) => s.Git.IgnoredFiles = v,
+                "What git or Perforce's P4IGNORE ignores, in the explorer. Its ⋯ menu changes it too, and a change applies to open Files tabs at once.",
+                "Outside a git repository and a Perforce workspace, the folders the @ list skips, such as node_modules, bin and obj.",
+                ["gitignore", ".gitignore", "p4ignore", ".p4ignore", "ignored", "explorer", "hide", "dim", "node_modules"]),
+            Setting("editor.hiddenFiles", "Hidden files", s => s.Editor.HiddenFiles, (s, v) => s.Editor.HiddenFiles = v,
+                "Dotfiles, such as .gitignore and .github, and what the system hides, in the explorer. Its ⋯ menu changes it too.",
+                "Everything in a hidden folder is hidden too.",
+                ["dotfiles", "hidden", "explorer", "hide", "dim"]),
         ], description: "Each folder group's tab of its project's folders and files, opened with the button beside its +.");
         Section("diffTool", "Diff tool",
         [
@@ -77,6 +86,82 @@ public sealed partial class FilesPage : SettingsPage
                 SetSide(ExplorerSide.Right);
             }
         }
+    }
+
+    /// <summary><b>Ignored files</b> are dimmed in the explorer.</summary>
+    public bool IgnoredFilesDimmed
+    {
+        get => Settings.Git.IgnoredFiles == IgnoredFiles.Dimmed;
+        set
+        {
+            if (value)
+            {
+                SetIgnoredFiles(IgnoredFiles.Dimmed);
+            }
+        }
+    }
+
+    /// <summary><b>Ignored files</b> are left out of the explorer.</summary>
+    public bool IgnoredFilesHidden
+    {
+        get => Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
+        set
+        {
+            if (value)
+            {
+                SetIgnoredFiles(IgnoredFiles.Hidden);
+            }
+        }
+    }
+
+    private void SetIgnoredFiles(IgnoredFiles files)
+    {
+        if (Settings.Git.IgnoredFiles == files)
+        {
+            return;
+        }
+        Settings.Git.IgnoredFiles = files;
+        OnPropertyChanged(nameof(IgnoredFilesDimmed));
+        OnPropertyChanged(nameof(IgnoredFilesHidden));
+        Save();
+    }
+
+    /// <summary><b>Hidden files</b> are dimmed in the explorer.</summary>
+    public bool HiddenFilesDimmed
+    {
+        get => Editor.HiddenFiles == HiddenFiles.Dimmed;
+        set
+        {
+            if (value)
+            {
+                SetHiddenFiles(HiddenFiles.Dimmed);
+            }
+        }
+    }
+
+    /// <summary><b>Hidden files</b> are left out of the explorer.</summary>
+    public bool HiddenFilesHidden
+    {
+        get => Editor.HiddenFiles == HiddenFiles.Hidden;
+        set
+        {
+            if (value)
+            {
+                SetHiddenFiles(HiddenFiles.Hidden);
+            }
+        }
+    }
+
+    private void SetHiddenFiles(HiddenFiles files)
+    {
+        if (Editor.HiddenFiles == files)
+        {
+            return;
+        }
+        Editor.HiddenFiles = files;
+        OnPropertyChanged(nameof(HiddenFilesDimmed));
+        OnPropertyChanged(nameof(HiddenFilesHidden));
+        Save();
     }
 
     private void SetSide(ExplorerSide side)

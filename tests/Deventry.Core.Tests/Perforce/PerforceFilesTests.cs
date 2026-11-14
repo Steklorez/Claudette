@@ -114,6 +114,40 @@ public sealed class PerforceFilesTests : IDisposable
         Assert.False(states[1].HasDepotRevision);
     }
 
+    // ---- What P4IGNORE ignores (DESIGN.md §18, "The explorer") -----------------------------------------------------
+
+    [Fact]
+    public void P4_ignores_says_which_paths_are_ignored_a_line_each()
+    {
+        var output = "C:\\ws\\Game.sln ignored\r\nC:\\ws\\Source not ignored\n/home/me/ws/My Folder/a.o ignored\nsomething else\n";
+
+        Assert.Equal(["C:\\ws\\Game.sln", "/home/me/ws/My Folder/a.o"], PerforceFileCommands.ParseIgnored(output));
+        Assert.Equal(["ignores", "-i", "a", "b"], PerforceFileCommands.Ignores(["a", "b"]));
+    }
+
+    [Fact]
+    public void The_ignore_cache_answers_once_and_after_a_forget_keeps_the_old_answer_until_the_new_one()
+    {
+        var cache = new PerforceIgnoreCache();
+        var saved = Path.Combine(_folder, "Saved");
+        Assert.Null(cache.IsIgnored(saved));
+
+        Assert.True(cache.Complete(cache.Generation, [(saved, true)]));
+        Assert.Equal((true, true), (cache.IsIgnored(saved), cache.Knows(saved)));
+        // The same answer again changes nothing that's shown.
+        Assert.False(cache.Complete(cache.Generation, [(saved, true)]));
+
+        var before = cache.Generation;
+        cache.Forget();
+
+        // Asked about again, but still marked as it was until then; an answer from before the forget is dropped.
+        Assert.Equal((true, false), (cache.IsIgnored(saved), cache.Knows(saved)));
+        Assert.False(cache.Complete(before, [(saved, false)]));
+        Assert.True(cache.IsIgnored(saved));
+        Assert.True(cache.Complete(cache.Generation, [(saved, false)]));
+        Assert.Equal((false, true), (cache.IsIgnored(saved), cache.Knows(saved)));
+    }
+
     // ---- The states' cache ------------------------------------------------------------------------------------------
 
     [Fact]

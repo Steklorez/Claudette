@@ -16,13 +16,16 @@ The header has the group's name, then:
 - **New file**, a page with a plus ([New files and folders](#new-files-and-folders));
 - **Find file**, a magnifier, which is `Ctrl/Cmd+P` ([Finding a file by name](finding-a-file-by-name.md));
 - **Collapse all**;
-- **⋯**, which has **New folder**, **Find in files…** and **Replace in files…** in the whole project ([Finding in files](finding-in-files.md)), **Show only changed files**, **Claude's changes** and **Against git HEAD** (in a repository), **Move to the right** (or **Move to the left**) and **Refresh**.
+- **⋯**, which has **New folder**, **Find in files…** and **Replace in files…** in the whole project ([Finding in files](finding-in-files.md)), **Show only changed files**, **Show ignored files** and **Show hidden files** ([The tree](#the-tree)), **Claude's changes** and **Against git HEAD** (in a repository), **Move to the right** (or **Move to the left**) and **Refresh**.
 
 ## The tree
 
 - Folders come first, then files, each by name, ignoring case. A folder's entries are read when you expand it.
 - `.git` isn't shown.
-- What git ignores is shown dimmed. Outside a repository, the folders the composer's `@` list skips (`node_modules`, `bin`, `obj` and the like) are dimmed instead. To leave them out of the tree altogether, set Settings → Git → **Files git ignores** to **Hidden**; the open Files tabs follow at once.
+- What git ignores is shown dimmed. Outside a repository, the folders the composer's `@` list skips (`node_modules`, `bin`, `obj` and the like) are dimmed instead.
+- In a Perforce workspace, what your P4IGNORE rules ignore is dimmed too, as `p4 add` would skip it. The tree doesn't wait for Perforce: an entry it ignores dims a moment after its folder shows. Perforce is asked about each file once; after a change to `.p4ignore` (or any file with *ignore* in its name), or **Refresh**, it's asked again.
+- Hidden files are shown dimmed: names that start with a dot, such as `.gitignore` and `.github`, on every system, and what Windows or macOS hides. Everything in a hidden folder is hidden too.
+- To leave ignored or hidden files out of the tree altogether, untick **Show ignored files** or **Show hidden files** in the **⋯** menu, or set Settings → **Files and diffs** → **Ignored files** or **Hidden files** to **Hidden**. They're the same settings, so every Files tab follows at once.
 - A link to a folder has a link badge and expands like a folder, unless it leads back up into the tree.
 - **It follows the disk.** Half a second after files appear, go or are renamed, the tree is drawn again, keeping what's expanded and selected.
 
@@ -114,7 +117,8 @@ Opening the Files tab from its group, with the **Project files** button or **Ope
 | Setting | Default | Where |
 |---|---|---|
 | **The explorer is on the** | Left | Settings → **Files and diffs** |
-| **Files git ignores** | Dimmed | Settings → **Git** |
+| **Ignored files** | Dimmed | Settings → **Files and diffs**, or **Show ignored files** in the **⋯** menu |
+| **Hidden files** | Dimmed | Settings → **Files and diffs**, or **Show hidden files** in the **⋯** menu |
 
 ## Shortcuts
 

@@ -19,6 +19,8 @@ public enum NotificationKind
     CheckIn,
     /// <summary>A long project action, such as a build, finished or failed (DESIGN.md §18, "Project tools").</summary>
     ProjectAction,
+    /// <summary>A timed message was sent, or skipped (DESIGN.md §18, "Timed messages").</summary>
+    TimedMessage,
 }
 
 /// <summary>Where clicking a notification goes: a tab, or an app-wide screen.</summary>
@@ -73,6 +75,9 @@ public sealed class NotificationService : IDisposable
     /// <returns>Whether it was sent.</returns>
     public bool Notify(NotificationKind kind, string title, string body, string? tabId = null, string? key = null, CheckInSettings? checkIns = null)
     {
+        // The remote clients have switches of their own for these (DESIGN.md §18, "Remote clients"); the tabs tell them
+        // the rest themselves.
+        _services.RemoteClients.OnAppNotification(kind, title, body, tabId);
         if (!IsEnabled(kind, checkIns) || !_notifier.IsAvailable)
         {
             return false;
@@ -101,6 +106,7 @@ public sealed class NotificationService : IDisposable
             NotificationKind.UpdateReady => settings.UpdateReady,
             NotificationKind.CheckIn => (checkIns ?? _services.Settings.CheckIns).Notify,
             NotificationKind.ProjectAction => settings.ProjectActions,
+            NotificationKind.TimedMessage => settings.TimedMessages,
             _ => false,
         };
     }
@@ -129,6 +135,8 @@ public sealed class NotificationService : IDisposable
     {
         IsAppActive = active;
         _services.RemoteControl.SetAppActive(active);
+        // Deventry at the back counts as away for the remote clients (DESIGN.md §18).
+        _services.RemoteClients.SetAppActive(active);
         if (active)
         {
             SetFlashing(false);

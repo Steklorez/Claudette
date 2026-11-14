@@ -116,7 +116,27 @@ public sealed class ScrollMarks : Control, ICustomHitTest
             _thumb = thumb;
             _thumb.PropertyChanged += OnThumbChanged;
         }
-        InvalidateVisual();
+        // Every layout pass in the window comes here, for every tab's marks: only one that moved the lane draws them again.
+        // Out of sight, they're drawn as they were until they show again.
+        if (IsEffectivelyVisible && Lane() != _drawnLane)
+        {
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>The lane the marks were last drawn in.</summary>
+    private Rect? _drawnLane;
+
+    /// <summary>The bar's track, from its template: where the thumb runs.</summary>
+    private Track? _track;
+
+    private Track? TrackOf(ScrollBar bar)
+    {
+        if (_track is not { } track || track.TemplatedParent != bar || !track.IsAttachedToVisualTree())
+        {
+            _track = track = bar.GetVisualDescendants().OfType<Track>().FirstOrDefault();
+        }
+        return track;
     }
 
     private void OnThumbChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -138,7 +158,7 @@ public sealed class ScrollMarks : Control, ICustomHitTest
         {
             return default;
         }
-        var track = bar.GetVisualDescendants().OfType<Track>().FirstOrDefault();
+        var track = TrackOf(bar);
         var (top, height) = track?.TranslatePoint(default, this) is { } trackAt ? (trackAt.Y, track.Bounds.Height) : (at.Y, bar.Bounds.Height);
         var (left, right) = (at.X + bar.Bounds.Width - LaneWidth, at.X + bar.Bounds.Width);
         // Where the thumb is drawn, through its transform: its two ends, within the bar.
@@ -192,6 +212,7 @@ public sealed class ScrollMarks : Control, ICustomHitTest
     public override void Render(DrawingContext context)
     {
         var lane = Lane();
+        _drawnLane = lane;
         if (lane.Width <= 0)
         {
             return;

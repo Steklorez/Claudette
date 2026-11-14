@@ -13,8 +13,8 @@ public sealed record AutomationRequest
 {
     /// <summary>
     /// What to do: <c>ping</c>, <c>click</c>, <c>rightclick</c>, <c>toggle</c>, <c>settext</c>, <c>show</c>,
-    /// <c>scroll</c>, <c>hover</c>, <c>unhover</c>, <c>key</c>, <c>capture</c>, <c>resize</c>, <c>close</c> or
-    /// <c>appearance</c>.
+    /// <c>focus</c>, <c>scroll</c>, <c>hover</c>, <c>unhover</c>, <c>key</c>, <c>capture</c>, <c>resize</c>,
+    /// <c>close</c> or <c>appearance</c>.
     /// </summary>
     public string Verb { get; init; } = "";
 

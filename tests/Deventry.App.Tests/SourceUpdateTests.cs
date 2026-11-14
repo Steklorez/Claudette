@@ -11,6 +11,21 @@ namespace Deventry.App.Tests;
 public class SourceUpdateTests
 {
     [Fact]
+    public async Task Settings_turns_restarting_by_itself_on_and_off_as_the_new_build_dialog_does()
+    {
+        var launcher = new FakeLauncher();
+        await using var h = new TabTestHarness(launcher: launcher);
+        using var source = await FakeCheckout.StartAsync(h, launcher);
+
+        // Off until turned on, and the same choice the New build ready dialog shows.
+        Assert.False(source.Badge.RestartAutomatically);
+        source.Badge.RestartAutomatically = true;
+        Assert.True(h.Services.State.RestartOnNewBuild);
+        source.Badge.RestartAutomatically = false;
+        Assert.False(h.Services.State.RestartOnNewBuild);
+    }
+
+    [Fact]
     public async Task New_commits_upstream_are_offered_with_their_subjects()
     {
         var launcher = new FakeLauncher();

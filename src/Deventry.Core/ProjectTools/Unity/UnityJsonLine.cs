@@ -66,7 +66,11 @@ public sealed record UnityJsonLine(string First, IReadOnlyList<string> More, IRe
         var tagStart = tag is null ? -1 : prefix.Length + categoryPart.Length;
         var messageStart = prefix.Length + categoryPart.Length + (tag is null ? 0 : tag.Length + 2);
         var first = prefix + categoryPart + (tag is null ? "" : tag + ": ") + messageLines[0];
-        var columns = new LogColumns(prefix.Length, rawTime is null ? null : ShownTime(rawTime, zone), category?.Length ?? 0, tagStart, tag?.Length ?? 0, messageStart);
+        // Unity's own time and thread before the message, with -timestamps: the time column has the entry's time, so
+        // they're drawn as the thread column, and the message starts after them.
+        var stamp = rawTime is null ? null : UnityTimestamp.Read(messageLines[0]);
+        var columns = new LogColumns(prefix.Length, rawTime is null ? null : ShownTime(rawTime, zone), category?.Length ?? 0, tagStart, tag?.Length ?? 0,
+            messageStart + (stamp?.Length ?? 0), stamp is null ? -1 : messageStart, stamp?.Length ?? 0, stamp?.Thread);
         return new UnityJsonLine(first, messageLines[1..], TraceOf(entry), verbosity, category, columns);
     }
 
@@ -81,7 +85,7 @@ public sealed record UnityJsonLine(string First, IReadOnlyList<string> More, IRe
     };
 
     /// <summary>The time as the column shows it, <c>15:01:22.123</c> in <paramref name="zone"/>; as it's written when it isn't a time.</summary>
-    private static string ShownTime(string raw, TimeZoneInfo zone)
+    internal static string ShownTime(string raw, TimeZoneInfo zone)
     {
         if (DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var time))
         {

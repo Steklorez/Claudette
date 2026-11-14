@@ -92,6 +92,32 @@ public static class PerforceFileCommands
     /// <summary><c>set -q</c>: every Perforce setting for the folder, from its config file, <c>p4 set</c> and the environment.</summary>
     public static IReadOnlyList<string> Settings() => ["set", "-q"];
 
+    /// <summary>
+    /// <c>ignores -i paths</c>: which of the paths Perforce's P4IGNORE rules ignore, as <c>p4 add</c> would skip them
+    /// (DESIGN.md §18, "The explorer"). Local paths, as they are: they aren't file specs.
+    /// </summary>
+    public static IReadOnlyList<string> Ignores(IEnumerable<string> paths) => ["ignores", "-i", .. paths];
+
+    /// <summary>
+    /// The paths <c>p4 ignores -i</c> says are ignored: a line for each path, the path then <c>ignored</c>, or <c>not
+    /// ignored</c>. Anything else is skipped.
+    /// </summary>
+    public static IReadOnlyList<string> ParseIgnored(string output)
+    {
+        const string ignored = " ignored", notIgnored = " not ignored";
+        var paths = new List<string>();
+        foreach (var raw in output.Split('\n'))
+        {
+            var line = raw.TrimEnd();
+            if (line.EndsWith(ignored, StringComparison.OrdinalIgnoreCase) && !line.EndsWith(notIgnored, StringComparison.OrdinalIgnoreCase)
+                && line[..^ignored.Length].Trim() is { Length: > 0 } path)
+            {
+                paths.Add(path);
+            }
+        }
+        return paths;
+    }
+
     private static IEnumerable<string> InChangelist(long? changelist) =>
         changelist is { } number ? ["-c", number.ToString(CultureInfo.InvariantCulture)] : [];
 

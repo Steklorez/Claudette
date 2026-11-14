@@ -32,7 +32,20 @@ public sealed partial class WindowsSleepBlocker : ISleepBlocker
 
     public string? UnavailableReason => null;
 
-    public bool IsBlocking => _blocking;
+    /// <summary>
+    /// What was last asked for, unless Windows refused it: its thread sets it at once, but after <see cref="SetBlocking"/>
+    /// returns, and the cup reads this as it's told the state changed (DESIGN.md §9, "Keeping the computer awake").
+    /// </summary>
+    public bool IsBlocking
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _wanted && _error is null;
+            }
+        }
+    }
 
     public void SetBlocking(bool block)
     {
@@ -49,7 +62,7 @@ public sealed partial class WindowsSleepBlocker : ISleepBlocker
 
     public string Describe() =>
         _error is { } error ? $"Windows refused to keep the computer awake ({error})."
-        : _blocking ? "Keeping the computer awake (SetThreadExecutionState). The screen can still turn off."
+        : IsBlocking ? "Keeping the computer awake (SetThreadExecutionState). The screen can still turn off."
         : "Not keeping the computer awake now.";
 
     public void Dispose()

@@ -134,11 +134,13 @@ public class PromptCacheTests
         await FinishTurnAsync(h, tab, oneHour: 5_000);
         Assert.Equal("Cache 60m", tab.PromptCacheText);
 
-        tab.IsSelected = false;
+        // On the UI thread, as selecting another tab is: the settings read as the session started can still come back
+        // there, and must see the tab as it is.
+        InlineDispatcher.Run(() => tab.IsSelected = false);
         h.Time.Advance(TimeSpan.FromMinutes(5));
         Assert.Equal("Cache 60m", tab.PromptCacheText);
 
-        tab.IsSelected = true;
+        InlineDispatcher.Run(() => tab.IsSelected = true);
         Assert.Equal("Cache 55m", tab.PromptCacheText);
         h.Time.Advance(TimeSpan.FromMinutes(1));
         Assert.Equal("Cache 54m", tab.PromptCacheText);
@@ -258,6 +260,7 @@ public class PromptCacheTests
             Wire.Entry("assistant", "2026-09-28T11:40:00Z", reply));
         h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "s1" }];
         h.Shell.Restore(null);
+        h.Start();
         var tab = h.Shell.AllTabs.Single();
 
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsPromptCacheShown, "the restored conversation");
@@ -276,6 +279,7 @@ public class PromptCacheTests
             Wire.Entry("assistant", "2026-09-27T09:31:00Z", Wire.Message(new JsonObject { ["type"] = "text", ["text"] = "A missing `using`." })));
         h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "s1" }];
         h.Shell.Restore(null);
+        h.Start();
         var tab = h.Shell.AllTabs.Single();
 
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsPromptCacheShown, "the restored conversation");

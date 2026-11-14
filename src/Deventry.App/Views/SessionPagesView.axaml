@@ -1,6 +1,6 @@
-<!-- A session's tool window's page (DESIGN.md §3, "Tool windows"): changed files, agents, tasks, MCP servers, the project's
-     tools, the scratch pad or, when the monitor is on, processes; the one Page names shows. ToolWindowView holds it, with
-     the session tab whose data it shows. -->
+<!-- A session's tool window's page (DESIGN.md §3, "Tool windows"): changed files, agents, tasks, MCP servers, media, the
+     project's tools, the scratch pad or, when the monitor is on, processes; the one Page names shows. ToolWindowView holds
+     it, with the session tab whose data it shows. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Deventry.App.ViewModels"
@@ -21,9 +21,25 @@
       <!-- Changed files (DESIGN.md §8) -->
       <DockPanel x:Name="FilesPage" IsVisible="False">
         <StackPanel DockPanel.Dock="Top" Margin="12,0,12,6" Spacing="4">
-          <Grid ColumnDefinitions="*,Auto">
+          <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
             <TextBlock Classes="muted small" Text="{Binding ChangedFiles.Summary}" TextWrapping="Wrap" VerticalAlignment="Center" />
-            <Button Grid.Column="1" Classes="flat" Command="{Binding ChangedFiles.RefreshCommand}">
+            <!-- DESIGN.md §8, "The tree": every folder at once, and the tree or the list -->
+            <Button Grid.Column="1" Classes="flat changedtool" Command="{Binding ChangedFiles.ExpandAllCommand}" IsVisible="{Binding ChangedFiles.HasFolders}"
+                    ToolTip.Tip="Expand all" AutomationProperties.Name="Expand all">
+              <Path Data="{StaticResource IconExpandAll}" />
+            </Button>
+            <Button Grid.Column="2" Classes="flat changedtool" Command="{Binding ChangedFiles.CollapseAllCommand}" IsVisible="{Binding ChangedFiles.HasFolders}"
+                    ToolTip.Tip="Collapse all" AutomationProperties.Name="Collapse all">
+              <Path Data="{StaticResource IconCollapseAll}" />
+            </Button>
+            <Button Grid.Column="3" Classes="flat changedtool" Command="{Binding ChangedFiles.ToggleViewCommand}"
+                    ToolTip.Tip="{Binding ChangedFiles.ViewSwitchText}" AutomationProperties.Name="{Binding ChangedFiles.ViewSwitchText}">
+              <Panel>
+                <Path Data="{StaticResource IconViewList}" IsVisible="{Binding ChangedFiles.ShowAsTree}" />
+                <Path Data="{StaticResource IconViewTree}" IsVisible="{Binding !ChangedFiles.ShowAsTree}" />
+              </Panel>
+            </Button>
+            <Button Grid.Column="4" Classes="flat" Command="{Binding ChangedFiles.RefreshCommand}">
               <TextBlock Classes="small" Text="Refresh" />
             </Button>
           </Grid>
@@ -33,18 +49,59 @@
           </CheckBox>
         </StackPanel>
         <!-- Every page wraps at the width shown (DESIGN.md §3, "Side panel"): a row's name and path wrap, and its counts
-             stay at its right edge. -->
-        <ListBox x:Name="ChangedFilesList" ItemsSource="{Binding ChangedFiles.Files}" Background="Transparent"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+             stay at its right edge. In the tree (DESIGN.md §8, "The tree"), a folder's row and, while it's expanded, what's
+             in it, each in by its depth; in the list, the files. -->
+        <ListBox x:Name="ChangedFilesList" ItemsSource="{Binding ChangedFiles.Rows}" Background="Transparent" Classes.tree="{Binding ChangedFiles.ShowAsTree}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Changed files"
                  Tapped="OnChangedFileTapped" DoubleTapped="OnChangedFileDoubleTapped">
-          <ListBox.ItemTemplate>
+          <ListBox.DataTemplates>
+            <!-- A folder, or a chain of folders that each hold only the next; a working tree's heading when the session
+                 changed files in more than one. A click anywhere but its box folds it, Alt+click every level under it too. -->
+            <DataTemplate DataType="vm:ChangedFolderRow">
+              <Grid Classes="changedfolder" Classes.worktree="{Binding IsWorkTree}" Classes.reviewed="{Binding IsAllReviewed}"
+                    Margin="{Binding Indent, Converter={x:Static vm:Converters.LeftMargin}}" ColumnDefinitions="20,Auto,Auto,*,Auto"
+                    ToolTip.Tip="{Binding Path}" Background="Transparent">
+                <!-- Its arrow, box and icon at the row's top, each on the middle of its name's first line (Controls/FirstLine),
+                     so a name that wraps goes on under the name rather than under them -->
+                <Panel Classes="changedfold" controls:FirstLine.CenterOn="{Binding #FolderName}">
+                  <Path Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+                  <Path Data="{StaticResource IconChevronRight}" IsVisible="{Binding IsCollapsed}" />
+                </Panel>
+                <!-- Ticks every file in it, or unticks them all; partly ticked while some are -->
+                <CheckBox Grid.Column="1" Classes="reviewed" IsChecked="{Binding IsReviewed, Mode=OneWay}" controls:FirstLine.CenterOn="{Binding #FolderName}"
+                          Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.ToggleFolderReviewedCommand}" CommandParameter="{Binding}"
+                          AutomationProperties.Name="Reviewed, every file in it" ToolTip.Tip="Reviewed: ticks every file in it, or unticks them all." />
+                <!-- A folder, or a working tree's branch -->
+                <Panel Grid.Column="2" Classes="changedfoldericon" controls:FirstLine.CenterOn="{Binding #FolderName}">
+                  <Path Data="{StaticResource IconToolFolder}" IsVisible="{Binding !IsWorkTree}" />
+                  <Path Data="{StaticResource IconBranch}" IsVisible="{Binding IsWorkTree}" />
+                </Panel>
+                <TextBlock Grid.Column="3" x:Name="FolderName" TextWrapping="Wrap">
+                  <Run Text="{Binding Name}" />
+                  <Run Classes="changedcount" Text="{Binding FilesText}" />
+                </TextBlock>
+                <TextBlock Grid.Column="4" Classes="mono small muted" Text="{Binding Stats}" VerticalAlignment="Top" Margin="6,0,0,0"
+                           controls:Baseline.AlignWith="{Binding #FolderName}" />
+                <Grid.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="Expand all" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.ExpandFolderAllCommand}" CommandParameter="{Binding}" />
+                    <MenuItem Header="Collapse" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.ToggleFolderCommand}" CommandParameter="{Binding}"
+                              IsVisible="{Binding IsExpanded}" />
+                    <Separator />
+                    <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.RevealFolderCommand}" CommandParameter="{Binding}" />
+                    <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.CopyFolderPathCommand}" CommandParameter="{Binding}" />
+                  </ContextMenu>
+                </Grid.ContextMenu>
+              </Grid>
+            </DataTemplate>
             <DataTemplate DataType="vm:ChangedFileRow">
-              <StackPanel>
-                <!-- DESIGN.md §8, "Working trees": each working tree's group, headed on its first row -->
-                <TextBlock Classes="small muted changedgroup" Text="{Binding Group}" IsVisible="{Binding Group, Converter={x:Static ObjectConverters.IsNotNull}}" />
+              <StackPanel Margin="{Binding Indent, Converter={x:Static vm:Converters.LeftMargin}}">
+                <!-- DESIGN.md §8, "Working trees": in the list, each working tree's group, headed on its first row -->
+                <TextBlock Classes="small muted changedgroup" Text="{Binding Group}" IsVisible="{Binding ShowsGroup}" />
                 <Grid Classes="changedfile" Classes.reviewed="{Binding IsReviewed}" ColumnDefinitions="Auto,Auto,*" ToolTip.Tip="{Binding StatusText}" Background="Transparent">
-                  <!-- DESIGN.md §8, "Reviewed": unticks when Claude changes the file again -->
-                  <CheckBox Classes="reviewed" IsChecked="{Binding IsReviewed, Mode=OneWay}"
+                  <!-- DESIGN.md §8, "Reviewed": unticks when Claude changes the file again. At the row's top, on the middle of
+                       the name's first line (Controls/FirstLine). -->
+                  <CheckBox Classes="reviewed" IsChecked="{Binding IsReviewed, Mode=OneWay}" controls:FirstLine.CenterOn="{Binding #FileName}"
                             Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ChangedFiles.ToggleFileReviewedCommand}" CommandParameter="{Binding}"
                             AutomationProperties.Name="Reviewed" ToolTip.Tip="Reviewed. Unticks when Claude changes the file again." />
                   <!-- The letter and the counts are monospace, beside the name: on its baseline (Controls/Baseline). -->
@@ -56,7 +113,8 @@
                       <TextBlock Grid.Column="1" Classes="mono small muted" Text="{Binding Stats}" VerticalAlignment="Top" Margin="6,0,0,0"
                                  controls:Baseline.AlignWith="{Binding #FileName}" />
                     </Grid>
-                    <TextBlock Classes="muted small" Text="{Binding DisplayPath}" TextWrapping="Wrap" />
+                    <!-- In the tree, its folder's row says where it is -->
+                    <TextBlock Classes="muted small" Text="{Binding DisplayPath}" TextWrapping="Wrap" IsVisible="{Binding !InTree}" />
                     <!-- DESIGN.md §8, "What the lines don't show": its line endings, byte order mark, newline at the end or whitespace -->
                     <TextBlock Classes="muted small" Text="{Binding Note}" TextWrapping="Wrap"
                                IsVisible="{Binding Note, Converter={x:Static ObjectConverters.IsNotNull}}" />
@@ -85,7 +143,7 @@
                 </Grid>
               </StackPanel>
             </DataTemplate>
-          </ListBox.ItemTemplate>
+          </ListBox.DataTemplates>
         </ListBox>
       </DockPanel>
 
@@ -307,6 +365,98 @@
           </ItemsControl>
         </ScrollViewer>
       </DockPanel>
+
+      <!-- Media (DESIGN.md §18, "Media"): the conversation's images, video and sound, the user's and the agent's, newest
+           first, each section folding to its header. A tile opens what it shows; its X clears it, and its menu has the rest.
+           What's cleared is under a line, in a Cleared group for each, folded until opened. -->
+      <ScrollViewer x:Name="MediaPage" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer.DataTemplates>
+          <!-- Its space below is its own, so a Cleared group that's hidden, with nothing in it, leaves none -->
+          <DataTemplate DataType="conv:MediaSection">
+            <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding IsShown}">
+              <Button Classes="flat row mediasection" Command="{Binding ToggleCommand}" AutomationProperties.Name="{Binding ToggleName}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Panel VerticalAlignment="Center">
+                    <Path Classes="toolicon" Data="{StaticResource IconChevronDown}" IsVisible="{Binding IsExpanded}" />
+                    <Path Classes="toolicon" Data="{StaticResource IconChevronRight}" IsVisible="{Binding !IsExpanded}" />
+                  </Panel>
+                  <TextBlock x:Name="SectionTitle" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" Text="{Binding CountText}" controls:Baseline.AlignWith="{Binding #SectionTitle}" />
+                </StackPanel>
+                <!-- Everything in it at once: Clear all, or Restore all from a Cleared group (DESIGN.md §18, "Media", "Clearing") -->
+                <Button.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="{Binding AllText}" IsEnabled="{Binding !IsEmpty}"
+                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleMediaSectionCommand}" CommandParameter="{Binding}" />
+                  </ContextMenu>
+                </Button.ContextMenu>
+              </Button>
+              <TextBlock Classes="muted small" Text="{Binding EmptyText}" TextWrapping="Wrap" Margin="4,0" IsVisible="{Binding ShowsEmptyText}" />
+              <ItemsControl ItemsSource="{Binding Entries}" IsVisible="{Binding IsExpanded}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel ItemSpacing="6" LineSpacing="8" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="conv:MediaEntry">
+                    <Panel Classes="mediatileframe">
+                      <Button Classes="flat mediatile" Classes.menuopen="{Binding #MediaMenu.IsOpen}" ToolTip.Tip="{Binding Tip}" AutomationProperties.Name="{Binding OpenName}"
+                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenMediaCommand}" CommandParameter="{Binding}">
+                        <StackPanel Spacing="3">
+                          <Border Classes="thumbnail mediathumb">
+                            <Border Classes="thumbclip">
+                              <Panel>
+                                <Image Source="{Binding Thumbnail, Converter={x:Static services:ImageFiles.Thumbnail}}" Stretch="UniformToFill" IsVisible="{Binding HasThumbnail}" />
+                                <!-- A video, a sound, or an image without a thumbnail (yet, or ever: an SVG) -->
+                                <Path Classes="mediakind" Data="{Binding KindIcon, Converter={x:Static conv:ToolIcons.Geometry}}" IsVisible="{Binding HasNoThumbnail}" />
+                              </Panel>
+                            </Border>
+                          </Border>
+                          <TextBlock Classes="small" Text="{Binding Name}" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                        </StackPanel>
+                        <Button.ContextMenu>
+                          <ContextMenu x:Name="MediaMenu">
+                            <MenuItem Header="Open" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenMediaCommand}" CommandParameter="{Binding}" />
+                            <MenuItem Header="Open in the OS's app" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenMediaInSystemCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding IsFile}" />
+                            <MenuItem Header="Show in conversation" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ShowMediaInConversationCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding CanShowInConversation}" />
+                            <MenuItem Header="{Binding ClearText}" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleMediaClearedCommand}" CommandParameter="{Binding}" />
+                            <Separator IsVisible="{Binding IsFile}" />
+                            <MenuItem Header="Reveal in file manager" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).RevealMediaCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding IsFile}" />
+                            <MenuItem Header="Copy path" Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).CopyMediaPathCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding IsFile}" />
+                          </ContextMenu>
+                        </Button.ContextMenu>
+                      </Button>
+                      <!-- Its X, which clears it, or once cleared its arrow, which restores it: at the thumbnail's corner while the
+                           pointer is over the tile or it has the focus (DESIGN.md §18, "Media", "Clearing") -->
+                      <Button Classes="flat mediaclear" ToolTip.Tip="{Binding ClearTip}" AutomationProperties.Name="{Binding ClearName}"
+                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleMediaClearedCommand}" CommandParameter="{Binding}">
+                        <Panel>
+                          <Path Data="{StaticResource IconClose}" IsVisible="{Binding !IsCleared}" />
+                          <Path Data="{StaticResource IconRestore}" IsVisible="{Binding IsCleared}" />
+                        </Panel>
+                      </Button>
+                    </Panel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </DataTemplate>
+        </ScrollViewer.DataTemplates>
+        <StackPanel>
+          <ItemsControl ItemsSource="{Binding Media.Sections}" Margin="12,0,16,0" />
+          <!-- What's cleared, under a line as the window's header is over the sections, with as much room under it as the
+               sections leave over it; a Cleared group once it has anything -->
+          <StackPanel IsVisible="{Binding Media.HasCleared}">
+            <Border Classes="mediadivider" />
+            <ItemsControl ItemsSource="{Binding Media.ClearedSections}" Margin="12,12,16,0" />
+          </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
 
       <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad"), once the tab has used it -->
       <Panel x:Name="ScratchPadPage" IsVisible="False">

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Deventry.Platform.Shell.Windows;
 using Deventry.App.Services;
@@ -20,6 +21,8 @@ public partial class MainWindow : Window
         Activated += (_, _) =>
         {
             _viewModel?.Services.Notifications.SetAppActive(true);
+            // A game that runs by the clock waits while Deventry is in the back (DESIGN.md §18, "Games with Joulene").
+            _viewModel?.Services.Games.SetAppActive(true);
             // Back from the OS's settings, perhaps with Reduce motion changed (DESIGN.md §3, "Accessibility").
             _ = _viewModel?.Services.ReadMotionPreferencesAsync(onlyIfStale: true);
             // Back from an editor, perhaps with deventry.json changed: the actions and links follow (DESIGN.md §18).
@@ -37,7 +40,11 @@ public partial class MainWindow : Window
             // Back from another editor, perhaps, with an open file changed there (DESIGN.md §18, "Project files").
             _viewModel?.Shell?.OnAppActivated();
         };
-        Deactivated += (_, _) => _viewModel?.Services.Notifications.SetAppActive(false);
+        Deactivated += (_, _) =>
+        {
+            _viewModel?.Services.Notifications.SetAppActive(false);
+            _viewModel?.Services.Games.SetAppActive(false);
+        };
         // A narrow window leaves the busiest tabs, then the weekly chart, out of the detailed header (DESIGN.md §6).
         SizeChanged += (_, e) => _viewModel?.Usage?.SetDetailsWidth(e.NewSize.Width / _zoom);
         LayoutUpdated += (_, _) =>
@@ -238,5 +245,86 @@ public partial class MainWindow : Window
         };
         _usageWindow.Show(this);
         return Task.CompletedTask;
+    }
+
+    /// <summary>A right-click on the remote clients' icon opens its menu, as a click does (DESIGN.md §18, "The header's indicator").</summary>
+    private void OnRemoteClientsContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (sender is Button { Flyout: { } menu } icon)
+        {
+            menu.ShowAt(icon);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>An entry of the remote clients' menu was picked: the menu closes, as a menu does, once its command has run.</summary>
+    private void OnRemoteClientsEntryClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => RemoteClientsIndicator.Flyout?.Hide());
+
+    /// <summary>The timed messages' section of the cup's menu, as it was last made.</summary>
+    private readonly List<object> _timedMenuItems = [];
+
+    /// <summary>The section was made for the menu open now: a right-click makes it as the menu opens.</summary>
+    private bool _timedMenuMade;
+
+    /// <summary>
+    /// The menu opened without a right-click, as the command channel and tests open it, which doesn't say it's opening:
+    /// its section is made now.
+    /// </summary>
+    private void OnKeepAwakeMenuOpened(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (!_timedMenuMade)
+        {
+            OnKeepAwakeMenuOpening(sender, new CancelEventArgs());
+        }
+    }
+
+    private void OnKeepAwakeMenuClosed(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => _timedMenuMade = false;
+
+    /// <summary>
+    /// The cup's menu opens (DESIGN.md §18, "Timed messages", "The header's cup"): first the timed messages, each opening
+    /// <b>Edit…</b> and <b>Clear…</b>, with a skipped one's reason under it; then <b>Clear all…</b> with more than one, and
+    /// <b>Add a timed message…</b>; then keeping awake. Made again each time, from the messages as they are.
+    /// </summary>
+    private void OnKeepAwakeMenuOpening(object? sender, CancelEventArgs e)
+    {
+        if (sender is not ContextMenu menu || _viewModel is not { Shell: { } shell } main)
+        {
+            return;
+        }
+        _timedMenuMade = true;
+        foreach (var item in _timedMenuItems)
+        {
+            menu.Items.Remove(item);
+        }
+        _timedMenuItems.Clear();
+        var rows = main.TimedMessages.Rows;
+        _timedMenuItems.Add(new MenuItem { Classes = { "menusection" }, Header = "Timed messages", IsEnabled = false });
+        foreach (var row in rows)
+        {
+            var entry = new MenuItem { Header = row.MenuText };
+            entry.Items.Add(new MenuItem { Header = "Edit…", Command = shell.EditTimedMessageCommand, CommandParameter = row });
+            entry.Items.Add(new MenuItem { Header = "Clear…", Command = shell.ClearTimedMessageCommand, CommandParameter = row });
+            _timedMenuItems.Add(entry);
+            if (row.Skipped is { } skipped)
+            {
+                _timedMenuItems.Add(new MenuItem { Header = new TextBlock { Text = skipped, Classes = { "small", "warning" } }, IsEnabled = false });
+            }
+        }
+        if (rows.Count > 1)
+        {
+            _timedMenuItems.Add(new MenuItem { Header = "Clear all…", Command = shell.ClearAllTimedMessagesCommand });
+        }
+        _timedMenuItems.Add(new MenuItem
+        {
+            Header = "Add a timed message…",
+            Command = shell.NewTimedMessageCommand,
+            Icon = new Avalonia.Controls.Shapes.Path { Classes = { "menuicon" }, Data = this.FindResource("IconClock") as Geometry },
+        });
+        _timedMenuItems.Add(new Separator());
+        for (var i = 0; i < _timedMenuItems.Count; i++)
+        {
+            menu.Items.Insert(i, _timedMenuItems[i]);
+        }
     }
 }

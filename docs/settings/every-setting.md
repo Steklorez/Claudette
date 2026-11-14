@@ -25,10 +25,13 @@ None of this page syncs, and a tab can't change it for itself.
 |---|---|---|---|
 | **Start Deventry when I log in** | Starting and closing | Off (your OS keeps it) | [Starting at login](../away/starting-at-login.md) |
 | **Also restore unpinned tabs when Deventry starts** | Starting and closing | On | [Closing and restoring](../tabs/closing-and-restoring.md) |
+| **Unload idle tabs to save memory** | Starting and closing | Off | [Closing and restoring](../tabs/closing-and-restoring.md) |
+| **After being idle for (minutes)** | Starting and closing | 60 | [Closing and restoring](../tabs/closing-and-restoring.md) |
 | **Confirm before closing a tab where Claude is working** | Starting and closing | On | [Closing and restoring](../tabs/closing-and-restoring.md) |
 | **Keep this computer awake** | Keeping the computer awake | Off | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
 | **When**: **Only while Claude has work to finish** or **Whenever Deventry is running** | Keeping the computer awake | Only while Claude has work to finish | [Keeping the computer awake](../away/keeping-the-computer-awake.md) |
 | **Also while tabs are connected to the Claude app** | Keeping the computer awake | On | [The Claude app](../away/the-claude-app.md) |
+| **Also while a remote client is on** | Keeping the computer awake | On | [Remote clients](../away/remote-clients.md#keeping-the-computer-awake) |
 | **Show Claude's service status** | Updates and status | On | [Claude is having problems](../troubleshooting/claude-is-having-problems.md) |
 | **Check for Deventry updates automatically** | Updates and status | On | [Deventry's updates](../updates/deventrys-updates.md) |
 | **Include pre-releases** | Updates and status | Off | [Deventry's updates](../updates/deventrys-updates.md) |
@@ -82,6 +85,7 @@ The page starts with a preview that shows your choices as you make them.
 | **Suggest my next prompt** | Message box | Off | No | No | [Prompt suggestions](../composer/prompt-suggestions.md) |
 | **Show context** | Tab rows | On | Yes | No | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
 | **Show task progress** | Tab rows | On | Yes | No | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
+| **Show running subagents** | Tab rows | Off | Yes | No | [Styles and themes](styles-and-themes.md#what-the-tab-rows-show) |
 
 ## Notifications
 
@@ -94,6 +98,7 @@ The page starts with a preview that shows your choices as you make them.
 | **Claude Code needs me to sign in** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
 | **A Claude Code update is ready** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
 | **A project action finishes** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
+| **A timed message is sent or skipped** | Notify me when | On | Yes | [Notifications](../away/notifications.md) |
 | **Show how many tabs need you** | The Dock or taskbar icon | On | Yes | [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md) |
 | **Animate it while tabs work or wait** | The Dock or taskbar icon | On | Yes | [The Dock and taskbar icon](../away/the-dock-and-taskbar-icon.md) |
 
@@ -220,9 +225,20 @@ None of this page syncs, and a tab can't change it for itself.
 | **The explorer is on the** | Project Files tab | Left | [The explorer](../project-files/the-explorer.md) |
 | **Wrap long lines** | Project Files tab | Off | [Editing](../project-files/editing.md) |
 | **Indent new lines with** | Project Files tab | 4 spaces (or 2 spaces, 8 spaces or Tabs) | [Editing](../project-files/editing.md) |
+| **Ignored files** | Project Files tab | Dimmed (or Hidden) | [The explorer](../project-files/the-explorer.md#the-tree) |
+| **Hidden files** | Project Files tab | Dimmed (or Hidden) | [The explorer](../project-files/the-explorer.md#the-tree) |
 | **Diff tool**: the built-in view, a tool installed here, or a custom command | Diff tool | Built-in diff view | [External diff tools](../changes/external-diff-tools.md) |
 | **Command** (for a custom command), with **Test** | Diff tool | Empty | [External diff tools](../changes/external-diff-tools.md) |
 | **Open in the diff window** | Diff tool | Opens the file, as Open files in says (or in the app the OS uses, or the changes in the diff tool) | [The diff view](../changes/the-diff-view.md#opening-the-file) |
+
+## Timed messages
+
+None of this page syncs, so two machines never send the same message, and a tab can't change it for itself.
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| The messages, each with its switch, **Edit…** and **Delete…**, and **Add a timed message…** | Timed messages | None | [Timed messages](../away/timed-messages.md) |
+| **Install the wake helper…** and **Remove the wake helper…** (macOS and Linux) | Waking the computer | Not installed | [Timed messages](../away/timed-messages.md#if-the-computer-is-asleep) |
 
 ## All tools
 
@@ -272,7 +288,6 @@ The first page under **Source control**. A tab can't change any of it for itself
 | **Remove worktrees no tab has used for** | Worktrees | Never (or 7, 14, 30 or 90 days), with **Clean up now** | No | [Worktree tabs](../tabs/worktree-tabs.md) |
 | **Path to git**, with **Browse…** | Git | Empty: the first git on your `PATH` | No | [Git](git.md) |
 | **New Files tabs show** | Project Files tab | Claude's changes (or Changes against git HEAD) | No | [Claude's changes in the editor](../project-files/claudes-changes-in-the-editor.md#what-the-changes-are-against) |
-| **Files git ignores** | Project Files tab | Dimmed (or Hidden) | No | [The explorer](../project-files/the-explorer.md) |
 
 ## Perforce
 
@@ -292,6 +307,64 @@ The second page under **Source control**. None of this page syncs.
 | **Show Perforce state in the Files tab** | Opening files in Perforce | On | [Perforce](../project-tools/perforce.md#in-the-files-tab) |
 | A password for a server and user, with **Save password** and **Forget password** | Stored password | None | [Perforce](../project-tools/perforce.md) |
 | Each folder's server and user, with **Add folder…** | Per-folder server and user | None | [Perforce](../project-tools/perforce.md) |
+
+## Tickets
+
+None of this group syncs, and a tab can't change it for itself. A server's token is in your computer's credential store.
+
+### All providers
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Work on a ticket in**: **A new tab** or **A new tab in a worktree** | Working on a ticket | A new tab | [Tickets](../project-tools/tickets.md#work-on-a-ticket) |
+| **Name new tabs after their ticket** | Working on a ticket | On | [Tickets](../project-tools/tickets.md#work-on-a-ticket) |
+| **Include the ticket's comments** | Working on a ticket | On | [Tickets](../project-tools/tickets.md#work-on-a-ticket) |
+
+### GitHub
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| Each server's **Sign in with**, with **Set token…**, and **Add a GitHub Enterprise server…** | Servers | github.com, Nothing (public repositories only) | [Tickets](../project-tools/tickets.md#sign-in) |
+| **Find a project's repository from its git remote** | Projects | On | [Tickets](../project-tools/tickets.md#where-a-projects-tickets-come-from) |
+| **Let Deventry change tickets** | Changing tickets | Off | [Tickets](../project-tools/tickets.md#change-a-ticket) |
+
+### YouTrack
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| Each server, with **Set token…**, and **Add a YouTrack server…** | Servers | None | [Tickets](../project-tools/tickets.md#sign-in) |
+| **Let Deventry change tickets** | Changing tickets | Off | [Tickets](../project-tools/tickets.md#change-a-ticket) |
+
+## Remote clients
+
+None of this group syncs, and a tab can't change it for itself. A client's secret, such as a bot's token, is in your computer's credential store, and the paired accounts with Deventry's state.
+
+### All clients
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Remote clients can** | What they can do | Watch, answer, send messages and stop Claude | [Remote clients](../away/remote-clients.md#what-remote-clients-can-do) |
+| **Open new tabs** | What they can do | Off | [Remote clients](../away/remote-clients.md#what-remote-clients-can-do) |
+| **A tab needs permission or an answer** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
+| **A tab finishes its turn** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
+| **A tab's Claude Code stops with an error** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
+| **Usage alerts and accounts' spend warnings** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
+| **A project action finishes** | Messages | Off | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
+| **When**: **While I'm away** or **Always, silently while I'm at the desk** | Messages | While I'm away | [Remote clients](../away/remote-clients.md#when-messages-come) |
+| **Count me away after (minutes)** | Messages | 5 | [Remote clients](../away/remote-clients.md#when-messages-come) |
+| **What they say**: **Everything** or **Just what happened** | Messages | Everything | [Remote clients](../away/remote-clients.md#privacy) |
+
+### Telegram
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Use a Telegram bot** | The bot | Off | [Remote clients](../away/remote-clients.md#setting-up-a-telegram-bot) |
+
+### Discord
+
+| Setting | Section | Default | Explained in |
+|---|---|---|---|
+| **Use a Discord bot** | The bot | Off | [Remote clients](../away/remote-clients.md#setting-up-a-discord-bot) |
 
 ## A project's settings
 

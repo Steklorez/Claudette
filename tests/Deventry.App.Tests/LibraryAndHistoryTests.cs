@@ -27,11 +27,7 @@ public class LibraryAndHistoryTests
         h.Transport.EmitTurn();
 
         // The lease is taken last, after the transcript and the record are written: wait for the whole save.
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         Assert.NotNull(h.Services.Library.Library.GetTranscriptPath("s1"));
         var entry = Assert.Single(h.Services.Library.Library.List());
         Assert.Equal("Login fix", entry.Record.Name);
@@ -57,6 +53,7 @@ public class LibraryAndHistoryTests
 
         Assert.False(h.Shell.IsHistoryOpen);
         var tab = h.Shell.SelectedTab!;
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.Equal("old-1", h.Factory.Launches[0].Resume);
         // It only ever lived on this machine, so it stays here.
@@ -311,6 +308,7 @@ public class LibraryAndHistoryTests
 
         await history.OpenCommand.ExecuteAsync(entry);
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         var resume = h.Factory.Launches[0].Resume!;
         Assert.StartsWith(h.Services.Paths.LocalSessionsDirectory, resume, StringComparison.Ordinal);
@@ -340,6 +338,7 @@ public class LibraryAndHistoryTests
 
         await confirmation.SecondaryCommand.ExecuteAsync(null);
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.True(h.Factory.Launches[0].ForkSession);
         // A copy of a library session syncs too, under its own id once it has one.
@@ -354,11 +353,7 @@ public class LibraryAndHistoryTests
         tab.SetSyncToLibrary(true);
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.Leases.HeldSessions.Contains("s1");
-        }, "the lease");
+        await TabTestHarness.Eventually(() => h.Services.Library.Leases.HeldSessions.Contains("s1"), "the lease", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
 
         var lease = Path.Combine(h.Services.Library.Library.GetSessionFolder("s1"), LeaseManager.FileName);
         await File.WriteAllTextAsync(lease, new JsonObject { ["machine"] = "LAPTOP-02", ["owner"] = "other", ["updatedAt"] = h.Time.GetUtcNow().ToString("O") }.ToJsonString(), TestContext.Current.CancellationToken);
@@ -380,11 +375,7 @@ public class LibraryAndHistoryTests
         tab.SetSyncToLibrary(true);
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.Leases.HeldSessions.Contains("s1");
-        }, "the lease");
+        await TabTestHarness.Eventually(() => h.Services.Library.Leases.HeldSessions.Contains("s1"), "the lease", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         var library = h.Services.Library.Library.GetTranscriptPath("s1")!;
         var copied = await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken);
         var lease = Path.Combine(h.Services.Library.Library.GetSessionFolder("s1"), LeaseManager.FileName);
@@ -394,11 +385,7 @@ public class LibraryAndHistoryTests
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder), UserLine("s1", "written after the take-over", h.WorkFolder));
         h.Transport.EmitTurn();
 
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return tab.IsReadOnly;
-        }, "read-only");
+        await TabTestHarness.Eventually(() => tab.IsReadOnly, "read-only", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         Assert.Equal("LAPTOP-02", tab.TakenOverBy);
         Assert.Equal(copied, await File.ReadAllTextAsync(library, TestContext.Current.CancellationToken));
         Assert.Equal(theirs, await File.ReadAllTextAsync(lease, TestContext.Current.CancellationToken));
@@ -415,6 +402,7 @@ public class LibraryAndHistoryTests
 
         await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.IsType<LeaseStatus.Mine>(h.Services.Library.CheckLease("lib-3"));
     }
@@ -431,6 +419,7 @@ public class LibraryAndHistoryTests
 
         await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         var record = h.Services.Library.Library.List().Single().Record;
         Assert.Equal(h.Time.GetUtcNow(), record.LastOpened);
@@ -494,10 +483,33 @@ public class LibraryAndHistoryTests
         await confirmation.ConfirmCommand.ExecuteAsync(null);
 
         // Taken over: resumed from this machine's own transcript, with the lease now held here.
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.Equal("both-1", h.Factory.Launches[0].Resume);
         Assert.IsType<LeaseStatus.Mine>(h.Services.Library.CheckLease("both-1"));
         Assert.True(h.Shell.SelectedTab!.SyncToLibrary);
+    }
+
+    [Fact]
+    public async Task A_session_whose_lease_an_earlier_run_here_left_opens_without_asking()
+    {
+        await using var h = new TabTestHarness();
+        h.WriteTranscript("crash-1", UserLine("crash-1", "Add the export button", h.WorkFolder));
+        await SaveToLibraryAsync(h, "crash-1", h.Services.Library.MachineName, lastUsed: DateTimeOffset.Parse("2026-09-28T09:00:00Z", CultureInfo.InvariantCulture));
+        await LeaveLeaseAsync(h, "crash-1");
+        h.OpenHistory();
+        var history = h.Shell.History!;
+        await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
+
+        await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
+
+        // Nothing has it open: it isn't open "on" this machine, and opening it takes the lease.
+        Assert.Null(h.Shell.Confirmation);
+        h.Start();
+        await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
+        Assert.Equal("crash-1", h.Factory.Launches[0].Resume);
+        Assert.False(h.Factory.Launches[0].ForkSession);
+        Assert.IsType<LeaseStatus.Mine>(h.Services.Library.CheckLease("crash-1"));
     }
 
     [Fact]
@@ -514,6 +526,7 @@ public class LibraryAndHistoryTests
 
         await history.OpenCommand.ExecuteAsync(entry);
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.StartsWith(h.Services.Paths.LocalSessionsDirectory, h.Factory.Launches[0].Resume!, StringComparison.Ordinal);
         Assert.True(h.Shell.SelectedTab!.SyncToLibrary);
@@ -535,6 +548,25 @@ public class LibraryAndHistoryTests
 
         Assert.Equal("LAPTOP-02", tab.TakenOverBy);
         Assert.Empty(h.Factory.Launches);
+    }
+
+    [Fact]
+    public async Task A_restored_tab_whose_lease_an_earlier_run_here_left_starts_and_takes_it()
+    {
+        await using var h = new TabTestHarness();
+        h.WriteTranscript("pinned-3", UserLine("pinned-3", "Add the export button", h.WorkFolder));
+        await SaveToLibraryAsync(h, "pinned-3", h.Services.Library.MachineName);
+        await LeaveLeaseAsync(h, "pinned-3");
+        h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "pinned-3", SyncToLibrary = true }];
+        h.Shell.Restore(null);
+        var tab = h.Shell.AllTabs.Single();
+
+        await tab.EnsureStartedAsync();
+
+        // Not read-only, as if the session had carried on somewhere: it carries on here.
+        Assert.Null(tab.TakenOverBy);
+        Assert.Equal("pinned-3", Assert.Single(h.Factory.Launches).Resume);
+        Assert.IsType<LeaseStatus.Mine>(h.Services.Library.CheckLease("pinned-3"));
     }
 
     [Fact]
@@ -615,6 +647,26 @@ public class LibraryAndHistoryTests
     }
 
     [Fact]
+    public async Task A_tab_whose_turns_were_kept_apart_never_starts_again()
+    {
+        await using var h = new TabTestHarness();
+        var first = UserLine("pin-7", "Add the export button", h.WorkFolder);
+        h.WriteTranscript("pin-7", first, UserLine("pin-7", "Here, on the desktop", h.WorkFolder, "2026-09-28T11:00:00Z"));
+        await CarriedOnElsewhereAsync(h, "pin-7", first, UserLine("pin-7", "There, on the laptop", h.WorkFolder, "2026-09-28T12:00:00Z"));
+        var tab = RestorePinned(h, "pin-7");
+        await tab.EnsureStartedAsync();
+        Assert.True(tab.IsReadOnly);
+
+        // Shown again, which starts a tab whose Claude Code isn't running: it stays read-only, offers no Restart, and
+        // leaves the lease for the laptop.
+        await tab.EnsureStartedAsync();
+
+        Assert.False(tab.CanRestart);
+        Assert.Empty(h.Factory.Launches);
+        Assert.IsType<LeaseStatus.Free>(h.Services.Library.CheckLease("pin-7"));
+    }
+
+    [Fact]
     public async Task Turns_that_reach_the_library_after_the_tab_started_are_picked_up_while_it_waits()
     {
         await using var h = new TabTestHarness();
@@ -659,6 +711,31 @@ public class LibraryAndHistoryTests
 
         await tab.SendCommand.ExecuteAsync(null);
         await TabTestHarness.Eventually(() => h.Transport.SentUserTexts.Contains("Ship it"), "the message");
+    }
+
+    [Fact]
+    public async Task A_restored_tab_that_has_not_started_looks_at_the_library_before_its_first_message()
+    {
+        await using var h = new TabTestHarness();
+        var first = UserLine("pin-8", "Add the export button", h.WorkFolder);
+        h.WriteTranscript("pin-8", first);
+        await CarriedOnElsewhereAsync(h, "pin-8", first);
+        // Selected, it reads its conversation without starting (DESIGN.md §9, "Starting fast").
+        var tab = RestorePinned(h, "pin-8");
+        await TabTestHarness.Eventually(() => Notes(tab).Any(n => n.Text == "Resumed."), "the earlier conversation");
+        // The laptop carries the session on meanwhile, and closes Deventry, which lets its lease go.
+        await CarriedOnElsewhereAsync(h, "pin-8", first, UserLine("pin-8", "Now the import", h.WorkFolder, "2026-09-28T12:00:00Z"));
+
+        tab.ComposerText = "Ship it";
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
+
+        // Not sent from this machine's older copy: the laptop's turn is read first, and the message waits to be sent again.
+        var resume = Assert.Single(h.Factory.Launches).Resume!;
+        Assert.StartsWith(h.Services.Paths.LocalSessionsDirectory, resume, StringComparison.Ordinal);
+        Assert.Contains(tab.Items, i => i is Conversation.UserMessageItem { Text: "Now the import" });
+        Assert.Equal("Ship it", tab.ComposerText);
+        Assert.DoesNotContain("Ship it", h.Transport.SentUserTexts);
+        Assert.Contains(Notes(tab), n => n.Text.StartsWith("Your message wasn't sent", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -749,6 +826,7 @@ public class LibraryAndHistoryTests
 
         await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.Equal("claude-sonnet-5-5", h.Factory.Launches[0].Model);
         Assert.Equal("plan", h.Factory.Launches[0].PermissionMode);
@@ -765,11 +843,7 @@ public class LibraryAndHistoryTests
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
 
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.Library.List().Any(e => e.Record.SessionId == "s1");
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.Library.List().Any(e => e.Record.SessionId == "s1"), "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         var record = h.Services.Library.Library.List().Single(e => e.Record.SessionId == "s1").Record;
         Assert.Equal("high", record.Overrides?.Effort);
     }
@@ -785,6 +859,7 @@ public class LibraryAndHistoryTests
 
         await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
 
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.Equal([(Path.Combine(h.WorkFolder, "src", "auth.cs"), "e1")], h.Shell.SelectedTab!.State.ReviewedFiles.Select(m => (m.Path, m.Change)));
     }
@@ -800,22 +875,14 @@ public class LibraryAndHistoryTests
         // the tab still works waits for a turn that won't come.
         await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && !tab.IsWorking, "the turn to finish");
         tab.SetSyncToLibrary(true);
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the first copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the first copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         Assert.Empty(Record().ReviewedFiles ?? []);
         var path = Path.Combine(h.WorkFolder, "src", "auth.cs");
 
         tab.ChangedFiles.ToggleFileReviewedCommand.Execute(new ChangedFileRow { Path = path, DisplayPath = "src/auth.cs", Status = "M", StatusText = "Modified", FromGit = true });
 
         // Relative to the folder, which has another path on another machine.
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return Record().ReviewedFiles is [{ Path: "src/auth.cs", Change: null }];
-        }, "the record");
+        await TabTestHarness.Eventually(() => Record().ReviewedFiles is [{ Path: "src/auth.cs", Change: null }], "the record", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
 
         SessionRecord Record() => h.Services.Library.Library.List().Single(e => e.Record.SessionId == "s1").Record;
     }
@@ -856,11 +923,7 @@ public class LibraryAndHistoryTests
         Assert.True(tab.SyncToLibrary);
         Assert.True(Assert.Single(h.Services.State.Tabs).SyncToLibrary);
         // No turn needed: the copy follows as soon as the transcript has settled.
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         Assert.NotNull(h.Services.Library.Library.GetTranscriptPath("s1"));
         Assert.Equal(120, Assert.Single(h.Services.Library.Library.List()).Record.Tokens.Total);
     }
@@ -885,11 +948,7 @@ public class LibraryAndHistoryTests
 
         h.Transport.EmitTurn();
 
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         Assert.NotNull(h.Services.Library.Library.GetTranscriptPath("s1"));
     }
 
@@ -900,11 +959,7 @@ public class LibraryAndHistoryTests
         var tab = await h.OpenTabAsync();
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
 
         tab.ToggleSyncToLibraryCommand.Execute(null);
 
@@ -931,11 +986,7 @@ public class LibraryAndHistoryTests
         Assert.True(tab.SyncToLibrary);
         h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
     }
 
     [Fact]
@@ -954,6 +1005,7 @@ public class LibraryAndHistoryTests
         await history.OpenCommand.ExecuteAsync(entry);
 
         // Resumed from this machine's own transcript, and syncing, so it takes the lease as it starts.
+        h.Start();
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.Equal("both-3", h.Factory.Launches[0].Resume);
         Assert.True(h.Shell.SelectedTab!.SyncToLibrary);
@@ -1045,11 +1097,7 @@ public class LibraryAndHistoryTests
         await File.WriteAllLinesAsync(agent, [ReplyLine("s1", "Found it")], TestContext.Current.CancellationToken);
         h.Transport.EmitTurn();
         // The copy starts with the result, and the tab is Idle again, which Sync now needs, only with the event after it.
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine && !tab.IsWorking;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine && !tab.IsWorking, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         // Renamed since the turn, and the library's copy of the subagent's transcript changed without its size or time
         // changing, so an ordinary copy would skip it.
         tab.State.UserName = "Login fix";
@@ -1109,11 +1157,7 @@ public class LibraryAndHistoryTests
         var tab = await h.OpenTabAsync();
         var transcript = h.WriteTranscript("s1", UserLine("s1", "hello", h.WorkFolder));
         h.Transport.EmitTurn();
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the library copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the library copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         // Taken over since the last lease refresh, which hasn't noticed yet.
         await HoldLeaseAsync(h, "s1", "LAPTOP-02");
         await File.AppendAllTextAsync(transcript, UserLine("s1", "written here", h.WorkFolder) + "\n", TestContext.Current.CancellationToken);
@@ -1279,6 +1323,7 @@ public class LibraryAndHistoryTests
         await TabTestHarness.Eventually(() => !history.IsLoading, "History to load");
 
         await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
+        h.Start();
 
         // Before any turn: read with its lease as the tab starts.
         var tab = h.Shell.SelectedTab!;
@@ -1355,11 +1400,7 @@ public class LibraryAndHistoryTests
     private static async Task CopyAfterTurnAsync(TabTestHarness h, TabViewModel tab)
     {
         var copy = tab.LibraryCopy;
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return copy.IsCompleted;
-        }, "the copy after the turn");
+        await TabTestHarness.Eventually(() => copy.IsCompleted, "the copy after the turn", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         await copy;
     }
 
@@ -1385,11 +1426,7 @@ public class LibraryAndHistoryTests
     private static async Task SyncNowAsync(TabTestHarness h, TabViewModel tab)
     {
         var sync = tab.SyncNowCommand.ExecuteAsync(null);
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return sync.IsCompleted;
-        }, "Sync now");
+        await TabTestHarness.Eventually(() => sync.IsCompleted, "Sync now", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         await sync;
     }
 
@@ -1412,6 +1449,19 @@ public class LibraryAndHistoryTests
         File.WriteAllTextAsync(
             Path.Combine(h.Services.Library.Library.GetSessionFolder(sessionId), LeaseManager.FileName),
             new JsonObject { ["machine"] = machine, ["owner"] = "other", ["updatedAt"] = h.Time.GetUtcNow().ToString("O") }.ToJsonString(),
+            TestContext.Current.CancellationToken);
+
+    /// <summary>An earlier run of Deventry on this machine had the session open and ended without letting it go, as in a crash.</summary>
+    private static Task LeaveLeaseAsync(TabTestHarness h, string sessionId) =>
+        File.WriteAllTextAsync(
+            Path.Combine(h.Services.Library.Library.GetSessionFolder(sessionId), LeaseManager.FileName),
+            new JsonObject
+            {
+                ["machine"] = h.Services.Library.MachineName,
+                ["machineId"] = h.Services.MachineId,
+                ["owner"] = "crashed",
+                ["updatedAt"] = h.Time.GetUtcNow().ToString("O"),
+            }.ToJsonString(),
             TestContext.Current.CancellationToken);
 
     private static async Task SaveToLibraryAsync(TabTestHarness h, string sessionId, string machine, DateTimeOffset? lastUsed = null, TabOverrides? overrides = null,

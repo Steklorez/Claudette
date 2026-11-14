@@ -169,6 +169,14 @@ internal sealed class FakeP4(TimeProvider? time = null) : IProcessLauncher
                 }
                 TicketExpires = Time.GetUtcNow() + TicketLifetime;
                 return (0, $"Enter password: \nUser {run.User ?? User} logged in.\n", "");
+            case "ignores" when Unreachable:
+                return (1, "", connectFailed);
+            case "ignores":
+                if (HoldIgnores is { } holding)
+                {
+                    await holding.Task;
+                }
+                return (0, string.Concat(run.Arguments.Where(a => a != "-i").Select(path => $"{path} {(IsIgnored(path) ? "ignored" : "not ignored")}\n")), "");
             case "fstat" or "edit" or "add" or "delete" or "revert" or "move" or "diff" or "print" or "reconcile" when Unreachable:
                 return (1, "", connectFailed);
             case "fstat" or "edit" or "add" or "delete" or "revert" or "move" or "diff" or "print" or "reconcile":
@@ -217,6 +225,26 @@ internal sealed class FakeP4(TimeProvider? time = null) : IProcessLauncher
 
     /// <summary>When set, the file commands wait for it before answering, as a slow or hung server does.</summary>
     public TaskCompletionSource? HoldFileCommands { get; set; }
+
+    /// <summary>
+    /// P4IGNORE's rules, as names, which <c>ignores -i</c> answers from: a path with one of them in it is ignored, as a
+    /// rule without a slash ignores the files and folders of that name and what's in them; one ending in a slash
+    /// (<c>Binaries/</c>) ignores only what's in a folder of that name, not the folder's own path. Lock it to change it
+    /// while commands may run.
+    /// </summary>
+    public HashSet<string> IgnoredNames { get; } = [];
+
+    /// <summary>When set, <c>ignores</c> waits for it before answering.</summary>
+    public TaskCompletionSource? HoldIgnores { get; set; }
+
+    private bool IsIgnored(string path)
+    {
+        var parts = path.Split('/', '\\');
+        lock (IgnoredNames)
+        {
+            return parts.Where((part, i) => IgnoredNames.Contains(part) || i < parts.Length - 1 && IgnoredNames.Contains(part + "/")).Any();
+        }
+    }
 
     /// <summary>The file commands run, in order: <c>edit</c>, <c>add</c> and the rest, without <c>fstat</c>.</summary>
     public IReadOnlyList<FakeP4Run> FileCommands => Runs.Where(r => r.Command is "edit" or "add" or "delete" or "revert" or "move" or "reconcile").ToArray();

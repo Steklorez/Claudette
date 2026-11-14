@@ -38,7 +38,7 @@ A mark is a small icon of your own on a tab, meaning whatever you want it to. De
 1. Right-click the tab and open **Mark ▸**.
 2. Pick one: **Check**, **Cross**, **Question mark**, **Star**, **Flag** or **Pause**.
 
-The mark shows under the tab's status icon, level with the second line: a green check, a red cross, an amber question mark, a gold star, a flag in the accent color and a muted pause sign. Hover it for its name.
+The mark shows at the start of the tab's second line, or under its status icon with [status dots](the-sidebar.md#status-dots): a green check, a red cross, an amber question mark, a gold star, a flag in the accent color and a muted pause sign. Hover it for its name.
 
 The menu ticks the tab's mark, and picking it again takes it off. **Clear mark**, in the menu while the tab has one, does the same.
 

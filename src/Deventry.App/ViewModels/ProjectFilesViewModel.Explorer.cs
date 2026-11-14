@@ -21,6 +21,7 @@ public partial class ExplorerRow : ObservableObject
         Depth = depth;
         FolderText = folderText;
         IsIgnored = entry.IsIgnored;
+        IsHidden = entry.IsHidden;
     }
 
     public TreeEntry Entry { get; private set; }
@@ -61,9 +62,13 @@ public partial class ExplorerRow : ObservableObject
 
     public bool IsCollapsedFolder => CanExpand && !IsExpanded;
 
-    /// <summary>Git ignores it, or it's a folder the <c>@</c> list skips: drawn dimmed.</summary>
+    /// <summary>Git or P4IGNORE ignores it, or it's a folder the <c>@</c> list skips: drawn dimmed.</summary>
     [ObservableProperty]
     public partial bool IsIgnored { get; set; }
+
+    /// <summary>A dotfile, one the OS hides, or in a hidden folder: drawn dimmed.</summary>
+    [ObservableProperty]
+    public partial bool IsHidden { get; set; }
 
     /// <summary>Claude changed it: <c>M</c>, or <c>A</c> for a file Claude created (with git's HEAD, git's own letters).</summary>
     [ObservableProperty]
@@ -117,6 +122,7 @@ public partial class ExplorerRow : ObservableObject
     {
         Entry = entry;
         IsIgnored = entry.IsIgnored;
+        IsHidden = entry.IsHidden;
         OnPropertyChanged(nameof(CanExpand));
         OnPropertyChanged(nameof(IsCollapsedFolder));
     }
@@ -169,7 +175,7 @@ public sealed partial class ProjectFilesViewModel
     {
         _inRepository = Directory.Exists(Folder) && GitInfo.TryGetBranch(Folder) is not null;
         OnPropertyChanged(nameof(IsGitRepository));
-        var entries = await ListAsync(Folder, parentIgnored: false);
+        var entries = await ListAsync(Folder, parentIgnored: false, parentHidden: false);
         Rows.Clear();
         foreach (var entry in entries)
         {
@@ -177,6 +183,7 @@ public sealed partial class ProjectFilesViewModel
         }
         Watch(Folder);
         RefreshPerforce([Folder]);
+        RefreshIgnores([Folder]);
         // Shallowest first, so a folder's parent is there to expand it in.
         foreach (var relative in State.ExpandedFolders.OrderBy(f => f.Count(c => c == '/')).ToArray())
         {
@@ -200,35 +207,78 @@ public sealed partial class ProjectFilesViewModel
         return row;
     }
 
-    /// <summary>What git ignores is left out of the tree, as Settings → Git → <b>Files git ignores</b> said when it was last read; null before.</summary>
+    /// <summary>
+    /// What's ignored, and what's hidden, is left out of the tree, as Settings → Files and diffs → <b>Ignored files</b>
+    /// and <b>Hidden files</b> said when they were last read; null before.
+    /// </summary>
     private bool? _hidesIgnored;
+
+    private bool? _hidesHidden;
 
     private bool HidesIgnored => _hidesIgnored ??= _services.Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
 
+    private bool HidesHidden => _hidesHidden ??= _services.Settings.Editor.HiddenFiles == HiddenFiles.Hidden;
+
     /// <summary>
-    /// A folder's entries for the tree, with what git ignores marked to be dimmed, or left out while Settings → Git →
-    /// <b>Files git ignores</b> is <b>Hidden</b> (DESIGN.md §18, "The explorer"). Which is decided once they're read, so
-    /// a listing that finishes after the setting changed follows it too.
+    /// A folder's entries for the tree, with what's ignored and what's hidden marked to be dimmed, or left out while
+    /// Settings → Files and diffs → <b>Ignored files</b> or <b>Hidden files</b> is <b>Hidden</b> (DESIGN.md §18, "The
+    /// explorer"). Which is decided once they're read, so a listing that finishes after a setting changed follows it too.
     /// </summary>
-    private async Task<IReadOnlyList<TreeEntry>> ListAsync(string folder, bool parentIgnored)
+    private async Task<IReadOnlyList<TreeEntry>> ListAsync(string folder, bool parentIgnored, bool parentHidden)
     {
-        var entries = await FolderListing.ReadAsync(Folder, folder, _services.Git, _inRepository, parentIgnored);
-        return HidesIgnored ? [.. entries.Where(e => !e.IsIgnored)] : entries;
+        var entries = await FolderListing.ReadAsync(Folder, folder, _services.Git, _inRepository, parentIgnored, parentHidden);
+        if (_perforce is not null)
+        {
+            // What P4IGNORE ignores, as Perforce last said; asked about once the folder's read (RefreshIgnores).
+            var ignores = PerforceFiles.Ignores;
+            entries = [.. entries.Select(e => !e.IsIgnored && ignores.IsIgnored(e.FullPath) == true ? e with { IsIgnored = true } : e)];
+        }
+        var (hidesIgnored, hidesHidden) = (HidesIgnored, HidesHidden);
+        return [.. entries.Where(e => !(hidesIgnored && e.IsIgnored) && !(hidesHidden && e.IsHidden))];
+    }
+
+    /// <summary>The explorer's ⋯ <b>Show ignored files</b>: ticked while they're in the tree, dimmed.</summary>
+    public bool ShowsIgnoredFiles => _services.Settings.Git.IgnoredFiles == IgnoredFiles.Dimmed;
+
+    /// <summary>The explorer's ⋯ <b>Show hidden files</b>.</summary>
+    public bool ShowsHiddenFiles => _services.Settings.Editor.HiddenFiles == HiddenFiles.Dimmed;
+
+    /// <summary>
+    /// <b>Show ignored files</b>: Settings → Files and diffs → <b>Ignored files</b> the other way, for every Files tab,
+    /// saved; each follows it at once.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleShowIgnoredFiles()
+    {
+        _services.Settings.Git.IgnoredFiles = ShowsIgnoredFiles ? IgnoredFiles.Hidden : IgnoredFiles.Dimmed;
+        _services.SaveSettings();
+    }
+
+    /// <summary><b>Show hidden files</b>: Settings → Files and diffs → <b>Hidden files</b> the other way, as above.</summary>
+    [RelayCommand]
+    private void ToggleShowHiddenFiles()
+    {
+        _services.Settings.Editor.HiddenFiles = ShowsHiddenFiles ? HiddenFiles.Hidden : HiddenFiles.Dimmed;
+        _services.SaveSettings();
     }
 
     /// <summary>
-    /// Settings changed: when <b>Files git ignores</b> did, every folder shown is read again, so what git ignores leaves
-    /// the tree, or comes back dimmed, at once.
+    /// Settings changed: when <b>Ignored files</b> or <b>Hidden files</b> did, every folder shown is read again, so what
+    /// they say leaves the tree, or comes back dimmed, at once.
     /// </summary>
-    private void FollowIgnoredFilesSetting()
+    private void FollowFileVisibilitySettings()
     {
-        var hides = _services.Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
-        if (_hidesIgnored == hides)
+        OnPropertyChanged(nameof(ShowsIgnoredFiles));
+        OnPropertyChanged(nameof(ShowsHiddenFiles));
+        var hidesIgnored = _services.Settings.Git.IgnoredFiles == IgnoredFiles.Hidden;
+        var hidesHidden = _services.Settings.Editor.HiddenFiles == HiddenFiles.Hidden;
+        if (_hidesIgnored == hidesIgnored && _hidesHidden == hidesHidden)
         {
             return;
         }
-        var listed = _hidesIgnored is not null;
-        _hidesIgnored = hides;
+        var listed = _hidesIgnored is not null || _hidesHidden is not null;
+        _hidesIgnored = hidesIgnored;
+        _hidesHidden = hidesHidden;
         if (listed && _started)
         {
             RefreshExplorer();
@@ -303,7 +353,7 @@ public sealed partial class ProjectFilesViewModel
             return;
         }
         row.IsExpanded = true;
-        var entries = await ListAsync(row.FullPath, row.IsIgnored);
+        var entries = await ListAsync(row.FullPath, row.IsIgnored, row.IsHidden);
         var index = Rows.IndexOf(row);
         // It was collapsed again, or went away, while it was read.
         if (index < 0 || !row.IsExpanded)
@@ -316,6 +366,7 @@ public sealed partial class ProjectFilesViewModel
         }
         Watch(row.FullPath);
         RefreshPerforce([row.FullPath]);
+        RefreshIgnores([row.FullPath]);
         OnFileStateChanged();
     }
 
@@ -390,12 +441,19 @@ public sealed partial class ProjectFilesViewModel
     private void RefreshExplorer()
     {
         RefreshPerforceWorkspace();
+        ForgetIgnores();
+        QueueTreeFolders();
+        _ = ReadQueuedFoldersAsync();
+    }
+
+    /// <summary>The folders the tree shows, the project's and the expanded ones', to be read again.</summary>
+    private void QueueTreeFolders()
+    {
         _foldersToRead.Add(Folder);
         foreach (var row in Rows.Where(r => r.IsExpanded))
         {
             _foldersToRead.Add(row.FullPath);
         }
-        _ = ReadQueuedFoldersAsync();
     }
 
     /// <summary>The relative paths of the folders expanded, for the state.</summary>
@@ -524,6 +582,12 @@ public sealed partial class ProjectFilesViewModel
             return;
         }
         _foldersToRead.Add(folder);
+        if (path is not null && Path.GetFileName(path).Contains("ignore", StringComparison.OrdinalIgnoreCase))
+        {
+            // .p4ignore, p4ignore.txt, .gitignore and the like: what's ignored may have changed anywhere under it.
+            ForgetIgnores();
+            QueueTreeFolders();
+        }
         if (path is null)
         {
             foreach (var file in OpenFiles.Where(f => PathComparer.Equals(Path.GetDirectoryName(f.Path) ?? "", folder)))
@@ -563,6 +627,7 @@ public sealed partial class ProjectFilesViewModel
         UpdateRowChanges();
         // What changed on disk may have changed in Perforce too: asked again, never waited for.
         RefreshPerforce(folders);
+        RefreshIgnores(folders);
     }
 
     /// <summary>
@@ -577,7 +642,7 @@ public sealed partial class ProjectFilesViewModel
         {
             return;
         }
-        var entries = await ListAsync(folder, parent?.IsIgnored ?? false);
+        var entries = await ListAsync(folder, parent?.IsIgnored ?? false, parent?.IsHidden ?? false);
         var start = parent is null ? 0 : Rows.IndexOf(parent) + 1;
         if (parent is not null && start == 0)
         {

@@ -23,8 +23,14 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>Claude's service status: the header's dot and the banner (DESIGN.md §18, "Service status").</summary>
     public ServiceStatusViewModel ServiceStatus { get; } = new(services);
 
+    /// <summary>The header's remote clients icon, beside the cup (DESIGN.md §18, "Remote clients").</summary>
+    public RemoteClientsIndicatorViewModel RemoteClients { get; } = new(services);
+
     /// <summary>The header's cup: whether the computer is kept awake, and the switch for it (DESIGN.md §9, "Keeping the computer awake").</summary>
     public KeepAwakeService KeepAwake { get; } = services.KeepAwake;
+
+    /// <summary>The timed messages, for the cup's clock and menu (DESIGN.md §18, "Timed messages").</summary>
+    public TimedMessagesService TimedMessages { get; } = services.TimedMessages;
 
     /// <summary>The signed-in email and plan, or null when signed out.</summary>
     public string? AccountText => Account.IsSignedIn ? Account.Summary : null;
@@ -83,12 +89,24 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>The header just says Deventry: no plan usage to show, and no API key's spend.</summary>
     public bool ShowsTitle => !HasUsage && !ShowsSpend;
 
-    /// <summary>This is a demo (DESIGN.md §11, "Demo mode"): its banner shows, with <b>Leave demo</b>.</summary>
+    /// <summary>This is a demo (DESIGN.md §11, "Demo mode").</summary>
     public bool IsDemo => Services.Demo is not null;
+
+    /// <summary>The demo's banner, with <b>Leave demo</b>: until dismissed, for as long as this demo runs.</summary>
+    public bool ShowsDemoBanner => IsDemo && !_demoBannerDismissed;
+
+    private bool _demoBannerDismissed;
 
     /// <summary><b>Leave demo</b>: closes it, as closing its window does, and its folder goes as it closes.</summary>
     [RelayCommand]
     private void LeaveDemo() => ExitRequested?.Invoke();
+
+    [RelayCommand]
+    private void DismissDemoBanner()
+    {
+        _demoBannerDismissed = true;
+        OnPropertyChanged(nameof(ShowsDemoBanner));
+    }
 
     /// <summary>
     /// Set by the window: it's too narrow for the session's meter beside everything else in the header, so the plan and
@@ -334,6 +352,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
                 _shell.Restore(initialFolder);
             }
             StartUsage();
+            // The tabs are up: a remote client Settings turns on can reach them (DESIGN.md §18, "Remote clients").
+            services.RemoteClients.Start(_shell);
             StartUpdateChecks(_shell);
             StartRestarts(_shell);
             StartAppUpdates(_shell, restored?.Update);
@@ -587,8 +607,11 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
 
     public async ValueTask DisposeAsync()
     {
+        // The remote clients say Deventry is closing, while the tabs are still there to name.
+        await services.RemoteClients.CloseAsync();
         services.Notifications.Activated -= OnNotificationActivated;
         ServiceStatus.Dispose();
+        RemoteClients.Dispose();
         Usage?.Dispose();
         Spend?.Dispose();
         Updates?.Dispose();

@@ -55,7 +55,7 @@ public class UsageCreditsTabTests
         h.Transport.Emit(PaidByCredits(h.Time.GetUtcNow() + TimeSpan.FromHours(2)));
         h.Transport.Emit(Done());
 
-        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle, "the turn to end");
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the turn to end");
         Assert.DoesNotContain("interrupt", h.Transport.SentControlSubtypes);
         Assert.False(tab.HasLimitWait);
     }
@@ -66,7 +66,7 @@ public class UsageCreditsTabTests
         await using var h = new TabTestHarness(s => s.Usage.UseUsageCredits = false);
         var tab = await WorkingAsync(h, "interrupt_receipt_v1", "interrupt_cancel_queued_v1");
         tab.ComposerText = "and the tests";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         var queued = Card(tab, "and the tests");
         h.Transport.Answers["interrupt"] = _ => new JsonObject { ["still_queued"] = new JsonArray(), ["cancelled"] = new JsonArray(queued.SentId) };
         var reset = h.Time.GetUtcNow() + TimeSpan.FromHours(2);
@@ -101,7 +101,7 @@ public class UsageCreditsTabTests
         var tab = await h.OpenTabAsync();
 
         tab.ComposerText = "Refactor the parser";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
 
         var held = Card(tab, "Refactor the parser");
         Assert.True(held.IsHeldForCredits);
@@ -132,23 +132,23 @@ public class UsageCreditsTabTests
         var reset = await CreditsPayingAsync(h, tracker);
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "This one matters";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         var held = Card(tab, "This one matters");
 
-        await tab.SendHeldNowCommand.ExecuteAsync(held);
+        await InlineDispatcher.RunAsync(() => tab.SendHeldNowCommand.ExecuteAsync(held));
 
         await TabTestHarness.Eventually(() => h.Transport.SentUserTexts.Contains("This one matters") && tab.Status == TabStatus.Working, "the message");
         Assert.False(held.IsHeldForCredits);
         h.Transport.Emit(Wire.Init());
         h.Transport.Emit(PaidByCredits(reset));
         h.Transport.Emit(Done());
-        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle, "the turn to end");
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the turn to end");
         Assert.DoesNotContain("interrupt", h.Transport.SentControlSubtypes);
         Assert.False(tab.HasLimitWait);
 
         // The next message is held again.
         tab.ComposerText = "And this one waits";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         Assert.True(Card(tab, "And this one waits").IsHeldForCredits);
     }
 
@@ -160,7 +160,7 @@ public class UsageCreditsTabTests
         await CreditsPayingAsync(h, tracker);
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "Never mind";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         await TabTestHarness.Eventually(() => tab.HasLimitWait, "the wait");
 
         await tab.CancelQueuedMessageCommand.ExecuteAsync(Card(tab, "Never mind"));
@@ -177,7 +177,7 @@ public class UsageCreditsTabTests
         await CreditsPayingAsync(h, tracker);
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "Refactor the parser";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         await TabTestHarness.Eventually(() => tab.CanUseCreditsNow, "the wait");
 
         tab.UseUsageCreditsNowCommand.Execute(null);
@@ -245,7 +245,7 @@ public class UsageCreditsTabTests
         Assert.False(new TabSettingsViewModel(h.Services, tab, () => { }).ShowsUsageCredits);
         h.Transport.Emit(PaidByCredits(h.Time.GetUtcNow() + TimeSpan.FromHours(2)));
         h.Transport.Emit(Done());
-        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle, "the turn to end");
+        await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the turn to end");
         Assert.DoesNotContain("interrupt", h.Transport.SentControlSubtypes);
     }
 
@@ -253,7 +253,7 @@ public class UsageCreditsTabTests
     {
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "Refactor the parser";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         h.Transport.Emit(new JsonObject
         {
             ["type"] = "system", ["subtype"] = "init", ["session_id"] = "s1", ["model"] = "claude-opus-5-5",

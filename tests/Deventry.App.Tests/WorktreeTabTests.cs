@@ -35,8 +35,10 @@ public class WorktreeTabTests
     /// </summary>
     internal static async Task<(TabViewModel Tab, string Path)> WorktreeTabAsync(TabTestHarness h, bool realWorktree)
     {
-        await h.Shell.OpenWorktreeTabAsync(h.WorkFolder);
-        var tab = h.Shell.SelectedTab!;
+        await InlineDispatcher.RunAsync(() => h.Shell.OpenWorktreeTabAsync(h.WorkFolder));
+        // Without one, what the shell said instead, such as git not finding the repository.
+        var tab = h.Shell.SelectedTab ?? throw new Xunit.Sdk.XunitException(
+            $"No worktree tab opened: {h.Shell.Confirmation?.Title ?? "nothing said"}{(h.Shell.Confirmation is { } notice ? $" ({notice.Message})" : "")}");
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the tab to start");
         var name = tab.State.NewWorktree!;
         var path = GitWorktrees.PathFor(h.WorkFolder, name);
@@ -50,7 +52,7 @@ public class WorktreeTabTests
             Directory.CreateDirectory(path);
         }
         tab.ComposerText = "go";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         h.Transport.Emit(new JsonObject { ["type"] = "system", ["subtype"] = "init", ["session_id"] = "s1", ["model"] = "claude-opus-5-5", ["cwd"] = path });
         h.Transport.Emit("""{"type":"result","subtype":"success","is_error":false,"session_id":"s1"}""");
         // Settled too: the status follows the session, which can be idle before the tab has applied the turn's end.
@@ -92,7 +94,7 @@ public class WorktreeTabTests
     {
         await using var h = new TabTestHarness();
 
-        await h.Shell.OpenWorktreeTabAsync(h.WorkFolder);
+        await InlineDispatcher.RunAsync(() => h.Shell.OpenWorktreeTabAsync(h.WorkFolder));
 
         Assert.Empty(h.Shell.AllTabs);
         Assert.Empty(h.Factory.Launches);
@@ -107,13 +109,13 @@ public class WorktreeTabTests
         await InitRepositoryAsync(h);
         var (tab, path) = await WorktreeTabAsync(h, realWorktree: true);
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
         await TabTestHarness.Eventually(() => h.Shell.Confirmation is not null, "the offer");
 
         var offer = h.Shell.Confirmation!;
         Assert.Equal($"Remove the worktree {Path.GetFileName(path)}?", offer.Title);
         Assert.Equal("Keep", offer.CancelText);
-        await offer.ConfirmCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => offer.ConfirmCommand.ExecuteAsync(null));
         Assert.False(Directory.Exists(path));
         Assert.Null(await new GitWorktrees(h.Services.Git).FindAsync(h.WorkFolder, path, TestContext.Current.CancellationToken));
     }
@@ -127,7 +129,7 @@ public class WorktreeTabTests
         var (tab, path) = await WorktreeTabAsync(h, realWorktree: true);
         await File.WriteAllTextAsync(Path.Combine(path, "draft.md"), "work\n", TestContext.Current.CancellationToken);
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
         await TabTestHarness.Eventually(() => h.Shell.Confirmation is not null, "the offer");
 
         var offer = h.Shell.Confirmation!;
@@ -152,7 +154,7 @@ public class WorktreeTabTests
         Assert.Equal(path, copy.Folder);
         Assert.Equal(h.WorkFolder, copy.GroupFolder);
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
 
         await Waiting.NeverAsync(() => h.Shell.Confirmation is not null, "an offer");
         Assert.True(Directory.Exists(path));
@@ -164,7 +166,7 @@ public class WorktreeTabTests
         Assert.SkipWhen(!GitInstalled, "git isn't on PATH.");
         await using var h = new TabTestHarness();
         await InitRepositoryAsync(h);
-        await h.Shell.OpenWorktreeTabAsync(h.WorkFolder);
+        await InlineDispatcher.RunAsync(() => h.Shell.OpenWorktreeTabAsync(h.WorkFolder));
         var tab = h.Shell.SelectedTab!;
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the tab to start");
         var name = tab.State.NewWorktree!;
@@ -175,7 +177,7 @@ public class WorktreeTabTests
         var copy = h.Shell.SelectedTab!;
         Assert.Equal(name, copy.State.NewWorktree);
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
 
         await Waiting.NeverAsync(() => h.Shell.Confirmation is not null, "an offer");
         Assert.True(Directory.Exists(path));
@@ -195,7 +197,7 @@ public class WorktreeTabTests
         await h.Shell.OpenFolderAsync(GitWorktrees.PathFor(link, Path.GetFileName(path)));
         Assert.NotSame(tab, h.Shell.SelectedTab);
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
 
         await Waiting.NeverAsync(() => h.Shell.Confirmation is not null, "an offer");
         Assert.True(Directory.Exists(path));
@@ -210,7 +212,7 @@ public class WorktreeTabTests
         var (tab, path) = await WorktreeTabAsync(h, realWorktree: true);
         h.Trees.Trees[4242].Children.Add((5001, "vite"));
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
         var leave = h.Shell.Confirmation!;
         Assert.Equal("Close, leave running", leave.SecondaryText);
         await leave.SecondaryCommand.ExecuteAsync(null);
@@ -226,14 +228,16 @@ public class WorktreeTabTests
         await using var h = new TabTestHarness();
         await InitRepositoryAsync(h);
         var (tab, path) = await WorktreeTabAsync(h, realWorktree: true);
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
         await TabTestHarness.Eventually(() => h.Shell.Confirmation is not null, "the offer");
         var offer = h.Shell.Confirmation!;
+        // Its message first: when it isn't empty, it says what git found in it.
+        Assert.StartsWith("The tab you closed worked in it. It has no changes", offer.Message, StringComparison.Ordinal);
         Assert.Equal($"Remove the worktree {Path.GetFileName(path)}?", offer.Title);
 
         // Made from a terminal before the user answered.
         await GitAsync(path, "commit", "-q", "--allow-empty", "-m", "from a terminal");
-        await offer.ConfirmCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => offer.ConfirmCommand.ExecuteAsync(null));
 
         Assert.True(Directory.Exists(path));
         var again = h.Shell.Confirmation!;
@@ -251,7 +255,7 @@ public class WorktreeTabTests
         await File.AppendAllTextAsync(Path.Combine(h.WorkFolder, ".git", "info", "exclude"), ".env\n", TestContext.Current.CancellationToken);
         await File.WriteAllTextAsync(Path.Combine(path, ".env"), "TOKEN=x\n", TestContext.Current.CancellationToken);
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
         await TabTestHarness.Eventually(() => h.Shell.Confirmation is not null, "the offer");
 
         var offer = h.Shell.Confirmation!;
@@ -270,7 +274,7 @@ public class WorktreeTabTests
         await GitAsync(h.WorkFolder, "branch", GitWorktrees.BranchPrefix + first);
         h.Services.Random = new Random(7);
 
-        await h.Shell.OpenWorktreeTabAsync(h.WorkFolder);
+        await InlineDispatcher.RunAsync(() => h.Shell.OpenWorktreeTabAsync(h.WorkFolder));
 
         Assert.Equal($"{first}-2", h.Shell.SelectedTab!.State.NewWorktree);
     }
@@ -282,7 +286,7 @@ public class WorktreeTabTests
         var extra = Directory.CreateDirectory(Path.Combine(h.Root, "lib")).FullName;
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "go";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         h.Transport.EmitTurn();
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.State.SessionId == "s1", "the turn");
         var launches = h.Factory.Launches.Count;
@@ -296,7 +300,7 @@ public class WorktreeTabTests
 
         // During a turn, it waits for the turn to end.
         tab.ComposerText = "more";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "working");
         await tab.SetExtraFoldersAsync([]);
         Assert.Equal(launches + 1, h.Factory.Launches.Count);
@@ -312,11 +316,11 @@ public class WorktreeTabTests
         var extra = Directory.CreateDirectory(Path.Combine(h.Root, "lib")).FullName;
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "go";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "working");
         await tab.SetExtraFoldersAsync([extra]);
         tab.ComposerText = "and then this";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         var queued = tab.Items.OfType<Deventry.App.Conversation.UserMessageItem>().Single(m => m.Text == "and then this");
         Assert.True(queued.IsQueued);
         var launches = h.Factory.Launches.Count;
@@ -343,7 +347,7 @@ public class WorktreeTabTests
         var extra = Directory.CreateDirectory(Path.Combine(h.Root, "lib")).FullName;
         var tab = await h.OpenTabAsync();
         tab.ComposerText = "go";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "working");
         await tab.SetExtraFoldersAsync([extra]);
 
@@ -355,7 +359,7 @@ public class WorktreeTabTests
         var launches = h.Factory.Launches.Count;
         Assert.Equal([extra], h.Factory.Launches[^1].AddDirectories);
         tab.ComposerText = "go on";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         h.Transport.EmitTurn();
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the next turn");
         await Waiting.NeverAsync(() => h.Factory.Launches.Count > launches, "another restart");

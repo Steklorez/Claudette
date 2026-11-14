@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Deventry.Core.Diffs;
 using Deventry.Core.Processes;
 using Deventry.Core.ProjectFiles;
+using Microsoft.Extensions.Logging;
 
 namespace Deventry.Core.Git;
 
@@ -47,7 +49,12 @@ public sealed record GitCheck(string? Path, string? Version, string? Problem);
 /// The user environment git runs with, and whose <c>PATH</c> it's found on (DESIGN.md §13), so git and its helpers
 /// (Git LFS, credential helpers) are the ones a terminal would use. Null: Deventry's own.
 /// </param>
-public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeProvider, string gitExecutable = GitWorkingTree.DefaultExecutable, UserEnvironment? environment = null)
+/// <param name="logger">
+/// Says why a command failed, which its callers only see as null or empty: a warning when git couldn't run or took too
+/// long, and what git said, at debug, when it ran and refused, which is often an answer (not a repository, no upstream).
+/// </param>
+public sealed partial class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeProvider, string gitExecutable = GitWorkingTree.DefaultExecutable,
+    UserEnvironment? environment = null, ILogger? logger = null)
 {
     /// <summary>The git run while no path is set, from <c>PATH</c>.</summary>
     public const string DefaultExecutable = "git";
@@ -432,6 +439,7 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
         {
             if (!Directory.Exists(workingDirectory))
             {
+                logger?.LogDebug("git {Arguments} wasn't run: {Folder} isn't there.", Shown(arguments), workingDirectory);
                 return null;
             }
             var spec = await SpecAsync(workingDirectory, ["-c", "core.quotepath=false", .. arguments], cancellationToken).ConfigureAwait(false);
@@ -439,13 +447,32 @@ public sealed class GitWorkingTree(IProcessLauncher launcher, TimeProvider timeP
             {
                 spec = UserEnvironment.WithVariables(spec, variables);
             }
-            return await ProcessRunner.RunAsync(launcher, spec, timeout, timeProvider, cancellationToken).ConfigureAwait(false);
+            var result = await ProcessRunner.RunAsync(launcher, spec, timeout, timeProvider, cancellationToken).ConfigureAwait(false);
+            if (result.ExitCode != 0)
+            {
+                logger?.LogDebug("git {Arguments} in {Folder} exited with {ExitCode}: {Error}", Shown(arguments), workingDirectory, result.ExitCode,
+                    WithoutCredentials(result.StandardError.Trim()));
+            }
+            return result;
         }
         catch (Exception ex) when (ex is TimeoutException or Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
         {
+            logger?.LogWarning("git {Arguments} in {Folder} didn't run: {Reason}", Shown(arguments), workingDirectory, WithoutCredentials(ex.Message));
             return null;
         }
     }
+
+    /// <summary>A command's words for the log, with any password or token in an address left out.</summary>
+    private static string Shown(IReadOnlyList<string> arguments) => WithoutCredentials(string.Join(' ', arguments));
+
+    /// <summary>
+    /// <paramref name="text"/> with the user and password of any address in it left out (<c>https://***@github.com/…</c>):
+    /// a clone's address can carry a token, and git repeats it in what it says.
+    /// </summary>
+    private static string WithoutCredentials(string text) => Credentials().Replace(text, "***@");
+
+    [GeneratedRegex(@"(?<=://)[^/@\s]+@")]
+    private static partial Regex Credentials();
 
     /// <summary>A run of the git <see cref="Executable"/> names, in the user environment.</summary>
     private async Task<ProcessStartSpec> SpecAsync(string? workingDirectory, IReadOnlyList<string> arguments, CancellationToken cancellationToken)

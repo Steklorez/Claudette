@@ -29,7 +29,7 @@ The sidebar lists the pages in groups:
 
 - **Deventry**: General, Appearance, Conversation, Notifications and Keyboard. [About Deventry](about.md) is a window of its own.
 - **Claude**: Claude Code, Accounts, Tabs, Usage and Advanced.
-- **Your work**: Sessions, and Files and diffs.
+- **Your work**: Sessions, Files and diffs, and [Timed messages](../away/timed-messages.md).
 - **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Deventry knows, Unreal Engine, Unity and Godot, each with its own icon (Unreal Engine's and Godot's are their logos). A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
 - **Source control**: [Git](git.md), with a branch for its icon, then [Perforce](../project-tools/perforce.md), with Perforce's logo.
 - At the foot, under a line, the [version and Help](#the-version-and-help).

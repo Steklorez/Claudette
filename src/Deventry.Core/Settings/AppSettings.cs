@@ -43,6 +43,15 @@ public sealed class AppSettings
 
     public NotificationSettings Notifications { get; set; } = new();
 
+    /// <summary>Settings → Tickets (DESIGN.md §18, "Tickets"): the trackers' servers, and working on a ticket. Per machine.</summary>
+    public TicketSettings Tickets { get; set; } = new();
+
+    /// <summary>Settings → Remote clients (DESIGN.md §18): the tabs from a phone, through a Telegram bot. Per machine.</summary>
+    public RemoteClientSettings RemoteClients { get; set; } = new();
+
+    /// <summary>Settings → Timed messages (DESIGN.md §18, "Timed messages"). Per machine.</summary>
+    public TimedMessageSettings TimedMessages { get; set; } = new();
+
     public KeyboardSettings Keyboard { get; set; } = new();
 
     public AdvancedSettings Advanced { get; set; } = new();
@@ -82,7 +91,10 @@ public sealed class GitSettings
     /// <summary>What a Project Files tab compares files with when it opens with nothing saved; each tab then has its own.</summary>
     public FilesTabChanges NewFilesTabsShow { get; set; } = FilesTabChanges.ClaudesChanges;
 
-    /// <summary>What the Project Files tab's explorer does with what git ignores (outside a repository, the folders the <c>@</c> list skips).</summary>
+    /// <summary>
+    /// What the Project Files tab's explorer does with what git or Perforce's P4IGNORE ignores (outside both, the folders
+    /// the <c>@</c> list skips). Settings → Files and diffs → <b>Ignored files</b>, which was Git's and keeps its key.
+    /// </summary>
     public IgnoredFiles IgnoredFiles { get; set; } = IgnoredFiles.Dimmed;
 }
 
@@ -96,7 +108,7 @@ public enum FilesTabChanges
     GitHead,
 }
 
-/// <summary>Settings → Git → <b>Files git ignores</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+/// <summary>Settings → Files and diffs → <b>Ignored files</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
 public enum IgnoredFiles
 {
     /// <summary>In the tree, drawn dimmed.</summary>
@@ -130,6 +142,9 @@ public sealed class NotificationSettings
 
     /// <summary>A long project action, such as a build, finished or failed (DESIGN.md §18, "Project tools").</summary>
     public bool ProjectActions { get; set; } = true;
+
+    /// <summary>A timed message was sent, or skipped (DESIGN.md §18, "Timed messages").</summary>
+    public bool TimedMessages { get; set; } = true;
 
     /// <summary>The number of tabs needing input on the Dock icon or taskbar button.</summary>
     public bool Badge { get; set; } = true;
@@ -257,6 +272,19 @@ public sealed class EditorSettings
     public int IndentSize { get; set; } = 4;
 
     public bool IndentWithTabs { get; set; }
+
+    /// <summary>What the Project Files tab's explorer does with dotfiles and the files the OS hides.</summary>
+    public HiddenFiles HiddenFiles { get; set; } = HiddenFiles.Dimmed;
+}
+
+/// <summary>Settings → Files and diffs → <b>Hidden files</b> (DESIGN.md §18, "Project files", "The explorer").</summary>
+public enum HiddenFiles
+{
+    /// <summary>In the tree, drawn dimmed.</summary>
+    Dimmed,
+
+    /// <summary>Left out of the tree.</summary>
+    Hidden,
 }
 
 public enum ExplorerSide
@@ -573,6 +601,12 @@ public sealed class AppearanceSettings
     public bool ShowTaskProgressOnTabs { get; set; } = true;
 
     /// <summary>
+    /// How many of a tab's subagents are running, on its row, the turn over or not; while it shows, the row's count of
+    /// running tasks leaves them out (DESIGN.md §4, "Sidebar"). Off by default.
+    /// </summary>
+    public bool ShowRunningSubagentsOnTabs { get; set; }
+
+    /// <summary>
     /// Joulene, the app's pixel mascot, standing on the composer and doing little things now and then (DESIGN.md §5,
     /// "Joulene on the composer"). On by default.
     /// </summary>
@@ -588,8 +622,8 @@ public sealed class AppearanceSettings
     public bool JouleneTips { get; set; } = true;
 
     /// <summary>
-    /// Tic-tac-toe, Connect Four, hangman and Minesweeper against Joulene, in the Games tool window (DESIGN.md §18, "Games
-    /// with Joulene"). On by default.
+    /// Tic-tac-toe, Four in a Row, hangman, Minesweeper and Pipeline against Joulene, in the Games tool window (DESIGN.md
+    /// §18, "Games with Joulene"). On by default.
     /// </summary>
     public bool GamesWithJoulene { get; set; } = true;
 
@@ -661,6 +695,12 @@ public sealed class AppearanceSettings
     public MotionSetting Motion { get; set; } = MotionSetting.System;
 
     /// <summary>
+    /// Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar"): how a tab's row says Claude works or waits, with
+    /// colored rows (the default) or the status dots.
+    /// </summary>
+    public TabActivity TabActivity { get; set; } = TabActivity.Bars;
+
+    /// <summary>
     /// Settings → Appearance → Zoom: the main window's content, in percent (DESIGN.md §3, "Accessibility"). It suits
     /// this machine's screen, so it doesn't sync.
     /// </summary>
@@ -668,6 +708,16 @@ public sealed class AppearanceSettings
 }
 
 /// <summary>Settings → Appearance → Motion: whether Deventry's animations run.</summary>
+/// <summary>Settings → Appearance → Tab activity (DESIGN.md §4, "Sidebar").</summary>
+public enum TabActivity
+{
+    /// <summary>The status dot before the name: it pulses while Claude works.</summary>
+    Dots,
+
+    /// <summary>Colored rows, with no status dots: a highlight runs across the row while Claude works, and the row blinks orange while it waits.</summary>
+    Bars,
+}
+
 public enum MotionSetting
 {
     /// <summary>Reduced when the OS, or Claude Code's <c>prefersReducedMotion</c>, asks for it.</summary>
@@ -711,6 +761,16 @@ public sealed class SessionSettings
     /// that isn't a restart handover, such as after an update installed by hand, still brings back every tab.
     /// </summary>
     public bool RestoreUnpinnedTabs { get; set; } = true;
+
+    /// <summary>
+    /// Stop the claude of a tab left idle for <see cref="UnloadIdleTabsAfterMinutes"/>, to give its memory back; its
+    /// conversation stays, and the next message starts it again on the same session (DESIGN.md §9, "Unloading idle tabs").
+    /// Off by default.
+    /// </summary>
+    public bool UnloadIdleTabs { get; set; }
+
+    /// <summary>How many minutes a tab is idle before it's unloaded.</summary>
+    public int UnloadIdleTabsAfterMinutes { get; set; } = 60;
 
     /// <summary>The session library folder (DESIGN.md §9). Null uses the app data folder.</summary>
     public string? LibraryFolder { get; set; }

@@ -179,8 +179,8 @@ public sealed class MascotLayer : Control
             // A game against her (DESIGN.md §18, "Games with Joulene"), while they're on.
             foreach (var (header, kind) in new[]
             {
-                ("Play tic-tac-toe", GameKind.TicTacToe), ("Play Connect Four", GameKind.ConnectFour), ("Play hangman", GameKind.Hangman),
-                ("Play Minesweeper", GameKind.Minesweeper),
+                ("Play tic-tac-toe", GameKind.TicTacToe), ("Play Four in a Row", GameKind.FourInARow), ("Play hangman", GameKind.Hangman),
+                ("Play Minesweeper", GameKind.Minesweeper), ("Play Pipeline", GameKind.Pipeline),
             })
             {
                 var play = new MenuItem { Header = header, CommandParameter = kind };
@@ -343,10 +343,12 @@ public sealed class MascotLayer : Control
         }
         // With tabs side by side, she's on the focused pane's composer only (DESIGN.md §18, "Split panes").
         var shown = IsEffectivelyVisible && Bounds.Width > 0 && this.FindAncestorOfType<TabView>()?.DataContext is not ViewModels.TabViewModel { IsSelected: false };
-        Report(_ => director.SetShown(this, shown));
+        // Told only when it changes: every tab's layers hear of every layout pass, and she's told whenever they're
+        // detached or given to another director.
         if (shown != _shown)
         {
             _shown = shown;
+            Report(_ => director.SetShown(this, shown));
             if (shown)
             {
                 ShowFrame();
@@ -363,7 +365,10 @@ public sealed class MascotLayer : Control
             _figure.Cell = cell;
             InvalidateArrange();
         }
-        Report(_ => director.SetRoom(Room(cell)));
+        if (!IsFront)
+        {
+            director.SetRoom(Room(cell));
+        }
     }
 
     /// <summary>
@@ -400,19 +405,31 @@ public sealed class MascotLayer : Control
         var inset = (Box?.CornerRadius.TopLeft ?? 0) + 2;
         var bandHeight = (MascotArt.Height + 1) * cell;
         var band = new Rect(0, -bandHeight, width, bandHeight);
-        List<(double Left, double Right)> free = [(inset, width - inset)];
-        foreach (var taken in Taken().Where(r => r.Intersects(band)))
+        // Loops over lists kept from one layout pass to the next, which each ask this again.
+        var free = _free;
+        free.Clear();
+        free.Add((inset, width - inset));
+        foreach (var taken in Taken())
         {
-            free = [.. free.SelectMany(f => Without(f, (taken.Left - cell, taken.Right + cell)))];
+            if (taken.Intersects(band))
+            {
+                Without(free, (taken.Left - cell, taken.Right + cell));
+            }
         }
         // A cell over the least, so rounding to whole cells still leaves her enough.
         var least = (MascotDirector.LeastRoom + 1) * cell;
-        var fits = free.Where(f => f.Right - f.Left >= least).ToList();
-        if (fits.Count == 0)
+        (double Left, double Right)? rightmost = null;
+        foreach (var fit in free)
+        {
+            if (fit.Right - fit.Left >= least && (rightmost is not { } best || fit.Right > best.Right))
+            {
+                rightmost = fit;
+            }
+        }
+        if (rightmost is not var (edgeLeft, right))
         {
             return null;
         }
-        var (edgeLeft, right) = fits.MaxBy(f => f.Right);
         var left = Math.Max(edgeLeft, Math.Min(width * 2 / 3, right - least));
         var home = _home.FirstOrDefault(c => c.IsEffectivelyVisible) is { } anchor && Here(anchor, new Rect(anchor.Bounds.Size)) is { } over
             ? (int)Math.Round(over.Center.X / cell - MascotArt.Width / 2.0)
@@ -425,20 +442,34 @@ public sealed class MascotLayer : Control
         return room.Width >= MascotDirector.LeastRoom ? room : null;
     }
 
-    private static IEnumerable<(double Left, double Right)> Without((double Left, double Right) free, (double Left, double Right) taken)
+    /// <summary>The stretches of the edge free so far, for <see cref="Room"/>.</summary>
+    private readonly List<(double Left, double Right)> _free = [];
+
+    /// <summary>What's drawn above the box, for <see cref="Room"/>.</summary>
+    private readonly List<Rect> _taken = [];
+
+    /// <summary>The controls left to look at under one of those, for <see cref="Taken"/>.</summary>
+    private readonly Stack<Visual> _walk = new();
+
+    /// <summary>Takes <paramref name="taken"/> out of the stretches in <paramref name="free"/>.</summary>
+    private static void Without(List<(double Left, double Right)> free, (double Left, double Right) taken)
     {
-        if (taken.Right <= free.Left || taken.Left >= free.Right)
+        for (var i = free.Count - 1; i >= 0; i--)
         {
-            yield return free;
-            yield break;
-        }
-        if (taken.Left > free.Left)
-        {
-            yield return (free.Left, taken.Left);
-        }
-        if (taken.Right < free.Right)
-        {
-            yield return (taken.Right, free.Right);
+            var stretch = free[i];
+            if (taken.Right <= stretch.Left || taken.Left >= stretch.Right)
+            {
+                continue;
+            }
+            free.RemoveAt(i);
+            if (taken.Right < stretch.Right)
+            {
+                free.Insert(i, (taken.Right, stretch.Right));
+            }
+            if (taken.Left > stretch.Left)
+            {
+                free.Insert(i, (stretch.Left, taken.Left));
+            }
         }
     }
 
@@ -446,32 +477,71 @@ public sealed class MascotLayer : Control
     /// What's drawn just above the box, here: the words and chips of what the composer stacks over it (each leaf, so
     /// the working line takes only as much of the edge as its words), and the controls to keep clear of.
     /// </summary>
-    private IEnumerable<Rect> Taken()
+    private List<Rect> Taken()
     {
+        var taken = _taken;
+        taken.Clear();
         if (Parent is Control stage && stage.Parent is Panel area)
         {
-            foreach (var above in area.Children.TakeWhile(c => c != stage).Where(c => c.IsVisible))
+            for (var i = 0; i < area.Children.Count && area.Children[i] != stage; i++)
             {
-                foreach (var leaf in above.GetVisualDescendants().OfType<Visual>().Where(IsDrawnLeaf))
+                if (area.Children[i].IsVisible)
                 {
-                    if (Here(leaf, new Rect(leaf.Bounds.Size)) is { } rect)
-                    {
-                        yield return rect;
-                    }
+                    AddDrawnLeaves(area.Children[i], taken);
                 }
             }
         }
-        foreach (var control in _keepClearOf.Where(c => c.IsEffectivelyVisible))
+        foreach (var control in _keepClearOf)
         {
-            if (Here(control, new Rect(control.Bounds.Size)) is { } rect)
+            if (control.IsEffectivelyVisible && Here(control, new Rect(control.Bounds.Size)) is { } rect)
             {
-                yield return rect;
+                taken.Add(rect);
+            }
+        }
+        return taken;
+    }
+
+    /// <summary>
+    /// Where the leaves under <paramref name="above"/> that are drawn are, here. A walk of its own rather than
+    /// <c>GetVisualDescendants</c>, which makes an enumerator for every control it passes, after every layout pass;
+    /// nothing under a control that isn't drawn is either.
+    /// </summary>
+    private void AddDrawnLeaves(Visual above, List<Rect> taken)
+    {
+        var left = _walk;
+        PushChildren(left, above);
+        while (left.TryPop(out var visual))
+        {
+            if (!visual.IsEffectivelyVisible)
+            {
+                continue;
+            }
+            if (PushChildren(left, visual) == 0 && visual.Bounds is { Width: > 0, Height: > 0 } && Here(visual, new Rect(visual.Bounds.Size)) is { } rect)
+            {
+                taken.Add(rect);
             }
         }
     }
 
-    private static bool IsDrawnLeaf(Visual visual) =>
-        visual.IsEffectivelyVisible && visual.Bounds is { Width: > 0, Height: > 0 } && !visual.GetVisualChildren().Any();
+    /// <summary>Puts <paramref name="visual"/>'s children on <paramref name="left"/>; how many it has.</summary>
+    private static int PushChildren(Stack<Visual> left, Visual visual)
+    {
+        if (visual.GetVisualChildren() is IReadOnlyList<Visual> children)
+        {
+            for (var i = 0; i < children.Count; i++)
+            {
+                left.Push(children[i]);
+            }
+            return children.Count;
+        }
+        var count = 0;
+        foreach (var child in visual.GetVisualChildren())
+        {
+            left.Push(child);
+            count++;
+        }
+        return count;
+    }
 
     private Rect? Here(Visual visual, Rect rect) => visual.TransformToVisual(this) is { } transform ? rect.TransformToAABB(transform) : null;
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
@@ -182,6 +183,60 @@ public class ProjectFilesTests
         await TabTestHarness.Eventually(() => files.Rows.Any(r => r.Name == "b.txt"), "the new file");
     }
 
+    /// <summary>
+    /// Hidden files (DESIGN.md §18, "The explorer"): dotfiles, and what's in a hidden folder, are dimmed by default. The
+    /// explorer's <b>Show hidden files</b> takes them out of the tree, saving Settings → Files and diffs → <b>Hidden
+    /// files</b>, and brings them back dimmed.
+    /// </summary>
+    [Fact]
+    public async Task Hidden_files_are_dimmed_and_Show_hidden_files_takes_them_out_and_brings_them_back()
+    {
+        await using var h = new TabTestHarness();
+        Write(Path.Combine(h.WorkFolder, ".editorconfig"), "");
+        Write(Path.Combine(h.WorkFolder, ".github", "workflows", "ci.yml"), "");
+        Write(Path.Combine(h.WorkFolder, "readme.md"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        IReadOnlyList<(string, bool)> Tree() => InlineDispatcher.Read(() => files.Rows.Select(r => (r.Name, r.IsHidden)).ToList());
+        await TabTestHarness.Eventually(() => Tree().Contains(("readme.md", false)), "the files");
+        Assert.Contains((".editorconfig", true), Tree());
+        Assert.True(files.ShowsHiddenFiles);
+        // What's in a hidden folder is hidden too.
+        var github = InlineDispatcher.Read(() => files.Rows.Single(r => r.Name == ".github"));
+        await InlineDispatcher.RunAsync(() => files.ToggleRowCommand.ExecuteAsync(github));
+        Assert.Contains(("workflows", true), Tree());
+
+        InlineDispatcher.Run(() => files.ToggleShowHiddenFilesCommand.Execute(null));
+
+        Assert.Equal(HiddenFiles.Hidden, h.Services.Settings.Editor.HiddenFiles);
+        Assert.False(files.ShowsHiddenFiles);
+        await TabTestHarness.Eventually(() => Tree() is var tree && tree.Contains(("readme.md", false)) && tree.All(r => !r.Item2), "the hidden files gone");
+
+        InlineDispatcher.Run(() => files.ToggleShowHiddenFilesCommand.Execute(null));
+
+        Assert.Equal(HiddenFiles.Dimmed, h.Services.Settings.Editor.HiddenFiles);
+        await TabTestHarness.Eventually(() => Tree().Contains((".editorconfig", true)), "the hidden files back, dimmed");
+    }
+
+    [Fact]
+    public async Task Show_ignored_files_takes_what_is_ignored_out_of_the_tree_and_Settings_says_so()
+    {
+        await using var h = new TabTestHarness();
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "node_modules"));
+        Write(Path.Combine(h.WorkFolder, "app.js"), "");
+        var (_, files) = await OpenFilesAsync(h);
+        IReadOnlyList<string> Names() => InlineDispatcher.Read(() => files.Rows.Select(r => r.Name).ToList());
+        await TabTestHarness.Eventually(() => Names().Contains("node_modules"), "node_modules, dimmed");
+        using var settings = new SettingsViewModel(h.Services, null);
+        Assert.True(settings.Files.IgnoredFilesDimmed);
+
+        InlineDispatcher.Run(() => files.ToggleShowIgnoredFilesCommand.Execute(null));
+
+        Assert.Equal(IgnoredFiles.Hidden, h.Services.Settings.Git.IgnoredFiles);
+        Assert.False(files.ShowsIgnoredFiles);
+        Assert.True(settings.Files.IgnoredFilesHidden);
+        await TabTestHarness.Eventually(() => !Names().Contains("node_modules") && Names().Contains("app.js"), "node_modules hidden");
+    }
+
     // ---- New files and folders ---------------------------------------------------------------------------------------
 
     [Fact]
@@ -305,8 +360,8 @@ public class ProjectFilesTests
         Assert.Equal(("Brain.cpp", 5, "File name", 1), (box.NameText, box.SelectedLength, box.Placeholder, box.Depth));
 
         box.NameText = "Mind.h";
-        var told = new List<string?>();
-        files.PropertyChanged += (_, e) => told.Add(e.PropertyName);
+        var told = new ConcurrentQueue<string?>();
+        files.PropertyChanged += (_, e) => told.Enqueue(e.PropertyName);
         await InlineDispatcher.RunAsync(() => files.CommitNamingCommand.ExecuteAsync(null));
 
         var moved = Path.Combine(h.WorkFolder, "Source", "Mind.h");
@@ -673,6 +728,90 @@ public class ProjectFilesTests
         Assert.False(file.HasBanner);
     }
 
+    [Fact]
+    public async Task The_bars_Save_saves_and_has_nothing_to_do_until_the_file_is_edited()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "a.txt"), "a\n");
+        // Not valid UTF-8, so it opens read-only, with nothing to save.
+        var latin = Path.Combine(h.WorkFolder, "latin.txt");
+        await File.WriteAllBytesAsync(latin, [(byte)'c', (byte)'a', (byte)'f', 0xE9, (byte)'\n'], Token);
+        var (_, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(path, preview: false);
+
+        Assert.True(file is { ShowsSaveButtons: true, CanSave: false, ShowsRevertClaudeChanges: false });
+        Assert.StartsWith("Save a.txt (", file.SaveTip, StringComparison.Ordinal);
+
+        Text(file).Insert(0, "x");
+        Assert.True(file.CanSave);
+        file.AskRevertEditsCommand.Execute(null);
+        await file.SaveFileCommand.ExecuteAsync(null);
+
+        Assert.Equal("xa\n", await File.ReadAllTextAsync(path, Token));
+        Assert.False(file.CanSave);
+        // Saved, there's nothing left for Revert's question to throw away.
+        Assert.False(file.IsAskingToRevert);
+        Text(file).Insert(0, "y");
+        file.AskRevertEditsCommand.Execute(null);
+        await files.SaveCommand.ExecuteAsync(null);
+        Assert.False(file.IsAskingToRevert);
+        Assert.Equal(0, files.UnsavedCount);
+        var readOnly = await files.OpenFileAsync(latin, preview: false);
+        Assert.True(readOnly.IsReadOnly);
+        Assert.False(readOnly.ShowsSaveButtons);
+    }
+
+    [Fact]
+    public async Task The_bars_Revert_asks_first_then_reads_the_file_from_disk_again_and_Undo_brings_the_edits_back()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "a.txt"), "a\n");
+        var (_, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(path, preview: false);
+        Text(file).Insert(0, "mine ");
+        file.FlushBackup();
+
+        file.AskRevertEditsCommand.Execute(null);
+
+        Assert.True(file.IsAskingToRevert);
+        Assert.Equal("Discard your edits to a.txt?", file.RevertQuestion);
+        file.CancelRevertCommand.Execute(null);
+        Assert.False(file.IsAskingToRevert);
+        Assert.Equal("mine a\n", file.Document!.Text);
+
+        file.AskRevertEditsCommand.Execute(null);
+        await file.ConfirmRevertCommand.ExecuteAsync(null);
+
+        Assert.False(file.IsAskingToRevert);
+        Assert.Equal("a\n", file.Document.Text);
+        Assert.False(file.IsModified);
+        Assert.Equal(0, files.UnsavedCount);
+        await TabTestHarness.Eventually(() => h.Services.EditorBackups.Load(path) is null, "the unsaved copy to go");
+
+        file.Document.Undo();
+        Assert.Equal("mine a\n", file.Document.Text);
+        Assert.True(file.IsModified);
+        Assert.Equal("a\n", await File.ReadAllTextAsync(path, Token));
+    }
+
+    [Fact]
+    public async Task The_bars_Revert_on_a_file_gone_from_disk_keeps_the_text_and_says_so()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "a.txt"), "a\n");
+        var (_, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(path, preview: false);
+        Text(file).Insert(0, "mine ");
+        File.Delete(path);
+
+        file.AskRevertEditsCommand.Execute(null);
+        await file.ConfirmRevertCommand.ExecuteAsync(null);
+
+        Assert.Equal("mine a\n", file.Document!.Text);
+        Assert.True(file.IsDeletedBanner);
+        Assert.True(file.CanSave);
+    }
+
     // ---- Claude's changes --------------------------------------------------------------------------------------------
 
     [Fact]
@@ -750,6 +889,67 @@ public class ProjectFilesTests
         h.Time.Advance(ProjectFilesViewModel.ChangesDelay);
 
         await TabTestHarness.Eventually(() => !file.IsReviewed, "the tick to go");
+    }
+
+    [Fact]
+    public async Task Revert_Claudes_changes_asks_first_then_puts_the_file_back_in_the_editor_unsaved()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "a.txt"), "b\nkeep\n");
+        var (tab, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(path, preview: false);
+        Assert.False(file.ShowsRevertClaudeChanges);
+        EmitEdit(h, "e1", path, before: "a\nkeep\n");
+        await TabTestHarness.Eventually(() => tab.ChangedFiles.HasClaudeChange(path), "the change recorded");
+        h.Time.Advance(ProjectFilesViewModel.ChangesDelay);
+        await TabTestHarness.Eventually(() => file is { ShowsRevertClaudeChanges: true, CanRevertClaudeChanges: true }, "Revert Claude's changes");
+
+        file.AskRevertClaudeChangesCommand.Execute(null);
+
+        Assert.Equal("Put a.txt back as it was before Claude changed it? Nothing is written until you save.", file.RevertQuestion);
+        await file.ConfirmRevertCommand.ExecuteAsync(null);
+
+        Assert.Equal("a\nkeep\n", file.Document!.Text);
+        Assert.True(file.IsModified);
+        Assert.False(file.CanRevertClaudeChanges);
+        Assert.Equal("b\nkeep\n", await File.ReadAllTextAsync(path, Token));
+        // Undo takes it back, and there's something to put back again once typing stops.
+        file.Document.Undo();
+        h.Time.Advance(ProjectFileViewModel.MarkersDelay);
+        await TabTestHarness.Eventually(() => file.CanRevertClaudeChanges, "something to revert again");
+    }
+
+    [Fact]
+    public async Task A_file_Claude_created_has_no_Revert_Claudes_changes()
+    {
+        await using var h = new TabTestHarness();
+        var path = Write(Path.Combine(h.WorkFolder, "new.txt"), "new\n");
+        var (tab, files) = await OpenFilesAsync(h);
+        var file = await files.OpenFileAsync(path, preview: false);
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "assistant",
+            ["message"] = new JsonObject
+            {
+                ["content"] = new JsonArray(new JsonObject
+                {
+                    ["type"] = "tool_use", ["id"] = "w1", ["name"] = "Write",
+                    ["input"] = new JsonObject { ["file_path"] = path, ["content"] = "new\n" },
+                }),
+            },
+        });
+        h.Transport.Emit(new JsonObject
+        {
+            ["type"] = "user",
+            ["message"] = new JsonObject { ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = "w1", ["content"] = "File created" }) },
+            ["tool_use_result"] = new JsonObject { ["type"] = "create", ["filePath"] = path, ["content"] = "new\n", ["originalFile"] = null },
+        });
+        await TabTestHarness.Eventually(() => tab.ChangedFiles.HasClaudeChange(path), "the change recorded");
+        h.Time.Advance(ProjectFilesViewModel.ChangesDelay);
+        await TabTestHarness.Eventually(() => file.Change is { IsNew: true }, "the change in the Files tab");
+
+        Assert.False(file.ShowsRevertClaudeChanges);
+        Assert.True(file.ShowsSaveButtons);
     }
 
     [Fact]
@@ -838,6 +1038,55 @@ public class ProjectFilesTests
         file.Mode = FileViewMode.Inline;
         Assert.False(file.Diff!.WordWrap);
         await TabTestHarness.Eventually(() => file.Diff is { IsLoading: false }, "the diff inline again");
+    }
+
+    /// <summary>
+    /// The editor's Wrap lines (DESIGN.md §18, "Project files", "The editor"): a file follows Settings → Files and diffs →
+    /// Wrap long lines until the bar's toggle, <c>Alt+Z</c> or the palette turns it on or off; from then on it's the file's
+    /// own, which the setting leaves be, kept with its tab.
+    /// </summary>
+    [Fact]
+    public async Task Wrap_lines_is_the_files_own_once_turned_on_or_off_and_comes_back_with_its_tab()
+    {
+        await using var h = new TabTestHarness();
+        var (_, files) = await OpenFilesAsync(h);
+        var a = await files.OpenFileAsync(Write(Path.Combine(h.WorkFolder, "a.txt"), "a\n"), preview: false);
+        var b = await files.OpenFileAsync(Write(Path.Combine(h.WorkFolder, "b.txt"), "b\n"), preview: false);
+        // Any text file has the bar for it, without the modes while Edit would be the only one.
+        Assert.True(b is { ShowsModeBar: true, ShowsModes: false, ShowsEditor: true, WordWrap: false });
+
+        a.WordWrap = true;
+
+        Assert.False(b.WordWrap);
+        h.Services.Settings.Editor.WordWrap = true;
+        InlineDispatcher.Run(h.Services.SaveSettings);
+        Assert.True(b.WordWrap);
+        a.WordWrap = false;
+        h.Services.Settings.Editor.WordWrap = false;
+        InlineDispatcher.Run(h.Services.SaveSettings);
+        h.Services.Settings.Editor.WordWrap = true;
+        InlineDispatcher.Run(h.Services.SaveSettings);
+        Assert.Equal((false, true), (a.WordWrap, b.WordWrap));
+        Assert.Equal([false, null], files.CaptureState().Files.Select(f => f.WordWrap));
+
+        // The palette has it for the file showing, which is b.
+        var wrap = Assert.Single(h.Shell.PaletteEntries(), e => e.Label == "Stop wrapping the file's lines");
+        await InlineDispatcher.RunAsync(wrap.Run);
+        Assert.False(b.WordWrap);
+        Assert.Contains(h.Shell.PaletteEntries(), e => e.Label == "Wrap the file's lines");
+
+        a.WordWrap = true;
+        var snapshot = h.Shell.CaptureForRestart();
+        await h.Shell.CloseTabsForRestartAsync();
+        h.Services.Settings.Editor.WordWrap = false;
+        InlineDispatcher.Run(() => h.Shell.Restore(null, snapshot));
+
+        var back = Assert.IsType<ProjectFilesViewModel>(h.Shell.Selected);
+        await TabTestHarness.Eventually(() => back.OpenFiles.All(f => f.IsLoaded), "the files read");
+        Assert.Equal([true, false], back.OpenFiles.Select(f => f.WordWrap));
+        h.Services.Settings.Editor.WordWrap = true;
+        InlineDispatcher.Run(h.Services.SaveSettings);
+        Assert.Equal([true, false], back.OpenFiles.Select(f => f.WordWrap));
     }
 
     [Fact]

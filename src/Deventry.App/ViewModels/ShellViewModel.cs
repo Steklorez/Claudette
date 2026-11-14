@@ -117,6 +117,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
                 }
             }
         };
+        // Idle tabs unload, once Settings → General says to (DESIGN.md §9, "Unloading idle tabs").
+        IdleUnloadTicker.Run(true);
     }
 
     public ObservableCollection<TabGroupViewModel> Groups { get; } = [];
@@ -177,10 +179,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// (DESIGN.md §9, "Keeping the computer awake"): turns running, not waiting on the user, tasks and agents running in
     /// the background, and tasks waiting for a usage limit to reset to carry on by themselves.
     /// </summary>
-    internal void OnTabWorkChanged() => _services.KeepAwake.SetWork(new ClaudeWork(
-        AllTabs.Count(t => t.Status == TabStatus.Working),
-        AllTabs.Sum(t => t.RunningTaskCount),
-        AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit)));
+    internal void OnTabWorkChanged()
+    {
+        _services.KeepAwake.SetWork(new ClaudeWork(
+            AllTabs.Count(t => t.Status == TabStatus.Working),
+            AllTabs.Sum(t => t.RunningTaskCount),
+            AllTabs.Count(t => t.IsWaitingForLimitReset && t.WillContinueAfterLimit)));
+        // A timed message's tab holds sleep off through its first turn (DESIGN.md §18, "Timed messages").
+        _services.TimedMessages.OnTabWork(AllTabs);
+    }
 
     // ---- Every tab's processes, in the header (DESIGN.md §4, "Process monitor") -------------------------------------
 
@@ -297,6 +304,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     public bool IsPickerOpen => Picker is not null;
 
+    /// <summary><b>Clone a repository…</b>, open over the window (DESIGN.md §4, "Opening a tab").</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCloneOpen))]
+    public partial CloneRepositoryViewModel? Clone { get; set; }
+
+    public bool IsCloneOpen => Clone is not null;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasConfirmation))]
     public partial ConfirmationViewModel? Confirmation { get; set; }
@@ -350,7 +364,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             {
                 tab.MarkFolderMissing();
             }
-            // Before the panes show it: showing a tab starts it, and the start reads this.
+            // Before anything starts it, the panes showing a tab connected to the Claude app or the running tabs starting
+            // below: the start reads this.
             if (snapshot?.InterruptedTabIds.Contains(tab.Id) == true)
             {
                 tab.CarryOnInterruptedTurn();
@@ -358,12 +373,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
         // The Project Files tabs come back every time, as pinned tabs do (DESIGN.md §18, "Project files").
         RestoreProjectFiles();
+        // And the Tickets tabs (DESIGN.md §18, "Tickets").
+        RestoreTickets();
         RestoreGroupOrder();
         // Claude Code's projects, or the offer to show them (DESIGN.md §4, "Claude Code's projects").
         StartClaudeProjects();
         RestorePanes(snapshot is null ? state.PaneTabIds : snapshot.PaneTabIds);
         var selectedId = snapshot?.SelectedTabId ?? state.SelectedTabId;
-        Selected = OpenTabs.FirstOrDefault(t => t.Id == selectedId) ?? AllTabs.FirstOrDefault() ?? (IShellTab?)Groups.Select(g => g.Files).FirstOrDefault(f => f is not null);
+        Selected = OpenTabs.FirstOrDefault(t => t.Id == selectedId) ?? AllTabs.FirstOrDefault()
+            ?? (IShellTab?)Groups.Select(g => g.Files).FirstOrDefault(f => f is not null) ?? Groups.Select(g => g.Tickets).FirstOrDefault(t => t is not null);
         UpdatePanes();
         SaveTabs();
         foreach (var tab in AllTabs.Where(t => snapshot?.RunningTabIds.Contains(t.Id) == true))
@@ -378,6 +396,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _ = _services.Drafts.KeepOnlyAsync(state.Tabs.Select(t => t.Id).ToHashSet(StringComparer.Ordinal));
         // Worktrees no tab needs any more go, as Settings → General says (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.Start();
+        // Timed messages are sent from now on, while Deventry runs (DESIGN.md §18, "Timed messages").
+        _services.TimedMessages.Start(this);
         // Settings changed on other machines (DESIGN.md §14, "Settings sync").
         _ = _services.Library.SyncSettingsAsync();
         if (initialFolder is not null)
@@ -397,6 +417,31 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
 
     public void ClosePicker() => Picker = null;
 
+    /// <summary><b>Clone a repository…</b>: from the picker or the command palette (DESIGN.md §4, "Opening a tab").</summary>
+    [RelayCommand]
+    private void OpenClone()
+    {
+        Picker = null;
+        Clone = new CloneRepositoryViewModel(_services, this);
+    }
+
+    /// <summary><b>New project…</b>: the same dialog, starting on an empty project (DESIGN.md §4, "Opening a tab").</summary>
+    [RelayCommand]
+    private void OpenNewProject()
+    {
+        Picker = null;
+        Clone = new CloneRepositoryViewModel(_services, this, empty: true);
+    }
+
+    /// <summary>Closes the clone dialog; while a clone runs, it stays until git finishes.</summary>
+    public void CloseClone()
+    {
+        if (Clone is not { IsCloning: true })
+        {
+            Clone = null;
+        }
+    }
+
     /// <summary>
     /// Opens a new tab in <paramref name="folder"/> and selects it, which starts its session. Every way to a new tab
     /// comes here (the picker, a group's <c>+</c>, <c>--folder</c>, Open Recent, the jump list, a dropped folder), so
@@ -404,7 +449,12 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// Claude app or not as Settings → Claude Code says (DESIGN.md §18, "Remote Control").
     /// </summary>
     /// <param name="opened">Runs on the new tab before it's selected and started, such as making it a sub-thread.</param>
-    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null)
+    /// <param name="overrides">The tab's own model, effort and mode, set before it's made, which reads them.</param>
+    /// <param name="select">
+    /// Select the new tab, as opening one does; false leaves the tab the user is in selected, as a timed message's does
+    /// (DESIGN.md §18, "Timed messages"), unless none is.
+    /// </param>
+    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null, TabOverrides? overrides = null, bool select = true)
     {
         if (!Directory.Exists(folder))
         {
@@ -417,11 +467,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             Folder = normalized,
             SyncToLibrary = _services.Settings.Sessions.SyncNewTabs,
             RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            Overrides = overrides ?? new(),
         };
         var tab = new TabViewModel(_services, this, state, isRestored: false);
         AddTab(tab);
         opened?.Invoke(tab);
-        SelectedTab = tab;
+        if (select || Selected is null)
+        {
+            SelectedTab = tab;
+        }
         SaveTabs();
         return tab.EnsureStartedAsync();
     }
@@ -470,6 +524,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         OnPropertyChanged(nameof(HasTabs));
         // Its session leaves the group's past sessions (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
+        OnTicketTabsChanged();
     }
 
     /// <summary>The group of <paramref name="folder"/>, made with its remembered color and name when it isn't open.</summary>
@@ -489,6 +544,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         group.MakeFolderTools = MakeFolderTools;
         SetUpGroupAccount(group);
         Groups.Add(group);
+        UpdateTicketSources(group);
         // A pinned group goes up among the pinned ones, and the others keep their place.
         OrderGroups();
         UpdateGroupLabels();
@@ -665,6 +721,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         {
             return;
         }
+        if (group?.Tickets is { } tickets)
+        {
+            CloseTickets(tickets);
+        }
         await CloseAllAndTidyAsync(group?.Tabs.Where(t => !t.IsPinned).ToArray() ?? []);
     }
 
@@ -680,6 +740,11 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         if (SelectedFiles is { } files)
         {
             return files.CloseShowingOrTabAsync();
+        }
+        if (SelectedTickets is { } tickets)
+        {
+            CloseTickets(tickets);
+            return Task.CompletedTask;
         }
         if (SelectedRun is { } run)
         {
@@ -700,8 +765,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         var ordered = AllTabs.ToList();
         var index = ordered.IndexOf(tab);
         var group = Groups.FirstOrDefault(g => g.Tabs.Contains(tab));
-        // Its runs' logs go with it (DESIGN.md §18, "Project tools").
-        IShellTab[] going = [tab, .. tab.ProjectTools.Runs.Items];
+        // Its runs' logs go with it (DESIGN.md §18, "Project tools"), and its editor logs (DESIGN.md §18, "Editor logs").
+        IShellTab[] going = [tab, .. tab.ProjectTools.Runs.Items, .. tab.ProjectTools.Logs];
         var hadFocus = Selected is { } focused && going.Contains(focused);
         group?.Tabs.Remove(tab);
         foreach (var gone in going)
@@ -709,7 +774,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             OpenTabs.Remove(gone);
         }
         RemoveGroupIfEmpty(group);
-        // Its editor logs move to another of the project's tabs, or go (DESIGN.md §18, "Editor logs").
+        CloseEditorLogsOf(tab);
         FollowEditorLogs();
         // A pane closes with its tab; the one beside it takes the focus if it had it (DESIGN.md §18, "Split panes").
         var at = _panes.IndexOf(hadFocus ? Selected! : tab);
@@ -720,14 +785,16 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             var remaining = AllTabs.ToList();
             Selected = _panes.Count > 0 ? _panes[Math.Min(pane, _panes.Count - 1)]
                 : remaining.Count > 0 ? remaining[Math.Clamp(index, 0, remaining.Count - 1)]
-                : group?.Files ?? Groups.Select(g => g.Files).FirstOrDefault(f => f is not null);
+                : (IShellTab?)group?.Files ?? (IShellTab?)group?.Tickets ?? Groups.Select(g => g.Files).FirstOrDefault(f => f is not null);
         }
         else if (closedPanes > 0)
         {
             UpdatePanes();
         }
+        OnTicketTabsChanged();
         SaveTabs();
         OnTabStatusChanged();
+        _services.RemoteClients.OnTabClosed(tab);
         // Its worktree's inactivity counts from now (DESIGN.md §4, "Cleaning up worktrees").
         _services.Worktrees.MarkUsed(tab.State);
         await tab.CloseAsync(killProcesses);
@@ -778,7 +845,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
         if (SelectedTab is null)
         {
-            var first = SelectedFiles?.Group.Tabs.FirstOrDefault() is { } groupFirst ? tabs.IndexOf(groupFirst)
+            var first = (SelectedFiles?.Group ?? SelectedTickets?.Group)?.Tabs.FirstOrDefault() is { } groupFirst ? tabs.IndexOf(groupFirst)
                 : SelectedLog is { } log && TabOf(log) is { } owner ? tabs.IndexOf(owner) + 1
                 : 0;
             SelectedTab = tabs[(offset > 0 ? first : first - 1 + tabs.Count) % tabs.Count];
@@ -1122,6 +1189,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     {
         var tabs = AllTabs.ToArray();
         var files = Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray();
+        var tickets = Groups.Select(g => g.Tickets).OfType<TicketsViewModel>().ToArray();
         var selected = _services.State.SelectedTabId;
         var panes = _services.State.PaneTabIds;
         _services.EditorLogs.Follow([], []);
@@ -1135,6 +1203,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         OpenTabs.Clear();
         OnPropertyChanged(nameof(HasTabs));
         await Task.WhenAll(files.Select(f => f.DisposeAsync().AsTask()));
+        await Task.WhenAll(tickets.Select(t => t.DisposeAsync().AsTask()));
         // A turn is left as it is, not interrupted, so Claude Code can carry it on after the restart.
         await Task.WhenAll(tabs.Select(t => t.CloseAsync(killProcesses: true, interruptTurn: false).AsTask()));
         OnTabStatusChanged();
@@ -1302,6 +1371,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         // One of Claude Code's projects with nothing open is placed by its sessions, not saved (DESIGN.md §4, "Claude Code's projects").
         state.GroupOrder = Groups.Where(g => !g.IsProjectOnly).Select(g => g.Folder).ToList();
         state.ProjectFiles = Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().Select(f => f.CaptureState()).ToList();
+        state.Tickets = Groups.Select(g => g.Tickets).OfType<TicketsViewModel>().Select(t => t.CaptureState()).ToList();
         _services.SaveState();
     }
 
@@ -1324,9 +1394,12 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         SaveTabs();
         _services.EditorLogs.Follow([], []);
         FindInFiles?.Dispose();
+        _attentionWait?.Dispose();
         FindResults.Dispose();
         ToolWindows.Dispose();
+        IdleUnloadTicker.Stop();
         await Task.WhenAll(Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray().Select(f => f.DisposeAsync().AsTask()));
+        await Task.WhenAll(Groups.Select(g => g.Tickets).OfType<TicketsViewModel>().ToArray().Select(t => t.DisposeAsync().AsTask()));
         await Task.WhenAll(AllTabs.ToArray().Select(t => t.DisposeAsync().AsTask()));
     }
 }

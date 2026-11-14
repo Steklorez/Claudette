@@ -7,13 +7,15 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// A project's settings, in a window of their own (DESIGN.md §14, "The project's settings"): a sidebar of its pages,
-/// <b>Links</b>, <b>Actions</b>, <b>Solution</b>, <b>Tools</b> and <b>Group</b>, and the page shown, for one folder. It opens from
+/// <b>Links</b>, <b>Tickets</b>, <b>Actions</b>, <b>Solution</b>, <b>Tools</b> and <b>Group</b>, and the page shown, for one folder. It opens from
 /// <b>Project settings…</b> in a group's or a tab's menu, and from the project menu's <b>Add an action…</b> and <b>Add a
 /// link…</b>, with a new one started. Each change is saved as it's made. Dispose it when the window closes.
 /// </summary>
 public sealed partial class ProjectSettingsWindowViewModel : ViewModelBase, IDisposable
 {
     public const string LinksPage = "Links";
+
+    public const string TicketsPage = "Tickets";
 
     public const string ActionsPage = "Actions";
 
@@ -24,17 +26,17 @@ public sealed partial class ProjectSettingsWindowViewModel : ViewModelBase, IDis
     public const string GroupPage = "Group";
 
     /// <summary>The pages, in the sidebar's order.</summary>
-    public static readonly IReadOnlyList<string> PageNames = [LinksPage, ActionsPage, SolutionPage, ToolsPage, GroupPage];
+    public static readonly IReadOnlyList<string> PageNames = [LinksPage, TicketsPage, ActionsPage, SolutionPage, ToolsPage, GroupPage];
 
     private readonly AppServices _services;
     private readonly SettingsContext _context;
 
-    public ProjectSettingsWindowViewModel(AppServices services, ProjectSettingsViewModel project, string page = LinksPage, bool startNew = false)
+    public ProjectSettingsWindowViewModel(AppServices services, ProjectSettingsViewModel project, string page = LinksPage)
     {
         _services = services;
         _context = new SettingsContext(services);
         Project = project;
-        Pages = [new ProjectLinksPage(_context, project), new ProjectActionsPage(_context, project), new ProjectSolutionPage(_context, project), new ProjectToolChoicesPage(_context, project), new ProjectGroupPage(_context, project)];
+        Pages = [new ProjectLinksPage(_context, project), new ProjectTicketsPage(_context, project), new ProjectActionsPage(_context, project), new ProjectSolutionPage(_context, project), new ProjectToolChoicesPage(_context, project), new ProjectGroupPage(_context, project)];
         foreach (var each in Pages)
         {
             each.RefreshItems();
@@ -42,7 +44,7 @@ public sealed partial class ProjectSettingsWindowViewModel : ViewModelBase, IDis
         NavEntries = [.. Pages.Select(p => SettingsNavEntry.Page(p.Title, p.IconKey))];
         _context.SettingsSaved += OnSettingsChanged;
         _context.AllPagesChanged += OnSettingsChanged;
-        Open(page, startNew);
+        Open(page);
     }
 
     public void Dispose()
@@ -92,27 +94,12 @@ public sealed partial class ProjectSettingsWindowViewModel : ViewModelBase, IDis
 
     private void OnSettingsChanged() => OnPropertyChanged(nameof(IsClaudeStyle));
 
-    /// <summary>
-    /// Shows <paramref name="page"/>, and on Links or Actions with <paramref name="startNew"/>, starts a new link or action
-    /// there: the window was asked for again, or opened, by <b>Add a link…</b> or <b>Add an action…</b>.
-    /// </summary>
-    public void Open(string page, bool startNew = false)
+    /// <summary>Shows <paramref name="page"/>: the window was opened, or asked for again, at it.</summary>
+    public void Open(string page)
     {
         if (PageNames.Contains(page))
         {
             SelectedPage = page;
-        }
-        if (!startNew)
-        {
-            return;
-        }
-        if (SelectedPage == LinksPage)
-        {
-            Project.StartNewLink();
-        }
-        else if (SelectedPage == ActionsPage)
-        {
-            Project.StartNewAction();
         }
     }
 }

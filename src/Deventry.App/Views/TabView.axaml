@@ -140,8 +140,10 @@
                         AutomationProperties.Name="{Binding Name, StringFormat='Open {0}'}"
                         Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).OpenImageCommand}" CommandParameter="{Binding}">
                   <Border Classes="thumbnail">
-                    <Image Source="{Binding Image.Data, Converter={x:Static services:ImageFiles.Preview}}" MaxHeight="120" MaxWidth="320"
-                           Stretch="Uniform" StretchDirection="DownOnly" />
+                    <Border Classes="thumbclip">
+                      <Image Source="{Binding Image.Data, Converter={x:Static services:ImageFiles.Preview}}" MaxHeight="120" MaxWidth="320"
+                             Stretch="Uniform" StretchDirection="DownOnly" />
+                    </Border>
                   </Border>
                 </Button>
               </DataTemplate>
@@ -246,7 +248,7 @@
             </StackPanel>
           </DockPanel>
         </Button>
-        <SelectableTextBlock Classes="muted" FontStyle="Italic" TextWrapping="Wrap" Margin="26,2,6,6" Text="{Binding ThoughtText}" IsVisible="{Binding ShowsThought}" />
+        <SelectableTextBlock Classes="muted thought" TextWrapping="Wrap" Margin="26,2,6,6" Text="{Binding ThoughtText}" IsVisible="{Binding ShowsThought}" />
         <Border Classes="tiledetail" Margin="26,2,6,6" IsVisible="{Binding ShowsTool}">
           <ContentControl Content="{Binding Tool}" ContentTemplate="{StaticResource ToolDetail}" />
         </Border>
@@ -291,8 +293,10 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="protocol:MessageImage">
                   <Border Classes="thumbnail">
-                    <Image Source="{Binding Data, Converter={x:Static services:ImageFiles.Thumbnail}}" Height="72" MaxWidth="160" Stretch="UniformToFill"
-                           AutomationProperties.Name="Attached image" />
+                    <Border Classes="thumbclip">
+                      <Image Source="{Binding Data, Converter={x:Static services:ImageFiles.Thumbnail}}" Height="72" MaxWidth="160" Stretch="UniformToFill"
+                             AutomationProperties.Name="Attached image" />
+                    </Border>
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -369,7 +373,7 @@
             </ContextMenu>
           </Button.ContextMenu>
         </Button>
-        <SelectableTextBlock Classes="muted" FontStyle="Italic" TextWrapping="Wrap" Margin="22,4,0,2"
+        <SelectableTextBlock Classes="muted thought" TextWrapping="Wrap" Margin="22,4,0,2"
                              Text="{Binding ShownText}" IsVisible="{Binding IsExpanded}" />
       </StackPanel>
       </controls:Card>

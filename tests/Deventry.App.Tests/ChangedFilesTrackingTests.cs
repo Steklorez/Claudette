@@ -46,6 +46,7 @@ public class ChangedFilesTrackingTests
         h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, SessionId = "s1" }];
 
         h.Shell.Restore(null);
+        h.Start();
         var tab = h.Shell.AllTabs.Single();
 
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.ChangedFiles.Files.Count == 1, "the changed file");
@@ -261,12 +262,11 @@ public class ChangedFilesTrackingTests
         // A commit from a terminal writes the index.
         h.FolderWatcher.Changed(Path.Combine(gitFolder, "index"));
 
-        await TabTestHarness.Eventually(() =>
+        await TabTestHarness.Eventually(() => Volatile.Read(ref statuses) == 2, "git asked again", poll: () =>
         {
             h.Time.Advance(ChangedFilesViewModel.DiskSettleDelay);
             h.Time.Advance(ChangedFilesViewModel.GitRefreshDelay);
-            return Volatile.Read(ref statuses) == 2;
-        }, "git asked again");
+        });
     }
 
     [Fact]

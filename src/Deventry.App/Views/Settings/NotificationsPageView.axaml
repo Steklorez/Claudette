@@ -30,6 +30,9 @@
       <c:SettingRow Key="notifications.projectActions">
         <ToggleSwitch IsChecked="{Binding NotifyProjectActions}" />
       </c:SettingRow>
+      <c:SettingRow Key="notifications.timedMessages">
+        <ToggleSwitch IsChecked="{Binding NotifyTimedMessages}" />
+      </c:SettingRow>
     </c:SettingsSection>
     <c:SettingsSection Key="icon">
       <c:SettingRow Key="notifications.badge">

@@ -12,8 +12,8 @@ no tokens) four times:
 - signed out (FAKE_CLAUDE_LOGGED_IN=0), for the sign-in screen;
 - as the demo is, after visiting every tab so each shows its model and any reviewed icon, for the shots that leave it
   alone: the new tab picker, the sidebar, a tab's info card, the command palette, a Tool calls card, the composer, the
-  Changed files, Scratch pad and Project tool windows, a Files tab, the Usage window, the Settings window on General,
-  Appearance, a search, Unreal Engine's page in Project tools, About and Accounts, and a tab's Tab settings;
+  Changed files, Scratch pad, Media and Project tool windows, a Files tab, the Usage window, the Settings window on General,
+  Appearance, Remote clients' Telegram, a search, Unreal Engine's page in Project tools, About and Accounts, and a tab's Tab settings;
 - with a stand-in for the Unreal editor open on starfall (deventry-demo --stand-in-editor, run as UnrealEditor.exe),
   for its log under the tab and in the main area;
 - and last, for the shots that change it by sending prompts: a usage limit (LIMIT), a turn that changed files (EDIT_FILE),
@@ -72,8 +72,10 @@ function Test-Wanted([string[]] $names) {
 }
 
 # Starts Deventry on the demo afresh in the first theme, runs $steps with $window and $deventry set, and closes it.
-function Use-Deventry([hashtable] $environment, [scriptblock] $steps) {
+# $prepare runs between writing the demo and starting Deventry, such as to give a project a file of its own.
+function Use-Deventry([hashtable] $environment, [scriptblock] $steps, [scriptblock] $prepare = $null) {
     New-DemoContent $build.Demo $Work $Projects 'standard' $Themes[0]
+    if ($prepare) { & $prepare }
     $script:deventry = Start-Deventry $build.App $Work $environment
     Set-Themes $Themes $Themes[0]
     try {
@@ -179,8 +181,8 @@ if (Test-Wanted 'getting-started/sign-in') {
 
 # As the demo is.
 if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
-    'conversation/scratch-pad', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
-    'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts',
+    'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
+    'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'away/remote-clients', 'away/remote-clients-discord',
     'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
     Use-Deventry @{} {
         Show-Tabs
@@ -255,6 +257,36 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
             $settings = Open-Settings
             Select-ListItem $settings 'General'
             Save-Window $settings $path
+            Close-Other $settings
+        }
+
+        # Remote clients → Telegram, before a bot is set up: the switch, what Telegram can read, the bot and pairing. The
+        # group is the sidebar's last: down to it.
+        Shot 'away/remote-clients' {
+            param($path)
+            $settings = Open-Settings
+            Send-ElementCommand 'scroll' (Find-ById $settings 'SidebarList') @{ lines = 40 } | Out-Null
+            Wait-Until { Find-ByType $settings 'ListItem' 'Telegram' } 'Telegram in the sidebar' 10
+            Select-ListItem $settings 'Telegram'
+            Save-Window $settings $path
+            # Settings opens where it was left: back on General, at the top, for the shots after.
+            Send-ElementCommand 'scroll' (Find-ById $settings 'SidebarList') @{ lines = -40 } | Out-Null
+            Wait-Until { Find-ByType $settings 'ListItem' 'General' } 'General in the sidebar' 10
+            Select-ListItem $settings 'General'
+            Close-Other $settings
+        }
+
+        # Remote clients → Discord, before a bot is set up: the switch, what Discord can read, the bot and pairing.
+        Shot 'away/remote-clients-discord' {
+            param($path)
+            $settings = Open-Settings
+            Send-ElementCommand 'scroll' (Find-ById $settings 'SidebarList') @{ lines = 40 } | Out-Null
+            Wait-Until { Find-ByType $settings 'ListItem' 'Discord' } 'Discord in the sidebar' 10
+            Select-ListItem $settings 'Discord'
+            Save-Window $settings $path
+            Send-ElementCommand 'scroll' (Find-ById $settings 'SidebarList') @{ lines = -40 } | Out-Null
+            Wait-Until { Find-ByType $settings 'ListItem' 'General' } 'General in the sidebar' 10
+            Select-ListItem $settings 'General'
             Close-Other $settings
         }
 
@@ -364,6 +396,36 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
             Save-Rect $window $path (Get-PanelRect -height 330 -Below) 0
         }
 
+        # Pool particle emitters' media, on its own at the right: the screenshot and capture the user brought, and the
+        # charts Claude read and the sound it named. Files named are found, and thumbnails made, off the UI thread.
+        Shot 'conversation/media' {
+            param($path)
+            Hide-ToolWindows $window
+            Show-SidePage 'Pool particle emitters' 'Media' 'Media'
+            foreach ($tile in 'Open Attached image', 'Open wave-clear.mp4', 'Open burst.wav', 'Open frame-times-pooled.png', 'Open frame-times-before.png') {
+                Wait-Until { Find-ByText $window $tile -Optional } "the $($tile.Substring(5)) tile" 30
+            }
+            Wait-Settled $window 1000
+            $panel = Find-ByText $window 'Tool window at the right'
+            Save-Rect $window $path (Get-PanelRect (Find-Lowest $panel)) 0
+        }
+
+        # The same with the sound cleared: under a line, Agent (Cleared) opened on it, and a chart's X showing, as it does
+        # under the pointer or with the focus. Then the sound restored, as it was.
+        Shot 'conversation/media-cleared' {
+            param($path)
+            Show-SidePage 'Pool particle emitters' 'Media' 'Media'
+            Invoke-Element (Find-ByText $window 'Clear burst.wav') "burst.wav's X"
+            Wait-Until { Find-ByText $window 'Expand Agent (Cleared)' -Optional } 'Agent (Cleared)' 20
+            Invoke-ByText $window 'Expand Agent (Cleared)'
+            Wait-Until { Find-ByText $window 'Restore burst.wav' -Optional } 'the cleared sound' 20
+            Send-ElementCommand 'focus' (Find-ByText $window 'Clear frame-times-before.png') | Out-Null
+            Wait-Settled $window 1000
+            $panel = Find-ByText $window 'Tool window at the right'
+            Save-Rect $window $path (Get-PanelRect (Find-Lowest $panel)) 0
+            Invoke-ByText $window 'Restore burst.wav'
+        }
+
         # Last, as it takes the layout with it: the group's Files tab, with a changed file open to show Claude's marks.
         Shot 'project-files/files-tab' {
             param($path)
@@ -430,6 +492,35 @@ if (Test-Wanted 'project-tools/editor-log') {
     }
 }
 
+# Starfall's tickets (DESIGN.md §18, "Tickets", "The guide's pictures"): a source in its deventry.local.json, and
+# DEVENTRY_DEMO_TICKETS, which has Deventry answer GitHub's API for that repository itself, so nothing reaches GitHub.
+if (Test-Wanted 'project-tools/tickets', 'project-tools/tickets-work-on-it') {
+    $source = '{ "tickets": [ { "provider": "github", "repository": "starfall-studio/starfall" } ] }'
+    Use-Deventry @{ DEVENTRY_DEMO_TICKETS = '1' } {
+        Hide-ToolWindows $window
+        Shot 'project-tools/tickets' {
+            param($path)
+            # Starfall's group alone has a source, so its row alone has the button.
+            Wait-Until { Find-ByText $window 'Tickets' -Optional } 'the Tickets button' 30
+            Invoke-ByText $window 'Tickets'
+            Wait-Until { Find-ByText $window '#142 Grappling hook detaches on slopes, open' -Optional } 'the tickets read' 30
+            Send-Click (Find-ByText $window '#142 Grappling hook detaches on slopes, open')
+            Wait-Until { Find-ByText $window 'Work on it' -Optional } 'the ticket read' 30
+            # Its text and comments lay out in the background.
+            Wait-Settled $window 1000
+            Save-Window $window $path
+        }
+        Shot 'project-tools/tickets-work-on-it' {
+            param($path)
+            Wait-Until { Find-ByText $window 'Work on it' -Optional } 'the ticket read' 30
+            Invoke-ByText $window 'Work on it'
+            Wait-Until { Find-ByText $window '#142 Grappling hook detaches on slopes' -Optional } 'the new tab' 30
+            Wait-Settled $window 1000
+            Save-Window $window $path
+        }
+    } { Set-Content -Encoding utf8 (Join-Path $Projects 'starfall\deventry.local.json') $source }
+}
+
 # Sending prompts, which stay in the conversations: each in its own tab.
 if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-card', 'tabs/processes') {
     Use-Deventry @{} {
@@ -485,6 +576,38 @@ if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-
             Wait-Until { Find-ByText $window '--child 600' -Optional } 'the spawned process' 60
             Wait-Settled $window
             Save-Rect $window $path (Get-PanelRect (Find-ByText $window '--child 600') -Below) 0
+        }
+    }
+}
+
+# A timed message (DESIGN.md §18, "Timed messages"), made as starfall's group menu makes one: Settings opens on the
+# editor, with the group's folder in it. Then the cup's menu, which lists it.
+if (Test-Wanted 'away/timed-messages', 'away/timed-messages-cup') {
+    Use-Deventry @{} {
+        Shot 'away/timed-messages' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'starfall')
+            $menu = Get-OtherWindow $deventry $window "the group's menu"
+            Send-Click (Find-ByText $menu "Add a timed message$([char] 0x2026)")
+            $settings = Get-OtherWindow $deventry $window 'the Settings window'
+            Wait-Until { Find-ByText $settings 'New timed message' -Optional } 'the editor' 20
+            Set-ElementText (Find-ByType $settings 'Edit' 'Name') 'Morning triage'
+            Set-ElementText (Find-ByType $settings 'Edit' 'Message') 'Triage the issues filed overnight: label each, and say which need me first.'
+            Wait-Settled $settings
+            Save-Window $settings $path
+            Invoke-ByText $settings 'Add'
+            Wait-Until { -not (Find-ByText $settings 'New timed message' -Optional) } 'the message added' 20
+            Close-Other $settings
+        }
+
+        Shot 'away/timed-messages-cup' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'Keep this computer awake')
+            $menu = Get-OtherWindow $deventry $window "the cup's menu"
+            Wait-Until { Find-ByText $menu 'Timed messages' -Optional } 'the timed messages in the menu' 20
+            Wait-Settled $menu
+            Save-Window $menu $path
+            Send-WindowKey $menu 'Escape'
         }
     }
 }

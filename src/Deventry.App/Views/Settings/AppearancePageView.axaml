@@ -51,6 +51,9 @@
       <c:SettingRow Key="appearance.zoom">
         <ComboBox ItemsSource="{Binding ZoomChoices}" SelectedItem="{Binding Zoom}" />
       </c:SettingRow>
+      <c:SettingRow Key="appearance.tabActivity">
+        <ComboBox ItemsSource="{Binding TabActivityChoices}" SelectedItem="{Binding TabActivity}" />
+      </c:SettingRow>
       <c:SettingRow Key="appearance.motion">
         <ComboBox ItemsSource="{Binding MotionChoices}" SelectedItem="{Binding Motion}" />
       </c:SettingRow>

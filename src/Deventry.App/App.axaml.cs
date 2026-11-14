@@ -23,6 +23,7 @@ using Deventry.Platform.Files;
 using Deventry.Platform.LoginShell;
 using Deventry.Platform.Notifications;
 using Deventry.Platform.Power;
+using Deventry.Platform.Presence;
 using Deventry.Platform.Processes;
 using Deventry.Platform.ProjectTools;
 using Deventry.Platform.Shell;
@@ -91,6 +92,13 @@ public partial class App : Application
                 loginItems: LoginLaunch.CreateItems(launcher, TimeProvider.System),
                 systemMotion: SystemMotion.CreateForCurrentOS(launcher, TimeProvider.System),
                 trash: Trash.CreateForCurrentOS(launcher, TimeProvider.System),
+                userPresence: UserPresences.CreateForCurrentOS(launcher, TimeProvider.System),
+                // A demo never wakes the computer: its timed messages are pictures (DESIGN.md §11, "Demo mode").
+                wakeTimer: Demo.DemoMode.FromEnvironment() is null ? WakeTimers.CreateForCurrentOS(launcher, TimeProvider.System) : null,
+                // The guide's pictures of the Tickets tab: the demo's GitHub issues, answered without the network (DESIGN.md §18, "Tickets").
+                httpHandler: Environment.GetEnvironmentVariable(Core.Demo.DemoTickets.Variable) is { Length: > 0 }
+                    ? new Core.Demo.DemoTickets(TimeProvider.System) { InnerHandler = new System.Net.Http.SocketsHttpHandler { AutomaticDecompression = System.Net.DecompressionMethods.All } }
+                    : null,
                 loggerFactory: loggers,
                 demo: Demo.DemoMode.FromEnvironment());
             if (_services.Demo is not null)

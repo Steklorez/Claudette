@@ -45,7 +45,7 @@ public sealed class PlanRealCliTests
         tab.ComposerText = "EXIT_PLAN";
         await tab.SendCommand.ExecuteAsync(null);
 
-        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<PlanItem>().Any()), "the plan card", TimeSpan.FromSeconds(60));
+        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<PlanItem>().Any()), "the plan card");
         Assert.True(drafted, "The plan file Claude wrote didn't show as a draft.");
         var version = Assert.Single(InlineDispatcher.Read(() => tab.TodoList.Plans.ToArray()));
         Assert.Equal(PlanState.Waiting, version.State);

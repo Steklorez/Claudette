@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Enumeration;
 using System.Text.Json;
 using Deventry.Core.Settings;
 
@@ -160,15 +161,25 @@ public static class BuildOutput
             return null;
         }
         DateTime? latest = null;
-        foreach (var file in new DirectoryInfo(directory).EnumerateFiles())
+        // Each file's time read where the enumeration finds it, without a FileInfo and its strings for each: a source
+        // build looks every couple of seconds.
+        var times = new FileSystemEnumerable<DateTime?>(directory, static (ref entry) =>
+            entry.FileName.SequenceEqual(BuildCopies.MarkerFileName) ? null : entry.LastWriteTimeUtc.UtcDateTime, AllFiles)
         {
-            if (file.Name != BuildCopies.MarkerFileName && (latest is null || file.LastWriteTimeUtc > latest))
+            ShouldIncludePredicate = static (ref entry) => !entry.IsDirectory,
+        };
+        foreach (var time in times)
+        {
+            if (time is { } written && (latest is null || written > latest))
             {
-                latest = file.LastWriteTimeUtc;
+                latest = written;
             }
         }
         return latest;
     }
+
+    /// <summary>What <see cref="DirectoryInfo.EnumerateFiles()"/> looks at: hidden files too, and an error for a folder it can't read.</summary>
+    private static readonly EnumerationOptions AllFiles = new() { AttributesToSkip = 0, IgnoreInaccessible = false };
 
     /// <summary>Whether the folder holds a whole build of <paramref name="assemblyName"/>: its assembly and the files that start it.</summary>
     public static bool IsComplete(string directory, string assemblyName) =>

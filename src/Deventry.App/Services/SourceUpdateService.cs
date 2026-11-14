@@ -77,6 +77,13 @@ public sealed class SourceUpdateService : IDisposable
 
     public bool AnyTabWorking => _restarts.AnyTabWorking;
 
+    /// <summary>Restart into new builds by itself once no tab is working: the same choice as New build ready's dialog.</summary>
+    public bool RestartAutomatically
+    {
+        get => _restarts.RestartAutomatically;
+        set => _restarts.RestartAutomatically = value;
+    }
+
     /// <summary>Raised on the UI thread when anything above changes, or a tab's status does.</summary>
     public event Action? Changed;
 

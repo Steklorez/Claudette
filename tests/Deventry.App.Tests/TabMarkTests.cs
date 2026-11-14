@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -145,6 +146,7 @@ public class TabMarkTests
         Assert.Equal(TabMark.Star, entry.Mark);
 
         await history.OpenCommand.ExecuteAsync(entry);
+        h.Start();
 
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.Equal(TabMark.Star, h.Shell.SelectedTab!.Mark);
@@ -163,6 +165,7 @@ public class TabMarkTests
 
         await history.OpenCommand.ExecuteAsync(history.Groups.SelectMany(g => g.Entries).Single());
         await Assert.IsType<ConfirmationViewModel>(h.Shell.Confirmation).SecondaryCommand.ExecuteAsync(null);
+        h.Start();
 
         await TabTestHarness.Eventually(() => h.Factory.Launches.Count == 1, "the resume");
         Assert.True(h.Factory.Launches[0].ForkSession);
@@ -181,22 +184,43 @@ public class TabMarkTests
         // already seen.
         await TabTestHarness.Eventually(() => tab.State.Tokens.Total == 120 && !tab.IsWorking, "the turn to finish");
         tab.SetSyncToLibrary(true);
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return h.Services.Library.CheckLease("s1") is LeaseStatus.Mine;
-        }, "the first copy");
+        await TabTestHarness.Eventually(() => h.Services.Library.CheckLease("s1") is LeaseStatus.Mine, "the first copy", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
         Assert.Null(Record().Mark);
 
         Pick(tab, TabMark.Star);
 
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return Record().Mark == "star";
-        }, "the record");
+        await TabTestHarness.Eventually(() => Record().Mark == "star", "the record", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
 
         SessionRecord Record() => h.Services.Library.Library.List().Single(e => e.Record.SessionId == "s1").Record;
+    }
+
+    [Fact]
+    public async Task With_colored_rows_a_mark_moves_only_the_second_line_over_and_with_status_dots_it_sits_under_the_icon()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await h.OpenTabAsync();
+
+        // Colored rows, the default: no status icon, so the name line has the row's whole width.
+        Assert.Equal(TabActivity.Bars, h.Services.Settings.Appearance.TabActivity);
+        Assert.False(tab.ShowsStatusGlyph);
+        Assert.Equal(0, tab.RowLeadWidth.Value);
+        Assert.Equal((0, 2), (tab.NameLineColumn, tab.NameLineSpan));
+
+        // A mark takes the lead column on the second line alone: the name line still spans it.
+        Pick(tab, TabMark.Star);
+        Assert.Equal(14, tab.RowLeadWidth.Value);
+        Assert.Equal((0, 2), (tab.NameLineColumn, tab.NameLineSpan));
+
+        // Status dots: the name line starts after the status icon, and the mark sits under it.
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
+        h.Services.Settings.Appearance.TabActivity = TabActivity.Dots;
+        h.OnUiThread(tab.OnSettingsChanged);
+        Assert.True(tab.ShowsStatusGlyph);
+        Assert.Equal(14, tab.RowLeadWidth.Value);
+        Assert.Equal((1, 1), (tab.NameLineColumn, tab.NameLineSpan));
+        Assert.Contains(nameof(TabViewModel.NameLineColumn), changed);
+        Assert.Contains(nameof(TabViewModel.NameLineSpan), changed);
     }
 
     /// <summary>Picks a mark from the tab's menu, as clicking its item does.</summary>

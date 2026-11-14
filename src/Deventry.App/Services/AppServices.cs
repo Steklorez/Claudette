@@ -18,9 +18,11 @@ using Deventry.Core.ProjectFiles;
 using Deventry.Core.ProjectTools;
 using Deventry.Core.ProjectTools.Unreal;
 using Deventry.Core.Protocol;
+using Deventry.Core.Remote;
 using Deventry.Core.RemoteControl;
 using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
+using Deventry.Core.TimedMessages;
 using Deventry.Core.Updates;
 using Deventry.Platform.Notifications;
 using Deventry.Platform.Processes;
@@ -88,6 +90,13 @@ public sealed class AppServices : IAsyncDisposable
     /// The OS's trash, for deleting from a Files tab's explorer (DESIGN.md §18, "Project files", "Renaming and deleting").
     /// Null has none, so deleting asks to delete for good: tests.
     /// </param>
+    /// <param name="userPresence">
+    /// Whether the user is at the computer, for when the remote clients send messages (DESIGN.md §18, "Remote clients").
+    /// Null can't tell: tests.
+    /// </param>
+    /// <param name="wakeTimer">
+    /// Wakes the computer for the next timed message (DESIGN.md §18, "Timed messages"). Null can't: tests.
+    /// </param>
     /// <param name="demo">This Deventry is a demo (DESIGN.md §11, "Demo mode"); null for any other.</param>
     public AppServices(
         AppPaths paths,
@@ -110,6 +119,8 @@ public sealed class AppServices : IAsyncDisposable
         ILoginItems? loginItems = null,
         ISystemMotion? systemMotion = null,
         ITrash? trash = null,
+        IUserPresence? userPresence = null,
+        IWakeTimer? wakeTimer = null,
         DemoMode? demo = null)
     {
         Demo = demo;
@@ -135,6 +146,12 @@ public sealed class AppServices : IAsyncDisposable
         _stateStore = new JsonFileStore<AppState>(paths.StateFile, Loggers.CreateLogger("State"));
         Settings = _settingsStore.Load();
         State = _stateStore.Load();
+        if (State.MachineId is not { Length: > 0 })
+        {
+            State.MachineId = Guid.NewGuid().ToString("N");
+            SaveState();
+        }
+        MachineId = State.MachineId;
         _systemMotion = systemMotion ?? new NoSystemMotion();
         Trash = trash ?? new NoTrash();
         ReduceMotion = Motion.Reduce(Settings.Appearance.Motion, false, false);
@@ -148,7 +165,7 @@ public sealed class AppServices : IAsyncDisposable
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
         // Settings → Git → Path to git, read as each run starts (DESIGN.md §14).
-        Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment) { ConfiguredPath = () => Settings.Git.Path };
+        Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment, logger: Loggers.CreateLogger("Git")) { ConfiguredPath = () => Settings.Git.Path };
         MentionFolders = new MentionFolderReader(Git, timeProvider);
         Library = new LibraryService(this);
         ScratchPads = new ScratchPadService(this);
@@ -163,6 +180,9 @@ public sealed class AppServices : IAsyncDisposable
         Tips = new ShortcutTips(Settings);
         Perforce = new PerforceService(this, credentials ?? new UnavailableCredentialStore());
         Accounts = new AccountsService(this, credentials ?? new UnavailableCredentialStore());
+        RemoteClients = new RemoteClientsService(this, credentials ?? new UnavailableCredentialStore(), userPresence ?? new NoUserPresence());
+        Tickets = new TicketsService(this, credentials ?? new UnavailableCredentialStore());
+        TimedMessages = new TimedMessagesService(this, wakeTimer ?? new NoWakeTimer());
         ProjectTools = new ProjectToolsService(this, systemProcesses, unrealRegistry ?? NoUnrealEngineRegistry.Instance, otherPrograms);
         ServiceStatus = new ServiceStatusService(this);
         LiveSessions = new LiveSessionsService(this, systemProcesses);
@@ -183,6 +203,7 @@ public sealed class AppServices : IAsyncDisposable
             ClaudeUpdates?.OnSettingsChanged();
             Notifications.OnSettingsChanged();
             KeepAwake.OnSettingsChanged();
+            RemoteClients.OnSettingsChanged();
             ServiceStatus.OnSettingsChanged();
             Tips.Refresh();
         };
@@ -352,10 +373,25 @@ public sealed class AppServices : IAsyncDisposable
     public RemoteControlService RemoteControl { get; }
 
     /// <summary>
+    /// The remote clients (DESIGN.md §18, "Remote clients"): the desk they reach the tabs through, and the bots,
+    /// Telegram's and Discord's, started once the tabs are up.
+    /// </summary>
+    public RemoteClientsService RemoteClients { get; }
+
+    /// <summary>
+    /// The ticket providers (DESIGN.md §18, "Tickets"): GitHub's and YouTrack's servers, their tokens, and a folder's
+    /// ticket sources, for the groups' Tickets tabs.
+    /// </summary>
+    public TicketsService Tickets { get; }
+
+    /// <summary>
     /// Keeping the computer from sleeping (DESIGN.md §9, "Keeping the computer awake"): Settings → General's <b>Keep
     /// this computer awake</b>, which the header's cup turns on and off, and tabs connected to the Claude app.
     /// </summary>
     public KeepAwakeService KeepAwake { get; }
+
+    /// <summary>The timed messages, sent at their times while Deventry runs (DESIGN.md §18, "Timed messages").</summary>
+    public TimedMessagesService TimedMessages { get; }
 
     /// <summary>The OS's trash, which a Files tab's explorer deletes to (DESIGN.md §18, "Project files", "Renaming and deleting").</summary>
     public ITrash Trash { get; }
@@ -468,6 +504,13 @@ public sealed class AppServices : IAsyncDisposable
 
     /// <summary>Saved tabs, recent and favorite folders. Change on the UI thread, then call <see cref="SaveState"/>.</summary>
     public AppState State { get; }
+
+    /// <summary>
+    /// This machine's id in the session library, made up once and kept in the state: its shared usage's file (DESIGN.md
+    /// §6, "Sharing across machines") and its leases, so a lease an earlier run here left is known for one (§9, "One
+    /// machine at a time").
+    /// </summary>
+    public string MachineId { get; }
 
     /// <summary>Raised on the UI thread after settings change.</summary>
     public event EventHandler? SettingsChanged;
@@ -757,8 +800,10 @@ public sealed class AppServices : IAsyncDisposable
         Mascot.Dispose();
         ScratchPads.Dispose();
         Library.Dispose();
+        await RemoteClients.DisposeAsync();
         Notifications.Dispose();
         RemoteControl.Dispose();
+        TimedMessages.Dispose();
         KeepAwake.Dispose();
         ServiceStatus.Dispose();
         LiveSessions.Dispose();

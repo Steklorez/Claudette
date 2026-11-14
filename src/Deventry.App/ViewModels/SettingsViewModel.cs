@@ -84,15 +84,31 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Usage = new UsagePage(_context);
         Sessions = new SessionsPage(_context);
         Files = new FilesPage(_context);
+        TimedMessages = new TimedMessagesPage(_context);
         AllTools = new AllToolsPage(_context);
         var types = services.ProjectTools.Detector.Types;
         ProjectTypes = [.. types.Select(type => new ProjectTypePage(_context, type))];
         Git = new GitPage(_context);
         Perforce = new PerforcePage(_context);
+        AllClients = new AllClientsPage(_context);
+        Clients = [.. services.RemoteClients.Types.Select(type => new RemoteClientPage(_context, type))];
+        foreach (var client in Clients)
+        {
+            // A client's tag follows its state, which changes without a setting changing.
+            client.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(SettingsPage.NavTag))
+                {
+                    RefreshNavTags();
+                }
+            };
+        }
+        AllTicketProviders = new AllTicketProvidersPage(_context);
+        TicketProviders = [.. services.Tickets.Types.Select(type => new TicketProviderPage(_context, type))];
         Advanced = new AdvancedPage(_context, ClaudeCode);
-        _groups = SettingsSidebar.Groups(types);
+        _groups = SettingsSidebar.Groups(types, services.RemoteClients.Types, services.Tickets.Types);
         Categories = [.. _groups.SelectMany(g => g.Categories)];
-        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, AllTools, .. ProjectTypes, Git, Perforce];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Accounts, Tabs, Usage, Advanced, Sessions, Files, TimedMessages, AllTools, .. ProjectTypes, Git, Perforce, AllTicketProviders, .. TicketProviders, AllClients, .. Clients];
         _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
@@ -122,8 +138,18 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         }
         HighlightWait.Dispose();
         General.Dispose();
+        AllClients.Dispose();
+        foreach (var client in Clients)
+        {
+            client.Dispose();
+        }
+        foreach (var provider in TicketProviders)
+        {
+            provider.Dispose();
+        }
         ClaudeCode.Dispose();
         Accounts.Dispose();
+        TimedMessages.Dispose();
         Git.Dispose();
         _context.Dispose();
     }
@@ -137,6 +163,24 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public ConversationPage Conversation { get; }
 
     public NotificationsPage Notifications { get; }
+
+    /// <summary>Settings → Remote clients → All clients (DESIGN.md §18, "Remote clients").</summary>
+    public AllClientsPage AllClients { get; }
+
+    /// <summary>A page for each kind of remote client, after All clients (DESIGN.md §18, "Remote clients").</summary>
+    public IReadOnlyList<RemoteClientPage> Clients { get; }
+
+    /// <summary>Settings → Tickets → All providers (DESIGN.md §18, "Tickets").</summary>
+    public AllTicketProvidersPage AllTicketProviders { get; }
+
+    /// <summary>A page for each ticket provider, after All providers (DESIGN.md §18, "Tickets").</summary>
+    public IReadOnlyList<TicketProviderPage> TicketProviders { get; }
+
+    /// <summary>The page of the ticket provider of <paramref name="kind"/>.</summary>
+    public TicketProviderPage TicketProvider(string kind) => TicketProviders.Single(p => p.Kind == kind);
+
+    /// <summary>The page of the remote client of <paramref name="kind"/>.</summary>
+    public RemoteClientPage Client(string kind) => Clients.Single(p => p.Kind == kind);
 
     public KeyboardPage Keyboard { get; }
 
@@ -152,6 +196,8 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public SessionsPage Sessions { get; }
 
     public FilesPage Files { get; }
+
+    public TimedMessagesPage TimedMessages { get; }
 
     public AllToolsPage AllTools { get; }
 
@@ -212,7 +258,10 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     {
         foreach (var entry in NavEntries.Where(e => !e.IsHeading))
         {
-            entry.Tag = Pages.FirstOrDefault(p => p.Title == entry.Category)?.NavTag;
+            var page = Pages.FirstOrDefault(p => p.Title == entry.Category);
+            // Its look first, so the tag never shows with the last one's.
+            entry.IsTagCaution = page?.IsNavTagCaution == true;
+            entry.Tag = page?.NavTag;
         }
     }
 
@@ -250,7 +299,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
             NavEntries.Add(SettingsNavEntry.Heading(heading));
             foreach (var page in categories.Select(category => _categoryPages.First(p => p.Title == category)))
             {
-                NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey, page.NavTag));
+                NavEntries.Add(SettingsNavEntry.Page(page.Title, page.IconKey, page.NavTag, page.IsNavTagCaution));
             }
         }
         OnPropertyChanged(nameof(SelectedNavEntry));

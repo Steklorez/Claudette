@@ -2,7 +2,7 @@
 title: The command palette
 parent: Tabs and sessions
 nav_order: 10
-summary: "The command palette is a box over the window that does anything Deventry has a command for, when you type a few letters of it."
+summary: "The command palette is a box over the window that does anything Deventry has a command for, when you type a few letters of it. Find a tab finds an open tab by pieces of its name."
 ---
 
 # The command palette
@@ -35,6 +35,7 @@ Before you type, the list has five kinds of entry, in this order. The kind shows
 For the whole window:
 
 - **New tab**, **Open from History…**, **Settings**
+- **Find a tab…**, while a tab is open. See [Finding a tab](#finding-a-tab).
 - **Collapse the sidebar** or **Expand the sidebar**
 - **Zoom in**, **Zoom out**, and **Reset zoom** while zoomed
 - **Go to the next tab waiting for you**, when another tab is waiting
@@ -58,9 +59,9 @@ For the selected tab:
 - **Stop Claude**, while Claude works
 - The project's main action, named for it (such as *Build*), with the project's name beside it
 - **Stash the message**, while something's typed in the composer
-- **Show changed files**, **Show the agent map**, **Show tasks**, **Show processes**, **Show MCP servers** (when the session has some) and **Show scratch pad**
+- **Show changed files**, **Show the agent map**, **Show tasks**, **Show processes**, **Show MCP servers** (when the session has some), **Show media** (when the conversation has any) and **Show scratch pad**
 - **Open project files**, which opens the project's Files tab. See [Opening project files](../project-files/opening-project-files.md).
-- **Play tic-tac-toe with Joulene**, **Play Connect Four with Joulene**, **Play hangman with Joulene** and **Play Minesweeper with Joulene**, unless the games are turned off. See [Games with Joulene](../joulene/games-with-joulene.md).
+- **Play tic-tac-toe with Joulene**, **Play Four in a Row with Joulene**, **Play hangman with Joulene**, **Play Minesweeper with Joulene** and **Play Pipeline with Joulene**, unless the games are turned off. See [Games with Joulene](../joulene/games-with-joulene.md).
 - **Tab settings…**, **Duplicate tab** and **Export conversation…**
 - **Collapse tab** (or **Expand tab**), while the tab has rows under it. See [Collapsing a tab](the-sidebar.md#collapsing-a-tab).
 - **New tab in a worktree**, for a folder in a git repository
@@ -71,6 +72,20 @@ For the selected tab:
 ## Filtering
 
 An entry matches when the letters you typed appear in its name in order, ignoring case. A match at the start of the name or of a word, or with the letters together, comes first. An entry also matches by its kind, so typing `tab` finds tabs, a little lower down.
+
+## Finding a tab
+
+With many tabs open, **Find a tab** finds one by a few pieces of text and takes you to it.
+
+1. Press `Ctrl/Cmd+K`, click the magnifier at the top of the sidebar (beside **History**), or choose **Find a tab…** in the palette.
+2. Type part of the tab's name, its project's name, its folder or its git branch. Every word you type has to be there somewhere, in any order and case: `login` finds *Fix login bug*, and `orbit auth` finds *Refactor auth* in the *orbit* project. Tabs whose name has the words come first, then those whose project has them, then the rest. With nothing typed, it lists every open tab, in the sidebar's order.
+3. Choose with `Up` and `Down` and press `Enter`, or click a tab.
+
+Each tab in the list shows its status, its name, and its project with its group's color, and its branch when it has one.
+
+Deventry selects the tab, opens its group (and its thread) if they were collapsed, scrolls the sidebar to its row and pulses the row softly for a couple of seconds so you see where it is. With [motion reduced](../settings/accessibility.md) the row is highlighted without moving, and the highlight fades. `Esc`, a click outside or the shortcut again closes the box without going anywhere.
+
+It finds only the tabs that are open; for past sessions, use [History](../history/history.md).
 
 ## Going to the next tab waiting for you
 
@@ -85,6 +100,7 @@ An entry matches when the letters you typed appear in its name in order, ignorin
 | `Enter` | Run the chosen entry |
 | `Esc` | Close the palette |
 | `Ctrl/Cmd+J` | Go to the next tab waiting for you |
+| `Ctrl/Cmd+K` | Find a tab |
 
 ## See also
 

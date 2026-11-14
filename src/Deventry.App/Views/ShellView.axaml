@@ -97,6 +97,40 @@
         </Button.ContextMenu>
       </Button>
     </DataTemplate>
+    <!-- A group's Tickets tab's row (DESIGN.md §18, "Tickets"): after its Project Files tab's, a ticket's outline, its name,
+         and how many tickets are open, or in the caution color what went wrong. Like the Files tab's, it can be dragged onto a
+         pane. -->
+    <DataTemplate x:Key="TicketsRow" DataType="vm:TicketsViewModel">
+      <Button Classes="tab tabrow filesrow" Classes.selected="{Binding IsSelected}" Classes.dragged="{Binding IsDragged}"
+              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectTicketsCommand}" CommandParameter="{Binding}"
+              ToolTip.Tip="{Binding RowTip}" ToolTip.ShowDelay="600" ToolTip.Placement="Right" AutomationProperties.Name="{Binding DisplayName}">
+        <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="6">
+          <!-- The ticket is wider than it's tall: in its square, it sits in the middle -->
+          <Panel VerticalAlignment="Top" Margin="0,3,0,0" Width="11" Height="11">
+            <Path Data="{StaticResource IconTicket}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Stretch="Uniform" VerticalAlignment="Center" />
+          </Panel>
+          <StackPanel Grid.Column="1" Spacing="1">
+            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="muted small" Classes.warning="{Binding RowIsWarning}" Text="{Binding RowDetail}" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <Button Grid.Column="2" Classes="flat closetab" Padding="4" VerticalAlignment="Top" ToolTip.Tip="Close" AutomationProperties.Name="Close tickets"
+                  Command="{Binding CloseCommand}">
+            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+          </Button>
+        </Grid>
+        <Button.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                      IsVisible="{Binding !IsShown}" ToolTip.Tip="Shows the project's tickets beside the tab you're in" />
+            <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}"
+                      ToolTip.Tip="Takes it off the screen; it stays open in the sidebar" />
+            <MenuItem Header="Refresh" Command="{Binding RefreshCommand}" />
+            <Separator />
+            <MenuItem Header="Close" Command="{Binding CloseCommand}" />
+          </ContextMenu>
+        </Button.ContextMenu>
+      </Button>
+    </DataTemplate>
     <!-- Its square on the rail. -->
     <!-- The project's icon on its group's row and in the rail (DESIGN.md §18, "Project tools"): its kind's, or a folder's
          without a project; a busy dot in its place while a job runs -->
@@ -106,16 +140,33 @@
               Classes.filled="{Binding IconKey, Converter={x:Static conversation:ToolIcons.IsFilled}}"
               Classes.unreal="{Binding IconKey, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:Logos.Unreal}}"
               IsVisible="{Binding !Runs.IsJobRunning}" />
-        <TextBlock Classes="status busy" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <TextBlock Classes="status" Classes.busy="{Binding Runs.IsJobRunning}" Text="●" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"
                    IsVisible="{Binding Runs.IsJobRunning}" />
       </Panel>
     </DataTemplate>
+    <!-- An entry of the project's menu, or of its Actions ▸ and Links ▸: a section's line or title, or something to pick -->
+    <DataTemplate x:Key="ProjectMenuEntry" DataType="vm:ProjectMenuEntry">
+      <Panel>
+        <Separator IsVisible="{Binding IsSeparator}" />
+        <TextBlock Classes="menusection" Text="{Binding Label}" IsVisible="{Binding IsHeader}" />
+        <Button Classes="flat menuentry" IsVisible="{Binding IsButton}" IsEnabled="{Binding IsEnabled}"
+                ToolTip.Tip="{Binding Tip}" ToolTip.ShowOnDisabled="True" Click="OnProjectMenuItemPicked" PointerEntered="OnProjectMenuEntryEntered"
+                Command="{Binding Command}" CommandParameter="{Binding Parameter}" AutomationProperties.Name="{Binding Label}">
+          <Grid ColumnDefinitions="14,*" ColumnSpacing="13">
+            <Path Classes="menuicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}" IsVisible="{Binding HasIcon}" />
+            <TextBlock Classes="small" Text="{Binding Mark}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding HasMark}" />
+            <TextBlock Grid.Column="1" Text="{Binding Label}" />
+          </Grid>
+        </Button>
+      </Panel>
+    </DataTemplate>
     <!-- The project's menu (DESIGN.md §18, "Project tools"): the project and what's wrong with deventry.json, then its
-         actions and links -->
+         actions in sections, and the folder's own actions and links in submenus, drawn as the sidebar's other menus are
+         (Themes/MenuStyles.axaml) -->
     <DataTemplate x:Key="ProjectMenu" DataType="vm:ProjectToolsViewModel">
-      <StackPanel x:Name="ProjectMenu" MinWidth="300" MaxWidth="440" Spacing="1">
-        <TextBlock Text="{Binding HeaderTitle}" FontWeight="SemiBold" Margin="8,2,8,0" />
-        <ItemsControl ItemsSource="{Binding HeaderLines}" Margin="8,0,8,2">
+      <StackPanel x:Name="ProjectMenu" MinWidth="300" MaxWidth="440">
+        <TextBlock Text="{Binding HeaderTitle}" FontWeight="SemiBold" Margin="12,2,12,0" />
+        <ItemsControl ItemsSource="{Binding HeaderLines}" Margin="12,0,12,2">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="x:String">
               <TextBlock Classes="muted small" Text="{Binding}" TextWrapping="Wrap" />
@@ -123,33 +174,59 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <!-- Entries of deventry.json that were skipped, and why (DESIGN.md §18) -->
-        <ItemsControl ItemsSource="{Binding FileProblems}" Margin="8,0,8,2" IsVisible="{Binding HasFileProblems}">
+        <ItemsControl ItemsSource="{Binding FileProblems}" Margin="12,0,12,2" IsVisible="{Binding HasFileProblems}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="x:String">
               <TextBlock Classes="small warning" Text="{Binding}" TextWrapping="Wrap" />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Separator Margin="0,2" />
+        <Separator />
         <ItemsControl ItemsSource="{Binding Menu}">
           <ItemsControl.ItemTemplate>
             <DataTemplate DataType="vm:ProjectMenuEntry">
               <Panel>
-                <Separator Margin="0,3" IsVisible="{Binding IsSeparator}" />
-                <TextBlock Classes="muted small" Text="{Binding Label}" Margin="8,4,8,1" IsVisible="{Binding IsHeader}" />
-                <Button Classes="flat row" IsVisible="{Binding IsButton}" IsEnabled="{Binding IsEnabled}" HorizontalContentAlignment="Stretch"
-                        ToolTip.Tip="{Binding Tip}" ToolTip.ShowOnDisabled="True" Click="OnProjectMenuItemPicked"
-                        Command="{Binding Command}" CommandParameter="{Binding Parameter}">
-                  <Grid ColumnDefinitions="16,*">
-                    <TextBlock Classes="small" Text="{Binding Mark}" VerticalAlignment="Center" IsVisible="{Binding HasMark}" />
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ProjectMenuEntry}" IsVisible="{Binding !IsSubmenu}" />
+                <!-- Actions ▸ and Links ▸: pointing at one or clicking it opens it beside the menu, as a menu's submenu does -->
+                <Button Classes="flat menuentry" IsVisible="{Binding IsSubmenu}" ToolTip.Tip="{Binding Tip}" AutomationProperties.Name="{Binding Label}"
+                        Click="OnProjectSubmenuClicked" PointerEntered="OnProjectSubmenuEntered">
+                  <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="13">
+                    <Path Classes="menuicon" Data="{Binding IconKey, Converter={x:Static conversation:ToolIcons.Geometry}}" />
                     <TextBlock Grid.Column="1" Text="{Binding Label}" />
+                    <Path Grid.Column="2" Classes="menuicon" Data="{StaticResource IconChevronRight}" Width="8" Height="8" />
                   </Grid>
                 </Button>
+                <!-- Its entries, beside its row. A popup that isn't dismissed by a click elsewhere, as a flyout is: a flyout
+                     open over the menu would keep the pointer from it, so pointing at another entry couldn't close or
+                     switch it. ShellView closes it as a menu's submenu closes. -->
+                <Popup Placement="RightEdgeAlignedTop" IsLightDismissEnabled="False" Opened="OnProjectSubmenuOpened" Closed="OnProjectSubmenuClosed">
+                  <FlyoutPresenter Classes="sectioned" PointerExited="OnProjectSubmenuExited">
+                    <ItemsControl ItemsSource="{Binding Items}" ItemTemplate="{StaticResource ProjectMenuEntry}" MinWidth="220" MaxWidth="440" />
+                  </FlyoutPresenter>
+                </Popup>
               </Panel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </StackPanel>
+    </DataTemplate>
+    <DataTemplate x:Key="TicketsSquare" DataType="vm:TicketsViewModel">
+      <Button Classes="tab" Classes.selected="{Binding IsSelected}" Width="38" Height="34" Padding="0" HorizontalAlignment="Center"
+              HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).SelectTicketsCommand}" CommandParameter="{Binding}"
+              ToolTip.Tip="{Binding RowTip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding DisplayName}">
+        <Path Data="{StaticResource IconTicket}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="12" Stretch="Uniform"
+              HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Button.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Open beside" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenBesideCommand, FallbackValue={x:Null}}" CommandParameter="{Binding}"
+                      IsVisible="{Binding !IsShown}" />
+            <MenuItem Header="Close pane" Command="{Binding ClosePaneCommand}" IsVisible="{Binding IsInSplit}" />
+            <Separator />
+            <MenuItem Header="Close" Command="{Binding CloseCommand}" />
+          </ContextMenu>
+        </Button.ContextMenu>
+      </Button>
     </DataTemplate>
     <DataTemplate x:Key="ProjectFilesSquare" DataType="vm:ProjectFilesViewModel">
       <Button Classes="tab" Classes.selected="{Binding IsSelected}" Width="38" Height="34" Padding="0" HorizontalAlignment="Center"
@@ -392,6 +469,22 @@
     <Style Selector="controls|AppearanceScope.claude Border.rowbadge">
       <Setter Property="CornerRadius" Value="8" />
     </Style>
+    <!-- Subagents running: the chip in the accent, as their rows' highlight is -->
+    <Style Selector="Border.rowbadge.agents">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <Style Selector="TextBlock.agentsbadge">
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <Style Selector="Path.agentsbadgeicon">
+      <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
+      <Setter Property="StrokeThickness" Value="1.1" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="Width" Value="8" />
+      <Setter Property="Height" Value="8" />
+      <Setter Property="Stretch" Value="Uniform" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
   </UserControl.Styles>
 
   <!-- Settings → Appearance → Density (DESIGN.md §14): "compact" tightens the rows, the conversation and the composer,
@@ -417,19 +510,24 @@
         <!-- New tab, History and collapsing: the sidebar's head, over a line (DESIGN.md §4, "Sidebar") -->
         <Border Grid.Row="0" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="6,8,6,6">
           <Panel>
-            <Grid ColumnDefinitions="*,Auto,Auto" IsVisible="{Binding Layout.IsSidebarExpanded}">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" IsVisible="{Binding Layout.IsSidebarExpanded}">
               <Button Classes="flat side" Command="{Binding NewTabCommand}" ToolTip.Tip="{Binding Tips.NewTab}" AutomationProperties.Name="New tab">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <Path Classes="icon" Data="{StaticResource IconPlus}" />
                   <TextBlock Text="New tab" VerticalAlignment="Center" />
                 </StackPanel>
               </Button>
+              <!-- Find a tab (DESIGN.md §4, "Find a tab") -->
+              <Button x:Name="FindTabButton" Grid.Column="1" Classes="flat" Padding="8" Command="{Binding OpenTabSearchCommand}" ToolTip.Tip="{Binding Tips.FindTab}"
+                      AutomationProperties.Name="Find a tab">
+                <Path Data="{StaticResource IconToolSearch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="13" Height="13" Stretch="Uniform" />
+              </Button>
               <!-- History (DESIGN.md §9) -->
-              <Button Grid.Column="1" Classes="flat" Padding="8" Command="{Binding OpenHistoryCommand}" ToolTip.Tip="{Binding Tips.History}"
+              <Button Grid.Column="2" Classes="flat" Padding="8" Command="{Binding OpenHistoryCommand}" ToolTip.Tip="{Binding Tips.History}"
                       AutomationProperties.Name="History">
                 <Path Data="{StaticResource IconHistory}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="13" Height="13" Stretch="Uniform" />
               </Button>
-              <Button Grid.Column="2" Classes="flat" Padding="8" Command="{Binding Layout.ToggleSidebarCommand}"
+              <Button Grid.Column="3" Classes="flat" Padding="8" Command="{Binding Layout.ToggleSidebarCommand}"
                       ToolTip.Tip="{Binding Tips.CollapseSidebar}" AutomationProperties.Name="Collapse the sidebar">
                 <Path Data="{StaticResource IconSidebar}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="13" Height="13" Stretch="Uniform" />
               </Button>
@@ -443,6 +541,9 @@
               </Button>
               <Button Classes="flat side" Command="{Binding OpenHistoryCommand}" ToolTip.Tip="{Binding Tips.History}" ToolTip.Placement="Right" AutomationProperties.Name="History">
                 <Path Classes="icon" Data="{StaticResource IconHistory}" />
+              </Button>
+              <Button Classes="flat side" Command="{Binding OpenTabSearchCommand}" ToolTip.Tip="{Binding Tips.FindTab}" ToolTip.Placement="Right" AutomationProperties.Name="Find a tab">
+                <Path Classes="icon" Data="{StaticResource IconToolSearch}" />
               </Button>
             </StackPanel>
           </Panel>
@@ -471,7 +572,7 @@
                 <Border Classes="groupband" Classes.pinned="{Binding IsPinned}" Classes.lastpinned="{Binding IsLastPinned}"
                         Classes.afterpinned="{Binding HasDividerAbove}">
                   <StackPanel>
-                    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                       <!-- Group label: click to collapse; right-click for group actions -->
                       <Button Classes="flat grouplabel" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="4,4"
                               ToolTip.Tip="{Binding Summary}" AutomationProperties.Name="{Binding Label}"
@@ -512,10 +613,19 @@
                                       IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconBranch}" /></MenuItem.Icon>
                             </MenuItem>
+                            <!-- A message sent at a time, to a new tab here (DESIGN.md §18, "Timed messages") -->
+                            <MenuItem Header="Add a timed message…" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewTimedMessageInGroupCommand}" CommandParameter="{Binding}"
+                                      ToolTip.Tip="A message Deventry sends at a time you choose, to a new tab in this folder">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconClock}" /></MenuItem.Icon>
+                            </MenuItem>
                             <Separator />
                             <MenuItem Classes="menusection" Header="Folder" IsEnabled="False" />
                             <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconFiles}" /></MenuItem.Icon>
+                            </MenuItem>
+                            <!-- The project's tickets (DESIGN.md §18, "Tickets"): an empty tab says how to add a source -->
+                            <MenuItem Header="Tickets" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTicketsCommand}" CommandParameter="{Binding}">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconTicket}" /></MenuItem.Icon>
                             </MenuItem>
                             <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                             <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}">
@@ -566,17 +676,26 @@
                               ToolTip.Tip="{Binding ProjectTools.ButtonTip, FallbackValue={x:Null}}" AutomationProperties.Name="Project tools">
                         <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectIcon}" />
                         <Button.Flyout>
-                          <Flyout Placement="RightEdgeAlignedTop" Opened="OnProjectMenuOpened">
+                          <Flyout Placement="RightEdgeAlignedTop" FlyoutPresenterClasses="sectioned" Opened="OnProjectMenuOpened" Closed="OnProjectMenuClosed">
                             <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectMenu}" />
                           </Flyout>
                         </Button.Flyout>
                       </Button>
+                      <!-- The group's Tickets tab (DESIGN.md §18, "Tickets"), while its folder has a ticket source: opens it, or selects it -->
+                      <Button x:Name="TicketsButton" Grid.Column="2" Classes="flat" Padding="6" ToolTip.Tip="Tickets" AutomationProperties.Name="Tickets"
+                              IsVisible="{Binding HasTicketSources}"
+                              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTicketsCommand}" CommandParameter="{Binding}" VerticalAlignment="Center">
+                        <!-- The ticket is wider than it's tall: in the same square as its neighbors' icons, it sits in the middle -->
+                        <Panel Width="11" Height="11">
+                          <Path Data="{StaticResource IconTicket}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Stretch="Uniform" VerticalAlignment="Center" />
+                        </Panel>
+                      </Button>
                       <!-- The group's Project Files tab (DESIGN.md §18, "Project files"): opens it, or selects it -->
-                      <Button x:Name="ProjectFilesButton" Grid.Column="2" Classes="flat" Padding="6" ToolTip.Tip="Project files" AutomationProperties.Name="Project files"
+                      <Button x:Name="ProjectFilesButton" Grid.Column="3" Classes="flat" Padding="6" ToolTip.Tip="Project files" AutomationProperties.Name="Project files"
                               Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}" VerticalAlignment="Center">
                         <Path Data="{StaticResource IconFiles}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="11" Height="11" Stretch="Uniform" />
                       </Button>
-                      <Button Grid.Column="3" Classes="flat" Padding="6" ToolTip.Tip="New tab in this folder" AutomationProperties.Name="New tab in this folder"
+                      <Button Grid.Column="4" Classes="flat" Padding="6" ToolTip.Tip="New tab in this folder" AutomationProperties.Name="New tab in this folder"
                               Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewTabInGroupCommand}" CommandParameter="{Binding}" VerticalAlignment="Center">
                         <Path Data="{StaticResource IconPlus}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="9" Height="9" Stretch="Uniform" />
                       </Button>
@@ -586,6 +705,7 @@
                     <controls:SideLine x:Name="GroupLine" Margin="9,2,0,0" Padding="8,0,0,0" LineBrush="{Binding Brush}" LineThickness="2" IsVisible="{Binding IsExpanded}">
                       <StackPanel Spacing="1">
                       <ContentControl Content="{Binding Files}" IsVisible="{Binding HasFiles}" ContentTemplate="{StaticResource ProjectFilesRow}" />
+                      <ContentControl Content="{Binding Tickets}" IsVisible="{Binding HasTickets}" ContentTemplate="{StaticResource TicketsRow}" />
                       <!-- Unclipped, as the rows are, so a row's chevron can sit out on the line -->
                       <ItemsControl ItemsSource="{Binding Tabs}" ClipToBounds="False">
                         <ItemsControl.ItemsPanel>
@@ -603,161 +723,189 @@
                                 <ToolTip.Tip>
                                   <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InfoCard}" />
                                 </ToolTip.Tip>
-                                <Grid ColumnDefinitions="14,*" ColumnSpacing="6">
-                                  <TextBlock Classes="status" Classes.busy="{Binding IsBusyStatus}" Classes.alert="{Binding IsAlertStatus}"
+                                <Panel>
+                                <!-- What Claude is doing, behind the row with Tab activity's colored rows (DESIGN.md §4, "Sidebar"): a soft
+                                     highlight running across it while Claude works, an orange wash blinking while it waits for the user,
+                                     and a still green or red one, fading out to the right, once it finished unseen or stopped with an error -->
+                                <controls:WorkBar Classes="rowglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
+                                <!-- Blinking only while it shows: a blink hidden with IsVisible is paused, but keeps the app drawing frames. -->
+                                <Border Classes="rowglow" Classes.waitglow="{Binding ShowsWaitBlink}" IsVisible="{Binding ShowsWaitBlink}" />
+                                <Border Classes="rowglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
+                                <Border Classes="rowglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
+                                <!-- Just found with Find a tab (DESIGN.md §4, "Find a tab"): a few soft pulses of the accent -->
+                                <Border Classes="rowglow attentionglow" Classes.attention="{Binding IsDrawingAttention}" />
+                                <Grid ColumnSpacing="{Binding RowLeadSpacing}" RowDefinitions="Auto,Auto" RowSpacing="1">
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="{Binding RowLeadWidth}" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.RowSpan="2" Classes="status" Classes.busy="{Binding IsBusyStatus}" Classes.alert="{Binding IsAlertStatus}"
                                              Classes.failed="{Binding IsErrorStatus}" Classes.unread="{Binding IsUnread}"
-                                             Text="{Binding StatusGlyph}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                                             Text="{Binding StatusGlyph}" ToolTip.Tip="{Binding StatusTip}" HorizontalAlignment="Center" VerticalAlignment="Top"
+                                             IsVisible="{Binding ShowsStatusGlyph}" />
                                   <!-- The user's own mark (DESIGN.md §4, "Marks"), or the reviewed icon over it: under the status
-                                       icon, level with the second line. The border gives the tip somewhere to hover. -->
-                                  <Border x:Name="RowMark" Background="Transparent" IsVisible="{Binding ShowsMarkIcon}" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                                          Margin="0,0,0,2" ToolTip.Tip="{Binding MarkTip}" AutomationProperties.Name="{Binding MarkTip}">
+                                       icon, level with the second line, or with Tab activity's colored rows before the second line
+                                       alone, the name keeping the row's width. Centered on that line as its context ring is, and
+                                       smaller, so it stays within the ring's height. The border gives the tip somewhere to hover. -->
+                                  <Border x:Name="RowMark" Grid.Row="1" Background="Transparent" IsVisible="{Binding ShowsMarkIcon}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          ToolTip.Tip="{Binding MarkTip}" AutomationProperties.Name="{Binding MarkTip}">
                                     <views:MarkIcon Mark="{Binding Mark}" IsReviewed="{Binding AllFilesReviewed}" />
                                   </Border>
-                                  <StackPanel Grid.Column="1" Spacing="1">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                      <DockPanel>
-                                        <!-- Collapses what's under the row: its sub-threads, subagents and runs (DESIGN.md §4, "Sidebar").
-                                             It sits on the group's line, level with the name, and takes no room before it. -->
-                                        <Border DockPanel.Dock="Left" Classes="rowfold" IsVisible="{Binding HasRowsUnder}" controls:OnLine.Line="GroupLine">
-                                          <Button x:Name="RowFold" Classes="flat rowfold"
-                                                  Command="{Binding ToggleRowsCollapsedCommand}" ToolTip.Tip="{Binding CollapseTip}" AutomationProperties.Name="{Binding CollapseMenuText}">
-                                            <Panel>
-                                              <Path Classes="down" Data="{StaticResource IconChevronDown}" IsVisible="{Binding !AreRowsCollapsed}"
-                                                    Stroke="{Binding $parent[ItemsControl].((vm:TabGroupViewModel)DataContext).Brush}" />
-                                              <Path Classes="right" Data="{StaticResource IconChevronRight}" IsVisible="{Binding AreRowsCollapsed}"
-                                                    Stroke="{Binding $parent[ItemsControl].((vm:TabGroupViewModel)DataContext).Brush}" />
-                                            </Panel>
-                                          </Button>
-                                        </Border>
-                                        <Path DockPanel.Dock="Left" Data="{StaticResource IconPin}" Fill="{DynamicResource MutedTextBrush}" Width="8" Height="10" Stretch="Uniform"
-                                              IsVisible="{Binding IsPinned}" VerticalAlignment="Center" Margin="0,0,5,0" />
-                                        <!-- The tab copies its session to the session library (DESIGN.md §9), with what it takes there as its tip; the border gives the tip somewhere to hover -->
-                                        <Border DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding SyncToLibrary}" VerticalAlignment="Center" Margin="0,0,5,0"
-                                                ToolTip.Tip="{Binding SyncTip}" AutomationProperties.Name="{Binding SyncTip}">
-                                          <Path Data="{StaticResource IconSync}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="9" Height="9" Stretch="Uniform" />
-                                        </Border>
-                                        <!-- A thread (DESIGN.md §18, "Threads"), with how many sub-threads it has as the tip -->
-                                        <Border x:Name="ThreadIcon" DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding IsThread}" VerticalAlignment="Center" Margin="0,0,5,0"
-                                                ToolTip.Tip="{Binding ThreadTip}" AutomationProperties.Name="{Binding ThreadTip}">
-                                          <Path Data="{StaticResource IconThread}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="9" Height="9" Stretch="Uniform" />
-                                        </Border>
-                                        <!-- Works in a git worktree of its own (DESIGN.md §4, "Worktree tabs"); in the branch badge while that shows -->
-                                        <Border DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding ShowWorktreeIcon}" VerticalAlignment="Center" Margin="0,0,5,0"
-                                                ToolTip.Tip="{Binding WorktreeTip}" AutomationProperties.Name="{Binding WorktreeTip}">
-                                          <Path Data="{StaticResource IconBranch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="9" Height="9" Stretch="Uniform" />
-                                        </Border>
-                                        <!-- Connected to the Claude app (DESIGN.md §18, "Remote Control"); dimmed while it connects or reconnects,
-                                             and more once it's switched off and waiting to disconnect -->
-                                        <Border x:Name="RemoteIcon" DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding RemoteControl.ShowIcon}" VerticalAlignment="Center" Margin="0,0,5,0"
-                                                Classes.settling="{Binding RemoteControl.IsSettling}" Classes.leaving="{Binding RemoteControl.IsLeaving}"
-                                                ToolTip.Tip="{Binding RemoteControl.StatusTip}" AutomationProperties.Name="{Binding RemoteControl.StatusTip}">
-                                          <Path Data="{StaticResource IconPhone}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="7" Height="10" Stretch="Uniform" />
-                                        </Border>
-                                        <TextBlock DockPanel.Dock="Left" Classes="status busy small" Text="⚙" IsVisible="{Binding ProcessMonitor.HasBusyProcesses}" VerticalAlignment="Center" Margin="0,0,5,0"
-                                                   ToolTip.Tip="A process this tab started is using CPU" />
-                                        <!-- Tasks still running once the turn is over (DESIGN.md §4, "Sidebar"; §5, "Running tasks") -->
-                                        <Border x:Name="TaskBadge" DockPanel.Dock="Left" Classes="taskbadge" IsVisible="{Binding ShowTaskBadge}" VerticalAlignment="Center" Margin="0,0,5,0"
-                                                ToolTip.Tip="{Binding TaskBadgeTip}" AutomationProperties.Name="{Binding TaskBadgeTip}">
-                                          <TextBlock Text="{Binding RunningTaskCount}" />
-                                        </Border>
-                                        <!-- What the collapsed row hides: how many rows, and the most urgent of them (DESIGN.md §4, "Sidebar") -->
-                                        <Border x:Name="FoldBadge" DockPanel.Dock="Right" Classes="foldbadge" Margin="5,0,0,0" VerticalAlignment="Center" IsVisible="{Binding AreRowsCollapsed}"
-                                                ToolTip.Tip="{Binding CollapsedTip}" AutomationProperties.Name="{Binding CollapsedTip}">
-                                          <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
-                                            <TextBlock Classes="count" Text="{Binding CollapsedRowCount}" />
-                                            <TextBlock Classes="status" Classes.busy="{Binding CollapsedIsBusy}" Classes.alert="{Binding CollapsedIsAlert}"
-                                                       Classes.failed="{Binding CollapsedIsError}" Classes.unread="{Binding CollapsedIsUnread}"
-                                                       Text="{Binding CollapsedGlyph}" IsVisible="{Binding CollapsedGlyph, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                          </StackPanel>
-                                        </Border>
-                                        <!-- The tab's account, while it isn't its group's (DESIGN.md §4, "Accounts") -->
-                                        <Border x:Name="TabAccountTag" DockPanel.Dock="Right" Classes="accounttag" Classes.default="{Binding RowAccountTag.IsDefault, FallbackValue=False}"
-                                                Margin="5,0,0,0" IsVisible="{Binding ShowsAccountTag}"
-                                                Background="{Binding RowAccountTag.SoftBrush, FallbackValue={x:Null}}" BorderBrush="{Binding RowAccountTag.Brush, FallbackValue={x:Null}}"
-                                                ToolTip.Tip="{Binding RowAccountTag.Tip, FallbackValue={x:Null}}">
-                                          <TextBlock Text="{Binding RowAccountTag.Name, FallbackValue=''}" />
-                                        </Border>
-                                        <Panel>
-                                          <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsRenaming}" />
-                                          <TextBox Text="{Binding RenameText}" IsVisible="{Binding IsRenaming}" Padding="4,1" MinHeight="0"
-                                                   KeyDown="OnRenameKeyDown" LostFocus="OnRenameLostFocus" AttachedToVisualTree="OnRenameAttached" />
-                                        </Panel>
-                                      </DockPanel>
-                                      <!-- At the end of the first line, so showing on hover takes room from the name alone, and the second
-                                           line holds still -->
-                                      <Button Grid.Column="1" Classes="flat closetab" Padding="4" Margin="6,0,0,0" VerticalAlignment="Center"
-                                              ToolTip.Tip="Close tab" AutomationProperties.Name="Close tab"
-                                              Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseTabCommand}" CommandParameter="{Binding}">
-                                        <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
-                                      </Button>
-                                    </Grid>
-                                    <!-- The model and effort, or what needs attention; at its right, where the tab works (DESIGN.md §4, "Sidebar") -->
-                                    <Grid ColumnDefinitions="*,Auto">
-                                      <DockPanel>
-                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0">
-                                          <!-- How far Claude's tasks have got (DESIGN.md §5, "Tasks"): selects the tab and opens the Tasks page -->
-                                          <Button x:Name="TaskProgressBadge" Classes="flat rowbadge" IsVisible="{Binding ShowTaskProgressBadge}" Command="{Binding ShowTasksFromRowCommand}"
-                                                  ToolTip.Tip="{Binding TodoList.ProgressTip}" AutomationProperties.Name="{Binding TodoList.ProgressTip}">
-                                            <Border Classes="rowbadge">
-                                              <StackPanel Orientation="Horizontal" Spacing="3">
-                                                <Path Data="{StaticResource IconToolTodo}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="8" Height="8" Stretch="Uniform"
-                                                      StrokeLineCap="Round" StrokeJoin="Round" VerticalAlignment="Center" />
-                                                <TextBlock Classes="muted small" Text="{Binding TodoList.ProgressShort}" />
-                                              </StackPanel>
-                                            </Border>
-                                          </Button>
-                                          <!-- The git branch, or the worktree: separate from the name, so renaming keeps it -->
-                                          <Button x:Name="BranchBadge" Classes="flat rowbadge" IsVisible="{Binding ShowBranchBadge}"
-                                                  ToolTip.Tip="{Binding BranchBadgeTip}" AutomationProperties.Name="{Binding BranchBadgeTip}">
-                                            <Border Classes="rowbadge">
-                                              <StackPanel Orientation="Horizontal" Spacing="3">
-                                                <Path Data="{StaticResource IconBranch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="8" Height="8" Stretch="Uniform"
-                                                      VerticalAlignment="Center" IsVisible="{Binding IsInWorktree}" />
-                                                <TextBlock Classes="muted small" Text="{Binding BranchBadge}" TextTrimming="CharacterEllipsis" />
-                                              </StackPanel>
-                                            </Border>
-                                            <Button.Flyout>
-                                              <MenuFlyout>
-                                                <MenuItem Header="Copy branch name" Command="{Binding CopyBranchCommand}" />
-                                              </MenuFlyout>
-                                            </Button.Flyout>
-                                          </Button>
-                                          <!-- The Perforce changelist (DESIGN.md §18): separate from the name, so renaming keeps it -->
-                                          <Button Classes="flat rowbadge changelist" IsVisible="{Binding Perforce.ShowChangelistBadge}"
-                                                  ToolTip.Tip="{Binding Perforce.ChangelistBadgeTip}" AutomationProperties.Name="{Binding Perforce.ChangelistBadge}">
-                                            <Border Classes="rowbadge">
-                                              <TextBlock Classes="muted small" Text="{Binding Perforce.ChangelistBadge}" />
-                                            </Border>
-                                            <Button.Flyout>
-                                              <MenuFlyout>
-                                                <MenuItem Header="Copy changelist number" Command="{Binding Perforce.CopyChangelistCommand}" CommandParameter="{x:Null}" />
-                                                <MenuItem Header="Open in P4V" Command="{Binding Perforce.OpenChangelistInP4VCommand}" CommandParameter="{x:Null}" />
-                                              </MenuFlyout>
-                                            </Button.Flyout>
-                                          </Button>
+                                  <Grid Grid.Column="{Binding NameLineColumn}" Grid.ColumnSpan="{Binding NameLineSpan}" ColumnDefinitions="*,Auto">
+                                    <DockPanel>
+                                      <!-- Collapses what's under the row: its sub-threads, subagents and runs (DESIGN.md §4, "Sidebar").
+                                           It sits on the group's line, level with the name, and takes no room before it. -->
+                                      <Border DockPanel.Dock="Left" Classes="rowfold" IsVisible="{Binding HasRowsUnder}" controls:OnLine.Line="GroupLine">
+                                        <Button x:Name="RowFold" Classes="flat rowfold"
+                                                Command="{Binding ToggleRowsCollapsedCommand}" ToolTip.Tip="{Binding CollapseTip}" AutomationProperties.Name="{Binding CollapseMenuText}">
+                                          <Panel>
+                                            <Path Classes="down" Data="{StaticResource IconChevronDown}" IsVisible="{Binding !AreRowsCollapsed}"
+                                                  Stroke="{Binding $parent[ItemsControl].((vm:TabGroupViewModel)DataContext).Brush}" />
+                                            <Path Classes="right" Data="{StaticResource IconChevronRight}" IsVisible="{Binding AreRowsCollapsed}"
+                                                  Stroke="{Binding $parent[ItemsControl].((vm:TabGroupViewModel)DataContext).Brush}" />
+                                          </Panel>
+                                        </Button>
+                                      </Border>
+                                      <Path DockPanel.Dock="Left" Data="{StaticResource IconPin}" Fill="{DynamicResource MutedTextBrush}" Width="8" Height="10" Stretch="Uniform"
+                                            IsVisible="{Binding IsPinned}" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                      <!-- The tab copies its session to the session library (DESIGN.md §9), with what it takes there as its tip; the border gives the tip somewhere to hover -->
+                                      <Border DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding SyncToLibrary}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                              ToolTip.Tip="{Binding SyncTip}" AutomationProperties.Name="{Binding SyncTip}">
+                                        <Path Data="{StaticResource IconSync}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="9" Height="9" Stretch="Uniform" />
+                                      </Border>
+                                      <!-- A thread (DESIGN.md §18, "Threads"), with how many sub-threads it has as the tip -->
+                                      <Border x:Name="ThreadIcon" DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding IsThread}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                              ToolTip.Tip="{Binding ThreadTip}" AutomationProperties.Name="{Binding ThreadTip}">
+                                        <Path Data="{StaticResource IconThread}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="9" Height="9" Stretch="Uniform" />
+                                      </Border>
+                                      <!-- Works in a git worktree of its own (DESIGN.md §4, "Worktree tabs"); in the branch badge while that shows -->
+                                      <Border DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding ShowWorktreeIcon}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                              ToolTip.Tip="{Binding WorktreeTip}" AutomationProperties.Name="{Binding WorktreeTip}">
+                                        <Path Data="{StaticResource IconBranch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="9" Height="9" Stretch="Uniform" />
+                                      </Border>
+                                      <!-- Connected to the Claude app (DESIGN.md §18, "Remote Control"); dimmed while it connects or reconnects,
+                                           and more once it's switched off and waiting to disconnect -->
+                                      <Border x:Name="RemoteIcon" DockPanel.Dock="Left" Background="Transparent" IsVisible="{Binding RemoteControl.ShowIcon}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                              Classes.settling="{Binding RemoteControl.IsSettling}" Classes.leaving="{Binding RemoteControl.IsLeaving}"
+                                              ToolTip.Tip="{Binding RemoteControl.StatusTip}" AutomationProperties.Name="{Binding RemoteControl.StatusTip}">
+                                        <Path Data="{StaticResource IconPhone}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="7" Height="10" Stretch="Uniform" />
+                                      </Border>
+                                      <TextBlock DockPanel.Dock="Left" Classes="status small" Classes.busy="{Binding ProcessMonitor.HasBusyProcesses}" Text="⚙" IsVisible="{Binding ProcessMonitor.HasBusyProcesses}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                                 ToolTip.Tip="A process this tab started is using CPU" />
+                                      <!-- Tasks still running once the turn is over (DESIGN.md §4, "Sidebar"; §5, "Running tasks") -->
+                                      <Border x:Name="TaskBadge" DockPanel.Dock="Left" Classes="taskbadge" IsVisible="{Binding ShowTaskBadge}" VerticalAlignment="Center" Margin="0,0,5,0"
+                                              ToolTip.Tip="{Binding TaskBadgeTip}" AutomationProperties.Name="{Binding TaskBadgeTip}">
+                                        <TextBlock Text="{Binding RowTaskCount}" />
+                                      </Border>
+                                      <!-- What the collapsed row hides: how many rows, and the most urgent of them (DESIGN.md §4, "Sidebar") -->
+                                      <Border x:Name="FoldBadge" DockPanel.Dock="Right" Classes="foldbadge" Margin="5,0,0,0" VerticalAlignment="Center" IsVisible="{Binding AreRowsCollapsed}"
+                                              ToolTip.Tip="{Binding CollapsedTip}" AutomationProperties.Name="{Binding CollapsedTip}">
+                                        <StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+                                          <TextBlock Classes="count" Text="{Binding CollapsedRowCount}" />
+                                          <TextBlock Classes="status" Classes.busy="{Binding CollapsedIsBusy}" Classes.alert="{Binding CollapsedIsAlert}"
+                                                     Classes.failed="{Binding CollapsedIsError}" Classes.unread="{Binding CollapsedIsUnread}"
+                                                     Text="{Binding CollapsedGlyph}" IsVisible="{Binding CollapsedGlyph, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                         </StackPanel>
-                                        <TextBlock Classes="muted small" Classes.warning="{Binding IsAlertStatus}" Classes.error="{Binding IsErrorStatus}"
-                                                   Text="{Binding RowDetail}" TextTrimming="CharacterEllipsis" />
-                                      </DockPanel>
-                                      <!-- How full the tab's context is (DESIGN.md §4, §6): muted, amber near auto-compact, red when
-                                           nearly full. At the end of the second line, under the close button. Clicking it shows what
-                                           fills the context, as the composer's indicator does, without selecting the tab. -->
-                                      <Button x:Name="ContextRing" Grid.Column="1" Classes="flat" Width="16" Height="16" Padding="0" Margin="6,0,0,0" VerticalAlignment="Center"
-                                              IsVisible="{Binding Context.ShowRing}" ToolTip.Tip="{Binding Context.Tip}" AutomationProperties.Name="{Binding Context.Text}">
-                                        <Panel Width="13" Height="13">
-                                          <Ellipse Classes="contexttrack" />
-                                          <Arc Classes="contextarc" Classes.high="{Binding Context.IsHigh}" Classes.critical="{Binding Context.IsCritical}"
-                                               StartAngle="-90" SweepAngle="{Binding Context.Sweep}" />
-                                        </Panel>
-                                        <Button.Flyout>
-                                          <Flyout Placement="RightEdgeAlignedBottom">
-                                            <views:ContextBreakdownView />
-                                          </Flyout>
-                                        </Button.Flyout>
-                                      </Button>
-                                    </Grid>
-                                  </StackPanel>
+                                      </Border>
+                                      <!-- The tab's account, while it isn't its group's (DESIGN.md §4, "Accounts") -->
+                                      <Border x:Name="TabAccountTag" DockPanel.Dock="Right" Classes="accounttag" Classes.default="{Binding RowAccountTag.IsDefault, FallbackValue=False}"
+                                              Margin="5,0,0,0" IsVisible="{Binding ShowsAccountTag}"
+                                              Background="{Binding RowAccountTag.SoftBrush, FallbackValue={x:Null}}" BorderBrush="{Binding RowAccountTag.Brush, FallbackValue={x:Null}}"
+                                              ToolTip.Tip="{Binding RowAccountTag.Tip, FallbackValue={x:Null}}">
+                                        <TextBlock Text="{Binding RowAccountTag.Name, FallbackValue=''}" />
+                                      </Border>
+                                      <Panel>
+                                        <!-- Its session starting, with Tab activity's bars: the name shimmers until it's ready -->
+                                        <TextBlock Classes="tabname" Classes.starting="{Binding ShowsStartingShimmer}" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsRenaming}" />
+                                        <TextBox Text="{Binding RenameText}" IsVisible="{Binding IsRenaming}" Padding="4,1" MinHeight="0"
+                                                 KeyDown="OnRenameKeyDown" LostFocus="OnRenameLostFocus" AttachedToVisualTree="OnRenameAttached" />
+                                      </Panel>
+                                    </DockPanel>
+                                    <!-- At the end of the first line, so showing on hover takes room from the name alone, and the second
+                                         line holds still -->
+                                    <Button Grid.Column="1" Classes="flat closetab" Padding="4" Margin="6,0,0,0" VerticalAlignment="Center"
+                                            ToolTip.Tip="Close tab" AutomationProperties.Name="Close tab"
+                                            Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseTabCommand}" CommandParameter="{Binding}">
+                                      <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="8" Height="8" Stretch="Uniform" />
+                                    </Button>
+                                  </Grid>
+                                  <!-- The model and effort, or what needs attention; at its right, where the tab works (DESIGN.md §4, "Sidebar") -->
+                                  <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto">
+                                    <DockPanel>
+                                      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" Margin="6,0,0,0">
+                                        <!-- Subagents still running, the turn over or not (DESIGN.md §4, "Sidebar"): shows them -->
+                                        <Button x:Name="AgentsBadge" Classes="flat rowbadge" IsVisible="{Binding ShowsAgentsBadge}" Command="{Binding ShowAgentsFromRowCommand}"
+                                                ToolTip.Tip="{Binding AgentsBadgeTip}" AutomationProperties.Name="{Binding AgentsBadgeTip}">
+                                          <Border Classes="rowbadge agents">
+                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                              <Path Classes="agentsbadgeicon" Data="{StaticResource IconToolAgent}" />
+                                              <TextBlock Classes="small agentsbadge" Text="{Binding AgentsBadge}" />
+                                            </StackPanel>
+                                          </Border>
+                                        </Button>
+                                        <!-- How far Claude's tasks have got (DESIGN.md §5, "Tasks"): selects the tab and opens the Tasks page -->
+                                        <Button x:Name="TaskProgressBadge" Classes="flat rowbadge" IsVisible="{Binding ShowTaskProgressBadge}" Command="{Binding ShowTasksFromRowCommand}"
+                                                ToolTip.Tip="{Binding TodoList.ProgressTip}" AutomationProperties.Name="{Binding TodoList.ProgressTip}">
+                                          <Border Classes="rowbadge">
+                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                              <Path Data="{StaticResource IconToolTodo}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="8" Height="8" Stretch="Uniform"
+                                                    StrokeLineCap="Round" StrokeJoin="Round" VerticalAlignment="Center" />
+                                              <TextBlock Classes="muted small" Text="{Binding TodoList.ProgressShort}" />
+                                            </StackPanel>
+                                          </Border>
+                                        </Button>
+                                        <!-- The git branch, or the worktree: separate from the name, so renaming keeps it -->
+                                        <Button x:Name="BranchBadge" Classes="flat rowbadge" IsVisible="{Binding ShowBranchBadge}"
+                                                ToolTip.Tip="{Binding BranchBadgeTip}" AutomationProperties.Name="{Binding BranchBadgeTip}">
+                                          <Border Classes="rowbadge">
+                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                              <Path Data="{StaticResource IconBranch}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Width="8" Height="8" Stretch="Uniform"
+                                                    VerticalAlignment="Center" IsVisible="{Binding IsInWorktree}" />
+                                              <TextBlock Classes="muted small" Text="{Binding BranchBadge}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                          </Border>
+                                          <Button.Flyout>
+                                            <MenuFlyout>
+                                              <MenuItem Header="Copy branch name" Command="{Binding CopyBranchCommand}" />
+                                            </MenuFlyout>
+                                          </Button.Flyout>
+                                        </Button>
+                                        <!-- The Perforce changelist (DESIGN.md §18): separate from the name, so renaming keeps it -->
+                                        <Button Classes="flat rowbadge changelist" IsVisible="{Binding Perforce.ShowChangelistBadge}"
+                                                ToolTip.Tip="{Binding Perforce.ChangelistBadgeTip}" AutomationProperties.Name="{Binding Perforce.ChangelistBadge}">
+                                          <Border Classes="rowbadge">
+                                            <TextBlock Classes="muted small" Text="{Binding Perforce.ChangelistBadge}" />
+                                          </Border>
+                                          <Button.Flyout>
+                                            <MenuFlyout>
+                                              <MenuItem Header="Copy changelist number" Command="{Binding Perforce.CopyChangelistCommand}" CommandParameter="{x:Null}" />
+                                              <MenuItem Header="Open in P4V" Command="{Binding Perforce.OpenChangelistInP4VCommand}" CommandParameter="{x:Null}" />
+                                            </MenuFlyout>
+                                          </Button.Flyout>
+                                        </Button>
+                                      </StackPanel>
+                                      <TextBlock Classes="muted small" Classes.warning="{Binding IsAlertStatus}" Classes.error="{Binding IsErrorStatus}"
+                                                 Text="{Binding RowDetail}" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <!-- How full the tab's context is (DESIGN.md §4, §6): muted, amber near auto-compact, red when
+                                         nearly full. At the end of the second line, under the close button. Clicking it shows what
+                                         fills the context, as the composer's indicator does, without selecting the tab. -->
+                                    <Button x:Name="ContextRing" Grid.Column="1" Classes="flat" Width="16" Height="16" Padding="0" Margin="6,0,0,0" VerticalAlignment="Center"
+                                            IsVisible="{Binding Context.ShowRing}" ToolTip.Tip="{Binding Context.Tip}" AutomationProperties.Name="{Binding Context.Text}">
+                                      <Panel Width="13" Height="13">
+                                        <Ellipse Classes="contexttrack" />
+                                        <Arc Classes="contextarc" Classes.high="{Binding Context.IsHigh}" Classes.critical="{Binding Context.IsCritical}"
+                                             StartAngle="-90" SweepAngle="{Binding Context.Sweep}" />
+                                      </Panel>
+                                      <Button.Flyout>
+                                        <Flyout Placement="RightEdgeAlignedBottom">
+                                          <views:ContextBreakdownView />
+                                        </Flyout>
+                                      </Button.Flyout>
+                                    </Button>
+                                  </Grid>
                                 </Grid>
+                                </Panel>
                                 <Button.ContextMenu>
                                   <ContextMenu Classes="sectioned">
                                     <!-- In sections, as Themes/MenuStyles.axaml draws them (DESIGN.md §4, "Sidebar"): the tab, how it shows, its session,
@@ -867,6 +1015,11 @@
                                               ToolTip.Tip="What claude --resume takes">
                                       <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconCopy}" /></MenuItem.Icon>
                                     </MenuItem>
+                                    <!-- The ticket the tab was started on (DESIGN.md §18, "Tickets") -->
+                                    <MenuItem Header="Open ticket" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTabTicketCommand}" CommandParameter="{Binding}"
+                                              IsVisible="{Binding HasTicket}" ToolTip.Tip="The ticket this tab was started on, in the project's Tickets tab">
+                                      <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconTicket}" /></MenuItem.Icon>
+                                    </MenuItem>
                                     <Separator />
                                     <MenuItem Classes="menusection" Header="Other devices" IsEnabled="False" />
                                     <!-- The item ticks itself as it's clicked, then runs the command, so the binding stays one-way -->
@@ -905,10 +1058,21 @@
                                     <Button Classes="flat agentrow" Classes.showing="{Binding IsShowing}" Classes.earlier="{Binding Node.IsEarlier}"
                                             Margin="{Binding Indent, Converter={x:Static vm:Converters.LeftMargin}}" Command="{Binding OpenCommand}"
                                             ToolTip.Tip="{Binding Tip}" ToolTip.Placement="Right" AutomationProperties.Name="{Binding Node.Title}">
-                                      <Grid ColumnDefinitions="12,*,Auto" ColumnSpacing="6">
+                                      <Panel>
+                                      <!-- With Tab activity's colored rows, the tab row's washes for the subagent (DESIGN.md §4, "Sidebar") -->
+                                      <controls:WorkBar Classes="rowglow" IsVisible="{Binding ShowsWorkBar}" BarBrush="{DynamicResource AccentStatusBrush}" />
+                                      <Border Classes="rowglow" Classes.waitglow="{Binding ShowsWaitBlink}" IsVisible="{Binding ShowsWaitBlink}" />
+                                      <Border Classes="rowglow doneglow" IsVisible="{Binding ShowsDoneBar}" />
+                                      <Border Classes="rowglow errorglow" IsVisible="{Binding ShowsErrorBar}" />
+                                      <Grid ColumnSpacing="{Binding GlyphSpacing}">
+                                        <Grid.ColumnDefinitions>
+                                          <ColumnDefinition Width="{Binding GlyphWidth}" />
+                                          <ColumnDefinition Width="*" />
+                                          <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
                                         <TextBlock Classes="status runglyph" Classes.busy="{Binding Node.IsRunning}" Classes.alert="{Binding Node.IsWaiting}"
                                                    Classes.ok="{Binding Node.IsDone}" Classes.failed="{Binding Node.IsFailed}"
-                                                   Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                                                   Text="{Binding Node.StatusGlyph}" HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="{Binding ShowsStatusGlyph}" />
                                         <StackPanel Grid.Column="1">
                                           <DockPanel>
                                             <Path DockPanel.Dock="Left" Classes="agentrowicon" Data="{StaticResource IconToolAgent}" />
@@ -916,6 +1080,7 @@
                                             <TextBlock Classes="runname" Text="{Binding Node.Title}" TextTrimming="CharacterEllipsis" />
                                           </DockPanel>
                                           <TextBlock Classes="muted rundetail" Classes.warning="{Binding Node.IsWaiting}" Classes.error="{Binding Node.IsFailed}"
+                                                     Classes.running="{Binding Node.IsRunning}" Classes.done="{Binding Node.IsDone}"
                                                      Text="{Binding Node.Subtitle}" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                         <Panel Grid.Column="2" VerticalAlignment="Top">
@@ -929,6 +1094,7 @@
                                           </Button>
                                         </Panel>
                                       </Grid>
+                                      </Panel>
                                       <Button.ContextMenu>
                                         <ContextMenu>
                                           <MenuItem Header="Show its work" Command="{Binding OpenCommand}" />
@@ -1148,6 +1314,10 @@
                         <MenuItem Header="Open project files" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenProjectFilesCommand}" CommandParameter="{Binding}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconFiles}" /></MenuItem.Icon>
                         </MenuItem>
+                        <!-- The project's tickets (DESIGN.md §18, "Tickets"): an empty tab says how to add a source -->
+                        <MenuItem Header="Tickets" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTicketsCommand}" CommandParameter="{Binding}">
+                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconTicket}" /></MenuItem.Icon>
+                        </MenuItem>
                         <!-- History listing only this project's sessions (DESIGN.md §9, "History") -->
                         <MenuItem Header="History for this folder" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenHistoryForGroupCommand}" CommandParameter="{Binding}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconHistory}" /></MenuItem.Icon>
@@ -1194,12 +1364,13 @@
                           ToolTip.Tip="{Binding ProjectTools.ButtonTip, FallbackValue={x:Null}}" ToolTip.Placement="Right" AutomationProperties.Name="Project tools">
                     <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectIcon}" />
                     <Button.Flyout>
-                      <Flyout Placement="RightEdgeAlignedTop" Opened="OnProjectMenuOpened">
+                      <Flyout Placement="RightEdgeAlignedTop" FlyoutPresenterClasses="sectioned" Opened="OnProjectMenuOpened" Closed="OnProjectMenuClosed">
                         <ContentControl Content="{Binding ProjectTools}" ContentTemplate="{StaticResource ProjectMenu}" />
                       </Flyout>
                     </Button.Flyout>
                   </Button>
                   <ContentControl Content="{Binding Files}" IsVisible="{Binding HasFiles}" ContentTemplate="{StaticResource ProjectFilesSquare}" />
+                  <ContentControl Content="{Binding Tickets}" IsVisible="{Binding HasTickets}" ContentTemplate="{StaticResource TicketsSquare}" />
                   <ItemsControl ItemsSource="{Binding Tabs}" IsVisible="{Binding IsExpanded}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
@@ -1218,6 +1389,7 @@
                             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InfoCard}" />
                           </ToolTip.Tip>
                           <Panel>
+                            <Border Classes="rowglow attentionglow" Classes.attention="{Binding IsDrawingAttention}" />
                             <TextBlock Text="{Binding DisplayName, Converter={x:Static vm:Converters.Initial}}" FontWeight="SemiBold"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <TextBlock Classes="status small" Classes.busy="{Binding IsBusyStatus}" Classes.alert="{Binding IsAlertStatus}"
@@ -1329,6 +1501,11 @@
                               <MenuItem Header="Copy session ID" Command="{Binding CopySessionIdCommand}" IsVisible="{Binding HasSessionId}"
                                         ToolTip.Tip="What claude --resume takes">
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconCopy}" /></MenuItem.Icon>
+                              </MenuItem>
+                              <!-- The ticket the tab was started on (DESIGN.md §18, "Tickets") -->
+                              <MenuItem Header="Open ticket" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).OpenTabTicketCommand}" CommandParameter="{Binding}"
+                                        IsVisible="{Binding HasTicket}" ToolTip.Tip="The ticket this tab was started on, in the project's Tickets tab">
+                                <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconTicket}" /></MenuItem.Icon>
                               </MenuItem>
                               <Separator />
                               <MenuItem Classes="menusection" Header="Other devices" IsEnabled="False" />
@@ -1597,6 +1774,12 @@
                 <views:ProjectFilesView />
               </Border>
             </DataTemplate>
+            <!-- A group's Tickets tab (DESIGN.md §18, "Tickets") -->
+            <DataTemplate DataType="vm:TicketsViewModel">
+              <Border Classes="island">
+                <views:TicketsView />
+              </Border>
+            </DataTemplate>
             <!-- A project run's log (DESIGN.md §18, "Project tools", "A run's log") -->
             <DataTemplate DataType="vm:ProjectRunViewModel">
               <Border Classes="island">
@@ -1664,6 +1847,17 @@
       </ContentControl>
     </Border>
 
+    <!-- Clone a repository (DESIGN.md §4, "Opening a tab") -->
+    <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsCloneOpen}" PointerPressed="OnCloneOverlayPressed">
+      <ContentControl Content="{Binding Clone}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:CloneRepositoryViewModel">
+            <views:CloneRepositoryView />
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </Border>
+
     <!-- Find in files (DESIGN.md §18, "Finding in files") -->
     <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsFindInFilesOpen}" PointerPressed="OnFindInFilesOverlayPressed">
       <ContentControl Content="{Binding FindInFiles}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,50,0,0">
@@ -1681,6 +1875,17 @@
         <ContentControl.DataTemplates>
           <DataTemplate DataType="vm:CommandPaletteViewModel">
             <views:CommandPaletteView />
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+    </Border>
+
+    <!-- Find a tab (DESIGN.md §4, "Find a tab") -->
+    <Border Grid.ColumnSpan="2" Classes="overlay" IsVisible="{Binding IsTabSearchOpen}" PointerPressed="OnTabSearchOverlayPressed">
+      <ContentControl Content="{Binding TabSearch}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,70,0,0">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="vm:TabSearchViewModel">
+            <views:TabSearchView />
           </DataTemplate>
         </ContentControl.DataTemplates>
       </ContentControl>

@@ -3,6 +3,8 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Logging;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
@@ -67,6 +69,161 @@ public class ProjectToolsUiTests
 
         // Verify resumes off the UI thread, so it comes last.
         await Verify(shown);
+    }
+
+    /// <summary>
+    /// Every icon an entry of the project's menu can name, in deventry.json or from a project type, has a shape of its own
+    /// (DESIGN.md §18, "deventry.json").
+    /// </summary>
+    [AvaloniaFact]
+    public void Every_icon_a_menu_entry_can_name_has_its_own_shape()
+    {
+        var keys = Core.ProjectTools.MenuIcons.Names.Select(ViewModels.MenuIconKeys.For).ToArray();
+
+        Assert.DoesNotContain("IconToolDefault", keys);
+        Assert.Equal(keys.Length, keys.Distinct().Count());
+        Assert.All(keys, key => Assert.IsAssignableFrom<Geometry>(Application.Current!.FindResource(key)));
+    }
+
+    /// <summary>
+    /// The project's Actions ▸ and Links ▸ follow the pointer as a menu's submenus do (DESIGN.md §18, "Project tools"):
+    /// pointing at one opens it in place of the other, and pointing at the rest of the menu, or moving off the submenu,
+    /// closes it.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Pointing_at_Actions_or_Links_opens_it_in_place_of_the_other_and_moving_off_closes_it()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        File.WriteAllText(Path.Combine(h.WorkFolder, Core.ProjectTools.ProjectFile.SharedName), """
+            { "actions": [ { "name": "Run tests", "command": "make test" } ], "links": [ { "name": "Board", "url": "https://example.com/board" } ] }
+            """);
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.HasTools && tab.ProjectTools.HasLinks, "the actions and links");
+        var button = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Project tools" && b.IsEffectivelyVisible);
+        var flyout = Assert.IsType<Flyout>(button.Flyout);
+        flyout.ShowAt(button);
+        var menu = Assert.IsAssignableFrom<Control>(flyout.Content);
+        await UiText.SettleUntilAsync(window, () => menu.IsEffectivelyVisible, "the menu");
+        var root = TopLevel.GetTopLevel(menu)!;
+        Button Row(Visual within, string name) =>
+            within.GetVisualDescendants().OfType<Button>().Single(b => b.IsEffectivelyVisible && AutomationProperties.GetName(b) == name);
+        static Avalonia.Controls.Primitives.Popup Submenu(Button row) => ((Panel)row.Parent!).Children.OfType<Avalonia.Controls.Primitives.Popup>().Single();
+        void PointAt(TopLevel top, Visual at)
+        {
+            top.MouseMove(at.TranslatePoint(new Point(at.Bounds.Width / 2, at.Bounds.Height / 2), top)!.Value);
+            UiText.Settle(window);
+        }
+        var (actions, links) = (Row(menu, "Actions"), Row(menu, "Links"));
+        // Where the pointer is, whether these are still the menu's rows, and which submenus are open where.
+        string State()
+        {
+            static string Place(Visual v, Visual to) => $"{v.TranslatePoint(default, to)} {v.Bounds.Size}";
+            string Kept(Button row, string name)
+            {
+                var now = menu.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible && AutomationProperties.GetName(b) == name).ToList();
+                return $"{name} {now.Contains(row)} of {now.Count}";
+            }
+            var open = Submenu(actions).IsOpen && Submenu(actions).Child is Visual sub ? $", Actions' submenu at {Place(sub, root)}" : "";
+            return $"pointer over Links {links.IsPointerOver}, over Actions {actions.IsPointerOver}; still the menu's rows: {Kept(actions, "Actions")}, "
+                + $"{Kept(links, "Links")}; open: Actions {Submenu(actions).IsOpen}, Links {Submenu(links).IsOpen}; Links at {Place(links, root)}{open}";
+        }
+
+        PointAt(root, actions);
+        Assert.True(Submenu(actions).IsOpen);
+        // From Actions to Links: Links opens in its place. (Seen failing once each on Windows and macOS, and not
+        // reproduced: what the menu was like then says why.)
+        PointAt(root, links);
+        Assert.False(Submenu(actions).IsOpen, State());
+        Assert.True(Submenu(links).IsOpen, State());
+        // The rest of the menu closes it.
+        PointAt(root, Row(menu, "Refresh"));
+        Assert.False(Submenu(links).IsOpen);
+
+        // Into the submenu keeps it open; off it closes it, and leaves the menu.
+        PointAt(root, actions);
+        var submenu = Submenu(actions).Child!;
+        var submenuRoot = TopLevel.GetTopLevel(submenu)!;
+        PointAt(submenuRoot, Row(submenu, "Run tests"));
+        Assert.True(Submenu(actions).IsOpen);
+        submenuRoot.MouseMove(new Point(-40, -40));
+        UiText.Settle(window);
+        Assert.False(Submenu(actions).IsOpen);
+        Assert.True(flyout.IsOpen);
+    }
+
+    /// <summary>
+    /// Picking an action from Actions ▸ with the mouse runs it and closes the submenu and the menu. The project's first
+    /// run changes the menu (Show output… has a log to show), which takes the submenu away under the pointer, and the
+    /// submenu then hears the pointer left it, after it has left its window. Asking where that was on the screen ended
+    /// Deventry: on Windows the submenu is a window of its own, and what it threw as that window closed went through
+    /// Windows, where nothing can catch it.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Picking_an_action_from_Actions_with_the_mouse_runs_it_and_closes_the_menu()
+    {
+        var launcher = new FakeLauncher();
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: launcher);
+        File.WriteAllText(Path.Combine(h.WorkFolder, Core.ProjectTools.ProjectFile.SharedName), """
+            { "actions": [ { "name": "Build and launch", "command": "make run" } ] }
+            """);
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.HasTools, "the actions");
+        var button = window.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Project tools" && b.IsEffectivelyVisible);
+        var flyout = Assert.IsType<Flyout>(button.Flyout);
+        flyout.ShowAt(button);
+        var menu = Assert.IsAssignableFrom<Control>(flyout.Content);
+        await UiText.SettleUntilAsync(window, () => menu.IsEffectivelyVisible, "the menu");
+        static Button Row(Visual within, string name) =>
+            within.GetVisualDescendants().OfType<Button>().Single(b => b.IsEffectivelyVisible && AutomationProperties.GetName(b) == name);
+        static Point Middle(Visual at, TopLevel top) => at.TranslatePoint(new Point(at.Bounds.Width / 2, at.Bounds.Height / 2), top)!.Value;
+        var actions = Row(menu, "Actions");
+        var root = TopLevel.GetTopLevel(menu)!;
+        root.MouseMove(Middle(actions, root));
+        UiText.Settle(window);
+        var popup = ((Panel)actions.Parent!).Children.OfType<Avalonia.Controls.Primitives.Popup>().Single();
+        Assert.True(popup.IsOpen);
+        var submenu = popup.Child!;
+        var submenuRoot = TopLevel.GetTopLevel(submenu)!;
+        var entry = Middle(Row(submenu, "Build and launch"), submenuRoot);
+
+        using (var logged = new AvaloniaWarnings())
+        {
+            submenuRoot.MouseMove(entry);
+            submenuRoot.MouseDown(entry, MouseButton.Left);
+            submenuRoot.MouseUp(entry, MouseButton.Left);
+            UiText.Settle(window);
+            // Headless, the submenu is drawn in the main window rather than one of its own, so what it throws is caught by
+            // the binding that changed the menu, which logs it.
+            if (logged.Messages.Count > 0)
+            {
+                Assert.Fail(string.Join(Environment.NewLine, logged.Messages));
+            }
+        }
+
+        Assert.False(popup.IsOpen);
+        Assert.False(flyout.IsOpen);
+        Assert.Equal("Build and launch", Assert.Single(tab.ProjectTools.Runs.Items).Name);
+    }
+
+    /// <summary>What Avalonia logs as a warning or worse while this is in use, such as an exception a binding caught.</summary>
+    private sealed class AvaloniaWarnings : ILogSink, IDisposable
+    {
+        private readonly ILogSink? _previous = Logger.Sink;
+
+        public AvaloniaWarnings() => Logger.Sink = this;
+
+        public List<string> Messages { get; } = [];
+
+        public bool IsEnabled(LogEventLevel level, string area) => level >= LogEventLevel.Warning;
+
+        public void Log(LogEventLevel level, string area, object? source, string messageTemplate) => Log(level, area, source, messageTemplate, []);
+
+        public void Log(LogEventLevel level, string area, object? source, string messageTemplate, params object?[] propertyValues) =>
+            Messages.Add($"{area}: {string.Join(" · ", propertyValues)}");
+
+        public void Dispose() => Logger.Sink = _previous;
     }
 
     [AvaloniaFact]
@@ -283,6 +440,64 @@ public class ProjectToolsUiTests
         await Verify(described);
     }
 
+    /// <summary>
+    /// A Unity log written with <c>-timestamps</c> (DESIGN.md §18, "Editor logs", "Its lines", issue #122): each line's
+    /// time and thread in columns, the thread's as wide as the longest, and the messages lined up after them, with the
+    /// file's text underneath.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_unity_log_with_timestamps_shows_each_lines_time_and_thread_in_columns_before_its_message()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher(), launcher: new FakeLauncher());
+        var os = Core.ProjectTools.ToolOSExtensions.Current == Core.ProjectTools.ToolOS.Windows ? Core.ProjectTools.ToolOS.Windows : Core.ProjectTools.ToolOS.Linux;
+        h.Services.ProjectTools.OS = os;
+        h.Services.ProjectTools.Paths = new Core.ProjectTools.ProjectToolPaths(Path.Combine(h.Root, "home"), LocalAppData: Path.Combine(h.Root, "local"));
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "ProjectSettings"));
+        File.WriteAllText(Path.Combine(h.WorkFolder, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.0.23f1\n");
+        Directory.CreateDirectory(Path.Combine(h.WorkFolder, "Assets"));
+        var processes = new FakeSystemProcesses();
+        h.Services.ProjectTools.Processes = processes;
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Project is { Logs: not null }, "the project");
+        var unityLog = Core.ProjectTools.Unity.UnityEditors.EditorLog(h.Services.ProjectTools.Paths, os)!;
+        Directory.CreateDirectory(Path.GetDirectoryName(unityLog)!);
+        File.WriteAllLines(unityLog,
+        [
+            "2026-11-05T13:14:55.764Z|0x9b98|Refreshing native plugins",
+            "2026-11-05T13:14:56.000Z|0x1a2b3c|Start HTTP server: port:7800",
+            "",
+            "2026-11-05T13:14:56.100Z|0x9b98|Domain Reload Profiling: 1881ms",
+        ]);
+        processes.Start(new Core.ProjectTools.SystemProcess(4412, "Unity", $"\"C:\\Unity\\6000.0.23f1\\Editor\\Unity.exe\" -projectPath \"{h.WorkFolder}\"", h.Time.GetUtcNow()));
+        h.Time.Advance(TimeSpan.FromSeconds(EditorLogService.ReadsPerCheck));
+        await UiText.SettleUntilAsync(window, () => tab.ProjectTools.Logs.Count == 1 && tab.ProjectTools.Logs[0].Output.Count == 4, "the log");
+        var editorLog = tab.ProjectTools.Logs[0];
+        editorLog.OpenCommand.Execute(null);
+        UiText.Settle(window);
+        var editor = Shown<EditorLogView>(window).FindControl<TextEditor>("Log")!;
+        var textView = editor.TextArea.TextView;
+        await UiText.SettleUntilAsync(window, () => textView.VisualLinesValid && textView.VisualLines.Count == 4, "the lines");
+
+        Assert.True(editorLog.HasThreadColumn);
+        Assert.Equal("0x1a2b3c".Length, editorLog.ThreadColumn);
+        AvaloniaEdit.Rendering.VisualLine Line(int number) => textView.VisualLines.Single(l => l.FirstDocumentLine.LineNumber == number);
+        double MessageX(int number, string message)
+        {
+            var text = editor.Document.GetText(editor.Document.GetLineByNumber(number));
+            return textView.GetVisualPosition(new TextViewPosition(number, text.IndexOf(message, StringComparison.Ordinal) + 1), AvaloniaEdit.Rendering.VisualYPosition.LineTop).X;
+        }
+        // Unity's time is drawn as the time column, and its thread as the thread's.
+        Assert.Equal("2026-11-05T13:14:55.764Z|".Length, Line(1).Elements[0].DocumentLength);
+        Assert.Equal("0x9b98|".Length, Line(1).Elements[1].DocumentLength);
+        // Every message starts in the same place, after the columns.
+        var message = MessageX(1, "Refreshing");
+        Assert.Equal(message, MessageX(2, "Start HTTP"));
+        Assert.Equal(message, MessageX(4, "Domain Reload"));
+        Assert.Equal(LogColumnsGenerator.MessageColumn(editorLog) * textView.WideSpaceWidth, message, 3);
+        Assert.Equal("2026-11-05T13:14:55.764Z|0x9b98|Refreshing native plugins", editor.Document.GetText(editor.Document.GetLineByNumber(1)));
+    }
+
     [AvaloniaFact]
     public async Task A_logs_long_lines_wrap_and_its_links_open_with_a_click()
     {
@@ -389,7 +604,7 @@ public class ProjectToolsUiTests
     private static TextEditor Log(ProjectRunView view) => view.FindControl<TextEditor>("Log")!;
 
     [AvaloniaFact]
-    public async Task A_folder_with_no_project_has_the_icon_with_the_folder_in_its_tip_and_its_menu_lists_the_links()
+    public async Task A_folder_with_no_project_has_the_icon_with_the_folder_in_its_tip_and_its_links_in_a_submenu()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         File.WriteAllText(Path.Combine(h.WorkFolder, Core.ProjectTools.ProjectFile.SharedName), """
@@ -412,17 +627,30 @@ public class ProjectToolsUiTests
         UiText.Settle(window);
         var menu = Assert.IsAssignableFrom<Control>(flyout.Content);
         await UiText.SettleUntilAsync(window, () => menu.IsEffectivelyVisible, "the menu");
-        var shown = UiText.Describe(menu, (h.Root, "{root}"));
-        var buttons = menu.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible).ToList();
-        var board = buttons.Single(b => UiText.Describe(b).Contains("Board", StringComparison.Ordinal));
+        // No Project page without project tools, so nothing to show the output of.
+        Assert.DoesNotContain(menu.GetVisualDescendants().OfType<Button>(), b => b.IsEffectivelyVisible && AutomationProperties.GetName(b) == "Show output…");
+
+        // The folder's links are in Links ▸, which a click opens beside the menu (DESIGN.md §18, "Project tools").
+        var linksEntry = menu.GetVisualDescendants().OfType<Button>().Single(b => b.IsEffectivelyVisible && AutomationProperties.GetName(b) == "Links");
+        linksEntry.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        var submenu = ((Panel)linksEntry.Parent!).Children.OfType<Avalonia.Controls.Primitives.Popup>().Single();
+        await UiText.SettleUntilAsync(window, () => submenu.IsOpen && submenu.Child is { IsEffectivelyVisible: true }, "Links");
+        var links = submenu.Child!;
+        var shown = UiText.Describe(menu, (h.Root, "{root}")) + "\n--- Links ▸\n" + UiText.Describe(links);
+        var buttons = links.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible).ToList();
+        var board = buttons.Single(b => AutomationProperties.GetName(b) == "Board");
         Assert.True(board.IsEffectivelyEnabled);
         Assert.Equal("https://example.atlassian.net/jira/software/projects/ABC/boards/1", ToolTip.GetTip(board));
-        var pullRequest = buttons.Single(b => UiText.Describe(b).Contains("Pull request", StringComparison.Ordinal));
+        var pullRequest = buttons.Single(b => AutomationProperties.GetName(b) == "Pull request");
         Assert.False(pullRequest.IsEffectivelyEnabled);
         Assert.Equal("No git branch.", ToolTip.GetTip(pullRequest));
-        // No Project page without project tools, so nothing to show the output of.
-        Assert.DoesNotContain(buttons, b => UiText.Describe(b).Contains("Show output…", StringComparison.Ordinal));
-        flyout.Hide();
+
+        // A pick in it opens the link, and the submenu and the menu both close, as a menu's do.
+        board.Command!.Execute(board.CommandParameter);
+        board.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        await UiText.SettleUntilAsync(window, () => !submenu.IsOpen && !flyout.IsOpen, "the menus to close");
+        await UiText.SettleUntilAsync(window, () => h.Platform.OpenedUrls.Count == 1, "the link opened");
+        Assert.Equal(["https://example.atlassian.net/jira/software/projects/ABC/boards/1"], h.Platform.OpenedUrls);
 
         await Verify(shown);
     }

@@ -59,6 +59,11 @@
                     <MenuItem Header="Replace in files…" Command="{Binding ReplaceInProjectCommand}" />
                     <Separator />
                     <MenuItem Header="Show only changed files" ToggleType="CheckBox" IsChecked="{Binding ShowOnlyChanged, Mode=OneWay}" Command="{Binding ToggleShowOnlyChangedCommand}" />
+                    <!-- Settings → Files and diffs' Ignored files and Hidden files, for every Files tab ("The tree") -->
+                    <MenuItem Header="Show ignored files" ToggleType="CheckBox" IsChecked="{Binding ShowsIgnoredFiles, Mode=OneWay}" Command="{Binding ToggleShowIgnoredFilesCommand}"
+                              ToolTip.Tip="What git or Perforce ignores, dimmed, in every Files tab" />
+                    <MenuItem Header="Show hidden files" ToggleType="CheckBox" IsChecked="{Binding ShowsHiddenFiles, Mode=OneWay}" Command="{Binding ToggleShowHiddenFilesCommand}"
+                              ToolTip.Tip="Dotfiles and what the system hides, dimmed, in every Files tab" />
                     <Separator IsVisible="{Binding IsGitRepository}" />
                     <MenuItem Header="Claude's changes" ToggleType="Radio" IsChecked="{Binding AgainstClaudeChanges}" IsVisible="{Binding IsGitRepository}"
                               ToolTip.Tip="Mark what the project's open tabs changed, against before Claude's first change" />
@@ -147,7 +152,7 @@
                   </Grid>
                 </DataTemplate>
                 <DataTemplate DataType="vm:ExplorerRow">
-                  <Panel Classes="explorerrow" Classes.ignored="{Binding IsIgnored}" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700"
+                  <Panel Classes="explorerrow" Classes.ignored="{Binding IsIgnored}" Classes.hidden="{Binding IsHidden}" Background="Transparent" ToolTip.Tip="{Binding Tip}" ToolTip.ShowDelay="700"
                          Tapped="OnRowTapped" DoubleTapped="OnRowDoubleTapped">
                     <DockPanel>
                       <Border DockPanel.Dock="Left" Width="{Binding Indent}" />

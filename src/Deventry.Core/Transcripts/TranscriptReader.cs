@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using Deventry.Core.Files;
 using Deventry.Core.Json;
 using Deventry.Core.Protocol;
 
@@ -362,7 +363,7 @@ public static class TranscriptReader
             {
                 var meta = Path.ChangeExtension(file, ".meta.json");
                 if (!File.Exists(meta)
-                    || JsonTree.Parse(File.ReadAllText(meta)) is not JsonObject metadata
+                    || JsonTree.Parse(SharedFile.ReadAllText(meta)) is not JsonObject metadata
                     || metadata.GetString("toolUseId") is not { Length: > 0 } toolUseId)
                 {
                     continue;

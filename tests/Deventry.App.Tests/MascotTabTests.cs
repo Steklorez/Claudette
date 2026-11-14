@@ -74,6 +74,7 @@ public class MascotTabTests
         h.Services.Settings.Sessions.RestoreUnpinnedTabs = true;
         h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true }, new TabState { Folder = h.WorkFolder }, new TabState { Folder = h.WorkFolder }];
         h.Shell.Restore(null);
+        h.Start();
         var group = h.Shell.Groups.Single();
         var (a, b, c) = (group.Tabs[0], group.Tabs[1], group.Tabs[2]);
         var director = h.Services.Mascot.Director!;
@@ -111,7 +112,7 @@ public class MascotTabTests
         var director = h.Services.Mascot.Director!;
         director.SetShown(new object(), true);
         director.SetRoom(MascotStage.DefaultRoom);
-        await TabTestHarness.Eventually(() => Advance(h) && director.Frame is { Pose: "stand", Drop: 0 }, "her to stand up");
+        await TabTestHarness.Eventually(() => director.Frame is { Pose: "stand", Drop: 0 }, "her to stand up", poll: () => Advance(h));
 
         // Sending: a paper plane.
         tab.ComposerText = "Refactor the parser";
@@ -125,12 +126,13 @@ public class MascotTabTests
         await TabTestHarness.Eventually(() => director.Frame.Props.Any(p => p.Name == "star"), "her to be dizzy");
 
         // Her name typed: she waves back, once.
-        await TabTestHarness.Eventually(() => Advance(h) && director.Frame is { Pose: "stand", Drop: 0 }, "her to recover");
+        await TabTestHarness.Eventually(() => director.Frame is { Pose: "stand", Drop: 0 }, "her to recover", poll: () => Advance(h));
         tab.ComposerText = "hello joulene";
         Assert.Equal("wave", director.Frame.Pose);
 
         // A huge paste: the crate.
-        await TabTestHarness.Eventually(() => Advance(h) && director.Frame is { Pose: "stand", Drop: 0 } && director.Frame.Props.Count == 0, "her to finish waving");
+        await TabTestHarness.Eventually(() => director.Frame is { Pose: "stand", Drop: 0 } && director.Frame.Props.Count == 0, "her to finish waving",
+            poll: () => Advance(h));
         tab.AddPastedText(string.Join("\n", Enumerable.Repeat("a long line of pasted text", 400)));
         Assert.Contains(director.Frame.Props, p => p.Name == "crate");
     }
@@ -172,10 +174,6 @@ public class MascotTabTests
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Working, "the turn");
     }
 
-    /// <summary>Moves her clock on a little, for a wait that goes by it.</summary>
-    private static bool Advance(TabTestHarness h)
-    {
-        h.Time.Advance(TimeSpan.FromMilliseconds(100));
-        return true;
-    }
+    /// <summary>Moves her clock on a little, for a wait that goes by it: an Eventually's poll, outside the UI lock.</summary>
+    private static void Advance(TabTestHarness h) => h.Time.Advance(TimeSpan.FromMilliseconds(100));
 }

@@ -162,7 +162,8 @@ public class ProjectSettingsUiTests
         list.ScrollIntoView(settings.NavEntries[^1]);
         UiText.Settle(window);
         Drawn();
-        Assert.Equal(new[] { "Deventry", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl }.Order(StringComparer.Ordinal), headings.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { "Deventry", "Claude", "Your work", SettingsSidebar.ProjectTools, SettingsSidebar.SourceControl, SettingsSidebar.Tickets, SettingsSidebar.RemoteClients }.Order(StringComparer.Ordinal),
+            headings.Order(StringComparer.Ordinal));
         window.Close();
     }
 
@@ -221,8 +222,8 @@ public class ProjectSettingsUiTests
         window.Width = 820;
         window.Height = 650;
 
-        // From the project's menu: the tallest the dialog gets, as it asks for the file too.
-        settings.Project.StartNewAction();
+        // A new action: the dialog at its tallest, with its group and icon.
+        settings.Project.AddProjectActionCommand.Execute(null);
         UiText.Settle(window);
         var dialog = window.GetVisualDescendants().OfType<ProjectActionEditorView>().Single();
         Assert.True(dialog.IsEffectivelyVisible);

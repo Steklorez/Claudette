@@ -264,11 +264,17 @@ public static partial class UnityLogs
         private static partial Regex FullPath();
     }
 
-    /// <summary>The C# compiler's <c>error CS0103</c> and <c>warning CS0168</c>, exceptions, and lines that start with Error or Warning.</summary>
-    public static LogLineLevel Classify(string line) =>
-        ErrorLine().IsMatch(line) ? LogLineLevel.Error
-        : WarningLine().IsMatch(line) ? LogLineLevel.Warning
-        : LogLineLevel.Normal;
+    /// <summary>
+    /// The C# compiler's <c>error CS0103</c> and <c>warning CS0168</c>, exceptions, and lines that start with Error or
+    /// Warning, after the time and thread <c>-timestamps</c> puts before them.
+    /// </summary>
+    public static LogLineLevel Classify(string line)
+    {
+        var text = UnityTimestamp.Read(line) is { } stamp ? line[stamp.Length..] : line;
+        return ErrorLine().IsMatch(text) ? LogLineLevel.Error
+            : WarningLine().IsMatch(text) ? LogLineLevel.Warning
+            : LogLineLevel.Normal;
+    }
 
     /// <summary>Unity's crash report in the log: <c>Crash!!!</c>, or <c>Native Crash Reporting</c>.</summary>
     public static bool IsCrash(string line) =>
@@ -284,12 +290,22 @@ public static partial class UnityLogs
     /// its stack trace, <c>UnityEngine.Debug:LogWarning (object)</c> and the frames under it, then
     /// <c>(Filename: Assets/Player.cs Line: 12)</c>, which carry it on, muted, as an exception's frames do. The trace
     /// says what a script's message is: <c>LogWarning</c> a warning, <c>LogError</c>, <c>LogException</c> and
-    /// <c>LogAssertion</c> an error. A blank line carries on the entry before it.
+    /// <c>LogAssertion</c> an error. A blank line carries on the entry before it. A line with the time and thread
+    /// <c>-timestamps</c> puts before it is read after them, and shows them in columns, the time in the machine's.
     /// </summary>
     private sealed partial class LineParser(TimeZoneInfo zone) : EditorLogParser(Classify, IsCrash)
     {
         /// <summary>What the line being shown is, while a JSON line's are shown one by one; null for a line of text.</summary>
         private LineRead? _json;
+
+        /// <summary>A line of text had <c>-timestamps</c>' time and thread: one without them is indented to the message.</summary>
+        private bool _stamped;
+
+        public override void Reset()
+        {
+            base.Reset();
+            _stamped = false;
+        }
 
         /// <summary>
         /// A line of Unity's JSON log (DESIGN.md §18, "Editor logs", "Unity's JSON log") shows as its entry: its message's
@@ -324,21 +340,38 @@ public static partial class UnityLogs
             {
                 return json;
             }
+            var columns = StampColumns(line);
+            var text = columns is null ? line : line[columns.MessageStart..];
             if (open is null)
             {
-                return new LineRead(Starts: true);
+                return new LineRead(Starts: true, Columns: columns);
             }
-            if (string.IsNullOrWhiteSpace(line))
+            if (string.IsNullOrWhiteSpace(text))
             {
-                return new LineRead(Starts: false);
+                return new LineRead(Starts: false, Columns: columns);
             }
-            if (DebugCall().Match(line) is { Success: true } call)
+            if (DebugCall().Match(text) is { Success: true } call)
             {
                 var kind = call.Groups["kind"].ValueSpan;
                 LogVerbosity? raises = kind is "Log" ? null : kind is "LogWarning" ? LogVerbosity.Warning : LogVerbosity.Error;
-                return new LineRead(Starts: false, IsTrace: true, Raises: raises);
+                return new LineRead(Starts: false, IsTrace: true, Raises: raises, Columns: columns);
             }
-            return Frame().IsMatch(line) ? new LineRead(Starts: false, IsTrace: true) : new LineRead(Starts: true);
+            return Frame().IsMatch(text) ? new LineRead(Starts: false, IsTrace: true, Columns: columns) : new LineRead(Starts: true, Columns: columns);
+        }
+
+        /// <summary>
+        /// A text line's columns, from the time and thread <c>-timestamps</c> put before it: the time, then the thread, then
+        /// the message. Once lines have them, one without is indented to the message; before, it has none.
+        /// </summary>
+        private LogColumns? StampColumns(string line)
+        {
+            if (UnityTimestamp.Read(line) is not { } stamp)
+            {
+                return _stamped ? LogColumns.CarriedOn : null;
+            }
+            _stamped = true;
+            return new LogColumns(stamp.TimeLength, UnityJsonLine.ShownTime(stamp.Time, zone), 0, -1, 0, stamp.Length,
+                stamp.Thread is null ? -1 : stamp.TimeLength, stamp.Length - stamp.TimeLength, stamp.Thread);
         }
 
         [GeneratedRegex(@"^UnityEngine\.Debug:(?<kind>Log(?:Warning|Error|Exception|Assertion)?)(?:Format)?\s?\(")]

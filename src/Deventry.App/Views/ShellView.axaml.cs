@@ -130,6 +130,7 @@ public partial class ShellView : UserControl
             { DataContext: TabViewModel { IsRenaming: false } tab } when button.Classes.Contains("tab") => tab,
             // A Project Files tab's row, and a run's, only go out to the panes (DESIGN.md §18, "Project files", "Project tools").
             { DataContext: ProjectFilesViewModel files } when button.Classes.Contains("tab") => files,
+            { DataContext: TicketsViewModel tickets } when button.Classes.Contains("tab") => tickets,
             { DataContext: ProjectRunViewModel run } when button.Classes.Contains("runrow") => run,
             { DataContext: EditorLogViewModel log } when button.Classes.Contains("logrow") => log,
             { DataContext: TabGroupViewModel group } when button.Classes.Contains("grouplabel") => group,
@@ -385,11 +386,78 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>
-    /// An entry of the project's menu was picked: the menu closes, as a menu does, once the entry has run its command,
-    /// which a button does after raising Click.
+    /// An entry of the project's menu, or of a submenu, was picked: both close, as a menu does, once the entry has run its
+    /// command, which a button does after raising Click.
     /// </summary>
     private void OnProjectMenuItemPicked(object? sender, RoutedEventArgs e) =>
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => _projectMenu?.Hide());
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _projectSubmenu?.Close();
+            _projectMenu?.Hide();
+        });
+
+    /// <summary>The project's menu closed, picked from or not: so does its submenu.</summary>
+    private void OnProjectMenuClosed(object? sender, EventArgs e) => _projectSubmenu?.Close();
+
+    /// <summary>The project's menu's <b>Actions ▸</b> or <b>Links ▸</b> open now (DESIGN.md §18, "Project tools").</summary>
+    private Popup? _projectSubmenu;
+
+    /// <summary>Its row stays lit while it's open, as a menu's does (Themes/MenuStyles.axaml).</summary>
+    private void OnProjectSubmenuOpened(object? sender, EventArgs e)
+    {
+        _projectSubmenu = sender as Popup;
+        SubmenuRow(_projectSubmenu)?.Classes.Add("open");
+    }
+
+    private void OnProjectSubmenuClosed(object? sender, EventArgs e) => SubmenuRow(sender as Popup)?.Classes.Remove("open");
+
+    /// <summary>A submenu's row: the button beside its popup.</summary>
+    private static Button? SubmenuRow(Popup? popup) => (popup?.Parent as Panel)?.Children.OfType<Button>().FirstOrDefault(b => b.IsVisible);
+
+    /// <summary>
+    /// The pointer left the submenu: it closes, unless the pointer went back onto its own row, which keeps it open, as a
+    /// menu's submenu does. Closing under the pointer (an entry picked, or the menu changing as a run starts) says so too,
+    /// once the submenu has left its window but before the popup says it's closed. It's on no screen then to ask about,
+    /// and on Windows what that threw went through the popup's window procedure, which ended Deventry.
+    /// </summary>
+    private void OnProjectSubmenuExited(object? sender, PointerEventArgs e)
+    {
+        if (sender is not Visual submenu || !submenu.IsAttachedToVisualTree() || _projectSubmenu is not { IsOpen: true } open
+            || SubmenuRow(open) is not { } row || !row.IsAttachedToVisualTree())
+        {
+            return;
+        }
+        var at = submenu.PointToScreen(e.GetPosition(submenu));
+        var (from, to) = (row.PointToScreen(default), row.PointToScreen(new Point(row.Bounds.Width, row.Bounds.Height)));
+        if (at.X < from.X || at.X >= to.X || at.Y < from.Y || at.Y >= to.Y)
+        {
+            open.Close();
+        }
+    }
+
+    /// <summary>Pointing at <b>Actions ▸</b> or <b>Links ▸</b> opens it, as a menu's submenu opens, in place of the other.</summary>
+    private void OnProjectSubmenuEntered(object? sender, PointerEventArgs e) => OpenProjectSubmenu(sender);
+
+    /// <summary>A click, or Enter, opens it too, and leaves it open when pointing at it already had.</summary>
+    private void OnProjectSubmenuClicked(object? sender, RoutedEventArgs e) => OpenProjectSubmenu(sender);
+
+    private void OpenProjectSubmenu(object? sender)
+    {
+        if (sender is Button { Parent: Panel row } && row.Children.OfType<Popup>().FirstOrDefault() is { IsOpen: false } submenu)
+        {
+            _projectSubmenu?.Close();
+            submenu.Open();
+        }
+    }
+
+    /// <summary>Pointing at another of the menu's entries closes the submenu open beside it; one of its own leaves it.</summary>
+    private void OnProjectMenuEntryEntered(object? sender, PointerEventArgs e)
+    {
+        if (_projectSubmenu is { IsOpen: true, Child: Visual submenu } && sender is Visual entry && !entry.GetVisualAncestors().Contains(submenu))
+        {
+            _projectSubmenu.Close();
+        }
+    }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -398,6 +466,7 @@ public partial class ShellView : UserControl
         {
             _shell.PropertyChanged -= OnShellChanged;
             _shell.ToolWindows.FocusRequested -= OnToolFocusRequested;
+            _shell.TabRevealed -= OnTabRevealed;
         }
         _shell = ViewModel;
         if (_shell is not null)
@@ -411,6 +480,7 @@ public partial class ShellView : UserControl
             _shell.ShowFileWindow = ShowFileWindow;
             _shell.PropertyChanged += OnShellChanged;
             _shell.ToolWindows.FocusRequested += OnToolFocusRequested;
+            _shell.TabRevealed += OnTabRevealed;
             if (Bounds.Width > 0)
             {
                 _shell.Layout.SetAvailableWidth(Bounds.Width);
@@ -418,6 +488,20 @@ public partial class ShellView : UserControl
         }
         WatchUpdates();
     }
+
+    /// <summary>
+    /// A tab found with Find a tab (DESIGN.md §4, "Find a tab"): its row, or its square on the rail, scrolled into view
+    /// once the group or thread it opened has been laid out.
+    /// </summary>
+    private void OnTabRevealed(TabViewModel tab) =>
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (this.GetVisualDescendants().OfType<Button>()
+                    .FirstOrDefault(b => b.Classes.Contains("tab") && ReferenceEquals(b.DataContext, tab) && b.IsEffectivelyVisible) is { } row)
+            {
+                row.BringIntoView();
+            }
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
 
     private void OnShellChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -478,9 +562,29 @@ public partial class ShellView : UserControl
         {
             return;
         }
+        var keyboard = shell.Keyboard;
+        bool Is(string id) => Shortcuts.Matches(keyboard, id, e.Key, e.KeyModifiers);
+
+        if (shell.IsTabSearchOpen)
+        {
+            // Find a tab has the keys while it's open (DESIGN.md §4, "Find a tab"), Esc included, before a dialog or
+            // tool window under it; its shortcut closes it again.
+            if (Is(KeyboardShortcuts.FindTab))
+            {
+                shell.CloseTabSearch();
+                e.Handled = true;
+            }
+            return;
+        }
         if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && shell.IsPickerOpen)
         {
             shell.ClosePicker();
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && shell.IsCloneOpen)
+        {
+            shell.CloseClone();
             e.Handled = true;
             return;
         }
@@ -490,9 +594,6 @@ public partial class ShellView : UserControl
             e.Handled = true;
             return;
         }
-        var keyboard = shell.Keyboard;
-        bool Is(string id) => Shortcuts.Matches(keyboard, id, e.Key, e.KeyModifiers);
-
         if (shell.IsPaletteOpen)
         {
             // The palette has the keys while it's open; its shortcut closes it again.
@@ -576,6 +677,10 @@ public partial class ShellView : UserControl
         else if (Is(KeyboardShortcuts.CommandPalette))
         {
             shell.OpenPaletteCommand.Execute(null);
+        }
+        else if (Is(KeyboardShortcuts.FindTab))
+        {
+            shell.OpenTabSearchCommand.Execute(null);
         }
         else if (Is(KeyboardShortcuts.NextTabNeedingInput))
         {
@@ -748,6 +853,15 @@ public partial class ShellView : UserControl
         }
     }
 
+    /// <summary>A click outside the clone dialog closes it, unless a clone is running.</summary>
+    private void OnCloneOverlayPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (ReferenceEquals(e.Source, sender))
+        {
+            ViewModel?.CloseClone();
+        }
+    }
+
     /// <summary>A click outside the command palette closes it.</summary>
     /// <summary>A click outside Find in files closes it (DESIGN.md §18, "Finding in files").</summary>
     private void OnFindInFilesOverlayPressed(object? sender, PointerPressedEventArgs e)
@@ -755,6 +869,15 @@ public partial class ShellView : UserControl
         if (ReferenceEquals(e.Source, sender))
         {
             ViewModel?.CloseFindInFiles();
+        }
+    }
+
+    /// <summary>A click outside Find a tab closes it.</summary>
+    private void OnTabSearchOverlayPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (ReferenceEquals(e.Source, sender))
+        {
+            ViewModel?.CloseTabSearch();
         }
     }
 
@@ -821,7 +944,7 @@ public partial class ShellView : UserControl
     {
         if (_projectSettingsWindows.FirstOrDefault(w => w.DataContext is ProjectSettingsWindowViewModel open && FolderHistory.SamePath(open.Project.Folder, opening.Folder)) is { } existing)
         {
-            ((ProjectSettingsWindowViewModel)existing.DataContext!).Open(opening.Page, opening.StartNew);
+            ((ProjectSettingsWindowViewModel)existing.DataContext!).Open(opening.Page);
             UnfocusedWindows.Activate(existing);
             return Task.CompletedTask;
         }
@@ -829,7 +952,7 @@ public partial class ShellView : UserControl
         {
             return Task.CompletedTask;
         }
-        var window = new ProjectSettingsWindow { DataContext = new ProjectSettingsWindowViewModel(main.Services, project, opening.Page, opening.StartNew) };
+        var window = new ProjectSettingsWindow { DataContext = new ProjectSettingsWindowViewModel(main.Services, project, opening.Page) };
         _projectSettingsWindows.Add(window);
         window.Closed += (_, _) => _projectSettingsWindows.Remove(window);
         window.Show(owner);

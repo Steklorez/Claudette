@@ -1,4 +1,6 @@
 using Deventry.Core.ProjectTools;
+using Deventry.Core.Remote;
+using Deventry.Core.Tickets;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Deventry.App.ViewModels;
@@ -19,6 +21,7 @@ public static class SettingsCategory
 
     public const string Notifications = "Notifications";
 
+
     public const string Keyboard = "Keyboard";
 
 
@@ -34,11 +37,17 @@ public static class SettingsCategory
 
     public const string Files = "Files and diffs";
 
+    public const string TimedMessages = "Timed messages";
+
     public const string AllTools = "All tools";
 
     public const string Git = "Git";
 
     public const string Perforce = "Perforce";
+
+    public const string AllClients = "All clients";
+
+    public const string AllTicketProviders = "All providers";
 
     public const string Advanced = "Advanced";
 }
@@ -54,17 +63,27 @@ public static class SettingsSidebar
 
     public const string SourceControl = "Source control";
 
-    public static IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types) =>
+    public const string RemoteClients = "Remote clients";
+
+    public const string Tickets = "Tickets";
+
+    /// <param name="clients">The kinds of remote client, each with a page after <b>All clients</b> (DESIGN.md §18, "Remote clients").</param>
+    /// <param name="providers">The ticket providers, each with a page after <b>All providers</b> (DESIGN.md §18, "Tickets").</param>
+    public static IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types, IEnumerable<IRemoteClientType> clients,
+        IEnumerable<ITicketProviderType> providers) =>
     [
         ("Deventry", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard]),
         ("Claude", [SettingsCategory.ClaudeCode, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
-        ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files]),
+        ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files, SettingsCategory.TimedMessages]),
         (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name)]),
         (SourceControl, [SettingsCategory.Git, SettingsCategory.Perforce]),
+        (Tickets, [SettingsCategory.AllTicketProviders, .. providers.Select(p => p.Name)]),
+        (RemoteClients, [SettingsCategory.AllClients, .. clients.Select(c => c.Name)]),
     ];
 
     /// <summary>Every category, in the sidebar's order.</summary>
-    public static IReadOnlyList<string> Categories(IEnumerable<IProjectType> types) => [.. Groups(types).SelectMany(g => g.Categories)];
+    public static IReadOnlyList<string> Categories(IEnumerable<IProjectType> types, IEnumerable<IRemoteClientType> clients, IEnumerable<ITicketProviderType> providers) =>
+        [.. Groups(types, clients, providers).SelectMany(g => g.Categories)];
 
     /// <summary>
     /// Other words every page of a group is found by, besides its own (DESIGN.md §14, "Search"): Source control's, so
@@ -73,6 +92,8 @@ public static class SettingsSidebar
     public static IReadOnlyList<string> GroupWords(string heading) => heading switch
     {
         SourceControl => [SourceControl, "version control", "vcs"],
+        RemoteClients => [RemoteClients, "remote", "phone", "mobile"],
+        Tickets => [Tickets, "issues", "tracker", "bug tracker"],
         _ => [],
     };
 }
@@ -101,10 +122,15 @@ public sealed partial class SettingsNavEntry : ObservableObject
     [ObservableProperty]
     public partial string? Tag { get; set; }
 
+    /// <summary>The tag says the page needs the user: it's in the caution colors.</summary>
+    [ObservableProperty]
+    public partial bool IsTagCaution { get; set; }
+
     public static SettingsNavEntry Heading(string title) => new(title, null, true);
 
     /// <summary>What a screen reader reads for it: its name.</summary>
     public override string ToString() => Title;
 
-    public static SettingsNavEntry Page(string title, string iconKey, string? tag = null) => new(title, iconKey, false) { Tag = tag };
+    public static SettingsNavEntry Page(string title, string iconKey, string? tag = null, bool isTagCaution = false) =>
+        new(title, iconKey, false) { Tag = tag, IsTagCaution = isTagCaution };
 }

@@ -69,8 +69,8 @@ public sealed record InfoRow(string Label, string Value, bool CanCopy = false);
 
 /// <summary>A row of the token breakdown popover.</summary>
 /// <summary>
-/// One tab: one Claude Code session in a working folder (DESIGN.md §4). Starts its process lazily, when first selected
-/// or sent a message.
+/// One tab: one Claude Code session in a working folder (DESIGN.md §4). Starts its process lazily, with its first
+/// message (DESIGN.md §9, "Starting fast").
 /// </summary>
 public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDisposable
 {
@@ -84,6 +84,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>Cancelled when the tab closes: a start under way stops there, and no new one begins.</summary>
     private readonly CancellationTokenSource _closing = new();
     private bool _restoredTranscript;
+    /// <summary>
+    /// The earlier conversation being read for a restored tab that's shown before it starts, with what it resumes from;
+    /// the start takes it rather than reading it again (DESIGN.md §9, "Starting fast").
+    /// </summary>
+    private Task<string?>? _transcriptRead;
     private bool _restartAfterSignIn;
     /// <summary>
     /// What's waiting on the user: permission prompts by request id, and the Perforce password prompt. A set, so a
@@ -121,6 +126,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         Tasks.Changed += OnTasksChanged;
         Find = new ConversationSearch(Items);
         Find.CurrentChanged += OnFindCurrentChanged;
+        SetUpMedia();
         _conversation = new ConversationBuilder(Items, TodoList, ModelDisplayName)
         {
             ExpandThinking = state.ExpandThinking ?? services.Settings.Appearance.ExpandThinking,
@@ -132,6 +138,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             OpenUrl = services.Platform.OpenUrlAsync,
             Agents = Agents,
             Tasks = Tasks,
+            Media = Media,
             Time = services.Time,
         };
         // A prompt the phone answered is withdrawn by Claude Code (DESIGN.md §18, "Remote Control").
@@ -144,6 +151,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _autoContinue = CreateAutoContinue();
         Status = TabStatus.NotStarted;
         ShowStartingModel();
+        ShowStartingMode();
+        _ = ReadStartingModeAsync();
         _restoredTranscript = !isRestored;
         // The suffix menu checks the suffixes on the message.
         Chips.CollectionChanged += (_, _) => OnPropertyChanged(nameof(SuffixMenu));
@@ -291,6 +300,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     {
         OnPropertyChanged(nameof(DisplayName));
         OnPropertyChanged(nameof(HasUserName));
+        Remote.OnTabChanged(this);
         _services.SaveState();
         // The usage history keeps the tab's last name, for its rows once it's closed (DESIGN.md §6).
         _services.Usage?.OnTabRenamed(Id, DisplayName);
@@ -322,7 +332,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     // ---- Status (DESIGN.md §4, "Status icon") ------------------------------------------------------------
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusGlyph), nameof(StatusTip), nameof(InfoRows), nameof(IsWorking), nameof(NeedsInput), nameof(IsBusyStatus), nameof(IsAlertStatus), nameof(IsErrorStatus), nameof(IsUnread), nameof(RowDetail), nameof(ShowTaskBadge), nameof(CanSyncNow), nameof(SyncNowTip))]
+    [NotifyPropertyChangedFor(nameof(PermissionModeName), nameof(IsBypassMode))]
+    [NotifyPropertyChangedFor(nameof(StatusGlyph), nameof(StatusTip), nameof(InfoRows), nameof(IsWorking), nameof(NeedsInput), nameof(IsBusyStatus), nameof(IsAlertStatus), nameof(ShowsWorkBar), nameof(ShowsWaitBlink), nameof(ShowsDoneBar), nameof(ShowsStatusGlyph), nameof(ShowsErrorBar), nameof(ShowsStartingShimmer), nameof(IsErrorStatus), nameof(IsUnread), nameof(RowDetail), nameof(ShowTaskBadge), nameof(CanSyncNow), nameof(SyncNowTip))]
     [NotifyCanExecuteChangedFor(nameof(StopCommand), nameof(SendCommand), nameof(RestartCommand), nameof(CompactCommand), nameof(SyncNowCommand))]
     public partial TabStatus Status { get; set; }
 
@@ -386,10 +397,14 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             {
                 rows.Add(new InfoRow("Branch", branch));
             }
+            if (TicketRow is { } ticket)
+            {
+                rows.Add(ticket);
+            }
             AddWorktreeRows(rows);
             AddAccountInfoRows(rows);
             rows.Add(new InfoRow("Model", $"{ModelName ?? "Default"} · {EffortName}"));
-            if (PermissionMode is not null)
+            if (ShownPermissionMode is not null)
             {
                 rows.Add(new InfoRow("Mode", PermissionModeName));
             }
@@ -493,8 +508,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     }
 
     /// <summary>
-    /// On screen, in a pane (DESIGN.md §18, "Split panes"): its session starts, its working line runs and what it shows
-    /// stays fresh, and it isn't unread. The selected tab, or each of the tabs side by side.
+    /// On screen, in a pane (DESIGN.md §18, "Split panes"): its earlier conversation is read, its working line runs and
+    /// what it shows stays fresh, and it isn't unread. The selected tab, or each of the tabs side by side.
     /// </summary>
     [ObservableProperty]
     public partial bool IsShown { get; set; }
@@ -511,8 +526,23 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             {
                 Status = TabStatus.Idle;
             }
+            if (State.Unseen)
+            {
+                State.Unseen = false;
+                _services.SaveState();
+                OnPropertyChanged(nameof(ShowsDoneBar));
+            }
             RefreshMessageTimes();
-            _ = EnsureStartedAsync();
+            // Its conversation, but not its claude: that starts with the first message (DESIGN.md §9, "Starting fast").
+            // A tab connected to the Claude app starts, so the app can reach it again (DESIGN.md §18, "Remote Control").
+            if (State.RemoteControl)
+            {
+                _ = EnsureStartedAsync();
+            }
+            else
+            {
+                ReadEarlierConversation();
+            }
             // Its deventry.json may have changed while another tab was showing (DESIGN.md §18).
             _ = ProjectTools.RefreshFileAsync();
             RefreshBranch();
@@ -615,10 +645,26 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [NotifyPropertyChangedFor(nameof(InfoRows), nameof(PermissionModeName), nameof(IsBypassMode))]
     public partial string? PermissionMode { get; set; }
 
-    public string PermissionModeName => PermissionModeInfo.Label(PermissionMode);
+    /// <summary>
+    /// The mode the tab starts in (DESIGN.md §7, "Starting mode"): chosen in Tab settings or Settings → Tabs, else what
+    /// Claude Code's settings files give. Shown until its claude reports one, as its model and effort are.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(InfoRows), nameof(PermissionModeName), nameof(IsBypassMode))]
+    public partial string? ExpectedPermissionMode { get; private set; }
 
-    /// <summary>Bypass mode gives the tab a warning style (DESIGN.md §7).</summary>
-    public bool IsBypassMode => PermissionMode == PermissionModeInfo.Bypass;
+    /// <summary>
+    /// The mode the picker, the info card and Bypass's warning go by: the one the tab starts in until its claude runs, and
+    /// while an unloaded tab waits for its next message; then the one Claude Code reports.
+    /// </summary>
+    private string? ShownPermissionMode => Status is TabStatus.NotStarted or TabStatus.Starting || PermissionMode is null
+        ? ExpectedPermissionMode
+        : PermissionMode;
+
+    public string PermissionModeName => PermissionModeInfo.Label(ShownPermissionMode);
+
+    /// <summary>Bypass mode gives the tab a warning style (DESIGN.md §7), before it starts in it too.</summary>
+    public bool IsBypassMode => ShownPermissionMode == PermissionModeInfo.Bypass;
 
     /// <summary>The modes to pick from: Auto only while the model supports it and no settings file turns it off.</summary>
     public IReadOnlyList<PermissionModeChoice> PermissionModeChoices =>
@@ -633,10 +679,40 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// </summary>
     public bool IsAutoModeAvailable => _startingMode?.AutoModeDisabled != true && CurrentModelInfo?.SupportsAutoMode != false;
 
-    /// <summary>The mode this tab starts in when neither its settings nor Deventry's choose one, once it has started.</summary>
+    /// <summary>
+    /// The mode this tab starts in when neither its settings nor Deventry's choose one, once Claude Code's settings files
+    /// have been read: as the tab is made, and again as it starts.
+    /// </summary>
     internal string? ClaudeCodeStartingMode => _startingMode is { } starting
         ? starting.Expected == PermissionModeInfo.Auto && !IsAutoModeAvailable ? PermissionModeInfo.Manual : starting.Expected
         : null;
+
+    /// <summary>Until its claude reports a mode, the tab shows the one it starts in.</summary>
+    private void ShowStartingMode() =>
+        ExpectedPermissionMode = State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode ?? ClaudeCodeStartingMode;
+
+    /// <summary>
+    /// Reads what Claude Code's settings files say about the starting mode, off the UI thread, for the mode the tab shows
+    /// before it starts. A start reads them again, and that reading wins.
+    /// </summary>
+    private async Task ReadStartingModeAsync()
+    {
+        var settingsFolder = State.WithoutProjectSettings ? null : Folder;
+        StartingPermissionMode starting;
+        try
+        {
+            starting = await Task.Run(() => _services.ReadStartingPermissionMode(settingsFolder)).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return;
+        }
+        _services.Dispatcher.Post(() =>
+        {
+            _startingMode ??= starting;
+            ShowStartingMode();
+        });
+    }
 
     /// <summary>Bypass asks first (DESIGN.md §7).</summary>
     public InlineConfirmation BypassConfirmation => field ??= new(() => SetModeAsync(PermissionModeInfo.Bypass));
@@ -648,7 +724,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     [RelayCommand]
     private async Task ChooseModeAsync(PermissionModeChoice? choice)
     {
-        if (choice is null || choice.Value == PermissionMode)
+        if (choice is null || choice.Value == ShownPermissionMode)
         {
             return;
         }
@@ -939,10 +1015,31 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public bool MarksClaudesAnswers => _services.Settings.Appearance.MarkClaudesAnswers;
 
     /// <summary>Settings changed, for example the quick suffix list was edited.</summary>
+    /// <summary>Whether the row's lead column has anything in it changed, with Tab activity or the mark.</summary>
+    private void RowLeadChanged()
+    {
+        OnPropertyChanged(nameof(HasRowLead));
+        OnPropertyChanged(nameof(RowLeadWidth));
+        OnPropertyChanged(nameof(RowLeadSpacing));
+        OnPropertyChanged(nameof(NameLineColumn));
+        OnPropertyChanged(nameof(NameLineSpan));
+    }
+
     public void OnSettingsChanged()
     {
         OnPropertyChanged(nameof(AvailableSuffixes));
         OnPropertyChanged(nameof(SuffixMenu));
+        OnPropertyChanged(nameof(ShowsWorkBar));
+        OnPropertyChanged(nameof(ShowsWaitBlink));
+        OnPropertyChanged(nameof(ShowsDoneBar));
+        OnPropertyChanged(nameof(ShowsStatusGlyph));
+        OnPropertyChanged(nameof(ShowsErrorBar));
+        OnPropertyChanged(nameof(ShowsStartingShimmer));
+        foreach (var row in SubagentRows)
+        {
+            row.ActivityChanged();
+        }
+        RowLeadChanged();
         _conversation.ExpandThinking = State.ExpandThinking ?? _services.Settings.Appearance.ExpandThinking;
         _conversation.CollapseToolCalls = State.CollapseToolCalls ?? _services.Settings.Appearance.CollapseToolCalls;
         _conversation.CollapseModifiedFiles = State.CollapseModifiedFiles ?? _services.Settings.Appearance.CollapseModifiedFiles;
@@ -957,11 +1054,15 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ProjectTools.OnSettingsChanged();
         OnPropertyChanged(nameof(MarksYourMessages));
         OnPropertyChanged(nameof(MarksClaudesAnswers));
+        // Settings → Tabs' Permission mode is the one a tab without its own starts in.
+        ShowStartingMode();
         OnGamesSettingsChanged();
         OnSubagentDisplayChanged();
         OnBranchChanged();
         RefreshPromptCache();
         OnPropertyChanged(nameof(ShowTaskProgressBadge));
+        OnPropertyChanged(nameof(ShowsAgentsBadge));
+        OnRowTasksChanged();
         OnPropertyChanged(nameof(RowDetail));
         // Naming sessions after their tabs turned on: a running one takes its name now (DESIGN.md §13).
         SyncClaudeName();
@@ -1152,7 +1253,6 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         var suffixText = suffixes.Length > 0 ? string.Join("\n", suffixes) : null;
 
         ComposerText = "";
-        TellMascot(mascot => mascot.MessageSent());
         foreach (var chip in Chips.Where(c => !c.IsKept).ToArray())
         {
             Chips.Remove(chip);
@@ -1160,7 +1260,19 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         var images = TakeAttachments();
         // Large pastes go after what was typed (DESIGN.md §5, "Attachments").
         var pastes = TakePastedTexts();
-        var text = PastedText.Join(typed, pastes);
+        await SendTypedAsync(PastedText.Join(typed, pastes), typed, suffixText, images, pastes, via: null);
+    }
+
+    /// <summary>
+    /// Sends what the user wrote, the composer's or a remote client's (<paramref name="via"/>, DESIGN.md §18, "Remote
+    /// clients"): its card, the notes Claude should have after it, and held, queued or sent as the tab stands.
+    /// </summary>
+    /// <param name="typed">What was typed, before any large pastes went after it.</param>
+    /// <param name="label">Over its card, for one the user didn't type here just now, such as a timed message (DESIGN.md §18, "Timed messages").</param>
+    private async Task SendTypedAsync(string text, string typed, string? suffixText, IReadOnlyList<MessageImage> images, IReadOnlyList<string> pastes, string? via,
+        string? label = null)
+    {
+        TellMascot(mascot => mascot.MessageSent());
         _autoContinue.UserSent();
         var stamp = NewStamp(fromUser: true);
         // What a thread's Claude should know about its sub-threads goes after the message, not after a command
@@ -1173,7 +1285,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         var mentions = OutgoingMessages.IsSlashCommand(text) ? null : ResolveMentions(text);
         var mentionNote = mentions is null ? null : SessionMentions.Note(mentions.Mentioned, mentions.ById);
         var card = _conversation.AddUserMessage(text, suffixText, images: images, threadNote: threadNote, mentionNote: mentionNote,
-            mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray(), subagentNote: subagentNote is { } told ? (told.Note, told.Line) : null);
+            mentioned: mentions?.Mentioned.Select(m => m.Name).ToArray(), subagentNote: subagentNote is { } told ? (told.Note, told.Line) : null, via: via, label: label);
         card.SubagentsToldBefore = subagentNote?.Before;
         foreach (var note in new[] { threadNote, subagentNote?.Note, mentionNote })
         {
@@ -1510,7 +1622,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     // ---- Lifecycle -----------------------------------------------------------------------------------------
 
-    public bool CanRestart => Status is TabStatus.Exited or TabStatus.Error && !IsFolderMissing && !IsSessionMissing;
+    public bool CanRestart => Status is TabStatus.Exited or TabStatus.Error && !IsFolderMissing && !IsSessionMissing && !IsReadOnly;
 
     [RelayCommand(CanExecute = nameof(CanRestart))]
     private Task RestartAsync()
@@ -1520,10 +1632,45 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         return EnsureStartedAsync();
     }
 
-    /// <summary>Starts the process if it isn't running: restored tabs start on first selection or message.</summary>
+    /// <summary>
+    /// Reads a restored tab's earlier conversation without starting its process, so it can be read and scrolled; its
+    /// claude starts with the first message (DESIGN.md §9, "Starting fast").
+    /// </summary>
+    internal void ReadEarlierConversation()
+    {
+        if (_restoredTranscript || _session is not null || _starting is not null || _closing.IsCancellationRequested)
+        {
+            return;
+        }
+        _restoredTranscript = true;
+        _transcriptRead = ReadAsync();
+
+        async Task<string?> ReadAsync()
+        {
+            var resume = await RestoreTranscriptAsync();
+            ChangedFiles.ChangesRead();
+            if (IsSessionMissing && _session is null && _starting is null)
+            {
+                // As a start would say it (StartAsync).
+                ErrorMessage = "Its earlier conversation is gone";
+                Status = TabStatus.Error;
+            }
+            return resume;
+        }
+    }
+
+    /// <summary>Starts the process if it isn't running: restored tabs start with their first message.</summary>
     public async Task EnsureStartedAsync()
     {
-        if (_closing.IsCancellationRequested || _session is not null || IsSessionMissing || Status == TabStatus.Error && (!Directory.Exists(Folder) || WaitsForSignIn))
+        if (_unloading is { } unloading)
+        {
+            // A message as the tab unloads: its claude stops first, or stays (DESIGN.md §9, "Unloading idle tabs"). One
+            // started while the old one stops would have its process tree ended with the old one's.
+            await unloading;
+        }
+        // A read-only tab's session carries on elsewhere, so it never starts here again: shown again, say, after its start
+        // found that (DESIGN.md §9, "One machine at a time").
+        if (_closing.IsCancellationRequested || _session is not null || IsReadOnly || IsSessionMissing || Status == TabStatus.Error && (!Directory.Exists(Folder) || WaitsForSignIn))
         {
             return;
         }
@@ -1560,9 +1707,17 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ErrorMessage = null;
         Status = TabStatus.Starting;
         var resume = State.SessionId;
+        var justRead = false;
+        if (_transcriptRead is { } read)
+        {
+            // Read as the tab was shown, before it started.
+            resume = await read;
+            _transcriptRead = null;
+            justRead = true;
+        }
         // Started again (after an exit, say): another machine may have carried the session on since its conversation was
         // read here, and then it's read again, from the library (DESIGN.md §9, "One machine at a time").
-        if (_restoredTranscript && await CompareWithLibraryAsync() is { Standing: LibraryStanding.Ahead or LibraryStanding.Diverged } since)
+        else if (_restoredTranscript && await CompareWithLibraryAsync() is { Standing: LibraryStanding.Ahead or LibraryStanding.Diverged } since)
         {
             if (since.Standing == LibraryStanding.Diverged)
             {
@@ -1572,12 +1727,17 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             _conversation.Clear();
             ChangedFiles.Reset();
             _restoredTranscript = false;
+            _transcriptRead = null;
         }
         if (!_restoredTranscript)
         {
             _restoredTranscript = true;
             resume = await RestoreTranscriptAsync();
             ChangedFiles.ChangesRead();
+            justRead = true;
+        }
+        if (justRead)
+        {
             if (IsReadOnly)
             {
                 // The session went on here and on another machine: this machine's turns are kept apart.
@@ -1618,6 +1778,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             var folder = Folder;
             var settingsFolder = State.WithoutProjectSettings ? null : folder;
             var starting = _startingMode = await Task.Run(() => _services.ReadStartingPermissionMode(settingsFolder));
+            ShowStartingMode();
             var environment = new Dictionary<string, string?>(_services.ClaudeVariables);
             if (_carryOnInterruptedTurn && resume is not null)
             {
@@ -2245,13 +2406,20 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _checkIns.SetWaitingOnUser(true);
                 if (Items.OfType<McpInputItem>().LastOrDefault(i => ReferenceEquals(i.Request, elicitation.Request)) is { } input)
                 {
-                    input.Answered += (_, _) => PermissionResolved(elicitation.Request.RequestId);
+                    input.Answered += (_, _) =>
+                    {
+                        PermissionResolved(elicitation.Request.RequestId);
+                        Remote.OnPromptClosed(this, elicitation.Request.RequestId, Core.Remote.RemotePromptEnd.AnsweredAtDesk, input.Outcome, null);
+                    };
+                    // Only the desk can fill in a server's form (DESIGN.md §18, "Remote clients").
+                    Remote.OnPromptWaiting(this, AtDesk(elicitation.Request.RequestId, input.Title, input.Message));
                 }
                 UpdateStatus();
                 _services.Notifications.Notify(NotificationKind.NeedsInput, DisplayName, $"{elicitation.Request.ServerName} asks: {Shorten(elicitation.Request.Message, 120)}", Id);
                 break;
             case ElicitationCancelled withdrawn:
                 PermissionResolved(withdrawn.RequestId);
+                Remote.OnPromptClosed(this, withdrawn.RequestId, Core.Remote.RemotePromptEnd.Withdrawn, Core.Remote.RemoteMessages.WithdrawnOutcome, null);
                 break;
             case SystemNotice { Message.Subtype: "status" } status:
                 // Claude Code reports mode changes it makes itself, such as leaving plan mode.
@@ -2379,6 +2547,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         var item = Items.OfType<PromptItem>().LastOrDefault(p => ReferenceEquals(p.Request, request));
         if (item is not null)
         {
+            WatchForRemote(item);
             item.Answered += (_, _) => PermissionResolved(request.RequestId);
             // Answered, withdrawn or cancelled with the session: the others are numbered again.
             item.PropertyChanged += (_, e) =>
@@ -2463,6 +2632,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _autoContinue.SettingsChanged();
         OnUsageCreditsChoiceChanged();
         OnFoldChainsChanged();
+        ShowStartingMode();
         if (_session is null)
         {
             ShowStartingModel();

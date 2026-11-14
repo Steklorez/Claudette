@@ -74,14 +74,74 @@ public sealed partial class TabViewModel
             Working.SetActivity(ToolActivity.Describe(running), ToolActivity.Details(running));
             // What Joulene on the composer works with goes by the newest tool (DESIGN.md §5).
             TellMascot();
+            // A remote client's live status says it too (DESIGN.md §18, "Remote clients").
+            Remote.OnTabChanged(this);
         }
     }
 
     /// <summary>Shown while Claude works; hidden while a prompt waits on the user, though the turn's time runs on.</summary>
     public bool IsWorkingLineShown => Status == TabStatus.Working;
 
+    /// <summary>
+    /// The row's running highlight (Settings → Appearance → Tab activity, DESIGN.md §4): while Claude works, and while its
+    /// subagents do after the turn that started them in the background has ended.
+    /// </summary>
+    public bool ShowsWorkBar => UsesBars && (Status == TabStatus.Working || HasActiveAgents && Status is TabStatus.Idle or TabStatus.Unread);
+
+    /// <summary>
+    /// A still green wash on a row Claude finished in while the user wasn't looking, with Tab activity's bars; it waits
+    /// for the subagents still running in the background.
+    /// </summary>
+    public bool ShowsDoneBar => UsesBars && !HasActiveAgents
+        && (Status == TabStatus.Unread || State.Unseen && Status is TabStatus.NotStarted or TabStatus.Starting or TabStatus.Idle or TabStatus.Exited);
+
+    internal bool UsesBars => _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars;
+
+    /// <summary>The status icon before the name: only with Tab activity's dots; with its bars the row says it all.</summary>
+    public bool ShowsStatusGlyph => !UsesBars;
+
+    /// <summary>
+    /// The row's lead column, where the status icon and the mark sit: with Tab activity's bars and no mark it has
+    /// nothing in it, and gives its room to the name.
+    /// </summary>
+    public bool HasRowLead => ShowsStatusGlyph || ShowsMarkIcon;
+
+    public Avalonia.Controls.GridLength RowLeadWidth => new(HasRowLead ? 14 : 0);
+
+    public double RowLeadSpacing => HasRowLead ? 6 : 0;
+
+    /// <summary>
+    /// Where the row's name line starts: after the status icon, or with Tab activity's bars over the lead column too,
+    /// so a mark, under it level with the second line, moves only that line over.
+    /// </summary>
+    public int NameLineColumn => ShowsStatusGlyph ? 1 : 0;
+
+    public int NameLineSpan => ShowsStatusGlyph ? 1 : 2;
+
+    /// <summary>A still red line under a tab whose Claude Code stopped with an error, with Tab activity's bars.</summary>
+    public bool ShowsErrorBar => Status == TabStatus.Error && UsesBars;
+
+    /// <summary>The tab's name shimmering while its session starts and isn't ready yet, with Tab activity's bars.</summary>
+    public bool ShowsStartingShimmer => Status == TabStatus.Starting && UsesBars;
+
+    /// <summary>The row blinking orange while Claude waits for the user, with Tab activity's bars.</summary>
+    public bool ShowsWaitBlink => Status == TabStatus.NeedsInput && _services.Settings.Appearance.TabActivity == Core.Settings.TabActivity.Bars;
+
     partial void OnStatusChanged(TabStatus oldValue, TabStatus newValue)
     {
+        // How long an idle tab has been idle, for unloading it (DESIGN.md §9, "Unloading idle tabs").
+        _statusSince = _services.Time.GetUtcNow();
+        // Unseen outlives a restart, which brings the tab back not started; a new turn, or the user looking, ends it.
+        if (newValue == TabStatus.Unread && !State.Unseen)
+        {
+            State.Unseen = true;
+            _services.SaveState();
+        }
+        else if (newValue is TabStatus.Working or TabStatus.NeedsInput && State.Unseen)
+        {
+            State.Unseen = false;
+            _services.SaveState();
+        }
         switch (newValue)
         {
             case TabStatus.Working:

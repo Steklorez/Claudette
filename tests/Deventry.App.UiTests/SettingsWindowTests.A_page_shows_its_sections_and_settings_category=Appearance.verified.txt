@@ -49,6 +49,9 @@
 "This computer"
 "Everything in the main window, bigger or smaller.  "
 [choice] "100%"
+"Tab activity"
+"How the sidebar shows that Claude is working in a tab, or waiting for you.  "
+[choice] "Colored rows"
 "Motion"
 "Whether the busy dots pulse, the working line twinkles and the icon moves.  "
 [choice] "Follow the system"
@@ -66,7 +69,7 @@
 "Now and then she holds up a tip, such as a shortcut you might not know.  "
 [toggle on] Shares tips
 "Games with Joulene"
-"Tic-tac-toe, Connect Four, hangman or Minesweeper against her while Claude works.  "
+"Tic-tac-toe, Four in a Row, hangman, Minesweeper or Pipeline against her while Claude works.  "
 [toggle on] Games with Joulene
 [button] Line up
 [button] Page up

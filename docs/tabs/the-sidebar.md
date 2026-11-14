@@ -9,7 +9,7 @@ summary: "The sidebar lists your tabs down the left of the window, grouped by wo
 
 The sidebar lists your tabs down the left of the window, grouped by working folder, so long session names, a status line and many tabs all fit. Each tab is one row with two lines.
 
-{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing status icons, branches, marks and context rings." %}
+{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
 
 ## A tab's row
 
@@ -21,20 +21,37 @@ The first line holds the tab's name, with small icons before it. The second line
 - The close button shows on the row you hover and on the selected tab.
 - A tab in Bypass permissions mode has a thin outline around its row. See [Permission modes](../permissions/permission-modes.md).
 
-## Status icons
+## What the tab is doing
 
-The icon at the start of the row says what the tab is doing. Hover it for the words.
+A tab's row is colored by what Claude is doing in it, with faint washes behind its text that fill the row.
+
+| The row | Meaning |
+|---|---|
+| A soft highlight running across it | Claude is working, or subagents it started in the background still are. |
+| An orange wash, blinking | Needs your input: a permission prompt, a question or a plan is waiting. |
+| A pale green wash, fading out to the right | Finished while you were in another tab. It stays until you open the tab, through a restart too. |
+| A pale red wash, fading out to the right | An error. The row's second line says what went wrong. |
+| The name shimmering | Starting. |
+| Nothing | Idle, not started yet, or not running. A restored tab doesn't start its `claude` until you send it a message, and one left idle may have stopped it ([Closing and restoring](closing-and-restoring.md#settings)). |
+
+With reduced motion on, the highlight holds still and the orange doesn't blink. A subagent's row under its tab is colored the same way by what the subagent is doing.
+
+A tab's [mark](names-marks-and-pins.md#marks) sits at the start of the second line, which moves over to make room for it.
+
+### Status dots
+
+Settings → Appearance → **Tab activity** → **Status dots** leaves the row uncolored and puts an icon at its start instead. Hover it for the words.
 
 | Icon | Meaning |
 |---|---|
-| `○` | Not started yet, or not running. A restored tab doesn't start its `claude` until you first select it. |
+| `○` | Not started yet, or not running. A restored tab doesn't start its `claude` until you send it a message, and one left idle may have stopped it ([Closing and restoring](closing-and-restoring.md#settings)). |
 | `●` (pulsing) | Starting, or Claude is working. |
 | `!` (highlighted) | Needs your input: a permission prompt, a question or a plan is waiting. |
 | `•` | Finished while you were in another tab. It clears when you look at the tab. |
 | `✕` | An error, or the process exited. The row's second line says what went wrong. |
 | none | Idle. |
 
-A tab's [mark](names-marks-and-pins.md#marks) sits under the status icon, level with the second line.
+The mark then sits under the status icon, level with the second line.
 
 ## The second line
 
@@ -59,7 +76,8 @@ Small icons before the name and bordered badges at the right of the second line 
 | Branch icon | The tab works in a git worktree. | [Worktree tabs](worktree-tabs.md) |
 | Phone | The tab is connected to the Claude app. It dims while it connects. | [The Claude app](../away/the-claude-app.md) |
 | `⚙` | A process the tab started is using CPU. | [Processes](processes.md) |
-| A number | Tasks (subagents and background tasks) still running after the turn ended. Hover it for which. | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
+| A number | Background tasks still running after the turn ended, subagents among them unless **Show running subagents** gives them their chip. Hover it for which. | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
+| Agents icon and `2 running` | Subagents still running, in the turn or after it, with **Show running subagents** on. Click it to see them: their rows come out from under a collapsed tab, or the Agents window opens. | [Subagents](../conversation/subagents.md#subagents-that-run-in-the-background) |
 | `3/7` | How many of Claude's tasks are done. Click it to open the Tasks page. | [The Tasks page](../plans/the-tasks-page.md) |
 | Branch name | The git branch the folder has checked out, such as `main`. Click it for **Copy branch name**. A worktree tab shows the worktree's name. | [Worktree tabs](worktree-tabs.md) |
 | `CL 12345` | The Perforce changelist. | [Perforce](../project-tools/perforce.md) |
@@ -96,7 +114,7 @@ On the rail, which lists only a thread's sub-threads under a tab, **Collapse tab
 
 ## The top and the foot
 
-At the top, over a line, **New tab** opens the [picker](opening-tabs.md), the clock opens [History](../history/history.md), and the last button collapses the sidebar. Each group's row has its project's icon, which opens the project's menu of actions and links ([Project tools](../project-tools/using-project-tools.md)). The foot, under a line, shows only while there's something in it: the Claude Code and Deventry update badges when there's an update, and a source build's new commits and **New build ready**. **Settings** and **User Guide** are at the header's right ([A tour of the window](../getting-started/a-tour-of-the-window.md#the-header)).
+At the top, over a line, **New tab** opens the [picker](opening-tabs.md), the magnifier finds a tab by part of its name ([Finding a tab](the-command-palette.md#finding-a-tab)), the clock opens [History](../history/history.md), and the last button collapses the sidebar. Each group's row has its project's icon, which opens the project's menu of actions and links ([Project tools](../project-tools/using-project-tools.md)). The foot, under a line, shows only while there's something in it: the Claude Code and Deventry update badges when there's an update, and a source build's new commits and **New build ready**. **Settings** and **User Guide** are at the header's right ([A tour of the window](../getting-started/a-tour-of-the-window.md#the-header)).
 
 ## Resizing and collapsing
 
@@ -106,10 +124,13 @@ At the top, over a line, **New tab** opens the [picker](opening-tabs.md), the cl
 
 ## Settings
 
+Settings → Appearance → **Tab activity**: **Colored rows**, the default, or **Status dots**. See [What the tab is doing](#what-the-tab-is-doing).
+
 Settings → Conversation → Tab rows:
 
 - **Show context**: the ring. On by default.
 - **Show task progress**: `3/7`, and the task Claude is working on in place of the model while it works. On by default.
+- **Show running subagents**: the **2 running** chip. Off by default. With it on, the count before the name leaves the subagents out.
 
 Settings → Git → Tab rows → **Show the git branch**: the branch badge. On by default. With it off, a worktree tab shows a branch icon before its name instead.
 
@@ -124,6 +145,7 @@ Settings → Perforce → **Show changelist on tabs** shows the changelist badge
 | `Ctrl/Cmd+1` to `Ctrl/Cmd+9` | Go to a tab by its place in the sidebar |
 | `Ctrl+Tab` and `Ctrl+Shift+Tab` | Next and previous tab |
 | `Ctrl/Cmd+J` | Go to the next tab waiting for you |
+| `Ctrl/Cmd+K` | Find a tab by part of its name, its project, folder or branch |
 
 ## See also
 

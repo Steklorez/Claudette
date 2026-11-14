@@ -20,6 +20,12 @@ public static class Converters
     /// <summary>An indent, for tree rows.</summary>
     public static readonly IValueConverter LeftMargin = new FuncValueConverter<double, Thickness>(left => new Thickness(left, 0, 0, 0));
 
+    /// <summary>
+    /// Out over a row's padding to its edges (bound to the row's <c>Padding</c>), for what fills the row behind its
+    /// content, as Tab activity's washes do (DESIGN.md §4, "Sidebar"), in either density.
+    /// </summary>
+    public static readonly IValueConverter Outset = new FuncValueConverter<Thickness, Thickness>(padding => new Thickness(-padding.Left, -padding.Top, -padding.Right, -padding.Bottom));
+
     /// <summary>Marks a process that left the tab's tree (DESIGN.md §4).</summary>
     public static readonly IValueConverter DetachedText = new FuncValueConverter<bool, string>(detached => detached ? "· detached" : "");
 

@@ -55,6 +55,35 @@ public sealed class FolderListingTests : IDisposable
     }
 
     [Fact]
+    public void Dotfiles_are_hidden_on_every_system_and_so_is_everything_in_a_hidden_folder()
+    {
+        Write(".editorconfig");
+        Write(".github/workflows/ci.yml");
+        Write("src/.keep");
+        Write("readme.md");
+
+        var top = FolderListing.Read(Project, Project).ToDictionary(e => e.Name, e => e.IsHidden);
+        var inside = FolderListing.Read(Project, Path.Combine(Project, ".github"), parentHidden: true);
+
+        Assert.Equal(new Dictionary<string, bool> { [".github"] = true, ["src"] = false, [".editorconfig"] = true, ["readme.md"] = false }, top);
+        Assert.Equal(("workflows", true), (Assert.Single(inside).Name, inside[0].IsHidden));
+        Assert.True(Assert.Single(FolderListing.Read(Project, Path.Combine(Project, "src"))).IsHidden);
+    }
+
+    [Fact]
+    public void A_file_Windows_hides_is_hidden()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "The Hidden attribute is Windows'.");
+        var path = Write("Thumbs.db");
+        File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
+        Write("readme.md");
+
+        var entries = FolderListing.Read(Project, Project).ToDictionary(e => e.Name, e => e.IsHidden);
+
+        Assert.Equal(new Dictionary<string, bool> { ["readme.md"] = false, ["Thumbs.db"] = true }, entries);
+    }
+
+    [Fact]
     public void A_worktrees_git_file_is_left_out_too()
     {
         Write(".git");
@@ -130,7 +159,7 @@ public sealed class FolderListingTests : IDisposable
         // Git isn't asked outside a repository: one that can't run changes nothing.
         var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
-        var entries = await FolderListing.ReadAsync(Project, Project, git, inRepository: false, parentIgnored: false, Token);
+        var entries = await FolderListing.ReadAsync(Project, Project, git, inRepository: false, parentIgnored: false, parentHidden: false, Token);
 
         Assert.Equal([("bin", true), ("node_modules", true), ("src", false), ("obj", false)], entries.Select(e => (e.Name, e.IsIgnored)));
     }
@@ -142,7 +171,7 @@ public sealed class FolderListingTests : IDisposable
         Write("build/log.txt");
         var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
-        var entries = await FolderListing.ReadAsync(Project, Path.Combine(Project, "build"), git, inRepository: true, parentIgnored: true, Token);
+        var entries = await FolderListing.ReadAsync(Project, Path.Combine(Project, "build"), git, inRepository: true, parentIgnored: true, parentHidden: false, Token);
 
         Assert.Equal([("out", true), ("log.txt", true)], entries.Select(e => (e.Name, e.IsIgnored)));
     }
@@ -154,7 +183,7 @@ public sealed class FolderListingTests : IDisposable
         Write("a.log");
         var git = new GitWorkingTree(new IsolatedGitLauncher(_temp.Path), TimeProvider.System, $"deventry-no-such-git-{Guid.NewGuid():N}");
 
-        var entries = await FolderListing.ReadAsync(Project, Project, git, inRepository: true, parentIgnored: false, Token);
+        var entries = await FolderListing.ReadAsync(Project, Project, git, inRepository: true, parentIgnored: false, parentHidden: false, Token);
 
         Assert.Equal(["node_modules", "a.log"], entries.Select(e => e.Name));
         Assert.DoesNotContain(entries, e => e.IsIgnored);
@@ -179,8 +208,8 @@ public sealed class FolderListingTests : IDisposable
         await launcher.RunAsync(Project, "add", "-f", "tracked.log");
         var git = new GitWorkingTree(launcher, TimeProvider.System);
 
-        var top = await FolderListing.ReadAsync(Project, Project, git, inRepository: true, parentIgnored: false, Token);
-        var src = await FolderListing.ReadAsync(Project, Path.Combine(Project, "src"), git, inRepository: true, parentIgnored: false, Token);
+        var top = await FolderListing.ReadAsync(Project, Project, git, inRepository: true, parentIgnored: false, parentHidden: false, Token);
+        var src = await FolderListing.ReadAsync(Project, Path.Combine(Project, "src"), git, inRepository: true, parentIgnored: false, parentHidden: false, Token);
 
         Assert.Equal(
             [("build", true), ("src", false), (".gitignore", false), ("app.log", true), ("keep.log", false), ("tracked.log", false), ("with space ü.log", true)],
@@ -188,5 +217,5 @@ public sealed class FolderListingTests : IDisposable
         Assert.Equal([("debug.log", true), ("main.c", false)], src.Select(e => (e.Name, e.IsIgnored)));
     }
 
-    private void Write(string relativePath, string content = "") => _temp.Write("project/" + relativePath, content);
+    private string Write(string relativePath, string content = "") => _temp.Write("project/" + relativePath, content);
 }

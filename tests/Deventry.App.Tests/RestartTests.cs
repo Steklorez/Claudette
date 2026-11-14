@@ -71,6 +71,7 @@ public class RestartTests
         h.Services.Settings.Sessions.RestoreUnpinnedTabs = true;
         h.Services.State.Tabs = [new TabState { Folder = h.WorkFolder, IsPinned = true, UserName = "pinned" }, new TabState { Folder = h.WorkFolder, UserName = "unpinned" }];
         h.Shell.Restore(null);
+        h.Start();
         h.Services.Settings.Sessions.RestoreUnpinnedTabs = false;
         var (pinned, unpinned) = (h.Shell.AllTabs.First(), h.Shell.AllTabs.Last());
         await TabTestHarness.Eventually(() => pinned.Status == TabStatus.Idle && pinned.IsSettled, "the selected tab to start");
@@ -285,11 +286,7 @@ public class RestartTests
         using var restarts = NewBuildReady(h, new ShellHost(h.Shell), output);
 
         var restarting = restarts.RestartAsync();
-        await TabTestHarness.Eventually(() =>
-        {
-            h.Time.Advance(TimeSpan.FromSeconds(1));
-            return restarting.IsCompleted;
-        }, "the restart to give up");
+        await TabTestHarness.Eventually(() => restarting.IsCompleted, "the restart to give up", poll: () => h.Time.Advance(TimeSpan.FromSeconds(1)));
 
         Assert.False(await restarting);
         Assert.True(launcher.Processes.Single().Killed);

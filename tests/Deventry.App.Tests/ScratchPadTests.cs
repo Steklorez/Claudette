@@ -280,7 +280,7 @@ public sealed class ScratchPadTests
         var pad = tab.ScratchPad;
         Type(h, pad, "typed just before closing");
 
-        await h.Shell.CloseTabCommand.ExecuteAsync(tab);
+        await InlineDispatcher.RunAsync(() => h.Shell.CloseTabCommand.ExecuteAsync(tab));
 
         await TabTestHarness.Eventually(() => Saved(h, pad)?.Text == "typed just before closing", "the pad saved");
         await TabTestHarness.Eventually(() => !h.Services.ScratchPads.Open().Any(), "the pad let go");
@@ -322,7 +322,7 @@ public sealed class ScratchPadTests
         await GitAsync(h.WorkFolder, "init", "-q");
         await GitAsync(h.WorkFolder, "remote", "add", "origin", Remote);
         await GitAsync(h.WorkFolder, "commit", "-q", "--allow-empty", "-m", "init");
-        await h.Shell.OpenWorktreeTabAsync(h.WorkFolder);
+        await InlineDispatcher.RunAsync(() => h.Shell.OpenWorktreeTabAsync(h.WorkFolder));
         var tab = h.Shell.SelectedTab!;
         await TabTestHarness.Eventually(() => tab.Status == TabStatus.Idle && tab.IsSettled, "the tab to start");
         var pad = tab.ScratchPad;
@@ -337,7 +337,7 @@ public sealed class ScratchPadTests
         File.WriteAllText(Path.Combine(gitDir, "commondir"), "../..\n");
 
         tab.ComposerText = "go";
-        await tab.SendCommand.ExecuteAsync(null);
+        await InlineDispatcher.RunAsync(() => tab.SendCommand.ExecuteAsync(null));
         h.Transport.Emit(new JsonObject { ["type"] = "system", ["subtype"] = "init", ["session_id"] = "s1", ["model"] = "claude-opus-5-5", ["cwd"] = worktree });
         h.Transport.Emit("""{"type":"result","subtype":"success","is_error":false,"session_id":"s1"}""");
 

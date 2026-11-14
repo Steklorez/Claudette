@@ -2,6 +2,7 @@ using Deventry.Core.Files;
 using Deventry.Core.Git;
 using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 namespace Deventry.App.ViewModels;
 
@@ -21,7 +22,10 @@ public sealed partial class ShellViewModel
 
     /// <summary>Opens a new tab that works in a new worktree of <paramref name="folder"/>'s repository, and selects it.</summary>
     /// <param name="opened">Runs on the new tab before it's selected and started, such as making it a sub-thread.</param>
-    public async Task OpenWorktreeTabAsync(string folder, Action<TabViewModel>? opened = null)
+    /// <param name="named">The worktree's name, such as a ticket's <c>issue-142</c>; <c>-2</c> and on are added when it's taken. Two words Deventry picks without it.</param>
+    /// <param name="overrides">The tab's own model, effort and mode, set before it's made, which reads them.</param>
+    /// <param name="select">Select the new tab; false leaves the tab the user is in selected, unless none is.</param>
+    public async Task OpenWorktreeTabAsync(string folder, Action<TabViewModel>? opened = null, string? named = null, TabOverrides? overrides = null, bool select = true)
     {
         if (!Directory.Exists(folder))
         {
@@ -36,9 +40,11 @@ public sealed partial class ShellViewModel
         }
         // Not one a folder, another tab or a branch left behind already has: Claude Code would meet that branch.
         var branches = await new GitWorktrees(_services.Git).BranchesAsync(root);
-        var name = GitWorktrees.NewName(_services.Random, candidate =>
-            Directory.Exists(GitWorktrees.PathFor(root, candidate)) || AllTabs.Any(t => t.State.NewWorktree == candidate)
-            || branches.Contains(GitWorktrees.BranchPrefix + candidate));
+        bool Taken(string candidate) => Directory.Exists(GitWorktrees.PathFor(root, candidate)) || AllTabs.Any(t => t.State.NewWorktree == candidate)
+            || branches.Contains(GitWorktrees.BranchPrefix + candidate);
+        var name = named is { Length: > 0 }
+            ? Enumerable.Range(1, 99).Select(n => n == 1 ? named : $"{named}-{n}").FirstOrDefault(c => !Taken(c)) ?? GitWorktrees.NewName(_services.Random, Taken)
+            : GitWorktrees.NewName(_services.Random, Taken);
         FolderHistory.Touch(_services.State, main, _services.Time.GetUtcNow(), _services.Settings.NewTabs.RecentFolderLimit);
         var state = new TabState
         {
@@ -47,11 +53,15 @@ public sealed partial class ShellViewModel
             NewWorktree = name,
             SyncToLibrary = _services.Settings.Sessions.SyncNewTabs,
             RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            Overrides = overrides ?? new(),
         };
         var tab = new TabViewModel(_services, this, state, isRestored: false);
         AddTab(tab);
         opened?.Invoke(tab);
-        SelectedTab = tab;
+        if (select || Selected is null)
+        {
+            SelectedTab = tab;
+        }
         SaveTabs();
         await tab.EnsureStartedAsync();
     }
@@ -66,6 +76,8 @@ public sealed partial class ShellViewModel
         || t.State is { NewWorktree: { } pending, WorktreeOf: { } of } && RealPath.Same(of, main)
            && RealPath.Same(GitWorktrees.PathFor(root, pending), path));
 
+    private ILogger WorktreesLog => field ??= _services.Loggers.CreateLogger("Worktrees");
+
     /// <summary>The selected tab's group folder can have worktrees: the palette offers one.</summary>
     private bool CanOpenWorktreeTab(TabViewModel tab) => Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { CanMakeWorktrees: true };
 
@@ -79,20 +91,33 @@ public sealed partial class ShellViewModel
         var found = new List<(string Main, GitWorktree Worktree, GitWorktreeWork? Work)>();
         foreach (var state in closed)
         {
-            if (state.WorktreeOf is not { } main || !Directory.Exists(main) || await _services.Git.GetRepositoryRootAsync(main) is not { } root)
+            if (state.WorktreeOf is not { } main)
             {
+                continue;
+            }
+            // Why a worktree isn't offered, or what's in one that is: the log is where it's said.
+            if (!Directory.Exists(main) || await _services.Git.GetRepositoryRootAsync(main) is not { } root)
+            {
+                WorktreesLog.LogDebug("No worktree offer for {Folder}: its main checkout {Main} isn't a repository now.", state.Folder, main);
                 continue;
             }
             var path = state.NewWorktree is { } name ? GitWorktrees.PathFor(root, name) : state.Folder;
             if (!Directory.Exists(path) || found.Any(f => RealPath.Same(f.Worktree.Path, path)) || IsWorktreeInUse(main, root, path))
             {
+                WorktreesLog.LogDebug("No worktree offer for {Path}: {Why}.", path,
+                    !Directory.Exists(path) ? "it isn't there" : IsWorktreeInUse(main, root, path) ? "an open tab works in it" : "it's offered already");
                 continue;
             }
             var worktrees = new GitWorktrees(_services.Git);
-            if (await worktrees.FindAsync(main, path) is { } worktree)
+            if (await worktrees.FindAsync(main, path) is not { } worktree)
             {
-                found.Add((main, worktree, await worktrees.InspectAsync(worktree)));
+                WorktreesLog.LogDebug("No worktree offer for {Path}: git doesn't list it as a worktree of {Main}.", path, main);
+                continue;
             }
+            var work = await worktrees.InspectAsync(worktree);
+            WorktreesLog.LogDebug("Worktree {Path} holds {Work}.", path, work is null ? "what git couldn't count"
+                : $"changes: {work.HasChanges}, commits of its own: {work.OwnCommits}, ignored files: {work.HasIgnoredFiles}");
+            found.Add((main, worktree, work));
         }
         if (found.Count == 1)
         {

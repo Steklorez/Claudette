@@ -45,10 +45,13 @@ public sealed partial class ShellViewModel
         ShowImage(new ToolImage(image, uri.Host, name, ToolImages.SaveName(name, image.MediaType), null, null, uri));
     }
 
-    /// <summary>Shows <paramref name="image"/> in a window of its own.</summary>
-    internal void ShowImage(ToolImage image)
+    /// <summary>
+    /// Shows <paramref name="image"/> in a window of its own; from the Media window, with its tile,
+    /// <paramref name="media"/>, which the window's <b>Clear</b> clears with <paramref name="toggleCleared"/>.
+    /// </summary>
+    internal void ShowImage(ToolImage image, MediaEntry? media = null, Action<MediaEntry>? toggleCleared = null)
     {
-        var viewer = new ImageViewerViewModel(image, _services);
+        var viewer = new ImageViewerViewModel(image, _services, media, toggleCleared);
         if (ShowImageWindow is { } show)
         {
             show(viewer);

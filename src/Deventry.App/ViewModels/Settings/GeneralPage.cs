@@ -22,6 +22,12 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
             Setting("state.startAtLogin", "Start Deventry when I log in", null, null, keywords: ["login item", "startup", "launch at login"], machineOnly: true),
             Setting("sessions.restoreUnpinnedTabs", "Also restore unpinned tabs when Deventry starts", s => s.Sessions.RestoreUnpinnedTabs, (s, v) => s.Sessions.RestoreUnpinnedTabs = v,
                 "Pinned tabs always come back.", keywords: ["reopen", "session restore"]),
+            Setting("sessions.unloadIdleTabs", "Unload idle tabs to save memory", s => s.Sessions.UnloadIdleTabs, (s, v) => s.Sessions.UnloadIdleTabs = v,
+                "A tab left idle stops its Claude Code. Its conversation stays, and your next message starts it again where it was.",
+                "A tab isn't unloaded while Claude works or waits for you, while tasks, subagents or programs Claude started run in it, or while it's connected to the Claude app.",
+                ["memory", "ram", "sleep", "suspend", "idle", "unload"]),
+            Setting("sessions.unloadIdleTabsAfterMinutes", "After being idle for (minutes)", s => s.Sessions.UnloadIdleTabsAfterMinutes, (s, v) => s.Sessions.UnloadIdleTabsAfterMinutes = v,
+                keywords: ["memory", "idle", "unload"]),
             Setting("general.confirmCloseWorkingTab", "Confirm before closing a tab where Claude is working",
                 s => s.General.ConfirmCloseWorkingTab, (s, v) => s.General.ConfirmCloseWorkingTab = v,
                 "Closing one stops Claude mid-turn."),
@@ -37,6 +43,9 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
             Setting("claudeCode.keepAwakeWhileConnected", "Also while tabs are connected to the Claude app",
                 s => s.ClaudeCode.KeepAwakeWhileConnected, (s, v) => s.ClaudeCode.KeepAwakeWhileConnected = v,
                 "So the Claude app can still reach them. The screen can still turn off.", keywords: ["remote control", "phone"]),
+            Setting("remoteClients.keepAwake", "Also while a remote client is on",
+                s => s.RemoteClients.KeepAwake, (s, v) => s.RemoteClients.KeepAwake = v,
+                "A sleeping computer can't answer your bots. The screen can still turn off.", keywords: ["telegram", "discord", "bot", "phone"]),
         ]);
         Section("updates", "Updates and status",
         [
@@ -48,7 +57,7 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
                 "From Deventry's releases on GitHub, at launch and every few hours.", keywords: ["version", "upgrade"]),
             Setting("general.includePrereleases", "Include pre-releases", s => s.General.IncludePrereleases, (s, v) => s.General.IncludePrereleases = v,
                 "Try new versions before they're released.", keywords: ["beta", "preview"]),
-            Info("general.version", "Deventry version", keywords: ["update now", "check now", "release notes"]),
+            Info("general.version", "Deventry version", keywords: ["update now", "check now", "release notes", "restart into new builds"]),
         ]);
         _ = RefreshStartAtLoginAsync();
         Services.KeepAwake.PropertyChanged += OnKeepAwakeChanged;
@@ -139,6 +148,18 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
         set => Set(value, v => Settings.Sessions.RestoreUnpinnedTabs = v);
     }
 
+    public bool UnloadIdleTabs
+    {
+        get => Settings.Sessions.UnloadIdleTabs;
+        set => Set(value, v => Settings.Sessions.UnloadIdleTabs = v);
+    }
+
+    public decimal? UnloadIdleTabsAfterMinutes
+    {
+        get => Settings.Sessions.UnloadIdleTabsAfterMinutes;
+        set => Set(value, v => Settings.Sessions.UnloadIdleTabsAfterMinutes = Math.Clamp((int)(v ?? new SessionSettings().UnloadIdleTabsAfterMinutes), 1, 24 * 60));
+    }
+
     public bool ConfirmCloseWorkingTab
     {
         get => Settings.General.ConfirmCloseWorkingTab;
@@ -202,6 +223,13 @@ public sealed partial class GeneralPage : SettingsPage, IDisposable
     }
 
     /// <summary><b>Also while tabs are connected to the Claude app</b>: system sleep only; the display can still sleep.</summary>
+    /// <summary><b>Also while a remote client is on</b> (DESIGN.md §18, "Remote clients").</summary>
+    public bool KeepAwakeWhileRemoteClient
+    {
+        get => Settings.RemoteClients.KeepAwake;
+        set => Set(value, v => Settings.RemoteClients.KeepAwake = v);
+    }
+
     public bool KeepAwakeWhileConnected
     {
         get => Settings.ClaudeCode.KeepAwakeWhileConnected;

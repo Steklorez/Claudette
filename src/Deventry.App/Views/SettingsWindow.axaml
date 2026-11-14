@@ -90,7 +90,7 @@
           <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
           <!-- A word about the page after its name, such as Off for a project type switched off: the page can still be
                picked -->
-          <Border Classes="settingchip" Margin="-4,0,0,0" VerticalAlignment="Center"
+          <Border Classes="settingchip" Classes.caution="{Binding IsTagCaution}" Margin="-4,0,0,0" VerticalAlignment="Center"
                   IsVisible="{Binding Tag, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <TextBlock Text="{Binding Tag}" />
           </Border>
@@ -225,6 +225,18 @@
                 <DataTemplate DataType="settings:NotificationsPage">
                   <pages:NotificationsPageView />
                 </DataTemplate>
+                <DataTemplate DataType="settings:AllTicketProvidersPage">
+                  <pages:AllTicketProvidersPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:TicketProviderPage">
+                  <pages:TicketProviderPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:AllClientsPage">
+                  <pages:AllClientsPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:RemoteClientPage">
+                  <pages:RemoteClientPageView />
+                </DataTemplate>
                 <DataTemplate DataType="settings:KeyboardPage">
                   <pages:KeyboardPageView />
                 </DataTemplate>
@@ -245,6 +257,9 @@
                 </DataTemplate>
                 <DataTemplate DataType="settings:FilesPage">
                   <pages:FilesPageView />
+                </DataTemplate>
+                <DataTemplate DataType="settings:TimedMessagesPage">
+                  <pages:TimedMessagesPageView />
                 </DataTemplate>
                 <DataTemplate DataType="settings:AllToolsPage">
                   <pages:AllToolsPageView />

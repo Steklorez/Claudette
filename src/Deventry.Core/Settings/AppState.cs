@@ -54,6 +54,15 @@ public sealed class AppState
     /// </summary>
     public Dictionary<string, string> FolderAccounts { get; set; } = [];
 
+    /// <summary>
+    /// The time each timed message was last sent or skipped for, by its id (DESIGN.md §18, "Timed messages"), so a
+    /// restart never sends one twice for the same time.
+    /// </summary>
+    public Dictionary<string, DateTimeOffset> TimedMessagesHandled { get; set; } = [];
+
+    /// <summary>The time each timed message was last skipped for, by its id, until it's next sent: the cup's menu says so.</summary>
+    public Dictionary<string, DateTimeOffset> TimedMessagesSkipped { get; set; } = [];
+
     /// <summary>The account a folder opened for the first time uses; null for the Default account.</summary>
     public string? NewFolderAccount { get; set; }
 
@@ -113,6 +122,9 @@ public sealed class AppState
     /// </summary>
     public List<ProjectFiles.ProjectFilesState> ProjectFiles { get; set; } = [];
 
+    /// <summary>The folder groups' Tickets tabs (DESIGN.md §18, "Tickets"), brought back as Project Files tabs are.</summary>
+    public List<Tickets.TicketsTabState> Tickets { get; set; } = [];
+
     /// <summary>
     /// The folder groups' order in the sidebar, by folder, since a group with only its Project Files tab has no tab in
     /// <see cref="Tabs"/> to place it by. Null: the order the tabs are in.
@@ -124,6 +136,9 @@ public sealed class AppState
 
     /// <summary>The Project Files tabs' explorer is hidden, by its button.</summary>
     public bool ExplorerHidden { get; set; }
+
+    /// <summary>The Tickets tabs' list's width as the user dragged it, or null for the default. One for every tab.</summary>
+    public double? TicketListWidth { get; set; }
 
     /// <summary>What Find in files had last: its query, options, mask and folder (DESIGN.md §18, "Finding in files").</summary>
     public ProjectFiles.FindInFilesState FindInFiles { get; set; } = new();
@@ -147,8 +162,15 @@ public sealed class AppState
     public bool DiffWordWrap { get; set; }
 
     /// <summary>
+    /// Changed files lists its files one after another rather than in a tree of their folders (DESIGN.md §8, "The tree"),
+    /// in every tab: its switch sets it.
+    /// </summary>
+    public bool ChangedFilesAsList { get; set; }
+
+    /// <summary>
     /// This machine's id in the session library's shared usage (DESIGN.md §6, "Sharing across machines"): made up once, so
-    /// its file keeps its name when the machine's is changed, and two machines with the same name don't share a file.
+    /// its file keeps its name when the machine's is changed, and two machines with the same name don't share a file. Its
+    /// leases carry it too, so a lease an earlier run here left is known for one (§9, "One machine at a time").
     /// </summary>
     public string? MachineId { get; set; }
 
@@ -257,6 +279,9 @@ public sealed class AppState
 
     /// <summary>Each game's score and level against Joulene (DESIGN.md §18, "Games with Joulene").</summary>
     public GamesState Games { get; set; } = new();
+
+    /// <summary>The accounts paired with the remote clients, and the bot's name (DESIGN.md §18, "Remote clients"). Per machine.</summary>
+    public RemoteClientsState RemoteClients { get; set; } = new();
 }
 
 /// <summary>The games against Joulene (DESIGN.md §18, "Games with Joulene"), by game: its score and the level chosen.</summary>
@@ -266,6 +291,22 @@ public sealed class GamesState
 
     /// <summary>The level chosen for each game that has levels, by name.</summary>
     public Dictionary<string, string> Levels { get; set; } = [];
+
+    /// <summary>
+    /// A game's score and level kept under <paramref name="from"/>, a name it no longer has, move to <paramref name="to"/>;
+    /// unless it has some there already, which stay.
+    /// </summary>
+    public void Rename(string from, string to)
+    {
+        if (Scores.Remove(from, out var score))
+        {
+            Scores.TryAdd(to, score);
+        }
+        if (Levels.Remove(from, out var level))
+        {
+            Levels.TryAdd(to, level);
+        }
+    }
 }
 
 /// <summary>A game's rounds so far against Joulene, from the user's side.</summary>
@@ -316,6 +357,9 @@ public sealed class TabState
     /// </summary>
     public string? Mark { get; set; }
 
+    /// <summary>The ticket the tab was started on (DESIGN.md §18, "Tickets", "Tabs remember their ticket"); null for none.</summary>
+    public Tickets.TicketRef? Ticket { get; set; }
+
     /// <summary>
     /// Copy this tab's session to the session library after each turn, so another machine can open it from History
     /// (DESIGN.md §9, "Session library"). Off unless the tab opted in: new tabs take Settings → Sessions → Sync new
@@ -336,6 +380,12 @@ public sealed class TabState
     /// Connect new tabs to the Claude app. The tab's own state, like <see cref="SyncToLibrary"/>, not an override.
     /// </summary>
     public bool RemoteControl { get; set; }
+
+    /// <summary>
+    /// Claude finished a turn in the tab and the user hasn't opened it since (DESIGN.md §4, "Sidebar"), kept so the
+    /// sidebar still says so after Deventry restarts, when the tab comes back not started.
+    /// </summary>
+    public bool Unseen { get; set; }
 
     /// <summary>
     /// The session and account the user chose <b>Continue here</b> for, as the session's id, a bar and
@@ -429,6 +479,18 @@ public sealed class TabState
     /// once it's shown (DESIGN.md §4, "Marks").
     /// </summary>
     public bool AllFilesReviewed { get; set; }
+
+    /// <summary>
+    /// The folders collapsed in Changed files' tree (DESIGN.md §8, "The tree"), by full path, and a working tree's
+    /// heading by <c>worktree:</c> and its path. A folder not in it is expanded, so one that's new to the tree is.
+    /// </summary>
+    public List<string> CollapsedChangedFolders { get; set; } = [];
+
+    /// <summary>
+    /// What's cleared in the Media window (DESIGN.md §18, "Media", "Clearing"): <c>user:</c> or <c>agent:</c> and the
+    /// entry's key, its file or its bytes. Oldest first; a key leaves it when the entry is put back, or seen again.
+    /// </summary>
+    public List<string> ClearedMedia { get; set; } = [];
 
     /// <summary>
     /// A usage limit stopped the tab's last turn, and it waits for the limit to reset (DESIGN.md §6, "Continuing after a

@@ -27,6 +27,17 @@
       <c:SettingRow Key="sessions.restoreUnpinnedTabs">
         <ToggleSwitch IsChecked="{Binding RestoreUnpinnedTabs}" />
       </c:SettingRow>
+      <!-- Unloading idle tabs (DESIGN.md §9) -->
+      <c:SettingRow Key="sessions.unloadIdleTabs">
+        <ToggleSwitch IsChecked="{Binding UnloadIdleTabs}" />
+        <c:SettingRow.Details>
+          <StackPanel IsEnabled="{Binding UnloadIdleTabs}">
+            <c:SettingRow Key="sessions.unloadIdleTabsAfterMinutes">
+              <NumericUpDown Minimum="1" Maximum="1440" Increment="15" FormatString="0" Value="{Binding UnloadIdleTabsAfterMinutes}" />
+            </c:SettingRow>
+          </StackPanel>
+        </c:SettingRow.Details>
+      </c:SettingRow>
       <c:SettingRow Key="general.confirmCloseWorkingTab">
         <ToggleSwitch IsChecked="{Binding ConfirmCloseWorkingTab}" />
       </c:SettingRow>
@@ -54,6 +65,9 @@
       <c:SettingRow Key="claudeCode.keepAwakeWhileConnected">
         <ToggleSwitch IsChecked="{Binding KeepAwakeWhileConnected}" />
       </c:SettingRow>
+      <c:SettingRow Key="remoteClients.keepAwake">
+        <ToggleSwitch IsChecked="{Binding KeepAwakeWhileRemoteClient}" />
+      </c:SettingRow>
     </c:SettingsSection>
 
     <!-- Claude's service status (DESIGN.md §18) and Deventry's own updates (DESIGN.md §2, "Updating Deventry") -->
@@ -74,6 +88,7 @@
         <c:SettingRow.Details>
           <StackPanel Spacing="8" DataContext="{Binding SourceUpdates}" x:DataType="vm:SourceUpdateViewModel">
             <TextBlock Classes="muted small" Text="{Binding CheckStatusText, FallbackValue=''}" TextWrapping="Wrap" />
+            <CheckBox IsChecked="{Binding RestartAutomatically}" Content="Restart into new builds by itself when no tab is working" />
             <TextBlock Classes="muted small" Text="{Binding WhyNotText}" TextWrapping="Wrap" IsVisible="{Binding WhyNotText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             <TextBlock Classes="small warning" Text="{Binding ErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasError}" />
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />

@@ -19,6 +19,12 @@ public sealed record MotionChoice(MotionSetting Setting)
     };
 }
 
+/// <summary>Settings → Appearance → Tab activity's choices (DESIGN.md §4, "Sidebar").</summary>
+public sealed record TabActivityChoice(TabActivity Activity)
+{
+    public override string ToString() => Activity == TabActivity.Bars ? "Colored rows" : "Status dots";
+}
+
 /// <summary>Joulene's sizes in Settings → Appearance (DESIGN.md §5, "Joulene on the composer").</summary>
 public sealed record JouleneSizeChoice(JouleneSize Size)
 {
@@ -84,6 +90,10 @@ public sealed class AppearancePage : SettingsPage
                 "Everything in the main window, bigger or smaller.",
                 "Ctrl and + or −, or Ctrl+0, change it too (Cmd on a Mac). Each computer keeps its own, to suit its screen.",
                 ["scale", "bigger", "magnify"]),
+            Setting("appearance.tabActivity", "Tab activity", s => s.Appearance.TabActivity, (s, v) => s.Appearance.TabActivity = v,
+                "How the sidebar shows that Claude is working in a tab, or waiting for you.",
+                "Colored rows: no status icons; a soft highlight runs across the row while Claude works, the row flashes orange while it waits for your answer, a pale green wash marks a tab it finished in while you weren't looking, until you open it, and a red one a tab that stopped with an error. A tab's name shimmers while its session starts. Status dots: the dot before the tab's name pulses while Claude works.",
+                ["working", "busy", "waiting", "progress", "bar", "dot", "sidebar", "activity"]),
             Setting("appearance.motion", "Motion", s => s.Appearance.Motion, (s, v) => s.Appearance.Motion = v,
                 "Whether the busy dots pulse, the working line twinkles and the icon moves.",
                 "Following the system, motion is reduced when your computer's settings, or Claude Code's prefersReducedMotion, ask for it. Joulene on the composer stands still then too.",
@@ -102,9 +112,9 @@ public sealed class AppearancePage : SettingsPage
                 "Now and then she holds up a tip, such as a shortcut you might not know.",
                 "At most every ten minutes, and never while you're typing.", ["joulene", "hints"]),
             Setting("appearance.gamesWithJoulene", "Games with Joulene", s => s.Appearance.GamesWithJoulene, (s, v) => s.Appearance.GamesWithJoulene = v,
-                "Tic-tac-toe, Connect Four, hangman or Minesweeper against her while Claude works.",
+                "Tic-tac-toe, Four in a Row, hangman, Minesweeper or Pipeline against her while Claude works.",
                 "Or while a usage limit holds a task. Start one by right-clicking her, from the command palette, or from the usage limit bar; it opens in the Games tool window. She plays whether or not she's on the composer.",
-                ["play", "tic-tac-toe", "connect four", "hangman", "minesweeper"]),
+                ["play", "tic-tac-toe", "four in a row", "hangman", "minesweeper", "pipeline", "pipes"]),
         ]);
         context.SettingsSaved += OnPreviewSettingsSaved;
         context.AllPagesChanged += OnPreviewSettingsSaved;
@@ -235,6 +245,15 @@ public sealed class AppearancePage : SettingsPage
         set => Set(value?.Percent ?? Core.Accessibility.Zoom.Default, v => Settings.Appearance.Zoom = v);
     }
 
+    public IReadOnlyList<TabActivityChoice> TabActivityChoices { get; } = [new(Core.Settings.TabActivity.Bars), new(Core.Settings.TabActivity.Dots)];
+
+    /// <summary>Whether the sidebar shows a working or waiting tab with its row's colors or a status dot (DESIGN.md §4, "Sidebar").</summary>
+    public TabActivityChoice TabActivity
+    {
+        get => TabActivityChoices.FirstOrDefault(c => c.Activity == Settings.Appearance.TabActivity) ?? TabActivityChoices[0];
+        set => Set(value?.Activity ?? Core.Settings.TabActivity.Bars, v => Settings.Appearance.TabActivity = v);
+    }
+
     public IReadOnlyList<MotionChoice> MotionChoices { get; } =
         [new(MotionSetting.System), new(MotionSetting.Reduce), new(MotionSetting.Full)];
 
@@ -281,7 +300,7 @@ public sealed class AppearancePage : SettingsPage
         set => Set(value, v => Settings.Appearance.JouleneTips = v);
     }
 
-    /// <summary>Tic-tac-toe, Connect Four, hangman and Minesweeper against her (DESIGN.md §18, "Games with Joulene").</summary>
+    /// <summary>Tic-tac-toe, Four in a Row, hangman, Minesweeper and Pipeline against her (DESIGN.md §18, "Games with Joulene").</summary>
     public bool GamesWithJoulene
     {
         get => Settings.Appearance.GamesWithJoulene;

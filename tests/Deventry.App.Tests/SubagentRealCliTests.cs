@@ -27,12 +27,12 @@ public sealed class SubagentRealCliTests
         // Two subagents, one asking to run a command and the other starting a nested Explore (the mock's SUBAGENTS).
         tab.ComposerText = "SUBAGENTS";
         await tab.SendCommand.ExecuteAsync(null);
-        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<PermissionItem>().Any(p => p.IsPending)), "the subagent's prompt", TimeSpan.FromSeconds(60));
+        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<PermissionItem>().Any(p => p.IsPending)), "the subagent's prompt");
         var asking = InlineDispatcher.Read(() => tab.SubagentRows.Single(r => r.Node.IsWaiting));
         InlineDispatcher.Run(() => asking.OpenCommand.Execute(null));
         var prompt = InlineDispatcher.Read(() => Assert.IsType<PermissionItem>(tab.ViewedAgent!.WaitingPrompt));
         InlineDispatcher.Run(() => prompt.AllowCommand.Execute(null));
-        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Any()), "the end of the turn", TimeSpan.FromSeconds(60));
+        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Any()), "the end of the turn");
 
         InlineDispatcher.Run(() =>
         {
@@ -57,7 +57,7 @@ public sealed class SubagentRealCliTests
 
         tab.ComposerText = "SUBAGENTS";
         await tab.SendCommand.ExecuteAsync(null);
-        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Any()), "the end of the turn", TimeSpan.FromSeconds(60));
+        await Deventry.Tests.Waiting.UntilAsync(() => InlineDispatcher.Read(() => tab.Items.OfType<TurnSummaryItem>().Any()), "the end of the turn");
 
         InlineDispatcher.Run(() =>
         {

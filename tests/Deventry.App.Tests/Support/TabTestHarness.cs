@@ -100,6 +100,12 @@ internal sealed class ScriptedTransport : IClaudeTransport
 
     public IEnumerable<string> SentControlSubtypes => Sent.Where(m => m["type"]?.GetValue<string>() == "control_request").Select(m => m["request"]!["subtype"]!.GetValue<string>());
 
+    /// <summary>
+    /// Its processes go on when their input closes, as a <c>claude</c> still writing its transcript does, and end only when
+    /// they're terminated: after the stop's grace, on the test's clock.
+    /// </summary>
+    public bool IgnoresInputClosing { get; set; }
+
     /// <summary>The pretend <c>claude</c> process id, for the process monitor.</summary>
     public int? ProcessId { get; set; } = 4242;
 
@@ -274,7 +280,13 @@ internal sealed class ScriptedTransport : IClaudeTransport
 
         public ValueTask SendAsync(string line, CancellationToken cancellationToken = default) => transport.Receive(process, line);
 
-        public void CloseInput() => process.Exit(0, "");
+        public void CloseInput()
+        {
+            if (!transport.IgnoresInputClosing)
+            {
+                process.Exit(0, "");
+            }
+        }
 
         public void Terminate() => process.Exit(-1, "");
 
@@ -415,6 +427,9 @@ internal sealed class InlineDispatcher : IUiDispatcher
         RunOnUiThread(() => task = work());
         return task!;
     }
+
+    /// <summary>This thread holds the UI lock: it's running work as if on the UI thread.</summary>
+    public static bool IsOnUiThread => UiThread.IsHeldByCurrentThread;
 
     /// <summary>Evaluates <paramref name="read"/> as if on the UI thread, so it can't see a collection mid-change.</summary>
     public static T Read<T>(Func<T> read)
@@ -638,11 +653,13 @@ internal sealed class TabTestHarness : IAsyncDisposable
         // Other programs' folders (the Epic launcher's, Unity Hub's) are empty ones here, never the real ones (DESIGN.md §18).
         var otherPrograms = new Core.ProjectTools.ProjectToolPaths(Path.Combine(_root, "home"), Path.Combine(_root, "appdata"), Path.Combine(_root, "localappdata"),
             Path.Combine(_root, "programdata"), Path.Combine(_root, "programfiles"), Path.Combine(_root, "applications"));
-        // Real processes, or the test's, but never p4 unless the test's is FakeP4 (NoRealP4Launcher says why).
-        Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher()), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
+        // Real processes, or the test's, but never p4 unless the test's is FakeP4 (NoRealP4Launcher says why). A real one's
+        // output is read to its end however long a busy machine takes to get to it: two seconds after it exited, a
+        // starved thread pool had read none of git's error. Nothing the tests start leaves a process holding it open.
+        Services = new AppServices(AppPaths.Under(_root), launcher is FakeP4 ? launcher : new NoRealP4Launcher(launcher ?? new ProcessLauncher(outputDrainTime: Waiting.Timeout)), Time, Platform, dispatcher ?? new InlineDispatcher(), processTrees: Trees, notifier: Notifier,
             appInstaller: appInstaller, httpHandler: http ?? new OfflineHandler(), appVersion: appVersion ?? TestVersion, loginShell: loginShell,
             projectToolPaths: otherPrograms, sleepBlocker: SleepBlocker, loginItems: LoginItems, systemMotion: SystemMotion,
-            trash: Trash, demo: demo);
+            trash: Trash, userPresence: Presence, wakeTimer: WakeTimer, demo: demo, loggerFactory: new TestOutputLoggers());
         Services.Notifications.UseBadge(Notifier);
         // The machine running the tests doesn't decide whether the Claude app is available (its ANTHROPIC_BASE_URL, say).
         Services.RemoteControl.EnvironmentVariable = _ => null;
@@ -695,8 +712,14 @@ internal sealed class TabTestHarness : IAsyncDisposable
     /// <summary>Stands in for keeping the computer awake while tabs are connected to the Claude app (DESIGN.md §18).</summary>
     public FakeSleepBlocker SleepBlocker { get; } = new();
 
+    /// <summary>Stands in for waking the computer for a timed message (DESIGN.md §18, "Timed messages").</summary>
+    public FakeWakeTimer WakeTimer { get; } = new();
+
     /// <summary>Stands in for the OS's reduce-motion setting (DESIGN.md §3, "Accessibility").</summary>
     public FakeSystemMotion SystemMotion { get; } = new();
+
+    /// <summary>Stands in for whether the user is at the computer, for the remote clients (DESIGN.md §18, "Remote clients").</summary>
+    public FakeUserPresence Presence { get; } = new();
 
     /// <summary>Stands in for the OS's trash (DESIGN.md §18, "Project files", "Renaming and deleting"): never the user's own.</summary>
     public FakeTrash Trash { get; private set; } = null!;
@@ -760,6 +783,12 @@ internal sealed class TabTestHarness : IAsyncDisposable
         InlineDispatcher.Run(action);
     }
 
+    /// <summary>
+    /// Starts a restored tab as its first message would, since selecting it only reads its conversation (DESIGN.md §9,
+    /// "Starting fast"). Not awaited: a start can wait on what the test does next.
+    /// </summary>
+    public void Start(TabViewModel? tab = null) => _ = InlineDispatcher.RunAsync((tab ?? Shell.SelectedTab!).EnsureStartedAsync);
+
     public async Task<TabViewModel> OpenTabAsync()
     {
         await Shell.OpenFolderAsync(WorkFolder);
@@ -784,8 +813,13 @@ internal sealed class TabTestHarness : IAsyncDisposable
     /// Waits until <paramref name="condition"/> holds, read the way the UI thread would (<see cref="InlineDispatcher.Read"/>),
     /// by the clock (<see cref="Waiting.UntilAsync"/>). Some waits are on real processes (git, for the file index).
     /// </summary>
-    public static Task Eventually(Func<bool> condition, string? what = null) =>
-        Waiting.UntilAsync(() => InlineDispatcher.Read(condition), what);
+    /// <param name="poll">
+    /// Run before each look, outside the UI lock: advancing the harness's clock goes here, never in
+    /// <paramref name="condition"/>. Under the lock, an advance waits for a timer another thread is running, which waits
+    /// for the lock, and every test in the process waits with them (<see cref="HarnessClock"/>).
+    /// </param>
+    public static Task Eventually(Func<bool> condition, string? what = null, Action? poll = null) =>
+        Waiting.UntilAsync(() => InlineDispatcher.Read(condition), what, poll: poll);
 
     public async ValueTask DisposeAsync()
     {

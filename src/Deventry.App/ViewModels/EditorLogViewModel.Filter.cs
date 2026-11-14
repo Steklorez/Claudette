@@ -24,6 +24,9 @@ public sealed partial class EditorLogViewModel
     /// <summary>The widest the category column gets, in characters; a longer name pushes its message along.</summary>
     public const int MaxCategoryColumn = 24;
 
+    /// <summary>The widest the thread column gets, in characters.</summary>
+    public const int MaxThreadColumn = 18;
+
     private readonly bool[] _hiddenLevels = new bool[Enum.GetValues<LogVerbosity>().Length];
     private readonly HashSet<string> _hiddenCategories = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, LogCategoryChoice> _categories = new(StringComparer.OrdinalIgnoreCase);
@@ -83,6 +86,17 @@ public sealed partial class EditorLogViewModel
     [NotifyPropertyChangedFor(nameof(ShowsColumns))]
     public partial bool HasTimeColumn { get; private set; }
 
+    /// <summary>
+    /// Its lines have the time and thread Unity's <c>-timestamps</c> puts before them, so the columns have the thread's
+    /// before the message (DESIGN.md §18, "Editor logs", "Its lines").
+    /// </summary>
+    [ObservableProperty]
+    public partial bool HasThreadColumn { get; private set; }
+
+    /// <summary>The thread column's width in characters: its longest thread's, to <see cref="MaxThreadColumn"/>.</summary>
+    [ObservableProperty]
+    public partial int ThreadColumn { get; private set; }
+
     /// <summary>Some lines are hidden: a level or a category is, or there's text to filter by.</summary>
     public bool IsFiltered => TextFilter.Length > 0 || _hiddenLevels.Any(h => h) || Categories.Any(c => !c.IsShown);
 
@@ -127,6 +141,8 @@ public sealed partial class EditorLogViewModel
             CategoryColumn = 0;
         }
         HasTimeColumn = (!read.Fresh && HasTimeColumn) || read.Lines.Any(l => l.Columns?.Time is not null);
+        HasThreadColumn = (!read.Fresh && HasThreadColumn) || read.Lines.Any(l => l.Columns is { ThreadStart: >= 0 });
+        ThreadColumn = Math.Min(MaxThreadColumn, Math.Max(read.Fresh ? 0 : ThreadColumn, read.Lines.Max(l => l.Columns?.Thread?.Length) ?? 0));
         foreach (var chip in Levels)
         {
             chip.Count += read.Counts[chip.Verbosity];

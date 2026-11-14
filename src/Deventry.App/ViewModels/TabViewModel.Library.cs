@@ -244,13 +244,17 @@ public sealed partial class TabViewModel
     /// never write the same session (DESIGN.md §9, "One machine at a time").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsReadOnly), nameof(CanSyncNow), nameof(SyncNowTip))]
-    [NotifyCanExecuteChangedFor(nameof(SendCommand), nameof(SyncNowCommand))]
+    [NotifyPropertyChangedFor(nameof(IsReadOnly), nameof(CanSyncNow), nameof(SyncNowTip), nameof(CanRestart))]
+    [NotifyCanExecuteChangedFor(nameof(SendCommand), nameof(SyncNowCommand), nameof(RestartCommand))]
     public partial string? TakenOverBy { get; set; }
 
     public bool IsReadOnly => TakenOverBy is not null;
 
-    public string ReadOnlyText => $"This session continued on {TakenOverBy}. The tab is read-only here; open it again from History to continue on this machine.";
+    /// <summary>
+    /// The banner in place of the composer. History only selects a tab already open on the session, so carrying it on here
+    /// takes closing this one first.
+    /// </summary>
+    public string ReadOnlyText => $"This session continued on {TakenOverBy}. The tab is read-only here; to continue on this machine, close it and open the session again from History.";
 
     public Task OnTakenOverAsync(string machine) => BecomeReadOnlyAsync(machine, $"This session was taken over by {machine}.");
 
@@ -312,15 +316,25 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>
-    /// Before the first message since Claude Code started, as for <see cref="CheckLibraryAsync"/>. When it brings another
-    /// machine's turns here, the message isn't sent but stays in the composer, to be read again against them. Returns
-    /// whether the message was held back.
+    /// Before the first message since Claude Code started, as for <see cref="CheckLibraryAsync"/>, and before the one that
+    /// starts it once its conversation is read: a restored tab is read as it's shown, maybe long before its first message
+    /// (DESIGN.md §9, "Starting fast"), and an unloaded one was read as it first started. When it brings another machine's
+    /// turns here, the message isn't sent but stays in the composer, to be read again against them. Returns whether the
+    /// message was held back.
     /// </summary>
-    private async Task<bool> CheckLibraryBeforeSendingAsync()
+    /// <param name="via">The remote client the message came from, whose message isn't in the composer (DESIGN.md §18, "Remote clients").</param>
+    private async Task<bool> CheckLibraryBeforeSendingAsync(string? via = null)
     {
-        if (_sentSinceStart || _session is null || IsWorking || !State.SyncToLibrary)
+        // One still to read its conversation looks as its start reads it.
+        var due = _session is null ? _restoredTranscript && _starting is null : !_sentSinceStart;
+        if (!due || IsWorking || !State.SyncToLibrary)
         {
             return false;
+        }
+        if (_transcriptRead is { } read)
+        {
+            // What's compared is what the tab shows.
+            await read;
         }
         if (!await ActOnLibraryAsync(await CompareWithLibraryAsync()))
         {
@@ -328,7 +342,9 @@ public sealed partial class TabViewModel
         }
         if (!IsReadOnly)
         {
-            _conversation.AddNote("Your message wasn't sent, so you can read it again against what's new. It's still in the composer.");
+            _conversation.AddNote(via is null
+                ? "Your message wasn't sent, so you can read it again against what's new. It's still in the composer."
+                : $"Your message from {via} wasn't sent, so you can read it again against what's new.");
         }
         return true;
     }
@@ -361,6 +377,7 @@ public sealed partial class TabViewModel
         Status = TabStatus.NotStarted;
         // Read again as it starts, which brings the library's copy here (RestoreTranscriptAsync).
         _restoredTranscript = false;
+        _transcriptRead = null;
         await EnsureStartedAsync();
     }
 

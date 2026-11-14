@@ -12,11 +12,12 @@ using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 namespace Deventry.App.ViewModels;
 
 /// <summary>One file in the Changed files panel (DESIGN.md §8).</summary>
-public sealed partial class ChangedFileRow : ObservableObject
+public sealed partial class ChangedFileRow : ChangedTreeRow
 {
     public required string Path { get; init; }
 
@@ -33,6 +34,26 @@ public sealed partial class ChangedFileRow : ObservableObject
     public required string StatusText { get; init; }
 
     public string? Stats { get; init; }
+
+    /// <summary>The lines added, when they're counted: what its folders' counts add up (DESIGN.md §8, "The tree").</summary>
+    public int? Added { get; init; }
+
+    /// <summary>The lines removed, when they're counted.</summary>
+    public int? Removed { get; init; }
+
+    /// <summary>
+    /// It's in the tree, under its folder's row (DESIGN.md §8, "The tree"): its path isn't under its name, and its working
+    /// tree's heading is a row of its own.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Indent), nameof(ShowsGroup))]
+    public partial bool InTree { get; set; }
+
+    /// <summary>In the tree, past its folder's arrow, as far as its folder's row is in.</summary>
+    public override double Indent => InTree ? Depth * TreeLevel + ArrowWidth : 0;
+
+    /// <summary>The list heads its working tree's group on this row.</summary>
+    public bool ShowsGroup => Group is not null && !InTree;
 
     /// <summary>
     /// What changed that the lines don't show, for the line under the row's folder: <i>"Only its line endings changed:
@@ -109,7 +130,7 @@ public sealed partial class ChangedFileRow : ObservableObject
     /// <summary>Shows the same as <paramref name="other"/>, so the list can keep this row.</summary>
     public bool SameAs(ChangedFileRow other) =>
         Path == other.Path && DisplayPath == other.DisplayPath && Status == other.Status && StatusText == other.StatusText
-        && Stats == other.Stats && Note == other.Note && BeforeLineEndings == other.BeforeLineEndings && ReferenceEquals(Before, other.Before) && BeforeKnown == other.BeforeKnown && FromGit == other.FromGit
+        && Stats == other.Stats && Added == other.Added && Removed == other.Removed && Note == other.Note && BeforeLineEndings == other.BeforeLineEndings && ReferenceEquals(Before, other.Before) && BeforeKnown == other.BeforeKnown && FromGit == other.FromGit
         && LatestChange == other.LatestChange && IsReviewed == other.IsReviewed
         && ReferenceEquals(After, other.After) && AfterKnown == other.AfterKnown && Since == other.Since && IsGone == other.IsGone
         && InGoneWorkTree == other.InGoneWorkTree && WorkTree == other.WorkTree && Group == other.Group;
@@ -146,7 +167,10 @@ internal interface IChangedFilesHost : ITabAreaHost
     void ClaudeCreatedFile(string path);
 }
 
-/// <summary>The tab's changed files and diffs (DESIGN.md §8).</summary>
+/// <summary>
+/// The tab's changed files and diffs (DESIGN.md §8), with partials for the working trees they're in
+/// (<c>.WorkTrees.cs</c>) and the tree the panel shows them in (<c>.Tree.cs</c>).
+/// </summary>
 public sealed partial class ChangedFilesViewModel : ViewModelBase
 {
     /// <summary>How long a tab that syncs waits after a tick before writing its record, so ticking several files writes it once.</summary>
@@ -188,6 +212,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         _host = host;
         // As saved, until the session's changes are read back (ChangesRead).
         AllReviewed = host.State.AllFilesReviewed;
+        ShowAsTree = !services.State.ChangedFilesAsList;
     }
 
     private ChangedFiles Changes
@@ -245,7 +270,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
 
     partial void OnShowGitChangesChanged(bool value)
     {
-        _ = RefreshAsync();
+        RefreshInBackground();
         UpdateWatches();
     }
 
@@ -324,6 +349,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     {
         _host.State.ReviewedFiles.Clear();
         _reviewed = null;
+        // Its tree starts again too, every folder expanded.
+        _host.State.CollapsedChangedFolders.Clear();
+        _collapsed = null;
         Reset();
         _services.SaveState();
         ReviewedChanged?.Invoke();
@@ -392,6 +420,21 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
             rows[i].Hidden = hidden;
             rows[i].Note = HiddenChangeText.Note(hidden, linesChanged: added + removed > 0 && hidden is not { WhitespaceOnly: true });
         }
+    }
+
+    /// <summary>
+    /// A turn's files with their lines added and removed, for the remote clients' message about it (DESIGN.md §18,
+    /// "Remote clients"): counted off the UI thread, as the footer's are.
+    /// </summary>
+    internal async Task<IReadOnlyList<Core.Remote.RemoteFileChange>> CountForRemoteAsync(IReadOnlyList<TurnFileRow> rows)
+    {
+        if (rows.Count == 0)
+        {
+            return [];
+        }
+        var changes = Changes;
+        var counted = await Task.Run(() => rows.Select(row => changes.CountTurn(row.Change)).ToArray());
+        return [.. rows.Select((row, i) => new Core.Remote.RemoteFileChange(row.DisplayPath, counted[i]?.Added ?? 0, counted[i]?.Removed ?? 0, row.Change.IsNew))];
     }
 
     /// <summary>
@@ -499,7 +542,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         if (ShowGitChanges)
         {
             // Once the edits pause.
-            GitRefreshWait.Restart(GitRefreshDelay, () => _ = RefreshAsync());
+            GitRefreshWait.Restart(GitRefreshDelay, RefreshInBackground);
             return;
         }
         if (_refreshQueued)
@@ -510,9 +553,29 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         _services.Dispatcher.Post(() =>
         {
             _refreshQueued = false;
-            _ = RefreshAsync();
+            RefreshInBackground();
         });
     }
+
+    /// <summary>
+    /// A refresh nobody waits for: one that fails says so in the log, rather than leaving the rows as they were without a
+    /// word.
+    /// </summary>
+    private void RefreshInBackground() => _ = RefreshOrSayWhyAsync();
+
+    private async Task RefreshOrSayWhyAsync()
+    {
+        try
+        {
+            await RefreshAsync();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Logger.LogWarning(ex, "Changed files couldn't list the changes in {Folder}.", _host.Folder);
+        }
+    }
+
+    private ILogger Logger => field ??= _services.Loggers.CreateLogger("ChangedFiles");
 
     [RelayCommand]
     internal async Task RefreshAsync()
@@ -546,6 +609,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 catch (OperationCanceledException)
                 {
                     // A newer refresh took over.
+                    Logger.LogDebug("The working tree's listing {Generation} was overtaken by a newer one.", generation);
                     return;
                 }
                 var from = tree ?? folder;
@@ -561,6 +625,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                         _ => c.Kind.ToString(),
                     },
                     Stats = c.Added is { } a && c.Removed is { } r && (a + r > 0 || c.Hidden is null) ? $"+{a} −{r}" : null,
+                    Added = c.Added,
+                    Removed = c.Removed,
                     Note = HiddenChangeText.Note(c.Hidden, linesChanged: c.Added + c.Removed > 0, fromGit: true),
                     Hidden = c.Hidden,
                     FromGit = true,
@@ -581,6 +647,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
         if (generation != _refreshGeneration)
         {
+            Logger.LogDebug("Changed files' listing {Generation} was overtaken by {Latest}: its rows are dropped.", generation, _refreshGeneration);
             return;
         }
         // Marks on files Claude has changed since are forgotten (DESIGN.md §8, "Reviewed").
@@ -601,6 +668,7 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         }
         UpdateWatches();
         SyncRows(rows);
+        ShowRows();
         Count = Files.Count;
         UpdateSummary();
         OnPropertyChanged(nameof(IsGitRepository));
@@ -628,6 +696,8 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
                 + (treeGone ? ", in a worktree that's gone" : ""),
             // No line changed: the line under the folder says what did, in place of +0 −0.
             Stats = state.Added is { } a && state.Removed is { } r ? a + r > 0 || state.Hidden is null ? $"+{a} −{r}" : null : state.IsBinary ? "binary" : null,
+            Added = state.Added,
+            Removed = state.Removed,
             Note = HiddenChangeText.Note(state.Hidden, linesChanged: state.Added + state.Removed > 0 && state.Hidden is not { WhitespaceOnly: true }),
             Hidden = state.Hidden,
             BeforeLineEndings = file.BeforeLineEndings,
@@ -869,20 +939,27 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
     /// Marks a file as reviewed as of Claude's change <paramref name="change"/> to it, or clears its mark. It stays
     /// reviewed until Claude changes it again, so marking a change older than Claude's latest leaves it unreviewed.
     /// </summary>
-    private void SetFileReviewed(string path, bool reviewed, string? change)
+    private void SetFileReviewed(string path, bool reviewed, string? change) => SetFilesReviewed([(path, change)], reviewed);
+
+    /// <summary>Marks several files as reviewed, each as of its change, or clears their marks: a folder's box (DESIGN.md §8, "The tree").</summary>
+    private void SetFilesReviewed(IReadOnlyList<(string Path, string? Change)> files, bool reviewed)
     {
-        if (reviewed)
+        foreach (var (path, change) in files)
         {
-            Reviewed.Mark(path, change);
-        }
-        else
-        {
-            Reviewed.Unmark(path);
+            if (reviewed)
+            {
+                Reviewed.Mark(path, change);
+            }
+            else
+            {
+                Reviewed.Unmark(path);
+            }
         }
         foreach (var row in Files)
         {
             row.IsReviewed = Reviewed.IsReviewed(row.Path, Changes.Find(row.Path));
         }
+        UpdateFolderReviewed();
         UpdateSummary();
         UpdateAllReviewed();
         _services.SaveState();

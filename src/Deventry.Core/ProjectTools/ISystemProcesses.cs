@@ -47,19 +47,43 @@ public static class SystemProcessNames
     /// <summary>Does <paramref name="name"/> (with or without <c>.exe</c>) match one of <paramref name="patterns"/>?</summary>
     public static bool Matches(string name, IEnumerable<string> patterns)
     {
-        var bare = name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
         foreach (var pattern in patterns)
         {
-            var target = pattern.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? pattern[..^4] : pattern;
-            if (target.EndsWith('*')
-                    ? bare.StartsWith(target[..^1], StringComparison.OrdinalIgnoreCase)
-                    : string.Equals(bare, target, StringComparison.OrdinalIgnoreCase))
+            if (Matches(name, pattern))
             {
                 return true;
             }
         }
         return false;
     }
+
+    /// <summary>
+    /// <see cref="Matches(string, IEnumerable{string})"/> for a name not made into a string yet: every process on the
+    /// machine is looked at every couple of seconds while a project's editor log is followed, and few match.
+    /// </summary>
+    public static bool MatchesAny(ReadOnlySpan<char> name, IReadOnlyList<string> patterns)
+    {
+        for (var i = 0; i < patterns.Count; i++)
+        {
+            if (Matches(name, patterns[i]))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool Matches(ReadOnlySpan<char> name, ReadOnlySpan<char> pattern)
+    {
+        var bare = WithoutExe(name);
+        var target = WithoutExe(pattern);
+        return target.EndsWith('*')
+            ? bare.StartsWith(target[..^1], StringComparison.OrdinalIgnoreCase)
+            : bare.Equals(target, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static ReadOnlySpan<char> WithoutExe(ReadOnlySpan<char> name) =>
+        name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? name[..^4] : name;
 
     /// <summary>
     /// The file name, without its extension, of the first argument ending in <paramref name="extension"/> (such as

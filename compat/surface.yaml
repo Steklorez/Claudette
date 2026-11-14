@@ -345,9 +345,9 @@ items:
   - id: "rate_limit_info.status"
     kind: field
     status: documented
-    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs
+    usedIn: src/Deventry.Core/Sessions/AutoContinueMonitor.cs, src/Deventry.Usage/UsageParser.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: AutoContinueMonitorTests, AutoContinueTests
+    test: AutoContinueMonitorTests, AutoContinueTests, UsageParserTests
   - id: "resetsAt"
     kind: field
     status: documented
@@ -1144,10 +1144,10 @@ items:
   - id: "Images in tool results"
     kind: behavior
     status: documented
-    usedIn: src/Deventry.Core/Protocol/ContentBlocks.cs, src/Deventry.Core/Protocol/MessageImage.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/ContentBlocks.cs, src/Deventry.Core/Protocol/MessageImage.cs, src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.App/Conversation/MediaGallery.cs
     docs: https://code.claude.com/docs/en/mcp
-    test: ToolImagesTests, ToolImageTests, ToolImageRealCliTests
-    fallback: "A tool_result's content can hold base64 image blocks, as the Messages API's do: a Read of an image, a PDF's pages read with pages, a notebook's figures, Bash output that's an image, an MCP tool's image (checked against 2.1.299, live and in transcripts). Deventry shows them under the tool's card (DESIGN.md §18, \"Images from Claude's tools\"). Non-base64 sources are skipped. If images move elsewhere, the cards show only the text, as before."
+    test: ToolImagesTests, ToolImageTests, ToolImageRealCliTests, MediaTests
+    fallback: "A tool_result's content can hold base64 image blocks, as the Messages API's do: a Read of an image, a PDF's pages read with pages, a notebook's figures, Bash output that's an image, an MCP tool's image (checked against 2.1.299, live and in transcripts). Deventry shows them under the tool's card (DESIGN.md §18, \"Images from Claude's tools\") and in the Media window (\"Media\"). Non-base64 sources are skipped. If images move elsewhere, the cards show only the text, as before, and the Media window has only the media files the conversation names."
   - id: "FileReadOutput"
     kind: field
     status: documented
@@ -1575,7 +1575,19 @@ items:
     status: undocumented
     usedIn: src/Deventry.Usage/UsageParser.cs, src/Deventry.Usage/UsageCredits.cs, src/Deventry.Core/Sessions/AutoContinueMonitor.cs, src/Deventry.App/ViewModels/TabViewModel.UsageCredits.cs
     test: UsageParserTests, UsageCreditsTests, UsageHeaderTests, UsageCreditsUiTests, AutoContinueMonitorTests, UsageCreditsTabTests
-    fallback: rate_limit_info.isUsingOverage, with rateLimitType and resetsAt for the used-up limit (status rejected, overageStatus allowed). Without it, the notice shows from get_usage alone, rate_limits.extra_usage.is_enabled with the session or weekly limit at 100%, a poll late and without a model's own limit. A tab that doesn't use usage credits stops a turn on it, and treats such a rejection as one the turn got past rather than the limit; without it, the tab holds messages by the poll alone, and a turn already running on credits isn't stopped.
+    fallback: rate_limit_info.isUsingOverage, with rateLimitType and resetsAt for the used-up limit (status rejected, overageStatus allowed). Without it, the notice shows from get_usage alone, rate_limits.extra_usage.is_enabled with the session or weekly limit at 100%, a poll late and without a model's own limit. A tab that doesn't use usage credits stops a turn on it, and treats such a rejection as one the turn got past rather than the limit; without it, the tab holds messages by the poll alone, and a turn already running on credits isn't stopped. False says credits stopped only on a rejected request, or one let through with no limit used up and neither rateLimitGraceActive nor overageInUse; any other is a request paid some other way, and the word that they pay stands.
+  - id: "rateLimitGraceActive"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Usage/UsageParser.cs
+    test: UsageParserTests
+    fallback: rate_limit_info.rateLimitGraceActive, true while Claude Code is in its grace window past a used-up limit. With isUsingOverage false, it keeps the word that usage credits pay rather than ending it. Without it, the event's unifiedWindows still show the limit used up and do the same.
+  - id: "overageInUse"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Usage/UsageParser.cs
+    test: UsageParserTests
+    fallback: rate_limit_info.overageInUse, true while usage credits are in use, even for a request they didn't pay for. With isUsingOverage false, it keeps the word that they pay rather than ending it. Without it, only the event's windows and status decide.
   - id: "/usage"
     kind: command
     status: documented
@@ -1867,7 +1879,7 @@ items:
     status: documented
     usedIn: src/Deventry.Core/Diffs/ChangedFiles.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: ChangedFilesTests, TaskProgressTests, ReplyFileTests
+    test: ChangedFilesTests, TaskProgressTests, ReplyFileTests, MediaTests
   - id: "filePath"
     kind: field
     status: documented
@@ -2309,9 +2321,9 @@ items:
   - id: "BashInput"
     kind: field
     status: documented
-    usedIn: src/Deventry.Core/Perforce/BashCommandLog.cs, src/Deventry.App/ViewModels/PerforceViewModel.cs
+    usedIn: src/Deventry.Core/Perforce/BashCommandLog.cs, src/Deventry.App/ViewModels/PerforceViewModel.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: PerforceTabTests
+    test: PerforceTabTests, MediaTests
   - id: "control_cancel_request for hook_callback"
     kind: behavior
     status: undocumented
@@ -2319,6 +2331,13 @@ items:
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: HookCallbackTests
     fallback: Sent when the turn is interrupted or the hook times out. Without it, a hook callback that's still waiting finishes and its answer is ignored.
+
+  - id: "TaskStop's task_id ends a background task without a task_notification"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.App/Conversation/RunningTasks.cs
+    test: AgentMapTests
+    fallback: "Claude stops a background task, a subagent among them, with the TaskStop tool (KillShell for a shell); its input's task_id (shell_id) names the task, and a result that isn't an error means it stopped. A subagent stopped this way was seen to stay running with no task_notification after it (2.1.312), so Deventry ends the task and the subagent on that result. If task_notification comes as well, the second end does nothing. If the tool or its input changed, a stopped subagent would look like it runs until the tab's session restarts."
 
   # --- Threads: a tab handing work to other tabs (DESIGN.md §18) -----------------------------------------
   - id: "SendMessage"

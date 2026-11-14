@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Deventry.Core.Files;
 using Deventry.Core.Json;
 using Deventry.Core.Protocol;
 
@@ -228,7 +229,7 @@ public static class FolderTrust
     {
         try
         {
-            return File.Exists(file) ? JsonTree.Parse(File.ReadAllText(file), Lenient) as JsonObject : null;
+            return File.Exists(file) ? JsonTree.Parse(SharedFile.ReadAllText(file), Lenient) as JsonObject : null;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
