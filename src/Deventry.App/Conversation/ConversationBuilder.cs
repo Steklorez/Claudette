@@ -466,9 +466,14 @@ public sealed class ConversationBuilder
 
     public void Apply(SessionEvent sessionEvent)
     {
+        var count = Items.Count;
         ApplyCore(sessionEvent);
-        // A step may have joined a run, or a message ended it: the run at the end folds as it should.
-        Runs.Update();
+        // A step may have joined a run, or a message ended it: the run at the end folds as it should. A piece of streamed
+        // text or thinking that only adds to the row it streams into changes no run, and they come many times a second.
+        if (sessionEvent is not (TextDelta or ThinkingDelta) || Items.Count != count)
+        {
+            Runs.Update();
+        }
     }
 
     private void ApplyCore(SessionEvent sessionEvent)

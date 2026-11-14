@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.VisualTree;
@@ -49,8 +50,42 @@ public static class WindowFrame
         {
             return new Thickness(TrafficLightsWidth / zoom, 0, 0, 0);
         }
-        var buttons = window.GetVisualDescendants().OfType<StackPanel>().FirstOrDefault(p => p is { Name: "PART_OverlayPanel", IsEffectivelyVisible: true });
-        return new Thickness(0, 0, (buttons?.Bounds.Width ?? DrawnButtonsWidth) / zoom, 0);
+        var buttons = Buttons(window);
+        return new Thickness(0, 0, (buttons is { IsEffectivelyVisible: true } ? buttons.Bounds.Width : DrawnButtonsWidth) / zoom, 0);
+    }
+
+    /// <summary>Each window's buttons, once found.</summary>
+    private static readonly ConditionalWeakTable<Window, StackPanel> FoundButtons = [];
+
+    /// <summary>
+    /// The panel of the buttons Avalonia draws: the one found before while it's still the window's, else looked for in
+    /// what the window draws around what's in it. Title bars ask after every layout pass, and looking through what's in
+    /// the main window too, every tab's controls, made most of a running turn's garbage.
+    /// </summary>
+    private static StackPanel? Buttons(Window window)
+    {
+        if (FoundButtons.TryGetValue(window, out var known) && TopLevel.GetTopLevel(known) == window)
+        {
+            return known;
+        }
+        var left = new Stack<Visual>();
+        left.Push(window);
+        while (left.TryPop(out var visual))
+        {
+            if (visual is StackPanel { Name: "PART_OverlayPanel" } panel)
+            {
+                FoundButtons.AddOrUpdate(window, panel);
+                return panel;
+            }
+            foreach (var child in visual.GetVisualChildren())
+            {
+                if (!ReferenceEquals(child, window.Content))
+                {
+                    left.Push(child);
+                }
+            }
+        }
+        return null;
     }
 }
 

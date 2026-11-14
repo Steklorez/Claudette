@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using Deventry.Core.Processes;
@@ -130,15 +131,17 @@ public sealed class SystemProcesses : ISystemProcesses
         {
             return found;
         }
+        var patterns = names as IReadOnlyList<string> ?? [.. names];
         var entry = new ProcessEntry32 { Size = (uint)sizeof(ProcessEntry32) };
         for (var more = Process32First(snapshot, &entry); more; more = Process32Next(snapshot, &entry))
         {
             var pid = (int)entry.ProcessId;
-            var name = new string(entry.ExeFile);
-            if (pid == _self || pid == 0 || !SystemProcessNames.Matches(name, names))
+            // Matched where Windows wrote it: only the few that match are made strings.
+            if (pid == _self || pid == 0 || !SystemProcessNames.MatchesAny(MemoryMarshal.CreateReadOnlySpanFromNullTerminated(entry.ExeFile), patterns))
             {
                 continue;
             }
+            var name = new string(entry.ExeFile);
             string? commandLine = null;
             string? folder = null;
             var handle = OpenProcess(ProcessQueryLimitedInformation | ProcessVmRead, false, pid);

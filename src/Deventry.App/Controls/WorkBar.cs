@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 
 namespace Deventry.App.Controls;
 
@@ -93,6 +94,9 @@ public sealed class WorkBar : Control
         Animate();
     }
 
+    /// <summary>The faint line under the highlight, for the color it was made with.</summary>
+    private ImmutableSolidColorBrush? _line;
+
     public override void Render(DrawingContext context)
     {
         var bounds = new Rect(Bounds.Size);
@@ -103,31 +107,32 @@ public sealed class WorkBar : Control
         var rect = new RoundedRect(bounds, CornerRadius);
         const double peak = 0.22;
         Color Faded(double alpha) => Color.FromArgb((byte)(alpha * 255), color.R, color.G, color.B);
+        // Immutable brushes: this draws every frame, and a brush of the mutable kind is an Avalonia object of its own,
+        // with its stops, that the compositor keeps track of.
         if (IsStill)
         {
-            var wash = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
-                GradientStops = { new GradientStop(Faded(peak), 0), new GradientStop(Faded(0), 1) },
-            };
+            var wash = new ImmutableLinearGradientBrush(
+                [new ImmutableGradientStop(0, Faded(peak)), new ImmutableGradientStop(1, Faded(0))],
+                startPoint: new RelativePoint(0, 0, RelativeUnit.Relative),
+                endPoint: new RelativePoint(1, 0, RelativeUnit.Relative));
             context.DrawRectangle(wash, null, rect);
             return;
         }
-        context.DrawRectangle(new SolidColorBrush(color, 0.05), null, rect);
+        if (_line is not { } line || line.Color != color)
+        {
+            _line = line = new ImmutableSolidColorBrush(color, 0.05);
+        }
+        context.DrawRectangle(line, null, rect);
         // The highlight: a soft band centred on the phase, coming in again at the left as it leaves at the right.
         var centre = _phase * (1 + Glow) - Glow / 2;
-        var brush = new LinearGradientBrush
-        {
-            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-            EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
-            GradientStops =
-            {
-                new GradientStop(Faded(0), Math.Clamp(centre - Glow / 2, 0, 1)),
-                new GradientStop(Faded(peak), Math.Clamp(centre, 0, 1)),
-                new GradientStop(Faded(0), Math.Clamp(centre + Glow / 2, 0, 1)),
-            },
-        };
+        var brush = new ImmutableLinearGradientBrush(
+            [
+                new ImmutableGradientStop(Math.Clamp(centre - Glow / 2, 0, 1), Faded(0)),
+                new ImmutableGradientStop(Math.Clamp(centre, 0, 1), Faded(peak)),
+                new ImmutableGradientStop(Math.Clamp(centre + Glow / 2, 0, 1), Faded(0)),
+            ],
+            startPoint: new RelativePoint(0, 0, RelativeUnit.Relative),
+            endPoint: new RelativePoint(1, 0, RelativeUnit.Relative));
         context.DrawRectangle(brush, null, rect);
     }
 }

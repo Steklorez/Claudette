@@ -45,8 +45,7 @@ public static class OnLine
 
     private static void OnLayoutUpdated(object? sender, EventArgs e)
     {
-        if (sender is not Control control || GetLine(control) is not { } name
-            || control.GetVisualAncestors().OfType<SideLine>().FirstOrDefault(l => l.Name == name) is not { } line)
+        if (sender is not Control control || GetLine(control) is not { } name || LineOf(control, name) is not { } line)
         {
             return;
         }
@@ -69,5 +68,18 @@ public static class OnLine
             control.RenderTransform = shift == 0 ? null : new TranslateTransform(shift, 0);
         }
         line.SetGap(control, Math.Round(corner.Y * scale) / scale, Math.Round((corner.Y + control.Bounds.Height) * scale) / scale);
+    }
+
+    /// <summary>The ancestor line named <paramref name="name"/>: looked for after every layout pass, so with a plain loop.</summary>
+    private static SideLine? LineOf(Control control, string name)
+    {
+        for (var visual = control.GetVisualParent(); visual is not null; visual = visual.GetVisualParent())
+        {
+            if (visual is SideLine line && line.Name == name)
+            {
+                return line;
+            }
+        }
+        return null;
     }
 }
