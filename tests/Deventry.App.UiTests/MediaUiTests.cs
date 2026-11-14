@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
 using Deventry.App.Conversation;
@@ -91,6 +92,14 @@ public class MediaUiTests
         clear.Focus();
         UiText.Settle(window);
         Assert.Equal(1, clear.Opacity);
+        // Under the pointer it keeps its own background, so it still shows over a bright image, and its outline takes the
+        // accent.
+        window.MouseMove(clear.TranslatePoint(new Point(clear.Bounds.Width / 2, clear.Bounds.Height / 2), window)!.Value);
+        UiText.Settle(window);
+        Assert.True(clear.IsPointerOver);
+        var presenter = clear.GetVisualDescendants().OfType<Avalonia.Controls.Presenters.ContentPresenter>().First(p => p.Name == "PART_ContentPresenter");
+        Assert.Equal(Color(window, "ComposerBrush"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(presenter.Background).Color);
+        Assert.Equal(Color(window, "AccentStatusBrush"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(presenter.BorderBrush).Color);
 
         clear.Command!.Execute(clear.CommandParameter);
         UiText.Settle(window);
@@ -130,6 +139,9 @@ public class MediaUiTests
         menu.Close();
         return item;
     }
+
+    private static Avalonia.Media.Color Color(Window window, string token) =>
+        Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(window.FindResource(window.ActualThemeVariant, token)).Color;
 
     private static Border Divider(Window window) =>
         window.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("mediadivider"));

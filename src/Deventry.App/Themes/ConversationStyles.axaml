@@ -1320,6 +1320,16 @@
     <Setter Property="Height" Value="7" />
     <Setter Property="Stretch" Value="Uniform" />
   </Style>
+  <!-- Under the pointer and pressed it keeps its own background, which a flat button's hover would make see-through, so
+       it still shows over a bright image: its outline and its X or arrow take the accent instead, as the tile's outline
+       does under the pointer. -->
+  <Style Selector="Button.mediaclear:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.mediaclear:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ComposerBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
+  <Style Selector="Button.mediaclear:pointerover Path, Button.mediaclear:pressed Path">
+    <Setter Property="Stroke" Value="{DynamicResource AccentStatusBrush}" />
+  </Style>
   <!-- The line over what's cleared, as the window's header has under it -->
   <Style Selector="Border.mediadivider">
     <Setter Property="Height" Value="1" />
