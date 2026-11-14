@@ -89,6 +89,16 @@ public sealed partial class TabViewModel
         }
     }
 
+    /// <summary>A section header's <b>Clear all</b>, or <b>Restore all</b> on a Cleared group's.</summary>
+    [RelayCommand]
+    private void ToggleMediaSection(MediaSection? section)
+    {
+        if (section is not null)
+        {
+            Media.ToggleAll(section);
+        }
+    }
+
     [RelayCommand]
     private Task CopyMediaPathAsync(MediaEntry? entry) =>
         entry?.Path is { } path ? _services.Platform.SetClipboardTextAsync(path) : Task.CompletedTask;

@@ -383,6 +383,13 @@
                   <TextBlock x:Name="SectionTitle" Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
                   <TextBlock Classes="muted small" Text="{Binding CountText}" controls:Baseline.AlignWith="{Binding #SectionTitle}" />
                 </StackPanel>
+                <!-- Everything in it at once: Clear all, or Restore all from a Cleared group (DESIGN.md §18, "Media", "Clearing") -->
+                <Button.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="{Binding AllText}" IsEnabled="{Binding !IsEmpty}"
+                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ToggleMediaSectionCommand}" CommandParameter="{Binding}" />
+                  </ContextMenu>
+                </Button.ContextMenu>
               </Button>
               <TextBlock Classes="muted small" Text="{Binding EmptyText}" TextWrapping="Wrap" Margin="4,0" IsVisible="{Binding ShowsEmptyText}" />
               <ItemsControl ItemsSource="{Binding Entries}" IsVisible="{Binding IsExpanded}">
@@ -442,10 +449,11 @@
         </ScrollViewer.DataTemplates>
         <StackPanel>
           <ItemsControl ItemsSource="{Binding Media.Sections}" Margin="12,0,16,0" />
-          <!-- What's cleared, under a line as the window's header is over the sections; a Cleared group once it has anything -->
+          <!-- What's cleared, under a line as the window's header is over the sections, with as much room under it as the
+               sections leave over it; a Cleared group once it has anything -->
           <StackPanel IsVisible="{Binding Media.HasCleared}">
             <Border Classes="mediadivider" />
-            <ItemsControl ItemsSource="{Binding Media.ClearedSections}" Margin="12,0,16,0" />
+            <ItemsControl ItemsSource="{Binding Media.ClearedSections}" Margin="12,12,16,0" />
           </StackPanel>
         </StackPanel>
       </ScrollViewer>

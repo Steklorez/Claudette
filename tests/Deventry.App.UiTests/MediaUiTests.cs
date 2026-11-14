@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
@@ -94,8 +95,13 @@ public class MediaUiTests
         clear.Command!.Execute(clear.CommandParameter);
         UiText.Settle(window);
 
-        // Under the line, in Agent (Cleared), folded.
+        // Under the line, in Agent (Cleared), folded, with as much room under the line as each section leaves under it.
         Assert.True(Divider(window).IsEffectivelyVisible);
+        var underLine = Divider(window).TranslatePoint(new Point(0, 1), window)!.Value.Y;
+        Assert.Equal(12, Header(window, "Expand Agent (Cleared)").TranslatePoint(default, window)!.Value.Y - underLine, 1);
+        // Its header's menu restores all it has, and User's clears all.
+        Assert.Equal("Restore all", HeaderMenuItem(window, Header(window, "Expand Agent (Cleared)")).Header);
+        Assert.Equal("Clear all", HeaderMenuItem(window, Header(window, "Collapse User")).Header);
         Assert.Equal(["Open Attached image"], Tiles(window).Select(AutomationProperties.GetName));
         Assert.False(Header(window, "Expand User (Cleared)", visible: false).IsEffectivelyVisible);
         Header(window, "Expand Agent (Cleared)").Command!.Execute(null);
@@ -113,6 +119,17 @@ public class MediaUiTests
 
     private static Button ClearButton(Window window, string name) =>
         window.GetVisualDescendants().OfType<Button>().Single(b => b.Classes.Contains("mediaclear") && b.IsEffectivelyVisible && AutomationProperties.GetName(b) == name);
+
+    /// <summary>The header's menu's one item, as it is open: a menu binds its items as it opens.</summary>
+    private static MenuItem HeaderMenuItem(Window window, Button header)
+    {
+        var menu = header.ContextMenu!;
+        menu.Open(header);
+        UiText.Settle(window);
+        var item = Assert.IsType<MenuItem>(Assert.Single(menu.Items));
+        menu.Close();
+        return item;
+    }
 
     private static Border Divider(Window window) =>
         window.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("mediadivider"));
