@@ -7,8 +7,6 @@ summary: "Your tabs from your phone, through a Telegram or Discord bot that Deve
 
 # Remote clients
 
-{% include unreleased.html %}
-
 Deventry can talk to you through a bot of your own, in Telegram or Discord, while you're away from the computer. The bot tells you when a tab needs you or finishes, shows what each tab is doing, and lets you answer its prompts with a tap, send it a message by replying, or stop it. Claude, the tools and the files stay on your computer: the bot only carries what Deventry already shows.
 
 Deventry talks to the bot itself, so listing your tabs, reading what they're doing and answering prompts cost no tokens. Only a message you send a tab does, as typing it at the desk would.

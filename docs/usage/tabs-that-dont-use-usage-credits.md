@@ -11,7 +11,7 @@ If your plan has usage credits turned on, they pay for Claude once your session 
 
 ## Choosing
 
-- **For every tab:** Settings → Tabs → **Use usage credits once a limit is used up**. It's off by default. Settings from before Deventry 1.0.0, Claudette's among them, keep it on, as it was then.
+- **For every tab:** Settings → Tabs → **Use usage credits once a limit is used up**. It's off by default. Settings from before Deventry 1.1.0, Claudette's among them, keep it on, as it was then.
 - **For one tab:** **Use usage credits** in the tab's menu, a check item. Tick it on the tabs that can't wait, or turn the setting on and untick it on the ones that can. **Tab settings…** has the same choice, also named **Use usage credits**: see [Tab settings](../tabs/tab-settings.md).
 
 The menu keeps the tab's own choice only while it differs from Settings, so ticking it back to what Settings says leaves the tab following Settings again, and the dot beside **Tab settings…** goes.

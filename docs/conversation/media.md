@@ -7,8 +7,6 @@ summary: "Every image, video and sound in a tab's conversation, yours and Claude
 
 # Media
 
-{% include unreleased.html %}
-
 The **Media** window gathers every image, video and sound in a tab's conversation into a gallery, so a screenshot from an hour ago, or the chart a script made, is a click away instead of a scroll back. It has two sections: **User**, for what you brought, and **Agent**, for what Claude saw or made.
 
 {% include shot.html name="guide/conversation/media" alt="The Media tool window: User, with 2 tiles, an attached screenshot of a game and a video, wave-clear.mp4, shown by its icon; and Agent, with 3 tiles, a sound, burst.wav, shown by its icon, and two frame-time charts Claude read, one flat and one with four spikes." %}

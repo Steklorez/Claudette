@@ -7,8 +7,6 @@ summary: "A project's GitHub and YouTrack issues in a tab beside Project Files, 
 
 # Tickets
 
-{% include unreleased.html %}
-
 A project's tickets, from the trackers it uses, in a tab of the project's own beside Project Files: the list, a ticket's text and comments, and **Work on it**, which starts a tab on the ticket with the ticket in its message, ready for you to send. GitHub's issues and YouTrack's issues are the first trackers Deventry reads.
 
 {% include shot.html name="guide/project-tools/tickets" alt="The starfall group's Tickets tab under its Project Files row: the open GitHub issues listed at the left with their labels, age and comments, and issue #142 at the right with its state, assignee and milestone, Work on it and Open on GitHub, its text and three comments." %}
