@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
@@ -166,8 +167,8 @@ public class KeepAwakeTests
         await using var h = new TabTestHarness();
         using var settings = new SettingsViewModel(h.Services, null);
         var general = settings.General;
-        var changed = new List<string?>();
-        general.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        general.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         general.KeepAwake = true;
         general.KeepAwakeWhileDeventryRuns = true;

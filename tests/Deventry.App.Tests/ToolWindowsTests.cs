@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -555,8 +556,8 @@ public class ToolWindowsTests
         EmitEdit(h, "e1", a);
         EmitEdit(h, "e2", b);
         await TabTestHarness.Eventually(() => tab.ChangedFiles.Files.Count == 2, "the changed files");
-        var changed = new List<string?>();
-        tab.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         Tick(a);
         Assert.False(tab.AllFilesReviewed);

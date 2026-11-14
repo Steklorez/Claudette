@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Avalonia.Input;
 using Avalonia.Media;
 using Deventry.App.Services;
@@ -141,8 +142,8 @@ public class SidebarTests
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        var changed = new List<string?>();
-        tab.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         Assert.Equal(tab.ModelBadge, tab.RowDetail);
 

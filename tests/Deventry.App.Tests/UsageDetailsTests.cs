@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Controls;
 using Deventry.App.Services;
@@ -76,8 +77,8 @@ public class UsageDetailsTests
         await using var tracker = NewTracker(h);
         using var header = new UsageViewModel(h.Services, tracker);
         Assert.Equal((75, 90), (header.WarnPercent, header.CriticalPercent));
-        var changed = new List<string?>();
-        header.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        var changed = new ConcurrentQueue<string?>();
+        header.PropertyChanged += (_, e) => changed.Enqueue(e.PropertyName);
 
         h.Services.Settings.Usage.WarnPercent = 60;
         h.Services.Settings.Usage.CriticalPercent = 80;

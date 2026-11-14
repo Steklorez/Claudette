@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Deventry.App.Tests.Support;
 using Deventry.App.ViewModels;
@@ -94,8 +95,8 @@ public class PermissionModeTests
         var tab = await h.OpenTabAsync();
         Assert.Contains(tab.PermissionModeChoices, c => c.IsAuto);
         Assert.True(tab.IsAutoModeAvailable);
-        var switched = new List<string?>();
-        tab.PropertyChanged += (_, e) => switched.Add(e.PropertyName);
+        var switched = new ConcurrentQueue<string?>();
+        tab.PropertyChanged += (_, e) => switched.Enqueue(e.PropertyName);
 
         tab.ChooseModelCommand.Execute(tab.Models.Single(m => m.Value == "haiku"));
         await tab.ModelSwitch.ConfirmCommand.ExecuteAsync(null);
