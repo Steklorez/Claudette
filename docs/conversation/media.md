@@ -66,7 +66,7 @@ Right-click a tile for more:
 
 ## Clearing
 
-To put a tile out of the way without losing it, clear it: point at the tile and click the **×** at its thumbnail's corner, choose **Clear** from its right-click menu, or click **Clear** in the image window's toolbar when you opened the image from here. It moves to **User (Cleared)** or **Agent (Cleared)**, under a line below the two sections. To clear a whole section at once, right-click its header and choose **Clear all**. Each Cleared group shows once it has anything, folded to its header; click the header to open it.
+To put a tile out of the way without losing it, clear it: point at the tile and click the **×** at its thumbnail's corner, choose **Clear** from its right-click menu, or click **Clear** in the image window's toolbar when you opened the image from here, which also closes the window. It moves to **User (Cleared)** or **Agent (Cleared)**, under a line below the two sections. To clear a whole section at once, right-click its header and choose **Clear all**. Each Cleared group shows once it has anything, folded to its header; click the header to open it.
 
 {% include shot.html name="guide/conversation/media-cleared" alt="The Media tool window with burst.wav cleared: User with its 2 tiles, then Agent with 2, the frame-time charts, the second showing the X at its thumbnail's corner; under a line, Agent (Cleared), opened, with burst.wav's tile." %}
 

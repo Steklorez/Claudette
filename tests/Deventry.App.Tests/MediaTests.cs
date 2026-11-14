@@ -279,15 +279,20 @@ public sealed class MediaTests
 
         await InlineDispatcher.RunAsync(() => tab.OpenMediaCommand.ExecuteAsync(entry));
         var viewer = Assert.Single(shown);
-        Assert.Equal((true, "Clear", "Move it to User (Cleared)"), (viewer.CanClear, viewer.ClearText, viewer.ClearTip));
+        Assert.Equal((true, "Clear", "Move it to User (Cleared), and close this window"), (viewer.CanClear, viewer.ClearText, viewer.ClearTip));
+        var closes = 0;
+        viewer.CloseRequested += () => closes++;
 
         InlineDispatcher.Run(() => viewer.ToggleClearedCommand.Execute(null));
 
+        // Cleared, and the window closes with it.
         Assert.Equal(bug, InlineDispatcher.Read(() => tab.Media.UserCleared.Entries.Single().Path));
+        Assert.Equal(1, closes);
+        // Opened from a cleared tile, Restore puts it back and leaves the window open.
         Assert.Equal(("Restore", "Move it back to User"), (viewer.ClearText, viewer.ClearTip));
         InlineDispatcher.Run(() => viewer.ToggleClearedCommand.Execute(null));
         Assert.Same(entry, InlineDispatcher.Read(() => tab.Media.User.Entries.Single()));
-        Assert.Equal("Clear", viewer.ClearText);
+        Assert.Equal(("Clear", 1), (viewer.ClearText, closes));
 
         // An image opened from anywhere else has no button for it.
         InlineDispatcher.Run(() => h.Shell.ShowImage(entry.Image ?? ShellViewModel.ImageFile(bug, "shots/bug.png")!));

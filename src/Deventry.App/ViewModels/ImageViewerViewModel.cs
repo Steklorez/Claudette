@@ -86,14 +86,24 @@ public sealed partial class ImageViewerViewModel : ViewModelBase, IDisposable
     /// <summary><b>Clear</b>, or <b>Restore</b> once it's cleared.</summary>
     public string ClearText => _media?.ClearText ?? "Clear";
 
-    public string ClearTip => _media?.ClearTip ?? "";
+    /// <summary>Where it goes, and for <b>Clear</b> that the window closes with it.</summary>
+    public string ClearTip => _media is not { } media ? "" : media.IsCleared ? media.ClearTip : $"{media.ClearTip}, and close this window";
+
+    /// <summary><b>Clear</b> cleared it: the window closes, its image out of the way. <b>Restore</b> leaves it open.</summary>
+    public event Action? CloseRequested;
 
     [RelayCommand]
     private void ToggleCleared()
     {
-        if (_media is { } media)
+        if (_media is not { } media)
         {
-            _toggleCleared?.Invoke(media);
+            return;
+        }
+        var clearing = !media.IsCleared;
+        _toggleCleared?.Invoke(media);
+        if (clearing && media.IsCleared)
+        {
+            CloseRequested?.Invoke();
         }
     }
 
