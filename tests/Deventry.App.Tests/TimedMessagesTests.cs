@@ -99,6 +99,81 @@ public class TimedMessagesTests
     }
 
     [Fact]
+    public async Task A_worktree_message_in_git_opens_a_worktree_tab_named_after_it()
+    {
+        Assert.SkipWhen(!WorktreeTabTests.GitInstalled, "git isn't on PATH.");
+        await using var h = await StartedAsync();
+        await WorktreeTabTests.InitRepositoryAsync(h);
+        var message = Once(h, h.Time.GetUtcNow().AddMinutes(1));
+        message.InWorktree = true;
+        h.OnUiThread(() => h.Services.TimedMessages.Save(message));
+
+        h.Time.Advance(TimeSpan.FromMinutes(1));
+
+        await TabTestHarness.Eventually(() => SentTexts(h).Contains(Text), "the timed message sent");
+        var tab = InlineDispatcher.Read(() => h.Shell.AllTabs.Single());
+        Assert.Equal("morning-triage", tab.State.NewWorktree);
+    }
+
+    [Fact]
+    public async Task A_message_noticed_late_is_sent_under_half_an_hour_and_skipped_after()
+    {
+        await using var h = await StartedAsync();
+        var soon = Once(h, h.Time.GetUtcNow().AddMinutes(5));
+        var laterAt = h.Time.GetUtcNow().AddMinutes(60);
+        var later = Once(h, laterAt);
+        later.Name = "Build check";
+        later.Text = "Check last night's build.";
+        h.OnUiThread(() =>
+        {
+            h.Services.TimedMessages.Save(soon);
+            h.Services.TimedMessages.Save(later);
+        });
+
+        // The computer slept through both times, and nothing woke it: its timers run as it wakes.
+        h.Time.Advance(TimeSpan.FromMinutes(25));
+
+        await TabTestHarness.Eventually(() => SentTexts(h).Contains(Text), "the message 20 minutes late sent");
+
+        h.Time.Advance(TimeSpan.FromMinutes(70));
+
+        await TabTestHarness.Eventually(() => Notifications(h).Any(n => n.Title == "Timed message skipped: Build check"), "the skipped one's notification");
+        Assert.DoesNotContain("Check last night's build.", SentTexts(h));
+        Assert.EndsWith("went by while the computer was asleep.", Notifications(h).Single(n => n.Title == "Timed message skipped: Build check").Body, StringComparison.Ordinal);
+        Assert.Single(InlineDispatcher.Read(() => h.Shell.AllTabs));
+        var row = h.Services.TimedMessages.Rows.Single(r => r.Name == "Build check");
+        Assert.StartsWith("Skipped the one ", row.Skipped);
+        Assert.Equal(laterAt, h.Services.State.TimedMessagesSkipped[later.Id]);
+    }
+
+    [Fact]
+    public async Task Clear_all_asks_first_and_then_deletes_every_message()
+    {
+        await using var h = await StartedAsync();
+        var first = Once(h, h.Time.GetUtcNow().AddHours(1));
+        var second = Once(h, h.Time.GetUtcNow().AddHours(2));
+        second.Name = "Build check";
+        h.OnUiThread(() =>
+        {
+            h.Services.TimedMessages.Save(first);
+            h.Services.TimedMessages.Save(second);
+        });
+        Assert.Equal(2, h.Services.TimedMessages.Rows.Count);
+
+        h.OnUiThread(() => h.Shell.ClearAllTimedMessagesCommand.Execute(null));
+
+        var confirmation = Assert.IsType<ConfirmationViewModel>(InlineDispatcher.Read(() => h.Shell.Confirmation));
+        Assert.Equal("Clear every timed message?", confirmation.Title);
+        Assert.Equal(2, h.Services.TimedMessages.Rows.Count);
+        await InlineDispatcher.RunAsync(() => confirmation.ConfirmCommand.ExecuteAsync(null));
+
+        Assert.Empty(h.Services.TimedMessages.Rows);
+        Assert.False(h.Services.TimedMessages.HasAny);
+        Assert.Null(h.WakeTimer.WakesAt);
+        Assert.Empty(h.Services.Settings.TimedMessages.Messages);
+    }
+
+    [Fact]
     public async Task A_message_whose_folder_is_gone_isnt_sent_and_says_why()
     {
         await using var h = await StartedAsync();
