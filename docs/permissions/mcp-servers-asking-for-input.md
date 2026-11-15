@@ -29,6 +29,14 @@ Some requests ask you to finish something in the browser, such as signing in to 
 2. Finish in the browser.
 3. The card closes by itself when the server says it's done. If it doesn't, choose **Done**.
 
+### A link that isn't a web page
+
+{% include unreleased.html %}
+
+Deventry opens web links (`https`, `http` and `mailto`) by itself, and nothing else. A server could send a link to a file, or one that opens another app on your computer, and opening either can run a program, even when the server itself runs somewhere else. So the card doesn't open it. It says what the link is and why it wasn't opened, and has **Open anyway** where **Open in browser** would be. Choose it only if you trust the server and know what the link is; then finish there and choose **Done**.
+
+A link that isn't an address at all can't be opened. **Decline** or **Dismiss** answers it.
+
 ## Declining
 
 **Decline** tells the server you won't provide it. **Dismiss** cancels the request. The card then says what happened: *Sent*, *Done*, *Declined* or *Dismissed*. A request Claude Code withdrew, or one left unanswered when the session ended, says so.

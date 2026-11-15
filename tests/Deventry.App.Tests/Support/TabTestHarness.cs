@@ -505,7 +505,11 @@ internal sealed class NoPlatform : IPlatformServices
         return Task.FromResult(SavePathToPick);
     }
 
-    public Task OpenUrlAsync(string url)
+    /// <summary>
+    /// What every address that opens comes through, as in the app: <see cref="IPlatformServices.OpenUrlAsync"/> is the
+    /// interface's own, which refuses what isn't a web link before it gets here.
+    /// </summary>
+    public Task OpenUrlAnywayAsync(string url)
     {
         Record(_openedUrls, url);
         return Task.CompletedTask;

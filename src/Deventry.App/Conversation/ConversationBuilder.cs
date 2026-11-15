@@ -200,6 +200,12 @@ public sealed class ConversationBuilder
     public Func<string, Task>? OpenUrl { get; set; }
 
     /// <summary>
+    /// Opens an MCP server's link that isn't a web page, a file or an app's own scheme, once the user read its warning
+    /// and chose <b>Open anyway</b> (DESIGN.md §7, "MCP servers asking for input").
+    /// </summary>
+    public Func<string, Task>? OpenUrlAnyway { get; set; }
+
+    /// <summary>
     /// Show a row for every hook run (Settings → Sessions). Off, only runs that fail, or print something while they
     /// work, get one (DESIGN.md §5, "Hook runs").
     /// </summary>
@@ -569,7 +575,7 @@ public sealed class ConversationBuilder
 
             case ElicitationRequested elicitation:
                 _blocks.Close();
-                Items.Add(_prompts.Add(elicitation.Request, OpenUrl));
+                Items.Add(_prompts.Add(elicitation.Request, OpenUrl, OpenUrlAnyway));
                 break;
 
             case ElicitationCancelled withdrawn:

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
+using Deventry.App.Services;
 using Deventry.App.Tests.Support;
 using Deventry.Core.Sessions;
 using Microsoft.Extensions.Time.Testing;
@@ -15,11 +16,16 @@ public sealed class McpInputTests : IAsyncDisposable
     private readonly ObservableCollection<ConversationItem> _items = [];
     private readonly ConversationBuilder _builder;
     private readonly List<string> _opened = [];
+    private readonly List<string> _openedAnyway = [];
 
     public McpInputTests()
     {
         _session = new ClaudeSession(_transport.ForSession(), new FakeTimeProvider()) { ShowsElicitations = true };
-        _builder = new ConversationBuilder(_items) { OpenUrl = url => { _opened.Add(url); return Task.CompletedTask; } };
+        _builder = new ConversationBuilder(_items)
+        {
+            OpenUrl = url => { _opened.Add(url); return Task.CompletedTask; },
+            OpenUrlAnyway = url => { _openedAnyway.Add(url); return Task.CompletedTask; },
+        };
     }
 
     private async Task<McpInputItem> ShowAsync(string request)
@@ -113,9 +119,13 @@ public sealed class McpInputTests : IAsyncDisposable
     {
         var card = await ShowAsync("""{"subtype":"elicitation","mcp_server_name":"auth","message":"Sign in to continue","mode":"url","url":"https://example.com/login","elicitation_id":"el-1"}""");
         Assert.True(card.IsUrl);
+        Assert.True(card.IsWebLink);
+        Assert.False(card.IsOtherLink);
+        Assert.Null(card.LinkWarning);
 
         await card.OpenUrlCommand.ExecuteAsync(null);
         Assert.Equal(["https://example.com/login"], _opened);
+        Assert.Empty(_openedAnyway);
         Assert.True(card.HasOpenedUrl);
 
         _builder.Apply(new SystemNotice(new Core.Protocol.SystemMessage("elicitation_complete", JsonNode.Parse("""{"type":"system","subtype":"elicitation_complete","mcp_server_name":"auth","elicitation_id":"el-1"}""")!.AsObject())));
@@ -123,6 +133,73 @@ public sealed class McpInputTests : IAsyncDisposable
         Assert.Equal("Done", card.Outcome);
         await TabTestHarness.Eventually(() => Answer() is not null, "the answer");
         Assert.Equal("accept", Answer()!["action"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task A_link_to_a_file_isnt_opened_until_the_user_chooses_open_anyway_under_its_warning()
+    {
+        var card = await ShowAsync("""{"subtype":"elicitation","mcp_server_name":"auth","message":"Sign in to continue","mode":"url","url":"file:///C:/Users/kim/Downloads/sign-in.exe","elicitation_id":"el-1"}""");
+        Assert.False(card.IsWebLink);
+        Assert.True(card.IsOtherLink);
+        Assert.Equal("This link is a file, not a web page, and opening a file can run a program. Deventry didn't open it. Open it only if you trust auth and know what it is.",
+            card.LinkWarning);
+
+        // The browser's button does nothing with it.
+        await card.OpenUrlCommand.ExecuteAsync(null);
+        Assert.Empty(_opened);
+        Assert.False(card.HasOpenedUrl);
+
+        await card.OpenAnywayCommand.ExecuteAsync(null);
+        Assert.Equal(["file:///C:/Users/kim/Downloads/sign-in.exe"], _openedAnyway);
+        Assert.Empty(_opened);
+        Assert.True(card.HasOpenedUrl);
+        Assert.Equal("Finish in what it opened, then choose Done if this doesn't close by itself.", card.OpenedText);
+
+        card.SendCommand.Execute(null);
+        await TabTestHarness.Eventually(() => Answer() is not null, "the answer");
+        Assert.Equal("accept", Answer()!["action"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task A_link_with_an_apps_own_scheme_names_the_scheme_in_its_warning()
+    {
+        var card = await ShowAsync("""{"subtype":"elicitation","mcp_server_name":"tickets","message":"Open the ticket","mode":"url","url":"search-ms:query=setup&crumb=location:\\\\evil.example\\share","elicitation_id":"el-1"}""");
+
+        Assert.True(card.IsOtherLink);
+        Assert.Equal("""This link isn't a web page: it opens whatever app this computer has for "search-ms:" links, which can run a program. Deventry didn't open it. Open it only if you trust tickets and know what it is.""",
+            card.LinkWarning);
+    }
+
+    [Fact]
+    public async Task A_link_that_isnt_an_address_cant_be_opened_at_all()
+    {
+        var card = await ShowAsync("""{"subtype":"elicitation","mcp_server_name":"auth","message":"Sign in","mode":"url","url":"sign in at our site","elicitation_id":"el-1"}""");
+
+        Assert.False(card.IsWebLink);
+        Assert.False(card.IsOtherLink);
+        Assert.Equal("The server's link isn't an address Deventry can open.", card.LinkWarning);
+        await card.OpenUrlCommand.ExecuteAsync(null);
+        await card.OpenAnywayCommand.ExecuteAsync(null);
+        Assert.Empty(_opened);
+        Assert.Empty(_openedAnyway);
+        Assert.True(card.DeclineCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Opening_an_address_refuses_anything_but_https_http_and_mailto_whoever_asks()
+    {
+        IPlatformServices platform = new NoPlatform();
+
+        await platform.OpenUrlAsync("https://example.com/");
+        await platform.OpenUrlAsync("mailto:team@example.com");
+        await platform.OpenUrlAsync("file:///C:/Windows/System32/calc.exe");
+        await platform.OpenUrlAsync("ms-msdt:/id PCWDiagnostic");
+        await platform.OpenUrlAsync(@"\\server\share\setup.exe");
+        Assert.Equal(["https://example.com/", "mailto:team@example.com"], ((NoPlatform)platform).OpenedUrls);
+
+        // Only Open anyway, after its warning, goes past it.
+        await platform.OpenUrlAnywayAsync("file:///C:/tool.exe");
+        Assert.Equal("file:///C:/tool.exe", ((NoPlatform)platform).OpenedUrls[^1]);
     }
 
     [Fact]

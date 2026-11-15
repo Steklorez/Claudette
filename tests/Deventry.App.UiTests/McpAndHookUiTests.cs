@@ -73,6 +73,29 @@ public class McpAndHookUiTests
     }
 
     [AvaloniaFact]
+    public async Task A_link_that_isnt_a_web_page_shows_its_warning_and_opens_only_from_open_anyway()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell }, 1100, 800);
+        h.Transport.Emit("""
+            {"type":"control_request","request_id":"e1","request":{"subtype":"elicitation","mcp_server_name":"tickets","message":"Sign in to continue",
+             "mode":"url","url":"file:///C:/Users/kim/Downloads/sign-in.exe","elicitation_id":"x1"}}
+            """);
+        await UiText.SettleUntilAsync(window, () => tab.Items.OfType<McpInputItem>().Any(), "the card");
+        UiText.Settle(window);
+
+        var texts = window.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).Select(t => t.Text).ToList();
+        Assert.Contains(texts, t => t?.StartsWith("This link is a file, not a web page", StringComparison.Ordinal) == true);
+        var buttons = window.GetVisualDescendants().OfType<Button>().Where(b => b.IsEffectivelyVisible).ToList();
+        Assert.DoesNotContain(buttons, b => b.Content as string == "Open in browser");
+
+        buttons.Single(b => b.Content as string == "Open anyway").Command!.Execute(null);
+        await UiText.SettleUntilAsync(window, () => h.Platform.OpenedUrls.Count > 0, "the link to open");
+        Assert.Equal(["file:///C:/Users/kim/Downloads/sign-in.exe"], h.Platform.OpenedUrls);
+    }
+
+    [AvaloniaFact]
     public async Task A_failed_hook_shows_a_row_open_to_its_output()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());

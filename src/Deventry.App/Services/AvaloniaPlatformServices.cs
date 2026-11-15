@@ -51,7 +51,7 @@ public sealed class AvaloniaPlatformServices(Func<TopLevel?> topLevel) : IPlatfo
         return file?.TryGetLocalPath();
     }
 
-    public async Task OpenUrlAsync(string url)
+    public async Task OpenUrlAnywayAsync(string url)
     {
         if (topLevel() is { } top && Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {

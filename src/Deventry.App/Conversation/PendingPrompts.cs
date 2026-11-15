@@ -30,9 +30,10 @@ internal sealed class PendingPrompts
 
     /// <summary>The card for an MCP server's request for input.</summary>
     /// <param name="openUrl">Opens the server's link in the browser, for a request to finish something there.</param>
-    public McpInputItem Add(ElicitationRequest request, Func<string, Task>? openUrl)
+    /// <param name="openUrlAnyway">Opens a link that isn't a web page, once the user chose <b>Open anyway</b>.</param>
+    public McpInputItem Add(ElicitationRequest request, Func<string, Task>? openUrl, Func<string, Task>? openUrlAnyway)
     {
-        var input = new McpInputItem(request, openUrl);
+        var input = new McpInputItem(request, openUrl, openUrlAnyway);
         _mcpInputs[request.RequestId] = input;
         return input;
     }

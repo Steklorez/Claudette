@@ -8,7 +8,20 @@ public interface IPlatformServices
     /// <param name="types">The kinds of file it offers; any file without.</param>
     Task<string?> PickFileAsync(string title, IReadOnlyList<FileTypeFilter>? types = null);
 
-    Task OpenUrlAsync(string url);
+    /// <summary>
+    /// Opens an address in the browser, or the mail app for <c>mailto</c>. Only https, http and mailto
+    /// (<see cref="Core.ProjectTools.ProjectLinks.IsAllowed"/>): any other address, a file or an app's own scheme, could
+    /// run a program, so it's refused here whoever asks, and nothing a reply, a server or a project's file names gets past
+    /// it (DESIGN.md §18, "Links").
+    /// </summary>
+    Task OpenUrlAsync(string url) => Core.ProjectTools.ProjectLinks.IsAllowed(url) ? OpenUrlAnywayAsync(url) : Task.CompletedTask;
+
+    /// <summary>
+    /// Opens any address with the app the OS has for it, which for a file or an app's own scheme can run a program. Only
+    /// for an address the user chose to open after being told so: an MCP server's link's <b>Open anyway</b> (DESIGN.md
+    /// §7, "MCP servers asking for input"). Everything else opens through <see cref="OpenUrlAsync"/>.
+    /// </summary>
+    Task OpenUrlAnywayAsync(string url);
 
     /// <summary>Shows a folder in Finder or Explorer.</summary>
     Task RevealFolderAsync(string path);

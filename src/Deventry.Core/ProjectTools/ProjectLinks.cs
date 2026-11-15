@@ -27,6 +27,13 @@ public static partial class ProjectLinks
 {
     public static readonly IReadOnlySet<string> AllowedSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "https", "http", "mailto" };
 
+    /// <summary>
+    /// Whether <paramref name="address"/> is one Deventry opens: a full address with one of <see cref="AllowedSchemes"/>.
+    /// Anything else, a file or an app's own scheme, could run a program (DESIGN.md §18, "Links").
+    /// </summary>
+    public static bool IsAllowed(string? address) =>
+        address is not null && Uri.TryCreate(address, UriKind.Absolute, out var uri) && AllowedSchemes.Contains(uri.Scheme);
+
     /// <summary>The placeholders a link can use, for hints: <c>{branch}</c>, <c>{changelist}</c> and <c>{folderName}</c>.</summary>
     public const string PlaceholderHint = "{branch}, {changelist} and {folderName} are filled in from the tab: its git branch, its Perforce changelist and its folder's name.";
 

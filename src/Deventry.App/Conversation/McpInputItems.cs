@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Deventry.Core.ProjectTools;
 using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -200,16 +201,25 @@ public sealed partial class McpField : ObservableObject
 /// <summary>
 /// An MCP server asking the user for input (DESIGN.md §7, "MCP servers asking for input"): a form built from its
 /// schema, or a link to finish something in the browser. <b>Send</b> (or <b>Done</b>), <b>Decline</b> or <b>Dismiss</b>
-/// answers it. The server's name, message and fields are the server's own: untrusted text.
+/// answers it. The server's name, message, fields and link are the server's own: untrusted. A link that isn't a web page
+/// isn't opened: the card says why, and opens it only on <b>Open anyway</b>.
 /// </summary>
 public sealed partial class McpInputItem : ConversationItem
 {
     private readonly Func<string, Task>? _openUrl;
+    private readonly Func<string, Task>? _openUrlAnyway;
 
-    public McpInputItem(ElicitationRequest request, Func<string, Task>? openUrl = null)
+    /// <summary>The link, when the server sent a full address.</summary>
+    private readonly Uri? _link;
+
+    /// <param name="openUrl">Opens a web link in the browser.</param>
+    /// <param name="openUrlAnyway">Opens any address, for <b>Open anyway</b> under the warning.</param>
+    public McpInputItem(ElicitationRequest request, Func<string, Task>? openUrl = null, Func<string, Task>? openUrlAnyway = null)
     {
         Request = request;
         _openUrl = openUrl;
+        _openUrlAnyway = openUrlAnyway;
+        _link = request.IsUrl && Uri.TryCreate(request.Url, UriKind.Absolute, out var link) ? link : null;
         if (request.Schema?.GetObject("properties") is { } properties)
         {
             var required = request.Schema.GetArray("required")?.Select(r => r?.ToString()).OfType<string>().ToHashSet() ?? [];
@@ -238,6 +248,30 @@ public sealed partial class McpInputItem : ConversationItem
 
     public string? Url => Request.Url;
 
+    /// <summary>A link to a web page, which <b>Open in browser</b> opens.</summary>
+    public bool IsWebLink => _link is not null && ProjectLinks.IsAllowed(Url);
+
+    /// <summary>
+    /// A link to something other than a web page: a file, or an app's own scheme, either of which can run a program. It
+    /// opens only on <b>Open anyway</b>, under <see cref="LinkWarning"/>.
+    /// </summary>
+    public bool IsOtherLink => _link is not null && !IsWebLink;
+
+    /// <summary>What's wrong with the link: why it wasn't opened, or that it isn't an address at all. Null for a web link.</summary>
+    public string? LinkWarning => !IsUrl || IsWebLink ? null
+        : _link is not { } link ? "The server's link isn't an address Deventry can open."
+        : (link.IsFile
+            ? "This link is a file, not a web page, and opening a file can run a program. Deventry didn't open it."
+            : $"This link isn't a web page: it opens whatever app this computer has for \"{link.Scheme}:\" links, which can run a program. Deventry didn't open it.")
+          + $" Open it only if you trust {Request.DisplayName ?? Request.ServerName} and know what it is.";
+
+    public bool HasLinkWarning => LinkWarning is not null;
+
+    /// <summary>What to do once the link is open.</summary>
+    public string OpenedText => IsWebLink
+        ? "Finish in the browser, then choose Done if this doesn't close by itself."
+        : "Finish in what it opened, then choose Done if this doesn't close by itself.";
+
     public ObservableCollection<McpField> Fields { get; } = [];
 
     public bool HasFields => Fields.Count > 0;
@@ -263,10 +297,21 @@ public sealed partial class McpInputItem : ConversationItem
     [RelayCommand]
     private async Task OpenUrlAsync()
     {
-        if (Url is { } url && _openUrl is not null)
+        if (IsWebLink && Url is { } url && _openUrl is not null)
         {
             HasOpenedUrl = true;
             await _openUrl(url);
+        }
+    }
+
+    /// <summary><b>Open anyway</b>: the user read the warning and chose to open a link that isn't a web page.</summary>
+    [RelayCommand]
+    private async Task OpenAnywayAsync()
+    {
+        if (IsOtherLink && Url is { } url && _openUrlAnyway is not null)
+        {
+            HasOpenedUrl = true;
+            await _openUrlAnyway(url);
         }
     }
 

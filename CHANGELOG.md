@@ -10,6 +10,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **A third look, Codex.** Settings → Appearance → **Style** → **Codex** takes after the ChatGPT and Codex apps, in light and dark: white and neutral greys, OpenAI's blue for the accent, the Send button and Claude's replies, your messages grey and the files a turn changed green, waiting prompts and alerts in OpenAI's orange, and replies in your system's font, with the Claude style's rounder cards and big composer. See [Styles and themes](https://deventry.app/settings/styles-and-themes/#style).
 
+### Security
+
+- **An MCP server's link that isn't a web page asks before it opens.** When an MCP server asks you to open a link to a file, or one that opens another app, which could run a program, the card no longer opens it: it says what the link is and why, and **Open anyway** opens it if you trust the server. Web links open in the browser as before, and Deventry now opens nothing but web links anywhere else. See [A link that isn't a web page](https://deventry.app/permissions/mcp-servers-asking-for-input/#a-link-that-isnt-a-web-page).
+
 ## [1.1.0] - 2026-11-14
 
 ### Added
