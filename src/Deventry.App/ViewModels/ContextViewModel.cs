@@ -142,9 +142,17 @@ public sealed partial class ContextViewModel : ObservableObject
     /// </summary>
     public long? Tokens { get; private set; }
 
-    private void Show(ContextIndicator indicator, ContextBreakdown breakdown, long tokens)
+    /// <summary>The context window's size, as the indicator last had it: the Tokens window's context bar.</summary>
+    public long? Window { get; private set; }
+
+    /// <summary>Where Claude Code compacts by itself, in tokens; null when it won't, or it isn't known.</summary>
+    public long? AutoCompactAt { get; private set; }
+
+    private void Show(ContextIndicator indicator, ContextBreakdown breakdown, long tokens, long window, long? autoCompactAt)
     {
         Tokens = tokens;
+        Window = window;
+        AutoCompactAt = autoCompactAt;
         Text = indicator.Text;
         Detail = indicator.Detail;
         IsHigh = indicator.IsHigh;
@@ -186,8 +194,9 @@ public sealed partial class ContextViewModel : ObservableObject
                 return;
             }
             _usageUnavailable = false;
-            Show(ContextIndicator.From(usage.TotalTokens, usage.MaxTokens, usage.Percentage, usage.AutoCompactEnabled ? usage.AutoCompactThreshold : null, estimated: false),
-                ContextBreakdown.From(usage), usage.TotalTokens);
+            var autoCompactAt = usage.AutoCompactEnabled ? usage.AutoCompactThreshold : null;
+            Show(ContextIndicator.From(usage.TotalTokens, usage.MaxTokens, usage.Percentage, autoCompactAt, estimated: false),
+                ContextBreakdown.From(usage), usage.TotalTokens, usage.MaxTokens, autoCompactAt);
         });
     }
 
@@ -202,8 +211,9 @@ public sealed partial class ContextViewModel : ObservableObject
             return;
         }
         var tokens = _callUsage.ContextTokens ?? 0;
-        Show(ContextIndicator.From(tokens, window, percentage, _autocompact is { Enabled: true, Threshold: { } threshold } ? threshold : null, estimated: true),
-            ContextBreakdown.Estimated(tokens, window), tokens);
+        var autoCompactAt = _autocompact is { Enabled: true, Threshold: { } threshold } ? threshold : (long?)null;
+        Show(ContextIndicator.From(tokens, window, percentage, autoCompactAt, estimated: true),
+            ContextBreakdown.Estimated(tokens, window), tokens, window, autoCompactAt);
     }
 
     /// <summary>Each session event, on the UI thread, before the tab's own handling saves the tab.</summary>
@@ -275,19 +285,14 @@ public sealed partial class ContextViewModel : ObservableObject
     }
 
     /// <summary>
-    /// This tab's tokens since the current 5-hour window started, the part that counts against the session limit, and
-    /// its recent turns for the popover's chart (DESIGN.md §4, "Token stats per tab"). From the usage history.
+    /// This tab's tokens since the current 5-hour window started, the part that counts against the session limit
+    /// (DESIGN.md §4, "Token stats per tab"). From the usage history; the popover's chart is the tab's token breakdown's
+    /// (<see cref="TabTokensViewModel"/>).
     /// </summary>
     [ObservableProperty]
     public partial string? TokenWindowText { get; set; }
 
-    [ObservableProperty]
-    public partial IReadOnlyList<Controls.ChartPoint> TurnPoints { get; set; } = [];
-
-    [ObservableProperty]
-    public partial double TurnChartMaximum { get; set; } = 1;
-
-    /// <summary>The tokens flyout is open: the only place its window and chart show, so they're read only then.</summary>
+    /// <summary>The tokens flyout is open: the only place its window's tokens show, so they're read only then.</summary>
     public bool IsTokenDetailsOpen
     {
         get;
@@ -301,7 +306,7 @@ public sealed partial class ContextViewModel : ObservableObject
         }
     }
 
-    /// <summary>Reads the window's tokens and the chart from the usage history, while the tokens flyout shows them.</summary>
+    /// <summary>Reads the window's tokens from the usage history, while the tokens flyout shows them.</summary>
     public void RefreshTokenWindow()
     {
         if (IsTokenDetailsOpen)
@@ -324,22 +329,8 @@ public sealed partial class ContextViewModel : ObservableObject
         var id = _host.Id;
         try
         {
-            var (inWindow, turns) = await Task.Run(() =>
-            {
-                // One query: the session window is inside the week.
-                var week = usage.Store.GetTurns(now - TimeSpan.FromDays(7), now, id);
-                var window = week.Where(t => t.Timestamp >= windowStart).Sum(t => t.Total);
-                var recent = week
-                    .GroupBy(t => t.Timestamp)
-                    .Select(g => new Controls.ChartPoint(g.Key, g.Sum(t => t.Total)))
-                    .OrderBy(p => p.Time)
-                    .TakeLast(40)
-                    .ToArray();
-                return (window, recent);
-            });
+            var inWindow = await Task.Run(() => usage.Store.GetTurns(windowStart, now, id).Sum(t => t.Total));
             TokenWindowText = $"This session window: {TokenTotals.Short(inWindow)}";
-            TurnPoints = turns;
-            TurnChartMaximum = turns.Length > 0 ? turns.Max(p => p.Value) : 1;
         }
         catch (Exception)
         {

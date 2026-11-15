@@ -56,19 +56,24 @@ public sealed class TurnsChart : Control
     public static readonly StyledProperty<long?> AutoCompactAtProperty =
         AvaloniaProperty.Register<TurnsChart, long?>(nameof(AutoCompactAt));
 
+    /// <summary>Columns and marks alone, for a small chart such as the composer's popup's: no axis, labels or context line.</summary>
+    public static readonly StyledProperty<bool> IsCompactProperty =
+        AvaloniaProperty.Register<TurnsChart, bool>(nameof(IsCompact));
+
     /// <summary>Run with a turn's number when its column is clicked.</summary>
     public static readonly StyledProperty<ICommand?> SelectCommandProperty =
         AvaloniaProperty.Register<TurnsChart, ICommand?>(nameof(SelectCommand));
 
-    private const double AxisWidth = 48;
-    private const double LabelsHeight = 30;
+    private double AxisWidth => IsCompact ? 0 : 48;
+
+    private double LabelsHeight => IsCompact ? 2 : 30;
     private const double MarkRoom = 14;
     private const double ContextHeight = 86;
     private const double ContextGap = 14;
 
     static TurnsChart()
     {
-        AffectsRender<TurnsChart>(ColumnsProperty, SelectedNumberProperty, IsCostProperty, ContextWindowProperty, AutoCompactAtProperty);
+        AffectsRender<TurnsChart>(ColumnsProperty, SelectedNumberProperty, IsCostProperty, ContextWindowProperty, AutoCompactAtProperty, IsCompactProperty);
     }
 
     public TurnsChart()
@@ -89,7 +94,9 @@ public sealed class TurnsChart : Control
 
     public ICommand? SelectCommand { get => GetValue(SelectCommandProperty); set => SetValue(SelectCommandProperty, value); }
 
-    private bool ShowsContext => ContextWindow is > 0 && (Columns ?? []).Any(c => c.Context is not null);
+    public bool IsCompact { get => GetValue(IsCompactProperty); set => SetValue(IsCompactProperty, value); }
+
+    private bool ShowsContext => !IsCompact && ContextWindow is > 0 && (Columns ?? []).Any(c => c.Context is not null);
 
     /// <summary>Where the columns are drawn, above their labels.</summary>
     private Rect Plot => new(AxisWidth, MarkRoom, Math.Max(0, Bounds.Width - AxisWidth - 4),
@@ -145,7 +152,7 @@ public sealed class TurnsChart : Control
         var step = NiceStep(Math.Max(largest, IsCost ? 0.01 : 1) / 4);
         var top = step * Math.Ceiling(Math.Max(largest, step) / step);
         var steps = (int)Math.Round(top / step);
-        for (var i = 0; i <= steps; i++)
+        for (var i = 0; i <= steps && !IsCompact; i++)
         {
             var y = plot.Bottom - (plot.Height * i / steps);
             context.DrawLine(grid, new Point(plot.Left, y), new Point(plot.Right, y));
@@ -174,7 +181,7 @@ public sealed class TurnsChart : Control
             {
                 context.DrawRectangle(null, new Pen(accent, 1), new RoundedRect(new Rect(plot.Left + (slot * i) + 1, plot.Top - MarkRoom + 2, slot - 2, plot.Height + MarkRoom), 4));
             }
-            if (slot >= 16 || i % (int)Math.Ceiling(16 / slot) == 0)
+            if (!IsCompact && (slot >= 16 || i % (int)Math.Ceiling(16 / slot) == 0))
             {
                 DrawText(context, column.Number.ToString(CultureInfo.CurrentCulture), new Point(x + (width / 2) - 20, plot.Bottom + 3), 40, TextAlignment.Center, text);
                 if (slot >= 34)

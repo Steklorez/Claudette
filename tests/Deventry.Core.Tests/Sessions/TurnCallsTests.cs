@@ -231,6 +231,30 @@ public class TurnCallsTests
         }
     }
 
+    [Fact]
+    public void The_turn_so_far_has_its_calls_and_results_as_they_arrive_and_ending_it_takes_them_all()
+    {
+        var calls = new TurnCalls();
+        calls.Add(Assistant("msg_1", input: 3, output: 50, cacheRead: 0, write1h: 30_000), Start);
+        calls.End(Usage((Opus, new UsageCounts(3, 50, 30_000, 0, 0.3))), Start.AddSeconds(1));
+        var later = Start.AddMinutes(85);
+
+        calls.Add(Assistant("msg_2", input: 3, output: 50, cacheRead: 0, write1h: 30_300, tools: [("toolu_1", "Read", new JsonObject())]), later);
+        calls.AddResults(Results(null, ("toolu_1", new string('x', 400), false)), later.AddSeconds(2));
+        var soFar = calls.SoFar();
+
+        // Its first call already says the cache had expired; its cost waits for the turn's result.
+        var call = Assert.Single(soFar.Calls);
+        Assert.Equal((CallKind.CacheExpired, 0.0), (call.Kind, call.CostUsd));
+        Assert.Equal(("Read", 100L), (Assert.Single(soFar.Steps).Tool, soFar.Steps[0].Tokens));
+        Assert.Equal(TimeSpan.FromMinutes(85), soFar.IdleBefore);
+
+        calls.Add(Assistant("msg_3", input: 3, output: 50, cacheRead: 30_300, write1h: 100), later.AddSeconds(4));
+        var ended = calls.End(Usage((Opus, new UsageCounts(6, 100, 30_400, 30_300, 0.35))), later.AddSeconds(5));
+        Assert.Equal(["msg_2", "msg_3"], ended.Calls.Select(c => c.MessageId));
+        Assert.Empty(calls.SoFar().Calls);
+    }
+
     private static ModelUsageTotals Usage(params (string Model, UsageCounts Counts)[] models) =>
         new(models.ToDictionary(m => m.Model, m => m.Counts));
 

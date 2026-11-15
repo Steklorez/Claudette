@@ -572,12 +572,23 @@
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
                       <TextBlock Classes="muted small" Text="{Binding Context.TokenSummary}" TextWrapping="Wrap" MaxWidth="420" />
+                      <!-- The kinds, in tokens and cost (DESIGN.md §18, "A turn's card, the popup and the info card") -->
+                      <Grid ColumnDefinitions="48,*" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+                        <TextBlock Classes="muted small" Text="Tokens" VerticalAlignment="Center" />
+                        <controls:KindsBar Grid.Column="1" Height="8" Values="{Binding Tokens.TokenValues}" />
+                        <TextBlock Grid.Row="1" Classes="muted small" Text="Cost" VerticalAlignment="Center" />
+                        <controls:KindsBar Grid.Row="1" Grid.Column="1" Height="8" Values="{Binding Tokens.CostValues}" />
+                      </Grid>
                       <TextBlock Classes="small" Text="{Binding Context.TokenWindowText}" IsVisible="{Binding Context.TokenWindowText, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                      <StackPanel Spacing="2" IsVisible="{Binding Context.TurnPoints.Count}">
-                        <TextBlock Classes="muted small" Text="Tokens per turn" />
-                        <controls:UsageChart Height="48" Points="{Binding Context.TurnPoints}" Maximum="{Binding Context.TurnChartMaximum}"
-                                             LineBrush="{DynamicResource MeterBrush}" />
+                      <StackPanel Spacing="2" IsVisible="{Binding Tokens.Columns.Count}">
+                        <TextBlock Classes="muted small" Text="Turns, by kind" />
+                        <controls:TurnsChart Height="72" IsCompact="True" Columns="{Binding Tokens.Columns}" SelectCommand="{Binding Tokens.ShowTurnCommand}" />
                       </StackPanel>
+                      <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Open breakdown" Command="{Binding Tokens.OpenBreakdownCommand}"
+                                ToolTip.Tip="What this tab's tokens went on, turn by turn, in a window of its own" />
+                        <TextBlock Classes="muted small" Text="{Binding Tokens.LastTurnText}" VerticalAlignment="Center" />
+                      </DockPanel>
                     </StackPanel>
                   </Flyout>
                 </Button.Flyout>
@@ -627,6 +638,12 @@
                               AutomationProperties.Name="{Binding Label, StringFormat='Copy {0}'}"
                               Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).CopyInfoRowCommand}" CommandParameter="{Binding}">
                         <TextBlock Classes="small" Text="Copy" />
+                      </Button>
+                      <!-- The Tokens row's way to the tab's token breakdown (DESIGN.md §18, "Opening it") -->
+                      <Button Grid.Column="2" Classes="flat" Padding="4,0" VerticalAlignment="Top" IsVisible="{Binding OpensBreakdown}"
+                              ToolTip.Tip="What this tab's tokens went on, turn by turn, in a window of its own"
+                              Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ShowTokenBreakdownCommand}">
+                        <TextBlock Classes="small" Text="Breakdown ›" />
                       </Button>
                     </Grid>
                   </DataTemplate>

@@ -1129,6 +1129,28 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
     /// <summary>The tool calls the turn made, every agent's; 0 when it made none.</summary>
     public int ToolCalls { get; init; }
 
+    /// <summary>The turn's number in its tab, as its token breakdown says it (DESIGN.md §18): the card's label, *Turn 9*.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Label))]
+    public partial int? TurnNumber { get; set; }
+
+    public string Label => TurnNumber is { } number ? string.Create(System.Globalization.CultureInfo.CurrentCulture, $"Turn {number}") : "Turn";
+
+    /// <summary>The turn's id in the usage history, which <b>Breakdown ›</b> opens the tab's breakdown on.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasBreakdown))]
+    public partial string? TurnId { get; set; }
+
+    public bool HasBreakdown => TurnId is not null;
+
+    /// <summary>The turn's tokens by kind, for the thin bar under its line (DESIGN.md §18, "A turn's card").</summary>
+    public Controls.KindValues? Kinds { get; init; }
+
+    /// <summary>What made the turn cost more, in the caution color: its first call found the prompt cache expired.</summary>
+    public string? CacheChip { get; init; }
+
+    public bool HasCacheChip => CacheChip is not null;
+
     /// <summary>The input tokens read from the prompt cache, when the result says.</summary>
     public long? CacheReadTokens { get; init; }
 
@@ -1198,7 +1220,8 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
     /// <param name="spent">What the turn spent, by model: the models it names.</param>
     /// <param name="modelName">Turns a model id into a display name.</param>
     /// <param name="toolCalls">The tool calls the turn made.</param>
-    internal static TurnSummaryItem? For(ResultMessage result, ModelUsageTotals spent, Func<string?, string?> modelName, int toolCalls = 0)
+    /// <param name="calls">The turn's calls (<see cref="TurnCompleted.Calls"/>): whether its first call found the cache expired.</param>
+    internal static TurnSummaryItem? For(ResultMessage result, ModelUsageTotals spent, Func<string?, string?> modelName, int toolCalls = 0, TurnCallLog? calls = null)
     {
         var parts = new List<string>();
         if (result.DurationMs is { } ms)
@@ -1214,11 +1237,26 @@ public sealed partial class TurnSummaryItem(string text) : ConversationItem
         // Only the models this turn used: the result's own list counts every turn of the process.
         if (!spent.IsEmpty)
         {
+            // What it cost, as its token breakdown says it (DESIGN.md §18, "A turn's card").
+            if (spent.CostUsd > 0)
+            {
+                parts.Add(Formats.Dollars(spent.CostUsd));
+            }
             parts.Add(string.Join(", ", spent.Models.Keys.Select(m => modelName(m) ?? m)));
         }
-        return parts.Count > 0
-            ? new TurnSummaryItem(string.Join(" · ", parts)) { ToolCalls = toolCalls, CacheReadTokens = Number(result.Usage?["cache_read_input_tokens"]) }
-            : null;
+        if (parts.Count == 0)
+        {
+            return null;
+        }
+        var counts = spent.Models.Values;
+        var expired = calls?.Calls.FirstOrDefault(c => c.Kind == CallKind.CacheExpired);
+        return new TurnSummaryItem(string.Join(" · ", parts))
+        {
+            ToolCalls = toolCalls,
+            CacheReadTokens = Number(result.Usage?["cache_read_input_tokens"]),
+            Kinds = spent.IsEmpty ? null : new Controls.KindValues(counts.Sum(c => c.CacheRead), counts.Sum(c => c.CacheWrite), counts.Sum(c => c.Input), counts.Sum(c => c.Output)),
+            CacheChip = expired is null ? null : $"The cache had expired: {Formats.Dollars(expired.CostUsd)} to read the conversation again",
+        };
     }
 
     private static string Tokens(long count) => count switch

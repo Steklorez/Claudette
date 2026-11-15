@@ -27,11 +27,12 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>A tab's breakdown: its window, or a new one, brought to the front.</summary>
-    private void ShowTokenBreakdown(TabViewModel tab)
+    /// <summary>A tab's breakdown: its window, or a new one, brought to the front, on the turn asked for.</summary>
+    private void ShowTokenBreakdown(TabViewModel tab, string? turnId, int? number)
     {
         if (_tokenWindows.TryGetValue(tab.Id, out var open))
         {
+            (open.DataContext as TokenBreakdownViewModel)?.Show(turnId, number);
             UnfocusedWindows.Activate(open);
             return;
         }
@@ -47,6 +48,7 @@ public partial class MainWindow
             _tokenWindows.Remove(tab.Id);
             breakdown.Dispose();
         };
+        breakdown.Show(turnId, number);
         breakdown.Refresh();
         window.Show(this);
     }

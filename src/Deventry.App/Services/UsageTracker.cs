@@ -383,11 +383,14 @@ public sealed class UsageTracker : IAsyncDisposable
     /// <param name="project">The tab's folder, for usage by project.</param>
     /// <param name="account">The account the tab ran under (DESIGN.md §4, "Accounts"); null for the Default account.</param>
     /// <param name="accountName">That account's name, which other machines match their own accounts by.</param>
-    public void OnTurnCompleted(string tabId, string tabName, TurnCompleted turn, string? project = null, string? account = null, string? accountName = null)
+    /// <param name="turnId">The turn's id, which its card keeps; a new one when not given.</param>
+    /// <param name="index">The turn's number in its tab, as its card says it.</param>
+    public void OnTurnCompleted(string tabId, string tabName, TurnCompleted turn, string? project = null, string? account = null, string? accountName = null,
+        string? turnId = null, int? index = null)
     {
         var records = TurnRecord.From(turn.Usage, turn.Result.SessionId, tabId, _services.Time.GetUtcNow(), project, account);
         // Its calls, tools' results and compactions, which point to it by its id (DESIGN.md §18, "What's recorded").
-        var turnId = Guid.NewGuid().ToString("N");
+        turnId ??= Guid.NewGuid().ToString("N");
         var detail = new TurnDetail(
             CallRecord.From(turn.Calls, turnId, tabId, turn.Result.SessionId),
             StepRecord.From(turn.Calls, turnId),
@@ -409,6 +412,7 @@ public sealed class UsageTracker : IAsyncDisposable
                         Plan = plan,
                         Turn = turnId,
                         IdleBefore = turn.Calls.IdleBefore,
+                        Index = index,
                     }), detail);
                     Store.SetTabName(tabId, tabName);
                     _services.Dispatcher.Post(() =>

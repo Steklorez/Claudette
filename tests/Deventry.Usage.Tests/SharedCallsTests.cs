@@ -36,7 +36,7 @@ public sealed class SharedCallsTests : IDisposable
 
         var read = SessionUsageFile.Read(SessionUsageFile.Write(usage))!;
 
-        Assert.Equal("turn-1", Assert.Single(read.Turns).Turn);
+        Assert.Equal(("turn-1", (int?)4), (Assert.Single(read.Turns).Turn, read.Turns[0].Index));
         Assert.Equal(usage.Calls, read.Calls);
         Assert.Equal(usage.Steps, read.Steps);
         Assert.Equal(usage.Events, read.Events);
@@ -84,7 +84,7 @@ public sealed class SharedCallsTests : IDisposable
     {
         var store = Open();
         var log = Log(Start);
-        store.AddTurns([new TurnRecord(Start, "my-tab", "s1", "opus", 5, 350, 600, 20_200, 0.05) { Turn = "turn-1" }],
+        store.AddTurns([new TurnRecord(Start, "my-tab", "s1", "opus", 5, 350, 600, 20_200, 0.05) { Turn = "turn-1", Index = 7 }],
             new TurnDetail(CallRecord.From(log, "turn-1", "my-tab", "s1"), StepRecord.From(log, "turn-1"),
                 [new UsageEvent("my-tab", "s1", "turn-1", Start.AddSeconds(3), UsageEventKind.Compacted, 150_000, "auto")]));
         // Another session's.
@@ -93,7 +93,7 @@ public sealed class SharedCallsTests : IDisposable
 
         var usage = store.GetSessionUsage("s1", "desk", "Desktop");
 
-        Assert.Equal("turn-1", Assert.Single(usage.Turns).Turn);
+        Assert.Equal(("turn-1", (int?)7), (Assert.Single(usage.Turns).Turn, usage.Turns[0].Index));
         Assert.Equal([("turn-1", "desk"), ("turn-1", "desk")], usage.Calls.Select(c => (c.Turn, c.Machine)));
         Assert.All(usage.Calls, c => Assert.Null(c.SessionId));
         Assert.Equal("desk", Assert.Single(usage.Steps).Machine);
@@ -112,6 +112,8 @@ public sealed class SharedCallsTests : IDisposable
 
         var calls = store.GetCalls(DateTimeOffset.MinValue, DateTimeOffset.MaxValue);
         Assert.Equal([("theirs", "lap", "s1"), ("theirs", "lap", "s1")], calls.Select(c => (c.Turn, c.Machine, c.SessionId)));
+        // The turn keeps its number in the tab that ran it.
+        Assert.Equal(4, Assert.Single(store.GetTurns(DateTimeOffset.MinValue, DateTimeOffset.MaxValue)).Index);
         Assert.Single(store.GetSteps(["theirs"]));
         Assert.Empty(store.GetSteps(["other plan"]));
         Assert.Equal("s1", Assert.Single(store.GetEvents(DateTimeOffset.MinValue, DateTimeOffset.MaxValue)).SessionId);
@@ -137,7 +139,7 @@ public sealed class SharedCallsTests : IDisposable
     {
         var log = Log(at);
         return new SessionUsage(SessionUsageFile.FileVersion, new Dictionary<string, string> { [machine] = machine }, new Dictionary<string, string> { ["tab"] = "Fix it" },
-            [new SharedTurn($"{turn}-opus", at, machine, "tab", "opus", 5, 350, 600, 20_200, 0.05) { Turn = turn }])
+            [new SharedTurn($"{turn}-opus", at, machine, "tab", "opus", 5, 350, 600, 20_200, 0.05) { Turn = turn, Index = 4 }])
         {
             Calls = [.. CallRecord.From(log, turn, "tab", null).Select(c => c with { Machine = machine })],
             Steps = [.. StepRecord.From(log, turn).Select(s => s with { Machine = machine })],

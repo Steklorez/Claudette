@@ -75,6 +75,20 @@ public static class ToolWindowKinds
         ShowsWhen = new(t => t.Media, nameof(MediaGallery.HasAnything), t => t.Media.HasAnything),
     };
 
+    /// <summary>
+    /// The tab's tokens, now and next, once it has made a call (DESIGN.md §18, "The Tokens tool window"): the turn running,
+    /// what the next message will cost, and its latest turns and findings.
+    /// </summary>
+    public static readonly ToolWindowKind Tokens = new()
+    {
+        Id = "Tokens",
+        Title = "Tokens",
+        Icon = "IconTokenBreakdown",
+        PaletteText = "Show tokens",
+        FollowsSession = true,
+        ShowsWhen = new(t => t.Tokens, nameof(TabTokensViewModel.HasCalls), t => t.Tokens.HasCalls),
+    };
+
     /// <summary>The project's scratch pad (DESIGN.md §18, "Scratch pad").</summary>
     public static readonly ToolWindowKind ScratchPad = new()
     {
@@ -123,5 +137,5 @@ public static class ToolWindowKinds
     };
 
     /// <summary>Every kind, in the order their icons take on the strip at first.</summary>
-    public static IReadOnlyList<ToolWindowKind> All { get; } = [Files, Agents, Project, Tasks, Mcp, Media, ScratchPad, Processes, Games, Find];
+    public static IReadOnlyList<ToolWindowKind> All { get; } = [Files, Agents, Project, Tasks, Mcp, Media, Tokens, ScratchPad, Processes, Games, Find];
 }

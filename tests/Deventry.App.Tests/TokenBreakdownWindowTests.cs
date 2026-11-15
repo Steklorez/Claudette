@@ -17,7 +17,7 @@ public class TokenBreakdownWindowTests
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
         TabViewModel? asked = null;
-        h.Shell.TokenBreakdownRequested += t => asked = t;
+        h.Shell.TokenBreakdownRequested += (t, _, _) => asked = t;
 
         tab.ShowTokenBreakdownCommand.Execute(null);
 

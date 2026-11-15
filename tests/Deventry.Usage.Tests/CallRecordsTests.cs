@@ -134,6 +134,27 @@ public sealed class CallRecordsTests : IDisposable
         Assert.Equal(2, upgraded.GetCalls(DateTimeOffset.MinValue, DateTimeOffset.MaxValue).Count);
     }
 
+    [Fact]
+    public void A_turns_number_is_kept_and_a_history_from_before_numbers_gets_none()
+    {
+        var store = Open();
+        store.AddTurns([new TurnRecord(Start, "tab-1", null, "opus", 1, 1, 1, 1, 0) { Turn = "turn-1" }]);
+        store.Dispose();
+        // Version 7 had calls and turn ids, but not the turns' numbers.
+        using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = DatabasePath, Pooling = false }.ToString()))
+        {
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "ALTER TABLE turns DROP COLUMN turn_index; PRAGMA user_version = 7;";
+            command.ExecuteNonQuery();
+        }
+
+        var upgraded = Open();
+        upgraded.AddTurns([new TurnRecord(Start.AddMinutes(1), "tab-1", null, "opus", 1, 1, 1, 1, 0) { Turn = "turn-2", Index = 9 }]);
+
+        Assert.Equal([null, 9], upgraded.GetTurns(DateTimeOffset.MinValue, DateTimeOffset.MaxValue).Select(t => t.Index));
+    }
+
     /// <summary>A turn of two calls on one model and a Read between them.</summary>
     private static TurnCallLog Log(DateTimeOffset at) => new(
         [

@@ -204,6 +204,15 @@ public sealed class TurnCalls
     public void Reset() => _contextReplaced = true;
 
     /// <summary>
+    /// The turn so far, for what shows it while it runs (DESIGN.md §18, "The Tokens tool window"): its calls as the stream
+    /// has shown them, without what only the turn's end says (the calls it didn't show, and each call's cost).
+    /// </summary>
+    public TurnCallLog SoFar() => new(
+        [.. _calls.Select(c => new ModelCall(c.Seq, c.MessageId, c.Agent, c.Agent is { } agent ? _agentTypes.GetValueOrDefault(agent) : null, c.Model, c.At, c.Tokens,
+            c.WebSearches, c.WebFetches, c.Seq == _firstMainSeq && _mayFindCacheExpired && c.Tokens.CacheWrite > c.Tokens.CacheRead ? CallKind.CacheExpired : CallKind.Call, 0))],
+        [.. _steps], [.. _compactions], _idleBefore);
+
+    /// <summary>
     /// The turn ended, having spent <paramref name="usage"/> (<see cref="TurnCompleted.Usage"/>): its calls, with what the
     /// stream didn't show as a call of its own, and each one's share of the cost. Starts the next turn afresh.
     /// </summary>

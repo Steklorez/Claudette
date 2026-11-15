@@ -692,7 +692,14 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     }
 
     /// <summary>A tab's turn reached the usage history: that tab's "this session window" tokens follow.</summary>
-    internal void OnTurnRecorded(string tabId) => AllTabs.FirstOrDefault(t => t.Id == tabId)?.Context.RefreshTokenWindow();
+    internal void OnTurnRecorded(string tabId)
+    {
+        if (AllTabs.FirstOrDefault(t => t.Id == tabId) is { } tab)
+        {
+            tab.Context.RefreshTokenWindow();
+            tab.Tokens.OnTurnRecorded();
+        }
+    }
 
     /// <summary>A plain confirmation over the whole window.</summary>
     internal void Confirm(string title, string message, string confirmText, Func<Task> onConfirm) =>

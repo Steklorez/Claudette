@@ -99,6 +99,7 @@ catch (IOException ex)
 
 // The usage history ends now, so the header's projection reads best soon after.
 var now = DateTimeOffset.Now;
+var usage = Path.Combine(folder, "usage.json");
 var written = await DemoHome.WriteAsync(folder, projects, now, new DemoOptions
 {
     ClaudePath = Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "fake-claude.exe" : "fake-claude"),
@@ -107,11 +108,10 @@ var written = await DemoHome.WriteAsync(folder, projects, now, new DemoOptions
     Still = still,
     Quiet = quiet,
     Window = new WindowPlacement(60, 40, 1480, 920, IsMaximized: false),
+    WriteUsage = (paths, _, tabs) => DemoUsage.Write(paths.UsageDatabase, usage, now.ToUniversalTime(), tabs),
 }, DemoRepositories.Make);
 var home = Path.GetDirectoryName(written.Paths.DataDirectory)!;
 var config = written.ClaudeConfig;
-var usage = Path.Combine(folder, "usage.json");
-DemoUsage.Write(written.Paths.UsageDatabase, usage, now.ToUniversalTime(), written.Tabs);
 
 Console.WriteLine($"""
     Demo content in {folder}, with its projects in {projects}.

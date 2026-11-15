@@ -234,9 +234,9 @@ public sealed class UsageStore : IDisposable
         command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account,
-                               uid, project_key, project_name, account_name, plan, turn, idle_ms)
+                               uid, project_key, project_name, account_name, plan, turn, idle_ms, turn_index)
             VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $project, $account,
-                    $uid, $projectKey, $projectName, $accountName, $plan, $turn, $idleMs)
+                    $uid, $projectKey, $projectName, $accountName, $plan, $turn, $idleMs, $turnIndex)
             """;
         foreach (var turn in turns)
         {
@@ -259,6 +259,7 @@ public sealed class UsageStore : IDisposable
             Add(command, "$plan", turn.Plan);
             Add(command, "$turn", turn.Turn);
             Add(command, "$idleMs", turn.IdleBefore is { } idle ? (long)idle.TotalMilliseconds : null);
+            Add(command, "$turnIndex", turn.Index);
             command.ExecuteNonQuery();
         }
         if (detail is not null)
@@ -482,7 +483,7 @@ public sealed class UsageStore : IDisposable
         using var command = _connection.CreateCommand();
         command.CommandText = """
             SELECT uid, timestamp, COALESCE(machine, $thisMachine), tab_id, model, input, output, cache_write, cache_read, cost_usd,
-                   project_key, project_name, plan, account, account_name, turn
+                   project_key, project_name, plan, account, account_name, turn, turn_index
             FROM turns WHERE session_id = $sessionId AND uid IS NOT NULL
             ORDER BY timestamp, id
             """;
@@ -511,6 +512,7 @@ public sealed class UsageStore : IDisposable
                     NullableString(reader, 14))
                 {
                     Turn = NullableString(reader, 15),
+                    Index = reader.IsDBNull(16) ? null : reader.GetInt32(16),
                 });
             }
         }
@@ -598,9 +600,9 @@ public sealed class UsageStore : IDisposable
         insert.Transaction = transaction;
         insert.CommandText = """
             INSERT OR IGNORE INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, account,
-                                         uid, machine, project_key, project_name, account_name, plan, turn)
+                                         uid, machine, project_key, project_name, account_name, plan, turn, turn_index)
             VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $account,
-                    $uid, $machine, $projectKey, $projectName, $accountName, $plan, $turn)
+                    $uid, $machine, $projectKey, $projectName, $accountName, $plan, $turn, $turnIndex)
             """;
         var added = new List<SharedTurn>();
         foreach (var turn in turns)
@@ -629,6 +631,7 @@ public sealed class UsageStore : IDisposable
             Add(insert, "$accountName", turn.Account?.Trim());
             Add(insert, "$plan", turn.Plan);
             Add(insert, "$turn", turn.Turn);
+            Add(insert, "$turnIndex", turn.Index);
             if (insert.ExecuteNonQuery() > 0)
             {
                 added.Add(turn);
@@ -719,12 +722,12 @@ public sealed class UsageStore : IDisposable
         // tab's index (turns_by_tab), so it would read every turn in the range.
         command.CommandText = tabId is null
             ? """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index FROM turns
               WHERE timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """
             : """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index FROM turns
               WHERE tab_id = $tabId AND timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """;
@@ -753,6 +756,7 @@ public sealed class UsageStore : IDisposable
             {
                 Turn = NullableString(reader, 11),
                 IdleBefore = reader.IsDBNull(12) ? null : TimeSpan.FromMilliseconds(reader.GetInt64(12)),
+                Index = reader.IsDBNull(13) ? null : reader.GetInt32(13),
             });
         }
         return turns;

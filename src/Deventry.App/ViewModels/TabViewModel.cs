@@ -65,7 +65,8 @@ public sealed record EffortChoice(string Value)
 
 /// <summary>One row of the tab info card (DESIGN.md §4).</summary>
 /// <param name="CanCopy">The tab info's card has <b>Copy</b> for it: an ID or name to paste elsewhere.</param>
-public sealed record InfoRow(string Label, string Value, bool CanCopy = false);
+/// <param name="OpensBreakdown">The Tokens row: <b>Breakdown ›</b> beside it opens the tab's token breakdown (DESIGN.md §18).</param>
+public sealed record InfoRow(string Label, string Value, bool CanCopy = false, bool OpensBreakdown = false);
 
 /// <summary>A row of the token breakdown popover.</summary>
 /// <summary>
@@ -427,7 +428,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             {
                 rows.Add(new InfoRow("Sync size", $"{syncSize} in the session library"));
             }
-            rows.Add(new InfoRow("Tokens", $"{Context.TokensShort} · {TabBurnRow.TurnsText(State.Tokens.Turns)}"));
+            rows.Add(new InfoRow("Tokens", Tokens.InfoText, OpensBreakdown: true));
             if (RunningVersion is { } running)
             {
                 // DESIGN.md §12: open tabs keep the version they started with.
@@ -2329,6 +2330,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ObserveForComposer(sessionEvent);
         Perforce.OnSessionEvent(sessionEvent);
         Context.OnSessionEvent(session, sessionEvent);
+        // The turn running, call by call, for the Tokens window (DESIGN.md §18, "The Tokens tool window").
+        Tokens.OnSessionEvent(sessionEvent);
         TrackToolsForWorkingLine(sessionEvent);
         TrackPromptCache(sessionEvent);
         if (ApiTrouble.Reports(sessionEvent))
@@ -2452,7 +2455,15 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 _stoppingForCredits = false;
                 _autoContinue.TurnEnded(completed.Result);
                 State.SessionId = completed.Result.SessionId ?? State.SessionId;
-                _services.Usage?.OnTurnCompleted(Id, DisplayName, completed, Folder, Account?.Id, Account?.Name);
+                // Its card has its number and its id in the usage history, so Breakdown › opens the breakdown on it, and the
+                // breakdown numbers it as the card does (DESIGN.md §18, "A turn's card").
+                var turnId = completed.Usage.IsEmpty || _services.Usage is null ? null : Guid.NewGuid().ToString("N");
+                if (Items.LastOrDefault() is TurnSummaryItem card && turnId is not null)
+                {
+                    card.TurnNumber = State.Tokens.Turns;
+                    card.TurnId = turnId;
+                }
+                _services.Usage?.OnTurnCompleted(Id, DisplayName, completed, Folder, Account?.Id, Account?.Name, turnId, State.Tokens.Turns);
                 // Only a tab that syncs writes to the library (DESIGN.md §9, "Session library").
                 CopyToLibrary();
                 _services.SaveState();
@@ -2520,6 +2531,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 break;
             case SessionExited exited:
                 _session = null;
+                Tokens.OnSessionEnded();
                 SetCompacting(false);
                 _claudeName = null;
                 RemoteControl.Reset();

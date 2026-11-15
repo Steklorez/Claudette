@@ -44,14 +44,15 @@ public static class DemoLaunch
         RemoveLeftovers(temporary);
         var folder = Path.Combine(temporary, FolderPrefix + Guid.NewGuid().ToString("N")[..8]);
         var now = services.Time.GetLocalNow();
-        var options = new DemoOptions { ClaudePath = app, Theme = services.Settings.Appearance.Theme, Style = services.Settings.Appearance.Style };
-        // Off the UI thread: it writes a few hundred files.
-        var written = await Task.Run(async () =>
+        var options = new DemoOptions
         {
-            var demo = await DemoHome.WriteAsync(folder, Path.Combine(folder, "projects"), now, options, DemoContent.EmptyFolder).ConfigureAwait(false);
-            DemoUsage.Write(demo.Paths.UsageDatabase, Path.Combine(demo.ClaudeConfig, StandInClaude.UsageFile), now.ToUniversalTime(), demo.Tabs);
-            return demo;
-        }).ConfigureAwait(false);
+            ClaudePath = app,
+            Theme = services.Settings.Appearance.Theme,
+            Style = services.Settings.Appearance.Style,
+            WriteUsage = (paths, config, tabs) => DemoUsage.Write(paths.UsageDatabase, Path.Combine(config, StandInClaude.UsageFile), now.ToUniversalTime(), tabs),
+        };
+        // Off the UI thread: it writes a few hundred files.
+        var written = await Task.Run(() => DemoHome.WriteAsync(folder, Path.Combine(folder, "projects"), now, options, DemoContent.EmptyFolder)).ConfigureAwait(false);
         var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
         {

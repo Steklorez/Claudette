@@ -2,7 +2,7 @@
 title: A tab's token breakdown
 parent: Usage and limits
 nav_order: 5
-summary: "What a tab's tokens went on, turn by turn and call by call, in tokens and cost, with what cost more than it needed to."
+summary: "What a tab's tokens went on, turn by turn and call by call, in tokens and cost, with what cost more than it needed to, and what the next message will cost."
 ---
 
 # A tab's token breakdown
@@ -15,7 +15,13 @@ A tab's token breakdown says what its tokens went on: what kind they were, turn 
 
 ## Opening it
 
-Right-click a tab and choose **Token breakdown…**, under **Session**. **Show token breakdown** in the command palette opens the selected tab's. Opening it again brings its window to the front.
+- Right-click a tab and choose **Token breakdown…**, under **Session**.
+- **Show token breakdown** in the command palette opens the selected tab's.
+- **Breakdown ›** on a turn's card in the conversation opens it on that turn.
+- **Open breakdown** in the composer bar's token count popup, or in the [Tokens tool window](#the-tokens-tool-window), where a click on one of the latest turns opens it on that turn.
+- **Breakdown ›** beside **Tokens** on the tab's info card (the **ⓘ** at the end of the line under the message box).
+
+Opening it again brings its window to the front, on the turn you asked for.
 
 ## What the tokens were
 
@@ -74,6 +80,23 @@ Plain words about what cost more than it needed to, the costliest first, each wi
 The period at the top of the window is **This session window**, **Today** or **All time**. A turn keeps its number in any of them.
 
 **Export…** saves the turns and their calls as a CSV file, with each turn's prompt.
+
+## The Tokens tool window
+
+The **Tokens** tool window keeps the parts of the breakdown that help while you work beside the conversation: what's happening now, and what comes next. Its icon joins the [tool windows](../tabs/tool-windows.md)' strip once the tab has used tokens, and **Show tokens** in the command palette shows it.
+
+{% include shot.html name="guide/usage/tokens-window" alt="The Tokens tool window of the Grappling hook tab: the context, This tab's tiles with its tokens, cost, share of the session limit and cache, the tokens and cost bars, its latest turns newest first with their prompts and costs, and its findings" %}
+
+- **Your next message**, between turns: what its first model call costs if you send it before the [prompt cache](the-prompt-cache.md) expires, and after, with why. Before, Claude reads the conversation from the cache; after, it writes all of it to the cache again, which costs many times more. Once the cache has expired, it says what sending now costs. It's the first call only: how many more a turn takes is up to Claude.
+- **Turn 15 · running**, while Claude works: the turn's tokens and cost so far, each model call as it comes in, with what each tool added between them (*↳ Read · +8.1k*), a subagent's calls as one row, and *Claude is choosing its next step…* after a tool's result.
+- **Context**: how full the context is, with the end Claude Code compacts it at, when it says.
+- **This tab**: its tokens, cost, share of the session limit and how much came from the cache, and its tokens and cost as bars by kind, the turn running included.
+- **Latest turns**: the last six, newest first, each with its prompt, a bar of its cost by kind and the cost, a dot when it was sent after the cache had expired. Click one to open the breakdown on it.
+- **Findings**: the costliest two, each with **Go to turn ›**, and **Open breakdown** for the rest.
+
+## On each turn's card
+
+The **Turn** card at the end of each turn says its number and what it cost, with a thin bar of its kinds of token under it. When the turn was sent after the prompt cache had expired, a warning says what reading the conversation again cost. **Breakdown ›** opens the breakdown on that turn. See [The end of a turn](../conversation/the-end-of-a-turn.md).
 
 ## What's kept
 

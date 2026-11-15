@@ -6,7 +6,8 @@ namespace Deventry.Usage.Demo;
 /// <summary>
 /// The demo's token breakdown (DESIGN.md §18, "Token breakdown"): the grappling hook's tab's turns with their calls, its
 /// tools' results, an Explore subagent on Haiku and a costlier one on Opus, a turn sent after the cache expired and one
-/// that compacted first, scaled to the tokens the tab has in the window, so the busiest tabs stay as they were.
+/// that compacted first, scaled to the tokens the tab has in the window, so the busiest tabs stay as they were. The tab's
+/// own totals are its turns', so its count, its turns' cards and its breakdown agree.
 /// </summary>
 internal static class DemoBreakdown
 {
@@ -63,6 +64,7 @@ internal static class DemoBreakdown
         /// <summary>Writes the turns, every count scaled so they come to about <paramref name="tokens"/>.</summary>
         public void Save(UsageStore store, long tokens)
         {
+            tab.Tokens.Models.Clear();
             var total = _turns.Sum(t => t.Calls.Sum(c => c.Total));
             var scale = total > 0 ? (double)tokens / total : 1;
             foreach (var (turn, at, idle, calls, steps, compacted) in _turns)
@@ -74,7 +76,20 @@ internal static class DemoBreakdown
                 var stepRecords = steps.Select(s => new StepRecord(turn, s.Seq, null, s.Tool, Scale(s.Tokens, scale), false, s.At) { ToolUseId = s.Use }).ToList();
                 UsageEvent[] events = compacted is { } when ? [new UsageEvent(tab.Id, tab.SessionId, turn, when, UsageEventKind.Compacted, Scale(_compactedFrom, scale), "auto")] : [];
                 store.AddTurns(rows, new TurnDetail(records, stepRecords, events));
+                foreach (var row in rows)
+                {
+                    if (!tab.Tokens.Models.TryGetValue(row.Model, out var model))
+                    {
+                        tab.Tokens.Models[row.Model] = model = new ModelTokenTotals();
+                    }
+                    model.Input += row.Input;
+                    model.Output += row.Output;
+                    model.CacheWrite += row.CacheWrite;
+                    model.CacheRead += row.CacheRead;
+                    model.EstimatedCostUsd += row.CostUsd;
+                }
             }
+            tab.Tokens.Turns = _turns.Count;
         }
 
         private long _compactedFrom;

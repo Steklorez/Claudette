@@ -458,7 +458,7 @@ public class UsageHeaderTests
         h.Services.UseUsageTracker(tracker);
         var tab = await h.OpenTabAsync();
         tracker.TurnRecorded += id => h.Shell.OnTurnRecorded(id);
-        // Older than the 5-hour window, but in the week's chart.
+        // Older than the 5-hour window.
         tracker.Store.AddTurns([new TurnRecord(h.Time.GetUtcNow().AddHours(-8), tab.Id, "s1", "claude-opus-5-5", 1000, 0, 0, 0, 0, null)]);
 
         h.Transport.EmitTurn();
@@ -470,7 +470,6 @@ public class UsageHeaderTests
         await tab.Context.TokenWindowRefresh;
 
         Assert.Equal("This session window: 120 tok", tab.Context.TokenWindowText);
-        Assert.Equal(2, tab.Context.TurnPoints.Count);
     }
 
     [Fact]

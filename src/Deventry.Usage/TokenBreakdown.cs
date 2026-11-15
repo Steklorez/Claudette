@@ -250,11 +250,13 @@ public sealed class TokenBreakdown
         var built = new List<TurnBreakdown>();
         foreach (var tab in turns.GroupBy(t => t.TabId, StringComparer.Ordinal))
         {
-            var number = 0;
+            var place = 0;
             foreach (var turn in tab.GroupBy(t => t.Turn ?? $"{t.TabId}@{t.Timestamp.ToUnixTimeMilliseconds()}", StringComparer.Ordinal).OrderBy(g => g.Min(t => t.Timestamp)))
             {
-                number++;
+                place++;
                 var records = turn.ToList();
+                // The number its card says, when it was recorded with one; otherwise its place.
+                var number = records[0].Index ?? place;
                 var id = records[0].Turn;
                 var mine = id is not null && callsOf.TryGetValue(id, out var c) ? c : [];
                 var tools = id is not null && stepsOf.TryGetValue(id, out var s) ? s : [];

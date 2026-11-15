@@ -621,7 +621,7 @@ public sealed class ConversationBuilder
                 _blocks.Close();
                 _carriedOnNoted = false;
                 _retryNote = null;
-                ApplyTurnCompleted(completed.Result, completed.Usage);
+                ApplyTurnCompleted(completed.Result, completed.Usage, completed.Calls);
                 _agents?.OnTurnCompleted();
                 break;
 
@@ -1025,7 +1025,7 @@ public sealed class ConversationBuilder
         }
     }
 
-    private void ApplyTurnCompleted(ResultMessage result, ModelUsageTotals usage)
+    private void ApplyTurnCompleted(ResultMessage result, ModelUsageTotals usage, TurnCallLog calls)
     {
         var tasksChanged = _tasksChangedThisTurn;
         _tasksChangedThisTurn = false;
@@ -1060,7 +1060,7 @@ public sealed class ConversationBuilder
             Items.Add(TurnTasksSummary);
         }
         AddTurnDocs();
-        if (TurnSummaryItem.For(result, usage, _modelName, toolCalls) is { } summary)
+        if (TurnSummaryItem.For(result, usage, _modelName, toolCalls, calls) is { } summary)
         {
             summary.IsFilesCollapsed = CollapseModifiedFiles;
             if (Clock is { } clock)

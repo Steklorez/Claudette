@@ -77,6 +77,12 @@ public sealed record TurnRecord(
     public TimeSpan? IdleBefore { get; init; }
 
     /// <summary>
+    /// The turn's number in its tab, as its card says it (*Turn 9*); null for turns recorded before numbers were, which a
+    /// breakdown numbers by their place.
+    /// </summary>
+    public int? Index { get; init; }
+
+    /// <summary>
     /// One record per model a turn used, from its share of the result's running totals (<see cref="TurnCompleted.Usage"/>),
     /// as <c>TokenTotals.Add</c> counts it.
     /// </summary>

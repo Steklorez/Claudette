@@ -36,6 +36,9 @@ public sealed record SharedTurn(
 {
     /// <summary>The turn's id, which its records for each model share and its calls, steps and events point to (DESIGN.md §18).</summary>
     public string? Turn { get; init; }
+
+    /// <summary>The turn's number in its tab (<see cref="TurnRecord.Index"/>).</summary>
+    public int? Index { get; init; }
 }
 
 /// <summary>A synced session's usage: every turn any machine ran in it, with the names of those machines and tabs.</summary>
@@ -97,6 +100,10 @@ public static class SessionUsageFile
             AddIfSet(entry, "accountId", turn.AccountId);
             AddIfSet(entry, "account", turn.Account);
             AddIfSet(entry, "turn", turn.Turn);
+            if (turn.Index is { } index)
+            {
+                entry["index"] = index;
+            }
             turns.Add(entry);
         }
         var file = new JsonObject
@@ -232,6 +239,7 @@ public static class SessionUsageFile
                 entry.GetString("account"))
             {
                 Turn = entry.GetString("turn"),
+                Index = entry["index"].AsWholeNumber() is { } index and > 0 and < int.MaxValue ? (int)index : null,
             });
         }
         return new SessionUsage(version, machines, tabs, turns)

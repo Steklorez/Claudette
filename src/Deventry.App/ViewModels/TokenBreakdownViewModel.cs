@@ -290,6 +290,36 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         }
     }
 
+    /// <summary>A turn asked for before the breakdown was read: shown once it is.</summary>
+    private (string? TurnId, int? Number)? _asked;
+
+    /// <summary>
+    /// Shows a turn by its id (a turn's card) or its number (the Tokens window), now or once the breakdown has been read.
+    /// Neither leaves the window as it is.
+    /// </summary>
+    public void Show(string? turnId, int? number)
+    {
+        if (turnId is null && number is null)
+        {
+            return;
+        }
+        _asked = (turnId, number);
+        ShowAsked();
+    }
+
+    private void ShowAsked()
+    {
+        if (_asked is not { } asked || Turns.Count == 0)
+        {
+            return;
+        }
+        if (Turns.FirstOrDefault(r => asked.TurnId is not null ? r.Turn.Turn == asked.TurnId : r.Number == asked.Number) is { } row)
+        {
+            _asked = null;
+            ShowTurn(row.Number);
+        }
+    }
+
     /// <summary>Shows a turn: selects its row, opens it, and has the view bring it into view.</summary>
     [RelayCommand]
     private void ShowTurn(int number)
@@ -381,6 +411,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         }
 
         Findings = [.. b.Findings.Select(f => new TokenFindingRow(f.Kind, f.Describe(name), f.Turn, ShowTurnCommand))];
+        ShowAsked();
         var largestModel = b.ByModel.Count > 0 ? b.ByModel.Max(m => cost ? m.CostUsd : m.Tokens.Total) : 0;
         Models = [.. b.ByModel.Select(m => new TokenShareRow(name(m.Model), null, m.Calls > 0 ? m.Calls.ToString("N0", CultureInfo.CurrentCulture) : "–",
             Values(m.Tokens, m.Costs), Scaled(cost ? m.CostUsd : m.Tokens.Total, largestModel), Formats.Tokens(m.Tokens.Total), Formats.Dollars(m.CostUsd)))];
@@ -471,9 +502,12 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     /// ended without calls, each message one turn's. A turn without a message of its own (from before the conversation the
     /// tab has now, or one Claude went on with) has none.
     /// </summary>
-    private Dictionary<TurnBreakdown, string> PromptsOf(IReadOnlyList<TurnBreakdown> turns)
+    private Dictionary<TurnBreakdown, string> PromptsOf(IReadOnlyList<TurnBreakdown> turns) => PromptsOf(_tab.Items, turns);
+
+    /// <summary>Each turn's prompt from a conversation's items, as <see cref="PromptsOf(IReadOnlyList{TurnBreakdown})"/> says.</summary>
+    internal static Dictionary<TurnBreakdown, string> PromptsOf(IEnumerable<ConversationItem> items, IReadOnlyList<TurnBreakdown> turns)
     {
-        var messages = _tab.Items.OfType<UserMessageItem>().Where(m => m.SentAt is not null).OrderBy(m => m.SentAt).ToList();
+        var messages = items.OfType<UserMessageItem>().Where(m => m.SentAt is not null).OrderBy(m => m.SentAt).ToList();
         var prompts = new Dictionary<TurnBreakdown, string>();
         var used = new HashSet<UserMessageItem>();
         foreach (var turn in turns.OrderBy(StartOf))

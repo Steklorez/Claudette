@@ -9,7 +9,7 @@ namespace Deventry.Usage;
 /// </summary>
 internal static class UsageSchema
 {
-    public const int Version = 7;
+    public const int Version = 8;
 
     private const int SqliteCorrupt = 11;
     private const int SqliteNotADatabase = 26;
@@ -192,6 +192,13 @@ internal static class UsageSchema
         if (!HasColumn(connection, transaction, "turns", "idle_ms"))
         {
             create.CommandText = "ALTER TABLE turns ADD COLUMN idle_ms INTEGER";
+            create.ExecuteNonQuery();
+        }
+        // Version 8: the turn's number in its tab, as its card says it (DESIGN.md §18, "A turn's card"). Null for turns
+        // recorded before, which a breakdown numbers by their place.
+        if (!HasColumn(connection, transaction, "turns", "turn_index"))
+        {
+            create.CommandText = "ALTER TABLE turns ADD COLUMN turn_index INTEGER";
             create.ExecuteNonQuery();
         }
         create.CommandText = """

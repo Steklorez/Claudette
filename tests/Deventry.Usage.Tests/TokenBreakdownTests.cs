@@ -63,6 +63,18 @@ public sealed class TokenBreakdownTests : IDisposable
     private static TokenBreakdown Breakdown() => TokenBreakdown.From(Turns, Calls, Steps, Events);
 
     [Fact]
+    public void A_turn_recorded_with_its_number_keeps_it()
+    {
+        TurnRecord[] numbered = [.. Turns.Select(t => t.Turn switch { "t3" => t with { Index = 12 }, "t4" => t with { Index = 13 }, _ => t })];
+
+        var breakdown = TokenBreakdown.From(numbered, Calls, Steps, Events);
+
+        // As the turns' cards say them: a tab's turns with no usage aren't recorded, and turns from before numbers by their place.
+        Assert.Equal([1, 2, 12, 13], breakdown.Turns.Select(t => t.Number));
+        Assert.Equal(12, breakdown.Findings.OfType<CacheExpiredFinding>().Single().Turn);
+    }
+
+    [Fact]
     public void Turns_are_numbered_in_their_tab_and_add_up_to_their_records()
     {
         var breakdown = Breakdown();
