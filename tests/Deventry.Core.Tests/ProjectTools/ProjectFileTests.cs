@@ -543,6 +543,22 @@ public sealed class ProjectFileTests : IDisposable
         Assert.Equal(reason, link.Problem);
     }
 
+    [Theory]
+    [InlineData("https://example.com/a?b=c", true)]
+    [InlineData("HTTP://example.com", true)]
+    [InlineData("mailto:team@example.com", true)]
+    [InlineData("file:///C:/Users/kim/Downloads/setup.exe", false)]
+    [InlineData(@"C:\Users\kim\Downloads\setup.exe", false)]
+    [InlineData(@"\\server\share\setup.exe", false)]
+    [InlineData("/usr/local/bin/tool", false)]
+    [InlineData("search-ms:query=setup&crumb=location:\\\\server\\share", false)]
+    [InlineData("ms-msdt:/id PCWDiagnostic", false)]
+    [InlineData("example.com/board", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void Only_a_full_https_http_or_mailto_address_is_allowed_to_open(string? address, bool allowed) =>
+        Assert.Equal(allowed, ProjectLinks.IsAllowed(address));
+
     [Fact]
     public void A_placeholder_that_cant_be_filled_disables_the_link_and_says_why()
     {

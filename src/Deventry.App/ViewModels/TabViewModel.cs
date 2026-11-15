@@ -136,6 +136,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             ShowUnsupportedMessages = services.Settings.Advanced.LogProtocol,
             ShowAllHookRuns = services.Settings.ClaudeCode.ShowAllHookRuns,
             OpenUrl = services.Platform.OpenUrlAsync,
+            OpenUrlAnyway = services.Platform.OpenUrlAnywayAsync,
             Agents = Agents,
             Tasks = Tasks,
             Media = Media,
