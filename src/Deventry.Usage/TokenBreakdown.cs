@@ -197,7 +197,7 @@ public sealed class TokenBreakdown
         var calls = turns.SelectMany(t => t.Calls).ToList();
         ByModel = ModelsOf(turns);
         ByAgent = AgentsOf(turns);
-        var reads = ReadsAgain(turns, events);
+        var reads = _reads = ReadsAgain(turns, events);
         ByTool = [.. turns.SelectMany(t => t.Steps).GroupBy(s => s.Tool, StringComparer.Ordinal)
             .Select(g => new ToolBreakdown(g.Key, g.Count(), g.Sum(s => s.Tokens), g.Sum(s => reads.GetValueOrDefault(s).Tokens), g.Sum(s => reads.GetValueOrDefault(s).CostUsd)))
             .OrderByDescending(t => t.ReadAgain).ThenByDescending(t => t.Added)];
@@ -205,7 +205,12 @@ public sealed class TokenBreakdown
         CallCount = calls.Count;
     }
 
+    private readonly Dictionary<StepRecord, ReadAgain> _reads;
+
     public IReadOnlyList<TurnBreakdown> Turns { get; }
+
+    /// <summary>How many later calls read a tool result again, and its tokens times them; nothing when none did.</summary>
+    public (int Calls, long Tokens) ReadAgainOf(StepRecord step) => _reads.TryGetValue(step, out var read) ? (read.Calls, read.Tokens) : (0, 0);
 
     public TokenKinds Tokens { get; }
 
@@ -366,8 +371,10 @@ public sealed class TokenBreakdown
     }
 
     /// <summary>
-    /// What later calls read again of each tool result: the main agent's calls after it until the conversation is compacted
-    /// or cleared, or for a subagent's, that subagent's later calls. Each is its tokens, at each call's model's price.
+    /// What later calls read again of each tool result: in its turn, the same agent's calls after the one that asked for it;
+    /// for the main agent's, its calls in the turns after too, until the conversation is compacted or cleared. Calls are
+    /// taken in their order, which a clock that hasn't moved between them doesn't change. Each is the result's tokens, at
+    /// each call's model's price.
     /// </summary>
     private static Dictionary<StepRecord, ReadAgain> ReadsAgain(IReadOnlyList<TurnBreakdown> turns, IReadOnlyList<UsageEvent> events)
     {
@@ -375,18 +382,27 @@ public sealed class TokenBreakdown
         var prices = TokenPrices.From(turns.SelectMany(t => t.Calls), []);
         foreach (var tab in turns.GroupBy(t => t.TabId, StringComparer.Ordinal))
         {
-            var calls = tab.SelectMany(t => t.Calls).Where(c => c.Kind is CallKind.Call or CallKind.CacheExpired).OrderBy(c => c.Timestamp).ToList();
+            var ordered = tab.OrderBy(t => t.At).ToList();
             var replaced = events.Where(e => e.TabId == tab.Key && e.Kind is UsageEventKind.Compacted or UsageEventKind.Cleared).OrderBy(e => e.Timestamp).ToList();
-            foreach (var step in tab.SelectMany(t => t.Steps))
+            for (var i = 0; i < ordered.Count; i++)
             {
-                var until = step.Agent is null ? replaced.FirstOrDefault(e => e.Timestamp > step.Timestamp) : null;
-                var later = calls.Where(c => c.Agent == step.Agent && c.Timestamp > step.Timestamp && (until is null || c.Timestamp < until.Timestamp)).ToList();
-                if (later.Count == 0)
+                var turn = ordered[i];
+                foreach (var step in turn.Steps)
                 {
-                    continue;
+                    var until = step.Agent is null ? replaced.FirstOrDefault(e => e.Timestamp >= step.Timestamp) : null;
+                    bool Before(CallRecord call) => until is null || call.Timestamp < until.Timestamp;
+                    var later = turn.Calls.Where(c => c.Agent == step.Agent && c.Seq > step.CallSeq && c.Kind is CallKind.Call or CallKind.CacheExpired && Before(c)).ToList();
+                    if (step.Agent is null)
+                    {
+                        later.AddRange(ordered.Skip(i + 1).SelectMany(t => t.Calls).Where(c => c.Agent is null && c.Kind is CallKind.Call or CallKind.CacheExpired && Before(c)));
+                    }
+                    if (later.Count == 0)
+                    {
+                        continue;
+                    }
+                    var cost = later.Sum(c => step.Tokens * (prices.CacheRead(c.Model) ?? 0));
+                    reads[step] = new ReadAgain(later.Count, step.Tokens * later.Count, cost, until?.Kind);
                 }
-                var cost = later.Sum(c => step.Tokens * (prices.CacheRead(c.Model) ?? 0));
-                reads[step] = new ReadAgain(later.Count, step.Tokens * later.Count, cost, until?.Kind);
             }
         }
         return reads;

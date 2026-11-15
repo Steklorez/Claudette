@@ -24,6 +24,7 @@ The tab's info card (hover over its row, or the **ⓘ** button at the end of the
 
 ## Where else the numbers show
 
+- What the tokens went on, turn by turn and call by call, is the tab's [token breakdown](token-breakdown.md): right-click the tab and choose **Token breakdown…**.
 - The working line above the composer shows the tokens of the turn in progress: see [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md).
 - [The Usage window](the-usage-window.md) and [the detailed header](the-detailed-header.md) rank your tabs by what they used in the session window.
 - The count isn't the same as how full the tab's context is: see [Context and compacting](context-and-compacting.md).

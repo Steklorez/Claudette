@@ -181,7 +181,7 @@ if (Test-Wanted 'getting-started/sign-in') {
 
 # As the demo is.
 if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
-    'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
+    'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window', 'usage/token-breakdown',
     'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'away/remote-clients', 'away/remote-clients-discord',
     'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
     Use-Deventry @{} {
@@ -250,6 +250,20 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
             $usage = Get-OtherWindow $deventry $window 'the Usage window'
             Save-Window $usage $path
             Close-Other $usage
+        }
+
+        # The grappling hook's tab's breakdown, from its menu (DESIGN.md §18, "Token breakdown"): its third turn was sent
+        # after the cache expired, with an Explore subagent, and its fourth compacted first.
+        Shot 'usage/token-breakdown' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'Grappling hook')
+            $menu = Get-OtherWindow $deventry $window 'the tab menu'
+            Send-Click (Find-ByText $menu "Token breakdown$([char] 0x2026)")
+            $breakdown = Get-OtherWindow $deventry $window 'the Token breakdown window'
+            Wait-Until { Find-ByText $breakdown 'What the tokens were' -Optional } 'the breakdown' 20
+            Wait-Settled $breakdown
+            Save-Window $breakdown $path
+            Close-Other $breakdown
         }
 
         Shot 'settings/settings-window' {

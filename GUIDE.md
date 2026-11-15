@@ -211,6 +211,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | The detailed header | **Detailed usage header**: the charts, **Burn rate**, **Time to limit**, **Busiest tabs**. | [Detailed header](DESIGN.md#detailed-header) |
 | The Usage window | Tabs in this session window, **Projects** and its period, **Accounts**, past sessions and weeks. | [Burn trendline](DESIGN.md#burn-trendline), [Usage history](DESIGN.md#usage-history) |
 | A tab's tokens | The composer bar's token count and its breakdown. | [§4](DESIGN.md#4-tabs--sessions) |
+| A tab's token breakdown | **Token breakdown…** and **Show token breakdown**, the kinds of token in tokens and cost, the tiles (the share of the session limit as an estimate), turn by turn and its marks, the turns and their calls, the findings, by model, agent and tool, the period, **Export…**, what's kept. | [Token breakdown](DESIGN.md#token-breakdown) |
 | Context and compacting | The context indicator, the row's ring, the breakdown, **Compact now**, *Conversation compacted*. | [Per-tab context](DESIGN.md#per-tab-context) |
 | The prompt cache | The **Cache** chip, its tooltip, **Show when the prompt cache expires**. | [Prompt cache](DESIGN.md#prompt-cache) |
 | Alerts | When alerts come (usage credits starting to pay too), where they show, turning them off. | [Alerts](DESIGN.md#alerts), [Usage credits](DESIGN.md#usage-credits) |

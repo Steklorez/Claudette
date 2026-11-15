@@ -42,6 +42,7 @@ In the order the menu has them.
 | **Use usage credits** | A check item: once a limit is used up, the tab carries on with your plan's usage credits. Unticked, it stops and waits for the limit to reset. Not on an API-key account. | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
 | **Trust this folder** | Starts Claude Code again with the folder's own settings, MCP servers and `CLAUDE.md`. Shown for a tab that started without them. | [Folder trust](../permissions/folder-trust.md) |
 | **Export conversation…** | Saves the conversation as a Markdown file or a web page. | [Exporting](../conversation/exporting.md) |
+| **Token breakdown…** | Opens the tab's token breakdown in a window of its own: what its tokens went on, turn by turn. | [A tab's token breakdown](../usage/token-breakdown.md) |
 | **Copy session ID** | Copies the session's ID. Shown once the tab has a session. | [Below](#copy-session-id) |
 
 ### Other devices

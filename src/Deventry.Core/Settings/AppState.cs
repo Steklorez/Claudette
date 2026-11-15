@@ -150,6 +150,12 @@ public sealed class AppState
     public bool DetailedUsageHeader { get; set; }
 
     /// <summary>
+    /// The token breakdown's charts and bars show cost rather than tokens (DESIGN.md §18, "Token breakdown"): its window's
+    /// <b>Tokens | Cost</b>, and the Tokens tool window's. Kept per machine.
+    /// </summary>
+    public bool TokensAsCost { get; set; }
+
+    /// <summary>
     /// Logs in the main area wrap their long lines (DESIGN.md §18, "Project tools", "A run's log"): each new one starts
     /// with <b>Wrap lines</b> as the last one was left.
     /// </summary>

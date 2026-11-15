@@ -1,0 +1,367 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:Deventry.App.Controls"
+        xmlns:vm="using:Deventry.App.ViewModels"
+        x:Class="Deventry.App.Views.TokenBreakdownWindow"
+        x:DataType="vm:TokenBreakdownViewModel"
+        Title="{Binding Title}"
+        Width="1180" Height="820" MinWidth="760" MinHeight="520"
+        WindowStartupLocation="CenterOwner">
+  <Window.Styles>
+    <Style Selector="TextBlock.section">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.panel">
+      <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,12" />
+    </Style>
+    <Style Selector="Border.tile">
+      <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="Margin" Value="0,0,10,0" />
+    </Style>
+    <Style Selector="Border.estimate">
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="4,0" />
+      <Setter Property="Margin" Value="6,0,0,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.chip">
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="5,0" />
+      <Setter Property="Margin" Value="0,0,4,0" />
+    </Style>
+    <Style Selector="Border.chip.caution">
+      <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+      <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+    </Style>
+    <Style Selector="Button.link">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.segment">
+      <Setter Property="Padding" Value="10,3" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Button.turnrow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Button.turnrow.selected">
+      <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+    </Style>
+    <Style Selector="TextBlock.num">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="controls|KindsBar">
+      <Setter Property="Height" Value="10" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="controls|KindsBar.thin">
+      <Setter Property="Height" Value="6" />
+    </Style>
+    <Style Selector="Ellipse.finding">
+      <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="Ellipse.finding.caution">
+      <Setter Property="Fill" Value="{DynamicResource MeterWarningBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Window.Resources>
+    <DataTemplate x:Key="ShareRow" DataType="vm:TokenShareRow">
+      <Grid ColumnDefinitions="*,40,*,58,52" Margin="0,3">
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="muted" FontSize="11" Text="{Binding Detail}" IsVisible="{Binding Detail, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+        <TextBlock Grid.Column="1" Classes="num" Text="{Binding Calls}" />
+        <controls:KindsBar Grid.Column="2" Classes="thin" Margin="10,0,6,0" Values="{Binding Values}" Scale="{Binding Scale}" />
+        <TextBlock Grid.Column="3" Classes="num" Text="{Binding Tokens}" />
+        <TextBlock Grid.Column="4" Classes="num" Text="{Binding Cost}" />
+      </Grid>
+    </DataTemplate>
+  </Window.Resources>
+
+  <!-- DESIGN.md §18, "The window": a tab's token breakdown -->
+  <DockPanel>
+    <controls:TitleBar DockPanel.Dock="Top" ShowsTitle="False">
+      <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Path Classes="menuicon" Data="{StaticResource IconTokenBreakdown}" Stroke="{DynamicResource AccentStatusBrush}" />
+        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+      </StackPanel>
+    </controls:TitleBar>
+    <Border DockPanel.Dock="Top" Classes="windowbar">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="12">
+        <TextBlock Classes="muted small" Text="{Binding Line}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        <ComboBox Grid.Column="1" MinWidth="170" ItemsSource="{Binding Periods}" SelectedItem="{Binding SelectedPeriod}"
+                  AutomationProperties.Name="Period" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <ToggleButton Classes="segment" Content="Tokens" IsChecked="{Binding ShowTokens}" CornerRadius="4,0,0,4"
+                        ToolTip.Tip="The chart and bars in tokens" />
+          <ToggleButton Classes="segment" Content="Cost" IsChecked="{Binding ShowCost}" CornerRadius="0,4,4,0"
+                        ToolTip.Tip="The chart and bars in estimated cost, closer to what counts against the plan's limits" />
+        </StackPanel>
+        <Button Grid.Column="3" Content="Export…" Command="{Binding ExportCommand}"
+                ToolTip.Tip="Save the turns and their calls as a CSV file" />
+      </Grid>
+    </Border>
+
+    <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="14" Spacing="12">
+        <TextBlock Classes="muted" IsVisible="{Binding IsEmpty}" TextWrapping="Wrap"
+                   Text="No turns recorded in this period. A turn's tokens show here once it ends." />
+
+        <!-- The tiles -->
+        <ItemsControl ItemsSource="{Binding Tiles}" IsVisible="{Binding HasTurns}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Rows="1" Margin="0,0,-10,0" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:TokenTile">
+              <Border Classes="tile" ToolTip.Tip="{Binding Tip}">
+                <StackPanel Spacing="1">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Classes="muted small" Text="{Binding Label}" />
+                    <Border Classes="estimate" IsVisible="{Binding IsEstimate}">
+                      <TextBlock Classes="muted" FontSize="10" Text="estimate" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock Text="{Binding Value}" FontSize="22" FontWeight="SemiBold" />
+                  <TextBlock Classes="muted small" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid x:Name="Columns" ColumnDefinitions="*,12,400" RowDefinitions="Auto,Auto" IsVisible="{Binding HasTurns}">
+          <StackPanel x:Name="LeftColumn" Spacing="12">
+            <!-- What the tokens were -->
+            <Border Classes="panel">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="section" Text="What the tokens were" />
+                  <TextBlock Grid.Column="1" Classes="muted small" VerticalAlignment="Center" Text="Each model call counted once, subagents included" />
+                </Grid>
+                <Grid ColumnDefinitions="56,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+                  <TextBlock Classes="muted small" Text="Tokens" VerticalAlignment="Center" />
+                  <controls:KindsBar Grid.Column="1" Values="{Binding TokenValues}" />
+                  <TextBlock Grid.Row="1" Classes="muted small" Text="Cost" VerticalAlignment="Center" />
+                  <controls:KindsBar Grid.Row="1" Grid.Column="1" Values="{Binding CostValues}" />
+                </Grid>
+                <Grid ColumnDefinitions="18,86,*,90,52,70,46" Margin="0,4,0,0">
+                  <TextBlock Grid.Column="3" Classes="muted small" HorizontalAlignment="Right" Text="Tokens" />
+                  <TextBlock Grid.Column="4" Classes="muted small" HorizontalAlignment="Right" Text="share" />
+                  <TextBlock Grid.Column="5" Classes="muted small" HorizontalAlignment="Right" Text="Cost" />
+                  <TextBlock Grid.Column="6" Classes="muted small" HorizontalAlignment="Right" Text="share" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Kinds}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:TokenKindRow">
+                      <Grid ColumnDefinitions="18,86,*,90,52,70,46" Margin="0,2" Background="Transparent" ToolTip.Tip="{Binding About}">
+                        <controls:KindsBar Width="10" Height="10" HorizontalAlignment="Left" Values="{Binding Swatch}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Classes="muted small" Text="{Binding About}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="3" Classes="num" Text="{Binding Tokens}" />
+                        <TextBlock Grid.Column="4" Classes="num muted" Text="{Binding TokenShare}" />
+                        <TextBlock Grid.Column="5" Classes="num" Text="{Binding Cost}" />
+                        <TextBlock Grid.Column="6" Classes="num muted" Text="{Binding CostShare}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- Turn by turn -->
+            <Border Classes="panel">
+              <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="section" Text="Turn by turn" />
+                  <TextBlock Grid.Column="1" Classes="muted small" VerticalAlignment="Center" Text="{Binding ChartUnit}" />
+                </Grid>
+                <controls:TurnsChart Height="340" Columns="{Binding Columns}" IsCost="{Binding ShowCost}" SelectedNumber="{Binding SelectedTurn}"
+                                     ContextWindow="{Binding ContextWindow}" SelectCommand="{Binding ShowTurnCommand}" />
+                <TextBlock Classes="muted small" TextWrapping="Wrap"
+                           Text="A dot marks a turn whose cache had expired, a chevron one that compacted first, a diamond one with a subagent. Click a column for its turn." />
+              </StackPanel>
+            </Border>
+
+            <!-- Turns -->
+            <Border Classes="panel" Padding="8,10">
+              <StackPanel Spacing="2">
+                <Grid ColumnDefinitions="*,Auto" Margin="6,0,6,4">
+                  <TextBlock Classes="section" Text="Turns" />
+                  <TextBlock Grid.Column="1" Classes="muted small" VerticalAlignment="Center" Text="Click a turn for its model calls" />
+                </Grid>
+                <Grid ColumnDefinitions="30,*,56,190,64,60,52,58" Margin="6,0">
+                  <TextBlock Classes="muted small" Text="#" />
+                  <TextBlock Grid.Column="1" Classes="muted small" Text="Prompt" />
+                  <TextBlock Grid.Column="2" Classes="muted small" HorizontalAlignment="Right" Text="Calls" />
+                  <TextBlock Grid.Column="3" Classes="muted small" Margin="12,0,0,0" Text="{Binding BarsHeader}" />
+                  <TextBlock Grid.Column="4" Classes="muted small" HorizontalAlignment="Right" Text="Tokens" />
+                  <TextBlock Grid.Column="5" Classes="muted small" HorizontalAlignment="Right" Text="Cost" />
+                  <TextBlock Grid.Column="6" Classes="muted small" HorizontalAlignment="Right" Text="Cache" />
+                  <TextBlock Grid.Column="7" Classes="muted small" HorizontalAlignment="Right" Text="Context" />
+                </Grid>
+                <ItemsControl x:Name="TurnList" ItemsSource="{Binding Turns}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:TokenTurnRow">
+                      <StackPanel>
+                        <Button Classes="turnrow" Classes.selected="{Binding IsSelected}" Command="{Binding ToggleCommand}"
+                                AutomationProperties.Name="{Binding Prompt, StringFormat='Turn: {0}'}">
+                          <Grid ColumnDefinitions="30,*,56,190,64,60,52,58" Margin="6,5">
+                            <TextBlock Classes="muted small" Text="{Binding NumberText}" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Spacing="1" Margin="0,0,8,0">
+                              <TextBlock Text="{Binding Prompt}" FontSize="13" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Prompt}" />
+                              <WrapPanel>
+                                <TextBlock Classes="muted small" Text="{Binding When}" Margin="0,0,8,0" />
+                                <ItemsControl ItemsSource="{Binding Chips}">
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                      <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                      <Border Classes="chip" Margin="0,1,4,1">
+                                        <TextBlock Classes="muted" FontSize="11" Text="{Binding}" />
+                                      </Border>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                              </WrapPanel>
+                            </StackPanel>
+                            <TextBlock Grid.Column="2" Classes="num" Text="{Binding CallsText}" />
+                            <controls:KindsBar Grid.Column="3" Margin="12,0,6,0" Values="{Binding Values}" Scale="{Binding Scale}" />
+                            <TextBlock Grid.Column="4" Classes="num" Text="{Binding Tokens}" />
+                            <TextBlock Grid.Column="5" Classes="num" Text="{Binding Cost}" />
+                            <TextBlock Grid.Column="6" Classes="num" Text="{Binding Cache}" />
+                            <TextBlock Grid.Column="7" Classes="num" Text="{Binding Context}" />
+                          </Grid>
+                        </Button>
+                        <ItemsControl ItemsSource="{Binding Calls}" IsVisible="{Binding IsExpanded}" Margin="0,0,0,6">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:TokenCallRow">
+                              <Grid ColumnDefinitions="30,*,56,190,64,60,52,58" Margin="6,2">
+                                <TextBlock Grid.Column="1" Classes="muted small" Margin="18,0,0,0" TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+                                  <Run Text="{Binding Label}" FontFamily="{DynamicResource MonoFont}" /><Run Text=" " /><Run Text="{Binding What}" />
+                                </TextBlock>
+                                <TextBlock Grid.Column="2" Classes="muted small" HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding Agent}" TextTrimming="CharacterEllipsis" />
+                                <controls:KindsBar Grid.Column="3" Classes="thin" Margin="12,0,6,0" Values="{Binding Values}" Scale="{Binding Scale}" />
+                                <TextBlock Grid.Column="4" Classes="num muted" Text="{Binding Tokens}" />
+                                <TextBlock Grid.Column="5" Classes="num muted" Text="{Binding Cost}" />
+                                <TextBlock Grid.Column="6" Classes="num muted" Text="{Binding Cache}" />
+                                <TextBlock Grid.Column="7" Classes="num muted" Text="{Binding Context}" />
+                              </Grid>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <StackPanel x:Name="RightColumn" Grid.Column="2" Spacing="12">
+            <!-- Findings -->
+            <Border Classes="panel" IsVisible="{Binding HasFindings}">
+              <StackPanel Spacing="8">
+                <TextBlock Classes="section" Text="Findings" />
+                <ItemsControl ItemsSource="{Binding Findings}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:TokenFindingRow">
+                      <Grid ColumnDefinitions="18,*" RowDefinitions="Auto,Auto" Margin="0,4">
+                        <Ellipse Width="7" Height="7" VerticalAlignment="Top" Margin="0,6,0,0" Classes.caution="{Binding IsCaution}" Classes="finding" />
+                        <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" FontSize="12" />
+                        <Button Grid.Row="1" Grid.Column="1" Classes="link" Margin="0,3,0,0" Content="{Binding GoToText}"
+                                Command="{Binding GoToTurn}" CommandParameter="{Binding Turn}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- By model, agent and tool -->
+            <Border Classes="panel">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section" Text="By model" />
+                <ItemsControl ItemsSource="{Binding Models}" ItemTemplate="{StaticResource ShareRow}" />
+              </StackPanel>
+            </Border>
+            <Border Classes="panel">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="section" Text="By agent" />
+                <ItemsControl ItemsSource="{Binding Agents}" ItemTemplate="{StaticResource ShareRow}" />
+              </StackPanel>
+            </Border>
+            <Border Classes="panel">
+              <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="section" Text="By tool" />
+                  <TextBlock Grid.Column="1" Classes="muted small" VerticalAlignment="Center" Text="What their results cost later" />
+                </Grid>
+                <Grid ColumnDefinitions="*,40,56,*,58">
+                  <TextBlock Grid.Column="1" Classes="muted small" HorizontalAlignment="Right" Text="Calls" />
+                  <TextBlock Grid.Column="2" Classes="muted small" HorizontalAlignment="Right" Text="Added" />
+                  <TextBlock Grid.Column="3" Classes="muted small" Margin="10,0,0,0" Text="Read again" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Tools}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:TokenToolRow">
+                      <Grid ColumnDefinitions="*,40,56,*,58" Margin="0,3">
+                        <TextBlock FontFamily="{DynamicResource MonoFont}" FontSize="12" Text="{Binding Tool}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Classes="num" Text="{Binding Calls}" />
+                        <TextBlock Grid.Column="2" Classes="num" Text="{Binding Added}" />
+                        <controls:KindsBar Grid.Column="3" Classes="thin" Margin="10,0,6,0" Scale="{Binding Scale}" Values="{x:Static vm:TokenBreakdownViewModel.CacheReadOnly}" />
+                        <StackPanel Grid.Column="4" HorizontalAlignment="Right">
+                          <TextBlock Classes="num" Text="{Binding ReadAgain}" />
+                          <TextBlock Classes="num muted" FontSize="11" Text="{Binding Cost}" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Classes="muted small" TextWrapping="Wrap" Margin="0,4,0,0"
+                           Text="A result stays in the conversation, so every later call reads it again from the cache until the conversation is compacted or cleared. Read again is its size times those calls." />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Grid>
+
+        <TextBlock Classes="muted small" Text="{Binding Footnote}" TextWrapping="Wrap" />
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</Window>

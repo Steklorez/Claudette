@@ -62,7 +62,7 @@ For the selected tab:
 - **Show changed files**, **Show the agent map**, **Show tasks**, **Show processes**, **Show MCP servers** (when the session has some), **Show media** (when the conversation has any) and **Show scratch pad**
 - **Open project files**, which opens the project's Files tab. See [Opening project files](../project-files/opening-project-files.md).
 - **Play tic-tac-toe with Joulene**, **Play Four in a Row with Joulene**, **Play hangman with Joulene**, **Play Minesweeper with Joulene** and **Play Pipeline with Joulene**, unless the games are turned off. See [Games with Joulene](../joulene/games-with-joulene.md).
-- **Tab settings…**, **Duplicate tab** and **Export conversation…**
+- **Tab settings…**, **Duplicate tab**, **Export conversation…** and **Show token breakdown**
 - **Collapse tab** (or **Expand tab**), while the tab has rows under it. See [Collapsing a tab](the-sidebar.md#collapsing-a-tab).
 - **New tab in a worktree**, for a folder in a git repository
 - The thread commands that apply: **Make this tab a thread**, **New sub-thread**, **New sub-thread in a worktree**, **Ask before sending to sub-threads** (or **Stop asking before sending to sub-threads**), **Stop being a thread**, **Assign to thread:** and a thread's name, **Go to thread** and **Detach from thread**

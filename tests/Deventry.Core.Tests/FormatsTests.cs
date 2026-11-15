@@ -35,6 +35,16 @@ public class FormatsTests
     [InlineData(1_582_900, "1.6M")]
     public void Tokens_are_in_round_figures(long tokens, string text) => Assert.Equal(text, Formats.Tokens(tokens));
 
+    [Theory]
+    [InlineData("claude-opus-5-5", "Opus 5.5")]
+    [InlineData("claude-haiku-4-5-20251001", "Haiku 4.5")]
+    [InlineData("claude-sonnet-4-5[1m]", "Sonnet 4.5")]
+    [InlineData("claude-fable-5-1", "Fable 5.1")]
+    [InlineData("opus", "opus")]
+    [InlineData("claude-opus", "claude-opus")]
+    [InlineData("gpt-6", "gpt-6")]
+    public void A_models_name_is_read_from_its_id(string id, string name) => Assert.Equal(name, Formats.ModelName(id));
+
     [Fact]
     public void A_folders_name_ignores_a_separator_at_its_end()
     {

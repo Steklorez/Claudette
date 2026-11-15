@@ -1,7 +1,7 @@
 ---
 title: Alerts
 parent: Usage and limits
-nav_order: 7
+nav_order: 8
 summary: "Deventry tells you when your session is getting full, so you don't have to watch the header."
 ---
 
