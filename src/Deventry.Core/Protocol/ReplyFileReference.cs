@@ -90,23 +90,30 @@ public sealed partial record ReplyFileReference(string Text, string Path, int? L
     }
 
     /// <summary>
-    /// Extensions the OSes run, install or follow rather than show: Windows' programs, scripts and shortcuts, macOS's
-    /// apps and scripts, Linux's launchers and packages, and the scripting languages an installer may have tied to their
-    /// interpreter.
+    /// Extensions the OSes run, install, mount or follow rather than show: Windows' programs, scripts and shortcuts, and
+    /// the files whose own app runs what's in them (compiled help, OneNote, Excel add-ins, a remote desktop's connection
+    /// to another machine), macOS's apps and scripts, Linux's launchers and packages, disk images, which mount without the
+    /// mark a download carries, and the scripting languages an installer may have tied to their interpreter.
     /// </summary>
     public static IReadOnlySet<string> ProgramExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         // Windows: programs, scripts, shortcuts and installers.
-        "exe", "com", "scr", "pif", "cpl", "msc", "msi", "msp", "msix", "msixbundle", "appx", "appxbundle", "appinstaller",
-        "application", "appref-ms", "gadget", "hta", "bat", "cmd", "ps1", "psm1", "vbs", "vbe", "js", "jse", "wsf", "wsh",
-        "ws", "sct", "lnk", "url", "website", "scf", "reg", "inf", "settingcontent-ms", "library-ms", "search-ms", "diagcab",
-        // macOS: apps, scripts, installers and links.
+        "exe", "com", "scr", "pif", "cpl", "msc", "msi", "msp", "mst", "msu", "msix", "msixbundle", "appx", "appxbundle",
+        "appinstaller", "application", "appref-ms", "xbap", "gadget", "hta", "bat", "cmd", "ps1", "psm1", "ps1xml", "ps2",
+        "ps2xml", "psc1", "psc2", "msh", "msh1", "msh2", "mshxml", "msh1xml", "msh2xml", "vb", "vbs", "vbe", "vbp", "js", "jse",
+        "wsf", "wsh", "ws", "wsc", "wsb", "sct", "lnk", "url", "website", "scf", "reg", "inf", "settingcontent-ms",
+        "library-ms", "search-ms", "searchconnector-ms", "diagcab", "theme", "themepack", "deskthemepack",
+        // Windows: files whose app runs what's in them, or connects to another machine.
+        "chm", "hlp", "one", "onepkg", "xll", "ade", "adp", "jnlp", "rdp",
+        // Disk images, which mount, and what's in them skips the mark a download carries.
+        "iso", "img", "vhd", "vhdx", "dmg",
+        // macOS: apps, scripts, installers, profiles and links.
         "app", "command", "tool", "terminal", "workflow", "action", "scpt", "scptd", "applescript", "pkg", "mpkg", "webloc",
-        "inetloc", "fileloc", "prefpane", "kext",
+        "inetloc", "fileloc", "prefpane", "saver", "kext", "mobileconfig",
         // Linux: launchers, scripts and packages.
-        "desktop", "appimage", "run", "sh", "bash", "zsh", "ksh", "csh", "fish", "deb", "rpm", "flatpakref", "snap",
+        "desktop", "appimage", "run", "sh", "bash", "zsh", "ksh", "csh", "fish", "deb", "rpm", "flatpak", "flatpakref", "snap",
         // Interpreters an installer may have made the default app.
-        "py", "pyw", "pyz", "pyc", "rb", "rbw", "pl", "php", "lua", "tcl", "jar", "ahk", "au3",
+        "py", "pyw", "pyz", "pyzw", "pyc", "pyo", "rb", "rbw", "pl", "php", "lua", "tcl", "jar", "ahk", "au3",
     };
 
     private const int MaxLength = 400;
