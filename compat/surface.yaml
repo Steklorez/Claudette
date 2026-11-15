@@ -764,9 +764,17 @@ items:
   - id: "compact_boundary"
     kind: message
     status: documented
-    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.App/Conversation/ConversationBuilder.cs, src/Deventry.Core/Sessions/ClaudeSession.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: TabViewModelTests
+    test: TabViewModelTests, TurnCallsTests
+  - id: "pre_tokens"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Protocol/SystemNotices.cs, src/Deventry.Core/Sessions/TurnCalls.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: TurnCallsTests
+    # compact_metadata.pre_tokens: the context's tokens before a compaction, recorded with it (DESIGN.md §18, "Token
+    # breakdown"). The transcript's compact_boundary has it as compactMetadata.preTokens, with postTokens.
   - id: "/compact"
     kind: command
     status: documented
@@ -1619,9 +1627,9 @@ items:
   - id: "message.usage"
     kind: field
     status: documented
-    usedIn: src/Deventry.Core/Sessions/CallUsage.cs
+    usedIn: src/Deventry.Core/Sessions/CallUsage.cs, src/Deventry.Core/Sessions/TurnCalls.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: CallUsageTests
+    test: CallUsageTests, TurnCallsTests
     # Per-call usage on assistant messages: repeated on every content block of a call, so counted once by message id.
   - id: "autocompact_state"
     kind: message
@@ -1662,24 +1670,44 @@ items:
   - id: "ephemeral_1h_input_tokens"
     kind: field
     status: documented
-    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs
+    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs, src/Deventry.Core/Sessions/TurnCalls.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: PromptCacheWritesTests
+    test: PromptCacheWritesTests, TurnCallsTests
     fallback: See cache_creation. Any tokens here mean the 1-hour lifetime.
   - id: "ephemeral_5m_input_tokens"
     kind: field
     status: documented
-    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs
+    usedIn: src/Deventry.Core/Protocol/PromptCacheWrites.cs, src/Deventry.Core/Sessions/TurnCalls.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: PromptCacheWritesTests
+    test: PromptCacheWritesTests, TurnCallsTests
     fallback: See cache_creation. Tokens here, with none at an hour, mean the 5-minute lifetime.
+  - id: "server_tool_use"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Sessions/TurnCalls.cs
+    docs: https://code.claude.com/docs/en/agent-sdk/typescript
+    test: TurnCallsTests
+    # On an assistant message's usage: web_search_requests and web_fetch_requests, each call's server tools, recorded
+    # with it (DESIGN.md §18, "Token breakdown"). On most calls in 2.1.301; a call without it made none.
+  - id: "<synthetic>"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Sessions/TurnCalls.cs
+    test: TurnCallsTests
+    fallback: "The model of the assistant messages Claude Code writes itself, such as an interrupted turn's note (85 in 2.1.301's transcripts on this machine): no call made them, so they're no call in the token breakdown. If it changes, such a message counts as a call of no tokens, which changes no figure."
+  - id: "modelUsage counts calls the stream doesn't show"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Deventry.Core/Sessions/TurnCalls.cs
+    test: TurnCallsTests, CallRecordingTests
+    fallback: "The token breakdown's spike (2.1.301, DESIGN.md §18): a result's modelUsage counts the compaction's call (reading the whole conversation, writing its summary) and Claude Code's own calls (its title on Haiku, WebFetch reading the pages it fetched), which neither the stream nor the transcript shows as assistant messages. Each turn's remainder, its usage less the calls it sent, is recorded as a call of its own, Compaction or ClaudeCode, so the calls add up to the turn. If Claude Code starts sending those calls, there's no remainder and nothing else changes; if the stream showed calls modelUsage doesn't count, the remainder is never below zero, so they'd be counted beyond the turn's totals."
   - id: "message.usage.cache_creation"
     kind: field
     status: documented
-    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs
+    usedIn: src/Deventry.Core/Protocol/ClaudeMessages.cs, src/Deventry.App/ViewModels/TabViewModel.PromptCache.cs, src/Deventry.Core/Sessions/TurnCalls.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
-    test: PromptCacheWritesTests, PromptCacheTests
-    fallback: "Optional, and unverified: the Messages API's usage has it, but no recording shows it on an assistant message (the mock's usage leaves it out). Read on the main agent's messages only, and from a restored tab's transcript, where it beats the result's, which can count subagents' writes. Without it the result's is used."
+    test: PromptCacheWritesTests, PromptCacheTests, TurnCallsTests
+    fallback: "Seen on every call in 2.1.301 (24,261 calls in real transcripts, the token breakdown's spike, DESIGN.md §18): its two lifetimes add up to cache_creation_input_tokens, and no call wrote at both. The mock's usage leaves it out. The prompt cache reads it on the main agent's messages, and from a restored tab's transcript, where it beats the result's, which can count subagents' writes; without it the result's is used. Each recorded call prices its writes by it (TurnCalls); without it they're taken as five minutes."
   - id: "apiKeySource"
     kind: field
     status: documented
@@ -1983,7 +2011,7 @@ items:
   - id: "subagent_type"
     kind: field
     status: documented
-    usedIn: src/Deventry.App/Conversation/ConversationItems.cs, src/Deventry.App/Conversation/AgentMap.cs
+    usedIn: src/Deventry.App/Conversation/ConversationItems.cs, src/Deventry.App/Conversation/AgentMap.cs, src/Deventry.Core/Sessions/TurnCalls.cs
     docs: https://code.claude.com/docs/en/agent-sdk/typescript
     test: AgentMapTests
   - id: "run_in_background"

@@ -106,13 +106,21 @@ public sealed record ApiRetryNotice(int? Attempt, int? MaxRetries, long? RetryDe
 
 /// <summary><c>system/compact_boundary</c>: Claude Code compacted the conversation.</summary>
 /// <param name="Trigger"><c>manual</c> for <c>/compact</c>, <c>auto</c> when Claude Code did it to free up context.</param>
-public sealed record CompactBoundaryNotice(string? Trigger)
+/// <param name="PreTokens">The context's tokens before it was compacted, when Claude Code says (DESIGN.md §18, "Token breakdown").</param>
+public sealed record CompactBoundaryNotice(string? Trigger, long? PreTokens = null)
 {
     /// <summary>Claude Code compacted by itself, not because it was asked to.</summary>
     public bool IsAutomatic => Trigger == "auto";
 
-    internal static CompactBoundaryNotice? From(SystemMessage message) =>
-        message.Subtype == "compact_boundary" ? new CompactBoundaryNotice(message.Raw.GetObject("compact_metadata")?.GetString("trigger")) : null;
+    internal static CompactBoundaryNotice? From(SystemMessage message)
+    {
+        if (message.Subtype != "compact_boundary")
+        {
+            return null;
+        }
+        var metadata = message.Raw.GetObject("compact_metadata");
+        return new CompactBoundaryNotice(metadata?.GetString("trigger"), metadata?["pre_tokens"].AsWholeNumber());
+    }
 }
 
 /// <summary>

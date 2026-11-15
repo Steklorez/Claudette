@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json.Nodes;
 using Deventry.Core.Json;
 using Deventry.Core.Protocol;
+using Deventry.Core.Sessions;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,6 +17,8 @@ namespace Deventry.Usage;
 /// from (DESIGN.md §6, "Sharing across machines").</item>
 /// <item>Per-turn token records, per tab, and each tab's last known name.</item>
 /// <item>Turns other machines ran in synced sessions, with their machines' names (<see cref="SessionUsageFile"/>).</item>
+/// <item>Each turn's model calls, its tools' results, and what changed what later calls cost (compactions, clears): counts
+/// and names only (DESIGN.md §18, "What's recorded").</item>
 /// </list>
 /// No conversation content is ever stored. Synchronous and safe to call from any thread; keep it off the UI thread.
 /// Times are stored to the millisecond.
@@ -221,18 +224,19 @@ public sealed class UsageStore : IDisposable
 
     /// <summary>
     /// Records this machine's turns, each with an id of its own that it keeps on every machine it's shared with (DESIGN.md
-    /// §6, "Sharing across machines").
+    /// §6, "Sharing across machines"), and with them, in the same transaction, their calls, steps and events (DESIGN.md
+    /// §18, "What's recorded").
     /// </summary>
-    public void AddTurns(IEnumerable<TurnRecord> turns) => Locked(() =>
+    public void AddTurns(IEnumerable<TurnRecord> turns, TurnDetail? detail = null) => Locked(() =>
     {
         using var transaction = _connection.BeginTransaction();
         using var command = _connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account,
-                               uid, project_key, project_name, account_name, plan)
+                               uid, project_key, project_name, account_name, plan, turn, idle_ms)
             VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $project, $account,
-                    $uid, $projectKey, $projectName, $accountName, $plan)
+                    $uid, $projectKey, $projectName, $accountName, $plan, $turn, $idleMs)
             """;
         foreach (var turn in turns)
         {
@@ -253,10 +257,217 @@ public sealed class UsageStore : IDisposable
             Add(command, "$projectName", turn.ProjectName);
             Add(command, "$accountName", turn.AccountName);
             Add(command, "$plan", turn.Plan);
+            Add(command, "$turn", turn.Turn);
+            Add(command, "$idleMs", turn.IdleBefore is { } idle ? (long)idle.TotalMilliseconds : null);
             command.ExecuteNonQuery();
+        }
+        if (detail is not null)
+        {
+            InsertDetail(transaction, detail);
         }
         transaction.Commit();
     });
+
+    /// <summary>
+    /// Records something that changed what a tab's later calls cost, outside a turn: the conversation cleared (DESIGN.md
+    /// §18, "What's recorded").
+    /// </summary>
+    public void AddEvent(UsageEvent usageEvent) => Locked(() =>
+    {
+        using var transaction = _connection.BeginTransaction();
+        InsertDetail(transaction, new TurnDetail([], [], [usageEvent]));
+        transaction.Commit();
+    });
+
+    private void InsertDetail(SqliteTransaction transaction, TurnDetail detail)
+    {
+        using var calls = _connection.CreateCommand();
+        calls.Transaction = transaction;
+        calls.CommandText = """
+            INSERT INTO calls (turn, tab_id, session_id, timestamp, seq, message_id, agent, agent_type, model, input, output, cache_read,
+                               write_5m, write_1h, web_searches, web_fetches, kind, cost_usd, source, machine)
+            VALUES ($turn, $tabId, $sessionId, $timestamp, $seq, $messageId, $agent, $agentType, $model, $input, $output, $cacheRead,
+                    $write5m, $write1h, $webSearches, $webFetches, $kind, $costUsd, $source, $machine)
+            """;
+        foreach (var call in detail.Calls)
+        {
+            calls.Parameters.Clear();
+            Add(calls, "$turn", call.Turn);
+            Add(calls, "$tabId", call.TabId);
+            Add(calls, "$sessionId", call.SessionId);
+            Add(calls, "$timestamp", call.Timestamp.ToUnixTimeMilliseconds());
+            Add(calls, "$seq", call.Seq);
+            Add(calls, "$messageId", call.MessageId);
+            Add(calls, "$agent", call.Agent);
+            Add(calls, "$agentType", call.AgentType);
+            Add(calls, "$model", call.Model);
+            Add(calls, "$input", call.Input);
+            Add(calls, "$output", call.Output);
+            Add(calls, "$cacheRead", call.CacheRead);
+            Add(calls, "$write5m", call.Write5m);
+            Add(calls, "$write1h", call.Write1h);
+            Add(calls, "$webSearches", call.WebSearches);
+            Add(calls, "$webFetches", call.WebFetches);
+            Add(calls, "$kind", (int)call.Kind);
+            Add(calls, "$costUsd", call.CostUsd);
+            Add(calls, "$source", (int)call.Source);
+            Add(calls, "$machine", call.Machine);
+            calls.ExecuteNonQuery();
+        }
+        using var steps = _connection.CreateCommand();
+        steps.Transaction = transaction;
+        steps.CommandText = """
+            INSERT INTO steps (turn, call_seq, agent, tool, tokens, is_error, timestamp, machine)
+            VALUES ($turn, $callSeq, $agent, $tool, $tokens, $isError, $timestamp, $machine)
+            """;
+        foreach (var step in detail.Steps)
+        {
+            steps.Parameters.Clear();
+            Add(steps, "$turn", step.Turn);
+            Add(steps, "$callSeq", step.CallSeq);
+            Add(steps, "$agent", step.Agent);
+            Add(steps, "$tool", step.Tool);
+            Add(steps, "$tokens", step.Tokens);
+            Add(steps, "$isError", step.IsError ? 1 : 0);
+            Add(steps, "$timestamp", step.Timestamp.ToUnixTimeMilliseconds());
+            Add(steps, "$machine", step.Machine);
+            steps.ExecuteNonQuery();
+        }
+        using var events = _connection.CreateCommand();
+        events.Transaction = transaction;
+        events.CommandText = """
+            INSERT INTO events (tab_id, session_id, turn, timestamp, kind, value, detail, machine)
+            VALUES ($tabId, $sessionId, $turn, $timestamp, $kind, $value, $detail, $machine)
+            """;
+        foreach (var usageEvent in detail.Events)
+        {
+            events.Parameters.Clear();
+            Add(events, "$tabId", usageEvent.TabId);
+            Add(events, "$sessionId", usageEvent.SessionId);
+            Add(events, "$turn", usageEvent.Turn);
+            Add(events, "$timestamp", usageEvent.Timestamp.ToUnixTimeMilliseconds());
+            Add(events, "$kind", (int)usageEvent.Kind);
+            Add(events, "$value", usageEvent.Value);
+            Add(events, "$detail", usageEvent.Detail);
+            Add(events, "$machine", usageEvent.Machine);
+            events.ExecuteNonQuery();
+        }
+    }
+
+    /// <summary>
+    /// The model calls recorded between <paramref name="from"/> and <paramref name="to"/>, only <paramref name="tabId"/>'s
+    /// when it's given, oldest first and each turn's in order (DESIGN.md §18, "What's recorded").
+    /// </summary>
+    public IReadOnlyList<CallRecord> GetCalls(DateTimeOffset from, DateTimeOffset to, string? tabId = null) => Locked(() =>
+        ReadCalls($"WHERE timestamp >= $from AND timestamp <= $to {(tabId is null ? "" : "AND tab_id = $tabId")}", command =>
+        {
+            Add(command, "$from", from.ToUnixTimeMilliseconds());
+            Add(command, "$to", to.ToUnixTimeMilliseconds());
+            if (tabId is not null)
+            {
+                Add(command, "$tabId", tabId);
+            }
+        }));
+
+    private List<CallRecord> ReadCalls(string where, Action<SqliteCommand> parameters)
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT turn, tab_id, session_id, timestamp, seq, message_id, agent, agent_type, model, input, output, cache_read, write_5m, write_1h,
+                   web_searches, web_fetches, kind, cost_usd, source, machine
+            FROM calls {where}
+            ORDER BY timestamp, turn, seq
+            """;
+        parameters(command);
+        var calls = new List<CallRecord>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            calls.Add(new CallRecord(
+                reader.GetString(0),
+                reader.GetString(1),
+                NullableString(reader, 2),
+                DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(3)),
+                reader.GetInt32(4),
+                NullableString(reader, 5),
+                NullableString(reader, 6),
+                NullableString(reader, 7),
+                reader.GetString(8),
+                reader.GetInt64(9),
+                reader.GetInt64(10),
+                reader.GetInt64(11),
+                reader.GetInt64(12),
+                reader.GetInt64(13),
+                reader.GetInt32(14),
+                reader.GetInt32(15),
+                (CallKind)reader.GetInt32(16),
+                reader.GetDouble(17),
+                (CallSource)reader.GetInt32(18))
+            {
+                Machine = NullableString(reader, 19),
+            });
+        }
+        return calls;
+    }
+
+    /// <summary>The tool results of the given turns, each turn's in order of the calls that asked for them.</summary>
+    public IReadOnlyList<StepRecord> GetSteps(IEnumerable<string> turns) => Locked(() => ReadSteps(turns));
+
+    private List<StepRecord> ReadSteps(IEnumerable<string> turns)
+    {
+        var steps = new List<StepRecord>();
+        using var command = _connection.CreateCommand();
+        command.CommandText = "SELECT turn, call_seq, agent, tool, tokens, is_error, timestamp, machine FROM steps WHERE turn = $turn ORDER BY call_seq, id";
+        foreach (var turn in turns.Distinct(StringComparer.Ordinal))
+        {
+            command.Parameters.Clear();
+            Add(command, "$turn", turn);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                steps.Add(new StepRecord(reader.GetString(0), reader.GetInt32(1), NullableString(reader, 2), reader.GetString(3), reader.GetInt64(4),
+                    reader.GetInt64(5) != 0, DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(6)))
+                {
+                    Machine = NullableString(reader, 7),
+                });
+            }
+        }
+        return steps;
+    }
+
+    /// <summary>The events recorded between <paramref name="from"/> and <paramref name="to"/>, only <paramref name="tabId"/>'s when it's given, oldest first.</summary>
+    public IReadOnlyList<UsageEvent> GetEvents(DateTimeOffset from, DateTimeOffset to, string? tabId = null) => Locked(() =>
+        ReadEvents($"WHERE timestamp >= $from AND timestamp <= $to {(tabId is null ? "" : "AND tab_id = $tabId")}", command =>
+        {
+            Add(command, "$from", from.ToUnixTimeMilliseconds());
+            Add(command, "$to", to.ToUnixTimeMilliseconds());
+            if (tabId is not null)
+            {
+                Add(command, "$tabId", tabId);
+            }
+        }));
+
+    private List<UsageEvent> ReadEvents(string where, Action<SqliteCommand> parameters)
+    {
+        using var command = _connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT tab_id, session_id, turn, timestamp, kind, value, detail, machine
+            FROM events {where}
+            ORDER BY timestamp, id
+            """;
+        parameters(command);
+        var events = new List<UsageEvent>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            events.Add(new UsageEvent(reader.GetString(0), NullableString(reader, 1), NullableString(reader, 2), DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(3)),
+                (UsageEventKind)reader.GetInt32(4), reader.IsDBNull(5) ? null : reader.GetInt64(5), NullableString(reader, 6))
+            {
+                Machine = NullableString(reader, 7),
+            });
+        }
+        return events;
+    }
 
     /// <summary>
     /// A synced session's turns as this machine has them, to share in the session's usage file (DESIGN.md §6, "Sharing
@@ -269,7 +480,7 @@ public sealed class UsageStore : IDisposable
         using var command = _connection.CreateCommand();
         command.CommandText = """
             SELECT uid, timestamp, COALESCE(machine, $thisMachine), tab_id, model, input, output, cache_write, cache_read, cost_usd,
-                   project_key, project_name, plan, account, account_name
+                   project_key, project_name, plan, account, account_name, turn
             FROM turns WHERE session_id = $sessionId AND uid IS NOT NULL
             ORDER BY timestamp, id
             """;
@@ -295,13 +506,72 @@ public sealed class UsageStore : IDisposable
                     NullableString(reader, 11),
                     NullableString(reader, 12),
                     NullableString(reader, 13),
-                    NullableString(reader, 14)));
+                    NullableString(reader, 14))
+                {
+                    Turn = NullableString(reader, 15),
+                });
             }
         }
         var machines = ReadNames("SELECT id, name FROM machines", turns.Select(t => t.Machine));
         machines[thisMachine] = thisMachineName;
         var tabs = ReadNames("SELECT tab_id, name FROM tabs", turns.Select(t => t.Tab));
-        return new SessionUsage(SessionUsageFile.FileVersion, machines, tabs, turns);
+        var shared = turns.Select(t => t.Turn).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        return new SessionUsage(SessionUsageFile.FileVersion, machines, tabs, turns)
+        {
+            Calls = [.. ReadCalls("WHERE session_id = $sessionId", command => Add(command, "$sessionId", sessionId))
+                .Where(c => shared.Contains(c.Turn)).Select(c => c with { SessionId = null, Machine = c.Machine ?? thisMachine })],
+            Steps = [.. ReadSteps(shared).Select(s => s with { Machine = s.Machine ?? thisMachine })],
+            Events = [.. ReadEvents("WHERE session_id = $sessionId", command => Add(command, "$sessionId", sessionId))
+                .Select(e => e with { SessionId = null, Machine = e.Machine ?? thisMachine })],
+        };
+    });
+
+    /// <summary>
+    /// Adds the calls, steps and events another machine shared in a synced session (DESIGN.md §18, "What's recorded"), for
+    /// <paramref name="turns"/> only, the turns of theirs this machine counts: each call once by its turn and place, a
+    /// turn's steps once, and each event once. None older than <paramref name="keepFor"/> or the last Clear are added.
+    /// Returns how many calls were added.
+    /// </summary>
+    public int ImportDetail(string sessionId, SessionUsage usage, IReadOnlySet<string> turns, TimeSpan? keepFor) => Locked(() =>
+    {
+        var now = _time.GetUtcNow();
+        using var transaction = _connection.BeginTransaction();
+        using var floor = _connection.CreateCommand();
+        floor.Transaction = transaction;
+        floor.CommandText = "SELECT through FROM imports WHERE machine = $every";
+        Add(floor, "$every", EveryMachine);
+        var cutoff = Math.Max(floor.ExecuteScalar() is long cleared ? cleared : long.MinValue, keepFor is { } keep ? (now - keep).ToUnixTimeMilliseconds() : long.MinValue);
+        bool Keeps(DateTimeOffset at) => at.ToUnixTimeMilliseconds() >= cutoff;
+
+        using var known = _connection.CreateCommand();
+        known.Transaction = transaction;
+        known.CommandText = "SELECT 1 FROM calls WHERE turn = $turn AND seq = $seq";
+        var calls = usage.Calls.Where(c => turns.Contains(c.Turn) && c.Machine is not null && Keeps(c.Timestamp)).Where(c =>
+        {
+            known.Parameters.Clear();
+            Add(known, "$turn", c.Turn);
+            Add(known, "$seq", c.Seq);
+            return known.ExecuteScalar() is null;
+        }).Select(c => c with { SessionId = sessionId }).ToList();
+        known.CommandText = "SELECT 1 FROM steps WHERE turn = $turn";
+        var steps = usage.Steps.Where(s => turns.Contains(s.Turn) && s.Machine is not null && Keeps(s.Timestamp)).GroupBy(s => s.Turn, StringComparer.Ordinal).Where(g =>
+        {
+            known.Parameters.Clear();
+            Add(known, "$turn", g.Key);
+            return known.ExecuteScalar() is null;
+        }).SelectMany(g => g).ToList();
+        known.CommandText = "SELECT 1 FROM events WHERE tab_id = $tab AND timestamp = $at AND kind = $kind";
+        var events = usage.Events.Where(e => e.Machine is not null && (e.Turn is null || turns.Contains(e.Turn)) && Keeps(e.Timestamp)).Where(e =>
+        {
+            known.Parameters.Clear();
+            Add(known, "$tab", e.TabId);
+            Add(known, "$at", e.Timestamp.ToUnixTimeMilliseconds());
+            Add(known, "$kind", (int)e.Kind);
+            return known.ExecuteScalar() is null;
+        }).Select(e => e with { SessionId = sessionId }).ToList();
+        InsertDetail(transaction, new TurnDetail(calls, steps, events));
+        transaction.Commit();
+        return calls.Count;
     });
 
     /// <summary>
@@ -326,9 +596,9 @@ public sealed class UsageStore : IDisposable
         insert.Transaction = transaction;
         insert.CommandText = """
             INSERT OR IGNORE INTO turns (timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, account,
-                                         uid, machine, project_key, project_name, account_name, plan)
+                                         uid, machine, project_key, project_name, account_name, plan, turn)
             VALUES ($timestamp, $tabId, $sessionId, $model, $input, $output, $cacheWrite, $cacheRead, $costUsd, $account,
-                    $uid, $machine, $projectKey, $projectName, $accountName, $plan)
+                    $uid, $machine, $projectKey, $projectName, $accountName, $plan, $turn)
             """;
         var added = new List<SharedTurn>();
         foreach (var turn in turns)
@@ -356,6 +626,7 @@ public sealed class UsageStore : IDisposable
             // Matched to this machine's accounts without the spaces at its ends, as names are compared.
             Add(insert, "$accountName", turn.Account?.Trim());
             Add(insert, "$plan", turn.Plan);
+            Add(insert, "$turn", turn.Turn);
             if (insert.ExecuteNonQuery() > 0)
             {
                 added.Add(turn);
@@ -446,12 +717,12 @@ public sealed class UsageStore : IDisposable
         // tab's index (turns_by_tab), so it would read every turn in the range.
         command.CommandText = tabId is null
             ? """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms FROM turns
               WHERE timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """
             : """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms FROM turns
               WHERE tab_id = $tabId AND timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """;
@@ -476,7 +747,11 @@ public sealed class UsageStore : IDisposable
                 reader.GetInt64(7),
                 reader.GetDouble(8),
                 reader.IsDBNull(9) ? null : reader.GetString(9),
-                reader.IsDBNull(10) ? null : reader.GetString(10)));
+                reader.IsDBNull(10) ? null : reader.GetString(10))
+            {
+                Turn = NullableString(reader, 11),
+                IdleBefore = reader.IsDBNull(12) ? null : TimeSpan.FromMilliseconds(reader.GetInt64(12)),
+            });
         }
         return turns;
     });
@@ -648,6 +923,7 @@ public sealed class UsageStore : IDisposable
             using var transaction = _connection.BeginTransaction();
             var deleted = Execute(transaction, "DELETE FROM samples WHERE timestamp < $cutoff", cutoff)
                 + Execute(transaction, "DELETE FROM turns WHERE timestamp < $cutoff", cutoff);
+            DeleteDetail(transaction, "<", cutoff);
             Execute(transaction, "DELETE FROM tabs WHERE tab_id NOT IN (SELECT tab_id FROM turns)", null);
             Execute(transaction, "DELETE FROM machines WHERE id NOT IN (SELECT machine FROM turns WHERE machine IS NOT NULL)", null);
             transaction.Commit();
@@ -666,6 +942,9 @@ public sealed class UsageStore : IDisposable
         {
             Execute(transaction, "DELETE FROM samples", null);
             Execute(transaction, "DELETE FROM turns", null);
+            Execute(transaction, "DELETE FROM calls", null);
+            Execute(transaction, "DELETE FROM steps", null);
+            Execute(transaction, "DELETE FROM events", null);
             Execute(transaction, "DELETE FROM tabs", null);
             Execute(transaction, "DELETE FROM machines", null);
             Execute(transaction, "DELETE FROM imports", null);
@@ -699,6 +978,7 @@ public sealed class UsageStore : IDisposable
         using var transaction = _connection.BeginTransaction();
         var deleted = Execute(transaction, "DELETE FROM samples WHERE timestamp <= $cutoff", through)
             + Execute(transaction, "DELETE FROM turns WHERE timestamp <= $cutoff", through);
+        DeleteDetail(transaction, "<=", through);
         Execute(transaction, "DELETE FROM tabs WHERE tab_id NOT IN (SELECT tab_id FROM turns)", null);
         Execute(transaction, "DELETE FROM machines WHERE id NOT IN (SELECT machine FROM turns WHERE machine IS NOT NULL)", null);
         SetFloor(transaction, through);
@@ -715,6 +995,14 @@ public sealed class UsageStore : IDisposable
         }
         return deleted;
     });
+
+    /// <summary>Deletes the calls, steps and events from before <paramref name="cutoff"/>, by <paramref name="comparison"/> (<c>&lt;</c> or <c>&lt;=</c>), as their turns go.</summary>
+    private void DeleteDetail(SqliteTransaction transaction, string comparison, long cutoff)
+    {
+        Execute(transaction, $"DELETE FROM calls WHERE timestamp {comparison} $cutoff", cutoff);
+        Execute(transaction, $"DELETE FROM steps WHERE timestamp {comparison} $cutoff", cutoff);
+        Execute(transaction, $"DELETE FROM events WHERE timestamp {comparison} $cutoff", cutoff);
+    }
 
     /// <summary>Nothing from before <paramref name="through"/> is imported again, nor before any later floor already set.</summary>
     private void SetFloor(SqliteTransaction transaction, long through)

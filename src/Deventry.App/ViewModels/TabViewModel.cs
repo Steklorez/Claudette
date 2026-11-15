@@ -2499,6 +2499,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 }
                 break;
             case ConversationReset:
+                // Later calls no longer read what was in it (DESIGN.md §18, "Token breakdown").
+                _services.Usage?.OnConversationCleared(Id, State.SessionId);
                 State.SessionStartedAt = _services.Time.GetUtcNow();
                 // The new conversation's changes start from nothing (DESIGN.md §8).
                 ChangedFiles.Clear();
