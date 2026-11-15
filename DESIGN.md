@@ -418,6 +418,7 @@ In every style, text in a different font or size beside other text sits on its b
   - Shown in short form in the composer bar (for example `1.2M tok`). Click it for a popover with the full breakdown and a small per-turn chart. The window's tokens and the chart come from the usage history, read once (a week's turns for the tab, by its index) when the popover opens and again as the tab's turns are recorded while it's open; other tabs' turns don't touch it.
   - Saved with the tab, so the counts survive app restarts and session resumes.
   - The same numbers feed the "which tab is burning the most" view in the Usage panel ([§6](#6-token-burn-awareness)).
+  - What they went on, turn by turn and call by call, is the tab's [Token breakdown](#token-breakdown) (designed, not built yet).
 - **Grouped by folder.** Tabs that share a working folder sit together in a group, like browser tab groups. In the sidebar a group is a label with its tabs listed under it:
   - Each group has a label with the folder name and a color. A line in the color runs down beside its tabs. If two folders have the same name, the label adds the parent folder (`work/api`, `personal/api`).
   - **The color.** ✅ Built 2026-09-29. A new group takes the first of eight group colors that no open group has. **Choose…** beside **Color** on the project's **Group** page opens a color picker beside it ([The project's settings](#the-projects-settings); it was **Change color…** in the group's menu, beside the label, until 2026-11-04, [issue #109](https://github.com/dotBunny/Deventry/issues/109)):
@@ -1156,7 +1157,7 @@ If a turn runs for a long time, Deventry can ask Claude how it's going, so a tab
 
 ## 6. Token Burn Awareness
 
-This is Deventry's main feature: knowing how fast you're using your plan's limits without running `/usage`.
+This is Deventry's main feature: knowing how fast you're using your plan's limits without running `/usage`. What a tab's tokens went on, by kind, turn, call, model, agent and tool, is its [Token breakdown](#token-breakdown) ([§18](#18-future-features), designed, not built yet).
 
 ### Header meters
 
@@ -2950,10 +2951,11 @@ Deventry has to keep working when Claude Code adds things it doesn't know about 
       - **Still to verify:** the computer woken from sleep with Deventry running: on Windows, by a desktop's S3 sleep and by Modern Standby, plugged in and on battery (the spike set the timer, but no computer has slept on it yet), and that Windows keeps it awake for the tab's turn; on macOS, installing the helper (including on a macOS whose `sudoers` doesn't read `sudoers.d`), the wake with the lid open, and closed on a display; on Linux, installing through `pkexec` and waking with `rtcwake`, on GNOME and KDE. And the page and the cup's menu on real Windows, macOS and Linux desktops, in both styles and themes (so far rendered headlessly and in the guide's pictures).
     - **The Codex style ([§3](#visual-style)).** ✅ Built 2026-11-14. Settings → Appearance → Style: a third look, Codex, after the ChatGPT and Codex apps, in the palette of OpenAI's design guidelines: white and neutral greys, OpenAI's blue for the accent and Claude's cards, your messages grey, the files a turn changed green, cautions in OpenAI's orange, and replies in the system's font, with the Claude style's rounder shapes, in light and dark.
       - **Still to verify:** how it looks on real Windows, macOS and Linux desktops, beside the ChatGPT and Codex apps. So far it has been rendered headlessly and in the demo on Windows.
+    - **Token breakdown ([§18](#token-breakdown)).** Designed 2026-11-15, after Oqura-ai/wisdom's dashboard; not built. Usage recorded per model call and per tool result, not only per turn, and a tab's breakdown from it: its tokens by kind in tokens and cost, turn by turn and call by call, by model, agent and tool, findings in plain words (an expired cache, a costly subagent, a result read again for many calls) and its estimated share of the session limit. In a window of its own from the tab's menu, in a **Tokens** tool window that shows the turn running and what the next message will cost, on each turn's card, and across tabs in the Usage panel, whose **Tabs** takes the place of **Tabs in this session window** under one period picker. Older turns are read from the transcript, with a progress bar, and checked against what was recorded. A spike first, then six steps.
 
 ## 18. Future Features
 
-Features beyond v1. All below are built (milestones 10, 11, 13, 14, 15 and 17). New ones go here first, each with a fuller design before it's built.
+Features beyond v1. All below are built (milestones 10, 11, 13, 14, 15 and 17), but the [Token breakdown](#token-breakdown), designed and not built yet. New ones go here first, each with a fuller design before it's built.
 
 ### Perforce ticket handling
 
@@ -4754,6 +4756,123 @@ A Markdown file in a [Project Files](#project-files) tab shows rendered as well 
 - **Spike (2026-11-14, Windows 11 desktop).** `SetWaitableTimer` with resume returned success, with no `ERROR_NOT_SUPPORTED`, and the plan's *Allow wake timers* read without administrator: on, plugged in, and off on battery in the Balanced plan. `powercfg /waketimers`, which lists the timers Windows will wake for, needs an elevated prompt. The machine has no S3 sleep, only Modern Standby (*S0 Low Power Idle, Network Connected*), in which Windows pauses desktop apps; whether a timer brings it back so Deventry can send is **still to verify** by putting it to sleep.
 
 **How it's built.** `Deventry.Core/TimedMessages`: `TimedMessage` and `TimedSchedule` (`Once`, `Days`, `Cron`, with `From` and `Until`; `Next(after, TimeZoneInfo)`, `Describe`, and `LocalTimes` for the spring and autumn hours), `CronExpression`, `TimedMessagePlanner` (pure: from the messages, the times already sent or skipped, now and when Deventry started, what's due, what's skipped and why, and the next wake, a minute early), `IWakeTimer` (the wake, its setup, installing and removing the helper, and `Describe()`; `NoWakeTimer` where there's none), and the settings section `timedMessages` (`Settings/TimedMessageSettings`), left out of sync; `AppState.TimedMessagesHandled` and `TimedMessagesSkipped` keep the times sent or skipped. `Deventry.Platform/Power`: `WindowsWakeTimer` with `WindowsPowerPlan` (what the plan's *Allow wake timers* means for it), `HelperWakeTimer` with the macOS and Linux helpers' scripts and rules, and `WakeTimers.CreateForCurrentOS`. In the App, `Services/TimedMessagesService` times them on the injected clock (a timer to the next one, and a 30-second tick, which also notices time passing in sleep, as `AutoContinueMonitor` does), opens and sends through `ShellViewModel.TimedMessages.cs` (`OpenFolderAsync` and `OpenWorktreeTabAsync`, told not to select the tab) and `TabViewModel.SendTimedAsync` (`TabViewModel.TimedMessages.cs`), sets the wake, follows each tab it opened until its first turn ends, and tells `KeepAwakeService` when to hold sleep off and what the cup's tip ends with; `ViewModels/Settings/TimedMessagesPage` and `TimedMessageEditor` are Settings; the cup's clock and menu are in `MainWindow.axaml`, the menu's timed section made each time it opens. Diagnostics (Settings → Advanced) list the messages, their next times and the wake. **Tests**: `TimedScheduleTests`, `CronExpressionTests`, `TimedMessagePlannerTests` and `TimedMessageSettingsTests` in Core, `TimedMessagesTests` in the app (with a `FakeWakeTimer`), `TimedMessagesUiTests` and the cup's in `MainWindowTests`, and in Platform `WakeTimerTests` (the Windows timer set and cancelled, never slept, and the plan's caveats) and `WakeHelperTests` (what's run, the install command, and the helper script turning away anything else, run for real on macOS and Linux).
+
+### Token breakdown
+
+Designed 2026-11-15; not built yet ([§17](#17-milestones)). After the dashboard of [Oqura-ai/wisdom](https://github.com/Oqura-ai/wisdom), which shows an agent session's tokens turn by turn, by kind, model and tool, with what it finds in plain words. The composer's token count and the Usage panel say how much a tab used ([§4](#4-tabs--sessions), [§6](#6-token-burn-awareness)); this says what the tokens went on, and so what to do about it: an expired cache, a subagent that cost more than the work it did, a large result read again on every call after it.
+
+- **Kinds of token.** Every view splits tokens four ways, as Claude Code reports them, in one stacked bar:
+  - **Cache read**: the conversation so far, read from the prompt cache at a tenth of the input price.
+  - **Cache write**: what's new since the last call, written to the cache at 1.25 times the input price for five minutes, or twice for an hour ([§6](#prompt-cache)).
+  - **Fresh input**: neither. Claude Code caches nearly everything, so it's small.
+  - **Output**: what Claude wrote, thinking included, at five times the input price.
+  - The bar's order and colors are fixed, cache read first. The four colors (`TokenCacheReadBrush` and the others in `App.axaml`, light and dark; chart colors, which the Claude and Codex styles keep, as they keep the context breakdown's) were checked with the categorical palette's validator, color blindness included, for every two that can meet: all but cache read beside output.
+- **Tokens and cost.** Counted in tokens, cache reads are nearly all of a tab (94% in the demo); counted in cost, they're under half, and output, under 1% of the tokens, is 15%. So the charts and bars switch between **Tokens** and **Cost**, starting on Tokens, the choice remembered on this machine for the window and the tool window together; and a tab's composition shows both bars at once.
+
+#### Prices
+
+- Costs are Claude Code's, as everywhere: each turn's `modelUsage.costUSD`, at list price, an estimate and not the user's bill.
+- A call's cost, and each kind's, are worked out from it, so they add up to the turn's exactly: the turn's cost for a model is split between its calls and kinds by their tokens, weighted as Anthropic prices every Claude model (input 1, cache read 0.1, cache write 1.25 at five minutes and 2 at an hour, output 5). There's no price table to keep up to date.
+- The same weights give a model's input price: a turn's cost ÷ its weighted tokens, from the latest result that used it. That prices what has no result yet: the calls of a turn still running, and the next message (below). Until a model has had a result, those show tokens only.
+- Web searches are priced per search, not per token. Their cost is in the turn's, spread with its tokens; the breakdown counts the searches.
+
+#### What's recorded
+
+The usage history keeps a row per turn and model ([§6](#usage-history)). It adds:
+
+- **Calls**, a row per model call, written once its usage is final (the next message has started, or the turn has ended): the turn, the message's id, the agent (main, or the subagent's tool call and its type), the model and time, input, output, cache read, cache write at five minutes and at an hour, web searches, the context it read and wrote, its kind (a call, a compaction, or the first call after the cache expired), its cost (apportioned as above once the turn's result says), and whether it was recorded live or read from the transcript. From the `assistant` messages' `usage`, each call counted once by its message's id, as the composer's count is ([§6](#data-source)); a subagent's through its `parent_tool_use_id`.
+- **Steps**, a row per tool result: the call it answers, the tool's name, its size in tokens (its characters ÷ 4; an image by its pixels, as the Messages API counts them), whether it failed, and the call after which it left the context, compacted or cleared. A result's **read again** is its tokens times the calls between.
+- **Events**: a compaction, with the context before and after (`compact_boundary`'s `pre_tokens`); a turn sent after the prompt cache expired ([§6](#prompt-cache)); a turn checked against the transcript, and what didn't match (below); and the **limit shares** (below).
+- **Turns** get their number in the tab (*turn 9*), and how long since the tab's last call: the cache's age.
+- Numbers and tool names only, as now: no prompts, replies, file names or output. The window reads the prompts and the tools' targets from the conversation, or from the transcript for a closed tab.
+- Kept as long as **Keep usage history** says, like the turns, and cleared with them. About 120 bytes a call and 40 a step: 8 MB a month of heavy use, 90 MB a year on **Forever**.
+- **Shared** with a synced tab's turns ([§6](#sharing-across-machines)): its `usage.json` carries its calls, steps and events too, so another machine's breakdown is there at once. A file without them, from a Deventry before this, is read as before, and its turns get their calls from the transcript (below).
+
+#### The breakdown
+
+One breakdown, for a tab or for a period across tabs: the kinds, the turns with their calls and steps, by model, by agent and by tool, the findings, and the share of the session limit. Every view shows its part of the same breakdown, so a figure shown in two places is the same figure: a tab's cost reads the same in the composer's popup, the window, the tool window and the Usage panel. A tab keeps its own up to date as its calls arrive; a period's is read from the usage history off the UI thread.
+
+- **Findings** say in plain words what cost more than it needed to, each with its turn and what it cost, the costliest first:
+  - For each turn whose first call found the cache expired: *"Turn 9 was sent 1h 12m after turn 8, after the 1-hour prompt cache had expired. Its first call wrote the whole conversation to the cache again: 122k tokens, $1.23, 12% of this tab's cost."*
+  - For a subagent that cost a tenth of the tab or more: *"The Explore subagent in turn 7 made 22 calls on Opus 5.5: 1.6M tokens, $1.73 (17%), for a report of 312 tokens."* When another of the same type ran on a cheaper model in the tab, it says what that one cost.
+  - For the result read again the most, when that's a twentieth of the tab's cache reads or more: *"The editor log Claude read in turn 5 (8.1k tokens) stayed in the conversation for 54 more calls, until it was compacted: 439k tokens read again."*
+  - For each compaction: *"Compacting before turn 12 took the context from 174k to 35k. A model call cost $0.11 on average just before it, $0.04 after."*
+- **The share of the session limit** is an estimate, and says so. Between two of the plan's samples ([§6](#usage-history)), the session meter's rise is split between the tabs whose calls fell between them, by their cost; a tab's share is what it was given in the current window, *≈ 23% of the session limit*. A rise with no call of this machine's under it (another machine's tab that doesn't sync, claude.ai) is no tab's, and the tooltip says how much: *"The meter rose 61 points this window: 23 while this tab worked, shared by cost with the tabs working then, and 9 with no tab here working."* Only the Default account's tabs have a share ([§4](#accounts)).
+
+#### Opening it
+
+**Token breakdown…** in the tab's menu, under **Session** after **Export conversation…** ([§4](#sidebar)), opens the tab's window. So do **Open breakdown** in the composer token count's popup, **Breakdown ›** on a turn's card (on that turn), a turn's row and **Open breakdown** in the Tokens tool window, a tab's row in the Usage panel (open or closed), the info card's **Tokens** row, and the command palette's **Show token breakdown**. There's one window per tab: opening it again brings it to the front, on the turn asked for.
+
+#### The window
+
+Its title bar says *Token breakdown · Fix the grappling hook on slopes* ([§3](#window-frame)). Its toolbar has the project, branch, session and *14 turns since 09:12* at the left, and at the right the period (**This session window**, **Today**, **All time**), **Tokens | Cost** and **Export…**. It opens at 1,180 by 820, and is at least 760 by 520; narrower than 1,100, the right column goes under the left.
+
+- **Tiles**: **Tokens**; **Estimated cost**, *at list price, not your bill*; **Session limit**, *≈ 23%*, marked as an estimate; **From the cache**, the share of what Claude read that came from it; **Model calls**, the main agent's and the subagents'; and **Tool calls**.
+- **What the tokens were**: the tokens' bar and the cost's, then each kind with what it is, its tokens and share, and its cost and share.
+- **Turn by turn**: a column per turn, its kinds stacked, in tokens or cost, with its number and time under it and a mark over it: ❄ the cache had expired, ⟲ compacted first, ◇ a subagent. Under it, on an axis of its own, the context after each turn, with the auto-compact threshold dashed. A click selects the turn in the table.
+- **Turns**: a row per turn with its prompt's first line and time, its duration, its calls (*4 +22*, the subagents' after the plus), its kinds bar (scaled to the largest turn), tokens, cost, the share from the cache and the context after it, and chips for its findings. A click opens its calls in order under it, each with its kinds bar, tokens, cost, cache share and context, and between them the result each call got: *"↳ Read Saved/Logs/Starfall.log · its result added 8.1k, read again by 54 later calls"*. A subagent is one row, with **Show its calls**.
+- **Findings**, each with **Go to turn 9 ›**.
+- **By model**, **By agent** and **By tool**: calls, a kinds bar, tokens and cost; for tools, what their results added, and how much was read again because of them.
+- **Export…** saves the turns and calls as CSV, with each turn's first line of prompt.
+- The table is the charts' table view: every value in a chart is in it, and each chart's tooltip says what its row does.
+- A line at the foot says what the figures are: Claude Code's estimates at list price; the share of the limit an estimate; each call counted once, subagents included.
+
+#### The Tokens tool window
+
+A tool window ([§3](#tool-windows)) in the right side's top group, following the focused tab, with the window's figures cut to what helps while working: now and next. Its icon shows once the tab has made a call.
+
+- **Your next message**, between turns while the cache chip shows ([§6](#prompt-cache)): what its first call costs before the cache expires and after, *Before 13:20 $0.03, After it $0.43*, from the context's size at the model's price, with why: *"Its first call reads this conversation's 41.4k tokens from the cache until 13:20. After that, Claude writes all of it to the cache again."* It's the first call only: Claude decides how many a turn takes. Then the context, as the composer's indicator has it, with the auto-compact threshold marked.
+- **Turn 15 · running**, during a turn: its tokens and cost so far, each call as its usage arrives with the result after it, *Claude is choosing its next step…*, and the context filling up.
+- **This tab**: the tiles (tokens, cost, the share of the limit, from the cache) and the two kinds bars; during a turn, with the turn so far, as the composer's count does.
+- **Latest turns**: the last six, newest first, each with its mark, prompt, kinds bar and cost; a click opens the window on it. *All 14 turns in the breakdown ›*.
+- **Findings**, the costliest two, and **Open breakdown**.
+
+#### A turn's card, the popup and the info card
+
+- A turn's **Turn** card ([§18](#conversation-cards)) adds its number (*Turn 9*), tokens and cost to its line, a thin kinds bar under it, a chip when it has a finding (*"❄ The cache had expired: $1.23 to read the conversation again"*, in the caution color with its icon) and **Breakdown ›**.
+- The composer token count's popup ([§4](#4-tabs--sessions), "Token stats per tab") keeps what it has, and adds the two kinds bars, the turns' columns by kind with their marks, the last turn's tokens and cost, and **Open breakdown**.
+- The info card's **Tokens** row adds the cost and the share of the limit: *10.1M tokens · about $10.47 · ≈ 23% of the session limit*.
+
+#### The Usage panel
+
+- **Tokens over**, a period picker under the session's chart (**This session window**, **This week**, **The last 30 days**), for every token section after it: **Where the tokens went**, **Tabs**, **Projects**, **Accounts**, **Models** and **Tools**. It starts on **This session window**, is remembered on this machine, and takes the place of the picker beside **Projects**.
+- **Where the tokens went**: the two kinds bars over the period, each kind's share of the cost, the tokens and cost, and the turns that began after the cache expired: *"4 turns began after the cache expired: $2.73 to read their conversations again."*
+- **Tabs** takes the place of **Tabs in this session window**: a row per tab, the costliest first, with its project, *closed* or the machine it's on, a kinds bar of its cost, its tokens, cost and turns, its expired caches, and **›**, which opens its breakdown.
+- **Models**: per model, its calls, cache read, cache write, output and cost. **Tools**: per tool, its calls, what its results added, how much was read again, and that cost.
+- The detailed header's busiest tabs ([§6](#detailed-header)) stay this session window's.
+
+#### Older turns: reading the transcript
+
+Turns with no calls recorded get them from Claude Code's transcript and its subagents' transcripts, which have every message's usage, when the window first opens on them: turns from before this, a turn cut short when Deventry closed, and another machine's from a Deventry before this.
+
+- **While it reads**, a bar under the toolbar says so, with its progress, *"Reading the transcript for turns 1–6 · 2.1 of 5.6 MB · turn 4 of 6 · then 1 subagent's transcript"*, and **Cancel**. It reads off the UI thread. The tiles, the composition and the turns' bars show at once from the turns' records; the calls, the steps and the findings that need them wait, and say so.
+- **The check.** Then every turn's tokens, by model and kind, are checked against its calls in the transcript, a synced turn's against the transcript in the session library, and the bar says how it went: *"13 turns agree with the usage history, to the token."*, *"Turns 3 and 4 ran on Laptop. Their figures came through the session library, and agree with the transcript there."*, *"Turn 5 was cut short when Deventry closed: the usage history is missing its last 2 calls (24k tokens, $0.03). They're added from the transcript, and marked."*
+- **Where they differ**, the transcript's calls are taken, as Claude Code's own record of each call, and the turn's record is corrected to them, its cost by the model's price; the check keeps what it changed. Turns recorded before Deventry worked out each turn's part of Claude Code's running totals ([§6](#data-source)) are corrected this way.
+- The calls it finds are saved, marked as from the transcript, with the check, so a transcript is read once.
+- Claude Code deletes old transcripts (`cleanupPeriodDays`). Without one, those turns keep their totals, without calls, and the window says why.
+- The transcript's format isn't documented ([§16](#16-tracking-claude-code-changes)), so this is a fallback: turns recorded live don't need it.
+
+#### Spike first
+
+Before step 1, with the protocol log of a real subscription session and the recordings against the mock:
+
+- Whether the `assistant` messages' `usage` has `cache_creation` split by lifetime, and `server_tool_use`. No recording shows either yet ([§6](#prompt-cache)); without the split, a call's write is priced at the turn's lifetime.
+- Whether every subagent call's `assistant` message, with its `usage`, comes through the stream.
+- Whether a turn's calls add up to its `modelUsage` exactly, compaction's call included, or what's left out (Claude Code's own helper calls, such as titles and prompt suggestions).
+- In the transcript: each entry's `usage`, how one call's entries repeat it (the message's id, `requestId`), and the same in the subagents' transcripts.
+
+#### Steps
+
+1. **Recording**: calls, steps and events in the usage history and `usage.json`, live, with retention and clearing.
+2. **The breakdown**: kinds, prices, turns, agents, models, tools, findings and the limit share.
+3. **The window**, with the menu's and the palette's way to it.
+4. **The tool window**, the turn's card, the popup and the info card.
+5. **The Usage panel**.
+6. **Reading the transcript**, and the check.
+
+Each step brings its guide pages (the **Usage and limits** chapter, with a new page, *A tab's token breakdown*), its pictures and its changelog entry as it's built.
+
+**How it'll be built.** `Deventry.Usage`: the schema's new tables (`UsageSchema`, its next version), `UsageStore` writing and reading calls, steps and events, `SessionUsageFile` sharing them, and `TokenBreakdown` with `TokenPrices` (the weights, and each model's price from its results), `TokenFindings` and `LimitShares`. `Deventry.Core`: `CallUsage` hands on each finished call with its agent; `Transcripts/TranscriptUsage` reads a transcript's calls, and `Sessions/TurnCheck` compares them with the recorded turns. The App: `TabViewModel.Tokens.cs` and `TokenBreakdownViewModel` (`tab.Tokens`, the tab's live breakdown, which the window, the tool window, the popup and the card read), `TokenBreakdownWindow`, a `Tokens` kind in `ToolWindowKinds` with its view, and `UsagePanelViewModel`'s period, **Tabs**, **Models** and **Tools**. Tests replay recorded sessions for their calls and check every view's figures against the breakdown's. The `assistant` usage fields it reads, the transcript's usage and `pre_tokens` go in `compat/surface.yaml` as each is used.
 
 ## 19. Open Questions
 
