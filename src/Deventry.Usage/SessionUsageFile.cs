@@ -156,6 +156,7 @@ public static class SessionUsageFile
             ["machine"] = step.Machine,
         };
         AddIfSet(entry, "agent", step.Agent);
+        AddIfSet(entry, "use", step.ToolUseId);
         return entry;
     }
 
@@ -264,7 +265,11 @@ public static class SessionUsageFile
     private static StepRecord? StepFromJson(JsonObject entry) =>
         entry.GetString("turn") is { Length: > 0 } turn && entry["call"].AsWholeNumber() is { } call && entry.GetString("tool") is { Length: > 0 } tool
         && Time(entry) is { } at && entry.GetString("machine") is { Length: > 0 } machine
-            ? new StepRecord(turn, (int)call, entry.GetString("agent"), tool, entry["tokens"].AsWholeNumber() ?? 0, entry.GetBool("error") ?? false, at) { Machine = machine }
+            ? new StepRecord(turn, (int)call, entry.GetString("agent"), tool, entry["tokens"].AsWholeNumber() ?? 0, entry.GetBool("error") ?? false, at)
+            {
+                Machine = machine,
+                ToolUseId = entry.GetString("use"),
+            }
             : null;
 
     /// <summary>An event, or null without its tab, time or machine, or of a kind this Deventry doesn't know.</summary>

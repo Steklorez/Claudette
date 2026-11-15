@@ -146,9 +146,12 @@ public sealed record StepRecord(string Turn, int CallSeq, string? Agent, string 
     /// <summary>The machine that shared it; null for this machine's.</summary>
     public string? Machine { get; init; }
 
+    /// <summary>The tool call's id: for an Agent call, the subagent's (<see cref="CallRecord.Agent"/>), whose report this is.</summary>
+    public string? ToolUseId { get; init; }
+
     /// <summary>A turn's tool results (<see cref="TurnCallLog.Steps"/>), to record with its turn.</summary>
     public static IReadOnlyList<StepRecord> From(TurnCallLog log, string turn) =>
-        [.. log.Steps.Select(s => new StepRecord(turn, s.CallSeq, s.Agent, s.Tool, s.Tokens, s.IsError, s.At))];
+        [.. log.Steps.Select(s => new StepRecord(turn, s.CallSeq, s.Agent, s.Tool, s.Tokens, s.IsError, s.At) { ToolUseId = s.ToolUseId })];
 }
 
 /// <summary>What a <see cref="UsageEvent"/> says happened. Stored as its number, so the numbers stay.</summary>

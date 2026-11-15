@@ -25,6 +25,16 @@ public class FormatsTests
     [InlineData(2 * 86400 + 3 * 3600 + 7, "2d 3h")]
     public void Duration_is_in_round_figures(int seconds, string text) => Assert.Equal(text, Formats.Duration(TimeSpan.FromSeconds(seconds)));
 
+    [Theory]
+    [InlineData(903, "903")]
+    [InlineData(4_000, "4k")]
+    [InlineData(8_149, "8.1k")]
+    [InlineData(122_061, "122k")]
+    [InlineData(999_499, "999k")]
+    [InlineData(999_500, "1M")]
+    [InlineData(1_582_900, "1.6M")]
+    public void Tokens_are_in_round_figures(long tokens, string text) => Assert.Equal(text, Formats.Tokens(tokens));
+
     [Fact]
     public void A_folders_name_ignores_a_separator_at_its_end()
     {

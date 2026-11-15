@@ -150,7 +150,7 @@ public sealed class SharedCallsTests : IDisposable
             new ModelCall(1, "msg_1", null, null, "opus", at, new CallTokens(3, 50, 10_000, 0, 200), 0, 0, CallKind.Call, 0.02),
             new ModelCall(2, "msg_2", "toolu_1", "Explore", "opus", at.AddSeconds(2), new CallTokens(2, 300, 10_200, 400, 0), 1, 0, CallKind.Call, 0.03),
         ],
-        [new ToolStep(1, null, "Read", 900, false, at.AddSeconds(1))],
+        [new ToolStep(1, null, "Read", 900, false, at.AddSeconds(1)) { ToolUseId = "toolu_read" }],
         [],
         null);
 

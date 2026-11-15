@@ -74,7 +74,11 @@ public sealed record ModelCall(int Seq, string? MessageId, string? Agent, string
 /// <summary>A tool's result: what it added to the conversation, in tokens, estimated from its size.</summary>
 /// <param name="CallSeq">The call that asked for it, by <see cref="ModelCall.Seq"/>.</param>
 /// <param name="Agent">The subagent whose tool it was; null for the main agent's.</param>
-public sealed record ToolStep(int CallSeq, string? Agent, string Tool, long Tokens, bool IsError, DateTimeOffset At);
+public sealed record ToolStep(int CallSeq, string? Agent, string Tool, long Tokens, bool IsError, DateTimeOffset At)
+{
+    /// <summary>The tool call's id: for an Agent call, the subagent's (its calls' <see cref="ModelCall.Agent"/>), whose report this is.</summary>
+    public string? ToolUseId { get; init; }
+}
 
 /// <summary>Claude Code compacted the conversation during a turn.</summary>
 /// <param name="PreTokens">The context's tokens before it, when Claude Code says.</param>
@@ -185,7 +189,7 @@ public sealed class TurnCalls
                 continue;
             }
             var tokens = ((long)result.Text.Length + 3) / 4 + result.Images.Sum(TokensOf);
-            _steps.Add(new ToolStep(use.Seq, message.ParentToolUseId ?? use.Agent, use.Tool, tokens, result.IsError, at));
+            _steps.Add(new ToolStep(use.Seq, message.ParentToolUseId ?? use.Agent, use.Tool, tokens, result.IsError, at) { ToolUseId = result.ToolUseId });
         }
     }
 

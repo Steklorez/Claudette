@@ -317,8 +317,8 @@ public sealed class UsageStore : IDisposable
         using var steps = _connection.CreateCommand();
         steps.Transaction = transaction;
         steps.CommandText = """
-            INSERT INTO steps (turn, call_seq, agent, tool, tokens, is_error, timestamp, machine)
-            VALUES ($turn, $callSeq, $agent, $tool, $tokens, $isError, $timestamp, $machine)
+            INSERT INTO steps (turn, call_seq, agent, tool, tool_use, tokens, is_error, timestamp, machine)
+            VALUES ($turn, $callSeq, $agent, $tool, $toolUse, $tokens, $isError, $timestamp, $machine)
             """;
         foreach (var step in detail.Steps)
         {
@@ -327,6 +327,7 @@ public sealed class UsageStore : IDisposable
             Add(steps, "$callSeq", step.CallSeq);
             Add(steps, "$agent", step.Agent);
             Add(steps, "$tool", step.Tool);
+            Add(steps, "$toolUse", step.ToolUseId);
             Add(steps, "$tokens", step.Tokens);
             Add(steps, "$isError", step.IsError ? 1 : 0);
             Add(steps, "$timestamp", step.Timestamp.ToUnixTimeMilliseconds());
@@ -417,7 +418,7 @@ public sealed class UsageStore : IDisposable
     {
         var steps = new List<StepRecord>();
         using var command = _connection.CreateCommand();
-        command.CommandText = "SELECT turn, call_seq, agent, tool, tokens, is_error, timestamp, machine FROM steps WHERE turn = $turn ORDER BY call_seq, id";
+        command.CommandText = "SELECT turn, call_seq, agent, tool, tokens, is_error, timestamp, machine, tool_use FROM steps WHERE turn = $turn ORDER BY call_seq, id";
         foreach (var turn in turns.Distinct(StringComparer.Ordinal))
         {
             command.Parameters.Clear();
@@ -429,6 +430,7 @@ public sealed class UsageStore : IDisposable
                     reader.GetInt64(5) != 0, DateTimeOffset.FromUnixTimeMilliseconds(reader.GetInt64(6)))
                 {
                     Machine = NullableString(reader, 7),
+                    ToolUseId = NullableString(reader, 8),
                 });
             }
         }

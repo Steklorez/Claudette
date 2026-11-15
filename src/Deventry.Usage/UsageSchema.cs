@@ -126,6 +126,7 @@ internal static class UsageSchema
                 call_seq INTEGER NOT NULL,
                 agent TEXT,
                 tool TEXT NOT NULL,
+                tool_use TEXT,
                 tokens INTEGER NOT NULL,
                 is_error INTEGER NOT NULL,
                 timestamp INTEGER NOT NULL,

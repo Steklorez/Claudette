@@ -167,9 +167,9 @@ public class TurnCallsTests
 
         Assert.Equal(
         [
-            new ToolStep(1, null, "Read", 101, false, Start.AddSeconds(1)),
-            new ToolStep(2, "toolu_agent", "Grep", 4, true, Start.AddSeconds(3)),
-            new ToolStep(1, null, "Agent", 300, false, Start.AddSeconds(4)),
+            new ToolStep(1, null, "Read", 101, false, Start.AddSeconds(1)) { ToolUseId = "toolu_read" },
+            new ToolStep(2, "toolu_agent", "Grep", 4, true, Start.AddSeconds(3)) { ToolUseId = "toolu_grep" },
+            new ToolStep(1, null, "Agent", 300, false, Start.AddSeconds(4)) { ToolUseId = "toolu_agent" },
         ], log.Steps);
         var subagent = log.Calls[1];
         Assert.Equal(("toolu_agent", "Explore", Haiku), (subagent.Agent, subagent.AgentType, subagent.Model));

@@ -35,6 +35,16 @@ public static class Formats
         _ => string.Create(CultureInfo.InvariantCulture, $"{(int)span.TotalDays}d {span.Hours}h"),
     };
 
+    /// <summary>A count of tokens in round figures: "903", "8.1k", "122k", "1.6M".</summary>
+    public static string Tokens(long tokens) => tokens switch
+    {
+        // From 999,500, which would round to "1000k".
+        >= 999_500 => string.Create(CultureInfo.InvariantCulture, $"{tokens / 1_000_000.0:0.#}M"),
+        >= 100_000 => string.Create(CultureInfo.InvariantCulture, $"{tokens / 1_000.0:0}k"),
+        >= 1_000 => string.Create(CultureInfo.InvariantCulture, $"{tokens / 1_000.0:0.#}k"),
+        _ => tokens.ToString(CultureInfo.InvariantCulture),
+    };
+
     /// <summary>"at 15:45" today, else "on Mon at 09:00", in the clock's time zone.</summary>
     public static string When(DateTimeOffset time, TimeProvider clock)
     {
