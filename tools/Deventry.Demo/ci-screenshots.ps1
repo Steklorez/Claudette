@@ -83,7 +83,7 @@ function Send-WhenReady([string] $pipe, [hashtable] $command, [string] $what, [i
 $tabs = 'Stamina drains twice on clients', 'Inventory loses items on save', 'Move to the Input System', 'UI on the Input System',
     'Gamepad rumble', 'Pool particle emitters', 'Grappling hook', 'Files (5)'
 
-foreach ($style in 'standard', 'claude') {
+foreach ($style in 'standard', 'claude', 'codex') {
     foreach ($theme in 'dark', 'light') {
         Write-Host "$style $theme"
         & $demo $Work --theme $theme --style $style --projects $Projects --still --quiet | Out-Null

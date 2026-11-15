@@ -27,6 +27,7 @@ public sealed partial class AboutPage : SettingsPage
     public static IReadOnlyList<(string Key, string Names, string Notice)> TrademarkNotices { get; } =
     [
         ("about.trademark.anthropic", "Claude and Claude Code", "Trademarks of Anthropic, PBC."),
+        ("about.trademark.openai", "ChatGPT and Codex", "Trademarks of OpenAI. The Codex style follows their apps' look."),
         ("about.trademark.godot", "Godot and the Godot logo",
             "Trademarks of the Godot Foundation, used under its trademark policy. The logo is by Andrea Calabró, under CC BY 4.0."),
         ("about.trademark.unity", "Unity", "A trademark or registered trademark of Unity Technologies or its affiliates in the U.S. and elsewhere."),
@@ -67,16 +68,16 @@ public sealed partial class AboutPage : SettingsPage
             "The people outside dotBunny whose work is in Deventry, and what each brought. Thank you.");
         Trademarks = [.. TrademarkNotices.Select(t => Info(t.Key, t.Names, t.Notice, keywords: ["trademark", "logo"]))];
         Section("trademarks", "Trademarks", Trademarks,
-            "Deventry is made by dotBunny. It isn't sponsored by, affiliated with or endorsed by Anthropic or the makers of the engines and tools it "
-            + "works with, and names them only to say what it works with. Other names are trademarks of their owners.");
+            "Deventry is made by dotBunny. It isn't sponsored by, affiliated with or endorsed by Anthropic, OpenAI or the makers of the engines and "
+            + "tools it works with, and names them only to say what it works with or whose look a style follows. Other names are trademarks of their owners.");
         Section("licenses", "Open-source licenses", [],
             "What Deventry is built with that others made, with their licenses and the third-party notices they carry.");
     }
 
     public override string IconKey => "IconCardNote";
 
-    /// <summary>Its window has the Claude style's looks when that's the style.</summary>
-    public bool IsClaudeStyle => Services.Settings.Appearance.Style == Deventry.Core.Settings.AppStyle.Claude;
+    /// <summary>Its window has the Claude and Codex styles' shapes when one of them is the style.</summary>
+    public bool IsRoundedStyle => Themes.AppColors.HasRoundedShapes(Services.Settings.Appearance.Style);
 
     public override string Description => "Which Deventry this is, whose names it uses, and what it's built with.";
 

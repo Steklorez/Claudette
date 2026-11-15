@@ -19,7 +19,7 @@
       <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude Button.projectchip">
+    <Style Selector="controls|AppearanceScope.rounded Button.projectchip">
       <Setter Property="Padding" Value="10,2" />
       <Setter Property="CornerRadius" Value="12" />
     </Style>

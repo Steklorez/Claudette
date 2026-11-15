@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **A third look, Codex.** Settings → Appearance → **Style** → **Codex** takes after the ChatGPT and Codex apps, in light and dark: white and neutral greys, OpenAI's blue for the accent, the Send button and Claude's replies, your messages grey and the files a turn changed green, waiting prompts and alerts in OpenAI's orange, and replies in your system's font, with the Claude style's rounder cards and big composer. See [Styles and themes](https://deventry.app/settings/styles-and-themes/#style).
+
 ## [1.1.0] - 2026-11-14
 
 ### Added

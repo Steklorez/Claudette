@@ -549,6 +549,9 @@ public enum AppStyle
 
     /// <summary>The Claude apps' look: ivory and warm greys, Claude's orange, rounder cards and serif replies.</summary>
     Claude,
+
+    /// <summary>The ChatGPT and Codex apps' look: white and neutral greys, OpenAI's blue, rounder cards.</summary>
+    Codex,
 }
 
 public sealed class AppearanceSettings

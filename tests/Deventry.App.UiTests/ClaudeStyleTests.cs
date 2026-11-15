@@ -67,6 +67,67 @@ public class ClaudeStyleTests
         }
     }
 
+    [AvaloniaFact]
+    public void The_Codex_style_repaints_the_window_and_moving_to_it_from_Claude_puts_back_what_only_Claude_changes()
+    {
+        var app = (App)Application.Current!;
+        var before = app.RequestedThemeVariant;
+        var window = new Window { Width = 200, Height = 100 };
+        window.Show();
+        try
+        {
+            app.RequestedThemeVariant = ThemeVariant.Light;
+            UiText.Settle(window);
+            var standardFind = Token(window, "FindHighlightBrush");
+
+            app.Colors.Apply(AppStyle.Codex);
+            UiText.Settle(window);
+
+            // The ChatGPT and Codex apps' white and greys, OpenAI's blue (DESIGN.md §3, "Visual style").
+            Assert.Equal(Color.Parse("#FFFFFF"), BackgroundOf(window));
+            Assert.Equal(Color.Parse("#F9F9F9"), Token(window, "SidebarBrush"));
+            Assert.Equal(AppColors.CodexAccent, (Color)window.FindResource("SystemAccentColor")!);
+            // The cards' colors (DESIGN.md §18, "Conversation cards"): your cards grey, Claude's blue, files green.
+            Assert.Equal(Color.Parse("#8F8F8F"), Token(window, "CardYouStripeBrush"));
+            Assert.Equal(Color.Parse("#0285FF"), Token(window, "CardClaudeStripeBrush"));
+            Assert.Equal(Color.Parse("#008635"), Token(window, "CardFilesStripeBrush"));
+            Assert.Equal(0.88, QuietStepTextOpacity(window));
+
+            app.RequestedThemeVariant = ThemeVariant.Dark;
+            UiText.Settle(window);
+
+            Assert.Equal(Color.Parse("#212121"), BackgroundOf(window));
+            Assert.Equal(Color.Parse("#181818"), Token(window, "SidebarBrush"));
+            Assert.Equal(Color.Parse("#48AAFF"), Token(window, "AccentStatusBrush"));
+
+            app.Colors.Apply(AppStyle.Claude);
+            app.RequestedThemeVariant = ThemeVariant.Light;
+            UiText.Settle(window);
+
+            Assert.Equal(Color.Parse("#F5F4ED"), Token(window, "SidebarBrush"));
+            Assert.NotEqual(standardFind, Token(window, "FindHighlightBrush"));
+            Assert.Equal(1, QuietStepTextOpacity(window));
+
+            app.Colors.Apply(AppStyle.Codex);
+            UiText.Settle(window);
+
+            // Codex has no find highlight of its own, so Claude's gives way to Standard's, not stays.
+            Assert.Equal(Color.Parse("#F9F9F9"), Token(window, "SidebarBrush"));
+            Assert.Equal(standardFind, Token(window, "FindHighlightBrush"));
+            Assert.Equal(0.88, QuietStepTextOpacity(window));
+            Assert.Equal(AppColors.CodexAccent, (Color)window.FindResource("SystemAccentColor")!);
+        }
+        finally
+        {
+            app.Colors.Apply(AppStyle.Standard);
+            app.RequestedThemeVariant = before;
+            window.Close();
+        }
+    }
+
+    private static double QuietStepTextOpacity(Window window) =>
+        Assert.IsType<double>(window.FindResource(window.ActualThemeVariant, "QuietStepTextOpacity"));
+
     private static Color BackgroundOf(Window window) => Assert.IsAssignableFrom<ISolidColorBrush>(window.Background).Color;
 
     private static Color Token(Window window, string key) =>
@@ -101,6 +162,15 @@ public class ClaudeStyleTests
         UiText.Settle(window);
 
         // Claude: rounder. Its warm grey comes with the colors (The_Claude_style_repaints_the_window_the_tokens_and_the_accent…).
+        Assert.Equal(new CornerRadius(14), YourCard(window)!.CornerRadius);
+        Assert.Equal(new CornerRadius(12), CodeFrame(window)!.CornerRadius);
+        AssertRound(window);
+
+        // Codex shares the Claude style's shapes.
+        h.Services.Settings.Appearance.Style = AppStyle.Codex;
+        h.Services.SaveSettings();
+        UiText.Settle(window);
+
         Assert.Equal(new CornerRadius(14), YourCard(window)!.CornerRadius);
         Assert.Equal(new CornerRadius(12), CodeFrame(window)!.CornerRadius);
         AssertRound(window);

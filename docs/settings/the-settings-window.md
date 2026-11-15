@@ -38,7 +38,7 @@ A project's own settings, its links, actions and the like, are in a window of th
 
 The arrow keys go up and down through the pages. [Every setting](every-setting.md) has a table for each.
 
-Each page starts with a line saying what's on it, then its sections. In the Claude style each section is a card.
+Each page starts with a line saying what's on it, then its sections. In the Claude and Codex styles each section is a card.
 
 ## A setting
 

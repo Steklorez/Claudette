@@ -1,0 +1,147 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    x:Class="Deventry.App.Themes.CodexColors">
+  <!-- Settings → Appearance → Style → Codex (DESIGN.md §3, "Visual style"): the ChatGPT and Codex apps' white and neutral
+       greys, with OpenAI's blue as the accent, from the palette in OpenAI's design guidelines for apps in ChatGPT.
+       AppColors copies these over App.axaml's tokens of the same name, and puts them back for Standard. Surfaces, text,
+       inline code and the accent change, and cautions (a waiting prompt, a usage alert) take OpenAI's orange instead of
+       yellow. Errors, diffs and the charts' model lines keep App.axaml's colors. The accent is a fixed color, so these use
+       it directly rather than SystemAccentColor. The Codex style's shapes are the Claude style's, under the "rounded"
+       class on an AppearanceScope, and its replies are in the interface's font, as the apps set them. -->
+  <ResourceDictionary.ThemeDictionaries>
+    <!-- Light, on ChatGPT's scale: white islands, cards and composer (#FFFFFF) on a light grey frame (#F3F3F3), a lighter
+         grey sidebar (#F9F9F9) and selection (#E8E8E8), near-black text (#0D0D0D) and grey muted text (#5D5D5D). -->
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="FrameBrush" Color="#F3F3F3" />
+      <!-- A game's board (DESIGN.md §18): grey slots in it, white tiles off it -->
+      <SolidColorBrush x:Key="GameSlotBrush" Color="#ECECEC" />
+      <SolidColorBrush x:Key="GameSlotHotBrush" Color="#E3E3E3" />
+      <SolidColorBrush x:Key="GameTileBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="GameTileHotBrush" Color="#F9F9F9" />
+      <SolidColorBrush x:Key="MutedTextBrush" Color="#5D5D5D" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#1A0D0D0D" />
+      <SolidColorBrush x:Key="CardBrush" Color="#F9F9F9" />
+      <SolidColorBrush x:Key="SubtleBrush" Color="#F9F9F9" />
+      <SolidColorBrush x:Key="HoverBrush" Color="#0F0D0D0D" />
+      <SolidColorBrush x:Key="IslandBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#0285FF" />
+      <SolidColorBrush x:Key="ToolIconSelectedTextBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TabSelectedBrush" Color="#E8E8E8" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#F9F9F9" />
+      <!-- The pinned groups' band at the top of the sidebar (DESIGN.md §4, "Pinning a group"): between the sidebar's
+           island and the frame. In dark, the frame is darker than the island, so the band is a shade lighter, away from it. -->
+      <SolidColorBrush x:Key="PinnedGroupsBrush" Color="#F6F6F6" />
+      <SolidColorBrush x:Key="ExplorerBrush" Color="#F9F9F9" />
+      <SolidColorBrush x:Key="ComposerBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComposerBorderBrush" Color="#260D0D0D" />
+      <SolidColorBrush x:Key="DialogBrush" Color="#FFFFFF" />
+      <!-- A darker blue for text, readable on white and the greys. -->
+      <SolidColorBrush x:Key="AccentStatusBrush" Color="#0169CC" />
+      <SolidColorBrush x:Key="SelectedRowBrush" Color="#0285FF" Opacity="0.12" />
+      <SolidColorBrush x:Key="AttentionGlowBrush" Color="#0285FF" Opacity="0.22" />
+      <SolidColorBrush x:Key="MeterTrackBrush" Color="#1A0D0D0D" />
+      <SolidColorBrush x:Key="MeterBrush" Color="#0285FF" />
+      <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#F3F3F3" />
+      <!-- The Project Files tab's editor (DESIGN.md §18): changed lines' bars and the selection in the blue. -->
+      <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#0285FF" />
+      <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0A0D0D0D" />
+      <SolidColorBrush x:Key="EditorSelectionBrush" Color="#0285FF" Opacity="0.22" />
+      <!-- Inline code as ChatGPT has it: the text's own color on a grey ground. -->
+      <SolidColorBrush x:Key="InlineCodeBrush" Color="#120D0D0D" />
+      <SolidColorBrush x:Key="InlineCodeTextBrush" Color="#0D0D0D" />
+      <!-- Cautions (a waiting prompt, a usage alert) in tints of OpenAI's orange (#E25507) rather than yellow, with a
+           darker orange for text, at least 4.5:1 on the tint. -->
+      <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#FFF3EB" />
+      <SolidColorBrush x:Key="CautionBorderBrush" Color="#F0A57C" />
+      <SolidColorBrush x:Key="WarningTextBrush" Color="#B54300" />
+      <!-- The conversation's cards (DESIGN.md §18, "Conversation cards"): your cards grey, as ChatGPT's bubbles are,
+           Claude's in the blue, and modified files in OpenAI's green, which stays apart from the blue with color blindness.
+           The labels are at least 4.5:1 on their tints. -->
+      <SolidColorBrush x:Key="CardYouStripeBrush" Color="#8F8F8F" />
+      <SolidColorBrush x:Key="CardYouTintBrush" Color="#5D5D5D" Opacity="0.06" />
+      <SolidColorBrush x:Key="CardYouOutlineBrush" Color="#5D5D5D" Opacity="0.2" />
+      <SolidColorBrush x:Key="CardYouLabelBrush" Color="#5D5D5D" />
+      <SolidColorBrush x:Key="CardClaudeStripeBrush" Color="#0285FF" />
+      <SolidColorBrush x:Key="CardClaudeTintBrush" Color="#0285FF" Opacity="0.05" />
+      <SolidColorBrush x:Key="CardClaudeOutlineBrush" Color="#0285FF" Opacity="0.28" />
+      <SolidColorBrush x:Key="CardClaudeLabelBrush" Color="#0169CC" />
+      <SolidColorBrush x:Key="CardFilesStripeBrush" Color="#008635" />
+      <SolidColorBrush x:Key="CardFilesTintBrush" Color="#008635" Opacity="0.05" />
+      <SolidColorBrush x:Key="CardFilesOutlineBrush" Color="#008635" Opacity="0.28" />
+      <SolidColorBrush x:Key="CardFilesLabelBrush" Color="#006E2B" />
+      <SolidColorBrush x:Key="CardStatsStripeBrush" Color="#7A8291" />
+      <SolidColorBrush x:Key="CardStatsTintBrush" Color="#7A8291" Opacity="0.07" />
+      <SolidColorBrush x:Key="CardStatsOutlineBrush" Color="#7A8291" Opacity="0.28" />
+      <SolidColorBrush x:Key="CardStatsLabelBrush" Color="#5B6372" />
+      <SolidColorBrush x:Key="CardNeutralStripeBrush" Color="#C4C4C4" />
+      <SolidColorBrush x:Key="CardNeutralTintBrush" Color="#0D0D0D" Opacity="0.03" />
+      <SolidColorBrush x:Key="CardNeutralOutlineBrush" Color="#0D0D0D" Opacity="0.1" />
+      <SolidColorBrush x:Key="CardNeutralLabelBrush" Color="#636363" />
+      <SolidColorBrush x:Key="CardTileBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CardTileBorderBrush" Color="#0D0D0D" Opacity="0.1" />
+    </ResourceDictionary>
+    <!-- Dark, on the same scale: grey islands (#212121) on a darker frame (#181818), lighter cards and composer (#303030),
+         white text and grey muted text (#AFAFAF). -->
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="FrameBrush" Color="#181818" />
+      <SolidColorBrush x:Key="GameSlotBrush" Color="#2A2A2A" />
+      <SolidColorBrush x:Key="GameSlotHotBrush" Color="#343434" />
+      <SolidColorBrush x:Key="GameTileBrush" Color="#3A3A3A" />
+      <SolidColorBrush x:Key="GameTileHotBrush" Color="#464646" />
+      <SolidColorBrush x:Key="ChangeModifiedBrush" Color="#48AAFF" />
+      <SolidColorBrush x:Key="EditorCurrentLineBrush" Color="#0FFFFFFF" />
+      <SolidColorBrush x:Key="EditorSelectionBrush" Color="#0285FF" Opacity="0.32" />
+      <SolidColorBrush x:Key="MutedTextBrush" Color="#AFAFAF" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#1FFFFFFF" />
+      <SolidColorBrush x:Key="CardBrush" Color="#303030" />
+      <SolidColorBrush x:Key="SubtleBrush" Color="#181818" />
+      <SolidColorBrush x:Key="HoverBrush" Color="#14FFFFFF" />
+      <SolidColorBrush x:Key="IslandBrush" Color="#212121" />
+      <SolidColorBrush x:Key="ToolIconSelectedBrush" Color="#0285FF" />
+      <SolidColorBrush x:Key="ToolIconSelectedTextBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TabSelectedBrush" Color="#303030" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#181818" />
+      <SolidColorBrush x:Key="PinnedGroupsBrush" Color="#232323" />
+      <!-- The Files tab's explorer: the sidebar's #181818 is the frame's too, so the explorer would read as the frame and
+           its divider as a stray line; a shade between the frame and the editor's island (#212121) sets it apart. -->
+      <SolidColorBrush x:Key="ExplorerBrush" Color="#1C1C1C" />
+      <SolidColorBrush x:Key="ComposerBrush" Color="#303030" />
+      <SolidColorBrush x:Key="ComposerBorderBrush" Color="#1FFFFFFF" />
+      <SolidColorBrush x:Key="DialogBrush" Color="#303030" />
+      <!-- OpenAI's lighter blue for dark, for text and meters. -->
+      <SolidColorBrush x:Key="AccentStatusBrush" Color="#48AAFF" />
+      <SolidColorBrush x:Key="SelectedRowBrush" Color="#0285FF" Opacity="0.24" />
+      <SolidColorBrush x:Key="AttentionGlowBrush" Color="#48AAFF" Opacity="0.32" />
+      <SolidColorBrush x:Key="MeterTrackBrush" Color="#26FFFFFF" />
+      <SolidColorBrush x:Key="MeterBrush" Color="#48AAFF" />
+      <SolidColorBrush x:Key="ChartSurfaceBrush" Color="#181818" />
+      <SolidColorBrush x:Key="InlineCodeBrush" Color="#26FFFFFF" />
+      <SolidColorBrush x:Key="InlineCodeTextBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CautionBackgroundBrush" Color="#36271F" />
+      <SolidColorBrush x:Key="CautionBorderBrush" Color="#8F5232" />
+      <SolidColorBrush x:Key="WarningTextBrush" Color="#FF9E6C" />
+      <SolidColorBrush x:Key="CardYouStripeBrush" Color="#8F8F8F" />
+      <SolidColorBrush x:Key="CardYouTintBrush" Color="#AFAFAF" Opacity="0.08" />
+      <SolidColorBrush x:Key="CardYouOutlineBrush" Color="#AFAFAF" Opacity="0.25" />
+      <SolidColorBrush x:Key="CardYouLabelBrush" Color="#CDCDCD" />
+      <SolidColorBrush x:Key="CardClaudeStripeBrush" Color="#48AAFF" />
+      <SolidColorBrush x:Key="CardClaudeTintBrush" Color="#48AAFF" Opacity="0.09" />
+      <SolidColorBrush x:Key="CardClaudeOutlineBrush" Color="#48AAFF" Opacity="0.38" />
+      <SolidColorBrush x:Key="CardClaudeLabelBrush" Color="#8CC8FF" />
+      <SolidColorBrush x:Key="CardFilesStripeBrush" Color="#40C977" />
+      <SolidColorBrush x:Key="CardFilesTintBrush" Color="#40C977" Opacity="0.09" />
+      <SolidColorBrush x:Key="CardFilesOutlineBrush" Color="#40C977" Opacity="0.35" />
+      <SolidColorBrush x:Key="CardFilesLabelBrush" Color="#7FDBA3" />
+      <SolidColorBrush x:Key="CardStatsStripeBrush" Color="#8A909C" />
+      <SolidColorBrush x:Key="CardStatsTintBrush" Color="#8A909C" Opacity="0.08" />
+      <SolidColorBrush x:Key="CardStatsOutlineBrush" Color="#8A909C" Opacity="0.3" />
+      <SolidColorBrush x:Key="CardStatsLabelBrush" Color="#AEB4C0" />
+      <SolidColorBrush x:Key="CardNeutralStripeBrush" Color="#6B6B6B" />
+      <SolidColorBrush x:Key="CardNeutralTintBrush" Color="#FFFFFF" Opacity="0.03" />
+      <SolidColorBrush x:Key="CardNeutralOutlineBrush" Color="#FFFFFF" Opacity="0.14" />
+      <SolidColorBrush x:Key="CardNeutralLabelBrush" Color="#AFAFAF" />
+      <SolidColorBrush x:Key="CardTileBrush" Color="#303030" />
+      <SolidColorBrush x:Key="CardTileBorderBrush" Color="#FFFFFF" Opacity="0.12" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

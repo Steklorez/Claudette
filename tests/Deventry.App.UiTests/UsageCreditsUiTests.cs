@@ -81,7 +81,7 @@ public class UsageCreditsUiTests
         try
         {
             await UiText.SettleUntilAsync(window, () => Notice(window).IsEffectivelyVisible, "the notice");
-            foreach (var style in new[] { AppStyle.Standard, AppStyle.Claude })
+            foreach (var style in Enum.GetValues<AppStyle>())
             {
                 foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
                 {

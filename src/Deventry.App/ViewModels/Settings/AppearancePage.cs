@@ -61,9 +61,9 @@ public sealed class AppearancePage : SettingsPage
             Setting("appearance.theme", "Theme", s => s.Appearance.Theme, (s, v) => s.Appearance.Theme = v,
                 "Light, dark, or as your computer is.", keywords: ["dark mode", "light mode", "colors"]),
             Setting("appearance.style", "Style", s => s.Appearance.Style, (s, v) => s.Appearance.Style = v,
-                "Deventry's own look, or the Claude apps'.",
-                "Claude looks like the Claude apps: ivory and warm greys, Claude's orange, rounder cards and serif replies. Standard uses neutral greys and your computer's accent color.",
-                ["claude style", "standard", "look", "theme"]),
+                "Deventry's own look, the Claude apps' or the ChatGPT and Codex apps'.",
+                "Claude looks like the Claude apps: ivory and warm greys, Claude's orange, rounder cards and serif replies. Codex looks like the ChatGPT and Codex apps: white and neutral greys, OpenAI's blue and rounder cards. Standard looks like JetBrains Rider: its greys and blue.",
+                ["claude style", "codex style", "chatgpt", "openai", "standard", "look", "theme"]),
             Setting("appearance.density", "Density", s => s.Appearance.Density, (s, v) => s.Appearance.Density = v,
                 "Compact tightens the conversation, the sidebar's rows and the message box.", keywords: ["compact", "comfortable", "spacing"]),
             Setting("appearance.fullWidthConversation", "Full-width conversation", s => s.Appearance.FullWidthConversation, (s, v) => s.Appearance.FullWidthConversation = v,
@@ -170,7 +170,7 @@ public sealed class AppearancePage : SettingsPage
 
     /// <summary>Settings → Appearance → Style (DESIGN.md §3, "Visual style"), named as the list shows them.</summary>
     public IReadOnlyList<StyleOption> StyleOptions { get; } =
-        [new(AppStyle.Standard, "Standard"), new(AppStyle.Claude, "Claude")];
+        [new(AppStyle.Standard, "Standard"), new(AppStyle.Claude, "Claude"), new(AppStyle.Codex, "Codex")];
 
     public StyleOption Style
     {

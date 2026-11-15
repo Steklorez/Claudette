@@ -27,6 +27,7 @@ public class SettingResetUiTests
     [AvaloniaTheory]
     [InlineData(AppStyle.Standard)]
     [InlineData(AppStyle.Claude)]
+    [InlineData(AppStyle.Codex)]
     public async Task Pointing_at_or_focusing_a_changed_setting_moves_nothing(AppStyle style)
     {
         await using var h = new TabTestHarness(s =>
@@ -39,7 +40,7 @@ public class SettingResetUiTests
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
         UiText.Settle(window);
-        Assert.Equal(style == AppStyle.Claude, window.GetVisualDescendants().OfType<AppearanceScope>().First().Classes.Contains("claude"));
+        Assert.Equal(style != AppStyle.Standard, window.GetVisualDescendants().OfType<AppearanceScope>().First().Classes.Contains("rounded"));
         var parent = Row(window, "general.keepAwake");
         var nested = Row(window, "general.keepAwakeWhen");
         Assert.True(parent.IsChanged && nested.IsChanged);
@@ -122,7 +123,7 @@ public class SettingResetUiTests
         var model = new TabSettingsViewModel(h.Services, tab, () => { });
         model.SelectedMode = model.ModeChoices[1];
         var view = new TabSettingsView { DataContext = model };
-        var window = UiText.Show(new AppearanceScope { Classes = { "compact", "claude" }, Children = { view } });
+        var window = UiText.Show(new AppearanceScope { Classes = { "compact", "rounded" }, Children = { view } });
         var row = Row(window, "tab.permissionMode");
         Assert.True(row.IsChanged);
         var layout = Layout(row);

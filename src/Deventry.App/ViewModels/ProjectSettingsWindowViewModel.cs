@@ -1,6 +1,5 @@
 using Deventry.App.Services;
 using Deventry.App.ViewModels.Settings;
-using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Deventry.App.ViewModels;
@@ -89,10 +88,10 @@ public sealed partial class ProjectSettingsWindowViewModel : ViewModelBase, IDis
         }
     }
 
-    /// <summary>The window takes the Claude style's shapes (DESIGN.md §3, "Visual style"), as the main window does.</summary>
-    public bool IsClaudeStyle => _services.Settings.Appearance.Style == AppStyle.Claude;
+    /// <summary>The window takes the Claude and Codex styles' shapes (DESIGN.md §3, "Visual style"), as the main window does.</summary>
+    public bool IsRoundedStyle => Themes.AppColors.HasRoundedShapes(_services.Settings.Appearance.Style);
 
-    private void OnSettingsChanged() => OnPropertyChanged(nameof(IsClaudeStyle));
+    private void OnSettingsChanged() => OnPropertyChanged(nameof(IsRoundedStyle));
 
     /// <summary>Shows <paramref name="page"/>: the window was opened, or asked for again, at it.</summary>
     public void Open(string page)

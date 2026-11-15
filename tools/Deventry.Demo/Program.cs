@@ -1,6 +1,6 @@
 // deventry-demo: demo content for trying Deventry's UI and for its screenshots, with no account and no tokens.
 //
-//   deventry-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]
+//   deventry-demo <folder> [--theme system|light|dark] [--style standard|claude|codex] [--projects <folder>] [--still] [--quiet]
 //
 // Makes, in <folder> (replacing what an earlier run made there):
 //   home/           for DEVENTRY_HOME: settings with fake-claude as Claude Code and the theme and style asked for
@@ -37,7 +37,7 @@ if (args is ["--stand-in-editor", var standInProject])
     return StandInEditor.Run(standInProject);
 }
 
-const string Usage = "usage: deventry-demo <folder> [--theme system|light|dark] [--style standard|claude] [--projects <folder>] [--still] [--quiet]";
+const string Usage = "usage: deventry-demo <folder> [--theme system|light|dark] [--style standard|claude|codex] [--projects <folder>] [--still] [--quiet]";
 string? folder = null;
 string? projects = null;
 var still = false;

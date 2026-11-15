@@ -64,6 +64,8 @@ public class RemoteClientsUiTests
     [InlineData(AppStyle.Standard, "Dark")]
     [InlineData(AppStyle.Claude, "Light")]
     [InlineData(AppStyle.Claude, "Dark")]
+    [InlineData(AppStyle.Codex, "Light")]
+    [InlineData(AppStyle.Codex, "Dark")]
     public async Task What_Telegram_can_read_is_said_in_the_caution_colors(AppStyle style, string variant)
     {
         var app = (App)Application.Current!;

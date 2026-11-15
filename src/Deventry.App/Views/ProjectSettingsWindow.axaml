@@ -46,7 +46,7 @@
 
   <!-- DESIGN.md §14, "The project's settings": a folder's project, its pages in a sidebar; changes are saved as they're
        made; the window isn't modal. -->
-  <controls:AppearanceScope Classes.claude="{Binding IsClaudeStyle}">
+  <controls:AppearanceScope Classes.rounded="{Binding IsRoundedStyle}">
     <DockPanel>
       <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): its title -->
       <controls:TitleBar DockPanel.Dock="Top" />

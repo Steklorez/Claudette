@@ -6,7 +6,7 @@
        them back for Standard. Surfaces, text, inline code and the accent change, and cautions (a waiting prompt, a
        usage alert) become warm tints of the accent instead of yellow. Errors, diffs and the charts' model lines keep
        App.axaml's colors. The accent is a fixed color, so these use it directly rather than SystemAccentColor. The
-       Claude style's shapes are in App.axaml and TabView.axaml, under the "claude" class on an AppearanceScope. -->
+       Claude style's shapes, which Codex shares, are under the "rounded" class on an AppearanceScope. -->
   <ResourceDictionary.ThemeDictionaries>
     <!-- Light, on claude.ai's scale: white cards and composer (#FFFFFF), an ivory page (#FAF9F5), a warmer sidebar
          (#F5F4ED) and selection (#E8E6DC), near-black text (#141413) and warm grey muted text. -->
@@ -77,6 +77,8 @@
       <SolidColorBrush x:Key="CardNeutralLabelBrush" Color="#63625C" />
       <SolidColorBrush x:Key="CardTileBrush" Color="#FFFFFF" />
       <SolidColorBrush x:Key="CardTileBorderBrush" Color="#1F1E1D" Opacity="0.1" />
+      <!-- Quieter in-between steps keep their text as it is: the muted text is already as soft as it can be. -->
+      <x:Double x:Key="QuietStepTextOpacity">1</x:Double>
     </ResourceDictionary>
     <!-- Dark, on the same scale: a charcoal page (#262624), lighter cards and composer (#30302E), a darker sidebar
          (#1F1E1D), off-white text (#FAF9F5) and warm grey muted text. -->
@@ -141,6 +143,7 @@
       <SolidColorBrush x:Key="CardNeutralLabelBrush" Color="#9C9A92" />
       <SolidColorBrush x:Key="CardTileBrush" Color="#30302E" />
       <SolidColorBrush x:Key="CardTileBorderBrush" Color="#DEDCD1" Opacity="0.12" />
+      <x:Double x:Key="QuietStepTextOpacity">1</x:Double>
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

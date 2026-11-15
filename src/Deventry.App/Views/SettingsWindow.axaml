@@ -100,7 +100,7 @@
   </Window.Resources>
 
   <!-- DESIGN.md §14: a sidebar of pages in groups; changes apply immediately; the window isn't modal. -->
-  <controls:AppearanceScope Classes.claude="{Binding IsClaudeStyle}">
+  <controls:AppearanceScope Classes.rounded="{Binding IsRoundedStyle}">
     <DockPanel>
       <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): its title -->
       <controls:TitleBar DockPanel.Dock="Top" />

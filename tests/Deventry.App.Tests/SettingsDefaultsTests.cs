@@ -210,16 +210,16 @@ public class SettingsDefaultsTests
     }
 
     [Fact]
-    public async Task Style_offers_Standard_and_Claude_and_saves_the_choice()
+    public async Task Style_offers_Standard_Claude_and_Codex_and_saves_the_choice()
     {
         await using var h = new TabTestHarness();
         var settings = new SettingsViewModel(h.Services, null) { SearchText = "style" };
         var changed = 0;
         h.Services.SettingsChanged += (_, _) => changed++;
 
-        Assert.Equal(["Standard", "Claude"], settings.Appearance.StyleOptions.Select(o => o.ToString()));
+        Assert.Equal(["Standard", "Claude", "Codex"], settings.Appearance.StyleOptions.Select(o => o.ToString()));
         Assert.Equal(AppStyle.Standard, settings.Appearance.Style.Style);
-        Assert.False(h.Shell.IsClaudeStyle);
+        Assert.False(h.Shell.IsRoundedStyle);
         Assert.Contains(settings.SearchResults, r => r is { Category: "Appearance", Label: "Style" });
 
         settings.Appearance.Style = settings.Appearance.StyleOptions[1];
@@ -227,8 +227,31 @@ public class SettingsDefaultsTests
         Assert.Equal(AppStyle.Claude, h.Services.Settings.Appearance.Style);
         Assert.Equal("Claude", settings.Appearance.Style.Label);
         Assert.True(changed > 0);
-        // The shell takes the "claude" class for the Claude apps' shapes.
-        Assert.True(h.Shell.IsClaudeStyle);
+        // The shell takes the "rounded" class for the apps' shapes, in the Claude style and in Codex.
+        Assert.True(h.Shell.IsRoundedStyle);
+
+        settings.Appearance.Style = settings.Appearance.StyleOptions[2];
+
+        Assert.Equal(AppStyle.Codex, h.Services.Settings.Appearance.Style);
+        Assert.Equal("Codex", settings.Appearance.Style.Label);
+        Assert.True(h.Shell.IsRoundedStyle);
+        Assert.True(settings.IsRoundedStyle);
+
+        settings.Appearance.Style = settings.Appearance.StyleOptions[0];
+
+        Assert.False(h.Shell.IsRoundedStyle);
+        Assert.False(settings.IsRoundedStyle);
+    }
+
+    [Fact]
+    public async Task Searching_for_ChatGPT_or_Codex_finds_Style()
+    {
+        await using var h = new TabTestHarness();
+        foreach (var words in new[] { "chatgpt", "codex", "openai" })
+        {
+            var settings = new SettingsViewModel(h.Services, null) { SearchText = words };
+            Assert.Contains(settings.SearchResults, r => r is { Category: "Appearance", Label: "Style" });
+        }
     }
 
     [Theory]
@@ -236,6 +259,12 @@ public class SettingsDefaultsTests
     [InlineData(AppStyle.Claude, null, "Charter")]
     [InlineData(AppStyle.Claude, "Fira Sans", "Fira Sans")]
     [InlineData(AppStyle.Standard, "Fira Sans", "Fira Sans")]
+    [InlineData(AppStyle.Codex, "Fira Sans", "Fira Sans")]
     public void Replies_are_serif_in_the_Claude_style_unless_a_conversation_font_is_set(AppStyle style, string? font, string first) =>
         Assert.Equal(first, Deventry.App.Themes.AppColors.ReplyFont(style, font).FamilyNames[0]);
+
+    /// <summary>The Codex style sets replies as the ChatGPT and Codex apps do, in the interface's font: the system's.</summary>
+    [Fact]
+    public void Replies_are_in_the_system_font_in_the_Codex_style() =>
+        Assert.Equal(Avalonia.Media.FontFamily.Default, Deventry.App.Themes.AppColors.ReplyFont(AppStyle.Codex, null));
 }

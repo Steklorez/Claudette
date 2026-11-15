@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Media;
 using Deventry.App.Services;
+using Deventry.App.Themes;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Development;
 using Deventry.Core.Git;
@@ -53,7 +54,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.Accounts.OpenTabs = () => [.. AllTabs.Select(t => t.State)];
         WatchGames();
         IsCompact = services.Settings.Appearance.Density == Density.Compact;
-        IsClaudeStyle = services.Settings.Appearance.Style == AppStyle.Claude;
+        IsRoundedStyle = AppColors.HasRoundedShapes(services.Settings.Appearance.Style);
         IsFullWidth = services.Settings.Appearance.FullWidthConversation;
         IsQuietSteps = services.Settings.Appearance.QuietSteps;
         IsIndentYou = services.Settings.Appearance.IndentYourMessages;
@@ -62,7 +63,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         {
             OnClaudeProjectsSettingChanged();
             IsCompact = _services.Settings.Appearance.Density == Density.Compact;
-            IsClaudeStyle = _services.Settings.Appearance.Style == AppStyle.Claude;
+            IsRoundedStyle = AppColors.HasRoundedShapes(_services.Settings.Appearance.Style);
             IsFullWidth = _services.Settings.Appearance.FullWidthConversation;
             IsQuietSteps = _services.Settings.Appearance.QuietSteps;
             IsIndentYou = _services.Settings.Appearance.IndentYourMessages;
@@ -1217,12 +1218,12 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     public partial bool IsCompact { get; private set; }
 
     /// <summary>
-    /// Settings → Appearance → Style is Claude (DESIGN.md §3, "Visual style"): the view takes the <c>claude</c> class,
-    /// whose styles give the conversation the Claude apps' shapes: rounder cards and code blocks, a rounded composer with
-    /// a round send button. The colors and the replies' serif are app-wide resources.
+    /// Settings → Appearance → Style is Claude or Codex (DESIGN.md §3, "Visual style"): the view takes the <c>rounded</c>
+    /// class, whose styles give the conversation the apps' shapes: rounder cards and code blocks, a big rounded composer
+    /// lifted off the page. The colors and the replies' font are app-wide resources.
     /// </summary>
     [ObservableProperty]
-    public partial bool IsClaudeStyle { get; private set; }
+    public partial bool IsRoundedStyle { get; private set; }
 
     /// <summary>
     /// Settings → Appearance → Full-width conversation (DESIGN.md §14): the view takes the <c>fullwidth</c> class, whose

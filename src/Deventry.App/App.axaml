@@ -115,7 +115,7 @@
       <Setter Property="IsVisible" Value="False" />
     </Style>
     <!-- Settings → Appearance → Style → Claude (DESIGN.md §3): rounder, as in the Claude apps. -->
-    <Style Selector="controls|AppearanceScope.claude md|CodeBlock /template/ Border.codeframe">
+    <Style Selector="controls|AppearanceScope.rounded md|CodeBlock /template/ Border.codeframe">
       <Setter Property="CornerRadius" Value="12" />
     </Style>
     <!-- An image in a reply (DESIGN.md §18, "Images in Claude's replies"): a placeholder naming where it's from, until it may
@@ -130,7 +130,7 @@
       <Setter Property="MaxWidth" Value="560" />
       <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude Border.replyimage">
+    <Style Selector="controls|AppearanceScope.rounded Border.replyimage">
       <Setter Property="CornerRadius" Value="12" />
     </Style>
     <Style Selector="Path.replyimageicon">
@@ -554,21 +554,21 @@
     </Style>
     <!-- Settings → Appearance → Style → Claude (DESIGN.md §3): the Claude apps' big rounded message box, lifted a
          little off the page. -->
-    <Style Selector="controls|AppearanceScope.claude Border.composer">
+    <Style Selector="controls|AppearanceScope.rounded Border.composer">
       <Setter Property="CornerRadius" Value="22" />
       <Setter Property="Padding" Value="16,8,8,8" />
       <Setter Property="BoxShadow" Value="0 2 12 0 #14000000" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude.compact Border.composer">
+    <Style Selector="controls|AppearanceScope.rounded.compact Border.composer">
       <Setter Property="Padding" Value="14,3,6,4" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude Button.tabrow">
+    <Style Selector="controls|AppearanceScope.rounded Button.tabrow">
       <Setter Property="CornerRadius" Value="10" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude Button.runrow">
+    <Style Selector="controls|AppearanceScope.rounded Button.runrow">
       <Setter Property="CornerRadius" Value="8" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude Button.agentrow">
+    <Style Selector="controls|AppearanceScope.rounded Button.agentrow">
       <Setter Property="CornerRadius" Value="8" />
     </Style>
     <Style Selector="Border.composer.bypass">
@@ -975,6 +975,8 @@
           <SolidColorBrush x:Key="CardErrorOutlineBrush" Color="#C42B1C" Opacity="0.3" />
           <SolidColorBrush x:Key="CardWarningTintBrush" Color="#D98A00" Opacity="0.07" />
           <SolidColorBrush x:Key="CardWarningOutlineBrush" Color="#D98A00" Opacity="0.35" />
+          <!-- Quieter in-between steps' text (DESIGN.md §18, "Conversation cards"): softer, its muted text still 4.5:1. -->
+          <x:Double x:Key="QuietStepTextOpacity">0.88</x:Double>
           <!-- A tile in a Tool calls card: raised a little off the card. -->
           <SolidColorBrush x:Key="CardTileBrush" Color="#FFFFFF" />
           <SolidColorBrush x:Key="CardTileBorderBrush" Color="#1A000000" />
@@ -1097,6 +1099,7 @@
           <SolidColorBrush x:Key="CardErrorOutlineBrush" Color="#FF6B61" Opacity="0.4" />
           <SolidColorBrush x:Key="CardWarningTintBrush" Color="#F2B233" Opacity="0.08" />
           <SolidColorBrush x:Key="CardWarningOutlineBrush" Color="#F2B233" Opacity="0.35" />
+          <x:Double x:Key="QuietStepTextOpacity">0.88</x:Double>
           <SolidColorBrush x:Key="CardTileBrush" Color="#FFFFFF" Opacity="0.04" />
           <SolidColorBrush x:Key="CardTileBorderBrush" Color="#FFFFFF" Opacity="0.1" />
           <!-- Perforce's logo in white, as its brand guidelines have it on a dark background: its reversed logo's white. -->

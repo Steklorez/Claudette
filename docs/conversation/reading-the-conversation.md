@@ -16,19 +16,19 @@ Every step is a card: a stripe down its left edge in the card's color, over a fa
 
 A card's header line has an icon, the kind in the card's color, a few muted words (a Tool calls card says *4 calls · 1 running*), and its time at the right. While you point at a card, or move the keyboard focus onto it, its buttons appear before the time: **Copy message**, **Add to scratch pad** and **⋯**. Short cards, such as a note or the **Turn** card, put the step on the header line.
 
-| Card | What it is | Standard | Claude style |
-|---|---|---|---|
-| **You** | Your message, or one naming what sent it: *Automatic check-in*, *From the thread Plan* | Magenta | Warm gray |
-| **Claude** | A reply | Blue | Claude's orange |
-| **Tool calls** | A run of tool calls as tiles ([Tool calls](tool-calls.md)) | Neutral | Neutral |
-| **Thinking**, **Hook**, **Note** | Claude's thinking, hook runs and notices ([Thinking, notes and hooks](thinking-notes-and-hooks.md)) | Neutral | Neutral |
-| A subagent, named by its type | A helper Claude started ([Subagents](subagents.md)) | Neutral | Neutral |
-| **Modified files** | The files a turn changed | Green | Blue |
-| **Turn**, **Tasks** | A turn's statistics, and where Claude's task list stands ([The end of a turn](the-end-of-a-turn.md)) | Slate | Warm slate |
-| **Permission**, **Question**, **Plan**, **Input requested** | Waiting for you | The caution colors | Warm tints of the accent |
-| **Error**, **Warning** | Something went wrong, or nearly | Red, amber | Red, amber |
+| Card | What it is | Standard | Claude style | Codex style |
+|---|---|---|---|---|
+| **You** | Your message, or one naming what sent it: *Automatic check-in*, *From the thread Plan* | Magenta | Warm gray | Gray |
+| **Claude** | A reply | Blue | Claude's orange | OpenAI's blue |
+| **Tool calls** | A run of tool calls as tiles ([Tool calls](tool-calls.md)) | Neutral | Neutral | Neutral |
+| **Thinking**, **Hook**, **Note** | Claude's thinking, hook runs and notices ([Thinking, notes and hooks](thinking-notes-and-hooks.md)) | Neutral | Neutral | Neutral |
+| A subagent, named by its type | A helper Claude started ([Subagents](subagents.md)) | Neutral | Neutral | Neutral |
+| **Modified files** | The files a turn changed | Green | Blue | Green |
+| **Turn**, **Tasks** | A turn's statistics, and where Claude's task list stands ([The end of a turn](the-end-of-a-turn.md)) | Slate | Warm slate | Slate |
+| **Permission**, **Question**, **Plan**, **Input requested** | Waiting for you | The caution colors | Warm tints of the accent | Tints of OpenAI's orange |
+| **Error**, **Warning** | Something went wrong, or nearly | Red, amber | Red, amber | Red, amber |
 
-The Claude style is Settings → Appearance → **Style**. [Styles and themes](../settings/styles-and-themes.md) shows both.
+The Claude and Codex styles are Settings → Appearance → **Style**. [Styles and themes](../settings/styles-and-themes.md) shows all three.
 
 ## Times
 

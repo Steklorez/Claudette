@@ -15,7 +15,7 @@
   <!-- About Deventry (DESIGN.md §14, "About"): a window of its own, over the one it was opened from, until it's closed.
        Which Deventry this is, where it is on the web and its license, the trademarks it names, and the licenses of what
        it's built with, as Settings' page drew them once (Views/Settings/AboutPageView). Esc closes it. -->
-  <controls:AppearanceScope Classes.claude="{Binding IsClaudeStyle}">
+  <controls:AppearanceScope Classes.rounded="{Binding IsRoundedStyle}">
     <DockPanel>
       <!-- The window's title bar, while it draws its own (DESIGN.md §3, "Window frame"): its title -->
       <controls:TitleBar DockPanel.Dock="Top" />

@@ -6,7 +6,7 @@
         xmlns:editor="using:Deventry.App.Views.Editor"
         xmlns:controls="using:Deventry.App.Controls">
   <!-- The Project Files tab's look (DESIGN.md §18, "Project files"): the explorer, the file tabs, the editor, the chip,
-       the banners and the peek. Under the "claude" class, the Claude style's rounder shapes. -->
+       the banners and the peek. Under the "rounded" class, the Claude and Codex styles' rounder shapes. -->
 
   <!-- The explorer: its own surface, the sidebar's but in Claude Dark (ExplorerBrush), with a divider on the side the
        editor is. -->
@@ -38,7 +38,7 @@
   <Style Selector="controls|AppearanceScope.compact ListBox.explorerlist ListBoxItem">
     <Setter Property="Padding" Value="8,1,6,1" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude ListBox.explorerlist ListBoxItem">
+  <Style Selector="controls|AppearanceScope.rounded ListBox.explorerlist ListBoxItem">
     <Setter Property="CornerRadius" Value="8" />
   </Style>
   <!-- What git or P4IGNORE ignores, and what's hidden, dimmed. -->
@@ -193,9 +193,9 @@
     <Setter Property="BorderThickness" Value="0,0,0,1" />
     <Setter Property="MinHeight" Value="32" />
   </Style>
-  <!-- In the Claude style, the explorer's shade: in its dark theme, SubtleBrush is the window frame's color, so the row
-       would merge with the frame and hide the island's rounded top corner -->
-  <Style Selector="controls|AppearanceScope.claude Border.filetabs">
+  <!-- In the Claude and Codex styles, the explorer's shade: in their dark themes, SubtleBrush is the window frame's color,
+       so the row would merge with the frame and hide the island's rounded top corner -->
+  <Style Selector="controls|AppearanceScope.rounded Border.filetabs">
     <Setter Property="Background" Value="{DynamicResource ExplorerBrush}" />
   </Style>
   <Style Selector="Button.filetab">
@@ -253,7 +253,7 @@
     <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Button.filetab">
+  <Style Selector="controls|AppearanceScope.rounded Button.filetab">
     <Setter Property="CornerRadius" Value="8,8,0,0" />
   </Style>
   <!-- A file in a window of its own: a small window after its name, on its own 12×12 grid -->

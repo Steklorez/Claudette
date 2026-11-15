@@ -5,8 +5,8 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// A style that looks for a class on an ancestor names the ancestor's type: Settings → Appearance's classes are on
-/// <c>Controls/AppearanceScope</c> (<c>controls|AppearanceScope.claude Border.composer</c>; DESIGN.md §3, "Visual style").
-/// One that starts with the bare class (<c>.claude Border.composer</c>) could match any ancestor, so Avalonia watches the
+/// <c>Controls/AppearanceScope</c> (<c>controls|AppearanceScope.rounded Border.composer</c>; DESIGN.md §3, "Visual style").
+/// One that starts with the bare class (<c>.rounded Border.composer</c>) could match any ancestor, so Avalonia watches the
 /// classes of every ancestor of every control the style might apply to: 1.5 million watchers for six tabs.
 /// </summary>
 public partial class AppearanceScopeTests
@@ -27,16 +27,16 @@ public partial class AppearanceScopeTests
     }
 
     [Theory]
-    [InlineData(".claude Border.composer", true)]
-    [InlineData(".claude.compact controls|Card", true)]
-    [InlineData(":not(.claude).quietsteps controls|Card", true)]
-    [InlineData("controls|AppearanceScope.claude Border.composer", false)]
+    [InlineData(".rounded Border.composer", true)]
+    [InlineData(".rounded.compact controls|Card", true)]
+    [InlineData(":not(.rounded).quietsteps controls|Card", true)]
+    [InlineData("controls|AppearanceScope.rounded Border.composer", false)]
     [InlineData(":is(Window).reducemotion Border.chip", false)]
     [InlineData("^:pointerover /template/ Border#PART_Card", false)]
     [InlineData(".compact > ContentPresenter", false)]
     [InlineData(".copied /template/ TextBlock#CopyLabel", false)]
     [InlineData("#Composer TextBlock", false)]
-    [InlineData(".claude", false)]
+    [InlineData(".rounded", false)]
     public void A_selector_looks_at_every_ancestor_when_it_starts_without_a_type_and_then_looks_inside(string selector, bool every) =>
         Assert.Equal(every, LooksAtEveryAncestor(selector));
 

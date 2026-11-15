@@ -17,7 +17,7 @@
       <Setter Property="CornerRadius" Value="8" />
       <Setter Property="ClipToBounds" Value="True" />
     </Style>
-    <Style Selector="controls|AppearanceScope.claude Border.previewbox">
+    <Style Selector="controls|AppearanceScope.rounded Border.previewbox">
       <Setter Property="CornerRadius" Value="12" />
     </Style>
     <!-- Inline code in the reply, as a reply's is drawn -->

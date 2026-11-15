@@ -5,11 +5,12 @@ the diff view, the thread's Tasks page and agent map, the detailed usage header,
 each.
 
 .DESCRIPTION
-For Standard and Claude, dark and light: makes the demo content afresh, starts the Debug build of Deventry on it
-(fake-claude as Claude Code, so no account and no tokens), visits every tab so each shows its model and any reviewed
-icon, opens the Grappling hook tab's Changed files, and captures the window as <style>-<theme>.png, and Joulene standing on
-the composer, close up, as joulene-<style>-<theme>.png (the demo runs with motion reduced, so she stands still at the
-composer's right rather than being caught part-way through falling off it). Then it:
+For each style, dark and light: makes the demo content afresh, starts the Debug build of Deventry on it (fake-claude as
+Claude Code, so no account and no tokens), visits every tab so each shows its model and any reviewed icon, opens the
+Grappling hook tab's Changed files, and captures the window as <style>-<theme>.png. For Codex, that's all. For Standard
+and Claude, it captures Joulene standing on the composer, close up, as joulene-<style>-<theme>.png (the demo runs with
+motion reduced, so she stands still at the composer's right rather than being caught part-way through falling off it).
+Then it:
 - opens the diff of StarfallCharacter.cpp from an Edit's tile and captures that window as diff-<style>-<theme>.png;
 - selects the Move to the Input System thread, shows its Tasks tool window and captures the window as
   tasks-<style>-<theme>.png, then on Agents, with the first subagent selected, as agents-<style>-<theme>.png;
@@ -21,8 +22,8 @@ composer's right rather than being caught part-way through falling off it). Then
 - closes History, hides the tool windows, opens starfall's Project Files tab, opens StarfallCharacter.cpp from its explorer and captures the
   window, with Claude's changes marked in the explorer and the editor's gutter, as files-<style>-<theme>.png;
 and closes Deventry by its window, as a user would. Last, it has MascotPictureTests draw Joulene on the composer's
-animation from her art and steps, as joulene.gif, and social-card.ps1 draw the site's social card with the new
-standard-dark.png.
+animation from her art and steps, as joulene.gif, and, with the Standard pictures taken, social-card.ps1 draw the site's
+social card with the new standard-dark.png.
 
 A run leaves you the focus, the keyboard and the pointer, so you can carry on working meanwhile, a fullscreen app
 included (DESIGN.md §9, "Taking screenshots without the focus"). Deventry runs with DEVENTRY_UNFOCUSED=1, its windows
@@ -34,11 +35,18 @@ PrintWindow, which doesn't need the windows in view.
 Where the demo's git repositories go. The conversation shows their paths, so choose a short one that says nothing
 about you, such as C:\Demo. It must be empty, or one deventry-demo made.
 
+.PARAMETER Styles
+Which styles to take: standard, claude and codex unless given.
+
 .EXAMPLE
 tools\Deventry.Demo\screenshots.ps1 -Projects C:\Demo
+
+.EXAMPLE
+tools\Deventry.Demo\screenshots.ps1 -Projects C:\Demo -Styles codex
 #>
 param(
     [Parameter(Mandatory)] [string] $Projects,
+    [ValidateSet('standard', 'claude', 'codex')] [string[]] $Styles = @('standard', 'claude', 'codex'),
     [string] $Out = (Join-Path $PSScriptRoot '..\..\docs\screenshots'),
     [string] $Work = (Join-Path ([IO.Path]::GetTempPath()) 'deventry-demo'),
     # How long Deventry gets to start and restore its tabs before the first click.
@@ -55,7 +63,7 @@ $build = Build-Deventry $repo
 $app = $build.App
 $demo = $build.Demo
 
-foreach ($style in 'standard', 'claude') {
+foreach ($style in $Styles) {
     foreach ($theme in 'dark', 'light') {
         Write-Host "$style $theme"
         New-DemoContent $demo $Work $Projects $style $theme
@@ -74,6 +82,8 @@ foreach ($style in 'standard', 'claude') {
             }
             Set-Step 'the window'
             Save-Window $window (Join-Path $Out "$style-$theme.png")
+            # The Codex style shows only on Styles and themes, in the main window (GUIDE.md, "Pictures").
+            if ($style -eq 'codex') { continue }
 
             # Joulene on the composer, close up: with motion reduced she stands still at its right, over Send.
             $send = (Find-ByText $window 'Send').Current.BoundingRectangle
@@ -185,7 +195,9 @@ try {
 finally {
     Remove-Item Env:DEVENTRY_MASCOT_GIF
 }
-# The site's social card shows the main window, so it's drawn again with the new one.
-Write-Host 'The social card'
-& (Join-Path $PSScriptRoot 'social-card.ps1')
+# The site's social card shows the Standard style's main window, so it's drawn again with a new one.
+if ($Styles -contains 'standard') {
+    Write-Host 'The social card'
+    & (Join-Path $PSScriptRoot 'social-card.ps1')
+}
 Write-Host "Saved to $Out"

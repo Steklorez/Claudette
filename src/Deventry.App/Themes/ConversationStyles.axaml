@@ -1,5 +1,5 @@
 <!-- A tab's styles (DESIGN.md §3, §5): the conversation, the tool windows and the composer. TabView includes them, so
-     they apply inside each tab, and the "compact" and "claude" classes on the shell's AppearanceScope change them. -->
+     they apply inside each tab, and the "compact" and "rounded" classes on the shell's AppearanceScope change them. -->
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ae="using:AvaloniaEdit"
@@ -36,7 +36,7 @@
     <Setter Property="Padding" Value="8,3" />
     <Setter Property="MaxWidth" Value="280" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.mascotbubble">
+  <Style Selector="controls|AppearanceScope.rounded Border.mascotbubble">
     <Setter Property="CornerRadius" Value="12" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="BoxShadow" Value="0 1 6 0 #22000000" />
@@ -86,7 +86,7 @@
     <Setter Property="CornerRadius" Value="4" />
     <Setter Property="Padding" Value="6,1" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.agenttype">
+  <Style Selector="controls|AppearanceScope.rounded Border.agenttype">
     <Setter Property="CornerRadius" Value="8" />
   </Style>
   <Style Selector="Border.agentprompt">
@@ -96,7 +96,7 @@
     <Setter Property="CornerRadius" Value="6" />
     <Setter Property="Padding" Value="10,6" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.agentprompt">
+  <Style Selector="controls|AppearanceScope.rounded Border.agentprompt">
     <Setter Property="CornerRadius" Value="10" />
   </Style>
   <Style Selector="controls|Card.agentreport">
@@ -226,7 +226,8 @@
     <Setter Property="OutlineBrush" Value="{DynamicResource CardStatsOutlineBrush}" />
     <Setter Property="LabelBrush" Value="{DynamicResource CardStatsLabelBrush}" />
   </Style>
-  <!-- Waiting on the user (DESIGN.md §7): the caution colors a prompt has always had, warm tints in the Claude style. -->
+  <!-- Waiting on the user (DESIGN.md §7): the caution colors a prompt has always had, warm tints in the Claude style and
+       OpenAI's orange in Codex. -->
   <Style Selector="controls|Card.waiting">
     <Setter Property="StripeBrush" Value="{DynamicResource CautionBorderBrush}" />
     <Setter Property="TintBrush" Value="{DynamicResource CautionBackgroundBrush}" />
@@ -328,23 +329,24 @@
     <Setter Property="Padding" Value="10,2,10,3" />
   </Style>
   <!-- Settings → Appearance → Style → Claude (DESIGN.md §3): rounder cards, as the Claude apps' are. -->
-  <Style Selector="controls|AppearanceScope.claude controls|Card">
+  <Style Selector="controls|AppearanceScope.rounded controls|Card">
     <Setter Property="CornerRadius" Value="14" />
     <Setter Property="Padding" Value="14,9,14,10" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude.compact controls|Card">
+  <Style Selector="controls|AppearanceScope.rounded.compact controls|Card">
     <Setter Property="CornerRadius" Value="10" />
     <Setter Property="Padding" Value="12,5,12,6" />
   </Style>
   <!-- Settings → Conversation → Quieter in-between steps (DESIGN.md §18, "Conversation cards"): a step on the way loses
-       its tint and outline, keeping its stripe, until it's pointed at or has the focus. In the Standard style its text
-       is a little softer too, still at least 4.5:1; the Claude style's muted text is already as soft as it can be. -->
+       its tint and outline, keeping its stripe, until it's pointed at or has the focus. Its text is a little softer too
+       (QuietStepTextOpacity), still at least 4.5:1, except in the Claude style, whose muted text is already as soft as it
+       can be. -->
   <Style Selector="controls|AppearanceScope.quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Border#PART_Card">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
   </Style>
-  <Style Selector="controls|AppearanceScope:not(.claude).quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Grid#PART_Body">
-    <Setter Property="Opacity" Value="0.88" />
+  <Style Selector="controls|AppearanceScope.quietsteps controls|Card.quiet:not(:pointerover):not(:focus-within) /template/ Grid#PART_Body">
+    <Setter Property="Opacity" Value="{DynamicResource QuietStepTextOpacity}" />
   </Style>
 
   <!-- Settings → Conversation → Indent your messages and Indent Claude's steps (DESIGN.md §18, "Conversation cards"):
@@ -390,7 +392,7 @@
   <Style Selector="controls|AppearanceScope.compact Button.tile">
     <Setter Property="Padding" Value="6,3" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Button.tile">
+  <Style Selector="controls|AppearanceScope.rounded Button.tile">
     <Setter Property="CornerRadius" Value="10" />
   </Style>
   <!-- The open tile's detail, under the tiles. -->
@@ -471,7 +473,7 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude :is(Button).logchip, controls|AppearanceScope.claude ToggleButton.logtoggle">
+  <Style Selector="controls|AppearanceScope.rounded :is(Button).logchip, controls|AppearanceScope.rounded ToggleButton.logtoggle">
     <Setter Property="CornerRadius" Value="12" />
   </Style>
   <Style Selector=":is(Button).logchip TextBlock.count">
@@ -554,7 +556,7 @@
   <Style Selector="controls|AppearanceScope.compact TextBox.scratchpad">
     <Setter Property="Padding" Value="6,3" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude TextBox.scratchpad">
+  <Style Selector="controls|AppearanceScope.rounded TextBox.scratchpad">
     <Setter Property="CornerRadius" Value="10" />
   </Style>
   <!-- Games with Joulene (DESIGN.md §18). Each board is one surface, its squares buttons with no look of their own: a slot
@@ -581,7 +583,7 @@
     <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.gamesurface">
+  <Style Selector="controls|AppearanceScope.rounded Border.gamesurface">
     <Setter Property="CornerRadius" Value="14" />
   </Style>
   <Style Selector="Button.boardcell">
@@ -602,7 +604,7 @@
     <Setter Property="CornerRadius" Value="7" />
     <Setter Property="Background" Value="{DynamicResource GameSlotBrush}" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.slot">
+  <Style Selector="controls|AppearanceScope.rounded Border.slot">
     <Setter Property="CornerRadius" Value="11" />
   </Style>
   <Style Selector="Button.boardcell:pointerover Border.slot, Button.boardcell:focus-visible Border.slot">
@@ -644,7 +646,7 @@
     <Setter Property="Padding" Value="3" />
     <Setter Property="CornerRadius" Value="8" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.lane">
+  <Style Selector="controls|AppearanceScope.rounded Border.lane">
     <Setter Property="CornerRadius" Value="15" />
   </Style>
   <Style Selector="Button.gamecolumn:pointerover Border.lane, Button.gamecolumn:focus-visible Border.lane">
@@ -714,7 +716,7 @@
     <Setter Property="Background" Value="{DynamicResource GameTileBrush}" />
     <Setter Property="BoxShadow" Value="0 1 1 0 #33000000" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.key">
+  <Style Selector="controls|AppearanceScope.rounded Border.key">
     <Setter Property="CornerRadius" Value="8" />
   </Style>
   <Style Selector="Border.key > TextBlock">
@@ -753,7 +755,7 @@
     <Setter Property="Background" Value="{DynamicResource GameTileBrush}" />
     <Setter Property="BoxShadow" Value="0 1 1 0 #33000000" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.minecell">
+  <Style Selector="controls|AppearanceScope.rounded Border.minecell">
     <Setter Property="CornerRadius" Value="7" />
   </Style>
   <Style Selector="Border.minecell > Panel">
@@ -850,10 +852,10 @@
     <Setter Property="BorderThickness" Value="1.5" />
     <Setter Property="BorderBrush" Value="{DynamicResource AccentStatusBrush}" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.pipepiece">
+  <Style Selector="controls|AppearanceScope.rounded Border.pipepiece">
     <Setter Property="CornerRadius" Value="6" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.pipepiece.next">
+  <Style Selector="controls|AppearanceScope.rounded Border.pipepiece.next">
     <Setter Property="CornerRadius" Value="9" />
   </Style>
   <!-- A code block's Add to scratch pad: in a tab, not in the agent map's own window, which has no pad -->
@@ -874,7 +876,7 @@
   <Style Selector="controls|AppearanceScope.compact Border.codeblock">
     <Setter Property="Padding" Value="6,3" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.codeblock">
+  <Style Selector="controls|AppearanceScope.rounded Border.codeblock">
     <Setter Property="CornerRadius" Value="10" />
   </Style>
   <Style Selector="TextBlock.done">
@@ -904,7 +906,7 @@
     <Setter Property="Padding" Value="10,6" />
     <Setter Property="Margin" Value="0,1" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.prompt">
+  <Style Selector="controls|AppearanceScope.rounded Border.prompt">
     <Setter Property="CornerRadius" Value="14" />
   </Style>
 
@@ -927,7 +929,7 @@
     <Setter Property="Padding" Value="8,6" />
     <Setter Property="MaxHeight" Value="160" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Border.threadmessage">
+  <Style Selector="controls|AppearanceScope.rounded Border.threadmessage">
     <Setter Property="CornerRadius" Value="12" />
   </Style>
 
@@ -1348,7 +1350,7 @@
   <Style Selector="controls|AppearanceScope.compact Button.taskrow">
     <Setter Property="Padding" Value="6,2" />
   </Style>
-  <Style Selector="controls|AppearanceScope.claude Button.taskrow">
+  <Style Selector="controls|AppearanceScope.rounded Button.taskrow">
     <Setter Property="CornerRadius" Value="8" />
   </Style>
   <!-- The / and @ autocomplete (DESIGN.md §5, "Composer") -->

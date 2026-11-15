@@ -15,7 +15,7 @@
 "Light, dark, or as your computer is."
 [choice] "System"
 "Style"
-"Deventry's own look, or the Claude apps'.  "
+"Deventry's own look, the Claude apps' or the ChatGPT and Codex apps'.  "
 [choice] "Standard"
 "Density"
 "Compact tightens the conversation, the sidebar's rows and the message box."

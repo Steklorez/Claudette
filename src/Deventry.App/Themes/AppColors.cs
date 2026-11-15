@@ -10,15 +10,19 @@ namespace Deventry.App.Themes;
 /// <summary>
 /// The colors of Settings → Appearance → Style (DESIGN.md §3, "Visual style"). Standard is App.axaml's tokens, Rider's
 /// Islands colors, and gives Fluent Rider's palette: its greys and blue. Claude puts <see cref="ClaudeColors"/> over those
-/// tokens, and gives Fluent a palette of the Claude apps' warm greys, ivory and orange. Fluent draws with the palette what
-/// it draws itself: window backgrounds, text, controls and the accent, whose lighter and darker shades it works out from
-/// it. Both work in light and dark. The Claude style's shapes are styles under the "claude" class, which the shell's
-/// <see cref="Controls.AppearanceScope"/> takes.
+/// tokens, and gives Fluent a palette of the Claude apps' warm greys, ivory and orange; Codex puts <see cref="CodexColors"/>
+/// over them, with a palette of the ChatGPT and Codex apps' white, neutral greys and OpenAI's blue. Fluent draws with the
+/// palette what it draws itself: window backgrounds, text, controls and the accent, whose lighter and darker shades it
+/// works out from it. All three work in light and dark. The Claude and Codex styles' shapes are styles under the
+/// "rounded" class (<see cref="HasRoundedShapes"/>), which the shell's <see cref="Controls.AppearanceScope"/> takes.
 /// </summary>
 public sealed class AppColors(Application app)
 {
     /// <summary>Claude's orange.</summary>
     public static readonly Color ClaudeAccent = Color.Parse("#D97757");
+
+    /// <summary>OpenAI's blue, from the palette in its design guidelines for apps in ChatGPT.</summary>
+    public static readonly Color CodexAccent = Color.Parse("#0285FF");
 
     /// <summary>Rider's blue.</summary>
     public static readonly Color RiderAccent = Color.Parse("#3574F0");
@@ -32,23 +36,31 @@ public sealed class AppColors(Application app)
     /// </summary>
     public const string SerifFonts = "Charter, Bitstream Charter, Georgia, Cambria, Noto Serif, DejaVu Serif";
 
+    /// <summary>Standard's value of each token a style has changed, kept the first time one does, by theme.</summary>
     private readonly Dictionary<(ThemeVariant Variant, object Key), object?> _standard = [];
     private ClaudeColors? _claude;
+    private CodexColors? _codex;
 
     /// <summary>The style applied; null until the first is.</summary>
     public AppStyle? Current { get; private set; }
 
-    /// <summary>The interface's font: Inter in the Standard style, as Rider's; the system's in the Claude style.</summary>
+    /// <summary>The interface's font: Inter in the Standard style, as Rider's; the system's in the Claude and Codex styles.</summary>
     public static FontFamily UiFont(AppStyle style) => style == AppStyle.Standard ? InterFont : FontFamily.Default;
 
     /// <summary>
     /// The font of Claude's replies: the conversation font when one is set, otherwise a serif in the Claude style, as
-    /// the Claude apps set replies, and the interface's in Standard.
+    /// the Claude apps set replies, and the interface's in Standard and Codex.
     /// </summary>
     public static FontFamily ReplyFont(AppStyle style, string? conversationFont) =>
         conversationFont is { } font ? new FontFamily($"{font}, {FontFamily.DefaultFontFamilyName}")
         : style == AppStyle.Claude ? new FontFamily($"{SerifFonts}, {FontFamily.DefaultFontFamilyName}")
         : UiFont(style);
+
+    /// <summary>
+    /// The Claude and Codex styles share the apps' rounder shapes: the "rounded" class on an AppearanceScope, which their
+    /// styles look for.
+    /// </summary>
+    public static bool HasRoundedShapes(AppStyle style) => style != AppStyle.Standard;
 
     public void Apply(AppStyle style)
     {
@@ -57,34 +69,32 @@ public sealed class AppColors(Application app)
             return;
         }
         Current = style;
-        var claude = style == AppStyle.Claude;
-        _claude ??= new ClaudeColors();
-        foreach (var (variant, provider) in _claude.ThemeDictionaries)
+        var chosen = Tokens(style);
+        foreach (var (variant, key) in chosen.Keys)
         {
-            if (provider is not IResourceDictionary claudeTokens
-                || !app.Resources.ThemeDictionaries.TryGetValue(variant, out var target)
-                || target is not IResourceDictionary tokens)
+            if (!_standard.ContainsKey((variant, key)) && Target(variant) is { } tokens)
+            {
+                _standard[(variant, key)] = tokens.TryGetValue(key, out var original) ? original : null;
+            }
+        }
+        // Every token a style has changed takes this style's value, or goes back to Standard's.
+        foreach (var ((variant, key), original) in _standard)
+        {
+            if (Target(variant) is not { } tokens)
             {
                 continue;
             }
-            foreach (var key in claudeTokens.Keys.ToList())
+            if (chosen.TryGetValue((variant, key), out var value))
             {
-                if (!_standard.ContainsKey((variant, key)))
-                {
-                    _standard[(variant, key)] = tokens.TryGetValue(key, out var original) ? original : null;
-                }
-                if (claude)
-                {
-                    tokens[key] = claudeTokens[key];
-                }
-                else if (_standard[(variant, key)] is { } original)
-                {
-                    tokens[key] = original;
-                }
-                else
-                {
-                    tokens.Remove(key);
-                }
+                tokens[key] = value;
+            }
+            else if (original is not null)
+            {
+                tokens[key] = original;
+            }
+            else
+            {
+                tokens.Remove(key);
             }
         }
         // Fluent reads most palette colors once, when its resources are first used, so a palette set on the running
@@ -94,9 +104,50 @@ public sealed class AppColors(Application app)
             return;
         }
         var fresh = new FluentTheme { DensityStyle = fluent.DensityStyle };
-        fresh.Palettes[ThemeVariant.Light] = claude ? LightPalette() : RiderLightPalette();
-        fresh.Palettes[ThemeVariant.Dark] = claude ? DarkPalette() : RiderDarkPalette();
+        fresh.Palettes[ThemeVariant.Light] = style switch
+        {
+            AppStyle.Claude => ClaudeLightPalette(),
+            AppStyle.Codex => CodexLightPalette(),
+            _ => RiderLightPalette(),
+        };
+        fresh.Palettes[ThemeVariant.Dark] = style switch
+        {
+            AppStyle.Claude => ClaudeDarkPalette(),
+            AppStyle.Codex => CodexDarkPalette(),
+            _ => RiderDarkPalette(),
+        };
         app.Styles[app.Styles.IndexOf(fluent)] = fresh;
+    }
+
+    /// <summary>The app's tokens for one theme.</summary>
+    private IResourceDictionary? Target(ThemeVariant variant) =>
+        app.Resources.ThemeDictionaries.TryGetValue(variant, out var target) ? target as IResourceDictionary : null;
+
+    /// <summary>The tokens a style puts over Standard's, by theme: none for Standard itself.</summary>
+    private Dictionary<(ThemeVariant Variant, object Key), object?> Tokens(AppStyle style)
+    {
+        ResourceDictionary? colors = style switch
+        {
+            AppStyle.Claude => _claude ??= new ClaudeColors(),
+            AppStyle.Codex => _codex ??= new CodexColors(),
+            _ => null,
+        };
+        var tokens = new Dictionary<(ThemeVariant Variant, object Key), object?>();
+        if (colors is null)
+        {
+            return tokens;
+        }
+        foreach (var (variant, provider) in colors.ThemeDictionaries)
+        {
+            if (provider is IResourceDictionary dictionary)
+            {
+                foreach (var key in dictionary.Keys.ToList())
+                {
+                    tokens[(variant, key)] = dictionary[key];
+                }
+            }
+        }
+        return tokens;
     }
 
     /// <summary>Rider's Islands Light: a light grey frame, black text, Rider's greys and blue.</summary>
@@ -148,8 +199,8 @@ public sealed class AppColors(Application app)
         ListMedium = Color.Parse("#29FFFFFF"),
     };
 
-    /// <summary>Ivory page, warm greys, near-black text.</summary>
-    private static ColorPaletteResources LightPalette() => new()
+    /// <summary>The Claude apps' light: ivory page, warm greys, near-black text.</summary>
+    private static ColorPaletteResources ClaudeLightPalette() => new()
     {
         Accent = ClaudeAccent,
         RegionColor = Color.Parse("#FAF9F5"),
@@ -174,8 +225,8 @@ public sealed class AppColors(Application app)
         ListMedium = Color.Parse("#291F1E1D"),
     };
 
-    /// <summary>Charcoal page, darker sidebar, off-white text.</summary>
-    private static ColorPaletteResources DarkPalette() => new()
+    /// <summary>The Claude apps' dark: charcoal page, darker sidebar, off-white text.</summary>
+    private static ColorPaletteResources ClaudeDarkPalette() => new()
     {
         Accent = ClaudeAccent,
         RegionColor = Color.Parse("#262624"),
@@ -199,5 +250,58 @@ public sealed class AppColors(Application app)
         ChromeMediumLow = Color.Parse("#30302E"),
         ListLow = Color.Parse("#19FAF9F5"),
         ListMedium = Color.Parse("#33FAF9F5"),
+    };
+
+    /// <summary>The ChatGPT and Codex apps' light: white page, neutral greys, near-black text.</summary>
+    private static ColorPaletteResources CodexLightPalette() => new()
+    {
+        Accent = CodexAccent,
+        RegionColor = Color.Parse("#FFFFFF"),
+        BaseHigh = Color.Parse("#0D0D0D"),
+        BaseMediumHigh = Color.Parse("#CC0D0D0D"),
+        BaseMedium = Color.Parse("#990D0D0D"),
+        BaseMediumLow = Color.Parse("#660D0D0D"),
+        BaseLow = Color.Parse("#330D0D0D"),
+        ChromeAltLow = Color.Parse("#0D0D0D"),
+        ChromeBlackHigh = Color.Parse("#0D0D0D"),
+        ChromeBlackMedium = Color.Parse("#990D0D0D"),
+        ChromeBlackMediumLow = Color.Parse("#660D0D0D"),
+        ChromeBlackLow = Color.Parse("#330D0D0D"),
+        ChromeDisabledHigh = Color.Parse("#E8E8E8"),
+        ChromeDisabledLow = Color.Parse("#8F8F8F"),
+        ChromeGray = Color.Parse("#5D5D5D"),
+        ChromeHigh = Color.Parse("#D4D4D4"),
+        ChromeLow = Color.Parse("#F9F9F9"),
+        ChromeMedium = Color.Parse("#F3F3F3"),
+        ChromeMediumLow = Color.Parse("#FFFFFF"),
+        ListLow = Color.Parse("#140D0D0D"),
+        ListMedium = Color.Parse("#290D0D0D"),
+    };
+
+    /// <summary>The ChatGPT and Codex apps' dark: grey page, darker sidebar, white text.</summary>
+    private static ColorPaletteResources CodexDarkPalette() => new()
+    {
+        Accent = CodexAccent,
+        RegionColor = Color.Parse("#212121"),
+        AltHigh = Color.Parse("#212121"),
+        AltMediumHigh = Color.Parse("#CC212121"),
+        AltMedium = Color.Parse("#99212121"),
+        AltMediumLow = Color.Parse("#66212121"),
+        AltLow = Color.Parse("#33212121"),
+        BaseHigh = Color.Parse("#FFFFFF"),
+        BaseMediumHigh = Color.Parse("#CCFFFFFF"),
+        BaseMedium = Color.Parse("#99FFFFFF"),
+        BaseMediumLow = Color.Parse("#66FFFFFF"),
+        BaseLow = Color.Parse("#33FFFFFF"),
+        ChromeAltLow = Color.Parse("#FFFFFF"),
+        ChromeDisabledHigh = Color.Parse("#303030"),
+        ChromeDisabledLow = Color.Parse("#8F8F8F"),
+        ChromeGray = Color.Parse("#AFAFAF"),
+        ChromeHigh = Color.Parse("#5D5D5D"),
+        ChromeLow = Color.Parse("#181818"),
+        ChromeMedium = Color.Parse("#2A2A2A"),
+        ChromeMediumLow = Color.Parse("#303030"),
+        ListLow = Color.Parse("#19FFFFFF"),
+        ListMedium = Color.Parse("#33FFFFFF"),
     };
 }

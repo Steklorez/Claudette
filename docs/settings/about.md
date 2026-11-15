@@ -30,7 +30,7 @@ The people outside dotBunny whose work is in Deventry, each with a line on what 
 
 ## Trademarks
 
-Deventry names Claude Code, and the engines and tools it works with, to say what it works with. Each has a row with its owner's notice: Claude and Claude Code, Godot and the Godot logo, Unity, Unreal, Unreal Engine and the Unreal Engine logo, and Perforce, P4V and the Perforce logo. Deventry is made by dotBunny, and isn't sponsored by, affiliated with or endorsed by any of them.
+Deventry names Claude Code, and the engines and tools it works with, to say what it works with, and ChatGPT and Codex, whose apps' look the [Codex style](styles-and-themes.md#style) follows. Each has a row with its owner's notice: Claude and Claude Code, ChatGPT and Codex, Godot and the Godot logo, Unity, Unreal, Unreal Engine and the Unreal Engine logo, and Perforce, P4V and the Perforce logo. Deventry is made by dotBunny, and isn't sponsored by, affiliated with or endorsed by any of them.
 
 Godot's logo is the icon of Godot projects, on their page in Settings and as the [project's icon](../project-tools/using-project-tools.md) on its group's row in the sidebar, and its whole logo, in color, is the title of Settings → [Godot](../project-tools/godot.md). Deventry uses it under the Godot Foundation's trademark policy, and the logo itself is by Andrea Calabró, under CC BY 4.0. Unity has an icon Deventry draws for it.
 

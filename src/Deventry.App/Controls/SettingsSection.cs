@@ -12,8 +12,8 @@ namespace Deventry.App.Controls;
 /// A section of a Settings page or of Tab settings… (DESIGN.md §14): a heading, a line under it, its rows, and its own
 /// <b>Reset to defaults</b>. It finds its <see cref="SettingsGroup"/> by <see cref="Key"/>, which says whether its settings
 /// are all this computer's (said once, in the heading) and whether any differ from their defaults. Its rows are drawn
-/// one under another with a line between them, and in the Claude style in a rounded box, as the Claude apps' settings
-/// are. Its look is in Themes/SettingsStyles.axaml.
+/// one under another with a line between them, and in the Claude and Codex styles in a rounded box, as the Claude apps'
+/// settings are. Its look is in Themes/SettingsStyles.axaml.
 /// </summary>
 [PseudoClasses(":highlighted")]
 public sealed class SettingsSection : ItemsControl

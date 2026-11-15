@@ -76,7 +76,9 @@ public class AboutPageTests
         Assert.StartsWith("Unreal®, Unreal Engine®, and the Unreal Engine® logo are trademarks", about.FindSetting("about.trademark.unreal")!.Description, StringComparison.Ordinal);
         // Perforce's logo, on its page, is shown with Perforce's permission.
         Assert.Contains("Perforce's permission", about.FindSetting("about.trademark.perforce")!.Description, StringComparison.Ordinal);
-        Assert.Contains("isn't sponsored by, affiliated with or endorsed by", about.FindGroup("trademarks")!.Description, StringComparison.Ordinal);
+        // ChatGPT and Codex are named for the Codex style, which follows their apps' look (DESIGN.md §3, "Visual style").
+        Assert.StartsWith("Trademarks of OpenAI.", about.FindSetting("about.trademark.openai")!.Description, StringComparison.Ordinal);
+        Assert.Contains("isn't sponsored by, affiliated with or endorsed by Anthropic, OpenAI", about.FindGroup("trademarks")!.Description, StringComparison.Ordinal);
         // Who has contributed, each found by their row's key, and the page's sections in order.
         Assert.Equal(["deventry", "contributors", "trademarks", "licenses"], about.Groups.Select(g => g.Key));
         Assert.Equal(AboutPage.ContributorList.Select(c => c.Key), about.Contributors.Select(r => r.Key));

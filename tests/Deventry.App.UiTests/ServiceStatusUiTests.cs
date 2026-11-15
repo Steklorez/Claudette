@@ -123,7 +123,7 @@ public class ServiceStatusUiTests
         await using var _ = h;
         try
         {
-            foreach (var style in new[] { AppStyle.Standard, AppStyle.Claude })
+            foreach (var style in Enum.GetValues<AppStyle>())
             {
                 foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
                 {
@@ -136,8 +136,8 @@ public class ServiceStatusUiTests
                     Assert.True(Token(window, "CautionBorderBrush") == ColorOf(Banner(window).BorderBrush), what);
                 }
             }
-            // The Claude style's caution is its own warm tint, not Standard's yellow.
-            Assert.Equal(Color.Parse("#33271F"), ColorOf(Banner(window).Background));
+            // The last, the Codex style's caution, is a tint of OpenAI's orange, not Standard's yellow.
+            Assert.Equal(Color.Parse("#36271F"), ColorOf(Banner(window).Background));
         }
         finally
         {

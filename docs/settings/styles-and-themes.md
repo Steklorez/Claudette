@@ -2,12 +2,12 @@
 title: Styles and themes
 parent: Settings
 nav_order: 4
-summary: "Deventry has two looks, Standard and Claude, and each comes in light and dark."
+summary: "Deventry has three looks, Standard, Claude and Codex, and each comes in light and dark."
 ---
 
 # Styles and themes
 
-Deventry has two looks, Standard and Claude, and each comes in light and dark. You pick the look with **Style** and the light or dark with **Theme**, in Settings → Appearance. Both change at once, with no restart. The preview at the top of the page, a little of a tab with Deventry on its message box, follows each choice as you make it.
+Deventry has three looks, Standard, Claude and Codex, and each comes in light and dark. You pick the look with **Style** and the light or dark with **Theme**, in Settings → Appearance. Both change at once, with no restart. The preview at the top of the page, a little of a tab with Deventry on its message box, follows each choice as you make it.
 
 {% include shot.html name="guide/settings/appearance" alt="Settings, Appearance: the preview of a tab at the top, then the theme, style, density and full-width conversation, the conversation and code fonts with their sizes, zoom and motion, and Deventry's settings" %}
 
@@ -17,7 +17,7 @@ Settings → Appearance → **Theme** is **System**, **Light** or **Dark**. **Sy
 
 ## Style
 
-Settings → Appearance → **Style** is **Standard** (the default) or **Claude**. The layout, the tool rows, the diffs and every control are the same in both. So are the islands: the sidebar, each pane and each tool window are rounded panels with a gap between them, on the window's frame, which the header and the strip of tool window icons sit on. The look changes.
+Settings → Appearance → **Style** is **Standard** (the default), **Claude** or **Codex**. The layout, the tool rows, the diffs and every control are the same in all three. So are the islands: the sidebar, each pane and each tool window are rounded panels with a gap between them, on the window's frame, which the header and the strip of tool window icons sit on. The look changes.
 
 {% include shot.html name="standard" alt="Deventry in the Standard style: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header and Deventry standing on the message box" %}
 
@@ -33,25 +33,36 @@ Settings → Appearance → **Style** is **Standard** (the default) or **Claude*
 - **A bigger composer**, a big rounded box lifted a little off the page, and rounder corners on the cards, code blocks and the sidebar's rows.
 - **Your system's interface font**, rather than Standard's Inter.
 
-All four, side by side:
+{% include shot.html name="codex" alt="The same window in the Codex style: white and neutral greys, OpenAI's blue for the accent, rounder cards and the replies in the system's font" %}
+
+**Codex** takes the ChatGPT and Codex apps as its reference, which share one palette:
+
+- **Colors** from OpenAI's palette for apps in ChatGPT. In light, white panels on a light grey frame, a lighter grey sidebar, and near-black text. In dark, grey panels on a darker frame, lighter cards, and white text. The accent is OpenAI's blue, including the Send button.
+- **Cautions are tints of OpenAI's orange**, not yellow: a waiting prompt, a usage alert, *Needs your input*. Errors, diffs, the charts' model lines and a folder group's own color keep their usual colors.
+- **Claude's replies are in your system's interface font**, as the ChatGPT and Codex apps set theirs, and inline code is the text's own color on grey. A conversation font you pick in Settings wins.
+- **The Claude style's shapes**: the big rounded composer lifted a little off the page, and rounder corners on the cards, code blocks and the sidebar's rows.
+
+All six, side by side:
 
 | ![Deventry in the Standard style, light](../screenshots/standard-light.png) | ![Deventry in the Standard style, dark](../screenshots/standard-dark.png) |
 |:---:|:---:|
 | Standard, light | Standard, dark |
 | ![Deventry in the Claude style, light](../screenshots/claude-light.png) | ![Deventry in the Claude style, dark](../screenshots/claude-dark.png) |
 | Claude, light | Claude, dark |
+| ![Deventry in the Codex style, light](../screenshots/codex-light.png) | ![Deventry in the Codex style, dark](../screenshots/codex-dark.png) |
+| Codex, light | Codex, dark |
 
 ## The conversation's colors
 
 Each step in the conversation is a card with a stripe down its left edge in its kind's color. The style changes the colors, so what the cards mean stays the same:
 
-| Card | Standard | Claude |
-|---|---|---|
-| Your messages | Magenta | Warm grey |
-| Claude's replies | Blue | Orange |
-| The files a turn changed | Green | Blue, which stays apart from the orange with color blindness |
+| Card | Standard | Claude | Codex |
+|---|---|---|---|
+| Your messages | Magenta | Warm grey | Grey |
+| Claude's replies | Blue | Orange | Blue |
+| The files a turn changed | Green | Blue, which stays apart from the orange with color blindness | Green |
 
-Tool calls, thinking, subagents and notes are neutral in both, and a turn's statistics are slate. [Reading the conversation](../conversation/reading-the-conversation.md) explains the cards.
+Tool calls, thinking, subagents and notes are neutral in all three, and a turn's statistics are slate. [Reading the conversation](../conversation/reading-the-conversation.md) explains the cards.
 
 ## Density
 

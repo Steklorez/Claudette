@@ -244,12 +244,12 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         init => General.SourceUpdates = value;
     }
 
-    /// <summary>The window takes the Claude style's shapes (DESIGN.md §3, "Visual style"), as the main window does.</summary>
-    public bool IsClaudeStyle => _services.Settings.Appearance.Style == AppStyle.Claude;
+    /// <summary>The window takes the Claude and Codex styles' shapes (DESIGN.md §3, "Visual style"), as the main window does.</summary>
+    public bool IsRoundedStyle => Themes.AppColors.HasRoundedShapes(_services.Settings.Appearance.Style);
 
     private void OnSettingsChanged()
     {
-        OnPropertyChanged(nameof(IsClaudeStyle));
+        OnPropertyChanged(nameof(IsRoundedStyle));
         RefreshNavTags();
     }
 

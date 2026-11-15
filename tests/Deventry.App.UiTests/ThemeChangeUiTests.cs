@@ -71,6 +71,10 @@ public class ThemeChangeUiTests
     [InlineData("dark", "light")]
     [InlineData("standard", "claude")]
     [InlineData("claude", "standard")]
+    [InlineData("standard", "codex")]
+    [InlineData("codex", "standard")]
+    [InlineData("claude", "codex")]
+    [InlineData("codex", "claude")]
     public async Task The_main_window_repaints_as_a_restart_would(string from, string to)
     {
         var app = (App)Application.Current!;
@@ -123,6 +127,9 @@ public class ThemeChangeUiTests
                 break;
             case "claude":
                 app.Colors.Apply(AppStyle.Claude);
+                break;
+            case "codex":
+                app.Colors.Apply(AppStyle.Codex);
                 break;
         }
     }

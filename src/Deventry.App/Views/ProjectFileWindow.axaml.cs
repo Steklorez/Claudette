@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Deventry.App.Services;
+using Deventry.App.Themes;
 using Deventry.App.ViewModels;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Development;
@@ -95,10 +96,10 @@ public partial class ProjectFileWindow : Window
         }
     }
 
-    /// <summary>The Claude style's shapes, which are styles under its class, as the main window's are, and the zoom.</summary>
+    /// <summary>The Claude and Codex styles' shapes, which are styles under their class, as the main window's are, and the zoom.</summary>
     private void UseAppearance(AppearanceSettings appearance)
     {
-        Appearance.Classes.Set("claude", appearance.Style == AppStyle.Claude);
+        Appearance.Classes.Set("rounded", AppColors.HasRoundedShapes(appearance.Style));
         UseZoom(Zoom.Clamp(appearance.Zoom));
     }
 
