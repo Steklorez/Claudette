@@ -15,7 +15,7 @@ Each way in is a *remote client*: a Telegram bot, or a Discord bot on your own D
 
 Settings has a group for them, **Remote clients**, at the end of its sidebar: **All clients** for what they all share, then a page for each: **Telegram** and **Discord**.
 
-{% include shot.html name="guide/away/remote-clients" alt="Settings on Remote clients → Telegram, before a bot is set up: The bot, with Use a Telegram bot off and a note in yellow that Telegram can read bot chats; Bot, with No bot yet and Set token…; and Paired with, with No account is paired yet and Pair an account… disabled. The sidebar's last group, Remote clients, has All clients, then Telegram and Discord, each marked Off." %}
+{% include shot.html name="guide/away/remote-clients" alt="Settings on Remote clients → Telegram, before a bot is set up: The bot, with Use a Telegram bot off and a note in yellow that Telegram can read bot chats; Bot, with No bot yet and Set token…; Paired with, with No account is paired yet and Pair an account… disabled; and below, Images, with Send the images Claude makes and the start of its note in yellow that the images go to a service Deventry doesn't control. The sidebar's last group, Remote clients, has All clients, then Telegram and Discord, each marked Off." %}
 
 ## Not the Claude app
 
@@ -49,7 +49,7 @@ You make the bot in Discord's Developer Portal, once, as an app that goes on you
 
 Deventry keeps the token only in your computer's credential store, as it does Telegram's. Under **Bot**, Settings shows the bot's name and whether it's **Connected**. Discord itself shows the bot offline even then: it shows someone's status only to people who share a server with them, and the bot is in none.
 
-{% include shot.html name="guide/away/remote-clients-discord" alt="Settings on Remote clients → Discord, before a bot is set up: The bot, with Use a Discord bot off and a note in yellow that Discord can read direct messages; Bot, with No bot yet, how to make one in the Developer Portal, and Set token…; and Paired with, with Pair an account… disabled." %}
+{% include shot.html name="guide/away/remote-clients-discord" alt="Settings on Remote clients → Discord, before a bot is set up: The bot, with Use a Discord bot off and a note in yellow that Discord can read direct messages; Bot, with No bot yet, how to make one in the Developer Portal, and Set token…; Paired with, with Pair an account… disabled; and below, Images, with Send the images Claude makes and the start of its note in yellow." %}
 
 ### What the app needs
 
