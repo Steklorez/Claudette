@@ -20,6 +20,21 @@ public sealed partial class TabViewModel
 
     private Services.RemoteClientsService Remote => _services.RemoteClients;
 
+    /// <summary>
+    /// <b>Keep from remote clients</b>, in the tab's menu (DESIGN.md §18, "Remote clients", "Keeping a tab from them"):
+    /// the clients hear nothing of this tab, its turns, prompts and images, and can't reach it.
+    /// </summary>
+    public bool KeepsFromRemoteClients => State.KeepFromRemoteClients;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void ToggleKeepFromRemoteClients()
+    {
+        State.KeepFromRemoteClients = !State.KeepFromRemoteClients;
+        _services.SaveState();
+        OnPropertyChanged(nameof(KeepsFromRemoteClients));
+        Remote.OnKeepFromRemoteClientsChanged(this);
+    }
+
     /// <summary>This tab now, for a client; <paramref name="project"/> is its group's name.</summary>
     /// <param name="withPrompt">With the prompt waiting, which reads the conversation: not for what changes as it works.</param>
     internal RemoteTab ToRemote(string project, bool withPrompt = true) => new()
@@ -424,7 +439,7 @@ public sealed partial class TabViewModel
     /// </summary>
     private void TellRemoteTurnFinished(ResultMessage result)
     {
-        if (!Remote.IsActive)
+        if (!Remote.IsActive || KeepsFromRemoteClients)
         {
             return;
         }
@@ -445,7 +460,53 @@ public sealed partial class TabViewModel
                 // The files went, or can't be read: they're named without their lines.
                 files = [.. rows.Select(r => new RemoteFileChange(r.DisplayPath, 0, 0, r.Change.IsNew))];
             }
-            Remote.OnTurnFinished(this, took, tasks, reply, files);
+            var (images, leftOut) = Remote.WantsImages ? await TurnImagesAsync() : ([], 0);
+            Remote.OnTurnFinished(this, took, tasks, reply, files, images, leftOut);
         });
+    }
+
+    // ---- The images a turn made (DESIGN.md §18, "Remote clients", "Images") ---------------------------------------
+
+    /// <summary>How long a turn's end waits for the files its reply names to be looked for, before the clients hear of it without them.</summary>
+    internal static readonly TimeSpan TurnImagesWait = TimeSpan.FromSeconds(5);
+
+    /// <summary>A file written this long before the turn started counts as the turn's: file systems keep times coarsely.</summary>
+    private static readonly TimeSpan WriteTimeSlack = TimeSpan.FromSeconds(2);
+
+    /// <summary>When this turn started: an image file written since was made by it.</summary>
+    private DateTimeOffset _turnStartedAt;
+
+    /// <summary>The agent's images the gallery has had since this turn started, each once.</summary>
+    private readonly List<MediaEntry> _turnImages = [];
+
+    /// <summary>A turn started: the images it makes are counted from now.</summary>
+    private void StartTurnImages()
+    {
+        _turnStartedAt = _services.Time.GetUtcNow();
+        _turnImages.Clear();
+    }
+
+    /// <summary>The gallery has an image of the agent's, seen live: one this turn may have made.</summary>
+    private void OnAgentImageSeen(MediaEntry entry)
+    {
+        _turnImages.RemoveAll(e => e.Key == entry.Key);
+        _turnImages.Add(entry);
+    }
+
+    /// <summary>
+    /// The images the turn made, once what its reply names has been looked for (but not past
+    /// <see cref="TurnImagesWait"/>): read and drawn for sending off the UI thread.
+    /// </summary>
+    private async Task<(IReadOnlyList<RemoteImage> Images, int LeftOut)> TurnImagesAsync()
+    {
+        using (var waited = new CancellationTokenSource())
+        {
+            await Task.WhenAny(Media.SettledAsync(), Task.Delay(TurnImagesWait, _services.Time, waited.Token));
+            await waited.CancelAsync();
+        }
+        // In the order the conversation last showed them, as the Media window has them, however long finding a file took.
+        var seen = _turnImages.OrderBy(e => e.Order).ToArray();
+        var since = _turnStartedAt - WriteTimeSlack;
+        return seen.Length == 0 ? ([], 0) : await Task.Run(() => Services.RemoteImageFiles.Made(seen, since));
     }
 }

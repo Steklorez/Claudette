@@ -375,7 +375,7 @@ public sealed class MediaTests
     }
 
     /// <summary>A tool's result that's an image, as an MCP tool's screenshot is.</summary>
-    private static string ImageResult(string toolUseId, string? parent) => new JsonObject
+    internal static string ImageResult(string toolUseId, string? parent) => new JsonObject
     {
         ["type"] = "user",
         ["message"] = new JsonObject

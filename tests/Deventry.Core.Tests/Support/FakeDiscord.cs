@@ -169,8 +169,10 @@ public sealed class FakeDiscord : HttpMessageHandler
                 var name = part.Headers.ContentDisposition?.Name?.Trim('"') ?? "";
                 if (part.Headers.ContentDisposition?.FileName is { } fileName)
                 {
+                    // The last file's name and content, and every file's name and media type, in order.
                     fields["file"] = fileName.Trim('"');
                     fields["file_content"] = Encoding.UTF8.GetString(await part.ReadAsByteArrayAsync(cancellationToken));
+                    ((fields["files"] ??= new JsonArray()) as JsonArray)!.Add($"{fileName.Trim('"')} {part.Headers.ContentType?.MediaType}");
                 }
                 else if (name == "payload_json" && JsonNode.Parse(await part.ReadAsStringAsync(cancellationToken)) is JsonObject payload)
                 {

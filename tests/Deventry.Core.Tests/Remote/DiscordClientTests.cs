@@ -406,6 +406,27 @@ public sealed class DiscordClientTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_turns_images_follow_its_message_in_one_message_replying_to_it_silently()
+    {
+        _desk.SendImages.Add(DiscordClient.ClientKind);
+        await StartAsync();
+
+        _desk.Raise(new RemoteTurnFinished(_desk.Tabs[0], null, null, "Drew the charts.", [])
+        {
+            Notice = RemoteNotice.Sound,
+            Images = [new RemoteImage("chart.png", "image/png", [1, 2, 3], 800, 600), new RemoteImage("photo.jpg", "image/jpeg", [4, 5], 800, 600)],
+        });
+
+        var turn = await NextSentAsync(1);
+        var images = await NextSentAsync(2);
+        Assert.Equal("**Grappling hook**: 2 images Claude made", Text(images));
+        Assert.Equal(["chart.png image/png", "photo.jpg image/jpeg"], images.Body["files"]!.AsArray().Select(f => (string)f!));
+        Assert.Equal(["chart.png", "photo.jpg"], images.Body["attachments"]!.AsArray().Select(a => (string)a!["filename"]!));
+        Assert.Equal($"{FakeDiscord.IdOf(turn)}", (string)images.Body["message_reference"]!["message_id"]!);
+        Assert.True(Silent(images));
+    }
+
+    [Fact]
     public async Task A_reply_longer_than_a_message_comes_as_a_Markdown_file()
     {
         _desk.LastReply = new RemoteReply("t1", "Grappling hook", string.Join("\n", Enumerable.Repeat("A long line of the reply.", 200)), _clock.GetUtcNow());

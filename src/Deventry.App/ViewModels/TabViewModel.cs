@@ -2353,6 +2353,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // sent, Continue after a usage limit) sees a turn under way.
                 UpdateStatus();
                 _turnsStarted++;
+                StartTurnImages();
                 HasMcpServers = started.Init.McpServerCount > 0;
                 if (State.SessionId != started.Init.SessionId)
                 {

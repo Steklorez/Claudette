@@ -15,7 +15,7 @@ Each way in is a *remote client*: a Telegram bot, or a Discord bot on your own D
 
 Settings has a group for them, **Remote clients**, at the end of its sidebar: **All clients** for what they all share, then a page for each: **Telegram** and **Discord**.
 
-{% include shot.html name="guide/away/remote-clients" alt="Settings on Remote clients → Telegram, before a bot is set up: The bot, with Use a Telegram bot off and a note in yellow that Telegram can read bot chats; Bot, with No bot yet and Set token…; and Paired with, with No account is paired yet and Pair an account… disabled. The sidebar's last group, Remote clients, has All clients, then Telegram and Discord, each marked Off." %}
+{% include shot.html name="guide/away/remote-clients" alt="Settings on Remote clients → Telegram, before a bot is set up: The bot, with Use a Telegram bot off and a note in yellow that Telegram can read bot chats; Bot, with No bot yet and Set token…; Paired with, with No account is paired yet and Pair an account… disabled; and below, Images, with Send the images Claude makes and the start of its note in yellow that the images go to a service Deventry doesn't control. The sidebar's last group, Remote clients, has All clients, then Telegram and Discord, each marked Off." %}
 
 ## Not the Claude app
 
@@ -49,7 +49,7 @@ You make the bot in Discord's Developer Portal, once, as an app that goes on you
 
 Deventry keeps the token only in your computer's credential store, as it does Telegram's. Under **Bot**, Settings shows the bot's name and whether it's **Connected**. Discord itself shows the bot offline even then: it shows someone's status only to people who share a server with them, and the bot is in none.
 
-{% include shot.html name="guide/away/remote-clients-discord" alt="Settings on Remote clients → Discord, before a bot is set up: The bot, with Use a Discord bot off and a note in yellow that Discord can read direct messages; Bot, with No bot yet, how to make one in the Developer Portal, and Set token…; and Paired with, with Pair an account… disabled." %}
+{% include shot.html name="guide/away/remote-clients-discord" alt="Settings on Remote clients → Discord, before a bot is set up: The bot, with Use a Discord bot off and a note in yellow that Discord can read direct messages; Bot, with No bot yet, how to make one in the Developer Portal, and Set token…; Paired with, with Pair an account… disabled; and below, Images, with Send the images Claude makes and the start of its note in yellow." %}
 
 ### What the app needs
 
@@ -107,6 +107,19 @@ When a prompt is answered, anywhere, its message loses its buttons and says how:
 Some cards can only be answered at the desk: an MCP server's form, whether to trust a folder, signing in and continuing under another account. Their messages say *Answer this at the desk.*
 
 Buttons belong to the Deventry that sent them. After Deventry restarts, an old button says so and loses its buttons; `/tabs` gives you new ones.
+
+## Images Claude makes
+
+{% include unreleased.html %}
+
+A bot can send you the images a turn made, after the turn's message, so you see the screenshot a browser tool took or the chart a script drew without going back to the desk. It's off for each bot until you turn it on: Settings → Remote clients → **Telegram** or **Discord** → **Images** → **Send the images Claude makes**.
+
+Above the switch, a note in yellow says what turning it on means: the images go to Telegram's or Discord's servers, which Deventry doesn't control, and stay in the chat; Deventry can't take them back. A screenshot shows whatever was on the screen or the page Claude captured, your code and anything private in it included.
+
+- **Which images.** Those Claude and its subagents made in the turn: a tool's screenshot or picture, and an image file written during the turn, such as a PNG Claude wrote or a chart a command drew. Not an image Claude only read or named that was already there. They're the images the tab's [Media](../conversation/media.md) window gains under **Agent**, less those.
+- **How they come.** Under the turn's message, as a reply to it and without a sound of their own: one as a photo, several as an album in Telegram, or one message in Discord, with the tab's name and *3 images Claude made*. Up to ten from a turn; past that, the message says how many more there are, and they're in the tab's Media window. Reply to them to send the tab a message, as with any of its messages.
+- **When.** Only with a finished turn's message, so only when that message comes ([When messages come](#when-messages-come)). Never while **What they say** is **Just what happened**.
+- **What kinds.** PNG, JPEG, GIF (its first frame), WebP and BMP, made smaller if they're more than 4,096 pixels across or 10 MB. Telegram sends a picture too tall or wide for a photo, such as a whole page's screenshot, as a file.
 
 ## Talking to a tab
 
@@ -179,9 +192,25 @@ Settings → Remote clients → All clients → **What they can do** sets it for
 
 Some things are only at the desk, whatever you choose: saving an **Always allow** rule, changing a tab's mode, model, account or settings, rewinding, closing a tab, and an MCP server's form.
 
+## Keeping a tab from them
+
+{% include unreleased.html %}
+
+For a tab whose work shouldn't leave your computer, such as a client's project or a session with secrets in it, right-click it and check **Keep from remote clients**, in the menu's **Other devices** section. Your bots then hear nothing of it and can't reach it, as if it weren't open:
+
+- None of its prompts, finished turns, errors or images are sent.
+- It isn't in `/tabs`, `/to` or `/stop`.
+- Anything you ask of it from your phone, such as replying to one of its old messages, is refused: *That tab is kept from remote clients: use it at the desk.*
+
+When you check it, its messages already in the chat lose their buttons and say *Kept from remote clients now: use it at the desk.* Uncheck it to let your bots have it again; a prompt still waiting there is sent then.
+
+The tab keeps the choice after Deventry restarts, and a copy of the tab has it too. It changes nothing at the desk, and it isn't the Claude app's [Remote Control](the-claude-app.md), which each tab turns on for itself.
+
 ## Privacy
 
 Telegram can read bot chats, and Discord its direct messages: neither is end-to-end encrypted. So the service sees what the bot sends you: your tabs' and projects' names, Claude's replies, and the commands and files Claude asks about. Settings says so beside each switch.
+
+Images go only if you turn on a bot's **Send the images Claude makes** ([Images Claude makes](#images-claude-makes)), and the service sees them too. A tab you keep from remote clients sends nothing at all ([Keeping a tab from them](#keeping-a-tab-from-them)).
 
 To send less, set All clients → **What they say** to **Just what happened**: messages then say only the tab's name and what happened (*Grappling hook needs you.*), with no reply, command, path or file name. A prompt's message has **Show**, which sends that prompt's details and buttons when you ask. See [What leaves this computer](../privacy/what-leaves-this-computer.md).
 
@@ -197,6 +226,8 @@ All this computer's: none of them sync.
 |---|---|---|
 | **Use a Telegram bot** | Off | Settings → Remote clients → Telegram |
 | **Use a Discord bot** | Off | Settings → Remote clients → Discord |
+| **Send the images Claude makes** | Off | Settings → Remote clients → Telegram or Discord |
+| **Keep from remote clients** | Off, for each tab | The tab's menu |
 | **Remote clients can** | Watch, answer, send messages and stop Claude | Settings → Remote clients → All clients |
 | **Open new tabs** | Off | Settings → Remote clients → All clients |
 | A tab needs permission or an answer; finishes its turn; its Claude Code stops with an error; usage alerts | On | Settings → Remote clients → All clients |

@@ -110,5 +110,17 @@
         </StackPanel>
       </c:SettingRow>
     </c:SettingsSection>
+
+    <!-- Images: the switch, under what sending them means, since they leave for a service Deventry doesn't control -->
+    <c:SettingsSection Key="{Binding ImagesSectionKey}">
+      <c:SettingRow Key="{Binding ImagesKey}" IsStacked="True">
+        <StackPanel Spacing="10">
+          <Border Classes="settingsnote caution">
+            <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding ImagesPrivacy}" />
+          </Border>
+          <ToggleSwitch IsChecked="{Binding SendsImages}" HorizontalAlignment="Left" AutomationProperties.Name="{Binding ImagesTitle}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
   </StackPanel>
 </UserControl>

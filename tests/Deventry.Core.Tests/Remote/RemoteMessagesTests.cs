@@ -74,4 +74,11 @@ public class RemoteMessagesTests
         Assert.Equal(["Session: 42% used, resets at 15:00", "Week: 18% used", "Studio: $3.20 today"], RemoteMessages.Usage(usage, now, TimeZoneInfo.Utc));
         Assert.Single(RemoteMessages.Usage(RemoteUsage.None, now, TimeZoneInfo.Utc));
     }
+
+    [Theory]
+    [InlineData(1, 0, "Claude", "The image Claude made")]
+    [InlineData(3, 0, "Claude", "3 images Claude made")]
+    [InlineData(10, 4, "Codex", "10 of the 14 images Codex made. The rest are in the tab's Media window.")]
+    public void A_turns_images_say_how_many_and_whose(int sent, int leftOut, string agent, string expected) =>
+        Assert.Equal(expected, RemoteMessages.Images(sent, leftOut, agent));
 }

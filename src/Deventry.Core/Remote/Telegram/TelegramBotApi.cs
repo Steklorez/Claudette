@@ -10,7 +10,7 @@ namespace Deventry.Core.Remote.Telegram;
 /// <summary>
 /// The Telegram Bot API requests Deventry makes (DESIGN.md §18, "Remote clients", "Telegram"): <c>getMe</c>,
 /// <c>getUpdates</c>, <c>sendMessage</c>, <c>editMessageText</c>, <c>editMessageReplyMarkup</c>,
-/// <c>answerCallbackQuery</c>, <c>sendDocument</c>, <c>setMyCommands</c>, <c>getWebhookInfo</c> and
+/// <c>answerCallbackQuery</c>, <c>sendDocument</c>, <c>sendPhoto</c>, <c>sendMediaGroup</c>, <c>setMyCommands</c>, <c>getWebhookInfo</c> and
 /// <c>deleteWebhook</c>. Every address holds the bot's token, so none is ever logged or put in an error: what goes
 /// wrong is a <see cref="TelegramApiException"/> in words without it. Each request's deadline is on the injected
 /// clock.
@@ -139,17 +139,65 @@ public sealed class TelegramBotApi
         await CallAsync("answerCallbackQuery", body, RequestTimeout, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Sends a file, such as a reply too long for a message, as Markdown. Returns its message's id.</summary>
+    /// <summary>Sends a file, such as a reply too long for a message, as Markdown, or an image. Returns its message's id.</summary>
     public async Task<long> SendDocumentAsync(long chatId, string fileName, byte[] content, string? captionHtml = null, long? replyTo = null,
+        bool silent = false, CancellationToken cancellationToken = default, string mediaType = "text/markdown")
+    {
+        using var form = Form(chatId, captionHtml, replyTo, silent);
+        form.Add(File(content, mediaType), "document", fileName);
+        return MessageId(await CallWithContentAsync("sendDocument", form, RequestTimeout, cancellationToken).ConfigureAwait(false));
+    }
+
+    /// <summary>
+    /// Sends images as photos, with the caption under the first: one with <c>sendPhoto</c>, up to ten as an album with
+    /// <c>sendMediaGroup</c>. Each must fit Telegram's limits for a photo (<see cref="FitsPhoto"/>). Returns the first
+    /// message's id.
+    /// </summary>
+    public async Task<long> SendPhotosAsync(long chatId, IReadOnlyList<RemoteImage> images, string? captionHtml = null, long? replyTo = null,
         bool silent = false, CancellationToken cancellationToken = default)
     {
-        using var form = new MultipartFormDataContent
+        if (images.Count == 1)
+        {
+            using var single = Form(chatId, captionHtml, replyTo, silent);
+            single.Add(File(images[0].Data, images[0].MediaType), "photo", images[0].Name);
+            return MessageId(await CallWithContentAsync("sendPhoto", single, UploadTimeout, cancellationToken).ConfigureAwait(false));
+        }
+        using var form = Form(chatId, null, replyTo, silent);
+        var media = new JsonArray();
+        for (var i = 0; i < images.Count; i++)
+        {
+            var part = $"photo{i.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+            var item = new JsonObject { ["type"] = "photo", ["media"] = $"attach://{part}" };
+            if (i == 0 && captionHtml is { Length: > 0 })
+            {
+                item["caption"] = captionHtml;
+                item["parse_mode"] = "HTML";
+            }
+            media.Add(item);
+            form.Add(File(images[i].Data, images[i].MediaType), part, images[i].Name);
+        }
+        form.Add(new StringContent(media.ToJsonString(Json)), "media");
+        var sent = await CallWithContentAsync("sendMediaGroup", form, UploadTimeout, cancellationToken).ConfigureAwait(false);
+        return sent is JsonArray { Count: > 0 } messages ? MessageId(messages[0]) : throw new TelegramApiException("Telegram's answer about the images couldn't be read.");
+    }
+
+    /// <summary>
+    /// Telegram takes an image as a photo only if its width and height come to 10,000 pixels at most and one is no more than
+    /// 20 times the other; one that doesn't, such as a whole page's screenshot, goes as a file.
+    /// </summary>
+    public static bool FitsPhoto(RemoteImage image) =>
+        image is { Width: > 0, Height: > 0 } && image.Width + image.Height <= 10_000 && Math.Max(image.Width, image.Height) <= 20 * Math.Min(image.Width, image.Height);
+
+    /// <summary>How long an upload may take: a phone's album of screenshots is several megabytes.</summary>
+    private static readonly TimeSpan UploadTimeout = TimeSpan.FromMinutes(2);
+
+    /// <summary>A form for a request with a file: the chat, and the caption, the reply and the sound as the message's own.</summary>
+    private static MultipartFormDataContent Form(long chatId, string? captionHtml, long? replyTo, bool silent)
+    {
+        var form = new MultipartFormDataContent
         {
             { new StringContent(chatId.ToString(System.Globalization.CultureInfo.InvariantCulture)), "chat_id" },
         };
-        var file = new ByteArrayContent(content);
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/markdown");
-        form.Add(file, "document", fileName);
         if (captionHtml is { Length: > 0 })
         {
             form.Add(new StringContent(captionHtml), "caption");
@@ -163,7 +211,14 @@ public sealed class TelegramBotApi
         {
             form.Add(new StringContent(new JsonObject { ["message_id"] = reply, ["allow_sending_without_reply"] = true }.ToJsonString()), "reply_parameters");
         }
-        return MessageId(await CallWithContentAsync("sendDocument", form, RequestTimeout, cancellationToken).ConfigureAwait(false));
+        return form;
+    }
+
+    private static ByteArrayContent File(byte[] content, string mediaType)
+    {
+        var file = new ByteArrayContent(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
+        return file;
     }
 
     /// <summary>Puts the commands in Telegram's <b>/</b> menu.</summary>

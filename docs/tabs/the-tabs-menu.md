@@ -52,6 +52,7 @@ In the order the menu has them.
 | **Sync now** | Copies the session to the library straight away. Shown while the tab syncs. | [Syncing a tab](../history/syncing-a-tab.md) |
 | **Connect to the Claude app** | A check item: connects the tab to the Claude app whenever its session runs. Greyed out, with the reason as its tip, when the account can't use it. | [The Claude app](../away/the-claude-app.md) |
 | **Open in the Claude app** | Opens the tab's session in the Claude app. Shown while the tab is connected. | [The Claude app](../away/the-claude-app.md) |
+| **Keep from remote clients** | A check item: your Telegram and Discord bots hear nothing of the tab and can't reach it. | [Keeping a tab from them](../away/remote-clients.md#keeping-a-tab-from-them) |
 
 ### Closing
 

@@ -23,6 +23,9 @@ public sealed class DiscordApi
     /// <summary>A request's deadline.</summary>
     public static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
 
+    /// <summary>A file's deadline: an album of screenshots is several megabytes.</summary>
+    public static readonly TimeSpan UploadTimeout = TimeSpan.FromMinutes(2);
+
     /// <summary>The longest a message's text can be.</summary>
     public const int MessageLimit = 2000;
 
@@ -165,19 +168,43 @@ public sealed class DiscordApi
     }
 
     /// <summary>Sends a file, such as a reply too long for a message, with a caption. Returns its message's id.</summary>
-    public async Task<long> SendFileAsync(long channelId, string fileName, byte[] content, string? caption = null, bool silent = false,
-        CancellationToken cancellationToken = default)
+    public Task<long> SendFileAsync(long channelId, string fileName, byte[] content, string? caption = null, bool silent = false,
+        CancellationToken cancellationToken = default) =>
+        SendFilesAsync(channelId, [(fileName, "text/markdown", content)], caption, null, silent, "sending a file", cancellationToken);
+
+    /// <summary>
+    /// Sends images in one message, which Discord shows in a grid, with a caption, as a reply to <paramref name="replyTo"/>.
+    /// Returns its id.
+    /// </summary>
+    public Task<long> SendImagesAsync(long channelId, IReadOnlyList<RemoteImage> images, string? caption = null, long? replyTo = null, bool silent = false,
+        CancellationToken cancellationToken = default) =>
+        SendFilesAsync(channelId, [.. images.Select(i => (i.Name, i.MediaType, i.Data))], caption, replyTo, silent, "sending images", cancellationToken);
+
+    private async Task<long> SendFilesAsync(long channelId, IReadOnlyList<(string Name, string MediaType, byte[] Content)> files, string? caption, long? replyTo,
+        bool silent, string doing, CancellationToken cancellationToken)
     {
         var payload = MessageBody(caption ?? "", silent);
-        payload["attachments"] = new JsonArray(new JsonObject { ["id"] = 0, ["filename"] = fileName });
+        var attachments = new JsonArray();
+        for (var i = 0; i < files.Count; i++)
+        {
+            attachments.Add(new JsonObject { ["id"] = i, ["filename"] = files[i].Name });
+        }
+        payload["attachments"] = attachments;
+        if (replyTo is { } reply)
+        {
+            payload["message_reference"] = new JsonObject { ["message_id"] = DiscordJson.Id(reply), ["fail_if_not_exists"] = false };
+        }
         using var form = new MultipartFormDataContent
         {
             { new StringContent(payload.ToJsonString(Json), Encoding.UTF8, "application/json"), "payload_json" },
         };
-        var file = new ByteArrayContent(content);
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/markdown");
-        form.Add(file, "files[0]", fileName);
-        return MessageId(await SendAsync(HttpMethod.Post, $"/channels/{DiscordJson.Id(channelId)}/messages", form, "sending a file", auth: true, cancellationToken)
+        for (var i = 0; i < files.Count; i++)
+        {
+            var file = new ByteArrayContent(files[i].Content);
+            file.Headers.ContentType = new MediaTypeHeaderValue(files[i].MediaType);
+            form.Add(file, $"files[{i.ToString(System.Globalization.CultureInfo.InvariantCulture)}]", files[i].Name);
+        }
+        return MessageId(await SendAsync(HttpMethod.Post, $"/channels/{DiscordJson.Id(channelId)}/messages", form, doing, auth: true, cancellationToken, UploadTimeout)
             .ConfigureAwait(false));
     }
 
@@ -295,9 +322,11 @@ public sealed class DiscordApi
 
     /// <summary>Makes a request, and gives back its answer, or throws why not.</summary>
     /// <param name="what">What it does, for an error: "sending a message". Never the route, which can hold an interaction's token.</param>
-    private async Task<JsonNode?> SendAsync(HttpMethod method, string route, HttpContent? content, string what, bool auth, CancellationToken cancellationToken)
+    /// <param name="timeout">Its deadline: <see cref="RequestTimeout"/>, or <see cref="UploadTimeout"/> for files.</param>
+    private async Task<JsonNode?> SendAsync(HttpMethod method, string route, HttpContent? content, string what, bool auth, CancellationToken cancellationToken,
+        TimeSpan? timeout = null)
     {
-        using var deadline = new CancellationTokenSource(RequestTimeout, _time);
+        using var deadline = new CancellationTokenSource(timeout ?? RequestTimeout, _time);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
         using var request = new HttpRequestMessage(method, $"{_baseUrl}{route}") { Content = content };
         request.Headers.UserAgent.ParseAdd(_userAgent);

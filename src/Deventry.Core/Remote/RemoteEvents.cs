@@ -25,8 +25,12 @@ public abstract record RemoteEvent
 /// <summary>A tab's status, what it's doing or its name changed.</summary>
 public sealed record RemoteTabChanged(RemoteTab Tab) : RemoteEvent;
 
-/// <summary>A tab closed.</summary>
-public sealed record RemoteTabClosed(string TabId, string Name) : RemoteEvent;
+/// <summary>A tab closed, or the user kept it from remote clients: either way, it's gone from them.</summary>
+public sealed record RemoteTabClosed(string TabId, string Name) : RemoteEvent
+{
+    /// <summary>It's open still, but kept from remote clients (<b>Keep from remote clients</b>, in its menu).</summary>
+    public bool Kept { get; init; }
+}
 
 /// <summary>
 /// A prompt is waiting. Raised again for the prompts already waiting when the user goes away, so walking off with one
@@ -57,7 +61,17 @@ public sealed record RemotePromptClosed(string TabId, string PromptId, RemotePro
 /// <param name="Tasks">Where the task list stands, when the turn changed it: "3 of 5 tasks done".</param>
 /// <param name="Reply">The reply, as Markdown; null when it had none.</param>
 /// <param name="Files">The files the turn changed.</param>
-public sealed record RemoteTurnFinished(RemoteTab Tab, TimeSpan? Took, string? Tasks, string? Reply, IReadOnlyList<RemoteFileChange> Files) : RemoteEvent;
+public sealed record RemoteTurnFinished(RemoteTab Tab, TimeSpan? Took, string? Tasks, string? Reply, IReadOnlyList<RemoteFileChange> Files) : RemoteEvent
+{
+    /// <summary>
+    /// The images the turn made, up to <see cref="RemoteImage.MostPerTurn"/>, for the clients that send them
+    /// (<see cref="IRemoteDesk.SendsImages"/>). Empty when none does, so nothing is read for nobody.
+    /// </summary>
+    public IReadOnlyList<RemoteImage> Images { get; init; } = [];
+
+    /// <summary>How many more it made than <see cref="Images"/> holds: they're in the tab's Media window.</summary>
+    public int ImagesLeftOut { get; init; }
+}
 
 /// <summary>A tab's agent stopped with an error, or couldn't start, or needs a sign-in.</summary>
 public sealed record RemoteTabFailed(RemoteTab Tab, string Message, bool NeedsSignIn = false) : RemoteEvent;

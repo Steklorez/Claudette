@@ -322,6 +322,49 @@ public sealed partial class MediaGallery : ObservableObject
     /// <summary>Shows a path in a tile's tooltip: inside the tab's folder from there, else in full.</summary>
     public Func<string, string>? ShownPath { get; set; }
 
+    /// <summary>
+    /// Called on the UI thread for each image the agent showed live, Claude's or a subagent's, as it's put in the gallery:
+    /// the tab keeps the ones a turn made for the remote clients (DESIGN.md §18, "Remote clients", "Images").
+    /// </summary>
+    public Action<MediaEntry>? AgentImageSeen { get; set; }
+
+    private readonly Lock _findingLock = new();
+    private int _finding;
+    private TaskCompletionSource? _settled;
+
+    /// <summary>
+    /// Completes once every file named so far has been looked for, and put in the gallery if it was found: what a reply
+    /// names is looked for after the reply is whole, so a turn's end waits for it.
+    /// </summary>
+    internal Task SettledAsync()
+    {
+        lock (_findingLock)
+        {
+            return _finding == 0 ? Task.CompletedTask : (_settled ??= new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously)).Task;
+        }
+    }
+
+    private void StartFinding()
+    {
+        lock (_findingLock)
+        {
+            _finding++;
+        }
+    }
+
+    private void DoneFinding()
+    {
+        TaskCompletionSource? settled = null;
+        lock (_findingLock)
+        {
+            if (--_finding == 0)
+            {
+                (settled, _settled) = (_settled, null);
+            }
+        }
+        settled?.TrySetResult();
+    }
+
     /// <summary>The section for <paramref name="source"/>.</summary>
     public MediaSection SectionOf(MediaSource source) => source == MediaSource.User ? User : Agent;
 
@@ -457,6 +500,7 @@ public sealed partial class MediaGallery : ObservableObject
             {
                 continue;
             }
+            StartFinding();
             _ = AddFoundAsync(finding, source, origin, item, at, first - i, generation, live);
         }
     }
@@ -471,22 +515,40 @@ public sealed partial class MediaGallery : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or OperationCanceledException)
         {
+            Post(DoneFinding);
             return;
         }
         if (path is null || MediaFiles.KindOf(path) is not { } kind)
         {
+            Post(DoneFinding);
             return;
         }
         Post(() =>
         {
-            if (generation != _generation)
+            try
             {
-                return;
+                if (generation != _generation)
+                {
+                    return;
+                }
+                var entry = new MediaEntry(kind, System.IO.Path.GetFileName(path), origin, path, null, item, at, PathKey(path), order);
+                if (!Put(source, entry, live) || kind != MediaKind.Image)
+                {
+                    return;
+                }
+                if (ViewerImages.HasExtension(path) && ThumbnailOfFile is { } make)
+                {
+                    MakeThumbnail(entry, () => make(path));
+                }
+                if (source == MediaSource.Agent && live)
+                {
+                    AgentImageSeen?.Invoke(entry);
+                }
             }
-            var entry = new MediaEntry(kind, System.IO.Path.GetFileName(path), origin, path, null, item, at, PathKey(path), order);
-            if (Put(source, entry, live) && kind == MediaKind.Image && ViewerImages.HasExtension(path) && ThumbnailOfFile is { } make)
+            finally
             {
-                MakeThumbnail(entry, () => make(path));
+                // After the entry's in, so a turn's end waiting for it sees it.
+                DoneFinding();
             }
         });
     }
@@ -506,6 +568,10 @@ public sealed partial class MediaGallery : ObservableObject
         else
         {
             entry.Thumbnail = image.Image.Data;
+        }
+        if (source == MediaSource.Agent && live)
+        {
+            AgentImageSeen?.Invoke(entry);
         }
     }
 

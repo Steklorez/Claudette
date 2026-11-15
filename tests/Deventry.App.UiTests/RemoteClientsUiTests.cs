@@ -81,11 +81,17 @@ public class RemoteClientsUiTests
             h.Services.SaveSettings();
             UiText.Settle(window);
 
-            var note = window.GetVisualDescendants().OfType<Border>().Single(b => b.Classes.Contains("settingsnote") && b.Classes.Contains("caution"));
-            Assert.True(note.IsEffectivelyVisible);
-            Assert.Equal(Brush(window, "CautionBackgroundBrush"), Assert.IsAssignableFrom<ISolidColorBrush>(note.Background).Color);
-            Assert.Equal(Brush(window, "CautionBorderBrush"), Assert.IsAssignableFrom<ISolidColorBrush>(note.BorderBrush).Color);
-            Assert.Contains("aren't end-to-end encrypted", note.GetVisualDescendants().OfType<TextBlock>().Single().Text);
+            // What the bot shares, and above Send the images Claude makes, that the images go to a service Deventry doesn't control.
+            var notes = window.GetVisualDescendants().OfType<Border>().Where(b => b.Classes.Contains("settingsnote") && b.Classes.Contains("caution")).ToList();
+            Assert.Equal(2, notes.Count);
+            foreach (var note in notes)
+            {
+                Assert.True(note.IsEffectivelyVisible);
+                Assert.Equal(Brush(window, "CautionBackgroundBrush"), Assert.IsAssignableFrom<ISolidColorBrush>(note.Background).Color);
+                Assert.Equal(Brush(window, "CautionBorderBrush"), Assert.IsAssignableFrom<ISolidColorBrush>(note.BorderBrush).Color);
+                Assert.Contains("aren't end-to-end encrypted", note.GetVisualDescendants().OfType<TextBlock>().Single().Text);
+            }
+            Assert.Contains("a service Deventry doesn't control", notes[1].GetVisualDescendants().OfType<TextBlock>().Single().Text);
         }
         finally
         {

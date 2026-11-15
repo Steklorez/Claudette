@@ -29,6 +29,8 @@ public sealed partial class TabViewModel
         // What's cleared stays cleared with the tab (DESIGN.md §18, "Media", "Clearing").
         Media.Cleared = State.ClearedMedia;
         Media.ClearedChanged = _services.SaveState;
+        // The images a turn makes go to the remote clients that send them (DESIGN.md §18, "Remote clients", "Images").
+        Media.AgentImageSeen = OnAgentImageSeen;
     }
 
     /// <summary>

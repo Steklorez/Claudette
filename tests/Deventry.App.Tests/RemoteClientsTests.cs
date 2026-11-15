@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
@@ -181,6 +182,51 @@ public class RemoteClientsTests
         Assert.Equal(RemoteResult.No($"{remote.Tab.DisplayName} isn't working."), await remote.Desk.StopAsync(remote.Tab.Id, "Telegram", Ct));
     }
 
+    // ---- Keeping a tab from them ------------------------------------------------------------------------------------
+
+    private static void ToggleKeep(Remote remote) => remote.H.OnUiThread(() => remote.Tab.ToggleKeepFromRemoteClientsCommand.Execute(null));
+
+    [Fact]
+    public async Task A_tab_kept_from_remote_clients_is_gone_from_them_until_it_is_let_go()
+    {
+        await using var remote = await StartAsync();
+        var waiting = await PromptAsync(remote);
+
+        ToggleKeep(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTabClosed>().Count == 1, "the tab to go");
+        Assert.True(remote.Client.Of<RemoteTabClosed>()[0].Kept);
+        Assert.True(InlineDispatcher.Read(() => remote.Tab.KeepsFromRemoteClients && remote.Tab.State.KeepFromRemoteClients));
+        Assert.Empty(await remote.Desk.GetTabsAsync(Ct));
+        Assert.Equal(RemoteResult.No(RemoteMessages.TabKept),
+            await remote.Desk.AnswerAsync(remote.Tab.Id, waiting.Prompt.Id, RemotePrompt.OptionIds.Allow, null, "Telegram", Ct));
+        Assert.Equal(RemoteResult.No(RemoteMessages.TabKept), await remote.Desk.SendAsync(remote.Tab.Id, "hello", "Telegram", Ct));
+        Assert.Null(await remote.Desk.GetLastReplyAsync(remote.Tab.Id, Ct));
+
+        // Let go, it's back, with the prompt still waiting there.
+        ToggleKeep(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemotePromptWaiting>().Count == 2, "the prompt again");
+        Assert.Equal(waiting.Prompt.Id, remote.Client.Of<RemotePromptWaiting>()[1].Prompt.Id);
+        Assert.Single(await remote.Desk.GetTabsAsync(Ct));
+    }
+
+    [Fact]
+    public async Task A_kept_tabs_turns_reach_no_client()
+    {
+        await using var remote = await StartAsync();
+        ToggleKeep(remote);
+
+        remote.H.Transport.EmitTurn("A private turn.");
+        await TabTestHarness.Eventually(() => remote.Tab.Items.OfType<TurnSummaryItem>().Count() == 1 && remote.Tab.IsSettled, "the kept turn's end");
+        ToggleKeep(remote);
+        remote.H.Transport.EmitTurn("A turn to share.");
+
+        // The clients hear of the second turn; the first would have come before it.
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the second turn's end");
+        Assert.Equal("A turn to share.", remote.Client.Of<RemoteTurnFinished>()[0].Reply);
+    }
+
     [Fact]
     public async Task A_closed_tab_is_gone_for_the_client()
     {
@@ -306,6 +352,72 @@ public class RemoteClientsTests
         Assert.Equal("The rope swings now.\nDetails follow.", turn.Reply);
         Assert.Equal(RemoteNotice.Sound, turn.Notice);
         Assert.Equal("The rope swings now.\nDetails follow.", (await remote.Desk.GetLastReplyAsync(remote.Tab.Id, Ct))?.Markdown);
+    }
+
+    /// <summary>
+    /// A turn that reads an image that was there before, writes a chart and takes a screenshot, then ends: one
+    /// <c>system/init</c> at its start, as Claude Code sends.
+    /// </summary>
+    private static void EmitTurnWithImages(Remote remote)
+    {
+        var h = remote.H;
+        var before = WriteFile(h, "shots/before.png", TestImages.Png);
+        File.SetLastWriteTimeUtc(before, h.Time.GetUtcNow().UtcDateTime.AddDays(-1));
+        h.Transport.Emit(Wire.Init());
+        var chart = WriteFile(h, "out/chart.png", TestImages.Png);
+        File.SetLastWriteTimeUtc(chart, h.Time.GetUtcNow().UtcDateTime.AddMinutes(1));
+        h.Transport.Emit(Wire.Tool(null, "t1", "Read", new JsonObject { ["file_path"] = before }));
+        h.Transport.Emit(Wire.Result("t1", "Read the image."));
+        h.Transport.Emit(Wire.Tool(null, "t2", "Write", new JsonObject { ["file_path"] = chart, ["content"] = "" }));
+        h.Transport.Emit(Wire.Result("t2", "File created"));
+        h.Transport.Emit(Wire.Tool(null, "t3", "mcp__playwright__browser_take_screenshot", []));
+        h.Transport.Emit(MediaTests.ImageResult("t3", parent: null));
+        h.Transport.Emit(Wire.Text(null, "The chart is in `out/chart.png`, beside `shots/before.png`."));
+        h.Transport.Emit(new JsonObject { ["type"] = "result", ["subtype"] = "success", ["is_error"] = false, ["result"] = "The chart is drawn.", ["session_id"] = "s1" });
+    }
+
+    private static string WriteFile(TabTestHarness h, string relative, byte[] data)
+    {
+        var path = Path.Combine(h.WorkFolder, relative.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, data);
+        return path;
+    }
+
+    [Fact]
+    public async Task A_turns_images_reach_a_client_that_sends_them_but_not_one_it_only_read()
+    {
+        await using var remote = await StartAsync(s => s.RemoteClients.SetSendImages("telegram", true));
+        Assert.True(remote.Desk.SendsImages("telegram"));
+
+        EmitTurnWithImages(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the turn's end");
+        var turn = remote.Client.Of<RemoteTurnFinished>()[0];
+        // The screenshot, and the chart it wrote, which the reply named last; not the image it read, which the reply named too.
+        Assert.Equal(["Image.png", "chart.png"], turn.Images.Select(i => i.Name));
+        Assert.All(turn.Images, i =>
+        {
+            Assert.Equal("image/png", i.MediaType);
+            Assert.Equal(TestImages.Png, i.Data);
+        });
+        Assert.Equal(0, turn.ImagesLeftOut);
+    }
+
+    [Fact]
+    public async Task No_images_are_read_while_no_client_sends_them_or_the_messages_say_just_what_happened()
+    {
+        await using var remote = await StartAsync(s =>
+        {
+            s.RemoteClients.SetSendImages("telegram", true);
+            s.RemoteClients.Detail = RemoteDetail.JustWhatHappened;
+        });
+        Assert.False(remote.Desk.SendsImages("telegram"));
+
+        EmitTurnWithImages(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the turn's end");
+        Assert.Empty(remote.Client.Of<RemoteTurnFinished>()[0].Images);
     }
 
     [Fact]

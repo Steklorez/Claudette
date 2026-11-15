@@ -560,6 +560,13 @@ public abstract partial class ChatBotClient
     /// <summary>Sends a file, with a caption as the service writes it. Returns its message's id.</summary>
     protected abstract Task<long> DeliverFileAsync(long chat, string fileName, byte[] content, string caption, bool silent, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Sends images, up to <see cref="RemoteImage.MostPerTurn"/>, as one album where the service has them, with a caption
+    /// as the service writes it, as a reply to <paramref name="replyTo"/>. Returns the first message's id.
+    /// </summary>
+    protected abstract Task<long> DeliverImagesAsync(long chat, IReadOnlyList<RemoteImage> images, string caption, long? replyTo, bool silent,
+        CancellationToken cancellationToken);
+
     /// <summary>Answers a tap, with a short note only its sender sees when there's one.</summary>
     protected abstract Task AnswerTapAsync(ChatTap tap, string? text, CancellationToken cancellationToken);
 

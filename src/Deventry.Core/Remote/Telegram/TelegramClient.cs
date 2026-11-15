@@ -238,6 +238,26 @@ public sealed class TelegramClient : ChatBotClient
     protected override Task<long> DeliverFileAsync(long chat, string fileName, byte[] content, string caption, bool silent, CancellationToken cancellationToken) =>
         _api.SendDocumentAsync(chat, fileName, content, caption, silent: silent, cancellationToken: cancellationToken);
 
+    /// <summary>
+    /// The images as one album of photos, with the caption under it; one too tall or wide for a photo, such as a whole
+    /// page's screenshot, goes as a file after it.
+    /// </summary>
+    protected override async Task<long> DeliverImagesAsync(long chat, IReadOnlyList<RemoteImage> images, string caption, long? replyTo, bool silent,
+        CancellationToken cancellationToken)
+    {
+        var photos = images.Where(TelegramBotApi.FitsPhoto).ToList();
+        long? first = photos.Count > 0
+            ? await _api.SendPhotosAsync(chat, photos, caption, replyTo, silent, cancellationToken).ConfigureAwait(false)
+            : null;
+        foreach (var file in images.Where(i => !TelegramBotApi.FitsPhoto(i)))
+        {
+            var id = await _api.SendDocumentAsync(chat, file.Name, file.Data, first is null ? caption : null, replyTo, silent, cancellationToken, file.MediaType)
+                .ConfigureAwait(false);
+            first ??= id;
+        }
+        return first ?? throw new TelegramApiException("There were no images to send.");
+    }
+
     protected override Task AnswerTapAsync(ChatTap tap, string? text, CancellationToken cancellationToken) =>
         _api.AnswerCallbackAsync(tap.Id, text, cancellationToken);
 

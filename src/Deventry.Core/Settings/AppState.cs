@@ -382,6 +382,12 @@ public sealed class TabState
     public bool RemoteControl { get; set; }
 
     /// <summary>
+    /// <b>Keep from remote clients</b>, in the tab's menu (DESIGN.md §18, "Remote clients", "Keeping a tab from them"):
+    /// the clients hear nothing of this tab and can't reach it. Off unless the user chose it; a copy of the tab keeps it.
+    /// </summary>
+    public bool KeepFromRemoteClients { get; set; }
+
+    /// <summary>
     /// Claude finished a turn in the tab and the user hasn't opened it since (DESIGN.md §4, "Sidebar"), kept so the
     /// sidebar still says so after Deventry restarts, when the tab comes back not started.
     /// </summary>
