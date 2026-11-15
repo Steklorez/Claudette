@@ -236,6 +236,21 @@ public sealed class TelegramClientTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_tab_kept_from_remote_clients_takes_its_prompts_buttons_away_and_says_so()
+    {
+        await StartAsync();
+        _desk.Raise(new RemotePromptWaiting(_desk.Tabs[0], FakeRemoteDesk.Command()) { Notice = RemoteNotice.Sound });
+        await NextSentAsync(1);
+
+        _desk.Raise(new RemoteTabClosed("t1", "Grappling hook") { Kept = true });
+
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Count == 1, "the edit");
+        var edit = _telegram.Of("editMessageText").Single();
+        Assert.EndsWith("<i>Kept from remote clients now: use it at the desk.</i>", (string)edit["text"]!);
+        Assert.Null(edit["reply_markup"]);
+    }
+
+    [Fact]
     public async Task Deny_with_a_message_asks_for_the_words_and_the_next_message_is_them()
     {
         await StartAsync();

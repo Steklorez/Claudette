@@ -182,6 +182,51 @@ public class RemoteClientsTests
         Assert.Equal(RemoteResult.No($"{remote.Tab.DisplayName} isn't working."), await remote.Desk.StopAsync(remote.Tab.Id, "Telegram", Ct));
     }
 
+    // ---- Keeping a tab from them ------------------------------------------------------------------------------------
+
+    private static void ToggleKeep(Remote remote) => remote.H.OnUiThread(() => remote.Tab.ToggleKeepFromRemoteClientsCommand.Execute(null));
+
+    [Fact]
+    public async Task A_tab_kept_from_remote_clients_is_gone_from_them_until_it_is_let_go()
+    {
+        await using var remote = await StartAsync();
+        var waiting = await PromptAsync(remote);
+
+        ToggleKeep(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTabClosed>().Count == 1, "the tab to go");
+        Assert.True(remote.Client.Of<RemoteTabClosed>()[0].Kept);
+        Assert.True(InlineDispatcher.Read(() => remote.Tab.KeepsFromRemoteClients && remote.Tab.State.KeepFromRemoteClients));
+        Assert.Empty(await remote.Desk.GetTabsAsync(Ct));
+        Assert.Equal(RemoteResult.No(RemoteMessages.TabKept),
+            await remote.Desk.AnswerAsync(remote.Tab.Id, waiting.Prompt.Id, RemotePrompt.OptionIds.Allow, null, "Telegram", Ct));
+        Assert.Equal(RemoteResult.No(RemoteMessages.TabKept), await remote.Desk.SendAsync(remote.Tab.Id, "hello", "Telegram", Ct));
+        Assert.Null(await remote.Desk.GetLastReplyAsync(remote.Tab.Id, Ct));
+
+        // Let go, it's back, with the prompt still waiting there.
+        ToggleKeep(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemotePromptWaiting>().Count == 2, "the prompt again");
+        Assert.Equal(waiting.Prompt.Id, remote.Client.Of<RemotePromptWaiting>()[1].Prompt.Id);
+        Assert.Single(await remote.Desk.GetTabsAsync(Ct));
+    }
+
+    [Fact]
+    public async Task A_kept_tabs_turns_reach_no_client()
+    {
+        await using var remote = await StartAsync();
+        ToggleKeep(remote);
+
+        remote.H.Transport.EmitTurn("A private turn.");
+        await TabTestHarness.Eventually(() => remote.Tab.Items.OfType<TurnSummaryItem>().Count() == 1 && remote.Tab.IsSettled, "the kept turn's end");
+        ToggleKeep(remote);
+        remote.H.Transport.EmitTurn("A turn to share.");
+
+        // The clients hear of the second turn; the first would have come before it.
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the second turn's end");
+        Assert.Equal("A turn to share.", remote.Client.Of<RemoteTurnFinished>()[0].Reply);
+    }
+
     [Fact]
     public async Task A_closed_tab_is_gone_for_the_client()
     {

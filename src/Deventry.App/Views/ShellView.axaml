@@ -1036,6 +1036,12 @@
                                       <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPhone}" /></MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem Header="Open in the Claude app" Command="{Binding RemoteControl.OpenInClaudeAppCommand}" IsVisible="{Binding RemoteControl.HasUrl}" />
+                                    <!-- Remote clients hear nothing of the tab, and can't reach it (DESIGN.md §18, "Remote clients", "Keeping a tab from them") -->
+                                    <MenuItem Header="Keep from remote clients" ToggleType="CheckBox" IsChecked="{Binding KeepsFromRemoteClients, Mode=OneWay}"
+                                              Command="{Binding ToggleKeepFromRemoteClientsCommand}"
+                                              ToolTip.Tip="Telegram and Discord hear nothing of this tab, its turns, prompts or images, and can't send to it, answer it or stop it">
+                                      <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettingsRemoteClients}" /></MenuItem.Icon>
+                                    </MenuItem>
                                     <Separator />
                                     <MenuItem Header="Close" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseTabCommand}" CommandParameter="{Binding}">
                                       <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconClose}" /></MenuItem.Icon>
@@ -1523,6 +1529,12 @@
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPhone}" /></MenuItem.Icon>
                               </MenuItem>
                               <MenuItem Header="Open in the Claude app" Command="{Binding RemoteControl.OpenInClaudeAppCommand}" IsVisible="{Binding RemoteControl.HasUrl}" />
+                              <!-- Remote clients hear nothing of the tab, and can't reach it (DESIGN.md §18, "Remote clients", "Keeping a tab from them") -->
+                              <MenuItem Header="Keep from remote clients" ToggleType="CheckBox" IsChecked="{Binding KeepsFromRemoteClients, Mode=OneWay}"
+                                        Command="{Binding ToggleKeepFromRemoteClientsCommand}"
+                                        ToolTip.Tip="Telegram and Discord hear nothing of this tab, its turns, prompts or images, and can't send to it, answer it or stop it">
+                                <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconSettingsRemoteClients}" /></MenuItem.Icon>
+                              </MenuItem>
                               <Separator />
                               <MenuItem Header="Close" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).CloseTabCommand}" CommandParameter="{Binding}">
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconClose}" /></MenuItem.Icon>

@@ -20,6 +20,21 @@ public sealed partial class TabViewModel
 
     private Services.RemoteClientsService Remote => _services.RemoteClients;
 
+    /// <summary>
+    /// <b>Keep from remote clients</b>, in the tab's menu (DESIGN.md §18, "Remote clients", "Keeping a tab from them"):
+    /// the clients hear nothing of this tab, its turns, prompts and images, and can't reach it.
+    /// </summary>
+    public bool KeepsFromRemoteClients => State.KeepFromRemoteClients;
+
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void ToggleKeepFromRemoteClients()
+    {
+        State.KeepFromRemoteClients = !State.KeepFromRemoteClients;
+        _services.SaveState();
+        OnPropertyChanged(nameof(KeepsFromRemoteClients));
+        Remote.OnKeepFromRemoteClientsChanged(this);
+    }
+
     /// <summary>This tab now, for a client; <paramref name="project"/> is its group's name.</summary>
     /// <param name="withPrompt">With the prompt waiting, which reads the conversation: not for what changes as it works.</param>
     internal RemoteTab ToRemote(string project, bool withPrompt = true) => new()
@@ -424,7 +439,7 @@ public sealed partial class TabViewModel
     /// </summary>
     private void TellRemoteTurnFinished(ResultMessage result)
     {
-        if (!Remote.IsActive)
+        if (!Remote.IsActive || KeepsFromRemoteClients)
         {
             return;
         }

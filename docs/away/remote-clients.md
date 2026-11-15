@@ -192,11 +192,25 @@ Settings → Remote clients → All clients → **What they can do** sets it for
 
 Some things are only at the desk, whatever you choose: saving an **Always allow** rule, changing a tab's mode, model, account or settings, rewinding, closing a tab, and an MCP server's form.
 
+## Keeping a tab from them
+
+{% include unreleased.html %}
+
+For a tab whose work shouldn't leave your computer, such as a client's project or a session with secrets in it, right-click it and check **Keep from remote clients**, in the menu's **Other devices** section. Your bots then hear nothing of it and can't reach it, as if it weren't open:
+
+- None of its prompts, finished turns, errors or images are sent.
+- It isn't in `/tabs`, `/to` or `/stop`.
+- Anything you ask of it from your phone, such as replying to one of its old messages, is refused: *That tab is kept from remote clients: use it at the desk.*
+
+When you check it, its messages already in the chat lose their buttons and say *Kept from remote clients now: use it at the desk.* Uncheck it to let your bots have it again; a prompt still waiting there is sent then.
+
+The tab keeps the choice after Deventry restarts, and a copy of the tab has it too. It changes nothing at the desk, and it isn't the Claude app's [Remote Control](the-claude-app.md), which each tab turns on for itself.
+
 ## Privacy
 
 Telegram can read bot chats, and Discord its direct messages: neither is end-to-end encrypted. So the service sees what the bot sends you: your tabs' and projects' names, Claude's replies, and the commands and files Claude asks about. Settings says so beside each switch.
 
-Images go only if you turn on a bot's **Send the images Claude makes** ([Images Claude makes](#images-claude-makes)), and the service sees them too.
+Images go only if you turn on a bot's **Send the images Claude makes** ([Images Claude makes](#images-claude-makes)), and the service sees them too. A tab you keep from remote clients sends nothing at all ([Keeping a tab from them](#keeping-a-tab-from-them)).
 
 To send less, set All clients → **What they say** to **Just what happened**: messages then say only the tab's name and what happened (*Grappling hook needs you.*), with no reply, command, path or file name. A prompt's message has **Show**, which sends that prompt's details and buttons when you ask. See [What leaves this computer](../privacy/what-leaves-this-computer.md).
 
@@ -213,6 +227,7 @@ All this computer's: none of them sync.
 | **Use a Telegram bot** | Off | Settings → Remote clients → Telegram |
 | **Use a Discord bot** | Off | Settings → Remote clients → Discord |
 | **Send the images Claude makes** | Off | Settings → Remote clients → Telegram or Discord |
+| **Keep from remote clients** | Off, for each tab | The tab's menu |
 | **Remote clients can** | Watch, answer, send messages and stop Claude | Settings → Remote clients → All clients |
 | **Open new tabs** | Off | Settings → Remote clients → All clients |
 | A tab needs permission or an answer; finishes its turn; its Claude Code stops with an error; usage alerts | On | Settings → Remote clients → All clients |

@@ -25,8 +25,12 @@ public abstract record RemoteEvent
 /// <summary>A tab's status, what it's doing or its name changed.</summary>
 public sealed record RemoteTabChanged(RemoteTab Tab) : RemoteEvent;
 
-/// <summary>A tab closed.</summary>
-public sealed record RemoteTabClosed(string TabId, string Name) : RemoteEvent;
+/// <summary>A tab closed, or the user kept it from remote clients: either way, it's gone from them.</summary>
+public sealed record RemoteTabClosed(string TabId, string Name) : RemoteEvent
+{
+    /// <summary>It's open still, but kept from remote clients (<b>Keep from remote clients</b>, in its menu).</summary>
+    public bool Kept { get; init; }
+}
 
 /// <summary>
 /// A prompt is waiting. Raised again for the prompts already waiting when the user goes away, so walking off with one

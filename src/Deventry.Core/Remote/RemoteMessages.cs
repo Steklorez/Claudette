@@ -121,6 +121,12 @@ public static class RemoteMessages
 
     public static string TabGone => "That tab is closed.";
 
+    /// <summary>What a client is told of a tab the user kept from remote clients, when it asks to do something there.</summary>
+    public static string TabKept => "That tab is kept from remote clients: use it at the desk.";
+
+    /// <summary>The line a kept tab's messages end with, losing their buttons.</summary>
+    public static string NowKept => "Kept from remote clients now: use it at the desk.";
+
     public static string Status(RemoteTabStatus status) => status switch
     {
         RemoteTabStatus.NotStarted => "Not started",

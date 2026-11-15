@@ -470,16 +470,16 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         }
     }
 
-    /// <summary>The tabs, each with its group's name, in the sidebar's order.</summary>
+    /// <summary>The tabs the clients know, each with its group's name, in the sidebar's order: not those kept from them.</summary>
     private IEnumerable<(TabViewModel Tab, string Project)> Tabs() =>
-        _shell is null ? [] : _shell.Groups.SelectMany(g => g.Tabs.Select(t => (t, g.Label)));
+        _shell is null ? [] : _shell.Groups.SelectMany(g => g.Tabs.Where(t => !t.KeepsFromRemoteClients).Select(t => (t, g.Label)));
 
     private string ProjectOf(TabViewModel tab) =>
         _shell?.Groups.FirstOrDefault(g => g.Tabs.Contains(tab)) is { } group ? group.Label : tab.FolderName;
 
     internal void OnTabChanged(TabViewModel tab)
     {
-        if (IsActive)
+        if (IsActive && !tab.KeepsFromRemoteClients)
         {
             Raise(new RemoteTabChanged(tab.ToRemote(ProjectOf(tab), withPrompt: false)));
         }
@@ -487,7 +487,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
 
     internal void OnTabClosed(TabViewModel tab)
     {
-        if (IsActive)
+        if (IsActive && !tab.KeepsFromRemoteClients)
         {
             Raise(new RemoteTabClosed(tab.Id, tab.DisplayName));
         }
@@ -495,7 +495,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
 
     internal void OnPromptWaiting(TabViewModel tab, RemotePrompt prompt)
     {
-        if (IsActive)
+        if (IsActive && !tab.KeepsFromRemoteClients)
         {
             Raise(new RemotePromptWaiting(tab.ToRemote(ProjectOf(tab)), prompt) { Notice = NoticeFor(Settings.NeedsInput) });
         }
@@ -504,7 +504,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
     internal void OnPromptClosed(TabViewModel tab, string promptId, RemotePromptEnd how, string outcome, string? client)
     {
         tab.RememberClosed(promptId, how, client);
-        if (IsActive)
+        if (IsActive && !tab.KeepsFromRemoteClients)
         {
             Raise(new RemotePromptClosed(tab.Id, promptId, how, outcome, client, _services.Time.GetUtcNow()));
         }
@@ -514,7 +514,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
     internal void OnTurnFinished(TabViewModel tab, TimeSpan? took, string? tasks, string? reply, IReadOnlyList<RemoteFileChange> files,
         IReadOnlyList<RemoteImage>? images = null, int leftOut = 0)
     {
-        if (IsActive)
+        if (IsActive && !tab.KeepsFromRemoteClients)
         {
             Raise(new RemoteTurnFinished(tab.ToRemote(ProjectOf(tab)), took, tasks, reply, files)
             {
@@ -527,7 +527,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
 
     internal void OnTabFailed(TabViewModel tab, string message, bool needsSignIn)
     {
-        if (IsActive)
+        if (IsActive && !tab.KeepsFromRemoteClients)
         {
             Raise(new RemoteTabFailed(tab.ToRemote(ProjectOf(tab)), message, needsSignIn) { Notice = NoticeFor(Settings.ProcessErrors) });
         }
@@ -544,7 +544,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         {
             Raise(new RemoteUsageAlert(title, body) { Notice = NoticeFor(Settings.UsageAlerts) });
         }
-        else if (kind == NotificationKind.ProjectAction)
+        else if (kind == NotificationKind.ProjectAction && (tabId is null || Find(tabId) is not null))
         {
             Raise(new RemoteProjectAction(tabId, title, body) { Notice = NoticeFor(Settings.ProjectActions) });
         }
@@ -650,7 +650,35 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         }, cancellationToken).ConfigureAwait(false);
     }
 
-    private TabViewModel? Find(string tabId) => _shell?.AllTabs.FirstOrDefault(t => t.Id == tabId);
+    /// <summary>The tab with <paramref name="tabId"/>, unless it's closed or kept from remote clients.</summary>
+    private TabViewModel? Find(string tabId) => _shell?.AllTabs.FirstOrDefault(t => t.Id == tabId && !t.KeepsFromRemoteClients);
+
+    /// <summary>Why a tab a client names can't be reached: kept from remote clients, or closed.</summary>
+    private string WhyNot(string tabId) =>
+        _shell?.AllTabs.Any(t => t.Id == tabId) == true ? RemoteMessages.TabKept : RemoteMessages.TabGone;
+
+    /// <summary>
+    /// The user kept <paramref name="tab"/> from remote clients, or let them have it again: the clients drop it, and its
+    /// messages say so; or they hear of it again, with the prompts waiting there.
+    /// </summary>
+    internal void OnKeepFromRemoteClientsChanged(TabViewModel tab)
+    {
+        if (!IsActive)
+        {
+            return;
+        }
+        if (tab.KeepsFromRemoteClients)
+        {
+            Raise(new RemoteTabClosed(tab.Id, tab.DisplayName) { Kept = true });
+            return;
+        }
+        var remote = tab.ToRemote(ProjectOf(tab));
+        Raise(new RemoteTabChanged(remote));
+        foreach (var prompt in tab.RemotePrompts())
+        {
+            Raise(new RemotePromptWaiting(remote, prompt) { Notice = NoticeFor(Settings.NeedsInput) });
+        }
+    }
 
     /// <summary>Does <paramref name="work"/> to a tab on the UI thread, if remote clients may, and says why not otherwise.</summary>
     private Task<RemoteResult> WithTabAsync(string tabId, RemoteAction action, Func<TabViewModel, Task<RemoteResult>> work, CancellationToken cancellationToken)
@@ -659,7 +687,7 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         {
             return Task.FromResult(RemoteResult.No(RemoteAccess.Refusal(action)));
         }
-        return OnUiAsync(async () => Find(tabId) is { } tab ? await work(tab).ConfigureAwait(true) : RemoteResult.No(RemoteMessages.TabGone), cancellationToken);
+        return OnUiAsync(async () => Find(tabId) is { } tab ? await work(tab).ConfigureAwait(true) : RemoteResult.No(WhyNot(tabId)), cancellationToken);
     }
 
     private Task<T> OnUiAsync<T>(Func<T> work, CancellationToken cancellationToken) => OnUiAsync(() => Task.FromResult(work()), cancellationToken);

@@ -94,11 +94,21 @@ public abstract partial class ChatBotClient
         {
             _targets.Remove(chat);
         }
+        var line = Format.Italic(closed.Kept ? RemoteMessages.NowKept : "The tab closed.");
         if (_live.Remove(closed.TabId, out var live))
         {
             _timers.Remove($"live:{closed.TabId}", out var timer);
             timer?.Dispose();
-            await EditAsync(live.Chat, live.Message, $"{live.Heading}\n{Format.Italic("The tab closed.")}", null, cancellationToken).ConfigureAwait(false);
+            await EditAsync(live.Chat, live.Message, $"{live.Heading}\n{line}", null, cancellationToken).ConfigureAwait(false);
+        }
+        // Its prompts still waiting lose their buttons: they're answered at the desk now.
+        foreach (var key in _promptMessages.Keys.Where(k => k.StartsWith(PromptKey(closed.TabId, ""), StringComparison.Ordinal)).ToArray())
+        {
+            _promptMessages.Remove(key, out var messages);
+            foreach (var (chat, message, text) in messages ?? [])
+            {
+                await EditAsync(chat, message, $"{text}\n\n{line}", null, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
