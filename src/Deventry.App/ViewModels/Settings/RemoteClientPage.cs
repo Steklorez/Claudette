@@ -51,6 +51,12 @@ public sealed partial class RemoteClientPage : SettingsPage, IDisposable
             Info($"state.remoteClients.{kind}.paired", "Paired with", "Only these accounts are answered; anyone else gets no answer at all.",
                 keywords: ["pair", "phone", "qr", "unpair", "account"]),
         ]);
+        Section(ImagesSectionKey, "Images",
+        [
+            Setting(ImagesKey, ImagesTitle, s => s.RemoteClients.SendsImages(kind), (s, v) => s.RemoteClients.SetSendImages(kind, v),
+                "When a turn ends, the images Claude and its subagents made in it follow its message: a screenshot or another tool's picture, or an image file written during the turn, such as a chart a script drew. Not one Claude only read, and none while All clients → What they say is Just what happened.",
+                keywords: ["image", "images", "screenshot", "picture", "photo", "chart", "media"]),
+        ]);
         _pairingTicker = new UiTicker(Services.Time, Services.Dispatcher, TimeSpan.FromSeconds(1), OnPairingTick);
         Remote.Changed += OnRemoteChanged;
         RefreshAccounts();
@@ -136,6 +142,26 @@ public sealed partial class RemoteClientPage : SettingsPage, IDisposable
     }
 
     public string SwitchTitle => Type.SwitchTitle;
+
+    // ---- Images (DESIGN.md §18, "Remote clients", "Images") ----------------------------------------------------------
+
+    /// <summary>The images section's key, and its switch's in <c>settings.json</c>: <c>remoteClients.clients.telegram.sendImages</c>.</summary>
+    public string ImagesSectionKey => $"{Kind}Images";
+
+    public string ImagesKey => $"remoteClients.clients.{Kind}.sendImages";
+
+    public string ImagesTitle => "Send the images Claude makes";
+
+    /// <summary><b>Send the images Claude makes</b>, off by default.</summary>
+    public bool SendsImages
+    {
+        get => Settings.RemoteClients.SendsImages(Kind);
+        set => Set(value, v => Settings.RemoteClients.SetSendImages(Kind, v));
+    }
+
+    /// <summary>What sending images means, in the caution colors above its switch: they leave for a service Deventry doesn't control.</summary>
+    public string ImagesPrivacy =>
+        $"This sends data to {Type.Name}, a service Deventry doesn't control. The images go to {Type.Name}'s servers, where they aren't end-to-end encrypted, and stay in the chat as long as {Type.Name} keeps it; Deventry can't take them back. A screenshot shows whatever was on the screen or the page Claude captured, your code and anything private in it included.";
 
     public string Privacy => Type.Privacy;
 

@@ -19,6 +19,11 @@ internal sealed class FakeRemoteDesk : IRemoteDesk
 
     public void SetQuiet(DateTimeOffset? until) => QuietUntil = until;
 
+    /// <summary>The kinds of client that send a turn's images.</summary>
+    public HashSet<string> SendImages { get; } = [];
+
+    public bool SendsImages(string kind) => SendImages.Contains(kind) && Detail == RemoteDetail.Everything;
+
     public List<RemoteTab> Tabs { get; set; } = [];
 
     public RemoteReply? LastReply { get; set; }

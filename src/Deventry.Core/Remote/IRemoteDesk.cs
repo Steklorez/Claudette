@@ -48,6 +48,12 @@ public interface IRemoteDesk
     /// <summary>Holds messages until <paramref name="until"/>, or lets them go again with null.</summary>
     void SetQuiet(DateTimeOffset? until);
 
+    /// <summary>
+    /// The client of <paramref name="kind"/> sends the images a turn made after its message, as its page in Settings says
+    /// (<b>Send the images Claude makes</b>, off by default); never while <see cref="Detail"/> is just what happened.
+    /// </summary>
+    bool SendsImages(string kind);
+
     /// <summary>Something happened. Raised on the UI thread: handlers queue their work and return.</summary>
     event Action<RemoteEvent>? EventRaised;
 

@@ -67,6 +67,17 @@ public static class RemoteMessages
 
     public static string Stopped(string tab) => $"{tab} stopped with an error.";
 
+    /// <summary>
+    /// What the images a turn made say, after the tab's name: "The image Claude made", "3 images Claude made", or with
+    /// more than one album holds, "10 of the 14 images Claude made. The rest are in the tab's Media window."
+    /// </summary>
+    public static string Images(int sent, int leftOut, string agent = "Claude") => (sent, leftOut) switch
+    {
+        (1, 0) => $"The image {agent} made",
+        (_, 0) => $"{sent} images {agent} made",
+        _ => $"{sent} of the {sent + leftOut} images {agent} made. The rest are in the tab's Media window.",
+    };
+
     // ---- The desk ---------------------------------------------------------------------------------------------------
 
     public static string Paired(string machine) => $"Paired with Deventry on {machine}.";

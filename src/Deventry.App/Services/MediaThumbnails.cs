@@ -31,12 +31,23 @@ public static class MediaThumbnails
 
     private static byte[]? Make(SKCodec? codec)
     {
+        using var image = Decode(codec, MaxWidth, MaxHeight);
+        using var png = image?.Encode(SKEncodedImageFormat.Png, 100);
+        return png?.ToArray();
+    }
+
+    /// <summary>
+    /// The image <paramref name="codec"/> reads, its first frame for an animated one, scaled down to fit
+    /// <paramref name="maxWidth"/> by <paramref name="maxHeight"/> and never up; null when it can't be decoded.
+    /// </summary>
+    internal static SKImage? Decode(SKCodec? codec, int maxWidth, int maxHeight)
+    {
         if (codec is null || codec.Info.Width <= 0 || codec.Info.Height <= 0)
         {
             return null;
         }
         var (width, height) = (codec.Info.Width, codec.Info.Height);
-        var scale = Math.Min(1f, Math.Min((float)MaxWidth / width, (float)MaxHeight / height));
+        var scale = Math.Min(1f, Math.Min((float)maxWidth / width, (float)maxHeight / height));
         // A JPEG or WebP decodes smaller itself; the rest decode whole and are scaled after.
         var decoded = codec.GetScaledDimensions(scale);
         var info = new SKImageInfo(decoded.Width, decoded.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -49,8 +60,6 @@ public static class MediaThumbnails
         using var scaled = target.Width == decoded.Width && target.Height == decoded.Height
             ? null
             : bitmap.Resize(target, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
-        using var image = SKImage.FromBitmap(scaled ?? bitmap);
-        using var png = image?.Encode(SKEncodedImageFormat.Png, 100);
-        return png?.ToArray();
+        return SKImage.FromBitmap(scaled ?? bitmap);
     }
 }

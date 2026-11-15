@@ -57,7 +57,17 @@ public sealed record RemotePromptClosed(string TabId, string PromptId, RemotePro
 /// <param name="Tasks">Where the task list stands, when the turn changed it: "3 of 5 tasks done".</param>
 /// <param name="Reply">The reply, as Markdown; null when it had none.</param>
 /// <param name="Files">The files the turn changed.</param>
-public sealed record RemoteTurnFinished(RemoteTab Tab, TimeSpan? Took, string? Tasks, string? Reply, IReadOnlyList<RemoteFileChange> Files) : RemoteEvent;
+public sealed record RemoteTurnFinished(RemoteTab Tab, TimeSpan? Took, string? Tasks, string? Reply, IReadOnlyList<RemoteFileChange> Files) : RemoteEvent
+{
+    /// <summary>
+    /// The images the turn made, up to <see cref="RemoteImage.MostPerTurn"/>, for the clients that send them
+    /// (<see cref="IRemoteDesk.SendsImages"/>). Empty when none does, so nothing is read for nobody.
+    /// </summary>
+    public IReadOnlyList<RemoteImage> Images { get; init; } = [];
+
+    /// <summary>How many more it made than <see cref="Images"/> holds: they're in the tab's Media window.</summary>
+    public int ImagesLeftOut { get; init; }
+}
 
 /// <summary>A tab's agent stopped with an error, or couldn't start, or needs a sign-in.</summary>
 public sealed record RemoteTabFailed(RemoteTab Tab, string Message, bool NeedsSignIn = false) : RemoteEvent;

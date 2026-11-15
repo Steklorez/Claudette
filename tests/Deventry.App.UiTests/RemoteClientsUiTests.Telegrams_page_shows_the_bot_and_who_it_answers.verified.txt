@@ -20,3 +20,13 @@
 "Paired today at 12:00"
 [button] Unpair Matt (@reapazor): Unpair…
 [button] Pair an account…
+"Images"
+[button] Reset to defaults
+"Send the images Claude makes"
+"When a turn ends, the images Claude and its subagents made in it follow its message: a screenshot or another tool's picture, or an image file written during the turn, such as a chart a script drew. Not one Claude only read, and none while All clients → What they say is Just what happened."
+"This sends data to Telegram, a service Deventry doesn't control. The images go to Telegram's servers, where they aren't end-to-end encrypted, and stay in the chat as long as Telegram keeps it; Deventry can't take them back. A screenshot shows whatever was on the screen or the page Claude captured, your code and anything private in it included."
+[toggle] Send the images Claude makes
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

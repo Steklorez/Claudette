@@ -138,7 +138,7 @@ public sealed class FakeTelegram : HttpMessageHandler
         }
         var method = path[prefix.Length..];
         var body = await Body(request, cancellationToken);
-        if (method is "sendMessage" or "sendDocument")
+        if (method is "sendMessage" or "sendDocument" or "sendPhoto" or "sendMediaGroup")
         {
             // The id it's answered with, for a test to reply to it.
             body["_message_id"] = Interlocked.Increment(ref _nextMessage);
@@ -167,7 +167,13 @@ public sealed class FakeTelegram : HttpMessageHandler
                 return answer();
             case "sendMessage":
             case "sendDocument":
+            case "sendPhoto":
                 return Ok(new JsonObject { ["message_id"] = (long)body["_message_id"]!, ["chat"] = new JsonObject { ["id"] = 0, ["type"] = "private" }, ["date"] = 0 });
+            case "sendMediaGroup":
+                // An album is a message for each image, the first with the id kept.
+                return Ok(new JsonArray(
+                    new JsonObject { ["message_id"] = (long)body["_message_id"]!, ["chat"] = new JsonObject { ["id"] = 0, ["type"] = "private" }, ["date"] = 0 },
+                    new JsonObject { ["message_id"] = Interlocked.Increment(ref _nextMessage), ["chat"] = new JsonObject { ["id"] = 0, ["type"] = "private" }, ["date"] = 0 }));
             default:
                 return Ok(true);
         }
@@ -184,6 +190,7 @@ public sealed class FakeTelegram : HttpMessageHandler
                 if (part.Headers.ContentDisposition?.FileName is { } fileName)
                 {
                     fields[name] = fileName.Trim('"');
+                    fields[$"{name}_type"] = part.Headers.ContentType?.MediaType;
                     fields["content"] = Encoding.UTF8.GetString(await part.ReadAsByteArrayAsync(cancellationToken));
                 }
                 else

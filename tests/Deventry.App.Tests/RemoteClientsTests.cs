@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.App.Tests.Support;
@@ -306,6 +307,72 @@ public class RemoteClientsTests
         Assert.Equal("The rope swings now.\nDetails follow.", turn.Reply);
         Assert.Equal(RemoteNotice.Sound, turn.Notice);
         Assert.Equal("The rope swings now.\nDetails follow.", (await remote.Desk.GetLastReplyAsync(remote.Tab.Id, Ct))?.Markdown);
+    }
+
+    /// <summary>
+    /// A turn that reads an image that was there before, writes a chart and takes a screenshot, then ends: one
+    /// <c>system/init</c> at its start, as Claude Code sends.
+    /// </summary>
+    private static void EmitTurnWithImages(Remote remote)
+    {
+        var h = remote.H;
+        var before = WriteFile(h, "shots/before.png", TestImages.Png);
+        File.SetLastWriteTimeUtc(before, h.Time.GetUtcNow().UtcDateTime.AddDays(-1));
+        h.Transport.Emit(Wire.Init());
+        var chart = WriteFile(h, "out/chart.png", TestImages.Png);
+        File.SetLastWriteTimeUtc(chart, h.Time.GetUtcNow().UtcDateTime.AddMinutes(1));
+        h.Transport.Emit(Wire.Tool(null, "t1", "Read", new JsonObject { ["file_path"] = before }));
+        h.Transport.Emit(Wire.Result("t1", "Read the image."));
+        h.Transport.Emit(Wire.Tool(null, "t2", "Write", new JsonObject { ["file_path"] = chart, ["content"] = "" }));
+        h.Transport.Emit(Wire.Result("t2", "File created"));
+        h.Transport.Emit(Wire.Tool(null, "t3", "mcp__playwright__browser_take_screenshot", []));
+        h.Transport.Emit(MediaTests.ImageResult("t3", parent: null));
+        h.Transport.Emit(Wire.Text(null, "The chart is in `out/chart.png`, beside `shots/before.png`."));
+        h.Transport.Emit(new JsonObject { ["type"] = "result", ["subtype"] = "success", ["is_error"] = false, ["result"] = "The chart is drawn.", ["session_id"] = "s1" });
+    }
+
+    private static string WriteFile(TabTestHarness h, string relative, byte[] data)
+    {
+        var path = Path.Combine(h.WorkFolder, relative.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, data);
+        return path;
+    }
+
+    [Fact]
+    public async Task A_turns_images_reach_a_client_that_sends_them_but_not_one_it_only_read()
+    {
+        await using var remote = await StartAsync(s => s.RemoteClients.SetSendImages("telegram", true));
+        Assert.True(remote.Desk.SendsImages("telegram"));
+
+        EmitTurnWithImages(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the turn's end");
+        var turn = remote.Client.Of<RemoteTurnFinished>()[0];
+        // The screenshot, and the chart it wrote, which the reply named last; not the image it read, which the reply named too.
+        Assert.Equal(["Image.png", "chart.png"], turn.Images.Select(i => i.Name));
+        Assert.All(turn.Images, i =>
+        {
+            Assert.Equal("image/png", i.MediaType);
+            Assert.Equal(TestImages.Png, i.Data);
+        });
+        Assert.Equal(0, turn.ImagesLeftOut);
+    }
+
+    [Fact]
+    public async Task No_images_are_read_while_no_client_sends_them_or_the_messages_say_just_what_happened()
+    {
+        await using var remote = await StartAsync(s =>
+        {
+            s.RemoteClients.SetSendImages("telegram", true);
+            s.RemoteClients.Detail = RemoteDetail.JustWhatHappened;
+        });
+        Assert.False(remote.Desk.SendsImages("telegram"));
+
+        EmitTurnWithImages(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the turn's end");
+        Assert.Empty(remote.Client.Of<RemoteTurnFinished>()[0].Images);
     }
 
     [Fact]

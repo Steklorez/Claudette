@@ -9,6 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - **A third look, Codex.** Settings → Appearance → **Style** → **Codex** takes after the ChatGPT and Codex apps, in light and dark: white and neutral greys, OpenAI's blue for the accent, the Send button and Claude's replies, your messages grey and the files a turn changed green, waiting prompts and alerts in OpenAI's orange, and replies in your system's font, with the Claude style's rounder cards and big composer. See [Styles and themes](https://deventry.app/settings/styles-and-themes/#style).
+- **See the images Claude makes on your phone.** Turn on Settings → Remote clients → **Telegram** or **Discord** → **Send the images Claude makes**, and when a turn ends, the screenshots and pictures Claude's tools took and the image files it wrote or drew in that turn follow the turn's message, as a photo or an album, up to ten at a time. Images Claude only read aren't sent. Off for each bot until you turn it on, and the note above the switch says what it means: the images go to Telegram's or Discord's servers, which Deventry doesn't control. See [Images Claude makes](https://deventry.app/away/remote-clients/#images-claude-makes).
 
 ## [1.1.0] - 2026-11-14
 

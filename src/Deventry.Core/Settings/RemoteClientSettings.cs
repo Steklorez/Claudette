@@ -24,6 +24,19 @@ public sealed class RemoteClientSettings
         client.Enabled = on;
     }
 
+    /// <summary>The client of <paramref name="kind"/> sends the images a turn made: off unless turned on.</summary>
+    public bool SendsImages(string kind) => Clients.TryGetValue(kind, out var client) && client.SendImages;
+
+    /// <summary>Turns sending images on or off for the client of <paramref name="kind"/>.</summary>
+    public void SetSendImages(string kind, bool on)
+    {
+        if (!Clients.TryGetValue(kind, out var client))
+        {
+            Clients[kind] = client = new RemoteClientTypeSettings();
+        }
+        client.SendImages = on;
+    }
+
     /// <summary>Any client is on.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public bool AnyEnabled => Clients.Values.Any(c => c.Enabled);
@@ -66,6 +79,9 @@ public sealed class RemoteClientSettings
 public sealed class RemoteClientTypeSettings
 {
     public bool Enabled { get; set; }
+
+    /// <summary><b>Send the images Claude makes</b>: after a turn's message, the images the turn made. Off by default.</summary>
+    public bool SendImages { get; set; }
 }
 
 /// <summary>What the remote clients keep in <c>state.json</c>: the paired accounts and the bot's name.</summary>

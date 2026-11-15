@@ -354,6 +354,87 @@ public sealed class TelegramClientTests : IAsyncLifetime
         Assert.Equal(["Whole reply", "Changed files"], FakeTelegram.Buttons(sent).Select(b => b.Text));
     }
 
+    private static RemoteImage Image(string name, int width = 800, int height = 600) => new(name, "image/png", [1, 2, 3], width, height);
+
+    private RemoteTurnFinished TurnWithImages(params RemoteImage[] images) =>
+        new(_desk.Tabs[0], null, null, "Drew the charts.", []) { Notice = RemoteNotice.Sound, Images = images };
+
+    [Fact]
+    public async Task A_turns_images_follow_its_message_as_an_album_replying_to_it_silently()
+    {
+        _desk.SendImages.Add(TelegramClient.ClientKind);
+        await StartAsync();
+
+        _desk.Raise(TurnWithImages(Image("chart.png"), Image("Screenshot.png")));
+
+        var turn = await NextSentAsync(1);
+        await Waiting.UntilAsync(() => _telegram.Of("sendMediaGroup").Count == 1, "the album");
+        var album = _telegram.Of("sendMediaGroup").Single();
+        Assert.Equal("chart.png", (string)album["photo0"]!);
+        Assert.Equal("image/png", (string)album["photo0_type"]!);
+        Assert.Equal("Screenshot.png", (string)album["photo1"]!);
+        var media = JsonNode.Parse((string)album["media"]!)!.AsArray();
+        Assert.Equal("attach://photo0", (string)media[0]!["media"]!);
+        Assert.Equal("<b>Grappling hook</b>: 2 images Claude made", (string)media[0]!["caption"]!);
+        Assert.Null(media[1]!["caption"]);
+        Assert.Equal("true", (string)album["disable_notification"]!);
+        Assert.Equal(FakeTelegram.IdOf(turn), (long)JsonNode.Parse((string)album["reply_parameters"]!)!["message_id"]!);
+    }
+
+    [Fact]
+    public async Task One_image_is_a_photo_and_one_too_tall_for_a_photo_comes_as_a_file()
+    {
+        _desk.SendImages.Add(TelegramClient.ClientKind);
+        await StartAsync();
+
+        _desk.Raise(TurnWithImages(Image("chart.png"), Image("whole-page.png", 400, 9000)));
+
+        await NextSentAsync(1);
+        await Waiting.UntilAsync(() => _telegram.Of("sendDocument").Count == 1, "the file");
+        var photo = _telegram.Of("sendPhoto").Single();
+        Assert.Equal("chart.png", (string)photo["photo"]!);
+        Assert.Equal("<b>Grappling hook</b>: 2 images Claude made", (string)photo["caption"]!);
+        var file = _telegram.Of("sendDocument").Single();
+        Assert.Equal("whole-page.png", (string)file["document"]!);
+        Assert.Equal("image/png", (string)file["document_type"]!);
+        Assert.Null(file["caption"]);
+        Assert.Empty(_telegram.Of("sendMediaGroup"));
+    }
+
+    [Fact]
+    public async Task More_images_than_an_album_holds_say_where_the_rest_are()
+    {
+        _desk.SendImages.Add(TelegramClient.ClientKind);
+        await StartAsync();
+
+        _desk.Raise(TurnWithImages(Image("a.png")) with { ImagesLeftOut = 4 });
+
+        await NextSentAsync(1);
+        await Waiting.UntilAsync(() => _telegram.Of("sendPhoto").Count == 1, "the photo");
+        Assert.Equal("<b>Grappling hook</b>: 1 of the 5 images Claude made. The rest are in the tab's Media window.", (string)_telegram.Of("sendPhoto")[0]["caption"]!);
+    }
+
+    [Theory]
+    [InlineData(false, RemoteDetail.Everything)]
+    [InlineData(true, RemoteDetail.JustWhatHappened)]
+    public async Task Images_go_only_when_the_client_sends_them_and_the_messages_say_everything(bool sendImages, RemoteDetail detail)
+    {
+        if (sendImages)
+        {
+            _desk.SendImages.Add(TelegramClient.ClientKind);
+        }
+        _desk.Detail = detail;
+        await StartAsync();
+
+        _desk.Raise(TurnWithImages(Image("chart.png")));
+
+        await NextSentAsync(1);
+        await _client.WhenIdleAsync().WaitAsync(Waiting.Timeout, TestContext.Current.CancellationToken);
+        Assert.Empty(_telegram.Of("sendPhoto"));
+        Assert.Empty(_telegram.Of("sendMediaGroup"));
+        Assert.Empty(_telegram.Of("sendDocument"));
+    }
+
     [Fact]
     public async Task A_reply_longer_than_a_message_comes_as_a_Markdown_file()
     {

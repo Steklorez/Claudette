@@ -325,6 +325,11 @@ public sealed class DiscordClient : ChatBotClient
     protected override Task<long> DeliverFileAsync(long chat, string fileName, byte[] content, string caption, bool silent, CancellationToken cancellationToken) =>
         _api.SendFileAsync(chat, fileName, content, caption, silent, cancellationToken);
 
+    /// <summary>The images in one message, which Discord shows in a grid, with the caption over them.</summary>
+    protected override Task<long> DeliverImagesAsync(long chat, IReadOnlyList<RemoteImage> images, string caption, long? replyTo, bool silent,
+        CancellationToken cancellationToken) =>
+        _api.SendImagesAsync(chat, images, caption, replyTo, silent, cancellationToken);
+
     /// <summary>The tap was taken already; a note follows it, which only its sender sees.</summary>
     protected override Task AnswerTapAsync(ChatTap tap, string? text, CancellationToken cancellationToken) =>
         text is { Length: > 0 } && tap.Token is { } token

@@ -510,11 +510,18 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
         }
     }
 
-    internal void OnTurnFinished(TabViewModel tab, TimeSpan? took, string? tasks, string? reply, IReadOnlyList<RemoteFileChange> files)
+    /// <param name="images">The images the turn made, when <see cref="WantsImages"/>; <paramref name="leftOut"/> more are in its Media window.</param>
+    internal void OnTurnFinished(TabViewModel tab, TimeSpan? took, string? tasks, string? reply, IReadOnlyList<RemoteFileChange> files,
+        IReadOnlyList<RemoteImage>? images = null, int leftOut = 0)
     {
         if (IsActive)
         {
-            Raise(new RemoteTurnFinished(tab.ToRemote(ProjectOf(tab)), took, tasks, reply, files) { Notice = NoticeFor(Settings.TurnFinished) });
+            Raise(new RemoteTurnFinished(tab.ToRemote(ProjectOf(tab)), took, tasks, reply, files)
+            {
+                Notice = NoticeFor(Settings.TurnFinished),
+                Images = images ?? [],
+                ImagesLeftOut = leftOut,
+            });
         }
     }
 
@@ -552,6 +559,11 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
     public bool CanOpenTabs => Settings.OpenTabs;
 
     public RemoteDetail Detail => Settings.Detail;
+
+    public bool SendsImages(string kind) => Settings.SendsImages(kind) && Settings.Detail == RemoteDetail.Everything;
+
+    /// <summary>A client that's on sends the images a turn made: the tabs find them and read them, which nothing does otherwise.</summary>
+    internal bool WantsImages => _clients.Keys.Any(SendsImages);
 
     public Task<IReadOnlyList<RemoteTab>> GetTabsAsync(CancellationToken cancellationToken = default) =>
         OnUiAsync<IReadOnlyList<RemoteTab>>(() => [.. Tabs().Select(t => t.Tab.ToRemote(t.Project))], cancellationToken);

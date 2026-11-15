@@ -171,7 +171,33 @@ public abstract partial class ChatBotClient
         var detail = Desk.Detail;
         var text = detail == RemoteDetail.JustWhatHappened ? Format.Escape(RemoteMessages.Finished(turn.Tab.Name)) : TurnText(turn);
         var buttons = Rows([MakeButton("Whole reply", new ReplyButton(turn.Tab.Id)), MakeButton("Changed files", new FilesButton(turn.Tab.Id))], 2);
-        await BroadcastAsync(text, buttons, notice == RemoteNotice.Silent, turn.Tab.Id, cancellationToken).ConfigureAwait(false);
+        var sent = await BroadcastAsync(text, buttons, notice == RemoteNotice.Silent, turn.Tab.Id, cancellationToken).ConfigureAwait(false);
+        if (turn.Images.Count > 0 && detail == RemoteDetail.Everything && Desk.SendsImages(Kind))
+        {
+            await SendImagesAsync(sent, turn, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// The images the turn made, after its message in each chat it went to, as a reply to it and silently: the message
+    /// made the sound (DESIGN.md §18, "Remote clients", "Images").
+    /// </summary>
+    private async Task SendImagesAsync(IReadOnlyList<(long Chat, long Message)> sent, RemoteTurnFinished turn, CancellationToken cancellationToken)
+    {
+        var caption = $"{Format.Bold(turn.Tab.Name)}: {Format.Escape(RemoteMessages.Images(turn.Images.Count, turn.ImagesLeftOut, turn.Tab.Agent))}";
+        foreach (var (chat, message) in sent)
+        {
+            try
+            {
+                var id = await PacedAsync(token => DeliverImagesAsync(chat, turn.Images, caption, message, silent: true, token), cancellationToken).ConfigureAwait(false);
+                Activity?.Invoke(RemoteActivity.Sent);
+                Remember(chat, id, turn.Tab.Id);
+            }
+            catch (ChatApiException ex)
+            {
+                _logger.LogWarning("{Client}: couldn't send a turn's images: {Error}", Name, ex.Message);
+            }
+        }
     }
 
     private async Task OnTabFailedAsync(RemoteTabFailed failed, CancellationToken cancellationToken)
