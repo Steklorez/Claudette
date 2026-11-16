@@ -301,8 +301,10 @@ public sealed class UsageTracker : IAsyncDisposable
                 }
                 else
                 {
-                    var theirs = usage.Turns.Where(t => t.Machine != _machineId && (t.AccountId is not null || t.Plan == plan));
+                    var theirs = usage.Turns.Where(t => t.Machine != _machineId && (t.AccountId is not null || t.Plan == plan)).ToList();
                     added.AddRange(Store.ImportTurns(file.SessionId, theirs, usage.Machines, usage.Tabs, keep));
+                    // Their calls, tools' results and events, for the turns of theirs this machine counts (DESIGN.md §18).
+                    Store.ImportDetail(file.SessionId, usage, theirs.Select(t => t.Turn).OfType<string>().ToHashSet(StringComparer.Ordinal), keep);
                 }
                 _sessionFilesRead[file.Path] = (file.Length, file.LastWriteUtc);
             }
@@ -347,8 +349,16 @@ public sealed class UsageTracker : IAsyncDisposable
             var inMain = (main?.Turns ?? []).Select(t => t.Id).ToHashSet(StringComparer.Ordinal);
             var merged = copies.Aggregate(main ?? SessionUsage.Empty, SessionUsageFile.Merge);
             merged = SessionUsageFile.Merge(merged, Store.GetSessionUsage(sessionId, _machineId, machineName));
-            merged = merged with { Turns = [.. merged.Turns.Where(t => t.At > floor)] };
-            return merged.Turns.All(t => inMain.Contains(t.Id)) && merged.Turns.Count == (main?.Turns.Count ?? 0) ? null : SessionUsageFile.Write(merged);
+            merged = merged with
+            {
+                Turns = [.. merged.Turns.Where(t => t.At > floor)],
+                Calls = [.. merged.Calls.Where(c => c.Timestamp > floor)],
+                Steps = [.. merged.Steps.Where(s => s.Timestamp > floor)],
+                Events = [.. merged.Events.Where(e => e.Timestamp > floor)],
+            };
+            var unchanged = merged.Turns.All(t => inMain.Contains(t.Id)) && merged.Turns.Count == (main?.Turns.Count ?? 0)
+                && merged.Calls.Count == (main?.Calls.Count ?? 0) && merged.Steps.Count == (main?.Steps.Count ?? 0) && merged.Events.Count == (main?.Events.Count ?? 0);
+            return unchanged ? null : SessionUsageFile.Write(merged);
         });
     }
 
@@ -373,9 +383,18 @@ public sealed class UsageTracker : IAsyncDisposable
     /// <param name="project">The tab's folder, for usage by project.</param>
     /// <param name="account">The account the tab ran under (DESIGN.md §4, "Accounts"); null for the Default account.</param>
     /// <param name="accountName">That account's name, which other machines match their own accounts by.</param>
-    public void OnTurnCompleted(string tabId, string tabName, TurnCompleted turn, string? project = null, string? account = null, string? accountName = null)
+    /// <param name="turnId">The turn's id, which its card keeps; a new one when not given.</param>
+    /// <param name="index">The turn's number in its tab, as its card says it.</param>
+    public void OnTurnCompleted(string tabId, string tabName, TurnCompleted turn, string? project = null, string? account = null, string? accountName = null,
+        string? turnId = null, int? index = null)
     {
         var records = TurnRecord.From(turn.Usage, turn.Result.SessionId, tabId, _services.Time.GetUtcNow(), project, account);
+        // Its calls, tools' results and compactions, which point to it by its id (DESIGN.md §18, "What's recorded").
+        turnId ??= Guid.NewGuid().ToString("N");
+        var detail = new TurnDetail(
+            CallRecord.From(turn.Calls, turnId, tabId, turn.Result.SessionId),
+            StepRecord.From(turn.Calls, turnId),
+            UsageEvent.From(turn.Calls, turnId, tabId, turn.Result.SessionId));
         // Which plan the Default account's turn used, so only machines on the same one count it (DESIGN.md §6).
         var plan = account is null && _services.RemoteControl.Account is { } signedIn ? UsageSharing.AccountKey(signedIn.Email, signedIn.OrganizationName) : null;
         if (records.Count > 0)
@@ -385,7 +404,16 @@ public sealed class UsageTracker : IAsyncDisposable
                 try
                 {
                     var (projectKey, projectName) = project is null ? default : ProjectOf(project);
-                    Store.AddTurns(records.Select(r => r with { ProjectKey = projectKey, ProjectName = projectName, AccountName = accountName?.Trim(), Plan = plan }));
+                    Store.AddTurns(records.Select(r => r with
+                    {
+                        ProjectKey = projectKey,
+                        ProjectName = projectName,
+                        AccountName = accountName?.Trim(),
+                        Plan = plan,
+                        Turn = turnId,
+                        IdleBefore = turn.Calls.IdleBefore,
+                        Index = index,
+                    }), detail);
                     Store.SetTabName(tabId, tabName);
                     _services.Dispatcher.Post(() =>
                     {
@@ -403,6 +431,25 @@ public sealed class UsageTracker : IAsyncDisposable
             });
         }
         _poller.NotifyTurnCompleted();
+    }
+
+    /// <summary>
+    /// A tab's conversation was cleared: what was in it isn't read by later calls (DESIGN.md §18, "What's recorded").
+    /// </summary>
+    public void OnConversationCleared(string tabId, string? sessionId)
+    {
+        var at = _services.Time.GetUtcNow();
+        WriteHistory(() =>
+        {
+            try
+            {
+                Store.AddEvent(new UsageEvent(tabId, sessionId, null, at, UsageEventKind.Cleared));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Couldn't record a cleared conversation.");
+            }
+        });
     }
 
     /// <summary>A tab's name changed: the history keeps the latest, so the tab's row is still named once it's closed.</summary>

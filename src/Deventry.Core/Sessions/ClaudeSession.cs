@@ -42,6 +42,7 @@ public sealed class ClaudeSession : IAsyncDisposable
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Task _readLoop;
     private readonly ProcessUsage _usage;
+    private readonly TurnCalls _calls = new();
     private int _unknownMessageCount;
     private int _protocolErrorCount;
     private readonly Lock _stateLock = new();
@@ -485,6 +486,10 @@ public sealed class ClaudeSession : IAsyncDisposable
                 {
                     PermissionMode = mode;
                 }
+                if (system.CompactBoundary is { } compacted)
+                {
+                    _calls.Compacted(compacted, _time.GetUtcNow());
+                }
                 Publish(new SystemNotice(system));
                 break;
 
@@ -504,6 +509,7 @@ public sealed class ClaudeSession : IAsyncDisposable
                 {
                     Publish(new AuthenticationRequired(assistant.Content.OfType<TextBlock>().FirstOrDefault()?.Text));
                 }
+                _calls.Add(assistant, _time.GetUtcNow());
                 Publish(new AssistantMessageReceived(assistant));
                 break;
 
@@ -518,6 +524,7 @@ public sealed class ClaudeSession : IAsyncDisposable
                 }
                 else
                 {
+                    _calls.AddResults(user, _time.GetUtcNow());
                     Publish(new ToolResultsReceived(user));
                 }
                 break;
@@ -525,7 +532,8 @@ public sealed class ClaudeSession : IAsyncDisposable
             case ResultMessage result:
                 SessionId = result.SessionId ?? SessionId;
                 StartupFailure ??= StartupFailure.From(result);
-                EndTurn(new TurnCompleted(result, _usage.Turn(result)));
+                var spent = _usage.Turn(result);
+                EndTurn(new TurnCompleted(result, spent) { Calls = _calls.End(spent, _time.GetUtcNow()) });
                 break;
 
             case RateLimitEventMessage rateLimit:
@@ -548,6 +556,7 @@ public sealed class ClaudeSession : IAsyncDisposable
             case ConversationResetMessage reset:
                 // Claude Code's running totals start again too.
                 _usage.Reset();
+                _calls.Reset();
                 Publish(new ConversationReset(reset.Trigger));
                 break;
 

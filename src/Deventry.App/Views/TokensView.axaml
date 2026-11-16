@@ -1,0 +1,205 @@
+<!-- The Tokens tool window's page (DESIGN.md §18, "The Tokens tool window"): the tab's tokens now and next. Between
+     turns, what the next message will cost before the prompt cache expires and after; during one, its calls as they
+     arrive; then the tab's tiles and kinds, its latest turns and its costliest findings, each opening the breakdown. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:controls="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.TokensView"
+             x:DataType="vm:TabTokensViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.tokenhead">
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.tokentile">
+      <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="Margin" Value="0,0,6,6" />
+    </Style>
+    <Style Selector="Border.tokenestimate">
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="3,0" />
+      <Setter Property="Margin" Value="5,0,0,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.num">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="controls|KindsBar">
+      <Setter Property="Height" Value="8" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="controls|KindsBar.thin">
+      <Setter Property="Height" Value="6" />
+    </Style>
+    <Style Selector="Button.tokenlink">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.tokenlink:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    </Style>
+    <Style Selector="Button.latestturn">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="4,3" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Ellipse.tokenmark">
+      <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
+    </Style>
+    <Style Selector="Ellipse.tokenmark.caution">
+      <Setter Property="Fill" Value="{DynamicResource MeterWarningBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="12,0,12,12" Spacing="16">
+
+      <!-- Your next message: its first call, before the cache expires and after -->
+      <StackPanel Spacing="6" IsVisible="{Binding ShowsNextMessage}">
+        <TextBlock Classes="tokenhead" Text="Your next message" />
+        <Grid ColumnDefinitions="74,*,52" RowDefinitions="Auto,Auto" RowSpacing="6">
+          <TextBlock Classes="muted small" Text="{Binding NextBefore}" VerticalAlignment="Center" IsVisible="{Binding !IsCacheExpired}" />
+          <controls:KindsBar Grid.Column="1" Values="{Binding NextWarmValues}" Scale="{Binding NextWarmScale}" Margin="0,0,8,0" IsVisible="{Binding !IsCacheExpired}" />
+          <TextBlock Grid.Column="2" Classes="num" Text="{Binding NextWarmCost}" IsVisible="{Binding !IsCacheExpired}" />
+          <TextBlock Grid.Row="1" Classes="muted small" Text="{Binding NextAfter}" VerticalAlignment="Center" />
+          <controls:KindsBar Grid.Row="1" Grid.Column="1" Values="{Binding NextColdValues}" Scale="1" Margin="0,0,8,0" />
+          <TextBlock Grid.Row="1" Grid.Column="2" Classes="num" Text="{Binding NextColdCost}" />
+        </Grid>
+        <TextBlock Classes="muted small" Text="{Binding NextNote}" TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- The turn running, call by call -->
+      <StackPanel Spacing="6" IsVisible="{Binding IsRunning}">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Classes="tokenhead">
+            <Run Text="{Binding RunningTitle}" /><Run Classes="muted" Text=" · running" />
+          </TextBlock>
+          <TextBlock Grid.Column="1" Classes="muted small" VerticalAlignment="Center" Text="{Binding RunningSummary}" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding RunningCalls}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:RunningCallRow">
+              <Panel>
+                <Grid ColumnDefinitions="26,*,52,48" Margin="0,2" IsVisible="{Binding !IsStep}">
+                  <TextBlock Classes="muted small" Text="{Binding Label}" VerticalAlignment="Center" />
+                  <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <TextBlock Classes="small" Text="{Binding What}" TextTrimming="CharacterEllipsis"
+                               IsVisible="{Binding What, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    <controls:KindsBar Classes="thin" Values="{Binding Values}" Scale="{Binding Scale}" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="num" Text="{Binding Tokens}" />
+                  <TextBlock Grid.Column="3" Classes="num muted" Text="{Binding Cost}" />
+                </Grid>
+                <TextBlock Classes="muted small" Margin="26,0,0,0" Text="{Binding What}" TextTrimming="CharacterEllipsis" IsVisible="{Binding IsStep}" />
+              </Panel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="muted small" FontStyle="Italic" Text="Claude is choosing its next step…" IsVisible="{Binding IsChoosing}" />
+      </StackPanel>
+
+      <!-- The context, filling up -->
+      <StackPanel Spacing="4" IsVisible="{Binding HasContext}">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Classes="muted small" Text="Context" />
+          <TextBlock Grid.Column="1" Classes="muted small" Text="{Binding ContextText}" />
+        </Grid>
+        <controls:ContextBar Height="8" Segments="{Binding ContextSegments}" AutomationProperties.Name="{Binding ContextText}" />
+      </StackPanel>
+
+      <!-- This tab -->
+      <StackPanel Spacing="8">
+        <TextBlock Classes="tokenhead" Text="This tab" />
+        <ItemsControl ItemsSource="{Binding Tiles}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Columns="2" Margin="0,0,-6,-6" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:TokenTile">
+              <Border Classes="tokentile" ToolTip.Tip="{Binding Tip}">
+                <StackPanel Spacing="1">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Classes="muted small" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                    <Border Classes="tokenestimate" IsVisible="{Binding IsEstimate}">
+                      <TextBlock Classes="muted" FontSize="10" Text="estimate" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock Text="{Binding Value}" FontSize="17" FontWeight="SemiBold" />
+                  <TextBlock Classes="muted small" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Grid ColumnDefinitions="48,*" RowDefinitions="Auto,Auto" RowSpacing="6">
+          <TextBlock Classes="muted small" Text="Tokens" VerticalAlignment="Center" />
+          <controls:KindsBar Grid.Column="1" Values="{Binding TokenValues}" />
+          <TextBlock Grid.Row="1" Classes="muted small" Text="Cost" VerticalAlignment="Center" />
+          <controls:KindsBar Grid.Row="1" Grid.Column="1" Values="{Binding CostValues}" />
+        </Grid>
+      </StackPanel>
+
+      <!-- The latest turns, newest first -->
+      <StackPanel Spacing="4" IsVisible="{Binding LatestTurns.Count}">
+        <TextBlock Classes="tokenhead" Text="Latest turns" />
+        <ItemsControl ItemsSource="{Binding LatestTurns}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:LatestTurnRow">
+              <Button Classes="latestturn" Command="{Binding $parent[UserControl].((vm:TabTokensViewModel)DataContext).OpenTurnCommand}" CommandParameter="{Binding}"
+                      ToolTip.Tip="Open the breakdown on this turn" AutomationProperties.Name="{Binding Prompt}">
+                <Grid ColumnDefinitions="24,*,52" RowDefinitions="Auto,Auto" RowSpacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Classes="muted small" Text="{Binding NumberText}" />
+                    <Ellipse Classes="tokenmark caution" Width="6" Height="6" IsVisible="{Binding IsCacheExpired}" VerticalAlignment="Center" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Classes="small" Text="{Binding Prompt}" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                  <TextBlock Grid.Column="2" Classes="num" Text="{Binding Cost}" />
+                  <controls:KindsBar Grid.Row="1" Grid.Column="1" Classes="thin" Values="{Binding Values}" Scale="{Binding Scale}" Margin="0,0,8,0" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Classes="tokenlink" Margin="4,2,0,0" Content="{Binding AllTurnsText}" Command="{Binding OpenBreakdownCommand}" />
+      </StackPanel>
+
+      <!-- The costliest findings, and the way to the rest -->
+      <StackPanel Spacing="6" IsVisible="{Binding Findings.Count}">
+        <TextBlock Classes="tokenhead" Text="Findings" />
+        <ItemsControl ItemsSource="{Binding Findings}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:TokenFindingRow">
+              <Grid ColumnDefinitions="16,*" RowDefinitions="Auto,Auto" Margin="0,3">
+                <Ellipse Classes="tokenmark" Classes.caution="{Binding IsCaution}" Width="7" Height="7" VerticalAlignment="Top" Margin="0,5,0,0" />
+                <TextBlock Grid.Column="1" Classes="small" Text="{Binding Text}" TextWrapping="Wrap" />
+                <Button Grid.Row="1" Grid.Column="1" Classes="tokenlink" Margin="0,3,0,0" Content="{Binding GoToText}"
+                        Command="{Binding GoToTurn}" CommandParameter="{Binding Turn}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <Button HorizontalAlignment="Left" Content="Open breakdown" Command="{Binding OpenBreakdownCommand}"
+              ToolTip.Tip="What this tab's tokens went on, turn by turn, in a window of its own" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

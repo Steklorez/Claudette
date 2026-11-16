@@ -447,7 +447,8 @@ public class ConversationBuilderTests
     {
         Apply("""{"type":"result","subtype":"success","is_error":false,"result":"ok","duration_ms":12300,"usage":{"input_tokens":10,"cache_read_input_tokens":4000,"output_tokens":312},"modelUsage":{"claude-opus-5-5":{"inputTokens":10,"cacheReadInputTokens":4000,"outputTokens":312,"costUSD":0.01}}}""");
 
-        Assert.Equal("12.3s · 4k in · 312 out · claude-opus-5-5", Assert.IsType<TurnSummaryItem>(Assert.Single(_items)).Text);
+        // What it cost, as its token breakdown says it (DESIGN.md §18, "A turn's card").
+        Assert.Equal("12.3s · 4k in · 312 out · $0.01 · claude-opus-5-5", Assert.IsType<TurnSummaryItem>(Assert.Single(_items)).Text);
     }
 
     [Fact]
@@ -460,7 +461,7 @@ public class ConversationBuilderTests
 
         _builder.Apply(new TurnCompleted(result, turn));
 
-        Assert.Equal("1s · claude-opus-5-5", Assert.IsType<TurnSummaryItem>(Assert.Single(_items)).Text);
+        Assert.Equal("1s · $0.01 · claude-opus-5-5", Assert.IsType<TurnSummaryItem>(Assert.Single(_items)).Text);
     }
 
     [Fact]

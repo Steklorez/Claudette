@@ -9,7 +9,7 @@ namespace Deventry.Usage;
 /// </summary>
 internal static class UsageSchema
 {
-    public const int Version = 6;
+    public const int Version = 8;
 
     private const int SqliteCorrupt = 11;
     private const int SqliteNotADatabase = 26;
@@ -93,6 +93,61 @@ internal static class UsageSchema
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS calls (
+                id INTEGER PRIMARY KEY,
+                turn TEXT NOT NULL,
+                tab_id TEXT NOT NULL,
+                session_id TEXT,
+                timestamp INTEGER NOT NULL,
+                seq INTEGER NOT NULL,
+                message_id TEXT,
+                agent TEXT,
+                agent_type TEXT,
+                model TEXT NOT NULL,
+                input INTEGER NOT NULL,
+                output INTEGER NOT NULL,
+                cache_read INTEGER NOT NULL,
+                write_5m INTEGER NOT NULL,
+                write_1h INTEGER NOT NULL,
+                web_searches INTEGER NOT NULL,
+                web_fetches INTEGER NOT NULL,
+                kind INTEGER NOT NULL,
+                cost_usd REAL NOT NULL,
+                source INTEGER NOT NULL,
+                machine TEXT
+            );
+            CREATE INDEX IF NOT EXISTS calls_by_turn ON calls (turn, seq);
+            CREATE INDEX IF NOT EXISTS calls_by_tab ON calls (tab_id, timestamp);
+            CREATE INDEX IF NOT EXISTS calls_by_time ON calls (timestamp);
+            CREATE INDEX IF NOT EXISTS calls_by_session ON calls (session_id);
+            CREATE TABLE IF NOT EXISTS steps (
+                id INTEGER PRIMARY KEY,
+                turn TEXT NOT NULL,
+                call_seq INTEGER NOT NULL,
+                agent TEXT,
+                tool TEXT NOT NULL,
+                tool_use TEXT,
+                tokens INTEGER NOT NULL,
+                is_error INTEGER NOT NULL,
+                timestamp INTEGER NOT NULL,
+                machine TEXT
+            );
+            CREATE INDEX IF NOT EXISTS steps_by_turn ON steps (turn, call_seq);
+            CREATE INDEX IF NOT EXISTS steps_by_time ON steps (timestamp);
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY,
+                tab_id TEXT NOT NULL,
+                session_id TEXT,
+                turn TEXT,
+                timestamp INTEGER NOT NULL,
+                kind INTEGER NOT NULL,
+                value INTEGER,
+                detail TEXT,
+                machine TEXT
+            );
+            CREATE INDEX IF NOT EXISTS events_by_tab ON events (tab_id, timestamp);
+            CREATE INDEX IF NOT EXISTS events_by_time ON events (timestamp);
+            CREATE INDEX IF NOT EXISTS events_by_session ON events (session_id);
             """;
         create.ExecuteNonQuery();
         // Version 3: the machine a shared sample came from; null for this machine's own.
@@ -126,7 +181,28 @@ internal static class UsageSchema
                 create.ExecuteNonQuery();
             }
         }
+        // Version 7: each turn's id, which its records for each model share and its calls, steps and events (above) point
+        // to, and how long the tab's main agent had made no call before it (DESIGN.md §18, "Token breakdown"). Null for
+        // turns recorded before.
+        if (!HasColumn(connection, transaction, "turns", "turn"))
+        {
+            create.CommandText = "ALTER TABLE turns ADD COLUMN turn TEXT";
+            create.ExecuteNonQuery();
+        }
+        if (!HasColumn(connection, transaction, "turns", "idle_ms"))
+        {
+            create.CommandText = "ALTER TABLE turns ADD COLUMN idle_ms INTEGER";
+            create.ExecuteNonQuery();
+        }
+        // Version 8: the turn's number in its tab, as its card says it (DESIGN.md §18, "A turn's card"). Null for turns
+        // recorded before, which a breakdown numbers by their place.
+        if (!HasColumn(connection, transaction, "turns", "turn_index"))
+        {
+            create.CommandText = "ALTER TABLE turns ADD COLUMN turn_index INTEGER";
+            create.ExecuteNonQuery();
+        }
         create.CommandText = """
+            CREATE INDEX IF NOT EXISTS turns_by_turn ON turns (turn) WHERE turn IS NOT NULL;
             CREATE UNIQUE INDEX IF NOT EXISTS turns_by_uid ON turns (uid) WHERE uid IS NOT NULL;
             CREATE INDEX IF NOT EXISTS turns_by_session ON turns (session_id);
             """;

@@ -459,6 +459,9 @@
       </ScrollViewer>
 
       <!-- The project's scratch pad (DESIGN.md §18, "Scratch pad"), once the tab has used it -->
+      <!-- The tab's tokens, now and next (DESIGN.md §18, "The Tokens tool window") -->
+      <views:TokensView x:Name="TokensPage" IsVisible="False" DataContext="{Binding Tokens}" />
+
       <Panel x:Name="ScratchPadPage" IsVisible="False">
         <views:ScratchPadView DataContext="{Binding ShownScratchPad}" />
       </Panel>

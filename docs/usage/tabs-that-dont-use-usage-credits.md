@@ -1,7 +1,7 @@
 ---
 title: Tabs that don't use usage credits
 parent: Usage and limits
-nav_order: 9
+nav_order: 10
 summary: "Once a limit is used up, a tab can stop and wait for the reset rather than spend your usage credits."
 ---
 

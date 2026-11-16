@@ -64,8 +64,29 @@ public sealed record TurnRecord(
     /// <summary>An API-key account's name, which other machines match their own accounts by.</summary>
     public string? AccountName { get; init; }
 
+    /// <summary>
+    /// The machine that ran it, when another one shared it (DESIGN.md §6, "Sharing across machines"); null for this
+    /// machine's. Read from the history; recording a turn here leaves it out.
+    /// </summary>
+    public string? Machine { get; init; }
+
     /// <summary>For the Default account's turns, the plan account signed in (<see cref="UsageSharing.AccountKey"/>).</summary>
     public string? Plan { get; init; }
+
+    /// <summary>
+    /// The turn's id, which its records for each model share and its calls, steps and events point to (DESIGN.md §18,
+    /// "What's recorded"); null for turns recorded before calls were.
+    /// </summary>
+    public string? Turn { get; init; }
+
+    /// <summary>How long the tab's main agent had made no call before the turn's first: the prompt cache's age.</summary>
+    public TimeSpan? IdleBefore { get; init; }
+
+    /// <summary>
+    /// The turn's number in its tab, as its card says it (*Turn 9*); null for turns recorded before numbers were, which a
+    /// breakdown numbers by their place.
+    /// </summary>
+    public int? Index { get; init; }
 
     /// <summary>
     /// One record per model a turn used, from its share of the result's running totals (<see cref="TurnCompleted.Usage"/>),
@@ -75,6 +96,109 @@ public sealed record TurnRecord(
         string? account = null) =>
         [.. turn.Models.Select(m => new TurnRecord(timestamp, tabId, sessionId, m.Key, m.Value.Input, m.Value.Output, m.Value.CacheWrite, m.Value.CacheRead,
             m.Value.CostUsd, project, account))];
+}
+
+/// <summary>Where a <see cref="CallRecord"/> came from. Stored as its number, so the numbers stay.</summary>
+public enum CallSource
+{
+    /// <summary>Recorded as Claude Code reported it.</summary>
+    Live = 0,
+
+    /// <summary>Read from the session's transcript later (DESIGN.md §18, "Older turns: reading the transcript").</summary>
+    Transcript = 1,
+}
+
+/// <summary>
+/// One model call of a recorded turn (DESIGN.md §18, "What's recorded"): counts and names only, no conversation content.
+/// Its <see cref="Kind"/> is stored as its number, so <see cref="CallKind"/>'s numbers stay.
+/// </summary>
+/// <param name="Turn">The turn's id (<see cref="TurnRecord.Turn"/>).</param>
+/// <param name="Seq">Its place among the turn's calls, from 1.</param>
+/// <param name="Agent">The subagent's tool call; null for the main agent.</param>
+/// <param name="CostUsd">Its share of the turn's cost for its model: Claude Code's estimate at list price, not a bill.</param>
+public sealed record CallRecord(
+    string Turn,
+    string TabId,
+    string? SessionId,
+    DateTimeOffset Timestamp,
+    int Seq,
+    string? MessageId,
+    string? Agent,
+    string? AgentType,
+    string Model,
+    long Input,
+    long Output,
+    long CacheRead,
+    long Write5m,
+    long Write1h,
+    int WebSearches,
+    int WebFetches,
+    CallKind Kind,
+    double CostUsd,
+    CallSource Source = CallSource.Live)
+{
+    public long CacheWrite => Write5m + Write1h;
+
+    public long Total => Input + Output + CacheRead + CacheWrite;
+
+    /// <summary>The machine that shared it; null for this machine's.</summary>
+    public string? Machine { get; init; }
+
+    /// <summary>A turn's calls (<see cref="TurnCompleted.Calls"/>), to record with its turn.</summary>
+    public static IReadOnlyList<CallRecord> From(TurnCallLog log, string turn, string tabId, string? sessionId) =>
+        [.. log.Calls.Select(c => new CallRecord(turn, tabId, sessionId, c.At, c.Seq, c.MessageId, c.Agent, c.AgentType, c.Model, c.Tokens.Input,
+            c.Tokens.Output, c.Tokens.CacheRead, c.Tokens.Write5m, c.Tokens.Write1h, c.WebSearches, c.WebFetches, c.Kind, c.CostUsd))];
+}
+
+/// <summary>A tool's result in a recorded turn: what it added to the conversation, in tokens, estimated from its size.</summary>
+/// <param name="CallSeq">The call that asked for it (<see cref="CallRecord.Seq"/>).</param>
+/// <param name="Agent">The subagent whose tool it was; null for the main agent's.</param>
+public sealed record StepRecord(string Turn, int CallSeq, string? Agent, string Tool, long Tokens, bool IsError, DateTimeOffset Timestamp)
+{
+    /// <summary>The machine that shared it; null for this machine's.</summary>
+    public string? Machine { get; init; }
+
+    /// <summary>The tool call's id: for an Agent call, the subagent's (<see cref="CallRecord.Agent"/>), whose report this is.</summary>
+    public string? ToolUseId { get; init; }
+
+    /// <summary>A turn's tool results (<see cref="TurnCallLog.Steps"/>), to record with its turn.</summary>
+    public static IReadOnlyList<StepRecord> From(TurnCallLog log, string turn) =>
+        [.. log.Steps.Select(s => new StepRecord(turn, s.CallSeq, s.Agent, s.Tool, s.Tokens, s.IsError, s.At) { ToolUseId = s.ToolUseId })];
+}
+
+/// <summary>What a <see cref="UsageEvent"/> says happened. Stored as its number, so the numbers stay.</summary>
+public enum UsageEventKind
+{
+    /// <summary>Claude Code compacted the conversation; <see cref="UsageEvent.Value"/> is the context's tokens before, when it said.</summary>
+    Compacted = 0,
+
+    /// <summary>The conversation was cleared: what was in it is no longer read.</summary>
+    Cleared = 1,
+
+    /// <summary>
+    /// The turn was checked against its transcript (DESIGN.md §18, "Older turns"): <see cref="UsageEvent.Value"/> is the
+    /// <see cref="TurnCheckOutcome"/>, and <see cref="UsageEvent.Detail"/> what a correction changed.
+    /// </summary>
+    Checked = 2,
+}
+
+/// <summary>Something that changed what a tab's later calls cost (DESIGN.md §18, "What's recorded").</summary>
+/// <param name="Turn">The turn it happened in, when it was in one.</param>
+/// <param name="Detail">More about it: a compaction's trigger, <c>auto</c> or <c>manual</c>.</param>
+public sealed record UsageEvent(string TabId, string? SessionId, string? Turn, DateTimeOffset Timestamp, UsageEventKind Kind, long? Value = null, string? Detail = null)
+{
+    /// <summary>The machine that shared it; null for this machine's.</summary>
+    public string? Machine { get; init; }
+
+    /// <summary>A turn's compactions (<see cref="TurnCallLog.Compactions"/>), to record with its turn.</summary>
+    public static IReadOnlyList<UsageEvent> From(TurnCallLog log, string turn, string tabId, string? sessionId) =>
+        [.. log.Compactions.Select(c => new UsageEvent(tabId, sessionId, turn, c.At, UsageEventKind.Compacted, c.PreTokens, c.Trigger))];
+}
+
+/// <summary>A turn's calls, steps and events, as <see cref="UsageStore.AddTurns"/> records them with it.</summary>
+public sealed record TurnDetail(IReadOnlyList<CallRecord> Calls, IReadOnlyList<StepRecord> Steps, IReadOnlyList<UsageEvent> Events)
+{
+    public static readonly TurnDetail None = new([], [], []);
 }
 
 /// <summary>A tab's tokens since some moment, for "which tab is burning the most".</summary>

@@ -1,7 +1,7 @@
 ---
 title: Usage history
 parent: Usage and limits
-nav_order: 10
+nav_order: 11
 summary: "Deventry keeps your usage on this machine, in a small database, so the trendline, the charts and the per-tab numbers survive a restart."
 ---
 

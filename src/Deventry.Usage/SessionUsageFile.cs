@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Deventry.Core.Json;
 using Deventry.Core.Protocol;
+using Deventry.Core.Sessions;
 
 namespace Deventry.Usage;
 
@@ -31,7 +32,14 @@ public sealed record SharedTurn(
     string? ProjectName = null,
     string? Plan = null,
     string? AccountId = null,
-    string? Account = null);
+    string? Account = null)
+{
+    /// <summary>The turn's id, which its records for each model share and its calls, steps and events point to (DESIGN.md §18).</summary>
+    public string? Turn { get; init; }
+
+    /// <summary>The turn's number in its tab (<see cref="TurnRecord.Index"/>).</summary>
+    public int? Index { get; init; }
+}
 
 /// <summary>A synced session's usage: every turn any machine ran in it, with the names of those machines and tabs.</summary>
 /// <param name="Version">The file's format: <see cref="SessionUsageFile.FileVersion"/> when this Deventry can read it.</param>
@@ -44,6 +52,15 @@ public sealed record SessionUsage(int Version, IReadOnlyDictionary<string, strin
 
     /// <summary>A later Deventry wrote the file in a format this one can't read, so its turns were left out.</summary>
     public bool IsNewerFormat => Version > SessionUsageFile.FileVersion;
+
+    /// <summary>The turns' model calls (DESIGN.md §18, "What's recorded"), each with its <see cref="CallRecord.Machine"/>.</summary>
+    public IReadOnlyList<CallRecord> Calls { get; init; } = [];
+
+    /// <summary>The turns' tools' results, each with its <see cref="StepRecord.Machine"/>.</summary>
+    public IReadOnlyList<StepRecord> Steps { get; init; } = [];
+
+    /// <summary>Compactions and clears, each with its <see cref="UsageEvent.Machine"/>.</summary>
+    public IReadOnlyList<UsageEvent> Events { get; init; } = [];
 }
 
 /// <summary>
@@ -82,15 +99,90 @@ public static class SessionUsageFile
             AddIfSet(entry, "plan", turn.Plan);
             AddIfSet(entry, "accountId", turn.AccountId);
             AddIfSet(entry, "account", turn.Account);
+            AddIfSet(entry, "turn", turn.Turn);
+            if (turn.Index is { } index)
+            {
+                entry["index"] = index;
+            }
             turns.Add(entry);
         }
-        return new JsonObject
+        var file = new JsonObject
         {
             ["version"] = Math.Max(usage.Version, FileVersion),
             ["machines"] = Names(usage.Machines),
             ["tabs"] = Names(usage.Tabs),
             ["turns"] = turns,
-        }.ToJsonString();
+        };
+        // Added in the same format: a Deventry from before them ignores them (DESIGN.md §18, "What's recorded").
+        if (usage.Calls.Count > 0 || usage.Steps.Count > 0 || usage.Events.Count > 0)
+        {
+            file["calls"] = new JsonArray([.. usage.Calls.OrderBy(c => c.Timestamp).ThenBy(c => c.Turn, StringComparer.Ordinal).ThenBy(c => c.Seq).Select(CallToJson)]);
+            file["steps"] = new JsonArray([.. usage.Steps.OrderBy(s => s.Timestamp).ThenBy(s => s.Turn, StringComparer.Ordinal).ThenBy(s => s.CallSeq).Select(StepToJson)]);
+            file["events"] = new JsonArray([.. usage.Events.OrderBy(e => e.Timestamp).Select(EventToJson)]);
+        }
+        return file.ToJsonString();
+    }
+
+    private static JsonNode CallToJson(CallRecord call)
+    {
+        var entry = new JsonObject
+        {
+            ["turn"] = call.Turn,
+            ["seq"] = call.Seq,
+            ["at"] = call.Timestamp.ToUnixTimeMilliseconds(),
+            ["machine"] = call.Machine,
+            ["tab"] = call.TabId,
+            ["model"] = call.Model,
+            ["input"] = call.Input,
+            ["output"] = call.Output,
+            ["cacheRead"] = call.CacheRead,
+            ["write5m"] = call.Write5m,
+            ["write1h"] = call.Write1h,
+            ["searches"] = call.WebSearches,
+            ["fetches"] = call.WebFetches,
+            ["kind"] = (int)call.Kind,
+            ["cost"] = call.CostUsd,
+            ["source"] = (int)call.Source,
+        };
+        AddIfSet(entry, "message", call.MessageId);
+        AddIfSet(entry, "agent", call.Agent);
+        AddIfSet(entry, "agentType", call.AgentType);
+        return entry;
+    }
+
+    private static JsonNode StepToJson(StepRecord step)
+    {
+        var entry = new JsonObject
+        {
+            ["turn"] = step.Turn,
+            ["call"] = step.CallSeq,
+            ["tool"] = step.Tool,
+            ["tokens"] = step.Tokens,
+            ["error"] = step.IsError,
+            ["at"] = step.Timestamp.ToUnixTimeMilliseconds(),
+            ["machine"] = step.Machine,
+        };
+        AddIfSet(entry, "agent", step.Agent);
+        AddIfSet(entry, "use", step.ToolUseId);
+        return entry;
+    }
+
+    private static JsonNode EventToJson(UsageEvent usageEvent)
+    {
+        var entry = new JsonObject
+        {
+            ["tab"] = usageEvent.TabId,
+            ["at"] = usageEvent.Timestamp.ToUnixTimeMilliseconds(),
+            ["kind"] = (int)usageEvent.Kind,
+            ["machine"] = usageEvent.Machine,
+        };
+        AddIfSet(entry, "turn", usageEvent.Turn);
+        if (usageEvent.Value is { } value)
+        {
+            entry["value"] = value;
+        }
+        AddIfSet(entry, "detail", usageEvent.Detail);
+        return entry;
     }
 
     /// <summary>
@@ -144,10 +236,59 @@ public static class SessionUsageFile
                 entry.GetString("projectName"),
                 entry.GetString("plan"),
                 entry.GetString("accountId"),
-                entry.GetString("account")));
+                entry.GetString("account"))
+            {
+                Turn = entry.GetString("turn"),
+                Index = entry["index"].AsWholeNumber() is { } index and > 0 and < int.MaxValue ? (int)index : null,
+            });
         }
-        return new SessionUsage(version, machines, tabs, turns);
+        return new SessionUsage(version, machines, tabs, turns)
+        {
+            Calls = [.. (file.GetArray("calls") ?? []).OfType<JsonObject>().Select(CallFromJson).OfType<CallRecord>()],
+            Steps = [.. (file.GetArray("steps") ?? []).OfType<JsonObject>().Select(StepFromJson).OfType<StepRecord>()],
+            Events = [.. (file.GetArray("events") ?? []).OfType<JsonObject>().Select(EventFromJson).OfType<UsageEvent>()],
+        };
     }
+
+    /// <summary>A call, or null without its turn, place, time, machine, tab or model. A kind this Deventry doesn't know reads as a call.</summary>
+    private static CallRecord? CallFromJson(JsonObject entry)
+    {
+        if (entry.GetString("turn") is not { Length: > 0 } turn || entry["seq"].AsWholeNumber() is not { } seq || Time(entry) is not { } at
+            || entry.GetString("machine") is not { Length: > 0 } machine || entry.GetString("tab") is not { Length: > 0 } tab
+            || entry.GetString("model") is not { Length: > 0 } model)
+        {
+            return null;
+        }
+        var kind = entry["kind"].AsWholeNumber() is { } k && Enum.IsDefined((CallKind)k) ? (CallKind)k : CallKind.Call;
+        var source = entry["source"].AsWholeNumber() is { } s && Enum.IsDefined((CallSource)s) ? (CallSource)s : CallSource.Live;
+        return new CallRecord(turn, tab, null, at, (int)seq, entry.GetString("message"), entry.GetString("agent"), entry.GetString("agentType"), model,
+            entry["input"].AsWholeNumber() ?? 0, entry["output"].AsWholeNumber() ?? 0, entry["cacheRead"].AsWholeNumber() ?? 0,
+            entry["write5m"].AsWholeNumber() ?? 0, entry["write1h"].AsWholeNumber() ?? 0, (int)(entry["searches"].AsWholeNumber() ?? 0),
+            (int)(entry["fetches"].AsWholeNumber() ?? 0), kind, entry.GetDouble("cost") ?? 0, source)
+        {
+            Machine = machine,
+        };
+    }
+
+    private static StepRecord? StepFromJson(JsonObject entry) =>
+        entry.GetString("turn") is { Length: > 0 } turn && entry["call"].AsWholeNumber() is { } call && entry.GetString("tool") is { Length: > 0 } tool
+        && Time(entry) is { } at && entry.GetString("machine") is { Length: > 0 } machine
+            ? new StepRecord(turn, (int)call, entry.GetString("agent"), tool, entry["tokens"].AsWholeNumber() ?? 0, entry.GetBool("error") ?? false, at)
+            {
+                Machine = machine,
+                ToolUseId = entry.GetString("use"),
+            }
+            : null;
+
+    /// <summary>An event, or null without its tab, time or machine, or of a kind this Deventry doesn't know.</summary>
+    private static UsageEvent? EventFromJson(JsonObject entry) =>
+        entry.GetString("tab") is { Length: > 0 } tab && Time(entry) is { } at && entry.GetString("machine") is { Length: > 0 } machine
+        && entry["kind"].AsWholeNumber() is { } kind && Enum.IsDefined((UsageEventKind)kind)
+            ? new UsageEvent(tab, null, entry.GetString("turn"), at, (UsageEventKind)kind, entry["value"].AsWholeNumber(), entry.GetString("detail")) { Machine = machine }
+            : null;
+
+    private static DateTimeOffset? Time(JsonObject entry) =>
+        entry.GetDouble("at") is { } at && double.IsFinite(at) && at is >= 0 and <= MaxMilliseconds ? DateTimeOffset.FromUnixTimeMilliseconds((long)at) : null;
 
     /// <summary>
     /// Both files' turns, each once by its id, and their names, <paramref name="newer"/>'s winning: nothing either one has
@@ -160,7 +301,20 @@ public static class SessionUsageFile
         {
             turns.TryAdd(turn.Id, turn);
         }
-        return new SessionUsage(Math.Max(older.Version, newer.Version), Union(older.Machines, newer.Machines), Union(older.Tabs, newer.Tabs), [.. turns.Values]);
+        // A turn's calls and steps come together, from the machine that ran it: the first file to have any of a turn's has them all.
+        var calls = older.Calls.Concat(newer.Calls).GroupBy(c => c.Turn, StringComparer.Ordinal).SelectMany(g => g.DistinctBy(c => c.Seq));
+        var steps = older.Steps.GroupBy(s => s.Turn, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+        foreach (var turn in newer.Steps.GroupBy(s => s.Turn, StringComparer.Ordinal))
+        {
+            steps.TryAdd(turn.Key, [.. turn]);
+        }
+        var events = older.Events.Concat(newer.Events).DistinctBy(e => (e.TabId, e.Timestamp, e.Kind));
+        return new SessionUsage(Math.Max(older.Version, newer.Version), Union(older.Machines, newer.Machines), Union(older.Tabs, newer.Tabs), [.. turns.Values])
+        {
+            Calls = [.. calls],
+            Steps = [.. steps.Values.SelectMany(s => s)],
+            Events = [.. events],
+        };
 
         static Dictionary<string, string> Union(IReadOnlyDictionary<string, string> first, IReadOnlyDictionary<string, string> second)
         {

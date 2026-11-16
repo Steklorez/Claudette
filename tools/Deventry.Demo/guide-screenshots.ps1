@@ -181,8 +181,8 @@ if (Test-Wanted 'getting-started/sign-in') {
 
 # As the demo is.
 if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'tabs/command-palette', 'conversation/tool-calls',
-    'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window',
-    'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'away/remote-clients', 'away/remote-clients-discord',
+    'conversation/scratch-pad', 'conversation/media', 'conversation/media-cleared', 'composer/composer', 'changes/changed-files', 'project-tools/project-page', 'tabs/tool-windows', 'usage/usage-window', 'usage/token-breakdown',
+    'usage/tokens-window', 'settings/settings-window', 'settings/appearance', 'settings/search', 'settings/project-tools', 'settings/about', 'accounts/settings-accounts', 'away/remote-clients', 'away/remote-clients-discord',
     'tabs/tab-settings', 'project-files/files-tab', 'project-files/markdown-preview') {
     Use-Deventry @{} {
         Show-Tabs
@@ -250,6 +250,32 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
             $usage = Get-OtherWindow $deventry $window 'the Usage window'
             Save-Window $usage $path
             Close-Other $usage
+        }
+
+        # The grappling hook's tab's breakdown, from its menu (DESIGN.md §18, "Token breakdown"): its third turn was sent
+        # after the cache expired, with an Explore subagent, and its fourth compacted first.
+        Shot 'usage/token-breakdown' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'Grappling hook')
+            $menu = Get-OtherWindow $deventry $window 'the tab menu'
+            Send-Click (Find-ByText $menu "Token breakdown$([char] 0x2026)")
+            $breakdown = Get-OtherWindow $deventry $window 'the Token breakdown window'
+            Wait-Until { Find-ByText $breakdown 'What the tokens were' -Optional } 'the breakdown' 20
+            Wait-Settled $breakdown
+            Save-Window $breakdown $path
+            Close-Other $breakdown
+        }
+
+        # The same tab's Tokens tool window (DESIGN.md §18, "The Tokens tool window"): its tiles and kinds, its latest
+        # turns, the third's dot for its expired cache, and its costliest findings.
+        Shot 'usage/tokens-window' {
+            param($path)
+            Hide-ToolWindows $window
+            Show-SidePage 'Grappling hook' 'Tokens' 'Tokens'
+            Wait-Until { Find-ByText $window 'Latest turns' -Optional } 'the latest turns' 20
+            Wait-Settled $window 1000
+            $panel = Find-ByText $window 'Tool window at the right'
+            Save-Rect $window $path (Get-PanelRect (Find-Lowest $panel)) 0
         }
 
         Shot 'settings/settings-window' {
@@ -536,7 +562,8 @@ if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-
             Save-Elements $window $path ((Find-ByText $window 'LIMIT 30'), (Find-ById $window 'ComposerPanel')) @(20, 40, 12, 4)
         }
 
-        # A turn that changed files ends with the Modified files card and the Turn card under it: an Edit on two files.
+        # A turn that changed files ends with the Modified files card and the Turn card under it: an Edit on two files. The
+        # Turn card's foot is its Breakdown ›, the only one in the tab: the cards restored with it have none.
         Shot 'conversation/turn-end' {
             param($path)
             Select-Tab 'Grappling hook'
@@ -546,7 +573,7 @@ if (Test-Wanted 'usage/limit', 'conversation/turn-end', 'permissions/permission-
             Wait-Until { Find-ByPrefix $window '5.2k in' } 'the Turn card' 30
             Wait-Settled $window
             $tiles = Get-Parent (Find-ByPrefix $window 'What this turn changed in')
-            Save-Elements $window $path @($tiles, (Find-ByPrefix $window '5.2k in')) @(19, 36, 12, 8)
+            Save-Elements $window $path @($tiles, (Find-ByText $window "Breakdown $([char] 0x203A)")) @(19, 36, 12, 8)
         }
 
         # The card's edge isn't a control's: its text and buttons, with room around them.

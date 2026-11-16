@@ -246,6 +246,27 @@
     <Setter Property="OutlineBrush" Value="{DynamicResource CardWarningOutlineBrush}" />
     <Setter Property="LabelBrush" Value="{DynamicResource WarningTextBrush}" />
   </Style>
+  <!-- A turn's card (DESIGN.md §18, "A turn's card"): a thin bar of its kinds, a chip when its cache had expired, and its
+       way to the token breakdown -->
+  <Style Selector="controls|KindsBar.turnkinds">
+    <Setter Property="Height" Value="4" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.cachechip">
+    <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Padding" Value="6,1" />
+  </Style>
+  <Style Selector="Button.breakdownlink">
+    <Setter Property="Padding" Value="4,0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentStatusBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
   <!-- A one-line card: the step on the header line, after the label. -->
   <Style Selector="controls|Card.inline /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Grid.Row" Value="0" />

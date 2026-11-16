@@ -64,6 +64,12 @@ public static class DemoUsage
             foreach (var tab in tabs)
             {
                 var share = TabShares.GetValueOrDefault(tab.Id, 0.05);
+                if (tab.Id == DemoBreakdown.Tab)
+                {
+                    // Its turns with their calls, for its token breakdown (DESIGN.md §18).
+                    DemoBreakdown.Write(store, tab, sessionStart, (long)(WindowTokens * share));
+                    continue;
+                }
                 for (var turn = 0; turn < 4; turn++)
                 {
                     var tokens = (long)(WindowTokens * share / 4);

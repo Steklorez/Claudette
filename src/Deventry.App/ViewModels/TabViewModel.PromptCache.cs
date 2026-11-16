@@ -150,6 +150,8 @@ public sealed partial class TabViewModel
     /// </summary>
     private void RefreshPromptCache()
     {
+        // What the next message will cost goes by the cache's time (DESIGN.md §18, "The Tokens tool window").
+        Tokens.RefreshNextMessage();
         var lifetime = PromptCacheLifetime;
         var countdown = lifetime is null ? null : PromptCacheClock.Countdown(lifetime.Lifetime);
         var shown = _services.Settings.Appearance.ShowPromptCacheExpiry && countdown is not null && Status != TabStatus.Working;

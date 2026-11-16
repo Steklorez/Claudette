@@ -25,6 +25,26 @@ public class FormatsTests
     [InlineData(2 * 86400 + 3 * 3600 + 7, "2d 3h")]
     public void Duration_is_in_round_figures(int seconds, string text) => Assert.Equal(text, Formats.Duration(TimeSpan.FromSeconds(seconds)));
 
+    [Theory]
+    [InlineData(903, "903")]
+    [InlineData(4_000, "4k")]
+    [InlineData(8_149, "8.1k")]
+    [InlineData(122_061, "122k")]
+    [InlineData(999_499, "999k")]
+    [InlineData(999_500, "1M")]
+    [InlineData(1_582_900, "1.6M")]
+    public void Tokens_are_in_round_figures(long tokens, string text) => Assert.Equal(text, Formats.Tokens(tokens));
+
+    [Theory]
+    [InlineData("claude-opus-5-5", "Opus 5.5")]
+    [InlineData("claude-haiku-4-5-20251001", "Haiku 4.5")]
+    [InlineData("claude-sonnet-4-5[1m]", "Sonnet 4.5")]
+    [InlineData("claude-fable-5-1", "Fable 5.1")]
+    [InlineData("opus", "opus")]
+    [InlineData("claude-opus", "claude-opus")]
+    [InlineData("gpt-6", "gpt-6")]
+    public void A_models_name_is_read_from_its_id(string id, string name) => Assert.Equal(name, Formats.ModelName(id));
+
     [Fact]
     public void A_folders_name_ignores_a_separator_at_its_end()
     {

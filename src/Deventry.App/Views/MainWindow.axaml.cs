@@ -173,6 +173,7 @@ public partial class MainWindow : Window
                 UseUsage(usage);
             }
         }
+        UseShellForTokens(_viewModel?.Shell);
     }
 
     /// <summary>Settings → Appearance → Use the system's title bar applies at once (DESIGN.md §3, "Window frame").</summary>
@@ -183,6 +184,10 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(MainWindowViewModel.Usage) && _viewModel?.Usage is { } usage)
         {
             UseUsage(usage);
+        }
+        if (e.PropertyName == nameof(MainWindowViewModel.Shell))
+        {
+            UseShellForTokens(_viewModel?.Shell);
         }
     }
 
@@ -229,7 +234,8 @@ public partial class MainWindow : Window
             UnfocusedWindows.Activate(_usageWindow);
             return Task.CompletedTask;
         }
-        var panel = new UsagePanelViewModel(main.Services, tracker, header, id => main.Shell?.AllTabs.FirstOrDefault(t => t.Id == id)?.DisplayName);
+        var panel = new UsagePanelViewModel(main.Services, tracker, header, id => main.Shell?.AllTabs.FirstOrDefault(t => t.Id == id)?.DisplayName,
+            tab => main.Shell?.ShowTokenBreakdown(tab));
         void OnTurnRecorded(string tabId) => panel.Refresh();
         void OnTurnsImported(IReadOnlyCollection<string> accountNames) => panel.Refresh();
         tracker.TurnRecorded += OnTurnRecorded;

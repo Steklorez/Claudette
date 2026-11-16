@@ -20,7 +20,9 @@ Click a tile to open that turn's changes to the file in the [diff view](../chang
 A turn that changed many files has a big card. Click anywhere on its header line, which lights up under the pointer, or the chevron after *3 files changed*, and the card folds to that line; a second click brings the tiles back. It works as a [Tool calls card](tool-calls.md#folding-the-calls) does: Settings → Conversation → **Show modified files collapsed** starts new cards folded, and right-clicking a Modified files card gives **Collapse all modified files** and **Expand all modified files**, which fold or open every one in the tab and start the ones still to come the same way, without changing Settings. The tab remembers which you chose.
 
 ## Turn
-A **Turn** card, one quiet line, comes next: how long the turn took, tokens in and out, the model, how much came from the prompt cache, and how many tool calls every agent made. For example: *1m 04s · 75.2k in · 904 out · Opus 5.5 · 62k from cache · 7 tool calls*. The time the turn ended is at the right.
+A **Turn** card, one quiet line, comes next: how long the turn took, tokens in and out, what it cost, the model, how much came from the prompt cache, and how many tool calls every agent made. For example: *1m 04s · 75.2k in · 904 out · $0.12 · Opus 5.5 · 62k from cache · 7 tool calls*. The time the turn ended is at the right.
+
+The card's label has the turn's number, *Turn 9*, as the tab's [token breakdown](../usage/token-breakdown.md) numbers it, and a thin bar under the line shows its tokens by kind. When the turn was sent after the [prompt cache](../usage/the-prompt-cache.md) had expired, a warning in the caution color says what reading the whole conversation again cost. **Breakdown ›** opens the breakdown on the turn. A tab Deventry restores after a restart shows its earlier turns without their cards, as Claude Code's transcript doesn't keep them; the tab's [token breakdown](../usage/token-breakdown.md) has them.
 
 ## Tasks
 

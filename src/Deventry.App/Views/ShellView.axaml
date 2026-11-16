@@ -1011,6 +1011,10 @@
                                               ToolTip.Tip="Save the conversation as a Markdown file or a web page">
                                       <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconToolWrite}" /></MenuItem.Icon>
                                     </MenuItem>
+                                    <MenuItem Header="Token breakdown…" Command="{Binding ShowTokenBreakdownCommand}"
+                                              ToolTip.Tip="What this tab's tokens went on, turn by turn, in a window of its own">
+                                      <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconTokenBreakdown}" /></MenuItem.Icon>
+                                    </MenuItem>
                                     <MenuItem Header="Copy session ID" Command="{Binding CopySessionIdCommand}" IsVisible="{Binding HasSessionId}"
                                               ToolTip.Tip="What claude --resume takes">
                                       <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconCopy}" /></MenuItem.Icon>
@@ -1503,6 +1507,10 @@
                               <MenuItem Header="Export conversation…" Command="{Binding ExportConversationCommand}"
                                         ToolTip.Tip="Save the conversation as a Markdown file or a web page">
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconToolWrite}" /></MenuItem.Icon>
+                              </MenuItem>
+                              <MenuItem Header="Token breakdown…" Command="{Binding ShowTokenBreakdownCommand}"
+                                        ToolTip.Tip="What this tab's tokens went on, turn by turn, in a window of its own">
+                                <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconTokenBreakdown}" /></MenuItem.Icon>
                               </MenuItem>
                               <MenuItem Header="Copy session ID" Command="{Binding CopySessionIdCommand}" IsVisible="{Binding HasSessionId}"
                                         ToolTip.Tip="What claude --resume takes">

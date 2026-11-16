@@ -33,7 +33,7 @@
 "Found two problems in Parser.cs."
 "Turn"
 "12:00"
-"Opus"
+"$0.01 · Opus"
 [field] "Message Claude…  (Enter to send, Shift+Enter for a new line, Esc to stop)"
 [button] Attach a file
 [button] Suffixes ▾
@@ -51,6 +51,7 @@
 "Idle"
 [button] Changed files
 [button] Agents
+[button] Tokens
 [button] Scratch pad
 [button] Games
 "work: Claude finished."

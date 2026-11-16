@@ -35,6 +35,32 @@ public static class Formats
         _ => string.Create(CultureInfo.InvariantCulture, $"{(int)span.TotalDays}d {span.Hours}h"),
     };
 
+    /// <summary>
+    /// A model's name from its id, for one Claude Code hasn't named: <c>claude-opus-5-5</c> is "Opus 5.5", and a date or a
+    /// <c>[1m]</c> after it is left out. An id it can't read is kept as it is.
+    /// </summary>
+    public static string ModelName(string id)
+    {
+        var bare = id.Split('[')[0];
+        var parts = bare.StartsWith("claude-", StringComparison.OrdinalIgnoreCase) ? bare["claude-".Length..].Split('-') : [];
+        if (parts.Length < 2 || parts[0].Length == 0 || !parts[0].All(char.IsLetter))
+        {
+            return id;
+        }
+        var version = parts.Skip(1).TakeWhile(p => p.Length is > 0 and <= 2 && p.All(char.IsDigit)).ToList();
+        return version.Count == 0 ? id : $"{Capitalize(parts[0])} {string.Join('.', version)}";
+    }
+
+    /// <summary>A count of tokens in round figures: "903", "8.1k", "122k", "1.6M".</summary>
+    public static string Tokens(long tokens) => tokens switch
+    {
+        // From 999,500, which would round to "1000k".
+        >= 999_500 => string.Create(CultureInfo.InvariantCulture, $"{tokens / 1_000_000.0:0.#}M"),
+        >= 100_000 => string.Create(CultureInfo.InvariantCulture, $"{tokens / 1_000.0:0}k"),
+        >= 1_000 => string.Create(CultureInfo.InvariantCulture, $"{tokens / 1_000.0:0.#}k"),
+        _ => tokens.ToString(CultureInfo.InvariantCulture),
+    };
+
     /// <summary>"at 15:45" today, else "on Mon at 09:00", in the clock's time zone.</summary>
     public static string When(DateTimeOffset time, TimeProvider clock)
     {

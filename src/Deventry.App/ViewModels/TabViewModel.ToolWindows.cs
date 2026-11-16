@@ -46,6 +46,7 @@ public sealed partial class TabViewModel
         {
             _ = ScratchPad.SyncAsync();
         }
+        Tokens.SetWanted("window", showing.Contains(ToolWindowKinds.Tokens.Id));
         ProcessMonitor.IsPanelVisible = IsProcessesWindowShowing;
         ProcessMonitor.OnProcessesWindowChanged();
     }

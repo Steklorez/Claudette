@@ -201,6 +201,7 @@ public partial class ComposerView : UserControl
         if (ViewModel is { } tab)
         {
             tab.Context.IsTokenDetailsOpen = true;
+            tab.Tokens.SetWanted("popup", true);
         }
     }
 
@@ -209,6 +210,7 @@ public partial class ComposerView : UserControl
         if (ViewModel is { } tab)
         {
             tab.Context.IsTokenDetailsOpen = false;
+            tab.Tokens.SetWanted("popup", false);
         }
     }
 

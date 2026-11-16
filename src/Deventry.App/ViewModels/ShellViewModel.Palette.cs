@@ -202,6 +202,8 @@ public sealed partial class ShellViewModel
                 AsyncCommand("New tab in a worktree", () => OpenWorktreeTabAsync(tab.GroupFolder));
             }
             AsyncCommand("Export conversation…", () => tab.ExportConversationCommand.ExecuteAsync(null));
+            // DESIGN.md §18, "Token breakdown".
+            Command("Show token breakdown", () => tab.ShowTokenBreakdownCommand.Execute(null));
             // DESIGN.md §18, "Threads".
             if (tab.CanMakeThread)
             {

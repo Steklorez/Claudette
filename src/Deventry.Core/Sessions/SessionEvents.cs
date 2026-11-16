@@ -32,7 +32,14 @@ public sealed record LocalCommandOutputReceived(string Text) : SessionEvent;
 /// What this turn spent, by model: its share of the result's running totals (<see cref="ProcessUsage"/>). Read this
 /// rather than the result's <c>modelUsage</c>, which counts every turn of the process.
 /// </param>
-public sealed record TurnCompleted(ResultMessage Result, ModelUsageTotals Usage) : SessionEvent;
+public sealed record TurnCompleted(ResultMessage Result, ModelUsageTotals Usage) : SessionEvent
+{
+    /// <summary>
+    /// The turn's model calls, which add up to <see cref="Usage"/>, with the tool results between them and its compactions
+    /// (<see cref="TurnCalls"/>; DESIGN.md §18, "Token breakdown").
+    /// </summary>
+    public TurnCallLog Calls { get; init; } = TurnCallLog.Empty;
+}
 
 public sealed record StateChanged(SessionState State) : SessionEvent;
 

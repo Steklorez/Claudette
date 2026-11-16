@@ -23,6 +23,13 @@ public sealed record DemoOptions
     /// <summary>The OS's notifications off, which a Deventry kept behind other windows would send.</summary>
     public bool Quiet { get; init; }
 
+    /// <summary>
+    /// Writes the usage history (<c>Deventry.Usage</c>'s <c>DemoUsage</c>), given Deventry's folders, Claude Code's and the
+    /// tabs: before the tabs are saved, so a tab whose turns it records takes its token totals from them, as a real tab's
+    /// agree with its records (DESIGN.md §18, "Token breakdown").
+    /// </summary>
+    public Action<AppPaths, string, IReadOnlyList<TabState>>? WriteUsage { get; init; }
+
     /// <summary>Where the window opens; where the OS puts it when null.</summary>
     public WindowPlacement? Window { get; init; }
 }
@@ -31,7 +38,8 @@ public sealed record DemoOptions
 public sealed record DemoWritten(AppPaths Paths, string ClaudeConfig, IReadOnlyList<TabState> Tabs);
 
 /// <summary>
-/// A demo's folder, but for its usage history, which <c>Deventry.Usage</c>'s <c>DemoUsage</c> writes: Deventry's settings
+/// A demo's folder, but for its usage history, which <c>Deventry.Usage</c>'s <c>DemoUsage</c> writes through
+/// <see cref="DemoOptions.WriteUsage"/>: Deventry's settings
 /// and state under <c>home</c> (as <c>DEVENTRY_HOME</c>), the tabs' and History's transcripts under <c>claude-config</c>
 /// (as <c>CLAUDE_CONFIG_DIR</c>), and the projects. <c>tools/Deventry.Demo</c> writes it for the screenshots, with git
 /// repositories and <c>fake-claude</c>; the app's demo with empty folders and Deventry standing in for Claude Code
@@ -76,6 +84,7 @@ public static class DemoHome
         }
         settings.Sessions.RestoreUnpinnedTabs = true;
         await new JsonFileStore<AppSettings>(paths.SettingsFile).SaveAsync(settings);
+        options.WriteUsage?.Invoke(paths, config, tabs);
 
         await new JsonFileStore<AppState>(paths.StateFile).SaveAsync(new AppState
         {

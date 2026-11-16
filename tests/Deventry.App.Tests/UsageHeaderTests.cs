@@ -6,6 +6,7 @@ using Deventry.Core;
 using Deventry.Core.Files;
 using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
+using Deventry.Core.Settings;
 using Deventry.Usage;
 
 namespace Deventry.App.Tests;
@@ -298,21 +299,25 @@ public class UsageHeaderTests
         ]);
 
         var panel = new UsagePanelViewModel(h.Services, tracker, header, _ => null);
+        // Tokens over starts on this session window (DESIGN.md §18, "The Usage panel").
+        Assert.Equal(UsagePanelPeriod.SessionWindow, panel.SelectedPeriod.Period);
         await panel.RefreshAsync();
+        Assert.Equal(["api", "Earlier turns"], panel.Projects.Select(p => p.Name));
 
-        // The week, by default: two folders named api, told apart by their parents, and the turns from before projects.
+        // The week: two folders named api, told apart by their parents, and the turns from before projects.
+        panel.SelectedPeriod = panel.Periods.Single(p => p.Period == UsagePanelPeriod.Week);
+        await panel.RefreshAsync();
         Assert.Equal(["api (play)", "api (work)", "Earlier turns"], panel.Projects.Select(p => p.Name));
         Assert.Equal(otherApi, panel.Projects[0].Tooltip);
         Assert.Equal("1 turn", panel.Projects[1].Turns);
 
-        panel.SelectedProjectPeriod = new ProjectPeriodChoice(ProjectPeriod.Month);
+        panel.SelectedPeriod = panel.Periods.Single(p => p.Period == UsagePanelPeriod.Month);
         await panel.RefreshAsync();
         Assert.Equal(api, panel.Projects[0].Folder);
         Assert.Equal("2 turns", panel.Projects[0].Turns);
-
-        panel.SelectedProjectPeriod = new ProjectPeriodChoice(ProjectPeriod.SessionWindow);
-        await panel.RefreshAsync();
-        Assert.Equal(["api", "Earlier turns"], panel.Projects.Select(p => p.Name));
+        // Remembered on this machine: the next panel opens on it.
+        Assert.Equal(UsagePanelPeriod.Month, h.Services.State.UsagePanelPeriod);
+        Assert.Equal(UsagePanelPeriod.Month, new UsagePanelViewModel(h.Services, tracker, header, _ => null).SelectedPeriod.Period);
     }
 
     // ---- Sharing across machines (DESIGN.md §6) --------------------------------------------------------------------
@@ -458,7 +463,7 @@ public class UsageHeaderTests
         h.Services.UseUsageTracker(tracker);
         var tab = await h.OpenTabAsync();
         tracker.TurnRecorded += id => h.Shell.OnTurnRecorded(id);
-        // Older than the 5-hour window, but in the week's chart.
+        // Older than the 5-hour window.
         tracker.Store.AddTurns([new TurnRecord(h.Time.GetUtcNow().AddHours(-8), tab.Id, "s1", "claude-opus-5-5", 1000, 0, 0, 0, 0, null)]);
 
         h.Transport.EmitTurn();
@@ -470,7 +475,6 @@ public class UsageHeaderTests
         await tab.Context.TokenWindowRefresh;
 
         Assert.Equal("This session window: 120 tok", tab.Context.TokenWindowText);
-        Assert.Equal(2, tab.Context.TurnPoints.Count);
     }
 
     [Fact]

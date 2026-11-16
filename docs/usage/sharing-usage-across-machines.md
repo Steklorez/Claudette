@@ -1,7 +1,7 @@
 ---
 title: Sharing usage across machines
 parent: Usage and limits
-nav_order: 11
+nav_order: 12
 summary: "Your plan's limits belong to your account, so every machine signed in to it sees the same usage."
 ---
 
@@ -24,7 +24,7 @@ Your prompts, replies and code aren't part of it. The usage database itself neve
 
 - **Other machines' readings** appear in the header's trendline and projection, the detailed header and the Usage window. Only machines signed in to the same plan account count, so your email isn't written to the library. When the newest reading is newer than this machine's, the header shows it.
 - **Projects** in [the Usage window](the-usage-window.md) add up every machine's turns in a project, matched by the repository and the folder inside it. Hover over a row for what each machine spent.
-- **Tabs in this session window** and the busiest tabs list another machine's tabs as *Fix the loader · Laptop*.
+- **Tabs** shows another machine's tabs with the machine's name, such as *starfall · Laptop*, and opens their token breakdowns from the turns they shared. The busiest tabs list them as *Fix the loader · Laptop*.
 - **Accounts** counts another machine's API-key turns with this machine's account of the same name. See [Spend and its warnings](../accounts/spend-and-its-warnings.md).
 
 Machines look for each other's usage at launch and once a minute. If another machine runs a newer Deventry whose shared files this one can't read yet, it leaves them out until you update, and says so in its log.

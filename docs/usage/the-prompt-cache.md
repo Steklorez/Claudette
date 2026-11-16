@@ -1,7 +1,7 @@
 ---
 title: The prompt cache
 parent: Usage and limits
-nav_order: 6
+nav_order: 7
 summary: "Claude keeps a conversation in a cache for a while after each request that reads or writes it, for five minutes or an hour."
 ---
 
