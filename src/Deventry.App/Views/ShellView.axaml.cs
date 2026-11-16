@@ -374,14 +374,16 @@ public partial class ShellView : UserControl
 
     /// <summary>
     /// A group's project menu opened: look at the project's files again, so what's enabled is current (a solution
-    /// generated from a terminal, say). The menu updates in place when that's done (DESIGN.md §18).
+    /// generated from a terminal, say). The menu updates in place when that's done (DESIGN.md §18). Not through
+    /// <b>Refresh</b>'s command, which is disabled while it runs: the entry greyed out as the menu opened, and took no
+    /// pointer, so pointing at it didn't close the submenu open beside it.
     /// </summary>
     private void OnProjectMenuOpened(object? sender, EventArgs e)
     {
         _projectMenu = sender as Flyout;
         if (_projectMenu?.Target?.DataContext is TabGroupViewModel { ProjectTools: { } tools })
         {
-            tools.RefreshCommand.Execute(null);
+            _ = tools.RefreshAsync();
         }
     }
 

@@ -25,6 +25,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- **Refresh in a project's menu stays as it is when the menu opens.** It greyed out for a moment while the menu looked at the project's files again, and pointing at it then left **Actions** or **Links** open beside it.
 - **An API-key account's tabs use its key** even when your Claude Code settings turn on a cloud provider, such as after `/setup-bedrock`, or set a key of their own. Those used to take over from the account's key. See [API-key accounts](https://deventry.app/accounts/api-key-accounts/#what-an-accounts-tabs-share).
 
 ### Security

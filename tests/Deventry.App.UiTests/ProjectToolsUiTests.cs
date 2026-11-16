@@ -129,6 +129,9 @@ public class ProjectToolsUiTests
                 + $"{Kept(links, "Links")}; open: Actions {Submenu(actions).IsOpen}, Links {Submenu(links).IsOpen}; Links at {Place(links, root)}{open}";
         }
 
+        // Opening the menu looks at the project's files again, which leaves Refresh as it was: a disabled entry takes no
+        // pointer, so pointing at it wouldn't close a submenu (failed on macOS CI while the refresh ran).
+        Assert.True(Row(menu, "Refresh").IsEffectivelyEnabled);
         PointAt(root, actions);
         Assert.True(Submenu(actions).IsOpen);
         // From Actions to Links: Links opens in its place. (Seen failing once each on Windows and macOS, and not
