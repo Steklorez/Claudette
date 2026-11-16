@@ -33,6 +33,8 @@ Settings → Appearance → **Style** is **Standard** (the default), **Claude** 
 - **A bigger composer**, a big rounded box lifted a little off the page, and rounder corners on the cards, code blocks and the sidebar's rows.
 - **Your system's interface font**, rather than Standard's Inter.
 
+{% include unreleased.html %}
+
 {% include shot.html name="codex" alt="The same window in the Codex style: white and neutral greys, OpenAI's blue for the accent, rounder cards and the replies in the system's font" %}
 
 **Codex** takes the ChatGPT and Codex apps as its reference, which share one palette:

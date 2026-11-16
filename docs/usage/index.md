@@ -3,11 +3,11 @@ title: Usage and limits
 parent: Usage and accounts
 nav_order: 1
 has_children: true
-summary: "The usage header, the Usage window, context, the prompt cache, alerts, and what happens at a limit."
+summary: "The usage header, the Usage window, where a tab's tokens went, context, the prompt cache, alerts, and what happens at a limit."
 ---
 
 # Usage and limits
 
-Deventry's main job beyond the tabs is to show how much of your Claude plan's limits you've used, how fast, and when you'll run out, without you running `/usage`. This chapter covers the meters in the header and the charts behind them, what each tab has used, the warnings, what happens when a limit stops a task, and the history Deventry keeps so it can draw all of it.
+Deventry's main job beyond the tabs is to show how much of your Claude plan's limits you've used, how fast, and when you'll run out, without you running `/usage`. This chapter covers the meters in the header and the charts behind them, what each tab has used and what its tokens went on, the warnings, what happens when a limit stops a task, and the history Deventry keeps so it can draw all of it.
 
 Usage here means your Claude plan's limits. If a tab runs under an API key instead, it has no plan limits, and the header shows that key's estimated spend: see [Accounts](../accounts/index.md).

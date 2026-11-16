@@ -37,7 +37,7 @@ Most of these show only when they apply to the tab.
 | *2 running tasks* | Work Claude Code keeps going in the background. It opens a list with **Stop**. | [The working line and running tasks](../conversation/the-working-line-and-running-tasks.md) |
 | **Files (4)** | How many files Claude changed. It opens the Changed files page. | [Changed files](../changes/changed-files.md) |
 | *Context 42%* | How full the context window is. It turns the caution color when Claude Code is about to compact the conversation. Click it for what fills the window and **Compact now**. | [Context and compacting](../usage/context-and-compacting.md) |
-| The tab's tokens, such as *12.3k tok* | Click for a breakdown by model. | [A tab's tokens](../usage/a-tabs-tokens.md) |
+| The tab's tokens, such as *12.3k tok* | Click for what they were and what they cost, by kind and by model. | [A tab's tokens](../usage/a-tabs-tokens.md) |
 | *⏎ sends* or *Ctrl+⏎ sends* | Which key sends the message. Click it to switch. | [The send key](#the-send-key), below |
 | **Send** | Sends the message. While Claude works it's **Stop**. | [Sending and stopping](sending-and-stopping.md) |
 

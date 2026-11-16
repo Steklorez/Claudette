@@ -345,6 +345,7 @@ None of this group syncs, and a tab can't change it for itself. A client's secre
 |---|---|---|---|
 | **Remote clients can** | What they can do | Watch, answer, send messages and stop Claude | [Remote clients](../away/remote-clients.md#what-remote-clients-can-do) |
 | **Open new tabs** | What they can do | Off | [Remote clients](../away/remote-clients.md#what-remote-clients-can-do) |
+| **Keep files sent to tabs** | What they can do | 1 month | [Remote clients](../away/remote-clients.md#sending-images-and-files) |
 | **A tab needs permission or an answer** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
 | **A tab finishes its turn** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
 | **A tab's Claude Code stops with an error** | Messages | On | [Remote clients](../away/remote-clients.md#what-the-bot-sends) |
@@ -359,12 +360,18 @@ None of this group syncs, and a tab can't change it for itself. A client's secre
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
 | **Use a Telegram bot** | The bot | Off | [Remote clients](../away/remote-clients.md#setting-up-a-telegram-bot) |
+| **Send the images Claude makes** | Images | Off | [Remote clients](../away/remote-clients.md#images-claude-makes) |
+| **Send the images Claude reads** | Images | Off | [Remote clients](../away/remote-clients.md#images-claude-makes) |
+| **Hold an image or file sent on its own** | Images and files from you | On | [Remote clients](../away/remote-clients.md#sending-images-and-files) |
 
 ### Discord
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
 | **Use a Discord bot** | The bot | Off | [Remote clients](../away/remote-clients.md#setting-up-a-discord-bot) |
+| **Send the images Claude makes** | Images | Off | [Remote clients](../away/remote-clients.md#images-claude-makes) |
+| **Send the images Claude reads** | Images | Off | [Remote clients](../away/remote-clients.md#images-claude-makes) |
+| **Hold an image or file sent on its own** | Images and files from you | On | [Remote clients](../away/remote-clients.md#sending-images-and-files) |
 
 ## A project's settings
 

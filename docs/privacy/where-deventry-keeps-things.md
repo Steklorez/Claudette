@@ -32,7 +32,7 @@ The data folder holds:
 | Where | What it is |
 |---|---|
 | `state.json` | What Deventry remembers about this machine: your open tabs and their order, groups, recent and favorite folders, which folder a session's project is on this machine, and notices you dismissed. |
-| `usage.db` | [Usage history](../usage/usage-history.md): plan usage readings, and for each turn the tab, model, token counts and estimated cost. Never your prompts, Claude's replies or any code. It's this machine's own, and kept for as long as Settings → Usage → **Keep usage history** says (1 month by default). |
+| `usage.db` | [Usage history](../usage/usage-history.md): plan usage readings, and for each turn the tab, model, token counts and estimated cost, with each of its model calls and the names of the tools used between them. Never your prompts, Claude's replies or any code. It's this machine's own, and kept for as long as Settings → Usage → **Keep usage history** says (1 month by default). |
 | `drafts` | Each tab's unsent message, and the stash ([Earlier prompts, drafts and the stash](../composer/earlier-prompts-drafts-and-the-stash.md)). |
 | `scratch` | This machine's copy of each [scratch pad](../conversation/the-scratch-pad.md). |
 | `library` | The [session library](../history/the-session-library.md), unless you've pointed it somewhere else. |
@@ -46,6 +46,10 @@ The data folder holds:
 Unsaved edits in a [Project files](../project-files/saving.md) tab are kept in `editor-backups`, so quitting never loses them. The names and colors of your [API-key accounts](../accounts/api-key-accounts.md) are in `state.json`. Their keys aren't ([Passwords and keys](passwords-and-keys.md)).
 
 Deventry writes its files whole or not at all: to a temporary file, then renamed over the real one. A crash or a power cut leaves the old file or the new one, never half of one. A settings or state file that isn't valid is kept next to it as `<name>.<time>.bad`, and Deventry starts from defaults ([Settings back to their defaults](../troubleshooting/settings-back-to-their-defaults.md)).
+
+## In your projects
+
+The images and files you send a tab from a [remote client](../away/remote-clients.md#sending-images-and-files) mostly go to Claude in the message. A PDF or a long log is saved in the tab's project instead, in `.deventry/attachments`, for Claude to read, and deleted once it's older than Settings → Remote clients → All clients → **Keep files sent to tabs** (1 month by default). The `.deventry` folder has a `.gitignore` of its own, so git leaves it out of your repository without your project's own `.gitignore` changing.
 
 ## The session library
 
