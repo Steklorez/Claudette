@@ -2,12 +2,12 @@
 title: Remote clients
 parent: Away from your desk
 nav_order: 4
-summary: "Your tabs from your phone, through a Telegram or Discord bot that Deventry runs itself: told when a tab needs you or finishes, its prompts answered with a tap, and messages sent by replying."
+summary: "Your tabs from your phone, through a Telegram or Discord bot that Deventry runs itself: told when a tab needs you or finishes, its prompts answered with a tap, and messages, images and files sent by replying."
 ---
 
 # Remote clients
 
-Deventry can talk to you through a bot of your own, in Telegram or Discord, while you're away from the computer. The bot tells you when a tab needs you or finishes, shows what each tab is doing, and lets you answer its prompts with a tap, send it a message by replying, or stop it. Claude, the tools and the files stay on your computer: the bot only carries what Deventry already shows.
+Deventry can talk to you through a bot of your own, in Telegram or Discord, while you're away from the computer. The bot tells you when a tab needs you or finishes, shows what each tab is doing, and lets you answer its prompts with a tap, send it a message by replying, with a screenshot or a file if you like, or stop it. Claude, the tools and the files stay on your computer: the bot only carries what Deventry already shows.
 
 Deventry talks to the bot itself, so listing your tabs, reading what they're doing and answering prompts cost no tokens. Only a message you send a tab does, as typing it at the desk would.
 
@@ -98,6 +98,7 @@ Each message starts with the tab's name and its project.
 
 - **A prompt.** *Allow this command?* with the command, *Allow editing Player.cs?*, Claude's question, or *Claude has a plan for you to review.* with the plan as a Markdown file; and the card's own answers as buttons: **Allow**, **Deny** and **Deny with a message…**; a question's options and **Answer in my own words**; a plan's **Approve, auto mode**, **Approve, accept edits**, **Approve, ask before edits** and **Keep planning…**. A button that takes words asks for them, and your next message is the answer; one where the words are optional also offers **Without a message**. A question with several parts comes a part at a time.
 - **A finished turn.** How long it took, where Claude's task list stands, the start of the reply, and the files it changed with their lines added and removed, with **Whole reply** and **Changed files**. A reply too long for a message comes as a Markdown file.
+- **Images**, if you turn them on: those the turn made, under its message ([Images Claude makes](#images-claude-makes)).
 - **An error.** Why the tab stopped, *Claude Code stopped unexpectedly (exit code 3).*, with **Start it again**. If Claude Code needs you to sign in, the message says to do that at the desk.
 - **Usage.** Usage alerts and your accounts' spend warnings, as the [notifications](notifications.md) say them.
 - **Closing.** *Deventry on DESK is closing.* when you close Deventry, and, without a sound, that it's back when it starts again.
@@ -136,7 +137,7 @@ Your message reaches Claude as if you'd typed it at the desk: it waits its turn 
 
 {% include unreleased.html %}
 
-Send a tab a screenshot, a log or a PDF with your message, as you'd attach it at the desk: to show Claude what's wrong, from wherever you are. In Telegram, send a photo or a file with a caption; in Discord, attach files to your message. It goes to the tab your message would.
+Send a tab a screenshot, a log or a PDF with your message, as you'd attach it at the desk: to show Claude what's wrong, from wherever you are. In Telegram, send a photo or a file with a caption; in Discord, attach files to your message. It goes to the tab your message would, and the bot says what went with it: *Sent to Grappling hook, with 2 images.*
 
 - **Images** (PNG, JPEG, GIF, WebP) go to Claude in the message, and show on its card and in the tab's [Media](../conversation/media.md) window. Telegram makes a photo smaller; send it as a file to keep its full quality.
 - **Text files** up to 100 KB go in the message, as a large paste does at the desk.
@@ -144,9 +145,9 @@ Send a tab a screenshot, a log or a PDF with your message, as you'd attach it at
 - **Anything else**, such as a program, isn't sent: the bot says so, and the rest goes. A voice message, a sticker or a video isn't taken.
 - Up to 20 files a message, each up to 20 MB.
 
-**An image or file on its own** waits for your next message, with **Send now** and **Discard**, since you often send the picture first and type what it's about after. What you send next takes it along; if nothing follows in 10 minutes, it goes on its own. Turn off **Hold an image or file sent on its own** on the bot's page to send it at once instead.
+**An image or file on its own** waits for your next message, with **Send now** and **Discard**, since you often send the picture first and type what it's about after. What you send next takes it along; if nothing follows in 10 minutes, it goes on its own. Turn off **Hold an image or file sent on its own**, in **Images and files from you** on the bot's page, to send it at once instead.
 
-Files saved to `.deventry/attachments` are deleted after a month, or as **Keep files sent to tabs** in All clients says, as a tab opens in the project.
+Files saved to `.deventry/attachments` are deleted after a month, or as All clients → **Keep files sent to tabs** says, as a tab opens in the project. Sending images and files needs nothing more than sending messages does ([What remote clients can do](#what-remote-clients-can-do)).
 
 ## Commands
 
@@ -203,7 +204,7 @@ Settings → Remote clients → All clients → **What they can do** sets it for
 
 - **Watch**: the tabs, Claude's replies, changed files and usage, and messages when things happen.
 - **Watch and answer prompts**: and allow or deny, answer a question, approve a plan or keep planning.
-- **Watch, answer, send messages and stop Claude**, the default: and send a tab a message, stop it, and start a stopped tab again. Claude can then run what it could at the desk, in the tab's permission mode.
+- **Watch, answer, send messages and stop Claude**, the default: and send a tab a message, with images and files, stop it, and start a stopped tab again. Claude can then run what it could at the desk, in the tab's permission mode.
 
 **Open new tabs**, off by default, lets `/new` open a tab in a favorite or recent folder.
 
@@ -225,7 +226,7 @@ The tab keeps the choice after Deventry restarts, and a copy of the tab has it t
 
 ## Privacy
 
-Telegram can read bot chats, and Discord its direct messages: neither is end-to-end encrypted. So the service sees what the bot sends you: your tabs' and projects' names, Claude's replies, and the commands and files Claude asks about. Settings says so beside each switch.
+Telegram can read bot chats, and Discord its direct messages: neither is end-to-end encrypted. So the service sees what the bot sends you: your tabs' and projects' names, Claude's replies, and the commands and files Claude asks about. It sees what you send the bot too, the images and files included. Settings says so beside each switch.
 
 Images go only if you turn on a bot's **Send the images Claude makes** or **Send the images Claude reads** ([Images Claude makes](#images-claude-makes)), and the service sees them too. A tab you keep from remote clients sends nothing at all ([Keeping a tab from them](#keeping-a-tab-from-them)).
 

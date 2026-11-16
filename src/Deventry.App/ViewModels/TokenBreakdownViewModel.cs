@@ -148,7 +148,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     public IReadOnlyList<TokenPeriodChoice> Periods { get; } = [.. Enum.GetValues<TokenPeriod>().Select(p => new TokenPeriodChoice(p))];
 
     [ObservableProperty]
-    public partial TokenPeriodChoice SelectedPeriod { get; set; } = new(TokenPeriod.SessionWindow);
+    public partial TokenPeriodChoice SelectedPeriod { get; set; } = new(TokenPeriod.AllTime);
 
     partial void OnSelectedPeriodChanged(TokenPeriodChoice value) => Refresh();
 

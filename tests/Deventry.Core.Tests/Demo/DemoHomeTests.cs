@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Deventry.Core.Demo;
 using Deventry.Core.Settings;
 
@@ -38,5 +40,23 @@ public sealed class DemoHomeTests : IDisposable
         }
         Assert.Equal(Path.Combine(_root, "claude-config"), written.ClaudeConfig);
         Assert.NotEmpty(Directory.EnumerateFiles(Path.Combine(written.ClaudeConfig, "projects", "demo"), "*.jsonl"));
+    }
+
+    [Theory]
+    [InlineData(8, 30)]
+    [InlineData(15, 0)]
+    public async Task Its_conversations_end_over_an_hour_before_its_made_whatever_the_time(int hour, int minute)
+    {
+        var now = new DateTimeOffset(2026, 10, 30, hour, minute, 0, TimeSpan.FromHours(-4));
+
+        var written = await DemoHome.WriteAsync(_root, Path.Combine(_root, "projects"), now, new DemoOptions { ClaudePath = "deventry-itself" }, DemoContent.EmptyFolder);
+
+        var state = new JsonFileStore<AppState>(written.Paths.StateFile).Load();
+        var times = state.Tabs
+            .SelectMany(t => Regex.Matches(File.ReadAllText(t.TranscriptPath!), "\"timestamp\":\"([^\"]+)\"").Select(m => DateTimeOffset.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)))
+            .ToList();
+        // Past the prompt cache's hour, so its chip says it expired, and that morning, so the cards show only times.
+        Assert.True(times.Max() <= now.AddMinutes(-61), $"The last turn ended at {times.Max():O}, made at {now:O}.");
+        Assert.All(times, t => Assert.Equal(now.Date, t.ToOffset(now.Offset).Date));
     }
 }

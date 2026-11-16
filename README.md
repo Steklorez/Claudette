@@ -26,7 +26,7 @@ The Tasks page follows Claude's plan as it writes it and every task it makes fro
 
 ### Know how fast you're burning your plan
 
-Live meters for the session, the week and each model's limit, with a projection: *"At this rate you'll hit the limit in 1h 05m"*. Open the header up for the charts, your burn rate and the tabs burning the most. Hit the limit mid-task, and the tab carries on by itself when it resets. [Usage and limits →](https://deventry.app/usage/)
+Live meters for the session, the week and each model's limit, with a projection: *"At this rate you'll hit the limit in 1h 05m"*. Open the header up for the charts, your burn rate and the tabs burning the most. Hit the limit mid-task, and the tab carries on by itself when it resets. And see where a tab's tokens went, turn by turn and call by call, what cost more than it needed to, and what your next message will cost. [Usage and limits →](https://deventry.app/usage/)
 
 ![The detailed usage header: the session chart heading for 90% just before the reset, the week with Fable's own line, the burn rate per hour, and the busiest tabs](docs/screenshots/header-standard-dark.png)
 
@@ -56,7 +56,7 @@ Each setting has a line saying what it does, and the search finds it by what you
 
 - **A conversation built for code:** cards in their own colors, tool calls side by side as tiles, permission prompts and plans as cards, rewind and branch, find and export. [The conversation →](https://deventry.app/conversation/) · [The composer →](https://deventry.app/composer/)
 - **Pick up anywhere:** History searches Claude's replies too, the session library syncs sessions between your machines, and Remote Control carries a tab on in the Claude app on your phone. [History and syncing →](https://deventry.app/history/)
-- **Your tabs from Telegram or Discord:** a bot of your own tells you when a tab needs you or finishes, answers its prompts with a tap and passes on your replies, at no cost in tokens. [Remote clients →](https://deventry.app/away/remote-clients/)
+- **Your tabs from Telegram or Discord:** a bot of your own tells you when a tab needs you or finishes, answers its prompts with a tap and passes on your replies, with your screenshots and files, at no cost in tokens. [Remote clients →](https://deventry.app/away/remote-clients/)
 - **It knows your project:** tools for Unreal Engine, Unity and Godot, the processes a tab started, MCP servers, and Perforce. [Project tools →](https://deventry.app/project-tools/)
 - **Three looks, light and dark:** Standard, dense and calm, Claude, after the Claude apps, and Codex, after the ChatGPT and Codex apps. [Styles and themes →](https://deventry.app/settings/styles-and-themes/)
 

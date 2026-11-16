@@ -2,16 +2,16 @@
 title: A tab's tokens
 parent: Usage and limits
 nav_order: 4
-summary: "Each tab counts the tokens it has used."
+summary: "Each tab counts the tokens it has used, in the composer bar, with what they were and what they cost a click away."
 ---
 
 # A tab's tokens
 
 Each tab counts the tokens it has used. The count sits in the composer bar, at its right, in short form such as `1.2M tok`. It moves while Claude works, and it's saved with the tab, so it survives restarts and resumed sessions.
 
-## The breakdown
+## What the count opens
 
-Click the count (its tip says **Tokens used by this tab**) to open a breakdown:
+Click the count (its tip says **Tokens used by this tab**) for a popup of what they were:
 
 - A table with a row for each model the tab used: **Input**, **Output**, **Cache write**, **Cache read** and **Cost**.
 - A summary line: *12 turns · 345,000 tokens · about $1.20 at list price (an estimate, not your bill)*. Claude Code works out the cost at list price, so it's an estimate, not what you're billed.

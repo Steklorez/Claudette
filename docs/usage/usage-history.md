@@ -13,6 +13,7 @@ Deventry keeps your usage on this machine, in a small database, so the trendline
 
 - **Plan usage readings**: the session and weekly percentages (and each model's, when its meter is on) with their reset times, saved when a value changes and at most once a minute. They feed the trendline and projection, the weekly charts, and the header after a restart.
 - **Each turn's token counts**: when it ran, which tab and project, the model, input, output, cache write and cache read tokens, an estimated cost, and the account it ran under. They feed each tab's token chart, the busiest tabs, and the Projects list in [the Usage window](the-usage-window.md).
+- **Each turn's model calls**: each call's model, its tokens of each kind and the agent that made it, the main conversation or a subagent of a kind; the name of each tool used between calls, how much its result added and whether it failed; and when the conversation was compacted or cleared. They feed each tab's [token breakdown](token-breakdown.md) and the Usage window's **Where the tokens went**.
 - **Tab names**: the last name each tab had, so its rows still have a name once the tab is closed.
 
 It never keeps your prompts, replies or code. Those stay in Claude Code's own transcripts. The file stays small even with **Forever**: roughly tens of megabytes a year of heavy use.
