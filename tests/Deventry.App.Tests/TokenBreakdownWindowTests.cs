@@ -61,6 +61,25 @@ public class TokenBreakdownWindowTests
     }
 
     [Fact]
+    public async Task It_opens_on_all_time_with_turns_from_before_the_session_window()
+    {
+        await using var h = new TabTestHarness();
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        var tab = await h.OpenTabAsync();
+        await SendTurnAsync(h, tab, "Read it");
+        h.Time.Advance(TimeSpan.FromHours(6));
+
+        using var breakdown = new TokenBreakdownViewModel(h.Services, tab);
+        breakdown.Refresh();
+        await TabTestHarness.Eventually(() => breakdown.Turns.Count == 1, "the turn from before this session window");
+        Assert.Equal(TokenPeriod.AllTime, breakdown.SelectedPeriod.Period);
+
+        breakdown.SelectedPeriod = breakdown.Periods.Single(p => p.Period == TokenPeriod.SessionWindow);
+        await TabTestHarness.Eventually(() => breakdown.IsLoaded && breakdown.IsEmpty, "no turns in this session window");
+    }
+
+    [Fact]
     public async Task Cost_is_remembered_and_shows_the_bars_in_dollars()
     {
         await using var h = new TabTestHarness();

@@ -78,7 +78,7 @@ Plain words about what cost more than it needed to, the costliest first, each wi
 
 ## The period and Export
 
-The period at the top of the window is **This session window**, **Today** or **All time**. A turn keeps its number in any of them.
+The period at the top of the window is **All time** when it opens, every turn the tab has had, or **This session window** or **Today**. A turn keeps its number in any of them.
 
 **Export…** saves the turns and their calls as a CSV file, with each turn's prompt.
 
