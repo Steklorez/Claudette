@@ -155,6 +155,9 @@ public abstract partial class ChatBotClient
         var images = held.Files.Count(f => MessageImage.DetectMediaType(f.Data) is not null);
         var text = Format.Escape(RemoteMessages.Holding(images, held.Files.Count - images, HoldFor));
         var buttons = Rows([MakeButton("Send now", new SendHeldButton(chat)), MakeButton("Discard", new DiscardHeldButton(chat))], 2);
+        // The ten minutes start before the notice saying so goes out, so they run from when it's seen. Should they end
+        // meanwhile, sending what's held waits on this loop for the notice.
+        After($"held:{chat}", HoldFor, token => SendHeldAsync(chat, timedOut: true, token));
         if (held.Notice is { } notice)
         {
             await PacedAsync(token => DeliverEditAsync(chat, notice, text, buttons, token), cancellationToken).ConfigureAwait(false);
@@ -163,7 +166,6 @@ public abstract partial class ChatBotClient
         {
             held.Notice = await SendAsync(chat, text, buttons, replyTo, silent: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
-        After($"held:{chat}", HoldFor, token => SendHeldAsync(chat, timedOut: true, token));
     }
 
     /// <summary>
