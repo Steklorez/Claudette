@@ -382,7 +382,7 @@ The map covers every part of Deventry that DESIGN.md describes. When a chapter i
 
 ## 7. Keeping it current
 
-- A change people can see updates its guide page and retakes its pictures in the same change, as it updates DESIGN.md (`guide-screenshots.ps1 -Only <chapter>/<picture>`). CLAUDE.md says so. The script leaves the focus, keyboard and pointer alone, so a run can go on while you work; the two pictures that need them, `tabs/info-card` and `tabs/command-palette`, are taken only with `-WithInput`, which borrows them for a few seconds each.
+- A change people can see updates its guide page and retakes its pictures in the same change, as it updates DESIGN.md (`guide-screenshots.ps1 -Only <chapter>/<picture>`). CLAUDE.md says so. The script leaves the focus, keyboard and pointer alone, so a run can go on while you work: even the info card, which shows as the pointer rests on a row, and the command palette, which its shortcut opens, are shown through Deventry's command channel.
 - A change to what the README's pictures show, which the guide's pages use too (the main window and its header, the detailed header, the diff view, Tasks and Agents, Settings, History, the Files tab), retakes them with `screenshots.ps1`, which draws the social card again from the new main window. Both scripts take `-Projects` a short folder that says nothing about you, such as `C:\Demo`.
 - A new part of Deventry in DESIGN.md gets its row in the map here, and its page, in the same change.
 - A change people would notice adds its entry to `CHANGELOG.md`'s **Unreleased** section in the same change ([The changelog](#the-changelog)). CLAUDE.md says so too.
