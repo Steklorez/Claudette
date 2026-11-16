@@ -405,6 +405,21 @@ public class RemoteClientsTests
     }
 
     [Fact]
+    public async Task The_images_Claude_only_read_come_too_marked_when_a_client_sends_those()
+    {
+        await using var remote = await StartAsync(s => s.RemoteClients.SetSendReadImages("telegram", true));
+        Assert.True(remote.Desk.SendsReadImages("telegram"));
+        Assert.False(remote.Desk.SendsImages("telegram"));
+
+        EmitTurnWithImages(remote);
+
+        await TabTestHarness.Eventually(() => remote.Client.Of<RemoteTurnFinished>().Count == 1, "the turn's end");
+        var turn = remote.Client.Of<RemoteTurnFinished>()[0];
+        // All three, as the Media window has them: the image it read, which was there a day before the turn, marked.
+        Assert.Equal([("Image.png", false), ("before.png", true), ("chart.png", false)], turn.Images.Select(i => (i.Name, i.WasRead)));
+    }
+
+    [Fact]
     public async Task No_images_are_read_while_no_client_sends_them_or_the_messages_say_just_what_happened()
     {
         await using var remote = await StartAsync(s =>

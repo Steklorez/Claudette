@@ -65,7 +65,9 @@ public sealed record RemoteTurnFinished(RemoteTab Tab, TimeSpan? Took, string? T
 {
     /// <summary>
     /// The images the turn made, up to <see cref="RemoteImage.MostPerTurn"/>, for the clients that send them
-    /// (<see cref="IRemoteDesk.SendsImages"/>). Empty when none does, so nothing is read for nobody.
+    /// (<see cref="IRemoteDesk.SendsImages"/>), and those Claude read in it (<see cref="RemoteImage.WasRead"/>) when a
+    /// client sends those too (<see cref="IRemoteDesk.SendsReadImages"/>). Empty when none does, so nothing is read for
+    /// nobody.
     /// </summary>
     public IReadOnlyList<RemoteImage> Images { get; init; } = [];
 

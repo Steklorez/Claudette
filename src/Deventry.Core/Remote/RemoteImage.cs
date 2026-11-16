@@ -9,6 +9,12 @@ namespace Deventry.Core.Remote;
 /// <param name="MediaType"><c>image/png</c> or <c>image/jpeg</c>.</param>
 public sealed record RemoteImage(string Name, string MediaType, byte[] Data, int Width, int Height)
 {
+    /// <summary>
+    /// Claude only read it: a file that was there before the turn, which it opened to look at. Sent only by a client that
+    /// sends the images Claude reads (<see cref="IRemoteDesk.SendsReadImages"/>).
+    /// </summary>
+    public bool WasRead { get; init; }
+
     /// <summary>The most a turn sends: one album, as Telegram and Discord each take ten in one message.</summary>
     public const int MostPerTurn = 10;
 

@@ -507,6 +507,7 @@ public sealed partial class TabViewModel
         // In the order the conversation last showed them, as the Media window has them, however long finding a file took.
         var seen = _turnImages.OrderBy(e => e.Order).ToArray();
         var since = _turnStartedAt - WriteTimeSlack;
-        return seen.Length == 0 ? ([], 0) : await Task.Run(() => Services.RemoteImageFiles.Made(seen, since));
+        var withRead = Remote.WantsReadImages;
+        return seen.Length == 0 ? ([], 0) : await Task.Run(() => Services.RemoteImageFiles.Made(seen, since, withRead));
     }
 }

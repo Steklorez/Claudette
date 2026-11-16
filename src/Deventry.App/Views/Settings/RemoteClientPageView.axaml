@@ -121,6 +121,10 @@
           <ToggleSwitch IsChecked="{Binding SendsImages}" HorizontalAlignment="Left" AutomationProperties.Name="{Binding ImagesTitle}" />
         </StackPanel>
       </c:SettingRow>
+      <!-- The images Claude only read, its own switch: they can be any image file on the computer -->
+      <c:SettingRow Key="{Binding ReadImagesKey}">
+        <ToggleSwitch IsChecked="{Binding SendsReadImages}" AutomationProperties.Name="{Binding ReadImagesTitle}" />
+      </c:SettingRow>
     </c:SettingsSection>
   </StackPanel>
 </UserControl>

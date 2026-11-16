@@ -397,6 +397,29 @@ public sealed class TelegramClientTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task An_image_Claude_only_read_goes_only_to_a_client_that_sends_those()
+    {
+        _desk.SendImages.Add(TelegramClient.ClientKind);
+        await StartAsync();
+
+        _desk.Raise(TurnWithImages(Image("chart.png"), Image("render.png") with { WasRead = true }));
+
+        await NextSentAsync(1);
+        await Waiting.UntilAsync(() => _telegram.Of("sendPhoto").Count == 1, "the photo");
+        Assert.Equal("chart.png", (string)_telegram.Of("sendPhoto")[0]["photo"]!);
+        Assert.Equal("<b>Grappling hook</b>: The image Claude made", (string)_telegram.Of("sendPhoto")[0]["caption"]!);
+
+        // Told to send those too, the next turn's go together.
+        _desk.SendReadImages.Add(TelegramClient.ClientKind);
+        _desk.Raise(TurnWithImages(Image("chart.png"), Image("render.png") with { WasRead = true }));
+
+        await Waiting.UntilAsync(() => _telegram.Of("sendMediaGroup").Count == 1, "the album");
+        var album = _telegram.Of("sendMediaGroup").Single();
+        Assert.Equal(("chart.png", "render.png"), ((string)album["photo0"]!, (string)album["photo1"]!));
+        Assert.Equal("<b>Grappling hook</b>: 2 images Claude made or read", (string)JsonNode.Parse((string)album["media"]!)!.AsArray()[0]!["caption"]!);
+    }
+
+    [Fact]
     public async Task One_image_is_a_photo_and_one_too_tall_for_a_photo_comes_as_a_file()
     {
         _desk.SendImages.Add(TelegramClient.ClientKind);

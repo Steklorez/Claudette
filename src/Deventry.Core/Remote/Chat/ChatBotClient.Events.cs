@@ -182,9 +182,11 @@ public abstract partial class ChatBotClient
         var text = detail == RemoteDetail.JustWhatHappened ? Format.Escape(RemoteMessages.Finished(turn.Tab.Name)) : TurnText(turn);
         var buttons = Rows([MakeButton("Whole reply", new ReplyButton(turn.Tab.Id)), MakeButton("Changed files", new FilesButton(turn.Tab.Id))], 2);
         var sent = await BroadcastAsync(text, buttons, notice == RemoteNotice.Silent, turn.Tab.Id, cancellationToken).ConfigureAwait(false);
-        if (turn.Images.Count > 0 && detail == RemoteDetail.Everything && Desk.SendsImages(Kind))
+        // The images it made, when this client sends them, and those Claude only read, when it sends those too.
+        var images = detail == RemoteDetail.Everything ? [.. turn.Images.Where(i => i.WasRead ? Desk.SendsReadImages(Kind) : Desk.SendsImages(Kind))] : Array.Empty<RemoteImage>();
+        if (images.Length > 0)
         {
-            await SendImagesAsync(sent, turn, cancellationToken).ConfigureAwait(false);
+            await SendImagesAsync(sent, turn, images, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -192,14 +194,14 @@ public abstract partial class ChatBotClient
     /// The images the turn made, after its message in each chat it went to, as a reply to it and silently: the message
     /// made the sound (DESIGN.md §18, "Remote clients", "Images").
     /// </summary>
-    private async Task SendImagesAsync(IReadOnlyList<(long Chat, long Message)> sent, RemoteTurnFinished turn, CancellationToken cancellationToken)
+    private async Task SendImagesAsync(IReadOnlyList<(long Chat, long Message)> sent, RemoteTurnFinished turn, IReadOnlyList<RemoteImage> images, CancellationToken cancellationToken)
     {
-        var caption = $"{Format.Bold(turn.Tab.Name)}: {Format.Escape(RemoteMessages.Images(turn.Images.Count, turn.ImagesLeftOut, turn.Tab.Agent))}";
+        var caption = $"{Format.Bold(turn.Tab.Name)}: {Format.Escape(RemoteMessages.Images(images.Count, turn.ImagesLeftOut, turn.Tab.Agent, images.Count(i => i.WasRead)))}";
         foreach (var (chat, message) in sent)
         {
             try
             {
-                var id = await PacedAsync(token => DeliverImagesAsync(chat, turn.Images, caption, message, silent: true, token), cancellationToken).ConfigureAwait(false);
+                var id = await PacedAsync(token => DeliverImagesAsync(chat, images, caption, message, silent: true, token), cancellationToken).ConfigureAwait(false);
                 Activity?.Invoke(RemoteActivity.Sent);
                 Remember(chat, id, turn.Tab.Id);
             }

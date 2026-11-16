@@ -54,6 +54,12 @@ public interface IRemoteDesk
     /// </summary>
     bool SendsImages(string kind);
 
+    /// <summary>
+    /// The client of <paramref name="kind"/> sends the images Claude read in a turn too (<b>Send the images Claude reads</b>,
+    /// off by default), such as one another program wrote; never while <see cref="Detail"/> is just what happened.
+    /// </summary>
+    bool SendsReadImages(string kind);
+
     /// <summary>Something happened. Raised on the UI thread: handlers queue their work and return.</summary>
     event Action<RemoteEvent>? EventRaised;
 

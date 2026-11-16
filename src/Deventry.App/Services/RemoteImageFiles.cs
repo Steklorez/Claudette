@@ -15,26 +15,30 @@ public static class RemoteImageFiles
     /// <summary>
     /// Of <paramref name="seen"/>, the agent's images the turn showed, oldest first, those it made: an image with no file
     /// (a screenshot, a tool's picture), or a file written since <paramref name="since"/> (a chart a script drew, a PNG
-    /// Claude wrote). An image it only read, which was there before, isn't. The newest
-    /// <see cref="RemoteImage.MostPerTurn"/> that can be sent, oldest first, and how many more it made.
+    /// Claude wrote). An image it only read, which was there before, isn't, unless <paramref name="withRead"/> says to
+    /// take those too (<b>Send the images Claude reads</b>), marked <see cref="RemoteImage.WasRead"/>. The newest
+    /// <see cref="RemoteImage.MostPerTurn"/> that can be sent, oldest first, and how many more there were.
     /// </summary>
-    public static (IReadOnlyList<RemoteImage> Images, int LeftOut) Made(IReadOnlyList<MediaEntry> seen, DateTimeOffset since)
+    public static (IReadOnlyList<RemoteImage> Images, int LeftOut) Made(IReadOnlyList<MediaEntry> seen, DateTimeOffset since, bool withRead = false)
     {
-        var made = seen.Where(entry => IsMade(entry, since)).ToList();
+        var taken = seen.Select(entry => (Entry: entry, WasRead: !IsMade(entry, since))).Where(e => !e.WasRead || (withRead && HasFile(e.Entry))).ToList();
         var images = new List<RemoteImage>();
         var tried = 0;
         // The newest first, until an album is full.
-        for (var i = made.Count - 1; i >= 0 && images.Count < RemoteImage.MostPerTurn; i--)
+        for (var i = taken.Count - 1; i >= 0 && images.Count < RemoteImage.MostPerTurn; i--)
         {
             tried++;
-            if (Read(made[i]) is { } image)
+            if (Read(taken[i].Entry) is { } image)
             {
-                images.Add(image);
+                images.Add(image with { WasRead = taken[i].WasRead });
             }
         }
         images.Reverse();
-        return (images, made.Count - tried);
+        return (images, taken.Count - tried);
     }
+
+    /// <summary>An image the turn showed from a file: one Claude may only have read.</summary>
+    private static bool HasFile(MediaEntry entry) => (entry.Path ?? entry.Image?.FilePath) is { Length: > 0 };
 
     private static bool IsMade(MediaEntry entry, DateTimeOffset since)
     {

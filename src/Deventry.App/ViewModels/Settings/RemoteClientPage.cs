@@ -54,8 +54,11 @@ public sealed partial class RemoteClientPage : SettingsPage, IDisposable
         Section(ImagesSectionKey, "Images",
         [
             Setting(ImagesKey, ImagesTitle, s => s.RemoteClients.SendsImages(kind), (s, v) => s.RemoteClients.SetSendImages(kind, v),
-                "When a turn ends, the images Claude and its subagents made in it follow its message: a screenshot or another tool's picture, or an image file written during the turn, such as a chart a script drew. Not one Claude only read, and none while All clients → What they say is Just what happened.",
+                "When a turn ends, the images Claude and its subagents made in it follow its message: a screenshot or another tool's picture, or an image file written during the turn, such as a chart a script drew. Not one Claude only read, which the switch below sends, and none while All clients → What they say is Just what happened.",
                 keywords: ["image", "images", "screenshot", "picture", "photo", "chart", "media"]),
+            Setting(ReadImagesKey, ReadImagesTitle, s => s.RemoteClients.SendsReadImages(kind), (s, v) => s.RemoteClients.SetSendReadImages(kind, v),
+                "The images Claude and its subagents read in a turn follow its message too: image files that were there before it, which Claude opened to look at, such as a render, a test's output or a picture another program wrote. Any image file on this computer Claude reads goes, so it's off unless you turn it on.",
+                keywords: ["image", "images", "read", "opened", "picture", "photo", "render", "output", "media"]),
         ]);
         _pairingTicker = new UiTicker(Services.Time, Services.Dispatcher, TimeSpan.FromSeconds(1), OnPairingTick);
         Remote.Changed += OnRemoteChanged;
@@ -157,6 +160,18 @@ public sealed partial class RemoteClientPage : SettingsPage, IDisposable
     {
         get => Settings.RemoteClients.SendsImages(Kind);
         set => Set(value, v => Settings.RemoteClients.SetSendImages(Kind, v));
+    }
+
+    /// <summary>The read images' switch's key in <c>settings.json</c>: <c>remoteClients.clients.telegram.sendReadImages</c>.</summary>
+    public string ReadImagesKey => $"remoteClients.clients.{Kind}.sendReadImages";
+
+    public string ReadImagesTitle => "Send the images Claude reads";
+
+    /// <summary><b>Send the images Claude reads</b>, off by default.</summary>
+    public bool SendsReadImages
+    {
+        get => Settings.RemoteClients.SendsReadImages(Kind);
+        set => Set(value, v => Settings.RemoteClients.SetSendReadImages(Kind, v));
     }
 
     /// <summary>What sending images means, in the caution colors above its switch: they leave for a service Deventry doesn't control.</summary>

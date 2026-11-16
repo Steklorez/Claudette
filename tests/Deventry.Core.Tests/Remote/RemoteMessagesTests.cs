@@ -81,4 +81,11 @@ public class RemoteMessagesTests
     [InlineData(10, 4, "Codex", "10 of the 14 images Codex made. The rest are in the tab's Media window.")]
     public void A_turns_images_say_how_many_and_whose(int sent, int leftOut, string agent, string expected) =>
         Assert.Equal(expected, RemoteMessages.Images(sent, leftOut, agent));
+
+    [Theory]
+    [InlineData(1, 1, "The image Claude read")]
+    [InlineData(3, 1, "3 images Claude made or read")]
+    [InlineData(2, 2, "2 images Claude read")]
+    public void Images_Claude_only_read_say_so(int sent, int read, string expected) =>
+        Assert.Equal(expected, RemoteMessages.Images(sent, 0, "Claude", read));
 }

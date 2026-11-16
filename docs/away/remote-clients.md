@@ -116,7 +116,8 @@ A bot can send you the images a turn made, after the turn's message, so you see 
 
 Above the switch, a note in yellow says what turning it on means: the images go to Telegram's or Discord's servers, which Deventry doesn't control, and stay in the chat; Deventry can't take them back. A screenshot shows whatever was on the screen or the page Claude captured, your code and anything private in it included.
 
-- **Which images.** Those Claude and its subagents made in the turn: a tool's screenshot or picture, and an image file written during the turn, such as a PNG Claude wrote or a chart a command drew. Not an image Claude only read or named that was already there. They're the images the tab's [Media](../conversation/media.md) window gains under **Agent**, less those.
+- **Which images.** Those Claude and its subagents made in the turn: a tool's screenshot or picture, and an image file written during the turn, such as a PNG Claude wrote or a chart a command drew. Not an image Claude only read or named that was already there, unless you turn on the switch under it (below). They're the images the tab's [Media](../conversation/media.md) window gains under **Agent**, less those.
+- **Images Claude reads.** Sometimes the picture you want is one Claude opened to look at: a render, a test's screenshot, or an image another program wrote. Turn on **Send the images Claude reads**, under **Send the images Claude makes**, and those come too, with *read* in the message: *The image Claude read*, *3 images Claude made or read*. It's off until you turn it on, and works on its own, so a bot can send the images Claude reads without those it makes. Any image file on your computer that Claude reads goes, so think about what's in your projects before you turn it on.
 - **How they come.** Under the turn's message, as a reply to it and without a sound of their own: one as a photo, several as an album in Telegram, or one message in Discord, with the tab's name and *3 images Claude made*. Up to ten from a turn; past that, the message says how many more there are, and they're in the tab's Media window. Reply to them to send the tab a message, as with any of its messages.
 - **When.** Only with a finished turn's message, so only when that message comes ([When messages come](#when-messages-come)). Never while **What they say** is **Just what happened**.
 - **What kinds.** PNG, JPEG, GIF (its first frame), WebP and BMP, made smaller if they're more than 4,096 pixels across or 10 MB. Telegram sends a picture too tall or wide for a photo, such as a whole page's screenshot, as a file.
@@ -210,7 +211,7 @@ The tab keeps the choice after Deventry restarts, and a copy of the tab has it t
 
 Telegram can read bot chats, and Discord its direct messages: neither is end-to-end encrypted. So the service sees what the bot sends you: your tabs' and projects' names, Claude's replies, and the commands and files Claude asks about. Settings says so beside each switch.
 
-Images go only if you turn on a bot's **Send the images Claude makes** ([Images Claude makes](#images-claude-makes)), and the service sees them too. A tab you keep from remote clients sends nothing at all ([Keeping a tab from them](#keeping-a-tab-from-them)).
+Images go only if you turn on a bot's **Send the images Claude makes** or **Send the images Claude reads** ([Images Claude makes](#images-claude-makes)), and the service sees them too. A tab you keep from remote clients sends nothing at all ([Keeping a tab from them](#keeping-a-tab-from-them)).
 
 To send less, set All clients → **What they say** to **Just what happened**: messages then say only the tab's name and what happened (*Grappling hook needs you.*), with no reply, command, path or file name. A prompt's message has **Show**, which sends that prompt's details and buttons when you ask. See [What leaves this computer](../privacy/what-leaves-this-computer.md).
 
@@ -227,6 +228,7 @@ All this computer's: none of them sync.
 | **Use a Telegram bot** | Off | Settings → Remote clients → Telegram |
 | **Use a Discord bot** | Off | Settings → Remote clients → Discord |
 | **Send the images Claude makes** | Off | Settings → Remote clients → Telegram or Discord |
+| **Send the images Claude reads** | Off | Settings → Remote clients → Telegram or Discord |
 | **Keep from remote clients** | Off, for each tab | The tab's menu |
 | **Remote clients can** | Watch, answer, send messages and stop Claude | Settings → Remote clients → All clients |
 | **Open new tabs** | Off | Settings → Remote clients → All clients |

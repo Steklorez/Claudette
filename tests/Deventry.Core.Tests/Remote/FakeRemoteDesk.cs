@@ -24,6 +24,10 @@ internal sealed class FakeRemoteDesk : IRemoteDesk
 
     public bool SendsImages(string kind) => SendImages.Contains(kind) && Detail == RemoteDetail.Everything;
 
+    public HashSet<string> SendReadImages { get; } = [];
+
+    public bool SendsReadImages(string kind) => SendReadImages.Contains(kind) && Detail == RemoteDetail.Everything;
+
     public List<RemoteTab> Tabs { get; set; } = [];
 
     public RemoteReply? LastReply { get; set; }
