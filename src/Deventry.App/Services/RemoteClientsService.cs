@@ -86,6 +86,10 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
     /// <summary>A remote client is on: the tabs tell it what happens.</summary>
     public bool IsActive => !_clients.IsEmpty;
 
+    /// <summary>The kinds of client connected now, by name: those <see cref="CloseAsync"/> has tell their chats Deventry is closing.</summary>
+    public IReadOnlyList<string> ConnectedNames =>
+        [.. Types.Where(t => _clients.TryGetValue(t.Kind, out var client) && client.State.Status == RemoteClientStatus.Connected).Select(t => t.Name)];
+
     public IRemoteClientType Type(string kind) => Types.First(t => t.Kind == kind);
 
     /// <summary>Pairing an account with the client of <paramref name="kind"/>, and the accounts paired with it.</summary>

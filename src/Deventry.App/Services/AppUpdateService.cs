@@ -374,7 +374,7 @@ public sealed class AppUpdateService : IDisposable
         // From here the new version owns the settings and state files: flush, then stop writing them.
         await _services.FlushAsync();
         _services.SuspendSaving = true;
-        await _host.CloseTabsAsync($"Installing Deventry {prepared.Version}…");
+        await _host.CloseTabsAsync($"Installing Deventry {prepared.Version}…", "Installing the update");
         // The new version is told where to say it's up, outside the data folder: it may move that, as Deventry does when
         // it takes over from Deventry (DESIGN.md §2, "Renaming to Deventry").
         var ready = _services.Paths.UpdateReadyFile(nonce);

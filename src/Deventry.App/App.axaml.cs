@@ -41,6 +41,7 @@ public partial class App : Application
     private MainWindowViewModel? _mainViewModel;
     private PlatformChrome? _chrome;
     private WindowPlacementTracker? _placement;
+    private bool _shuttingDown;
     private bool _shutdownComplete;
     private MainWindow? _mainWindow;
     private AutomationChannel? _automation;
@@ -358,7 +359,15 @@ public partial class App : Application
             return;
         }
         e.Cancel = true;
+        if (_shuttingDown)
+        {
+            // Closed again, by Alt+F4 or the Dock, while closing: it's under way.
+            return;
+        }
+        _shuttingDown = true;
         window.IsEnabled = false;
+        // A card over the window says what closing is doing, once it takes a moment (DESIGN.md §13).
+        var closing = _mainViewModel?.BeginClosing();
         try
         {
             _chrome?.Dispose();
@@ -380,6 +389,7 @@ public partial class App : Application
                 // Whatever closing the tabs met, the state, settings and usage are written.
                 if (_services is not null)
                 {
+                    closing?.Saving(restart: _services.SuspendSaving);
                     try
                     {
                         await _services.FlushAsync();
@@ -387,6 +397,7 @@ public partial class App : Application
                     finally
                     {
                         await _services.DisposeAsync();
+                        closing?.Advance();
                     }
                 }
             }

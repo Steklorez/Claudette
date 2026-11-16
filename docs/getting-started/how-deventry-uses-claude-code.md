@@ -42,6 +42,18 @@ Open Task Manager or Activity Monitor and you'll see a `claude` for each tab tha
 
 Tabs you haven't sent a message to since launch don't start `claude`, even when you select one to read it, so many pinned tabs cost nothing until used. Closing a tab stops its `claude`, and what it started unless you choose to leave that running. Closing Deventry stops every tab's. See [Processes](../tabs/processes.md).
 
+## When you close Deventry
+
+{% include unreleased.html %}
+
+Closing Deventry's window doesn't end it at once. The window stays while Deventry:
+
+1. Tells your [Telegram or Discord bot](../away/remote-clients.md) it's closing, if one is connected.
+2. Stops every tab, all at once. A tab Claude is working in is interrupted first, so the session ends cleanly, and each `claude` gets a moment to finish writing its transcript. What the tabs started is stopped too.
+3. Saves your scratch pads, the message in each tab's box, and which tabs are open.
+
+With no tab working, that's well under a second. With one in a turn it can take a few seconds, so once it takes a moment the window dims under a card that says what Deventry is doing, such as *Stopping Claude in 3 tabs (1 of 3 done)*, with a bar that fills as it goes, and Joulene waving goodbye. Restarting into an update or a new build shows the same card, with *Installing Deventry 1.2.0…* or *Restarting into the new build…*.
+
 ## What Deventry asks Claude Code for on its own
 
 - After your first message in a new session, one small request for a title, which becomes the tab's name.

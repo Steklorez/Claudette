@@ -23,7 +23,7 @@ internal sealed class ShellRestartHost(ShellViewModel shell) : IRestartHost
 
     public RestartSnapshot Capture() => shell.CaptureForRestart();
 
-    public Task CloseTabsAsync(string message) => shell.CloseTabsForRestartAsync();
+    public Task CloseTabsAsync(string title, string wait) => shell.CloseTabsForRestartAsync();
 
     public void Recover(RestartSnapshot snapshot) => shell.Restore(null, snapshot);
 

@@ -34,7 +34,7 @@ Settings → General has the same actions under **Updates and status**.
 ## What an update does
 
 1. Deventry saves a snapshot of every tab, each unsent message, the selected tab and the window's size and place.
-2. It stops its tabs as closing does, and installs the new version.
+2. It stops its tabs as closing does, under a card that says *Installing Deventry 1.2.0…* and what it's doing, and installs the new version.
 3. The new version opens, takes the tabs from the snapshot and carries on.
 
 A tab that was working is carried on: Claude Code re-runs the turn by itself, once, and the conversation says *Carrying on with the turn the restart cut off.* Processes the tabs started are stopped, as when Deventry closes. The card warns you when a tab is working, and **Update when idle** is the way to avoid interrupting it.

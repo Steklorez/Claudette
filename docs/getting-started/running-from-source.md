@@ -52,7 +52,7 @@ The build is `dotnet build` of the app, in the configuration you built it in, su
 
 Deventry checks the build output every two seconds. Once a build's files have stopped changing, **New build ready** appears at the foot of the sidebar. A failed build writes nothing, so it's never offered. Choose the badge to see when the build was made:
 
-- **Restart now** restarts into it.
+- **Restart now** restarts into it. A card over the window says *Restarting into the new build…* while the tabs stop and the new build starts.
 - **Restart when idle** waits until no tab is starting, working or waiting on you. **Don't restart** cancels the wait.
 - **Restart into new builds by itself when no tab is working** does that every time. It's remembered on this machine.
 

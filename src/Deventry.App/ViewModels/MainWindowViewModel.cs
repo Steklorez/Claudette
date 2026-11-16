@@ -1,3 +1,4 @@
+using Deventry.App.Mascot;
 using Deventry.App.Services;
 using Deventry.Core.Auth;
 using Deventry.Core.Development;
@@ -585,13 +586,16 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         return snapshot;
     }
 
-    async Task IRestartHost.CloseTabsAsync(string message)
+    async Task IRestartHost.CloseTabsAsync(string title, string wait)
     {
-        CurrentPage = new BusyViewModel(message);
+        // The card shows at once, over the tabs as they go: a restart always takes a while.
+        Closing?.Dispose();
+        var closing = Closing = NewClosing(title, wait: true);
         if (_shell is not null)
         {
-            await _shell.CloseTabsForRestartAsync();
+            await _shell.CloseTabsForRestartAsync(closing);
         }
+        closing.Waiting(wait);
     }
 
     void IRestartHost.Recover(RestartSnapshot snapshot)
@@ -601,14 +605,52 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             _shell.Restore(null, snapshot);
             CurrentPage = _shell;
         }
+        // The new copy didn't start: the card goes, and the tabs are back.
+        Closing?.Dispose();
+        Closing = null;
     }
 
-    void IRestartHost.Exit() => ExitRequested?.Invoke();
+    void IRestartHost.Exit()
+    {
+        // The wait is over: the new copy is up.
+        Closing?.Advance();
+        ExitRequested?.Invoke();
+    }
+
+    // ---- Closing (DESIGN.md §13, "What closing does, on screen") ------------------------------------------------
+
+    /// <summary>The card over the window while Deventry closes or restarts, or null.</summary>
+    [ObservableProperty]
+    public partial ClosingViewModel? Closing { get; private set; }
+
+    /// <summary>Closing starts: the card that says what it's doing, or a restart's, already up.</summary>
+    public ClosingViewModel BeginClosing() => Closing ??= NewClosing("Closing Deventry…", wait: false);
+
+    /// <summary>A card counting every step closing will take from here: the bots, each tab, a restart's wait, saving.</summary>
+    private ClosingViewModel NewClosing(string title, bool wait)
+    {
+        var steps = (services.RemoteClients.ConnectedNames.Count > 0 ? 1 : 0) + (_shell?.AllTabs.Count() ?? 0) + (wait ? 1 : 0) + 1;
+        // A screenshot run's pictures don't depend on the day: no hat, as on the composer.
+        var joulene = services.Settings.Appearance.ShowJoulene
+            ? new ClosingJoulene(services.ReduceMotion, UnfocusedWindows.IsOn ? null : MascotCalendar.HatAt(services.Time.GetLocalNow()), services.Mascot.PixelsPerCell)
+            : null;
+        return new ClosingViewModel(services.Time, services.Dispatcher, title, steps, joulene, wait ? TimeSpan.Zero : ClosingViewModel.ShowAfter);
+    }
 
     public async ValueTask DisposeAsync()
     {
+        var closing = Closing;
         // The remote clients say Deventry is closing, while the tabs are still there to name.
+        var bots = services.RemoteClients.ConnectedNames;
+        if (bots.Count > 0)
+        {
+            closing?.TellingBots(bots);
+        }
         await services.RemoteClients.CloseAsync();
+        if (bots.Count > 0)
+        {
+            closing?.Advance();
+        }
         services.Notifications.Activated -= OnNotificationActivated;
         ServiceStatus.Dispose();
         RemoteClients.Dispose();
@@ -623,7 +665,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
         AppUpdates?.Dispose();
         if (_shell is not null)
         {
-            await _shell.DisposeAsync();
+            await _shell.ShutDownAsync(closing);
         }
     }
 }

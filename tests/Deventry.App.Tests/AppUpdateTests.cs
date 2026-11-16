@@ -107,9 +107,9 @@ public class AppUpdateTests
 
         public RestartSnapshot Capture() => shell.CaptureForRestart();
 
-        public Task CloseTabsAsync(string message)
+        public Task CloseTabsAsync(string title, string wait)
         {
-            ClosedWith = message;
+            ClosedWith = title;
             return shell.CloseTabsForRestartAsync();
         }
 

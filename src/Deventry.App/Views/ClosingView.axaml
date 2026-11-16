@@ -1,0 +1,22 @@
+<!-- Closing Deventry, or restarting it (DESIGN.md §13, "What closing does, on screen"): a card saying what it's doing,
+     with a bar that fills by step and Joulene waving goodbye from its top edge. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deventry.App.ViewModels"
+             xmlns:controls="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.ClosingView"
+             x:DataType="vm:ClosingViewModel">
+  <StackPanel Width="380">
+    <!-- She stands on the card's top edge, toward its right; her figure is added from code -->
+    <Panel x:Name="Stand" HorizontalAlignment="Right" Margin="0,0,32,0" />
+    <Border Classes="dialog">
+      <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="16" TextWrapping="Wrap" />
+        <!-- Drawn, not a ProgressBar: the window is disabled while it closes, and this keeps its colors -->
+        <controls:ContextBar Height="6" CornerRadius="3" Segments="{Binding Bar}" IsHitTestVisible="False"
+                             AutomationProperties.Name="{Binding Progress}" />
+        <TextBlock Text="{Binding Step}" Classes="muted" TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

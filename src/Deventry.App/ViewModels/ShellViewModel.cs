@@ -1201,7 +1201,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// Stops every tab for a restart, as closing Deventry does, but keeps them in the saved state: the new build
     /// brings them back, or this one does if the new build doesn't start.
     /// </summary>
-    public async Task CloseTabsForRestartAsync()
+    public async Task CloseTabsForRestartAsync(ClosingViewModel? closing = null)
     {
         var tabs = AllTabs.ToArray();
         var files = Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray();
@@ -1221,7 +1221,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         await Task.WhenAll(files.Select(f => f.DisposeAsync().AsTask()));
         await Task.WhenAll(tickets.Select(t => t.DisposeAsync().AsTask()));
         // A turn is left as it is, not interrupted, so Claude Code can carry it on after the restart.
-        await Task.WhenAll(tabs.Select(t => t.CloseAsync(killProcesses: true, interruptTurn: false).AsTask()));
+        await StopTabsAsync(tabs, t => t.CloseAsync(killProcesses: true, interruptTurn: false), closing);
         OnTabStatusChanged();
     }
 
@@ -1405,7 +1405,10 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync() => ShutDownAsync(null);
+
+    /// <summary>Closing Deventry: every tab stops, at once, each telling <paramref name="closing"/> as it's done.</summary>
+    public async ValueTask ShutDownAsync(ClosingViewModel? closing)
     {
         SaveTabs();
         _services.EditorLogs.Follow([], []);
@@ -1416,6 +1419,26 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         IdleUnloadTicker.Stop();
         await Task.WhenAll(Groups.Select(g => g.Files).OfType<ProjectFilesViewModel>().ToArray().Select(f => f.DisposeAsync().AsTask()));
         await Task.WhenAll(Groups.Select(g => g.Tickets).OfType<TicketsViewModel>().ToArray().Select(t => t.DisposeAsync().AsTask()));
-        await Task.WhenAll(AllTabs.ToArray().Select(t => t.DisposeAsync().AsTask()));
+        await StopTabsAsync(AllTabs.ToArray(), t => t.DisposeAsync(), closing);
+    }
+
+    /// <summary>Stops <paramref name="tabs"/> all at once, the closing card counting each as it's done (DESIGN.md §13).</summary>
+    private static async Task StopTabsAsync(TabViewModel[] tabs, Func<TabViewModel, ValueTask> stop, ClosingViewModel? closing)
+    {
+        if (tabs.Length > 0)
+        {
+            closing?.StoppingTabs([.. tabs.Select(t => t.DisplayName)]);
+        }
+        await Task.WhenAll(tabs.Select(async t =>
+        {
+            try
+            {
+                await stop(t);
+            }
+            finally
+            {
+                closing?.TabStopped();
+            }
+        }));
     }
 }

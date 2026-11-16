@@ -17,8 +17,11 @@ public interface IRestartHost
     /// <summary>The open tabs, drafts and window placement, for the new build.</summary>
     RestartSnapshot Capture();
 
-    /// <summary>Shows <paramref name="message"/> in place of the tabs and stops every tab, as closing Deventry does.</summary>
-    Task CloseTabsAsync(string message);
+    /// <summary>
+    /// Shows <paramref name="title"/> on the closing card over the window and stops every tab, as closing Deventry does;
+    /// then the card says <paramref name="wait"/> until <see cref="Exit"/> or <see cref="Recover"/>.
+    /// </summary>
+    Task CloseTabsAsync(string title, string wait);
 
     /// <summary>The new build didn't start: brings the tabs back here.</summary>
     void Recover(RestartSnapshot snapshot);
@@ -239,7 +242,7 @@ public sealed class RestartService : IDisposable
         // From here the new build owns the settings and state files: flush, then stop writing them.
         await _services.FlushAsync();
         _services.SuspendSaving = true;
-        await _host.CloseTabsAsync("Restarting into the new build…");
+        await _host.CloseTabsAsync("Restarting into the new build…", "Starting the new build");
         IRunningProcess? process = null;
         var errors = new Queue<string>();
         try

@@ -3,6 +3,7 @@
         xmlns:vm="using:Deventry.App.ViewModels"
         xmlns:conversation="using:Deventry.App.Conversation"
         xmlns:controls="using:Deventry.App.Controls"
+        xmlns:local="using:Deventry.App.Views"
         xmlns:settings="using:Deventry.Core.Settings"
         xmlns:chrome="using:Avalonia.Controls.Chrome"
         x:Class="Deventry.App.Views.MainWindow"
@@ -698,6 +699,12 @@
             </StackPanel>
           </StackPanel>
         </Border>
+      </Border>
+
+      <!-- Closing Deventry, or restarting it (DESIGN.md §13, "What closing does, on screen"): what it's doing, once that
+           takes a moment, over everything -->
+      <Border Classes="overlay" IsVisible="{Binding Closing.IsShown, FallbackValue=False}">
+        <local:ClosingView DataContext="{Binding Closing}" HorizontalAlignment="Center" VerticalAlignment="Center" />
       </Border>
     </Grid>
   </LayoutTransformControl>

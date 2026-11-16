@@ -1,0 +1,2 @@
+﻿"Closing Deventry…"
+"Stopping Claude in 3 tabs (1 of 3 done)"
