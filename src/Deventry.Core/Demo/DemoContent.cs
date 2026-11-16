@@ -24,6 +24,12 @@ public static class DemoContent
     /// </summary>
     public const string StudioAccount = "studio";
 
+    /// <summary>When the conversations' last turn ends, after <see cref="Day"/>: 9:13:52 on their usual morning.</summary>
+    private static readonly TimeSpan LastTurnEnds = new(9, 14, 0);
+
+    /// <summary>How long before now the last turn ended, at least: past the prompt cache's hour, so its chip says it expired.</summary>
+    private static readonly TimeSpan SinceLastTurn = TimeSpan.FromMinutes(75);
+
     /// <summary>
     /// Makes the projects under <paramref name="projects"/> with <paramref name="make"/>, which returns each one's folder,
     /// and writes the transcripts to <paramref name="transcripts"/>, their turns earlier on the day of <paramref name="now"/>.
@@ -31,7 +37,7 @@ public static class DemoContent
     /// <returns>The tabs, the one to show first.</returns>
     public static List<TabState> Write(string projects, string transcripts, DateTimeOffset now, Func<string, DemoProject, string> make)
     {
-        var today = new DateTimeOffset(now.Date, now.Offset);
+        var today = Day(now);
         var starfall = Starfall(projects, make);
         var tidepool = Tidepool(projects, make);
         var orbit = Orbit(projects, make);
@@ -945,6 +951,19 @@ public static class DemoContent
 
     /// <summary>Earlier today, so the conversation's times read naturally.</summary>
     private static DateTimeOffset At(DateTimeOffset today, int hour, int minute) => today.AddHours(hour).AddMinutes(minute);
+
+    /// <summary>
+    /// What the conversations' times count from: midnight of <paramref name="now"/>'s day, so they run from 6:05 to 9:13
+    /// that morning. Made before 10:29, their last turn would be under an hour and a quarter old, or still to come, and
+    /// the cache chip would count down from it: at 8:30, <i>Cache 111m</i>. So then they all move earlier that day,
+    /// together, and pictures taken in the morning show the cache expired, as the afternoon's do.
+    /// </summary>
+    private static DateTimeOffset Day(DateTimeOffset now)
+    {
+        var midnight = new DateTimeOffset(now.Date, now.Offset);
+        var latest = now - SinceLastTurn - LastTurnEnds;
+        return latest < midnight ? latest : midnight;
+    }
 
     /// <summary>A project's folder and nothing in it, as the app's demo has them (DESIGN.md §11, "Demo mode").</summary>
     public static string EmptyFolder(string projects, DemoProject project)
