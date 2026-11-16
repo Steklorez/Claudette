@@ -1269,6 +1269,7 @@ Each alert fires once per window. The first reading after a restart doesn't aler
 - The projection alert's line keeps up with the projection under the session meter in the same way, and goes once the projection no longer hits the limit before the reset.
 - A reset alert's line keeps up with the limit that reset (*"Session usage is now 12%."*).
 - The session's threshold and projection lines give way to the usage credits notice ([Usage credits](#usage-credits)), which says the limit is used up: when credits start paying the line goes, and while they pay those alerts get no line, only their OS notification.
+- The session's threshold and projection lines go once the session is used up, at 100%, from a reading or from a tab the limit stopped (its `rate_limit_event` says so between polls): what they warned of is here, and the stopped tabs' bars say when it resets. An alert raised at 100%, the session having jumped past a threshold, gets its OS notification and no line. Asked for by the user, 2026-11-16.
 
 ### Usage credits
 

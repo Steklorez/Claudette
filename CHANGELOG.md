@@ -19,6 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Changed
 
 - **Closing Deventry says what it's doing.** When closing takes a moment, as when Claude is working in a tab, the window dims under a card that says what Deventry is on, such as telling your Telegram bot it's closing, stopping Claude in each tab or saving your drafts, with a bar that fills as it goes and Joulene waving goodbye. Restarting into an update or a new build shows the same card. Before, the window just stopped responding until it closed. See [When you close Deventry](https://deventry.app/getting-started/how-deventry-uses-claude-code/#when-you-close-deventry).
+- **The usage warnings go once you hit the session limit.** The line under the header that warned you'd passed 75% or 90%, or were on pace to hit the limit, goes by itself once you hit it, since the tabs the limit stopped say so already. A warning that comes as you hit the limit only sends its notification. See [Alerts](https://deventry.app/usage/alerts/).
 - **A closed to-do list stays closed.** When Claude adds tasks to the to-do list pinned at the top of the conversation, or starts a new list after finishing one, a list you'd closed stays closed, its line counting the tasks; it opens by itself only for a tab's first list. It used to open again for each new list.
 
 ### Security

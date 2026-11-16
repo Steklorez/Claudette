@@ -64,6 +64,37 @@ public class UsageHeaderTests
     }
 
     [Fact]
+    public async Task The_warnings_go_once_the_session_limit_is_hit_and_one_raised_at_the_limit_only_notifies()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(3);
+        tracker.OnRateLimitEvent(Event(0.50, resets, 0.40));
+        await TabTestHarness.Eventually(() => header.HasData, "the first reading");
+
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(0.80, resets, 0.41));
+        await TabTestHarness.Eventually(() => header.HasAlert, "the warning");
+
+        // A tab's turn stopped at the limit: its rate_limit_event says the session is used up.
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(1.0, resets, 0.42));
+        await TabTestHarness.Eventually(() => !header.HasAlert, "the warning to go");
+
+        // The next window: from 50% straight to the limit, past both thresholds at once.
+        var next = resets.AddHours(5);
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(0.50, next, 0.43));
+        await TabTestHarness.Eventually(() => header.Session.PercentText == "50%", "the next window");
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        tracker.OnRateLimitEvent(Event(1.0, next, 0.44));
+        // The first window's jump from 80% notified too.
+        await TabTestHarness.Eventually(() => h.Notifier.Shown.Count(n => n.Title == "Session usage passed 90%") == 2, "its notification");
+        Assert.False(header.HasAlert);
+    }
+
+    [Fact]
     public async Task Usage_credits_paying_show_a_notice_until_the_limit_resets_and_notify_once()
     {
         await using var h = new TabTestHarness();

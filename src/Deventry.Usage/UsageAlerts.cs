@@ -134,8 +134,10 @@ public sealed class UsageAlerts(TimeProvider clock)
     /// holds:
     /// <list type="bullet">
     /// <item>A threshold alert follows the session's reading, until the window it was about resets: its reset time
-    /// passes, or a new window's reading is below the threshold.</item>
-    /// <item>A projection alert follows <paramref name="projection"/>, until it no longer hits the limit before the reset.</item>
+    /// passes, or a new window's reading is below the threshold. It goes once the session is used up: the limit it
+    /// warned of is here, and the tabs it stopped say so.</item>
+    /// <item>A projection alert follows <paramref name="projection"/>, until it no longer hits the limit before the reset,
+    /// or the session is used up.</item>
     /// <item>A reset alert follows the reading of the limit that reset.</item>
     /// </list>
     /// Without the reading it follows, an alert stays as it is.
@@ -144,7 +146,7 @@ public sealed class UsageAlerts(TimeProvider clock)
         alert switch
         {
             { Kind: UsageAlertKind.ThresholdCrossed, Threshold: { } threshold } when snapshot.Session is { } session =>
-                session.Percent >= threshold && (session.ResetsAt is null || session.ResetsAt > now) ? ThresholdAlert(session, threshold, now) : null,
+                session.Percent >= threshold && session.Percent < 100 && (session.ResetsAt is null || session.ResetsAt > now) ? ThresholdAlert(session, threshold, now) : null,
             { Kind: UsageAlertKind.ProjectedToHitLimit } when snapshot.Session is { } session && projection is not null =>
                 projection.HitsLimitBeforeReset && session.Percent < 100 ? ProjectionAlert(projection) : null,
             { Kind: UsageAlertKind.LimitReset, Reading: { } reset } when snapshot.Limits.FirstOrDefault(l => l.Kind == reset.Kind && l.Label.Equals(reset.Label, StringComparison.OrdinalIgnoreCase)) is { } reading =>

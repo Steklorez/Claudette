@@ -195,6 +195,15 @@ public sealed class UsageAlertsTests
     }
 
     [Fact]
+    public void A_threshold_alert_goes_once_the_session_is_used_up()
+    {
+        Observe(10);
+        var alert = Assert.Single(Observe(91));
+
+        Assert.Null(UsageAlerts.Refresh(alert, UsageFixtures.Snapshot(Now, 100, WindowA), new BurnProjection(), Now.AddMinutes(30)));
+    }
+
+    [Fact]
     public void A_reset_alert_follows_the_limit_that_reset()
     {
         Observe(50);

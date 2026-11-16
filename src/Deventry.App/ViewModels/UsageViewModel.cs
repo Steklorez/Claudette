@@ -137,8 +137,9 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// The latest usage alert, shown under the header until dismissed. A threshold alert's numbers follow the session
     /// meter until its window resets, a projection alert's the projection until it stops saying the limit will be hit,
-    /// and a reset alert's the limit that reset (<see cref="UsageAlerts.Refresh"/>). While usage credits pay, the
-    /// session's alerts give way to their notice (<see cref="UsageAlert.GivesWayToCredits"/>).
+    /// and a reset alert's the limit that reset (<see cref="UsageAlerts.Refresh"/>). The session's threshold and
+    /// projection alerts go once the session is used up, and while usage credits pay they give way to their notice
+    /// (<see cref="UsageAlert.GivesWayToCredits"/>).
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAlert))]
@@ -195,7 +196,8 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
             // credits have their notice there already, which says more than the session's alerts while they pay.
             if (alert.Kind != UsageAlertKind.UsingCredits && !(_creditsPaying && alert.GivesWayToCredits))
             {
-                Alert = alert;
+                // As it is now: a warning of the limit raised as the session is used up gets no line, only its notification.
+                Alert = UsageAlerts.Refresh(alert, snapshot, Projection(snapshot), _services.Time.GetUtcNow());
             }
             _services.Notifications.Notify(NotificationKind.UsageAlert, alert.Title, alert.Message, key: alert.Kind.ToString());
         }

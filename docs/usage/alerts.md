@@ -24,6 +24,7 @@ Each alert comes once per window. The first reading after Deventry starts doesn'
   - A warning level's line keeps up with the session meter, and goes once the session resets.
   - The projection's keeps up with the projection, and goes once you're no longer on pace to hit the limit.
   - A reset's keeps up with the limit that reset.
+  - A warning level's line and the projection's go as soon as you hit the session limit, since the tabs it stopped say so already. A warning raised as you hit the limit only sends its notification.
 - **The usage credits notice** instead, for usage credits. Once they start paying, the session's warning and projection lines give way to it, since it says the limit is used up. See [When usage credits pay](the-usage-header.md#when-usage-credits-pay).
 - **An OS notification**, when Deventry isn't in front. Clicking it opens [the Usage window](the-usage-window.md).
 
