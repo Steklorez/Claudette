@@ -613,8 +613,9 @@ public sealed partial class TodoList : ObservableObject
     public TodoItem? Current => Items.FirstOrDefault(i => i.IsActive);
 
     /// <summary>
-    /// The pinned list shows its tasks, not just its line (DESIGN.md §5, "Tasks"). It opens when a list starts, or work on
-    /// a finished one starts again, and closes once every task is done; in between it stays as the user left it.
+    /// The pinned list shows its tasks, not just its line (DESIGN.md §5, "Tasks"). It opens when the tab's first list
+    /// starts, and closes once every task is done; otherwise it stays as it is, open or closed, however Claude changes
+    /// the list: tasks added to a closed list, or work on a finished one starting again, leave it closed.
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ClosedLineTask), nameof(ToggleTip))]
@@ -622,6 +623,9 @@ public sealed partial class TodoList : ObservableObject
 
     /// <summary>Whether the list had tasks left at its last change: it opens or closes by itself only when that changes.</summary>
     private bool _hadTasksLeft;
+
+    /// <summary>The tab has had a list with tasks left: after the first, a list never opens by itself.</summary>
+    private bool _hadAList;
 
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     private void ToggleExpanded() => IsExpanded = !IsExpanded;
@@ -1004,12 +1008,20 @@ public sealed partial class TodoList : ObservableObject
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(HasStatus));
         OnPropertyChanged(nameof(ClosedLineTask));
-        // Open for a new list and closed once it's done, so a finished list doesn't take up room; a list the user closed
-        // stays closed as Claude works through it.
+        // Open for the tab's first list, and closed once a list is done, so a finished list doesn't take up room. Otherwise
+        // it's as the user has it: a closed list stays closed as Claude adds tasks or starts on it again, its line counting.
         if (HasTasksLeft != _hadTasksLeft)
         {
             _hadTasksLeft = HasTasksLeft;
-            IsExpanded = _hadTasksLeft;
+            if (!_hadTasksLeft)
+            {
+                IsExpanded = false;
+            }
+            else if (!_hadAList)
+            {
+                IsExpanded = true;
+            }
+            _hadAList |= _hadTasksLeft;
         }
     }
 
