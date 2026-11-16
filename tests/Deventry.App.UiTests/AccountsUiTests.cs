@@ -55,6 +55,26 @@ public class AccountsUiTests
         await Verify(UiText.Describe(page, (h.Root, "{root}")));
     }
 
+    [AvaloniaFact]
+    public async Task Adding_a_providers_key_says_what_it_exposes_the_key_to_and_asks_to_confirm()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        h.Services.Accounts.Credentials = new FakeCredentialStore();
+        await h.Services.Accounts.AddCloudAccountAsync("Render farm", Core.Accounts.CloudProviders.Bedrock,
+            new Core.Accounts.CloudAccountSettings { SignIn = Core.Accounts.CloudSignIns.Profile, Region = "us-east-1", Profile = "studio-sso", RefreshSignIn = true }, null);
+        using var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = SettingsCategory.Accounts };
+        var accounts = (ViewModels.Settings.AccountsPage)settings.CurrentPage!;
+        accounts.NewKind = accounts.KindChoices.Single(c => c.Provider == Core.Accounts.CloudProviders.Foundry);
+        accounts.NewCloud!.SignIn = accounts.NewCloud.SignIns.Single(s => s.Value == Core.Accounts.CloudSignIns.ApiKey);
+        var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
+        window.Show();
+        UiText.Settle(window);
+
+        var page = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => Grid.GetColumn(s) == 1);
+
+        await Verify(UiText.Describe(page, (h.Root, "{root}")));
+    }
+
     private static Border Tag(Window window, string name) =>
         window.GetVisualDescendants().OfType<Border>().Single(b => b.Name == name && b.FindAncestorOfType<ScrollViewer>()?.IsVisible == true);
 }

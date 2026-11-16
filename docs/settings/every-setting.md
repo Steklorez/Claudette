@@ -141,7 +141,9 @@ This page is this machine's own. None of it syncs, and a tab can't change it for
 | An account's name and tag color | Accounts | Chosen when you add it | [API-key accounts](../accounts/api-key-accounts.md) |
 | **Warn when today's estimated spend passes ($)** and **Warn when this month's estimated spend passes ($)** | Accounts | No warning | [Spend and its warnings](../accounts/spend-and-its-warnings.md) |
 | **Change key…** and **Remove…** | Accounts | | [API-key accounts](../accounts/api-key-accounts.md) |
-| **Add an API key**: a **Name** and the key | Add an API key | No accounts besides Default | [API-key accounts](../accounts/api-key-accounts.md) |
+| A cloud provider account's **Change settings…** | Accounts | | [Cloud provider accounts](../accounts/cloud-provider-accounts.md) |
+| **Add an account**: a **Name**, its **Kind** and the key | Add an account | No accounts besides Default | [API-key accounts](../accounts/api-key-accounts.md) |
+| **Add an account** for a cloud provider: **Sign in with**, what the provider needs, **Sign in again when the credentials expire** and the models | Add an account | On, for an AWS profile and gcloud | [Cloud provider accounts](../accounts/cloud-provider-accounts.md) |
 
 ## Tabs
 

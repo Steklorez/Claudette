@@ -433,7 +433,7 @@ public sealed partial class TabTokensViewModel : ObservableObject
         [
             new("Tokens", Formats.Tokens(totals.Total + liveTokens.Total), IsRunning ? "with the turn so far" : "this tab's"),
             new("Cost", Formats.Dollars(totals.EstimatedCostUsd + liveCost), "estimated"),
-            _tab.Account is not null ? new("Session limit", "–", "an API key's")
+            _tab.Account is { } account ? new("Session limit", "–", account.IsCloudProvider ? $"{account.KindName}'s" : "an API key's")
                 : _limit is { } limit ? new("Session limit", string.Create(CultureInfo.CurrentCulture, $"≈ {limit.Points:0}%"), "this window", IsEstimate: true)
                 : new("Session limit", "–", "not read yet", IsEstimate: true),
             new("From the cache", kinds.CacheShare is { } share ? string.Create(CultureInfo.CurrentCulture, $"{share * 100:0}%") : "–", "of what Claude read"),

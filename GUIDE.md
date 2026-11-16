@@ -225,10 +225,11 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Page | Covers | From |
 |---|---|---|
 | Your Claude sign-in | The **Default** account, the header's account menu, **Plan and billing** or **Console billing**, **Sign out…** and what it stops. | [§11](DESIGN.md#11-sign-in), [Accounts](DESIGN.md#accounts) |
-| API-key accounts | Settings → Accounts: **Add an API key**, where the key is kept, **Change key…**, **Remove…**; on Linux, `secret-tool`. | [Accounts](DESIGN.md#accounts) |
+| API-key accounts | Settings → Accounts: **Add an account** with an **Anthropic API key**, where the key is kept, **Change key…**, **Remove…**; on Linux, `secret-tool`. | [Accounts](DESIGN.md#accounts) |
+| Cloud provider accounts | **Add an account** for Amazon Bedrock, Claude Platform on AWS, Google Cloud's Agent Platform, Claude Models on Google Cloud or Microsoft Foundry: what each needs, how each signs in, **Sign in again when the credentials expire**, a provider's own key in the environment and what that exposes it to, the models, **Change settings…**, a tab on another provider than its account's. | [Accounts](DESIGN.md#accounts) |
 | A folder's account | A group's **Account ▸**, **New folders use**, the account tags. | [Accounts](DESIGN.md#accounts) |
 | Moving a tab to another account | A tab's **Account ▸**, what moving it costs, and the question when a conversation would carry on under another account than it began under (**Continue here**, **New chat with a digest**, **Warn before continuing a session under another account**). | [Accounts](DESIGN.md#accounts), [Continuing under another account](DESIGN.md#continuing-under-another-account) |
-| Spend and its warnings | The header's spend, the warnings, the Usage window's **Accounts**, and what an API-key account doesn't have (plan meters, the Claude app). | [Accounts](DESIGN.md#accounts) |
+| Spend and its warnings | The header's spend, the warnings, the Usage window's **Accounts**, and what an API-key or cloud provider account doesn't have (plan meters, the Claude app). | [Accounts](DESIGN.md#accounts) |
 
 ### History and syncing (`history/`)
 
@@ -315,7 +316,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 |---|---|---|
 | Where Deventry keeps things | The data folder on each OS and `DEVENTRY_HOME`, what's in it (settings, state, usage history, drafts, unsaved edits, logs, downloads), files sent to a tab from a remote client in its project's `.deventry/attachments`, the session library's contents, and Claude Code's own files. | [Storage](DESIGN.md#storage), [§9](DESIGN.md#9-sessions-history-restore--sync), [Usage history](DESIGN.md#usage-history) |
 | What leaves this computer | The session library and its synced folder, usage sharing, settings sync, the status page, the update check. What Claude Code sends is Claude Code's. | [Session library](DESIGN.md#session-library-sync-across-machines), [Sharing across machines](DESIGN.md#sharing-across-machines), [Service status](DESIGN.md#service-status), [Updating Deventry](DESIGN.md#updating-deventry) |
-| Passwords and keys | Perforce passwords and API keys in the OS's credential store, never synced or logged. | [Perforce ticket handling](DESIGN.md#perforce-ticket-handling), [Accounts](DESIGN.md#accounts) |
+| Passwords and keys | Perforce passwords and API keys in the OS's credential store, never synced or logged; a cloud provider's own key in its tabs' environment. | [Perforce ticket handling](DESIGN.md#perforce-ticket-handling), [Accounts](DESIGN.md#accounts) |
 
 ### Reference (`reference/`)
 

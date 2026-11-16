@@ -9,19 +9,31 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels.Settings;
 
-/// <summary>One account in Settings → Accounts: its name, tag color, key and spend warnings (DESIGN.md §4, "Accounts").</summary>
+/// <summary>
+/// One account in Settings → Accounts: its name, tag color, key and spend warnings, and a cloud account's settings
+/// (DESIGN.md §4, "Accounts").
+/// </summary>
 public sealed partial class AccountEditor : ObservableObject
 {
     private readonly AccountsService _accounts;
+    private readonly Func<string, Task<string?>> _pickFile;
+    private readonly Func<string, Task> _openUrl;
 
-    public AccountEditor(AccountsService accounts, ClaudeAccount account)
+    public AccountEditor(AccountsService accounts, ClaudeAccount account, Func<string, Task<string?>>? pickFile = null, Func<string, Task>? openUrl = null)
     {
         _accounts = accounts;
+        _pickFile = pickFile ?? (_ => Task.FromResult<string?>(null));
+        _openUrl = openUrl ?? (_ => Task.CompletedTask);
         Account = account;
         Removal = new InlineConfirmation(RemoveAsync);
     }
 
     public ClaudeAccount Account { get; }
+
+    /// <summary>What it is, beside its name: "API key", "Amazon Bedrock · AWS profile or SSO".</summary>
+    public string KindText => Account is { Provider: { } provider, Cloud: { } cloud }
+        ? $"{provider.Name} · {CloudSignIns.Label(cloud.SignIn, provider)}"
+        : Account.KindName;
 
     /// <summary>Renamed as the box loses focus; an empty name keeps the old one.</summary>
     public string Name
@@ -79,6 +91,19 @@ public sealed partial class AccountEditor : ObservableObject
 
     // ---- The key ------------------------------------------------------------------------------------------------------
 
+    /// <summary>It has a key to change: an API key, or a cloud account that signs in with one.</summary>
+    public bool HasKey => Account.HasSecret;
+
+    /// <summary>Its key goes in the environment of its tabs' <c>claude</c>: changing it says so again.</summary>
+    public bool ExposesKey => Account.Cloud is { } cloud && CloudSignIns.PutsKeyInEnvironment(cloud.SignIn);
+
+    public string KeyPlaceholder => Account.Provider?.KeyName ?? "sk-ant-…";
+
+    /// <summary>What changing a key that goes in the environment means, as adding it said.</summary>
+    public string? KeyExposureNote => ExposesKey
+        ? $"Claude Code reads the {Account.Provider?.KeyName} only from its environment, so the commands Claude runs in {Account.Name}'s tabs can read it too. Tabs use a new key when they start again."
+        : null;
+
     [ObservableProperty]
     public partial bool IsChangingKey { get; set; }
 
@@ -105,15 +130,17 @@ public sealed partial class AccountEditor : ObservableObject
     [RelayCommand]
     private async Task SaveKeyAsync()
     {
-        if (NewKey.Trim().Length == 0)
+        if (NewKey.Trim() is not { Length: > 0 } key)
         {
             Status = "Paste the new key first.";
             return;
         }
         try
         {
-            await _accounts.SetKeyAsync(Account, NewKey);
-            Status = $"Saved the new key in {_accounts.Credentials.Name}. Tabs pick it up within a few minutes, or when they start again.";
+            await _accounts.SetKeyAsync(Account, key);
+            Status = Account.IsApiKey
+                ? $"Saved the new key in {_accounts.Credentials.Name}. Tabs pick it up within a few minutes, or when they start again."
+                : $"Saved the new key in {_accounts.Credentials.Name}. Tabs use it when they start again.";
             IsChangingKey = false;
         }
         catch (CredentialStoreException ex)
@@ -126,6 +153,54 @@ public sealed partial class AccountEditor : ObservableObject
         }
     }
 
+    // ---- A cloud account's settings --------------------------------------------------------------------------------------
+
+    public bool IsCloud => Account.IsCloudProvider;
+
+    /// <summary>The settings being changed, while <see cref="IsEditingDetails"/>.</summary>
+    [ObservableProperty]
+    public partial CloudAccountForm? Details { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsEditingDetails { get; private set; }
+
+    [RelayCommand]
+    private void EditDetails()
+    {
+        if (Account is { Provider: { } provider, Cloud: { } cloud })
+        {
+            Status = null;
+            Details = new CloudAccountForm(provider, _accounts.Credentials.Name, _pickFile, _openUrl, cloud);
+            IsEditingDetails = true;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelDetails()
+    {
+        IsEditingDetails = false;
+        Details = null;
+    }
+
+    [RelayCommand]
+    private void SaveDetails()
+    {
+        if (Details is not { } form)
+        {
+            return;
+        }
+        if (form.Problem is { } problem)
+        {
+            Status = problem;
+            return;
+        }
+        _accounts.SetCloud(Account, form.ToSettings());
+        Status = $"Saved. Tabs on {Account.Name} use the change when they start again.";
+        IsEditingDetails = false;
+        Details = null;
+        OnPropertyChanged(nameof(KindText));
+    }
+
     // ---- Removing it --------------------------------------------------------------------------------------------------
 
     /// <summary>How many open tabs run under the account: it can't be removed while any do.</summary>
@@ -134,7 +209,7 @@ public sealed partial class AccountEditor : ObservableObject
     public bool CanRemove => TabsUsing == 0;
 
     public string RemoveTip => CanRemove
-        ? $"Removes {Account.Name} and its key. Folders that used it use Default again."
+        ? $"Removes {Account.Name}{(Account.HasSecret ? " and its key" : "")}. Folders that used it use Default again."
         : TabsUsing == 1
             ? $"1 open tab runs under {Account.Name}: move it to another account, or close it, first."
             : $"{TabsUsing} open tabs run under {Account.Name}: move them to another account, or close them, first.";
@@ -179,16 +254,24 @@ public sealed class OrganizationRuleRow(RemoteControlService service, Organizati
     public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => service.RemoveRule(rule));
 }
 
+/// <summary>What Settings → Accounts can add: an Anthropic API key, or a cloud provider.</summary>
+public sealed record AccountKindChoice(string Label, CloudProvider? Provider)
+{
+    public override string ToString() => Label;
+}
+
 /// <summary>
-/// Settings → Accounts (DESIGN.md §4, "Accounts"): the accounts tabs can run under besides Default, adding an API key,
-/// and which account a folder opened for the first time uses. Each machine sets up its own: nothing here syncs, and keys
-/// go only to the OS credential store.
+/// Settings → Accounts (DESIGN.md §4, "Accounts"): the accounts tabs can run under besides Default, adding an API key or
+/// a cloud provider, and which account a folder opened for the first time uses. Each machine sets up its own: nothing
+/// here syncs, and keys go only to the OS credential store, and for some providers to their tabs' environment.
 /// </summary>
 public sealed partial class AccountsPage : SettingsPage, IDisposable
 {
     public AccountsPage(SettingsContext context) : base(context, SettingsCategory.Accounts)
     {
-        Editors = [.. Accounts.All.Select(a => new AccountEditor(Accounts, a))];
+        Editors = [.. Accounts.All.Select(NewEditor)];
+        KindChoices = [new AccountKindChoice("Anthropic API key", null), .. CloudProviders.All.Select(p => new AccountKindChoice(p.Name, p))];
+        NewKind = KindChoices[0];
         NewFolderChoices = AccountChoice.All(Accounts, Accounts.NewFolderAccount);
         Section("accounts", "Accounts",
         [
@@ -200,11 +283,13 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
                 "Ask first when a session started under one account is about to carry on under another.",
                 "Claude Code sends the whole earlier conversation with its requests, so it goes to the account the session continues under, and that account's organization may be able to see it. Claude can't use its earlier thinking from another organization, so its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
                 ["other account", "organization", "work account", "personal account", "resume", "privacy"]),
-            Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend"]),
+            Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend", "region", "model pins"]),
         ], description: "Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");
-        Section("addKey", "Add an API key",
+        Section("addAccount", "Add an account",
         [
-            Info("state.addAccount", "Add an API key", keywords: ["new account", "api key account", "console"]),
+            Info("state.addAccount", "Add an account",
+                keywords: ["new account", "api key account", "console", "cloud provider", "amazon bedrock", "aws", "claude platform on aws", "google cloud", "vertex ai",
+                    "agent platform", "microsoft foundry", "azure", "third-party"]),
         ]);
         Section("organizationRules", "What an organization has turned off",
         [
@@ -264,9 +349,64 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
     public string? CredentialStoreUnavailableText => Accounts.Credentials.IsAvailable ? null : Accounts.Credentials.UnavailableReason;
 
     public string KeyNote =>
-        $"Each key is kept in {Accounts.Credentials.Name}, never in Deventry's files, and never synced. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment.";
+        $"Keys are kept in {Accounts.Credentials.Name}, never in Deventry's files, and never synced. A cloud provider's account can sign in without one, through its own tools.";
 
-    // ---- Adding an API key --------------------------------------------------------------------------------------------
+    /// <summary>What an API key's form says about where its key goes.</summary>
+    public string ApiKeyNote =>
+        $"Kept in {Accounts.Credentials.Name}. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment.";
+
+    private AccountEditor NewEditor(ClaudeAccount account) => new(Accounts, account, PickFileAsync, Services.Platform.OpenUrlAsync);
+
+    private Task<string?> PickFileAsync(string title) => Services.Platform.PickFileAsync(title);
+
+    // ---- Adding an account ----------------------------------------------------------------------------------------------
+
+    public IReadOnlyList<AccountKindChoice> KindChoices { get; }
+
+    /// <summary>What the new account is: an API key, or a cloud provider, whose form <see cref="NewCloud"/> is.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNewApiKey), nameof(CanAdd))]
+    public partial AccountKindChoice NewKind { get; set; }
+
+    partial void OnNewKindChanged(AccountKindChoice value)
+    {
+        NewCloud = value.Provider is { } provider ? new CloudAccountForm(provider, Accounts.Credentials.Name, PickFileAsync, Services.Platform.OpenUrlAsync) : null;
+        NewKey = "";
+        AddStatus = null;
+    }
+
+    public bool IsNewApiKey => NewKind.Provider is null;
+
+    /// <summary>The new cloud account's form; null while adding an API key.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanAdd))]
+    public partial CloudAccountForm? NewCloud { get; private set; }
+
+    partial void OnNewCloudChanged(CloudAccountForm? oldValue, CloudAccountForm? newValue)
+    {
+        if (oldValue is not null)
+        {
+            oldValue.PropertyChanged -= OnNewCloudPropertyChanged;
+        }
+        if (newValue is not null)
+        {
+            newValue.PropertyChanged += OnNewCloudPropertyChanged;
+        }
+    }
+
+    private void OnNewCloudPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CloudAccountForm.SignIn))
+        {
+            OnPropertyChanged(nameof(CanAdd));
+        }
+    }
+
+    /// <summary>
+    /// The new account can be added here: one with a key needs the credential store, which a Linux without
+    /// <c>secret-tool</c> doesn't have; a cloud account that signs in without one doesn't.
+    /// </summary>
+    public bool CanAdd => Accounts.Credentials.IsAvailable || NewCloud is { KeepsSecret: false };
 
     [ObservableProperty]
     public partial string NewName { get; set; } = "";
@@ -281,6 +421,11 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
     private async Task AddAsync()
     {
         var name = NewName.Trim();
+        if (NewCloud is { } cloud)
+        {
+            await AddCloudAsync(name, cloud);
+            return;
+        }
         if (name.Length == 0 || NewKey.Trim().Length == 0)
         {
             AddStatus = "Give the account a name, and paste its API key.";
@@ -289,8 +434,7 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         try
         {
             await Accounts.AddApiKeyAccountAsync(name, NewKey);
-            AddStatus = $"Added {name}. Choose it from a folder group's Account menu for that folder's new tabs, or from a tab's to move the tab.";
-            NewName = "";
+            Added(name);
         }
         catch (CredentialStoreException ex)
         {
@@ -300,6 +444,45 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         {
             NewKey = "";
         }
+    }
+
+    private async Task AddCloudAsync(string name, CloudAccountForm cloud)
+    {
+        if (name.Length == 0)
+        {
+            AddStatus = "Give the account a name.";
+            return;
+        }
+        if ((cloud.Problem ?? cloud.SecretProblem) is { } problem)
+        {
+            AddStatus = problem;
+            return;
+        }
+        if (cloud.KeepsSecret && !Accounts.Credentials.IsAvailable)
+        {
+            AddStatus = Accounts.Credentials.UnavailableReason;
+            return;
+        }
+        try
+        {
+            await Accounts.AddCloudAccountAsync(name, cloud.Provider, cloud.ToSettings(), cloud.Secret);
+            Added(name);
+            NewCloud = new CloudAccountForm(cloud.Provider, Accounts.Credentials.Name, PickFileAsync, Services.Platform.OpenUrlAsync);
+        }
+        catch (CredentialStoreException ex)
+        {
+            AddStatus = ex.Message;
+        }
+        finally
+        {
+            cloud.ClearSecrets();
+        }
+    }
+
+    private void Added(string name)
+    {
+        AddStatus = $"Added {name}. Choose it from a folder group's Account menu for that folder's new tabs, or from a tab's to move the tab.";
+        NewName = "";
     }
 
     // ---- New folders --------------------------------------------------------------------------------------------------
@@ -329,7 +512,7 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         }
         foreach (var added in all.Where(a => Editors.All(e => e.Account != a)))
         {
-            Editors.Add(new AccountEditor(Accounts, added));
+            Editors.Add(NewEditor(added));
         }
         foreach (var editor in Editors)
         {

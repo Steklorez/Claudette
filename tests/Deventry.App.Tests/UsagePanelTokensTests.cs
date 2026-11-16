@@ -74,7 +74,7 @@ public class UsagePanelTokensTests
         Assert.Equal("Token breakdown · refactor auth", breakdown.Title);
         Assert.Equal("Turn 1", breakdown.Turns[0].Prompt);
         Assert.StartsWith("api · 1 turn since", breakdown.Line, StringComparison.Ordinal);
-        Assert.Equal("an API key doesn't use the plan", breakdown.Tiles.Single(t => t.Label == "Session limit").Detail);
+        Assert.Equal("its account doesn't use the plan", breakdown.Tiles.Single(t => t.Label == "Session limit").Detail);
     }
 
     [Fact]

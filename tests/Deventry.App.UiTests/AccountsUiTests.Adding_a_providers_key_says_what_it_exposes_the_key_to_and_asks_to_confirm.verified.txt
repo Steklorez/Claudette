@@ -1,0 +1,57 @@
+﻿"Accounts"
+"This computer"
+"Accounts tabs can run under besides Claude Code's own sign-in."
+"Accounts"
+[button] Reset to defaults
+"Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another."
+"New folders use"
+"Which account a folder opened for the first time runs under."
+[choice] "Default"
+"Warn before continuing a session under another account"
+"Ask first when a session started under one account is about to carry on under another.  "
+[toggle on] Warn before continuing a session under another account
+[field] "Render farm"
+[choice] "Blue"
+"Amazon Bedrock · AWS profile or SSO"
+"Warn when today's estimated spend passes ($)"
+[button] (icon)
+[button] (icon)
+[field] ""
+"Warn when this month's estimated spend passes ($)"
+[button] (icon)
+[button] (icon)
+[field] ""
+[button] Change settings…
+[button] Remove…
+"Add an account"
+"Keys are kept in Test Keychain, never in Deventry's files, and never synced. A cloud provider's account can sign in without one, through its own tools."
+"Name"
+[field] "for example: Work"
+"Kind"
+[choice] "Microsoft Foundry"
+"Sign in with"
+[choice] "Foundry API key"
+"Resource name"
+[field] "my-resource"
+"Foundry API key"
+[field] ""
+"Claude Code reads a Foundry API key only from its environment, so Deventry puts this key in the environment of the claude that each of this account's tabs runs. Every command Claude runs there inherits it: its Bash commands and scripts, hooks, MCP servers, and anything they start. Any of them can read the key, and print, log or send it on, and a prompt that tells Claude to read it gets it. Deventry keeps it in Test Keychain otherwise, never in its own files, a command line or a log. Where you can, sign in another way instead: Microsoft Entra ID (az login)."
+[ ] I understand that the commands Claude runs can read this key: I understand that the commands Claude runs in this account's tabs can read this key
+"Your deployments' names, which Claude Code calls for each model. Without them it tries its own defaults, which your resource may not have."
+"Opus (optional)"
+[field] "Claude Code's default on Microsoft Foundry"
+"Sonnet (optional)"
+[field] "Claude Code's default on Microsoft Foundry"
+"Haiku (optional)"
+[field] "Claude Code's default on Microsoft Foundry"
+"Fable (optional)"
+[field] "Claude Code's default on Microsoft Foundry"
+[button] How to set up Microsoft Foundry
+[button] Add account
+"What an organization has turned off"
+"When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed."
+"Nothing. If an organization turns a feature off for your account, it's listed here."
+[button] Line up
+[button] Page up
+[button] Page down
+[button] Line down

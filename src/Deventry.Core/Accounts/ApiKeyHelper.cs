@@ -1,23 +1,15 @@
-using System.Text.Json.Nodes;
-
 namespace Deventry.Core.Accounts;
 
 /// <summary>
 /// How an API-key account's key reaches Claude Code (DESIGN.md §4, "Accounts"). The key stays in the OS credential
 /// store. Claude Code runs the <c>apiKeyHelper</c> command Deventry passes it with <c>--settings</c>, which is Deventry
 /// itself started with <see cref="Option"/>: it reads the key from the store and prints it, so the key is never in an
-/// argument, a variable, a settings file or a log.
+/// argument, a variable, a settings file or a log. What else the tab starts with is <see cref="AccountLaunch"/>'s.
 /// </summary>
 public static class ApiKeyHelper
 {
     /// <summary>The option Deventry is started with to print an account's key: <c>--api-key-helper &lt;account id&gt;</c>.</summary>
     public const string Option = "--api-key-helper";
-
-    /// <summary>
-    /// Variables an API-key account's tabs go without: Claude Code takes them over its <c>apiKeyHelper</c>, so one in the
-    /// user's environment would quietly bill another key.
-    /// </summary>
-    public static readonly IReadOnlyList<string> OutrankingVariables = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"];
 
     /// <summary>Where the account's key is in the OS credential store.</summary>
     public static string CredentialKey(string accountId) => $"claude-api-key/{accountId}";
@@ -48,10 +40,6 @@ public static class ApiKeyHelper
         }
         return $"\"{executable}\" {Option} {accountId}";
     }
-
-    /// <summary>The <c>--settings</c> value for an API-key account's tab: just its <c>apiKeyHelper</c>.</summary>
-    public static string Settings(string executable, string accountId) =>
-        new JsonObject { ["apiKeyHelper"] = Command(executable, accountId) }.ToJsonString();
 
     /// <summary>The account Deventry was started to print the key of, when its arguments are <see cref="Option"/> and an id.</summary>
     public static bool TryGetAccountId(IReadOnlyList<string> args, out string accountId)

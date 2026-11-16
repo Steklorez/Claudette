@@ -7,14 +7,14 @@ summary: "An API-key account lets a tab run Claude Code on an API key instead of
 
 # API-key accounts
 
-An API-key account lets a tab run Claude Code on an API key instead of your Claude sign-in. It suits a work key beside a personal plan. API keys are the only kind of account you can add besides Default.
+An API-key account lets a tab run Claude Code on an API key instead of your Claude sign-in. It suits a work key beside a personal plan. For Amazon Bedrock, Google Cloud or Microsoft Foundry, see [Cloud provider accounts](cloud-provider-accounts.md).
 
-{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Accounts with New folders use, the switch for warning before a session continues under another account, an account named Studio with its name and tag color, its two spend warnings, Change key and Remove, and the form for adding another key" %}
+{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Accounts with New folders use, the switch for warning before a session continues under another account, an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings" %}
 
 ## Adding an account
 
 1. Open Settings → Accounts.
-2. Under **Add an API key**, type a **Name**, such as Work, and paste the **API key**. The key is hidden as you type.
+2. Under **Add an account**, type a **Name**, such as Work, leave its **Kind** as **Anthropic API key**, and paste the **API key**. The key is hidden as you type.
 3. Click **Add account**.
 
 The account appears above the form. Now choose where it's used: [a folder's account](a-folders-account.md) for a folder's new tabs, or [moving a tab](moving-a-tab-to-another-account.md) for one that's open.
@@ -29,7 +29,7 @@ On Linux, adding an account is off until `secret-tool` is installed (the `libsec
 
 A tab on an API-key account runs in the same Claude Code configuration folder as the Default account's, so it shares everything else with it: settings, MCP servers, plugins, skills, transcripts and [History](../history/history.md). Moving a tab between accounts copies nothing.
 
-The account's tabs start without `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`, so the key you added is the one used. Default's tabs keep them if you've set them.
+The account's tabs start without `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`, and with every cloud provider turned off, wherever you set them, even in Claude Code's own settings (as `/setup-bedrock` does), so the key you added is the one used. Default's tabs keep them if you've set them.
 
 ## Changing and removing an account
 
@@ -61,4 +61,5 @@ A key Claude Code won't use, or can't get, is that tab's own error: *Claude Code
 ## See also
 
 - [Your Claude sign-in](your-claude-sign-in.md) for the Default account.
+- [Cloud provider accounts](cloud-provider-accounts.md) for Amazon Bedrock, Google Cloud and Microsoft Foundry.
 - [Passwords and keys](../privacy/passwords-and-keys.md) for how keys are stored.

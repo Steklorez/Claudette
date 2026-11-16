@@ -8,9 +8,12 @@ namespace Deventry.Core.Accounts;
 /// </summary>
 public static class AccountState
 {
-    /// <summary>The account with <paramref name="id"/>, or null for the Default account, or one that's gone or can't be used.</summary>
+    /// <summary>
+    /// The account with <paramref name="id"/>, or null for the Default account, or one that's gone or can't be used: of a
+    /// kind a later Deventry added.
+    /// </summary>
     public static ClaudeAccount? Find(AppState state, string? id) =>
-        id is null ? null : state.Accounts.FirstOrDefault(a => a.Id == id && ApiKeyHelper.IsSafeId(a.Id) && a.IsApiKey);
+        id is null ? null : state.Accounts.FirstOrDefault(a => a.Id == id && ApiKeyHelper.IsSafeId(a.Id) && a.IsUsable);
 
     /// <summary>
     /// The account a new tab in <paramref name="folder"/> uses: the one its group was set to, else the one new folders

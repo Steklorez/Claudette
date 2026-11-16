@@ -1,7 +1,7 @@
 ---
 title: Moving a tab to another account
 parent: Accounts
-nav_order: 4
+nav_order: 5
 summary: "You can move a tab that's open to another account and carry on with the same conversation."
 ---
 

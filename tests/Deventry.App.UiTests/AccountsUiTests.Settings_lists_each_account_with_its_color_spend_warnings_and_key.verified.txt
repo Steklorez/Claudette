@@ -23,12 +23,15 @@
 [field] ""
 [button] Change key…
 [button] Remove…
-"Add an API key"
-"Each key is kept in Test Keychain, never in Deventry's files, and never synced. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment."
+"Add an account"
+"Keys are kept in Test Keychain, never in Deventry's files, and never synced. A cloud provider's account can sign in without one, through its own tools."
 "Name"
 [field] "for example: Work"
+"Kind"
+[choice] "Anthropic API key"
 "API key"
 [field] "sk-ant-…"
+"Kept in Test Keychain. Claude Code asks Deventry for it when a tab starts, so it's never in a command line or the environment."
 [button] Add account
 "What an organization has turned off"
 "When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed."

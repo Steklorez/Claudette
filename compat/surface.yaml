@@ -1536,6 +1536,244 @@ items:
     test: ProcessUsageTests, UsageStoreTests, AccountsTests
     # Each model's estimated cost in a result's modelUsage, at list price and running like the rest of modelUsage: an
     # API-key account's spend in the header, its warnings and the Usage panel's Accounts list. Not a bill.
+  - id: "--settings env over settings files and the environment"
+    kind: behavior
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: RealCliTests, CloudAccountsTests
+    # An account's tab sets its provider, region, project, workspace, resource, profile, key file and model pins in the
+    # --settings value's env, which Claude Code applies over the user's, the project's and local settings' env (but not
+    # managed settings'), and over the environment. An empty value is unset for provider selection.
+  - id: "an empty env value turns a credential off"
+    kind: behavior
+    status: undocumented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: RealCliTests
+    fallback: "If an empty key counts as set, an account's requests fail with a key error, which the tab reports as refused credentials; a key in the user's settings would then have to be removed there, as for a provider's key (the tab says which file)."
+    # Found in the test run (DESIGN.md §4, "Accounts"): ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, AWS_BEARER_TOKEN_BEDROCK and
+    # ANTHROPIC_FOUNDRY_API_KEY set to "" in --settings' env are unset. The docs promise it only for provider selection.
+  - id: "CLAUDE_CODE_USE_BEDROCK"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/CloudProviders.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # "1" in its provider's accounts' --settings env (Mantle is no account's: it's emptied with the rest); "" in every
+    # other account's, so a provider the Default account uses doesn't take over. Default's tabs keep the user's.
+  - id: "CLAUDE_CODE_USE_MANTLE"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/CloudProviders.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # See CLAUDE_CODE_USE_BEDROCK.
+  - id: "CLAUDE_CODE_USE_ANTHROPIC_AWS"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/CloudProviders.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-platform-on-aws
+    test: CloudAccountsTests, RealCliTests
+    # See CLAUDE_CODE_USE_BEDROCK.
+  - id: "CLAUDE_CODE_USE_VERTEX"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/CloudProviders.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/google-vertex-ai
+    test: CloudAccountsTests, RealCliTests
+    # See CLAUDE_CODE_USE_BEDROCK.
+  - id: "CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/CloudProviders.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-models-on-google-cloud-anthropic-managed
+    test: CloudAccountsTests, RealCliTests
+    # See CLAUDE_CODE_USE_BEDROCK.
+  - id: "CLAUDE_CODE_USE_FOUNDRY"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/CloudProviders.cs, src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/microsoft-foundry
+    test: CloudAccountsTests, RealCliTests
+    # See CLAUDE_CODE_USE_BEDROCK.
+  - id: "AWS_REGION"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # A Bedrock or Claude Platform on AWS account's region, in its --settings env.
+  - id: "AWS_PROFILE"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # An AWS account's profile, when it names one, in its --settings env; an access key goes in a profile, since
+    # awsCredentialExport takes only temporary credentials.
+  - id: "AWS_ACCESS_KEY_ID"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # With AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN: emptied for an account that names a profile, since the AWS
+    # credential chain takes them over it. Their values are never read.
+  - id: "AWS_SECRET_ACCESS_KEY"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # See AWS_ACCESS_KEY_ID.
+  - id: "AWS_SESSION_TOKEN"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # See AWS_ACCESS_KEY_ID.
+  - id: "AWS_BEARER_TOKEN_BEDROCK"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/amazon-bedrock
+    test: CloudAccountsTests, RealCliTests
+    # A Bedrock account's key: Claude Code reads it only from its environment, so it goes in the environment of
+    # the account's tabs' claude (not --settings, which is on the command line), after Settings says what
+    # that exposes it to. Emptied for every other way of signing in to Bedrock.
+  - id: "ANTHROPIC_AWS_WORKSPACE_ID"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-platform-on-aws
+    test: CloudAccountsTests, RealCliTests
+    # A Claude Platform on AWS account's workspace, in its --settings env.
+  - id: "ANTHROPIC_AWS_API_KEY"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-platform-on-aws
+    test: CloudAccountsTests, RealCliTests
+    # See AWS_BEARER_TOKEN_BEDROCK: a Claude Platform on AWS workspace key, which apiKeyHelper doesn't carry.
+  - id: "ANTHROPIC_VERTEX_PROJECT_ID"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/google-vertex-ai
+    test: CloudAccountsTests, RealCliTests
+    # An Agent Platform account's project, in its --settings env.
+  - id: "CLOUD_ML_REGION"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/google-vertex-ai
+    test: CloudAccountsTests, RealCliTests
+    # An Agent Platform account's region, in its --settings env.
+  - id: "ANTHROPIC_GOOGLE_CLOUD_PROJECT"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-models-on-google-cloud-anthropic-managed
+    test: CloudAccountsTests, RealCliTests
+    # An Anthropic-managed Google Cloud account's project, in its --settings env.
+  - id: "ANTHROPIC_GOOGLE_CLOUD_WORKSPACE_ID"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-models-on-google-cloud-anthropic-managed
+    test: CloudAccountsTests, RealCliTests
+    # Its workspace, in its --settings env.
+  - id: "ANTHROPIC_GOOGLE_CLOUD_LOCATION"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/claude-models-on-google-cloud-anthropic-managed
+    test: CloudAccountsTests, RealCliTests
+    # Its location, in its --settings env; emptied when the account has none (global).
+  - id: "GOOGLE_APPLICATION_CREDENTIALS"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/google-vertex-ai
+    test: CloudAccountsTests, RealCliTests
+    # A Google account's service account key file, in its --settings env. A path, not a secret.
+  - id: "ANTHROPIC_FOUNDRY_RESOURCE"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/microsoft-foundry
+    test: CloudAccountsTests, RealCliTests
+    # A Foundry account's resource name, in its --settings env. A URL or host name is refused, by Claude Code
+    # and Settings alike.
+  - id: "ANTHROPIC_FOUNDRY_API_KEY"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/microsoft-foundry
+    test: CloudAccountsTests, RealCliTests
+    # See AWS_BEARER_TOKEN_BEDROCK: a Foundry key, which apiKeyHelper doesn't carry. Emptied for Entra ID.
+  - id: "ANTHROPIC_FOUNDRY_AUTH_TOKEN"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/microsoft-foundry
+    test: CloudAccountsTests, RealCliTests
+    # Emptied for every Foundry account: it takes over from the key and from Entra ID.
+  - id: "ANTHROPIC_DEFAULT_OPUS_MODEL"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: CloudAccountsTests
+    # A cloud account's model pins, in its --settings env; emptied when it has none, so another provider's pins in
+    # the user's settings don't apply.
+  - id: "ANTHROPIC_DEFAULT_SONNET_MODEL"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: CloudAccountsTests
+    # See ANTHROPIC_DEFAULT_OPUS_MODEL.
+  - id: "ANTHROPIC_DEFAULT_HAIKU_MODEL"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: CloudAccountsTests
+    # See ANTHROPIC_DEFAULT_OPUS_MODEL.
+  - id: "ANTHROPIC_DEFAULT_FABLE_MODEL"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/env-vars
+    test: CloudAccountsTests
+    # See ANTHROPIC_DEFAULT_OPUS_MODEL.
+  - id: "awsAuthRefresh"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: CloudAccountsTests
+    # An AWS profile account's "aws sso login [--profile <name>]" in its --settings, with Sign in again when the
+    # credentials expire. The test run saw it run from --settings when the credentials couldn't be loaded.
+  - id: "gcpAuthRefresh"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Accounts/AccountLaunch.cs
+    docs: https://code.claude.com/docs/en/settings-reference
+    test: CloudAccountsTests
+    # A gcloud account's "gcloud auth application-default login" in its --settings. The test run saw it run for
+    # Anthropic-managed Google Cloud too, which its page doesn't mention.
+  - id: "apiProvider"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Sessions/InitializeResult.cs, src/Deventry.App/ViewModels/TabViewModel.Account.cs
+    test: CloudAccountsTests
+    fallback: "Missing or empty: no check. An unknown value on a cloud account's tab is reported as another provider than the account's, by its word."
+    # initialize's account.apiProvider: firstParty, bedrock, mantle, vertex, foundry, anthropicAws or anthropicGoogleCloud,
+    # which are Deventry's account kinds' words; claude auth status reports it too.
 
   # --- Plan usage (DESIGN.md §6) ------------------------------------------------------------------------
   - id: "rate_limits_available"

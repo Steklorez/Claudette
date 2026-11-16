@@ -7,10 +7,10 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.App.ViewModels;
 
 /// <summary>
-/// The header while the selected tab runs under an API key (DESIGN.md §4, "Accounts"): the account, and its estimated
-/// spend today, this week and this month, from Claude Code's own per-turn estimates on this machine, and other machines'
-/// under an account of the same name while they share their usage. The plan meters are the Default account's, so they
-/// make way.
+/// The header while the selected tab runs under an API key or a cloud provider (DESIGN.md §4, "Accounts"): the account,
+/// and its estimated spend today, this week and this month, from Claude Code's own per-turn estimates on this machine,
+/// and other machines' under an account of the same name while they share their usage. The plan meters are the Default
+/// account's, so they make way.
 /// </summary>
 public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
 {
@@ -42,14 +42,17 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         _ticker.Dispose();
     }
 
-    /// <summary>The selected tab's API-key account; null while it runs under Default, and the plan meters show.</summary>
+    /// <summary>The selected tab's API-key or cloud provider account; null while it runs under Default, and the plan meters show.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsShown), nameof(Tag))]
+    [NotifyPropertyChangedFor(nameof(IsShown), nameof(Tag), nameof(KindText))]
     public partial ClaudeAccount? Account { get; private set; }
 
     public bool IsShown => Account is not null;
 
     public AccountTag? Tag => AccountTag.For(Account, showDefault: false);
+
+    /// <summary>What the account is, beside its name: "API key, estimated", "Amazon Bedrock, estimated".</summary>
+    public string KindText => Account is null ? "" : $"{Account.KindName}, estimated";
 
     [ObservableProperty]
     public partial string TodayText { get; private set; } = "";
@@ -63,9 +66,11 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
     /// <summary>Whose tabs the spend is from: other machines' too, while they share their usage (DESIGN.md §6, "Sharing across machines").</summary>
     public string Tooltip =>
         (_services.Settings.Usage.ShareThroughLibrary
-            ? "Estimated spend on this API key from this machine's tabs, and other machines' tabs that sync to the session library under an account of the same name"
-            : "Estimated spend on this API key from this machine's tabs")
+            ? $"Estimated spend on this {SpendSubject} from this machine's tabs, and other machines' tabs that sync to the session library under an account of the same name"
+            : $"Estimated spend on this {SpendSubject} from this machine's tabs")
         + ": Claude Code's own estimates at list price, not your bill. Click for usage details.";
+
+    private string SpendSubject => Account?.Provider is { } provider ? $"{provider.Name} account" : "API key";
 
     /// <summary>The selected tab changed, or its account did.</summary>
     public void Show(ClaudeAccount? account)

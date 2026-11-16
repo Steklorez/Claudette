@@ -10,9 +10,9 @@ using Microsoft.Extensions.Logging;
 namespace Deventry.App.Services;
 
 /// <summary>
-/// The accounts tabs run Claude Code under besides the Default one (DESIGN.md §4, "Accounts"): adding, renaming and
-/// removing them, their keys in the OS credential store, what a tab's <c>claude</c> starts with for one, and the warnings
-/// when an API key's estimated spend passes what the user set.
+/// The accounts tabs run Claude Code under besides the Default one (DESIGN.md §4, "Accounts"): API keys and cloud
+/// providers. Adding, renaming and removing them, their keys in the OS credential store, what a tab's <c>claude</c>
+/// starts with for one, and the warnings when an account's estimated spend passes what the user set.
 /// </summary>
 public sealed class AccountsService(AppServices services, ICredentialStore credentials)
 {
@@ -21,7 +21,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
 
     private readonly ILogger _logger = services.Loggers.CreateLogger("Accounts");
 
-    /// <summary>Where API keys are kept. Tests replace it.</summary>
+    /// <summary>Where accounts' keys are kept. Tests replace it.</summary>
     public ICredentialStore Credentials { get; internal set; } = credentials;
 
     /// <summary>
@@ -96,20 +96,70 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
             Kind = AccountKinds.ApiKey,
             Color = TabGroupViewModel.ToHex(NextColor()),
         };
-        await Credentials.WriteAsync(ApiKeyHelper.CredentialKey(account.Id), ApiKeyHelper.CredentialLabel(account.Name), key.Trim()).ConfigureAwait(false);
-        services.Dispatcher.Post(() =>
-        {
-            services.State.Accounts.Add(account);
-            services.SaveState();
-            Changed?.Invoke();
-        });
+        await Credentials.WriteAsync(AccountSecrets.CredentialKey(account.Id), AccountSecrets.CredentialLabel(account), key.Trim()).ConfigureAwait(false);
+        Add(account);
         return account;
     }
 
-    /// <summary>Replaces an API-key account's key in the credential store.</summary>
+    /// <summary>
+    /// Adds a cloud provider account. Its key, if its way of signing in has one, goes to the credential store first, so an
+    /// account is only added once its key is saved.
+    /// </summary>
+    /// <exception cref="CredentialStoreException">The key couldn't be saved.</exception>
+    /// <exception cref="ArgumentException">What the account says about the provider isn't right (<see cref="CloudProviders.Problem"/>).</exception>
+    public async Task<ClaudeAccount> AddCloudAccountAsync(string name, CloudProvider provider, CloudAccountSettings cloud, string? secret)
+    {
+        if (CloudProviders.Problem(provider, cloud) is { } problem)
+        {
+            throw new ArgumentException(problem, nameof(cloud));
+        }
+        var account = new ClaudeAccount
+        {
+            Name = name.Trim(),
+            Kind = provider.Kind,
+            Cloud = cloud,
+            Color = TabGroupViewModel.ToHex(NextColor()),
+        };
+        if (CloudSignIns.KeepsSecret(cloud.SignIn))
+        {
+            if (secret?.Trim() is not { Length: > 0 } trimmed)
+            {
+                throw new ArgumentException("The account needs its key.", nameof(secret));
+            }
+            await Credentials.WriteAsync(AccountSecrets.CredentialKey(account.Id), AccountSecrets.CredentialLabel(account), trimmed).ConfigureAwait(false);
+        }
+        Add(account);
+        return account;
+    }
+
+    private void Add(ClaudeAccount account) => services.Dispatcher.Post(() =>
+    {
+        services.State.Accounts.Add(account);
+        services.SaveState();
+        Changed?.Invoke();
+    });
+
+    /// <summary>Replaces an account's key in the credential store: an API key's, or a cloud provider's.</summary>
     /// <exception cref="CredentialStoreException">The key couldn't be saved.</exception>
     public Task SetKeyAsync(ClaudeAccount account, string key) =>
-        Credentials.WriteAsync(ApiKeyHelper.CredentialKey(account.Id), ApiKeyHelper.CredentialLabel(account.Name), key.Trim());
+        Credentials.WriteAsync(AccountSecrets.CredentialKey(account.Id), AccountSecrets.CredentialLabel(account), key.Trim());
+
+    /// <summary>Saves what a cloud account says about its provider, which its tabs use when they start again.</summary>
+    /// <exception cref="ArgumentException">It isn't right (<see cref="CloudProviders.Problem"/>).</exception>
+    public void SetCloud(ClaudeAccount account, CloudAccountSettings cloud)
+    {
+        if (account.Provider is not { } provider)
+        {
+            return;
+        }
+        if (CloudProviders.Problem(provider, cloud) is { } problem)
+        {
+            throw new ArgumentException(problem, nameof(cloud));
+        }
+        account.Cloud = cloud;
+        services.SaveState();
+        Changed?.Invoke();
+    }
 
     public void Rename(ClaudeAccount account, string name)
     {
@@ -142,7 +192,11 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
     /// <exception cref="CredentialStoreException">The key couldn't be removed; the account stays.</exception>
     public async Task RemoveAsync(ClaudeAccount account)
     {
-        await Credentials.DeleteAsync(ApiKeyHelper.CredentialKey(account.Id)).ConfigureAwait(false);
+        // An account without a secret needs no credential store, which a Linux without secret-tool doesn't have.
+        if (account.HasSecret || Credentials.IsAvailable)
+        {
+            await Credentials.DeleteAsync(AccountSecrets.CredentialKey(account.Id)).ConfigureAwait(false);
+        }
         services.Dispatcher.Post(() =>
         {
             AccountState.Forget(services.State, account.Id);
@@ -156,21 +210,34 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
     // ---- Starting claude --------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// What a tab's <c>claude</c> starts with for <paramref name="account"/>: nothing more for Default; for an API key,
-    /// the <c>--settings</c> naming its key helper, and without the variables Claude Code would take over it.
+    /// What a tab's <c>claude</c> starts with for <paramref name="account"/> (<see cref="AccountLaunch"/>): null for
+    /// Default, which starts as before. A cloud account whose key goes in the environment reads it from the credential
+    /// store here.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Deventry's path can't go in the helper's command.</exception>
-    public (string? Settings, IReadOnlyDictionary<string, string?> Environment) LaunchFor(ClaudeAccount? account)
+    /// <exception cref="InvalidOperationException">Deventry's path can't go in the helper's command, or the key can't be read.</exception>
+    public async Task<AccountLaunch?> LaunchForAsync(ClaudeAccount? account)
     {
         if (account is null)
         {
-            return (null, new Dictionary<string, string?>());
+            return null;
         }
         if (HelperExecutable is not { } executable || !ApiKeyHelper.IsSafePath(executable))
         {
-            throw new InvalidOperationException($"Claude Code can't be given {account.Name}'s key: Deventry's own path ({HelperExecutable ?? "unknown"}) can't go in a command as it is.");
+            throw new InvalidOperationException($"Claude Code can't be given {account.Name}'s credentials: Deventry's own path ({HelperExecutable ?? "unknown"}) can't go in a command as it is.");
         }
-        return (ApiKeyHelper.Settings(executable, account.Id), ApiKeyHelper.OutrankingVariables.ToDictionary(v => v, string? (_) => null));
+        string? key = null;
+        if (account.Cloud is { } cloud && CloudSignIns.PutsKeyInEnvironment(cloud.SignIn))
+        {
+            try
+            {
+                key = await Credentials.ReadAsync(AccountSecrets.CredentialKey(account.Id)).ConfigureAwait(false);
+            }
+            catch (CredentialStoreException ex)
+            {
+                throw new InvalidOperationException($"Deventry couldn't read {account.Name}'s key from {Credentials.Name}: {ex.Message}", ex);
+            }
+        }
+        return AccountLaunch.For(account, executable, key);
     }
 
     // ---- Spend warnings ---------------------------------------------------------------------------------------------
@@ -220,17 +287,21 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
                 account.DailyAlertSentFor = day;
                 services.SaveState();
                 services.Notifications.Notify(NotificationKind.UsageAlert, $"{account.Name}: {Formats.Dollars(spentToday)} today",
-                    $"The estimated spend on {account.Name}'s API key passed {Formats.Dollars((double)daily)} today.");
+                    $"The estimated spend on {SpendOn(account)} passed {Formats.Dollars((double)daily)} today.");
             }
             if (account.MonthlySpendAlert is { } monthly && spentThisMonth >= (double)monthly && account.MonthlyAlertSentFor != monthKey)
             {
                 account.MonthlyAlertSentFor = monthKey;
                 services.SaveState();
                 services.Notifications.Notify(NotificationKind.UsageAlert, $"{account.Name}: {Formats.Dollars(spentThisMonth)} this month",
-                    $"The estimated spend on {account.Name}'s API key passed {Formats.Dollars((double)monthly)} this month.");
+                    $"The estimated spend on {SpendOn(account)} passed {Formats.Dollars((double)monthly)} this month.");
             }
         });
     }
+
+    /// <summary>What a spend warning says the spend is on: "Work's API key", "Studio's Amazon Bedrock account".</summary>
+    public static string SpendOn(ClaudeAccount account) =>
+        account.Provider is { } provider ? $"{account.Name}'s {provider.Name} account" : $"{account.Name}'s API key";
 }
 
 /// <summary>Where the spend periods start, in local time (DESIGN.md §4, "Accounts").</summary>

@@ -475,7 +475,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     {
         if (!_tab.UsesPlan)
         {
-            return new("Session limit", "–", "an API key doesn't use the plan");
+            return new("Session limit", "–", "its account doesn't use the plan");
         }
         if (_limit is not { } limit)
         {

@@ -103,8 +103,20 @@ public static class DemoHome
             ],
             SessionMarks = sessionMarks,
             // The studio's API key, which orbit-game's group uses (DESIGN.md §4, "Accounts"). Its key isn't stored: the
-            // demo's Claude Code never runs the key helper.
-            Accounts = [new ClaudeAccount { Id = DemoContent.StudioAccount, Name = "Studio", Color = "#A66BFF", DailySpendAlert = 20 }],
+            // demo's Claude Code never runs the key helper. And its Amazon Bedrock account, which no tab uses, signing
+            // in with an AWS profile, so Settings → Accounts shows a cloud provider's too.
+            Accounts =
+            [
+                new ClaudeAccount { Id = DemoContent.StudioAccount, Name = "Studio", Color = "#A66BFF", DailySpendAlert = 20 },
+                new ClaudeAccount
+                {
+                    Id = "demo-render-farm",
+                    Name = "Render farm",
+                    Kind = AccountKinds.Bedrock,
+                    Color = "#25B8B8",
+                    Cloud = new CloudAccountSettings { SignIn = CloudSignIns.Profile, Region = "us-east-1", Profile = "studio-sso", RefreshSignIn = true },
+                },
+            ],
             FolderAccounts = { [tabs.Single(t => t.Id == "tab-pool").Folder] = DemoContent.StudioAccount },
             Window = options.Window,
             // Answered, so the sidebar doesn't offer Claude Code's projects over the demo (DESIGN.md §4, "Claude Code's projects").

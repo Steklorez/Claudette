@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json.Nodes;
+using Deventry.Core.Accounts;
 using Deventry.Core.Composer;
 using Deventry.Core.Diffs;
 using Deventry.Core.Files;
@@ -79,6 +80,113 @@ public sealed class RealCliTests : IAsyncLifetime
         var messages = _api.Requests.Where(r => r.Path.StartsWith("/v1/messages", StringComparison.Ordinal) && r.LastUserText.Contains("hello", StringComparison.Ordinal)).ToArray();
         Assert.NotEmpty(messages);
         Assert.All(messages, r => Assert.Equal("sk-ant-helper-123", r.ApiKey));
+    }
+
+    // ---- Accounts' settings and environment (DESIGN.md §4, "Accounts") ------------------------------------------------
+
+    [Fact]
+    public async Task An_api_key_accounts_settings_keep_its_key_over_a_provider_and_a_key_in_the_users_settings()
+    {
+        // The user's own settings, which every account's tabs share, turn Bedrock on and set a key: both outrank an
+        // apiKeyHelper, so the account's settings empty them.
+        await File.WriteAllTextAsync(Path.Combine(Config, "settings.json"),
+            """{ "env": { "CLAUDE_CODE_USE_BEDROCK": "1", "ANTHROPIC_API_KEY": "sk-ant-from-settings" } }""", TestContext.Current.CancellationToken);
+        var launch = AccountLaunch.For(new ClaudeAccount { Name = "Work" }, "/opt/Deventry/Deventry");
+        var settings = JsonNode.Parse(launch.Settings)!.AsObject();
+        // Deventry's helper is Deventry; any command that prints a key stands in for it.
+        settings["apiKeyHelper"] = "echo sk-ant-helper-123";
+
+        await using var session = await StartAsync(environment: AccountEnvironment(launch), settings: settings.ToJsonString());
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        var (done, _) = await session.ReadUntilAsync<TurnCompleted>();
+
+        Assert.Equal("pong", done.Result.Result);
+        Assert.All(MessagesSaying("hello"), r => Assert.Equal("sk-ant-helper-123", r.ApiKey));
+    }
+
+    [Fact]
+    public async Task A_cloud_providers_key_reaches_it_from_the_environment()
+    {
+        var account = new ClaudeAccount
+        {
+            Name = "Studio",
+            Kind = AccountKinds.Foundry,
+            Cloud = new CloudAccountSettings { SignIn = CloudSignIns.ApiKey, Resource = "studio-ai" },
+        };
+        var launch = AccountLaunch.For(account, "/opt/Deventry/Deventry", key: "foundry-key-123");
+        var settings = JsonNode.Parse(launch.Settings)!.AsObject();
+        // The mock in place of the resource's endpoint.
+        settings["env"]!.AsObject().Remove("ANTHROPIC_FOUNDRY_RESOURCE");
+        settings["env"]!["ANTHROPIC_FOUNDRY_BASE_URL"] = _api.BaseAddress.ToString().TrimEnd('/');
+
+        await using var session = await StartAsync(environment: AccountEnvironment(launch), settings: settings.ToJsonString());
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        var (done, _) = await session.ReadUntilAsync<TurnCompleted>();
+
+        Assert.Equal("pong", done.Result.Result);
+        Assert.All(MessagesSaying("hello"), r => Assert.Equal("foundry-key-123", r.ApiKey));
+    }
+
+    [Fact]
+    public async Task An_aws_profile_signs_claude_platform_on_aws_requests_over_keys_in_the_environment()
+    {
+        // An access key saved to a profile with aws configure, as Settings → Accounts says to; the environment has
+        // another key, which the AWS credential chain would take over the profile, and which the account empties.
+        var credentials = _root.Combine("aws-credentials");
+        await File.WriteAllTextAsync(credentials, "[studio]\naws_access_key_id = AKIAEXAMPLE123\naws_secret_access_key = secret-access-key\n", TestContext.Current.CancellationToken);
+        var account = new ClaudeAccount
+        {
+            Name = "Studio",
+            Kind = AccountKinds.AnthropicAws,
+            Cloud = new CloudAccountSettings { SignIn = CloudSignIns.Profile, Profile = "studio", Region = "us-east-1", Workspace = "wrkspc_test" },
+        };
+        var launch = AccountLaunch.For(account, "/opt/Deventry/Deventry");
+        var settings = JsonNode.Parse(launch.Settings)!.AsObject();
+        settings["env"]!["ANTHROPIC_AWS_BASE_URL"] = _api.BaseAddress.ToString().TrimEnd('/');
+        var environment = AccountEnvironment(launch);
+        environment["AWS_SHARED_CREDENTIALS_FILE"] = credentials;
+        // Over the account's own removal from the environment: only its emptying in the settings keeps these out.
+        environment["AWS_ACCESS_KEY_ID"] = "AKIAFROMENVIRONMENT";
+        environment["AWS_SECRET_ACCESS_KEY"] = "from-the-environment";
+
+        await using var session = await StartAsync(environment: environment, settings: settings.ToJsonString());
+        await session.SendUserMessageAsync("hello", TestContext.Current.CancellationToken);
+        var (done, _) = await session.ReadUntilAsync<TurnCompleted>();
+
+        Assert.Equal("pong", done.Result.Result);
+        Assert.All(MessagesSaying("hello"), r =>
+        {
+            // Signed with the profile's key, for the account's workspace and region.
+            Assert.StartsWith("AWS4-HMAC-SHA256 Credential=AKIAEXAMPLE123/", r.Authorization, StringComparison.Ordinal);
+            Assert.Contains("/us-east-1/", r.Authorization, StringComparison.Ordinal);
+            Assert.Equal("wrkspc_test", r.WorkspaceId);
+            Assert.Null(r.ApiKey);
+        });
+    }
+
+    /// <summary>
+    /// The variables an account's tab starts with, over the test's own; anything that would leave the machine goes to a
+    /// proxy that isn't there, so a cloud provider's own endpoints are never reached.
+    /// </summary>
+    private static Dictionary<string, string?> AccountEnvironment(AccountLaunch launch)
+    {
+        var environment = new Dictionary<string, string?>(launch.Environment)
+        {
+            ["HTTPS_PROXY"] = "http://127.0.0.1:9",
+            ["HTTP_PROXY"] = "http://127.0.0.1:9",
+            ["NO_PROXY"] = "127.0.0.1,localhost",
+            ["AWS_CONFIG_FILE"] = Path.Combine(Path.GetTempPath(), "deventry-no-aws-config"),
+            ["AWS_SHARED_CREDENTIALS_FILE"] = Path.Combine(Path.GetTempPath(), "deventry-no-aws-credentials"),
+            ["AWS_EC2_METADATA_DISABLED"] = "true",
+        };
+        return environment;
+    }
+
+    private RecordedRequest[] MessagesSaying(string text)
+    {
+        var messages = _api.Requests.Where(r => r.Path.StartsWith("/v1/messages", StringComparison.Ordinal) && r.LastUserText.Contains(text, StringComparison.Ordinal)).ToArray();
+        Assert.NotEmpty(messages);
+        return messages;
     }
 
     [Fact]

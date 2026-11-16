@@ -572,7 +572,14 @@ public sealed class AppServices : IAsyncDisposable
     /// (DESIGN.md §7, "Starting mode"); null reads only the user's and managed settings. Reads files.
     /// </summary>
     public StartingPermissionMode ReadStartingPermissionMode(string? folder) =>
-        StartingPermissionMode.Read(StartingPermissionMode.SettingsFiles(ClaudeManagedSettingsDirectory, ClaudeConfigDirectory, folder));
+        StartingPermissionMode.Read(ClaudeSettingsFilesFor(folder));
+
+    /// <summary>
+    /// Claude Code's settings files for a session in <paramref name="folder"/>, the one that wins first; null reads only
+    /// the user's and managed settings.
+    /// </summary>
+    public IReadOnlyList<ClaudeSettingsFile> ClaudeSettingsFilesFor(string? folder) =>
+        StartingPermissionMode.SettingsFiles(ClaudeManagedSettingsDirectory, ClaudeConfigDirectory, folder);
 
     /// <summary>
     /// Claude Code may start in <paramref name="folder"/> without asking about what the folder's own configuration runs

@@ -60,8 +60,9 @@ public sealed partial class TabViewModel
     internal PromptCacheTtl? PromptCacheLifetime =>
         PromptCache.Resolve(_promptCacheConfig, _modelId, PromptCacheClock.ReportedLifetime, PromptCacheBilling);
 
-    private ClaudeBilling PromptCacheBilling =>
-        PromptCache.BillingOf(Account?.IsApiKey == true, _apiKeySource, _promptCacheConfig, _services.RemoteControl.Account);
+    private ClaudeBilling PromptCacheBilling => Account?.IsCloudProvider == true
+        ? ClaudeBilling.CloudProvider
+        : PromptCache.BillingOf(Account?.IsApiKey == true, _apiKeySource, _promptCacheConfig, _services.RemoteControl.Account);
 
     /// <summary>Follows the main agent's requests, which refresh the cache, and what makes it no use.</summary>
     private void TrackPromptCache(SessionEvent sessionEvent)

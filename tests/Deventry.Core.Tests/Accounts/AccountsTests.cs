@@ -15,12 +15,14 @@ public class AccountsTests
     [Fact]
     public void The_key_helper_is_Deventry_itself_named_in_the_sessions_own_settings()
     {
-        var settings = ApiKeyHelper.Settings(@"C:\Program Files\Deventry\Deventry.exe", Id);
+        var launch = AccountLaunch.For(new ClaudeAccount { Id = Id, Name = "Work" }, @"C:\Program Files\Deventry\Deventry.exe");
+        var settings = JsonNode.Parse(launch.Settings)!.AsObject();
 
-        Assert.Equal($"\"C:\\Program Files\\Deventry\\Deventry.exe\" --api-key-helper {Id}", JsonNode.Parse(settings)!["apiKeyHelper"]!.GetValue<string>());
-        Assert.Equal(["apiKeyHelper"], JsonNode.Parse(settings)!.AsObject().Select(p => p.Key));
+        Assert.Equal($"\"C:\\Program Files\\Deventry\\Deventry.exe\" --api-key-helper {Id}", settings["apiKeyHelper"]!.GetValue<string>());
+        Assert.Equal(["apiKeyHelper", "env"], settings.Select(p => p.Key));
         Assert.True(ApiKeyHelper.TryGetAccountId(["--api-key-helper", Id], out var id));
         Assert.Equal(Id, id);
+        Assert.Null(launch.KeyVariable);
     }
 
     [Theory]
@@ -62,8 +64,22 @@ public class AccountsTests
     }
 
     [Fact]
-    public void An_API_key_tab_goes_without_the_variables_that_outrank_its_helper() =>
-        Assert.Equal(["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"], ApiKeyHelper.OutrankingVariables);
+    public void An_API_key_tab_goes_without_the_variables_that_outrank_its_helper_wherever_they_are_set()
+    {
+        var launch = AccountLaunch.For(new ClaudeAccount { Id = Id, Name = "Work" }, "/usr/bin/deventry");
+        var env = JsonNode.Parse(launch.Settings)!["env"]!.AsObject();
+        string[] outranking =
+        [
+            "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_USE_ANTHROPIC_AWS", "CLAUDE_CODE_USE_ANTHROPIC_GOOGLE_CLOUD",
+            "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_FOUNDRY", "CLAUDE_CODE_USE_MANTLE", "CLAUDE_CODE_USE_VERTEX",
+        ];
+
+        // Emptied in the session's settings, over Claude Code's settings files, and gone from its environment.
+        Assert.Equal(outranking, env.Select(p => p.Key).Order(StringComparer.Ordinal));
+        Assert.All(env, p => Assert.Equal("", p.Value!.GetValue<string>()));
+        Assert.Equal(outranking, launch.Environment.Keys.Order(StringComparer.Ordinal));
+        Assert.All(launch.Environment, p => Assert.Null(p.Value));
+    }
 
     [Fact]
     public void The_sessions_settings_go_on_the_command_line()
@@ -156,12 +172,32 @@ public class AccountsTests
     [Fact]
     public void The_confirmation_says_what_the_switch_costs()
     {
-        var toKey = SwitchCost.Describe("Work", 150_000, "claude-opus-5-5", billedByToken: true);
-        var toPlan = SwitchCost.Describe("Default", 150_000, "claude-opus-5-5", billedByToken: false);
-        var unknown = SwitchCost.Describe("Work", 0, null, billedByToken: true);
+        var toKey = SwitchCost.Describe("Work", 150_000, "claude-opus-5-5", ClaudeBilling.ApiKey);
+        var toPlan = SwitchCost.Describe("Default", 150_000, "claude-opus-5-5", ClaudeBilling.Subscription);
+        var unknown = SwitchCost.Describe("Work", 0, null, ClaudeBilling.ApiKey);
+        var toCloud = SwitchCost.Describe("Studio", 150_000, "us.anthropic.claude-opus-5-5", ClaudeBilling.CloudProvider, "Amazon Bedrock");
+        var toCloudUnknown = SwitchCost.Describe("Studio", 150_000, "team-opus-prod", ClaudeBilling.CloudProvider, "Microsoft Foundry");
 
         Assert.Contains("again under Work, without the prompt cache, once: about $0.75 at list price.", toKey, StringComparison.Ordinal);
         Assert.EndsWith(", which counts toward its plan's limits.", toPlan, StringComparison.Ordinal);
         Assert.Equal("Claude reads the conversation again under Work, without the prompt cache, once, billed to its API key.", unknown);
+        Assert.EndsWith("once: about $0.75 at Anthropic's list price, billed through Amazon Bedrock.", toCloud, StringComparison.Ordinal);
+        Assert.EndsWith("once, billed through Microsoft Foundry.", toCloudUnknown, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("us.anthropic.claude-opus-5-5", 150_000, 0.75)]
+    [InlineData("global.anthropic.claude-sonnet-5-5", 150_000, 0.375)]
+    [InlineData("us.anthropic.claude-haiku-4-5-20251001-v1:0", 1_000_000, 1.25)]
+    [InlineData("anthropic.claude-haiku-4-5", 1_000_000, 1.25)]
+    [InlineData("claude-haiku-4-5@20251001", 1_000_000, 1.25)]
+    public void A_cloud_providers_model_id_has_its_models_price(string model, long tokens, double dollars) =>
+        Assert.Equal(dollars, SwitchCost.Estimate(model, tokens)!.Value, precision: 6);
+
+    [Fact]
+    public void A_model_id_that_only_mentions_claude_gets_no_estimate()
+    {
+        Assert.Null(SwitchCost.Estimate("arn:aws:bedrock:us-east-2:123456789012:application-inference-profile/opus", 1000));
+        Assert.Null(SwitchCost.Estimate("team-claude-opus-5-5", 1000));
     }
 }

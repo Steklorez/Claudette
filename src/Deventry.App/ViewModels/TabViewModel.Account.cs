@@ -1,6 +1,7 @@
 using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.Core.Accounts;
+using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels;
@@ -31,9 +32,12 @@ public sealed partial class TabViewModel
     /// <summary>The menu is there once there's an account besides Default.</summary>
     public bool HasAccountMenu => _services.Accounts.HasAccounts;
 
-    /// <summary>Why the Claude app isn't for this tab's account whatever the Default account can do: an API key can't.</summary>
+    /// <summary>
+    /// Why the Claude app isn't for this tab's account whatever the Default account can do: an API key or a cloud
+    /// provider can't.
+    /// </summary>
     internal string? AccountRemoteControlReason => Account is { } account
-        ? $"{account.Name} uses an API key, and the Claude app needs a claude.ai sign-in"
+        ? $"{account.Name} uses {(account.Provider is { } provider ? provider.Name : "an API key")}, and the Claude app needs a claude.ai sign-in"
         : null;
 
     /// <summary>
@@ -56,8 +60,9 @@ public sealed partial class TabViewModel
             return;
         }
         var name = target?.Name ?? AccountsService.DefaultName;
+        var billing = target is null ? ClaudeBilling.Subscription : target.IsCloudProvider ? ClaudeBilling.CloudProvider : ClaudeBilling.ApiKey;
         _shell.Confirm($"Move \"{DisplayName}\" to {name}?",
-            SwitchCost.Describe(name, Context.Tokens ?? 0, _modelId, billedByToken: target is not null),
+            SwitchCost.Describe(name, Context.Tokens ?? 0, _modelId, billing, target?.Provider?.Name),
             "Move", () => ApplyAccountAsync(target));
     }
 
@@ -124,19 +129,61 @@ public sealed partial class TabViewModel
     {
         if (_services.Accounts.HasAccounts)
         {
-            rows.Add(new InfoRow("Account", Account is { } account ? $"{account.Name} (API key)" : AccountsService.DefaultName));
+            rows.Add(new InfoRow("Account", Account is { } account ? $"{account.Name} ({account.KindName})" : AccountsService.DefaultName));
         }
     }
 
     /// <summary>
-    /// Claude Code turned the tab's API key down, or couldn't get it. That's this account's to fix, not a sign-in to
-    /// Claude Code, so the other tabs and the Default account carry on.
+    /// Claude Code turned the tab's API key or cloud credentials down, or couldn't get them. That's this account's to
+    /// fix, not a sign-in to Claude Code, so the other tabs and the Default account carry on.
     /// </summary>
     private void OnApiKeyRefused(ClaudeAccount account, string? said)
     {
         Status = TabStatus.Error;
-        _conversation.AddNote(
-            $"Claude Code couldn't use {account.Name}'s API key{(said is { Length: > 0 } ? $" (it said \"{said}\")" : "")}. Check the key in Settings → Accounts, or move the tab to another account.",
+        var saying = said is { Length: > 0 } ? $" (it said \"{said}\")" : "";
+        _conversation.AddNote(account.Provider is { } provider
+            ? $"Claude Code couldn't sign in to {provider.Name} for {account.Name}{saying}. {CredentialsHint(account)} Or move the tab to another account."
+            : $"Claude Code couldn't use {account.Name}'s API key{saying}. Check the key in Settings → Accounts, or move the tab to another account.",
             NoteKind.Error);
+    }
+
+    /// <summary>Where to look when a cloud account's credentials are refused, for how it signs in.</summary>
+    private static string CredentialsHint(ClaudeAccount account) => account.Cloud?.SignIn switch
+    {
+        CloudSignIns.Profile when account.Cloud.Profile is { Length: > 0 } profile => $"Sign in to AWS with \"aws sso login --profile {profile}\", or check the profile in Settings → Accounts.",
+        CloudSignIns.Profile => "Sign in to AWS, or check its credentials in ~/.aws.",
+        CloudSignIns.Gcloud => $"Sign in with \"{AccountLaunch.GcloudSignInCommand}\", or check the project in Settings → Accounts.",
+        CloudSignIns.EntraId => "Sign in with \"az login\", or check the resource name in Settings → Accounts.",
+        CloudSignIns.KeyFile => "Check the key file in Settings → Accounts.",
+        _ => "Check the key in Settings → Accounts.",
+    };
+
+    /// <summary>
+    /// Claude Code says which provider the session started on: when it isn't the account's, such as when an
+    /// organization's managed settings choose one, the tab says so rather than billing it quietly.
+    /// </summary>
+    private void CheckAccountProvider(string? apiProvider)
+    {
+        if (Account is { } account && apiProvider is { Length: > 0 } && !CloudProviders.IsExpected(account, apiProvider))
+        {
+            _conversation.AddNote(
+                $"Claude Code is using {CloudProviders.NameOf(apiProvider)} for this tab, not {(account.Provider?.Name ?? "an API key")} as {account.Name} says. An organization's managed settings may choose it.",
+                NoteKind.Warning);
+        }
+    }
+
+    /// <summary>
+    /// A setting in one of Claude Code's settings files takes over from the key the account put in the environment of
+    /// the tab's <c>claude</c>: the tab says which, since Deventry can't put the key in the settings instead.
+    /// </summary>
+    private async Task NoteKeyTakenOverAsync(string keyVariable, string? folder)
+    {
+        var file = await Task.Run(() => AccountLaunch.SettingsFileSetting(_services.ClaudeSettingsFilesFor(folder), keyVariable));
+        if (file is not null && Account is { } account)
+        {
+            _conversation.AddNote(
+                $"{file} sets {keyVariable}, which Claude Code uses over {account.Name}'s key. Remove it there for this account's key to be used.",
+                NoteKind.Warning);
+        }
     }
 }

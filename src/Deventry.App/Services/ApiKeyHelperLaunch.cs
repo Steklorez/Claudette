@@ -20,7 +20,7 @@ internal static class ApiKeyHelperLaunch
         try
         {
             store ??= CredentialStores.CreateForCurrentOS(new ProcessLauncher(), TimeProvider.System);
-            var key = store.ReadAsync(ApiKeyHelper.CredentialKey(accountId)).GetAwaiter().GetResult();
+            var key = store.ReadAsync(AccountSecrets.CredentialKey(accountId)).GetAwaiter().GetResult();
             if (string.IsNullOrEmpty(key))
             {
                 // Plain ASCII: the console's code page may not have an arrow.

@@ -16,6 +16,11 @@ namespace Deventry.MockApi;
 /// <param name="LastUserImages">The images in the latest user message, in order.</param>
 /// <param name="ApiKey">The <c>x-api-key</c> the request came with: which key Claude Code used.</param>
 /// <param name="System">The text of the request's system prompt, so tests can see what Claude was told.</param>
+/// <param name="Authorization">
+/// The <c>Authorization</c> header: a bearer token, or a cloud provider's signature, such as AWS's, which names the
+/// access key it signed with.
+/// </param>
+/// <param name="WorkspaceId">The <c>anthropic-workspace-id</c> header that Claude Platform on AWS sends.</param>
 public sealed record RecordedRequest(
     string Method,
     string Path,
@@ -28,7 +33,9 @@ public sealed record RecordedRequest(
     string LastToolResultText = "",
     IReadOnlyList<RecordedImage>? LastUserImages = null,
     string? ApiKey = null,
-    string System = "");
+    string System = "",
+    string? Authorization = null,
+    string? WorkspaceId = null);
 
 /// <summary>An image that reached the API: its media type, size, and for a PNG its dimensions.</summary>
 public sealed record RecordedImage(string MediaType, int Bytes, int? Width, int? Height);
@@ -269,7 +276,9 @@ public sealed partial class MockAnthropicApi : IAsyncDisposable
             LastToolResultText(body),
             LastUserImages(body),
             request.Headers["x-api-key"].FirstOrDefault(),
-            SystemText(body)));
+            SystemText(body),
+            request.Headers.Authorization.FirstOrDefault(),
+            request.Headers["anthropic-workspace-id"].FirstOrDefault()));
     }
 
     /// <summary>The system prompt's text: its blocks' text, one after another, or the string it is.</summary>

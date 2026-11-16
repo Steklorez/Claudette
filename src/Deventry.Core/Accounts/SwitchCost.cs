@@ -1,4 +1,5 @@
 using System.Globalization;
+using Deventry.Core.Sessions;
 
 namespace Deventry.Core.Accounts;
 
@@ -26,14 +27,21 @@ public static class SwitchCost
 
     /// <summary>
     /// The re-read's cost in US dollars at list price for <paramref name="tokens"/> of conversation on
-    /// <paramref name="model"/> (a model id such as <c>claude-opus-5-5</c>, with or without a <c>[1m]</c> suffix), or null
-    /// for a model without a known price.
+    /// <paramref name="model"/> (a model id such as <c>claude-opus-5-5</c>, with or without a <c>[1m]</c> suffix, or a
+    /// cloud provider's, such as Bedrock's <c>us.anthropic.claude-opus-4-8</c> or the Agent Platform's
+    /// <c>claude-haiku-4-5@20251001</c>), or null for a model without a known price.
     /// </summary>
     public static double? Estimate(string? model, long tokens)
     {
         if (model is null || tokens <= 0)
         {
             return null;
+        }
+        // A cloud provider's id names the model after a region and the publisher: us.anthropic.claude-…
+        var at = model.IndexOf("claude-", StringComparison.OrdinalIgnoreCase);
+        if (at > 0 && model[..at].EndsWith("anthropic.", StringComparison.OrdinalIgnoreCase))
+        {
+            model = model[at..];
         }
         foreach (var (prefix, perMillion) in InputPrices)
         {
@@ -47,14 +55,21 @@ public static class SwitchCost
 
     /// <summary>What the confirmation says the switch costs: the tokens, and the estimate when it's billed by the token.</summary>
     /// <param name="accountName">The account it moves to.</param>
-    /// <param name="billedByToken">The account pays per token (an API key), rather than from a plan's limits.</param>
-    public static string Describe(string accountName, long tokens, string? model, bool billedByToken)
+    /// <param name="billing">How the account pays: from a plan's limits, or by the token to an API key or a cloud provider.</param>
+    /// <param name="provider">The cloud provider's name, for <see cref="ClaudeBilling.CloudProvider"/>.</param>
+    public static string Describe(string accountName, long tokens, string? model, ClaudeBilling billing, string? provider = null)
     {
         var read = tokens > 0
             ? $"Claude reads the conversation's {tokens.ToString("N0", CultureInfo.CurrentCulture)} tokens again under {accountName}, without the prompt cache, once"
             : $"Claude reads the conversation again under {accountName}, without the prompt cache, once";
-        return billedByToken && Estimate(model, tokens) is { } dollars
-            ? $"{read}: about {Formats.Dollars(dollars)} at list price."
-            : billedByToken ? $"{read}, billed to its API key." : $"{read}, which counts toward its plan's limits.";
+        var estimate = Estimate(model, tokens);
+        return billing switch
+        {
+            ClaudeBilling.Subscription => $"{read}, which counts toward its plan's limits.",
+            ClaudeBilling.CloudProvider when estimate is { } dollars => $"{read}: about {Formats.Dollars(dollars)} at Anthropic's list price, billed through {provider ?? "its cloud provider"}.",
+            ClaudeBilling.CloudProvider => $"{read}, billed through {provider ?? "its cloud provider"}.",
+            _ when estimate is { } dollars => $"{read}: about {Formats.Dollars(dollars)} at list price.",
+            _ => $"{read}, billed to its API key.",
+        };
     }
 }

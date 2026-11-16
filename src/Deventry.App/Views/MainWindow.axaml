@@ -245,7 +245,7 @@
             <TextBlock Grid.Column="1" Text="Deventry" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0"
                        IsVisible="{Binding ShowsHeaderTitle}" />
 
-            <!-- The selected tab runs under an API key: its estimated spend in place of the plan's meters (DESIGN.md §4,
+            <!-- The selected tab runs under an API key or a cloud provider: its estimated spend in place of the plan's meters (DESIGN.md §4,
                  "Accounts"). Click for the Usage panel. -->
             <Button x:Name="AccountSpend" Grid.Column="1" Classes="header" HorizontalAlignment="Left" IsVisible="{Binding ShowsSpend}" Command="{Binding Usage.OpenPanelCommand, FallbackValue={x:Null}}"
                     ToolTip.Tip="{Binding Spend.Tooltip, FallbackValue={x:Null}}" AutomationProperties.Name="Estimated API spend">
@@ -253,7 +253,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                   <Ellipse Width="8" Height="8" Fill="{Binding Spend.Tag.Brush, FallbackValue={x:Null}}" VerticalAlignment="Center" />
                   <TextBlock Text="{Binding Spend.Account.Name, FallbackValue=''}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                  <TextBlock Classes="muted small" Text="API key, estimated" VerticalAlignment="Center" />
+                  <TextBlock Classes="muted small" Text="{Binding Spend.KindText, FallbackValue=''}" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                   <TextBlock Classes="muted small" Text="Today" VerticalAlignment="Center" />

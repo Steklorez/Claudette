@@ -1799,12 +1799,17 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // The task-tracking tools on every model: Claude Code gives them only older ones (DESIGN.md §5, "Tasks").
                 environment["CLAUDE_CODE_ENABLE_TODO_TOOLS"] = "1";
             }
-            // An API-key account's key comes from Deventry's key helper, and nothing in the environment outranks it
-            // (DESIGN.md §4, "Accounts").
-            var (accountSettings, accountEnvironment) = _services.Accounts.LaunchFor(Account);
-            foreach (var (name, value) in accountEnvironment)
+            // An account's settings choose its provider, or none, over Claude Code's own settings and the environment, and
+            // its key comes from Deventry's key helper, or for some providers' keys in the environment (DESIGN.md §4,
+            // "Accounts").
+            var accountLaunch = await _services.Accounts.LaunchForAsync(Account);
+            foreach (var (name, value) in accountLaunch?.Environment ?? new Dictionary<string, string?>())
             {
                 environment[name] = value;
+            }
+            if (accountLaunch?.KeyVariable is { } keyVariable)
+            {
+                await NoteKeyTakenOverAsync(keyVariable, settingsFolder);
             }
             var resumeAt = resume is null ? null : State.ResumeAt;
             if (State.NewWorktree is not null)
@@ -1829,7 +1834,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 RestoredUsage = await restoredUsage,
                 // Chosen when asked about the folder's own configuration (DESIGN.md §7, "Folder trust").
                 SettingSources = State.WithoutProjectSettings ? "user" : null,
-                Settings = accountSettings,
+                Settings = accountLaunch?.Settings,
                 FallbackModel = settings.ClaudeCode.FallbackModel,
                 AgentProgressSummaries = settings.ClaudeCode.SubagentProgressSummaries,
                 // The next prompt Claude Code predicts, which the empty composer shows (DESIGN.md §5, "Prompt suggestions").
@@ -1876,6 +1881,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             _ = LoadPromptCacheConfigAsync();
             _ = LoadTaskListAsync();
             _services.RememberModels(session.Initialization?.Models);
+            CheckAccountProvider(session.Initialization?.Account.ApiProvider);
             State.SessionStartedAt ??= _services.Time.GetUtcNow();
             // The installed version is what just started; system/init confirms it with the first turn.
             SetRunningVersion(_services.InstalledClaudeVersion);
