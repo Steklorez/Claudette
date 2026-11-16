@@ -49,8 +49,11 @@ public class SharedTurnsTests
         Assert.Equal(lap.Harness.WorkFolder, project.Folder);
         Assert.Contains("Desktop: $0.02 · 2 turns", project.Tooltip, StringComparison.Ordinal);
         Assert.Contains("This machine: $0.01 · 1 turn", project.Tooltip, StringComparison.Ordinal);
-        Assert.Equal(["Laptop tab", $"{deskTab.DisplayName} · Desktop"], panel.Tabs.Select(t => t.Name).Order());
-        Assert.Equal("On Desktop", panel.Tabs.Single(t => t.Name.EndsWith("Desktop", StringComparison.Ordinal)).Tooltip);
+        Assert.Equal(["Laptop tab", deskTab.DisplayName], panel.Tabs.Select(t => t.Name).Order());
+        // The desktop's tab says so, and opens as the desktop's.
+        var theirs = panel.Tabs.Single(t => t.Name == deskTab.DisplayName);
+        Assert.EndsWith("Desktop", theirs.Detail, StringComparison.Ordinal);
+        Assert.Equal($"{deskTab.DisplayName} · Desktop", theirs.Tab.Name);
         // Read once: nothing new is added the next time.
         await lap.Tracker.ShareAsync();
         Assert.Equal(3, lap.Tracker.Store.GetTokensByTab(DateTimeOffset.MinValue).Sum(t => t.Turns));

@@ -156,6 +156,12 @@ public sealed class AppState
     public bool TokensAsCost { get; set; }
 
     /// <summary>
+    /// The period the Usage panel's token sections cover, its <b>Tokens over</b> (DESIGN.md §18, "The Usage panel"). Kept
+    /// per machine.
+    /// </summary>
+    public UsagePanelPeriod UsagePanelPeriod { get; set; }
+
+    /// <summary>
     /// Logs in the main area wrap their long lines (DESIGN.md §18, "Project tools", "A run's log"): each new one starts
     /// with <b>Wrap lines</b> as the last one was left.
     /// </summary>
@@ -610,6 +616,19 @@ public sealed class TabOverrides
 
     public bool HasAny => Model is not null || Effort is not null || PermissionMode is not null || CheckIns is not null || ShowProcessMonitor is not null
         || ContinueAfterLimitReset is not null || UseUsageCredits is not null || Subagents is not null || FoldChains is not null;
+}
+
+/// <summary>The periods the Usage panel's token sections can cover (DESIGN.md §18, "The Usage panel").</summary>
+public enum UsagePanelPeriod
+{
+    /// <summary>From the current 5-hour window's start.</summary>
+    SessionWindow,
+
+    /// <summary>The weekly limit's own week when it's known, otherwise the last 7 days.</summary>
+    Week,
+
+    /// <summary>The last 30 days.</summary>
+    Month,
 }
 
 public sealed class RecentFolder

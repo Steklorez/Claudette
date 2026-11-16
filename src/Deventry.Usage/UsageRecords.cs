@@ -64,6 +64,12 @@ public sealed record TurnRecord(
     /// <summary>An API-key account's name, which other machines match their own accounts by.</summary>
     public string? AccountName { get; init; }
 
+    /// <summary>
+    /// The machine that ran it, when another one shared it (DESIGN.md §6, "Sharing across machines"); null for this
+    /// machine's. Read from the history; recording a turn here leaves it out.
+    /// </summary>
+    public string? Machine { get; init; }
+
     /// <summary>For the Default account's turns, the plan account signed in (<see cref="UsageSharing.AccountKey"/>).</summary>
     public string? Plan { get; init; }
 

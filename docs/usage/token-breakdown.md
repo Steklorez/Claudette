@@ -20,6 +20,7 @@ A tab's token breakdown says what its tokens went on: what kind they were, turn 
 - **Breakdown ›** on a turn's card in the conversation opens it on that turn.
 - **Open breakdown** in the composer bar's token count popup, or in the [Tokens tool window](#the-tokens-tool-window), where a click on one of the latest turns opens it on that turn.
 - **Breakdown ›** beside **Tokens** on the tab's info card (the **ⓘ** at the end of the line under the message box).
+- A tab's row in [the Usage window](the-usage-window.md#tabs)'s **Tabs**, for a tab you've closed, or one on another machine, too. Its window reads what the usage history has of it, so its turns go by their numbers rather than their prompts.
 
 Opening it again brings its window to the front, on the turn you asked for.
 
@@ -105,6 +106,6 @@ Deventry keeps each call's numbers and its tools' names in [the usage history](u
 ## See also
 
 - [A tab's tokens](a-tabs-tokens.md), the count in the composer bar.
-- [The Usage window](the-usage-window.md), for every tab's use of the session and the week.
+- [The Usage window](the-usage-window.md), for where every tab's tokens went over the session, the week or the month.
 - [The prompt cache](the-prompt-cache.md), and why an expired cache costs more.
 - [Context and compacting](context-and-compacting.md).

@@ -170,21 +170,28 @@ internal static class MachineNames
     }
 }
 
-/// <summary>The period the Usage panel's <b>Projects</b> list covers.</summary>
-public enum ProjectPeriod
+/// <summary>
+/// A tab's row in the Usage panel's <b>Tabs</b> (DESIGN.md §18, "The Usage panel"): its tokens and cost over the period,
+/// its cost by kind, its turns and expired caches, and the way to its breakdown, open or closed.
+/// </summary>
+/// <param name="Detail">Its project, <i>closed</i> or the machine it's on, and an API key's account: <i>starfall · closed</i>.</param>
+/// <param name="Scale">Its cost against the costliest tab's, for its bar.</param>
+/// <param name="Expired">*2 expired caches*; null when it had none.</param>
+public sealed record TabTokensRow(string Name, string Detail, KindValues Costs, double Scale, string Tokens, string Cost, string Turns, string? Expired, HistoryTabBreakdown Tab)
 {
-    SessionWindow,
-    Week,
-    Month,
+    public bool HasExpired => Expired is not null;
 }
 
-/// <summary>A choice in the Projects list's period picker, shown by its label.</summary>
-public sealed record ProjectPeriodChoice(ProjectPeriod Period)
+/// <summary>A model's row in the Usage panel's <b>Models</b>: its calls, the kinds that cost, and its cost.</summary>
+public sealed record TokenModelRow(string Name, string Calls, string CacheRead, string CacheWrite, string Output, string Cost);
+
+/// <summary>A choice in the Usage panel's <b>Tokens over</b>, shown by its label.</summary>
+public sealed record UsagePeriodChoice(UsagePanelPeriod Period)
 {
     public override string ToString() => Period switch
     {
-        ProjectPeriod.SessionWindow => "This session window",
-        ProjectPeriod.Month => "The last 30 days",
+        UsagePanelPeriod.SessionWindow => "This session window",
+        UsagePanelPeriod.Month => "The last 30 days",
         _ => "This week",
     };
 }
@@ -193,8 +200,9 @@ public sealed record ProjectPeriodChoice(ProjectPeriod Period)
 public sealed record PastWindowRow(string When, string Peak, double Percent);
 
 /// <summary>
-/// The Usage panel (DESIGN.md §6, "Burn trendline"): larger charts of the current session and the past week, tokens
-/// per tab for the current window, and past sessions and weeks from the usage history.
+/// The Usage panel (DESIGN.md §6, "Burn trendline"): larger charts of the current session and the past week; over the
+/// period <b>Tokens over</b> chooses, where the tokens went, and the tokens per tab, project, account, model and tool
+/// (DESIGN.md §18, "The Usage panel"); and past sessions and weeks from the usage history.
 /// </summary>
 public sealed partial class UsagePanelViewModel : ViewModelBase
 {
@@ -204,14 +212,20 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
     private readonly UsageTracker _tracker;
     private readonly UsageViewModel _header;
     private readonly Func<string, string?> _tabName;
+    private readonly Action<HistoryTabBreakdown>? _openBreakdown;
 
-    public UsagePanelViewModel(AppServices services, UsageTracker tracker, UsageViewModel header, Func<string, string?> tabName)
+    /// <param name="tabName">An open tab's name, by its id; null for a tab that isn't open.</param>
+    /// <param name="openBreakdown">Opens a tab's token breakdown, from its row's <b>›</b>.</param>
+    public UsagePanelViewModel(AppServices services, UsageTracker tracker, UsageViewModel header, Func<string, string?> tabName,
+        Action<HistoryTabBreakdown>? openBreakdown = null)
     {
         _services = services;
         _tracker = tracker;
         _header = header;
         _tabName = tabName;
-        Refresh();
+        _openBreakdown = openBreakdown;
+        // Choosing it reads the history.
+        SelectedPeriod = Periods.FirstOrDefault(p => p.Period == services.State.UsagePanelPeriod) ?? Periods[0];
     }
 
     /// <summary>Counts refreshes, so a slow one that finishes after a later one doesn't overwrite it.</summary>
@@ -228,12 +242,81 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
     [ObservableProperty]
     public partial DateTimeOffset WeekEnd { get; set; }
 
+    // ---- Tokens over the period (DESIGN.md §18, "The Usage panel") --------------------------------------------------
+
+    public IReadOnlyList<UsagePeriodChoice> Periods { get; } = [.. Enum.GetValues<UsagePanelPeriod>().Select(p => new UsagePeriodChoice(p))];
+
+    /// <summary>The period every token section covers. It starts on this session window, and is remembered on this machine.</summary>
     [ObservableProperty]
-    public partial IReadOnlyList<TabBurnRow> Tabs { get; set; } = [];
+    public partial UsagePeriodChoice SelectedPeriod { get; set; }
+
+    partial void OnSelectedPeriodChanged(UsagePeriodChoice value)
+    {
+        if (_services.State.UsagePanelPeriod != value.Period)
+        {
+            _services.State.UsagePanelPeriod = value.Period;
+            _services.SaveState();
+        }
+        Refresh();
+    }
+
+    /// <summary>The period has turns: the token sections show.</summary>
+    [ObservableProperty]
+    public partial bool HasTurns { get; set; }
+
+    [ObservableProperty]
+    public partial KindValues TokenValues { get; set; } = KindValues.Zero;
+
+    [ObservableProperty]
+    public partial KindValues CostValues { get; set; } = KindValues.Zero;
+
+    /// <summary>Each kind of token over the period, its tokens and cost and their shares.</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<TokenKindRow> Kinds { get; set; } = [];
+
+    /// <summary>*1.2M tokens · about $3.40 · 14 turns in 3 tabs*.</summary>
+    [ObservableProperty]
+    public partial string TotalsText { get; set; } = "";
+
+    /// <summary>*4 turns began after the cache expired: $2.73 to read their conversations again.*; null when none did.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasExpiredText))]
+    public partial string? ExpiredText { get; set; }
+
+    public bool HasExpiredText => ExpiredText is not null;
+
+    /// <summary>Every tab with turns in the period, the costliest first: open, closed and other machines' synced tabs.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTabs))]
+    public partial IReadOnlyList<TabTokensRow> Tabs { get; set; } = [];
 
     public bool HasTabs => Tabs.Count > 0;
 
-    /// <summary>Tokens per project over <see cref="SelectedProjectPeriod"/>.</summary>
+    /// <summary>Per model, the costliest first.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasModels))]
+    public partial IReadOnlyList<TokenModelRow> Models { get; set; } = [];
+
+    public bool HasModels => Models.Count > 0;
+
+    /// <summary>Per tool, those whose results were read again the most first.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTools))]
+    public partial IReadOnlyList<TokenToolRow> Tools { get; set; } = [];
+
+    public bool HasTools => Tools.Count > 0;
+
+    /// <summary>A tab's <b>›</b>: its token breakdown, open or closed.</summary>
+    [RelayCommand]
+    private void OpenTab(TabTokensRow? row)
+    {
+        if (row is not null)
+        {
+            _openBreakdown?.Invoke(row.Tab);
+        }
+    }
+
+    /// <summary>Tokens per project over <see cref="SelectedPeriod"/>.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasProjects))]
     public partial IReadOnlyList<ProjectBurnRow> Projects { get; set; } = [];
@@ -246,22 +329,14 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         : "Tokens used in each folder, across all its tabs.";
 
     /// <summary>
-    /// Tokens and estimated spend per account over <see cref="SelectedProjectPeriod"/>, once there's an account besides
-    /// Default (DESIGN.md §4, "Accounts").
+    /// Tokens and estimated spend per account over <see cref="SelectedPeriod"/>, once there's an account besides Default
+    /// (DESIGN.md §4, "Accounts").
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasAccounts))]
     public partial IReadOnlyList<AccountBurnRow> Accounts { get; set; } = [];
 
     public bool HasAccounts => Accounts.Count > 0;
-
-    public IReadOnlyList<ProjectPeriodChoice> ProjectPeriods { get; } = [.. Enum.GetValues<ProjectPeriod>().Select(p => new ProjectPeriodChoice(p))];
-
-    /// <summary>The week by default, like the chart above it.</summary>
-    [ObservableProperty]
-    public partial ProjectPeriodChoice SelectedProjectPeriod { get; set; } = new(ProjectPeriod.Week);
-
-    partial void OnSelectedProjectPeriodChanged(ProjectPeriodChoice value) => Refresh();
 
     [ObservableProperty]
     public partial IReadOnlyList<PastWindowRow> PastSessions { get; set; } = [];
@@ -334,23 +409,25 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         // The week: the weekly limit's own window when known, else the last 7 days.
         var weekEnd = snapshot?.WeeklyAll?.ResetsAt is { } weekReset && weekReset > now ? weekReset : now;
         var weekStart = weekEnd - TimeSpan.FromDays(7);
-        // Tokens per tab since the current session window started.
         var windowStart = snapshot?.Session?.ResetsAt is { } sessionReset ? sessionReset - SessionWindow : now - SessionWindow;
-        var projectsFrom = SelectedProjectPeriod.Period switch
+        var period = SelectedPeriod.Period;
+        var from = period switch
         {
-            ProjectPeriod.SessionWindow => windowStart,
-            ProjectPeriod.Month => now - TimeSpan.FromDays(30),
+            UsagePanelPeriod.SessionWindow => windowStart,
+            UsagePanelPeriod.Month => now - TimeSpan.FromDays(30),
             _ => weekStart,
         };
-        (IReadOnlyList<UsageSample> Samples, IReadOnlyList<TabTokenSum> Tabs, IReadOnlyList<ProjectTokenSum> Projects, IReadOnlyList<AccountTokenSum> Accounts,
-            IReadOnlyList<WindowPeak> Sessions, IReadOnlyList<WindowPeak> Weeks, IReadOnlyDictionary<string, string> Machines) data;
+        (IReadOnlyList<UsageSample> Samples, TokenBreakdown Breakdown, IReadOnlyDictionary<string, string> Names, IReadOnlyList<ProjectTokenSum> Projects,
+            IReadOnlyList<AccountTokenSum> Accounts, IReadOnlyList<WindowPeak> Sessions, IReadOnlyList<WindowPeak> Weeks, IReadOnlyDictionary<string, string> Machines) data;
         try
         {
             data = await Task.Run(() => (
                 store.GetSamples(weekStart, now),
-                store.GetTokensByTab(windowStart, planOnly: true),
-                store.GetTokensByProject(projectsFrom),
-                store.GetTokensByAccount(projectsFrom),
+                // With no end, as the sections beside it: another machine's clock may run ahead of this one's.
+                TokenBreakdown.ReadPeriod(store, from, DateTimeOffset.MaxValue),
+                store.GetTabNames(),
+                store.GetTokensByProject(from),
+                store.GetTokensByAccount(from),
                 store.GetPastWindows(UsageWindow.Session, now),
                 store.GetPastWindows(UsageWindow.Weekly, now),
                 store.GetMachineNames()));
@@ -367,8 +444,7 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         WeekEnd = weekEnd;
         WeekStart = weekStart;
         WeekPoints = data.Samples.Where(s => s.WeeklyPercent is not null).Select(s => new ChartPoint(s.Timestamp, s.WeeklyPercent!.Value)).ToArray();
-        Tabs = TabBurnRow.From(data.Tabs, _tabName, data.Machines);
-        OnPropertyChanged(nameof(HasTabs));
+        ShowTokens(data.Breakdown, data.Names, data.Machines);
         Projects = ProjectBurnRow.From(data.Projects, data.Machines);
         Accounts = _services.Accounts.HasAccounts || data.Accounts.Any(a => a.Account is not null)
             ? AccountBurnRow.From(data.Accounts, _services.Accounts, data.Machines)
@@ -390,5 +466,63 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         OnPropertyChanged(nameof(HistoryNote));
 
         static PastWindowRow Row(string when, double peak) => new(when, $"peaked at {peak:0}%", Math.Clamp(peak, 0, 100));
+    }
+
+    /// <summary>The token sections from the period's breakdown: where the tokens went, and per tab, model and tool.</summary>
+    private void ShowTokens(TokenBreakdown b, IReadOnlyDictionary<string, string> names, IReadOnlyDictionary<string, string> machines)
+    {
+        HasTurns = b.Turns.Count > 0;
+        TokenValues = KindValues.Of(b.Tokens);
+        CostValues = KindValues.Of(b.Costs);
+        Kinds = TokenBreakdownViewModel.KindRows(b.Tokens, b.Costs);
+        var tabs = b.ByTab.Count;
+        TotalsText = string.Create(CultureInfo.CurrentCulture,
+            $"{Formats.Tokens(b.Tokens.Total)} tokens · about {Formats.Dollars(b.CostUsd)} · {TabBurnRow.TurnsText(b.Turns.Count)} in {tabs} tab{(tabs == 1 ? "" : "s")}");
+        var (expired, expiredCost) = b.CacheExpired;
+        ExpiredText = expired == 0 ? null
+            : expired == 1 ? $"1 turn began after the cache expired: {Formats.Dollars(expiredCost)} to read its conversation again."
+            : string.Create(CultureInfo.CurrentCulture, $"{expired} turns began after the cache expired: {Formats.Dollars(expiredCost)} to read their conversations again.");
+
+        var costliest = b.ByTab.Count > 0 ? b.ByTab.Max(t => t.CostUsd) : 0;
+        Tabs = [.. b.ByTab.Select(t => TabRow(t, costliest, names, machines))];
+        Models = [.. b.ByModel.Select(m => new TokenModelRow(Formats.ModelName(m.Model), m.Calls > 0 ? m.Calls.ToString("N0", CultureInfo.CurrentCulture) : "–",
+            Formats.Tokens(m.Tokens.CacheRead), Formats.Tokens(m.Tokens.CacheWrite), Formats.Tokens(m.Tokens.Output), TokenBreakdownViewModel.Dollars(m.CostUsd)))];
+        var mostRead = b.ByTool.Count > 0 ? b.ByTool.Max(t => t.ReadAgain) : 0;
+        Tools = [.. b.ByTool.Select(t => new TokenToolRow(t.Tool, t.Calls.ToString("N0", CultureInfo.CurrentCulture), Formats.Tokens(t.Added),
+            mostRead > 0 ? (double)t.ReadAgain / mostRead : 0, Formats.Tokens(t.ReadAgain), TokenBreakdownViewModel.Dollars(t.ReadAgainCostUsd)))];
+    }
+
+    /// <summary>A tab's row: named as it is when it's open, by the name it last had when it isn't, and another machine's by its machine too.</summary>
+    private TabTokensRow TabRow(TabBreakdown tab, double costliest, IReadOnlyDictionary<string, string> names, IReadOnlyDictionary<string, string> machines)
+    {
+        var open = tab.Machine is null ? _tabName(tab.TabId) : null;
+        var name = open ?? names.GetValueOrDefault(tab.TabId) ?? (tab.Machine is null ? "A closed tab" : "A tab");
+        var machine = tab.Machine is { } id ? MachineNames.Of(id, machines) : null;
+        var project = tab.ProjectName ?? (tab.Project is { } folder ? Formats.FolderName(folder) : null);
+        var account = tab.Account is null ? null
+            : tab.Machine is null && _services.Accounts.Find(tab.Account) is { } mine ? mine.Name
+            : tab.AccountName?.Trim() is { Length: > 0 } named ? named : "an API key";
+        var detail = new List<string>();
+        if (project is not null)
+        {
+            detail.Add(project);
+        }
+        if ((machine ?? (open is null ? "closed" : null)) is { } where)
+        {
+            detail.Add(where);
+        }
+        if (account is not null)
+        {
+            detail.Add(account);
+        }
+        return new TabTokensRow(name, string.Join(" · ", detail), KindValues.Of(tab.Costs), costliest > 0 ? tab.CostUsd / costliest : 0,
+            Formats.Tokens(tab.Tokens.Total), TokenBreakdownViewModel.Dollars(tab.CostUsd), TabBurnRow.TurnsText(tab.Turns),
+            tab.CacheExpired switch
+            {
+                0 => null,
+                1 => "1 expired cache",
+                var n => string.Create(CultureInfo.CurrentCulture, $"{n} expired caches"),
+            },
+            new HistoryTabBreakdown(tab.TabId, name, machine, project, tab.SessionId, tab.Account is null));
     }
 }

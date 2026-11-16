@@ -114,20 +114,26 @@ public sealed partial class TokenTurnRow(TurnBreakdown turn, string prompt, stri
 /// <summary>
 /// A tab's token breakdown in a window of its own (DESIGN.md §18, "The window"): its tiles, what its tokens were, its turns
 /// as a chart and a table that opens to each turn's calls, the findings, and its tokens by model, agent and tool, for a
-/// period, in tokens or cost. Read from the usage history off the UI thread, and again as the tab's turns are recorded.
+/// period, in tokens or cost. Read from the usage history off the UI thread, and again as the tab's turns are recorded. An
+/// open tab's, or one the Usage panel lists that's closed or another machine's (<see cref="ITokenBreakdownSubject"/>).
 /// </summary>
 public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposable
 {
     private readonly AppServices _services;
-    private readonly TabViewModel _tab;
+    private readonly ITokenBreakdownSubject _tab;
     private TokenBreakdown? _breakdown;
     private LimitShare? _limit;
     private int _reads;
 
     internal TokenBreakdownViewModel(AppServices services, TabViewModel tab)
+        : this(services, new OpenTabBreakdown(tab))
+    {
+    }
+
+    internal TokenBreakdownViewModel(AppServices services, ITokenBreakdownSubject subject)
     {
         _services = services;
-        _tab = tab;
+        _tab = subject;
         ShowCost = services.State.TokensAsCost;
         if (services.Usage is { } usage)
         {
@@ -137,7 +143,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
 
     public string TabId => _tab.Id;
 
-    public string Title => $"Token breakdown · {_tab.DisplayName}";
+    public string Title => $"Token breakdown · {_tab.Name}";
 
     public IReadOnlyList<TokenPeriodChoice> Periods { get; } = [.. Enum.GetValues<TokenPeriod>().Select(p => new TokenPeriodChoice(p))];
 
@@ -249,7 +255,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         var now = _services.Time.GetUtcNow();
         var from = From(SelectedPeriod.Period, now, usage.Current);
         var tabId = _tab.Id;
-        var planTab = _tab.Account is null;
+        var planTab = _tab.UsesPlan;
         try
         {
             var (breakdown, limit) = await Task.Run(() =>
@@ -348,12 +354,16 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         var name = ModelName;
 
         var first = b.Turns.FirstOrDefault();
-        var parts = new List<string> { _tab.FolderName };
-        if (_tab.TokenBranchName is { } branch)
+        var parts = new List<string>();
+        if (_tab.Project is { } project)
+        {
+            parts.Add(project);
+        }
+        if (_tab.Branch is { } branch)
         {
             parts.Add(branch);
         }
-        if (_tab.State.SessionId is { Length: >= 8 } session)
+        if (_tab.SessionId is { Length: >= 8 } session)
         {
             parts.Add($"session {session[..8]}");
         }
@@ -382,13 +392,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
 
         TokenValues = KindValues.Of(b.Tokens);
         CostValues = KindValues.Of(b.Costs);
-        Kinds =
-        [
-            Kind("Cache read", new(1, 0, 0, 0), "Read from the prompt cache: the conversation so far, at a tenth of the input price", b.Tokens.CacheRead, b.Costs.CacheRead),
-            Kind("Cache write", new(0, 1, 0, 0), "Written to the prompt cache: what was new since the last call, at more than the input price", b.Tokens.CacheWrite, b.Costs.CacheWrite),
-            Kind("Fresh input", new(0, 0, 1, 0), "Neither read from the cache nor written to it. Claude Code caches nearly everything, so it's small", b.Tokens.Input, b.Costs.Input),
-            Kind("Output", new(0, 0, 0, 1), "What Claude wrote, thinking included, at five times the input price", b.Tokens.Output, b.Costs.Output),
-        ];
+        Kinds = KindRows(b.Tokens, b.Costs);
 
         var prompts = PromptsOf(b.Turns);
         Columns = [.. b.Turns.Select(t => new TurnColumn(t.Number, Local(t.At).ToString("HH:mm", CultureInfo.CurrentCulture), Values(t.Tokens, t.Costs), MarkOf(t), t.ContextAfter,
@@ -424,14 +428,30 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
 
         KindValues Values(TokenKinds tokens, KindCosts costs) => cost ? KindValues.Of(costs) : KindValues.Of(tokens);
 
-        TokenKindRow Kind(string kind, KindValues swatch, string about, long tokens, double dollars) => new(kind, swatch, about, tokens.ToString("N0", CultureInfo.CurrentCulture),
-            b.Tokens.Total > 0 ? Percent((double)tokens / b.Tokens.Total, 1) : "–", dollars is > 0 and < 0.01 ? "<$0.01" : Formats.Dollars(dollars),
-            b.CostUsd > 0 ? Percent(dollars / b.CostUsd) : "–");
     }
+
+    /// <summary>
+    /// What each kind of token was, its tokens and cost and their shares (DESIGN.md §18, "Kinds of token"): the window's
+    /// composition, and the Usage panel's <b>Where the tokens went</b>.
+    /// </summary>
+    internal static IReadOnlyList<TokenKindRow> KindRows(TokenKinds tokens, KindCosts costs) =>
+    [
+        Kind("Cache read", new(1, 0, 0, 0), "Read from the prompt cache: the conversation so far, at a tenth of the input price", tokens.CacheRead, costs.CacheRead, tokens, costs),
+        Kind("Cache write", new(0, 1, 0, 0), "Written to the prompt cache: what was new since the last call, at more than the input price", tokens.CacheWrite, costs.CacheWrite, tokens, costs),
+        Kind("Fresh input", new(0, 0, 1, 0), "Neither read from the cache nor written to it. Claude Code caches nearly everything, so it's small", tokens.Input, costs.Input, tokens, costs),
+        Kind("Output", new(0, 0, 0, 1), "What Claude wrote, thinking included, at five times the input price", tokens.Output, costs.Output, tokens, costs),
+    ];
+
+    private static TokenKindRow Kind(string kind, KindValues swatch, string about, long count, double dollars, TokenKinds tokens, KindCosts costs) => new(kind, swatch, about,
+        count.ToString("N0", CultureInfo.CurrentCulture), tokens.Total > 0 ? Percent((double)count / tokens.Total, 1) : "–", Dollars(dollars),
+        costs.Total > 0 ? Percent(dollars / costs.Total) : "–");
+
+    /// <summary>A cost, with less than a cent said so rather than as $0.00.</summary>
+    internal static string Dollars(double dollars) => dollars is > 0 and < 0.01 ? "<$0.01" : Formats.Dollars(dollars);
 
     private TokenTile LimitTile()
     {
-        if (_tab.Account is not null)
+        if (!_tab.UsesPlan)
         {
             return new("Session limit", "–", "an API key doesn't use the plan");
         }
@@ -502,7 +522,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     /// ended without calls, each message one turn's. A turn without a message of its own (from before the conversation the
     /// tab has now, or one Claude went on with) has none.
     /// </summary>
-    private Dictionary<TurnBreakdown, string> PromptsOf(IReadOnlyList<TurnBreakdown> turns) => PromptsOf(_tab.Items, turns);
+    private Dictionary<TurnBreakdown, string> PromptsOf(IReadOnlyList<TurnBreakdown> turns) => PromptsOf(_tab.Conversation, turns);
 
     /// <summary>Each turn's prompt from a conversation's items, as <see cref="PromptsOf(IReadOnlyList{TurnBreakdown})"/> says.</summary>
     internal static Dictionary<TurnBreakdown, string> PromptsOf(IEnumerable<ConversationItem> items, IReadOnlyList<TurnBreakdown> turns)
@@ -582,9 +602,9 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     /// </summary>
     private long? ContextWindowOf(IReadOnlyList<TurnBreakdown> turns)
     {
-        if (_tab.Context is { Tokens: { } tokens, Percent: double percent } && percent > 0)
+        if (_tab.ContextWindow is { } window)
         {
-            return (long)Math.Round(tokens * 100 / percent);
+            return window;
         }
         return turns.Select(t => t.ContextAfter).Max() is { } largest ? Math.Max(SmallestWindow, largest) : null;
     }
@@ -603,7 +623,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         _ => null,
     };
 
-    private string ModelName(string model) => _tab.ModelNameFor(model);
+    private string ModelName(string model) => _tab.ModelName(model);
 
     private DateTimeOffset Local(DateTimeOffset time) => TimeZoneInfo.ConvertTime(time, _services.Time.LocalTimeZone);
 
@@ -625,7 +645,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         {
             return;
         }
-        var name = string.Concat(_tab.DisplayName.Split(Path.GetInvalidFileNameChars())).Trim();
+        var name = string.Concat(_tab.Name.Split(Path.GetInvalidFileNameChars())).Trim();
         if (await _services.Platform.PickSaveFileAsync("Export the token breakdown", $"{(name.Length > 0 ? name : "Tokens")} tokens.csv", ExportTypes) is not { } path)
         {
             return;

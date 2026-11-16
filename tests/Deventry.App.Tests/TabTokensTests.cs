@@ -91,8 +91,8 @@ public class TabTokensTests
         var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
         h.Services.UseUsageTracker(tracker);
         var tab = await h.OpenTabAsync();
-        (TabViewModel Tab, string? TurnId, int? Number)? asked = null;
-        h.Shell.TokenBreakdownRequested += (t, id, number) => asked = (t, id, number);
+        (TabViewModel? Tab, string? TurnId, int? Number)? asked = null;
+        h.Shell.TokenBreakdownRequested += (t, id, number) => asked = ((t as OpenTabBreakdown)?.Tab, id, number);
 
         await SendTurnAsync(h, tab, "Read it");
 
@@ -142,8 +142,8 @@ public class TabTokensTests
         h.Services.UseUsageTracker(tracker);
         var tab = await h.OpenTabAsync();
         await SendTurnAsync(h, tab, "Read the grapple code\nand say what's wrong");
-        (TabViewModel Tab, string? TurnId, int? Number)? asked = null;
-        h.Shell.TokenBreakdownRequested += (t, id, number) => asked = (t, id, number);
+        (TabViewModel? Tab, string? TurnId, int? Number)? asked = null;
+        h.Shell.TokenBreakdownRequested += (t, id, number) => asked = ((t as OpenTabBreakdown)?.Tab, id, number);
 
         tab.Tokens.SetWanted("window", true);
 

@@ -170,6 +170,17 @@ public sealed record AgentBreakdown(AgentKind Kind, string? Agent, string? Type,
 public sealed record ToolBreakdown(string Tool, int Calls, long Added, long ReadAgain, double ReadAgainCostUsd);
 
 /// <summary>
+/// A tab's part of a period's breakdown (DESIGN.md §18, "The Usage panel"), with what its latest record says of it: the
+/// machine that ran it (null for this one), its session, its project and its account (null for the Default account).
+/// </summary>
+/// <param name="CacheExpired">Its turns whose first call found the prompt cache expired.</param>
+public sealed record TabBreakdown(string TabId, string? Machine, string? SessionId, string? Project, string? ProjectName, string? Account, string? AccountName,
+    int Turns, TokenKinds Tokens, KindCosts Costs, int CacheExpired)
+{
+    public double CostUsd => Costs.Total;
+}
+
+/// <summary>
 /// What a tab's tokens went on, or a period's across tabs (DESIGN.md §18, "The breakdown"): by kind, turn by turn and call
 /// by call, by model, agent and tool, and what cost more than it needed to. Every view shows its part of one, so a figure
 /// shown in two places is the same figure.
@@ -203,6 +214,9 @@ public sealed class TokenBreakdown
             .OrderByDescending(t => t.ReadAgain).ThenByDescending(t => t.Added)];
         Findings = FindingsOf(turns, reads, events);
         CallCount = calls.Count;
+        ByTab = TabsOf(turns);
+        var expired = calls.Where(c => c.Kind == CallKind.CacheExpired).ToList();
+        CacheExpired = (expired.Count, expired.Sum(c => c.CostUsd));
     }
 
     private readonly Dictionary<StepRecord, ReadAgain> _reads;
@@ -232,6 +246,15 @@ public sealed class TokenBreakdown
 
     /// <summary>What cost more than it needed to, the costliest first (DESIGN.md §18, "The breakdown").</summary>
     public IReadOnlyList<TokenFinding> Findings { get; }
+
+    /// <summary>Each tab's part, the costliest first: one for a tab's own breakdown, every tab's for a period's.</summary>
+    public IReadOnlyList<TabBreakdown> ByTab { get; }
+
+    /// <summary>
+    /// The turns whose first call found the prompt cache expired, and what those calls cost: reading each conversation
+    /// again (DESIGN.md §18, "The Usage panel").
+    /// </summary>
+    public (int Turns, double CostUsd) CacheExpired { get; }
 
     public TokenPrices Prices { get; }
 
@@ -289,14 +312,32 @@ public sealed class TokenBreakdown
         return From(turns, calls, store.GetSteps(inPeriod), store.GetEvents(DateTimeOffset.MinValue, to, tabId), from);
     }
 
+    /// <summary>
+    /// How long before a period's first turn ended its calls are read from: a turn's calls start before it ends, by as long
+    /// as it ran.
+    /// </summary>
+    private static readonly TimeSpan LongestTurn = TimeSpan.FromDays(1);
+
     /// <summary>Every tab's turns between <paramref name="from"/> and <paramref name="to"/>, for the Usage panel. Synchronous: keep it off the UI thread.</summary>
     public static TokenBreakdown ReadPeriod(UsageStore store, DateTimeOffset from, DateTimeOffset to)
     {
         var turns = store.GetTurns(from, to);
         var ids = turns.Select(t => t.Turn).OfType<string>().ToHashSet(StringComparer.Ordinal);
-        var calls = store.GetCalls(DateTimeOffset.MinValue, to).Where(c => ids.Contains(c.Turn)).ToList();
-        return From(turns, calls, store.GetSteps(ids), store.GetEvents(DateTimeOffset.MinValue, to));
+        // Read from a day before the period, not the whole history: a year of it is millions of calls.
+        var start = from == DateTimeOffset.MinValue ? from : from - LongestTurn;
+        var calls = store.GetCalls(start, to).Where(c => ids.Contains(c.Turn)).ToList();
+        return From(turns, calls, store.GetSteps(ids), store.GetEvents(start, to));
     }
+
+    private static List<TabBreakdown> TabsOf(IReadOnlyList<TurnBreakdown> turns) =>
+    [
+        .. turns.GroupBy(t => t.TabId, StringComparer.Ordinal).Select(tab =>
+        {
+            var latest = tab.SelectMany(t => t.Records).MaxBy(r => r.Timestamp)!;
+            return new TabBreakdown(tab.Key, latest.Machine, latest.SessionId, latest.Project, latest.ProjectName, latest.Account, latest.AccountName, tab.Count(),
+                tab.Aggregate(TokenKinds.Zero, (sum, t) => sum.Plus(t.Tokens)), tab.Aggregate(KindCosts.Zero, (sum, t) => sum.Plus(t.Costs)), tab.Count(t => t.CacheExpired));
+        }).OrderByDescending(t => t.CostUsd).ThenByDescending(t => t.Tokens.Total).ThenBy(t => t.TabId, StringComparer.Ordinal),
+    ];
 
     private static List<ModelBreakdown> ModelsOf(IReadOnlyList<TurnBreakdown> turns)
     {

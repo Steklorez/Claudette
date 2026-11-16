@@ -669,6 +669,9 @@ public sealed class UsageStore : IDisposable
     /// <summary>The names of the machines that shared turns, by their ids.</summary>
     public IReadOnlyDictionary<string, string> GetMachineNames() => Locked(() => ReadNames("SELECT id, name FROM machines", null));
 
+    /// <summary>The last name each tab with turns had (<see cref="SetTabName"/>), by its id, closed tabs' and other machines' too.</summary>
+    public IReadOnlyDictionary<string, string> GetTabNames() => Locked(() => ReadNames("SELECT tab_id, name FROM tabs", null));
+
     /// <summary>
     /// Gives this machine's turns recorded before projects had keys the key of their folder, where <paramref name="keyFor"/>
     /// knows it (the folder still exists), so a project's older and newer turns are one row in the Usage panel. Their counts
@@ -722,12 +725,14 @@ public sealed class UsageStore : IDisposable
         // tab's index (turns_by_tab), so it would read every turn in the range.
         command.CommandText = tabId is null
             ? """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index,
+                  machine, project_name, account_name FROM turns
               WHERE timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """
             : """
-              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index FROM turns
+              SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index,
+                  machine, project_name, account_name FROM turns
               WHERE tab_id = $tabId AND timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """;
@@ -757,6 +762,9 @@ public sealed class UsageStore : IDisposable
                 Turn = NullableString(reader, 11),
                 IdleBefore = reader.IsDBNull(12) ? null : TimeSpan.FromMilliseconds(reader.GetInt64(12)),
                 Index = reader.IsDBNull(13) ? null : reader.GetInt32(13),
+                Machine = NullableString(reader, 14),
+                ProjectName = NullableString(reader, 15),
+                AccountName = NullableString(reader, 16),
             });
         }
         return turns;

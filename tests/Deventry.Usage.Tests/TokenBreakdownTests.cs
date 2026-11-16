@@ -88,6 +88,28 @@ public sealed class TokenBreakdownTests : IDisposable
     }
 
     [Fact]
+    public void A_periods_tabs_are_the_costliest_first_with_what_their_latest_records_say_and_its_expired_caches()
+    {
+        // Another machine's tab, on an API key's account, in a project of its own.
+        TurnRecord[] theirs =
+        [
+            new(T0.AddMinutes(30), "tab-2", "s9", "opus", 1, 1, 1, 1, 0.01, "/old/api") { ProjectName = "api" },
+            new(T0.AddMinutes(95), "tab-2", "s9", "opus", 1, 1, 1, 1, 0.02, "/lap/api", "acct") { ProjectName = "api", Machine = "lap", AccountName = "Studio" },
+        ];
+
+        var breakdown = TokenBreakdown.From([.. Turns, .. theirs], Calls, Steps, Events);
+
+        Assert.Equal([Tab, "tab-2"], breakdown.ByTab.Select(t => t.TabId));
+        var mine = breakdown.ByTab[0];
+        Assert.Equal((4, 1), (mine.Turns, mine.CacheExpired));
+        Assert.Equal(Turns.Sum(t => t.CostUsd), mine.CostUsd, 9);
+        var other = breakdown.ByTab[1];
+        Assert.Equal(("lap", "s9", "/lap/api", "api", "acct", "Studio", 2), (other.Machine, other.SessionId, other.Project, other.ProjectName, other.Account, other.AccountName, other.Turns));
+        // Turn 3's first call wrote the conversation again.
+        Assert.Equal((1, 0.60), breakdown.CacheExpired);
+    }
+
+    [Fact]
     public void A_turn_says_its_calls_its_marks_and_the_context_after_it()
     {
         var turns = Breakdown().Turns;
@@ -197,6 +219,9 @@ public sealed class TokenBreakdownTests : IDisposable
         {
             store.AddTurns(turn, new TurnDetail([.. Calls.Where(c => c.Turn == turn.Key)], [.. Steps.Where(s => s.Turn == turn.Key)], [.. Events.Where(e => e.Turn == turn.Key)]));
         }
+
+        store.SetTabName(Tab, "Grappling hook");
+        Assert.Equal("Grappling hook", store.GetTabNames()[Tab]);
 
         var read = TokenBreakdown.Read(store, Tab, T0.AddMinutes(5), T0.AddHours(2));
 

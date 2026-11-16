@@ -16,12 +16,12 @@ public class TokenBreakdownWindowTests
     {
         await using var h = new TabTestHarness();
         var tab = await h.OpenTabAsync();
-        TabViewModel? asked = null;
+        ITokenBreakdownSubject? asked = null;
         h.Shell.TokenBreakdownRequested += (t, _, _) => asked = t;
 
         tab.ShowTokenBreakdownCommand.Execute(null);
 
-        Assert.Same(tab, asked);
+        Assert.Same(tab, Assert.IsType<OpenTabBreakdown>(asked).Tab);
     }
 
     [Fact]

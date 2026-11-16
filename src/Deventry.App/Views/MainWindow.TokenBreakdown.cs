@@ -27,8 +27,8 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>A tab's breakdown: its window, or a new one, brought to the front, on the turn asked for.</summary>
-    private void ShowTokenBreakdown(TabViewModel tab, string? turnId, int? number)
+    /// <summary>A tab's breakdown, open or not: its window, or a new one, brought to the front, on the turn asked for.</summary>
+    private void ShowTokenBreakdown(ITokenBreakdownSubject tab, string? turnId, int? number)
     {
         if (_tokenWindows.TryGetValue(tab.Id, out var open))
         {

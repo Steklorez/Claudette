@@ -12,6 +12,42 @@
       <Setter Property="FontSize" Value="16" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <Style Selector="TextBlock.num">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="controls|KindsBar">
+      <Setter Property="Height" Value="10" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="controls|KindsBar.thin">
+      <Setter Property="Height" Value="6" />
+    </Style>
+    <Style Selector="Border.expired">
+      <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="Border.expiredchip">
+      <Setter Property="BorderBrush" Value="{DynamicResource CautionBorderBrush}" />
+      <Setter Property="Background" Value="{DynamicResource CautionBackgroundBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="5,0" />
+      <Setter Property="Margin" Value="0,2,0,0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.openrow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
     <Style Selector="ProgressBar.share">
       <Setter Property="MinWidth" Value="0" />
       <Setter Property="Height" Value="6" />
@@ -48,21 +84,80 @@
                                GridBrush="{DynamicResource DividerBrush}" LabelBrush="{DynamicResource MutedTextBrush}" />
         </StackPanel>
 
-        <!-- Tokens per tab -->
-        <StackPanel Spacing="6">
-          <TextBlock Classes="section" Text="Tabs in this session window" />
-          <TextBlock Classes="muted small" Text="Tokens each tab used since the current 5-hour window started. Costs are Claude Code's estimates at list price, not your bill." TextWrapping="Wrap" />
-          <TextBlock Classes="muted" Text="No turns yet in this window." IsVisible="{Binding !HasTabs}" />
-          <ItemsControl ItemsSource="{Binding Tabs}">
+        <!-- The period every token section under it covers (DESIGN.md §18, "The Usage panel") -->
+        <Border BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="0,14,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Classes="section" Text="Tokens over" VerticalAlignment="Center" />
+            <ComboBox x:Name="PeriodPicker" MinWidth="190" ItemsSource="{Binding Periods}" SelectedItem="{Binding SelectedPeriod}"
+                      AutomationProperties.Name="Tokens over" />
+          </StackPanel>
+        </Border>
+
+        <!-- Where the tokens went: the kinds over the period, and what expired caches cost -->
+        <StackPanel Spacing="8">
+          <TextBlock Classes="section" Text="Where the tokens went" />
+          <TextBlock Classes="muted" Text="No turns in this period." IsVisible="{Binding !HasTurns}" />
+          <StackPanel Spacing="8" IsVisible="{Binding HasTurns}">
+            <TextBlock Classes="muted small" Text="{Binding TotalsText}" TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="56,*" RowDefinitions="Auto,Auto" RowSpacing="8">
+              <TextBlock Classes="muted small" Text="Tokens" VerticalAlignment="Center" />
+              <controls:KindsBar Grid.Column="1" Values="{Binding TokenValues}" />
+              <TextBlock Grid.Row="1" Classes="muted small" Text="Cost" VerticalAlignment="Center" />
+              <controls:KindsBar Grid.Row="1" Grid.Column="1" Values="{Binding CostValues}" />
+            </Grid>
+            <Grid ColumnDefinitions="18,*,90,52,70,46" Margin="0,4,0,0">
+              <TextBlock Grid.Column="2" Classes="muted small" HorizontalAlignment="Right" Text="Tokens" />
+              <TextBlock Grid.Column="3" Classes="muted small" HorizontalAlignment="Right" Text="share" />
+              <TextBlock Grid.Column="4" Classes="muted small" HorizontalAlignment="Right" Text="Cost" />
+              <TextBlock Grid.Column="5" Classes="muted small" HorizontalAlignment="Right" Text="share" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Kinds}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:TokenKindRow">
+                  <Grid ColumnDefinitions="18,*,90,52,70,46" Margin="0,2" Background="Transparent" ToolTip.Tip="{Binding About}">
+                    <controls:KindsBar Width="10" Height="10" HorizontalAlignment="Left" Values="{Binding Swatch}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="num" Text="{Binding Tokens}" />
+                    <TextBlock Grid.Column="3" Classes="num muted" Text="{Binding TokenShare}" />
+                    <TextBlock Grid.Column="4" Classes="num" Text="{Binding Cost}" />
+                    <TextBlock Grid.Column="5" Classes="num muted" Text="{Binding CostShare}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Classes="expired" IsVisible="{Binding HasExpiredText}">
+              <TextBlock Classes="small" Text="{Binding ExpiredText}" TextWrapping="Wrap" />
+            </Border>
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Tokens per tab, open, closed or another machine's, each opening its breakdown -->
+        <StackPanel Spacing="6" IsVisible="{Binding HasTabs}">
+          <TextBlock Classes="section" Text="Tabs" />
+          <TextBlock Classes="muted small" TextWrapping="Wrap"
+                     Text="The costliest first, with each tab's cost by kind. Costs are Claude Code's estimates at list price, not your bill. › opens a tab's token breakdown." />
+          <!-- Out by the rows' padding, so their text lines up with the sections' -->
+          <ItemsControl ItemsSource="{Binding Tabs}" Margin="-4,0">
             <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="vm:TabBurnRow">
-                <Grid ColumnDefinitions="*,120,80,70,70" Margin="0,3" Background="Transparent" ToolTip.Tip="{Binding Tooltip}">
-                  <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                  <ProgressBar Grid.Column="1" Classes="share" Value="{Binding Share}" VerticalAlignment="Center" Margin="8,0" />
-                  <TextBlock Grid.Column="2" Classes="mono small" Text="{Binding Tokens}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                  <TextBlock Grid.Column="3" Classes="mono small muted" Text="{Binding Cost}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                  <TextBlock Grid.Column="4" Classes="small muted" Text="{Binding Turns}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                </Grid>
+              <DataTemplate DataType="vm:TabTokensRow">
+                <Button Classes="openrow" Command="{Binding $parent[Window].((vm:UsagePanelViewModel)DataContext).OpenTabCommand}" CommandParameter="{Binding}"
+                        ToolTip.Tip="Open this tab's token breakdown" AutomationProperties.Name="{Binding Name}">
+                  <Grid ColumnDefinitions="*,140,64,64,64,20">
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="muted small" Text="{Binding Detail}" TextTrimming="CharacterEllipsis"
+                                 IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      <Border Classes="expiredchip" IsVisible="{Binding HasExpired}">
+                        <TextBlock Classes="small" Text="{Binding Expired}" />
+                      </Border>
+                    </StackPanel>
+                    <controls:KindsBar Grid.Column="1" Classes="thin" Margin="10,0,8,0" Values="{Binding Costs}" Scale="{Binding Scale}" />
+                    <TextBlock Grid.Column="2" Classes="num" Text="{Binding Tokens}" />
+                    <TextBlock Grid.Column="3" Classes="num" Text="{Binding Cost}" />
+                    <TextBlock Grid.Column="4" Classes="num muted" Text="{Binding Turns}" />
+                    <TextBlock Grid.Column="5" Classes="muted" Text="›" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                  </Grid>
+                </Button>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
@@ -70,11 +165,7 @@
 
         <!-- Tokens per project (DESIGN.md §6, "Usage history") -->
         <StackPanel Spacing="6">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="section" Text="Projects" VerticalAlignment="Center" />
-            <ComboBox Grid.Column="1" MinWidth="170" ItemsSource="{Binding ProjectPeriods}" SelectedItem="{Binding SelectedProjectPeriod}"
-                      AutomationProperties.Name="Period" />
-          </Grid>
+          <TextBlock Classes="section" Text="Projects" />
           <TextBlock Classes="muted small" Text="{Binding ProjectsNote}" TextWrapping="Wrap" />
           <TextBlock Classes="muted" Text="No turns in this period." IsVisible="{Binding !HasProjects}" />
           <ItemsControl ItemsSource="{Binding Projects}">
@@ -96,7 +187,7 @@
         <StackPanel Spacing="6" IsVisible="{Binding HasAccounts}">
           <TextBlock Classes="section" Text="Accounts" />
           <TextBlock Classes="muted small" TextWrapping="Wrap"
-                     Text="Over the period above. Costs are Claude Code's estimates at list price, not a bill; on a plan, its limits are what count." />
+                     Text="Costs are Claude Code's estimates at list price, not a bill; on a plan, its limits are what count." />
           <ItemsControl ItemsSource="{Binding Accounts}">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="vm:AccountBurnRow">
@@ -110,6 +201,61 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+        </StackPanel>
+
+        <!-- Per model: its calls and what cost (DESIGN.md §18, "The Usage panel") -->
+        <StackPanel Spacing="6" IsVisible="{Binding HasModels}">
+          <TextBlock Classes="section" Text="Models" />
+          <Grid ColumnDefinitions="*,60,80,80,70,70">
+            <TextBlock Grid.Column="1" Classes="muted small" HorizontalAlignment="Right" Text="Calls" />
+            <TextBlock Grid.Column="2" Classes="muted small" HorizontalAlignment="Right" Text="Cache read" />
+            <TextBlock Grid.Column="3" Classes="muted small" HorizontalAlignment="Right" Text="Cache write" />
+            <TextBlock Grid.Column="4" Classes="muted small" HorizontalAlignment="Right" Text="Output" />
+            <TextBlock Grid.Column="5" Classes="muted small" HorizontalAlignment="Right" Text="Cost" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Models}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:TokenModelRow">
+                <Grid ColumnDefinitions="*,60,80,80,70,70" Margin="0,3">
+                  <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Classes="num" Text="{Binding Calls}" />
+                  <TextBlock Grid.Column="2" Classes="num" Text="{Binding CacheRead}" />
+                  <TextBlock Grid.Column="3" Classes="num" Text="{Binding CacheWrite}" />
+                  <TextBlock Grid.Column="4" Classes="num" Text="{Binding Output}" />
+                  <TextBlock Grid.Column="5" Classes="num" Text="{Binding Cost}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <!-- Per tool: what its results added, and what later calls read again because of them -->
+        <StackPanel Spacing="6" IsVisible="{Binding HasTools}">
+          <TextBlock Classes="section" Text="Tools" />
+          <Grid ColumnDefinitions="*,60,80,*,80">
+            <TextBlock Grid.Column="1" Classes="muted small" HorizontalAlignment="Right" Text="Calls" />
+            <TextBlock Grid.Column="2" Classes="muted small" HorizontalAlignment="Right" Text="Added" />
+            <TextBlock Grid.Column="3" Classes="muted small" Margin="12,0,0,0" Text="Read again" />
+            <TextBlock Grid.Column="4" Classes="muted small" HorizontalAlignment="Right" Text="That cost" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Tools}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:TokenToolRow">
+                <Grid ColumnDefinitions="*,60,80,*,80" Margin="0,3">
+                  <TextBlock FontFamily="{DynamicResource MonoFont}" FontSize="12" Text="{Binding Tool}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Classes="num" Text="{Binding Calls}" />
+                  <TextBlock Grid.Column="2" Classes="num" Text="{Binding Added}" />
+                  <Grid Grid.Column="3" ColumnDefinitions="*,56" Margin="12,0,0,0">
+                    <controls:KindsBar Classes="thin" Margin="0,0,6,0" Scale="{Binding Scale}" Values="{x:Static vm:TokenBreakdownViewModel.CacheReadOnly}" />
+                    <TextBlock Grid.Column="1" Classes="num" Text="{Binding ReadAgain}" />
+                  </Grid>
+                  <TextBlock Grid.Column="4" Classes="num" Text="{Binding Cost}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Classes="muted small" TextWrapping="Wrap"
+                     Text="A result stays in the conversation, so every later call reads it again from the cache until the conversation is compacted or cleared. Read again is its size times those calls." />
         </StackPanel>
 
         <!-- The week -->
