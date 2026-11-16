@@ -19,6 +19,9 @@ public sealed class AllClientsPage : SettingsPage, IDisposable
                 keywords: ["permission", "answer", "stop", "send"]),
             Setting("remoteClients.openTabs", "Open new tabs", s => s.RemoteClients.OpenTabs, (s, v) => s.RemoteClients.OpenTabs = v,
                 "With /new, in a favorite or recent folder. A folder that asks about trust asks here.", keywords: ["new tab", "folder"]),
+            Setting("remoteClients.keepAttachments", "Keep files sent to tabs", s => s.RemoteClients.KeepAttachments, (s, v) => s.RemoteClients.KeepAttachments = v,
+                "A PDF or a long log you send a tab is saved in its project's .deventry/attachments for Claude to read, which git ignores. Older ones are deleted as a tab opens in the project.",
+                keywords: ["attachment", "file", "pdf", "log", "retention", ".deventry", "delete"]),
         ]);
         Section("messages", "Messages",
         [
@@ -48,6 +51,16 @@ public sealed class AllClientsPage : SettingsPage, IDisposable
     private void OnRemoteChanged() => OnPropertyChanged(nameof(AwayText));
 
     // ---- What they can do -------------------------------------------------------------------------------------------
+
+    public IReadOnlyList<RetentionChoice> AttachmentRetentionChoices { get; } =
+        [.. Enum.GetValues<Core.Settings.RetentionPeriod>().Select(p => new RetentionChoice(p))];
+
+    /// <summary><b>Keep files sent to tabs</b>: a month by default (DESIGN.md §18, "Attachments from a client").</summary>
+    public RetentionChoice KeepAttachments
+    {
+        get => AttachmentRetentionChoices.FirstOrDefault(c => c.Period == Settings.RemoteClients.KeepAttachments) ?? AttachmentRetentionChoices[2];
+        set => Set(value?.Period ?? Core.Settings.RetentionPeriod.OneMonth, v => Settings.RemoteClients.KeepAttachments = v);
+    }
 
     public bool AccessWatch
     {

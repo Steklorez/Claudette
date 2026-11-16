@@ -84,9 +84,25 @@ public sealed class FakeDiscord : HttpMessageHandler
         return new HttpResponseMessage(status) { Content = new StringContent(error.ToJsonString()) };
     }
 
+    /// <summary>The files on the stand-in for Discord's file server, by their address's path: <c>/attachments/1/2/shot.png</c>.</summary>
+    public Dictionary<string, byte[]> Files { get; } = [];
+
+    /// <summary>Where a file sent to the bot is: on this stand-in's own host, as the client's address for the API is.</summary>
+    public static string FileUrl(string name) => $"https://discord.test/attachments/1/2/{name}";
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var path = request.RequestUri!.AbsolutePath;
+        if (path.StartsWith("/attachments/", StringComparison.Ordinal))
+        {
+            byte[]? data;
+            lock (_lock)
+            {
+                data = Files.GetValueOrDefault(path);
+                _calls.Add(new Call("GET", path, [], request.Headers.Authorization?.ToString()));
+            }
+            return data is null ? Error(HttpStatusCode.NotFound, 0, "404: Not Found") : new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data) };
+        }
         const string prefix = "/api/v10";
         if (!path.StartsWith(prefix, StringComparison.Ordinal))
         {

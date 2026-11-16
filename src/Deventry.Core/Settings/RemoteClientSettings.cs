@@ -50,6 +50,28 @@ public sealed class RemoteClientSettings
         client.SendReadImages = on;
     }
 
+    /// <summary>
+    /// The client of <paramref name="kind"/> holds an image or file sent with no words for the next message: on unless
+    /// turned off.
+    /// </summary>
+    public bool HoldsAttachments(string kind) => !Clients.TryGetValue(kind, out var client) || client.HoldAttachments;
+
+    /// <summary>Turns holding attachments on or off for the client of <paramref name="kind"/>.</summary>
+    public void SetHoldAttachments(string kind, bool on)
+    {
+        if (!Clients.TryGetValue(kind, out var client))
+        {
+            Clients[kind] = client = new RemoteClientTypeSettings();
+        }
+        client.HoldAttachments = on;
+    }
+
+    /// <summary>
+    /// <b>Keep attachments</b>: how long the files a client sends a tab stay in the project's <c>.deventry/attachments</c>
+    /// (DESIGN.md §18, "Attachments from a client").
+    /// </summary>
+    public RetentionPeriod KeepAttachments { get; set; } = RetentionPeriod.OneMonth;
+
     /// <summary>Any client is on.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public bool AnyEnabled => Clients.Values.Any(c => c.Enabled);
@@ -101,6 +123,11 @@ public sealed class RemoteClientTypeSettings
     /// Off by default.
     /// </summary>
     public bool SendReadImages { get; set; }
+
+    /// <summary>
+    /// <b>Hold an image or file sent on its own</b>: for the message after it, up to ten minutes. On by default.
+    /// </summary>
+    public bool HoldAttachments { get; set; } = true;
 }
 
 /// <summary>What the remote clients keep in <c>state.json</c>: the paired accounts and the bot's name.</summary>

@@ -27,10 +27,16 @@ public sealed record TelegramChat(long Id, string Type)
 
 /// <summary>A message the bot received, as much of it as Deventry reads (Bot API <c>Message</c>).</summary>
 /// <param name="ReplyTo">The bot's message it replies to, with Telegram's reply.</param>
-/// <param name="HasMedia">It carries a photo, a file, a voice message or the like, which the bot doesn't take yet.</param>
+/// <param name="HasMedia">It carries what the bot doesn't take: a voice message, a video, a sticker, a location.</param>
 public sealed record TelegramMessage(long MessageId, TelegramChat Chat, TelegramUser? From, DateTimeOffset Date, string? Text, long? ReplyTo, bool HasMedia)
 {
-    private static readonly string[] MediaFields = ["photo", "document", "voice", "audio", "video", "video_note", "sticker", "animation", "contact", "location"];
+    /// <summary>Its photo, the largest size Telegram keeps, or its file (DESIGN.md §18, "Attachments from a client").</summary>
+    public IReadOnlyList<ChatAttachment> Attachments { get; init; } = [];
+
+    /// <summary>The album it's one picture of (<c>media_group_id</c>).</summary>
+    public string? Album { get; init; }
+
+    private static readonly string[] MediaFields = ["voice", "audio", "video", "video_note", "sticker", "animation", "contact", "location", "poll", "dice"];
 
     internal static TelegramMessage? Parse(JsonNode? node)
     {
@@ -42,7 +48,28 @@ public sealed record TelegramMessage(long MessageId, TelegramChat Chat, Telegram
         var date = TelegramUser.Long(message["date"]) is { } seconds ? DateTimeOffset.FromUnixTimeSeconds(seconds) : DateTimeOffset.MinValue;
         var replyTo = message["reply_to_message"] is JsonObject reply ? TelegramUser.Long(reply["message_id"]) : null;
         return new TelegramMessage(id, new TelegramChat(chatId, chat.GetString("type") ?? ""), TelegramUser.Parse(message["from"]), date,
-            message.GetString("text") ?? message.GetString("caption"), replyTo, MediaFields.Any(f => message[f] is not null));
+            message.GetString("text") ?? message.GetString("caption"), replyTo, MediaFields.Any(f => message[f] is not null))
+        {
+            Attachments = AttachmentsOf(message),
+            Album = message.GetString("media_group_id"),
+        };
+    }
+
+    /// <summary>
+    /// A photo as its largest size, which Telegram has made a JPEG; a file (<c>document</c>) by its own name and type.
+    /// </summary>
+    private static IReadOnlyList<ChatAttachment> AttachmentsOf(JsonObject message)
+    {
+        if (message["photo"] is JsonArray { Count: > 0 } sizes && sizes[^1] is JsonObject largest && largest.GetString("file_id") is { Length: > 0 } photo)
+        {
+            return [new ChatAttachment("photo.jpg", "image/jpeg", TelegramUser.Long(largest["file_size"]), photo)];
+        }
+        if (message["document"] is JsonObject document && document.GetString("file_id") is { Length: > 0 } file)
+        {
+            return [new ChatAttachment(document.GetString("file_name") is { Length: > 0 } name ? name : "file", document.GetString("mime_type"),
+                TelegramUser.Long(document["file_size"]), file)];
+        }
+        return [];
     }
 }
 

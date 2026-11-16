@@ -173,7 +173,10 @@ public sealed class DiscordClient : ChatBotClient
             _dms[message.Author.Id] = message.ChannelId;
         }
         var chat = new ChatMessage(message.ChannelId, message.Id, message.Author.ToChat(), message.Timestamp, message.Content, message.ReplyTo, message.HasMedia,
-            IsPrivate: true);
+            IsPrivate: true)
+        {
+            Attachments = message.Attachments,
+        };
         Post(token => HandleMessageAsync(chat, stale: false, token));
     }
 
@@ -321,6 +324,10 @@ public sealed class DiscordClient : ChatBotClient
 
     protected override Task DeliverButtonsAsync(long chat, long message, IReadOnlyList<IReadOnlyList<ChatButton>>? buttons, CancellationToken cancellationToken) =>
         _api.EditMessageAsync(chat, message, null, buttons, cancellationToken);
+
+    /// <summary>An attachment sent to the bot, from Discord's file servers (DESIGN.md §18, "Attachments from a client").</summary>
+    protected override Task<byte[]> DownloadAsync(ChatAttachment attachment, CancellationToken cancellationToken) =>
+        _api.DownloadAttachmentAsync(attachment.Source, RemoteAttachment.MaxBytes, cancellationToken);
 
     protected override Task<long> DeliverFileAsync(long chat, string fileName, byte[] content, string caption, bool silent, CancellationToken cancellationToken) =>
         _api.SendFileAsync(chat, fileName, content, caption, silent, cancellationToken);

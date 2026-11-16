@@ -232,6 +232,49 @@ public sealed class TelegramBotApi
         await CallAsync("setMyCommands", new JsonObject { ["commands"] = list }, RequestTimeout, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Downloads a file sent to the bot (DESIGN.md §18, "Attachments from a client"): <c>getFile</c> for where it is, then
+    /// the file, at most <paramref name="maxBytes"/>. Its address holds the token, so it's never logged or put in an error.
+    /// </summary>
+    public async Task<byte[]> DownloadFileAsync(string fileId, long maxBytes, CancellationToken cancellationToken = default)
+    {
+        var file = await CallAsync("getFile", new JsonObject { ["file_id"] = fileId }, RequestTimeout, cancellationToken).ConfigureAwait(false) as JsonObject;
+        if (file?.GetString("file_path") is not { Length: > 0 } path)
+        {
+            throw new TelegramApiException("Telegram didn't say where the file is.");
+        }
+        if (TelegramUser.Long(file["file_size"]) is { } size && size > maxBytes)
+        {
+            throw new TelegramApiException($"The file is {Formats.Size(size)}, more than {Formats.Size(maxBytes)}.");
+        }
+        using var deadline = new CancellationTokenSource(UploadTimeout, _time);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/file/bot{_token}/{path}");
+        request.Headers.UserAgent.ParseAdd(_userAgent);
+        try
+        {
+            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new TelegramApiException($"Telegram answered the file's download with {(int)response.StatusCode} {response.ReasonPhrase}", (int)response.StatusCode);
+            }
+            return await Downloads.ReadAsync(response, maxBytes, linked.Token).ConfigureAwait(false)
+                ?? throw new TelegramApiException($"The file is more than {Formats.Size(maxBytes)}.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new TelegramApiException("Telegram didn't send the file in time.", inner: Scrubbed(ex));
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TelegramApiException($"Couldn't reach Telegram: {Scrub(ex.Message)}", inner: Scrubbed(ex));
+        }
+    }
+
     /// <summary>The web address the bot sends its updates to, or null when it has none and can be polled.</summary>
     public async Task<string?> GetWebhookAsync(CancellationToken cancellationToken = default) =>
         await CallAsync("getWebhookInfo", null, RequestTimeout, cancellationToken).ConfigureAwait(false) is JsonObject info

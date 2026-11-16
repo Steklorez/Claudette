@@ -60,6 +60,12 @@ public sealed partial class RemoteClientPage : SettingsPage, IDisposable
                 "The images Claude and its subagents read in a turn follow its message too: image files that were there before it, which Claude opened to look at, such as a render, a test's output or a picture another program wrote. Any image file on this computer Claude reads goes, so it's off unless you turn it on.",
                 keywords: ["image", "images", "read", "opened", "picture", "photo", "render", "output", "media"]),
         ]);
+        Section(AttachmentsSectionKey, "Images and files from you",
+        [
+            Setting(HoldKey, HoldTitle, s => s.RemoteClients.HoldsAttachments(kind), (s, v) => s.RemoteClients.SetHoldAttachments(kind, v),
+                $"An image or file you send {type.Name} with no words waits for your next message and goes with it, with Send now and Discard, or on its own after 10 minutes. Off, it goes to the tab at once.",
+                keywords: ["attachment", "image", "file", "photo", "hold", "wait", "send"]),
+        ], description: "You can send a tab images, text files and PDFs with a message, as you'd attach them at the desk.");
         _pairingTicker = new UiTicker(Services.Time, Services.Dispatcher, TimeSpan.FromSeconds(1), OnPairingTick);
         Remote.Changed += OnRemoteChanged;
         RefreshAccounts();
@@ -160,6 +166,22 @@ public sealed partial class RemoteClientPage : SettingsPage, IDisposable
     {
         get => Settings.RemoteClients.SendsImages(Kind);
         set => Set(value, v => Settings.RemoteClients.SetSendImages(Kind, v));
+    }
+
+    // ---- Images and files from you (DESIGN.md §18, "Attachments from a client") -----------------------------------
+
+    public string AttachmentsSectionKey => $"{Kind}Attachments";
+
+    /// <summary>Holding's switch's key in <c>settings.json</c>: <c>remoteClients.clients.telegram.holdAttachments</c>.</summary>
+    public string HoldKey => $"remoteClients.clients.{Kind}.holdAttachments";
+
+    public string HoldTitle => "Hold an image or file sent on its own";
+
+    /// <summary><b>Hold an image or file sent on its own</b>, on by default.</summary>
+    public bool HoldsAttachments
+    {
+        get => Settings.RemoteClients.HoldsAttachments(Kind);
+        set => Set(value, v => Settings.RemoteClients.SetHoldAttachments(Kind, v));
     }
 
     /// <summary>The read images' switch's key in <c>settings.json</c>: <c>remoteClients.clients.telegram.sendReadImages</c>.</summary>

@@ -68,7 +68,22 @@ internal sealed class FakeRemoteDesk : IRemoteDesk
 
     public Task<IReadOnlyList<RemoteTab>> GetTabsAsync(CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<RemoteTab>>([.. Tabs]);
 
-    public Task<RemoteResult> SendAsync(string tabId, string text, string client, CancellationToken cancellationToken = default) => Record($"send {tabId} {text} ({client})");
+    public Task<RemoteResult> SendAsync(string tabId, string text, IReadOnlyList<RemoteAttachment> attachments, string client, CancellationToken cancellationToken = default)
+    {
+        lock (_lock)
+        {
+            Sent.Add((tabId, text, attachments));
+        }
+        return Record(attachments.Count == 0 ? $"send {tabId} {text} ({client})" : $"send {tabId} {text} ({client}) with {string.Join(", ", attachments.Select(a => a.Name))}");
+    }
+
+    /// <summary>What was sent to tabs, with the files that went with it.</summary>
+    public List<(string TabId, string Text, IReadOnlyList<RemoteAttachment> Attachments)> Sent { get; } = [];
+
+    /// <summary>The clients that don't hold an image or file sent on its own: none by default, as Settings has it.</summary>
+    public HashSet<string> NoHold { get; } = [];
+
+    public bool HoldsAttachments(string kind) => !NoHold.Contains(kind);
 
     public Task<RemoteResult> StopAsync(string tabId, string client, CancellationToken cancellationToken = default) => Record($"stop {tabId}");
 

@@ -295,13 +295,51 @@ public sealed class DiscordClientTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task A_file_is_only_text_for_now()
+    public async Task A_sticker_isnt_taken()
     {
         await StartAsync();
 
-        _gateway.Message(Me, "", attachment: true);
+        _gateway.Message(Me, "", sticker: true);
 
-        Assert.Equal("Only text for now.", Text(await NextSentAsync(1)));
+        Assert.Equal("Only text, images and files for now.", Text(await NextSentAsync(1)));
+    }
+
+    // ---- Images and files from the user (DESIGN.md §18, "Attachments from a client") -----------------------------
+
+    /// <summary><c>/to</c> the grappling hook's tab, so the DM's messages go to it, and the bot saying so.</summary>
+    private async Task TargetAsync()
+    {
+        _gateway.Message(Me, "/to Grappling");
+        await NextSentAsync(1);
+    }
+
+    [Fact]
+    public async Task Attachments_come_from_Discords_file_server_with_the_message_and_without_the_token()
+    {
+        _discord.Files["/attachments/1/2/shot.png"] = [0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A, 0x1A, 0x0A];
+        _discord.Files["/attachments/1/2/notes.md"] = "# The rope\nIt snaps."u8.ToArray();
+        await StartAsync();
+        await TargetAsync();
+
+        _gateway.Message(Me, "Look at these", attachments: [("shot.png", FakeDiscord.FileUrl("shot.png")), ("notes.md", FakeDiscord.FileUrl("notes.md"))]);
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the message");
+        Assert.Equal(("t1", "Look at these"), (_desk.Sent[0].TabId, _desk.Sent[0].Text));
+        Assert.Equal(["shot.png", "notes.md"], _desk.Sent[0].Attachments.Select(a => a.Name));
+        Assert.All(_discord.Of("GET", "/attachments/"), c => Assert.Null(c.Authorization));
+    }
+
+    [Fact]
+    public async Task An_attachment_anywhere_but_Discords_file_server_isnt_downloaded()
+    {
+        await StartAsync();
+        await TargetAsync();
+
+        _gateway.Message(Me, "And this", attachments: [("evil.png", "https://example.com/evil.png")]);
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the words");
+        Assert.Empty(_desk.Sent[0].Attachments);
+        Assert.Contains(_discord.Sent, s => Text(s).Contains("isn't on Discord's file servers", StringComparison.Ordinal));
     }
 
     // ---- Prompts ----------------------------------------------------------------------------------------------------

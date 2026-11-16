@@ -10,9 +10,20 @@ public sealed record ChatUser(long Id, bool IsBot, string Name, string? Username
 /// <param name="Chat">The chat it's in, which the bot answers in.</param>
 /// <param name="MessageId">Its id in the chat; 0 for a command a service delivers without a message, as Discord's slash commands.</param>
 /// <param name="ReplyTo">The bot's message it replies to, with the service's reply.</param>
-/// <param name="HasMedia">It carries a photo, a file, a voice message or the like, which the bot doesn't take yet.</param>
+/// <param name="HasMedia">It carries what the bot doesn't take: a voice message, a sticker, a video, a location.</param>
 /// <param name="IsPrivate">It's in a chat between the bot and one account: only these count.</param>
-public sealed record ChatMessage(long Chat, long MessageId, ChatUser? From, DateTimeOffset Date, string? Text, long? ReplyTo, bool HasMedia, bool IsPrivate);
+public sealed record ChatMessage(long Chat, long MessageId, ChatUser? From, DateTimeOffset Date, string? Text, long? ReplyTo, bool HasMedia, bool IsPrivate)
+{
+    /// <summary>The images and files it carries, to download (DESIGN.md §18, "Attachments from a client").</summary>
+    public IReadOnlyList<ChatAttachment> Attachments { get; init; } = [];
+
+    /// <summary>The album it's one picture of: Telegram sends an album as a message each, with one caption.</summary>
+    public string? Album { get; init; }
+}
+
+/// <summary>An image or file in a message, as the service says it: its name, its type and size when it says, and where to get it.</summary>
+/// <param name="Source">What the service downloads it by: Telegram's file id, Discord's address.</param>
+public sealed record ChatAttachment(string Name, string? MediaType, long? Size, string Source);
 
 /// <summary>A tap on one of the bot's buttons.</summary>
 /// <param name="Id">The service's id for the tap, to answer it.</param>

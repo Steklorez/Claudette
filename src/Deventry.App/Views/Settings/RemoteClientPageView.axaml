@@ -126,5 +126,12 @@
         <ToggleSwitch IsChecked="{Binding SendsReadImages}" AutomationProperties.Name="{Binding ReadImagesTitle}" />
       </c:SettingRow>
     </c:SettingsSection>
+
+    <!-- Images and files sent to a tab from the client (DESIGN.md §18, "Attachments from a client") -->
+    <c:SettingsSection Key="{Binding AttachmentsSectionKey}">
+      <c:SettingRow Key="{Binding HoldKey}">
+        <ToggleSwitch IsChecked="{Binding HoldsAttachments}" AutomationProperties.Name="{Binding HoldTitle}" />
+      </c:SettingRow>
+    </c:SettingsSection>
   </StackPanel>
 </UserControl>

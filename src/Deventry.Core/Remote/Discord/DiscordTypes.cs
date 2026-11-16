@@ -37,9 +37,12 @@ public sealed record DiscordApplication(long Id, string Name, IReadOnlyList<stri
 /// <summary>A message in a channel the bot can see (Discord's <c>Message</c>), as much of it as Deventry reads.</summary>
 /// <param name="GuildId">The server it's in; null in a DM.</param>
 /// <param name="ReplyTo">The message it replies to.</param>
-/// <param name="HasMedia">It carries files or stickers, which the bot doesn't take yet.</param>
+/// <param name="HasMedia">It carries stickers, which the bot doesn't take.</param>
 public sealed record DiscordMessage(long Id, long ChannelId, long? GuildId, DiscordUser Author, DateTimeOffset Timestamp, string? Content, long? ReplyTo, bool HasMedia)
 {
+    /// <summary>Its attachments, by their addresses on Discord's servers (DESIGN.md §18, "Attachments from a client").</summary>
+    public IReadOnlyList<ChatAttachment> Attachments { get; init; } = [];
+
     internal static DiscordMessage? Parse(JsonNode? node)
     {
         if (node is not JsonObject message || DiscordJson.Snowflake(message["id"]) is not { } id || DiscordJson.Snowflake(message["channel_id"]) is not { } channel
@@ -48,9 +51,18 @@ public sealed record DiscordMessage(long Id, long ChannelId, long? GuildId, Disc
             return null;
         }
         var replyTo = message["message_reference"] is JsonObject reference ? DiscordJson.Snowflake(reference["message_id"]) : null;
-        var media = message["attachments"] is JsonArray { Count: > 0 } || message["sticker_items"] is JsonArray { Count: > 0 };
+        var media = message["sticker_items"] is JsonArray { Count: > 0 };
+        var attachments = message["attachments"] is JsonArray list
+            ? list.OfType<JsonObject>().Where(a => a.GetString("url") is { Length: > 0 })
+                .Select(a => new ChatAttachment(a.GetString("filename") is { Length: > 0 } name ? name : "file", a.GetString("content_type"),
+                    a["size"] is JsonValue size && size.TryGetValue<long>(out var bytes) ? bytes : null, a.GetString("url")!))
+                .ToList()
+            : [];
         return new DiscordMessage(id, channel, DiscordJson.Snowflake(message["guild_id"]), author, DiscordJson.Time(message["timestamp"]), message.GetString("content"),
-            replyTo, media);
+            replyTo, media)
+        {
+            Attachments = attachments,
+        };
     }
 }
 

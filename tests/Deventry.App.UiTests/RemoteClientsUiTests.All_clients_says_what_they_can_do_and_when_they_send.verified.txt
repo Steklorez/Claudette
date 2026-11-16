@@ -12,6 +12,9 @@
 "Open new tabs"
 "With /new, in a favorite or recent folder. A folder that asks about trust asks here."
 [toggle] Open new tabs
+"Keep files sent to tabs"
+"A PDF or a long log you send a tab is saved in its project's .deventry/attachments for Claude to read, which git ignores. Older ones are deleted as a tab opens in the project."
+[choice] "1 month"
 "Messages"
 [button] Reset to defaults
 "A message answering what you did from your phone always comes."

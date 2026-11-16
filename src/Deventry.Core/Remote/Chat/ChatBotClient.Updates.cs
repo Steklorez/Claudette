@@ -64,7 +64,7 @@ public abstract partial class ChatBotClient
 
     private sealed record ShowButton(string TabId, string PromptId) : Button;
 
-    private sealed record SendPendingButton(string TabId, string Text) : Button;
+    private sealed record SendPendingButton(string TabId, string Text, IReadOnlyList<RemoteAttachment> Files) : Button;
 
     private sealed record FolderButton(string Path) : Button;
 
@@ -130,32 +130,14 @@ public abstract partial class ChatBotClient
             await HandleCommandAsync(chat, command, argument, cancellationToken).ConfigureAwait(false);
             return;
         }
-        if (message.HasMedia)
+        // A voice message, a sticker, a video: nothing Claude reads.
+        if (message.HasMedia && message.Attachments.Count == 0)
         {
-            await SendAsync(chat, "Only text for now.", replyTo: ReplyTo(message), silent: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await SendAsync(chat, Format.Escape(RemoteMessages.OnlyTextAndFiles), replyTo: ReplyTo(message), silent: true, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
             return;
         }
-        if (message.Text?.Trim() is not { Length: > 0 } text)
-        {
-            return;
-        }
-        if (_awaiting.Remove(chat, out var waiting))
-        {
-            await waiting(text, cancellationToken).ConfigureAwait(false);
-            return;
-        }
-        if (message.ReplyTo is { } replied && _messageTabs.TryGetValue((chat, replied), out var tabId))
-        {
-            await SendToTabAsync(chat, tabId, text, ReplyTo(message), cancellationToken).ConfigureAwait(false);
-        }
-        else if (_targets.TryGetValue(chat, out var target))
-        {
-            await SendToTabAsync(chat, target, text, ReplyTo(message), cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await AskWhichTabAsync(chat, text, ReplyTo(message), cancellationToken).ConfigureAwait(false);
-        }
+        await HandleContentAsync(message, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>A message to reply to: none for a command the service delivered without one.</summary>
@@ -328,26 +310,33 @@ public abstract partial class ChatBotClient
 
     // ---- Talking to a tab -------------------------------------------------------------------------------------------
 
-    private async Task SendToTabAsync(long chat, string tabId, string text, long? replyTo, CancellationToken cancellationToken)
+    private async Task SendToTabAsync(long chat, string tabId, string text, IReadOnlyList<RemoteAttachment> files, long? replyTo, CancellationToken cancellationToken)
     {
-        var result = await Desk.SendAsync(tabId, text, Name, cancellationToken).ConfigureAwait(false);
+        var result = await Desk.SendAsync(tabId, text, files, Name, cancellationToken).ConfigureAwait(false);
         if (!result.Done)
         {
             await SendAsync(chat, Format.Escape(result.Reason ?? "Couldn't send it."), replyTo: replyTo, silent: true, cancellationToken: cancellationToken).ConfigureAwait(false);
             return;
         }
         _engaged.Add(tabId);
+        if (result.Reason is { } leftOut)
+        {
+            // Sent, but some of it couldn't go: a file Claude can't read.
+            await SendAsync(chat, Format.Escape(leftOut), replyTo: replyTo, silent: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
         if (await FindTabAsync(tabId, cancellationToken).ConfigureAwait(false) is not { } tab)
         {
             return;
         }
         // Its message shows what the tab is doing, edited in place: the turn's end is a new one.
-        var heading = $"Sent to {Format.Bold(tab.Name)}.";
+        var images = files.Count(f => Protocol.MessageImage.DetectMediaType(f.Data) is not null);
+        var heading = files.Count == 0 ? $"Sent to {Format.Bold(tab.Name)}."
+            : $"Sent to {Format.Bold(tab.Name)}, with {Format.Escape(RemoteMessages.Things(images, files.Count - images))}.";
         var id = await SendAsync(chat, LiveText(heading, tab), LiveButtons(tab), replyTo, silent: true, tabId: tab.Id, cancellationToken: cancellationToken).ConfigureAwait(false);
         StartLive(chat, id, heading, tab);
     }
 
-    private async Task AskWhichTabAsync(long chat, string text, long? replyTo, CancellationToken cancellationToken)
+    private async Task AskWhichTabAsync(long chat, string text, IReadOnlyList<RemoteAttachment> files, long? replyTo, CancellationToken cancellationToken)
     {
         var tabs = (await Desk.GetTabsAsync(cancellationToken).ConfigureAwait(false)).Where(t => !t.IsReadOnly).ToList();
         if (tabs.Count == 0)
@@ -355,7 +344,7 @@ public abstract partial class ChatBotClient
             await SendAsync(chat, "No tabs are open to send that to.", replyTo: replyTo, silent: true, cancellationToken: cancellationToken).ConfigureAwait(false);
             return;
         }
-        var buttons = Rows(tabs.Select(t => MakeButton(t.Name, new SendPendingButton(t.Id, text))), 2);
+        var buttons = Rows(tabs.Select(t => MakeButton(t.Name, new SendPendingButton(t.Id, text, files))), 2);
         await SendAsync(chat, "Which tab is this for?", buttons, replyTo, silent: true, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
@@ -443,12 +432,25 @@ public abstract partial class ChatBotClient
                 break;
             case SendPendingButton pending:
                 await Toast(tap, null, cancellationToken).ConfigureAwait(false);
-                _buttons.Remove(key);
+                // The question's other buttons go too, and the files they'd have sent with them.
+                foreach (var other in _buttons.Where(b => b.Value is SendPendingButton p && ReferenceEquals(p.Files, pending.Files) && p.Text == pending.Text)
+                             .Select(b => b.Key).ToList())
+                {
+                    _buttons.Remove(other);
+                }
                 if (tap is { Chat: { } questionChat, MessageId: { } question })
                 {
                     await PacedAsync(token => DeliverButtonsAsync(questionChat, question, null, token), cancellationToken).ConfigureAwait(false);
                 }
-                await SendToTabAsync(chat, pending.TabId, pending.Text, null, cancellationToken).ConfigureAwait(false);
+                await SendToTabAsync(chat, pending.TabId, pending.Text, pending.Files, null, cancellationToken).ConfigureAwait(false);
+                break;
+            case SendHeldButton held:
+                await Toast(tap, null, cancellationToken).ConfigureAwait(false);
+                await SendHeldAsync(held.Chat, timedOut: false, cancellationToken).ConfigureAwait(false);
+                break;
+            case DiscardHeldButton discard:
+                await Toast(tap, null, cancellationToken).ConfigureAwait(false);
+                await TakeHeldAsync(discard.Chat, RemoteMessages.Discarded, cancellationToken).ConfigureAwait(false);
                 break;
             case FolderButton folder:
                 var opened = await Desk.OpenTabAsync(folder.Path, Name, cancellationToken).ConfigureAwait(false);

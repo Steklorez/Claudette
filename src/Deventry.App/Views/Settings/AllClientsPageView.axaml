@@ -22,6 +22,10 @@
       <c:SettingRow Key="remoteClients.openTabs">
         <ToggleSwitch IsChecked="{Binding OpenTabs}" />
       </c:SettingRow>
+      <!-- How long files sent to tabs stay in their projects (DESIGN.md §18, "Attachments from a client") -->
+      <c:SettingRow Key="remoteClients.keepAttachments">
+        <ComboBox ItemsSource="{Binding AttachmentRetentionChoices}" SelectedItem="{Binding KeepAttachments}" MinWidth="160" AutomationProperties.Name="Keep files sent to tabs" />
+      </c:SettingRow>
     </c:SettingsSection>
 
     <c:SettingsSection Key="messages">

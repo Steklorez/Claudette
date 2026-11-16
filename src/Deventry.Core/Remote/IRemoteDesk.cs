@@ -2,6 +2,7 @@ namespace Deventry.Core.Remote;
 
 /// <summary>What became of something a client asked the desk to do: done, or why not, in words to show.</summary>
 /// <param name="TabId">The tab it was done in, for a tab it opened.</param>
+/// <param name="Reason">Why it wasn't done, or for one done, what was left out: a file Claude can't read.</param>
 public sealed record RemoteResult(bool Done, string? Reason = null, string? TabId = null)
 {
     public static RemoteResult Ok { get; } = new(true);
@@ -60,6 +61,12 @@ public interface IRemoteDesk
     /// </summary>
     bool SendsReadImages(string kind);
 
+    /// <summary>
+    /// The client of <paramref name="kind"/> holds an image or file sent with no words for the next message, as its page
+    /// in Settings says (<b>Hold an image or file sent on its own</b>, on by default).
+    /// </summary>
+    bool HoldsAttachments(string kind);
+
     /// <summary>Something happened. Raised on the UI thread: handlers queue their work and return.</summary>
     event Action<RemoteEvent>? EventRaised;
 
@@ -67,7 +74,8 @@ public interface IRemoteDesk
     Task<IReadOnlyList<RemoteTab>> GetTabsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>Sends <paramref name="text"/> to a tab, as typing it at the desk would, from <paramref name="client"/> ("Telegram").</summary>
-    Task<RemoteResult> SendAsync(string tabId, string text, string client, CancellationToken cancellationToken = default);
+    /// <param name="attachments">Images and files sent with it (DESIGN.md §18, "Attachments from a client"); none for words alone.</param>
+    Task<RemoteResult> SendAsync(string tabId, string text, IReadOnlyList<RemoteAttachment> attachments, string client, CancellationToken cancellationToken = default);
 
     /// <summary>Stops the tab's agent, as its <b>Stop</b> does.</summary>
     Task<RemoteResult> StopAsync(string tabId, string client, CancellationToken cancellationToken = default);

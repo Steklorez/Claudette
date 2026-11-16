@@ -317,6 +317,53 @@ public sealed class DiscordApi
 
     // ---- Calls ------------------------------------------------------------------------------------------------------
 
+    /// <summary>The hosts an attachment is downloaded from: Discord's file servers, never anywhere a message could point to.</summary>
+    private static readonly string[] AttachmentHosts = ["cdn.discordapp.com", "media.discordapp.net"];
+
+    /// <summary>
+    /// Downloads an attachment sent to the bot (DESIGN.md §18, "Attachments from a client"), at most
+    /// <paramref name="maxBytes"/>, from Discord's file servers alone, and without the bot's token: they don't take one.
+    /// </summary>
+    public async Task<byte[]> DownloadAttachmentAsync(string url, long maxBytes, CancellationToken cancellationToken = default)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var address) || !IsAttachmentHost(address))
+        {
+            throw new DiscordApiException("The attachment isn't on Discord's file servers.");
+        }
+        using var deadline = new CancellationTokenSource(UploadTimeout, _time);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
+        using var request = new HttpRequestMessage(HttpMethod.Get, address);
+        request.Headers.UserAgent.ParseAdd(_userAgent);
+        try
+        {
+            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, linked.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new DiscordApiException($"Discord answered downloading a file with {(int)response.StatusCode} {response.ReasonPhrase}", (int)response.StatusCode);
+            }
+            return await Downloads.ReadAsync(response, maxBytes, linked.Token).ConfigureAwait(false)
+                ?? throw new DiscordApiException($"The file is more than {Formats.Size(maxBytes)}.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw new DiscordApiException("Discord didn't send the file in time.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new DiscordApiException($"Couldn't reach Discord, downloading a file: {ex.HttpRequestError}.");
+        }
+    }
+
+    /// <summary>Discord's file servers, over HTTPS; or for a test's stand-in, its own host.</summary>
+    private bool IsAttachmentHost(Uri address) =>
+        (address.Scheme == Uri.UriSchemeHttps && AttachmentHosts.Contains(address.Host, StringComparer.OrdinalIgnoreCase))
+        || (Uri.TryCreate(_baseUrl, UriKind.Absolute, out var api) && address.Scheme == api.Scheme && address.Host.Equals(api.Host, StringComparison.OrdinalIgnoreCase)
+            && !AttachmentHosts.Contains(api.Host) && api.Host != "discord.com");
+
     private Task<JsonNode?> CallAsync(HttpMethod method, string route, JsonNode? body, string what, CancellationToken cancellationToken, bool auth = true) =>
         SendAsync(method, route, body is null ? null : new StringContent(body.ToJsonString(Json), Encoding.UTF8, "application/json"), what, auth, cancellationToken);
 

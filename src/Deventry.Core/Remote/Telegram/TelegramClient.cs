@@ -201,8 +201,12 @@ public sealed class TelegramClient : ChatBotClient
         update.Callback is { } callback ? HandleTapAsync(new ChatTap(callback.Id, User(callback.From), callback.Message?.Chat.Id, callback.Message?.MessageId, callback.Data),
                 cancellationToken)
         : update.Message is { } message ? HandleMessageAsync(new ChatMessage(message.Chat.Id, message.MessageId, message.From is { } from ? User(from) : null, message.Date,
-                message.Text, message.ReplyTo, message.HasMedia, message.Chat.IsPrivate), stale, cancellationToken)
+                message.Text, message.ReplyTo, message.HasMedia, message.Chat.IsPrivate) { Attachments = message.Attachments, Album = message.Album }, stale, cancellationToken)
         : Task.CompletedTask;
+
+    /// <summary>A photo or file sent to the bot, by its id: <c>getFile</c>, then the file (DESIGN.md §18, "Attachments from a client").</summary>
+    protected override Task<byte[]> DownloadAsync(ChatAttachment attachment, CancellationToken cancellationToken) =>
+        _api.DownloadFileAsync(attachment.Source, RemoteAttachment.MaxBytes, cancellationToken);
 
     private static ChatUser User(TelegramUser user) => new(user.Id, user.IsBot, user.Name, user.Username);
 

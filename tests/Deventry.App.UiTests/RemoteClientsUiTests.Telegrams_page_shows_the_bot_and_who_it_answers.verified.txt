@@ -29,6 +29,12 @@
 "Send the images Claude reads"
 "The images Claude and its subagents read in a turn follow its message too: image files that were there before it, which Claude opened to look at, such as a render, a test's output or a picture another program wrote. Any image file on this computer Claude reads goes, so it's off unless you turn it on."
 [toggle] Send the images Claude reads
+"Images and files from you"
+[button] Reset to defaults
+"You can send a tab images, text files and PDFs with a message, as you'd attach them at the desk."
+"Hold an image or file sent on its own"
+"An image or file you send Telegram with no words waits for your next message and goes with it, with Send now and Discard, or on its own after 10 minutes. Off, it goes to the tab at once."
+[toggle on] Hold an image or file sent on its own
 [button] Line up
 [button] Page up
 [button] Page down

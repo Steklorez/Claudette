@@ -7,6 +7,7 @@ using Deventry.Core.Accessibility;
 using Deventry.Core.Development;
 using Deventry.Core.Git;
 using Deventry.Core.Protocol;
+using Deventry.Core.Remote;
 using Deventry.Core.Settings;
 using Deventry.Platform.Processes;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -526,6 +527,13 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         // Its session leaves the group's past sessions (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
         OnTicketTabsChanged();
+        // Files remote clients sent the project's tabs, older than Settings keeps, go (DESIGN.md §18, "Attachments from a client").
+        if (_services.Settings.RemoteClients.KeepAttachments.ToTimeSpan() is { } keep)
+        {
+            var folder = tab.Folder;
+            var now = _services.Time.GetUtcNow();
+            _ = Task.Run(() => RemoteAttachments.Prune(folder, keep, now));
+        }
     }
 
     /// <summary>The group of <paramref name="folder"/>, made with its remembered color and name when it isn't open.</summary>

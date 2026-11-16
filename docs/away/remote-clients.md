@@ -130,7 +130,23 @@ Above the switch, a note in yellow says what turning it on means: the images go 
 
 The bot answers *Sent to Grappling hook.*, and that message then shows what the tab is doing and for how long, updated as it works, with **Stop**. The turn's end comes as a new message, which makes your phone buzz.
 
-Your message reaches Claude as if you'd typed it at the desk: it waits its turn while Claude is working, and its card says *You, from Telegram* (or Discord). What's in the tab's message box at the desk is left alone. Only text can be sent for now.
+Your message reaches Claude as if you'd typed it at the desk: it waits its turn while Claude is working, and its card says *You, from Telegram* (or Discord). What's in the tab's message box at the desk is left alone.
+
+## Sending images and files
+
+{% include unreleased.html %}
+
+Send a tab a screenshot, a log or a PDF with your message, as you'd attach it at the desk: to show Claude what's wrong, from wherever you are. In Telegram, send a photo or a file with a caption; in Discord, attach files to your message. It goes to the tab your message would.
+
+- **Images** (PNG, JPEG, GIF, WebP) go to Claude in the message, and show on its card and in the tab's [Media](../conversation/media.md) window. Telegram makes a photo smaller; send it as a file to keep its full quality.
+- **Text files** up to 100 KB go in the message, as a large paste does at the desk.
+- **PDFs and longer text files**, such as a long log, are saved in the project's `.deventry/attachments` folder and named in the message for Claude to read. Git ignores that folder by a file of its own, so your project's `.gitignore` is left alone.
+- **Anything else**, such as a program, isn't sent: the bot says so, and the rest goes. A voice message, a sticker or a video isn't taken.
+- Up to 20 files a message, each up to 20 MB.
+
+**An image or file on its own** waits for your next message, with **Send now** and **Discard**, since you often send the picture first and type what it's about after. What you send next takes it along; if nothing follows in 10 minutes, it goes on its own. Turn off **Hold an image or file sent on its own** on the bot's page to send it at once instead.
+
+Files saved to `.deventry/attachments` are deleted after a month, or as **Keep files sent to tabs** in All clients says, as a tab opens in the project.
 
 ## Commands
 
@@ -229,6 +245,8 @@ All this computer's: none of them sync.
 | **Use a Discord bot** | Off | Settings → Remote clients → Discord |
 | **Send the images Claude makes** | Off | Settings → Remote clients → Telegram or Discord |
 | **Send the images Claude reads** | Off | Settings → Remote clients → Telegram or Discord |
+| **Hold an image or file sent on its own** | On | Settings → Remote clients → Telegram or Discord |
+| **Keep files sent to tabs** | 1 month | Settings → Remote clients → All clients |
 | **Keep from remote clients** | Off, for each tab | The tab's menu |
 | **Remote clients can** | Watch, answer, send messages and stop Claude | Settings → Remote clients → All clients |
 | **Open new tabs** | Off | Settings → Remote clients → All clients |

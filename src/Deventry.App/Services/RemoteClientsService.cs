@@ -564,6 +564,8 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
 
     public bool SendsReadImages(string kind) => Settings.SendsReadImages(kind) && Settings.Detail == RemoteDetail.Everything;
 
+    public bool HoldsAttachments(string kind) => Settings.HoldsAttachments(kind);
+
     /// <summary>
     /// A client that's on sends the images a turn made, or those Claude read: the tabs find them and read them, which
     /// nothing does otherwise.
@@ -576,8 +578,8 @@ public sealed class RemoteClientsService : IRemoteDesk, IAsyncDisposable
     public Task<IReadOnlyList<RemoteTab>> GetTabsAsync(CancellationToken cancellationToken = default) =>
         OnUiAsync<IReadOnlyList<RemoteTab>>(() => [.. Tabs().Select(t => t.Tab.ToRemote(t.Project))], cancellationToken);
 
-    public Task<RemoteResult> SendAsync(string tabId, string text, string client, CancellationToken cancellationToken = default) =>
-        WithTabAsync(tabId, RemoteAction.Send, tab => tab.SendRemoteAsync(text, client), cancellationToken);
+    public Task<RemoteResult> SendAsync(string tabId, string text, IReadOnlyList<RemoteAttachment> attachments, string client, CancellationToken cancellationToken = default) =>
+        WithTabAsync(tabId, RemoteAction.Send, tab => tab.SendRemoteAsync(text, attachments, client), cancellationToken);
 
     public Task<RemoteResult> StopAsync(string tabId, string client, CancellationToken cancellationToken = default) =>
         WithTabAsync(tabId, RemoteAction.Stop, tab => tab.StopRemoteAsync(), cancellationToken);

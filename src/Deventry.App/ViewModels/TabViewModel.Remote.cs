@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using Deventry.App.Conversation;
+using Deventry.Core.Composer;
 using Deventry.Core.Protocol;
 using Deventry.Core.Remote;
+using Deventry.Core.Settings;
 
 namespace Deventry.App.ViewModels;
 
@@ -370,10 +372,15 @@ public sealed partial class TabViewModel
     /// messages, mentions and the thread's note; but the composer, its draft and its quick suffixes stay as they are.
     /// Its card says it came from the client.
     /// </summary>
-    internal async Task<RemoteResult> SendRemoteAsync(string text, string client)
+    /// <param name="attachments">
+    /// Images and files sent with it (DESIGN.md §18, "Attachments from a client"): images go in the message, as the
+    /// composer's do; a text file in it, as a large paste; anything else Claude reads is saved in the project's
+    /// <c>.deventry/attachments</c> and mentioned.
+    /// </param>
+    internal async Task<RemoteResult> SendRemoteAsync(string text, IReadOnlyList<RemoteAttachment> attachments, string client)
     {
         var message = text.Trim();
-        if (message.Length == 0)
+        if (message.Length == 0 && attachments.Count == 0)
         {
             return RemoteResult.No("There's nothing to send.");
         }
@@ -393,9 +400,32 @@ public sealed partial class TabViewModel
         {
             return RemoteResult.No($"Another machine's turns just reached {DisplayName}, so the message wasn't sent. Read them, then send it again.");
         }
-        await SendTypedAsync(message, message, null, [], [], via: client);
+        var prepared = PreparedAttachments.None;
+        if (attachments.Count > 0)
+        {
+            var folder = Folder;
+            var now = _services.Time.GetLocalNow();
+            var keep = _services.Settings.RemoteClients.KeepAttachments.ToTimeSpan();
+            try
+            {
+                prepared = await Task.Run(() => RemoteAttachments.Prepare(attachments, folder, now, keep));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return RemoteResult.No($"Couldn't save the files in {Path.Combine(folder, RemoteAttachments.DeventryFolder)}: {ex.Message}");
+            }
+            if (prepared.IsEmpty && message.Length == 0)
+            {
+                return RemoteResult.No(string.Join("\n", prepared.Refused));
+            }
+        }
+        // A saved file is mentioned after the words, as a dropped one is, for Claude Code to read.
+        var sent = prepared.Mentions.Count == 0 ? message : $"{message}{(message.Length > 0 ? "\n\n" : "")}{string.Join(" ", prepared.Mentions)}";
+        // A text file goes after them as a large paste does, shown on the card as one.
+        await SendTypedAsync(PastedText.Join(sent, prepared.Pastes), sent, null, prepared.Images, prepared.Pastes, via: client);
         return IsAskingTrust ? RemoteResult.No("Sent, but this folder asks whether to trust it first: answer that at the desk.")
             : IsAskingOtherAccount ? RemoteResult.No("Sent, but it waits to be told at the desk whether to continue under another account.")
+            : prepared.Refused.Count > 0 ? new RemoteResult(true, $"Not sent: {string.Join(" ", prepared.Refused)}")
             : RemoteResult.Ok;
     }
 

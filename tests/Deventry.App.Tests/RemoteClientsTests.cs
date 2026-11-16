@@ -152,7 +152,7 @@ public class RemoteClientsTests
         await using var remote = await StartAsync();
         remote.H.OnUiThread(() => remote.Tab.ComposerText = "half typed");
 
-        var result = await remote.Desk.SendAsync(remote.Tab.Id, "Fix the rope physics", "Telegram", Ct);
+        var result = await remote.Desk.SendAsync(remote.Tab.Id, "Fix the rope physics", [], "Telegram", Ct);
 
         Assert.True(result.Done);
         await TabTestHarness.Eventually(() => remote.H.Transport.SentUserTexts.Contains("Fix the rope physics"), "the message");
@@ -162,10 +162,53 @@ public class RemoteClientsTests
     }
 
     [Fact]
+    public async Task Images_and_files_from_the_client_go_with_the_message_as_the_composers_do()
+    {
+        await using var remote = await StartAsync();
+        RemoteAttachment[] files =
+        [
+            new("shot.png", TestImages.Png),
+            new("notes.txt", "The rope snaps at 40 m."u8.ToArray()),
+            new("spec.pdf", "%PDF-1.7 the spec"u8.ToArray()),
+            new("tool.exe", [0x4D, 0x5A, 0, 1]),
+        ];
+
+        var result = await remote.Desk.SendAsync(remote.Tab.Id, "What's wrong here?", files, "Telegram", Ct);
+
+        // Sent, saying what couldn't go.
+        Assert.True(result.Done);
+        Assert.Equal("Not sent: tool.exe: Claude can't read it. Images, text files and PDFs can be sent.", result.Reason);
+        await TabTestHarness.Eventually(() => remote.H.Transport.Sent.Any(m => (string?)m["type"] == "user" && m["message"]?["content"] is JsonArray), "the message");
+        var blocks = remote.H.Transport.Sent.Last(m => (string?)m["type"] == "user")["message"]!["content"]!.AsArray();
+        Assert.Equal("image", (string?)blocks[0]!["type"]);
+        var text = string.Join("\n", blocks.Skip(1).Select(b => (string?)b!["text"]));
+        Assert.StartsWith("What's wrong here?\n\n@.deventry/attachments/", text, StringComparison.Ordinal);
+        Assert.Contains("-spec.pdf", text, StringComparison.Ordinal);
+        Assert.Contains("Attached file notes.txt:\n\nThe rope snaps at 40 m.", text, StringComparison.Ordinal);
+        // The PDF is in the project, which git doesn't see.
+        var saved = Path.Combine(remote.H.WorkFolder, ".deventry", "attachments");
+        Assert.EndsWith("-spec.pdf", Assert.Single(Directory.GetFiles(saved)), StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(remote.H.WorkFolder, ".deventry", ".gitignore")));
+        var card = InlineDispatcher.Read(() => remote.Tab.Items.OfType<UserMessageItem>().Last());
+        Assert.Single(card.Images);
+    }
+
+    [Fact]
+    public async Task Only_files_Claude_cant_read_and_no_words_send_nothing()
+    {
+        await using var remote = await StartAsync();
+
+        var result = await remote.Desk.SendAsync(remote.Tab.Id, "", [new("tool.exe", [0x4D, 0x5A, 0, 1])], "Telegram", Ct);
+
+        Assert.Equal(RemoteResult.No("tool.exe: Claude can't read it. Images, text files and PDFs can be sent."), result);
+        Assert.DoesNotContain(remote.H.Transport.Sent, m => (string?)m["type"] == "user");
+    }
+
+    [Fact]
     public async Task Stopping_from_the_client_stops_the_tab()
     {
         await using var remote = await StartAsync();
-        await remote.Desk.SendAsync(remote.Tab.Id, "Work a while", "Telegram", Ct);
+        await remote.Desk.SendAsync(remote.Tab.Id, "Work a while", [], "Telegram", Ct);
         await TabTestHarness.Eventually(() => remote.Tab.IsWorking, "the turn");
 
         var result = await remote.Desk.StopAsync(remote.Tab.Id, "Telegram", Ct);
@@ -200,7 +243,7 @@ public class RemoteClientsTests
         Assert.Empty(await remote.Desk.GetTabsAsync(Ct));
         Assert.Equal(RemoteResult.No(RemoteMessages.TabKept),
             await remote.Desk.AnswerAsync(remote.Tab.Id, waiting.Prompt.Id, RemotePrompt.OptionIds.Allow, null, "Telegram", Ct));
-        Assert.Equal(RemoteResult.No(RemoteMessages.TabKept), await remote.Desk.SendAsync(remote.Tab.Id, "hello", "Telegram", Ct));
+        Assert.Equal(RemoteResult.No(RemoteMessages.TabKept), await remote.Desk.SendAsync(remote.Tab.Id, "hello", [], "Telegram", Ct));
         Assert.Null(await remote.Desk.GetLastReplyAsync(remote.Tab.Id, Ct));
 
         // Let go, it's back, with the prompt still waiting there.
@@ -232,7 +275,7 @@ public class RemoteClientsTests
     {
         await using var remote = await StartAsync();
 
-        Assert.Equal(RemoteResult.No(RemoteMessages.TabGone), await remote.Desk.SendAsync("no-such-tab", "hello", "Telegram", Ct));
+        Assert.Equal(RemoteResult.No(RemoteMessages.TabGone), await remote.Desk.SendAsync("no-such-tab", "hello", [], "Telegram", Ct));
     }
 
     [Theory]
@@ -244,7 +287,7 @@ public class RemoteClientsTests
         await using var remote = await StartAsync(s => s.RemoteClients.Access = level);
         await PromptAsync(remote);
 
-        var sent = await remote.Desk.SendAsync(remote.Tab.Id, "hello", "Telegram", Ct);
+        var sent = await remote.Desk.SendAsync(remote.Tab.Id, "hello", [], "Telegram", Ct);
         var answered = await remote.Desk.AnswerAsync(remote.Tab.Id, "p1", RemotePrompt.OptionIds.Allow, null, "Telegram", Ct);
         var opened = await remote.Desk.OpenTabAsync(remote.H.WorkFolder, "Telegram", Ct);
 

@@ -83,6 +83,46 @@ public static class RemoteMessages
         };
     }
 
+    // ---- Attachments from a client (DESIGN.md §18, "Attachments from a client") --------------------------------------
+
+    /// <summary>What a message held for the next one carries: *1 image*, *3 files*, *2 images and a file*.</summary>
+    public static string Things(int images, int files)
+    {
+        static string Count(int n, string one) => n switch
+        {
+            1 => $"1 {one}",
+            _ => string.Create(CultureInfo.InvariantCulture, $"{n} {one}s"),
+        };
+        return (images, files) switch
+        {
+            (> 0, 0) => Count(images, "image"),
+            (0, _) => Count(files, "file"),
+            _ => $"{Count(images, "image")} and {(files == 1 ? "a file" : Count(files, "file"))}",
+        };
+    }
+
+    public static string Holding(int images, int files, TimeSpan holdFor) =>
+        $"Holding {Things(images, files)} for your next message. {(images + files == 1 ? "It goes" : "They go")} with what you send next, or on {(images + files == 1 ? "its" : "their")} own in {BurnMinutes(holdFor)}.";
+
+    public static string HeldAlone(TimeSpan heldFor) => $"Nothing followed in {BurnMinutes(heldFor)}, so it goes on its own.";
+
+    public const string Discarded = "Discarded.";
+
+    public const string SentWithMessage = "Sent with your message.";
+
+    public const string OnlyTextAndFiles = "Only text, images and files for now.";
+
+    public const string AnswerTakesWords = "An answer takes words alone: send the file as a message of its own, after it.";
+
+    public static string TooLarge(string name, long bytes) =>
+        $"{name} is {Formats.Size(bytes)}; files can be up to {Formats.Size(RemoteAttachment.MaxBytes)}.";
+
+    public static string TooMany(int left) =>
+        string.Create(CultureInfo.InvariantCulture, $"A message can have up to {RemoteAttachment.MostPerMessage} files: {left} more weren't taken.");
+
+    private static string BurnMinutes(TimeSpan span) => span.TotalMinutes is var minutes && minutes == 1 ? "a minute"
+        : string.Create(CultureInfo.InvariantCulture, $"{minutes:0} minutes");
+
     // ---- The desk ---------------------------------------------------------------------------------------------------
 
     public static string Paired(string machine) => $"Paired with Deventry on {machine}.";

@@ -47,8 +47,15 @@ public sealed class FakeTelegram : HttpMessageHandler
 
     public int Polls { get; private set; }
 
+    /// <summary>Files the bot can download, by their file id: <c>getFile</c> says where, and the file's address gives them.</summary>
+    public Dictionary<string, byte[]> Files { get; } = [];
+
     /// <summary>A message to the bot, in a private chat by default, sent now unless <paramref name="date"/> says.</summary>
-    public long Message(long from, string text, DateTimeOffset date, long? replyTo = null, string chatType = "private", long? chat = null, bool photo = false)
+    /// <param name="photo">A photo, by its file id, with the text as its caption.</param>
+    /// <param name="document">A file, by its name and id, with the text as its caption.</param>
+    /// <param name="album">The album the photo or file is one of.</param>
+    public long Message(long from, string text, DateTimeOffset date, long? replyTo = null, string chatType = "private", long? chat = null, string? photo = null,
+        (string Name, string FileId)? document = null, string? album = null, bool voice = false)
     {
         var id = Interlocked.Increment(ref _nextMessage);
         var message = new JsonObject
@@ -63,10 +70,30 @@ public sealed class FakeTelegram : HttpMessageHandler
         {
             message["reply_to_message"] = new JsonObject { ["message_id"] = reply, ["chat"] = new JsonObject { ["id"] = chat ?? from, ["type"] = chatType } };
         }
-        if (photo)
+        if (photo is not null || document is not null || voice)
         {
             message.Remove("text");
-            message["photo"] = new JsonArray(new JsonObject { ["file_id"] = "x" });
+            if (text.Length > 0)
+            {
+                message["caption"] = text;
+            }
+        }
+        if (photo is not null)
+        {
+            // Telegram sends each size it keeps, the largest last.
+            message["photo"] = new JsonArray(new JsonObject { ["file_id"] = $"{photo}-small", ["width"] = 90 }, new JsonObject { ["file_id"] = photo, ["width"] = 1280 });
+        }
+        if (document is { } file)
+        {
+            message["document"] = new JsonObject { ["file_id"] = file.FileId, ["file_name"] = file.Name };
+        }
+        if (voice)
+        {
+            message["voice"] = new JsonObject { ["file_id"] = "voice" };
+        }
+        if (album is not null)
+        {
+            message["media_group_id"] = album;
         }
         Update(new JsonObject { ["message"] = message });
         return id;
@@ -131,6 +158,17 @@ public sealed class FakeTelegram : HttpMessageHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var path = request.RequestUri!.AbsolutePath;
+        // A file's download, where getFile said it is.
+        var files = $"/file/bot{Token}/files/";
+        if (path.StartsWith(files, StringComparison.Ordinal))
+        {
+            byte[]? data;
+            lock (_lock)
+            {
+                data = Files.GetValueOrDefault(path[files.Length..]);
+            }
+            return data is null ? Error(HttpStatusCode.NotFound, "Not Found") : new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(data) };
+        }
         var prefix = $"/bot{Token}/";
         if (!path.StartsWith(prefix, StringComparison.Ordinal))
         {
@@ -151,6 +189,14 @@ public sealed class FakeTelegram : HttpMessageHandler
         {
             case "getMe":
                 return GetMeAnswer?.Invoke() ?? Ok(new JsonObject { ["id"] = 42, ["is_bot"] = true, ["first_name"] = "Deventry", ["username"] = BotUsername });
+            case "getFile":
+                var id = (string?)body["file_id"] ?? "";
+                lock (_lock)
+                {
+                    return Files.TryGetValue(id, out var file)
+                        ? Ok(new JsonObject { ["file_id"] = id, ["file_size"] = file.Length, ["file_path"] = $"files/{id}" })
+                        : Error(HttpStatusCode.BadRequest, "Bad Request: invalid file_id");
+                }
             case "getWebhookInfo":
                 return Ok(new JsonObject { ["url"] = Webhook ?? "" });
             case "deleteWebhook":

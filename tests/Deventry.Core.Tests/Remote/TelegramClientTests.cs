@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using Deventry.Core.Remote;
+using Deventry.Core.Remote.Chat;
 using Deventry.Core.Remote.Telegram;
 using Deventry.Core.Tests.Support;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -190,13 +191,157 @@ public sealed class TelegramClientTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task A_photo_is_only_text_for_now()
+    public async Task A_voice_message_or_a_sticker_isnt_taken()
     {
         await StartAsync();
 
-        _telegram.Message(Me, "", Now, photo: true);
+        _telegram.Message(Me, "", Now, voice: true);
 
-        Assert.Equal("Only text for now.", Text(await NextSentAsync(1)));
+        Assert.Equal("Only text, images and files for now.", Text(await NextSentAsync(1)));
+    }
+
+    // ---- Images and files from the user (DESIGN.md §18, "Attachments from a client") -----------------------------
+
+    /// <summary>The start of a PNG, which is all a picture needs to be one.</summary>
+    private static readonly byte[] Png = [0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13, (byte)'I', (byte)'H', (byte)'D', (byte)'R'];
+
+    /// <summary>Sends <c>/to</c> a tab, so plain messages go to it, and waits for the bot to say so.</summary>
+    private async Task TargetAsync(string tab)
+    {
+        var before = _telegram.Sent.Count;
+        _telegram.Message(Me, $"/to {tab}", Now);
+        await NextSentAsync(before + 1);
+    }
+
+    [Fact]
+    public async Task A_photo_with_a_caption_goes_to_the_tab_with_its_words()
+    {
+        _telegram.Files["shot"] = Png;
+        await StartAsync();
+        await TargetAsync("Grappling");
+
+        _telegram.Message(Me, "Is the rope too long here?", Now, photo: "shot");
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the message");
+        var (tab, text, files) = _desk.Sent[0];
+        Assert.Equal(("t1", "Is the rope too long here?"), (tab, text));
+        Assert.Equal("photo.jpg", Assert.Single(files).Name);
+        Assert.Equal(Png, files[0].Data);
+        // Downloaded by its largest size.
+        Assert.Equal("shot", (string)_telegram.Of("getFile").Single()["file_id"]!);
+        Assert.Equal("Sent to <b>Grappling hook</b>, with 1 image.", Text(_telegram.Sent[^1]).Split('\n')[0]);
+    }
+
+    [Fact]
+    public async Task A_photo_on_its_own_waits_for_the_next_message_and_goes_with_it()
+    {
+        _telegram.Files["shot"] = Png;
+        await StartAsync();
+        await TargetAsync("Grappling");
+        var before = _telegram.Sent.Count;
+
+        _telegram.Message(Me, "", Now, photo: "shot");
+
+        var notice = await NextSentAsync(before + 1);
+        Assert.Equal("Holding 1 image for your next message. It goes with what you send next, or on its own in 10 minutes.", Text(notice));
+        Assert.Equal(["Send now", "Discard"], FakeTelegram.Buttons(notice).Select(b => b.Text));
+        Assert.Empty(_desk.Sent);
+
+        _telegram.Message(Me, "The hook clips through here", Now);
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the message");
+        Assert.Equal(("The hook clips through here", 1), (_desk.Sent[0].Text, _desk.Sent[0].Attachments.Count));
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Any(e => (string)e["text"]! == "Sent with your message."), "the notice updated");
+    }
+
+    [Fact]
+    public async Task What_was_held_goes_on_its_own_after_ten_minutes()
+    {
+        _telegram.Files["shot"] = Png;
+        await StartAsync();
+        await TargetAsync("Grappling");
+        var before = _telegram.Sent.Count;
+        _telegram.Message(Me, "", Now, photo: "shot");
+        await NextSentAsync(before + 1);
+
+        // The bot's poll times out on this clock too, so nothing more is sent to it after.
+        _clock.Advance(ChatBotClient.HoldFor);
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the image on its own");
+        Assert.Equal(("", 1), (_desk.Sent[0].Text, _desk.Sent[0].Attachments.Count));
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Any(e => (string)e["text"]! == "Nothing followed in 10 minutes, so it goes on its own."), "the note");
+    }
+
+    [Fact]
+    public async Task Send_now_sends_what_was_held_and_Discard_drops_it()
+    {
+        _telegram.Files["shot"] = Png;
+        _telegram.Files["log"] = "error: rope snapped\n"u8.ToArray();
+        await StartAsync();
+        await TargetAsync("Grappling");
+
+        _telegram.Message(Me, "", Now, document: ("rope.log", "log"));
+        await Waiting.UntilAsync(() => _telegram.Sent.Any(s => Text(s).StartsWith("Holding 1 file", StringComparison.Ordinal)), "the notice");
+        var held = _telegram.Sent.Last(s => Text(s).StartsWith("Holding 1 file", StringComparison.Ordinal));
+        _telegram.Tap(Me, FakeTelegram.Data(held, "Send now"), FakeTelegram.IdOf(held));
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the file sent now");
+        Assert.Equal("rope.log", Assert.Single(_desk.Sent[0].Attachments).Name);
+
+        _telegram.Message(Me, "", Now, photo: "shot");
+        await Waiting.UntilAsync(() => _telegram.Sent.Count(s => Text(s).StartsWith("Holding", StringComparison.Ordinal)) == 2, "the second notice");
+        var second = _telegram.Sent.Last(s => Text(s).StartsWith("Holding", StringComparison.Ordinal));
+        _telegram.Tap(Me, FakeTelegram.Data(second, "Discard"), FakeTelegram.IdOf(second));
+        await Waiting.UntilAsync(() => _telegram.Of("editMessageText").Any(e => (string)e["text"]! == "Discarded."), "discarded");
+        _telegram.Message(Me, "Words alone now", Now);
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 2, "the words");
+        Assert.Empty(_desk.Sent[1].Attachments);
+    }
+
+    [Fact]
+    public async Task An_albums_pictures_go_together_with_its_caption()
+    {
+        _telegram.Files["one"] = Png;
+        _telegram.Files["two"] = Png;
+        await StartAsync();
+        await TargetAsync("Grappling");
+
+        _telegram.Message(Me, "", Now, photo: "one", album: "a1");
+        _telegram.Message(Me, "Before and after", Now, photo: "two", album: "a1");
+        await SettleAsync();
+        Assert.Empty(_desk.Sent);
+        _clock.Advance(ChatBotClient.AlbumWait);
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the album");
+        Assert.Equal(("Before and after", 2), (_desk.Sent[0].Text, _desk.Sent[0].Attachments.Count));
+    }
+
+    [Fact]
+    public async Task A_file_that_cant_be_had_is_said_and_the_words_still_go()
+    {
+        await StartAsync();
+        await TargetAsync("Grappling");
+
+        _telegram.Message(Me, "Here's the report", Now, document: ("report.pdf", "missing"));
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the words");
+        Assert.Empty(_desk.Sent[0].Attachments);
+        Assert.Contains(_telegram.Sent, s => Text(s).StartsWith("Couldn't get report.pdf from Telegram:", StringComparison.Ordinal));
+        // The token never shows.
+        Assert.DoesNotContain(_telegram.Sent, s => Text(s).Contains(FakeTelegram.Token, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task With_holding_off_a_photo_on_its_own_goes_at_once()
+    {
+        _telegram.Files["shot"] = Png;
+        _desk.NoHold.Add(TelegramClient.ClientKind);
+        await StartAsync();
+        await TargetAsync("Grappling");
+
+        _telegram.Message(Me, "", Now, photo: "shot");
+
+        await Waiting.UntilAsync(() => _desk.Sent.Count == 1, "the photo");
+        Assert.Equal(("", 1), (_desk.Sent[0].Text, _desk.Sent[0].Attachments.Count));
     }
 
     // ---- Prompts ----------------------------------------------------------------------------------------------------

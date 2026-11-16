@@ -73,7 +73,8 @@ public sealed class FakeDiscordGateway
         Current.Push(new JsonObject { ["op"] = 0, ["t"] = type, ["s"] = Interlocked.Increment(ref _sequence), ["d"] = data });
 
     /// <summary>A message to the bot in its DM.</summary>
-    public long Message(long from, string content, long? replyTo = null, long? guild = null, bool attachment = false)
+    /// <param name="attachments">Its attachments, by their names and addresses on the file server.</param>
+    public long Message(long from, string content, long? replyTo = null, long? guild = null, IReadOnlyList<(string Name, string Url)>? attachments = null, bool sticker = false)
     {
         var id = Interlocked.Increment(ref _sequence) + 70_000;
         var message = new JsonObject
@@ -83,8 +84,12 @@ public sealed class FakeDiscordGateway
             ["author"] = User(from),
             ["content"] = content,
             ["timestamp"] = "2026-11-12T14:00:00.000000+00:00",
-            ["attachments"] = attachment ? new JsonArray(new JsonObject { ["id"] = "1" }) : new JsonArray(),
+            ["attachments"] = new JsonArray([.. (attachments ?? []).Select((a, i) => (JsonNode)new JsonObject { ["id"] = $"{i + 1}", ["filename"] = a.Name, ["url"] = a.Url })]),
         };
+        if (sticker)
+        {
+            message["sticker_items"] = new JsonArray(new JsonObject { ["id"] = "1", ["name"] = "wave" });
+        }
         if (replyTo is { } reply)
         {
             message["message_reference"] = new JsonObject { ["message_id"] = $"{reply}", ["channel_id"] = $"{FakeDiscord.DmOf(from)}" };
