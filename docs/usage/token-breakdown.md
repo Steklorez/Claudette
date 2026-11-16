@@ -20,7 +20,7 @@ A tab's token breakdown says what its tokens went on: what kind they were, turn 
 - **Breakdown ›** on a turn's card in the conversation opens it on that turn.
 - **Open breakdown** in the composer bar's token count popup, or in the [Tokens tool window](#the-tokens-tool-window), where a click on one of the latest turns opens it on that turn.
 - **Breakdown ›** beside **Tokens** on the tab's info card (the **ⓘ** at the end of the line under the message box).
-- A tab's row in [the Usage window](the-usage-window.md#tabs)'s **Tabs**, for a tab you've closed, or one on another machine, too. Its window reads what the usage history has of it, so its turns go by their numbers rather than their prompts.
+- A tab's row in [the Usage window](the-usage-window.md#tabs)'s **Tabs**, for a tab you've closed, or one on another machine, too. Its window reads what the usage history has of it, and its turns' prompts from [the transcript](#older-turns).
 
 Opening it again brings its window to the front, on the turn you asked for.
 
@@ -99,9 +99,24 @@ The **Tokens** tool window keeps the parts of the breakdown that help while you 
 
 The **Turn** card at the end of each turn says its number and what it cost, with a thin bar of its kinds of token under it. When the turn was sent after the prompt cache had expired, a warning says what reading the conversation again cost. **Breakdown ›** opens the breakdown on that turn. See [The end of a turn](../conversation/the-end-of-a-turn.md).
 
+## Older turns
+
+Turns from before this version of Deventry have their totals but not their calls. Claude Code keeps every call in the session's transcript, so the first time the window opens on turns like these, it reads the transcript to fill them in. A bar under the toolbar says how far it has got, such as *Reading the transcript of turns 1–6 · 2.1 MB of 5.6 MB*, with **Cancel**. Meanwhile the tiles and bars show the turns' totals, and their calls and the findings that need them come once it's read.
+
+While it's there, it checks every turn the usage history has against the transcript, and says how that went:
+
+- Turns that agree, and those that have their calls now.
+- A turn whose figures don't agree is corrected to the transcript, Claude Code's own record of each call, and marked **Corrected from the transcript**.
+- A turn the history missed, perhaps cut short when Deventry closed, is added from the transcript and marked **Added from the transcript**. The turns after it in the window move on by one.
+- Turns from your other machines are checked, and kept as they recorded them.
+- A turn the transcript has nothing for at the time it ran is kept as it was recorded.
+- Claude Code deletes old transcripts after a while. Turns whose transcript has gone keep their totals, without their calls.
+
+Each turn is checked once, so the transcript isn't read again for it. A tab you've closed has its turns' prompts from the transcript too, each time its window opens. **Dismiss** hides what the check said.
+
 ## What's kept
 
-Deventry keeps each call's numbers and its tools' names in [the usage history](usage-history.md), for as long as **Keep usage history** says, and shares them with a synced tab's turns when [usage sharing](sharing-usage-across-machines.md) is on. The prompts aren't kept there: the window reads them from the conversation. Turns from before this version of Deventry have their totals but not their calls.
+Deventry keeps each call's numbers and its tools' names in [the usage history](usage-history.md), for as long as **Keep usage history** says, and shares them with a synced tab's turns when [usage sharing](sharing-usage-across-machines.md) is on. The prompts aren't kept there: the window reads them from the conversation, or for a closed tab from the transcript.
 
 ## See also
 

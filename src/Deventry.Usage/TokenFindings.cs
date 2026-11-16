@@ -89,6 +89,15 @@ public sealed record HeavyResultFinding(int Turn, string Tool, long Tokens, int 
 {
     public override TokenFindingKind Kind => TokenFindingKind.HeavyResult;
 
+    /// <summary>The tool call whose result it is, for naming what it read from the conversation.</summary>
+    public string? ToolUseId { get; init; }
+
+    /// <summary>
+    /// What it read, by name, when the conversation says (DESIGN.md §18, "Findings"): the file a Read read,
+    /// <i>Starfall.log</i>; null otherwise.
+    /// </summary>
+    public string? Target { get; init; }
+
     public override string Describe(Func<string, string> modelName)
     {
         var until = Until switch
@@ -98,7 +107,8 @@ public sealed record HeavyResultFinding(int Turn, string Tool, long Tokens, int 
             _ => "",
         };
         var more = Calls == 1 ? "1 more call" : string.Create(CultureInfo.InvariantCulture, $"{Calls} more calls");
-        return $"The {Tool} result in turn {Turn} ({Short(Tokens)} tokens) stayed in the conversation for {more}{until}: {Short(ReadAgain)} tokens read again.";
+        var what = Target is { } target ? $"The {Tool} of {target}" : $"The {Tool} result";
+        return $"{what} in turn {Turn} ({Short(Tokens)} tokens) stayed in the conversation for {more}{until}: {Short(ReadAgain)} tokens read again.";
     }
 }
 

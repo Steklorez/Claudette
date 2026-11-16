@@ -207,6 +207,56 @@ public class TranscriptReaderTests
     }
 
     [Fact]
+    public void A_compaction_is_read_with_its_trigger_and_size_and_its_summary_is_marked()
+    {
+        // The token breakdown's older turns (DESIGN.md §18, "Older turns"): what was compacted, and the summary that carries
+        // on the turn it compacted in.
+        var transcript = TranscriptReader.Read(
+        [
+            """{"type":"user","message":{"role":"user","content":"Keep going"}}""",
+            """{"type":"system","subtype":"compact_boundary","content":"Conversation compacted","compactMetadata":{"trigger":"auto","preTokens":150300,"postTokens":12000}}""",
+            """{"type":"user","isCompactSummary":true,"isVisibleInTranscriptOnly":true,"message":{"role":"user","content":"This session is being continued from a previous conversation."}}""",
+        ]);
+
+        Assert.Equal(new TranscriptCompaction("auto", 150_300), transcript.Items[1] with { Time = null, Uuid = null, ParentUuid = null });
+        Assert.Equal([false, true], transcript.Items.OfType<TranscriptPrompt>().Select(p => p.IsCompactSummary));
+        var turn = Assert.Single(TranscriptTurns.Of(transcript));
+        Assert.Equal("Keep going", turn.Prompt);
+    }
+
+    [Fact]
+    public async Task Reading_says_how_many_bytes_of_the_transcript_and_its_subagents_it_has_read()
+    {
+        using var folder = new TempFolder();
+        var main = folder.Write("s1.jsonl", string.Join('\n', Enumerable.Range(0, 2_000).Select(i =>
+            $$$"""{"type":"user","message":{"role":"user","content":"{{{new string('x', 200)}}} {{{i}}}"}}""")));
+        folder.Write("s1/subagents/agent-a1.meta.json", """{"agentType":"Explore","toolUseId":"toolu_a"}""");
+        folder.Write("s1/subagents/agent-a1.jsonl", """{"isSidechain":true,"type":"assistant","message":{"content":[{"type":"text","text":"found"}]}}""");
+        var files = TranscriptReader.FilesOf(main);
+        var total = files.Sum(f => new FileInfo(f).Length);
+        var said = new List<long>();
+
+        await TranscriptReader.ReadAsync(main, endAt: null, new Recorder(said), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, files.Count);
+        // Every 256 KB as it goes, and each file as it ends: all of it, last.
+        Assert.True(said.Count >= 3, $"{said.Count} reports");
+        Assert.Equal(said.Order(), said);
+        Assert.Equal(total, said[^1]);
+    }
+
+    private sealed class Recorder(List<long> said) : IProgress<long>
+    {
+        public void Report(long value)
+        {
+            lock (said)
+            {
+                said.Add(value);
+            }
+        }
+    }
+
+    [Fact]
     public async Task Subagent_transcripts_are_merged_in_under_their_agent_call()
     {
         // The layout Claude Code 2.1.284 writes: <session>.jsonl, and <session>/subagents/agent-<id>.jsonl with a

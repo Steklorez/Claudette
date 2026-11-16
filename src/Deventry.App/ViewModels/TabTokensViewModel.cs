@@ -454,7 +454,7 @@ public sealed partial class TabTokensViewModel : ObservableObject
             largest > 0 ? t.CostUsd / largest : 0, Formats.Dollars(t.CostUsd), IsRunning: false))];
         Columns = [.. b.Turns.TakeLast(ChartTurns).Select(t => new TurnColumn(t.Number, "", KindValues.Of(t.Tokens), MarkOf(t), null,
             string.Create(CultureInfo.CurrentCulture, $"Turn {t.Number}: {Formats.Tokens(t.Tokens.Total)} tokens · {Formats.Dollars(t.CostUsd)}")))];
-        Findings = [.. b.Findings.Take(2).Select(f => new TokenFindingRow(f.Kind, f.Describe(_tab.ModelNameFor), f.Turn, ShowTurnCommand))];
+        Findings = [.. TokenBreakdownViewModel.Named(b.Findings.Take(2), _tab.Items).Select(f => new TokenFindingRow(f.Kind, f.Describe(_tab.ModelNameFor), f.Turn, ShowTurnCommand))];
         AllTurnsText = string.Create(CultureInfo.CurrentCulture, $"All {b.Turns.Count} turn{(b.Turns.Count == 1 ? "" : "s")} in the breakdown ›");
         LastTurnText = b.Turns.LastOrDefault() is { } lastTurn
             ? string.Create(CultureInfo.CurrentCulture, $"Last turn: {Formats.Tokens(lastTurn.Tokens.Total)} · {Formats.Dollars(lastTurn.CostUsd)}")

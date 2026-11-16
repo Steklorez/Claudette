@@ -29,6 +29,12 @@ public sealed record TranscriptPrompt(string Text) : TranscriptItem
 {
     /// <summary>Images attached to the prompt (DESIGN.md §5, "Attachments"), as Claude Code stored them.</summary>
     public IReadOnlyList<MessageImage> Images { get; init; } = [];
+
+    /// <summary>
+    /// The summary Claude Code writes after compacting (<c>isCompactSummary</c>), which carries on the turn it compacted
+    /// in rather than starting one.
+    /// </summary>
+    public bool IsCompactSummary { get; init; }
 }
 
 /// <summary>
@@ -39,6 +45,12 @@ public sealed record TranscriptMessage(ClaudeMessage Message) : TranscriptItem;
 
 /// <summary>A local command's output, such as the note after a model change.</summary>
 public sealed record TranscriptNote(string Text) : TranscriptItem;
+
+/// <summary>
+/// Claude Code compacted the conversation (<c>compact_boundary</c>), with its trigger and the context's tokens before it,
+/// when it says: what the token breakdown reads older turns' compactions from (DESIGN.md §18, "Older turns").
+/// </summary>
+public sealed record TranscriptCompaction(string? Trigger, long? PreTokens) : TranscriptItem;
 
 /// <summary>
 /// A background task ended, as Claude Code told the model (<c>&lt;task-notification&gt;</c>): for example a background
@@ -108,11 +120,19 @@ public static class TranscriptReader
     /// of MB.
     /// </remarks>
     public static Task<Transcript> ReadAsync(string path, string? endAt, CancellationToken cancellationToken = default) =>
+        ReadAsync(path, endAt, bytesRead: null, cancellationToken);
+
+    /// <summary>
+    /// Reads a transcript as <see cref="ReadAsync(string, string?, CancellationToken)"/> does, saying as it goes how many
+    /// bytes of it and its subagents' transcripts (<see cref="FilesOf"/>) it has read.
+    /// </summary>
+    public static Task<Transcript> ReadAsync(string path, string? endAt, IProgress<long>? bytesRead, CancellationToken cancellationToken = default) =>
         Task.Run(() =>
         {
-            var main = ReadEntries(Lines(path, cancellationToken), parentToolUseId: null, endAt);
+            var read = new ReadCounter(bytesRead);
+            var main = ReadEntries(Lines(path, cancellationToken, read), parentToolUseId: null, endAt);
             var streams = new List<List<Entry>> { main.Entries };
-            var subagents = ReadSubagents(path, cancellationToken);
+            var subagents = ReadSubagents(path, cancellationToken, read);
             if (main.Ended)
             {
                 // An entry without a time follows the one before it.
@@ -122,14 +142,59 @@ public static class TranscriptReader
             return new Transcript(Merge(streams), main.AiTitle, main.CustomTitle, main.StartedAt);
         }, cancellationToken);
 
+    /// <summary>A transcript and its subagents' transcripts, the main one first: what reading it all reads.</summary>
+    public static IReadOnlyList<string> FilesOf(string transcriptPath)
+    {
+        var folder = SubagentsFolder(transcriptPath);
+        return Directory.Exists(folder)
+            ? [transcriptPath, .. Directory.EnumerateFiles(folder, "*.jsonl").Order(StringComparer.Ordinal)]
+            : [transcriptPath];
+    }
+
+    private static string SubagentsFolder(string transcriptPath) =>
+        Path.Combine(Path.GetDirectoryName(transcriptPath) ?? "", Path.GetFileNameWithoutExtension(transcriptPath), "subagents");
+
+    /// <summary>The bytes read so far across a transcript's files, said every 256 KB rather than every line.</summary>
+    private sealed class ReadCounter(IProgress<long>? progress)
+    {
+        private const long Every = 256 * 1024;
+        private long _done;
+        private long _said;
+
+        public void FileDone(long length)
+        {
+            _done += length;
+            Say(_done);
+        }
+
+        public void At(long inFile)
+        {
+            if (progress is not null && _done + inFile - _said >= Every)
+            {
+                Say(_done + inFile);
+            }
+        }
+
+        private void Say(long total)
+        {
+            _said = total;
+            progress?.Report(total);
+        }
+    }
+
     /// <summary>The file's lines, read as they're needed. Claude Code keeps writing it meanwhile, so it's shared.</summary>
-    private static IEnumerable<string> Lines(string path, CancellationToken cancellationToken)
+    private static IEnumerable<string> Lines(string path, CancellationToken cancellationToken, ReadCounter? read = null)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 64 * 1024, FileOptions.SequentialScan);
         foreach (var line in Files.Utf8Lines.Read(stream, 0, cancellationToken))
         {
+            if (line.End >= 0)
+            {
+                read?.At(line.End);
+            }
             yield return line.Text;
         }
+        read?.FileDone(stream.Length);
     }
 
     public static Transcript Read(IEnumerable<string> lines)
@@ -218,9 +283,18 @@ public static class TranscriptReader
                     break;
                 case "user" when entry.GetObject("message") is { } message:
                     ReadUser(entry, message, parentToolUseId, time, items);
+                    if (items.Count > before && items[^1].Item is TranscriptPrompt summary && entry.GetBool("isCompactSummary") == true)
+                    {
+                        items[^1] = new Entry(items[^1].Time, summary with { IsCompactSummary = true });
+                    }
                     break;
                 // A background task that ends while the model is mid-turn reaches it as a queued command, recorded as an
                 // attachment rather than a user turn.
+                // Claude Code compacted the conversation: in a subagent's own transcript, its own context.
+                case "system" when parentToolUseId is null && entry.GetString("subtype") == "compact_boundary":
+                    var compaction = entry.GetObject("compactMetadata");
+                    items.Add(new Entry(time, new TranscriptCompaction(compaction?.GetString("trigger"), compaction?["preTokens"].AsWholeNumber())));
+                    break;
                 case "attachment" when entry.GetObject("attachment") is { } attachment
                                        && attachment.GetString("type") == "queued_command"
                                        && attachment.GetString("prompt")?.Trim() is { } prompt
@@ -349,10 +423,10 @@ public static class TranscriptReader
     /// The subagents' own transcripts: <c>&lt;session-id&gt;/subagents/agent-&lt;id&gt;.jsonl</c>, each with a
     /// <c>.meta.json</c> naming the <c>Agent</c> call that started it (<c>toolUseId</c>). One without it is skipped.
     /// </summary>
-    private static List<List<Entry>> ReadSubagents(string transcriptPath, CancellationToken cancellationToken)
+    private static List<List<Entry>> ReadSubagents(string transcriptPath, CancellationToken cancellationToken, ReadCounter? read = null)
     {
         var streams = new List<List<Entry>>();
-        var folder = Path.Combine(Path.GetDirectoryName(transcriptPath) ?? "", Path.GetFileNameWithoutExtension(transcriptPath), "subagents");
+        var folder = SubagentsFolder(transcriptPath);
         if (!Directory.Exists(folder))
         {
             return streams;
@@ -368,7 +442,7 @@ public static class TranscriptReader
                 {
                     continue;
                 }
-                streams.Add(ReadEntries(Lines(file, cancellationToken), toolUseId).Entries);
+                streams.Add(ReadEntries(Lines(file, cancellationToken, read), toolUseId).Entries);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {

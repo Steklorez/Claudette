@@ -174,6 +174,12 @@ public enum UsageEventKind
 
     /// <summary>The conversation was cleared: what was in it is no longer read.</summary>
     Cleared = 1,
+
+    /// <summary>
+    /// The turn was checked against its transcript (DESIGN.md §18, "Older turns"): <see cref="UsageEvent.Value"/> is the
+    /// <see cref="TurnCheckOutcome"/>, and <see cref="UsageEvent.Detail"/> what a correction changed.
+    /// </summary>
+    Checked = 2,
 }
 
 /// <summary>Something that changed what a tab's later calls cost (DESIGN.md §18, "What's recorded").</summary>

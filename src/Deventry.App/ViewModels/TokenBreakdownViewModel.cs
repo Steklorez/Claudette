@@ -271,6 +271,8 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
                 _limit = limit;
                 Build();
                 IsLoaded = true;
+                // Older turns from the transcript, once (DESIGN.md §18, "Older turns").
+                StartTranscriptRead();
             });
         }
         catch (Exception)
@@ -414,7 +416,7 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
             Turns.Add(row);
         }
 
-        Findings = [.. b.Findings.Select(f => new TokenFindingRow(f.Kind, f.Describe(name), f.Turn, ShowTurnCommand))];
+        Findings = [.. Named(b.Findings, _tab.Conversation).Select(f => new TokenFindingRow(f.Kind, f.Describe(name), f.Turn, ShowTurnCommand))];
         ShowAsked();
         var largestModel = b.ByModel.Count > 0 ? b.ByModel.Max(m => cost ? m.CostUsd : m.Tokens.Total) : 0;
         Models = [.. b.ByModel.Select(m => new TokenShareRow(name(m.Model), null, m.Calls > 0 ? m.Calls.ToString("N0", CultureInfo.CurrentCulture) : "–",
@@ -445,6 +447,26 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     private static TokenKindRow Kind(string kind, KindValues swatch, string about, long count, double dollars, TokenKinds tokens, KindCosts costs) => new(kind, swatch, about,
         count.ToString("N0", CultureInfo.CurrentCulture), tokens.Total > 0 ? Percent((double)count / tokens.Total, 1) : "–", Dollars(dollars),
         costs.Total > 0 ? Percent(dollars / costs.Total) : "–");
+
+    /// <summary>
+    /// The findings, a result read again named by the file it read when the conversation has its tool call (DESIGN.md §18,
+    /// "Findings"): <i>The Read of Starfall.log in turn 5</i>.
+    /// </summary>
+    internal static IEnumerable<TokenFinding> Named(IEnumerable<TokenFinding> findings, IEnumerable<ConversationItem> conversation)
+    {
+        Dictionary<string, string>? files = null;
+        foreach (var finding in findings)
+        {
+            if (finding is HeavyResultFinding { ToolUseId: { } id } heavy)
+            {
+                files ??= conversation.ToolCalls().Where(t => t.FilePath is { Length: > 0 }).GroupBy(t => t.ToolUseId, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.First().FilePath!, StringComparer.Ordinal);
+                yield return files.TryGetValue(id, out var file) ? heavy with { Target = Path.GetFileName(file) } : heavy;
+                continue;
+            }
+            yield return finding;
+        }
+    }
 
     /// <summary>A cost, with less than a cent said so rather than as $0.00.</summary>
     internal static string Dollars(double dollars) => dollars is > 0 and < 0.01 ? "<$0.01" : Formats.Dollars(dollars);
@@ -522,7 +544,20 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
     /// ended without calls, each message one turn's. A turn without a message of its own (from before the conversation the
     /// tab has now, or one Claude went on with) has none.
     /// </summary>
-    private Dictionary<TurnBreakdown, string> PromptsOf(IReadOnlyList<TurnBreakdown> turns) => PromptsOf(_tab.Conversation, turns);
+    private Dictionary<TurnBreakdown, string> PromptsOf(IReadOnlyList<TurnBreakdown> turns)
+    {
+        var prompts = PromptsOf(_tab.Conversation, turns);
+        // A tab that isn't open has them from its transcript.
+        foreach (var turn in turns)
+        {
+            if (!prompts.ContainsKey(turn) && turn.Turn is { } id && _transcriptPrompts.TryGetValue(id, out var prompt)
+                && prompt.Split('\n').FirstOrDefault(l => l.Trim().Length > 0)?.Trim() is { } line)
+            {
+                prompts[turn] = line;
+            }
+        }
+        return prompts;
+    }
 
     /// <summary>Each turn's prompt from a conversation's items, as <see cref="PromptsOf(IReadOnlyList{TurnBreakdown})"/> says.</summary>
     internal static Dictionary<TurnBreakdown, string> PromptsOf(IEnumerable<ConversationItem> items, IReadOnlyList<TurnBreakdown> turns)
@@ -561,6 +596,11 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         if (turn.Compacted)
         {
             chips.Add("Compacted first");
+        }
+        // What the transcript changed (DESIGN.md §18, "Older turns").
+        if (turn.Check is TurnCheckOutcome.Corrected or TurnCheckOutcome.Added)
+        {
+            chips.Add(turn.Check == TurnCheckOutcome.Added ? "Added from the transcript" : "Corrected from the transcript");
         }
         foreach (var agent in turn.Calls.Where(c => c.Agent is not null).GroupBy(c => c.Agent))
         {
@@ -695,5 +735,8 @@ public sealed partial class TokenBreakdownViewModel : ObservableObject, IDisposa
         {
             usage.TurnRecorded -= OnTurnRecorded;
         }
+        // A read still going stops with the window.
+        _transcriptCancel?.Cancel();
+        _transcriptCancel?.Dispose();
     }
 }

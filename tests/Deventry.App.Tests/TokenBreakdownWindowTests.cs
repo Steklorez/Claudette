@@ -106,6 +106,67 @@ public class TokenBreakdownWindowTests
     }
 
     [Fact]
+    public async Task A_closed_tabs_older_turns_get_their_calls_and_prompts_from_the_transcript_once()
+    {
+        await using var h = new TabTestHarness();
+        var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        var at = h.Time.GetUtcNow().AddHours(-2);
+        // Recorded before calls were, with Claude Code's title on Haiku besides its two calls.
+        tracker.Store.AddTurns([new TurnRecord(at.AddSeconds(8), "tab-closed", "s1", Opus, 8, 160, 540, 40_300, 0.04), new TurnRecord(at.AddSeconds(8), "tab-closed", "s1", "claude-haiku-5-5", 1_200, 20, 0, 0, 0.0013)]);
+        var projects = Path.Combine(h.Root, "projects");
+        Directory.CreateDirectory(Path.Combine(projects, "work"));
+        File.WriteAllLines(Path.Combine(projects, "work", "s1.jsonl"),
+        [
+            Entry(new JsonObject { ["type"] = "user", ["message"] = new JsonObject { ["role"] = "user", ["content"] = "Read the grapple code\nand say what's wrong" } }, at),
+            Entry(Assistant("msg_1", input: 3, output: 40, cacheRead: 20_000, write1h: 300, new JsonObject { ["type"] = "tool_use", ["id"] = "toolu_1", ["name"] = "Read", ["input"] = new JsonObject() }), at.AddSeconds(2)),
+            Entry(new JsonObject
+            {
+                ["type"] = "user",
+                ["message"] = new JsonObject { ["role"] = "user", ["content"] = new JsonArray(new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = "toolu_1", ["content"] = new string('x', 800) }) },
+            }, at.AddSeconds(3)),
+            Entry(Assistant("msg_2", input: 2, output: 120, cacheRead: 20_300, write1h: 240, new JsonObject { ["type"] = "text", ["text"] = "Done." }), at.AddSeconds(6)),
+        ]);
+        h.Services.ProjectsDirectory = projects;
+        using var breakdown = new TokenBreakdownViewModel(h.Services, new HistoryTabBreakdown("tab-closed", "refactor auth", null, "api", "s1", UsesPlan: true));
+
+        breakdown.Refresh();
+
+        await TabTestHarness.Eventually(() => breakdown.Turns is [{ Turn.HasCalls: true }], "the turn's calls from the transcript");
+        Assert.False(breakdown.IsReadingTranscript);
+        Assert.Equal("Read the grapple code", breakdown.Turns[0].Prompt);
+        Assert.Equal(["Turn 1 has its model calls now, read from the transcript, and agrees with the usage history."], breakdown.TranscriptLines);
+        var calls = tracker.Store.GetCalls(DateTimeOffset.MinValue, DateTimeOffset.MaxValue, "tab-closed");
+        Assert.Equal(4, calls.Count);
+        Assert.All(calls, c => Assert.Equal(CallSource.Transcript, c.Source));
+
+        // Opened again, it's read for the prompts alone: nothing more to check, and nothing to say.
+        using var again = new TokenBreakdownViewModel(h.Services, new HistoryTabBreakdown("tab-closed", "refactor auth", null, "api", "s1", UsesPlan: true));
+        again.Refresh();
+        await TabTestHarness.Eventually(() => again.Turns is [{ Prompt: "Read the grapple code" }], "the prompt again");
+        Assert.Empty(again.TranscriptLines);
+        Assert.Equal(4, tracker.Store.GetCalls(DateTimeOffset.MinValue, DateTimeOffset.MaxValue, "tab-closed").Count);
+    }
+
+    [Fact]
+    public void How_the_check_went_is_said_turn_by_turn()
+    {
+        Assert.Equal("Turn 4", TokenBreakdownViewModel.TurnList([4]));
+        Assert.Equal("Turns 3 and 4", TokenBreakdownViewModel.TurnList([4, 3]));
+        Assert.Equal("turns 1–6", TokenBreakdownViewModel.TurnList([1, 2, 3, 4, 5, 6], lower: true));
+        Assert.Equal("Turns 1, 3 and 5–7", TokenBreakdownViewModel.TurnList([1, 3, 5, 6, 7]));
+
+        Assert.Equal(["The transcript of turns 1 and 2 isn't there: Claude Code deletes old ones. They keep their totals without calls."],
+            TokenBreakdownViewModel.Describe([], [1, 2], new Dictionary<string, string>(), promptsOnly: false));
+    }
+
+    private static string Entry(JsonObject entry, DateTimeOffset at)
+    {
+        entry["timestamp"] = at.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture);
+        return entry.ToJsonString();
+    }
+
+    [Fact]
     public void The_export_has_a_line_per_call_with_its_turns_prompt()
     {
         var at = new DateTimeOffset(2026, 11, 15, 9, 0, 0, TimeSpan.Zero);

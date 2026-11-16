@@ -129,6 +129,12 @@ public sealed record TurnBreakdown(string? Turn, int Number, string TabId, DateT
     /// <summary>The subagents' types, in the order they first called, *Explore*; a subagent without one is "".</summary>
     public IReadOnlyList<string> AgentTypes => [.. Calls.Where(c => c.Agent is not null).DistinctBy(c => c.Agent).Select(c => c.AgentType ?? "")];
 
+    /// <summary>What checking it against its transcript found (DESIGN.md §18, "Older turns"); null before it's been checked.</summary>
+    public TurnCheckOutcome? Check { get; init; }
+
+    /// <summary>Its calls were read from the transcript rather than recorded as Claude Code reported them.</summary>
+    public bool FromTranscript => Calls.Any(c => c.Source == CallSource.Transcript);
+
     /// <summary>How full the main agent's context was after its last call, or null without one.</summary>
     public long? ContextAfter => Calls.LastOrDefault(c => c.Agent is null && c.Kind is CallKind.Call or CallKind.CacheExpired) is { } last ? TokenKinds.Of(last).Context : null;
 }
@@ -270,16 +276,20 @@ public sealed class TokenBreakdown
         var callsOf = calls.GroupBy(c => c.Turn, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.OrderBy(c => c.Seq).ToList(), StringComparer.Ordinal);
         var stepsOf = steps.GroupBy(s => s.Turn, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.OrderBy(s => s.Timestamp).ToList(), StringComparer.Ordinal);
         var compactedIn = events.Where(e => e.Kind == UsageEventKind.Compacted && e.Turn is not null).Select(e => e.Turn!).ToHashSet(StringComparer.Ordinal);
+        var checks = events.Where(e => e.Kind == UsageEventKind.Checked && e.Turn is not null && e.Value is { } value && Enum.IsDefined((TurnCheckOutcome)value))
+            .GroupBy(e => e.Turn!, StringComparer.Ordinal).ToDictionary(g => g.Key, g => (TurnCheckOutcome)g.MaxBy(e => e.Timestamp)!.Value!.Value, StringComparer.Ordinal);
         var built = new List<TurnBreakdown>();
         foreach (var tab in turns.GroupBy(t => t.TabId, StringComparer.Ordinal))
         {
             var place = 0;
+            var number = 0;
             foreach (var turn in tab.GroupBy(t => t.Turn ?? $"{t.TabId}@{t.Timestamp.ToUnixTimeMilliseconds()}", StringComparer.Ordinal).OrderBy(g => g.Min(t => t.Timestamp)))
             {
                 place++;
                 var records = turn.ToList();
-                // The number its card says, when it was recorded with one; otherwise its place.
-                var number = records[0].Index ?? place;
+                // The number its card says, when it was recorded with one; otherwise its place. Each is after the one
+                // before it: a turn added from the transcript moves those after it on by one (DESIGN.md §18, "Older turns").
+                number = Math.Max(records[0].Index ?? place, number + 1);
                 var id = records[0].Turn;
                 var mine = id is not null && callsOf.TryGetValue(id, out var c) ? c : [];
                 var tools = id is not null && stepsOf.TryGetValue(id, out var s) ? s : [];
@@ -292,7 +302,10 @@ public sealed class TokenBreakdown
                     continue;
                 }
                 built.Add(new TurnBreakdown(id, number, tab.Key, at, records, tokens, costs, mine, tools,
-                    records[0].IdleBefore, mine.Any(call => call.Kind == CallKind.Compaction) || (id is not null && compactedIn.Contains(id))));
+                    records[0].IdleBefore, mine.Any(call => call.Kind == CallKind.Compaction) || (id is not null && compactedIn.Contains(id)))
+                {
+                    Check = id is not null && checks.TryGetValue(id, out var check) ? check : null,
+                });
             }
         }
         var ordered = built.OrderBy(t => t.At).ThenBy(t => t.TabId, StringComparer.Ordinal).ThenBy(t => t.Number).ToList();
@@ -482,7 +495,7 @@ public sealed class TokenBreakdown
         if (reads.Count > 0 && reads.MaxBy(r => r.Value.Tokens) is var (step, read) && Tokens.CacheRead > 0 && (double)read.Tokens / Tokens.CacheRead >= HeavyResultShare)
         {
             var turn = turns.First(t => t.Steps.Contains(step));
-            findings.Add(new HeavyResultFinding(turn.Number, step.Tool, step.Tokens, read.Calls, read.Tokens, read.CostUsd, read.Until));
+            findings.Add(new HeavyResultFinding(turn.Number, step.Tool, step.Tokens, read.Calls, read.Tokens, read.CostUsd, read.Until) { ToolUseId = step.ToolUseId });
         }
 
         foreach (var turn in turns.Where(t => t.Compacted))

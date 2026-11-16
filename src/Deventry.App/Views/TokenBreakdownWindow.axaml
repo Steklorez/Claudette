@@ -85,6 +85,12 @@
     <Style Selector="controls|KindsBar.thin">
       <Setter Property="Height" Value="6" />
     </Style>
+    <Style Selector="Border.transcriptbar">
+      <Setter Property="Background" Value="{DynamicResource SubtleBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="14,8" />
+    </Style>
     <Style Selector="Ellipse.finding">
       <Setter Property="Fill" Value="{DynamicResource MutedTextBrush}" />
     </Style>
@@ -130,6 +136,34 @@
         <Button Grid.Column="3" Content="Export…" Command="{Binding ExportCommand}"
                 ToolTip.Tip="Save the turns and their calls as a CSV file" />
       </Grid>
+    </Border>
+
+    <!-- Older turns read from the transcript, and how checking them went (DESIGN.md §18, "Older turns") -->
+    <Border DockPanel.Dock="Top" Classes="transcriptbar" IsVisible="{Binding ShowsTranscriptBar}">
+      <Panel>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding IsReadingTranscript}">
+          <StackPanel Spacing="5">
+            <TextBlock Classes="small" Text="{Binding TranscriptProgressText}" TextWrapping="Wrap" />
+            <ProgressBar Minimum="0" Maximum="1" Value="{Binding TranscriptProgress}" Height="4" MinHeight="4" MinWidth="0"
+                         Background="{DynamicResource MeterTrackBrush}" Foreground="{DynamicResource MeterBrush}"
+                         AutomationProperties.Name="Reading the transcript" />
+            <TextBlock Classes="muted small" TextWrapping="Wrap"
+                       Text="The tiles and bars are from the turns' totals meanwhile. Their calls, and the findings that need them, come once it's read." />
+          </StackPanel>
+          <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelTranscriptCommand}" VerticalAlignment="Top"
+                  ToolTip.Tip="Stop reading. The turns keep their totals, and the transcript is read the next time the window opens." />
+        </Grid>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding !IsReadingTranscript}">
+          <ItemsControl ItemsSource="{Binding TranscriptLines}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Classes="small" Text="{Binding}" TextWrapping="Wrap" Margin="0,1" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Button Grid.Column="1" Classes="flat" Content="Dismiss" Command="{Binding DismissTranscriptCommand}" VerticalAlignment="Top" />
+        </Grid>
+      </Panel>
     </Border>
 
     <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled">

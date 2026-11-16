@@ -33,6 +33,9 @@ public interface ITokenBreakdownSubject
 
     /// <summary>A model's name, as the tab names it, or from its id.</summary>
     string ModelName(string model);
+
+    /// <summary>The tab's own transcript of a session it ran, when it knows where it is.</summary>
+    string? TranscriptPathOf(string sessionId);
 }
 
 /// <summary>An open tab's breakdown: everything from the tab itself.</summary>
@@ -57,6 +60,8 @@ public sealed class OpenTabBreakdown(TabViewModel tab) : ITokenBreakdownSubject
     public long? ContextWindow => tab.Context.Window;
 
     public string ModelName(string model) => tab.ModelNameFor(model);
+
+    public string? TranscriptPathOf(string sessionId) => tab.State.SessionId == sessionId ? tab.State.TranscriptPath : null;
 }
 
 /// <summary>
@@ -75,4 +80,6 @@ public sealed record HistoryTabBreakdown(string Id, string TabName, string? Mach
     public long? ContextWindow => null;
 
     public string ModelName(string model) => Formats.ModelName(model);
+
+    public string? TranscriptPathOf(string sessionId) => null;
 }

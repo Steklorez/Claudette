@@ -1293,6 +1293,18 @@ items:
     usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/History/HistoryIndex.cs
     test: TranscriptReaderTests, HistoryIndexTests
     fallback: Restored tabs could show subagent messages at the top level, and History could count them.
+  - id: "usage in transcript entries"
+    kind: file
+    status: undocumented
+    usedIn: src/Deventry.Core/Transcripts/TranscriptTurns.cs, src/Deventry.Usage/TurnCheck.cs, src/Deventry.App/ViewModels/TokenBreakdownViewModel.Transcript.cs
+    test: TurnCheckTests, TokenBreakdownWindowTests
+    fallback: "A transcript's assistant entries carry each call's message.usage as the stream does, repeated on each of a call's entries by message id, and a subagent's transcript its calls (checked with 2.1.301 against 24,261 real calls, DESIGN.md §18, \"Spike\"). The token breakdown reads them for turns recorded without calls and checks recorded turns against them (\"Older turns\"). Without usage there, the transcript's turns have no calls: turns recorded without them keep their totals, and nothing is corrected or added."
+  - id: "compact_boundary and isCompactSummary in transcripts"
+    kind: file
+    status: undocumented
+    usedIn: src/Deventry.Core/Transcripts/TranscriptReader.cs, src/Deventry.Core/Transcripts/TranscriptTurns.cs
+    test: TranscriptReaderTests, TurnCheckTests
+    fallback: "A transcript records a compaction as {\"type\":\"system\",\"subtype\":\"compact_boundary\",\"compactMetadata\":{\"trigger\",\"preTokens\",\"postTokens\"}}, and the summary after it as a user entry with isCompactSummary (2.1.301). The token breakdown's older turns take the compaction as their turn's, so its call counts as compaction's, and don't start a turn at the summary. Without the flag, a turn that compacted mid-way splits in two, and the first half could be added as a turn the history missed: checks would then say a turn was added that wasn't cut short."
 
   # --- Files and behavior ------------------------------------------------------------------------------
   - id: "sessions/<pid>.json"

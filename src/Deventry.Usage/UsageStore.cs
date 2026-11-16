@@ -230,6 +230,95 @@ public sealed class UsageStore : IDisposable
     public void AddTurns(IEnumerable<TurnRecord> turns, TurnDetail? detail = null) => Locked(() =>
     {
         using var transaction = _connection.BeginTransaction();
+        InsertTurns(transaction, turns);
+        if (detail is not null)
+        {
+            InsertDetail(transaction, detail);
+        }
+        transaction.Commit();
+    });
+
+    /// <summary>
+    /// Takes in a check of a tab's turns against their transcript (DESIGN.md §18, "Older turns: reading the transcript"):
+    /// each turn's records as checked, a corrected one's changed in place so each record keeps its id across machines and
+    /// isn't shared twice; its calls, steps and compactions from the transcript in place of any it had; and the check. A
+    /// turn recorded before ids gets its id.
+    /// </summary>
+    public void ApplyCheck(string tabId, IReadOnlyList<CheckedTurn> turns) => Locked(() =>
+    {
+        using var transaction = _connection.BeginTransaction();
+        using var command = _connection.CreateCommand();
+        command.Transaction = transaction;
+        foreach (var turn in turns)
+        {
+            if (turn.Before is [{ Turn: null } first, ..])
+            {
+                command.Parameters.Clear();
+                command.CommandText = "UPDATE turns SET turn = $turn WHERE tab_id = $tabId AND turn IS NULL AND timestamp = $timestamp";
+                Add(command, "$turn", turn.Turn);
+                Add(command, "$tabId", tabId);
+                Add(command, "$timestamp", first.Timestamp.ToUnixTimeMilliseconds());
+                command.ExecuteNonQuery();
+            }
+            // A turn recorded before calls has its idle time from the transcript: the prompt cache's age.
+            if (turn.Outcome is TurnCheckOutcome.Agreed or TurnCheckOutcome.Corrected && turn.Records is [{ IdleBefore: { } idle }, ..])
+            {
+                command.Parameters.Clear();
+                command.CommandText = "UPDATE turns SET idle_ms = $idleMs WHERE tab_id = $tabId AND turn = $turn AND idle_ms IS NULL";
+                Add(command, "$idleMs", (long)idle.TotalMilliseconds);
+                Add(command, "$tabId", tabId);
+                Add(command, "$turn", turn.Turn);
+                command.ExecuteNonQuery();
+            }
+            switch (turn.Outcome)
+            {
+                case TurnCheckOutcome.Corrected:
+                    foreach (var record in turn.Records)
+                    {
+                        if (turn.Before.Any(r => r.Model == record.Model))
+                        {
+                            command.Parameters.Clear();
+                            command.CommandText = """
+                                UPDATE turns SET input = $input, output = $output, cache_write = $cacheWrite, cache_read = $cacheRead, cost_usd = $costUsd
+                                WHERE tab_id = $tabId AND turn = $turn AND model = $model
+                                """;
+                            Add(command, "$input", record.Input);
+                            Add(command, "$output", record.Output);
+                            Add(command, "$cacheWrite", record.CacheWrite);
+                            Add(command, "$cacheRead", record.CacheRead);
+                            Add(command, "$costUsd", record.CostUsd);
+                            Add(command, "$tabId", tabId);
+                            Add(command, "$turn", turn.Turn);
+                            Add(command, "$model", record.Model);
+                            command.ExecuteNonQuery();
+                        }
+                        else
+                        {
+                            InsertTurns(transaction, [record]);
+                        }
+                    }
+                    // The transcript's calls and compactions take the place of what was recorded.
+                    command.Parameters.Clear();
+                    command.CommandText = """
+                        DELETE FROM calls WHERE turn = $turn;
+                        DELETE FROM steps WHERE turn = $turn;
+                        DELETE FROM events WHERE turn = $turn AND kind = $compacted;
+                        """;
+                    Add(command, "$turn", turn.Turn);
+                    Add(command, "$compacted", (int)UsageEventKind.Compacted);
+                    command.ExecuteNonQuery();
+                    break;
+                case TurnCheckOutcome.Added:
+                    InsertTurns(transaction, turn.Records);
+                    break;
+            }
+            InsertDetail(transaction, turn.Detail);
+        }
+        transaction.Commit();
+    });
+
+    private void InsertTurns(SqliteTransaction transaction, IEnumerable<TurnRecord> turns)
+    {
         using var command = _connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = """
@@ -262,12 +351,7 @@ public sealed class UsageStore : IDisposable
             Add(command, "$turnIndex", turn.Index);
             command.ExecuteNonQuery();
         }
-        if (detail is not null)
-        {
-            InsertDetail(transaction, detail);
-        }
-        transaction.Commit();
-    });
+    }
 
     /// <summary>
     /// Records something that changed what a tab's later calls cost, outside a turn: the conversation cleared (DESIGN.md
@@ -726,13 +810,13 @@ public sealed class UsageStore : IDisposable
         command.CommandText = tabId is null
             ? """
               SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index,
-                  machine, project_name, account_name FROM turns
+                  machine, project_name, account_name, project_key, plan FROM turns
               WHERE timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """
             : """
               SELECT timestamp, tab_id, session_id, model, input, output, cache_write, cache_read, cost_usd, project, account, turn, idle_ms, turn_index,
-                  machine, project_name, account_name FROM turns
+                  machine, project_name, account_name, project_key, plan FROM turns
               WHERE tab_id = $tabId AND timestamp >= $from AND timestamp <= $to
               ORDER BY timestamp, id
               """;
@@ -765,6 +849,8 @@ public sealed class UsageStore : IDisposable
                 Machine = NullableString(reader, 14),
                 ProjectName = NullableString(reader, 15),
                 AccountName = NullableString(reader, 16),
+                ProjectKey = NullableString(reader, 17),
+                Plan = NullableString(reader, 18),
             });
         }
         return turns;

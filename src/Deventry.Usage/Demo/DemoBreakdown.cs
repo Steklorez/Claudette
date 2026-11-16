@@ -74,7 +74,13 @@ internal static class DemoBreakdown
                 var rows = records.GroupBy(c => c.Model).Select(g => new TurnRecord(end, tab.Id, tab.SessionId, g.Key, g.Sum(c => c.Input), g.Sum(c => c.Output),
                     g.Sum(c => c.CacheWrite), g.Sum(c => c.CacheRead), g.Sum(c => c.CostUsd), tab.Folder) { Turn = turn, IdleBefore = idle }).ToList();
                 var stepRecords = steps.Select(s => new StepRecord(turn, s.Seq, null, s.Tool, Scale(s.Tokens, scale), false, s.At) { ToolUseId = s.Use }).ToList();
-                UsageEvent[] events = compacted is { } when ? [new UsageEvent(tab.Id, tab.SessionId, turn, when, UsageEventKind.Compacted, Scale(_compactedFrom, scale), "auto")] : [];
+                // Checked against the transcript already, as a tab's turns are once its breakdown has opened: the demo's
+                // transcript is its conversation, not these calls (DESIGN.md §18, "Older turns").
+                UsageEvent[] events =
+                [
+                    .. compacted is { } when ? [new UsageEvent(tab.Id, tab.SessionId, turn, when, UsageEventKind.Compacted, Scale(_compactedFrom, scale), "auto")] : Array.Empty<UsageEvent>(),
+                    new UsageEvent(tab.Id, tab.SessionId, turn, end, UsageEventKind.Checked, (long)TurnCheckOutcome.Agreed),
+                ];
                 store.AddTurns(rows, new TurnDetail(records, stepRecords, events));
                 foreach (var row in rows)
                 {
