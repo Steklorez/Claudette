@@ -85,6 +85,61 @@ internal sealed class ScriptedTransport : IClaudeTransport
         ["get_context_usage"] = _ => new JsonObject { ["totalTokens"] = 1000, ["maxTokens"] = 200000, ["percentage"] = 0.5 },
     };
 
+    /// <summary>
+    /// Answers to a Codex session's JSON-RPC requests by method (DESIGN.md §18, "Codex, a second agent"): given the params,
+    /// the result; null leaves the request unanswered. A method without one is answered with an empty result.
+    /// </summary>
+    public ConcurrentDictionary<string, Func<JsonObject, JsonObject?>> RpcAnswers { get; } = new()
+    {
+        ["initialize"] = _ => new JsonObject { ["userAgent"] = "deventry/0.169.0 (test)" },
+        ["model/list"] = _ => new JsonObject
+        {
+            ["data"] = new JsonArray(new JsonObject
+            {
+                ["id"] = "gpt-fake-1",
+                ["model"] = "gpt-fake-1",
+                ["displayName"] = "GPT Fake 1",
+                ["supportedReasoningEfforts"] = new JsonArray(new JsonObject { ["reasoningEffort"] = "low" }, new JsonObject { ["reasoningEffort"] = "high" }),
+            }),
+        },
+        ["account/read"] = _ => new JsonObject { ["account"] = new JsonObject { ["type"] = "chatgpt", ["email"] = "fake@example.com", ["planType"] = "pro" } },
+        ["thread/start"] = _ => new JsonObject { ["thread"] = new JsonObject { ["id"] = CodexThread }, ["model"] = "gpt-fake-1", ["reasoningEffort"] = "low" },
+        ["thread/resume"] = p => new JsonObject { ["thread"] = new JsonObject { ["id"] = p["threadId"]?.GetValue<string>() }, ["model"] = "gpt-fake-1" },
+        ["turn/start"] = _ => new JsonObject { ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "inProgress" } },
+    };
+
+    /// <summary>The thread a Codex tab's scripted session starts, and the turn it runs.</summary>
+    public const string CodexThread = "codex-thread-1";
+
+    public const string CodexTurn = "codex-turn-1";
+
+    /// <summary>The JSON-RPC methods a Codex session sent, in order.</summary>
+    public IEnumerable<string> SentRpcMethods => Sent.Where(m => m["method"] is not null).Select(m => m["method"]!.GetValue<string>());
+
+    /// <summary>A complete Codex turn: its start, a reply, the tokens it spent and its end.</summary>
+    public void EmitCodexTurn(string reply = "ok")
+    {
+        Emit(new JsonObject { ["method"] = "turn/started", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "inProgress" } } });
+        Emit(new JsonObject { ["method"] = "item/agentMessage/delta", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["itemId"] = "m1", ["delta"] = reply } });
+        Emit(new JsonObject { ["method"] = "item/completed", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["turnId"] = CodexTurn, ["item"] = new JsonObject { ["type"] = "agentMessage", ["id"] = "m1", ["text"] = reply } } });
+        Emit(new JsonObject
+        {
+            ["method"] = "thread/tokenUsage/updated",
+            ["params"] = new JsonObject
+            {
+                ["threadId"] = CodexThread,
+                ["turnId"] = CodexTurn,
+                ["tokenUsage"] = new JsonObject
+                {
+                    ["total"] = new JsonObject { ["inputTokens"] = 1200, ["cachedInputTokens"] = 800, ["outputTokens"] = 40 },
+                    ["last"] = new JsonObject { ["inputTokens"] = 1200, ["cachedInputTokens"] = 800, ["outputTokens"] = 40 },
+                    ["modelContextWindow"] = 258400,
+                },
+            },
+        });
+        Emit(new JsonObject { ["method"] = "turn/completed", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "completed" } } });
+    }
+
     public IReadOnlyList<JsonObject> Sent
     {
         get
@@ -123,6 +178,16 @@ internal sealed class ScriptedTransport : IClaudeTransport
         {
             _sent.Add(message);
             _sentBy.Add((process, message));
+        }
+        if (message["method"] is JsonValue method && message["id"] is { } rpcId)
+        {
+            // A Codex session's request: answered as Codex would.
+            var result = RpcAnswers.TryGetValue(method.GetValue<string>(), out var rpc) ? rpc(message["params"] as JsonObject ?? []) : [];
+            if (result is not null)
+            {
+                process.Write(new JsonObject { ["id"] = rpcId.DeepClone(), ["result"] = result }.ToJsonString());
+            }
+            return ValueTask.CompletedTask;
         }
         if (message["type"]?.GetValue<string>() == "control_request")
         {
@@ -295,6 +360,43 @@ internal sealed class ScriptedTransport : IClaudeTransport
             process.Exit(0, "");
             return ValueTask.CompletedTask;
         }
+    }
+}
+
+/// <summary>Starts Codex tabs' sessions on the scripted transport, which answers their JSON-RPC (DESIGN.md §18, "Codex, a second agent").</summary>
+internal sealed class ScriptedCodexFactory(ScriptedTransport transport, TimeProvider time) : Core.Codex.ICodexSessionFactory
+{
+    private readonly List<Core.Codex.CodexLaunchOptions> _launches = [];
+
+    public IReadOnlyList<Core.Codex.CodexLaunchOptions> Launches
+    {
+        get
+        {
+            lock (_launches)
+            {
+                return [.. _launches];
+            }
+        }
+    }
+
+    public async Task<Core.Codex.CodexSession> StartAsync(Core.Codex.CodexLaunchOptions options, CancellationToken cancellationToken = default)
+    {
+        var connection = transport.ForSession();
+        lock (_launches)
+        {
+            _launches.Add(options);
+        }
+        var session = new Core.Codex.CodexSession(connection, time);
+        try
+        {
+            await session.StartAsync(options.Start, cancellationToken);
+        }
+        catch
+        {
+            await session.DisposeAsync();
+            throw;
+        }
+        return session;
     }
 }
 
@@ -689,6 +791,8 @@ internal sealed class TabTestHarness : IAsyncDisposable
         Services.ProjectsDirectory = ProjectsDirectory;
         Factory = new ScriptedSessionFactory(Transport, Time);
         Services.UseSessionFactory(Factory);
+        CodexFactory = new ScriptedCodexFactory(Transport, Time);
+        Services.UseCodexSessionFactory(CodexFactory);
         Shell = new ShellViewModel(Services, () => OnAuthenticationRequired());
     }
 
@@ -751,6 +855,8 @@ internal sealed class TabTestHarness : IAsyncDisposable
     public ScriptedTransport Transport { get; } = new();
 
     public ScriptedSessionFactory Factory { get; }
+
+    public ScriptedCodexFactory CodexFactory { get; }
 
     public AppServices Services { get; }
 

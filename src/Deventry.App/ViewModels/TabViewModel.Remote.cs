@@ -14,9 +14,6 @@ namespace Deventry.App.ViewModels;
 /// </summary>
 public sealed partial class TabViewModel
 {
-    /// <summary>The agent the messages name.</summary>
-    private const string Agent = "Claude";
-
     /// <summary>The client answering a card just now, so its closing says who: "Telegram".</summary>
     private string? _answeringFrom;
 
@@ -45,7 +42,7 @@ public sealed partial class TabViewModel
         Name = DisplayName,
         Project = project,
         Branch = BranchBadge,
-        Agent = Agent,
+        Agent = AgentShortName,
         Model = ModelName,
         Status = Status switch
         {
@@ -123,7 +120,7 @@ public sealed partial class TabViewModel
         {
             Id = QuestionPartId(question, part),
             Kind = RemotePromptKind.Question,
-            Title = RemoteMessages.QuestionTitle(Agent),
+            Title = RemoteMessages.QuestionTitle(AgentShortName),
             About = entry.Text,
             Asker = question.Asker,
             Part = question.Questions.Count > 1 ? part + 1 : 0,
@@ -138,7 +135,7 @@ public sealed partial class TabViewModel
         {
             Id = plan.Request.RequestId,
             Kind = RemotePromptKind.Plan,
-            Title = RemoteMessages.PlanTitle(Agent),
+            Title = RemoteMessages.PlanTitle(AgentShortName),
             Plan = plan.HasPlan ? plan.Plan.ToString() : null,
             Asker = plan.Asker,
             Options =

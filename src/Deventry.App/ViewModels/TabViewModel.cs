@@ -666,11 +666,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public string PermissionModeName => PermissionModeInfo.Label(ShownPermissionMode);
 
     /// <summary>Bypass mode gives the tab a warning style (DESIGN.md §7), before it starts in it too.</summary>
-    public bool IsBypassMode => ShownPermissionMode == PermissionModeInfo.Bypass;
+    public bool IsBypassMode => ShownPermissionMode == PermissionModeInfo.Bypass || IsCodex && ShownPermissionMode == Core.Codex.CodexModes.FullAccess;
 
     /// <summary>The modes to pick from: Auto only while the model supports it and no settings file turns it off.</summary>
     public IReadOnlyList<PermissionModeChoice> PermissionModeChoices =>
-        IsAutoModeAvailable ? PermissionModeInfo.Choices : PermissionModeInfo.Choices.Where(c => !c.IsAuto).ToArray();
+        IsCodex ? PermissionModeInfo.CodexChoices
+        : IsAutoModeAvailable ? PermissionModeInfo.Choices : PermissionModeInfo.Choices.Where(c => !c.IsAuto).ToArray();
 
     /// <summary>What Claude Code's settings files say about the mode this tab starts in, read as it starts (DESIGN.md §7).</summary>
     private StartingPermissionMode? _startingMode;
@@ -691,7 +692,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>Until its claude reports a mode, the tab shows the one it starts in.</summary>
     private void ShowStartingMode() =>
-        ExpectedPermissionMode = State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode ?? ClaudeCodeStartingMode;
+        ExpectedPermissionMode = IsCodex ? Core.Codex.CodexModes.Normalize(State.Overrides.PermissionMode ?? _services.Settings.Codex.DefaultMode)
+            : State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode ?? ClaudeCodeStartingMode;
 
     /// <summary>
     /// Reads what Claude Code's settings files say about the starting mode, off the UI thread, for the mode the tab shows
@@ -1693,6 +1695,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     private async Task StartAsync()
     {
+        if (IsCodex)
+        {
+            await StartCodexAsync();
+            return;
+        }
         if (_services.Sessions is not { } sessions)
         {
             return;
@@ -2389,7 +2396,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 FollowTaskFolder();
                 // The session is the tab's own now (a new one, a copy's, or after /clear): it has the tab's mark.
                 RememberMark();
-                if (started.Init.ClaudeCodeVersion is { } reported && Version.TryParse(reported, out var version))
+                if (!IsCodex && started.Init.ClaudeCodeVersion is { } reported && Version.TryParse(reported, out var version))
                 {
                     SetRunningVersion(version);
                 }

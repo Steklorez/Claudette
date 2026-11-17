@@ -325,7 +325,7 @@ public sealed partial class TabViewModel
         _checkIns.SetWaitingOnUser(true);
         UpdateStatus();
         var remote = ToRemotePrompt(approval);
-        var body = RemoteMessages.PromptLine(remote, Agent);
+        var body = RemoteMessages.PromptLine(remote, AgentShortName);
         _services.Notifications.Notify(NotificationKind.NeedsInput, DisplayName, body, Id);
         _shell.Announce($"{DisplayName}: {body}");
         Remote.OnPromptWaiting(this, remote);

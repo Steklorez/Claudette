@@ -4,6 +4,7 @@ using Deventry.Core;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Auth;
 using Deventry.Core.Claude;
+using Deventry.Core.Codex;
 using Deventry.Core.Composer;
 using Deventry.Core.Credentials;
 using Deventry.Core.Demo;
@@ -164,6 +165,7 @@ public sealed class AppServices : IAsyncDisposable
         RemoteControl = new RemoteControlService(this);
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
+        CodexLocator = new CodexLocator(launcher, timeProvider, UserEnvironment);
         // Settings → Git → Path to git, read as each run starts (DESIGN.md §14).
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment, logger: Loggers.CreateLogger("Git")) { ConfiguredPath = () => Settings.Git.Path };
         MentionFolders = new MentionFolderReader(Git, timeProvider);
@@ -499,6 +501,9 @@ public sealed class AppServices : IAsyncDisposable
 
     public ClaudeLocator Locator { get; }
 
+    /// <summary>Finds <c>codex</c> (DESIGN.md §18, "Codex, a second agent").</summary>
+    public CodexLocator CodexLocator { get; }
+
     /// <summary>Deventry's settings (DESIGN.md §14). Change them on the UI thread, then call <see cref="SaveSettings"/>.</summary>
     public AppSettings Settings { get; }
 
@@ -555,6 +560,46 @@ public sealed class AppServices : IAsyncDisposable
     public ClaudeInstall? Install { get; private set; }
 
     public IClaudeSessionFactory? Sessions { get; private set; }
+
+    /// <summary>The Codex Deventry found, once it has looked and found one it can use.</summary>
+    public CodexInstall? CodexInstall { get; private set; }
+
+    /// <summary>Starts Codex tabs' sessions, once Codex is found; null until then (DESIGN.md §18, "Codex, a second agent").</summary>
+    public ICodexSessionFactory? CodexSessions { get; private set; }
+
+    /// <summary>Codex was found, or looked for again (on the UI thread).</summary>
+    public event Action? CodexChanged;
+
+    /// <summary>What looking for Codex last found, for Settings → Agents → Codex.</summary>
+    public CodexLocateResult? CodexFound { get; private set; }
+
+    /// <summary>
+    /// Looks for Codex, as Settings → Agents → Codex names it or where it's installed. Found and usable, Codex tabs can
+    /// start. Called at launch, and again from Settings and the setup screen.
+    /// </summary>
+    public async Task<CodexLocateResult> LocateCodexAsync()
+    {
+        var result = await CodexLocator.LocateAsync(Settings.Codex.CodexPath).ConfigureAwait(false);
+        Dispatcher.Post(() =>
+        {
+            CodexFound = result;
+            if (result is { IsUsable: true, Install: { } install })
+            {
+                UseCodexInstall(install);
+            }
+            CodexChanged?.Invoke();
+        });
+        return result;
+    }
+
+    public void UseCodexInstall(CodexInstall install)
+    {
+        CodexInstall = install;
+        CodexSessions = new CodexSessionFactory(install.Path, _launcher, Time, Loggers, Diagnostics, UserEnvironment);
+    }
+
+    /// <summary>For tests: Codex tabs' sessions come from <paramref name="factory"/> instead of a real <c>codex</c>.</summary>
+    internal void UseCodexSessionFactory(ICodexSessionFactory factory) => CodexSessions = factory;
 
     public ClaudeAuth? Auth { get; private set; }
 

@@ -452,11 +452,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// </summary>
     /// <param name="opened">Runs on the new tab before it's selected and started, such as making it a sub-thread.</param>
     /// <param name="overrides">The tab's own model, effort and mode, set before it's made, which reads them.</param>
+    /// <param name="agent">
+    /// The agent the tab runs (DESIGN.md §18, "A tab's agent"), which the folder remembers for its next new tab; null for
+    /// the one the folder's last new tab used.
+    /// </param>
     /// <param name="select">
     /// Select the new tab, as opening one does; false leaves the tab the user is in selected, as a timed message's does
     /// (DESIGN.md §18, "Timed messages"), unless none is.
     /// </param>
-    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null, TabOverrides? overrides = null, bool select = true)
+    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null, TabOverrides? overrides = null, bool select = true, Core.Agents.IAgentType? agent = null)
     {
         if (!Directory.Exists(folder))
         {
@@ -464,11 +468,18 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
         var normalized = FolderHistory.Normalize(folder);
         FolderHistory.Touch(_services.State, normalized, _services.Time.GetUtcNow(), _services.Settings.NewTabs.RecentFolderLimit);
+        if (agent is not null)
+        {
+            AgentsService.Remember(_services.State, normalized, agent);
+        }
+        agent ??= AgentsService.ForFolder(_services.State, normalized);
         var state = new TabState
         {
             Folder = normalized,
+            Agent = AgentsService.StateKind(agent),
             SyncToLibrary = _services.Settings.Sessions.SyncNewTabs,
-            RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            // The Claude app reaches only Claude Code's sessions (DESIGN.md §18, "Remote Control").
+            RemoteControl = agent.Features.HasFlag(Core.Agents.AgentFeatures.RemoteControl) && _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
             Overrides = overrides ?? new(),
         };
         var tab = new TabViewModel(_services, this, state, isRestored: false);
@@ -485,6 +496,19 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand]
     private Task NewTabInGroupAsync(TabGroupViewModel? group) =>
         group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder);
+
+    /// <summary><b>New Claude Code tab</b> in a group's menu: its next tabs start Claude Code too (DESIGN.md §18, "A tab's agent").</summary>
+    [RelayCommand]
+    private Task NewClaudeCodeTabInGroupAsync(TabGroupViewModel? group) =>
+        group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder, agent: Core.Agents.ClaudeCodeAgent.Instance);
+
+    /// <summary><b>New Codex tab</b> in a group's menu: its next tabs start Codex too, until a Claude Code one.</summary>
+    [RelayCommand]
+    private Task NewCodexTabInGroupAsync(TabGroupViewModel? group) =>
+        group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder, agent: Core.Agents.CodexAgent.Instance);
+
+    /// <summary>Codex was found, so a group's menu can offer a Codex tab (DESIGN.md §18, "Codex, a second agent").</summary>
+    public bool IsCodexAvailable => _services.CodexSessions is not null;
 
     /// <summary>
     /// A tab's folder moved (<b>Choose folder…</b> for a missing folder, DESIGN.md §9): the tab joins that folder's

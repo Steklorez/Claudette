@@ -16,6 +16,9 @@ public sealed class AppSettings
 
     public ClaudeCodeSettings ClaudeCode { get; set; } = new();
 
+    /// <summary>Codex, the second agent (DESIGN.md §18, "Codex, a second agent").</summary>
+    public CodexSettings Codex { get; set; } = new();
+
     public NewTabSettings NewTabs { get; set; } = new();
 
     /// <summary>Settings → Tabs → Claude Code's projects (DESIGN.md §4, "Claude Code's projects"). Per machine, as folders are.</summary>
@@ -415,6 +418,25 @@ public enum KeepAwakeWhen
     /// </summary>
     [JsonStringEnumMemberName("claudetteRuns")]
     DeventryRuns,
+}
+
+/// <summary>Settings → Agents → Codex (DESIGN.md §18, "Codex, a second agent").</summary>
+public sealed class CodexSettings
+{
+    /// <summary>Null means find it automatically.</summary>
+    public string? CodexPath { get; set; }
+
+    /// <summary>The model a new Codex tab starts with; null for Codex's own default.</summary>
+    public string? DefaultModel { get; set; }
+
+    /// <summary>The mode a new Codex tab starts in (<c>CodexModes</c>); null for Auto.</summary>
+    public string? DefaultMode { get; set; }
+
+    /// <summary>
+    /// At a usage limit, offer to carry the work on in the other agent (DESIGN.md §18, "Continuing in the other agent").
+    /// Off by default. It's here because it's about the agents; it applies to both.
+    /// </summary>
+    public bool OfferOtherAgentAtLimit { get; set; }
 }
 
 public sealed class ClaudeCodeSettings

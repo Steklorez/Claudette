@@ -214,6 +214,8 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             services.SaveSettings();
         }
         services.UseInstall(result.Install!);
+        // Codex, the second agent, is looked for alongside, without holding up the window (DESIGN.md §18).
+        _ = services.LocateCodexAsync();
         if (_launchUpdate is { } launchUpdate)
         {
             services.ClaudeUpdates!.RecordLaunchUpdate(launchUpdate);

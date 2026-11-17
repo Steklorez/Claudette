@@ -24,7 +24,7 @@ public sealed partial class TabViewModel
     /// </summary>
     private void NotifyTurnFinished(ResultMessage result)
     {
-        var body = RemoteMessages.TurnLine(_conversation.TurnTasksSummary?.Text, result.Result, Agent);
+        var body = RemoteMessages.TurnLine(_conversation.TurnTasksSummary?.Text, result.Result, AgentShortName);
         _services.Notifications.Notify(NotificationKind.TurnFinished, DisplayName, body, Id);
         _shell.Announce($"{DisplayName}: Claude finished.");
         TellRemoteTurnFinished(result);
@@ -46,7 +46,7 @@ public sealed partial class TabViewModel
 
     /// <summary>What a waiting prompt asks, in a line: its notification's text, and a sub-thread's in its thread's strip.</summary>
     private string PromptText(PromptItem prompt) =>
-        ToRemotePrompt(prompt) is { } remote ? RemoteMessages.PromptLine(remote, Agent) : "Claude is waiting for you.";
+        ToRemotePrompt(prompt) is { } remote ? RemoteMessages.PromptLine(remote, AgentShortName) : $"{AgentShortName} is waiting for you.";
 
     /// <summary>Claude Code stopped with an error, or couldn't start.</summary>
     private void NotifyProcessError(string body)
