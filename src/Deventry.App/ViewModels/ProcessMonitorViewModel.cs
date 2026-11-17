@@ -193,7 +193,7 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
     partial void OnIsPanelVisibleChanged(bool value) => UpdateSampler();
 
     /// <summary>The session started: follow its <c>claude</c> and what it starts.</summary>
-    internal void AttachTree(ClaudeSession session)
+    internal void AttachTree(IAgentSession session)
     {
         if (_services.ProcessTrees is not { } trees || session.ProcessId is not { } pid)
         {

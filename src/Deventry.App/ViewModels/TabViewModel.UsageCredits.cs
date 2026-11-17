@@ -163,7 +163,7 @@ public sealed partial class TabViewModel
     /// Stops the turn, with what was waiting its turn in Claude Code, which would run on usage credits too: the user's
     /// messages and the thread's are held for the reset, Deventry's own check-ins dropped.
     /// </summary>
-    private async Task StopForCreditsAsync(ClaudeSession session, DateTimeOffset? resetsAt, string? limitType)
+    private async Task StopForCreditsAsync(IAgentSession session, DateTimeOffset? resetsAt, string? limitType)
     {
         try
         {

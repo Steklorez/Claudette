@@ -34,7 +34,7 @@ public partial class TabViewModel
         _claudeNameSync = RenameInClaudeCodeAsync(session, name);
     }
 
-    private async Task RenameInClaudeCodeAsync(ClaudeSession session, string name)
+    private async Task RenameInClaudeCodeAsync(IAgentSession session, string name)
     {
         try
         {

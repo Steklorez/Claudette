@@ -24,7 +24,7 @@ public sealed partial class TabViewModel
     private async Task ToggleUltracodeAsync()
     {
         var on = !State.Ultracode;
-        if (_session is { } session && !await ApplyUltracodeAsync(session, on))
+        if (_session is IHasSessionStyles session && !await ApplyUltracodeAsync(session, on))
         {
             return;
         }
@@ -35,7 +35,7 @@ public sealed partial class TabViewModel
         OnPropertyChanged(nameof(InfoRows));
     }
 
-    private async Task<bool> ApplyUltracodeAsync(ClaudeSession session, bool on)
+    private async Task<bool> ApplyUltracodeAsync(IHasSessionStyles session, bool on)
     {
         try
         {
@@ -72,13 +72,13 @@ public sealed partial class TabViewModel
     [RelayCommand]
     private async Task ChooseOutputStyleAsync(OutputStyleChoice? choice)
     {
-        if (choice is null || choice.IsCurrent || _session is not { } session)
+        if (choice is null || choice.IsCurrent || _session is not { } session || session is not IHasSessionStyles styles)
         {
             return;
         }
         try
         {
-            await session.SetOutputStyleAsync(choice.Name);
+            await styles.SetOutputStyleAsync(choice.Name);
             UpdateOutputStyles(session.Initialization, choice.Name);
             _conversation.AddNote($"Output style: {choice.Label}, from the next reply. It's kept in this folder's .claude/settings.local.json.");
         }

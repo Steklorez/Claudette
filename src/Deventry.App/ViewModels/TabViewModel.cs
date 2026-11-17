@@ -79,7 +79,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     private readonly ShellViewModel _shell;
     private readonly ConversationBuilder _conversation;
     private readonly CheckInMonitor _checkIns;
-    private ClaudeSession? _session;
+    private IAgentSession? _session;
     private Task? _pump;
     private Task? _starting;
     /// <summary>Cancelled when the tab closes: a start under way stops there, and no new one begins.</summary>
@@ -112,7 +112,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         TodoList.Time = services.Time;
         ProcessMonitor = new ProcessMonitorViewModel(services, this);
         ChangedFiles = new ChangedFilesViewModel(services, this);
-        McpServers = new McpServersViewModel(() => _session, url => _services.Platform.OpenUrlAsync(url));
+        McpServers = new McpServersViewModel(() => _session as IHasMcpServers, url => _services.Platform.OpenUrlAsync(url));
         ReplyImages = new ReplyImages(new ReplyImageLoader(services.Http, services.Time), () => Folder);
         ProjectTools = new ProjectToolsViewModel(services, this);
         WatchRunsUnder();
@@ -763,7 +763,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// Switches to the mode the tab starts in when nothing chose one. The user didn't ask for it, so if Claude Code
     /// refuses, the tab stays in the mode it reports, as a new session with the flag would.
     /// </summary>
-    private async Task SwitchModeQuietlyAsync(ClaudeSession session, string mode)
+    private async Task SwitchModeQuietlyAsync(IAgentSession session, string mode)
     {
         try
         {
@@ -2220,7 +2220,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         string? title = null;
         try
         {
-            title = await _session.GenerateSessionTitleAsync(_firstPrompt);
+            title = _session is IWritesSessionTitles titles ? await titles.GenerateSessionTitleAsync(_firstPrompt) : null;
         }
         catch (Exception)
         {
@@ -2235,7 +2235,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     }
 
     /// <summary>Reads events off the UI thread and applies them in batches, so fast streaming doesn't flood the UI.</summary>
-    private async Task PumpAsync(ClaudeSession session)
+    private async Task PumpAsync(IAgentSession session)
     {
         var reader = session.Events;
         var batch = new List<SessionEvent>();
@@ -2286,7 +2286,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         && (_session is not { } session || session.State == _appliedState)
         && _contextRefresh is null or { IsCompleted: true };
 
-    private void Apply(ClaudeSession session, IReadOnlyList<SessionEvent> events)
+    private void Apply(IAgentSession session, IReadOnlyList<SessionEvent> events)
     {
         if (!ReferenceEquals(session, _session))
         {
@@ -2318,7 +2318,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>The kinds of event that failed to apply, each noted once in the conversation.</summary>
     private readonly HashSet<string> _failedEvents = new(StringComparer.Ordinal);
 
-    private void ApplyEvent(ClaudeSession session, SessionEvent sessionEvent)
+    private void ApplyEvent(IAgentSession session, SessionEvent sessionEvent)
     {
         if (RemoteControl.InterceptCommand(sessionEvent))
         {

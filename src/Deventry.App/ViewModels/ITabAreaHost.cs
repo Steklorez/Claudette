@@ -22,7 +22,7 @@ internal interface ITabAreaHost
     TabState State { get; }
 
     /// <summary>The tab's session while it runs.</summary>
-    ClaudeSession? Session { get; }
+    IAgentSession? Session { get; }
 
     /// <summary>A note in the conversation, optionally with a link.</summary>
     void AddNote(string text, NoteKind kind = NoteKind.Info, string? link = null);

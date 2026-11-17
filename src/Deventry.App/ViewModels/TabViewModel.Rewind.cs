@@ -96,7 +96,7 @@ public sealed partial class TabViewModel
             return;
         }
         var restored = false;
-        if (restoreFiles && message.Uuid is { } uuid && _session is { } session)
+        if (restoreFiles && message.Uuid is { } uuid && _session is IRewindsFiles session)
         {
             if (!await RestoreFilesAsync(session, uuid))
             {
@@ -142,7 +142,7 @@ public sealed partial class TabViewModel
             _conversation.AddNote(reason, NoteKind.Warning);
             return;
         }
-        if (_session is not { } session)
+        if (_session is not IRewindsFiles session)
         {
             _conversation.AddNote("Claude Code isn't running in this tab. Restart it to put files back.", NoteKind.Warning);
             return;
@@ -175,7 +175,7 @@ public sealed partial class TabViewModel
             "Restore files",
             async () =>
             {
-                if (_session is { } current && await RestoreFilesAsync(current, uuid))
+                if (_session is IRewindsFiles current && await RestoreFilesAsync(current, uuid))
                 {
                     _conversation.AddNote($"Put {DescribeFiles(preview.FilesChanged)} back as before that message.");
                     _ = ChangedFiles.RefreshAsync();
@@ -186,7 +186,7 @@ public sealed partial class TabViewModel
     /// <summary>A dry run of <c>rewind_files</c>, or null when there's no session, no id or no checkpoint to restore.</summary>
     private async Task<RewindResult?> PreviewFileRestoreAsync(UserMessageItem message)
     {
-        if (message.Uuid is not { } uuid || _session is not { } session)
+        if (message.Uuid is not { } uuid || _session is not IRewindsFiles session)
         {
             return null;
         }
@@ -202,7 +202,7 @@ public sealed partial class TabViewModel
         }
     }
 
-    private async Task<bool> RestoreFilesAsync(ClaudeSession session, string uuid)
+    private async Task<bool> RestoreFilesAsync(IRewindsFiles session, string uuid)
     {
         try
         {

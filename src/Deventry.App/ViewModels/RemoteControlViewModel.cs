@@ -222,11 +222,11 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     }
 
     /// <summary>The session just started: connect before any prompt goes out, if the switch is on.</summary>
-    internal void ConnectOnStart(ClaudeSession session)
+    internal void ConnectOnStart(IAgentSession session)
     {
         _waiting = Change.None;
         _usesCommand = false;
-        if (!_host.State.RemoteControl)
+        if (!_host.State.RemoteControl || session is not IRemoteControllable)
         {
             return;
         }
@@ -255,7 +255,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
             return;
         }
         // Claude Code already closing the connection connects again once it has.
-        if (_host.Session is not { } session || _disconnecting || Status.State is RemoteControlState.Connected or RemoteControlState.Connecting)
+        if (_host.Session is not { } session || session is not IRemoteControllable || _disconnecting || Status.State is RemoteControlState.Connected or RemoteControlState.Connecting)
         {
             OnInfoChanged();
             return;
@@ -274,14 +274,14 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     /// with claude.ai and answers with its address, or says why it can't. A Claude Code that doesn't know the request
     /// gets the <c>/remote-control</c> command instead.
     /// </summary>
-    private async Task ConnectAsync(ClaudeSession session)
+    private async Task ConnectAsync(IAgentSession session)
     {
         _waiting = Change.None;
         Status = RemoteControlStatus.Connecting;
         RemoteControlStatus answer;
         try
         {
-            answer = RemoteControlProtocol.FromEnabled(await session.EnableRemoteControlAsync(_host.DisplayName));
+            answer = RemoteControlProtocol.FromEnabled(await ((IRemoteControllable)session).EnableRemoteControlAsync(_host.DisplayName));
         }
         catch (ControlRequestException ex) when (RemoteControlProtocol.IsUnsupported(ex.Error))
         {
@@ -329,7 +329,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     /// The fallback: <c>/remote-control &lt;name&gt;</c> as a message of its own, sent only while Claude isn't working, so
     /// the next turn to end is its answer. The tab doesn't show it as something the user sent.
     /// </summary>
-    private async Task SendCommandAsync(ClaudeSession session)
+    private async Task SendCommandAsync(IAgentSession session)
     {
         _waiting = Change.None;
         _commandPending = true;
@@ -421,7 +421,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
         {
             _waiting = Change.None;
         }
-        if (_host.Session is not { } session || Status.State != RemoteControlState.Connected)
+        if (_host.Session is not { } session || session is not IRemoteControllable || Status.State != RemoteControlState.Connected)
         {
             if (Status.State != RemoteControlState.Connecting)
             {
@@ -454,13 +454,13 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     /// it can't say it did, Claude Code is restarted on the same session instead, which doesn't connect again. A tab
     /// switched back on in the meantime connects again once it's disconnected.
     /// </summary>
-    private async Task DisconnectAsync(ClaudeSession session)
+    private async Task DisconnectAsync(IAgentSession session)
     {
         _waiting = Change.None;
         _disconnecting = true;
         try
         {
-            await session.DisableRemoteControlAsync();
+            await ((IRemoteControllable)session).DisableRemoteControlAsync();
         }
         catch (ClaudeSessionExitedException)
         {
@@ -512,7 +512,7 @@ public sealed partial class RemoteControlViewModel : ViewModelBase
     /// A turn ended: a prompt withdrawn from now on can have been answered in the Claude app, and a change of the switch
     /// that waited for the turn happens now.
     /// </summary>
-    internal void OnTurnCompleted(ClaudeSession session)
+    internal void OnTurnCompleted(IAgentSession session)
     {
         _stoppedHere = false;
         var waiting = _waiting;
