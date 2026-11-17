@@ -3,11 +3,13 @@ using Deventry.Core.Installation;
 
 namespace Deventry.Core.Tests;
 
-/// <summary>Keeps compat/surface.yaml honest (DESIGN.md §16).</summary>
+/// <summary>Keeps compat/surface.yaml, and compat/codex-surface.yaml for Codex, honest (DESIGN.md §16, §18).</summary>
 public partial class CompatibilitySurfaceTests
 {
     private static readonly string RepoRoot = FindRepoRoot();
-    private static readonly string Surface = File.ReadAllText(Path.Combine(RepoRoot, "compat", "surface.yaml"));
+    private static readonly string Surface = Read("surface.yaml");
+
+    private static string Read(string file) => File.ReadAllText(Path.Combine(RepoRoot, "compat", file));
 
     [Fact]
     public void Versions_match_the_code()
@@ -16,10 +18,12 @@ public partial class CompatibilitySurfaceTests
         Assert.Equal(ClaudeLocator.LastTestedVersion, Version.Parse(Field("lastTested")));
     }
 
-    [Fact]
-    public void Every_used_in_file_exists()
+    [Theory]
+    [InlineData("surface.yaml")]
+    [InlineData("codex-surface.yaml")]
+    public void Every_used_in_file_exists(string file)
     {
-        var missing = UsedInPattern().Matches(Surface)
+        var missing = UsedInPattern().Matches(Read(file))
             .SelectMany(m => m.Groups[1].Value.Split(','))
             .Select(p => p.Trim())
             .Where(p => p.StartsWith("src/", StringComparison.Ordinal) || p.StartsWith("tests/", StringComparison.Ordinal) || p.StartsWith("tools/", StringComparison.Ordinal))
@@ -29,10 +33,12 @@ public partial class CompatibilitySurfaceTests
         Assert.Empty(missing);
     }
 
-    [Fact]
-    public void Undocumented_entries_have_a_fallback()
+    [Theory]
+    [InlineData("surface.yaml")]
+    [InlineData("codex-surface.yaml")]
+    public void Undocumented_entries_have_a_fallback(string file)
     {
-        var entries = Surface.Split("\n  - id:").Skip(1);
+        var entries = Read(file).Split("\n  - id:").Skip(1);
         var withoutFallback = entries
             .Where(e => StatusPattern().Match(e) is { Success: true } s && s.Groups[1].Value is "undocumented" or "experimental")
             .Where(e => !e.Contains("fallback:", StringComparison.Ordinal))
@@ -42,8 +48,10 @@ public partial class CompatibilitySurfaceTests
         Assert.Empty(withoutFallback);
     }
 
-    [Fact]
-    public void Every_test_named_exists()
+    [Theory]
+    [InlineData("surface.yaml")]
+    [InlineData("codex-surface.yaml")]
+    public void Every_test_named_exists(string file)
     {
         // "test: A, B (a note)" names test classes; "none yet …" names none.
         var classes = Directory.EnumerateFiles(Path.Combine(RepoRoot, "tests"), "*.cs", SearchOption.AllDirectories)
@@ -51,7 +59,7 @@ public partial class CompatibilitySurfaceTests
                 && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .SelectMany(f => ClassPattern().Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value))
             .ToHashSet(StringComparer.Ordinal);
-        var named = TestPattern().Matches(Surface)
+        var named = TestPattern().Matches(Read(file))
             .Select(m => m.Groups[1].Value.Trim())
             .Where(value => !value.StartsWith("none yet", StringComparison.Ordinal))
             .SelectMany(value => value.Split('(')[0].Split(','))

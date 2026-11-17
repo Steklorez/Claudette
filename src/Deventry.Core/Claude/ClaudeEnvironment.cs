@@ -8,11 +8,13 @@ namespace Deventry.Core.Claude;
 public static class ClaudeEnvironment
 {
     /// <summary>
-    /// Variables that Claude Code sets for the processes it starts. If Deventry was itself started from inside a
-    /// Claude Code session, these are inherited and make <c>claude</c> behave as that session's child: in the
-    /// milestone 1 spike it ignored the given credentials and reported "Not logged in". User configuration such as
-    /// <c>CLAUDE_CONFIG_DIR</c> or <c>CLAUDE_CODE_USE_BEDROCK</c> is deliberately not on this list.
-    /// Tracked in compat/surface.yaml.
+    /// Variables that Claude Code, or Codex, sets for the processes it starts. If Deventry was itself started from inside
+    /// a Claude Code session, these are inherited and make <c>claude</c> behave as that session's child: in the
+    /// milestone 1 spike it ignored the given credentials and reported "Not logged in". Codex's are removed too, so a
+    /// <c>codex</c> or <c>claude</c> Deventry starts is a session of its own whichever agent Deventry was started from
+    /// (DESIGN.md §18, "Codex, a second agent"). User configuration such as <c>CLAUDE_CONFIG_DIR</c>,
+    /// <c>CLAUDE_CODE_USE_BEDROCK</c> or <c>CODEX_HOME</c> is deliberately not on this list.
+    /// Tracked in compat/surface.yaml and compat/codex-surface.yaml.
     /// </summary>
     public static readonly IReadOnlySet<string> SessionVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -31,6 +33,15 @@ public static class ClaudeEnvironment
         "CLAUDE_EFFORT",
         "CLAUDE_AGENT_SDK_VERSION",
         "AI_AGENT",
+        // Codex's, from the 2026-11-17 spike against Codex 0.169.0.
+        "CODEX_THREAD_ID",
+        "CODEX_SESSION_ID",
+        "CODEX_TOOL_CALL_ID",
+        "CODEX_CI",
+        "CODEX_SANDBOX",
+        "CODEX_SANDBOX_NETWORK_DISABLED",
+        "CODEX_VERSION",
+        "CODEX_APPLY_PATCH_PRESERVE_LINE_ENDINGS",
     };
 
     /// <summary>The current process environment, cleaned, with <paramref name="overrides"/> applied.</summary>

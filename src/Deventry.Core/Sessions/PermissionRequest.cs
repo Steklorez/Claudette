@@ -70,6 +70,22 @@ public sealed class PermissionRequest
         Raw = request;
     }
 
+    /// <summary>
+    /// Another agent's request to run a call (DESIGN.md §18, "Codex, a second agent"): Codex's approvals, which have no
+    /// rules or modes to suggest.
+    /// </summary>
+    internal PermissionRequest(string requestId, string toolName, string? toolUseId, JsonObject input, ToolCall call, string? reason)
+    {
+        RequestId = requestId;
+        ToolName = toolName;
+        ToolUseId = toolUseId;
+        Input = input;
+        Call = call;
+        DecisionReason = reason;
+        Suggestions = [];
+        Raw = [];
+    }
+
     public string RequestId { get; }
 
     public string ToolName { get; }

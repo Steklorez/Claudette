@@ -5,7 +5,7 @@ namespace Deventry.Core.Tests.Support;
 internal static class SessionEventExtensions
 {
     /// <summary>Reads events until one of type <typeparamref name="T"/> (matching <paramref name="match"/>) arrives.</summary>
-    public static async Task<(T Match, List<SessionEvent> Seen)> ReadUntilAsync<T>(this ClaudeSession session, Func<T, bool>? match = null, TimeSpan? timeout = null)
+    public static async Task<(T Match, List<SessionEvent> Seen)> ReadUntilAsync<T>(this IAgentSession session, Func<T, bool>? match = null, TimeSpan? timeout = null)
         where T : SessionEvent
     {
         using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(10));

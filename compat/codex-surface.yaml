@@ -1,0 +1,175 @@
+# Everything Deventry relies on from Codex (DESIGN.md §18, "Codex, a second agent"), as compat/surface.yaml is for
+# Claude Code (DESIGN.md §16).
+#
+# Rule: code that starts using something new from Codex adds an entry here in the same change.
+# `codex app-server generate-json-schema --experimental --out <folder>` writes the protocol's exact schema for a
+# version; compare it with the last tested version's when Codex updates.
+#
+# Fields: as compat/surface.yaml's. A method's `status` is experimental when it's behind `experimentalApi`.
+
+versions:
+  minimum: 0.169.0     # the version the 2026-11-17 spike recorded
+  lastTested: 0.169.0
+
+items:
+  # --- Launch ------------------------------------------------------------------------------------------
+  - id: "codex app-server"
+    kind: command
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: FakeCodexTests
+  - id: "-c project_doc_fallback_filenames"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: FakeCodexTests
+  - id: "CODEX_HOME"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
+    docs: https://learn.chatgpt.com/docs/config-file/environment-variables
+    test: FakeCodexTests
+  - id: "CODEX_THREAD_ID, CODEX_SESSION_ID, CODEX_TOOL_CALL_ID, CODEX_CI, CODEX_SANDBOX, CODEX_SANDBOX_NETWORK_DISABLED, CODEX_VERSION, CODEX_APPLY_PATCH_PRESERVE_LINE_ENDINGS"
+    kind: env
+    status: undocumented
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
+    test: FakeCodexTests
+    fallback: "Seen on a command Codex ran in the spike. Removed from what Deventry starts; a new one is only a session variable left in, which a `codex` Deventry starts may take as its parent's."
+
+  # --- Requests Deventry sends ---------------------------------------------------------------------------
+  - id: initialize
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: initialized
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: model/list
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: account/read
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/start
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/resume
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/settings/update
+    kind: control
+    status: experimental
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests
+    fallback: "Pass the model, effort, approval policy and sandbox policy on the next turn/start instead, which documents them as overrides for that turn and the ones after."
+  - id: thread/name/set
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: turn/start
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: turn/steer
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: turn/interrupt
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, FakeCodexTests
+
+  # --- What Codex sends ----------------------------------------------------------------------------------
+  - id: "turn/started, turn/completed"
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: "item/started, item/completed"
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.Core/Codex/CodexItems.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexItemsTests
+  - id: "item/agentMessage/delta, item/reasoning/summaryTextDelta, item/reasoning/summaryPartAdded"
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/tokenUsage/updated
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: account/rateLimits/updated
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: FakeCodexTests
+  - id: serverRequest/resolved
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: "item/commandExecution/requestApproval, item/fileChange/requestApproval"
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, FakeCodexTests
+  - id: "commandExecution.commandActions"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexItems.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexItemsTests
+  - id: "commandExecution.command (wrapped in the shell Codex runs it in)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexItems.cs
+    test: CodexItemsTests
+    fallback: "A wrapper the pattern doesn't know shows as it is; commandActions' own commands are preferred anyway."
+  - id: "fileChange.changes[].diff (an update's hunks without file headers, an add's whole content)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexItems.cs, src/Deventry.Core/Diffs/UnifiedHunks.cs
+    test: CodexSessionTests, UnifiedHunksTests
+    fallback: "Hunks that don't parse leave the change without a diff and its file's before unknown; Changed files still shows the file, from git."
+  - id: "userMessage.clientId (the clientUserMessageId a turn was started with)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests
+    fallback: "Without it the echo carries the item's own id, and a message's rewind point is that instead of Deventry's."

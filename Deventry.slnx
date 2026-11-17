@@ -16,6 +16,7 @@
   <Folder Name="/tools/">
     <Project Path="tools/Deventry.Demo/Deventry.Demo.csproj" />
     <Project Path="tools/Deventry.FakeClaude/Deventry.FakeClaude.csproj" />
+    <Project Path="tools/Deventry.FakeCodex/Deventry.FakeCodex.csproj" />
     <Project Path="tools/Deventry.Fixtures/Deventry.Fixtures.csproj" />
     <Project Path="tools/Deventry.MockApi/Deventry.MockApi.csproj" />
   </Folder>

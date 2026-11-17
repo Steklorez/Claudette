@@ -15,6 +15,12 @@ internal sealed class FakeTransport : IClaudeTransport
     /// <summary>Automatic answers to control requests, by subtype. The default answers <c>initialize</c> with <see cref="InitializeResponse"/>.</summary>
     public Dictionary<string, Func<JsonObject, JsonObject?>> AutoRespond { get; } = new();
 
+    /// <summary>
+    /// Automatic answers to JSON-RPC requests, by method, for a Codex session (DESIGN.md §18, "Codex, a second agent"):
+    /// given the request's params, the result to answer with, or null to leave it unanswered.
+    /// </summary>
+    public Dictionary<string, Func<JsonObject, JsonObject?>> AutoRespondRpc { get; } = new();
+
     public JsonObject InitializeResponse { get; set; } = new()
     {
         ["models"] = new JsonArray(new JsonObject
@@ -79,6 +85,11 @@ internal sealed class FakeTransport : IClaudeTransport
             done.TrySetResult(obj);
         }
 
+        if (obj["method"] is JsonValue method && obj["id"] is { } rpcId && AutoRespondRpc.TryGetValue(method.GetValue<string>(), out var rpc)
+            && rpc(obj["params"] as JsonObject ?? []) is { } rpcResult)
+        {
+            EmitJson(new JsonObject { ["id"] = rpcId.DeepClone(), ["result"] = rpcResult });
+        }
         if (obj["type"]?.GetValue<string>() == "control_request")
         {
             var requestId = obj["request_id"]!.GetValue<string>();

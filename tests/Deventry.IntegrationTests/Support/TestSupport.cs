@@ -37,9 +37,15 @@ internal static class FakeClaude
     public static string Path { get; } = System.IO.Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "fake-claude.exe" : "fake-claude");
 }
 
+internal static class FakeCodex
+{
+    /// <summary>The fake-codex executable, copied next to the tests by the project reference.</summary>
+    public static string Path { get; } = System.IO.Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "fake-codex.exe" : "fake-codex");
+}
+
 internal static class SessionEventExtensions
 {
-    public static async Task<(T Match, List<SessionEvent> Seen)> ReadUntilAsync<T>(this ClaudeSession session, Func<T, bool>? match = null, TimeSpan? timeout = null)
+    public static async Task<(T Match, List<SessionEvent> Seen)> ReadUntilAsync<T>(this IAgentSession session, Func<T, bool>? match = null, TimeSpan? timeout = null)
         where T : SessionEvent
     {
         using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(60));
