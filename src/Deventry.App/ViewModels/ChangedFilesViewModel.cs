@@ -316,9 +316,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         switch (sessionEvent)
         {
             case AssistantMessageReceived { Message: var message }:
-                foreach (var toolUse in message.Content.OfType<ToolUseBlock>().Where(t => ChangedFiles.IsFileTool(t.Name)))
+                foreach (var toolUse in message.Content.OfType<ToolUseBlock>().Where(t => t.Call.IsFileChange))
                 {
-                    Changes.RecordToolUse(toolUse.Id, toolUse.Name, toolUse.Input);
+                    Changes.RecordToolCall(toolUse.Id, toolUse.Call, toolUse.Input);
                 }
                 break;
             case ToolResultsReceived { Message: var results }:

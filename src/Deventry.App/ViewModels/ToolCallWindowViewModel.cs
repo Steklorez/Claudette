@@ -7,6 +7,7 @@ using Deventry.App.Services;
 using Deventry.Core;
 using Deventry.Core.Diffs;
 using Deventry.Core.Protocol;
+using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -99,9 +100,9 @@ public sealed partial class ToolCallWindowViewModel : ObservableObject, IDisposa
     public ToolCallView View => Tool switch
     {
         { IsBash: true } => ToolCallView.Command,
-        { Name: "Read" } when Tool.HasReadText || !Tool.IsComplete => ToolCallView.File,
+        { Call.Kind: ToolKind.Read } when Tool.HasReadText || !Tool.IsComplete => ToolCallView.File,
         { HasDiff: true } => ToolCallView.Diff,
-        { Name: "Grep" or "Glob" } => ToolCallView.Search,
+        { Call.Kind: ToolKind.Search or ToolKind.Find } => ToolCallView.Search,
         _ => ToolCallView.Other,
     };
 
@@ -227,7 +228,7 @@ public sealed partial class ToolCallWindowViewModel : ObservableObject, IDisposa
         {
             return [];
         }
-        if (tool.Name == "Grep" && tool.ResultInfo?.GrepMode == "content" && tool.Output is { } output)
+        if (tool.Call.Kind == ToolKind.Search && tool.ResultInfo?.GrepMode == "content" && tool.Output is { } output)
         {
             var files = new List<(string Path, List<SearchMatch> Matches)>();
             foreach (var line in output.ReplaceLineEndings("\n").Split('\n'))

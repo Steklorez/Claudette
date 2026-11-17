@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
 using Deventry.Core.Claude;
 using Deventry.Core.Protocol;
@@ -36,7 +35,7 @@ public sealed partial class TabViewModel
     }
 
     /// <summary>The main agent's tool calls that haven't had their result yet, oldest first.</summary>
-    private readonly List<(string Id, string Name, JsonObject Input)> _runningTools = [];
+    private readonly List<(string Id, ToolCall Call)> _runningTools = [];
 
     /// <summary>
     /// Follows the main agent's tool calls for the working line: a call runs from its <c>tool_use</c> to its result.
@@ -52,7 +51,7 @@ public sealed partial class TabViewModel
                 {
                     if (_runningTools.All(t => t.Id != block.Id))
                     {
-                        _runningTools.Add((block.Id, block.Name, block.Input));
+                        _runningTools.Add((block.Id, block.Call));
                         changed = true;
                     }
                 }
@@ -70,7 +69,7 @@ public sealed partial class TabViewModel
         }
         if (changed)
         {
-            (string Name, JsonObject Input)[] running = [.. _runningTools.Select(t => (t.Name, t.Input))];
+            ToolCall[] running = [.. _runningTools.Select(t => t.Call)];
             Working.SetActivity(ToolActivity.Describe(running), ToolActivity.Details(running));
             // What Joulene on the composer works with goes by the newest tool (DESIGN.md §5).
             TellMascot();

@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Deventry.Core.Sessions;
 
 namespace Deventry.Core.Protocol;
 
@@ -9,7 +10,20 @@ public sealed record TextBlock(string Text, JsonObject Raw) : ContentBlock("text
 
 public sealed record ThinkingBlock(string Thinking, JsonObject Raw) : ContentBlock("thinking", Raw);
 
-public sealed record ToolUseBlock(string Id, string Name, JsonObject Input, JsonObject Raw) : ContentBlock("tool_use", Raw);
+public sealed record ToolUseBlock(string Id, string Name, JsonObject Input, JsonObject Raw) : ContentBlock("tool_use", Raw)
+{
+    private ToolCall? _call;
+
+    /// <summary>
+    /// What the call does (DESIGN.md §18, "Codex, a second agent"): read from Claude Code's tool name and input, or given
+    /// by the agent's session as it made the block.
+    /// </summary>
+    public ToolCall Call
+    {
+        get => _call ??= ClaudeToolCalls.From(Name, Input);
+        init => _call = value;
+    }
+}
 
 public sealed record ToolResultBlock(string ToolUseId, string Text, bool IsError, JsonObject Raw) : ContentBlock("tool_result", Raw)
 {
@@ -18,6 +32,9 @@ public sealed record ToolResultBlock(string ToolUseId, string Text, bool IsError
     /// pages or a notebook's figures, Bash output that's an image, an MCP tool's screenshot.
     /// </summary>
     public IReadOnlyList<MessageImage> Images { get; init; } = [];
+
+    /// <summary>A command's exit code, where the agent reports it apart from the result's text.</summary>
+    public int? ExitCode { get; init; }
 }
 
 /// <summary>A block type Deventry doesn't know yet.</summary>

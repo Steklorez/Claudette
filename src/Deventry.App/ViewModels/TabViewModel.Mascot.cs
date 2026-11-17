@@ -34,7 +34,7 @@ public sealed partial class TabViewModel
                 TabStatus.NeedsInput => MascotMood.Waiting,
                 _ => MascotMood.Idle,
             },
-        Tool = Status == TabStatus.Working && _runningTools.Count > 0 ? MascotTools.For(_runningTools[^1].Name) : MascotTool.None,
+        Tool = Status == TabStatus.Working && _runningTools.Count > 0 ? MascotTools.For(_runningTools[^1].Call) : MascotTool.None,
         Agents = Agents.ActiveCount,
         Planning = PermissionMode == "plan",
         ContextFull = Context.IsHigh,

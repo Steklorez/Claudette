@@ -59,6 +59,7 @@ public sealed class PermissionRequest
         Description = request.GetString("description");
         ToolUseId = request.GetString("tool_use_id");
         Input = request.GetObject("input") ?? [];
+        Call = ClaudeToolCalls.From(ToolName, Input);
         Suggestions = request.GetArray("permission_suggestions")?.OfType<JsonObject>().ToArray() ?? [];
         // Only the TypeScript option names are documented; accept the snake_case wire spelling too.
         DecisionReason = request.GetString("decision_reason") ?? request.GetString("decisionReason");
@@ -80,6 +81,9 @@ public sealed class PermissionRequest
     public string? ToolUseId { get; }
 
     public JsonObject Input { get; }
+
+    /// <summary>What the call asking does, whichever agent made it (DESIGN.md §18, "Codex, a second agent").</summary>
+    public ToolCall Call { get; }
 
     /// <summary>Claude Code's suggested updates, such as <c>addRules</c> for <c>localSettings</c> or <c>setMode</c>.</summary>
     public IReadOnlyList<JsonObject> Suggestions { get; }

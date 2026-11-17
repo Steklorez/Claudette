@@ -208,9 +208,9 @@ public sealed class AgentMap
         parent.Refresh();
     }
 
-    internal void OnToolUse(AgentNode agent, string toolUseId, string name, JsonObject input)
+    internal void OnToolUse(AgentNode agent, string toolUseId, ToolCall call, JsonObject input)
     {
-        agent.OnToolUse(name, input);
+        agent.OnToolUse(call, input);
         _toolCallOwners[toolUseId] = agent;
         // A subagent's permission request can arrive before the tool call it's for.
         foreach (var prompt in _unattributed.Where(p => p.Request.ToolUseId == toolUseId).ToArray())

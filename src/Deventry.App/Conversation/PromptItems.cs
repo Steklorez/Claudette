@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Deventry.App.ViewModels;
-using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -102,33 +101,37 @@ public abstract partial class PromptItem(PermissionRequest request) : Conversati
 /// </summary>
 public sealed partial class PermissionItem : PromptItem
 {
-    private static readonly string[] EditTools = ["Edit", "Write", "MultiEdit", "NotebookEdit"];
-
     public PermissionItem(PermissionRequest request) : base(request)
     {
         var input = request.Input;
         var name = request.DisplayName ?? request.ToolName;
-        var path = Str(input, "file_path") ?? Str(input, "notebook_path");
-        Title = request.ToolName switch
+        var call = request.Call;
+        var path = call.Path;
+        Title = call.Kind switch
         {
-            "Bash" => "Allow this command?",
-            "Write" when path is not null && !File.Exists(path) => $"Allow creating {Path.GetFileName(path)}?",
-            _ when EditTools.Contains(request.ToolName) && path is not null => $"Allow editing {Path.GetFileName(path)}?",
-            "WebFetch" => "Allow fetching this page?",
+            ToolKind.Command => "Allow this command?",
+            ToolKind.Write when path is not null && !File.Exists(path) => $"Allow creating {Path.GetFileName(path)}?",
+            ToolKind.Edit or ToolKind.Write when path is not null => $"Allow editing {Path.GetFileName(path)}?",
+            ToolKind.Delete when path is not null => $"Allow deleting {Path.GetFileName(path)}?",
+            ToolKind.WebFetch => "Allow fetching this page?",
             _ => $"Allow {name}?",
         };
-        Command = request.ToolName == "Bash" ? Str(input, "command") : null;
-        IsUnsandboxed = request.ToolName == "Bash" && input["dangerouslyDisableSandbox"] is JsonValue unsandboxed && unsandboxed.GetValueKind() == JsonValueKind.True;
-        Detail = Command is not null ? null : ToolUseItem.Summarize(request.ToolName, input) is { Length: > 0 } summary ? summary : null;
+        Command = call.Kind == ToolKind.Command ? call.Command : null;
+        IsUnsandboxed = call.Kind == ToolKind.Command && input["dangerouslyDisableSandbox"] is JsonValue unsandboxed && unsandboxed.GetValueKind() == JsonValueKind.True;
+        Detail = Command is not null ? null : ToolUseItem.Summarize(call, input) is { Length: > 0 } summary ? summary : null;
         Description = request.Description is { } description && description != Detail && description != Path.GetFileName(path ?? "") ? description : null;
         Reason = request.DecisionReason;
-        if (request.ToolName == "Edit" && Str(input, "old_string") is { } oldText && Str(input, "new_string") is { } newText)
+        if (call.Kind == ToolKind.Edit && call.OldText is { } oldText && call.NewText is { } newText)
         {
             Diff = DiffView.FromReplacement(oldText, newText);
         }
-        else if (request.ToolName == "Write" && Str(input, "content") is { } content)
+        else if (call.Kind == ToolKind.Write && call.Content is { } content)
         {
             Diff = DiffView.FromNewFile(content);
+        }
+        else if (call.Hunks is { Length: > 0 } hunks)
+        {
+            Diff = DiffView.FromStructuredPatch(Core.Diffs.UnifiedHunks.ToStructuredPatch(hunks));
         }
 
         SuggestedRules = request.SuppressAlwaysAllowRule ? [] : request.SuggestedRules;
@@ -328,8 +331,6 @@ public sealed partial class PermissionItem : PromptItem
         Deny();
         return true;
     }
-
-    private static string? Str(JsonObject obj, string name) => obj.GetString(name);
 }
 
 /// <summary>One option of a clarifying question.</summary>

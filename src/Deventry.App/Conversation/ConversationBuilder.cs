@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
-using Deventry.Core.Diffs;
 using Deventry.Core.Docs;
 using Deventry.Core.Media;
 using Deventry.Core.Protocol;
@@ -756,11 +755,11 @@ public sealed class ConversationBuilder
                     }
                     if (_agents is not null && _agent is not null)
                     {
-                        _agents.OnToolUse(_agent, toolUse.Id, toolUse.Name, toolUse.Input);
+                        _agents.OnToolUse(_agent, toolUse.Id, toolUse.Call, toolUse.Input);
                     }
-                    if (toolUse.Name is "Agent" or "Task")
+                    if (toolUse.Call.Kind == ToolKind.Agent)
                     {
-                        var subagent = new SubagentItem(toolUse.Id, toolUse.Name, toolUse.Input);
+                        var subagent = new SubagentItem(toolUse.Id, toolUse.Name, toolUse.Input, toolUse.Call);
                         StampCall(subagent);
                         var child = new ConversationBuilder(subagent.Items, todoList: null, _modelName) { _parent = this, _todoList = _todoList };
                         // Its traffic fills its group and its node in the agent map, under this agent.
@@ -775,7 +774,7 @@ public sealed class ConversationBuilder
                     }
                     else
                     {
-                        var tool = new ToolUseItem(toolUse.Id, toolUse.Name, toolUse.Input);
+                        var tool = new ToolUseItem(toolUse.Id, toolUse.Name, toolUse.Input, toolUse.Call);
                         StampCall(tool);
                         _toolUses[toolUse.Id] = tool;
                         AddToolCard(tool);
@@ -832,7 +831,7 @@ public sealed class ConversationBuilder
     /// <summary>A file a tool reads or changes, for <see cref="FilePaths"/>.</summary>
     private void TrackFile(ToolUseBlock toolUse)
     {
-        if ((toolUse.Input.GetString("file_path") ?? toolUse.Input.GetString("notebook_path")) is { Length: > 0 } path)
+        if (toolUse.Call.Path is { Length: > 0 } path)
         {
             var files = Root._filePaths;
             files.Remove(path);
@@ -843,8 +842,8 @@ public sealed class ConversationBuilder
     /// <summary>A file change counts toward the task in progress, once it's made (DESIGN.md §5, "What each task did").</summary>
     private void TrackTaskFile(ToolUseBlock toolUse)
     {
-        if (_todoList is not null && ChangedFiles.IsFileTool(toolUse.Name)
-            && (toolUse.Input.GetString("file_path") ?? toolUse.Input.GetString("notebook_path")) is { } path
+        if (_todoList is not null && toolUse.Call.IsFileChange
+            && toolUse.Call.Path is { } path
             && _todoList.TaskFor(AgentChain()) is { } task)
         {
             _taskFiles[toolUse.Id] = (task, path);
@@ -961,10 +960,10 @@ public sealed class ConversationBuilder
             return;
         }
         // A Read of an image has the image itself, which is what Claude saw.
-        IReadOnlyList<ReplyFileReference> named = tool.Images.Count > 0 ? [] : tool.Name switch
+        IReadOnlyList<ReplyFileReference> named = tool.Images.Count > 0 ? [] : tool.Call.Kind switch
         {
-            "Bash" or "PowerShell" when tool.Input.GetString("command") is { } command => MediaFiles.InCommand(command),
-            "Read" or "Write" or "Edit" or "MultiEdit" when tool.Input.GetString("file_path") is { Length: > 0 } path && MediaFiles.KindOf(path) is not null =>
+            ToolKind.Command when tool.Call.Command is { } command => MediaFiles.InCommand(command),
+            ToolKind.Read or ToolKind.Write or ToolKind.Edit when tool.Call.Path is { Length: > 0 } path && MediaFiles.KindOf(path) is not null =>
                 [new ReplyFileReference(path, path)],
             _ => [],
         };

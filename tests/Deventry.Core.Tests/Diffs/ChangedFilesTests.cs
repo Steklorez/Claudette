@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Deventry.Core.Diffs;
 using Deventry.Core.ProjectFiles;
+using Deventry.Core.Sessions;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Deventry.Core.Tests.Diffs;
@@ -663,4 +664,48 @@ public sealed class ChangedFilesTests : IDisposable
     }
 
     private static string Json(string value) => System.Text.Json.JsonSerializer.Serialize(value);
+
+    [Fact]
+    public void A_change_reported_as_hunks_is_taken_back_from_the_file_for_its_before()
+    {
+        // Codex reports an edit as hunks once it's made (DESIGN.md §18, "Codex, a second agent").
+        var path = PathOf("README.md");
+        File.WriteAllText(path, "# Spike repo, edited\nsecond\n");
+        var call = new ToolCall(ToolKind.Edit, "Edit file") { Path = path, Hunks = "@@ -1 +1 @@\n-# Spike repo\n+# Spike repo, edited\n" };
+
+        _files.RecordToolCall("c1", call, []);
+        var file = _files.RecordToolResult("c1", false, null);
+
+        Assert.NotNull(file);
+        Assert.Equal("# Spike repo\nsecond\n", file.Before);
+        Assert.True(file.BeforeKnown);
+        Assert.False(file.IsNew);
+        Assert.Equal("# Spike repo, edited\nsecond\n", file.After);
+        Assert.True(file.AfterKnown);
+        Assert.Equal(path, Assert.Single(_files.TakeTurn()).Path);
+    }
+
+    [Fact]
+    public void A_new_file_reported_with_its_content_is_new()
+    {
+        var path = PathOf("notes.txt");
+        var call = new ToolCall(ToolKind.Write, "Create file") { Path = path, Content = "written\n" };
+
+        _files.RecordToolCall("c1", call, []);
+        var file = _files.RecordToolResult("c1", false, null);
+
+        Assert.NotNull(file);
+        Assert.True(file.IsNew);
+        Assert.True(file.BeforeKnown);
+        Assert.Equal("written\n", file.After);
+    }
+
+    [Fact]
+    public void Calls_that_change_no_file_are_passed_over()
+    {
+        _files.RecordToolCall("c1", new ToolCall(ToolKind.Command, "Shell") { Command = "git status" }, []);
+
+        Assert.Null(_files.RecordToolResult("c1", false, null));
+        Assert.Empty(_files.Files);
+    }
 }

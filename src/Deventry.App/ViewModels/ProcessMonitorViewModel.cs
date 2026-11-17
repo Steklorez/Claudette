@@ -266,7 +266,7 @@ public sealed partial class ProcessMonitorViewModel : ViewModelBase
         {
             _processTools.Remove(gone);
         }
-        var running = _host.ToolItems.LastOrDefault(t => t is { Name: "Bash", IsComplete: false });
+        var running = _host.ToolItems.LastOrDefault(t => t is { Call.Kind: ToolKind.Command, IsComplete: false });
         foreach (var snapshot in snapshots.Where(s => !s.IsRoot && !_processTools.ContainsKey(s.Pid)))
         {
             if (running is not null)
