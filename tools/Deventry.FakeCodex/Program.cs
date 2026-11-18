@@ -29,7 +29,8 @@
 // A thread's finished items are kept in deventry-turns/<thread>.jsonl in CODEX_HOME (as the demo writes its Codex tab's), which "thread/turns/list" reads back and
 // without which "thread/read" and "thread/resume" fail, as Codex's do for a thread it has no rollout of; its prompts and replies go in
 // its rollout too, for History.
-// Each turn spends 1,200 input tokens (800 of them cached) and 40 output tokens of gpt-fake-1. A message steered into a
+// Its models are gpt-fake-1, the default, and the demo's Codex tab's, gpt-5.5-codex; a thread starts or resumes with the one it's
+// given. Each turn spends 1,200 input tokens (800 of them cached) and 40 output tokens of the thread's model. A message steered into a
 // running turn ("turn/steer") ends it with "steered: <message>".
 using System.Collections.Concurrent;
 using System.Text;
@@ -166,20 +167,7 @@ internal sealed class AppServer(string version, string home, string sandbox)
                 Respond(id, new JsonObject { ["userAgent"] = $"deventry/{version} (fake)", ["platformOs"] = OperatingSystem.IsWindows() ? "windows" : "unix" });
                 break;
             case "model/list":
-                Respond(id, new JsonObject
-                {
-                    ["data"] = new JsonArray(new JsonObject
-                    {
-                        ["id"] = "gpt-fake-1",
-                        ["model"] = "gpt-fake-1",
-                        ["displayName"] = "GPT Fake 1",
-                        ["description"] = "fake-codex's only model",
-                        ["hidden"] = false,
-                        ["isDefault"] = true,
-                        ["defaultReasoningEffort"] = "medium",
-                        ["supportedReasoningEfforts"] = new JsonArray(Effort("low"), Effort("medium"), Effort("high")),
-                    }),
-                });
+                Respond(id, new JsonObject { ["data"] = new JsonArray(Model("gpt-fake-1", "GPT Fake 1", isDefault: true), Model("gpt-5.5-codex", "GPT-5.5-Codex", isDefault: false)) });
                 break;
             case "account/read":
                 Respond(id, Auth.IsSignedIn(home)
@@ -218,6 +206,7 @@ internal sealed class AppServer(string version, string home, string sandbox)
             case "thread/resume":
                 var resumed = parameters["threadId"]!.GetValue<string>();
                 _thread = resumed;
+                _model = parameters["model"]?.GetValue<string>() ?? _model;
                 _rollout = Directory.Exists(Path.Combine(home, "sessions"))
                     ? Directory.EnumerateFiles(Path.Combine(home, "sessions"), $"rollout-*-{resumed}.jsonl", SearchOption.AllDirectories).FirstOrDefault()
                     : null;
@@ -500,6 +489,19 @@ internal sealed class AppServer(string version, string home, string sandbox)
         }.ToJsonString() + "\n");
         return path;
     }
+
+    /// <summary>A model for "model/list": its own, and the demo's Codex tab's (`DemoCodex.Model`), which the tab resumes with.</summary>
+    private static JsonObject Model(string model, string name, bool isDefault) => new()
+    {
+        ["id"] = model,
+        ["model"] = model,
+        ["displayName"] = name,
+        ["description"] = $"fake-codex's {name}",
+        ["hidden"] = false,
+        ["isDefault"] = isDefault,
+        ["defaultReasoningEffort"] = "medium",
+        ["supportedReasoningEfforts"] = new JsonArray(Effort("low"), Effort("medium"), Effort("high")),
+    };
 
     private static JsonObject Effort(string level) => new() { ["reasoningEffort"] = level, ["description"] = level };
 

@@ -26,6 +26,9 @@ public partial class TabViewModel
     /// <summary>The agent's icon, by its key in App.axaml (DESIGN.md §18, "Its icon").</summary>
     public string AgentIconKey => IsCodex ? "IconAgentCodex" : "IconAgentClaudeCode";
 
+    /// <summary>The icon on the agent's replies: Claude's own card icon, or the agent's.</summary>
+    public string ReplyIconKey => IsCodex ? "IconAgentCodex" : "IconCardClaude";
+
     /// <summary>The row shows the agent's icon: while tabs of more than one agent are open, which the shell says.</summary>
     [ObservableProperty]
     public partial bool ShowsAgentIcon { get; set; }

@@ -11,6 +11,8 @@ summary: "Installing Codex, signing in to it, and what Deventry sets up for it."
 
 Deventry runs the Codex you have installed, signed in with your own ChatGPT account. It can install Codex for you, and sign you in the way Codex's own `codex login` does.
 
+{% include shot.html name="guide/codex/settings-codex" alt="Settings → Agents → Codex: Found, with Codex's version and where it is, and Look again; Path to codex; Account, signed in using ChatGPT, with Sign out; and New Codex tabs, with their Model and Mode." %}
+
 ## Installing Codex
 
 Deventry looks for Codex as it starts: on your `PATH`, and where Codex's installer puts it.

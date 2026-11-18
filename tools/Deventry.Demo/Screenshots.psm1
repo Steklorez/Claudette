@@ -707,6 +707,9 @@ function Start-Deventry([string] $app, [string] $work, [hashtable] $environment 
     $start.EnvironmentVariables['DEVENTRY_HOME'] = Join-Path $work 'home'
     $start.EnvironmentVariables['CLAUDE_CONFIG_DIR'] = Join-Path $work 'claude-config'
     $start.EnvironmentVariables['FAKE_CLAUDE_USAGE'] = Join-Path $work 'usage.json'
+    # The demo's own Codex folder, for its Codex tab, whose usage fake-codex reports.
+    $start.EnvironmentVariables['CODEX_HOME'] = Join-Path $work 'codex-home'
+    $start.EnvironmentVariables['FAKE_CODEX_USAGE'] = 'demo'
     $start.EnvironmentVariables['CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'] = '1'
     # A source build otherwise copies itself to its data folder and runs from there.
     $start.EnvironmentVariables['DEVENTRY_RUN_IN_PLACE'] = '1'

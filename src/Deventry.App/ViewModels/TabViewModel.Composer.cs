@@ -176,7 +176,7 @@ public sealed partial class TabViewModel
     public partial string? PromptSuggestion { get; private set; }
 
     /// <summary>The composer's placeholder: the suggestion, with the key that takes it, or which keys send.</summary>
-    public string ComposerPlaceholder => PromptSuggestion is { } suggestion ? $"{suggestion}  (Tab to use)" : Tips.ComposerPlaceholder;
+    public string ComposerPlaceholder => PromptSuggestion is { } suggestion ? $"{suggestion}  (Tab to use)" : Tips.ComposerPlaceholderFor(AgentShortName);
 
     /// <summary>
     /// The send key chip in the composer's bar (DESIGN.md §5, "Composer"): Enter sends, or Ctrl/Cmd+Enter does. It's

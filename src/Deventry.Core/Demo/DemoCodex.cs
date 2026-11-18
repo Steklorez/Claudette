@@ -169,7 +169,7 @@ public static class DemoCodex
             : new JsonObject { ["type"] = kind, ["command"] = command, ["name"] = Path.GetFileName(path), ["path"] = path }),
         ["status"] = "completed",
         ["aggregatedOutput"] = output,
-        ["exitCode"] = output.Length == 0 && kind == "search" ? 1 : 0,
+        ["exitCode"] = 0,
     };
 
     private static JsonObject FileChange(string id, string path, string content) => new()

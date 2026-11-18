@@ -158,13 +158,13 @@ public sealed class ShortcutTips(AppSettings settings) : ObservableObject
     public string Deny => Text(KeyboardShortcuts.DenyPrompt) ?? "";
 
     /// <summary>The composer's placeholder: which key sends, which starts a new line (Settings → Keyboard → Send with), and Stop.</summary>
-    public string ComposerPlaceholder
+    public string ComposerPlaceholder => ComposerPlaceholderFor("Claude");
+
+    /// <summary><see cref="ComposerPlaceholder"/> for a tab of <paramref name="agent"/>: "Claude", "Codex".</summary>
+    public string ComposerPlaceholderFor(string agent)
     {
-        get
-        {
-            var keys = SendsWithPrimaryEnter ? $"{PrimaryEnter} to send, Enter for a new line" : "Enter to send, Shift+Enter for a new line";
-            return Text(KeyboardShortcuts.Stop) is { } stop ? $"Message Claude…  ({keys}, {stop} to stop)" : $"Message Claude…  ({keys})";
-        }
+        var keys = SendsWithPrimaryEnter ? $"{PrimaryEnter} to send, Enter for a new line" : "Enter to send, Shift+Enter for a new line";
+        return Text(KeyboardShortcuts.Stop) is { } stop ? $"Message {agent}…  ({keys}, {stop} to stop)" : $"Message {agent}…  ({keys})";
     }
 
     // ---- Send with (DESIGN.md §14), on the composer's send key chip and Send (DESIGN.md §5, "Composer") ------------

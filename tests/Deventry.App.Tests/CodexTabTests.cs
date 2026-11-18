@@ -31,6 +31,8 @@ public sealed class CodexTabTests
 
         Assert.True(tab.IsCodex);
         Assert.Equal("Codex", tab.AgentShortName);
+        Assert.StartsWith("Message Codex…", tab.ComposerPlaceholder, StringComparison.Ordinal);
+        Assert.Equal("IconAgentCodex", tab.ReplyIconKey);
         var launch = Assert.Single(h.CodexFactory.Launches);
         Assert.Equal(h.WorkFolder, launch.Start.WorkingDirectory);
         Assert.Contains(CodexArguments.ClaudeMdFallback, launch.ConfigOverrides);

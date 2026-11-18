@@ -331,9 +331,12 @@
       </controls:Card>
     </DataTemplate>
 
-    <!-- Claude's reply: a Claude card, quieter once Claude carried on working after it (DESIGN.md §18, "Conversation cards"). -->
+    <!-- The agent's reply: a Claude card, quieter once the agent carried on working after it (DESIGN.md §18, "Conversation cards"),
+         named for the tab's agent, Claude or Codex (DESIGN.md §18, "Codex, a second agent", "Words"). -->
     <DataTemplate DataType="conv:AssistantTextItem">
-      <controls:Card Classes="claude" Classes.quiet="{Binding IsIntermediate}" Label="Claude" Icon="{StaticResource IconCardClaude}"
+      <controls:Card Classes="claude" Classes.quiet="{Binding IsIntermediate}"
+                     Label="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).AgentShortName, FallbackValue=Claude}"
+                     Icon="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ReplyIconKey, FallbackValue=IconCardClaude, Converter={x:Static conv:ToolIcons.Geometry}}"
                      TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" Actions="{Binding}" ActionsTemplate="{StaticResource ReplyTools}"
                      Extra="{Binding Steps}" ExtraTemplate="{StaticResource StepsPill}">
         <StackPanel>
