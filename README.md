@@ -8,7 +8,7 @@ It isn't a reimplementation. Each tab runs the real `claude` CLI, with your sett
 
 **[deventry.app](https://deventry.app)** · [Download](https://deventry.app/downloads/) · [The user guide](https://deventry.app/guide/) · [Changelog](CHANGELOG.md)
 
-![Deventry: seven tabs over three game projects, a C++ conversation with tool calls and a code block, the Changed files panel, the plan usage header, and Joulene, the mascot, standing on the message box](docs/screenshots/standard-dark.png)
+![Deventry: eight tabs over three game projects, one of them Codex's, a C++ conversation with tool calls and a code block, the Changed files panel, the plan usage header, and Joulene, the mascot, standing on the message box](docs/screenshots/standard-dark.png)
 
 ## What it does
 
@@ -96,7 +96,7 @@ You need [Claude Code](https://code.claude.com/docs) installed. Deventry finds `
 
 ### Try it without an account
 
-`tools/Deventry.Demo` builds a demo, the one in these screenshots: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads and two on a studio's API key, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
+`tools/Deventry.Demo` builds a demo, the one in these screenshots: three game projects (Unreal in C++, Unity in C#, and Godot), eight tabs including a thread with two sub-threads, two on a studio's API key and one on Codex, past sessions for History, and a usage history, with stand-ins for Claude Code and Codex. It needs no account and spends no tokens.
 
 ```sh
 dotnet run --project tools/Deventry.Demo -- <empty folder>

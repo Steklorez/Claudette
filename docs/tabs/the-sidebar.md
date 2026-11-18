@@ -9,7 +9,7 @@ summary: "The sidebar lists your tabs down the left of the window, grouped by wo
 
 The sidebar lists your tabs down the left of the window, grouped by working folder, so long session names, a status line and many tabs all fit. Each tab is one row with two lines.
 
-{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
+{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and eight tabs, each with its agent's icon, one of them Codex's, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
 
 ## A tab's row
 

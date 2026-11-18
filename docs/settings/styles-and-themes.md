@@ -19,7 +19,7 @@ Settings → Appearance → **Theme** is **System**, **Light** or **Dark**. **Sy
 
 Settings → Appearance → **Style** is **Standard** (the default), **Claude** or **Codex**. The layout, the tool rows, the diffs and every control are the same in all three. So are the islands: the sidebar, each pane and each tool window are rounded panels with a gap between them, on the window's frame, which the header and the strip of tool window icons sit on. The look changes.
 
-{% include shot.html name="standard" alt="Deventry in the Standard style: seven tabs over three game projects in the sidebar, a C++ conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header and Deventry standing on the message box" %}
+{% include shot.html name="standard" alt="Deventry in the Standard style: eight tabs over three game projects in the sidebar, one of them Codex's, a C++ conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header and Deventry standing on the message box" %}
 
 **Standard** takes JetBrains Rider as its reference, in its Islands colors: a grey frame with darker panels in dark, white panels on light grey in light, and Rider's blue for selection, the usage meters, checked boxes and the icon of a tool window showing. Its type is Rider's too, Inter for the interface and JetBrains Mono for code, which come with Deventry, so it looks the same on every system. The conversation keeps the dense, calm layout of Claude Code's extension for Visual Studio Code: diffs are inline, in red and green, and code takes Visual Studio Code's Light+ and Dark+ colors. The composer is a rounded box, and Send and Stop are round buttons: an arrow in the accent color, and a square.
 

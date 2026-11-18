@@ -108,7 +108,7 @@ function Shot([string] $name, [scriptblock] $steps) {
 function Show-Tabs {
     Set-Step 'visiting the tabs'
     $tabs = 'Stamina drains twice on clients', 'Inventory loses items on save', 'Move to the Input System', 'UI on the Input System',
-        'Gamepad rumble', 'Pool particle emitters', 'Grappling hook'
+        'Gamepad rumble', 'Pool particle emitters', 'Load older inventory saves', 'Grappling hook'
     foreach ($text in $tabs) {
         Invoke-ByText $window $text
         Wait-Settled $window

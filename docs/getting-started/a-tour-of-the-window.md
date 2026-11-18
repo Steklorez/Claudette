@@ -9,7 +9,7 @@ summary: "The usage header, the sidebar, the conversation, the tool windows and 
 
 The window has five parts: the usage header across the top, the sidebar on the left, the conversation in the middle, the tool windows on the right and the composer under the conversation. This page names each part and says where to read more.
 
-{% include shot.html name="standard" alt="Deventry's window: seven tabs over three game projects in the sidebar, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Joulene standing on the message box" %}
+{% include shot.html name="standard" alt="Deventry's window: eight tabs over three game projects in the sidebar, one of them Codex's, a conversation with tool calls and a code block, the Changed files tool window, the plan's usage in the header, and Joulene standing on the message box" %}
 
 ## The header
 

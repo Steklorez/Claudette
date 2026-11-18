@@ -77,7 +77,7 @@ See [Command line and environment](../reference/command-line-and-environment.md)
 
 ## Try it without an account
 
-`tools/Deventry.Demo` makes a demo: three game projects (Unreal in C++, Unity in C#, and Godot), seven tabs including a thread with two sub-threads, past sessions for History, and a usage history, with a stand-in for Claude Code. It needs no account and spends no tokens.
+`tools/Deventry.Demo` makes a demo: three game projects (Unreal in C++, Unity in C#, and Godot), eight tabs including a thread with two sub-threads and one on Codex, past sessions for History, and a usage history, with stand-ins for Claude Code and Codex. It needs no account and spends no tokens.
 
 ```sh
 dotnet run --project tools/Deventry.Demo -- <empty folder>

@@ -2,12 +2,12 @@
 title: Trying the demo
 parent: Getting started
 nav_order: 6
-summary: "Look around Deventry on made-up projects, with a stand-in for Claude, without an account."
+summary: "Look around Deventry on made-up projects, with stand-ins for Claude and Codex, without an account."
 ---
 
 # Trying the demo
 
-The demo is Deventry on made-up projects, with a stand-in for Claude, so you can see what it's like before you have a Claude subscription, or show it to someone who hasn't. It needs no account and no Claude Code, works offline, and costs nothing.
+The demo is Deventry on made-up projects, with stand-ins for Claude and Codex, so you can see what it's like before you have a Claude subscription, or show it to someone who hasn't. It needs no account and no Claude Code, works offline, and costs nothing.
 
 ## Starting it
 
@@ -20,7 +20,7 @@ The demo opens in a window of its own, titled *Deventry demo*. The window you st
 
 ## What's in it
 
-Three game projects, an Unreal one, a Unity one and a Godot one, with seven tabs over them: a long conversation with Claude's changes, a thread with two sub-threads, a plan and a task list part-way done, subagents and marks. History lists past sessions over seven projects, the usage header shows a session part-way through with its trend and projection, and one project runs on an API-key account, *Studio*, with a month of its spend.
+Three game projects, an Unreal one, a Unity one and a Godot one, with eight tabs over them: a long conversation with Claude's changes, a thread with two sub-threads, a plan and a task list part-way done, subagents and marks, and a [Codex](../codex/index.md) tab. History lists past sessions over seven projects, the usage header shows a session part-way through with its trend and projection, and one project runs on an API-key account, *Studio*, with a month of its spend.
 
 The projects have no files: their folders are empty, so a diff or the Files tab has nothing to show.
 

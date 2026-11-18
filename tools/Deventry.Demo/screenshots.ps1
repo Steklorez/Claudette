@@ -75,7 +75,7 @@ foreach ($style in $Styles) {
             # A tab loads its session when it's first shown: visit each, then come back to the first.
             Set-Step 'visiting the tabs'
             $tabs = 'Stamina drains twice on clients', 'Inventory loses items on save', 'Move to the Input System', 'UI on the Input System',
-                'Gamepad rumble', 'Pool particle emitters', 'Grappling hook', 'Files (5)'
+                'Gamepad rumble', 'Pool particle emitters', 'Load older inventory saves', 'Grappling hook', 'Files (5)'
             foreach ($text in $tabs) {
                 Invoke-ByText $window $text
                 Start-Sleep -Seconds 2

@@ -9,7 +9,7 @@ summary: "Every status icon, badge and dot in Deventry's window, what it means, 
 
 Every status icon, badge and dot in Deventry's window, what it means, and the page that explains it. Hovering an icon shows a tooltip that says the same.
 
-{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and seven tabs, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
+{% include shot.html name="guide/tabs/sidebar" alt="The sidebar with three folder groups and eight tabs, each with its agent's icon, one of them Codex's, showing branches, marks, context rings and a tab's finished subagents washed in green." %}
 
 ## What a tab is doing
 
