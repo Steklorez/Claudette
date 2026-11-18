@@ -88,6 +88,8 @@ public partial class TabViewModel
                     WorkingDirectory = Folder,
                     Resume = resume,
                     Fork = fork,
+                    // Up to the point a rewind or branch goes back to (DESIGN.md §18, "Rewind and branch").
+                    ForkAfter = fork ? State.ResumeAt : null,
                     Model = State.Overrides.Model ?? settings.Codex.DefaultModel,
                     Effort = State.Overrides.Effort,
                     Mode = mode,
@@ -116,6 +118,8 @@ public partial class TabViewModel
                 // A copy has its own thread from the start, and the original is left as it was.
                 RecordSessionOrigin(resume, session.SessionId!, isCopy: true);
                 State.ForkOnNextStart = false;
+                State.ResumeAt = null;
+                State.ResumeDropsTurn = null;
                 OnPropertyChanged(nameof(InfoRows));
                 OnSyncSizeChanged();
             }

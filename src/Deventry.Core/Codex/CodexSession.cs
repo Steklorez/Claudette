@@ -184,10 +184,20 @@ public sealed class CodexSession : IAgentSession
             {
                 throw new CodexThreadMissingException(resume, ex);
             }
-            started = options.Fork
+            if (options.Fork)
+            {
                 // Its settings are the thread's own, then the tab's as below.
-                ? await RequestAsync("thread/fork", new JsonObject { ["threadId"] = resume, ["excludeTurns"] = true }, StartTimeout, cancellationToken).ConfigureAwait(false)
-                : await RequestAsync("thread/resume", thread, StartTimeout, cancellationToken).ConfigureAwait(false);
+                var fork = new JsonObject { ["threadId"] = resume, ["excludeTurns"] = true };
+                if (options.ForkAfter is { } after && await TurnOfAsync(resume, after, cancellationToken).ConfigureAwait(false) is { } lastTurn)
+                {
+                    fork["lastTurnId"] = lastTurn;
+                }
+                started = await RequestAsync("thread/fork", fork, StartTimeout, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                started = await RequestAsync("thread/resume", thread, StartTimeout, cancellationToken).ConfigureAwait(false);
+            }
         }
         else
         {
@@ -394,6 +404,35 @@ public sealed class CodexSession : IAgentSession
         }
         while (cursor is not null);
         return events;
+    }
+
+    /// <summary>
+    /// The turn of <paramref name="threadId"/> that holds the item <paramref name="itemId"/>, by its id or the id a message
+    /// was sent with; null when none does. Read without resuming the thread.
+    /// </summary>
+    private async Task<string?> TurnOfAsync(string threadId, string itemId, CancellationToken cancellationToken)
+    {
+        string? cursor = null;
+        do
+        {
+            var parameters = new JsonObject { ["threadId"] = threadId, ["sortDirection"] = "asc", ["itemsView"] = "full", ["limit"] = 50 };
+            if (cursor is not null)
+            {
+                parameters["cursor"] = cursor;
+            }
+            var page = await RequestAsync("thread/turns/list", parameters, StartTimeout, cancellationToken).ConfigureAwait(false);
+            foreach (var turn in page.GetArray("data")?.OfType<JsonObject>() ?? [])
+            {
+                if (turn.GetArray("items")?.OfType<JsonObject>().Any(i => i.GetString("id") == itemId || i.GetString("clientId") == itemId) == true)
+                {
+                    return turn.GetString("id");
+                }
+            }
+            cursor = page.GetString("nextCursor");
+        }
+        while (cursor is not null);
+        _logger.LogWarning("No turn of Codex's thread has the item to go back to; the copy keeps the whole conversation.");
+        return null;
     }
 
     /// <summary>A stored item as the events its live counterpart reported.</summary>

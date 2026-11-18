@@ -40,11 +40,11 @@ public sealed partial class TabViewModel
         }
         if (IsWorking)
         {
-            return "Claude is working. Stop the turn, or wait for it to end, to go back to an earlier message.";
+            return $"{AgentShortName} is working. Stop the turn, or wait for it to end, to go back to an earlier message.";
         }
         if (Status == TabStatus.Starting)
         {
-            return "Claude Code is still starting.";
+            return $"{Agent.Name} is still starting.";
         }
         return null;
     }
@@ -78,7 +78,7 @@ public sealed partial class TabViewModel
         {
             _shell.Confirm(
                 "Edit and resend this message?",
-                $"{body} Claude changed {DescribeFiles(files.FilesChanged)} since; restoring puts {(files.FilesChanged.Count == 1 ? "it" : "them")} back as before this message.",
+                $"{body} {AgentShortName} changed {DescribeFiles(files.FilesChanged)} since; restoring puts {(files.FilesChanged.Count == 1 ? "it" : "them")} back as before this message.",
                 "Go back and restore files",
                 () => GoBackAsync(message, restoreFiles: true),
                 "Go back, keep files",
@@ -291,7 +291,8 @@ public sealed partial class TabViewModel
     /// <summary>Going back to <paramref name="resumeAt"/> needs the transcript to resume from: says so when it's gone.</summary>
     private bool IsTranscriptMissing(string? resumeAt)
     {
-        if (resumeAt is null || State.SessionId is not { } sessionId || _services.Library.FindTranscript(sessionId, State.TranscriptPath) is not null)
+        // Codex keeps a thread's turns itself, and its start says when the thread is gone.
+        if (resumeAt is null || IsCodex || State.SessionId is not { } sessionId || _services.Library.FindTranscript(sessionId, State.TranscriptPath) is not null)
         {
             return false;
         }
@@ -326,6 +327,8 @@ public sealed partial class TabViewModel
         return new TabState
         {
             Folder = State.Folder,
+            // A copy goes on in the same agent (DESIGN.md §18, "Codex, a second agent").
+            Agent = State.Agent,
             SessionId = sessionId,
             TranscriptPath = sessionId is null ? null : State.TranscriptPath,
             ForkOnNextStart = sessionId is not null,
@@ -333,7 +336,7 @@ public sealed partial class TabViewModel
             ResumeDropsTurn = sessionId is null ? null : dropsTurn,
             AutoName = State.AutoName,
             SyncToLibrary = State.SyncToLibrary,
-            RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            RemoteControl = OffersRemoteControl && _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
             KeepFromRemoteClients = State.KeepFromRemoteClients,
             Overrides = Copy(State.Overrides) ?? new TabOverrides(),
             // On the same account, so carrying the conversation on doesn't read it again (DESIGN.md §4, "Accounts").

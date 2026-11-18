@@ -76,6 +76,12 @@ public sealed record CodexStartOptions
     /// <summary>With <see cref="Resume"/>: a new thread with the resumed one's history (<c>thread/fork</c>), leaving it as it was.</summary>
     public bool Fork { get; init; }
 
+    /// <summary>
+    /// With <see cref="Fork"/>: the item (or the id a message was sent with) the copy keeps the conversation through, by
+    /// the turn it's in (DESIGN.md §18, "Rewind and branch"); null keeps all of it.
+    /// </summary>
+    public string? ForkAfter { get; init; }
+
     /// <summary>Null: Codex's own default model.</summary>
     public string? Model { get; init; }
 

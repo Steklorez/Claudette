@@ -431,4 +431,71 @@ public sealed class CodexTabTests
         Assert.False(h.Services.Settings.Codex.OfferOtherAgentAtLimit);
         Assert.False(tab.OffersOtherAgent);
     }
+
+    /// <summary>A message sent from the composer, and Codex's turn for it: its echo with the id it was sent with, and a reply.</summary>
+    private static async Task SendAndAnswerAsync(TabTestHarness h, TabViewModel tab, string text, string turnId, string reply)
+    {
+        var starts = h.Transport.SentRpcMethods.Count(m => m == "turn/start");
+        tab.ComposerText = text;
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Count(m => m == "turn/start") == starts + 1, "the message");
+        var sentId = h.Transport.Sent.Last(m => m["method"]?.GetValue<string>() == "turn/start")["params"]!["clientUserMessageId"]!.GetValue<string>();
+        JsonObject Note(string method, JsonObject parameters) => new() { ["method"] = method, ["params"] = parameters };
+        JsonObject Item(JsonObject item) => Note("item/completed", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turnId"] = turnId, ["item"] = item });
+        var replies = tab.Items.OfType<AssistantTextItem>().Count();
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = turnId } }));
+        h.Transport.Emit(Item(new JsonObject { ["type"] = "userMessage", ["id"] = $"u-{turnId}", ["clientId"] = sentId, ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = text }) }));
+        h.Transport.Emit(Item(new JsonObject { ["type"] = "agentMessage", ["id"] = $"a-{turnId}", ["text"] = reply }));
+        h.Transport.Emit(Note("turn/completed", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = turnId, ["status"] = "completed" } }));
+        await TabTestHarness.Eventually(() => tab.Items.OfType<AssistantTextItem>().Count() == replies + 1 && tab.IsSettled, "the turn to end");
+    }
+
+    [Fact]
+    public async Task Editing_and_resending_a_codex_message_forks_the_thread_through_the_turn_before_it()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await OpenCodexTabAsync(h);
+        await SendAndAnswerAsync(h, tab, "Add the hook", "turn-1", "Added.");
+        await SendAndAnswerAsync(h, tab, "Make it longer", "turn-2", "Longer.");
+        h.Transport.RpcAnswers["thread/turns/list"] = p => new JsonObject
+        {
+            ["data"] = new JsonArray(
+                new JsonObject { ["id"] = "turn-1", ["items"] = new JsonArray(new JsonObject { ["type"] = "agentMessage", ["id"] = "a-turn-1", ["text"] = "Added." }) },
+                new JsonObject { ["id"] = "turn-2", ["items"] = new JsonArray(new JsonObject { ["type"] = "agentMessage", ["id"] = "a-turn-2", ["text"] = "Longer." }) }),
+        };
+        h.Transport.RpcAnswers["thread/fork"] = _ => new JsonObject { ["thread"] = new JsonObject { ["id"] = "codex-fork-1" }, ["model"] = "gpt-fake-1" };
+        var second = tab.Items.OfType<UserMessageItem>().Last();
+        Assert.Equal("a-turn-1", second.ResumeAt);
+
+        await InlineDispatcher.RunAsync(() => tab.EditAndResendCommand.ExecuteAsync(second));
+        await InlineDispatcher.RunAsync(() => h.Shell.Confirmation!.ConfirmCommand.ExecuteAsync(null));
+
+        await TabTestHarness.Eventually(() => h.CodexFactory.Launches.Count == 2 && tab.Status == TabStatus.Idle, "the copy to start");
+        var start = h.CodexFactory.Launches[1].Start;
+        Assert.Equal((ScriptedTransport.CodexThread, true, "a-turn-1"), (start.Resume, start.Fork, start.ForkAfter));
+        var fork = h.Transport.Sent.Last(m => m["method"]?.GetValue<string>() == "thread/fork")["params"]!.AsObject();
+        Assert.Equal("turn-1", fork["lastTurnId"]!.GetValue<string>());
+        Assert.Equal("codex-fork-1", tab.State.SessionId);
+        Assert.Equal("Make it longer", tab.ComposerText);
+    }
+
+    [Fact]
+    public async Task Branching_from_a_codex_message_opens_a_codex_tab()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await OpenCodexTabAsync(h);
+        await SendAndAnswerAsync(h, tab, "Add the hook", "turn-1", "Added.");
+        await SendAndAnswerAsync(h, tab, "Make it longer", "turn-2", "Longer.");
+
+        await InlineDispatcher.RunAsync(() => tab.BranchFromHereCommand.ExecuteAsync(tab.Items.OfType<UserMessageItem>().Last()));
+
+        var branch = h.Shell.SelectedTab!;
+        Assert.NotSame(tab, branch);
+        Assert.True(branch.IsCodex);
+        // It starts at once, as a copy of the thread through the turn before the message.
+        await TabTestHarness.Eventually(() => h.CodexFactory.Launches.Count == 2, "the branch to start");
+        var start = h.CodexFactory.Launches[1].Start;
+        Assert.Equal((ScriptedTransport.CodexThread, true, "a-turn-1"), (start.Resume, start.Fork, start.ForkAfter));
+        Assert.Equal("Make it longer", branch.ComposerText);
+    }
 }
