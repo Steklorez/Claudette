@@ -316,4 +316,61 @@ public sealed class CodexTabTests
         h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = "codex-turn-2" } }));
         await TabTestHarness.Eventually(() => tab.PermissionModeName == "Auto", "the mode to leave Plan");
     }
+
+    [Fact]
+    public async Task A_codex_subagent_is_a_subagent_card_and_a_node_on_the_agent_map_it_can_be_stopped_from()
+    {
+        const string Child = "codex-child-1";
+        await using var h = new TabTestHarness();
+        var tab = await OpenCodexTabAsync(h);
+        tab.ComposerText = "Look at the levels with a helper";
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Contains("turn/start"), "the message");
+        JsonObject Note(string method, JsonObject parameters) => new() { ["method"] = method, ["params"] = parameters };
+        JsonObject Item(string method, string thread, JsonObject item) => Note(method, new JsonObject { ["threadId"] = thread, ["turnId"] = "t", ["item"] = item });
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = ScriptedTransport.CodexTurn } }));
+        h.Transport.Emit(Item("item/started", ScriptedTransport.CodexThread, new JsonObject { ["type"] = "collabAgentToolCall", ["id"] = "spawn-1", ["tool"] = "spawnAgent", ["prompt"] = "Count the levels", ["receiverThreadIds"] = new JsonArray(Child), ["status"] = "inProgress" }));
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = Child, ["turn"] = new JsonObject { ["id"] = "child-turn" } }));
+        h.Transport.Emit(Item("item/started", Child, new JsonObject { ["type"] = "commandExecution", ["id"] = "exec-c1", ["command"] = "ls levels", ["status"] = "inProgress" }));
+
+        await TabTestHarness.Eventually(() => tab.Items.OfType<SubagentItem>().SingleOrDefault() is { Items.Count: > 0 }, "the subagent's work");
+        var subagent = tab.Items.OfType<SubagentItem>().Single();
+        Assert.Equal("Count the levels", subagent.Call.Prompt);
+        var node = Assert.Single(tab.Agents.Subagents);
+        await TabTestHarness.Eventually(() => node.CanStop, "Stop on the map");
+        Assert.Equal(Child, node.TaskId);
+
+        h.Transport.Emit(Item("item/completed", Child, new JsonObject { ["type"] = "agentMessage", ["id"] = "m-c1", ["text"] = "Three levels." }));
+        h.Transport.Emit(Note("turn/completed", new JsonObject { ["threadId"] = Child, ["turn"] = new JsonObject { ["id"] = "child-turn", ["status"] = "completed" } }));
+
+        await TabTestHarness.Eventually(() => subagent.IsSucceeded && node.IsDone, "the subagent to report");
+        Assert.True(tab.IsInTurn);
+    }
+
+    [Fact]
+    public async Task With_subagents_turned_off_codex_starts_without_them_and_one_it_starts_anyway_is_stopped()
+    {
+        const string Child = "codex-child-1";
+        await using var h = new TabTestHarness(s => s.ClaudeCode.Subagents = Core.Settings.SubagentUse.DontAllow);
+        var tab = await OpenCodexTabAsync(h);
+
+        var launch = Assert.Single(h.CodexFactory.Launches);
+        Assert.Contains(CodexArguments.NoSubagents, launch.ConfigOverrides);
+        Assert.Contains(Core.Subagents.SubagentMessages.StartNote(Core.Settings.SubagentUse.DontAllow, Core.Subagents.SubagentMessages.CodexTool)!, launch.Start.DeveloperInstructions);
+
+        tab.ComposerText = "Count the levels";
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Contains("turn/start"), "the message");
+        JsonObject Note(string method, JsonObject parameters) => new() { ["method"] = method, ["params"] = parameters };
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = ScriptedTransport.CodexTurn } }));
+        h.Transport.Emit(Note("item/started", new JsonObject
+        {
+            ["threadId"] = ScriptedTransport.CodexThread,
+            ["turnId"] = ScriptedTransport.CodexTurn,
+            ["item"] = new JsonObject { ["type"] = "collabAgentToolCall", ["id"] = "spawn-1", ["tool"] = "spawnAgent", ["prompt"] = "Count them", ["receiverThreadIds"] = new JsonArray(Child), ["status"] = "inProgress" },
+        }));
+
+        await TabTestHarness.Eventually(() => h.Transport.Sent.Any(m => m["method"]?.GetValue<string>() == "turn/interrupt" && m["params"]?["threadId"]?.GetValue<string>() == Child), "the subagent to be stopped");
+        Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text.StartsWith("Stopped a subagent Codex started", StringComparison.Ordinal));
+    }
 }

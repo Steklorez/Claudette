@@ -442,6 +442,76 @@ public sealed class CodexSessionTests
     }
 
     [Fact]
+    public async Task A_subagent_is_an_agent_call_its_threads_work_shows_under_and_its_last_reply_reports()
+    {
+        const string Child = "01a1eb89-5555-71e3-8bc3-b1e0d1c53852";
+        _transport.AutoRespondRpc["turn/interrupt"] = _ => [];
+        await using var session = await StartedAsync();
+        TurnStarted();
+
+        Item("item/started", new JsonObject { ["type"] = "collabAgentToolCall", ["id"] = "spawn-1", ["tool"] = "spawnAgent", ["prompt"] = "Look through the level code\nand report", ["senderThreadId"] = Thread, ["receiverThreadIds"] = new JsonArray(), ["status"] = "inProgress" });
+        Item("item/completed", new JsonObject { ["type"] = "collabAgentToolCall", ["id"] = "spawn-1", ["tool"] = "spawnAgent", ["prompt"] = "Look through the level code\nand report", ["senderThreadId"] = Thread, ["receiverThreadIds"] = new JsonArray(Child), ["status"] = "completed" });
+        var (started, seen) = await session.ReadUntilAsync<SystemNotice>();
+        var agent = seen.OfType<AssistantMessageReceived>().Single().Message.Content.OfType<ToolUseBlock>().Single();
+        Assert.Equal(("spawn-1", ToolKind.Agent, "Look through the level code", "Look through the level code\nand report"), (agent.Id, agent.Call.Kind, agent.Call.Description, agent.Call.Prompt));
+        Assert.Equal(("task_started", Child, "spawn-1", "local_agent"), (started.Message.Subtype, started.Message.Raw.GetString("task_id"), started.Message.Raw.GetString("tool_use_id"), started.Message.Raw.GetString("task_type")));
+
+        Notify("turn/started", new JsonObject { ["threadId"] = Child, ["turn"] = new JsonObject { ["id"] = "child-turn", ["status"] = "inProgress" } });
+        Item("item/started", new JsonObject { ["type"] = "commandExecution", ["id"] = "exec-c1", ["command"] = "ls levels", ["commandActions"] = new JsonArray(new JsonObject { ["type"] = "listFiles", ["command"] = "ls levels", ["path"] = "levels" }), ["status"] = "inProgress" }, Child);
+        var (childCall, _) = await session.ReadUntilAsync<AssistantMessageReceived>();
+        Assert.Equal("spawn-1", childCall.Message.ParentToolUseId);
+        // The main turn goes on: the subagent's turn isn't it.
+        Assert.Equal(SessionState.Working, session.State);
+
+        await session.StopTaskAsync(Child, Token);
+        var interrupt = _transport.Sent.Last(s => s.GetString("method") == "turn/interrupt")["params"]!.AsObject();
+        Assert.Equal((Child, "child-turn"), (interrupt.GetString("threadId"), interrupt.GetString("turnId")));
+
+        Item("item/completed", new JsonObject { ["type"] = "agentMessage", ["id"] = "m-c1", ["text"] = "Found three levels." }, Child);
+        Notify("turn/completed", new JsonObject { ["threadId"] = Child, ["turn"] = new JsonObject { ["id"] = "child-turn", ["status"] = "completed" } });
+        var (report, after) = await session.ReadUntilAsync<ToolResultsReceived>(r => r.Message.Content.OfType<ToolResultBlock>().Any(b => b.ToolUseId == "spawn-1"));
+        Assert.Equal("spawn-1", after.OfType<AssistantMessageReceived>().Single(a => a.Message.Content.OfType<TextBlock>().Any()).Message.ParentToolUseId);
+        Assert.Equal("Found three levels.", report.Message.Content.OfType<ToolResultBlock>().Single().Text);
+        Assert.Null(report.Message.ParentToolUseId);
+        var (ended, _) = await session.ReadUntilAsync<SystemNotice>();
+        Assert.Equal(("task_notification", "completed", Child), (ended.Message.Subtype, ended.Message.Raw.GetString("status"), ended.Message.Raw.GetString("task_id")));
+        Assert.Equal(SessionState.Working, session.State);
+    }
+
+    [Fact]
+    public async Task A_subagent_read_back_is_its_call_with_the_report_a_later_wait_gave()
+    {
+        const string Child = "01a1eb89-5555-71e3-8bc3-b1e0d1c53852";
+        _transport.AutoRespondRpc["thread/turns/list"] = _ => new JsonObject
+        {
+            ["data"] = new JsonArray(new JsonObject
+            {
+                ["id"] = Turn,
+                ["items"] = new JsonArray(
+                    new JsonObject { ["type"] = "collabAgentToolCall", ["id"] = "spawn-1", ["tool"] = "spawnAgent", ["prompt"] = "Count the levels", ["receiverThreadIds"] = new JsonArray(Child), ["status"] = "completed" },
+                    new JsonObject
+                    {
+                        ["type"] = "collabAgentToolCall",
+                        ["id"] = "wait-1",
+                        ["tool"] = "wait",
+                        ["receiverThreadIds"] = new JsonArray(Child),
+                        ["status"] = "completed",
+                        ["agentsStates"] = new JsonObject { [Child] = new JsonObject { ["status"] = "completed", ["message"] = "Three." } },
+                    }),
+            }),
+        };
+        await using var session = await StartedAsync();
+
+        var turns = await session.ReadTurnsAsync(Token);
+
+        var agent = Assert.IsType<AssistantMessageReceived>(turns[0].Event).Message.Content.OfType<ToolUseBlock>().Single();
+        Assert.Equal((ToolKind.Agent, "Count the levels"), (agent.Call.Kind, agent.Call.Prompt));
+        var report = Assert.IsType<ToolResultsReceived>(turns[1].Event).Message.Content.OfType<ToolResultBlock>().Single();
+        Assert.Equal(("spawn-1", "Three."), (report.ToolUseId, report.Text));
+        Assert.Equal(2, turns.Count);
+    }
+
+    [Fact]
     public async Task An_approval_Codex_withdraws_takes_its_card_away()
     {
         await using var session = await StartedAsync();

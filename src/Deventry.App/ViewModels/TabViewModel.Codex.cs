@@ -79,8 +79,8 @@ public partial class TabViewModel
         {
             var mode = CodexModes.Normalize(State.Overrides.PermissionMode ?? settings.Codex.DefaultMode);
             ExpectedPermissionMode = mode;
-            // The same notes Claude Code's system prompt gets: the project's and the Perforce workspace's.
-            var notes = (await Perforce.WithPerforceAsync(await ProjectTools.WithNoteAsync(new ClaudeLaunchOptions { WorkingDirectory = Folder }))).AppendSystemPrompt;
+            // The same notes Claude Code's system prompt gets: the project's, the Perforce workspace's and the subagents'.
+            var notes = WithSubagentNote(await Perforce.WithPerforceAsync(await ProjectTools.WithNoteAsync(new ClaudeLaunchOptions { WorkingDirectory = Folder }))).AppendSystemPrompt;
             var options = new CodexLaunchOptions
             {
                 Start = new CodexStartOptions
@@ -94,7 +94,8 @@ public partial class TabViewModel
                     DeveloperInstructions = notes,
                     ClientVersion = _services.AppVersion.ToString(),
                 },
-                ConfigOverrides = [CodexArguments.ClaudeMdFallback],
+                // Subagents turned off take Codex's tools for them away (DESIGN.md §18, "Subagents").
+                ConfigOverrides = SubagentUse == Core.Settings.SubagentUse.DontAllow ? [CodexArguments.ClaudeMdFallback, CodexArguments.NoSubagents] : [CodexArguments.ClaudeMdFallback],
                 ProtocolLogPath = _services.ProtocolLogPath(FolderName),
             };
             _closing.Token.ThrowIfCancellationRequested();

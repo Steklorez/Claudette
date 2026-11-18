@@ -44,6 +44,13 @@ items:
     docs: https://learn.chatgpt.com/docs/config-file/config-reference
     test: FakeCodexTests
     fallback: "On Windows, a tab tries the user's own choice, then mxc, then unelevated, and keeps the first that windowsSandbox/readiness calls ready. If none is, Codex asks before each command and edit, and the tab says why."
+  - id: "-c agents.enabled=false"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: CodexTabTests
+    fallback: "A tab whose subagents are turned off starts Codex without its tools for them (the spike's finding: --disable multi_agent didn't take them away). A subagent Codex starts anyway is stopped as it starts, and the tab says so."
   - id: "codex --version"
     kind: command
     status: documented
@@ -226,6 +233,18 @@ items:
     usedIn: src/Deventry.Core/Codex/CodexSession.cs
     docs: https://learn.chatgpt.com/docs/app-server
     test: CodexSessionTests, CodexTabTests
+  - id: "collabAgentToolCall (spawnAgent: prompt, receiverThreadIds; a later call's agentsStates)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests, CodexTabTests
+    fallback: "In the schema, not the docs. A spawn is an Agent call, and its thread's turn and items, on the same connection, show under it; a restored tab reads its report from a later call's agentsStates. Without it, a subagent's work isn't shown, and the main thread's reply still says what it found."
+  - id: "subAgentActivity (agentThreadId, agentPath, kind)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests
+    fallback: "In the schema, not the docs. Says which thread a spawn started when its call hasn't, and when it ended; the thread's own turn/completed says that too."
   - id: "commandExecution.commandActions"
     kind: field
     status: documented

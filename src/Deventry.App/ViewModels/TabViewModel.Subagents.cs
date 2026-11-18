@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
 using Deventry.Core.Composer;
+using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
 using Deventry.Core.Subagents;
@@ -152,7 +153,7 @@ public sealed partial class TabViewModel
     private ClaudeLaunchOptions WithSubagentNote(ClaudeLaunchOptions options)
     {
         var use = SubagentUse;
-        if (SubagentMessages.StartNote(use) is not { } note)
+        if (SubagentMessages.StartNote(use, SubagentTool) is not { } note)
         {
             return options;
         }
@@ -164,6 +165,35 @@ public sealed partial class TabViewModel
     /// The PreToolUse hook every tab registers on the <c>Agent</c> tool, so turning subagents off applies at once, in a
     /// tab already running too.
     /// </summary>
+    /// <summary>The tool that starts a subagent, as the tab's agent knows it.</summary>
+    private string SubagentTool => IsCodex ? SubagentMessages.CodexTool : SubagentMessages.ClaudeTool;
+
+    /// <summary>
+    /// Codex started a subagent while they're turned off (DESIGN.md §18, "Subagents"): no hook can refuse its call, so its
+    /// thread is stopped as it starts, and the tab says so.
+    /// </summary>
+    private void StopSubagentIfNotAllowed(SystemMessage started)
+    {
+        if (!IsCodex || SubagentUse != SubagentUse.DontAllow || started.Raw.GetString("task_id") is not { } taskId || _session is not { } session)
+        {
+            return;
+        }
+        _conversation.AddNote("Stopped a subagent Codex started: subagents are turned off for this tab.", NoteKind.Warning);
+        _ = StopQuietlyAsync();
+
+        async Task StopQuietlyAsync()
+        {
+            try
+            {
+                await session.StopTaskAsync(taskId);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // Gone already, or Codex ended: nothing to stop.
+            }
+        }
+    }
+
     private HookRegistration SubagentHook() => new("PreToolUse", SubagentMessages.ToolMatcher, OnAgentCallAsync);
 
     /// <summary>Claude calls the <c>Agent</c> tool: refused while subagents are turned off. Called off the UI thread.</summary>
@@ -180,13 +210,13 @@ public sealed partial class TabViewModel
     {
         var use = SubagentUse;
         var before = State.SubagentsTold;
-        if (before == use || _session is null && SubagentMessages.StartNote(use) is not null)
+        if (before == use || _session is null && SubagentMessages.StartNote(use, SubagentTool) is not null)
         {
             return null;
         }
         State.SubagentsTold = use;
         _services.SaveState();
-        return (SubagentMessages.ChangeNote(use), SubagentMessages.ChangeNoteLine(use), before);
+        return (SubagentMessages.ChangeNote(use, SubagentTool), SubagentMessages.ChangeNoteLine(use, AgentShortName), before);
     }
 
     /// <summary>A message that carried a note on subagents was taken back: the next one carries it again.</summary>

@@ -2460,6 +2460,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // And when it's compacting the conversation: Joulene on the composer sweeps up (DESIGN.md §5).
                 SetCompacting(status.Message.Status?.IsCompacting == true);
                 break;
+            case SystemNotice { Message.Subtype: "task_started" } task:
+                StopSubagentIfNotAllowed(task.Message);
+                break;
             case SystemNotice { Message.Subtype: "bridge_state" or "worker_shutting_down" } remote:
                 RemoteControl.OnNotice(remote.Message);
                 break;

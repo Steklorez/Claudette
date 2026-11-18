@@ -33,6 +33,9 @@ public static class CodexArguments
     /// <summary>Configuration every tab's Codex gets: a project's <c>CLAUDE.md</c> read when it has no <c>AGENTS.md</c>.</summary>
     public const string ClaudeMdFallback = "project_doc_fallback_filenames=[\"CLAUDE.md\"]";
 
+    /// <summary>A tab whose subagents are turned off: Codex without its tools for them (DESIGN.md §18, "Subagents").</summary>
+    public const string NoSubagents = "agents.enabled=false";
+
     public static IReadOnlyList<string> ForAppServer(CodexLaunchOptions options) =>
         ["app-server", .. options.ConfigOverrides.SelectMany(c => new[] { "-c", c })];
 }

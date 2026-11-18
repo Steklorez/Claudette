@@ -319,9 +319,16 @@ public sealed class CodexSession : IAgentSession
         return Task.FromResult(new ContextUsage(used, max, max > 0 ? Math.Round(100.0 * used / max, 1) : 0, null, true, []));
     }
 
-    /// <summary>Stops one subagent: its thread's turn (DESIGN.md §18, "Codex, a second agent").</summary>
-    public Task StopTaskAsync(string taskId, CancellationToken cancellationToken = default) =>
-        RequestAsync("turn/interrupt", new JsonObject { ["threadId"] = taskId }, DefaultTimeout, cancellationToken);
+    /// <summary>Stops one subagent, by its thread's id: the turn it's working on (DESIGN.md §18, "Subagents").</summary>
+    public Task StopTaskAsync(string taskId, CancellationToken cancellationToken = default)
+    {
+        var parameters = new JsonObject { ["threadId"] = taskId };
+        if (_subagents.TryGetValue(taskId, out var subagent) && subagent.TurnId is { } turnId)
+        {
+            parameters["turnId"] = turnId;
+        }
+        return RequestAsync("turn/interrupt", parameters, DefaultTimeout, cancellationToken);
+    }
 
     public async Task StopAsync(TimeSpan grace)
     {
@@ -364,6 +371,8 @@ public sealed class CodexSession : IAgentSession
     public async Task<IReadOnlyList<(SessionEvent Event, DateTimeOffset? Time)>> ReadTurnsAsync(CancellationToken cancellationToken = default)
     {
         var events = new List<(SessionEvent, DateTimeOffset?)>();
+        // Subagents' threads, by id, to the spawn calls whose results a later item says.
+        var spawned = new Dictionary<string, string>(StringComparer.Ordinal);
         string? cursor = null;
         do
         {
@@ -376,7 +385,7 @@ public sealed class CodexSession : IAgentSession
             foreach (var item in page.GetArray("data")?.OfType<JsonObject>().SelectMany(t => t.GetArray("items")?.OfType<JsonObject>() ?? []) ?? [])
             {
                 var time = item["startedAtMs"].AsWholeNumber() is { } ms ? DateTimeOffset.FromUnixTimeMilliseconds(ms) : (DateTimeOffset?)null;
-                foreach (var replayed in ReplayOf(item))
+                foreach (var replayed in ReplayOf(item, spawned))
                 {
                     events.Add((replayed, time));
                 }
@@ -388,10 +397,34 @@ public sealed class CodexSession : IAgentSession
     }
 
     /// <summary>A stored item as the events its live counterpart reported.</summary>
-    private IEnumerable<SessionEvent> ReplayOf(JsonObject item)
+    /// <param name="spawned">The subagents spawned so far, whose ends a later item may say.</param>
+    private IEnumerable<SessionEvent> ReplayOf(JsonObject item, Dictionary<string, string> spawned)
     {
         switch (item.GetString("type"))
         {
+            case "collabAgentToolCall":
+                // A subagent's call, and its report once a later call (a wait) says how it ended. Its own work is its
+                // thread's, which isn't read back.
+                if (item.GetString("tool") == "spawnAgent" && item.GetString("id") is { } spawnId)
+                {
+                    var prompt = item.GetString("prompt") ?? "";
+                    yield return new AssistantMessageReceived(new AssistantMessage(spawnId, Model, [AgentUse(spawnId, prompt, DescriptionOf(prompt))], null, null, ItemRaw(item)));
+                    foreach (var thread in item.GetStringList("receiverThreadIds"))
+                    {
+                        spawned[thread] = spawnId;
+                    }
+                }
+                foreach (var (thread, node) in item.GetObject("agentsStates") ?? [])
+                {
+                    if (node is JsonObject state && state.GetString("status") is "completed" or "errored" or "interrupted" or "shutdown"
+                        && spawned.Remove(thread, out var useId))
+                    {
+                        var report = state.GetString("message") is { Length: > 0 } message ? message : "Done.";
+                        yield return new ToolResultsReceived(new UserMessage([new ToolResultBlock(useId, report, state.GetString("status") == "errored", ToolResultRaw(useId))],
+                            null, null, ItemRaw(item)));
+                    }
+                }
+                yield break;
             case "userMessage":
                 yield return PromptOf(item);
                 yield break;
@@ -521,38 +554,52 @@ public sealed class CodexSession : IAgentSession
                     _lastReply = "";
                     StartTurn();
                 }
+                else if (parameters.GetString("threadId") is { } startedThread && _subagents.TryGetValue(startedThread, out var working))
+                {
+                    working.TurnId = parameters.GetObject("turn")?.GetString("id");
+                }
                 break;
             case "turn/completed":
                 if (IsOwnThread(parameters))
                 {
                     EndTurn(parameters.GetObject("turn") ?? []);
                 }
+                else if (parameters.GetString("threadId") is { } endedThread && _subagents.TryGetValue(endedThread, out var ended))
+                {
+                    // Its turn is the work it was given (DESIGN.md §18, "Subagents").
+                    EndSubagent(ended, parameters.GetObject("turn")?.GetString("status") switch
+                    {
+                        "interrupted" => "stopped",
+                        "failed" => "failed",
+                        _ => "completed",
+                    });
+                }
                 break;
-            case "item/agentMessage/delta" when IsOwnThread(parameters):
+            case "item/agentMessage/delta" when TryRoute(parameters, out var replyParent, out _):
                 if (parameters.GetString("delta") is { Length: > 0 } text)
                 {
-                    Publish(new TextDelta(text, null));
+                    Publish(new TextDelta(text, replyParent));
                 }
                 break;
-            case "item/reasoning/summaryTextDelta" when IsOwnThread(parameters):
+            case "item/reasoning/summaryTextDelta" when TryRoute(parameters, out var thinkingParent, out _):
                 if (parameters.GetString("delta") is { Length: > 0 } thinking)
                 {
-                    Publish(new ThinkingDelta(thinking, null));
+                    Publish(new ThinkingDelta(thinking, thinkingParent));
                 }
                 break;
-            case "item/reasoning/summaryPartAdded" when IsOwnThread(parameters):
-                Publish(new ThinkingDelta("\n\n", null));
+            case "item/reasoning/summaryPartAdded" when TryRoute(parameters, out var partParent, out _):
+                Publish(new ThinkingDelta("\n\n", partParent));
                 break;
-            case "item/started" when IsOwnThread(parameters):
+            case "item/started" when TryRoute(parameters, out var startedParent, out _):
                 if (parameters.GetObject("item") is { } startedItem)
                 {
-                    OnItemStarted(startedItem);
+                    OnItemStarted(startedItem, startedParent);
                 }
                 break;
-            case "item/completed" when IsOwnThread(parameters):
+            case "item/completed" when TryRoute(parameters, out var completedParent, out var subagent):
                 if (parameters.GetObject("item") is { } completedItem)
                 {
-                    OnItemCompleted(completedItem);
+                    OnItemCompleted(completedItem, completedParent, subagent);
                 }
                 break;
             case "thread/tokenUsage/updated" when IsOwnThread(parameters):
@@ -615,73 +662,307 @@ public sealed class CodexSession : IAgentSession
 
     private bool IsOwnThread(JsonObject parameters) => parameters.GetString("threadId") is not { } thread || thread == SessionId;
 
-    private void OnItemStarted(JsonObject item)
+    /// <param name="parent">The Agent call a subagent's item shows under; null for the main thread's.</param>
+    private void OnItemStarted(JsonObject item, string? parent)
     {
-        if (CallsOf(item) is { } calls)
+        if (item.GetString("type") == "collabAgentToolCall")
+        {
+            if (item.GetString("tool") == "spawnAgent")
+            {
+                OnSpawnStarted(item, parent);
+            }
+            return;
+        }
+        if (CallsOf(item, parent) is { } calls)
         {
             Publish(calls);
         }
     }
 
-    private void OnItemCompleted(JsonObject item)
+    /// <param name="parent">The Agent call a subagent's item shows under; null for the main thread's.</param>
+    /// <param name="subagent">The subagent whose item it is; null for the main thread's.</param>
+    private void OnItemCompleted(JsonObject item, string? parent, Subagent? subagent)
     {
         switch (item.GetString("type"))
         {
             case "agentMessage":
-                _lastReply = item.GetString("text") ?? "";
-                if (ReplyOf(item) is { } reply)
+                if (subagent is null)
+                {
+                    _lastReply = item.GetString("text") ?? "";
+                }
+                else
+                {
+                    subagent.LastReply = item.GetString("text") ?? "";
+                }
+                if (ReplyOf(item, parent) is { } reply)
                 {
                     Publish(reply);
                 }
                 return;
             case "reasoning":
-                if (ReplyOf(item) is { } thinking)
+                if (ReplyOf(item, parent) is { } thinking)
                 {
                     Publish(thinking);
                 }
                 return;
-            case "userMessage":
+            case "userMessage" when subagent is null:
                 Publish(PromptOf(item));
                 return;
-            case "contextCompaction":
+            case "userMessage":
+                // A subagent's task, which its call already shows.
+                return;
+            case "collabAgentToolCall":
+                if (item.GetString("tool") == "spawnAgent")
+                {
+                    OnSpawnCompleted(item, parent);
+                }
+                return;
+            case "subAgentActivity":
+                OnSubagentActivity(item, parent);
+                return;
+            case "contextCompaction" when subagent is null:
                 Publish(CompactionNotice());
                 return;
-            case "plan" when item.GetString("text") is { Length: > 0 } plan:
+            case "plan" when subagent is null && item.GetString("text") is { Length: > 0 } plan:
                 OfferPlan(item.GetString("id"), plan);
                 return;
         }
-        if (ResultsOf(item) is { } results)
+        if (ResultsOf(item, parent) is { } results)
         {
             Publish(results);
         }
     }
 
     /// <summary>An item's calls, as Claude Code's tool uses; null when it isn't a call.</summary>
-    private AssistantMessageReceived? CallsOf(JsonObject item)
+    private AssistantMessageReceived? CallsOf(JsonObject item, string? parent = null)
     {
         var calls = CodexItems.CallsOf(item);
         return calls.Count == 0 ? null : new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model,
             [.. calls.Select(c => (ContentBlock)new ToolUseBlock(c.Id, c.Name, c.Input, new JsonObject { ["type"] = "tool_use", ["id"] = c.Id }) { Call = c.Call })],
-            null, null, ItemRaw(item)));
+            parent, null, ItemRaw(item)));
     }
 
     /// <summary>A finished call's results, as Claude Code's tool results; null when it has none.</summary>
-    private static ToolResultsReceived? ResultsOf(JsonObject item)
+    private static ToolResultsReceived? ResultsOf(JsonObject item, string? parent = null)
     {
         var results = CodexItems.ResultsOf(item);
         return results.Count == 0 ? null : new ToolResultsReceived(new UserMessage(
             [.. results.Select(r => (ContentBlock)new ToolResultBlock(r.Id, r.Text, r.IsError, new JsonObject { ["type"] = "tool_result", ["tool_use_id"] = r.Id }) { ExitCode = r.ExitCode })],
-            null, null, ItemRaw(item)));
+            null, parent, ItemRaw(item)));
     }
 
     /// <summary>A reply or its reasoning's summary; null when it's empty.</summary>
-    private AssistantMessageReceived? ReplyOf(JsonObject item)
+    private AssistantMessageReceived? ReplyOf(JsonObject item, string? parent = null)
     {
         ContentBlock? block = item.GetString("type") == "reasoning"
             ? string.Join("\n\n", item.GetStringList("summary")) is { Length: > 0 } summary ? new ThinkingBlock(summary, []) : null
             : item.GetString("text") is { Length: > 0 } text ? new TextBlock(text, []) : null;
-        return block is null ? null : new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, [block], null, null, ItemRaw(item)));
+        return block is null ? null : new AssistantMessageReceived(new AssistantMessage(item.GetString("id"), Model, [block], parent, null, ItemRaw(item)));
     }
+
+    // ---- Subagents (DESIGN.md §18, "Subagents") ------------------------------------------------------------------------
+
+    /// <summary>The name a subagent's call goes by, as Claude Code's Agent tool does.</summary>
+    public const string AgentTool = "Agent";
+
+    /// <summary>A subagent's thread: the Agent call its work shows under, and how its work went.</summary>
+    private sealed class Subagent(string threadId, string toolUseId, string? parentToolUseId)
+    {
+        public string ThreadId { get; } = threadId;
+
+        public string ToolUseId { get; } = toolUseId;
+
+        /// <summary>The call the agent that spawned it shows under: null for the main thread's own.</summary>
+        public string? ParentToolUseId { get; } = parentToolUseId;
+
+        public string? TurnId { get; set; }
+
+        public string LastReply { get; set; } = "";
+
+        public bool Ended { get; set; }
+    }
+
+    private readonly ConcurrentDictionary<string, Subagent> _subagents = new();
+    private readonly Lock _subagentLock = new();
+    // Spawn calls whose thread Codex hasn't said yet, oldest first.
+    private readonly List<(string ToolUseId, string? ParentToolUseId, string Description)> _spawning = [];
+
+    /// <summary>
+    /// Where an event belongs: the main thread's (a null <paramref name="parent"/>), or a known subagent's, under its Agent
+    /// call. False for a thread Deventry doesn't know.
+    /// </summary>
+    private bool TryRoute(JsonObject parameters, out string? parent, out Subagent? subagent)
+    {
+        parent = null;
+        subagent = null;
+        if (IsOwnThread(parameters))
+        {
+            return true;
+        }
+        if (parameters.GetString("threadId") is { } thread && _subagents.TryGetValue(thread, out subagent))
+        {
+            parent = subagent.ToolUseId;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// A <c>spawnAgent</c> call (a <c>collabAgentToolCall</c>): an Agent call, as Claude Code's is, which the subagent's
+    /// own work shows under once its thread is known.
+    /// </summary>
+    private void OnSpawnStarted(JsonObject item, string? parent)
+    {
+        if (item.GetString("id") is not { } id)
+        {
+            return;
+        }
+        var prompt = item.GetString("prompt") ?? "";
+        var description = DescriptionOf(prompt);
+        Publish(new AssistantMessageReceived(new AssistantMessage(id, Model, [AgentUse(id, prompt, description)], parent, null, ItemRaw(item))));
+        var threads = item.GetStringList("receiverThreadIds");
+        if (threads.Count == 0)
+        {
+            lock (_subagentLock)
+            {
+                _spawning.Add((id, parent, description));
+            }
+            return;
+        }
+        foreach (var thread in threads)
+        {
+            AddSubagent(thread, id, parent, description);
+        }
+    }
+
+    private void OnSpawnCompleted(JsonObject item, string? parent)
+    {
+        if (item.GetString("id") is not { } id)
+        {
+            return;
+        }
+        string description;
+        lock (_subagentLock)
+        {
+            var index = _spawning.FindIndex(s => s.ToolUseId == id);
+            description = index >= 0 ? _spawning[index].Description : DescriptionOf(item.GetString("prompt") ?? "");
+            if (index >= 0 && item.GetStringList("receiverThreadIds").Count > 0)
+            {
+                _spawning.RemoveAt(index);
+            }
+        }
+        foreach (var thread in item.GetStringList("receiverThreadIds"))
+        {
+            AddSubagent(thread, id, parent, description);
+        }
+        if (item.GetString("status") == "failed" && !_subagents.Values.Any(s => s.ToolUseId == id))
+        {
+            Publish(new ToolResultsReceived(new UserMessage([new ToolResultBlock(id, "Codex couldn't start the subagent.", true, ToolResultRaw(id))], null, parent, ItemRaw(item))));
+        }
+    }
+
+    /// <summary>A <c>subAgentActivity</c> item: a subagent's thread starting, or its end.</summary>
+    private void OnSubagentActivity(JsonObject item, string? parent)
+    {
+        if (item.GetString("agentThreadId") is not { } thread)
+        {
+            return;
+        }
+        switch (item.GetString("kind"))
+        {
+            case "started" when !_subagents.ContainsKey(thread):
+                (string ToolUseId, string? ParentToolUseId, string Description)? spawn = null;
+                lock (_subagentLock)
+                {
+                    var index = _spawning.FindIndex(s => s.ParentToolUseId == parent);
+                    if (index >= 0)
+                    {
+                        spawn = _spawning[index];
+                        _spawning.RemoveAt(index);
+                    }
+                }
+                if (spawn is { } known)
+                {
+                    AddSubagent(thread, known.ToolUseId, known.ParentToolUseId, known.Description);
+                    return;
+                }
+                // Its spawn wasn't seen: a call of its own stands in for it.
+                var id = item.GetString("id") ?? thread;
+                var description = item.GetString("agentPath") is { Length: > 0 } path ? path : "Subagent";
+                Publish(new AssistantMessageReceived(new AssistantMessage(id, Model, [AgentUse(id, "", description)], parent, null, ItemRaw(item))));
+                AddSubagent(thread, id, parent, description);
+                return;
+            case "completed" when _subagents.TryGetValue(thread, out var done):
+                EndSubagent(done, "completed");
+                return;
+            case "interrupted" when _subagents.TryGetValue(thread, out var stopped):
+                EndSubagent(stopped, "stopped");
+                return;
+        }
+    }
+
+    /// <summary>A subagent's thread is known: its work shows under its call, and it's a task the agent map and Stop follow.</summary>
+    private void AddSubagent(string thread, string toolUseId, string? parentToolUseId, string description)
+    {
+        if (!_subagents.TryAdd(thread, new Subagent(thread, toolUseId, parentToolUseId)))
+        {
+            return;
+        }
+        Publish(new SystemNotice(new SystemMessage("task_started", new JsonObject
+        {
+            ["type"] = "system",
+            ["subtype"] = "task_started",
+            ["task_id"] = thread,
+            ["tool_use_id"] = toolUseId,
+            ["description"] = description,
+            ["task_type"] = "local_agent",
+        })));
+    }
+
+    /// <summary>
+    /// A subagent finished its work, or was stopped: its call's result is its last reply, as a Claude Code subagent's
+    /// report is, and its task ends.
+    /// </summary>
+    private void EndSubagent(Subagent subagent, string status)
+    {
+        lock (_subagentLock)
+        {
+            if (subagent.Ended)
+            {
+                return;
+            }
+            subagent.Ended = true;
+        }
+        var report = subagent.LastReply.Length > 0 ? subagent.LastReply : status == "completed" ? "Done." : $"The subagent {status}.";
+        Publish(new ToolResultsReceived(new UserMessage([new ToolResultBlock(subagent.ToolUseId, report, status == "failed", ToolResultRaw(subagent.ToolUseId))],
+            null, subagent.ParentToolUseId, new JsonObject { ["type"] = "codex_subagent", ["uuid"] = subagent.ThreadId })));
+        Publish(new SystemNotice(new SystemMessage("task_notification", new JsonObject
+        {
+            ["type"] = "system",
+            ["subtype"] = "task_notification",
+            ["task_id"] = subagent.ThreadId,
+            ["tool_use_id"] = subagent.ToolUseId,
+            ["status"] = status,
+            ["summary"] = report,
+        })));
+    }
+
+    private static ToolUseBlock AgentUse(string id, string prompt, string description) =>
+        new(id, AgentTool, new JsonObject { ["description"] = description, ["prompt"] = prompt }, new JsonObject { ["type"] = "tool_use", ["id"] = id })
+        {
+            Call = new ToolCall(ToolKind.Agent, AgentTool) { Description = description, Prompt = prompt },
+        };
+
+    /// <summary>A subagent's name, from its task: its first line, short.</summary>
+    private static string DescriptionOf(string prompt)
+    {
+        var line = prompt.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault() ?? "";
+        return line.Length == 0 ? "Subagent" : line.Length > 60 ? line[..57] + "…" : line;
+    }
+
+    private static JsonObject ToolResultRaw(string id) => new() { ["type"] = "tool_result", ["tool_use_id"] = id };
+
+
 
     /// <summary>A message Deventry sent, echoed with the id it was sent with, as Claude Code echoes one (DESIGN.md §5, "Rewind and branch").</summary>
     private static PromptReplayed PromptOf(JsonObject item)
