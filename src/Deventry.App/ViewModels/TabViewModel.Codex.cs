@@ -79,6 +79,8 @@ public partial class TabViewModel
         {
             var mode = CodexModes.Normalize(State.Overrides.PermissionMode ?? settings.Codex.DefaultMode);
             ExpectedPermissionMode = mode;
+            // Deventry's hook, which checks files out of Perforce before Codex's patches (DESIGN.md §18, "Perforce").
+            var hook = await PerforceHookCommandAsync();
             // The same notes Claude Code's system prompt gets: the project's, the Perforce workspace's and the subagents'.
             var notes = WithSubagentNote(await Perforce.WithPerforceAsync(await ProjectTools.WithNoteAsync(new ClaudeLaunchOptions { WorkingDirectory = Folder }))).AppendSystemPrompt;
             var options = new CodexLaunchOptions
@@ -100,7 +102,13 @@ public partial class TabViewModel
                     ClientVersion = _services.AppVersion.ToString(),
                 },
                 // Subagents turned off take Codex's tools for them away (DESIGN.md §18, "Subagents").
-                ConfigOverrides = SubagentUse == Core.Settings.SubagentUse.DontAllow ? [CodexArguments.ClaudeMdFallback, CodexArguments.NoSubagents] : [CodexArguments.ClaudeMdFallback],
+                ConfigOverrides =
+                [
+                    CodexArguments.ClaudeMdFallback,
+                    .. SubagentUse == Core.Settings.SubagentUse.DontAllow ? [CodexArguments.NoSubagents] : Array.Empty<string>(),
+                    .. hook is null ? Array.Empty<string>() : [CodexHooks.Config(hook)],
+                ],
+                EnvironmentOverrides = hook is null ? new Dictionary<string, string?>() : new Dictionary<string, string?> { [CodexHooks.PipeVariable] = HookPipe().Name },
                 ProtocolLogPath = _services.ProtocolLogPath(FolderName),
             };
             _closing.Token.ThrowIfCancellationRequested();
@@ -150,6 +158,10 @@ public partial class TabViewModel
                     : pickedUp is not null ? PickedUpNote(pickedUp) : "Resumed.");
                 _forkNote = null;
             }
+            if (hook is not null)
+            {
+                _ = AskToTrustHookAsync(session, hook);
+            }
             Status = TabStatus.Idle;
             _pump = PumpAsync(session);
             _contextRefresh = Context.RefreshUsageAsync(session);
@@ -173,6 +185,82 @@ public partial class TabViewModel
             Status = TabStatus.Error;
             _conversation.AddNote($"Couldn't start Codex: {ex.Message}", NoteKind.Error);
             NotifyProcessError($"Couldn't start Codex: {ex.Message}");
+        }
+    }
+
+    /// <summary>The pipe the tab's hook helper reaches it through, made with the first start that has the hook.</summary>
+    private CodexHookPipe? _hookPipe;
+
+    /// <summary>The user said not to trust Deventry's hook, so the tab doesn't ask again until it's opened again.</summary>
+    private bool _hookTrustDeclined;
+
+    private CodexHookPipe HookPipe() => _hookPipe ??= new CodexHookPipe(Perforce.CheckOutBeforeCodexPatchAsync);
+
+    /// <summary>
+    /// Deventry's hook command, when the tab's Codex should have it: Settings → Perforce checks files out before changes,
+    /// the folder is in a workspace, and Deventry's own path can go in a command. Null otherwise.
+    /// </summary>
+    private async Task<string?> PerforceHookCommandAsync()
+    {
+        if (!_services.Settings.Perforce.CheckOutBeforeChanges || _services.Accounts.HelperExecutable is not { } executable
+            || !Core.Accounts.ApiKeyHelper.IsSafePath(executable))
+        {
+            return null;
+        }
+        try
+        {
+            return await _services.Perforce.Files.WorkspaceForAsync(Folder, _closing.Token) is null ? null : CodexHooks.Command(executable);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Codex runs a hook only once the user has trusted it, as its own <c>/hooks</c> asks: while Deventry's isn't, the
+    /// tab asks, saying what it runs, and writes the trust once they say yes (DESIGN.md §18, "Trusting Deventry's hook").
+    /// </summary>
+    private async Task AskToTrustHookAsync(CodexSession session, string command)
+    {
+        CodexHookState? hook;
+        try
+        {
+            hook = await session.FindHookAsync(Folder, command, _closing.Token);
+        }
+        catch (Exception ex) when (ex is CodexRequestException or TimeoutException or OperationCanceledException or IOException)
+        {
+            return;
+        }
+        if (hook is null || hook.IsTrusted || _hookTrustDeclined || _closing.IsCancellationRequested)
+        {
+            return;
+        }
+        _services.Dispatcher.Post(() => _shell.Confirm(
+            "Let Codex check files out of Perforce?",
+            $"This folder is in a Perforce workspace, where files are read-only until they're checked out. Deventry can check them out before each of Codex's edits, through a hook that runs {command}. "
+                + "Codex runs a hook only once you've trusted it: trusting it writes its hash to Codex's configuration (config.toml), as Codex's own /hooks does. A new version of Deventry asks again.",
+            "Trust Deventry's hook",
+            () => TrustHookAsync(session, hook),
+            "Not now",
+            () =>
+            {
+                _hookTrustDeclined = true;
+                _conversation.AddNote("Codex's edits won't check files out of Perforce first: Deventry's hook isn't trusted.", NoteKind.Warning);
+                return Task.CompletedTask;
+            }));
+    }
+
+    private async Task TrustHookAsync(CodexSession session, CodexHookState hook)
+    {
+        try
+        {
+            await session.TrustHookAsync(hook, _closing.Token);
+            _conversation.AddNote("Codex checks files out of Perforce before it changes them now.");
+        }
+        catch (Exception ex) when (ex is CodexRequestException or TimeoutException or IOException)
+        {
+            _conversation.AddNote($"Couldn't trust Deventry's hook in Codex's configuration: {ex.Message}", NoteKind.Warning);
         }
     }
 

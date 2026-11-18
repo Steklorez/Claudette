@@ -51,6 +51,19 @@ items:
     docs: https://learn.chatgpt.com/docs/config-file/config-reference
     test: CodexTabTests
     fallback: "A tab whose subagents are turned off starts Codex without its tools for them (the spike's finding: --disable multi_agent didn't take them away). A subagent Codex starts anyway is stopped as it starts, and the tab says so."
+  - id: "-c hooks.PreToolUse (a command hook on apply_patch)"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexHooks.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: CodexHooksTests, CodexPerforceTests
+    fallback: "Only in a Perforce workspace with Check out before changes on. Without it, Codex's patches of files Perforce hasn't checked out fail on the read-only files, and the tab says so."
+  - id: "PreToolUse hook input for apply_patch (tool_name apply_patch, tool_input.command the patch, cwd), and the hook's environment"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexHooks.cs, src/Deventry.App/Services/CodexHookLaunch.cs
+    test: CodexHooksTests, CodexPerforceTests
+    fallback: "Checked against 0.169.0 with a mock model: the patch's headers name its files relative to cwd, and the hook runs with codex's environment, which names the pipe to the tab (DEVENTRY_CODEX_HOOK_PIPE). Without them the helper lets the patch go on unchanged, as a hook with nothing to say does."
   - id: "codex --version"
     kind: command
     status: documented
@@ -122,6 +135,13 @@ items:
     docs: https://learn.chatgpt.com/docs/app-server
     test: CodexSessionTests, FakeCodexTests
     fallback: "Asked before thread/resume, so a thread Codex no longer has is told from one it won't resume (a required MCP server, another model provider), whose error is shown as Codex gives it."
+  - id: "hooks/list, config/batchWrite (hooks.state.\"<key>\".trusted_hash)"
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexPerforceTests
+    fallback: "Codex runs a hook passed with -c only once it's trusted, as /hooks does by writing its hash; Deventry asks the user first, then writes it. The key of a hook passed with -c is positional (<session-flags>\\config.toml:pre_tool_use:0:0), so it stays while the hook does. If trusting fails, the tab says Codex's edits won't check files out first."
   - id: thread/fork
     kind: control
     status: documented

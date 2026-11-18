@@ -2787,6 +2787,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _services.LiveSessions.Changed -= OnLiveSessionsChanged;
         _checkIns.Dispose();
         _autoContinue.Dispose();
+        if (_hookPipe is { } hookPipe)
+        {
+            await hookPipe.DisposeAsync();
+        }
         _copied?.Dispose();
         AgentTicker.Stop();
         TaskTicker.Stop();

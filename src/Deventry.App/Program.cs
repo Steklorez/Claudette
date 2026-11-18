@@ -23,6 +23,11 @@ internal sealed class Program
         {
             return ApiKeyHelperLaunch.Run(accountId);
         }
+        // Codex running a tab's hook before a patch (DESIGN.md §18, "Perforce"): the same.
+        if (Core.Codex.CodexHooks.IsHookLaunch(args))
+        {
+            return CodexHookLaunch.Run();
+        }
         // The demo's claude, which Deventry stands in for (DESIGN.md §11, "Demo mode"): the same, before anything else.
         if (Demo.StandInClaudeLaunch.IsStandIn)
         {

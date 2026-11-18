@@ -1126,6 +1126,37 @@ public sealed class CodexSession : IAgentSession
     }
 
     /// <summary>
+    /// Deventry's hook as Codex lists it for <paramref name="folder"/> (<c>hooks/list</c>), found by its command; null when
+    /// Codex doesn't list it (DESIGN.md §18, "Perforce").
+    /// </summary>
+    public async Task<CodexHookState?> FindHookAsync(string folder, string command, CancellationToken cancellationToken = default)
+    {
+        var listed = await RequestAsync("hooks/list", new JsonObject { ["cwds"] = new JsonArray(folder) }, DefaultTimeout, cancellationToken).ConfigureAwait(false);
+        var hook = listed.GetArray("data")?.OfType<JsonObject>().SelectMany(e => e.GetArray("hooks")?.OfType<JsonObject>() ?? [])
+            .FirstOrDefault(h => h.GetString("command") == command);
+        return hook is not null && hook.GetString("key") is { } key && hook.GetString("currentHash") is { } hash
+            ? new CodexHookState(key, hash, hook.GetString("trustStatus") ?? "untrusted")
+            : null;
+    }
+
+    /// <summary>
+    /// Trusts Deventry's hook as Codex's own <c>/hooks</c> does: its hash written to the user's configuration
+    /// (<c>config/batchWrite</c>, <c>hooks.state."&lt;key&gt;".trusted_hash</c>), and the configuration reloaded into
+    /// the thread. Only once the user has said so.
+    /// </summary>
+    public Task TrustHookAsync(CodexHookState hook, CancellationToken cancellationToken = default) =>
+        RequestAsync("config/batchWrite", new JsonObject
+        {
+            ["edits"] = new JsonArray(new JsonObject
+            {
+                ["keyPath"] = $"hooks.state.\"{hook.Key.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal)}\".trusted_hash",
+                ["value"] = hook.Hash,
+                ["mergeStrategy"] = "upsert",
+            }),
+            ["reloadUserConfig"] = true,
+        }, DefaultTimeout, cancellationToken);
+
+    /// <summary>
     /// Answers Codex's calls to Deventry's own tools (<see cref="CodexTools"/>): the tab sets it as the session starts.
     /// Called off the read loop; without it, every call says the tool isn't there.
     /// </summary>
