@@ -204,7 +204,7 @@ public sealed record PastWindowRow(string When, string Peak, double Percent);
 /// period <b>Tokens over</b> chooses, where the tokens went, and the tokens per tab, project, account, model and tool
 /// (DESIGN.md §18, "The Usage panel"); and past sessions and weeks from the usage history.
 /// </summary>
-public sealed partial class UsagePanelViewModel : ViewModelBase
+public sealed partial class UsagePanelViewModel : ViewModelBase, IDisposable
 {
     private static readonly TimeSpan SessionWindow = TimeSpan.FromHours(5);
 
@@ -226,6 +226,74 @@ public sealed partial class UsagePanelViewModel : ViewModelBase
         _openBreakdown = openBreakdown;
         // Choosing it reads the history.
         SelectedPeriod = Periods.FirstOrDefault(p => p.Period == services.State.UsagePanelPeriod) ?? Periods[0];
+        _header.PropertyChanged += OnHeaderChanged;
+        _tracker.Updated += OnPlanUpdated;
+        _tracker.CodexUpdated += OnPlanUpdated;
+        RefreshAgents();
+    }
+
+    public void Dispose()
+    {
+        _header.PropertyChanged -= OnHeaderChanged;
+        _tracker.Updated -= OnPlanUpdated;
+        _tracker.CodexUpdated -= OnPlanUpdated;
+    }
+
+    // ---- Each agent's plan (DESIGN.md §18, "Codex, a second agent") -------------------------------------------------
+
+    /// <summary>The session section's title: the header's agent's, named while tabs of both agents are open.</summary>
+    [ObservableProperty]
+    public partial string SessionTitle { get; private set; } = "This session (5-hour window)";
+
+    /// <summary>The other agent's plan, a line of its own while tabs of both are open and it has a reading.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasOtherAgent))]
+    public partial string? OtherAgentText { get; private set; }
+
+    public bool HasOtherAgent => OtherAgentText is not null;
+
+    [ObservableProperty]
+    public partial string OtherAgentName { get; private set; } = "";
+
+    [ObservableProperty]
+    public partial string OtherAgentIconKey { get; private set; } = "IconAgentCodex";
+
+    private void OnHeaderChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(UsageViewModel.ShownAgent) or nameof(UsageViewModel.ShowsAgentIcon))
+        {
+            RefreshAgents();
+        }
+    }
+
+    private void OnPlanUpdated(UsageSnapshot snapshot) => RefreshAgents();
+
+    private void RefreshAgents()
+    {
+        var both = _header.ShowsAgentIcon;
+        SessionTitle = both ? $"{_header.AgentName}: this session (5-hour window)" : "This session (5-hour window)";
+        var codexShown = _header.ShownAgent.Kind == Core.Agents.AgentKinds.Codex;
+        Core.Agents.IAgentType other = codexShown ? Core.Agents.ClaudeCodeAgent.Instance : Core.Agents.CodexAgent.Instance;
+        OtherAgentName = other.Name;
+        OtherAgentIconKey = codexShown ? "IconAgentClaudeCode" : "IconAgentCodex";
+        OtherAgentText = both && (codexShown ? _tracker.Current : _tracker.CodexCurrent) is { } plan ? PlanText(plan, _services.Time.GetUtcNow()) : null;
+    }
+
+    /// <summary>*Session 42%, resets in 2 h 10 min · Weekly 12%*.</summary>
+    private static string PlanText(UsageSnapshot plan, DateTimeOffset now)
+    {
+        var parts = new List<string>();
+        if (plan.Session is { } session)
+        {
+            parts.Add(session.ResetsAt is { } resets && resets > now
+                ? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Session {session.Percent:0}%, resets in {BurnRate.FormatCountdown(resets - now)}")
+                : string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Session {session.Percent:0}%"));
+        }
+        if (plan.WeeklyAll is { } weekly)
+        {
+            parts.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Weekly {weekly.Percent:0}%"));
+        }
+        return parts.Count == 0 ? "No reading yet" : string.Join(" · ", parts);
     }
 
     /// <summary>Counts refreshes, so a slow one that finishes after a later one doesn't overwrite it.</summary>

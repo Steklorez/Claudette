@@ -5042,12 +5042,12 @@ The aim is **near parity**: a Codex tab has the conversation, tool cards, approv
 4. **Around it.** Partly built 2026-11-17:
    - **Choosing the agent.** A folder group's menu has **New Claude Code tab here** and, once Codex is found, **New Codex tab here**; a folder remembers its last new tab's agent (`AppState.FolderAgents`, App's `Services/AgentsService`), and a tab keeps its own (`TabState.Agent`). A Codex tab starts through `TabViewModel.Codex.cs`, with the tab's notes as developer instructions.
    - **The icons.** `IconAgentClaudeCode` and `IconAgentCodex`, Deventry's own, on each tab row and before the usage header's meters while tabs of both agents are open.
-   - **The usage header** follows the selected tab's agent: Codex's windows from `account/rateLimits/updated` (Usage's `CodexUsage`), Claude's as before.
+   - **The usage header** follows the selected tab's agent: Codex's windows from `account/rateLimits/updated` (Usage's `CodexUsage`), Claude's as before. Codex's limits have alerts of their own, whose notifications say *Codex:*, as Claude's say *Claude:* once Codex has reported its plan; the line under the header is the shown agent's. The Usage panel's session section names its agent while tabs of both are open, and the other agent's plan has a line of its own under it (its session and week); the history and token sections are as before.
    - **History** and restoring a Codex tab, as above (`History/CodexHistory`, `CodexSession.ReadTurnsAsync`).
    - **Installing and signing in**: Core's `Installation/CodexLocator` and `CodexInstaller`, `Auth/CodexAuth`; the App's `CodexSetupViewModel`, which Settings → Agents → Codex (`ViewModels/Settings/CodexPage`) and the setup and sign-in screens (`Views/CodexOfferView`) show. The sidebar's **Claude** group is now **Agents**.
    - **The Windows sandbox**: `CodexSessionFactory` tries the user's choice, then MXC, then the unelevated one, and keeps the first that's ready; with none, the tab says why commands and edits will ask.
    - **The words**: notifications, Remote clients' messages and threads name the tab's agent (`TabViewModel.AgentShortName`).
-   - **Still to build in this step**: the session library for Codex tabs, the **New tab** picker's accounts under their agent, a section for each agent in the Usage panel, and a limit alert that names its agent.
+   - **Still to build in this step**: the session library for Codex tabs, and the **New tab** picker's accounts under their agent.
 
    **Tests**: `CodexHistoryTests`, `CodexInstallerTests` and `CodexSessionTests` in Core, `CodexUsageTests` in Usage, `FakeCodexTests` in the integration tests (resuming, sign-in, and the sandbox chosen on Windows), `CodexTabTests` and `CodexSettingsTests` in the App, and the setup screen's offer in `SetupScreenUiTests`.
 5. **Near parity.** Subagents and the agent map, rewind and branch, threads, Perforce, Plan mode and questions, continuing in the other agent.

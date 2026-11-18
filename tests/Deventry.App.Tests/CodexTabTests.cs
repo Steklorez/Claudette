@@ -203,4 +203,58 @@ public sealed class CodexTabTests
         Assert.Equal("Claude Code", header.AgentName);
         Assert.False(header.HasData);
     }
+
+    [Fact]
+    public async Task Codexs_limits_alert_by_name_and_its_line_shows_with_its_plan()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        using var header = new UsageViewModel(h.Services, tracker);
+        var resets = h.Time.GetUtcNow().AddHours(3).ToUnixTimeSeconds();
+        JsonObject Limits(int percent) => new() { ["primary"] = new JsonObject { ["usedPercent"] = percent, ["windowDurationMins"] = 300, ["resetsAt"] = resets } };
+
+        InlineDispatcher.Run(() => tracker.OnCodexRateLimits(Limits(50)));
+        h.Time.Advance(TimeSpan.FromMinutes(5));
+        InlineDispatcher.Run(() => tracker.OnCodexRateLimits(Limits(85)));
+
+        await TabTestHarness.Eventually(() => h.Notifier.Shown.Any(n => n.Title == "Codex: Session usage passed 75%"), "Codex's notification");
+        // Claude Code's plan is shown, so its line waits for Codex's.
+        Assert.False(header.HasAlert);
+        InlineDispatcher.Run(() => header.ShowAgent(CodexAgent.Instance));
+        // The latest: at this pace the session runs out before it resets.
+        Assert.Equal("On pace to hit the session limit", header.Alert!.Title);
+        Assert.Contains(h.Notifier.Shown, n => n.Title == "Codex: On pace to hit the session limit");
+        InlineDispatcher.Run(() => header.ShowAgent(ClaudeCodeAgent.Instance));
+        Assert.False(header.HasAlert);
+    }
+
+    [Fact]
+    public async Task The_usage_panel_names_the_shown_agent_and_gives_the_others_plan_a_line()
+    {
+        await using var h = new TabTestHarness();
+        await using var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
+        h.Services.UseUsageTracker(tracker);
+        using var header = new UsageViewModel(h.Services, tracker);
+        using var panel = new UsagePanelViewModel(h.Services, tracker, header, _ => null);
+        Assert.Equal(("This session (5-hour window)", false), (panel.SessionTitle, panel.HasOtherAgent));
+
+        InlineDispatcher.Run(() =>
+        {
+            tracker.OnCodexRateLimits(new JsonObject
+            {
+                ["primary"] = new JsonObject { ["usedPercent"] = 42, ["windowDurationMins"] = 300, ["resetsAt"] = h.Time.GetUtcNow().AddHours(2).ToUnixTimeSeconds() },
+                ["secondary"] = new JsonObject { ["usedPercent"] = 12, ["windowDurationMins"] = 10080 },
+            });
+            // Tabs of both agents are open, as the shell says.
+            header.ShowsAgentIcon = true;
+        });
+
+        Assert.Equal("Claude Code: this session (5-hour window)", panel.SessionTitle);
+        Assert.Equal(("Codex", "IconAgentCodex", "Session 42%, resets in 2h 00m · Weekly 12%"), (panel.OtherAgentName, panel.OtherAgentIconKey, panel.OtherAgentText));
+        InlineDispatcher.Run(() => header.ShowAgent(CodexAgent.Instance));
+        Assert.Equal("Codex: this session (5-hour window)", panel.SessionTitle);
+        // Claude Code has no reading yet.
+        Assert.False(panel.HasOtherAgent);
+    }
 }
