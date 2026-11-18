@@ -2469,6 +2469,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             case Core.Codex.RateLimitsReported codexLimits:
                 // Codex's account's limits, for the header while a Codex tab is selected (DESIGN.md §18, "The usage header").
                 _services.Usage?.OnCodexRateLimits(codexLimits.RateLimits);
+                // One it has reached stops the turn: the tab waits for its reset, as at Claude's (DESIGN.md §6).
+                if (Usage.CodexUsage.Rejection(codexLimits.RateLimits, _services.Time.GetUtcNow()) is { } rejected)
+                {
+                    _autoContinue.RateLimit(rejected);
+                }
                 break;
             case RateLimitUpdated rateLimit:
                 // The header's plan usage is the Default account's (DESIGN.md §4, "Accounts").

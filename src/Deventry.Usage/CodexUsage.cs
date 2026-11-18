@@ -36,6 +36,32 @@ public static class CodexUsage
         return limits.Count == 0 ? null : new UsageSnapshot(limits, now, UsageSource.RateLimitEvent);
     }
 
+    /// <summary>
+    /// The limit Codex says it has reached, as Claude Code's <c>rate_limit_info</c> says a rejection, for the tab's wait
+    /// for its reset (DESIGN.md §6, "Continuing after a limit resets"): the window that's full, or the one
+    /// <c>rateLimitReachedType</c> names; null while none is.
+    /// </summary>
+    public static JsonObject? Rejection(JsonObject rateLimits, DateTimeOffset now)
+    {
+        var named = rateLimits.GetString("rateLimitReachedType");
+        foreach (var name in new[] { "primary", "secondary" })
+        {
+            if (rateLimits.GetObject(name) is not { } window || window["resetsAt"].AsWholeNumber() is not { } resets
+                || !(named == name || window.GetDouble("usedPercent") >= 100) || DateTimeOffset.FromUnixTimeSeconds(resets) <= now)
+            {
+                continue;
+            }
+            var minutes = window.GetDouble("windowDurationMins");
+            return new JsonObject
+            {
+                ["status"] = "rejected",
+                ["resetsAt"] = resets,
+                ["rateLimitType"] = minutes is { } m && TimeSpan.FromMinutes(m) > SessionLongest ? "seven_day" : "five_hour",
+            };
+        }
+        return null;
+    }
+
     /// <summary>Codex says a limit has been reached (<c>rateLimitReachedType</c>).</summary>
     public static bool IsLimitReached(JsonObject rateLimits) => rateLimits.GetString("rateLimitReachedType") is { Length: > 0 };
 }

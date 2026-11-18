@@ -245,6 +245,13 @@ items:
     usedIn: src/Deventry.Core/Codex/CodexSession.cs
     test: CodexSessionTests
     fallback: "In the schema, not the docs. Says which thread a spawn started when its call hasn't, and when it ended; the thread's own turn/completed says that too."
+  - id: "turn.error.codexErrorInfo usageLimitExceeded, rateLimits.rateLimitReachedType"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.Usage/CodexUsage.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexTabTests
+    fallback: "A turn that failed at the plan's limit, and the window that's full, make the tab wait for its reset as at Claude's. Without them a full window (usedPercent 100) still does; a failure that says nothing is shown as an error."
   - id: "commandExecution.commandActions"
     kind: field
     status: documented

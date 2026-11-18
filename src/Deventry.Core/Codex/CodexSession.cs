@@ -1280,10 +1280,16 @@ public sealed class CodexSession : IAgentSession
         var spent = _total.Minus(_atTurnStart);
         var usage = spent.IsZero ? ModelUsageTotals.Empty : new ModelUsageTotals(new Dictionary<string, UsageCounts> { [Model ?? "codex"] = spent });
         var raw = new JsonObject { ["type"] = "result", ["duration_ms"] = turn["durationMs"]?.DeepClone() };
+        if (turn.GetObject("error")?["codexErrorInfo"] is { } info && info.ToJsonString().Contains("usageLimitExceeded", StringComparison.Ordinal))
+        {
+            // Stopped at the plan's limit, as Claude Code says it (DESIGN.md §6, "Continuing after a limit resets").
+            raw["api_error_status"] = 429;
+        }
         var result = status switch
         {
             "interrupted" => new ResultMessage("error_during_execution", true, null, "aborted_streaming", SessionId, null, null, null, raw),
-            "failed" => new ResultMessage("error_during_execution", true, error ?? "Codex couldn't finish the turn.", null, SessionId, null, null, null, raw),
+            // Anything else that failed isn't a limit: it says so, rather than leaving the tab to wait for a reset.
+            "failed" => new ResultMessage("error_during_execution", true, error ?? "Codex couldn't finish the turn.", raw["api_error_status"] is null ? "error" : null, SessionId, null, null, null, raw),
             _ => new ResultMessage("success", false, _lastReply, null, SessionId, null, null, null, raw),
         };
         _turnId = null;

@@ -509,6 +509,18 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     private Task NewCodexTabInGroupAsync(TabGroupViewModel? group) =>
         group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder, agent: Core.Agents.CodexAgent.Instance);
 
+    /// <summary>
+    /// <b>Continue in Codex</b> (or Claude Code) at a usage limit (DESIGN.md §18, "Continuing in the other agent"): a tab of
+    /// <paramref name="agent"/> in <paramref name="from"/>'s folder, beside it, named <paramref name="name"/>, with
+    /// <paramref name="handover"/> as its draft for the user to send.
+    /// </summary>
+    internal Task ContinueInAgentAsync(TabViewModel from, Core.Agents.IAgentType agent, string name, string handover) =>
+        OpenFolderAsync(from.Folder, tab =>
+        {
+            tab.State.UserName = name;
+            tab.ComposerText = handover;
+        }, agent: agent);
+
     /// <summary>Codex was found, so a group's menu can offer a Codex tab (DESIGN.md §18, "Codex, a second agent").</summary>
     public bool IsCodexAvailable => _services.CodexSessions is not null;
 

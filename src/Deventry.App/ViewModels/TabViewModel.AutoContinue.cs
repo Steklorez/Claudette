@@ -25,7 +25,7 @@ public sealed partial class TabViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasLimitWait), nameof(LimitWaitText), nameof(WillContinueAfterLimit), nameof(CanContinueAfterLimit),
         nameof(ContinueAfterLimitText), nameof(RowDetail), nameof(InfoRows), nameof(CanPlayWhileWaiting), nameof(CanStopContinuing),
-        nameof(CanDismissLimitWait), nameof(CanUseCreditsNow))]
+        nameof(CanDismissLimitWait), nameof(CanUseCreditsNow), nameof(OffersOtherAgent))]
     public partial LimitWait? LimitWait { get; private set; }
 
     public bool HasLimitWait => LimitWait is not null;

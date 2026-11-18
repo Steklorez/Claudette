@@ -373,4 +373,62 @@ public sealed class CodexTabTests
         await TabTestHarness.Eventually(() => h.Transport.Sent.Any(m => m["method"]?.GetValue<string>() == "turn/interrupt" && m["params"]?["threadId"]?.GetValue<string>() == Child), "the subagent to be stopped");
         Assert.Contains(tab.Items.OfType<NoteItem>(), n => n.Text.StartsWith("Stopped a subagent Codex started", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task At_its_limit_a_codex_tab_waits_for_the_reset_and_offers_to_hand_the_work_to_claude_code()
+    {
+        await using var h = new TabTestHarness(s => s.Codex.OfferOtherAgentAtLimit = true);
+        var tab = await OpenCodexTabAsync(h);
+        tab.State.UserName = "Grappling hook";
+        tab.ComposerText = "Add the grappling hook";
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Contains("turn/start"), "the message");
+        JsonObject Note(string method, JsonObject parameters) => new() { ["method"] = method, ["params"] = parameters };
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = ScriptedTransport.CodexTurn } }));
+        h.Transport.Emit(Note("item/completed", new JsonObject
+        {
+            ["threadId"] = ScriptedTransport.CodexThread,
+            ["turnId"] = ScriptedTransport.CodexTurn,
+            ["item"] = new JsonObject { ["type"] = "agentMessage", ["id"] = "m1", ["text"] = "The hook fires; the rope isn't drawn yet." },
+        }));
+        h.Transport.Emit(Note("account/rateLimits/updated", new JsonObject
+        {
+            ["rateLimits"] = new JsonObject
+            {
+                ["primary"] = new JsonObject { ["usedPercent"] = 100, ["windowDurationMins"] = 300, ["resetsAt"] = h.Time.GetUtcNow().AddHours(1).ToUnixTimeSeconds() },
+                ["rateLimitReachedType"] = "primary",
+            },
+        }));
+        h.Transport.Emit(Note("turn/completed", new JsonObject
+        {
+            ["threadId"] = ScriptedTransport.CodexThread,
+            ["turn"] = new JsonObject { ["id"] = ScriptedTransport.CodexTurn, ["status"] = "failed", ["error"] = new JsonObject { ["message"] = "You've hit your usage limit.", ["codexErrorInfo"] = "usageLimitExceeded" } },
+        }));
+
+        await TabTestHarness.Eventually(() => tab.HasLimitWait && tab.OffersOtherAgent, "the limit bar");
+        Assert.Equal("Continue in Claude Code", tab.ContinueInOtherAgentText);
+
+        await InlineDispatcher.RunAsync(() => tab.ContinueInOtherAgentCommand.ExecuteAsync(null));
+
+        var claude = h.Shell.SelectedTab!;
+        Assert.NotSame(tab, claude);
+        Assert.False(claude.IsCodex);
+        Assert.Equal(tab.Folder, claude.Folder);
+        Assert.Equal("Grappling hook (Claude)", claude.DisplayName);
+        Assert.StartsWith("Please carry on with this work. Codex was doing it in this folder and stopped at its usage limit.", claude.ComposerText, StringComparison.Ordinal);
+        Assert.Contains("> Add the grappling hook", claude.ComposerText, StringComparison.Ordinal);
+        Assert.Contains("Codex's last reply:\n> The hook fires; the rope isn't drawn yet.", claude.ComposerText, StringComparison.Ordinal);
+        // The Codex tab waits for its reset still.
+        Assert.True(tab.HasLimitWait);
+    }
+
+    [Fact]
+    public async Task Without_the_setting_the_limit_bar_offers_no_other_agent()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await OpenCodexTabAsync(h);
+
+        Assert.False(h.Services.Settings.Codex.OfferOtherAgentAtLimit);
+        Assert.False(tab.OffersOtherAgent);
+    }
 }
