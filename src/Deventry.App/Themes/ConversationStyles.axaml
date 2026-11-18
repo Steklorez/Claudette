@@ -278,13 +278,9 @@
   <Style Selector="controls|Card.inline /template/ TextBlock#PART_Detail">
     <Setter Property="IsVisible" Value="False" />
   </Style>
-  <!-- On a card of one line that wraps, the label and time stay on its first line. -->
+  <!-- On a card of one line that wraps, the label and time stay on its first line, and the icon on the label's (Card.cs). -->
   <Style Selector="controls|Card.inline /template/ TextBlock#PART_Label, controls|Card.inline /template/ TextBlock#PART_Time">
     <Setter Property="VerticalAlignment" Value="Top" />
-  </Style>
-  <Style Selector="controls|Card.inline /template/ Path#PART_Icon">
-    <Setter Property="VerticalAlignment" Value="Top" />
-    <Setter Property="Margin" Value="0,2,6,0" />
   </Style>
   <Style Selector="controls|Card.inline">
     <Setter Property="Padding" Value="12,5,12,6" />

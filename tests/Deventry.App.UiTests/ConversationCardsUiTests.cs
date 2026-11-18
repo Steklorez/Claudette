@@ -221,6 +221,37 @@ public sealed class ConversationCardsUiTests
         window.Close();
     }
 
+    /// <summary>
+    /// A turn's card is a line with its bar under it (DESIGN.md §18, "A turn's card"): its icon is on the line, with the
+    /// label, not in the middle of the line and the bar.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_turns_icon_is_on_its_labels_line_not_between_the_line_and_its_bar()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.Items.Add(new TurnSummaryItem("15.1s · 1.5M in · 1.2k out · $0.34 · Opus 5.5")
+        {
+            Kinds = new KindValues(1_500_000, 0, 2_000, 1_200),
+            ToolCalls = 2,
+            TurnNumber = 120,
+            TurnId = "turn-120",
+        });
+        await UiText.SettleUntilAsync(window, () => Named(window, "stats").Count == 1, "the turn's card");
+        UiText.Settle(window);
+
+        var card = Named(window, "stats")[0];
+        var icon = card.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single(p => p.Name == "PART_Icon");
+        var label = card.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "PART_Label");
+        var bar = card.GetVisualDescendants().OfType<KindsBar>().Single();
+        Assert.Equal("Turn 120", label.Text);
+        var middle = icon.TranslatePoint(new Point(0, icon.Bounds.Height / 2), window)!.Value.Y;
+        Assert.InRange(middle - FirstLine.MiddleIn(label, window)!.Value, -0.6, 0.6);
+        Assert.True(middle < bar.TranslatePoint(default, window)!.Value.Y, "The icon is level with the bar or below it.");
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task A_chain_of_steps_folds_into_one_line_and_then_into_the_replys_header_which_opens_it_inside_the_card()
     {

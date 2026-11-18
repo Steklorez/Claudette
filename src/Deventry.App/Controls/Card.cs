@@ -199,6 +199,12 @@ public sealed class Card : ContentControl
             body.PointerMoved += OnBodyPointerMoved;
             body.PointerExited += (_, _) => PseudoClasses.Set(":headerover", false);
         }
+        // An inline card's step can run to more lines, as a turn's statistics and the bar under them do: its icon stays on
+        // the label's line (FirstLine), rather than the middle of them all.
+        if (Classes.Contains("inline") && e.NameScope.Find<Control>("PART_Icon") is { } icon && e.NameScope.Find<TextBlock>("PART_Label") is { } label)
+        {
+            FirstLine.SetCenterOn(icon, label);
+        }
     }
 
     /// <summary>The pointer is on the header line of a card that folds, its text and tips included, not the content under it.</summary>
