@@ -184,6 +184,32 @@ public sealed class CodexTabTests
     }
 
     [Fact]
+    public async Task Tab_settings_on_a_codex_tab_offers_codexs_modes_and_goes_back_to_codexs_default()
+    {
+        await using var h = new TabTestHarness();
+        // Claude Code's default for new tabs, which a Codex tab doesn't take.
+        h.Services.Settings.NewTabs.DefaultPermissionMode = "acceptEdits";
+        h.Services.Settings.Codex.DefaultMode = CodexModes.ReadOnly;
+        var tab = await OpenCodexTabAsync(h);
+
+        var settings = new TabSettingsViewModel(h.Services, tab, () => { });
+        Assert.Equal([null, CodexModes.ReadOnly, CodexModes.Auto, CodexModes.Plan, CodexModes.FullAccess], settings.ModeChoices.Select(c => c.Value));
+        Assert.Equal("Default (Read only)", settings.ModeChoices[0].Label);
+
+        var previous = tab.State.Overrides;
+        tab.State.Overrides = new TabOverrides { PermissionMode = CodexModes.Auto };
+        await tab.ApplyOverridesAsync(previous);
+        Assert.Equal("Auto", tab.PermissionModeName);
+        previous = tab.State.Overrides;
+        tab.State.Overrides = new TabOverrides();
+        await tab.ApplyOverridesAsync(previous);
+
+        Assert.Equal("Read only", tab.PermissionModeName);
+        var update = h.Transport.Sent.Last(m => m["method"]?.GetValue<string>() == "thread/settings/update")["params"]!.AsObject();
+        Assert.Equal("readOnly", update["sandboxPolicy"]!["type"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task A_codex_tabs_modes_are_codexs_and_full_access_asks_first()
     {
         await using var h = new TabTestHarness();

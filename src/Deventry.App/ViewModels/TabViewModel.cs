@@ -2744,7 +2744,14 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             }
             if (State.Overrides.PermissionMode != previous.PermissionMode)
             {
-                if ((State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode) is { } mode)
+                if (IsCodex)
+                {
+                    // Codex's modes, and its default from Settings → Agents → Codex (DESIGN.md §18, "Modes").
+                    var codexMode = Core.Codex.CodexModes.Normalize(State.Overrides.PermissionMode ?? _services.Settings.Codex.DefaultMode);
+                    await _session.SetPermissionModeAsync(codexMode);
+                    PermissionMode = codexMode;
+                }
+                else if ((State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode) is { } mode)
                 {
                     await _session.SetPermissionModeAsync(mode);
                     PermissionMode = mode;

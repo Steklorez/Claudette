@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Deventry.App.Services;
 using Deventry.App.ViewModels.Settings;
+using Deventry.Core.Codex;
 using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -65,12 +66,15 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         }
         var defaultEffort = tab.DefaultEffortSetting is { } level ? Core.Formats.Capitalize(level) : "the model's default";
         EffortChoices = [new Choice(null, $"Default ({defaultEffort})"), .. levels.Select(e => new Choice(e, Core.Formats.Capitalize(e)))];
-        // Claude Code's default is known once the tab has started and read its settings files (DESIGN.md §7).
-        var defaultMode = defaults.NewTabs.DefaultPermissionMode ?? tab.ClaudeCodeStartingMode;
+        // Claude Code's default is known once the tab has started and read its settings files (DESIGN.md §7). A Codex tab
+        // has Codex's modes, and Settings → Agents → Codex's default (DESIGN.md §18, "Modes").
+        var defaultMode = tab.IsCodex ? CodexModes.Label(defaults.Codex.DefaultMode ?? CodexModes.Auto)
+            : (defaults.NewTabs.DefaultPermissionMode ?? tab.ClaudeCodeStartingMode) is { } claudeMode ? PermissionModeInfo.Label(claudeMode)
+            : "Claude Code's default";
         ModeChoices =
         [
-            new Choice(null, $"Default ({(defaultMode is null ? "Claude Code's default" : PermissionModeInfo.Label(defaultMode))})"),
-            .. PermissionModeInfo.Choices.Select(m => new Choice(m.Value, m.Label)),
+            new Choice(null, $"Default ({defaultMode})"),
+            .. (tab.IsCodex ? PermissionModeInfo.CodexChoices : PermissionModeInfo.Choices).Select(m => new Choice(m.Value, m.Label)),
         ];
         MonitorChoices = [new Choice(null, $"Default ({(defaults.Processes.ShowMonitor ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
         AutoContinueChoices = [new Choice(null, $"Default ({(defaults.Usage.ContinueAfterLimitReset ? "on" : "off")})"), new Choice(On, "On"), new Choice(Off, "Off")];
