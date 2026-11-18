@@ -131,6 +131,19 @@ None of this page syncs.
 
 The page also shows the installed Claude Code and how it was installed, with **Check now**, **Update now**, **Update on next launch** and **What's new** ([Claude Code's updates](../updates/claude-codes-updates.md)), and the signed-in account with **Sign in** and **Sign out…** ([Your Claude sign-in](../accounts/your-claude-sign-in.md)).
 
+## Codex
+
+None of this page syncs.
+
+| Setting | Section | Default | Per tab | Explained in |
+|---|---|---|---|---|
+| **Path to codex** | Codex | Found automatically | No | [Adding Codex](../codex/adding-codex.md) |
+| **Model** | New Codex tabs | Codex's own default | No | [Adding Codex](../codex/adding-codex.md#settings) |
+| **Mode** | New Codex tabs | Auto | No | [Codex tabs](../codex/codex-tabs.md#modes) |
+| **Offer to continue in the other agent at a usage limit** | Both agents | Off | No | [Codex's usage](../codex/codex-and-usage.md#continuing-in-the-other-agent) |
+
+The page also shows the Codex Deventry found, with **Look again** and **Install Codex**, and its sign-in, with **Sign in** and **Sign out** ([Adding Codex](../codex/adding-codex.md)).
+
 ## Accounts
 
 This page is this machine's own. None of it syncs, and a tab can't change it for itself. Accounts and their keys are on the [Accounts](../accounts/index.md) pages.

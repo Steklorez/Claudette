@@ -63,7 +63,7 @@ The sidebar groups the chapters into sections (`docs/guide/<section>.md`), in th
 | Downloads | Its own page. |
 | Getting started | Its own chapter. |
 | Sessions | Tabs and sessions, The conversation, The composer, Permissions and prompts, History and syncing. |
-| Agents and threads | Plans, tasks and agents, Threads. |
+| Agents and threads | Plans, tasks and agents, Threads, Codex. |
 | Code and changes | Reviewing changes, Project files, Project tools. |
 | Usage and accounts | Usage and limits, Accounts. |
 | Make it yours | Settings, Away from your desk, Deventry. |
@@ -176,6 +176,14 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Sending work and getting reports | **Ask before sending to sub-threads** and its question, *From the thread*, the *From the sub-threads* report and how a sub-thread's work can end. | [Threads](DESIGN.md#threads) |
 | Sub-threads waiting on you | The strip over the thread's composer: **Allow**, **Deny**, **Go to tab**. | [Threads](DESIGN.md#threads) |
 | Reaching other sessions | A session's name in Claude Code, **Reached as**, `@` sessions and tabs, **Copy session ID**, *From the session*. | [§13](DESIGN.md#13-architecture), [Autocomplete](DESIGN.md#autocomplete) |
+
+### Codex (`codex/`)
+
+| Page | Covers | From |
+|---|---|---|
+| Adding Codex | Settings → Agents → **Codex**: **Found**, **Install Codex** and **Look again**, **Path to codex**; the setup and sign-in screens' offer; **Sign in** and **Sign out** with Codex's own `codex login`; Codex's sandbox on Windows; in a Perforce workspace, **Let Codex check files out of Perforce?** with **Trust Deventry's hook** and **Not now**; the page's settings. | [Codex, a second agent](DESIGN.md#codex-a-second-agent) |
+| Codex tabs | **New Codex tab here** and **New Claude Code tab here**, a folder remembering its agent, the agent icons on the rows; Codex's modes and its permission cards; what works as in a Claude Code tab (Plan mode, subagents, threads, going back, History and syncing, the project's notes); a restored tab starting as it's shown; what only Claude Code has. | [Codex, a second agent](DESIGN.md#codex-a-second-agent) |
+| Codex's usage | The header and the Usage window following the selected tab's agent, Codex's alerts and **Codex:**, a Codex tab waiting for its reset, **Continue in Codex** and **Continue in Claude Code**. | [Codex, a second agent](DESIGN.md#codex-a-second-agent) |
 
 ### Reviewing changes (`changes/`)
 
