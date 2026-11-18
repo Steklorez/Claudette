@@ -568,4 +568,53 @@ public sealed class CodexTabTests
         Assert.Equal(ThreadMessages.NoSuchSubThread("Art", []), answer["contentItems"]![0]!["text"]!.GetValue<string>());
         Assert.False(tab.IsThread);
     }
+
+    [Fact]
+    public async Task Restoring_files_before_a_codex_message_puts_back_what_its_turns_changed()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await OpenCodexTabAsync(h);
+        var notes = Path.Combine(h.WorkFolder, "notes.md");
+        var added = Path.Combine(h.WorkFolder, "added.md");
+        await File.WriteAllTextAsync(notes, "one\n", TestContext.Current.CancellationToken);
+
+        tab.ComposerText = "Change the notes";
+        await tab.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Contains("turn/start"), "the message");
+        var sentId = h.Transport.Sent.Last(m => m["method"]?.GetValue<string>() == "turn/start")["params"]!["clientUserMessageId"]!.GetValue<string>();
+        JsonObject Note(string method, JsonObject parameters) => new() { ["method"] = method, ["params"] = parameters };
+        JsonObject Item(string method, JsonObject item) => Note(method, new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turnId"] = "turn-1", ["item"] = item });
+        JsonObject Patch(string status) => new()
+        {
+            ["type"] = "fileChange",
+            ["id"] = "patch-1",
+            ["status"] = status,
+            ["changes"] = new JsonArray(
+                new JsonObject { ["path"] = notes, ["kind"] = new JsonObject { ["type"] = "update" }, ["diff"] = "@@ -1 +1 @@\n-one\n+two\n" },
+                new JsonObject { ["path"] = added, ["kind"] = new JsonObject { ["type"] = "add" }, ["diff"] = "new\n" }),
+        };
+        h.Transport.Emit(Note("turn/started", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = "turn-1" } }));
+        h.Transport.Emit(Item("item/completed", new JsonObject { ["type"] = "userMessage", ["id"] = "u1", ["clientId"] = sentId, ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = "Change the notes" }) }));
+        h.Transport.Emit(Item("item/started", Patch("inProgress")));
+        await File.WriteAllTextAsync(notes, "two\n", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(added, "new\n", TestContext.Current.CancellationToken);
+        h.Transport.Emit(Item("item/completed", Patch("completed")));
+        h.Transport.Emit(Note("thread/tokenUsage/updated", new JsonObject
+        {
+            ["threadId"] = ScriptedTransport.CodexThread,
+            ["turnId"] = "turn-1",
+            ["tokenUsage"] = new JsonObject { ["total"] = new JsonObject { ["inputTokens"] = 100, ["outputTokens"] = 10 }, ["last"] = new JsonObject { ["inputTokens"] = 100, ["outputTokens"] = 10 } },
+        }));
+        h.Transport.Emit(Note("turn/completed", new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["turn"] = new JsonObject { ["id"] = "turn-1", ["status"] = "completed" } }));
+        await TabTestHarness.Eventually(() => tab.Items.OfType<TurnSummaryItem>().SingleOrDefault() is { Files.Count: 2 } && tab.IsSettled, "the turn's files");
+
+        await InlineDispatcher.RunAsync(() => tab.RestoreFilesBeforeCommand.ExecuteAsync(tab.Items.OfType<UserMessageItem>().Single()));
+        await TabTestHarness.Eventually(() => h.Shell.Confirmation is not null, "the question");
+        Assert.StartsWith("Deventry puts notes.md and added.md back", h.Shell.Confirmation!.Message, StringComparison.Ordinal);
+        await InlineDispatcher.RunAsync(() => h.Shell.Confirmation!.ConfirmCommand.ExecuteAsync(null));
+
+        await TabTestHarness.Eventually(() => tab.Items.OfType<NoteItem>().Any(n => n.Text.StartsWith("Put notes.md and added.md back", StringComparison.Ordinal)), "the files back");
+        Assert.Equal("one\n", await File.ReadAllTextAsync(notes, TestContext.Current.CancellationToken));
+        Assert.False(File.Exists(added));
+    }
 }

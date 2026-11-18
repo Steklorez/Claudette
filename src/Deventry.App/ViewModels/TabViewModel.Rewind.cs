@@ -96,7 +96,7 @@ public sealed partial class TabViewModel
             return;
         }
         var restored = false;
-        if (restoreFiles && message.Uuid is { } uuid && _session is IRewindsFiles session)
+        if (restoreFiles && message.Uuid is { } uuid && FileRewinder is { } session)
         {
             if (!await RestoreFilesAsync(session, uuid))
             {
@@ -142,9 +142,9 @@ public sealed partial class TabViewModel
             _conversation.AddNote(reason, NoteKind.Warning);
             return;
         }
-        if (_session is not IRewindsFiles session)
+        if (FileRewinder is not { } session)
         {
-            _conversation.AddNote("Claude Code isn't running in this tab. Restart it to put files back.", NoteKind.Warning);
+            _conversation.AddNote($"{Agent.Name} isn't running in this tab. Restart it to put files back.", NoteKind.Warning);
             return;
         }
         RewindResult preview;
@@ -170,12 +170,12 @@ public sealed partial class TabViewModel
         var counts = preview.Insertions > 0 || preview.Deletions > 0 ? $" (+{preview.Insertions} −{preview.Deletions})" : "";
         _shell.Confirm(
             "Restore files to before this message?",
-            $"Claude Code puts {DescribeFiles(preview.FilesChanged)}{counts} back as {(preview.FilesChanged.Count == 1 ? "it was" : "they were")} before it. "
+            $"{(IsCodex ? "Deventry" : "Claude Code")} puts {DescribeFiles(preview.FilesChanged)}{counts} back as {(preview.FilesChanged.Count == 1 ? "it was" : "they were")} before it. "
             + "Later changes to them, Claude's or yours, are lost. The conversation stays as it is.",
             "Restore files",
             async () =>
             {
-                if (_session is IRewindsFiles current && await RestoreFilesAsync(current, uuid))
+                if (FileRewinder is { } current && await RestoreFilesAsync(current, uuid))
                 {
                     _conversation.AddNote($"Put {DescribeFiles(preview.FilesChanged)} back as before that message.");
                     _ = ChangedFiles.RefreshAsync();
@@ -186,7 +186,7 @@ public sealed partial class TabViewModel
     /// <summary>A dry run of <c>rewind_files</c>, or null when there's no session, no id or no checkpoint to restore.</summary>
     private async Task<RewindResult?> PreviewFileRestoreAsync(UserMessageItem message)
     {
-        if (message.Uuid is not { } uuid || _session is not IRewindsFiles session)
+        if (message.Uuid is not { } uuid || FileRewinder is not { } session)
         {
             return null;
         }
@@ -212,6 +212,11 @@ public sealed partial class TabViewModel
                 _conversation.AddNote(NoCheckpointText(result), NoteKind.Error);
                 return false;
             }
+            if (IsCodex && result.Error is { } error)
+            {
+                // Some went back, and not these.
+                _conversation.AddNote($"Couldn't put every file back: {error}, or it changed meanwhile.", NoteKind.Warning);
+            }
             if (result.SkippedLinks > 0)
             {
                 _conversation.AddNote($"Claude Code left {result.SkippedLinks} linked file{(result.SkippedLinks == 1 ? "" : "s")} as {(result.SkippedLinks == 1 ? "it was" : "they were")}.", NoteKind.Warning);
@@ -225,9 +230,26 @@ public sealed partial class TabViewModel
         }
     }
 
-    private static string NoCheckpointText(RewindResult result) =>
-        $"Claude Code can't put files back to before that message: {result.Error ?? "it has no copies of them from then"}."
-        + " It keeps them while Settings → Claude Code → Keep copies of files Claude changes, so prompts can be rewound is on.";
+    private string NoCheckpointText(RewindResult result) => IsCodex
+        ? $"Deventry can't put files back to before that message: {result.Error ?? "it didn't see what they held then"}."
+        : $"Claude Code can't put files back to before that message: {result.Error ?? "it has no copies of them from then"}."
+            + " It keeps them while Settings → Claude Code → Keep copies of files Claude changes, so prompts can be rewound is on.";
+
+    /// <summary>
+    /// What puts files back: Claude Code's own copies of them, or for a Codex tab, which keeps none, Deventry's record of
+    /// each turn's changes (DESIGN.md §18, "Rewind and branch"). Null while the tab's agent isn't running.
+    /// </summary>
+    private IRewindsFiles? FileRewinder => _session is null ? null : IsCodex ? new TurnFilesRewinder(this) : _session as IRewindsFiles;
+
+    /// <summary>Puts files back from the footers of the turns since a message, by the message's id.</summary>
+    private sealed class TurnFilesRewinder(TabViewModel tab) : IRewindsFiles
+    {
+        public Task<RewindResult> RewindFilesAsync(string userMessageId, bool dryRun = false, CancellationToken cancellationToken = default)
+        {
+            var footers = tab.Items.SkipWhile(i => i is not UserMessageItem { Uuid: var uuid } || uuid != userMessageId).OfType<TurnSummaryItem>().ToList();
+            return tab.ChangedFiles.RewindFilesAsync(footers, dryRun);
+        }
+    }
 
     /// <summary>"Program.cs", "Program.cs and App.cs", or "5 files".</summary>
     internal static string DescribeFiles(IReadOnlyList<string> files) => files.Count switch
