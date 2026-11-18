@@ -110,6 +110,13 @@ items:
     usedIn: src/Deventry.Core/Codex/CodexSession.cs
     docs: https://learn.chatgpt.com/docs/app-server
     test: CodexSessionTests
+  - id: "model/list data[].isDefault, data[].defaultReasoningEffort"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.App/ViewModels/TabViewModel.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
+    fallback: "Kept with the models Codex last offered, for the row of a Codex tab that hasn't started and Tab settings' Default. Without them the row says Default for the model and effort Settings doesn't name, until the tab starts and Codex says its own."
   - id: account/read
     kind: control
     status: documented

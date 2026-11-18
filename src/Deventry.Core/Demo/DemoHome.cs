@@ -137,6 +137,8 @@ public static class DemoHome
             Window = options.Window,
             // Answered, so the sidebar doesn't offer Claude Code's projects over the demo (DESIGN.md §4, "Claude Code's projects").
             ClaudeProjectsOffered = true,
+            // What its Codex offers, so the Codex tab's row names its model before it starts.
+            KnownCodexModels = options.CodexPath is null ? [] : [DemoCodex.Offered],
         });
         return new DemoWritten(paths, config, tabs, codexHome);
     }

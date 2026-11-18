@@ -1442,7 +1442,11 @@ public sealed class CodexSession : IAgentSession
                 m.GetString("displayName") ?? m.GetString("id") ?? "",
                 m.GetString("description"),
                 m.GetArray("supportedReasoningEfforts") is { Count: > 0 },
-                [.. m.GetArray("supportedReasoningEfforts")?.OfType<JsonObject>().Select(e => e.GetString("reasoningEffort")).OfType<string>() ?? []]))
+                [.. m.GetArray("supportedReasoningEfforts")?.OfType<JsonObject>().Select(e => e.GetString("reasoningEffort")).OfType<string>() ?? []])
+            {
+                IsDefault = m.GetBool("isDefault") == true,
+                DefaultEffort = m.GetString("defaultReasoningEffort"),
+            })
             .Where(m => m.Value.Length > 0)
             .ToArray() ?? [];
 

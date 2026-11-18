@@ -3,7 +3,7 @@ using Deventry.Core.Protocol;
 
 namespace Deventry.Core.Sessions;
 
-/// <summary>A model Claude Code offers, with the effort levels it supports (DESIGN.md §5, "Model &amp; effort").</summary>
+/// <summary>A model Claude Code or Codex offers, with the effort levels it supports (DESIGN.md §5, "Model &amp; effort").</summary>
 public sealed record ModelInfo(
     string Value,
     string? ResolvedModel,
@@ -14,6 +14,12 @@ public sealed record ModelInfo(
 {
     /// <summary>Auto mode works with this model (DESIGN.md §7). Claude Code leaves the field out for one that it doesn't.</summary>
     public bool SupportsAutoMode { get; init; }
+
+    /// <summary>Codex's own default model (<c>isDefault</c>). Claude Code's is its <c>default</c> entry instead.</summary>
+    public bool IsDefault { get; init; }
+
+    /// <summary>The effort Codex starts this model at (<c>defaultReasoningEffort</c>); Claude Code doesn't say.</summary>
+    public string? DefaultEffort { get; init; }
 }
 
 /// <summary>A slash command, as <c>initialize</c> and <c>system/commands_changed</c> list them (DESIGN.md §5, "Composer").</summary>

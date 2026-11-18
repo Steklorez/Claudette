@@ -611,14 +611,30 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     public string ModelBadge => $"{ShortModel(ModelName)} · {(Effort is null ? "Default" : Formats.Capitalize(Effort))}";
 
-    /// <summary>Until its claude starts, the row and the info card show the model and effort it will start with.</summary>
+    /// <summary>
+    /// Until its agent starts, the row and the info card show the model and effort it will start with, named from what
+    /// the agent last offered on this machine. Codex says its own default model and the effort it starts each at.
+    /// </summary>
     private void ShowStartingModel()
     {
-        var defaults = _services.Settings.NewTabs;
-        Effort = State.Overrides.Effort ?? defaults.DefaultEffort;
-        var model = State.Overrides.Model ?? defaults.DefaultModel;
-        ModelName = model is null ? null : _services.State.KnownModels.FirstOrDefault(m => m.Value == model)?.DisplayName ?? model;
+        var known = _services.KnownModels(Agent);
+        var model = State.Overrides.Model ?? DefaultModelSetting;
+        if (IsCodex)
+        {
+            var info = model is null ? known.FirstOrDefault(m => m.IsDefault) : known.FirstOrDefault(m => m.Value == model || m.ResolvedModel == model);
+            ModelName = info?.DisplayName ?? model;
+            Effort = State.Overrides.Effort ?? info?.DefaultEffort;
+            return;
+        }
+        Effort = State.Overrides.Effort ?? DefaultEffortSetting;
+        ModelName = model is null ? null : known.FirstOrDefault(m => m.Value == model)?.DisplayName ?? model;
     }
+
+    /// <summary>The model Settings starts a new tab of the tab's agent with; null for the agent's own default.</summary>
+    public string? DefaultModelSetting => IsCodex ? _services.Settings.Codex.DefaultModel : _services.Settings.NewTabs.DefaultModel;
+
+    /// <summary>The effort Settings starts a new tab of the tab's agent at; null for the model's. Codex has no setting for it.</summary>
+    public string? DefaultEffortSetting => IsCodex ? null : _services.Settings.NewTabs.DefaultEffort;
 
     /// <summary>
     /// The second line of the tab's row in the sidebar (DESIGN.md §4): the model and effort, or what needs attention
@@ -1910,7 +1926,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
             _ = LoadSpinnerVerbsAsync();
             _ = LoadPromptCacheConfigAsync();
             _ = LoadTaskListAsync();
-            _services.RememberModels(session.Initialization?.Models);
+            _services.RememberModels(Agent, session.Initialization?.Models);
             CheckAccountProvider(session.Initialization?.Account.ApiProvider);
             State.SessionStartedAt ??= _services.Time.GetUtcNow();
             // The installed version is what just started; system/init confirms it with the first turn.
@@ -2711,7 +2727,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         }
         try
         {
-            var model = State.Overrides.Model ?? _services.Settings.NewTabs.DefaultModel;
+            // Codex's own default is a model on its list, and its effort the model's, which it goes back to by name.
+            var model = State.Overrides.Model ?? DefaultModelSetting ?? (IsCodex ? Models.FirstOrDefault(m => m.IsDefault)?.Value : null);
             if (State.Overrides.Model != previous.Model)
             {
                 await _session.SetModelAsync(model);
@@ -2719,7 +2736,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 ModelName = ModelDisplayName(_modelId) ?? model;
                 ForgetPromptCache();
             }
-            var effort = State.Overrides.Effort ?? _services.Settings.NewTabs.DefaultEffort;
+            var effort = State.Overrides.Effort ?? DefaultEffortSetting ?? (IsCodex ? FindModel(_modelId)?.DefaultEffort : null);
             if (State.Overrides.Effort != previous.Effort)
             {
                 await _session.SetEffortAsync(effort);

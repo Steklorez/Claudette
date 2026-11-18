@@ -32,6 +32,8 @@ public sealed class CodexSessionTests
                     ["displayName"] = "GPT-6.1-Sol",
                     ["description"] = "Latest workhorse model",
                     ["hidden"] = false,
+                    ["isDefault"] = true,
+                    ["defaultReasoningEffort"] = "high",
                     ["supportedReasoningEfforts"] = new JsonArray(new JsonObject { ["reasoningEffort"] = "low" }, new JsonObject { ["reasoningEffort"] = "high" }),
                 },
                 new JsonObject { ["id"] = "hidden-one", ["displayName"] = "Hidden", ["hidden"] = true }),
@@ -89,6 +91,8 @@ public sealed class CodexSessionTests
         Assert.Equal(SessionState.Idle, session.State);
         var model = Assert.Single(session.Initialization!.Models);
         Assert.Equal(["low", "high"], model.SupportedEffortLevels);
+        Assert.True(model.IsDefault);
+        Assert.Equal("high", model.DefaultEffort);
         Assert.Equal("dev@example.com", session.Initialization.Account.Email);
         Assert.Equal("Codex", session.Agent.Name);
     }

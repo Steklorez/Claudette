@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 using Deventry.Core.Agents;
+using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
 
 namespace Deventry.Core.Demo;
@@ -29,6 +30,16 @@ public static class DemoCodex
     public const string Model = "gpt-5.5-codex";
 
     public const string ModelName = "GPT-5.5-Codex";
+
+    /// <summary>
+    /// What the demo's Codex offers (<c>model/list</c>), which the demo's state remembers as a Codex that ran before would
+    /// have left it (<see cref="AppState.KnownCodexModels"/>), so the tab's row names its model before the tab starts.
+    /// </summary>
+    public static ModelInfo Offered { get; } = new(Model, Model, ModelName, "The demo's stand-in for Codex", true, ["low", "medium", "high"])
+    {
+        IsDefault = true,
+        DefaultEffort = "medium",
+    };
 
     /// <summary>The file a thread's items are kept in.</summary>
     public static string TurnsFile(string codexHome, string thread) => Path.Combine(codexHome, TurnsFolder, $"{thread}.jsonl");

@@ -238,6 +238,12 @@ public sealed class AppState
     /// </summary>
     public List<ModelInfo> KnownModels { get; set; } = [];
 
+    /// <summary>
+    /// The models the installed Codex last offered (<c>model/list</c>), as <see cref="KnownModels"/> are Claude Code's: a
+    /// Codex tab that hasn't started yet names its model with them (DESIGN.md §18, "Codex, a second agent").
+    /// </summary>
+    public List<ModelInfo> KnownCodexModels { get; set; } = [];
+
     /// <summary>The main window's position and size when Deventry last closed on this machine (DESIGN.md §14).</summary>
     public WindowPlacement? Window { get; set; }
 

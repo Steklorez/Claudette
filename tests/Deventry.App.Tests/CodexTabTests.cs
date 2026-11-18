@@ -120,6 +120,70 @@ public sealed class CodexTabTests
     }
 
     [Fact]
+    public async Task A_codex_tab_remembers_the_models_codex_offered_apart_from_claude_codes()
+    {
+        await using var h = new TabTestHarness();
+        await OpenCodexTabAsync(h);
+
+        var model = Assert.Single(h.Services.State.KnownCodexModels);
+        Assert.Equal(("gpt-fake-1", "GPT Fake 1", true, "low"), (model.Value, model.DisplayName, model.IsDefault, model.DefaultEffort));
+        Assert.Empty(h.Services.State.KnownModels);
+    }
+
+    [Fact]
+    public async Task A_restored_codex_tab_names_its_model_and_effort_from_what_codex_last_offered_before_it_starts()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.State.KnownModels = [new ModelInfo("opus", "claude-opus-5-5", "Opus", null, true, ["low", "high"])];
+        h.Services.State.KnownCodexModels =
+        [
+            new ModelInfo("gpt-fake-1", "gpt-fake-1", "GPT-Fake-1", null, true, ["low", "high"]) { IsDefault = true, DefaultEffort = "high" },
+            new ModelInfo("gpt-fake-2", "gpt-fake-2", "GPT-Fake-2", null, true, ["low", "medium"]) { DefaultEffort = "medium" },
+        ];
+        // Claude Code's defaults for new tabs, which a Codex tab doesn't take.
+        h.Services.Settings.NewTabs.DefaultModel = "opus";
+        h.Services.Settings.NewTabs.DefaultEffort = "low";
+        Directory.CreateDirectory(h.WorkFolder);
+        // The selected tab is shown, which starts it: the Codex tabs aren't.
+        h.Services.State.Tabs =
+        [
+            new TabState { Id = "claude", Folder = h.WorkFolder },
+            new TabState { Id = "codex-1", Folder = h.WorkFolder, SessionId = "codex-thread-1", Agent = AgentKinds.Codex },
+            new TabState { Id = "codex-2", Folder = h.WorkFolder, SessionId = "codex-thread-2", Agent = AgentKinds.Codex, Overrides = new TabOverrides { Model = "gpt-fake-2" } },
+        ];
+        h.Services.State.SelectedTabId = "claude";
+        h.Shell.Restore(null);
+        var tabs = h.Shell.AllTabs.Where(t => t.IsCodex).ToList();
+
+        Assert.All(tabs, t => Assert.Equal(TabStatus.NotStarted, t.Status));
+        Assert.Equal(["GPT-Fake-1 · High", "GPT-Fake-2 · Medium"], tabs.Select(t => t.ModelBadge));
+        var settings = new TabSettingsViewModel(h.Services, tabs[1], () => { });
+        Assert.Equal([null, "gpt-fake-1", "gpt-fake-2"], settings.ModelChoices.Select(c => c.Value));
+        Assert.Equal("Default (GPT-Fake-1)", settings.ModelChoices[0].Label);
+        Assert.Equal("Default (the model's default)", settings.EffortChoices[0].Label);
+    }
+
+    [Fact]
+    public async Task Going_back_to_the_default_model_in_Tab_settings_switches_codex_to_its_own_default()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.Settings.NewTabs.DefaultModel = "opus";
+        var tab = await OpenCodexTabAsync(h);
+        var previous = tab.State.Overrides;
+        tab.State.Overrides = new TabOverrides { Model = "gpt-other" };
+        await tab.ApplyOverridesAsync(previous);
+
+        previous = tab.State.Overrides;
+        tab.State.Overrides = new TabOverrides();
+        await tab.ApplyOverridesAsync(previous);
+
+        var models = h.Transport.Sent.Where(m => m["method"]?.GetValue<string>() == "thread/settings/update")
+            .Select(m => m["params"]?["model"]?.GetValue<string>());
+        Assert.Equal(["gpt-other", "gpt-fake-1"], models);
+        Assert.Equal("GPT Fake 1", tab.ModelName);
+    }
+
+    [Fact]
     public async Task A_codex_tabs_modes_are_codexs_and_full_access_asks_first()
     {
         await using var h = new TabTestHarness();

@@ -44,9 +44,11 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         var overrides = tab.State.Overrides;
         var defaults = services.Settings;
 
-        // What the tab's Claude Code offers, else what Claude Code last offered on this machine (DESIGN.md §14).
-        IReadOnlyList<ModelInfo> models = tab.Models.Count > 0 ? tab.Models : services.State.KnownModels;
-        var defaultModel = defaults.NewTabs.DefaultModel is { } modelId ? models.FirstOrDefault(m => m.Value == modelId)?.DisplayName ?? modelId : "Claude Code's default";
+        // What the tab's agent offers, else what it last offered on this machine (DESIGN.md §14).
+        IReadOnlyList<ModelInfo> models = tab.Models.Count > 0 ? tab.Models : services.KnownModels(tab.Agent);
+        var defaultModel = tab.DefaultModelSetting is { } modelId ? models.FirstOrDefault(m => m.Value == modelId)?.DisplayName ?? modelId
+            : tab.IsCodex ? models.FirstOrDefault(m => m.IsDefault)?.DisplayName ?? "Codex's default"
+            : "Claude Code's default";
         ModelChoices = [new Choice(null, $"Default ({defaultModel})"), .. models.Select(m => new Choice(m.Value, m.DisplayName))];
         if (overrides.Model is { } model && ModelChoices.All(c => c.Value != model))
         {
@@ -61,7 +63,7 @@ public sealed partial class TabSettingsViewModel : ViewModelBase, ISettingsSourc
         {
             levels.Add(effort);
         }
-        var defaultEffort = defaults.NewTabs.DefaultEffort is { } level ? Core.Formats.Capitalize(level) : "the model's default";
+        var defaultEffort = tab.DefaultEffortSetting is { } level ? Core.Formats.Capitalize(level) : "the model's default";
         EffortChoices = [new Choice(null, $"Default ({defaultEffort})"), .. levels.Select(e => new Choice(e, Core.Formats.Capitalize(e)))];
         // Claude Code's default is known once the tab has started and read its settings files (DESIGN.md §7).
         var defaultMode = defaults.NewTabs.DefaultPermissionMode ?? tab.ClaudeCodeStartingMode;

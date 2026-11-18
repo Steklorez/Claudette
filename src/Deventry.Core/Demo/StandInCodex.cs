@@ -106,14 +106,14 @@ public sealed class StandInCodex
                 {
                     ["data"] = new JsonArray(new JsonObject
                     {
-                        ["id"] = DemoCodex.Model,
-                        ["model"] = DemoCodex.Model,
-                        ["displayName"] = DemoCodex.ModelName,
-                        ["description"] = "The demo's stand-in for Codex",
+                        ["id"] = DemoCodex.Offered.Value,
+                        ["model"] = DemoCodex.Offered.ResolvedModel,
+                        ["displayName"] = DemoCodex.Offered.DisplayName,
+                        ["description"] = DemoCodex.Offered.Description,
                         ["hidden"] = false,
-                        ["isDefault"] = true,
-                        ["defaultReasoningEffort"] = "medium",
-                        ["supportedReasoningEfforts"] = new JsonArray(Effort("low"), Effort("medium"), Effort("high")),
+                        ["isDefault"] = DemoCodex.Offered.IsDefault,
+                        ["defaultReasoningEffort"] = DemoCodex.Offered.DefaultEffort,
+                        ["supportedReasoningEfforts"] = new JsonArray([.. DemoCodex.Offered.SupportedEffortLevels.Select(e => (JsonNode)Effort(e))]),
                     }),
                 });
                 return;
@@ -181,7 +181,7 @@ public sealed class StandInCodex
     {
         ["thread"] = new JsonObject { ["id"] = _thread },
         ["model"] = DemoCodex.Model,
-        ["reasoningEffort"] = "medium",
+        ["reasoningEffort"] = DemoCodex.Offered.DefaultEffort,
     };
 
     private static JsonObject Effort(string effort) => new() { ["reasoningEffort"] = effort, ["description"] = effort };

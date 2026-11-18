@@ -99,6 +99,8 @@ internal sealed class ScriptedTransport : IClaudeTransport
                 ["id"] = "gpt-fake-1",
                 ["model"] = "gpt-fake-1",
                 ["displayName"] = "GPT Fake 1",
+                ["isDefault"] = true,
+                ["defaultReasoningEffort"] = "low",
                 ["supportedReasoningEfforts"] = new JsonArray(new JsonObject { ["reasoningEffort"] = "low" }, new JsonObject { ["reasoningEffort"] = "high" }),
             }),
         },
