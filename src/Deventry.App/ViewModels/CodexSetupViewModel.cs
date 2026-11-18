@@ -171,6 +171,11 @@ public sealed partial class CodexSetupViewModel : ViewModelBase, IDisposable
         finally
         {
             await RefreshSignInAsync();
+            if (!IsSignedIn)
+            {
+                // The header no longer names the account Codex was signed in to.
+                _services.UseCodexAccount(null);
+            }
         }
     }
 }

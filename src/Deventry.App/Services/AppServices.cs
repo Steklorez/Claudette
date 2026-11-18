@@ -624,6 +624,26 @@ public sealed class AppServices : IAsyncDisposable
     /// <summary>Codex's own sign-in, once Codex is found (DESIGN.md §18, "Installing and signing in").</summary>
     public CodexAuth? CodexAuth { get; private set; }
 
+    /// <summary>
+    /// The account Codex is signed in to, as the last Codex session that started said it (<c>account/read</c>): the header's
+    /// while a Codex tab is selected (DESIGN.md §18, "The header follows the selected tab's agent"). Null until one has, and
+    /// once Codex signs out.
+    /// </summary>
+    public AccountInfo? CodexAccount { get; private set; }
+
+    /// <summary><see cref="CodexAccount"/> changed (on the UI thread).</summary>
+    public event Action? CodexAccountChanged;
+
+    /// <summary>A Codex session said its account, or Codex signed out (null): the header follows, on the UI thread.</summary>
+    internal void UseCodexAccount(AccountInfo? account) => Dispatcher.Post(() =>
+    {
+        if (account != CodexAccount)
+        {
+            CodexAccount = account;
+            CodexAccountChanged?.Invoke();
+        }
+    });
+
     /// <summary>Codex's installer. Tests replace it: the real one would install Codex on the machine running them.</summary>
     internal Func<ICodexInstaller> CodexInstallerFactory { get; set; }
 

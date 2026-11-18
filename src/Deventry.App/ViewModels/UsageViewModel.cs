@@ -103,14 +103,12 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     /// tab's agent"). Claude Code until a Codex tab is selected.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AgentIconKey), nameof(AgentName))]
+    [NotifyPropertyChangedFor(nameof(AgentName))]
     public partial Core.Agents.IAgentType ShownAgent { get; private set; } = Core.Agents.ClaudeCodeAgent.Instance;
 
-    /// <summary>The meters' agent's icon, before them while more than one agent is in use, so it's clear whose they are.</summary>
+    /// <summary>Tabs of more than one agent are open: the Usage panel names whose plan its session is, and gives the other's a line.</summary>
     [ObservableProperty]
-    public partial bool ShowsAgentIcon { get; set; }
-
-    public string AgentIconKey => IsCodexShown ? "IconAgentCodex" : "IconAgentClaudeCode";
+    public partial bool HasSeveralAgents { get; set; }
 
     public string AgentName => ShownAgent.Name;
 

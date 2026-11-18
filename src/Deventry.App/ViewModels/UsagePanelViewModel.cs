@@ -260,7 +260,7 @@ public sealed partial class UsagePanelViewModel : ViewModelBase, IDisposable
 
     private void OnHeaderChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(UsageViewModel.ShownAgent) or nameof(UsageViewModel.ShowsAgentIcon))
+        if (e.PropertyName is nameof(UsageViewModel.ShownAgent) or nameof(UsageViewModel.HasSeveralAgents))
         {
             RefreshAgents();
         }
@@ -270,7 +270,7 @@ public sealed partial class UsagePanelViewModel : ViewModelBase, IDisposable
 
     private void RefreshAgents()
     {
-        var both = _header.ShowsAgentIcon;
+        var both = _header.HasSeveralAgents;
         SessionTitle = both ? $"{_header.AgentName}: this session (5-hour window)" : "This session (5-hour window)";
         var codexShown = _header.ShownAgent.Kind == Core.Agents.AgentKinds.Codex;
         Core.Agents.IAgentType other = codexShown ? Core.Agents.ClaudeCodeAgent.Instance : Core.Agents.CodexAgent.Instance;

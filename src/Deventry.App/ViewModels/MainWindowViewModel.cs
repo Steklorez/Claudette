@@ -27,6 +27,17 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
     /// <summary>The account menu, the sign-in banner and its dialog, and signing out (DESIGN.md §11).</summary>
     public AccountViewModel Account { get; } = new(services);
 
+    /// <summary>Codex's account, which the header shows in place of Claude Code's while a Codex tab is selected (DESIGN.md §18).</summary>
+    public CodexAccountViewModel CodexAccount { get; } = new(services);
+
+    /// <summary>The selected tab is a Codex tab: the header names Codex's account rather than Claude Code's.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsClaudeAccount))]
+    public partial bool ShowsCodexAccount { get; private set; }
+
+    /// <summary>The header names Claude Code's account: it's known, and the selected tab isn't a Codex tab.</summary>
+    public bool ShowsClaudeAccount => Account.Status is not null && !ShowsCodexAccount;
+
     /// <summary>Claude's service status: the header's dot and the banner (DESIGN.md §18, "Service status").</summary>
     public ServiceStatusViewModel ServiceStatus { get; } = new(services);
 
@@ -181,6 +192,7 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
             if (e.PropertyName == nameof(AccountViewModel.Status))
             {
                 OnPropertyChanged(nameof(AccountText));
+                OnPropertyChanged(nameof(ShowsClaudeAccount));
             }
         };
         return CheckInstallAsync(services.Settings.ClaudeCode.ClaudePath);
@@ -348,11 +360,12 @@ public sealed partial class MainWindowViewModel(AppServices services, string? in
                 {
                     Spend?.Show(_shell.SelectedAccount);
                 }
-                // And the selected tab's agent: its plan, with its icon while tabs of more than one are open (DESIGN.md §18).
+                // And the selected tab's agent: its plan and its account (DESIGN.md §18).
                 if (e.PropertyName is nameof(ShellViewModel.SelectedAgent) or nameof(ShellViewModel.HasSeveralAgents))
                 {
                     Usage?.ShowAgent(_shell.SelectedAgent);
-                    Usage?.ShowsAgentIcon = _shell.HasSeveralAgents;
+                    Usage?.HasSeveralAgents = _shell.HasSeveralAgents;
+                    ShowsCodexAccount = _shell.SelectedAgent.Kind == Core.Agents.AgentKinds.Codex;
                 }
             };
             OnPropertyChanged(nameof(Shell));

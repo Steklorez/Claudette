@@ -11,7 +11,7 @@ summary: "Opening a Codex tab, its modes, and what works as in a Claude Code tab
 
 A Codex tab is a tab like any other, running Codex instead of Claude Code. A tab keeps its agent: a conversation can't move from one to the other, though [Codex's usage](codex-and-usage.md#continuing-in-the-other-agent) covers handing the work over.
 
-{% include shot.html name="guide/codex/codex-tab" alt="A Codex tab, Load older inventory saves, in tidepool's group: Codex's replies headed Codex with its icon, a Read file, a Search and a Create file tile, and the composer saying Message Codex with GPT-5.5-Codex, Medium and Auto under it. The tab's row has Codex's icon, the other rows Claude Code's, and the header shows Codex's session and weekly usage after its icon." %}
+{% include shot.html name="guide/codex/codex-tab" alt="A Codex tab, Load older inventory saves, in tidepool's group: Codex's replies headed Codex with its icon, a Read file, a Search and a Create file tile, and the composer saying Message Codex with GPT-5.5-Codex, Medium and Auto under it. The tab's row has Codex's icon, the other rows Claude Code's, and the header shows Codex's session and weekly usage, and the account Codex is signed in to with its Pro plan." %}
 
 ## Opening one
 

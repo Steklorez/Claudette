@@ -13,7 +13,7 @@ Codex has usage limits of its own, a five-hour window and a weekly one, separate
 
 ## The header follows the selected tab
 
-Select a Codex tab, and the meters show Codex's windows: its session and week, the countdown to the session's reset, the sparkline and the projection. Select a Claude Code tab, and they're Claude's again. While tabs of both agents are open, the agent's icon stands before the meters, so it's clear whose they are. Codex sends its limits with each turn, so the meters fill in after a Codex tab's first turn. See [The usage header](../usage/the-usage-header.md).
+Select a Codex tab, and the meters show Codex's windows: its session and week, the countdown to the session's reset, the sparkline and the projection. Select a Claude Code tab, and they're Claude's again. The account beside them says whose they are: on a Codex tab it's the account Codex is signed in to, with its plan, such as *Pro plan*, and its menu has **Codex settings…**, where Codex signs in and out. Codex sends its limits with each turn, so the meters fill in after a Codex tab's first turn. See [The usage header](../usage/the-usage-header.md).
 
 The Usage window's session section names the agent while tabs of both are open, with the other agent's session and week on a line of their own under it. See [The Usage window](../usage/the-usage-window.md).
 

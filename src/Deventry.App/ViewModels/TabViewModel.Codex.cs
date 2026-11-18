@@ -125,6 +125,11 @@ public partial class TabViewModel
             }
             session.ToolHandler = OnCodexToolCallAsync;
             _session = session;
+            // Whose account Codex runs under, for the header while a Codex tab is selected (DESIGN.md §18).
+            if (session.Initialization?.Account is { } account)
+            {
+                _services.UseCodexAccount(account);
+            }
             _appliedState = SessionState.Starting;
             _sentSinceStart = false;
             State.SessionId = session.SessionId;

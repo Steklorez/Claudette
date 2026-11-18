@@ -169,7 +169,7 @@ public sealed class CodexTabTests
     }
 
     [Fact]
-    public async Task The_header_shows_the_selected_tabs_agents_plan_with_its_icon_while_both_are_open()
+    public async Task The_header_shows_the_selected_tabs_agents_plan_and_its_rows_their_agents_icons_while_both_are_open()
     {
         await using var h = new TabTestHarness();
         var tracker = new UsageTracker(h.Services, new UsageStore(Path.Combine(h.Root, "usage.db"), h.Time));
@@ -198,7 +198,6 @@ public sealed class CodexTabTests
         Assert.True(h.Shell.HasSeveralAgents);
         Assert.True(codex.ShowsAgentIcon && claude.ShowsAgentIcon);
         Assert.Equal("Codex", header.AgentName);
-        Assert.Equal("IconAgentCodex", header.AgentIconKey);
         Assert.Equal(42, header.Session.Percent);
         Assert.Equal("12%", Assert.Single(header.Weekly).PercentText);
 
@@ -206,6 +205,36 @@ public sealed class CodexTabTests
         Assert.Equal("Claude Code", header.AgentName);
         Assert.False(header.HasData);
     }
+
+    /// <summary>
+    /// The header names Codex's account while a Codex tab is selected (DESIGN.md §18): the email and plan its session read
+    /// as it started, and nothing once Codex signs out.
+    /// </summary>
+    [Fact]
+    public async Task The_header_names_the_account_Codex_said_and_forgets_it_when_Codex_signs_out()
+    {
+        await using var h = new TabTestHarness();
+        using var account = new CodexAccountViewModel(h.Services);
+        Assert.Equal(("Codex", false), (account.HeaderName, account.IsKnown));
+
+        await OpenCodexTabAsync(h);
+        await TabTestHarness.Eventually(() => account.IsKnown, "Codex's account");
+
+        Assert.Equal(("fake@example.com", "Pro plan", "Signed in to Codex as"), (account.HeaderName, account.PlanText, account.SignedInText));
+        InlineDispatcher.Run(() => h.Services.UseCodexAccount(new Deventry.Core.Sessions.AccountInfo(null, null, null, "apiKey", "openai")));
+        Assert.Equal(("API key", null), (account.HeaderName, account.PlanText));
+        InlineDispatcher.Run(() => h.Services.UseCodexAccount(null));
+        Assert.Equal(("Codex", false), (account.HeaderName, account.IsKnown));
+    }
+
+    [Theory]
+    [InlineData("pro", "Pro plan")]
+    [InlineData("plus", "Plus plan")]
+    [InlineData("business", "Business plan")]
+    [InlineData("unknown", null)]
+    [InlineData(null, null)]
+    public void Codexs_plan_reads_as_ChatGPTs_names_it(string? planType, string? name) =>
+        Assert.Equal(name, CodexAccountViewModel.PlanName(planType));
 
     [Fact]
     public async Task Codexs_limits_alert_by_name_and_its_line_shows_with_its_plan()
@@ -250,7 +279,7 @@ public sealed class CodexTabTests
                 ["secondary"] = new JsonObject { ["usedPercent"] = 12, ["windowDurationMins"] = 10080 },
             });
             // Tabs of both agents are open, as the shell says.
-            header.ShowsAgentIcon = true;
+            header.HasSeveralAgents = true;
         });
 
         Assert.Equal("Claude Code: this session (5-hour window)", panel.SessionTitle);
