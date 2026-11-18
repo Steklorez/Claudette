@@ -14,6 +14,8 @@
 //                   history that ends now, with the plan's usage and a month of Studio's spend
 //   claude-config/  for CLAUDE_CONFIG_DIR: the tabs' transcripts, with the subagents' beside them, and past sessions
 //                   for History: more in each project, one in a worktree of starfall, and four older projects
+//   codex-home/     for CODEX_HOME: the Codex tab's conversation in tidepool, which fake-codex reads back, and its
+//                   session file for History; fake-codex, as Codex, reports its usage (FAKE_CODEX_USAGE=demo)
 //   usage.json      for FAKE_CLAUDE_USAGE: the plan usage fake-claude reports, where the history ends
 //   projects/       three git repositories, with Claude's changes in their working trees, and the older projects'
 //                   empty folders. --projects puts them elsewhere: the conversation shows their paths, so a short one
@@ -103,6 +105,7 @@ var usage = Path.Combine(folder, "usage.json");
 var written = await DemoHome.WriteAsync(folder, projects, now, new DemoOptions
 {
     ClaudePath = Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "fake-claude.exe" : "fake-claude"),
+    CodexPath = Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "fake-codex.exe" : "fake-codex"),
     Theme = theme,
     Style = style,
     Still = still,
@@ -121,6 +124,8 @@ Console.WriteLine($"""
       CLAUDE_CONFIG_DIR={config}
       FAKE_CLAUDE_USAGE={usage}
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      CODEX_HOME={written.CodexHome}
+      FAKE_CODEX_USAGE=demo
     """);
 return 0;
 

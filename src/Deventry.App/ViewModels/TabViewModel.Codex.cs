@@ -108,7 +108,9 @@ public partial class TabViewModel
                     .. SubagentUse == Core.Settings.SubagentUse.DontAllow ? [CodexArguments.NoSubagents] : Array.Empty<string>(),
                     .. hook is null ? Array.Empty<string>() : [CodexHooks.Config(hook)],
                 ],
-                EnvironmentOverrides = hook is null ? new Dictionary<string, string?>() : new Dictionary<string, string?> { [CodexHooks.PipeVariable] = HookPipe().Name },
+                EnvironmentOverrides = hook is null
+                    ? _services.CodexVariables
+                    : new Dictionary<string, string?>(_services.CodexVariables) { [CodexHooks.PipeVariable] = HookPipe().Name },
                 ProtocolLogPath = _services.ProtocolLogPath(FolderName),
             };
             _closing.Token.ThrowIfCancellationRequested();

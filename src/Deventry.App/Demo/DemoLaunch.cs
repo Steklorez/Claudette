@@ -36,7 +36,7 @@ public static class DemoLaunch
     /// of driving it.
     /// </summary>
     private static readonly string[] NotPassedOn =
-        ["DEVENTRY_HOME", "CLAUDE_CONFIG_DIR", "DEVENTRY_AUTOMATION_PIPE", "DEVENTRY_UNFOCUSED", StandInClaude.Variable, DemoMode.Variable];
+        ["DEVENTRY_HOME", "CLAUDE_CONFIG_DIR", "CODEX_HOME", "DEVENTRY_AUTOMATION_PIPE", "DEVENTRY_UNFOCUSED", StandInClaude.Variable, StandInCodex.Variable, DemoMode.Variable];
 
     /// <summary>Writes a demo under <paramref name="temporary"/> and starts <paramref name="app"/> on it; returns its folder.</summary>
     public static async Task<string> StartAsync(AppServices services, string app, string temporary)
@@ -47,6 +47,7 @@ public static class DemoLaunch
         var options = new DemoOptions
         {
             ClaudePath = app,
+            CodexPath = app,
             Theme = services.Settings.Appearance.Theme,
             Style = services.Settings.Appearance.Style,
             WriteUsage = (paths, config, tabs) => DemoUsage.Write(paths.UsageDatabase, Path.Combine(config, StandInClaude.UsageFile), now.ToUniversalTime(), tabs),
@@ -63,6 +64,7 @@ public static class DemoLaunch
         }
         environment["DEVENTRY_HOME"] = Path.GetDirectoryName(written.Paths.DataDirectory)!;
         environment["CLAUDE_CONFIG_DIR"] = written.ClaudeConfig;
+        environment["CODEX_HOME"] = written.CodexHome;
         environment[DemoMode.Variable] = folder;
         // A source build would copy itself into the demo's folder first (DESIGN.md §9, "Working on Deventry").
         environment["DEVENTRY_RUN_IN_PLACE"] = "1";

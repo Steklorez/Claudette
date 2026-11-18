@@ -28,6 +28,11 @@ internal sealed class Program
         {
             return CodexHookLaunch.Run();
         }
+        // The demo's codex, which Deventry stands in for too (DESIGN.md §18, "Codex, a second agent").
+        if (Demo.StandInCodexLaunch.IsStandIn)
+        {
+            return Demo.StandInCodexLaunch.Run(args);
+        }
         // The demo's claude, which Deventry stands in for (DESIGN.md §11, "Demo mode"): the same, before anything else.
         if (Demo.StandInClaudeLaunch.IsStandIn)
         {

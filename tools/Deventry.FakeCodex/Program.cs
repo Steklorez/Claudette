@@ -26,7 +26,7 @@
 //   SLOW               streams its reply over about ten seconds (for interrupts and steering)
 //   LIMIT              a turn that fails at the usage limit, the five-hour window at 100%
 //   anything else      replies "pong: <prompt>"; an image sent with it is named: "[images: 1]"
-// A thread's finished items are kept in fake-codex/<thread>.jsonl in CODEX_HOME, which "thread/turns/list" reads back and
+// A thread's finished items are kept in deventry-turns/<thread>.jsonl in CODEX_HOME (as the demo writes its Codex tab's), which "thread/turns/list" reads back and
 // without which "thread/read" and "thread/resume" fail, as Codex's do for a thread it has no rollout of; its prompts and replies go in
 // its rollout too, for History.
 // Each turn spends 1,200 input tokens (800 of them cached) and 40 output tokens of gpt-fake-1. A message steered into a
@@ -218,8 +218,15 @@ internal sealed class AppServer(string version, string home, string sandbox)
             case "thread/resume":
                 var resumed = parameters["threadId"]!.GetValue<string>();
                 _thread = resumed;
-                _rollout = Directory.EnumerateFiles(Path.Combine(home, "sessions"), $"rollout-*-{resumed}.jsonl", SearchOption.AllDirectories).FirstOrDefault();
+                _rollout = Directory.Exists(Path.Combine(home, "sessions"))
+                    ? Directory.EnumerateFiles(Path.Combine(home, "sessions"), $"rollout-*-{resumed}.jsonl", SearchOption.AllDirectories).FirstOrDefault()
+                    : null;
                 Respond(id, new JsonObject { ["thread"] = new JsonObject { ["id"] = _thread, ["path"] = _rollout }, ["model"] = _model, ["reasoningEffort"] = "medium" });
+                if (Environment.GetEnvironmentVariable("FAKE_CODEX_USAGE") == "demo")
+                {
+                    // The header shows Codex's usage as the tab is selected, before its first turn here.
+                    Notify("account/rateLimits/updated", new JsonObject { ["rateLimits"] = RateLimits() });
+                }
                 break;
             case "thread/turns/list":
                 Respond(id, new JsonObject { ["data"] = TurnsOf(parameters["threadId"]?.GetValue<string>() ?? ""), ["nextCursor"] = null });
@@ -482,7 +489,7 @@ internal sealed class AppServer(string version, string home, string sandbox)
         var now = DateTimeOffset.UtcNow;
         var folder = Path.Combine(home, "sessions", now.ToString("yyyy", System.Globalization.CultureInfo.InvariantCulture), now.ToString("MM", System.Globalization.CultureInfo.InvariantCulture), now.ToString("dd", System.Globalization.CultureInfo.InvariantCulture));
         Directory.CreateDirectory(folder);
-        Directory.CreateDirectory(Path.Combine(home, "fake-codex"));
+        Directory.CreateDirectory(Path.Combine(home, "deventry-turns"));
         File.WriteAllText(ItemsFile(thread), "");
         var path = Path.Combine(folder, $"rollout-{now:yyyy-MM-ddTHH-mm-ss}-{thread}.jsonl");
         File.WriteAllText(path, new JsonObject
@@ -517,7 +524,7 @@ internal sealed class AppServer(string version, string home, string sandbox)
         }
     }
 
-    private string ItemsFile(string thread) => Path.Combine(home, "fake-codex", $"{thread}.jsonl");
+    private string ItemsFile(string thread) => Path.Combine(home, "deventry-turns", $"{thread}.jsonl");
 
     /// <summary>A finished item, for "thread/turns/list", and a prompt or reply in the rollout, for History.</summary>
     private void Keep(string thread, string turnId, JsonObject item)

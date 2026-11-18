@@ -166,7 +166,10 @@ public sealed class AppServices : IAsyncDisposable
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
         CodexLocator = new CodexLocator(launcher, timeProvider, UserEnvironment);
-        FindCodex = path => CodexLocator.LocateAsync(path);
+        // A demo's Codex is Deventry standing in, which says its version only with the stand-in's variable.
+        FindCodex = path => Demo is not null && path is not null
+            ? Task.FromResult(new CodexLocateResult(new CodexInstall(path, Version.Parse(StandInCodex.Version)), null, null))
+            : CodexLocator.LocateAsync(path);
         CodexInstallerFactory = () => new CodexInstaller(ToolOSExtensions.Current, Paths.UtilityDirectory, _launcher, Time, UserEnvironment.Probe, UserEnvironment);
         // Settings → Git → Path to git, read as each run starts (DESIGN.md §14).
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment, logger: Loggers.CreateLogger("Git")) { ConfiguredPath = () => Settings.Git.Path };
@@ -471,6 +474,14 @@ public sealed class AppServices : IAsyncDisposable
         ? RemoteControl.ClaudeVariables
         : new Dictionary<string, string?>(RemoteControl.ClaudeVariables) { [StandInClaude.Variable] = "1" };
 
+    /// <summary>
+    /// What every <c>codex</c> Deventry starts, and runs to look for it and its sign-in, has in its environment: in a
+    /// demo, the variable that has Deventry stand in for Codex (DESIGN.md §11, "Demo mode"), which only <c>codex</c> gets.
+    /// </summary>
+    public IReadOnlyDictionary<string, string?> CodexVariables => Demo is null
+        ? new Dictionary<string, string?>()
+        : new Dictionary<string, string?> { [StandInCodex.Variable] = "1" };
+
     /// <summary>Where <b>Try the demo</b> writes its demos: the temporary folder; a test's own in tests.</summary>
     public string DemoFolderRoot { get; set; } = Path.GetTempPath();
 
@@ -601,7 +612,7 @@ public sealed class AppServices : IAsyncDisposable
     {
         CodexInstall = install;
         CodexSessions = new CodexSessionFactory(install.Path, _launcher, Time, Loggers, Diagnostics, UserEnvironment);
-        CodexAuth = new CodexAuth(install.Path, _launcher, Time, UserEnvironment);
+        CodexAuth = new CodexAuth(install.Path, _launcher, Time, UserEnvironment, CodexVariables);
     }
 
     /// <summary>
