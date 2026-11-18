@@ -221,6 +221,54 @@ public sealed class ConversationCardsUiTests
         window.Close();
     }
 
+    /// <summary>
+    /// A turn's card is one line (DESIGN.md §18, "A turn's card"): its icon, its label, its statistics, then its bar and
+    /// <b>Breakdown ›</b>, which go under the statistics in a narrow pane.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task A_turns_card_is_one_line_with_its_bar_and_Breakdown_after_its_statistics()
+    {
+        await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
+        var tab = await h.OpenTabAsync();
+        var window = UiText.Show(new ShellView { DataContext = h.Shell });
+        tab.Items.Add(new TurnSummaryItem("15.1s · 1.5M in · 1.2k out · $0.34")
+        {
+            Kinds = new KindValues(1_500_000, 0, 2_000, 1_200),
+            TurnNumber = 120,
+            TurnId = "turn-120",
+        });
+        await UiText.SettleUntilAsync(window, () => Named(window, "stats").Count == 1, "the turn's card");
+        UiText.Settle(window);
+
+        var card = Named(window, "stats")[0];
+        var icon = card.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single(p => p.Name == "PART_Icon");
+        var label = card.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "PART_Label");
+        var stats = card.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "TurnStats");
+        var bar = card.GetVisualDescendants().OfType<KindsBar>().Single();
+        var breakdown = card.GetVisualDescendants().OfType<Button>().Single(b => Equals(b.Content, "Breakdown ›"));
+        Assert.Equal("Turn 120", label.Text);
+        Assert.Single(stats.TextLayout.TextLines);
+        var line = FirstLine.MiddleIn(label, window)!.Value;
+        double Middle(Control control) => control.TranslatePoint(new Point(0, control.Bounds.Height / 2), window)!.Value.Y;
+        Assert.InRange(Middle(icon) - line, -0.6, 0.6);
+        Assert.InRange(FirstLine.MiddleIn(stats, window)!.Value - line, -1, 1);
+        Assert.InRange(Middle(bar) - line, -1, 1);
+        Assert.InRange(Middle(breakdown) - line, -1, 1);
+        // After the statistics, the bar, then Breakdown ›.
+        double Left(Control control) => control.TranslatePoint(default, window)!.Value.X;
+        Assert.True(Left(bar) > Left(stats) + stats.TextLayout.WidthIncludingTrailingWhitespace);
+        Assert.True(Left(breakdown) > Left(bar) + bar.Bounds.Width);
+
+        // In a narrow pane the bar and Breakdown › go under the statistics, which keep their room; the icon stays on the
+        // label's line.
+        window.Width = 800;
+        UiText.Settle(window);
+        Assert.True(Middle(bar) > FirstLine.MiddleIn(stats, window)!.Value + stats.TextLayout.TextLines[0].Height / 2, "The bar is beside the statistics, not under them.");
+        Assert.InRange(Left(bar) - Left(stats), -1, 1);
+        Assert.InRange(Middle(icon) - FirstLine.MiddleIn(label, window)!.Value, -0.6, 0.6);
+        window.Close();
+    }
+
     [AvaloniaFact]
     public async Task A_chain_of_steps_folds_into_one_line_and_then_into_the_replys_header_which_opens_it_inside_the_card()
     {

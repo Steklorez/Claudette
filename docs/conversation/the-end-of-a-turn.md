@@ -24,7 +24,7 @@ A **Turn** card, one quiet line, comes next: how long the turn took, tokens in a
 
 {% include unreleased.html %}
 
-The card's label has the turn's number, *Turn 9*, as the tab's [token breakdown](../usage/token-breakdown.md) numbers it, and a thin bar under the line shows its tokens by kind. When the turn was sent after the [prompt cache](../usage/the-prompt-cache.md) had expired, a warning in the caution color says what reading the whole conversation again cost. **Breakdown ›** opens the breakdown on the turn. A tab Deventry restores after a restart shows its earlier turns without their cards, as Claude Code's transcript doesn't keep them; the tab's [token breakdown](../usage/token-breakdown.md) has them.
+The card's label has the turn's number, *Turn 9*, as the tab's [token breakdown](../usage/token-breakdown.md) numbers it, and a thin bar after its statistics shows its tokens by kind, beside **Breakdown ›**. When the turn was sent after the [prompt cache](../usage/the-prompt-cache.md) had expired, a warning in the caution color says what reading the whole conversation again cost. **Breakdown ›** opens the breakdown on the turn. A tab Deventry restores after a restart shows its earlier turns without their cards, as Claude Code's transcript doesn't keep them; the tab's [token breakdown](../usage/token-breakdown.md) has them.
 
 ## Tasks
 

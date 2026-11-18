@@ -97,7 +97,7 @@ The **Tokens** tool window keeps the parts of the breakdown that help while you 
 
 ## On each turn's card
 
-The **Turn** card at the end of each turn says its number and what it cost, with a thin bar of its kinds of token under it. When the turn was sent after the prompt cache had expired, a warning says what reading the conversation again cost. **Breakdown ›** opens the breakdown on that turn. See [The end of a turn](../conversation/the-end-of-a-turn.md).
+The **Turn** card at the end of each turn says its number and what it cost, with a thin bar of its kinds of token on its line. When the turn was sent after the prompt cache had expired, a warning says what reading the conversation again cost. **Breakdown ›** opens the breakdown on that turn. See [The end of a turn](../conversation/the-end-of-a-turn.md).
 
 ## Older turns
 

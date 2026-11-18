@@ -875,18 +875,18 @@
         </controls:Card>
         <controls:Card Classes="inline stats quiet" Label="{Binding Label}" Icon="{StaticResource IconCardStats}" TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}">
           <StackPanel Spacing="5">
-            <TextBlock Classes="muted small" Text="{Binding StatsText}" TextWrapping="Wrap" />
-            <!-- The turn's tokens by kind with the way to its breakdown, and what made it cost more (DESIGN.md §18, "A turn's card") -->
-            <Grid ColumnSpacing="12">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MaxWidth="520" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <controls:KindsBar Classes="turnkinds" Values="{Binding Kinds}" IsVisible="{Binding Kinds, Converter={x:Static ObjectConverters.IsNotNull}}" />
-              <Button Grid.Column="1" Classes="flat breakdownlink" Content="Breakdown ›" IsVisible="{Binding HasBreakdown}"
-                      ToolTip.Tip="What this turn's tokens went on, in the tab's token breakdown"
-                      Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ShowTokenBreakdownAtCommand}" CommandParameter="{Binding TurnId}" />
-            </Grid>
+            <!-- One line: the turn's statistics, then its tokens by kind and the way to its breakdown, which go under the
+                 statistics together in a pane too narrow for them (DESIGN.md §18, "A turn's card") -->
+            <WrapPanel ItemSpacing="12" LineSpacing="4">
+              <TextBlock x:Name="TurnStats" Classes="muted small" Text="{Binding StatsText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <controls:KindsBar Classes="turnkinds" Values="{Binding Kinds}" IsVisible="{Binding Kinds, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Button Classes="flat breakdownlink" Content="Breakdown ›" IsVisible="{Binding HasBreakdown}"
+                        ToolTip.Tip="What this turn's tokens went on, in the tab's token breakdown"
+                        Command="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ShowTokenBreakdownAtCommand}" CommandParameter="{Binding TurnId}" />
+              </StackPanel>
+            </WrapPanel>
+            <!-- What made it cost more -->
             <Border Classes="cachechip" IsVisible="{Binding HasCacheChip}" HorizontalAlignment="Left">
               <TextBlock Classes="small" Text="{Binding CacheChip}" TextWrapping="Wrap" />
             </Border>
