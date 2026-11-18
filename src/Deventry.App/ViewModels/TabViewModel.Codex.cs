@@ -94,6 +94,9 @@ public partial class TabViewModel
                     Effort = State.Overrides.Effort,
                     Mode = mode,
                     DeveloperInstructions = notes,
+                    // Deventry's own tools, which a thread's messages to its sub-threads go through (DESIGN.md §18,
+                    // "Threads"); a resumed thread keeps the ones it started with.
+                    DynamicTools = resume is null ? Core.Codex.CodexTools.All() : null,
                     ClientVersion = _services.AppVersion.ToString(),
                 },
                 // Subagents turned off take Codex's tools for them away (DESIGN.md §18, "Subagents").
@@ -107,6 +110,7 @@ public partial class TabViewModel
                 await session.DisposeAsync();
                 return;
             }
+            session.ToolHandler = OnCodexToolCallAsync;
             _session = session;
             _appliedState = SessionState.Starting;
             _sentSinceStart = false;

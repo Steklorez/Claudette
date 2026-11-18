@@ -32,6 +32,16 @@ public sealed class CodexItemsTests
     }
 
     [Fact]
+    public void Deventrys_send_message_tool_is_a_send_message_call_and_others_are_their_own()
+    {
+        var send = CodexItems.CallsOf(new JsonObject { ["type"] = "dynamicToolCall", ["id"] = "d1", ["tool"] = CodexTools.SendMessage, ["arguments"] = new JsonObject { ["to"] = "Art page", ["message"] = "Go" } }).Single();
+        var other = CodexItems.CallsOf(new JsonObject { ["type"] = "dynamicToolCall", ["id"] = "d2", ["tool"] = "lookup", ["arguments"] = new JsonObject() }).Single();
+
+        Assert.Equal((Deventry.Core.Threads.SendMessageCall.ToolName, "Art page"), (send.Name, send.Input.GetString("to")));
+        Assert.Equal(("lookup", ToolKind.Other), (other.Name, other.Call.Kind));
+    }
+
+    [Fact]
     public void A_failed_command_or_one_with_a_nonzero_exit_is_an_error()
     {
         var failed = CodexItems.ResultsOf(new JsonObject { ["type"] = "commandExecution", ["id"] = "e", ["status"] = "completed", ["exitCode"] = 1, ["aggregatedOutput"] = "error" }).Single();

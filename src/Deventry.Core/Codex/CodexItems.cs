@@ -50,6 +50,9 @@ public static partial class CodexItems
             case "imageView":
                 var image = item.GetString("path");
                 return [new CodexCall(id, ViewImage, Input("file_path", image), new ToolCall(ToolKind.ViewImage, ViewImage) { Path = image })];
+            case "dynamicToolCall" when item.GetString("tool") == CodexTools.SendMessage:
+                // A thread's message to a sub-thread, shown as Claude Code's SendMessage is (DESIGN.md §18, "Threads").
+                return [new CodexCall(id, Threads.SendMessageCall.ToolName, item.GetObject("arguments") ?? [], new ToolCall(ToolKind.Other, Threads.SendMessageCall.ToolName))];
             case "dynamicToolCall":
                 var name = item.GetString("tool") ?? "tool";
                 return [new CodexCall(id, name, item.GetObject("arguments") ?? [], new ToolCall(ToolKind.Other, name))];

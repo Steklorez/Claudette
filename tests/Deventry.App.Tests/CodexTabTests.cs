@@ -7,6 +7,7 @@ using Deventry.Core.Agents;
 using Deventry.Core.Codex;
 using Deventry.Core.Sessions;
 using Deventry.Core.Settings;
+using Deventry.Core.Threads;
 using Deventry.Usage;
 
 namespace Deventry.App.Tests;
@@ -497,5 +498,74 @@ public sealed class CodexTabTests
         var start = h.CodexFactory.Launches[1].Start;
         Assert.Equal((ScriptedTransport.CodexThread, true, "a-turn-1"), (start.Resume, start.Fork, start.ForkAfter));
         Assert.Equal("Make it longer", branch.ComposerText);
+    }
+
+    [Fact]
+    public async Task A_codex_thread_hands_work_to_a_sub_thread_through_deventrys_own_tool()
+    {
+        await using var h = new TabTestHarness();
+        var plan = await OpenCodexTabAsync(h);
+        plan.StartRenameCommand.Execute(null);
+        plan.RenameText = "Plan";
+        await plan.CommitRenameCommand.ExecuteAsync(null);
+        // A Claude Code sub-thread: the folder remembers Codex now, so it's asked for.
+        await InlineDispatcher.RunAsync(() => h.Shell.OpenFolderAsync(h.WorkFolder, agent: ClaudeCodeAgent.Instance));
+        var art = h.Shell.SelectedTab!;
+        art.StartRenameCommand.Execute(null);
+        art.RenameText = "Art page";
+        await art.CommitRenameCommand.ExecuteAsync(null);
+        h.Shell.MakeThreadCommand.Execute(plan);
+        art.AssignToThreadCommand.Execute(plan);
+        plan.ToggleAskBeforeSendingToSubThreadsCommand.Execute(null);
+
+        // Every Codex thread Deventry starts has the tool.
+        Assert.Equal(CodexTools.SendMessage, h.CodexFactory.Launches.Single().Start.DynamicTools!.Single()!["name"]!.GetValue<string>());
+        // The thread is told its sub-threads, and the tool to reach them by.
+        plan.ComposerText = "Split the work";
+        await plan.SendCommand.ExecuteAsync(null);
+        await TabTestHarness.Eventually(() => h.Transport.SentRpcMethods.Contains("turn/start"), "the message");
+        var told = h.Transport.Sent.Last(m => m["method"]?.GetValue<string>() == "turn/start")["params"]!["input"]![0]!["text"]!.GetValue<string>();
+        Assert.Contains($"call {CodexTools.SendMessage} with its name as `to`", told, StringComparison.Ordinal);
+
+        h.Transport.EmitTo(0, new JsonObject
+        {
+            ["method"] = "item/tool/call",
+            ["id"] = 41,
+            ["params"] = new JsonObject
+            {
+                ["threadId"] = ScriptedTransport.CodexThread,
+                ["turnId"] = ScriptedTransport.CodexTurn,
+                ["callId"] = "call-1",
+                ["tool"] = CodexTools.SendMessage,
+                ["arguments"] = new JsonObject { ["to"] = "art page", ["message"] = "Build the art page." },
+            },
+        });
+
+        await TabTestHarness.Eventually(() => h.Transport.SentUserTextsTo(1).Any(t => t.StartsWith("Message from the thread \"Plan\"", StringComparison.Ordinal)), "the delivery");
+        Assert.EndsWith("\n\nBuild the art page.", h.Transport.SentUserTextsTo(1).Last(), StringComparison.Ordinal);
+        await TabTestHarness.Eventually(() => h.Transport.SentTo(0).Any(m => m["id"]?.ToJsonString() == "41" && m["result"] is not null), "the tool's answer");
+        var answer = h.Transport.SentTo(0).First(m => m["id"]?.ToJsonString() == "41")["result"]!;
+        Assert.True(answer["success"]!.GetValue<bool>());
+        Assert.Equal(ThreadMessages.Delivered("Art page", waits: false, readsAsError: false), answer["contentItems"]![0]!["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Deventrys_tool_says_who_the_sub_threads_are_when_the_name_isnt_one()
+    {
+        await using var h = new TabTestHarness();
+        var tab = await OpenCodexTabAsync(h);
+
+        h.Transport.Emit(new JsonObject
+        {
+            ["method"] = "item/tool/call",
+            ["id"] = 42,
+            ["params"] = new JsonObject { ["threadId"] = ScriptedTransport.CodexThread, ["tool"] = CodexTools.SendMessage, ["arguments"] = new JsonObject { ["to"] = "Art", ["message"] = "Hi" } },
+        });
+
+        await TabTestHarness.Eventually(() => h.Transport.Sent.Any(m => m["id"]?.ToJsonString() == "42" && m["result"] is not null), "the tool's answer");
+        var answer = h.Transport.Sent.First(m => m["id"]?.ToJsonString() == "42")["result"]!;
+        Assert.False(answer["success"]!.GetValue<bool>());
+        Assert.Equal(ThreadMessages.NoSuchSubThread("Art", []), answer["contentItems"]![0]!["text"]!.GetValue<string>());
+        Assert.False(tab.IsThread);
     }
 }

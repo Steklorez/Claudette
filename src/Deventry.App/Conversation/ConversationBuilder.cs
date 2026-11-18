@@ -333,6 +333,7 @@ public sealed class ConversationBuilder
             IsFromThread = isFromThread,
             Via = via,
             ThreadNote = threadNote,
+            AgentName = AgentName,
             MentionNote = mentionNote,
             Mentioned = mentioned ?? [],
             SubagentNote = subagentNote?.Note,

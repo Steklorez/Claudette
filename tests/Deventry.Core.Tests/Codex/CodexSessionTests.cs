@@ -512,6 +512,27 @@ public sealed class CodexSessionTests
     }
 
     [Fact]
+    public async Task A_call_to_deventrys_own_tool_is_answered_as_the_tab_says_or_refused_without_it()
+    {
+        await using var session = await StartedAsync();
+        _transport.EmitJson(new JsonObject { ["method"] = "item/tool/call", ["id"] = 51, ["params"] = new JsonObject { ["threadId"] = Thread, ["tool"] = CodexTools.SendMessage, ["arguments"] = new JsonObject() } });
+        var refused = await _transport.WaitForSentAsync(s => s["id"]?.ToJsonString() == "51" && s["result"] is not null);
+        Assert.False(refused["result"]!["success"]!.GetValue<bool>());
+
+        CodexToolCall? asked = null;
+        session.ToolHandler = (call, _) =>
+        {
+            asked = call;
+            return Task.FromResult(new CodexToolAnswer("Sent.", true));
+        };
+        _transport.EmitJson(new JsonObject { ["method"] = "item/tool/call", ["id"] = 52, ["params"] = new JsonObject { ["threadId"] = Thread, ["tool"] = CodexTools.SendMessage, ["arguments"] = new JsonObject { ["to"] = "Art" } } });
+
+        var answered = await _transport.WaitForSentAsync(s => s["id"]?.ToJsonString() == "52" && s["result"] is not null);
+        Assert.Equal(("Sent.", true), (answered["result"]!["contentItems"]![0]!["text"]!.GetValue<string>(), answered["result"]!["success"]!.GetValue<bool>()));
+        Assert.Equal((CodexTools.SendMessage, "Art", Thread), (asked!.Tool, asked.Arguments.GetString("to"), asked.ThreadId));
+    }
+
+    [Fact]
     public async Task An_approval_Codex_withdraws_takes_its_card_away()
     {
         await using var session = await StartedAsync();

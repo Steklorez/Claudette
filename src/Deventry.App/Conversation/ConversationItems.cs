@@ -234,9 +234,12 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     public bool HasThreadNote => ThreadNote is not null;
 
     /// <summary>The line under a message that carried a note on threads.</summary>
-    public string ThreadNoteText => ThreadNote == Core.Threads.ThreadMessages.NoLongerAThread
-        ? "Told Claude this tab is no longer a thread"
-        : "Told Claude about its sub-threads";
+    public string ThreadNoteText => Core.Threads.ThreadMessages.IsNoLongerAThread(ThreadNote)
+        ? $"Told {AgentName} this tab is no longer a thread"
+        : $"Told {AgentName} about its sub-threads";
+
+    /// <summary>What the line under the message calls the tab's agent: "Claude", "Codex".</summary>
+    public string AgentName { get; init; } = "Claude";
 
     /// <summary>
     /// The note on subagents sent after the message, after the tab's setting for them changed (DESIGN.md §5,

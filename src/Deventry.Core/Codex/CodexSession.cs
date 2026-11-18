@@ -1071,6 +1071,9 @@ public sealed class CodexSession : IAgentSession
             case "item/tool/requestUserInput":
                 AskQuestions(id, parameters);
                 break;
+            case "item/tool/call":
+                _ = AnswerToolCallAsync(id, parameters);
+                break;
             default:
                 // Not something Deventry answers yet: refused, so Codex doesn't wait for it.
                 _logger.LogWarning("Unsupported request '{Method}' from Codex.", method);
@@ -1120,6 +1123,39 @@ public sealed class CodexSession : IAgentSession
             _ => "decline",
         };
         await RespondSafelyAsync(() => _rpc.RespondAsync(id, new JsonObject { ["decision"] = answer }, _lifetime.Token)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Answers Codex's calls to Deventry's own tools (<see cref="CodexTools"/>): the tab sets it as the session starts.
+    /// Called off the read loop; without it, every call says the tool isn't there.
+    /// </summary>
+    public Func<CodexToolCall, CancellationToken, Task<CodexToolAnswer>>? ToolHandler { get; set; }
+
+    /// <summary>A call to one of Deventry's own tools (<c>item/tool/call</c>), answered as the tab says.</summary>
+    private async Task AnswerToolCallAsync(JsonNode id, JsonObject parameters)
+    {
+        var call = new CodexToolCall(parameters.GetString("tool") ?? "", parameters.GetObject("arguments") ?? [], parameters.GetString("threadId"));
+        CodexToolAnswer answer;
+        try
+        {
+            answer = ToolHandler is { } handler
+                ? await handler(call, _lifetime.Token).ConfigureAwait(false)
+                : new CodexToolAnswer($"Deventry has no tool named {call.Tool}.", false);
+        }
+        catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Couldn't answer Codex's call to {Tool}.", call.Tool);
+            answer = new CodexToolAnswer($"Deventry couldn't carry out {call.Tool}: {ex.Message}", false);
+        }
+        await RespondSafelyAsync(() => _rpc.RespondAsync(id, new JsonObject
+        {
+            ["contentItems"] = new JsonArray(new JsonObject { ["type"] = "inputText", ["text"] = answer.Text }),
+            ["success"] = answer.Success,
+        }, _lifetime.Token)).ConfigureAwait(false);
     }
 
     /// <summary>The name a question card goes by, as Claude Code's clarifying questions do.</summary>

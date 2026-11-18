@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 
@@ -30,6 +31,15 @@ public sealed record SendMessageCall(string To, string Message, bool NotifyWhenI
         }
         return new SendMessageCall(Recipient(to), tool.GetString("message") ?? tool.GetString("content") ?? "", tool.GetBool("notify_when_idle") == true);
     }
+
+    /// <summary>
+    /// Reads the arguments of a call to Deventry's own tool for it (Codex's <c>deventry_send_message</c>, DESIGN.md §18,
+    /// "Threads"); null for a call with no recipient.
+    /// </summary>
+    public static SendMessageCall? FromArguments(JsonObject arguments) =>
+        arguments.GetString("to") is { } to && !string.IsNullOrWhiteSpace(to)
+            ? new SendMessageCall(Recipient(to), arguments.GetString("message") ?? "", false)
+            : null;
 
     /// <summary><c>Art page [3fa9c1]</c>, <c>"Art page"</c> and <c>@Art page</c> are all <c>Art page</c>.</summary>
     internal static string Recipient(string to)

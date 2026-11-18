@@ -221,6 +221,13 @@ items:
     docs: https://learn.chatgpt.com/docs/app-server
     test: CodexSessionTests
     fallback: "Codex's questions, in Plan mode, are a question card answered by each question's id; dismissed, it's answered with none. If it changes, Codex's questions are refused as an unknown request, and Codex goes on with its best judgment."
+  - id: "thread/start dynamicTools, item/tool/call"
+    kind: control
+    status: experimental
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.Core/Codex/CodexTools.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
+    fallback: "Every thread Deventry starts has deventry_send_message, which Codex keeps with the thread and restores on resume; a call to it is answered with the delivery's outcome. A thread resumed from before Deventry gave it, or a Codex without dynamic tools, can't reach its sub-threads: the user hands the work over by hand."
   - id: turn/plan/updated
     kind: message
     status: documented
