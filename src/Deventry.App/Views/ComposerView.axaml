@@ -79,7 +79,7 @@
         <Button Grid.Column="2" Content="Don't continue" Command="{Binding DontContinueCommand}" IsVisible="{Binding CanStopContinuing}" VerticalAlignment="Center"
                 ToolTip.Tip="Leave the task stopped. Send a message to go on yourself." />
         <Button Grid.Column="2" Content="{Binding ContinueAfterLimitText}" Command="{Binding ContinueAfterLimitCommand}" IsVisible="{Binding CanContinueAfterLimit}" VerticalAlignment="Center" />
-        <!-- The work carried on in the other agent, while Settings → Agents → Codex offers it (DESIGN.md §18) -->
+        <!-- The work carried on in the other agent, while Settings → All agents offers it (DESIGN.md §18) -->
         <Button Grid.Column="3" Content="{Binding ContinueInOtherAgentText}" Command="{Binding ContinueInOtherAgentCommand}" IsVisible="{Binding OffersOtherAgent}"
                 VerticalAlignment="Center" ToolTip.Tip="{Binding ContinueInOtherAgentTip}" />
         <Button Grid.Column="4" Classes="flat" Padding="4" ToolTip.Tip="Close" AutomationProperties.Name="Close" VerticalAlignment="Center"

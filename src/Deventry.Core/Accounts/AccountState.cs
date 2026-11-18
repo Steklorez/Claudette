@@ -17,7 +17,7 @@ public static class AccountState
 
     /// <summary>
     /// The account a new tab in <paramref name="folder"/> uses: the one its group was set to, else the one new folders
-    /// use (Settings → Accounts), else Default. An account removed since counts as Default.
+    /// use (Settings → Claude Code → Accounts), else Default. An account removed since counts as Default.
     /// </summary>
     public static string? ForFolder(AppState state, string folder)
     {

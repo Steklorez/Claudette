@@ -246,8 +246,8 @@
                 <DataTemplate DataType="settings:CodexPage">
                   <pages:CodexPageView />
                 </DataTemplate>
-                <DataTemplate DataType="settings:AccountsPage">
-                  <pages:AccountsPageView />
+                <DataTemplate DataType="settings:AllAgentsPage">
+                  <pages:AllAgentsPageView />
                 </DataTemplate>
                 <DataTemplate DataType="settings:TabsPage">
                   <pages:TabsPageView />

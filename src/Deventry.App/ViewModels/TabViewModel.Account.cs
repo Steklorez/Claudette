@@ -146,19 +146,19 @@ public sealed partial class TabViewModel
         var saying = said is { Length: > 0 } ? $" (it said \"{said}\")" : "";
         _conversation.AddNote(account.Provider is { } provider
             ? $"Claude Code couldn't sign in to {provider.Name} for {account.Name}{saying}. {CredentialsHint(account)} Or move the tab to another account."
-            : $"Claude Code couldn't use {account.Name}'s API key{saying}. Check the key in Settings → Accounts, or move the tab to another account.",
+            : $"Claude Code couldn't use {account.Name}'s API key{saying}. Check the key in Settings → Claude Code → Accounts, or move the tab to another account.",
             NoteKind.Error);
     }
 
     /// <summary>Where to look when a cloud account's credentials are refused, for how it signs in.</summary>
     private static string CredentialsHint(ClaudeAccount account) => account.Cloud?.SignIn switch
     {
-        CloudSignIns.Profile when account.Cloud.Profile is { Length: > 0 } profile => $"Sign in to AWS with \"aws sso login --profile {profile}\", or check the profile in Settings → Accounts.",
+        CloudSignIns.Profile when account.Cloud.Profile is { Length: > 0 } profile => $"Sign in to AWS with \"aws sso login --profile {profile}\", or check the profile in Settings → Claude Code → Accounts.",
         CloudSignIns.Profile => "Sign in to AWS, or check its credentials in ~/.aws.",
-        CloudSignIns.Gcloud => $"Sign in with \"{AccountLaunch.GcloudSignInCommand}\", or check the project in Settings → Accounts.",
-        CloudSignIns.EntraId => "Sign in with \"az login\", or check the resource name in Settings → Accounts.",
-        CloudSignIns.KeyFile => "Check the key file in Settings → Accounts.",
-        _ => "Check the key in Settings → Accounts.",
+        CloudSignIns.Gcloud => $"Sign in with \"{AccountLaunch.GcloudSignInCommand}\", or check the project in Settings → Claude Code → Accounts.",
+        CloudSignIns.EntraId => "Sign in with \"az login\", or check the resource name in Settings → Claude Code → Accounts.",
+        CloudSignIns.KeyFile => "Check the key file in Settings → Claude Code → Accounts.",
+        _ => "Check the key in Settings → Claude Code → Accounts.",
     };
 
     /// <summary>

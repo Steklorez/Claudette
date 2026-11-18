@@ -5,8 +5,9 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
-/// Settings → Advanced (DESIGN.md §14): extra arguments for <c>claude</c>, protocol logging (DESIGN.md §13, "Logging"),
-/// the data folder, and Diagnostics (DESIGN.md §16, "Staying tolerant at runtime").
+/// Settings → Advanced (DESIGN.md §14): protocol logging (DESIGN.md §13, "Logging"), the data folder, and Diagnostics
+/// (DESIGN.md §16, "Staying tolerant at runtime"). Extra arguments for <c>claude</c> are Claude Code's
+/// (<see cref="ClaudeCodePage"/>).
 /// </summary>
 public sealed partial class AdvancedPage : SettingsPage
 {
@@ -16,12 +17,10 @@ public sealed partial class AdvancedPage : SettingsPage
     public AdvancedPage(SettingsContext context, ClaudeCodePage claudeCode) : base(context, SettingsCategory.Advanced)
     {
         _claudeCode = claudeCode;
-        Section("claude", "Running claude",
+        Section("logs", "Logs and files",
         [
-            Setting("advanced.extraArguments", "Extra arguments for every claude process", s => s.Advanced.ExtraArguments, (s, v) => s.Advanced.ExtraArguments = v,
-                "Split on spaces and added after Deventry's own. Applies to tabs started after the change.", keywords: ["command line", "flags", "cli"]),
             Setting("advanced.logProtocol", "Log protocol traffic", s => s.Advanced.LogProtocol, (s, v) => s.Advanced.LogProtocol = v,
-                "Everything each session sends and receives, to help with a bug report. Kept 7 days.",
+                "Everything each tab's agent sends and receives, to help with a bug report. Kept 7 days.",
                 "Logs hold your prompts and file contents. Messages Deventry skips also show in the conversation. Applies to tabs started after the change.",
                 ["debug", "logging", "open log folder"]),
             Info("advanced.dataFolder", "Deventry's data folder", "Saved tabs, usage history and logs.", keywords: ["open data folder", "files"]),
@@ -36,13 +35,7 @@ public sealed partial class AdvancedPage : SettingsPage
 
     public override string IconKey => "IconToolBash";
 
-    public override string Description => "How Deventry runs claude, its logs and its files, and what it has noticed this run.";
-
-    public string ExtraArguments
-    {
-        get => Settings.Advanced.ExtraArguments;
-        set => Set(value, v => Settings.Advanced.ExtraArguments = v ?? "");
-    }
+    public override string Description => "Deventry's logs and files, and what it has noticed this run.";
 
     [RelayCommand]
     private Task OpenDataFolderAsync() => Services.Platform.RevealFolderAsync(Services.Paths.DataDirectory);

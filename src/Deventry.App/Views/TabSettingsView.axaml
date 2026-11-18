@@ -18,7 +18,7 @@
       </Border>
       <ScrollViewer MaxHeight="560">
         <StackPanel Spacing="24" Margin="24,8,24,16">
-          <c:SettingsSection Key="model" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Tabs says">
+          <c:SettingsSection Key="model" ResetText="Use defaults" ResetTip="Puts this section back to what Settings → Agents says">
             <c:SettingRow Key="tab.model">
               <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding SelectedModel}" />
             </c:SettingRow>

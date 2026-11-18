@@ -6,11 +6,7 @@
              x:DataType="settings:AdvancedPage">
   <!-- Advanced (DESIGN.md §14; §13, "Logging"; §16, "Staying tolerant at runtime") -->
   <StackPanel Spacing="32">
-    <c:SettingsSection Key="claude">
-      <c:SettingRow Key="advanced.extraArguments" IsStacked="True">
-        <TextBox Classes="mono" Text="{Binding ExtraArguments, UpdateSourceTrigger=LostFocus}" PlaceholderText="for example --add-dir ../shared"
-                 AutomationProperties.Name="Extra arguments for every claude process" />
-      </c:SettingRow>
+    <c:SettingsSection Key="logs">
       <c:SettingRow Key="advanced.logProtocol">
         <ToggleSwitch IsChecked="{Binding LogProtocol}" />
         <c:SettingRow.Details>

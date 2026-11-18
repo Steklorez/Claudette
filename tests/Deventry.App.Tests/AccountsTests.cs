@@ -249,7 +249,7 @@ public class AccountsTests
         Assert.False(h.Shell.NeedsSignIn);
         Assert.False(tab.IsWaitingForSignIn);
         Assert.Contains(InlineDispatcher.Read(() => tab.Items.OfType<NoteItem>().ToArray()),
-            n => n.Text.StartsWith("Claude Code couldn't use Work's API key. Check the key in Settings → Accounts", StringComparison.Ordinal));
+            n => n.Text.StartsWith("Claude Code couldn't use Work's API key. Check the key in Settings → Claude Code → Accounts", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -332,14 +332,14 @@ public class AccountsTests
         Assert.Equal([("Work", "$1.50"), ("Default", "$0.20"), ("A removed account", "$0.10")], panel.Accounts.Select(a => (a.Name, a.Cost)));
     }
 
-    // ---- Settings → Accounts ----------------------------------------------------------------------------------------
+    // ---- Settings → Claude Code → Accounts ----------------------------------------------------------------------------------------
 
     [Fact]
     public async Task Settings_adds_renames_recolors_and_removes_an_account_but_not_while_a_tab_runs_under_it()
     {
         await using var h = new TabTestHarness();
         var keys = UseKeys(h);
-        using var page = new AccountsPage(new SettingsContext(h.Services));
+        using var page = new ClaudeCodePage(new SettingsContext(h.Services), null, null);
         Assert.False(page.HasAccounts);
 
         page.NewName = "Work";

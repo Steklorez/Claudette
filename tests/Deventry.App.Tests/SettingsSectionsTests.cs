@@ -69,9 +69,14 @@ public class SettingsSectionsTests
         Assert.True(settings.Appearance.FindSetting("appearance.zoom")!.ShowsMachineMark);
         Assert.False(settings.Appearance.FindSetting("appearance.theme")!.ShowsMachineMark);
         Assert.False(settings.Appearance.FindGroup("accessibility")!.ShowsMachineMark);
-        // Subagents is Claude Code's, which stays here, among what new tabs start with, which syncs.
-        Assert.True(settings.Tabs.FindSetting("claudeCode.subagents")!.ShowsMachineMark);
-        Assert.False(settings.Tabs.FindSetting("newTabs.defaultModel")!.ShowsMachineMark);
+        // All agents' settings stay here: the page says so once, by its title.
+        Assert.True(settings.AllAgents.IsMachineOnly);
+        Assert.All(settings.AllAgents.Groups, g => Assert.False(g.ShowsMachineMark));
+        // What a new Claude Code tab starts with syncs, so the rest of Claude Code's page says so by each section.
+        Assert.False(settings.ClaudeCode.IsMachineOnly);
+        Assert.False(settings.ClaudeCode.FindGroup("newTabs")!.ShowsMachineMark);
+        Assert.True(settings.ClaudeCode.FindGroup("accounts")!.ShowsMachineMark);
+        Assert.True(settings.ClaudeCode.FindGroup("sessions")!.ShowsMachineMark);
         // The marks follow what settings sync copies.
         foreach (var item in settings.Pages.SelectMany(p => p.Items).Where(i => i.IsSetting && !i.Key.StartsWith("state.", StringComparison.Ordinal)))
         {
@@ -95,10 +100,10 @@ public class SettingsSectionsTests
         tab.State.Overrides = new TabOverrides { Model = "opus" };
         using var settings = new SettingsViewModel(h.Services, null, host: h.Shell);
 
-        var model = settings.Tabs.FindSetting("newTabs.defaultModel")!;
+        var model = settings.ClaudeCode.FindSetting("newTabs.defaultModel")!;
         Assert.Equal("1 tab has its own", model.TabsNote);
         Assert.Contains(tab.DisplayName, model.TabsTip, StringComparison.Ordinal);
-        Assert.Null(settings.Tabs.FindSetting("newTabs.defaultEffort")!.TabsNote);
+        Assert.Null(settings.ClaudeCode.FindSetting("newTabs.defaultEffort")!.TabsNote);
     }
 
     [Fact]

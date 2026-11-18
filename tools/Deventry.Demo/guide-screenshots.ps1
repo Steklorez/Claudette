@@ -363,7 +363,17 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
         Shot 'accounts/settings-accounts' {
             param($path)
             $settings = Open-Settings
-            Select-ListItem $settings 'Accounts'
+            Select-ListItem $settings 'Claude Code'
+            Wait-Settled $settings
+            # Claude Code's page, scrolled down to its Accounts: Default's Sign out… sits under the section's heading and
+            # line, which a template draws and UI Automation doesn't see.
+            $scroller = Find-ById $settings 'PageScroller'
+            $default = Find-ByText $settings "Sign out$([char] 0x2026)"
+            $gap = 100 * [WindowShot]::Scale($settings)
+            for ($step = 0; $step -lt 100 -and $default.Current.BoundingRectangle.Top - $scroller.Current.BoundingRectangle.Top -gt $gap; $step++) {
+                Send-ElementCommand 'scroll' $scroller @{ lines = 1 } | Out-Null
+            }
+            Wait-Settled $settings
             Save-Window $settings $path
             Close-Other $settings
         }

@@ -4,14 +4,14 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels.Settings;
 
-/// <summary>A way to sign in to a cloud provider, as Settings → Accounts offers it.</summary>
+/// <summary>A way to sign in to a cloud provider, as Settings → Claude Code → Accounts offers it.</summary>
 public sealed record SignInChoice(string Value, string Label)
 {
     public override string ToString() => Label;
 }
 
 /// <summary>
-/// What a cloud provider account says, in Settings → Accounts (DESIGN.md §4, "Accounts"): how it signs in, the
+/// What a cloud provider account says, in Settings → Claude Code → Accounts (DESIGN.md §4, "Accounts"): how it signs in, the
 /// provider's own settings, the models it pins, and, while adding one, its key. The same form changes an account's
 /// settings, without its way of signing in, which a key may go with.
 /// </summary>

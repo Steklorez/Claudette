@@ -25,13 +25,13 @@ A Codex tab that hits its limit stops and waits for the reset, under the same ru
 
 ## Continuing in the other agent
 
-Turn on Settings → Agents → Codex → **Offer to continue in the other agent at a usage limit**, and when a tab stops at its agent's limit, the bar under the conversation offers **Continue in Codex**, or **Continue in Claude Code** on a Codex tab, beside waiting for the reset.
+Turn on Settings → Agents → All agents → **Offer to continue in the other agent**, and when a tab stops at its agent's limit, the bar under the conversation offers **Continue in Codex**, or **Continue in Claude Code** on a Codex tab, beside waiting for the reset.
 
 It opens a tab of the other agent in the same folder, named after the first with the agent's name, such as *Grappling hook (Codex)*. Its first message is in the composer for you to trim and send: what you asked (the first message and the last two), the to-do list and how far it got, the files changed so far, and the last reply. The first tab stays, waiting for its reset.
 
 ## Settings
 
-- Settings → Agents → Codex → **Offer to continue in the other agent at a usage limit**: off by default.
+- Settings → Agents → All agents → **Offer to continue in the other agent**: off by default.
 - The warning levels in Settings → Usage, and Settings → Tabs → **Continue tasks when a usage limit resets**, apply to both agents.
 
 ## See also

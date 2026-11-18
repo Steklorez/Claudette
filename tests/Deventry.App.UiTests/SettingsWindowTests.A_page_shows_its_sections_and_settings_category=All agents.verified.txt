@@ -1,0 +1,14 @@
+﻿"All agents"
+"This computer"
+"What applies to every agent's tabs."
+"Subagents"
+[button] Reset to defaults
+"Each tab can change this for itself, from Tab settings… in its menu."
+"Subagents"
+"Whether the agent hands parts of its work to subagents.  "
+[choice] "The agent decides"
+"At a usage limit"
+[button] Reset to defaults
+"Offer to continue in the other agent"
+"A tab stopped at its plan's limit offers a tab of the other agent, which carries the work on.  "
+[toggle] Offer to continue in the other agent

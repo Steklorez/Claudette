@@ -78,7 +78,7 @@ public sealed class SettingsSection : ItemsControl
         set => SetValue(ResetTextProperty, value);
     }
 
-    /// <summary>Its reset's tip: what the section goes back to, which in Tab settings… is what Settings → Tabs says.</summary>
+    /// <summary>Its reset's tip: what the section goes back to, which in Tab settings… is what Settings says.</summary>
     public string ResetTip
     {
         get => GetValue(ResetTipProperty);

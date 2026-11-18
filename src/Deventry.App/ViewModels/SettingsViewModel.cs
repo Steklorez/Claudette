@@ -79,10 +79,10 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Notifications = new NotificationsPage(_context);
         Keyboard = new KeyboardPage(_context);
         Tabs = new TabsPage(_context);
-        ClaudeCode = new ClaudeCodePage(_context, accountText, updates, Tabs);
-        Codex = new CodexPage(_context);
-        Accounts = new AccountsPage(_context);
         Usage = new UsagePage(_context);
+        AllAgents = new AllAgentsPage(_context);
+        ClaudeCode = new ClaudeCodePage(_context, accountText, updates);
+        Codex = new CodexPage(_context);
         Sessions = new SessionsPage(_context);
         Files = new FilesPage(_context);
         TimedMessages = new TimedMessagesPage(_context);
@@ -109,7 +109,7 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         Advanced = new AdvancedPage(_context, ClaudeCode);
         _groups = SettingsSidebar.Groups(types, services.RemoteClients.Types, services.Tickets.Types);
         Categories = [.. _groups.SelectMany(g => g.Categories)];
-        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, ClaudeCode, Codex, Accounts, Tabs, Usage, Advanced, Sessions, Files, TimedMessages, AllTools, .. ProjectTypes, Git, Perforce, AllTicketProviders, .. TicketProviders, AllClients, .. Clients];
+        SettingsPage[] pages = [General, Appearance, Conversation, Notifications, Keyboard, Tabs, Usage, Advanced, AllAgents, ClaudeCode, Codex, Sessions, Files, TimedMessages, AllTools, .. ProjectTypes, Git, Perforce, AllTicketProviders, .. TicketProviders, AllClients, .. Clients];
         _categoryPages = [.. Categories.Select(category => pages.Single(p => p.Title == category))];
         foreach (var page in _categoryPages)
         {
@@ -150,7 +150,6 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
         }
         ClaudeCode.Dispose();
         Codex.Dispose();
-        Accounts.Dispose();
         TimedMessages.Dispose();
         Git.Dispose();
         _context.Dispose();
@@ -187,11 +186,13 @@ public sealed partial class SettingsViewModel : ViewModelBase, IDisposable
     public KeyboardPage Keyboard { get; }
 
 
+    /// <summary>What every agent shares, before each agent's page (DESIGN.md §18, "Codex, a second agent").</summary>
+    public AllAgentsPage AllAgents { get; }
+
+    /// <summary>Claude Code, with the accounts its tabs run under.</summary>
     public ClaudeCodePage ClaudeCode { get; }
 
     public CodexPage Codex { get; }
-
-    public AccountsPage Accounts { get; }
 
     public TabsPage Tabs { get; }
 

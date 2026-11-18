@@ -54,9 +54,9 @@ A tab that's restored when Deventry starts brings back rows only for its last tu
 
 ## Discouraging or turning off subagents
 
-Settings → Tabs → **Subagents** says whether Claude hands parts of its work to subagents:
+Settings → Agents → All agents → **Subagents** says whether Claude hands parts of its work to subagents, and Codex too in a [Codex tab](../codex/codex-tabs.md):
 
-- **Claude decides** (the default): Claude uses them when it judges they help.
+- **The agent decides** (the default): Claude uses them when it judges they help.
 - **Discourage them**: Claude is asked to do the work itself, in the conversation, and to use a subagent only when you ask for one.
 - **Don't allow them**: Claude is told it can't, and Deventry turns down any subagent Claude starts anyway. Its card says *Not started: subagents are turned off for this tab*, and Claude carries on by itself.
 
@@ -79,7 +79,7 @@ A restored tab shows each subagent's finished work, tool calls included, but no 
 ## Settings
 
 - Settings → Conversation → **Show subagents' work**: **Under the tab in the sidebar** (the default) or **In the conversation**. See [Subagents under their tab](#subagents-under-their-tab).
-- Settings → Tabs → **Subagents**: **Claude decides** (the default), **Discourage them** or **Don't allow them**, which a tab's **Tab settings…** can change for it. See [Discouraging or turning off subagents](#discouraging-or-turning-off-subagents).
+- Settings → Agents → All agents → **Subagents**: **The agent decides** (the default), **Discourage them** or **Don't allow them**, which a tab's **Tab settings…** can change for it. See [Discouraging or turning off subagents](#discouraging-or-turning-off-subagents).
 - **Summarize subagents' progress** (Settings → Claude Code, off by default) is explained with [the agent map](../plans/the-agent-map.md).
 
 ## Shortcuts

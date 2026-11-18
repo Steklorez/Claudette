@@ -144,7 +144,7 @@ A button before a group's **+** (tip: **Project files**) opens that folder's Fil
 
 ## The account new tabs use
 
-Once you've added an API-key account in Settings → Accounts, the group's menu has **Account ▸**, which lists Default and each account with its color, the group's ticked. The choice is for the group's new tabs and is remembered for the folder on this machine. Tabs already open keep their account. A group that uses an account other than Default shows a small tag with the account's name beside its label. See [A folder's account](../accounts/a-folders-account.md).
+Once you've added an API-key account in Settings → Claude Code → Accounts, the group's menu has **Account ▸**, which lists Default and each account with its color, the group's ticked. The choice is for the group's new tabs and is remembered for the folder on this machine. Tabs already open keep their account. A group that uses an account other than Default shows a small tag with the account's name beside its label. See [A folder's account](../accounts/a-folders-account.md).
 
 ## See also
 

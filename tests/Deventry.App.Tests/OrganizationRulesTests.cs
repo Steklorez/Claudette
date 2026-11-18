@@ -11,7 +11,7 @@ namespace Deventry.App.Tests;
 
 /// <summary>
 /// What an account's organization has turned off, kept as a rule so Deventry stops trying (DESIGN.md §18, "Remote
-/// Control"), and listed in Settings → Accounts with a way to remove it.
+/// Control"), and listed in Settings → Claude Code → Accounts with a way to remove it.
 /// </summary>
 public class OrganizationRulesTests
 {
@@ -142,7 +142,7 @@ public class OrganizationRulesTests
     public async Task Settings_lists_the_rules_and_removes_one()
     {
         await using var h = new TabTestHarness();
-        using var page = new AccountsPage(new SettingsContext(h.Services));
+        using var page = new ClaudeCodePage(new SettingsContext(h.Services), null, null);
         Assert.False(page.HasOrganizationRules);
 
         h.Services.RemoteControl.UseAccount(Account("me@example.com", "Example"));

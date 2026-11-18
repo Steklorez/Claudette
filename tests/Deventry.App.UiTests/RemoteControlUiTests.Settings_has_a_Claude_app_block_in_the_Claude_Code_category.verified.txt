@@ -1,4 +1,5 @@
 ﻿"Claude app"
+"This computer"
 [button] Reset to defaults
 "Remote Control: a tab here, continued from the Claude app."
 "Connect new tabs to the Claude app"

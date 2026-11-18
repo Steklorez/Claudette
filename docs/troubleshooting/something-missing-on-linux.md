@@ -25,7 +25,7 @@ Install it, from `libsecret-tools` on Debian and Ubuntu or `libsecret` on Fedora
 
 ## API keys for accounts: `secret-tool`
 
-An API-key account's key goes in the same store, through `secret-tool`. Without it, adding an API key in Settings → Accounts is off, and Settings says why. Install `libsecret-tools` as above.
+An API-key account's key goes in the same store, through `secret-tool`. Without it, adding an API key in Settings → Claude Code → Accounts is off, and Settings says why. Install `libsecret-tools` as above.
 
 ## Environment
 

@@ -8,19 +8,6 @@ namespace Deventry.App.ViewModels.Settings;
 /// <summary>A favorite folder in Settings → Tabs, in the order the new tab picker lists them.</summary>
 public sealed record FavoriteFolderRow(string Path, string Name);
 
-/// <summary>Settings → Tabs → Subagents' choices, and the tab's own in Tab settings… (DESIGN.md §5, "Subagents").</summary>
-public sealed record SubagentUseChoice(SubagentUse Use)
-{
-    public static string Label(SubagentUse use) => use switch
-    {
-        SubagentUse.Discourage => "Discourage them",
-        SubagentUse.DontAllow => "Don't allow them",
-        _ => "Claude decides",
-    };
-
-    public override string ToString() => Label(Use);
-}
-
 /// <summary>
 /// The keys Tab settings… overrides go by (DESIGN.md §14, "Per-tab overrides"), for the settings that say "2 tabs have
 /// their own".
@@ -54,35 +41,15 @@ public static class TabOverrideKeys
 }
 
 /// <summary>
-/// Settings → Tabs (DESIGN.md §14): what each new tab starts with, which its Tab settings… can change for it: the model,
-/// effort, permission mode and subagents, what happens at a usage limit, check-ins on long turns and the process
-/// monitor; and the new tab picker's recent and favorite folders (DESIGN.md §4, "Opening a tab").
+/// Settings → Tabs (DESIGN.md §14): what every tab does, which its Tab settings… can change for it: what happens at a
+/// usage limit, check-ins on long turns and the process monitor; the new tab picker's recent and favorite folders
+/// (DESIGN.md §4, "Opening a tab"); and Claude Code's projects in the sidebar. What a new tab starts with is its agent's
+/// page's (<see cref="ClaudeCodePage"/>, <see cref="CodexPage"/>), and subagents are All agents' (<see cref="AllAgentsPage"/>).
 /// </summary>
 public sealed partial class TabsPage : SettingsPage
 {
-    /// <summary>Used until a session has told Deventry which models the installed Claude Code offers.</summary>
-    private static readonly IReadOnlyList<Choice> FallbackModels =
-        [new("opus", "Opus"), new("sonnet", "Sonnet"), new("haiku", "Haiku"), new("fable", "Fable")];
-
-    private static readonly IReadOnlyList<string> FallbackEffortLevels = ["low", "medium", "high", "xhigh", "max"];
-
     public TabsPage(SettingsContext context) : base(context, SettingsCategory.Tabs)
     {
-        Section("newTabs", "New tabs start with",
-        [
-            Setting("newTabs.defaultModel", "Model", s => s.NewTabs.DefaultModel, (s, v) => s.NewTabs.DefaultModel = v,
-                keywords: ["default model", "opus", "sonnet", "haiku"], overrideKey: TabOverrideKeys.Model),
-            Setting("newTabs.defaultEffort", "Effort", s => s.NewTabs.DefaultEffort, (s, v) => s.NewTabs.DefaultEffort = v,
-                "How hard the model thinks before it answers.", keywords: ["default effort", "thinking"], overrideKey: TabOverrideKeys.Effort),
-            Setting("newTabs.defaultPermissionMode", "Permission mode", s => s.NewTabs.DefaultPermissionMode, (s, v) => s.NewTabs.DefaultPermissionMode = v,
-                "What Claude may do without asking first.",
-                "Claude Code's default is what your settings and your organization's make it, usually Auto. A project's own settings can still change it for its tabs.",
-                ["default permission mode", "auto", "plan", "accept edits", "bypass"], TabOverrideKeys.PermissionMode),
-            Setting("claudeCode.subagents", "Subagents", s => s.ClaudeCode.Subagents, (s, v) => s.ClaudeCode.Subagents = v,
-                "Whether Claude hands parts of its work to subagents.",
-                "Discourage asks it to do the work itself, unless you ask for a subagent. Don't allow tells it it can't, and Deventry turns down any subagent it starts anyway, in tabs already open too.",
-                ["agents", "task tool"], TabOverrideKeys.Subagents),
-        ], description: "Each tab can change these for itself, from Tab settings… in its menu.");
         Section("usageLimits", "At a usage limit",
         [
             Setting("usage.continueAfterLimitReset", "Continue tasks when a usage limit resets", s => s.Usage.ContinueAfterLimitReset, (s, v) => s.Usage.ContinueAfterLimitReset = v,
@@ -143,85 +110,7 @@ public sealed partial class TabsPage : SettingsPage
 
     public override string IconKey => "IconSettingsTabs";
 
-    public override string Description => "What each new tab starts with, and the folders you open them in.";
-
-    // ---- Models and effort levels from Claude Code (DESIGN.md §14, "Tabs") ---------------------------------------
-
-    public IReadOnlyList<Choice> ModelChoices => field ??= BuildModelChoices();
-
-    public IReadOnlyList<Choice> EffortChoices => field ??= BuildEffortChoices();
-
-    /// <summary>
-    /// "Claude Code's default" names the mode it comes to from the user's and managed settings, usually Auto (DESIGN.md
-    /// §7, "Starting mode"). A project's settings can still change it for its tabs.
-    /// </summary>
-    public IReadOnlyList<Choice> ModeChoices => field ??=
-    [
-        new(null, $"Claude Code's default ({PermissionModeInfo.Label(Services.ReadStartingPermissionMode(null).Expected)})"),
-        .. PermissionModeInfo.Choices.Select(m => new Choice(m.Value, m.Label)),
-    ];
-
-    public Choice DefaultModel
-    {
-        get => ModelChoices.FirstOrDefault(c => c.Value == Settings.NewTabs.DefaultModel) ?? ModelChoices[0];
-        set => Set(value?.Value, v => Settings.NewTabs.DefaultModel = v);
-    }
-
-    public Choice DefaultEffort
-    {
-        get => EffortChoices.FirstOrDefault(c => c.Value == Settings.NewTabs.DefaultEffort) ?? EffortChoices[0];
-        set => Set(value?.Value, v => Settings.NewTabs.DefaultEffort = v);
-    }
-
-    public Choice DefaultMode
-    {
-        get => ModeChoices.FirstOrDefault(c => c.Value == Settings.NewTabs.DefaultPermissionMode) ?? ModeChoices[0];
-        set => Set(value?.Value, v => Settings.NewTabs.DefaultPermissionMode = v);
-    }
-
-    /// <summary>What Claude Code offered in its last <c>initialize</c> reply, plus the current default if it's not among them.</summary>
-    private IReadOnlyList<Choice> BuildModelChoices()
-    {
-        var known = Services.State.KnownModels;
-        IReadOnlyList<Choice> models = known.Count > 0 ? [.. known.Select(m => new Choice(m.Value, m.DisplayName))] : FallbackModels;
-        var choices = new List<Choice> { new(null, "Claude Code's default") };
-        choices.AddRange(models);
-        if (Settings.NewTabs.DefaultModel is { } current && choices.All(c => c.Value != current))
-        {
-            choices.Add(new Choice(current, current));
-        }
-        return choices;
-    }
-
-    /// <summary>Every effort level a model offers, in Claude Code's order.</summary>
-    private IReadOnlyList<Choice> BuildEffortChoices()
-    {
-        var levels = Services.State.KnownModels.SelectMany(m => m.SupportedEffortLevels).Distinct(StringComparer.Ordinal).ToList();
-        if (levels.Count == 0)
-        {
-            levels = [.. FallbackEffortLevels];
-        }
-        var choices = new List<Choice> { new(null, "The model's default") };
-        choices.AddRange(levels.Select(l => new Choice(l, Formats.Capitalize(l))));
-        if (Settings.NewTabs.DefaultEffort is { } current && choices.All(c => c.Value != current))
-        {
-            choices.Add(new Choice(current, Formats.Capitalize(current)));
-        }
-        return choices;
-    }
-
-    public IReadOnlyList<SubagentUseChoice> SubagentChoices { get; } =
-        [new(SubagentUse.ClaudeDecides), new(SubagentUse.Discourage), new(SubagentUse.DontAllow)];
-
-    /// <summary>
-    /// <b>Subagents</b> (DESIGN.md §5, "Subagents"): whether Claude may hand work to them. Applies at once, in tabs already
-    /// open too; each tab can override it in Tab settings….
-    /// </summary>
-    public SubagentUseChoice Subagents
-    {
-        get => SubagentChoices.FirstOrDefault(c => c.Use == Settings.ClaudeCode.Subagents) ?? SubagentChoices[0];
-        set => Set(value?.Use ?? SubagentUse.ClaudeDecides, v => Settings.ClaudeCode.Subagents = v);
-    }
+    public override string Description => "What every tab does at a usage limit, on a long turn and with its processes, and the folders you open them in.";
 
     // ---- At a usage limit (DESIGN.md §6) --------------------------------------------------------------------------
 

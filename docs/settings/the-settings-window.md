@@ -27,8 +27,8 @@ Settings opens on the page you left it on. It's a window of its own that stays o
 
 The sidebar lists the pages in groups:
 
-- **Deventry**: General, Appearance, Conversation, Notifications and Keyboard. [About Deventry](about.md) is a window of its own.
-- **Agents**: Claude Code, [Codex](../codex/adding-codex.md), Accounts, Tabs, Usage and Advanced. It was **Claude** before Codex came.
+- **Deventry**: General, Appearance, Conversation, Notifications, Keyboard, Tabs, Usage and [Advanced](advanced.md). [About Deventry](about.md) is a window of its own.
+- **Agents**: All agents, which has what every agent's tabs share (**Subagents**, and offering the other agent at a usage limit), then a page for each agent, with its icon: Claude Code, with the [accounts](../accounts/index.md) its tabs run under, and [Codex](../codex/adding-codex.md).
 - **Your work**: Sessions, Files and diffs, and [Timed messages](../away/timed-messages.md).
 - **Project tools**: All tools, which has what every kind of project shares, then a page for each kind of project Deventry knows, Unreal Engine, Unity and Godot, each with its own icon (Unreal Engine's and Godot's are their logos). A kind of project you've switched off says *Off* beside its name, and its page is still there to switch it back on.
 - **Source control**: [Git](git.md), with a branch for its icon, then [Perforce](../project-tools/perforce.md), with Perforce's logo.
@@ -64,7 +64,7 @@ Each section has **Reset to defaults** by its heading, which puts that section's
 - **Sessions** leaves the library's **Folder** and **Sync Deventry's settings through the library**. Use **Use the default folder**, or turn the switch off, when you mean to change them.
 - **Usage** leaves **Keep usage history**.
 - **Tabs** leaves your favorite and recent folders.
-- **Accounts** only puts **New folders use** back to Default. Your accounts and their keys stay.
+- **Claude Code**'s **Accounts** only puts **New folders use** back to Default. Your accounts and their keys stay.
 - **Perforce** leaves its stored password and its per-folder servers and users.
 - **Keyboard**'s **Quick suffixes** puts the five built-in suffixes back, which deletes your own, so it asks first.
 

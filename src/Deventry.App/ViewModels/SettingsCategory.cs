@@ -25,15 +25,15 @@ public static class SettingsCategory
     public const string Keyboard = "Keyboard";
 
 
-    public const string ClaudeCode = "Claude Code";
-
-    public const string Codex = "Codex";
-
-    public const string Accounts = "Accounts";
-
     public const string Tabs = "Tabs";
 
     public const string Usage = "Usage";
+
+    public const string AllAgents = "All agents";
+
+    public const string ClaudeCode = "Claude Code";
+
+    public const string Codex = "Codex";
 
     public const string Sessions = "Sessions";
 
@@ -56,12 +56,13 @@ public static class SettingsCategory
 
 /// <summary>
 /// The Settings sidebar's groups (DESIGN.md §14), in order: a heading and its categories. About Deventry is a window of
-/// its own (DESIGN.md §14, "About"); Claude ends with Advanced, which is mostly about running Claude Code; Project tools has All tools,
-/// then a page for each project type Deventry knows, in its order; Source control has Git, then Perforce.
+/// its own (DESIGN.md §14, "About"); Deventry ends with Advanced; Agents has All agents, then a page for each agent, as
+/// Project tools has All tools, then a page for each project type Deventry knows, in its order; Source control has Git,
+/// then Perforce.
 /// </summary>
 public static class SettingsSidebar
 {
-    /// <summary>The agents' pages, Claude Code's first (DESIGN.md §18, "Codex, a second agent"), with what they share.</summary>
+    /// <summary>What every agent shares, then each agent's page, Claude Code's first (DESIGN.md §18, "Codex, a second agent").</summary>
     public const string Agents = "Agents";
 
     public const string ProjectTools = "Project tools";
@@ -77,8 +78,9 @@ public static class SettingsSidebar
     public static IReadOnlyList<(string Heading, IReadOnlyList<string> Categories)> Groups(IEnumerable<IProjectType> types, IEnumerable<IRemoteClientType> clients,
         IEnumerable<ITicketProviderType> providers) =>
     [
-        ("Deventry", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard]),
-        (Agents, [SettingsCategory.ClaudeCode, SettingsCategory.Codex, SettingsCategory.Accounts, SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
+        ("Deventry", [SettingsCategory.General, SettingsCategory.Appearance, SettingsCategory.Conversation, SettingsCategory.Notifications, SettingsCategory.Keyboard,
+            SettingsCategory.Tabs, SettingsCategory.Usage, SettingsCategory.Advanced]),
+        (Agents, [SettingsCategory.AllAgents, SettingsCategory.ClaudeCode, SettingsCategory.Codex]),
         ("Your work", [SettingsCategory.Sessions, SettingsCategory.Files, SettingsCategory.TimedMessages]),
         (ProjectTools, [SettingsCategory.AllTools, .. types.Select(t => t.Name)]),
         (SourceControl, [SettingsCategory.Git, SettingsCategory.Perforce]),
@@ -99,7 +101,7 @@ public static class SettingsSidebar
         SourceControl => [SourceControl, "version control", "vcs"],
         RemoteClients => [RemoteClients, "remote", "phone", "mobile"],
         Tickets => [Tickets, "issues", "tracker", "bug tracker"],
-        Agents => [Agents, "claude", "agent"],
+        Agents => [Agents, "provider"],
         _ => [],
     };
 }

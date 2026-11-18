@@ -3,7 +3,7 @@ using Deventry.Core.Settings;
 namespace Deventry.Core.Subagents;
 
 /// <summary>
-/// What Deventry tells Claude about subagents, as Settings → Tabs → Subagents or the tab's own setting says
+/// What Deventry tells Claude about subagents, as Settings → All agents → Subagents or the tab's own setting says
 /// (DESIGN.md §5, "Subagents"): the note Claude Code starts with, the note on the next message when the setting changes
 /// in a running tab, and the answer to an <c>Agent</c> call Deventry's hook refuses.
 /// </summary>

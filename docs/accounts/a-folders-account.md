@@ -23,11 +23,11 @@ The menu only shows once you have an account besides Default.
 
 ## New folders
 
-A folder you open for the first time uses Settings → Accounts → **New folders use**, which is Default unless you change it.
+A folder you open for the first time uses Settings → Claude Code → Accounts → **New folders use**, which is Default unless you change it.
 
 ## The tags
 
-Each account has a color: the first group color no other account has, which you can change in Settings → Accounts with **Tag color**.
+Each account has a color: the first group color no other account has, which you can change in Settings → Claude Code → Accounts with **Tag color**.
 
 - A group whose new tabs use an account other than Default has a small tag with the account's name beside its label. Hover over it for *New tabs here run under Studio*.
 - A tab whose account isn't its group's has its account's tag on its row. Default's tag is muted. Hover over it for which account it is.
@@ -37,8 +37,8 @@ Each account has a color: the first group color no other account has, which you 
 
 | Setting | Default | Where |
 |---|---|---|
-| **New folders use** | Default | Settings → Accounts |
-| **Tag color** | The first free group color | Settings → Accounts, on each account |
+| **New folders use** | Default | Settings → Claude Code → Accounts |
+| **Tag color** | The first free group color | Settings → Claude Code → Accounts, on each account |
 
 ## See also
 

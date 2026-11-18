@@ -893,7 +893,7 @@ public sealed partial class SubagentItem : ToolUseItem
     /// <summary>It started, so it has work to show: every subagent but one Deventry's hook refused.</summary>
     public bool IsStarted => !IsRefused;
 
-    /// <summary>The call came back refused by Deventry's hook, as Settings → Tabs → Subagents says.</summary>
+    /// <summary>The call came back refused by Deventry's hook, as Settings → All agents → Subagents says.</summary>
     internal void ShowRefused()
     {
         IsComplete = true;

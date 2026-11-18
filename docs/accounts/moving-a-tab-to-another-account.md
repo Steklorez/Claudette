@@ -48,7 +48,7 @@ Moving a tab with **Account ▸** has asked already, so it doesn't ask again. De
 
 ## Settings
 
-Settings → Accounts → **Warn before continuing a session under another account**, on by default, asks before a conversation carries on under another account.
+Settings → Claude Code → Accounts → **Warn before continuing a session under another account**, on by default, asks before a conversation carries on under another account.
 
 ## See also
 

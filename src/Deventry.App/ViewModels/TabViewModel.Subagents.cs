@@ -134,7 +134,7 @@ public sealed partial class SubagentRowViewModel : ObservableObject
 }
 
 /// <summary>
-/// Subagents (DESIGN.md §5, "Subagents"): whether Claude may use them, as Settings → Tabs → Subagents or the tab's
+/// Subagents (DESIGN.md §5, "Subagents"): whether Claude may use them, as Settings → All agents → Subagents or the tab's
 /// own setting says, and where their work shows. With Settings → Conversation → Show subagents' work on <b>Under the tab
 /// in the sidebar</b>, each has a row under the tab's, and the tab shows one's work in place of its conversation,
 /// read-only: Claude Code has no way for the user to write to a subagent, only for Claude to.

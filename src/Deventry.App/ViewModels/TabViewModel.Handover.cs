@@ -8,7 +8,7 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// <b>Continue in Codex</b> (or <b>in Claude Code</b>) on the limit bar (DESIGN.md §18, "Continuing in the other agent"):
-/// while Settings → Agents → Codex offers it, a tab stopped at its agent's usage limit opens a tab of the other agent in
+/// while Settings → All agents offers it, a tab stopped at its agent's usage limit opens a tab of the other agent in
 /// its folder, whose first message, a draft the user sends, hands the work over.
 /// </summary>
 public sealed partial class TabViewModel

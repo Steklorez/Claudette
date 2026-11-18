@@ -9,7 +9,7 @@ summary: "A cloud provider account lets a tab run Claude Code through Amazon Bed
 
 A cloud provider account lets a tab run Claude Code through Amazon Bedrock, Google Cloud or Microsoft Foundry instead of your Claude sign-in. It suits a studio whose Claude comes through its cloud, beside a personal plan. You choose where it's used as you would for an API key: [a folder's account](a-folders-account.md), or [moving a tab](moving-a-tab-to-another-account.md).
 
-{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Accounts with New folders use, the switch for warning before a session continues under another account, an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings" %}
+{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Claude Code, at its Accounts: Default, signed in, with Sign out…; an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings; then New folders use, and the switch for warning before a session continues under another account. The sidebar has Tabs, Usage and Advanced under Deventry, and All agents, Claude Code and Codex under Agents" %}
 
 ## The providers
 
@@ -25,7 +25,7 @@ Your provider has to be set up for Claude first, such as Claude's models enabled
 
 ## Adding an account
 
-1. Open Settings → Accounts.
+1. Open Settings → Claude Code → Accounts.
 2. Under **Add an account**, type a **Name**, such as Render farm, and choose the provider as its **Kind**.
 3. Choose how it signs in under **Sign in with**, and fill in what the provider needs.
 4. Optionally, fill in the models: see [Models](#models).
@@ -74,7 +74,7 @@ If Claude Code runs a tab on another provider than its account's, as an organiza
 
 ## If Claude Code can't sign in
 
-A sign-in Claude Code can't use is that tab's own error, saying what to do: *Claude Code couldn't sign in to Amazon Bedrock for Render farm. Sign in to AWS with "aws sso login --profile studio-sso", or check the profile in Settings → Accounts. Or move the tab to another account.* A key that's gone from the credential store stops the tab before Claude Code starts, and says so.
+A sign-in Claude Code can't use is that tab's own error, saying what to do: *Claude Code couldn't sign in to Amazon Bedrock for Render farm. Sign in to AWS with "aws sso login --profile studio-sso", or check the profile in Settings → Claude Code → Accounts. Or move the tab to another account.* A key that's gone from the credential store stops the tab before Claude Code starts, and says so.
 
 ## See also
 

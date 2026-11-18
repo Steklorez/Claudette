@@ -651,7 +651,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public partial string? PermissionMode { get; set; }
 
     /// <summary>
-    /// The mode the tab starts in (DESIGN.md §7, "Starting mode"): chosen in Tab settings or Settings → Tabs, else what
+    /// The mode the tab starts in (DESIGN.md §7, "Starting mode"): chosen in Tab settings or Settings → Claude Code, else what
     /// Claude Code's settings files give. Shown until its claude reports one, as its model and effort are.
     /// </summary>
     [ObservableProperty]
@@ -1061,7 +1061,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ProjectTools.OnSettingsChanged();
         OnPropertyChanged(nameof(MarksYourMessages));
         OnPropertyChanged(nameof(MarksClaudesAnswers));
-        // Settings → Tabs' Permission mode is the one a tab without its own starts in.
+        // Settings → Claude Code's Permission mode is the one a tab without its own starts in.
         ShowStartingMode();
         OnGamesSettingsChanged();
         OnSubagentDisplayChanged();

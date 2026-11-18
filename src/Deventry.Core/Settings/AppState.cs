@@ -285,7 +285,7 @@ public sealed class AppState
 
     /// <summary>
     /// What accounts' organizations have turned off, which Deventry stopped trying (DESIGN.md §18, "Remote Control";
-    /// Settings → Accounts lists them with a way to remove each). Per machine: it doesn't sync.
+    /// Settings → Claude Code → Accounts lists them with a way to remove each). Per machine: it doesn't sync.
     /// </summary>
     public List<OrganizationRule> OrganizationRules { get; set; } = [];
 

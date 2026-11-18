@@ -182,13 +182,13 @@ public class SettingsDefaultsTests
         await using var h = new TabTestHarness();
         var before = new SettingsViewModel(h.Services, null);
         // Nothing offered yet on this machine: the built-in list.
-        Assert.Contains(before.Tabs.ModelChoices, c => c.Value == "sonnet");
+        Assert.Contains(before.ClaudeCode.ModelChoices, c => c.Value == "sonnet");
 
         var tab = await h.OpenTabAsync();
         var settings = new SettingsViewModel(h.Services, null);
 
-        Assert.Equal([null, "opus", "haiku"], settings.Tabs.ModelChoices.Select(c => c.Value));
-        Assert.Equal([null, "low", "high"], settings.Tabs.EffortChoices.Select(c => c.Value));
+        Assert.Equal([null, "opus", "haiku"], settings.ClaudeCode.ModelChoices.Select(c => c.Value));
+        Assert.Equal([null, "low", "high"], settings.ClaudeCode.EffortChoices.Select(c => c.Value));
         Assert.Equal(["opus", "haiku"], h.Services.State.KnownModels.Select(m => m.Value));
         var tabSettings = new TabSettingsViewModel(h.Services, tab, () => { });
         Assert.Equal([null, "low", "high"], tabSettings.EffortChoices.Select(c => c.Value));

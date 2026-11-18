@@ -52,11 +52,5 @@
         </ComboBox>
       </c:SettingRow>
     </c:SettingsSection>
-
-    <c:SettingsSection Key="bothAgents">
-      <c:SettingRow Key="codex.offerOtherAgentAtLimit">
-        <ToggleSwitch IsChecked="{Binding OfferOtherAgentAtLimit}" />
-      </c:SettingRow>
-    </c:SettingsSection>
   </StackPanel>
 </UserControl>

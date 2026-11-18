@@ -4,24 +4,8 @@
              xmlns:c="using:Deventry.App.Controls"
              x:Class="Deventry.App.Views.Settings.TabsPageView" ClipToBounds="False"
              x:DataType="settings:TabsPage">
-  <!-- Tabs (DESIGN.md §14): what each new tab starts with, which its Tab settings… can change; the new tab picker -->
+  <!-- Tabs (DESIGN.md §14): what every tab does, which its Tab settings… can change; the new tab picker -->
   <StackPanel Spacing="32">
-    <c:SettingsSection Key="newTabs">
-      <c:SettingRow Key="newTabs.defaultModel">
-        <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding DefaultModel}" />
-      </c:SettingRow>
-      <c:SettingRow Key="newTabs.defaultEffort">
-        <ComboBox ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding DefaultEffort}" />
-      </c:SettingRow>
-      <c:SettingRow Key="newTabs.defaultPermissionMode">
-        <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding DefaultMode}" />
-      </c:SettingRow>
-      <!-- DESIGN.md §5, "Subagents": applies at once, in tabs already open too -->
-      <c:SettingRow Key="claudeCode.subagents">
-        <ComboBox ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding Subagents}" />
-      </c:SettingRow>
-    </c:SettingsSection>
-
     <!-- DESIGN.md §6, "Continuing after a limit resets" and "Tabs that don't use usage credits" -->
     <c:SettingsSection Key="usageLimits">
       <c:SettingRow Key="usage.continueAfterLimitReset">

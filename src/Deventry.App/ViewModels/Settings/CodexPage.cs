@@ -4,8 +4,8 @@ namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
 /// Settings → Agents → Codex (DESIGN.md §18, "Codex, a second agent"): the Codex Deventry found, or installing it; its own
-/// sign-in; how a new Codex tab starts; and continuing a tab's work in the other agent at a limit. Dispose it with the
-/// window.
+/// sign-in; and how a new Codex tab starts. What applies to both agents is All agents' (<see cref="AllAgentsPage"/>).
+/// Dispose it with the window.
 /// </summary>
 public sealed partial class CodexPage : SettingsPage, IDisposable
 {
@@ -29,14 +29,6 @@ public sealed partial class CodexPage : SettingsPage, IDisposable
             Setting("codex.defaultMode", "Mode", s => s.Codex.DefaultMode, (s, v) => s.Codex.DefaultMode = v,
                 "What Codex may do without asking. Each tab can change it.", keywords: ["sandbox", "approval", "read only", "full access", "plan"]),
         ], description: "These apply to tabs started after a change.");
-        Section("bothAgents", "Both agents",
-        [
-            Setting("codex.offerOtherAgentAtLimit", "Offer to continue in the other agent at a usage limit", s => s.Codex.OfferOtherAgentAtLimit,
-                (s, v) => s.Codex.OfferOtherAgentAtLimit = v,
-                "A tab stopped at its plan's limit offers a tab of the other agent, which carries the work on.",
-                "Its first message, a draft for you to send, says what you asked, the to-do list, the files changed so far and the last reply.",
-                ["limit", "continue", "hand off", "claude code"]),
-        ]);
         Setup = new CodexSetupViewModel(Services);
     }
 
@@ -75,13 +67,5 @@ public sealed partial class CodexPage : SettingsPage, IDisposable
                 Set(value.Value == CodexModes.Auto ? null : value.Value, v => Settings.Codex.DefaultMode = v);
             }
         }
-    }
-
-    // ---- Both agents ---------------------------------------------------------------------------------------------------
-
-    public bool OfferOtherAgentAtLimit
-    {
-        get => Settings.Codex.OfferOtherAgentAtLimit;
-        set => Set(value, v => Settings.Codex.OfferOtherAgentAtLimit = v);
     }
 }

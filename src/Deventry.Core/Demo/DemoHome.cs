@@ -120,7 +120,7 @@ public static class DemoHome
             SessionMarks = sessionMarks,
             // The studio's API key, which orbit-game's group uses (DESIGN.md §4, "Accounts"). Its key isn't stored: the
             // demo's Claude Code never runs the key helper. And its Amazon Bedrock account, which no tab uses, signing
-            // in with an AWS profile, so Settings → Accounts shows a cloud provider's too.
+            // in with an AWS profile, so Settings → Claude Code → Accounts shows a cloud provider's too.
             Accounts =
             [
                 new ClaudeAccount { Id = DemoContent.StudioAccount, Name = "Studio", Color = "#A66BFF", DailySpendAlert = 20 },

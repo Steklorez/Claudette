@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
-/// One account in Settings → Accounts: its name, tag color, key and spend warnings, and a cloud account's settings
+/// One account in Settings → Claude Code → Accounts: its name, tag color, key and spend warnings, and a cloud account's settings
 /// (DESIGN.md §4, "Accounts").
 /// </summary>
 public sealed partial class AccountEditor : ObservableObject
@@ -238,7 +238,7 @@ public sealed partial class AccountEditor : ObservableObject
     }
 }
 
-/// <summary>One rule in Settings → Accounts → What an organization has turned off (DESIGN.md §18, "Remote Control").</summary>
+/// <summary>One rule in Settings → Claude Code → What an organization has turned off (DESIGN.md §18, "Remote Control").</summary>
 public sealed class OrganizationRuleRow(RemoteControlService service, OrganizationRule rule)
 {
     public OrganizationRule Rule { get; } = rule;
@@ -254,58 +254,20 @@ public sealed class OrganizationRuleRow(RemoteControlService service, Organizati
     public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => service.RemoveRule(rule));
 }
 
-/// <summary>What Settings → Accounts can add: an Anthropic API key, or a cloud provider.</summary>
+/// <summary>What Settings → Claude Code → Add an account can add: an Anthropic API key, or a cloud provider.</summary>
 public sealed record AccountKindChoice(string Label, CloudProvider? Provider)
 {
     public override string ToString() => Label;
 }
 
 /// <summary>
-/// Settings → Accounts (DESIGN.md §4, "Accounts"): the accounts tabs can run under besides Default, adding an API key or
-/// a cloud provider, and which account a folder opened for the first time uses. Each machine sets up its own: nothing
-/// here syncs, and keys go only to the OS credential store, and for some providers to their tabs' environment.
+/// Settings → Agents → Claude Code → Accounts (DESIGN.md §4, "Accounts"): Default, the accounts tabs can run under besides
+/// it, adding an API key or a cloud provider, and which account a folder opened for the first time uses. Each machine sets
+/// up its own: nothing here syncs, and keys go only to the OS credential store, and for some providers to their tabs'
+/// environment. Then what an organization has turned off for an account (DESIGN.md §18, "Remote Control").
 /// </summary>
-public sealed partial class AccountsPage : SettingsPage, IDisposable
+public sealed partial class ClaudeCodePage
 {
-    public AccountsPage(SettingsContext context) : base(context, SettingsCategory.Accounts)
-    {
-        Editors = [.. Accounts.All.Select(NewEditor)];
-        KindChoices = [new AccountKindChoice("Anthropic API key", null), .. CloudProviders.All.Select(p => new AccountKindChoice(p.Name, p))];
-        NewKind = KindChoices[0];
-        NewFolderChoices = AccountChoice.All(Accounts, Accounts.NewFolderAccount);
-        Section("accounts", "Accounts",
-        [
-            // The accounts themselves are the user's, like Perforce's per-folder overrides: only this goes back to Default.
-            Setting("state.newFolderAccount", "New folders use", () => Accounts.NewFolderAccount is null, () => Accounts.NewFolderAccount = null,
-                "Which account a folder opened for the first time runs under.", keywords: ["default account", "api key"]),
-            Setting("accounts.warnBeforeOtherAccount", "Warn before continuing a session under another account", s => s.Accounts.WarnBeforeOtherAccount,
-                (s, v) => s.Accounts.WarnBeforeOtherAccount = v,
-                "Ask first when a session started under one account is about to carry on under another.",
-                "Claude Code sends the whole earlier conversation with its requests, so it goes to the account the session continues under, and that account's organization may be able to see it. Claude can't use its earlier thinking from another organization, so its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
-                ["other account", "organization", "work account", "personal account", "resume", "privacy"]),
-            Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend", "region", "model pins"]),
-        ], description: "Tabs run under Default, Claude Code's own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");
-        Section("addAccount", "Add an account",
-        [
-            Info("state.addAccount", "Add an account",
-                keywords: ["new account", "api key account", "console", "cloud provider", "amazon bedrock", "aws", "claude platform on aws", "google cloud", "vertex ai",
-                    "agent platform", "microsoft foundry", "azure", "third-party"]),
-        ]);
-        Section("organizationRules", "What an organization has turned off",
-        [
-            Info("state.organizationRules", "Turned off for an account", keywords: ["remote control", "claude app", "policy", "organization", "admin", "rule", "disabled", "remove"]),
-        ], description: "When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed.");
-        OrganizationRules = [.. RemoteControl.Rules.Select(r => new OrganizationRuleRow(RemoteControl, r))];
-        Accounts.Changed += OnAccountsChanged;
-        RemoteControl.RulesChanged += OnRulesChanged;
-    }
-
-    public void Dispose()
-    {
-        Accounts.Changed -= OnAccountsChanged;
-        RemoteControl.RulesChanged -= OnRulesChanged;
-    }
-
     private RemoteControlService RemoteControl => Services.RemoteControl;
 
     /// <summary>What organizations turned off for the accounts signed in here, each with <b>Remove</b>.</summary>
@@ -324,10 +286,6 @@ public sealed partial class AccountsPage : SettingsPage, IDisposable
         }
         OnPropertyChanged(nameof(HasOrganizationRules));
     }
-
-    public override string IconKey => "IconCardYou";
-
-    public override string Description => "Accounts tabs can run under besides Claude Code's own sign-in.";
 
     private AccountsService Accounts => Services.Accounts;
 

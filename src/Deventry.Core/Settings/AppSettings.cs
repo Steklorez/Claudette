@@ -64,11 +64,11 @@ public sealed class AppSettings
     /// <summary>Settings → Git (DESIGN.md §14): the git Deventry runs, and what the Project Files tab shows of git. Per machine.</summary>
     public GitSettings Git { get; set; } = new();
 
-    /// <summary>Settings → Accounts (DESIGN.md §4, "Accounts"): what's asked before a session moves to another account.</summary>
+    /// <summary>Settings → Claude Code → Accounts (DESIGN.md §4, "Accounts"): what's asked before a session moves to another account.</summary>
     public AccountSettings Accounts { get; set; } = new();
 }
 
-/// <summary>Settings → Accounts (DESIGN.md §4, "Continuing under another account").</summary>
+/// <summary>Settings → Claude Code → Accounts (DESIGN.md §4, "Continuing under another account").</summary>
 public sealed class AccountSettings
 {
     /// <summary>
@@ -508,7 +508,7 @@ public sealed class ClaudeCodeSettings
     public bool AskBeforeUsingFolderSettings { get; set; } = true;
 }
 
-/// <summary>Settings → Tabs → Subagents (DESIGN.md §5, "Subagents").</summary>
+/// <summary>Settings → All agents → Subagents (DESIGN.md §5, "Subagents").</summary>
 public enum SubagentUse
 {
     /// <summary>Claude uses subagents when it judges they help, as Claude Code has it.</summary>

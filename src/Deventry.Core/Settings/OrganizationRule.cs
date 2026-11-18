@@ -4,7 +4,7 @@ namespace Deventry.Core.Settings;
 
 /// <summary>
 /// Something an account's organization has turned off, which Deventry accepts and stops trying (DESIGN.md §18, "Remote
-/// Control"). Kept in <see cref="AppState.OrganizationRules"/>, so it's per machine, and removed from Settings → Accounts
+/// Control"). Kept in <see cref="AppState.OrganizationRules"/>, so it's per machine, and removed from Settings → Claude Code → Accounts
 /// when the organization changes its mind.
 /// </summary>
 public sealed class OrganizationRule
@@ -48,7 +48,7 @@ public sealed class OrganizationRule
         {
             reason += ".";
         }
-        return $"{reason} This is your organization's rule for {Email}, kept since {Since}. Remove it in Settings → Accounts to try again.".TrimStart();
+        return $"{reason} This is your organization's rule for {Email}, kept since {Since}. Remove it in Settings → Claude Code → Accounts to try again.".TrimStart();
     }
 
     /// <summary>The feature in words, for Settings.</summary>

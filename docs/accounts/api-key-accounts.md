@@ -9,11 +9,11 @@ summary: "An API-key account lets a tab run Claude Code on an API key instead of
 
 An API-key account lets a tab run Claude Code on an API key instead of your Claude sign-in. It suits a work key beside a personal plan. For Amazon Bedrock, Google Cloud or Microsoft Foundry, see [Cloud provider accounts](cloud-provider-accounts.md).
 
-{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Accounts with New folders use, the switch for warning before a session continues under another account, an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings" %}
+{% include shot.html name="guide/accounts/settings-accounts" alt="Settings → Claude Code, at its Accounts: Default, signed in, with Sign out…; an API-key account named Studio and an Amazon Bedrock account named Render farm, each with its name, tag color, what it is and its spend warnings; then New folders use, and the switch for warning before a session continues under another account. The sidebar has Tabs, Usage and Advanced under Deventry, and All agents, Claude Code and Codex under Agents" %}
 
 ## Adding an account
 
-1. Open Settings → Accounts.
+1. Open Settings → Claude Code → Accounts.
 2. Under **Add an account**, type a **Name**, such as Work, leave its **Kind** as **Anthropic API key**, and paste the **API key**. The key is hidden as you type.
 3. Click **Add account**.
 
@@ -33,7 +33,7 @@ The account's tabs start without `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`,
 
 ## Changing and removing an account
 
-Each account in Settings → Accounts has:
+Each account in Settings → Claude Code → Accounts has:
 
 - A name box. Edit it and click away to rename it.
 - **Tag color**, the color of its tag: see [A folder's account](a-folders-account.md#the-tags).
@@ -45,13 +45,13 @@ Each account in Settings → Accounts has:
 
 | Setting | Default | Where |
 |---|---|---|
-| **New folders use** | Default | Settings → Accounts |
+| **New folders use** | Default | Settings → Claude Code → Accounts |
 
 **New folders use** is the account a folder uses the first time you open it. The accounts are yours, so **Reset to defaults** on this page only sets **New folders use** back to Default and leaves them alone. Each machine sets up its own accounts: they don't sync, and neither do keys.
 
 ## If Claude Code refuses the key
 
-A key Claude Code won't use, or can't get, is that tab's own error: *Claude Code couldn't use Work's API key. Check the key in Settings → Accounts, or move the tab to another account.* If Deventry is installed in a folder whose path has a quote, `$`, `%` or a backtick in it, a tab can't use an API-key account, and says why.
+A key Claude Code won't use, or can't get, is that tab's own error: *Claude Code couldn't use Work's API key. Check the key in Settings → Claude Code → Accounts, or move the tab to another account.* If Deventry is installed in a folder whose path has a quote, `$`, `%` or a backtick in it, a tab can't use an API-key account, and says why.
 
 ## What an API key doesn't have
 

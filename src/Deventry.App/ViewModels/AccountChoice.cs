@@ -7,7 +7,7 @@ namespace Deventry.App.ViewModels;
 
 /// <summary>
 /// An account in a menu or a list that picks one (DESIGN.md §4, "Accounts"): a group's and a tab's <b>Account ▸</b>, and
-/// Settings → Accounts' <b>New folders use</b>.
+/// Settings → Claude Code → Accounts' <b>New folders use</b>.
 /// </summary>
 /// <param name="Id">The account's id; null for Default.</param>
 /// <param name="IsChecked">It's the one chosen now.</param>

@@ -31,13 +31,13 @@ When Deventry logs in for you, it gives the password to `p4 login` on its standa
 
 ## API keys
 
-A key you add in Settings → Accounts → **Add an account** goes to the credential store as soon as you save it. Deventry's files keep only the account's name and color. Without a credential store, such as Linux without `secret-tool`, adding a key is off, and says why.
+A key you add in Settings → Claude Code → **Add an account** goes to the credential store as soon as you save it. Deventry's files keep only the account's name and color. Without a credential store, such as Linux without `secret-tool`, adding a key is off, and says why.
 
 Claude Code gets the key when it asks for it, through a small command that Deventry itself runs: it prints the key from the credential store for the `claude` that asked, then exits. The key isn't in an environment variable, on a command line or in a file. **Change key…** replaces it, and **Remove…** on an account deletes the key from the store. See [API-key accounts](../accounts/api-key-accounts.md).
 
 ## A cloud provider's key
 
-A **Bedrock API key**, a **Workspace API key** for Claude Platform on AWS or a **Foundry API key** you add in Settings → Accounts goes to the credential store too. Claude Code reads these keys only from its environment, so Deventry puts the key in the environment of each of the account's tabs' Claude Code as it starts, and nowhere else: not in its files, on a command line or in a log.
+A **Bedrock API key**, a **Workspace API key** for Claude Platform on AWS or a **Foundry API key** you add in Settings → Claude Code → Accounts goes to the credential store too. Claude Code reads these keys only from its environment, so Deventry puts the key in the environment of each of the account's tabs' Claude Code as it starts, and nowhere else: not in its files, on a command line or in a log.
 
 Every command Claude runs in those tabs inherits it, so they can read it, and Settings asks you to confirm that before it adds the key. Signing in with an AWS profile, gcloud or `az login` instead keeps Deventry out of it altogether. See [Cloud provider accounts](../accounts/cloud-provider-accounts.md#a-providers-own-key).
 

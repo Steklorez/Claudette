@@ -112,62 +112,12 @@ The notification for a check-in is **Notify me when a check-in is sent**, on the
 | Each command's shortcut | Shortcuts | The defaults in [Keyboard shortcuts](../reference/keyboard-shortcuts.md) | Yes | [Keyboard](keyboard.md#changing-a-shortcut) |
 | The list of suffixes, each with a label, its text and an optional shortcut, and **Add suffix** | Quick suffixes | Five: Clarify first, Plan only, Keep it small, Test it and Explain | Yes (as one list) | [Quick suffixes](../composer/quick-suffixes.md) |
 
-## Claude Code
-
-None of this page syncs.
-
-| Setting | Section | Default | Per tab | Explained in |
-|---|---|---|---|---|
-| **Check for Claude Code updates automatically** | Claude Code | On | No | [Claude Code's updates](../updates/claude-codes-updates.md) |
-| **Path to claude** | Claude Code | Found automatically | No | [The first launch](../getting-started/the-first-launch.md) |
-| **Name each tab's session in Claude Code after the tab** | Starting a session | On | No | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
-| **Ask before using a new folder's own configuration** | Starting a session | On | No | [Folder trust](../permissions/folder-trust.md) |
-| **Use my login shell's environment** (macOS and Linux only) | Starting a session | On | No | [Claude can't find a program](../troubleshooting/claude-cant-find-a-program.md) |
-| **Keep copies of files Claude changes, so prompts can be rewound** | Starting a session | On | No | [Rewind and branch](../conversation/rewind-and-branch.md) |
-| **Give Claude a task list** | Starting a session | On | No | [The Tasks page](../plans/the-tasks-page.md) |
-| **Summarize subagents' progress** | Starting a session | Off | No | [The agent map](../plans/the-agent-map.md) |
-| **Fallback model** | Starting a session | None | No | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
-| **Connect new tabs to the Claude app** | Claude app | Off | Own switch (**Connect to the Claude app**) | [The Claude app](../away/the-claude-app.md) |
-
-The page also shows the installed Claude Code and how it was installed, with **Check now**, **Update now**, **Update on next launch** and **What's new** ([Claude Code's updates](../updates/claude-codes-updates.md)), and the signed-in account with **Sign in** and **Sign out…** ([Your Claude sign-in](../accounts/your-claude-sign-in.md)).
-
-## Codex
-
-None of this page syncs.
-
-| Setting | Section | Default | Per tab | Explained in |
-|---|---|---|---|---|
-| **Path to codex** | Codex | Found automatically | No | [Adding Codex](../codex/adding-codex.md) |
-| **Model** | New Codex tabs | Codex's own default | No | [Adding Codex](../codex/adding-codex.md#settings) |
-| **Mode** | New Codex tabs | Auto | No | [Codex tabs](../codex/codex-tabs.md#modes) |
-| **Offer to continue in the other agent at a usage limit** | Both agents | Off | No | [Codex's usage](../codex/codex-and-usage.md#continuing-in-the-other-agent) |
-
-The page also shows the Codex Deventry found, with **Look again** and **Install Codex**, and its sign-in, with **Sign in** and **Sign out** ([Adding Codex](../codex/adding-codex.md)).
-
-## Accounts
-
-This page is this machine's own. None of it syncs, and a tab can't change it for itself. Accounts and their keys are on the [Accounts](../accounts/index.md) pages.
-
-| Setting | Section | Default | Explained in |
-|---|---|---|---|
-| **New folders use** | Accounts | Default | [A folder's account](../accounts/a-folders-account.md) |
-| An account's name and tag color | Accounts | Chosen when you add it | [API-key accounts](../accounts/api-key-accounts.md) |
-| **Warn when today's estimated spend passes ($)** and **Warn when this month's estimated spend passes ($)** | Accounts | No warning | [Spend and its warnings](../accounts/spend-and-its-warnings.md) |
-| **Change key…** and **Remove…** | Accounts | | [API-key accounts](../accounts/api-key-accounts.md) |
-| A cloud provider account's **Change settings…** | Accounts | | [Cloud provider accounts](../accounts/cloud-provider-accounts.md) |
-| **Add an account**: a **Name**, its **Kind** and the key | Add an account | No accounts besides Default | [API-key accounts](../accounts/api-key-accounts.md) |
-| **Add an account** for a cloud provider: **Sign in with**, what the provider needs, **Sign in again when the credentials expire** and the models | Add an account | On, for an AWS profile and gcloud | [Cloud provider accounts](../accounts/cloud-provider-accounts.md) |
-
 ## Tabs
 
-What each new tab starts with, and the folders you open them in.
+What every tab does at a usage limit, on a long turn and with its processes, and the folders you open them in. What a new tab starts with is its agent's: [Claude Code](#claude-code) and [Codex](#codex) have their own.
 
 | Setting | Section | Default | Syncs | Per tab | Explained in |
 |---|---|---|---|---|---|
-| **Model** | New tabs start with | Claude Code's default | Yes | Yes (**Model**) | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
-| **Effort** | New tabs start with | The model's default | Yes | Yes (**Effort**) | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
-| **Permission mode** | New tabs start with | Claude Code's default, named with the mode it gives | Yes | Yes (**Permission mode**) | [Permission modes](../permissions/permission-modes.md) |
-| **Subagents** | New tabs start with | Claude decides | No | Yes (**Subagents**) | [Subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents) |
 | **Continue tasks when a usage limit resets** | At a usage limit | On | Yes | Yes | [When a limit stops a task](../usage/when-a-limit-stops-a-task.md) |
 | **Use usage credits once a limit is used up** | At a usage limit | Off | Yes | Yes (**Use usage credits**, and the tab's menu) | [Tabs that don't use usage credits](../usage/tabs-that-dont-use-usage-credits.md) |
 | **Check in on long turns** | Check-ins on long turns | On | Yes | Yes (**Use different check-ins for this tab**) | [Check-ins on long turns](../composer/check-ins-on-long-turns.md) |
@@ -209,10 +159,62 @@ None of this page syncs.
 
 | Setting | Section | Default | Explained in |
 |---|---|---|---|
-| **Extra arguments for every claude process** | Running claude | Empty | [Advanced](advanced.md#extra-arguments-for-claude) |
-| **Log protocol traffic**, with **Open log folder** | Running claude | Off | [Advanced](advanced.md#log-protocol-traffic) |
-| **Deventry's data folder**, with **Open data folder** | Running claude | | [Advanced](advanced.md#the-log-and-data-folders) |
+| **Log protocol traffic**, with **Open log folder** | Logs and files | Off | [Advanced](advanced.md#log-protocol-traffic) |
+| **Deventry's data folder**, with **Open data folder** | Logs and files | | [Advanced](advanced.md#the-log-and-data-folders) |
 | What Claude Code sent that Deventry doesn't know, with **Copy diagnostics** | Diagnostics | | [Advanced](advanced.md#diagnostics) |
+
+## All agents
+
+What Claude Code's and Codex's tabs share. None of this page syncs.
+
+| Setting | Section | Default | Per tab | Explained in |
+|---|---|---|---|---|
+| **Subagents** | Subagents | The agent decides | Yes (**Subagents**) | [Subagents](../conversation/subagents.md#discouraging-or-turning-off-subagents) |
+| **Offer to continue in the other agent** | At a usage limit | Off | No | [Codex's usage](../codex/codex-and-usage.md#continuing-in-the-other-agent) |
+
+## Claude Code
+
+Only what a new Claude Code tab starts with syncs. The rest of the page stays on this machine, accounts and their keys too, which are on the [Accounts](../accounts/index.md) pages.
+
+| Setting | Section | Default | Syncs | Per tab | Explained in |
+|---|---|---|---|---|---|
+| **Check for Claude Code updates automatically** | Claude Code | On | No | No | [Claude Code's updates](../updates/claude-codes-updates.md) |
+| **Path to claude** | Claude Code | Found automatically | No | No | [The first launch](../getting-started/the-first-launch.md) |
+| Default, Claude Code's own sign-in, with **Sign in** and **Sign out…** | Accounts | | No | No | [Your Claude sign-in](../accounts/your-claude-sign-in.md) |
+| An account's name and tag color | Accounts | Chosen when you add it | No | No | [API-key accounts](../accounts/api-key-accounts.md) |
+| **Warn when today's estimated spend passes ($)** and **Warn when this month's estimated spend passes ($)** | Accounts | No warning | No | No | [Spend and its warnings](../accounts/spend-and-its-warnings.md) |
+| **Change key…** and **Remove…** | Accounts | | No | No | [API-key accounts](../accounts/api-key-accounts.md) |
+| A cloud provider account's **Change settings…** | Accounts | | No | No | [Cloud provider accounts](../accounts/cloud-provider-accounts.md) |
+| **New folders use** | Accounts | Default | No | No | [A folder's account](../accounts/a-folders-account.md) |
+| **Warn before continuing a session under another account** | Accounts | On | No | No | [Moving a tab to another account](../accounts/moving-a-tab-to-another-account.md) |
+| **Add an account**: a **Name**, its **Kind** and the key | Add an account | No accounts besides Default | No | No | [API-key accounts](../accounts/api-key-accounts.md) |
+| **Add an account** for a cloud provider: **Sign in with**, what the provider needs, **Sign in again when the credentials expire** and the models | Add an account | On, for an AWS profile and gcloud | No | No | [Cloud provider accounts](../accounts/cloud-provider-accounts.md) |
+| **Model** | New Claude Code tabs | Claude Code's default | Yes | Yes (**Model**) | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
+| **Effort** | New Claude Code tabs | The model's default | Yes | Yes (**Effort**) | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
+| **Permission mode** | New Claude Code tabs | Claude Code's default, named with the mode it gives | Yes | Yes (**Permission mode**) | [Permission modes](../permissions/permission-modes.md) |
+| **Name each tab's session in Claude Code after the tab** | Starting a session | On | No | No | [Names, marks and pins](../tabs/names-marks-and-pins.md) |
+| **Ask before using a new folder's own configuration** | Starting a session | On | No | No | [Folder trust](../permissions/folder-trust.md) |
+| **Use my login shell's environment** (macOS and Linux only) | Starting a session | On | No | No | [Claude can't find a program](../troubleshooting/claude-cant-find-a-program.md) |
+| **Keep copies of files Claude changes, so prompts can be rewound** | Starting a session | On | No | No | [Rewind and branch](../conversation/rewind-and-branch.md) |
+| **Give Claude a task list** | Starting a session | On | No | No | [The Tasks page](../plans/the-tasks-page.md) |
+| **Summarize subagents' progress** | Starting a session | Off | No | No | [The agent map](../plans/the-agent-map.md) |
+| **Fallback model** | Starting a session | None | No | No | [Model, effort and output style](../composer/model-effort-and-output-style.md) |
+| **Extra arguments for every claude process** | Starting a session | Empty | No | No | [Advanced](advanced.md#extra-arguments-for-claude) |
+| **Connect new tabs to the Claude app** | Claude app | Off | No | Own switch (**Connect to the Claude app**) | [The Claude app](../away/the-claude-app.md) |
+
+The page also shows the installed Claude Code and how it was installed, with **Check now**, **Update now**, **Update on next launch** and **What's new** ([Claude Code's updates](../updates/claude-codes-updates.md)), and what an organization has turned off for an account, each with **Remove** ([The Claude app](../away/the-claude-app.md)).
+
+## Codex
+
+None of this page syncs.
+
+| Setting | Section | Default | Per tab | Explained in |
+|---|---|---|---|---|
+| **Path to codex** | Codex | Found automatically | No | [Adding Codex](../codex/adding-codex.md) |
+| **Model** | New Codex tabs | Codex's own default | No | [Adding Codex](../codex/adding-codex.md#settings) |
+| **Mode** | New Codex tabs | Auto | No | [Codex tabs](../codex/codex-tabs.md#modes) |
+
+The page also shows the Codex Deventry found, with **Look again** and **Install Codex**, and its sign-in, with **Sign in** and **Sign out** ([Adding Codex](../codex/adding-codex.md)).
 
 ## Sessions
 
