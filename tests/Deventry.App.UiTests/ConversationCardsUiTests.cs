@@ -222,19 +222,18 @@ public sealed class ConversationCardsUiTests
     }
 
     /// <summary>
-    /// A turn's card is a line with its bar under it (DESIGN.md §18, "A turn's card"): its icon is on the line, with the
-    /// label, not in the middle of the line and the bar.
+    /// A turn's card is one line (DESIGN.md §18, "A turn's card"): its icon, its label, its statistics, then its bar and
+    /// <b>Breakdown ›</b>, which go under the statistics in a narrow pane.
     /// </summary>
     [AvaloniaFact]
-    public async Task A_turns_icon_is_on_its_labels_line_not_between_the_line_and_its_bar()
+    public async Task A_turns_card_is_one_line_with_its_bar_and_Breakdown_after_its_statistics()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
         var tab = await h.OpenTabAsync();
         var window = UiText.Show(new ShellView { DataContext = h.Shell });
-        tab.Items.Add(new TurnSummaryItem("15.1s · 1.5M in · 1.2k out · $0.34 · Opus 5.5")
+        tab.Items.Add(new TurnSummaryItem("15.1s · 1.5M in · 1.2k out · $0.34")
         {
             Kinds = new KindValues(1_500_000, 0, 2_000, 1_200),
-            ToolCalls = 2,
             TurnNumber = 120,
             TurnId = "turn-120",
         });
@@ -244,11 +243,29 @@ public sealed class ConversationCardsUiTests
         var card = Named(window, "stats")[0];
         var icon = card.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single(p => p.Name == "PART_Icon");
         var label = card.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "PART_Label");
+        var stats = card.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Name == "TurnStats");
         var bar = card.GetVisualDescendants().OfType<KindsBar>().Single();
+        var breakdown = card.GetVisualDescendants().OfType<Button>().Single(b => Equals(b.Content, "Breakdown ›"));
         Assert.Equal("Turn 120", label.Text);
-        var middle = icon.TranslatePoint(new Point(0, icon.Bounds.Height / 2), window)!.Value.Y;
-        Assert.InRange(middle - FirstLine.MiddleIn(label, window)!.Value, -0.6, 0.6);
-        Assert.True(middle < bar.TranslatePoint(default, window)!.Value.Y, "The icon is level with the bar or below it.");
+        Assert.Single(stats.TextLayout.TextLines);
+        var line = FirstLine.MiddleIn(label, window)!.Value;
+        double Middle(Control control) => control.TranslatePoint(new Point(0, control.Bounds.Height / 2), window)!.Value.Y;
+        Assert.InRange(Middle(icon) - line, -0.6, 0.6);
+        Assert.InRange(FirstLine.MiddleIn(stats, window)!.Value - line, -1, 1);
+        Assert.InRange(Middle(bar) - line, -1, 1);
+        Assert.InRange(Middle(breakdown) - line, -1, 1);
+        // After the statistics, the bar, then Breakdown ›.
+        double Left(Control control) => control.TranslatePoint(default, window)!.Value.X;
+        Assert.True(Left(bar) > Left(stats) + stats.TextLayout.WidthIncludingTrailingWhitespace);
+        Assert.True(Left(breakdown) > Left(bar) + bar.Bounds.Width);
+
+        // In a narrow pane the bar and Breakdown › go under the statistics, which keep their room; the icon stays on the
+        // label's line.
+        window.Width = 800;
+        UiText.Settle(window);
+        Assert.True(Middle(bar) > FirstLine.MiddleIn(stats, window)!.Value + stats.TextLayout.TextLines[0].Height / 2, "The bar is beside the statistics, not under them.");
+        Assert.InRange(Left(bar) - Left(stats), -1, 1);
+        Assert.InRange(Middle(icon) - FirstLine.MiddleIn(label, window)!.Value, -0.6, 0.6);
         window.Close();
     }
 

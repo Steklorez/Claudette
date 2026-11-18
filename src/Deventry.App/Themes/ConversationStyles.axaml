@@ -246,9 +246,10 @@
     <Setter Property="OutlineBrush" Value="{DynamicResource CardWarningOutlineBrush}" />
     <Setter Property="LabelBrush" Value="{DynamicResource WarningTextBrush}" />
   </Style>
-  <!-- A turn's card (DESIGN.md §18, "A turn's card"): a thin bar of its kinds, a chip when its cache had expired, and its
-       way to the token breakdown -->
+  <!-- A turn's card (DESIGN.md §18, "A turn's card"): a thin bar of its kinds after its statistics, a chip when its cache
+       had expired, and its way to the token breakdown -->
   <Style Selector="controls|KindsBar.turnkinds">
+    <Setter Property="Width" Value="80" />
     <Setter Property="Height" Value="4" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
