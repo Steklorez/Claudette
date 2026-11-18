@@ -40,11 +40,11 @@ public sealed partial class TabViewModel
         }
         if (IsWorking)
         {
-            return "Claude is working. Stop the turn, or wait for it to end, to go back to an earlier message.";
+            return $"{AgentShortName} is working. Stop the turn, or wait for it to end, to go back to an earlier message.";
         }
         if (Status == TabStatus.Starting)
         {
-            return "Claude Code is still starting.";
+            return $"{Agent.Name} is still starting.";
         }
         return null;
     }
@@ -78,7 +78,7 @@ public sealed partial class TabViewModel
         {
             _shell.Confirm(
                 "Edit and resend this message?",
-                $"{body} Claude changed {DescribeFiles(files.FilesChanged)} since; restoring puts {(files.FilesChanged.Count == 1 ? "it" : "them")} back as before this message.",
+                $"{body} {AgentShortName} changed {DescribeFiles(files.FilesChanged)} since; restoring puts {(files.FilesChanged.Count == 1 ? "it" : "them")} back as before this message.",
                 "Go back and restore files",
                 () => GoBackAsync(message, restoreFiles: true),
                 "Go back, keep files",
@@ -96,7 +96,7 @@ public sealed partial class TabViewModel
             return;
         }
         var restored = false;
-        if (restoreFiles && message.Uuid is { } uuid && _session is { } session)
+        if (restoreFiles && message.Uuid is { } uuid && FileRewinder is { } session)
         {
             if (!await RestoreFilesAsync(session, uuid))
             {
@@ -142,9 +142,9 @@ public sealed partial class TabViewModel
             _conversation.AddNote(reason, NoteKind.Warning);
             return;
         }
-        if (_session is not { } session)
+        if (FileRewinder is not { } session)
         {
-            _conversation.AddNote("Claude Code isn't running in this tab. Restart it to put files back.", NoteKind.Warning);
+            _conversation.AddNote($"{Agent.Name} isn't running in this tab. Restart it to put files back.", NoteKind.Warning);
             return;
         }
         RewindResult preview;
@@ -170,12 +170,12 @@ public sealed partial class TabViewModel
         var counts = preview.Insertions > 0 || preview.Deletions > 0 ? $" (+{preview.Insertions} −{preview.Deletions})" : "";
         _shell.Confirm(
             "Restore files to before this message?",
-            $"Claude Code puts {DescribeFiles(preview.FilesChanged)}{counts} back as {(preview.FilesChanged.Count == 1 ? "it was" : "they were")} before it. "
+            $"{(IsCodex ? "Deventry" : "Claude Code")} puts {DescribeFiles(preview.FilesChanged)}{counts} back as {(preview.FilesChanged.Count == 1 ? "it was" : "they were")} before it. "
             + "Later changes to them, Claude's or yours, are lost. The conversation stays as it is.",
             "Restore files",
             async () =>
             {
-                if (_session is { } current && await RestoreFilesAsync(current, uuid))
+                if (FileRewinder is { } current && await RestoreFilesAsync(current, uuid))
                 {
                     _conversation.AddNote($"Put {DescribeFiles(preview.FilesChanged)} back as before that message.");
                     _ = ChangedFiles.RefreshAsync();
@@ -186,7 +186,7 @@ public sealed partial class TabViewModel
     /// <summary>A dry run of <c>rewind_files</c>, or null when there's no session, no id or no checkpoint to restore.</summary>
     private async Task<RewindResult?> PreviewFileRestoreAsync(UserMessageItem message)
     {
-        if (message.Uuid is not { } uuid || _session is not { } session)
+        if (message.Uuid is not { } uuid || FileRewinder is not { } session)
         {
             return null;
         }
@@ -202,7 +202,7 @@ public sealed partial class TabViewModel
         }
     }
 
-    private async Task<bool> RestoreFilesAsync(ClaudeSession session, string uuid)
+    private async Task<bool> RestoreFilesAsync(IRewindsFiles session, string uuid)
     {
         try
         {
@@ -211,6 +211,11 @@ public sealed partial class TabViewModel
             {
                 _conversation.AddNote(NoCheckpointText(result), NoteKind.Error);
                 return false;
+            }
+            if (IsCodex && result.Error is { } error)
+            {
+                // Some went back, and not these.
+                _conversation.AddNote($"Couldn't put every file back: {error}, or it changed meanwhile.", NoteKind.Warning);
             }
             if (result.SkippedLinks > 0)
             {
@@ -225,9 +230,26 @@ public sealed partial class TabViewModel
         }
     }
 
-    private static string NoCheckpointText(RewindResult result) =>
-        $"Claude Code can't put files back to before that message: {result.Error ?? "it has no copies of them from then"}."
-        + " It keeps them while Settings → Claude Code → Keep copies of files Claude changes, so prompts can be rewound is on.";
+    private string NoCheckpointText(RewindResult result) => IsCodex
+        ? $"Deventry can't put files back to before that message: {result.Error ?? "it didn't see what they held then"}."
+        : $"Claude Code can't put files back to before that message: {result.Error ?? "it has no copies of them from then"}."
+            + " It keeps them while Settings → Claude Code → Keep copies of files Claude changes, so prompts can be rewound is on.";
+
+    /// <summary>
+    /// What puts files back: Claude Code's own copies of them, or for a Codex tab, which keeps none, Deventry's record of
+    /// each turn's changes (DESIGN.md §18, "Rewind and branch"). Null while the tab's agent isn't running.
+    /// </summary>
+    private IRewindsFiles? FileRewinder => _session is null ? null : IsCodex ? new TurnFilesRewinder(this) : _session as IRewindsFiles;
+
+    /// <summary>Puts files back from the footers of the turns since a message, by the message's id.</summary>
+    private sealed class TurnFilesRewinder(TabViewModel tab) : IRewindsFiles
+    {
+        public Task<RewindResult> RewindFilesAsync(string userMessageId, bool dryRun = false, CancellationToken cancellationToken = default)
+        {
+            var footers = tab.Items.SkipWhile(i => i is not UserMessageItem { Uuid: var uuid } || uuid != userMessageId).OfType<TurnSummaryItem>().ToList();
+            return tab.ChangedFiles.RewindFilesAsync(footers, dryRun);
+        }
+    }
 
     /// <summary>"Program.cs", "Program.cs and App.cs", or "5 files".</summary>
     internal static string DescribeFiles(IReadOnlyList<string> files) => files.Count switch
@@ -291,7 +313,8 @@ public sealed partial class TabViewModel
     /// <summary>Going back to <paramref name="resumeAt"/> needs the transcript to resume from: says so when it's gone.</summary>
     private bool IsTranscriptMissing(string? resumeAt)
     {
-        if (resumeAt is null || State.SessionId is not { } sessionId || _services.Library.FindTranscript(sessionId, State.TranscriptPath) is not null)
+        // Codex keeps a thread's turns itself, and its start says when the thread is gone.
+        if (resumeAt is null || IsCodex || State.SessionId is not { } sessionId || _services.Library.FindTranscript(sessionId, State.TranscriptPath) is not null)
         {
             return false;
         }
@@ -326,6 +349,8 @@ public sealed partial class TabViewModel
         return new TabState
         {
             Folder = State.Folder,
+            // A copy goes on in the same agent (DESIGN.md §18, "Codex, a second agent").
+            Agent = State.Agent,
             SessionId = sessionId,
             TranscriptPath = sessionId is null ? null : State.TranscriptPath,
             ForkOnNextStart = sessionId is not null,
@@ -333,7 +358,7 @@ public sealed partial class TabViewModel
             ResumeDropsTurn = sessionId is null ? null : dropsTurn,
             AutoName = State.AutoName,
             SyncToLibrary = State.SyncToLibrary,
-            RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            RemoteControl = OffersRemoteControl && _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
             KeepFromRemoteClients = State.KeepFromRemoteClients,
             Overrides = Copy(State.Overrides) ?? new TabOverrides(),
             // On the same account, so carrying the conversation on doesn't read it again (DESIGN.md §4, "Accounts").

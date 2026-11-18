@@ -314,6 +314,16 @@
     </Style>
     <!-- The project's icon (DESIGN.md §18, "Project tools"): 13 pixels, fitted and centred, as a shape stretched into a
          fixed size draws from its top left -->
+    <!-- A tab's agent, before its name while tabs of more than one agent are open (DESIGN.md §18, "Its icon") -->
+    <Style Selector="Path.agenticon">
+      <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
+      <Setter Property="StrokeThickness" Value="1.3" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StrokeJoin" Value="Round" />
+      <Setter Property="Width" Value="11" />
+      <Setter Property="Height" Value="11" />
+      <Setter Property="Stretch" Value="Uniform" />
+    </Style>
     <Style Selector="Path.projecticon">
       <Setter Property="Stroke" Value="{DynamicResource MutedTextBrush}" />
       <Setter Property="StrokeThickness" Value="1.4" />
@@ -608,6 +618,15 @@
                             <MenuItem Header="New tab here" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewTabInGroupCommand}" CommandParameter="{Binding}">
                               <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPlus}" /></MenuItem.Icon>
                             </MenuItem>
+                            <!-- Either agent, which the folder's next new tabs take too, once Codex is found (DESIGN.md §18, "A tab's agent") -->
+                            <MenuItem Header="New Claude Code tab here" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewClaudeCodeTabInGroupCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).IsCodexAvailable}">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconAgentClaudeCode}" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="New Codex tab here" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewCodexTabInGroupCommand}" CommandParameter="{Binding}"
+                                      IsVisible="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).IsCodexAvailable}">
+                              <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconAgentCodex}" /></MenuItem.Icon>
+                            </MenuItem>
                             <!-- Its own git worktree, so its edits don't meet the other tabs' (DESIGN.md §4, "Worktree tabs") -->
                             <MenuItem Header="New tab in a worktree" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewWorktreeTabCommand}" CommandParameter="{Binding}"
                                       IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch">
@@ -814,6 +833,10 @@
                                               ToolTip.Tip="{Binding RowAccountTag.Tip, FallbackValue={x:Null}}">
                                         <TextBlock Text="{Binding RowAccountTag.Name, FallbackValue=''}" />
                                       </Border>
+                                      <!-- Its agent, while tabs of more than one are open (DESIGN.md §18, "Its icon") -->
+                                      <Path x:Name="TabAgentIcon" DockPanel.Dock="Left" Classes="agenticon" Margin="0,0,5,0" VerticalAlignment="Center"
+                                            IsVisible="{Binding ShowsAgentIcon}" Data="{Binding AgentIconKey, Converter={x:Static conversation:ToolIcons.Geometry}}"
+                                            ToolTip.Tip="{Binding Agent.Name}" />
                                       <Panel>
                                         <!-- Its session starting, with Tab activity's bars: the name shimmers until it's ready -->
                                         <TextBlock Classes="tabname" Classes.starting="{Binding ShowsStartingShimmer}" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsRenaming}" />
@@ -1035,7 +1058,7 @@
                                     <MenuItem Header="Sync now" Command="{Binding SyncNowCommand}" IsVisible="{Binding SyncToLibrary}"
                                               ToolTip.Tip="{Binding SyncNowTip}" ToolTip.ShowOnDisabled="True" />
                                     <!-- Remote Control (DESIGN.md §18): disabled, with the reason as its tip, when the account can't use it -->
-                                    <MenuItem Header="Connect to the Claude app" ToggleType="CheckBox" IsChecked="{Binding RemoteControl.IsOn, Mode=OneWay}"
+                                    <MenuItem Header="Connect to the Claude app" ToggleType="CheckBox" IsChecked="{Binding RemoteControl.IsOn, Mode=OneWay}" IsVisible="{Binding OffersRemoteControl}"
                                               Command="{Binding RemoteControl.ToggleCommand}" ToolTip.Tip="{Binding RemoteControl.ToggleTip}" ToolTip.ShowOnDisabled="True">
                                       <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPhone}" /></MenuItem.Icon>
                                     </MenuItem>
@@ -1314,6 +1337,15 @@
                         <MenuItem Header="New tab here" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewTabInGroupCommand}" CommandParameter="{Binding}">
                           <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPlus}" /></MenuItem.Icon>
                         </MenuItem>
+                        <!-- Either agent, which the folder's next new tabs take too, once Codex is found (DESIGN.md §18, "A tab's agent") -->
+                        <MenuItem Header="New Claude Code tab here" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewClaudeCodeTabInGroupCommand}" CommandParameter="{Binding}"
+                                  IsVisible="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).IsCodexAvailable}">
+                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconAgentClaudeCode}" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="New Codex tab here" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewCodexTabInGroupCommand}" CommandParameter="{Binding}"
+                                  IsVisible="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).IsCodexAvailable}">
+                          <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconAgentCodex}" /></MenuItem.Icon>
+                        </MenuItem>
                         <!-- Its own git worktree, so its edits don't meet the other tabs' (DESIGN.md §4, "Worktree tabs") -->
                         <MenuItem Header="New tab in a worktree" Command="{Binding $parent[UserControl].((vm:ShellViewModel)DataContext).NewWorktreeTabCommand}" CommandParameter="{Binding}"
                                   IsVisible="{Binding CanMakeWorktrees}" ToolTip.Tip="A tab whose Claude works in a separate checkout, on its own branch">
@@ -1532,7 +1564,7 @@
                               <MenuItem Header="Sync now" Command="{Binding SyncNowCommand}" IsVisible="{Binding SyncToLibrary}"
                                         ToolTip.Tip="{Binding SyncNowTip}" ToolTip.ShowOnDisabled="True" />
                               <!-- Remote Control (DESIGN.md §18): disabled, with the reason as its tip, when the account can't use it -->
-                              <MenuItem Header="Connect to the Claude app" ToggleType="CheckBox" IsChecked="{Binding RemoteControl.IsOn, Mode=OneWay}"
+                              <MenuItem Header="Connect to the Claude app" ToggleType="CheckBox" IsChecked="{Binding RemoteControl.IsOn, Mode=OneWay}" IsVisible="{Binding OffersRemoteControl}"
                                         Command="{Binding RemoteControl.ToggleCommand}" ToolTip.Tip="{Binding RemoteControl.ToggleTip}" ToolTip.ShowOnDisabled="True">
                                 <MenuItem.Icon><Path Classes="menuicon" Data="{StaticResource IconPhone}" /></MenuItem.Icon>
                               </MenuItem>

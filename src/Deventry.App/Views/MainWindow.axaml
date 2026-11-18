@@ -470,7 +470,7 @@
                          Classes.degraded="{Binding ServiceStatus.IsDegraded}" Classes.outage="{Binding ServiceStatus.IsOutage}" />
               </Button>
               <!-- The account menu (DESIGN.md §11): the email and plan from claude auth status, and Sign out -->
-              <Button Classes="header" IsVisible="{Binding Account.Status, Converter={x:Static ObjectConverters.IsNotNull}}"
+              <Button Classes="header" IsVisible="{Binding ShowsClaudeAccount}"
                       ToolTip.Tip="Your Claude Code account" AutomationProperties.Name="Account">
                 <Panel>
                   <TextBlock Name="AccountName" Classes="muted" Text="{Binding Account.HeaderName}" VerticalAlignment="Center" IsVisible="{Binding !IsHeaderNarrow}" />
@@ -507,10 +507,44 @@
                   <MultiBinding Converter="{x:Static BoolConverters.And}">
                     <Binding Path="Account.HeaderPlan" Converter="{x:Static ObjectConverters.IsNotNull}" />
                     <Binding Path="!IsHeaderNarrow" />
+                    <Binding Path="!ShowsCodexAccount" />
                   </MultiBinding>
                 </Button.IsVisible>
                 <TextBlock Classes="muted" Text="{Binding Account.HeaderPlan}" VerticalAlignment="Center" />
               </Button>
+              <!-- Codex's account, in place of Claude Code's while a Codex tab is selected (DESIGN.md §18): its email and plan, and
+                   its settings, where it signs in and out -->
+              <Button Classes="header" IsVisible="{Binding ShowsCodexAccount}" ToolTip.Tip="Your Codex account" AutomationProperties.Name="Codex account">
+                <Panel>
+                  <TextBlock Classes="muted" Text="{Binding CodexAccount.HeaderName}" VerticalAlignment="Center" IsVisible="{Binding !IsHeaderNarrow}" />
+                  <Path Data="{StaticResource IconCardYou}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.3" Stretch="Uniform"
+                        Width="13" Height="13" VerticalAlignment="Center" IsVisible="{Binding IsHeaderNarrow}" />
+                </Panel>
+                <Button.Flyout>
+                  <Flyout Placement="BottomEdgeAlignedRight">
+                    <StackPanel Spacing="10" Width="300" Margin="4">
+                      <StackPanel Spacing="2" DataContext="{Binding CodexAccount}" x:DataType="vm:CodexAccountViewModel">
+                        <TextBlock Classes="muted small" Text="{Binding SignedInText}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Email, FallbackValue=''}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                   IsVisible="{Binding Email, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <TextBlock Text="{Binding PlanText, FallbackValue=''}" TextWrapping="Wrap"
+                                   IsVisible="{Binding PlanText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                      </StackPanel>
+                      <Button Content="Codex settings…" Command="{Binding Shell.OpenSettingCommand, FallbackValue={x:Null}}" CommandParameter="Codex#account"
+                              HorizontalAlignment="Left" ToolTip.Tip="Codex's sign-in, and how its tabs start" />
+                    </StackPanel>
+                  </Flyout>
+                </Button.Flyout>
+              </Button>
+              <TextBlock Classes="muted" Text="{Binding CodexAccount.PlanText}" VerticalAlignment="Center" Margin="8,0">
+                <TextBlock.IsVisible>
+                  <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="ShowsCodexAccount" />
+                    <Binding Path="CodexAccount.PlanText" Converter="{x:Static ObjectConverters.IsNotNull}" />
+                    <Binding Path="!IsHeaderNarrow" />
+                  </MultiBinding>
+                </TextBlock.IsVisible>
+              </TextBlock>
               <!-- Settings (DESIGN.md §14) -->
               <Button Name="SettingsButton" Classes="flat" VerticalAlignment="Center" AutomationProperties.Name="Settings"
                       ToolTip.Tip="{Binding Shell.Tips.Settings, FallbackValue=Settings}" Command="{Binding Shell.OpenSettingsCommand, FallbackValue={x:Null}}"

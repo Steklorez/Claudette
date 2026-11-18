@@ -16,21 +16,24 @@ public sealed partial class TabViewModel
     /// <summary>The account changed while Claude worked: Claude Code starts again under it once the turn ends.</summary>
     private bool _restartForAccount;
 
-    /// <summary>The account the tab runs under; null for Default, and for one removed since.</summary>
-    public ClaudeAccount? Account => _services.Accounts.Find(State.AccountId);
+    /// <summary>
+    /// The account the tab runs under; null for Default, and for one removed since. Accounts are Claude Code's: a Codex
+    /// tab runs under Codex's own sign-in (DESIGN.md §18, "Codex, a second agent").
+    /// </summary>
+    public ClaudeAccount? Account => IsCodex ? null : _services.Accounts.Find(State.AccountId);
 
-    public string AccountName => _services.Accounts.NameOf(State.AccountId);
+    public string AccountName => IsCodex ? "Codex's own sign-in" : _services.Accounts.NameOf(State.AccountId);
 
-    /// <summary>The tag on the tab's row, while its account isn't the one its group's new tabs use.</summary>
-    public AccountTag? RowAccountTag => Account?.Id == _services.Accounts.ForFolder(GroupFolder) ? null : AccountTag.For(Account, showDefault: true);
+    /// <summary>The tag on the tab's row, while its account isn't the one its group's new tabs use; none on a Codex tab.</summary>
+    public AccountTag? RowAccountTag => IsCodex || Account?.Id == _services.Accounts.ForFolder(GroupFolder) ? null : AccountTag.For(Account, showDefault: true);
 
     public bool ShowsAccountTag => RowAccountTag is not null;
 
     /// <summary><b>Account ▸</b> in the tab's menu: Default and every other account, the tab's own checked.</summary>
     public IReadOnlyList<AccountMenuItem> AccountMenu => AccountMenuItem.All(_services.Accounts, Account?.Id, SwitchAccountCommand);
 
-    /// <summary>The menu is there once there's an account besides Default.</summary>
-    public bool HasAccountMenu => _services.Accounts.HasAccounts;
+    /// <summary>The menu is there once there's an account besides Default, on a Claude Code tab.</summary>
+    public bool HasAccountMenu => !IsCodex && _services.Accounts.HasAccounts;
 
     /// <summary>
     /// Why the Claude app isn't for this tab's account whatever the Default account can do: an API key or a cloud
@@ -143,19 +146,19 @@ public sealed partial class TabViewModel
         var saying = said is { Length: > 0 } ? $" (it said \"{said}\")" : "";
         _conversation.AddNote(account.Provider is { } provider
             ? $"Claude Code couldn't sign in to {provider.Name} for {account.Name}{saying}. {CredentialsHint(account)} Or move the tab to another account."
-            : $"Claude Code couldn't use {account.Name}'s API key{saying}. Check the key in Settings → Accounts, or move the tab to another account.",
+            : $"Claude Code couldn't use {account.Name}'s API key{saying}. Check the key in Settings → Claude Code → Accounts, or move the tab to another account.",
             NoteKind.Error);
     }
 
     /// <summary>Where to look when a cloud account's credentials are refused, for how it signs in.</summary>
     private static string CredentialsHint(ClaudeAccount account) => account.Cloud?.SignIn switch
     {
-        CloudSignIns.Profile when account.Cloud.Profile is { Length: > 0 } profile => $"Sign in to AWS with \"aws sso login --profile {profile}\", or check the profile in Settings → Accounts.",
+        CloudSignIns.Profile when account.Cloud.Profile is { Length: > 0 } profile => $"Sign in to AWS with \"aws sso login --profile {profile}\", or check the profile in Settings → Claude Code → Accounts.",
         CloudSignIns.Profile => "Sign in to AWS, or check its credentials in ~/.aws.",
-        CloudSignIns.Gcloud => $"Sign in with \"{AccountLaunch.GcloudSignInCommand}\", or check the project in Settings → Accounts.",
-        CloudSignIns.EntraId => "Sign in with \"az login\", or check the resource name in Settings → Accounts.",
-        CloudSignIns.KeyFile => "Check the key file in Settings → Accounts.",
-        _ => "Check the key in Settings → Accounts.",
+        CloudSignIns.Gcloud => $"Sign in with \"{AccountLaunch.GcloudSignInCommand}\", or check the project in Settings → Claude Code → Accounts.",
+        CloudSignIns.EntraId => "Sign in with \"az login\", or check the resource name in Settings → Claude Code → Accounts.",
+        CloudSignIns.KeyFile => "Check the key file in Settings → Claude Code → Accounts.",
+        _ => "Check the key in Settings → Claude Code → Accounts.",
     };
 
     /// <summary>

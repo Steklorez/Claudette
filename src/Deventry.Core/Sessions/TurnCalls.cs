@@ -180,7 +180,7 @@ public sealed class TurnCalls
         foreach (var use in message.Content.OfType<ToolUseBlock>())
         {
             _toolUses[use.Id] = (call.Seq, message.ParentToolUseId, use.Name);
-            if (use.Name is "Agent" or "Task" && use.Input.GetString("subagent_type") is { Length: > 0 } type)
+            if (use.Call is { Kind: ToolKind.Agent, SubagentType: { Length: > 0 } type })
             {
                 _agentTypes[use.Id] = type;
             }

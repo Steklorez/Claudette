@@ -222,7 +222,7 @@ public sealed partial class AgentNode : ObservableObject
     /// <summary>What it's doing now, or how it ended.</summary>
     public string ActivityLine => Status switch
     {
-        AgentStatus.Waiting => WaitingPrompt is { } prompt ? $"Needs your permission: {Describe(prompt.Request.ToolName, prompt.Request.Input)}" : StatusText,
+        AgentStatus.Waiting => WaitingPrompt is { } prompt ? $"Needs your permission: {Describe(prompt.Request.Call, prompt.Request.Input)}" : StatusText,
         AgentStatus.Running => RetryText ?? ProgressSummary ?? Activity ?? (IsRoot ? "Working…" : "Starting…"),
         AgentStatus.Done => FirstLine(ResultText) ?? "Done",
         AgentStatus.Failed => FirstLine(ResultText) is { } error ? $"Failed: {error}" : "Failed",
@@ -321,17 +321,17 @@ public sealed partial class AgentNode : ObservableObject
 
     // ---- Updates, from the conversation builder and Claude Code's task messages --------------------------------
 
-    internal void OnToolUse(string name, JsonObject input)
+    internal void OnToolUse(ToolCall call, JsonObject input)
     {
         _seenToolCalls++;
         ToolCalls = Math.Max(ToolCalls, _seenToolCalls);
-        Activity = Describe(name, input);
+        Activity = Describe(call, input);
         RetryText = null;
     }
 
     /// <summary>A tool call in one line, as the conversation's tool rows summarize it: <c>Grep auth  in src/</c>.</summary>
-    private static string Describe(string name, JsonObject input) =>
-        ToolUseItem.Summarize(name, input) is { Length: > 0 } summary ? $"{name} {summary}" : name;
+    private static string Describe(ToolCall call, JsonObject input) =>
+        ToolUseItem.Summarize(call, input) is { Length: > 0 } summary ? $"{call.Name} {summary}" : call.Name;
 
     internal void OnText(string text)
     {

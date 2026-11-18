@@ -37,16 +37,21 @@ public enum MascotTool
     Agents,
 }
 
-/// <summary>The tools she knows from Claude Code's names for them (the working line knows the same ones).</summary>
+/// <summary>What she works with for each kind of tool call, whichever agent made it (the working line knows the same ones).</summary>
 public static class MascotTools
 {
-    public static MascotTool For(string? toolName) => toolName switch
+    /// <summary>For one of Claude Code's tools, by its name.</summary>
+    public static MascotTool For(string? toolName) => toolName is null ? MascotTool.None : For(Core.Protocol.ClaudeToolCalls.KindOf(toolName));
+
+    public static MascotTool For(Core.Sessions.ToolCall call) => For(call.Kind);
+
+    private static MascotTool For(Core.Sessions.ToolKind kind) => kind switch
     {
-        "Read" or "Grep" or "Glob" or "LS" or "NotebookRead" => MascotTool.Reading,
-        "Edit" or "MultiEdit" or "Write" or "NotebookEdit" => MascotTool.Editing,
-        "Bash" or "PowerShell" or "BashOutput" or "Monitor" => MascotTool.Running,
-        "WebFetch" or "WebSearch" => MascotTool.Web,
-        "Agent" or "Task" => MascotTool.Agents,
+        Core.Sessions.ToolKind.Read or Core.Sessions.ToolKind.Search or Core.Sessions.ToolKind.Find or Core.Sessions.ToolKind.ViewImage => MascotTool.Reading,
+        Core.Sessions.ToolKind.Edit or Core.Sessions.ToolKind.Write or Core.Sessions.ToolKind.Delete => MascotTool.Editing,
+        Core.Sessions.ToolKind.Command or Core.Sessions.ToolKind.CommandOutput or Core.Sessions.ToolKind.Monitor => MascotTool.Running,
+        Core.Sessions.ToolKind.WebFetch or Core.Sessions.ToolKind.WebSearch => MascotTool.Web,
+        Core.Sessions.ToolKind.Agent => MascotTool.Agents,
         _ => MascotTool.None,
     };
 }

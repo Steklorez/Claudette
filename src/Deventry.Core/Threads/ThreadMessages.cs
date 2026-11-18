@@ -31,16 +31,17 @@ public static class ThreadMessages
     public static readonly TimeSpan ApprovalWindow = TimeSpan.FromMinutes(10);
 
     /// <summary>The note on a thread's next message, after it became one or its sub-threads changed.</summary>
-    public static string Note(IReadOnlyList<string> subThreads)
+    /// <param name="tool">The tool that sends to a sub-thread, as the thread's agent knows it: Claude Code's SendMessage, Codex's deventry_send_message.</param>
+    public static string Note(IReadOnlyList<string> subThreads, string tool = SendMessageCall.ToolName)
     {
         if (subThreads.Count == 0)
         {
-            return "[Deventry] This tab is now a thread, which can hand work to Claude Code sessions in other tabs: its sub-threads. "
+            return "[Deventry] This tab is now a thread, which can hand work to sessions in other tabs: its sub-threads. "
                 + "It has none yet; the user assigns them.";
         }
         var names = string.Join(", ", subThreads.Select(n => $"\"{n}\""));
-        return $"[Deventry] This tab is a thread. Its sub-threads are other tabs, each a Claude Code session of its own: {names}. "
-            + "To give one work, call SendMessage with its name as `to`. Deventry delivers it, as that tab's next turn if it's busy. "
+        return $"[Deventry] This tab is a thread. Its sub-threads are other tabs, each a session of its own: {names}. "
+            + $"To give one work, call {tool} with its name as `to`. Deventry delivers it, as that tab's next turn if it's busy. "
             + "When every sub-thread you messaged has finished, Deventry sends you their results in one message, "
             + "so don't wait, poll or ask to be told: end your turn once you've handed out the work. "
             + "The user can see and steer each sub-thread, and answers its permission prompts and questions.";
@@ -50,16 +51,32 @@ public static class ThreadMessages
     public const string NoLongerAThread =
         "[Deventry] This tab is no longer a thread: it has no sub-threads, and SendMessage reaches other sessions as usual.";
 
+    /// <summary>The note on a former thread's next message, for an agent whose only way to send is Deventry's own tool.</summary>
+    public static string NoLongerAThreadFor(string tool) => tool == SendMessageCall.ToolName
+        ? NoLongerAThread
+        : $"[Deventry] This tab is no longer a thread: it has no sub-threads, so there's no one to send {tool} to.";
+
+    /// <summary>Whether a note is one a thread gets as it stops being one.</summary>
+    public static bool IsNoLongerAThread(string? note) =>
+        note is not null && note.StartsWith("[Deventry] This tab is no longer a thread", StringComparison.Ordinal);
+
+    /// <summary>What Deventry's own tool answers a tab that isn't a thread, or a name that isn't a sub-thread's.</summary>
+    public static string NoSuchSubThread(string to, IReadOnlyList<string> subThreads) => subThreads.Count == 0
+        ? $"Not sent: this tab isn't a thread with sub-threads, so there's no \"{to}\" to send to."
+        : $"Not sent: \"{to}\" isn't one of this thread's sub-threads, which are {string.Join(", ", subThreads.Select(n => $"\"{n}\""))}.";
+
     /// <summary>
     /// The answer to a <c>SendMessage</c> Deventry delivered itself. Claude Code shows the hook's answer as a refusal,
     /// so it says plainly that the message went.
     /// </summary>
     /// <param name="waits">The sub-thread is busy, so the message waits for its turn to end.</param>
-    public static string Delivered(string name, bool waits) =>
+    /// <param name="readsAsError">The answer is a hook's refusal, which Claude Code shows as an error: it says the message went anyway.</param>
+    public static string Delivered(string name, bool waits, bool readsAsError = true) =>
         (waits
             ? $"{DeliveredStart} \"{name}\". It's busy, so the message waits there and starts its next turn once the current one ends."
             : $"{DeliveredStart} \"{name}\", where it starts the next turn.")
-        + " It went, although this reads as an error: don't send it again. When every sub-thread you've messaged has finished, "
+        + (readsAsError ? " It went, although this reads as an error: don't send it again." : " Don't send it again.")
+        + " When every sub-thread you've messaged has finished, "
         + "Deventry sends you their results in one message, so there's no need to wait, poll or ask to be told.";
 
     /// <summary>The answer to a call that only asked to be told when a sub-thread is idle.</summary>

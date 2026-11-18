@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\src\Deventry.Usage\Deventry.Usage.csproj" />
     <ProjectReference Include="..\..\tools\Deventry.MockApi\Deventry.MockApi.csproj" />
     <ProjectReference Include="..\..\tools\Deventry.FakeClaude\Deventry.FakeClaude.csproj" />
+    <ProjectReference Include="..\..\tools\Deventry.FakeCodex\Deventry.FakeCodex.csproj" />
     <ProjectReference Include="..\..\tools\Deventry.Fixtures\Deventry.Fixtures.csproj" />
   </ItemGroup>
 </Project>

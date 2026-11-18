@@ -1,0 +1,319 @@
+# Everything Deventry relies on from Codex (DESIGN.md §18, "Codex, a second agent"), as compat/surface.yaml is for
+# Claude Code (DESIGN.md §16).
+#
+# Rule: code that starts using something new from Codex adds an entry here in the same change.
+# `codex app-server generate-json-schema --experimental --out <folder>` writes the protocol's exact schema for a
+# version; compare it with the last tested version's when Codex updates.
+#
+# Fields: as compat/surface.yaml's. A method's `status` is experimental when it's behind `experimentalApi`.
+
+versions:
+  minimum: 0.169.0     # the version the 2026-11-17 spike recorded
+  lastTested: 0.169.0
+
+items:
+  # --- Launch ------------------------------------------------------------------------------------------
+  - id: "codex app-server"
+    kind: command
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: FakeCodexTests
+  - id: "-c project_doc_fallback_filenames"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: FakeCodexTests
+  - id: "CODEX_HOME"
+    kind: env
+    status: documented
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
+    docs: https://learn.chatgpt.com/docs/config-file/environment-variables
+    test: FakeCodexTests
+  - id: "CODEX_THREAD_ID, CODEX_SESSION_ID, CODEX_TOOL_CALL_ID, CODEX_CI, CODEX_SANDBOX, CODEX_SANDBOX_NETWORK_DISABLED, CODEX_VERSION, CODEX_APPLY_PATCH_PRESERVE_LINE_ENDINGS"
+    kind: env
+    status: undocumented
+    usedIn: src/Deventry.Core/Claude/ClaudeEnvironment.cs
+    test: FakeCodexTests
+    fallback: "Seen on a command Codex ran in the spike. Removed from what Deventry starts; a new one is only a session variable left in, which a `codex` Deventry starts may take as its parent's."
+  - id: "-c windows.sandbox"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: FakeCodexTests
+    fallback: "On Windows, a tab tries the user's own choice, then mxc, then unelevated, and keeps the first that windowsSandbox/readiness calls ready. If none is, Codex asks before each command and edit, and the tab says why."
+  - id: "-c agents.enabled=false"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSessionFactory.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: CodexTabTests
+    fallback: "A tab whose subagents are turned off starts Codex without its tools for them (the spike's finding: --disable multi_agent didn't take them away). A subagent Codex starts anyway is stopped as it starts, and the tab says so."
+  - id: "-c hooks.PreToolUse (a command hook on apply_patch)"
+    kind: flag
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexHooks.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs
+    docs: https://learn.chatgpt.com/docs/config-file/config-reference
+    test: CodexHooksTests, CodexPerforceTests
+    fallback: "Only in a Perforce workspace with Check out before changes on. Without it, Codex's patches of files Perforce hasn't checked out fail on the read-only files, and the tab says so."
+  - id: "PreToolUse hook input for apply_patch (tool_name apply_patch, tool_input.command the patch, cwd), and the hook's environment"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexHooks.cs, src/Deventry.App/Services/CodexHookLaunch.cs
+    test: CodexHooksTests, CodexPerforceTests
+    fallback: "Checked against 0.169.0 with a mock model: the patch's headers name its files relative to cwd, and the hook runs with codex's environment, which names the pipe to the tab (DEVENTRY_CODEX_HOOK_PIPE). Without them the helper lets the patch go on unchanged, as a hook with nothing to say does."
+  - id: "codex --version"
+    kind: command
+    status: documented
+    usedIn: src/Deventry.Core/Installation/CodexLocator.cs
+    docs: https://learn.chatgpt.com/docs/developer-commands
+    test: FakeCodexTests
+    fallback: Read as the first X.Y.Z in the text, so formatting changes are tolerated.
+  - id: "codex login, codex login status, codex logout"
+    kind: command
+    status: documented
+    usedIn: src/Deventry.Core/Auth/CodexAuth.cs, src/Deventry.App/ViewModels/Settings/CodexPage.cs
+    docs: https://learn.chatgpt.com/docs/auth
+    test: FakeCodexTests
+    fallback: "Signed in is login status exiting 0 without saying Not logged in; its text is shown as it is. Deventry never signs in through the app-server's account methods."
+  - id: "irm https://chatgpt.com/codex/install.ps1 | iex, curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+    kind: command
+    status: documented
+    usedIn: src/Deventry.Core/Installation/CodexInstaller.cs
+    docs: https://learn.chatgpt.com/docs/codex/cli
+    test: CodexInstallerTests
+  - id: "CODEX_NON_INTERACTIVE"
+    kind: env
+    status: undocumented
+    usedIn: src/Deventry.Core/Installation/CodexInstaller.cs
+    test: CodexInstallerTests
+    fallback: "Set for the installer, which has no terminal to ask in. Without it the installer may wait for an answer: the install times out and says so, and the docs' command still works in a terminal."
+
+  # --- Requests Deventry sends ---------------------------------------------------------------------------
+  - id: initialize
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: initialized
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: model/list
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: account/read
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/start
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/resume
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/read
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, FakeCodexTests
+    fallback: "Asked before thread/resume, so a thread Codex no longer has is told from one it won't resume (a required MCP server, another model provider), whose error is shown as Codex gives it."
+  - id: "hooks/list, config/batchWrite (hooks.state.\"<key>\".trusted_hash)"
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexPerforceTests
+    fallback: "Codex runs a hook passed with -c only once it's trusted, as /hooks does by writing its hash; Deventry asks the user first, then writes it. The key of a hook passed with -c is positional (<session-flags>\\config.toml:pre_tool_use:0:0), so it stays while the hook does. If trusting fails, the tab says Codex's edits won't check files out first."
+  - id: thread/fork
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexLibraryTests
+  - id: thread/turns/list
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, FakeCodexTests
+  - id: windowsSandbox/readiness
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: FakeCodexTests
+  - id: thread/settings/update
+    kind: control
+    status: experimental
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests
+    fallback: "Pass the model, effort, approval policy and sandbox policy on the next turn/start instead, which documents them as overrides for that turn and the ones after."
+  - id: thread/name/set
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: turn/start
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: turn/steer
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: turn/interrupt
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, FakeCodexTests
+
+  # --- What Codex sends ----------------------------------------------------------------------------------
+  - id: "turn/started, turn/completed"
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: "item/started, item/completed"
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.Core/Codex/CodexItems.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexItemsTests
+  - id: "item/agentMessage/delta, item/reasoning/summaryTextDelta, item/reasoning/summaryPartAdded"
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: thread/tokenUsage/updated
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: account/rateLimits/updated
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: FakeCodexTests
+  - id: serverRequest/resolved
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+  - id: "item/commandExecution/requestApproval, item/fileChange/requestApproval"
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, FakeCodexTests
+  - id: item/tool/requestUserInput
+    kind: control
+    status: experimental
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests
+    fallback: "Codex's questions, in Plan mode, are a question card answered by each question's id; dismissed, it's answered with none. If it changes, Codex's questions are refused as an unknown request, and Codex goes on with its best judgment."
+  - id: "thread/start dynamicTools, item/tool/call"
+    kind: control
+    status: experimental
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.Core/Codex/CodexTools.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
+    fallback: "Every thread Deventry starts has deventry_send_message, which Codex keeps with the thread and restores on resume; a call to it is answered with the delivery's outcome. A thread resumed from before Deventry gave it, or a Codex without dynamic tools, can't reach its sub-threads: the user hands the work over by hand."
+  - id: turn/plan/updated
+    kind: message
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
+  - id: "plan item (proposed plan text in Plan mode)"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexSessionTests, CodexTabTests
+  - id: "collabAgentToolCall (spawnAgent: prompt, receiverThreadIds; a later call's agentsStates)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests, CodexTabTests
+    fallback: "In the schema, not the docs. A spawn is an Agent call, and its thread's turn and items, on the same connection, show under it; a restored tab reads its report from a later call's agentsStates. Without it, a subagent's work isn't shown, and the main thread's reply still says what it found."
+  - id: "subAgentActivity (agentThreadId, agentPath, kind)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests
+    fallback: "In the schema, not the docs. Says which thread a spawn started when its call hasn't, and when it ended; the thread's own turn/completed says that too."
+  - id: "turn.error.codexErrorInfo usageLimitExceeded, rateLimits.rateLimitReachedType"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs, src/Deventry.Usage/CodexUsage.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexTabTests
+    fallback: "A turn that failed at the plan's limit, and the window that's full, make the tab wait for its reset as at Claude's. Without them a full window (usedPercent 100) still does; a failure that says nothing is shown as an error."
+  - id: "commandExecution.commandActions"
+    kind: field
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexItems.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexItemsTests
+  - id: "commandExecution.command (wrapped in the shell Codex runs it in)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexItems.cs
+    test: CodexItemsTests
+    fallback: "A wrapper the pattern doesn't know shows as it is; commandActions' own commands are preferred anyway."
+  - id: "fileChange.changes[].diff (an update's hunks without file headers, an add's whole content)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexItems.cs, src/Deventry.Core/Diffs/UnifiedHunks.cs
+    test: CodexSessionTests, UnifiedHunksTests
+    fallback: "Hunks that don't parse leave the change without a diff and its file's before unknown; Changed files still shows the file, from git."
+  - id: "userMessage.clientId (the clientUserMessageId a turn was started with)"
+    kind: field
+    status: undocumented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    test: CodexSessionTests
+    fallback: "Without it the echo carries the item's own id, and a message's rewind point is that instead of Deventry's."
+
+  # --- Files Codex keeps (read for History) -------------------------------------------------------------
+  - id: "sessions/<year>/<month>/<day>/rollout-<time>-<thread id>.jsonl"
+    kind: file
+    status: undocumented
+    usedIn: src/Deventry.Core/History/CodexHistory.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs, src/Deventry.App/ViewModels/SessionOpener.cs
+    test: CodexHistoryTests, FakeCodexTests, CodexLibraryTests
+    fallback: "In CODEX_HOME. Copied whole to the session library as a Codex session's transcript, and brought into another machine's sessions folder under the same kind of name, where Codex resumes it by its id (the spike's finding: resuming by path from another home failed). Read for History, a line at a time: the session_meta line's id, cwd and cli_version, and response_item messages' text for the first prompt and search. A file without a session_meta line is passed over; History lists Codex's sessions without what it can't read, and a tab's own conversation comes from thread/turns/list, not the file."
+  - id: "session_index.jsonl"
+    kind: file
+    status: undocumented
+    usedIn: src/Deventry.Core/History/CodexHistory.cs
+    test: CodexHistoryTests
+    fallback: "In CODEX_HOME: {id, thread_name} lines, the last for a thread winning, for History's names. Without it History names a session by its first prompt."

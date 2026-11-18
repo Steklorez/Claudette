@@ -427,8 +427,9 @@ public sealed partial class TabViewModel
         LastUsed = _services.Time.GetUtcNow(),
         Folder = Folder,
         FirstPrompt = _firstPrompt,
-        ClaudeCodeVersion = _session?.ClaudeCodeVersion,
+        ClaudeCodeVersion = (_session as ClaudeSession)?.ClaudeCodeVersion,
         ReviewedFiles = ReviewedFiles.ToRecord(State.ReviewedFiles, Folder),
+        Agent = State.Agent,
     };
 
     /// <summary>

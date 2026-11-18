@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Deventry.App.ViewModels.Settings"
+             xmlns:c="using:Deventry.App.Controls"
+             x:Class="Deventry.App.Views.Settings.AllAgentsPageView" ClipToBounds="False"
+             x:DataType="settings:AllAgentsPage">
+  <!-- All agents (DESIGN.md §18, "Codex, a second agent"): what Claude Code's and Codex's tabs share -->
+  <StackPanel Spacing="32">
+    <!-- DESIGN.md §5, "Subagents": applies at once, in tabs already open too -->
+    <c:SettingsSection Key="subagents">
+      <c:SettingRow Key="claudeCode.subagents">
+        <ComboBox ItemsSource="{Binding SubagentChoices}" SelectedItem="{Binding Subagents}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- DESIGN.md §18, "Continuing in the other agent" -->
+    <c:SettingsSection Key="otherAgent">
+      <c:SettingRow Key="codex.offerOtherAgentAtLimit">
+        <ToggleSwitch IsChecked="{Binding OfferOtherAgentAtLimit}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+  </StackPanel>
+</UserControl>

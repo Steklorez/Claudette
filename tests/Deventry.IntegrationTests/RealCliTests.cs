@@ -130,7 +130,7 @@ public sealed class RealCliTests : IAsyncLifetime
     [Fact]
     public async Task An_aws_profile_signs_claude_platform_on_aws_requests_over_keys_in_the_environment()
     {
-        // An access key saved to a profile with aws configure, as Settings → Accounts says to; the environment has
+        // An access key saved to a profile with aws configure, as Settings → Claude Code → Accounts says to; the environment has
         // another key, which the AWS credential chain would take over the profile, and which the account empties.
         var credentials = _root.Combine("aws-credentials");
         await File.WriteAllTextAsync(credentials, "[studio]\naws_access_key_id = AKIAEXAMPLE123\naws_secret_access_key = secret-access-key\n", TestContext.Current.CancellationToken);

@@ -57,7 +57,7 @@
          A tab that doesn't use usage credits waits the same way, and can start using them ("Tabs that don't use usage credits"). -->
     <Border Classes="codeblock" IsVisible="{Binding HasLimitWait}">
       <!-- The text with the game's link under it, and the buttons in the middle of the bar's height -->
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
         <StackPanel Spacing="4" VerticalAlignment="Center">
           <TextBlock TextWrapping="Wrap" Text="{Binding LimitWaitText}" />
           <!-- Something to do until it resets (DESIGN.md §18, "Games with Joulene") -->
@@ -79,7 +79,10 @@
         <Button Grid.Column="2" Content="Don't continue" Command="{Binding DontContinueCommand}" IsVisible="{Binding CanStopContinuing}" VerticalAlignment="Center"
                 ToolTip.Tip="Leave the task stopped. Send a message to go on yourself." />
         <Button Grid.Column="2" Content="{Binding ContinueAfterLimitText}" Command="{Binding ContinueAfterLimitCommand}" IsVisible="{Binding CanContinueAfterLimit}" VerticalAlignment="Center" />
-        <Button Grid.Column="3" Classes="flat" Padding="4" ToolTip.Tip="Close" AutomationProperties.Name="Close" VerticalAlignment="Center"
+        <!-- The work carried on in the other agent, while Settings → All agents offers it (DESIGN.md §18) -->
+        <Button Grid.Column="3" Content="{Binding ContinueInOtherAgentText}" Command="{Binding ContinueInOtherAgentCommand}" IsVisible="{Binding OffersOtherAgent}"
+                VerticalAlignment="Center" ToolTip.Tip="{Binding ContinueInOtherAgentTip}" />
+        <Button Grid.Column="4" Classes="flat" Padding="4" ToolTip.Tip="Close" AutomationProperties.Name="Close" VerticalAlignment="Center"
                 Command="{Binding DismissLimitWaitCommand}" IsVisible="{Binding CanDismissLimitWait}">
           <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.4" Width="7" Height="7" Stretch="Uniform" />
         </Button>
@@ -172,7 +175,7 @@
     <!-- The transcript is gone from here and the library (DESIGN.md §9, "Old sessions") -->
     <Border Classes="codeblock" IsVisible="{Binding IsSessionMissing}">
       <StackPanel Spacing="8">
-        <TextBlock Classes="warning" TextWrapping="Wrap" Text="{x:Static vm:TabViewModel.SessionMissingText}" />
+        <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding SessionMissingMessage}" />
         <WrapPanel ItemSpacing="8" LineSpacing="8">
           <Button Classes="accent" Content="Start a new session" Command="{Binding StartNewSessionCommand}" />
           <Button Content="{Binding CloseMissingText}" Command="{Binding UnpinAndCloseCommand}" />
@@ -411,7 +414,7 @@
                       </ItemsControl>
                       <!-- DESIGN.md §5, "Model and effort": ultracode and the output style -->
                       <Separator Margin="0,4" />
-                      <ToggleButton Classes="flat row" IsChecked="{Binding IsUltracode, Mode=OneWay}" Command="{Binding ToggleUltracodeCommand}">
+                      <ToggleButton Classes="flat row" IsChecked="{Binding IsUltracode, Mode=OneWay}" Command="{Binding ToggleUltracodeCommand}" IsVisible="{Binding OffersUltracode}">
                         <StackPanel>
                           <TextBlock Text="Ultracode" />
                           <TextBlock Classes="muted small" TextWrapping="Wrap"

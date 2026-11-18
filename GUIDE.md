@@ -63,7 +63,7 @@ The sidebar groups the chapters into sections (`docs/guide/<section>.md`), in th
 | Downloads | Its own page. |
 | Getting started | Its own chapter. |
 | Sessions | Tabs and sessions, The conversation, The composer, Permissions and prompts, History and syncing. |
-| Agents and threads | Plans, tasks and agents, Threads. |
+| Agents and threads | Plans, tasks and agents, Threads, Codex. |
 | Code and changes | Reviewing changes, Project files, Project tools. |
 | Usage and accounts | Usage and limits, Accounts. |
 | Make it yours | Settings, Away from your desk, Deventry. |
@@ -122,7 +122,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Reading the conversation | The cards and what their colors mean in each style, times, following new output and **Jump to latest**, **Quieter in-between steps**, **Indent your messages** and **Indent Claude's steps**, **Full-width conversation**. | [§5](DESIGN.md#5-conversation-view), [Conversation cards](DESIGN.md#conversation-cards), [Copy and times](DESIGN.md#copy-and-times) |
 | Tool calls | The **Tool calls** card and its tiles, a tile's detail and **Show all**, Edit and Write diffs, Bash's output and git chips, a call in a window of its own. | [Conversation cards](DESIGN.md#conversation-cards), [§5](DESIGN.md#5-conversation-view) |
 | Thinking, notes and hooks | Thinking (**Show thinking expanded**, **Collapse all thinking**), notes, warnings and errors, API retries, hook runs and **Show every hook run in the conversation**. | [§5](DESIGN.md#5-conversation-view), [Hook runs](DESIGN.md#hook-runs), [Notices](DESIGN.md#notices) |
-| Subagents | A subagent's card, its own cards and report, subagents in the background. **Show subagents' work** under the tab: a subagent's row, its work in the tab, **Message it through Claude**, rows from earlier turns and dismissing them. Settings → Tabs → **Subagents**. The agent map is in Plans, tasks and agents. | [§5](DESIGN.md#5-conversation-view), [Subagents](DESIGN.md#subagents) |
+| Subagents | A subagent's card, its own cards and report, subagents in the background. **Show subagents' work** under the tab: a subagent's row, its work in the tab, **Message it through Claude**, rows from earlier turns and dismissing them. Settings → Agents → All agents → **Subagents**. The agent map is in Plans, tasks and agents. | [§5](DESIGN.md#5-conversation-view), [Subagents](DESIGN.md#subagents) |
 | The end of a turn | The **Modified files** and **Turn** cards, the **Tasks** card, the Claude Docs a turn wrote. | [Conversation cards](DESIGN.md#conversation-cards), [Changes per turn](DESIGN.md#changes-per-turn) |
 | Finding your way | The scroll bar's marks, `F3` and `F4`, `Ctrl/Cmd+F3` and `Ctrl/Cmd+F4`, find (`Ctrl/Cmd+F`). | [Conversation cards](DESIGN.md#conversation-cards), [Find](DESIGN.md#find) |
 | Copying and quoting | **Copy**, **Copy message**, **Quote in reply**, **Quote message**, a code block's header (**Wrap lines**, **Copy**). | [Copy and times](DESIGN.md#copy-and-times) |
@@ -177,6 +177,14 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Sub-threads waiting on you | The strip over the thread's composer: **Allow**, **Deny**, **Go to tab**. | [Threads](DESIGN.md#threads) |
 | Reaching other sessions | A session's name in Claude Code, **Reached as**, `@` sessions and tabs, **Copy session ID**, *From the session*. | [§13](DESIGN.md#13-architecture), [Autocomplete](DESIGN.md#autocomplete) |
 
+### Codex (`codex/`)
+
+| Page | Covers | From |
+|---|---|---|
+| Adding Codex | Settings → Agents → **Codex**: **Found**, **Install Codex** and **Look again**, **Path to codex**; the setup and sign-in screens' offer; **Sign in** and **Sign out** with Codex's own `codex login`; Codex's sandbox on Windows; in a Perforce workspace, **Let Codex check files out of Perforce?** with **Trust Deventry's hook** and **Not now**; the page's settings. | [Codex, a second agent](DESIGN.md#codex-a-second-agent) |
+| Codex tabs | **New Codex tab here** and **New Claude Code tab here**, a folder remembering its agent, the agent icons on the rows; Codex's modes and its permission cards; what works as in a Claude Code tab (Plan mode, subagents, threads, going back, History and syncing, the project's notes); a restored tab starting as it's shown; what only Claude Code has. | [Codex, a second agent](DESIGN.md#codex-a-second-agent) |
+| Codex's usage | The header and the Usage window following the selected tab's agent, Codex's alerts and **Codex:**, a Codex tab waiting for its reset, **Continue in Codex** and **Continue in Claude Code**. | [Codex, a second agent](DESIGN.md#codex-a-second-agent) |
+
 ### Reviewing changes (`changes/`)
 
 | Page | Covers | From |
@@ -225,7 +233,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Page | Covers | From |
 |---|---|---|
 | Your Claude sign-in | The **Default** account, the header's account menu, **Plan and billing** or **Console billing**, **Sign out…** and what it stops. | [§11](DESIGN.md#11-sign-in), [Accounts](DESIGN.md#accounts) |
-| API-key accounts | Settings → Accounts: **Add an account** with an **Anthropic API key**, where the key is kept, **Change key…**, **Remove…**; on Linux, `secret-tool`. | [Accounts](DESIGN.md#accounts) |
+| API-key accounts | Settings → Claude Code → Accounts: **Add an account** with an **Anthropic API key**, where the key is kept, **Change key…**, **Remove…**; on Linux, `secret-tool`. | [Accounts](DESIGN.md#accounts) |
 | Cloud provider accounts | **Add an account** for Amazon Bedrock, Claude Platform on AWS, Google Cloud's Agent Platform, Claude Models on Google Cloud or Microsoft Foundry: what each needs, how each signs in, **Sign in again when the credentials expire**, a provider's own key in the environment and what that exposes it to, the models, **Change settings…**, a tab on another provider than its account's. | [Accounts](DESIGN.md#accounts) |
 | A folder's account | A group's **Account ▸**, **New folders use**, the account tags. | [Accounts](DESIGN.md#accounts) |
 | Moving a tab to another account | A tab's **Account ▸**, what moving it costs, and the question when a conversation would carry on under another account than it began under (**Continue here**, **New chat with a digest**, **Warn before continuing a session under another account**). | [Accounts](DESIGN.md#accounts), [Continuing under another account](DESIGN.md#continuing-under-another-account) |
@@ -260,7 +268,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 |---|---|---|
 | Notifications | Each kind and its switch, what they say, when they're skipped, where a click goes. | [§10](DESIGN.md#10-notifications) |
 | The Dock and taskbar icon | The badge, the icon's animation, the taskbar's flash. | [§10](DESIGN.md#10-notifications) |
-| The Claude app | **Connect to the Claude app**, **Open in the Claude app**, the phone icon, pushes to your phone, who can't use it, and what an organization has turned off (Settings → Accounts). | [Remote Control](DESIGN.md#remote-control-the-claude-app) |
+| The Claude app | **Connect to the Claude app**, **Open in the Claude app**, the phone icon, pushes to your phone, who can't use it, and what an organization has turned off (Settings → Claude Code). | [Remote Control](DESIGN.md#remote-control-the-claude-app) |
 | Remote clients | Settings' **Remote clients** group (**All clients**, then **Telegram** and **Discord**), and the bots: how they differ from the Claude app, making a Telegram one with @BotFather and a Discord one in the Developer Portal (User Install, in no server), **Set token…**, one program per bot, a Telegram bot with a webhook and a Discord app that can't be added to an account or sends its commands to a web address, **Pair an account…** (Telegram's `/start`; Discord's **Add to My Apps**, `/pair` from any chat, and what to do when Discord won't let the bot write first) and **Unpair…**, what the bot sends and its buttons, a prompt closing, the images Claude makes and reads (**Send the images Claude makes**, **Send the images Claude reads**), talking to a tab (replies, `/to`, live status), sending images and files (holding one sent alone, `.deventry/attachments`), the commands, **When** and what counts as away, the header's icon (its colors, its arcs lighting up, its tooltip and menu, **Quiet for an hour**), **What they can do**, **Keep from remote clients** on a tab, privacy and **Just what happened**, keeping the computer awake. | [Remote clients](DESIGN.md#remote-clients) |
 | Keeping the computer awake | Settings → General, the header's cup, when it holds off sleep. | [Keeping the computer awake](DESIGN.md#keeping-the-computer-awake) |
 | Timed messages | Settings → **Timed messages** and its editor (name, project, message, opens in, mode, model, effort, **Once**, **On days** and **Advanced**'s cron, **From** and **Until**, the next three times), **Add a timed message…** in a group's menu, the cup's menu and the palette, what happens at the time, only while Deventry runs, waking the computer (Windows' **Allow wake timers**, the wake helper on macOS and Linux), half an hour late, the cup's clock and menu with **Edit…**, **Clear…** and **Clear all…**, the notification. | [Timed messages](DESIGN.md#timed-messages) |
@@ -284,7 +292,7 @@ One page, out of the sidebar and linked from both footers and the privacy chapte
 | Accessibility | Screen readers and what they hear, **Zoom**, **Motion**, and what the editor can't do yet. | [Accessibility](DESIGN.md#accessibility) |
 | Keyboard | **Send with**, changing a shortcut, one key for both OSes, the shortcuts it refuses. Reference lists them all. | [Keyboard shortcuts](DESIGN.md#keyboard-shortcuts) |
 | Git | The first page under **Source control**: what it gathers (the branch on tab rows, worktree cleanup, the Files tab's two choices, each explained on its feature's page), and **Path to git**: what Deventry runs git for, the git and version found, and that Claude's own git commands don't use it. | [Pages](DESIGN.md#pages) |
-| Advanced | **Extra arguments for every claude process**, **Log protocol traffic**, **Open log folder**, **Open data folder**, **Diagnostics**. | [§14](DESIGN.md#14-settings), [Staying tolerant at runtime](DESIGN.md#staying-tolerant-at-runtime) |
+| Advanced | **Extra arguments for every claude process** (on Claude Code's page), **Log protocol traffic**, both agents', **Open log folder**, **Open data folder**, **Diagnostics**. | [§14](DESIGN.md#14-settings), [Staying tolerant at runtime](DESIGN.md#staying-tolerant-at-runtime) |
 | About Deventry | A window of its own; opening it (**About Deventry** in the header's menu, in Settings' **Help** and the macOS app menu, the palette); the version, **On the web** (**Website**, **Source code**, **Changelog**, **Privacy policy**) and Deventry's **MIT License**; **Contributors** (**GitHub**, **Pull requests**); **Trademarks**, each name with its owner's notice, and Godot's logo used under its trademark policy; **Open-source licenses** (**Website**, **License**, **Notices**). | [About](DESIGN.md#about) |
 
 ### Updates (`updates/`)

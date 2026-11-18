@@ -4,6 +4,7 @@ using Deventry.Core;
 using Deventry.Core.Accessibility;
 using Deventry.Core.Auth;
 using Deventry.Core.Claude;
+using Deventry.Core.Codex;
 using Deventry.Core.Composer;
 using Deventry.Core.Credentials;
 using Deventry.Core.Demo;
@@ -164,6 +165,12 @@ public sealed class AppServices : IAsyncDisposable
         RemoteControl = new RemoteControlService(this);
         var otherPrograms = projectToolPaths ?? ProjectToolPaths.ForCurrentUser();
         Locator = new ClaudeLocator(launcher, timeProvider, UserEnvironment, ClaudeVariables, new ClaudeDesktop(otherPrograms, ToolOSExtensions.Current));
+        CodexLocator = new CodexLocator(launcher, timeProvider, UserEnvironment);
+        // A demo's Codex is Deventry standing in, which says its version only with the stand-in's variable.
+        FindCodex = path => Demo is not null && path is not null
+            ? Task.FromResult(new CodexLocateResult(new CodexInstall(path, Version.Parse(StandInCodex.Version)), null, null))
+            : CodexLocator.LocateAsync(path);
+        CodexInstallerFactory = () => new CodexInstaller(ToolOSExtensions.Current, Paths.UtilityDirectory, _launcher, Time, UserEnvironment.Probe, UserEnvironment);
         // Settings → Git → Path to git, read as each run starts (DESIGN.md §14).
         Git = new GitWorkingTree(launcher, timeProvider, environment: UserEnvironment, logger: Loggers.CreateLogger("Git")) { ConfiguredPath = () => Settings.Git.Path };
         MentionFolders = new MentionFolderReader(Git, timeProvider);
@@ -467,6 +474,14 @@ public sealed class AppServices : IAsyncDisposable
         ? RemoteControl.ClaudeVariables
         : new Dictionary<string, string?>(RemoteControl.ClaudeVariables) { [StandInClaude.Variable] = "1" };
 
+    /// <summary>
+    /// What every <c>codex</c> Deventry starts, and runs to look for it and its sign-in, has in its environment: in a
+    /// demo, the variable that has Deventry stand in for Codex (DESIGN.md §11, "Demo mode"), which only <c>codex</c> gets.
+    /// </summary>
+    public IReadOnlyDictionary<string, string?> CodexVariables => Demo is null
+        ? new Dictionary<string, string?>()
+        : new Dictionary<string, string?> { [StandInCodex.Variable] = "1" };
+
     /// <summary>Where <b>Try the demo</b> writes its demos: the temporary folder; a test's own in tests.</summary>
     public string DemoFolderRoot { get; set; } = Path.GetTempPath();
 
@@ -498,6 +513,9 @@ public sealed class AppServices : IAsyncDisposable
     public ILoggerFactory Loggers { get; }
 
     public ClaudeLocator Locator { get; }
+
+    /// <summary>Finds <c>codex</c> (DESIGN.md §18, "Codex, a second agent").</summary>
+    public CodexLocator CodexLocator { get; }
 
     /// <summary>Deventry's settings (DESIGN.md §14). Change them on the UI thread, then call <see cref="SaveSettings"/>.</summary>
     public AppSettings Settings { get; }
@@ -555,6 +573,84 @@ public sealed class AppServices : IAsyncDisposable
     public ClaudeInstall? Install { get; private set; }
 
     public IClaudeSessionFactory? Sessions { get; private set; }
+
+    /// <summary>The Codex Deventry found, once it has looked and found one it can use.</summary>
+    public CodexInstall? CodexInstall { get; private set; }
+
+    /// <summary>Starts Codex tabs' sessions, once Codex is found; null until then (DESIGN.md §18, "Codex, a second agent").</summary>
+    public ICodexSessionFactory? CodexSessions { get; private set; }
+
+    /// <summary>Codex was found, or looked for again (on the UI thread).</summary>
+    public event Action? CodexChanged;
+
+    /// <summary>What looking for Codex last found, for Settings → Agents → Codex.</summary>
+    public CodexLocateResult? CodexFound { get; private set; }
+
+    /// <summary>
+    /// Looks for Codex, as Settings → Agents → Codex names it or where it's installed. Found and usable, Codex tabs can
+    /// start. Called at launch, and again from Settings and the setup screen.
+    /// </summary>
+    public async Task<CodexLocateResult> LocateCodexAsync()
+    {
+        var result = await FindCodex(Settings.Codex.CodexPath).ConfigureAwait(false);
+        Dispatcher.Post(() =>
+        {
+            CodexFound = result;
+            if (result is { IsUsable: true, Install: { } install })
+            {
+                UseCodexInstall(install);
+            }
+            CodexChanged?.Invoke();
+        });
+        return result;
+    }
+
+    /// <summary>How <see cref="LocateCodexAsync"/> looks, given the path Settings names: <see cref="CodexLocator"/>'s way, but a test's own.</summary>
+    internal Func<string?, Task<CodexLocateResult>> FindCodex { get; set; }
+
+    public void UseCodexInstall(CodexInstall install)
+    {
+        CodexInstall = install;
+        CodexSessions = new CodexSessionFactory(install.Path, _launcher, Time, Loggers, Diagnostics, UserEnvironment);
+        CodexAuth = new CodexAuth(install.Path, _launcher, Time, UserEnvironment, CodexVariables);
+    }
+
+    /// <summary>
+    /// Codex's own folder, which History reads its sessions from (DESIGN.md §18, "Codex, a second agent"): the app gives
+    /// it <see cref="CodexLocator.HomeFor"/>. Null reads none: tests.
+    /// </summary>
+    public string? CodexHome { get; set; }
+
+    /// <summary>Codex's own sign-in, once Codex is found (DESIGN.md §18, "Installing and signing in").</summary>
+    public CodexAuth? CodexAuth { get; private set; }
+
+    /// <summary>
+    /// The account Codex is signed in to, as the last Codex session that started said it (<c>account/read</c>): the header's
+    /// while a Codex tab is selected (DESIGN.md §18, "The header follows the selected tab's agent"). Null until one has, and
+    /// once Codex signs out.
+    /// </summary>
+    public AccountInfo? CodexAccount { get; private set; }
+
+    /// <summary><see cref="CodexAccount"/> changed (on the UI thread).</summary>
+    public event Action? CodexAccountChanged;
+
+    /// <summary>A Codex session said its account, or Codex signed out (null): the header follows, on the UI thread.</summary>
+    internal void UseCodexAccount(AccountInfo? account) => Dispatcher.Post(() =>
+    {
+        if (account != CodexAccount)
+        {
+            CodexAccount = account;
+            CodexAccountChanged?.Invoke();
+        }
+    });
+
+    /// <summary>Codex's installer. Tests replace it: the real one would install Codex on the machine running them.</summary>
+    internal Func<ICodexInstaller> CodexInstallerFactory { get; set; }
+
+    public ICodexInstaller CreateCodexInstaller() => CodexInstallerFactory();
+
+    /// <summary>For tests: Codex tabs' sessions come from <paramref name="factory"/> instead of a real <c>codex</c>.</summary>
+    internal void UseCodexSessionFactory(ICodexSessionFactory factory) => CodexSessions = factory;
 
     public ClaudeAuth? Auth { get; private set; }
 

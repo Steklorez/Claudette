@@ -1,5 +1,6 @@
 using Deventry.App.Services;
 using Deventry.Core;
+using Deventry.Core.Agents;
 using Deventry.Core.Git;
 using Deventry.Core.History;
 using Deventry.Core.Library;
@@ -27,6 +28,7 @@ internal static class HistorySessions
             // A copy: the list is built off the UI thread, which owns the state.
             new Dictionary<string, SessionMark>(services.State.SessionMarks));
         var sessionLibrary = library.Library;
+        var codexHome = services.CodexHome;
         return await Task.Run(async () =>
         {
             // Before the scan: the records name the sessions it finds, and say when another machine used one since.
@@ -35,13 +37,27 @@ internal static class HistorySessions
             Action<SessionSummary>? each = found is null
                 ? null
                 : summary => found(LocalEntry(summary, records.GetValueOrDefault(summary.SessionId), context));
-            var local = index is null ? [] : await index.ScanAsync(each).ConfigureAwait(false);
+            var claude = index is null ? [] : await index.ScanAsync(each).ConfigureAwait(false);
+            // Codex's sessions too, from its own folder (DESIGN.md §18, "Codex, a second agent").
+            var codex = codexHome is null ? [] : CodexHistory.Scan(codexHome);
+            foreach (var summary in codex)
+            {
+                each?.Invoke(summary);
+            }
+            IReadOnlyList<SessionSummary> local = [.. claude, .. codex];
             // Sessions only in the library are summarized from its copies, cached as Claude Code's own are.
             var localIds = local.Select(s => s.SessionId).ToHashSet(StringComparer.Ordinal);
-            var libraryOnly = stored.Where(e => e.IsConflictCopy || !localIds.Contains(e.Record.SessionId)).Select(e => e.TranscriptPath).ToArray();
-            IReadOnlyDictionary<string, SessionSummary?> summaries = index is null
-                ? libraryOnly.ToDictionary(p => p, HistoryIndex.ReadSummary, StringComparer.Ordinal)
-                : await index.SummarizeAsync(libraryOnly).ConfigureAwait(false);
+            var libraryOnly = stored.Where(e => e.IsConflictCopy || !localIds.Contains(e.Record.SessionId)).ToArray();
+            var claudeOnly = libraryOnly.Where(e => e.Record.Agent is null).Select(e => e.TranscriptPath).ToArray();
+            IReadOnlyDictionary<string, SessionSummary?> claudeSummaries = index is null
+                ? claudeOnly.ToDictionary(p => p, HistoryIndex.ReadSummary, StringComparer.Ordinal)
+                : await index.SummarizeAsync(claudeOnly).ConfigureAwait(false);
+            // A Codex session's copy is its session file, read as Codex's own are.
+            var summaries = new Dictionary<string, SessionSummary?>(claudeSummaries, StringComparer.Ordinal);
+            foreach (var entry in libraryOnly.Where(e => e.Record.Agent == AgentKinds.Codex))
+            {
+                summaries[entry.TranscriptPath] = CodexHistory.Read(entry.TranscriptPath);
+            }
             return (IReadOnlyList<HistoryEntry>)Merge(local, stored, records, summaries, context);
         });
     }
@@ -123,7 +139,7 @@ internal static class HistorySessions
         return Entry(summary.SessionId, record?.Name ?? summary.Title, summary.FirstPrompt ?? record?.FirstPrompt, summary.Folder ?? record?.Folder,
             lastUsedElsewhere ? record!.Machine : context.Machine, lastUsedElsewhere ? record!.LastUsed : summary.LastActivity,
             summary.MessageCount, summary.GitBranch, summary.TranscriptPath, record, libraryEntry?.TranscriptPath, isConflict: false, label: null,
-            context, continuedElsewhere: lastUsedElsewhere, prompts: summary.Prompts, librarySize: libraryEntry?.Size);
+            context, continuedElsewhere: lastUsedElsewhere, prompts: summary.Prompts, librarySize: libraryEntry?.Size, agent: summary.Agent);
     }
 
     /// <summary>A session only in the library, from another machine (or older than Claude Code's own cleanup).</summary>
@@ -134,16 +150,21 @@ internal static class HistorySessions
         return Entry(record.SessionId, libraryEntry.IsConflictCopy ? $"{title} ({libraryEntry.ConflictLabel})" : title,
             summary?.FirstPrompt ?? record.FirstPrompt, record.Folder, record.Machine, record.LastUsed,
             summary?.MessageCount ?? 0, record.Project?.Branch, localTranscript: null, record, libraryEntry.TranscriptPath,
-            libraryEntry.IsConflictCopy, libraryEntry.ConflictLabel, context, prompts: summary?.Prompts, librarySize: libraryEntry.Size);
+            libraryEntry.IsConflictCopy, libraryEntry.ConflictLabel, context, prompts: summary?.Prompts, librarySize: libraryEntry.Size, agent: record.Agent);
     }
 
     /// <param name="librarySize">What the session takes in the session library, for one that's there (DESIGN.md §9, "History").</param>
     internal static HistoryEntry Entry(string id, string? title, string? prompt, string? folder, string lastMachine, DateTimeOffset last, int messages, string? branch,
         string? localTranscript, SessionRecord? record, string? libraryTranscript, bool isConflict, string? label, EntryContext context,
-        bool continuedElsewhere = false, string? prompts = null, long? librarySize = null)
+        bool continuedElsewhere = false, string? prompts = null, long? librarySize = null, string? agent = null)
     {
         var who = lastMachine == context.Machine ? "This machine" : lastMachine;
         var details = new List<string> { who, Formats.Ago(context.Now - last) };
+        // Codex's sessions say so; Claude Code's, as ever, say nothing (DESIGN.md §18, "Codex, a second agent").
+        if (Services.AgentsService.Find(agent) is { Kind: not Core.Agents.AgentKinds.ClaudeCode } other)
+        {
+            details.Insert(0, other.Name);
+        }
         if (messages > 0)
         {
             details.Add($"{messages} message{(messages == 1 ? "" : "s")}");
@@ -168,6 +189,7 @@ internal static class HistorySessions
         }
         return new HistoryEntry
         {
+            Agent = agent,
             SessionId = id,
             Title = title is { Length: > 0 } ? title : prompt ?? "Untitled session",
             FirstPrompt = prompt,

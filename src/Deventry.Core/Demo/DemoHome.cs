@@ -13,6 +13,12 @@ public sealed record DemoOptions
     /// </summary>
     public required string ClaudePath { get; init; }
 
+    /// <summary>
+    /// The demo's Codex, for its Codex tab (DESIGN.md §18, "Codex, a second agent"): <c>fake-codex</c> for the
+    /// screenshots, Deventry itself in the app's demo; null for a demo without one.
+    /// </summary>
+    public string? CodexPath { get; init; }
+
     public ThemeChoice Theme { get; init; } = ThemeChoice.System;
 
     public AppStyle Style { get; init; } = AppStyle.Standard;
@@ -34,8 +40,8 @@ public sealed record DemoOptions
     public WindowPlacement? Window { get; init; }
 }
 
-/// <summary>What a demo was written as: Deventry's folders, Claude Code's, and the tabs.</summary>
-public sealed record DemoWritten(AppPaths Paths, string ClaudeConfig, IReadOnlyList<TabState> Tabs);
+/// <summary>What a demo was written as: Deventry's folders, Claude Code's, Codex's (as <c>CODEX_HOME</c>), and the tabs.</summary>
+public sealed record DemoWritten(AppPaths Paths, string ClaudeConfig, IReadOnlyList<TabState> Tabs, string CodexHome);
 
 /// <summary>
 /// A demo's folder, but for its usage history, which <c>Deventry.Usage</c>'s <c>DemoUsage</c> writes through
@@ -62,6 +68,15 @@ public static class DemoHome
 
         var tabs = DemoContent.Write(projects, transcripts, now, make);
         var sessionMarks = DemoHistory.Write(projects, transcripts, now);
+        // Codex's own folder, the demo's: its tab's conversation and session file, never the user's ~/.codex.
+        var codexHome = Path.Combine(folder, "codex-home");
+        Directory.CreateDirectory(codexHome);
+        if (options.CodexPath is not null)
+        {
+            // With tidepool's tabs, after its thread.
+            var tidepool = tabs.Single(t => t.Id == "tab-inventory").Folder;
+            tabs.Insert(tabs.FindIndex(t => t.Id == "tab-pool"), DemoCodex.Write(codexHome, tidepool, now));
+        }
 
         var settings = new AppSettings();
         settings.General.CheckForAppUpdates = false;
@@ -69,6 +84,7 @@ public static class DemoHome
         settings.ClaudeCode.ClaudePath = options.ClaudePath;
         settings.ClaudeCode.CheckForUpdates = false;
         settings.ClaudeCode.UseLoginShellEnvironment = false;
+        settings.Codex.CodexPath = options.CodexPath;
         settings.Appearance.Theme = options.Theme;
         settings.Appearance.Style = options.Style;
         if (options.Still)
@@ -104,7 +120,7 @@ public static class DemoHome
             SessionMarks = sessionMarks,
             // The studio's API key, which orbit-game's group uses (DESIGN.md §4, "Accounts"). Its key isn't stored: the
             // demo's Claude Code never runs the key helper. And its Amazon Bedrock account, which no tab uses, signing
-            // in with an AWS profile, so Settings → Accounts shows a cloud provider's too.
+            // in with an AWS profile, so Settings → Claude Code → Accounts shows a cloud provider's too.
             Accounts =
             [
                 new ClaudeAccount { Id = DemoContent.StudioAccount, Name = "Studio", Color = "#A66BFF", DailySpendAlert = 20 },
@@ -122,6 +138,6 @@ public static class DemoHome
             // Answered, so the sidebar doesn't offer Claude Code's projects over the demo (DESIGN.md §4, "Claude Code's projects").
             ClaudeProjectsOffered = true,
         });
-        return new DemoWritten(paths, config, tabs);
+        return new DemoWritten(paths, config, tabs, codexHome);
     }
 }

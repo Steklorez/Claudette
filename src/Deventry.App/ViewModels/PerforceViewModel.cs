@@ -353,6 +353,41 @@ public sealed partial class PerforceViewModel : ObservableObject
         return HookOutputs.Continue();
     }
 
+    /// <summary>
+    /// Codex is about to apply a patch (Deventry's hook on <c>apply_patch</c>, DESIGN.md §18, "Perforce"): the files it
+    /// changes, deletes or moves are checked out first, as Claude's are before Edit and Write. It always lets the patch go
+    /// on: a file it couldn't check out gets a note, and the patch says what it found. Called off the UI thread.
+    /// </summary>
+    internal async Task<JsonObject> CheckOutBeforeCodexPatchAsync(JsonObject hookInput, CancellationToken cancellationToken)
+    {
+        var paths = Core.Codex.CodexHooks.FilesOf(hookInput)
+            .Where(f => f.Change != Core.Codex.CodexPatchChange.Add)
+            .Select(f => f.Path)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (!_services.Settings.Perforce.CheckOutBeforeChanges || paths.Count == 0)
+        {
+            return [];
+        }
+        using var deadline = new CancellationTokenSource(Core.Codex.CodexHooks.Timeout - Core.Codex.CodexHooks.Margin - Core.Codex.CodexHooks.Margin, _services.Time);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
+        var names = string.Join(", ", paths.Select(Path.GetFileName));
+        try
+        {
+            var context = await InlineContextAsync().WaitAsync(linked.Token).ConfigureAwait(false);
+            var outcome = await _services.Perforce.Files.CheckOutBeforeWritingAsync(context, paths, linked.Token).ConfigureAwait(false);
+            if (!outcome.Succeeded)
+            {
+                _services.Dispatcher.Post(() => _host.AddNote($"Couldn't check out {names} in Perforce before Codex changed it: {outcome.Problem}", NoteKind.Warning));
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            _services.Dispatcher.Post(() => _host.AddNote($"Perforce didn't answer in time, so Codex changed {names} without checking it out first.", NoteKind.Warning));
+        }
+        return [];
+    }
+
     /// <summary>The tab's context, read on the UI thread, where its changelists are kept.</summary>
     private Task<PerforceContext> InlineContextAsync()
     {

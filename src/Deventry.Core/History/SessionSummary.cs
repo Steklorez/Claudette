@@ -24,4 +24,11 @@ public sealed record SessionSummary(
     DateTimeOffset LastActivity,
     string? GitBranch,
     string? ClaudeCodeVersion,
-    string? Prompts = null);
+    string? Prompts = null)
+{
+    /// <summary>
+    /// The agent the session ran (<c>Agents.AgentKinds</c>; DESIGN.md §18, "Codex, a second agent"); null for Claude Code's.
+    /// A Codex session's id is its thread's, which it's resumed by.
+    /// </summary>
+    public string? Agent { get; init; }
+}

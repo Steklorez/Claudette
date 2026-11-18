@@ -316,9 +316,9 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         switch (sessionEvent)
         {
             case AssistantMessageReceived { Message: var message }:
-                foreach (var toolUse in message.Content.OfType<ToolUseBlock>().Where(t => ChangedFiles.IsFileTool(t.Name)))
+                foreach (var toolUse in message.Content.OfType<ToolUseBlock>().Where(t => t.Call.IsFileChange))
                 {
-                    Changes.RecordToolUse(toolUse.Id, toolUse.Name, toolUse.Input);
+                    Changes.RecordToolCall(toolUse.Id, toolUse.Call, toolUse.Input);
                 }
                 break;
             case ToolResultsReceived { Message: var results }:
@@ -401,6 +401,59 @@ public sealed partial class ChangedFilesViewModel : ViewModelBase
         summary.Files = rows;
         _turns.Add(summary);
         _ = CountTurnAsync(rows);
+    }
+
+    /// <summary>
+    /// Puts the files the turns of <paramref name="footers"/> changed back as they were before the earliest of them, or
+    /// with <paramref name="dryRun"/> says which they are (DESIGN.md §18, "Rewind and branch"): how a Codex tab puts files
+    /// back, as Codex keeps no copies of them. A file a turn created is deleted. Only the turns this tab saw count, as
+    /// only they have footers with what the files held.
+    /// </summary>
+    internal async Task<RewindResult> RewindFilesAsync(IEnumerable<TurnSummaryItem> footers, bool dryRun)
+    {
+        var earliest = new Dictionary<string, TurnFileChange>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in footers.SelectMany(f => f.Files ?? []))
+        {
+            earliest.TryAdd(row.Change.Path, row.Change);
+        }
+        var unknown = earliest.Values.Where(c => !c.IsNew && !c.BeforeKnown).Select(c => c.Path).ToList();
+        var restorable = earliest.Values.Where(c => c.IsNew || c.BeforeKnown).ToList();
+        string? Error(IReadOnlyList<string> paths) => paths.Count == 0 ? null
+            : $"Deventry didn't see what {(paths.Count == 1 ? Path.GetFileName(paths[0]) : $"{paths.Count} files")} held before then";
+        if (dryRun || restorable.Count == 0)
+        {
+            return new RewindResult(restorable.Count > 0 || unknown.Count == 0, Error(unknown), [.. restorable.Select(c => c.Path)], 0, 0, 0);
+        }
+        var failed = await Task.Run(() =>
+        {
+            var couldNot = new List<string>(unknown);
+            foreach (var change in restorable)
+            {
+                try
+                {
+                    if (!Revert.Write(change.Path, ReadText(change.Path), change.IsNew ? null : change.Before))
+                    {
+                        couldNot.Add(change.Path);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    couldNot.Add(change.Path);
+                }
+            }
+            return couldNot;
+        });
+        CheckDisk();
+        return new RewindResult(true, Error(failed), [.. restorable.Select(c => c.Path).Except(failed)], 0, 0, 0);
+
+        static string? ReadText(string path)
+        {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+            return Core.Files.TextFileEncoding.TryRead(File.ReadAllBytes(path), out _, out var text) ? text : null;
+        }
     }
 
     /// <summary>The footer's counts, against the files as the turn left them: on disk, as it has just ended.</summary>

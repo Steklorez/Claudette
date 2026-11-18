@@ -84,6 +84,8 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         _services.StateChanged += (_, _) => OnRemovedPastSessionsChanged();
         // An account added, renamed or removed, or a folder's changed: the groups' and tabs' tags and menus follow.
         _services.Accounts.Changed += OnAccountsChanged;
+        // Codex found: a group's menu offers a Codex tab (DESIGN.md §18, "Codex, a second agent").
+        _services.CodexChanged += () => OnPropertyChanged(nameof(IsCodexAvailable));
         _services.Library.LeaseLost += (sessionId, machine) =>
         {
             foreach (var tab in AllTabs.Where(t => t.State.SessionId == sessionId))
@@ -253,7 +255,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// (DESIGN.md §18, "Project files").
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedEditorLog), nameof(SelectedLog), nameof(SelectedAccount), nameof(ProjectTab))]
+    [NotifyPropertyChangedFor(nameof(SelectedTab), nameof(SelectedFiles), nameof(SelectedRun), nameof(SelectedEditorLog), nameof(SelectedLog), nameof(SelectedAccount), nameof(SelectedAgent), nameof(ProjectTab))]
     public partial IShellTab? Selected { get; set; }
 
     /// <summary>The focused tab when it's a session's; null while nothing, or a Project Files tab, has the focus.</summary>
@@ -452,11 +454,15 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     /// </summary>
     /// <param name="opened">Runs on the new tab before it's selected and started, such as making it a sub-thread.</param>
     /// <param name="overrides">The tab's own model, effort and mode, set before it's made, which reads them.</param>
+    /// <param name="agent">
+    /// The agent the tab runs (DESIGN.md §18, "A tab's agent"), which the folder remembers for its next new tab; null for
+    /// the one the folder's last new tab used.
+    /// </param>
     /// <param name="select">
     /// Select the new tab, as opening one does; false leaves the tab the user is in selected, as a timed message's does
     /// (DESIGN.md §18, "Timed messages"), unless none is.
     /// </param>
-    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null, TabOverrides? overrides = null, bool select = true)
+    public Task OpenFolderAsync(string folder, Action<TabViewModel>? opened = null, TabOverrides? overrides = null, bool select = true, Core.Agents.IAgentType? agent = null)
     {
         if (!Directory.Exists(folder))
         {
@@ -464,11 +470,18 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         }
         var normalized = FolderHistory.Normalize(folder);
         FolderHistory.Touch(_services.State, normalized, _services.Time.GetUtcNow(), _services.Settings.NewTabs.RecentFolderLimit);
+        if (agent is not null)
+        {
+            AgentsService.Remember(_services.State, normalized, agent);
+        }
+        agent ??= AgentsService.ForFolder(_services.State, normalized);
         var state = new TabState
         {
             Folder = normalized,
+            Agent = AgentsService.StateKind(agent),
             SyncToLibrary = _services.Settings.Sessions.SyncNewTabs,
-            RemoteControl = _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
+            // The Claude app reaches only Claude Code's sessions (DESIGN.md §18, "Remote Control").
+            RemoteControl = agent.Features.HasFlag(Core.Agents.AgentFeatures.RemoteControl) && _services.Settings.ClaudeCode.ConnectNewTabsToClaudeApp,
             Overrides = overrides ?? new(),
         };
         var tab = new TabViewModel(_services, this, state, isRestored: false);
@@ -485,6 +498,31 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
     [RelayCommand]
     private Task NewTabInGroupAsync(TabGroupViewModel? group) =>
         group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder);
+
+    /// <summary><b>New Claude Code tab</b> in a group's menu: its next tabs start Claude Code too (DESIGN.md §18, "A tab's agent").</summary>
+    [RelayCommand]
+    private Task NewClaudeCodeTabInGroupAsync(TabGroupViewModel? group) =>
+        group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder, agent: Core.Agents.ClaudeCodeAgent.Instance);
+
+    /// <summary><b>New Codex tab</b> in a group's menu: its next tabs start Codex too, until a Claude Code one.</summary>
+    [RelayCommand]
+    private Task NewCodexTabInGroupAsync(TabGroupViewModel? group) =>
+        group is null ? Task.CompletedTask : OpenFolderAsync(group.Folder, agent: Core.Agents.CodexAgent.Instance);
+
+    /// <summary>
+    /// <b>Continue in Codex</b> (or Claude Code) at a usage limit (DESIGN.md §18, "Continuing in the other agent"): a tab of
+    /// <paramref name="agent"/> in <paramref name="from"/>'s folder, beside it, named <paramref name="name"/>, with
+    /// <paramref name="handover"/> as its draft for the user to send.
+    /// </summary>
+    internal Task ContinueInAgentAsync(TabViewModel from, Core.Agents.IAgentType agent, string name, string handover) =>
+        OpenFolderAsync(from.Folder, tab =>
+        {
+            tab.State.UserName = name;
+            tab.ComposerText = handover;
+        }, agent: agent);
+
+    /// <summary>Codex was found, so a group's menu can offer a Codex tab (DESIGN.md §18, "Codex, a second agent").</summary>
+    public bool IsCodexAvailable => _services.CodexSessions is not null;
 
     /// <summary>
     /// A tab's folder moved (<b>Choose folder…</b> for a missing folder, DESIGN.md §9): the tab joins that folder's
@@ -524,6 +562,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
         group.Tabs.Insert(index, tab);
         OpenTabs.Add(tab);
         OnPropertyChanged(nameof(HasTabs));
+        RefreshAgentIcons();
         // Its session leaves the group's past sessions (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
         OnTicketTabsChanged();
@@ -533,6 +572,26 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             var folder = tab.Folder;
             var now = _services.Time.GetUtcNow();
             _ = Task.Run(() => RemoteAttachments.Prune(folder, keep, now));
+        }
+    }
+
+    /// <summary>
+    /// Tabs of more than one agent are open: each row shows its agent's icon (DESIGN.md §18, "Its icon"). With one agent,
+    /// rows look as they always have.
+    /// </summary>
+    public bool HasSeveralAgents { get; private set; }
+
+    private void RefreshAgentIcons()
+    {
+        var several = AllTabs.Select(t => t.Agent.Kind).Distinct().Skip(1).Any();
+        foreach (var tab in AllTabs)
+        {
+            tab.ShowsAgentIcon = several;
+        }
+        if (several != HasSeveralAgents)
+        {
+            HasSeveralAgents = several;
+            OnPropertyChanged(nameof(HasSeveralAgents));
         }
     }
 
@@ -581,6 +640,7 @@ public sealed partial class ShellViewModel : ViewModelBase, IAsyncDisposable
             UpdateGroupLabels();
         }
         OnPropertyChanged(nameof(HasTabs));
+        RefreshAgentIcons();
         // A closed tab's session is a past session again (DESIGN.md §4, "Claude Code's projects").
         ApplyClaudeProjects();
     }

@@ -75,7 +75,7 @@ public sealed partial class McpServerRow(McpServerStatus status) : ObservableObj
 /// change; a tab without a session shows nothing.
 /// </summary>
 /// <param name="openUrl">Opens a sign-in page in the browser.</param>
-public sealed partial class McpServersViewModel(Func<ClaudeSession?> session, Func<string, Task>? openUrl = null) : ViewModelBase
+public sealed partial class McpServersViewModel(Func<IHasMcpServers?> session, Func<string, Task>? openUrl = null) : ViewModelBase
 {
     public ObservableCollection<McpServerRow> Servers { get; } = [];
 
@@ -214,7 +214,7 @@ public sealed partial class McpServersViewModel(Func<ClaudeSession?> session, Fu
     private Task ToggleAsync(McpServerRow? row) =>
         row is null ? Task.CompletedTask : ChangeAsync(row, s => s.SetMcpServerEnabledAsync(row.Name, row.IsDisabled), row.IsDisabled ? "turn on" : "turn off");
 
-    private async Task ChangeAsync(McpServerRow row, Func<ClaudeSession, Task> change, string what)
+    private async Task ChangeAsync(McpServerRow row, Func<IHasMcpServers, Task> change, string what)
     {
         if (session() is not { } current)
         {

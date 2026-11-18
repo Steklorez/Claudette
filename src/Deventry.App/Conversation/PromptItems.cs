@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Deventry.App.ViewModels;
-using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,6 +24,9 @@ public enum PermissionState
 public abstract partial class PromptItem(PermissionRequest request) : ConversationItem
 {
     public PermissionRequest Request { get; } = request;
+
+    /// <summary>What the card calls the agent asking: "Claude", "Codex" (DESIGN.md §18, "Words").</summary>
+    public string AgentName { get; init; } = "Claude";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPending), nameof(HasOutcome), nameof(PositionText), nameof(HasPosition))]
@@ -102,33 +104,37 @@ public abstract partial class PromptItem(PermissionRequest request) : Conversati
 /// </summary>
 public sealed partial class PermissionItem : PromptItem
 {
-    private static readonly string[] EditTools = ["Edit", "Write", "MultiEdit", "NotebookEdit"];
-
     public PermissionItem(PermissionRequest request) : base(request)
     {
         var input = request.Input;
         var name = request.DisplayName ?? request.ToolName;
-        var path = Str(input, "file_path") ?? Str(input, "notebook_path");
-        Title = request.ToolName switch
+        var call = request.Call;
+        var path = call.Path;
+        Title = call.Kind switch
         {
-            "Bash" => "Allow this command?",
-            "Write" when path is not null && !File.Exists(path) => $"Allow creating {Path.GetFileName(path)}?",
-            _ when EditTools.Contains(request.ToolName) && path is not null => $"Allow editing {Path.GetFileName(path)}?",
-            "WebFetch" => "Allow fetching this page?",
+            ToolKind.Command => "Allow this command?",
+            ToolKind.Write when path is not null && !File.Exists(path) => $"Allow creating {Path.GetFileName(path)}?",
+            ToolKind.Edit or ToolKind.Write when path is not null => $"Allow editing {Path.GetFileName(path)}?",
+            ToolKind.Delete when path is not null => $"Allow deleting {Path.GetFileName(path)}?",
+            ToolKind.WebFetch => "Allow fetching this page?",
             _ => $"Allow {name}?",
         };
-        Command = request.ToolName == "Bash" ? Str(input, "command") : null;
-        IsUnsandboxed = request.ToolName == "Bash" && input["dangerouslyDisableSandbox"] is JsonValue unsandboxed && unsandboxed.GetValueKind() == JsonValueKind.True;
-        Detail = Command is not null ? null : ToolUseItem.Summarize(request.ToolName, input) is { Length: > 0 } summary ? summary : null;
+        Command = call.Kind == ToolKind.Command ? call.Command : null;
+        IsUnsandboxed = call.Kind == ToolKind.Command && input["dangerouslyDisableSandbox"] is JsonValue unsandboxed && unsandboxed.GetValueKind() == JsonValueKind.True;
+        Detail = Command is not null ? null : ToolUseItem.Summarize(call, input) is { Length: > 0 } summary ? summary : null;
         Description = request.Description is { } description && description != Detail && description != Path.GetFileName(path ?? "") ? description : null;
         Reason = request.DecisionReason;
-        if (request.ToolName == "Edit" && Str(input, "old_string") is { } oldText && Str(input, "new_string") is { } newText)
+        if (call.Kind == ToolKind.Edit && call.OldText is { } oldText && call.NewText is { } newText)
         {
             Diff = DiffView.FromReplacement(oldText, newText);
         }
-        else if (request.ToolName == "Write" && Str(input, "content") is { } content)
+        else if (call.Kind == ToolKind.Write && call.Content is { } content)
         {
             Diff = DiffView.FromNewFile(content);
+        }
+        else if (call.Hunks is { Length: > 0 } hunks)
+        {
+            Diff = DiffView.FromStructuredPatch(Core.Diffs.UnifiedHunks.ToStructuredPatch(hunks));
         }
 
         SuggestedRules = request.SuppressAlwaysAllowRule ? [] : request.SuggestedRules;
@@ -328,8 +334,6 @@ public sealed partial class PermissionItem : PromptItem
         Deny();
         return true;
     }
-
-    private static string? Str(JsonObject obj, string name) => obj.GetString(name);
 }
 
 /// <summary>One option of a clarifying question.</summary>
@@ -446,7 +450,7 @@ public sealed partial class QuestionItem : PromptItem
 
     public ObservableCollection<QuestionEntry> Questions { get; } = [];
 
-    public string Title => Questions.Count == 1 ? "Claude has a question" : "Claude has some questions";
+    public string Title => Questions.Count == 1 ? $"{AgentName} has a question" : $"{AgentName} has some questions";
 
     private bool CanSubmit() => IsPending && Questions.Count > 0 && Questions.All(q => q.Answer is not null);
 
@@ -533,7 +537,21 @@ public sealed partial class PlanItem : PromptItem
     public partial int VersionNumber { get; private set; }
 
     /// <summary>"Claude's plan", or "Claude's plan · v2" from the second version on.</summary>
-    public string Title => VersionNumber > 1 ? $"Claude's plan · v{VersionNumber}" : "Claude's plan";
+    public string Title => VersionNumber > 1 ? $"{AgentName}'s plan · v{VersionNumber}" : $"{AgentName}'s plan";
+
+    /// <summary>What the card says for a plan with no text.</summary>
+    public string ReadyText => $"{AgentName} has finished planning and is ready to start making changes.";
+
+    /// <summary>
+    /// <b>Approve, accept edits</b> is offered: Claude Code's mode for it. A Codex tab's Auto already makes edits in the
+    /// workspace without asking (DESIGN.md §18, "Modes").
+    /// </summary>
+    public bool OffersAcceptingEdits { get; init; } = true;
+
+    /// <summary>What <b>Approve, auto mode</b> says it does.</summary>
+    public string AutoModeTip => OffersAcceptingEdits
+        ? "Start working in auto mode: a safety check reviews actions and blocks risky ones"
+        : $"Start working in Auto: {AgentName} works in the project without asking, and asks for anything outside it";
 
     /// <summary>This plan as a line diff against the version before it; null for the first.</summary>
     [ObservableProperty]
@@ -584,7 +602,7 @@ public sealed partial class PlanItem : PromptItem
     private void ApproveAcceptingEdits() => Approve("acceptEdits", "Approved. Edits are accepted automatically");
 
     [RelayCommand]
-    private void ApproveAskingForEdits() => Approve("default", "Approved. Claude will ask before each edit");
+    private void ApproveAskingForEdits() => Approve("default", $"Approved. {AgentName} will ask before each edit");
 
     private void Approve(string mode, string outcome)
     {

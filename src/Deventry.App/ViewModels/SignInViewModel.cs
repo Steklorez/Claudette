@@ -16,6 +16,9 @@ namespace Deventry.App.ViewModels;
 public sealed partial class SignInViewModel : ViewModelBase
 {
     public const string NeedsSignInText = "Claude Code needs you to sign in.";
+
+    /// <summary>Codex, offered beside Claude Code on the launch screen (DESIGN.md §18, "Installing and signing in"); null in the banner's dialog.</summary>
+    public CodexSetupViewModel? Codex { get; init; }
     private const string FinishInBrowserText = "Finish signing in in your browser.";
 
     private readonly AppServices _services;

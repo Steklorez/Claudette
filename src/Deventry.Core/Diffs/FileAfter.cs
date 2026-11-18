@@ -16,6 +16,21 @@ public static class FileAfter
     /// the session's previous change left the file; null for a file that didn't exist.
     /// </summary>
     /// <returns>The text, and whether it's known: an Edit to an unknown base, or one that doesn't fit it, isn't.</returns>
+    public static (string? After, bool Known) Of(Sessions.ToolCall call, JsonObject? input, JsonObject? result, string? @base, bool baseKnown)
+    {
+        if (ChangedFiles.IsFileTool(call.Name))
+        {
+            return Of(call.Name, input, result, @base, baseKnown);
+        }
+        // Another agent's change: a new file's whole content, or hunks made to the file as it was.
+        if (call.Hunks is { } hunks)
+        {
+            return baseKnown && ApplyPatch(@base ?? "", UnifiedHunks.ToStructuredPatch(hunks)) is { } patched ? (patched, true) : (null, false);
+        }
+        return call is { Kind: Sessions.ToolKind.Write, Content: { } content } ? (content, true) : (null, false);
+    }
+
+    /// <inheritdoc cref="Of(Sessions.ToolCall, JsonObject?, JsonObject?, string?, bool)"/>
     public static (string? After, bool Known) Of(string toolName, JsonObject? input, JsonObject? result, string? @base, bool baseKnown)
     {
         switch (toolName)

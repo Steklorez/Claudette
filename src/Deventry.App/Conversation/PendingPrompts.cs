@@ -15,14 +15,20 @@ internal sealed class PendingPrompts
     /// <summary>What a prompt Claude Code withdraws says. Null, or no function, keeps <see cref="PromptItem.WithdrawnOutcome"/>.</summary>
     public Func<string?>? WithdrawnOutcome { get; set; }
 
+    /// <summary>What the cards call the agent: "Claude", "Codex" (DESIGN.md §18, "Words").</summary>
+    public string AgentName { get; set; } = "Claude";
+
+    /// <summary>A plan card offers <b>Approve, accept edits</b>: Claude Code's mode, which Codex hasn't.</summary>
+    public bool OffersAcceptingEdits { get; set; } = true;
+
     /// <summary>The card for a permission request: a question or a plan for those tools, else a permission prompt.</summary>
     public PromptItem Add(PermissionRequest request)
     {
         PromptItem item = request.ToolName switch
         {
-            "AskUserQuestion" => new QuestionItem(request),
-            "ExitPlanMode" => new PlanItem(request),
-            _ => new PermissionItem(request),
+            "AskUserQuestion" => new QuestionItem(request) { AgentName = AgentName },
+            "ExitPlanMode" => new PlanItem(request) { AgentName = AgentName, OffersAcceptingEdits = OffersAcceptingEdits },
+            _ => new PermissionItem(request) { AgentName = AgentName },
         };
         _permissions[request.RequestId] = item;
         return item;

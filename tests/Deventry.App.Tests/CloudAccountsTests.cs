@@ -136,7 +136,7 @@ public class CloudAccountsTests
 
         Assert.Equal(0, signInAsked);
         Assert.Contains(InlineDispatcher.Read(() => tab.Items.OfType<NoteItem>().ToArray()),
-            n => n.Text == "Claude Code couldn't sign in to Amazon Bedrock for Studio. Sign in to AWS with \"aws sso login --profile studio-sso\", or check the profile in Settings → Accounts. Or move the tab to another account.");
+            n => n.Text == "Claude Code couldn't sign in to Amazon Bedrock for Studio. Sign in to AWS with \"aws sso login --profile studio-sso\", or check the profile in Settings → Claude Code → Accounts. Or move the tab to another account.");
     }
 
     [Fact]
@@ -155,14 +155,14 @@ public class CloudAccountsTests
         Assert.EndsWith("once: about $0.75 at Anthropic's list price, billed through Amazon Bedrock.", h.Shell.Confirmation!.Message, StringComparison.Ordinal);
     }
 
-    // ---- Settings → Accounts -------------------------------------------------------------------------------------------
+    // ---- Settings → Claude Code → Accounts -------------------------------------------------------------------------------------------
 
     [Fact]
     public async Task Settings_adds_a_providers_key_only_once_told_what_the_key_is_exposed_to()
     {
         await using var h = new TabTestHarness();
         var keys = UseKeys(h);
-        using var page = new AccountsPage(new SettingsContext(h.Services));
+        using var page = new ClaudeCodePage(new SettingsContext(h.Services), null, null);
         Assert.Equal(["Anthropic API key", "Amazon Bedrock", "Claude Platform on AWS", "Google Cloud's Agent Platform", "Claude Models on Google Cloud", "Microsoft Foundry"],
             page.KindChoices.Select(c => c.Label));
 
@@ -205,7 +205,7 @@ public class CloudAccountsTests
         await using var h = new TabTestHarness();
         UseKeys(h);
         var studio = await h.Services.Accounts.AddCloudAccountAsync("Studio", CloudProviders.Bedrock, BedrockProfile, null);
-        using var page = new AccountsPage(new SettingsContext(h.Services));
+        using var page = new ClaudeCodePage(new SettingsContext(h.Services), null, null);
         var editor = Assert.Single(page.Editors);
         Assert.False(editor.HasKey);
         Assert.True(editor.IsCloud);
@@ -235,7 +235,7 @@ public class CloudAccountsTests
         await using var h = new TabTestHarness();
         UseKeys(h);
         h.Services.Accounts.Credentials = new Core.Credentials.UnavailableCredentialStore();
-        using var page = new AccountsPage(new SettingsContext(h.Services));
+        using var page = new ClaudeCodePage(new SettingsContext(h.Services), null, null);
         Assert.False(page.CanAdd);
 
         page.NewName = "Studio";

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Deventry.Core.ProjectFiles;
 using Deventry.Core.Protocol;
+using Deventry.Core.Sessions;
 
 namespace Deventry.Core.Diffs;
 
@@ -154,7 +155,7 @@ public sealed class ChangedFiles
 {
     private readonly TimeProvider _timeProvider;
     private readonly StringComparer _pathComparer;
-    private readonly Dictionary<string, (string ToolName, string? Path, JsonObject Input)> _pending = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (string ToolName, string? Path, JsonObject Input, ToolCall Call)> _pending = new(StringComparer.Ordinal);
     private readonly HashSet<string> _applied = new(StringComparer.Ordinal);
     /// <summary>What Deventry's hook read before a call ran, by tool call id: its real path, and its "before" when it could read it.</summary>
     private readonly Dictionary<string, (string Path, string? Before, bool Known)> _hooked = new(StringComparer.Ordinal);
@@ -197,17 +198,23 @@ public sealed class ChangedFiles
     /// <summary>Raised after a change is recorded.</summary>
     public event Action? Changed;
 
-    public static bool IsFileTool(string toolName) => toolName is "Edit" or "Write" or "MultiEdit" or "NotebookEdit";
+    /// <summary>One of Claude Code's file tools: Edit, Write, MultiEdit and NotebookEdit.</summary>
+    public static bool IsFileTool(string toolName) => ClaudeToolCalls.KindOf(toolName) is ToolKind.Edit or ToolKind.Write;
 
-    /// <summary>Notes a tool call. Only file tools are kept; the change counts once its result succeeds.</summary>
-    public void RecordToolUse(string toolUseId, string toolName, JsonObject input)
+    /// <summary>Notes one of Claude Code's tool calls. Only file tools are kept; the change counts once its result succeeds.</summary>
+    public void RecordToolUse(string toolUseId, string toolName, JsonObject input) => RecordToolCall(toolUseId, ClaudeToolCalls.From(toolName, input), input);
+
+    /// <summary>
+    /// Notes a tool call, whichever agent made it (DESIGN.md §18, "Codex, a second agent"). Only changes to files are kept;
+    /// the change counts once its result succeeds.
+    /// </summary>
+    public void RecordToolCall(string toolUseId, ToolCall call, JsonObject input)
     {
-        if (!IsFileTool(toolName) || _applied.Contains(toolUseId))
+        if (!call.IsFileChange || _applied.Contains(toolUseId))
         {
             return;
         }
-        var path = toolName == "NotebookEdit" ? input.GetString("notebook_path") : input.GetString("file_path");
-        _pending[toolUseId] = (toolName, string.IsNullOrEmpty(path) ? null : path, input);
+        _pending[toolUseId] = (call.Name, string.IsNullOrEmpty(call.Path) ? null : call.Path, input, call);
     }
 
     /// <summary>
@@ -308,8 +315,15 @@ public sealed class ChangedFiles
         _applied.Add(toolUseId);
         var when = at ?? _timeProvider.GetUtcNow();
         var key = Normalize(path);
-        // This change's own "before": from its result, or what the hook read before it ran.
-        var (before, isNew, beforeKnown) = ReadBefore(pending.ToolName, result);
+        // A change reported as hunks says nothing of the file before it: taken back from the file as the change left it.
+        if (!hookedFound && result is null && inTurn && pending.Call.Hunks is { } hunks && BeforeFromHunks(path, hunks) is { } taken)
+        {
+            (hooked, hookedFound) = ((path, taken, true), true);
+        }
+        // This change's own "before": from its result, or what the hook read before it ran; a new file has none.
+        var (before, isNew, beforeKnown) = result is null && pending.Call is { Kind: ToolKind.Write, Hunks: null } && !IsFileTool(pending.ToolName)
+            ? (null, true, true)
+            : ReadBefore(pending.ToolName, result);
         if (!beforeKnown && hookedFound && hooked.Known)
         {
             (before, isNew, beforeKnown) = (hooked.Before, hooked.Before is null, true);
@@ -346,7 +360,7 @@ public sealed class ChangedFiles
         // What the change was made to: its own "before", or failing that (a transcript leaves a large one out), how the
         // session's previous change left the file.
         var (@base, baseKnown) = beforeKnown ? (before, true) : file is { AfterKnown: true } ? (file.After, true) : (null, false);
-        var (after, afterKnown) = FileAfter.Of(pending.ToolName, pending.Input, result, @base, baseKnown);
+        var (after, afterKnown) = FileAfter.Of(pending.Call, pending.Input, result, @base, baseKnown);
         // Its "before" isn't how the previous change left the file: something else changed it between them.
         var changedBetween = file is { AfterKnown: true } && beforeKnown && !FileAfter.Same(before ?? "", file.After ?? "");
 
@@ -608,6 +622,10 @@ public sealed class ChangedFiles
             _ => (null, false, false),
         };
     }
+
+    /// <summary>The file before a change reported as <paramref name="hunks"/>: what it holds now, with the change taken back.</summary>
+    private string? BeforeFromHunks(string path, string hunks) =>
+        ReadFromDisk(path, MaxInspectBytes) is { Known: true, Before: { } now } ? UnifiedHunks.Before(now, hunks) : null;
 
     internal static string Normalize(string path)
     {

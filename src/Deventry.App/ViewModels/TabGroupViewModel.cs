@@ -365,6 +365,6 @@ public sealed record PastSessionRow(HistoryEntry Entry, string Detail)
 /// <summary>One of the group colors, with the name its swatch has for screen readers and in its tip.</summary>
 public sealed record NamedColor(string Name, Color Color)
 {
-    /// <summary>Its name, as a list that picks one (Settings → Accounts) shows and reads it out.</summary>
+    /// <summary>Its name, as a list that picks one (Settings → Claude Code → Accounts) shows and reads it out.</summary>
     public override string ToString() => Name;
 }

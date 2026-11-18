@@ -14,10 +14,12 @@
 //                   history that ends now, with the plan's usage and a month of Studio's spend
 //   claude-config/  for CLAUDE_CONFIG_DIR: the tabs' transcripts, with the subagents' beside them, and past sessions
 //                   for History: more in each project, one in a worktree of starfall, and four older projects
+//   codex-home/     for CODEX_HOME: the Codex tab's conversation in tidepool, which fake-codex reads back, and its
+//                   session file for History; fake-codex, as Codex, reports its usage (FAKE_CODEX_USAGE=demo)
 //   usage.json      for FAKE_CLAUDE_USAGE: the plan usage fake-claude reports, where the history ends
-//   projects/       three git repositories, with Claude's changes in their working trees, and the older projects'
-//                   empty folders. --projects puts them elsewhere: the conversation shows their paths, so a short one
-//                   such as C:\Demo reads better.
+//   projects/       three git repositories, with Claude's changes in their working trees, the older projects' empty
+//                   folders, and fake-codex in .codex, as the demo's Codex. --projects puts them elsewhere: the
+//                   conversation shows their paths, so a short one such as C:\Demo reads better.
 // then prints the environment to run Deventry with. A folder it would replace must be empty or one it made.
 //
 //   deventry-demo --stand-in-editor <uproject>
@@ -99,10 +101,19 @@ catch (IOException ex)
 
 // The usage history ends now, so the header's projection reads best soon after.
 var now = DateTimeOffset.Now;
+// The demo's Codex, copied in beside the projects: Settings shows where it is, which a picture of it then says nothing
+// about this checkout.
+var codex = Path.Combine(projects, ".codex");
+Directory.CreateDirectory(codex);
+foreach (var file in Directory.EnumerateFiles(AppContext.BaseDirectory, "fake-codex.*"))
+{
+    File.Copy(file, Path.Combine(codex, Path.GetFileName(file)), overwrite: true);
+}
 var usage = Path.Combine(folder, "usage.json");
 var written = await DemoHome.WriteAsync(folder, projects, now, new DemoOptions
 {
     ClaudePath = Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "fake-claude.exe" : "fake-claude"),
+    CodexPath = Path.Combine(codex, OperatingSystem.IsWindows() ? "fake-codex.exe" : "fake-codex"),
     Theme = theme,
     Style = style,
     Still = still,
@@ -121,6 +132,8 @@ Console.WriteLine($"""
       CLAUDE_CONFIG_DIR={config}
       FAKE_CLAUDE_USAGE={usage}
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      CODEX_HOME={written.CodexHome}
+      FAKE_CODEX_USAGE=demo
     """);
 return 0;
 

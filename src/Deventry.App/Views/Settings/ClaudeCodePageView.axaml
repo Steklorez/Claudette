@@ -6,7 +6,74 @@
              xmlns:c="using:Deventry.App.Controls"
              x:Class="Deventry.App.Views.Settings.ClaudeCodePageView" ClipToBounds="False"
              x:DataType="settings:ClaudeCodePage">
-  <!-- Claude Code (DESIGN.md §14) -->
+  <!-- Claude Code (DESIGN.md §14), with the accounts its tabs run under (DESIGN.md §4, "Accounts") -->
+  <UserControl.DataTemplates>
+    <!-- A cloud provider account's settings: adding one, with its key, or changing one's, without -->
+    <DataTemplate DataType="settings:CloudAccountForm">
+      <StackPanel Spacing="8">
+        <c:SettingRow Title="Sign in with" Padding="8,4" IsVisible="{Binding CanChooseSignIn}">
+          <ComboBox ItemsSource="{Binding SignIns}" SelectedItem="{Binding SignIn}" MinWidth="220" AutomationProperties.Name="How the account signs in" />
+        </c:SettingRow>
+        <c:SettingRow Title="Signs in with" Padding="8,4" IsVisible="{Binding !IsNew}">
+          <TextBlock Text="{Binding SignInText}" VerticalAlignment="Center" />
+        </c:SettingRow>
+        <c:SettingRow Title="{Binding ResourceLabel}" Padding="8,4" IsVisible="{Binding HasResource}">
+          <TextBox Text="{Binding Resource}" PlaceholderText="{Binding ResourceExample}" AutomationProperties.Name="{Binding ResourceLabel}" />
+        </c:SettingRow>
+        <c:SettingRow Title="{Binding ProjectLabel}" Padding="8,4" IsVisible="{Binding HasProject}">
+          <TextBox Text="{Binding Project}" PlaceholderText="{Binding ProjectExample}" AutomationProperties.Name="{Binding ProjectLabel}" />
+        </c:SettingRow>
+        <c:SettingRow Title="{Binding WorkspaceLabel}" Padding="8,4" IsVisible="{Binding HasWorkspace}">
+          <TextBox Text="{Binding Workspace}" PlaceholderText="{Binding WorkspaceExample}" AutomationProperties.Name="{Binding WorkspaceLabel}" />
+        </c:SettingRow>
+        <c:SettingRow Title="{Binding RegionLabel}" Padding="8,4" IsVisible="{Binding HasRegion}">
+          <TextBox Text="{Binding Region}" PlaceholderText="{Binding RegionExample}" AutomationProperties.Name="{Binding RegionLabel}" />
+        </c:SettingRow>
+        <c:SettingRow Title="AWS profile (optional)" Padding="8,4" IsVisible="{Binding IsProfile}">
+          <TextBox Text="{Binding Profile}" PlaceholderText="the default credential chain" AutomationProperties.Name="AWS profile" />
+        </c:SettingRow>
+        <c:SettingRow Title="Key file" Padding="8,4" IsVisible="{Binding IsKeyFile}">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Text="{Binding KeyFile}" PlaceholderText="service-account.json" AutomationProperties.Name="Service account key file" />
+            <Button Grid.Column="1" Content="Browse…" Command="{Binding BrowseKeyFileCommand}" />
+          </Grid>
+        </c:SettingRow>
+        <c:SettingRow Title="{Binding KeyName}" Padding="8,4" IsVisible="{Binding AsksApiKey}">
+          <TextBox Text="{Binding ApiKey}" PasswordChar="•" AutomationProperties.Name="{Binding KeyName}" />
+        </c:SettingRow>
+        <!-- A key that can only reach Claude Code in its environment: what that exposes it to, and the box that says the user read it -->
+        <Border Classes="settingsnote caution" IsVisible="{Binding ExposesKey}">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding ExposureWarning}" />
+            <CheckBox IsChecked="{Binding AcceptsExposure}" IsVisible="{Binding AsksApiKey}"
+                      AutomationProperties.Name="I understand that the commands Claude runs can read this key">
+              <TextBlock TextWrapping="Wrap" Text="I understand that the commands Claude runs in this account's tabs can read this key" />
+            </CheckBox>
+          </StackPanel>
+        </Border>
+        <TextBlock Classes="small muted" TextWrapping="Wrap" Text="{Binding SignInNote}" Margin="8,0" />
+        <CheckBox IsChecked="{Binding RefreshSignIn}" IsVisible="{Binding CanRefreshSignIn}" Margin="8,0"
+                  AutomationProperties.Name="Sign in again when the credentials expire">
+          <TextBlock TextWrapping="Wrap" Text="{Binding RefreshText}" />
+        </CheckBox>
+        <!-- Which model each of Claude Code's model choices uses on the provider -->
+        <TextBlock Classes="small muted" TextWrapping="Wrap" Text="{Binding ModelsNote}" Margin="8,4,8,0" />
+        <c:SettingRow Title="Opus (optional)" Padding="8,4">
+          <TextBox Text="{Binding OpusModel}" PlaceholderText="{Binding ModelPlaceholder}" AutomationProperties.Name="Opus model" />
+        </c:SettingRow>
+        <c:SettingRow Title="Sonnet (optional)" Padding="8,4">
+          <TextBox Text="{Binding SonnetModel}" PlaceholderText="{Binding ModelPlaceholder}" AutomationProperties.Name="Sonnet model" />
+        </c:SettingRow>
+        <c:SettingRow Title="Haiku (optional)" Padding="8,4">
+          <TextBox Text="{Binding HaikuModel}" PlaceholderText="{Binding ModelPlaceholder}" AutomationProperties.Name="Haiku model" />
+        </c:SettingRow>
+        <c:SettingRow Title="Fable (optional)" Padding="8,4">
+          <TextBox Text="{Binding FableModel}" PlaceholderText="{Binding ModelPlaceholder}" AutomationProperties.Name="Fable model" />
+        </c:SettingRow>
+        <Button Classes="settingslink" Content="{Binding DocsText}" Command="{Binding OpenDocsCommand}" ToolTip.Tip="{Binding Provider.DocsUrl}" HorizontalAlignment="Left" />
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.DataTemplates>
   <StackPanel Spacing="32">
     <c:SettingsSection Key="installed">
       <!-- Version, install method and updates, from claude doctor (DESIGN.md §12) -->
@@ -73,10 +140,11 @@
       </c:SettingRow>
     </c:SettingsSection>
 
-    <!-- The account, with Sign in / Sign out (DESIGN.md §11, §14) -->
-    <c:SettingsSection Key="account">
-      <c:SettingRow Key="claudeCode.account" Title="{Binding AccountText, StringFormat='Signed in as {0}'}" IsVisible="{Binding !HasAccount}" />
-      <c:SettingRow Key="claudeCode.account" Title="{Binding Account.SettingsText, FallbackValue=''}" IsVisible="{Binding HasAccount}">
+    <!-- The accounts: Default, Claude Code's own sign-in, with Sign in / Sign out (DESIGN.md §11, §14), then the others
+         (DESIGN.md §4, "Accounts"), and which one new folders use -->
+    <c:SettingsSection Key="accounts">
+      <c:SettingRow Key="claudeCode.account" Description="{Binding AccountText, StringFormat='Signed in as {0}'}" IsVisible="{Binding !HasAccount}" />
+      <c:SettingRow Key="claudeCode.account" Description="{Binding Account.SettingsText, FallbackValue=''}" IsVisible="{Binding HasAccount}">
         <StackPanel Orientation="Horizontal" Spacing="8" DataContext="{Binding Account}" x:DataType="vm:AccountViewModel">
           <Button Content="Sign out…" Command="{Binding SignOutCommand}" IsVisible="{Binding IsSignedIn}" />
           <Button Classes="accent" Content="Sign in" Command="{Binding BeginSignInCommand}" IsVisible="{Binding CanBeginSignIn}" />
@@ -99,6 +167,127 @@
             <ContentControl Content="{Binding SignIn}" IsVisible="{Binding HasSignIn}" HorizontalAlignment="Left" />
           </StackPanel>
         </c:SettingRow.Details>
+      </c:SettingRow>
+      <!-- The accounts besides Default, each in a box of its own -->
+      <c:SettingRow Key="state.accounts" Title="" IsVisible="{Binding HasAccounts}" IsStacked="True">
+        <ItemsControl ItemsSource="{Binding Editors}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="10" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="settings:AccountEditor">
+              <Border Classes="settingsnote">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="Auto,*,150,Auto" ColumnSpacing="8">
+                    <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Account name" />
+                    <ComboBox Grid.Column="2" HorizontalAlignment="Stretch" ItemsSource="{x:Static settings:AccountEditor.Colors}" SelectedItem="{Binding Color}"
+                              AutomationProperties.Name="Tag color">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="vm:NamedColor">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Ellipse Width="10" Height="10" VerticalAlignment="Center">
+                              <Ellipse.Fill>
+                                <SolidColorBrush Color="{Binding Color}" />
+                              </Ellipse.Fill>
+                            </Ellipse>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Column="3" Classes="muted small" Text="{Binding KindText}" VerticalAlignment="Center" />
+                  </Grid>
+                  <c:SettingRow Title="Warn when today's estimated spend passes ($)" Padding="8,4">
+                    <NumericUpDown Minimum="0" Increment="5" FormatString="0.##" Value="{Binding DailySpendAlert}" Width="140"
+                                   AutomationProperties.Name="Daily spend warning in dollars" />
+                  </c:SettingRow>
+                  <c:SettingRow Title="Warn when this month's estimated spend passes ($)" Padding="8,4">
+                    <NumericUpDown Minimum="0" Increment="10" FormatString="0.##" Value="{Binding MonthlySpendAlert}" Width="140"
+                                   AutomationProperties.Name="Monthly spend warning in dollars" />
+                  </c:SettingRow>
+                  <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !IsChangingKey}">
+                    <Button Content="Change settings…" Command="{Binding EditDetailsCommand}" IsVisible="{Binding IsCloud}" IsEnabled="{Binding !IsEditingDetails}" />
+                    <Button Content="Change key…" Command="{Binding ChangeKeyCommand}" IsVisible="{Binding HasKey}" />
+                    <Button Content="Remove…" Command="{Binding Removal.AskCommand}" IsEnabled="{Binding CanRemove}"
+                            ToolTip.Tip="{Binding RemoveTip}" ToolTip.ShowOnDisabled="True" />
+                  </StackPanel>
+                  <!-- A cloud account's settings, changed in place -->
+                  <StackPanel Spacing="8" IsVisible="{Binding IsEditingDetails}">
+                    <ContentControl Content="{Binding Details}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button Classes="accent" Content="Save changes" Command="{Binding SaveDetailsCommand}" />
+                      <Button Content="Cancel" Command="{Binding CancelDetailsCommand}" />
+                    </StackPanel>
+                  </StackPanel>
+                  <StackPanel Spacing="8" IsVisible="{Binding IsChangingKey}">
+                    <Border Classes="settingsnote caution" IsVisible="{Binding ExposesKey}">
+                      <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding KeyExposureNote}" />
+                    </Border>
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                      <TextBox Text="{Binding NewKey}" PasswordChar="•" PlaceholderText="{Binding KeyPlaceholder}" AutomationProperties.Name="New key" />
+                      <Button Grid.Column="1" Classes="accent" Content="Save key" Command="{Binding SaveKeyCommand}" />
+                      <Button Grid.Column="2" Content="Cancel" Command="{Binding CancelKeyCommand}" />
+                    </Grid>
+                  </StackPanel>
+                  <StackPanel Spacing="8" IsVisible="{Binding Removal.IsOpen}">
+                    <TextBlock TextWrapping="Wrap" Text="{Binding RemoveTip}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button Classes="accent" Content="Remove" Command="{Binding Removal.ConfirmCommand}" />
+                      <Button Content="Cancel" Command="{Binding Removal.CancelCommand}" />
+                    </StackPanel>
+                  </StackPanel>
+                  <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding Status}" IsVisible="{Binding Status, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </c:SettingRow>
+      <c:SettingRow Key="state.newFolderAccount">
+        <ComboBox ItemsSource="{Binding NewFolderChoices}" SelectedItem="{Binding NewFolderAccount}" />
+      </c:SettingRow>
+      <c:SettingRow Key="accounts.warnBeforeOtherAccount">
+        <ToggleSwitch IsChecked="{Binding WarnBeforeOtherAccount}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- Adding one: a key goes to the OS credential store, and for some providers to their tabs' environment -->
+    <c:SettingsSection Key="addAccount" Description="{Binding KeyNote}">
+      <c:SettingRow Key="state.addAccount" Title="" IsStacked="True">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="small warning" TextWrapping="Wrap" Text="{Binding CredentialStoreUnavailableText}" IsVisible="{Binding !IsCredentialStoreAvailable}" />
+          <c:SettingRow Title="Name" Padding="8,4">
+            <TextBox Text="{Binding NewName}" PlaceholderText="for example: Work" AutomationProperties.Name="New account's name" />
+          </c:SettingRow>
+          <c:SettingRow Title="Kind" Padding="8,4">
+            <ComboBox ItemsSource="{Binding KindChoices}" SelectedItem="{Binding NewKind}" MinWidth="220" AutomationProperties.Name="New account's kind" />
+          </c:SettingRow>
+          <StackPanel Spacing="8" IsVisible="{Binding IsNewApiKey}">
+            <c:SettingRow Title="API key" Padding="8,4">
+              <TextBox Text="{Binding NewKey}" PasswordChar="•" PlaceholderText="sk-ant-…" AutomationProperties.Name="New account's API key" />
+            </c:SettingRow>
+            <TextBlock Classes="small muted" TextWrapping="Wrap" Text="{Binding ApiKeyNote}" Margin="8,0" />
+          </StackPanel>
+          <ContentControl Content="{Binding NewCloud}" IsVisible="{Binding !IsNewApiKey}" />
+          <Button Classes="accent" Content="Add account" Command="{Binding AddCommand}" IsEnabled="{Binding CanAdd}" HorizontalAlignment="Left" />
+          <TextBlock Classes="small" TextWrapping="Wrap" Text="{Binding AddStatus}" IsVisible="{Binding AddStatus, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- What a new Claude Code tab starts with, which its Tab settings… can change (DESIGN.md §14, "Per-tab overrides") -->
+    <c:SettingsSection Key="newTabs">
+      <c:SettingRow Key="newTabs.defaultModel">
+        <ComboBox ItemsSource="{Binding ModelChoices}" SelectedItem="{Binding DefaultModel}" />
+      </c:SettingRow>
+      <c:SettingRow Key="newTabs.defaultEffort">
+        <ComboBox ItemsSource="{Binding EffortChoices}" SelectedItem="{Binding DefaultEffort}" />
+      </c:SettingRow>
+      <c:SettingRow Key="newTabs.defaultPermissionMode">
+        <ComboBox ItemsSource="{Binding ModeChoices}" SelectedItem="{Binding DefaultMode}" />
       </c:SettingRow>
     </c:SettingsSection>
 
@@ -126,6 +315,10 @@
       <c:SettingRow Key="claudeCode.fallbackModel">
         <ComboBox ItemsSource="{Binding FallbackModelChoices}" SelectedItem="{Binding FallbackModel}" />
       </c:SettingRow>
+      <c:SettingRow Key="advanced.extraArguments" IsStacked="True">
+        <TextBox Classes="mono" Text="{Binding ExtraArguments, UpdateSourceTrigger=LostFocus}" PlaceholderText="for example --add-dir ../shared"
+                 AutomationProperties.Name="Extra arguments for every claude process" />
+      </c:SettingRow>
     </c:SettingsSection>
 
     <!-- The Claude app, Remote Control (DESIGN.md §18): each tab has its own switch; this is what new tabs start with -->
@@ -139,6 +332,38 @@
       <c:SettingRow Key="claudeCode.pushNotifications">
         <Button Classes="settingslink" Content="How to set them up" Command="{Binding OpenPushNotificationsDocsCommand}"
                 ToolTip.Tip="{x:Static settings:ClaudeCodePage.PushNotificationsDocs}" />
+      </c:SettingRow>
+    </c:SettingsSection>
+
+    <!-- What an organization has turned off for an account (DESIGN.md §18, "Remote Control"), each a rule to remove -->
+    <c:SettingsSection Key="organizationRules">
+      <c:SettingRow Key="state.organizationRules" Title="" IsStacked="True">
+        <StackPanel Spacing="10">
+          <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding NoOrganizationRulesText}" IsVisible="{Binding !HasOrganizationRules}" />
+          <ItemsControl ItemsSource="{Binding OrganizationRules}" IsVisible="{Binding HasOrganizationRules}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="10" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="settings:OrganizationRuleRow">
+                <Border Classes="settingsnote">
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <StackPanel Spacing="2">
+                      <TextBlock Text="{Binding Feature}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                      <TextBlock Text="{Binding Account}" TextWrapping="Wrap" />
+                      <TextBlock Classes="small" Text="{Binding Reason}" TextWrapping="Wrap" />
+                      <TextBlock Classes="small muted" Text="{Binding Since}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Remove" Command="{Binding RemoveCommand}" VerticalAlignment="Top"
+                            AutomationProperties.Name="Remove this rule" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </c:SettingRow>
     </c:SettingsSection>
   </StackPanel>

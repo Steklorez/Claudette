@@ -26,6 +26,7 @@ public class SettingsWindowTests
     [InlineData("Tabs")]
     [InlineData("Appearance")]
     [InlineData("Sessions")]
+    [InlineData("All agents")]
     public async Task A_page_shows_its_sections_and_settings(string category)
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
@@ -271,7 +272,7 @@ public class SettingsWindowTests
     public async Task A_text_setting_takes_effect_when_the_box_loses_focus_not_on_each_keystroke()
     {
         await using var h = new TabTestHarness(dispatcher: new AvaloniaUiDispatcher());
-        var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = "Advanced" };
+        var settings = new SettingsViewModel(h.Services, null) { SelectedCategory = SettingsCategory.ClaudeCode };
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
         UiText.Settle(window);
@@ -287,7 +288,7 @@ public class SettingsWindowTests
         window.GetVisualDescendants().OfType<TextBox>().First(t => t.PlaceholderText == "Search settings").Focus();
         UiText.Settle(window);
         Assert.Equal(1, changes);
-        Assert.Equal("--verbose", settings.Advanced.ExtraArguments);
+        Assert.Equal("--verbose", settings.ClaudeCode.ExtraArguments);
     }
 
     /// <summary>

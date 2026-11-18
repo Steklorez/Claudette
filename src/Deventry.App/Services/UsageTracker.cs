@@ -86,6 +86,41 @@ public sealed class UsageTracker : IAsyncDisposable
     /// <summary>The latest plan usage. Only read on the UI thread.</summary>
     public UsageSnapshot? Current { get; private set; }
 
+    /// <summary>
+    /// Codex's plan usage, as its tabs report it (DESIGN.md §18, "The usage header"); null until one has. Only read on the
+    /// UI thread. Codex sends it with each turn, so nothing polls for it.
+    /// </summary>
+    public UsageSnapshot? CodexCurrent { get; private set; }
+
+    /// <summary>Codex's session readings since its window began, for the header's sparkline and projection. Kept in memory.</summary>
+    public IReadOnlyList<UsagePoint> CodexHistory => _codexHistory;
+
+    private readonly List<UsagePoint> _codexHistory = [];
+
+    /// <summary>Raised on the UI thread when Codex's plan usage changes.</summary>
+    public event Action<UsageSnapshot>? CodexUpdated;
+
+    /// <summary>A Codex tab reported its account's rate limits (<c>account/rateLimits/updated</c>). On the UI thread.</summary>
+    public void OnCodexRateLimits(System.Text.Json.Nodes.JsonObject rateLimits)
+    {
+        var now = _services.Time.GetUtcNow();
+        if (CodexUsage.From(rateLimits, now) is not { } snapshot)
+        {
+            return;
+        }
+        if (snapshot.Session is { } session)
+        {
+            // A new window starts the history again.
+            if (CodexCurrent?.Session is { ResetsAt: { } before } && session.ResetsAt is { } after && after - before > TimeSpan.FromMinutes(1))
+            {
+                _codexHistory.Clear();
+            }
+            _codexHistory.Add(new UsagePoint(now, session.Percent));
+        }
+        CodexCurrent = snapshot;
+        CodexUpdated?.Invoke(snapshot);
+    }
+
     /// <summary>False when <c>get_usage</c> doesn't work and the <c>/usage</c> fallback is off: no model-specific meters.</summary>
     public bool ModelLimitsAvailable => _poller.ModelLimitsAvailable;
 

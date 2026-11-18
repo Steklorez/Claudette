@@ -1,21 +1,19 @@
+using Deventry.Core.Accounts;
 using Deventry.Core.Installation;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Deventry.App.ViewModels.Settings;
 
 /// <summary>
-/// Settings → Claude Code (DESIGN.md §14): the installed version and its updates, the path to it, the account, how a
-/// session starts (its name, folder trust, the login shell's environment, checkpoints, the task list, the fallback model),
-/// and the Claude app. Dispose it with the window.
+/// Settings → Agents → Claude Code (DESIGN.md §14): the installed version and its updates, the path to it, the accounts
+/// its tabs run under (<c>ClaudeCodePage.Accounts.cs</c>), what a new Claude Code tab starts with
+/// (<c>ClaudeCodePage.NewTabs.cs</c>), how a session starts (its name, folder trust, the login shell's environment,
+/// checkpoints, the task list, the fallback model, extra arguments), and the Claude app. Dispose it with the window.
 /// </summary>
 public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
 {
-    private readonly TabsPage _tabs;
-
-    /// <param name="tabs">Tabs, whose model list <b>Fallback model</b> offers too.</param>
-    public ClaudeCodePage(SettingsContext context, string? accountText, ClaudeUpdateViewModel? updates, TabsPage tabs) : base(context, SettingsCategory.ClaudeCode)
+    public ClaudeCodePage(SettingsContext context, string? accountText, ClaudeUpdateViewModel? updates) : base(context, SettingsCategory.ClaudeCode)
     {
-        _tabs = tabs;
         AccountText = accountText ?? "Not signed in";
         Updates = updates;
         Section("installed", "Claude Code",
@@ -26,10 +24,41 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
             Setting("claudeCode.claudePath", "Path to claude", s => s.ClaudeCode.ClaudePath, (s, v) => s.ClaudeCode.ClaudePath = v,
                 "Empty finds Claude Code by itself. A change takes effect the next time Deventry starts.", keywords: ["executable", "binary", "location"]),
         ]);
-        Section("account", "Account",
+        Editors = [.. Accounts.All.Select(NewEditor)];
+        KindChoices = [new AccountKindChoice("Anthropic API key", null), .. CloudProviders.All.Select(p => new AccountKindChoice(p.Name, p))];
+        NewKind = KindChoices[0];
+        NewFolderChoices = AccountChoice.All(Accounts, Accounts.NewFolderAccount);
+        Section("accounts", "Accounts",
         [
-            Info("claudeCode.account", "Signed-in account", keywords: ["sign in", "sign out", "login", "logout", "email", "plan"]),
+            Info("claudeCode.account", "Default", "Your own sign-in to Claude Code.",
+                keywords: ["signed-in account", "default account", "sign in", "sign out", "login", "logout", "email", "plan"]),
+            Info("state.accounts", "Your accounts", keywords: ["spend warning", "change key", "remove account", "tag color", "estimated spend", "region", "model pins"]),
+            // The accounts themselves are the user's, like Perforce's per-folder overrides: only this goes back to Default.
+            Setting("state.newFolderAccount", "New folders use", () => Accounts.NewFolderAccount is null, () => Accounts.NewFolderAccount = null,
+                "Which account a folder opened for the first time runs under.", keywords: ["default account", "api key"]),
+            Setting("accounts.warnBeforeOtherAccount", "Warn before continuing a session under another account", s => s.Accounts.WarnBeforeOtherAccount,
+                (s, v) => s.Accounts.WarnBeforeOtherAccount = v,
+                "Ask first when a session started under one account is about to carry on under another.",
+                "Claude Code sends the whole earlier conversation with its requests, so it goes to the account the session continues under, and that account's organization may be able to see it. Claude can't use its earlier thinking from another organization, so its replies may be slower and use more tokens. It can only warn about sessions Deventry saw begin.",
+                ["other account", "organization", "work account", "personal account", "resume", "privacy"]),
+        ], description: "Tabs run under Default, your own sign-in, unless their folder group's Account menu, or the tab's own, picks another.");
+        Section("addAccount", "Add an account",
+        [
+            Info("state.addAccount", "Add an account",
+                keywords: ["new account", "api key account", "console", "cloud provider", "amazon bedrock", "aws", "claude platform on aws", "google cloud", "vertex ai",
+                    "agent platform", "microsoft foundry", "azure", "third-party"]),
         ]);
+        Section("newTabs", "New Claude Code tabs",
+        [
+            Setting("newTabs.defaultModel", "Model", s => s.NewTabs.DefaultModel, (s, v) => s.NewTabs.DefaultModel = v,
+                keywords: ["default model", "opus", "sonnet", "haiku"], overrideKey: TabOverrideKeys.Model),
+            Setting("newTabs.defaultEffort", "Effort", s => s.NewTabs.DefaultEffort, (s, v) => s.NewTabs.DefaultEffort = v,
+                "How hard the model thinks before it answers.", keywords: ["default effort", "thinking"], overrideKey: TabOverrideKeys.Effort),
+            Setting("newTabs.defaultPermissionMode", "Permission mode", s => s.NewTabs.DefaultPermissionMode, (s, v) => s.NewTabs.DefaultPermissionMode = v,
+                "What Claude may do without asking first.",
+                "Claude Code's default is what your settings and your organization's make it, usually Auto. A project's own settings can still change it for its tabs.",
+                ["default permission mode", "auto", "plan", "accept edits", "bypass"], TabOverrideKeys.PermissionMode),
+        ], description: "Each tab can change these for itself, from Tab settings… in its menu.");
         Section("sessions", "Starting a session",
         [
             Setting("general.renameInClaudeCode", "Name each tab's session in Claude Code after the tab", s => s.General.RenameInClaudeCode, (s, v) => s.General.RenameInClaudeCode = v,
@@ -59,6 +88,8 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
                 "Each summary is a small extra model call, which counts toward your usage.", ["agents", "agent map"]),
             Setting("claudeCode.fallbackModel", "Fallback model", s => s.ClaudeCode.FallbackModel, (s, v) => s.ClaudeCode.FallbackModel = v,
                 "When a tab's model is overloaded, Claude Code switches to this one rather than wait.", keywords: ["overloaded", "529"]),
+            Setting("advanced.extraArguments", "Extra arguments for every claude process", s => s.Advanced.ExtraArguments, (s, v) => s.Advanced.ExtraArguments = v,
+                "Split on spaces and added after Deventry's own.", keywords: ["command line", "flags", "cli"]),
         ], description: "These apply to tabs started after a change.");
         Section("claudeApp", "Claude app",
         [
@@ -72,21 +103,33 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
                 "Push when actions required sends one when a tab needs an answer; Push when Claude decides adds the ones Claude chooses to send.",
                 ["mobile", "remote control"]),
         ], description: "Remote Control: a tab here, continued from the Claude app.");
+        Section("organizationRules", "What an organization has turned off",
+        [
+            Info("state.organizationRules", "Turned off for an account", keywords: ["remote control", "claude app", "policy", "organization", "admin", "rule", "disabled", "remove"]),
+        ], description: "When an account's organization turns a feature off, Deventry stops trying it for that account. Remove a rule if that has changed.");
+        OrganizationRules = [.. RemoteControl.Rules.Select(r => new OrganizationRuleRow(RemoteControl, r))];
+        Accounts.Changed += OnAccountsChanged;
+        RemoteControl.RulesChanged += OnRulesChanged;
         // Signing in from this window can make the Claude app available, or not (DESIGN.md §18).
-        Services.RemoteControl.AvailabilityChanged += OnRemoteControlAvailabilityChanged;
+        RemoteControl.AvailabilityChanged += OnRemoteControlAvailabilityChanged;
     }
 
-    public void Dispose() => Services.RemoteControl.AvailabilityChanged -= OnRemoteControlAvailabilityChanged;
+    public void Dispose()
+    {
+        Accounts.Changed -= OnAccountsChanged;
+        RemoteControl.RulesChanged -= OnRulesChanged;
+        RemoteControl.AvailabilityChanged -= OnRemoteControlAvailabilityChanged;
+    }
 
     public override string IconKey => "IconCardClaude";
 
-    public override string Description => "The Claude Code Deventry runs, your account, and how each session starts.";
+    public override string Description => "The Claude Code Deventry runs, the accounts its tabs run under, and how each session starts.";
 
     // ---- The installed version and the account ----------------------------------------------------------------------
 
     public string AccountText { get; }
 
-    /// <summary>The account, with <b>Sign in</b> and <b>Sign out</b> wired to the header's (DESIGN.md §11). Null in some tests.</summary>
+    /// <summary>Default's sign-in, with <b>Sign in</b> and <b>Sign out</b> wired to the header's (DESIGN.md §11). Null in some tests.</summary>
     public AccountViewModel? Account { get; internal set; }
 
     public bool HasAccount => Account is not null;
@@ -134,9 +177,9 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
         set => Set(value, v => Settings.General.RenameInClaudeCode = v);
     }
 
-    /// <summary><b>Fallback model</b>: none, or one of the models Tabs offers.</summary>
+    /// <summary><b>Fallback model</b>: none, or one of the models a new tab can start with.</summary>
     public IReadOnlyList<Choice> FallbackModelChoices => field ??=
-        [new(null, "None"), .. _tabs.ModelChoices.Where(c => c.Value is not null)];
+        [new(null, "None"), .. ModelChoices.Where(c => c.Value is not null)];
 
     public Choice FallbackModel
     {
@@ -171,6 +214,12 @@ public sealed partial class ClaudeCodePage : SettingsPage, IDisposable
     {
         get => Settings.ClaudeCode.AskBeforeUsingFolderSettings;
         set => Set(value, v => Settings.ClaudeCode.AskBeforeUsingFolderSettings = v);
+    }
+
+    public string ExtraArguments
+    {
+        get => Settings.Advanced.ExtraArguments;
+        set => Set(value, v => Settings.Advanced.ExtraArguments = v ?? "");
     }
 
     /// <summary>

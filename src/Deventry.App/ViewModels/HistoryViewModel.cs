@@ -14,6 +14,9 @@ public sealed class HistoryEntry
 {
     public required string SessionId { get; init; }
 
+    /// <summary>The agent the session ran; null for Claude Code (DESIGN.md §18, "Codex, a second agent").</summary>
+    public string? Agent { get; init; }
+
     public required string Title { get; init; }
 
     public string? FirstPrompt { get; init; }

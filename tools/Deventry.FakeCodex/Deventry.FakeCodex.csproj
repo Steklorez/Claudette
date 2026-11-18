@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>fake-codex</AssemblyName>
+    <RootNamespace>Deventry.FakeCodex</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

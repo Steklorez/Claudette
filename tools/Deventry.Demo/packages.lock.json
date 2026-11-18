@@ -59,6 +59,9 @@
       "fake-claude": {
         "type": "Project"
       },
+      "fake-codex": {
+        "type": "Project"
+      },
       "Microsoft.Data.Sqlite": {
         "type": "CentralTransitive",
         "requested": "[10.0.14, )",

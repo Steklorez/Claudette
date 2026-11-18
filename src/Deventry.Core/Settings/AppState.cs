@@ -55,6 +55,12 @@ public sealed class AppState
     public Dictionary<string, string> FolderAccounts { get; set; } = [];
 
     /// <summary>
+    /// The agent each folder's last new tab used (<see cref="Agents.AgentKinds"/>), which its next one starts with
+    /// (DESIGN.md §18, "A tab's agent"). A folder that isn't here starts Claude Code.
+    /// </summary>
+    public Dictionary<string, string> FolderAgents { get; set; } = [];
+
+    /// <summary>
     /// The time each timed message was last sent or skipped for, by its id (DESIGN.md §18, "Timed messages"), so a
     /// restart never sends one twice for the same time.
     /// </summary>
@@ -279,7 +285,7 @@ public sealed class AppState
 
     /// <summary>
     /// What accounts' organizations have turned off, which Deventry stopped trying (DESIGN.md §18, "Remote Control";
-    /// Settings → Accounts lists them with a way to remove each). Per machine: it doesn't sync.
+    /// Settings → Claude Code → Accounts lists them with a way to remove each). Per machine: it doesn't sync.
     /// </summary>
     public List<OrganizationRule> OrganizationRules { get; set; } = [];
 
@@ -362,6 +368,12 @@ public sealed class TabState
     /// takes its group's; <b>Account ▸</b> in the tab's menu switches it.
     /// </summary>
     public string? AccountId { get; set; }
+
+    /// <summary>
+    /// The agent the tab runs (<see cref="Agents.AgentKinds"/>; DESIGN.md §18, "Codex, a second agent"); null for Claude
+    /// Code. A tab keeps its agent: a session can't move between them.
+    /// </summary>
+    public string? Agent { get; set; }
 
     /// <summary>
     /// The icon the user marked the tab with (DESIGN.md §4, "Marks"), as <see cref="TabMarks.Key"/> writes it; null for

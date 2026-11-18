@@ -15,7 +15,7 @@ public sealed record Choice(string? Value, string Label)
 }
 
 /// <summary>
-/// "Tab settings…": settings for one tab that replace the defaults from Settings → Tabs (DESIGN.md §14, "Per-tab
+/// "Tab settings…": settings for one tab that replace the defaults from Settings (DESIGN.md §14, "Per-tab
 /// overrides"), and the tab's own switches. Each change applies as it's made, as in Settings, and each section has
 /// <b>Use defaults</b>. The extra folders apply when it closes, since Claude Code starts again to use them. The folder's
 /// custom project actions are in Settings, on the tab's Actions page, which a button here opens.

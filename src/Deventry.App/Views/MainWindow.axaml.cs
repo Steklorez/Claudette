@@ -247,6 +247,7 @@ public partial class MainWindow : Window
             tracker.TurnRecorded -= OnTurnRecorded;
             tracker.SamplesImported -= panel.Refresh;
             tracker.TurnsImported -= OnTurnsImported;
+            panel.Dispose();
             _usageWindow = null;
         };
         _usageWindow.Show(this);

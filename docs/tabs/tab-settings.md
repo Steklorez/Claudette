@@ -23,10 +23,10 @@ Each one starts at **Default**, which says what the default is, such as *Default
 
 | Section | Setting | Choices | The default comes from |
 |---|---|---|---|
-| **Model and mode** | **Model** | Default, or a model | Settings → Tabs → New tabs start with → **Model** |
-| | **Effort** | Default, or an effort level | Settings → Tabs → New tabs start with → **Effort** |
-| | **Permission mode** | Default, or a mode | Settings → Tabs → New tabs start with → **Permission mode** |
-| | **Subagents** | Default, **Claude decides**, **Discourage them**, **Don't allow them** | Settings → Tabs → **Subagents** |
+| **Model and mode** | **Model** | Default, or a model | Settings → Claude Code → New Claude Code tabs → **Model** |
+| | **Effort** | Default, or an effort level | Settings → Claude Code → New Claude Code tabs → **Effort** |
+| | **Permission mode** | Default, or a mode | Settings → Claude Code → New Claude Code tabs → **Permission mode** |
+| | **Subagents** | Default, **The agent decides**, **Discourage them**, **Don't allow them** | Settings → Agents → All agents → **Subagents** |
 | **At a usage limit** | **Continue tasks when a usage limit resets** | Default, **On**, **Off** | Settings → Tabs → At a usage limit → **Continue tasks when a usage limit resets** |
 | | **Use usage credits** | Default, **On**, **Off** | Settings → Tabs → At a usage limit → **Use usage credits once a limit is used up** |
 | **Process monitor** | **Show the process monitor** | Default, **On**, **Off** | Settings → Tabs → Process monitor → **Show the process monitor** |

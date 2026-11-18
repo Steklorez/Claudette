@@ -10,5 +10,7 @@
     <ProjectReference Include="..\..\src\Deventry.Usage\Deventry.Usage.csproj" />
     <!-- Built next to the tool: the demo's Claude Code, so trying it needs no account and spends no tokens. -->
     <ProjectReference Include="..\Deventry.FakeClaude\Deventry.FakeClaude.csproj" />
+    <!-- And its Codex, for its Codex tab. -->
+    <ProjectReference Include="..\Deventry.FakeCodex\Deventry.FakeCodex.csproj" />
   </ItemGroup>
 </Project>

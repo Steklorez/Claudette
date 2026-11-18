@@ -8,7 +8,7 @@ using Deventry.App.Views;
 
 namespace Deventry.App.UiTests;
 
-/// <summary>Accounts besides the Default one, rendered: the sidebar's tags and Settings → Accounts (DESIGN.md §4, "Accounts").</summary>
+/// <summary>Accounts besides the Default one, rendered: the sidebar's tags and Settings → Claude Code → Accounts (DESIGN.md §4, "Accounts").</summary>
 public class AccountsUiTests
 {
     [AvaloniaFact]
@@ -45,7 +45,7 @@ public class AccountsUiTests
         h.Services.Accounts.Credentials = new FakeCredentialStore();
         var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
         work.DailySpendAlert = 20;
-        using var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = SettingsCategory.Accounts };
+        using var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = SettingsCategory.ClaudeCode };
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };
         window.Show();
         UiText.Settle(window);
@@ -62,8 +62,8 @@ public class AccountsUiTests
         h.Services.Accounts.Credentials = new FakeCredentialStore();
         await h.Services.Accounts.AddCloudAccountAsync("Render farm", Core.Accounts.CloudProviders.Bedrock,
             new Core.Accounts.CloudAccountSettings { SignIn = Core.Accounts.CloudSignIns.Profile, Region = "us-east-1", Profile = "studio-sso", RefreshSignIn = true }, null);
-        using var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = SettingsCategory.Accounts };
-        var accounts = (ViewModels.Settings.AccountsPage)settings.CurrentPage!;
+        using var settings = new SettingsViewModel(h.Services, "me@example.com") { SelectedCategory = SettingsCategory.ClaudeCode };
+        var accounts = (ViewModels.Settings.ClaudeCodePage)settings.CurrentPage!;
         accounts.NewKind = accounts.KindChoices.Single(c => c.Provider == Core.Accounts.CloudProviders.Foundry);
         accounts.NewCloud!.SignIn = accounts.NewCloud.SignIns.Single(s => s.Value == Core.Accounts.CloudSignIns.ApiKey);
         var window = new SettingsWindow { DataContext = settings, Width = 900, Height = 700 };

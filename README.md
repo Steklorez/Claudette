@@ -2,9 +2,9 @@
 
 > This was made for our own usage, it's not meant for everyone and is opinionated. The core pillar is to minimize token usage by default.
 
-**An agentic development environment (ADE) for your desktop**, formerly Claudette. Deventry is made for [Claude Code](https://code.claude.com/docs) first, with more agents to come, and puts it in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time, so you never have to run `/usage` again. It's light on tokens out of the box: it asks Claude for little on its own, and whatever else would spend them waits for you to turn it on.
+**An agentic development environment (ADE) for your desktop**, formerly Claudette. Deventry is made for [Claude Code](https://code.claude.com/docs) first, with OpenAI's [Codex](https://deventry.app/codex/) beside it, and puts them in a real desktop window: every session in its own tab, every change ready to review, and your plan's usage on screen the whole time, so you never have to run `/usage` again. It's light on tokens out of the box: it asks Claude for little on its own, and whatever else would spend them waits for you to turn it on.
 
-It isn't a reimplementation. Each tab runs the real `claude` CLI, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions, and Deventry draws it as proper native UI instead of a terminal. It runs on Windows, macOS and Linux (from source for now), and every change is built and tested on all three. Built with .NET 10 and Avalonia.
+It isn't a reimplementation. Each tab runs the real `claude` CLI, with your settings, `CLAUDE.md`, MCP servers, hooks and permissions, or the real `codex`, and Deventry draws it as proper native UI instead of a terminal. It runs on Windows, macOS and Linux (from source for now), and every change is built and tested on all three. Built with .NET 10 and Avalonia.
 
 **[deventry.app](https://deventry.app)** · [Download](https://deventry.app/downloads/) · [The user guide](https://deventry.app/guide/) · [Changelog](CHANGELOG.md)
 
@@ -23,6 +23,10 @@ One tab per session, grouped by project, each showing at a glance whether it's b
 The Tasks page follows Claude's plan as it writes it and every task it makes from it. Threads spread one job over several tabs: Claude hands work to the sub-threads with Claude Code's own `SendMessage`, and their results come back in one message. The agent map shows subagents as a tree while they fan out. [Plans, tasks and agents →](https://deventry.app/plans/) · [Threads →](https://deventry.app/threads/)
 
 ![A thread moving a Unity game to the Input System: its two sub-threads under it in the sidebar, the plan it approved (v2, with Changes from v1), its tasks two of seven done with who has each, and the SendMessage calls that handed work to the sub-threads](docs/screenshots/tasks-standard-dark.png)
+
+### Codex beside Claude Code
+
+Open a tab on Codex, signed in with your own ChatGPT account, beside your Claude Code tabs. Its replies, plans, subagents, threads and rewind work as a Claude Code tab's do, the header shows Codex's limits while its tab is selected, and a tab stopped at one agent's limit can offer to carry the work on in the other. [Codex →](https://deventry.app/codex/)
 
 ### Know how fast you're burning your plan
 

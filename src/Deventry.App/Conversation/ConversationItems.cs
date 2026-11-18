@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Deventry.Core;
+using Deventry.Core.Diffs;
 using Deventry.Core.Docs;
 using Deventry.Core.Protocol;
 using Deventry.Core.Sessions;
@@ -233,9 +234,12 @@ public sealed partial class UserMessageItem(string text, string? suffixText = nu
     public bool HasThreadNote => ThreadNote is not null;
 
     /// <summary>The line under a message that carried a note on threads.</summary>
-    public string ThreadNoteText => ThreadNote == Core.Threads.ThreadMessages.NoLongerAThread
-        ? "Told Claude this tab is no longer a thread"
-        : "Told Claude about its sub-threads";
+    public string ThreadNoteText => Core.Threads.ThreadMessages.IsNoLongerAThread(ThreadNote)
+        ? $"Told {AgentName} this tab is no longer a thread"
+        : $"Told {AgentName} about its sub-threads";
+
+    /// <summary>What the line under the message calls the tab's agent: "Claude", "Codex".</summary>
+    public string AgentName { get; init; } = "Claude";
 
     /// <summary>
     /// The note on subagents sent after the message, after the tab's setting for them changed (DESIGN.md §5,
@@ -506,22 +510,34 @@ public partial class ToolUseItem : ConversationItem
 
     public bool IsReadTextCut => !ShowsAllOutput && ReadText is { Length: > ShownOutputLimit };
 
-    public ToolUseItem(string toolUseId, string name, JsonObject input)
+    /// <summary>One of Claude Code's calls, by its tool's name and input.</summary>
+    public ToolUseItem(string toolUseId, string name, JsonObject input) : this(toolUseId, name, input, ClaudeToolCalls.From(name, input))
+    {
+    }
+
+    /// <summary>A call as its agent's session described it (DESIGN.md §18, "Codex, a second agent").</summary>
+    public ToolUseItem(string toolUseId, string name, JsonObject input, ToolCall call)
     {
         ToolUseId = toolUseId;
         Name = name;
+        Call = call;
         // A copy without its parent: the input is a node of the whole message, which it would otherwise keep alive.
         Input = input.Parent is null ? input : input.DeepClone().AsObject();
-        Summary = Summarize(name, input);
-        Command = name == "Bash" ? Str(input, "command") : null;
-        Detail = DetailText(name, input);
-        if (name == "Edit" && Str(input, "old_string") is { } oldText && Str(input, "new_string") is { } newText)
+        Summary = Summarize(call, input);
+        Command = call.Kind == ToolKind.Command ? call.Command : null;
+        Detail = DetailText(call, input);
+        if (call.Kind == ToolKind.Edit && call.OldText is { } oldText && call.NewText is { } newText)
         {
             Diff = DiffView.FromReplacement(oldText, newText);
         }
-        else if (name == "Write" && Str(input, "content") is { } content)
+        else if (call.Kind == ToolKind.Write && call.Content is { } content)
         {
             Diff = DiffView.FromNewFile(content);
+        }
+        else if (call.Hunks is { Length: > 0 } hunks && DiffView.FromStructuredPatch(UnifiedHunks.ToStructuredPatch(hunks)) is { } patched)
+        {
+            Diff = patched;
+            ChangedLine = FirstChangedLine(UnifiedHunks.ToStructuredPatch(hunks));
         }
     }
 
@@ -531,18 +547,19 @@ public partial class ToolUseItem : ConversationItem
 
     public JsonObject Input { get; }
 
+    /// <summary>What the call does, whichever agent made it.</summary>
+    public ToolCall Call { get; }
+
     /// <summary>
-    /// The file a Read, Edit, Write, MultiEdit or NotebookEdit worked on, which its detail's <b>Open</b> opens (DESIGN.md
-    /// §18, "Project files", "Opening files in the editor"); null for other tools.
+    /// The file a read or a change worked on, which its detail's <b>Open</b> opens (DESIGN.md §18, "Project files",
+    /// "Opening files in the editor"); null for other tools.
     /// </summary>
-    public string? FilePath => Name is "Read" or "Edit" or "Write" or "MultiEdit" or "NotebookEdit"
-        ? Str(Input, "file_path") ?? Str(Input, "notebook_path")
-        : null;
+    public string? FilePath => Call.Kind is ToolKind.Read || Call.IsFileChange ? Call.Path : null;
 
     public bool CanOpenFile => FilePath is { Length: > 0 };
 
     /// <summary>The line to open the file at: an edit's first changed line, from its <c>structuredPatch</c>, or where a Read started.</summary>
-    public int? FileLine => ChangedLine ?? (Name == "Read" && ResultInfo is { } read ? read.StartLine : null);
+    public int? FileLine => ChangedLine ?? (Call.Kind == ToolKind.Read && ResultInfo is { } read ? read.StartLine : null);
 
     /// <summary>The first line an Edit or Write changed, from its result's <c>structuredPatch</c>.</summary>
     private int? ChangedLine { get; set; }
@@ -557,14 +574,14 @@ public partial class ToolUseItem : ConversationItem
     {
         get
         {
-            if ((Str(Input, "file_path") ?? Str(Input, "notebook_path")) is not { Length: > 0 } path)
+            if (Call.Path is not { Length: > 0 } path)
             {
                 return Summary;
             }
             var separator = path.Contains('\\') && !path.Contains('/') ? '\\' : '/';
             var parts = path.Split('/', '\\').Where(p => p.Length > 0).ToArray();
             var tail = parts.Length > 2 ? $"…{separator}{parts[^2]}{separator}{parts[^1]}" : path;
-            return Name == "Read" && Input["offset"] is { } offset ? $"{tail} (from line {offset})" : tail;
+            return Call.Kind == ToolKind.Read && Call.FromLine is { } line ? $"{tail} (from line {line})" : tail;
         }
     }
 
@@ -572,29 +589,29 @@ public partial class ToolUseItem : ConversationItem
     public string TileName => Summary.Length > 0 ? $"{Name} {Summary}" : Name;
 
     /// <summary>The summary in full, for its tooltip: a command keeps its line breaks.</summary>
-    public string FullSummary => Name is "Bash" or "PowerShell" && Str(Input, "command") is { } command
+    public string FullSummary => Call.Kind == ToolKind.Command && Call.Command is { } command
         ? command.Trim()
-        : Summarize(Name, Input, int.MaxValue);
+        : Summarize(Call, Input, int.MaxValue);
 
-    public string Icon => Name switch
+    public string Icon => Call.Kind switch
     {
-        "Read" => "▤",
-        "Write" or "Edit" or "NotebookEdit" => "✎",
-        "Bash" => "❯",
-        "Grep" or "Glob" => "⌕",
-        "WebFetch" or "WebSearch" => "◍",
-        "Agent" or "Task" => "◈",
-        "Skill" => "✦",
-        "AskUserQuestion" => "?",
-        "ExitPlanMode" => "☰",
+        ToolKind.Read => "▤",
+        ToolKind.Write or ToolKind.Edit or ToolKind.Delete => "✎",
+        ToolKind.Command => "❯",
+        ToolKind.Search or ToolKind.Find => "⌕",
+        ToolKind.WebFetch or ToolKind.WebSearch => "◍",
+        ToolKind.Agent => "◈",
+        ToolKind.Skill => "✦",
+        ToolKind.Question => "?",
+        ToolKind.Plan => "☰",
         _ => "•",
     };
 
     /// <summary>The card's icon: the key of a vector icon in App.axaml (DESIGN.md §5).</summary>
-    public string IconKey => ToolIcons.KeyFor(Name);
+    public string IconKey => ToolIcons.KeyFor(Call);
 
-    /// <summary>Edit, Write and the other file tools, which can be opened in the diff view (DESIGN.md §5, §8).</summary>
-    public bool IsFileChange => Core.Diffs.ChangedFiles.IsFileTool(Name);
+    /// <summary>A change to a file, which can be opened in the diff view (DESIGN.md §5, §8).</summary>
+    public bool IsFileChange => Call.IsFileChange;
 
     /// <summary>A file change that went through, so there's something to show in the diff view.</summary>
     public bool CanOpenDiff => IsFileChange && IsComplete && !IsError;
@@ -690,11 +707,11 @@ public partial class ToolUseItem : ConversationItem
                 Diff = DiffView.FromStructuredPatch(patch);
                 ChangedLine = FirstChangedLine(patch);
             }
-            else if (Name == "Write" && Str(result, "type") == "create" && Str(result, "content") is { } content)
+            else if (Call.Kind == ToolKind.Write && Str(result, "type") == "create" && Str(result, "content") is { } content)
             {
                 Diff = DiffView.FromNewFile(content);
             }
-            if (Name == "Bash")
+            if (Call.Kind == ToolKind.Command)
             {
                 // Output that's an image (isImage) is a data URL, which shows as the image instead (Images).
                 var stdout = result.GetBool("isImage") == true ? "" : Str(result, "stdout") ?? "";
@@ -707,7 +724,7 @@ public partial class ToolUseItem : ConversationItem
             }
         }
         ResultSummary = HasDiff && !isError ? null : FirstLine(text);
-        if (!HasDiff && Name is not ("Read" or "Agent" or "Task"))
+        if (!HasDiff && Call.Kind is not (ToolKind.Read or ToolKind.Agent))
         {
             Output = text;
         }
@@ -761,21 +778,30 @@ public partial class ToolUseItem : ConversationItem
         return result.GetBool("interrupted") == true ? "Interrupted" : null;
     }
 
-    /// <summary>The most telling input field, such as the file path or command.</summary>
-    public static string Summarize(string name, JsonObject input, int maxLength = 140)
+    /// <summary>The most telling input field of one of Claude Code's calls, such as the file path or command.</summary>
+    public static string Summarize(string name, JsonObject input, int maxLength = 140) => Summarize(ClaudeToolCalls.From(name, input), input, maxLength);
+
+    /// <summary>What a call worked on, from what it does, such as the file path or command.</summary>
+    public static string Summarize(ToolCall call, int maxLength = 140) => Summarize(call, null, maxLength);
+
+    /// <summary>
+    /// What a call worked on: from what it does first (the file, the command, what it searched for), then the most telling
+    /// field of its <paramref name="input"/>.
+    /// </summary>
+    public static string Summarize(ToolCall call, JsonObject? input, int maxLength = 140)
     {
-        var summary = name switch
+        var summary = call.Kind switch
         {
-            "Read" when Str(input, "file_path") is { } path && input["offset"] is not null
-                => $"{path} (from line {input["offset"]})",
-            "Grep" when Str(input, "pattern") is { } pattern
-                => Str(input, "path") is { } where ? $"{pattern} in {where}" : pattern,
-            "Agent" or "Task" => Str(input, "description"),
-            "AskUserQuestion" => (input["questions"] as JsonArray)?.OfType<JsonObject>().Select(q => Str(q, "question")).FirstOrDefault(q => q is not null),
-            "ExitPlanMode" => "Plan ready for review",
+            ToolKind.Read when call.Path is { } path && call.FromLine is { } line => $"{path} (from line {line})",
+            ToolKind.Search when call.Pattern is { } pattern => call.Where is { } where ? $"{pattern} in {where}" : pattern,
+            ToolKind.Agent => call.Description,
+            ToolKind.Question when input is not null
+                => (input["questions"] as JsonArray)?.OfType<JsonObject>().Select(q => Str(q, "question")).FirstOrDefault(q => q is not null),
+            ToolKind.Plan when call.Name == "ExitPlanMode" => "Plan ready for review",
             _ => null,
         };
-        if (summary is null)
+        summary ??= Text(call.Path) ?? Text(call.Command) ?? Text(call.Pattern) ?? Text(call.Where) ?? Text(call.Url) ?? Text(call.Query) ?? Text(call.Skill);
+        if (summary is null && input is not null)
         {
             foreach (var key in new[] { "file_path", "notebook_path", "command", "pattern", "path", "url", "query", "skill", "description", "prompt" })
             {
@@ -786,18 +812,23 @@ public partial class ToolUseItem : ConversationItem
                 }
             }
         }
+        summary ??= Text(call.Description) ?? Text(call.Prompt);
         summary = (summary ?? "").ReplaceLineEndings(" ");
         return summary.Length > maxLength ? summary[..(maxLength - 3)] + "…" : summary;
+
+        static string? Text(string? value) => string.IsNullOrEmpty(value) ? null : value;
     }
 
-    private static string? DetailText(string name, JsonObject input) => name switch
+    private static string? DetailText(ToolCall call, JsonObject input) => call.Kind switch
     {
-        "Bash" or "Edit" or "Write" or "Read" => null,
-        "Agent" or "Task" => Str(input, "prompt"),
-        "ExitPlanMode" => Str(input, "plan"),
-        "AskUserQuestion" => string.Join("\n\n", (input["questions"] as JsonArray ?? []).OfType<JsonObject>().Select(q =>
+        ToolKind.Command or ToolKind.Read or ToolKind.Write or ToolKind.Delete => null,
+        // MultiEdit's and NotebookEdit's input is the change itself, with no one text before and after to show.
+        ToolKind.Edit when call.OldText is not null || call.Hunks is not null => null,
+        ToolKind.Agent => call.Prompt,
+        ToolKind.Plan when call.Name == "ExitPlanMode" => Str(input, "plan"),
+        ToolKind.Question => string.Join("\n\n", (input["questions"] as JsonArray ?? []).OfType<JsonObject>().Select(q =>
             $"{Str(q, "question")}\n" + string.Join("\n", (q["options"] as JsonArray ?? []).OfType<JsonObject>().Select(o => $"  • {Str(o, "label")}")))),
-        "WebFetch" => Str(input, "prompt") is { } prompt ? $"{Str(input, "url")}\n\n{prompt}" : null,
+        ToolKind.WebFetch => call.Prompt is { } prompt ? $"{call.Url}\n\n{prompt}" : null,
         _ => input.Count > 0 ? input.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) : null,
     };
 
@@ -830,9 +861,13 @@ public partial class ToolUseItem : ConversationItem
 /// <summary>A subagent: a collapsible group holding that agent's own text and tool calls (DESIGN.md §5).</summary>
 public sealed partial class SubagentItem : ToolUseItem
 {
-    public SubagentItem(string toolUseId, string name, JsonObject input) : base(toolUseId, name, input)
+    public SubagentItem(string toolUseId, string name, JsonObject input) : this(toolUseId, name, input, ClaudeToolCalls.From(name, input))
     {
-        AgentType = Str(input, "subagent_type") ?? "agent";
+    }
+
+    public SubagentItem(string toolUseId, string name, JsonObject input, ToolCall call) : base(toolUseId, name, input, call)
+    {
+        AgentType = call.SubagentType ?? "agent";
     }
 
     public string AgentType { get; }
@@ -858,7 +893,7 @@ public sealed partial class SubagentItem : ToolUseItem
     /// <summary>It started, so it has work to show: every subagent but one Deventry's hook refused.</summary>
     public bool IsStarted => !IsRefused;
 
-    /// <summary>The call came back refused by Deventry's hook, as Settings → Tabs → Subagents says.</summary>
+    /// <summary>The call came back refused by Deventry's hook, as Settings → All agents → Subagents says.</summary>
     internal void ShowRefused()
     {
         IsComplete = true;

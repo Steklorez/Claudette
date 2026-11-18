@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using System.Threading.Channels;
+using Deventry.Core.Agents;
 using Deventry.Core.Protocol;
 using Deventry.Core.RemoteControl;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ public sealed class ClaudeSessionExitedException(TransportExit exit, StartupFail
 /// One long-running Claude Code process in stream-json mode (DESIGN.md §13). Reads its output, turns it into
 /// <see cref="Events"/>, answers its control requests, and sends messages and control requests to it.
 /// </summary>
-public sealed class ClaudeSession : IAsyncDisposable
+public sealed class ClaudeSession : IAgentSession, IWritesSessionTitles, IRewindsFiles, IRemoteControllable, IHasSessionStyles, IHasMcpServers
 {
     public static readonly TimeSpan DefaultControlTimeout = TimeSpan.FromSeconds(30);
 
@@ -70,6 +71,8 @@ public sealed class ClaudeSession : IAsyncDisposable
         _readLoop = Task.Run(ReadLoopAsync);
     }
 
+    public IAgentType Agent => ClaudeCodeAgent.Instance;
+
     /// <summary>Everything the session reports, in order. Completes after <see cref="SessionExited"/>.</summary>
     public ChannelReader<SessionEvent> Events => _events.Reader;
 
@@ -93,6 +96,8 @@ public sealed class ClaudeSession : IAsyncDisposable
     public string? PermissionMode { get; private set; }
 
     public string? ClaudeCodeVersion { get; private set; }
+
+    string? IAgentSession.Version => ClaudeCodeVersion;
 
     public IReadOnlyList<string> Capabilities { get; private set; } = [];
 
@@ -199,11 +204,11 @@ public sealed class ClaudeSession : IAsyncDisposable
     /// TypeScript SDK's <c>cancelAsyncMessage</c>, answered with <c>{"cancelled": true}</c> by 2.1.286. False when Claude
     /// Code had already taken the message, or doesn't know the request.
     /// </summary>
-    public async Task<bool> CancelQueuedMessageAsync(string messageUuid, CancellationToken cancellationToken = default)
+    public async Task<bool> CancelQueuedMessageAsync(string messageId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await SendControlRequestAsync(new JsonObject { ["subtype"] = "cancel_async_message", ["message_uuid"] = messageUuid }, cancellationToken: cancellationToken)
+            var response = await SendControlRequestAsync(new JsonObject { ["subtype"] = "cancel_async_message", ["message_uuid"] = messageId }, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             return response.GetBool("cancelled") == true;
         }

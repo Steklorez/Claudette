@@ -42,6 +42,26 @@ public sealed class DemoHomeTests : IDisposable
         Assert.NotEmpty(Directory.EnumerateFiles(Path.Combine(written.ClaudeConfig, "projects", "demo"), "*.jsonl"));
     }
 
+    [Fact]
+    public async Task With_a_codex_its_codex_tab_is_in_tidepools_group_and_its_session_in_its_own_codex_folder()
+    {
+        var now = new DateTimeOffset(2026, 10, 30, 15, 0, 0, TimeSpan.FromHours(-4));
+
+        var written = await DemoHome.WriteAsync(_root, Path.Combine(_root, "projects"), now, new DemoOptions { ClaudePath = "deventry-itself", CodexPath = "deventry-itself" }, DemoContent.EmptyFolder);
+
+        var settings = new JsonFileStore<AppSettings>(written.Paths.SettingsFile).Load();
+        Assert.Equal("deventry-itself", settings.Codex.CodexPath);
+        var state = new JsonFileStore<AppState>(written.Paths.StateFile).Load();
+        Assert.Equal(8, state.Tabs.Count);
+        var codex = state.Tabs.Single(t => t.Agent == Core.Agents.AgentKinds.Codex);
+        Assert.Equal(("tab-codex", state.Tabs.Single(t => t.Id == "tab-inventory").Folder), (codex.Id, codex.Folder));
+        Assert.Equal("tab-pool", state.Tabs[state.Tabs.IndexOf(codex) + 1].Id);
+        Assert.Equal(Path.Combine(_root, "codex-home"), written.CodexHome);
+        Assert.True(File.Exists(DemoCodex.TurnsFile(written.CodexHome, codex.SessionId!)));
+        var listed = Assert.Single(Core.History.CodexHistory.Scan(written.CodexHome, TestContext.Current.CancellationToken));
+        Assert.Equal((DemoCodex.Thread, DemoCodex.Name), (listed.SessionId, listed.Title));
+    }
+
     [Theory]
     [InlineData(8, 30)]
     [InlineData(15, 0)]

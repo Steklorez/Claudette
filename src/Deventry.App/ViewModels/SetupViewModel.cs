@@ -22,6 +22,7 @@ public sealed record SetupInstall(string Command, Func<Action<string>, Task<Clau
 /// for it again. Null when it isn't offered.
 /// </param>
 /// <param name="demo"><b>Try the demo</b>, which needs no Claude Code (DESIGN.md §11, "Demo mode"); null when it isn't offered.</param>
+/// <param name="codex">Codex, offered beside Claude Code (DESIGN.md §18, "Installing and signing in"); null when it isn't.</param>
 public sealed partial class SetupViewModel(
     ClaudeLocateResult result,
     IPlatformServices platform,
@@ -29,9 +30,12 @@ public sealed partial class SetupViewModel(
     Func<Action<string>, Task<ClaudeUpdateResult>>? update = null,
     Func<Task>? recheck = null,
     SetupInstall? install = null,
-    Demo.DemoStarter? demo = null) : ViewModelBase
+    Demo.DemoStarter? demo = null,
+    CodexSetupViewModel? codex = null) : ViewModelBase
 {
     public Demo.DemoStarter? Demo { get; } = demo;
+
+    public CodexSetupViewModel? Codex { get; } = codex;
 
     public const string InstallDocsUrl = "https://code.claude.com/docs/en/setup";
 

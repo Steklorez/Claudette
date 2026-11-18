@@ -331,9 +331,12 @@
       </controls:Card>
     </DataTemplate>
 
-    <!-- Claude's reply: a Claude card, quieter once Claude carried on working after it (DESIGN.md §18, "Conversation cards"). -->
+    <!-- The agent's reply: a Claude card, quieter once the agent carried on working after it (DESIGN.md §18, "Conversation cards"),
+         named for the tab's agent, Claude or Codex (DESIGN.md §18, "Codex, a second agent", "Words"). -->
     <DataTemplate DataType="conv:AssistantTextItem">
-      <controls:Card Classes="claude" Classes.quiet="{Binding IsIntermediate}" Label="Claude" Icon="{StaticResource IconCardClaude}"
+      <controls:Card Classes="claude" Classes.quiet="{Binding IsIntermediate}"
+                     Label="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).AgentShortName, FallbackValue=Claude}"
+                     Icon="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).ReplyIconKey, FallbackValue=IconCardClaude, Converter={x:Static conv:ToolIcons.Geometry}}"
                      TimeText="{Binding TimeText}" TimeTip="{Binding TimeTip}" Actions="{Binding}" ActionsTemplate="{StaticResource ReplyTools}"
                      Extra="{Binding Steps}" ExtraTemplate="{StaticResource StepsPill}">
         <StackPanel>
@@ -662,14 +665,14 @@
               <ItemsControl ItemsSource="{Binding Changes.Lines, FallbackValue={x:Null}}" />
             </ScrollViewer>
           </Border>
-          <TextBlock Classes="muted" Text="Claude has finished planning and is ready to start making changes." TextWrapping="Wrap" IsVisible="{Binding !HasPlan}" />
+          <TextBlock Classes="muted" Text="{Binding ReadyText}" TextWrapping="Wrap" IsVisible="{Binding !HasPlan}" />
           <!-- Auto mode first, as the main button, while the tab can use it (DESIGN.md §7) -->
           <WrapPanel ItemSpacing="8" LineSpacing="6" IsVisible="{Binding IsPending}">
             <Button Classes="accent" Content="Approve, auto mode" Command="{Binding ApproveInAutoModeCommand}"
                     IsVisible="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).IsAutoModeAvailable}"
-                    ToolTip.Tip="Start working in auto mode: a safety check reviews actions and blocks risky ones" />
+                    ToolTip.Tip="{Binding AutoModeTip}" />
             <Button Classes.accent="{Binding !$parent[UserControl].((vm:TabViewModel)DataContext).IsAutoModeAvailable}" Content="Approve, accept edits"
-                    Command="{Binding ApproveAcceptingEditsCommand}" ToolTip.Tip="Start working, and edit files without asking" />
+                    Command="{Binding ApproveAcceptingEditsCommand}" ToolTip.Tip="Start working, and edit files without asking" IsVisible="{Binding OffersAcceptingEdits}" />
             <Button Content="Approve, ask before edits" Command="{Binding ApproveAskingForEditsCommand}" ToolTip.Tip="{Binding $parent[UserControl].((vm:TabViewModel)DataContext).Tips.Allow}"
                     ToolTip.ServiceEnabled="{Binding !Request.DefaultToNo}" />
             <Button Content="Keep planning…" Command="{Binding StartFeedbackCommand}" />

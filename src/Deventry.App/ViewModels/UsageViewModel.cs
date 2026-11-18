@@ -66,6 +66,9 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     private readonly AppServices _services;
     private readonly UsageTracker _tracker;
     private readonly UsageAlerts _alerts;
+    private readonly UsageAlerts _codexAlerts;
+    // The line under the header is the shown agent's alert; the other agent's waits here until it's shown again.
+    private UsageAlert? _otherAgentsAlert;
     private readonly ITimer _clock;
     private List<UsagePoint> _history = [];
     // Usage credits pay by the latest reading, whether or not their notice shows.
@@ -77,7 +80,9 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         _services = services;
         _tracker = tracker;
         _alerts = new UsageAlerts(services.Time);
+        _codexAlerts = new UsageAlerts(services.Time);
         _tracker.Updated += OnUpdated;
+        _tracker.CodexUpdated += OnCodexUpdated;
         _tracker.TurnRecorded += OnTurnRecorded;
         _tracker.SamplesImported += OnSamplesImported;
         _tracker.TurnsImported += OnTurnsImported;
@@ -92,6 +97,38 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
     }
 
     public MeterViewModel Session { get; } = new("Session", "S");
+
+    /// <summary>
+    /// The agent whose plan the header shows: the selected tab's (DESIGN.md §18, "The usage header follows the selected
+    /// tab's agent"). Claude Code until a Codex tab is selected.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AgentName))]
+    public partial Core.Agents.IAgentType ShownAgent { get; private set; } = Core.Agents.ClaudeCodeAgent.Instance;
+
+    /// <summary>Tabs of more than one agent are open: the Usage panel names whose plan its session is, and gives the other's a line.</summary>
+    [ObservableProperty]
+    public partial bool HasSeveralAgents { get; set; }
+
+    public string AgentName => ShownAgent.Name;
+
+    private bool IsCodexShown => ShownAgent.Kind == Core.Agents.AgentKinds.Codex;
+
+    /// <summary>Shows <paramref name="agent"/>'s plan: the selected tab changed to one of another agent.</summary>
+    public void ShowAgent(Core.Agents.IAgentType agent)
+    {
+        if (agent.Kind == ShownAgent.Kind)
+        {
+            return;
+        }
+        ShownAgent = agent;
+        (Alert, _otherAgentsAlert) = (_otherAgentsAlert, Alert);
+        Weekly.Clear();
+        Refresh();
+    }
+
+    /// <summary>The session readings the sparkline and projection go by: the shown agent's.</summary>
+    private IReadOnlyList<UsagePoint> History => IsCodexShown ? _tracker.CodexHistory : _history;
 
     /// <summary>The weekly limit across all models, then each model-specific weekly limit.</summary>
     public ObservableCollection<MeterViewModel> Weekly { get; } = [];
@@ -190,16 +227,44 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         Refresh();
         QueryDetailsIfDue(snapshot);
         var usage = _services.Settings.Usage;
-        foreach (var alert in _alerts.Observe(snapshot, Projection(snapshot), usage.WarnPercent, usage.CriticalPercent))
+        foreach (var alert in _alerts.Observe(snapshot, Projection(snapshot, _history), usage.WarnPercent, usage.CriticalPercent))
         {
             // The line under the header, and an OS notification when Deventry isn't in front (DESIGN.md §6, §10). Usage
             // credits have their notice there already, which says more than the session's alerts while they pay.
             if (alert.Kind != UsageAlertKind.UsingCredits && !(_creditsPaying && alert.GivesWayToCredits))
             {
                 // As it is now: a warning of the limit raised as the session is used up gets no line, only its notification.
-                Alert = UsageAlerts.Refresh(alert, snapshot, Projection(snapshot), _services.Time.GetUtcNow());
+                ShowAlert(Core.Agents.ClaudeCodeAgent.Instance, UsageAlerts.Refresh(alert, snapshot, Projection(snapshot, _history), _services.Time.GetUtcNow()));
             }
-            _services.Notifications.Notify(NotificationKind.UsageAlert, alert.Title, alert.Message, key: alert.Kind.ToString());
+            // Named while Codex is in use too (DESIGN.md §18, "A limit alert names its agent").
+            var title = _tracker.CodexCurrent is null ? alert.Title : $"{Core.Agents.ClaudeCodeAgent.Instance.ShortName}: {alert.Title}";
+            _services.Notifications.Notify(NotificationKind.UsageAlert, title, alert.Message, key: alert.Kind.ToString());
+        }
+    }
+
+    /// <summary>A Codex tab reported Codex's plan usage: its own alerts, which name it (DESIGN.md §18, "The usage header").</summary>
+    private void OnCodexUpdated(UsageSnapshot snapshot)
+    {
+        Refresh();
+        var usage = _services.Settings.Usage;
+        var codex = Core.Agents.CodexAgent.Instance;
+        foreach (var alert in _codexAlerts.Observe(snapshot, Projection(snapshot, _tracker.CodexHistory), usage.WarnPercent, usage.CriticalPercent))
+        {
+            ShowAlert(codex, UsageAlerts.Refresh(alert, snapshot, Projection(snapshot, _tracker.CodexHistory), _services.Time.GetUtcNow()));
+            _services.Notifications.Notify(NotificationKind.UsageAlert, $"{codex.ShortName}: {alert.Title}", alert.Message, key: $"{codex.Kind}:{alert.Kind}");
+        }
+    }
+
+    /// <summary>The line under the header while <paramref name="agent"/>'s plan is shown; kept for when it is, otherwise.</summary>
+    private void ShowAlert(Core.Agents.IAgentType agent, UsageAlert? alert)
+    {
+        if (agent.Kind == ShownAgent.Kind)
+        {
+            Alert = alert;
+        }
+        else
+        {
+            _otherAgentsAlert = alert;
         }
     }
 
@@ -231,9 +296,9 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private BurnProjection? Projection(UsageSnapshot snapshot) =>
+    private BurnProjection? Projection(UsageSnapshot snapshot, IReadOnlyList<UsagePoint>? history = null) =>
         snapshot.Session is { } session
-            ? BurnRate.Project(_history, session.Percent, session.ResetsAt, _services.Time.GetUtcNow(), TimeSpan.FromMinutes(_services.Settings.Usage.BurnRateWindowMinutes))
+            ? BurnRate.Project(history ?? History, session.Percent, session.ResetsAt, _services.Time.GetUtcNow(), TimeSpan.FromMinutes(_services.Settings.Usage.BurnRateWindowMinutes))
             : null;
 
     private void Refresh()
@@ -241,10 +306,11 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(WarnPercent));
         OnPropertyChanged(nameof(CriticalPercent));
         OnPropertyChanged(nameof(IsCompact));
-        var snapshot = _tracker.Current;
+        var snapshot = IsCodexShown ? _tracker.CodexCurrent : _tracker.Current;
         HasData = snapshot?.Session is not null || snapshot?.WeeklyAll is not null;
         var now = _services.Time.GetUtcNow();
-        RefreshCredits(snapshot, now);
+        // Usage credits are Claude's plan's (DESIGN.md §6).
+        RefreshCredits(IsCodexShown ? null : snapshot, now);
         if (snapshot is null)
         {
             return;
@@ -261,7 +327,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
             HitsLimitBeforeReset = projection.HitsLimitBeforeReset;
             WindowEnd = session.ResetsAt;
             WindowStart = session.ResetsAt - SessionWindow;
-            SessionPoints = _history.Select(p => new ChartPoint(p.Time, p.Percent)).Append(new ChartPoint(now, session.Percent)).ToArray();
+            SessionPoints = History.Select(p => new ChartPoint(p.Time, p.Percent)).Append(new ChartPoint(now, session.Percent)).ToArray();
             SessionProjection = ProjectionLine(projection, session.ResetsAt, now);
         }
         if (Alert is { } alert)
@@ -275,7 +341,7 @@ public sealed partial class UsageViewModel : ViewModelBase, IDisposable
         {
             weekly.Add(all);
         }
-        if (usage.ShowModelMeters && _tracker.ModelLimitsAvailable)
+        if (!IsCodexShown && usage.ShowModelMeters && _tracker.ModelLimitsAvailable)
         {
             weekly.AddRange(snapshot.WeeklyModels);
         }

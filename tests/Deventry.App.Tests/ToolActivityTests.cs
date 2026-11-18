@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Deventry.App.Conversation;
+using Deventry.Core.Sessions;
 
 namespace Deventry.App.Tests;
 
@@ -39,7 +40,7 @@ public class ToolActivityTests
     [Fact]
     public void Several_calls_show_the_newest_and_how_many_more()
     {
-        Assert.Null(ToolActivity.Describe([]));
+        Assert.Null(ToolActivity.Describe(Array.Empty<ToolCall>()));
         Assert.Equal("Reading b.cs and 1 more", ToolActivity.Describe([("Read", Input("""{"file_path":"a.cs"}""")), ("Read", Input("""{"file_path":"b.cs"}"""))]));
         Assert.Equal("Running 3 agents", ToolActivity.Describe([.. Enumerable.Repeat(("Agent", Input("""{"description":"x"}""")), 3)]));
     }
@@ -54,7 +55,7 @@ public class ToolActivityTests
         ]);
 
         Assert.Equal("Bash: dotnet test Deventry.slnx \\\n  --filter \"Category!=Live\"\nRead: /repo/src/Deventry.App/Views/TabView.axaml", details);
-        Assert.Null(ToolActivity.Details([]));
+        Assert.Null(ToolActivity.Details(Array.Empty<ToolCall>()));
     }
 
     [Fact]

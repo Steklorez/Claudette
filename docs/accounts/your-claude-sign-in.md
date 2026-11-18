@@ -32,7 +32,7 @@ Deventry then asks Claude Code again. When it's signed out, the banner *Claude C
 
 If Claude Code still reports a sign-in afterward, the menu says so: an API key set in the environment or in Claude Code's settings isn't removed by signing out.
 
-Settings → Claude Code shows the same account line, with **Sign in** and **Sign out…**.
+Settings → Claude Code → Accounts shows the same account line as **Default**, the first of the accounts, with **Sign in** and **Sign out…**.
 
 ## Signing in again
 

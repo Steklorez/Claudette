@@ -167,7 +167,7 @@ public sealed partial class ContextViewModel : ObservableObject
     /// Asks Claude Code what fills the context window (<c>get_context_usage</c>), as the session starts and after each
     /// turn. Without it, the indicator is estimated from each call.
     /// </summary>
-    internal async Task RefreshUsageAsync(ClaudeSession session)
+    internal async Task RefreshUsageAsync(IAgentSession session)
     {
         ContextUsage usage;
         try
@@ -217,7 +217,7 @@ public sealed partial class ContextViewModel : ObservableObject
     }
 
     /// <summary>Each session event, on the UI thread, before the tab's own handling saves the tab.</summary>
-    internal void OnSessionEvent(ClaudeSession session, SessionEvent sessionEvent)
+    internal void OnSessionEvent(IAgentSession session, SessionEvent sessionEvent)
     {
         switch (sessionEvent)
         {

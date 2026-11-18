@@ -14,24 +14,31 @@ public static class ToolIcons
 {
     public const string Default = "IconToolDefault";
 
-    public static string KeyFor(string toolName) => toolName switch
+    /// <summary>For one of Claude Code's tools, by its name.</summary>
+    public static string KeyFor(string toolName) => toolName is "ListMcpResourcesTool" or "ReadMcpResourceTool"
+        ? "IconToolMcp"
+        : KeyFor(Core.Protocol.ClaudeToolCalls.KindOf(toolName));
+
+    /// <summary>For a call, by what it does, whichever agent made it.</summary>
+    public static string KeyFor(Core.Sessions.ToolCall call) => call.Name is "ListMcpResourcesTool" or "ReadMcpResourceTool" ? "IconToolMcp" : KeyFor(call.Kind);
+
+    private static string KeyFor(Core.Sessions.ToolKind kind) => kind switch
     {
-        "Read" => "IconToolRead",
-        "Edit" or "MultiEdit" or "NotebookEdit" => "IconToolEdit",
-        "Write" => "IconToolWrite",
-        "Bash" or "BashOutput" or "KillShell" or "KillBash" or "PowerShell" => "IconToolBash",
-        "Grep" => "IconToolSearch",
-        "Glob" or "LS" => "IconToolFolder",
-        "WebFetch" => "IconToolWeb",
-        "WebSearch" => "IconToolWebSearch",
-        "Agent" or "Task" => "IconToolAgent",
-        "TodoWrite" or "TaskCreate" or "TaskUpdate" or "TaskList" or "TaskGet" => "IconToolTodo",
-        "Skill" => "IconToolSkill",
-        "Monitor" => "IconToolMonitor",
-        "AskUserQuestion" => "IconToolQuestion",
-        "ExitPlanMode" or "EnterPlanMode" => "IconToolPlan",
-        "ListMcpResourcesTool" or "ReadMcpResourceTool" => "IconToolMcp",
-        _ when toolName.StartsWith("mcp__", StringComparison.Ordinal) => "IconToolMcp",
+        Core.Sessions.ToolKind.Read or Core.Sessions.ToolKind.ViewImage => "IconToolRead",
+        Core.Sessions.ToolKind.Edit or Core.Sessions.ToolKind.Delete => "IconToolEdit",
+        Core.Sessions.ToolKind.Write => "IconToolWrite",
+        Core.Sessions.ToolKind.Command or Core.Sessions.ToolKind.CommandOutput => "IconToolBash",
+        Core.Sessions.ToolKind.Search => "IconToolSearch",
+        Core.Sessions.ToolKind.Find => "IconToolFolder",
+        Core.Sessions.ToolKind.WebFetch => "IconToolWeb",
+        Core.Sessions.ToolKind.WebSearch => "IconToolWebSearch",
+        Core.Sessions.ToolKind.Agent => "IconToolAgent",
+        Core.Sessions.ToolKind.Todo => "IconToolTodo",
+        Core.Sessions.ToolKind.Skill => "IconToolSkill",
+        Core.Sessions.ToolKind.Monitor => "IconToolMonitor",
+        Core.Sessions.ToolKind.Question => "IconToolQuestion",
+        Core.Sessions.ToolKind.Plan => "IconToolPlan",
+        Core.Sessions.ToolKind.Mcp => "IconToolMcp",
         _ => Default,
     };
 

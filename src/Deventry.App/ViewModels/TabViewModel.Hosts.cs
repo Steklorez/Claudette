@@ -14,7 +14,7 @@ public sealed partial class TabViewModel : IProcessMonitorHost, IChangedFilesHos
 {
     // ---- Every area ------------------------------------------------------------------------------------------------
 
-    ClaudeSession? ITabAreaHost.Session => _session;
+    IAgentSession? ITabAreaHost.Session => _session;
 
     void ITabAreaHost.AddNote(string text, NoteKind kind, string? link) => _conversation.AddNote(text, kind, link);
 

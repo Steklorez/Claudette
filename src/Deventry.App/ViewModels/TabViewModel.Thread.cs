@@ -246,20 +246,46 @@ public sealed partial class TabViewModel
     /// after asking when it should, and stops Claude Code's own delivery; anything else goes on as it would. Called off
     /// the UI thread.
     /// </summary>
-    private async Task<JsonObject> OnSendMessageAsync(HookInput input, CancellationToken cancellationToken)
+    private async Task<JsonObject> OnSendMessageAsync(HookInput input, CancellationToken cancellationToken) =>
+        SendMessageCall.From(input) is { } call && await SendToSubThreadAsync(call, readsAsError: true, cancellationToken) is { } answer
+            ? HookOutputs.Deny(answer)
+            : HookOutputs.Continue();
+
+    /// <summary>
+    /// Codex calls Deventry's own tool for a thread's messages (DESIGN.md §18, "Threads"), which goes as Claude Code's
+    /// <c>SendMessage</c> does through the hook. Called off the UI thread.
+    /// </summary>
+    private async Task<Core.Codex.CodexToolAnswer> OnCodexToolCallAsync(Core.Codex.CodexToolCall call, CancellationToken cancellationToken)
     {
-        if (SendMessageCall.From(input) is not { } call)
+        if (call.Tool != Core.Codex.CodexTools.SendMessage)
         {
-            return HookOutputs.Continue();
+            return new($"Deventry has no tool named {call.Tool}.", false);
         }
+        if (SendMessageCall.FromArguments(call.Arguments) is not { } send)
+        {
+            return new("Not sent: say which sub-thread it's for, as `to`.", false);
+        }
+        if (await SendToSubThreadAsync(send, readsAsError: false, cancellationToken) is { } answer)
+        {
+            return new(answer, ThreadMessages.IsDeliveryAnswer(answer));
+        }
+        return new(ThreadMessages.NoSuchSubThread(send.To, await OnUiThreadAsync(() => IsThread ? SubThreadNames : [])), false);
+    }
+
+    /// <summary>
+    /// A message to one of this thread's sub-threads, which Deventry delivers itself, after asking when it should: what
+    /// the agent is told of it. Null when <see cref="SendMessageCall.To"/> isn't one of them.
+    /// </summary>
+    private async Task<string?> SendToSubThreadAsync(SendMessageCall call, bool readsAsError, CancellationToken cancellationToken)
+    {
         var found = await OnUiThreadAsync(() => FindSubThread(call.To));
         if (found is not var (subThread, name))
         {
-            return HookOutputs.Continue();
+            return null;
         }
         if (call.Message.Trim().Length == 0)
         {
-            return HookOutputs.Deny(ThreadMessages.NoSubscriptionNeeded(name));
+            return ThreadMessages.NoSubscriptionNeeded(name);
         }
         if (await OnUiThreadAsync(() => AskBeforeSendingToSubThreads))
         {
@@ -279,12 +305,15 @@ public sealed partial class TabViewModel
             }
             if (send != true)
             {
-                return HookOutputs.Deny(send is null ? ThreadMessages.NotAnswered(name) : ThreadMessages.Declined(name));
+                return send is null ? ThreadMessages.NotAnswered(name) : ThreadMessages.Declined(name);
             }
         }
         var waits = await OnUiThreadAsync(() => SubThreads.Contains(subThread) ? Deliver(subThread, call.Message) : (bool?)null);
-        return HookOutputs.Deny(waits is { } busy ? ThreadMessages.Delivered(name, busy) : ThreadMessages.Gone(name));
+        return waits is { } busy ? ThreadMessages.Delivered(name, busy, readsAsError) : ThreadMessages.Gone(name);
     }
+
+    /// <summary>The tool that sends to a sub-thread, as the tab's agent knows it.</summary>
+    private string ThreadTool => IsCodex ? Core.Codex.CodexTools.SendMessage : SendMessageCall.ToolName;
 
     /// <summary>The sub-thread <paramref name="recipient"/> names, and its name; null when this isn't a thread or none does.</summary>
     private (TabViewModel SubThread, string Name)? FindSubThread(string recipient)
@@ -325,7 +354,7 @@ public sealed partial class TabViewModel
         _checkIns.SetWaitingOnUser(true);
         UpdateStatus();
         var remote = ToRemotePrompt(approval);
-        var body = RemoteMessages.PromptLine(remote, Agent);
+        var body = RemoteMessages.PromptLine(remote, AgentShortName);
         _services.Notifications.Notify(NotificationKind.NeedsInput, DisplayName, body, Id);
         _shell.Announce($"{DisplayName}: {body}");
         Remote.OnPromptWaiting(this, remote);
@@ -533,7 +562,7 @@ public sealed partial class TabViewModel
             }
             State.ThreadNote = roster;
             _services.SaveState();
-            return ThreadMessages.Note(names);
+            return ThreadMessages.Note(names, ThreadTool);
         }
         if (State.ThreadNote is null)
         {
@@ -541,7 +570,7 @@ public sealed partial class TabViewModel
         }
         State.ThreadNote = null;
         _services.SaveState();
-        return ThreadMessages.NoLongerAThread;
+        return ThreadMessages.NoLongerAThreadFor(ThreadTool);
     }
 
     /// <summary>A message that carried a note was taken back: the next one carries it again.</summary>

@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
-using System.Text.Json.Nodes;
 using Deventry.Core;
+using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -87,23 +87,24 @@ public sealed partial class StepRowItem : ObservableObject
     /// <summary>The call as a line: what it did, in words, by the tool.</summary>
     internal static string ToolTitle(ToolUseItem tool)
     {
-        var description = Text(tool.Input, "description");
-        var file = Text(tool.Input, "file_path") ?? Text(tool.Input, "notebook_path");
+        var description = string.IsNullOrWhiteSpace(tool.Call.Description) ? null : tool.Call.Description;
+        var file = string.IsNullOrWhiteSpace(tool.Call.Path) ? null : tool.Call.Path;
         var name = file is null ? null : file[(Math.Max(file.LastIndexOf('/'), file.LastIndexOf('\\')) + 1)..];
         if (tool is SubagentItem)
         {
             return tool.Summary.Length > 0 ? $"Agent · {tool.Summary}" : "Agent";
         }
-        return tool.Name switch
+        return tool.Call.Kind switch
         {
-            "Bash" => "Ran " + (description ?? Short(tool.Command ?? tool.Summary)),
-            "Read" when name is not null => "Read " + name,
-            "Write" when name is not null => "Created " + name,
-            "Edit" or "MultiEdit" or "NotebookEdit" when name is not null => "Edited " + name,
-            "Grep" => "Searched for " + Short(tool.Summary),
-            "Glob" => "Listed " + Short(tool.Summary),
-            "WebFetch" => "Fetched " + Short(tool.Summary),
-            "WebSearch" => "Searched the web for " + Short(tool.Summary),
+            ToolKind.Command => "Ran " + (description ?? Short(tool.Command ?? tool.Summary)),
+            ToolKind.Read when name is not null => "Read " + name,
+            ToolKind.Write when name is not null => "Created " + name,
+            ToolKind.Edit when name is not null => "Edited " + name,
+            ToolKind.Delete when name is not null => "Deleted " + name,
+            ToolKind.Search => "Searched for " + Short(tool.Summary),
+            ToolKind.Find => "Listed " + Short(tool.Summary),
+            ToolKind.WebFetch => "Fetched " + Short(tool.Summary),
+            ToolKind.WebSearch => "Searched the web for " + Short(tool.Summary),
             _ => tool.Summary.Length > 0 ? $"{tool.Name} {Short(tool.Summary)}" : tool.Name,
         };
     }
@@ -113,9 +114,6 @@ public sealed partial class StepRowItem : ObservableObject
         text = text.ReplaceLineEndings(" ").Trim();
         return text.Length > 90 ? text[..87] + "…" : text;
     }
-
-    private static string? Text(JsonObject? input, string key) =>
-        input?[key] is JsonValue value && value.TryGetValue<string>(out var text) && !string.IsNullOrWhiteSpace(text) ? text : null;
 }
 
 /// <summary>

@@ -2,22 +2,22 @@
 title: Advanced
 parent: Settings
 nav_order: 8
-summary: "Settings → Advanced is for the things you reach for when something isn't working, or when you want claude to start with an option Deventry doesn't have a setting for."
+summary: "Settings → Advanced is for the things you reach for when something isn't working: protocol logging, Deventry's folders and Diagnostics."
 ---
 
 # Advanced
 
-Settings → Advanced is for the things you reach for when something isn't working, or when you want `claude` to start with an option Deventry doesn't have a setting for. It holds extra arguments for `claude`, protocol logging, two shortcuts to Deventry's folders, and Diagnostics.
+Settings → Advanced is for the things you reach for when something isn't working. It holds protocol logging, two shortcuts to Deventry's folders, and Diagnostics. For when you want `claude` to start with an option Deventry doesn't have a setting for, Claude Code's page has extra arguments.
 
 ## Extra arguments for claude
 
-**Extra arguments for every claude process** takes command-line arguments, such as `--add-dir ../shared`. Deventry splits them on spaces and adds them after its own arguments every time it starts `claude`. They apply to tabs started after you change them, so open a new tab, or close one and open it again, to pick them up.
+**Extra arguments for every claude process**, in Settings → Claude Code → Starting a session, takes command-line arguments, such as `--add-dir ../shared`. Deventry splits them on spaces and adds them after its own arguments every time it starts `claude`. They apply to tabs started after you change them, so open a new tab, or close one and open it again, to pick them up.
 
 Deventry already passes the arguments it needs to talk to Claude Code. An extra argument that changes how `claude` talks, such as its input or output format, can stop a tab from working. If a tab stops starting after you add one, empty the box. [Claude Code's CLI reference](https://code.claude.com/docs/en/cli-reference) lists what `claude` takes.
 
 ## Log protocol traffic
 
-**Log protocol traffic** writes everything each session sends to and receives from Claude Code to the log folder. It's meant for bug reports: when Claude Code changes, a log shows exactly what changed. It applies to tabs started after you turn it on.
+**Log protocol traffic** writes everything each session sends to and receives from its agent, Claude Code or Codex, to the log folder. It's meant for bug reports: when Claude Code changes, a log shows exactly what changed. It applies to tabs started after you turn it on.
 
 With it on, a message Deventry can't read also appears in the conversation, as a collapsed row, *Unsupported message from Claude Code*, with the raw message inside.
 
@@ -45,12 +45,12 @@ The page's **Diagnostics** section shows how Deventry is getting on with the Cla
 
 ## Settings
 
-All of these are in Settings → Advanced, stay on this machine, and can't be overridden per tab. **Reset to defaults** by the **Running claude** heading puts both back.
+Both stay on this machine, and can't be overridden per tab. **Reset to defaults** by each one's heading puts it back.
 
-| Setting | Default |
-|---|---|
-| **Extra arguments for every claude process** | Empty |
-| **Log protocol traffic** | Off |
+| Setting | Where | Default |
+|---|---|---|
+| **Extra arguments for every claude process** | Settings → Claude Code → Starting a session | Empty |
+| **Log protocol traffic** | Settings → Advanced → Logs and files | Off |
 
 ## See also
 

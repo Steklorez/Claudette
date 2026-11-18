@@ -363,7 +363,17 @@ if (Test-Wanted 'getting-started/new-tab', 'tabs/sidebar', 'tabs/info-card', 'ta
         Shot 'accounts/settings-accounts' {
             param($path)
             $settings = Open-Settings
-            Select-ListItem $settings 'Accounts'
+            Select-ListItem $settings 'Claude Code'
+            Wait-Settled $settings
+            # Claude Code's page, scrolled down to its Accounts: Default's Sign out… sits under the section's heading and
+            # line, which a template draws and UI Automation doesn't see.
+            $scroller = Find-ById $settings 'PageScroller'
+            $default = Find-ByText $settings "Sign out$([char] 0x2026)"
+            $gap = 100 * [WindowShot]::Scale($settings)
+            for ($step = 0; $step -lt 100 -and $default.Current.BoundingRectangle.Top - $scroller.Current.BoundingRectangle.Top -gt $gap; $step++) {
+                Send-ElementCommand 'scroll' $scroller @{ lines = 1 } | Out-Null
+            }
+            Wait-Settled $settings
             Save-Window $settings $path
             Close-Other $settings
         }
@@ -635,6 +645,42 @@ if (Test-Wanted 'away/timed-messages', 'away/timed-messages-cup') {
             Wait-Settled $menu
             Save-Window $menu $path
             Send-WindowKey $menu 'Escape'
+        }
+    }
+}
+
+# Codex (DESIGN.md §18, "Codex, a second agent"), with fake-codex as the demo's Codex: its tab in tidepool's group, with
+# Codex's usage in the header and each row's agent's icon, a group's menu opening either agent's tab, and its page in
+# Settings.
+if (Test-Wanted 'codex/codex-tab', 'codex/new-codex-tab', 'codex/settings-codex') {
+    Use-Deventry @{} {
+        Shot 'codex/codex-tab' {
+            param($path)
+            Select-Tab 'Load older inventory saves'
+            # Started as it's shown, which reads its conversation back from Codex and its usage into the header.
+            Wait-Until { Find-ByText $window "Review the inventory save code for anything that would break a player's older save files." -Optional } 'its conversation' 30
+            Wait-Settled $window
+            Save-Window $window $path
+        }
+
+        Shot 'codex/new-codex-tab' {
+            param($path)
+            Send-RightClick (Find-ByText $window 'tidepool')
+            $menu = Get-OtherWindow $deventry $window "the group's menu"
+            Wait-Until { Find-ByText $menu 'New Codex tab here' -Optional } 'New Codex tab here' 20
+            Wait-Settled $menu
+            Save-Window $menu $path
+            Send-WindowKey $menu 'Escape'
+        }
+
+        Shot 'codex/settings-codex' {
+            param($path)
+            $settings = Open-Settings
+            Select-ListItem $settings 'Codex'
+            Wait-Until { Find-ByText $settings 'Logged in using ChatGPT' -Optional } "Codex's sign-in" 20
+            Wait-Settled $settings
+            Save-Window $settings $path
+            Close-Other $settings
         }
     }
 }

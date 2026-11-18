@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Deventry.App.Services;
+using Deventry.Core.Agents;
 using Deventry.Core.Diffs;
 using Deventry.Core.Git;
+using Deventry.Core.History;
 using Deventry.Core.Library;
 using Deventry.Core.Settings;
 
@@ -145,6 +147,13 @@ internal sealed class SessionOpener
                 transcript = Path.Combine(separate, $"{entry.SessionId}.jsonl");
                 await Task.Run(() => File.Copy(copy, transcript, overwrite: true));
             }
+            else if (entry.Agent == AgentKinds.Codex)
+            {
+                // Into Codex's own folder, where Codex finds it by its id (DESIGN.md §18, "The session library").
+                transcript = _services.CodexHome is { } codexHome
+                    ? await library.PickUpAsync(entry.SessionId, CodexHistory.PlaceFor(codexHome, entry.SessionId, _services.Time.GetUtcNow()))
+                    : throw new InvalidOperationException("Deventry doesn't know where Codex keeps its sessions.");
+            }
             else
             {
                 transcript = await library.CopyToLocalAsync(entry.SessionId);
@@ -202,6 +211,8 @@ internal sealed class SessionOpener
         var state = new TabState
         {
             Folder = FolderHistory.Normalize(folder),
+            // A session is resumed by the agent that ran it (DESIGN.md §18, "Codex, a second agent").
+            Agent = entry.Agent,
             SessionId = entry.SessionId,
             AutoName = record?.AutoName ?? entry.Title,
             UserName = fork ? null : record?.UserName,

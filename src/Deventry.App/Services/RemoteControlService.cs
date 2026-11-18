@@ -48,7 +48,7 @@ public sealed class RemoteControlService : IDisposable
     public string? PolicyReason { get; private set; }
 
     /// <summary>
-    /// What the organizations have turned off, as Settings → Accounts lists it (DESIGN.md §18, "Remote Control"). Kept in
+    /// What the organizations have turned off, as Settings → Claude Code → Accounts lists it (DESIGN.md §18, "Remote Control"). Kept in
     /// the machine's state, so it holds across restarts.
     /// </summary>
     public IReadOnlyList<OrganizationRule> Rules => _services.State.OrganizationRules;

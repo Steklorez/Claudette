@@ -79,7 +79,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     private readonly ShellViewModel _shell;
     private readonly ConversationBuilder _conversation;
     private readonly CheckInMonitor _checkIns;
-    private ClaudeSession? _session;
+    private IAgentSession? _session;
     private Task? _pump;
     private Task? _starting;
     /// <summary>Cancelled when the tab closes: a start under way stops there, and no new one begins.</summary>
@@ -112,7 +112,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         TodoList.Time = services.Time;
         ProcessMonitor = new ProcessMonitorViewModel(services, this);
         ChangedFiles = new ChangedFilesViewModel(services, this);
-        McpServers = new McpServersViewModel(() => _session, url => _services.Platform.OpenUrlAsync(url));
+        McpServers = new McpServersViewModel(() => _session as IHasMcpServers, url => _services.Platform.OpenUrlAsync(url));
         ReplyImages = new ReplyImages(new ReplyImageLoader(services.Http, services.Time), () => Folder);
         ProjectTools = new ProjectToolsViewModel(services, this);
         WatchRunsUnder();
@@ -145,6 +145,9 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         };
         // A prompt the phone answered is withdrawn by Claude Code (DESIGN.md §18, "Remote Control").
         _conversation.WithdrawnOutcome = RemoteControl.WithdrawnPromptOutcome;
+        // The cards name the tab's agent, and offer its modes (DESIGN.md §18, "Codex, a second agent").
+        _conversation.AgentName = AgentShortName;
+        _conversation.OffersAcceptingEdits = !IsCodex;
         // In Plan mode Claude's Write or Edit to a Markdown file is the plan's draft (DESIGN.md §5, "Tasks").
         _conversation.IsInPlanMode = () => PermissionMode == "plan";
         TodoList.PropertyChanged += OnTodoListChanged;
@@ -662,7 +665,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public partial string? PermissionMode { get; set; }
 
     /// <summary>
-    /// The mode the tab starts in (DESIGN.md §7, "Starting mode"): chosen in Tab settings or Settings → Tabs, else what
+    /// The mode the tab starts in (DESIGN.md §7, "Starting mode"): chosen in Tab settings or Settings → Claude Code, else what
     /// Claude Code's settings files give. Shown until its claude reports one, as its model and effort are.
     /// </summary>
     [ObservableProperty]
@@ -680,11 +683,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public string PermissionModeName => PermissionModeInfo.Label(ShownPermissionMode);
 
     /// <summary>Bypass mode gives the tab a warning style (DESIGN.md §7), before it starts in it too.</summary>
-    public bool IsBypassMode => ShownPermissionMode == PermissionModeInfo.Bypass;
+    public bool IsBypassMode => ShownPermissionMode == PermissionModeInfo.Bypass || IsCodex && ShownPermissionMode == Core.Codex.CodexModes.FullAccess;
 
     /// <summary>The modes to pick from: Auto only while the model supports it and no settings file turns it off.</summary>
     public IReadOnlyList<PermissionModeChoice> PermissionModeChoices =>
-        IsAutoModeAvailable ? PermissionModeInfo.Choices : PermissionModeInfo.Choices.Where(c => !c.IsAuto).ToArray();
+        IsCodex ? PermissionModeInfo.CodexChoices
+        : IsAutoModeAvailable ? PermissionModeInfo.Choices : PermissionModeInfo.Choices.Where(c => !c.IsAuto).ToArray();
 
     /// <summary>What Claude Code's settings files say about the mode this tab starts in, read as it starts (DESIGN.md §7).</summary>
     private StartingPermissionMode? _startingMode;
@@ -705,7 +709,8 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     /// <summary>Until its claude reports a mode, the tab shows the one it starts in.</summary>
     private void ShowStartingMode() =>
-        ExpectedPermissionMode = State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode ?? ClaudeCodeStartingMode;
+        ExpectedPermissionMode = IsCodex ? Core.Codex.CodexModes.Normalize(State.Overrides.PermissionMode ?? _services.Settings.Codex.DefaultMode)
+            : State.Overrides.PermissionMode ?? _services.Settings.NewTabs.DefaultPermissionMode ?? ClaudeCodeStartingMode;
 
     /// <summary>
     /// Reads what Claude Code's settings files say about the starting mode, off the UI thread, for the mode the tab shows
@@ -777,7 +782,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// Switches to the mode the tab starts in when nothing chose one. The user didn't ask for it, so if Claude Code
     /// refuses, the tab stays in the mode it reports, as a new session with the flag would.
     /// </summary>
-    private async Task SwitchModeQuietlyAsync(ClaudeSession session, string mode)
+    private async Task SwitchModeQuietlyAsync(IAgentSession session, string mode)
     {
         try
         {
@@ -1070,7 +1075,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         ProjectTools.OnSettingsChanged();
         OnPropertyChanged(nameof(MarksYourMessages));
         OnPropertyChanged(nameof(MarksClaudesAnswers));
-        // Settings → Tabs' Permission mode is the one a tab without its own starts in.
+        // Settings → Claude Code's Permission mode is the one a tab without its own starts in.
         ShowStartingMode();
         OnGamesSettingsChanged();
         OnSubagentDisplayChanged();
@@ -1658,6 +1663,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         {
             return;
         }
+        if (IsCodex)
+        {
+            // Codex keeps the conversation, and reads it back only once it has started (DESIGN.md §18, "History").
+            _ = EnsureStartedAsync();
+            return;
+        }
         _restoredTranscript = true;
         _transcriptRead = ReadAsync();
 
@@ -1707,6 +1718,11 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
 
     private async Task StartAsync()
     {
+        if (IsCodex)
+        {
+            await StartCodexAsync();
+            return;
+        }
         if (_services.Sessions is not { } sessions)
         {
             return;
@@ -2011,6 +2027,12 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     public const string SessionMissingText =
         "The earlier conversation couldn't be found here or in the session library (Claude Code may have cleaned it up). You can start a new session in this folder.";
 
+    public const string CodexSessionMissingText =
+        "Codex couldn't find the earlier conversation (it may have been cleaned up). You can start a new session in this folder.";
+
+    /// <summary>What the composer says when the earlier conversation is gone, in the words of the tab's agent.</summary>
+    public string SessionMissingMessage => IsCodex ? CodexSessionMissingText : SessionMissingText;
+
     /// <summary><b>Start a new session</b> in the same folder, keeping the tab's name, overrides and suffixes.</summary>
     [RelayCommand]
     private async Task StartNewSessionAsync()
@@ -2234,7 +2256,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         string? title = null;
         try
         {
-            title = await _session.GenerateSessionTitleAsync(_firstPrompt);
+            title = _session is IWritesSessionTitles titles ? await titles.GenerateSessionTitleAsync(_firstPrompt) : null;
         }
         catch (Exception)
         {
@@ -2249,7 +2271,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     }
 
     /// <summary>Reads events off the UI thread and applies them in batches, so fast streaming doesn't flood the UI.</summary>
-    private async Task PumpAsync(ClaudeSession session)
+    private async Task PumpAsync(IAgentSession session)
     {
         var reader = session.Events;
         var batch = new List<SessionEvent>();
@@ -2300,7 +2322,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         && (_session is not { } session || session.State == _appliedState)
         && _contextRefresh is null or { IsCompleted: true };
 
-    private void Apply(ClaudeSession session, IReadOnlyList<SessionEvent> events)
+    private void Apply(IAgentSession session, IReadOnlyList<SessionEvent> events)
     {
         if (!ReferenceEquals(session, _session))
         {
@@ -2332,7 +2354,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
     /// <summary>The kinds of event that failed to apply, each noted once in the conversation.</summary>
     private readonly HashSet<string> _failedEvents = new(StringComparer.Ordinal);
 
-    private void ApplyEvent(ClaudeSession session, SessionEvent sessionEvent)
+    private void ApplyEvent(IAgentSession session, SessionEvent sessionEvent)
     {
         if (RemoteControl.InterceptCommand(sessionEvent))
         {
@@ -2403,7 +2425,7 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 FollowTaskFolder();
                 // The session is the tab's own now (a new one, a copy's, or after /clear): it has the tab's mark.
                 RememberMark();
-                if (started.Init.ClaudeCodeVersion is { } reported && Version.TryParse(reported, out var version))
+                if (!IsCodex && started.Init.ClaudeCodeVersion is { } reported && Version.TryParse(reported, out var version))
                 {
                     SetRunningVersion(version);
                 }
@@ -2452,8 +2474,20 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
                 // And when it's compacting the conversation: Joulene on the composer sweeps up (DESIGN.md §5).
                 SetCompacting(status.Message.Status?.IsCompacting == true);
                 break;
+            case SystemNotice { Message.Subtype: "task_started" } task:
+                StopSubagentIfNotAllowed(task.Message);
+                break;
             case SystemNotice { Message.Subtype: "bridge_state" or "worker_shutting_down" } remote:
                 RemoteControl.OnNotice(remote.Message);
+                break;
+            case Core.Codex.RateLimitsReported codexLimits:
+                // Codex's account's limits, for the header while a Codex tab is selected (DESIGN.md §18, "The usage header").
+                _services.Usage?.OnCodexRateLimits(codexLimits.RateLimits);
+                // One it has reached stops the turn: the tab waits for its reset, as at Claude's (DESIGN.md §6).
+                if (Usage.CodexUsage.Rejection(codexLimits.RateLimits, _services.Time.GetUtcNow()) is { } rejected)
+                {
+                    _autoContinue.RateLimit(rejected);
+                }
                 break;
             case RateLimitUpdated rateLimit:
                 // The header's plan usage is the Default account's (DESIGN.md §4, "Accounts").
@@ -2768,6 +2802,10 @@ public sealed partial class TabViewModel : ViewModelBase, IShellTab, IAsyncDispo
         _services.LiveSessions.Changed -= OnLiveSessionsChanged;
         _checkIns.Dispose();
         _autoContinue.Dispose();
+        if (_hookPipe is { } hookPipe)
+        {
+            await hookPipe.DisposeAsync();
+        }
         _copied?.Dispose();
         AgentTicker.Stop();
         TaskTicker.Stop();

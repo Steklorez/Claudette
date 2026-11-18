@@ -71,7 +71,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
         Changed?.Invoke();
     }
 
-    /// <summary>Settings → Accounts → <b>New folders use</b>.</summary>
+    /// <summary>Settings → Claude Code → Accounts → <b>New folders use</b>.</summary>
     public string? NewFolderAccount
     {
         get => Find(services.State.NewFolderAccount)?.Id;
@@ -256,7 +256,7 @@ public sealed class AccountsService(AppServices services, ICredentialStore crede
 
     /// <summary>
     /// A turn of <paramref name="accountId"/>'s was recorded, or one running under it spent more: warns once a day and once
-    /// a month when its estimated spend passes what Settings → Accounts says. The spend counts other machines' turns under
+    /// a month when its estimated spend passes what Settings → Claude Code → Accounts says. The spend counts other machines' turns under
     /// an account of the same name (DESIGN.md §6, "Sharing across machines"), and the turns running here as they go. Reads
     /// the usage history off the UI thread.
     /// </summary>

@@ -16,6 +16,9 @@ public sealed class AppSettings
 
     public ClaudeCodeSettings ClaudeCode { get; set; } = new();
 
+    /// <summary>Codex, the second agent (DESIGN.md §18, "Codex, a second agent").</summary>
+    public CodexSettings Codex { get; set; } = new();
+
     public NewTabSettings NewTabs { get; set; } = new();
 
     /// <summary>Settings → Tabs → Claude Code's projects (DESIGN.md §4, "Claude Code's projects"). Per machine, as folders are.</summary>
@@ -61,11 +64,11 @@ public sealed class AppSettings
     /// <summary>Settings → Git (DESIGN.md §14): the git Deventry runs, and what the Project Files tab shows of git. Per machine.</summary>
     public GitSettings Git { get; set; } = new();
 
-    /// <summary>Settings → Accounts (DESIGN.md §4, "Accounts"): what's asked before a session moves to another account.</summary>
+    /// <summary>Settings → Claude Code → Accounts (DESIGN.md §4, "Accounts"): what's asked before a session moves to another account.</summary>
     public AccountSettings Accounts { get; set; } = new();
 }
 
-/// <summary>Settings → Accounts (DESIGN.md §4, "Continuing under another account").</summary>
+/// <summary>Settings → Claude Code → Accounts (DESIGN.md §4, "Continuing under another account").</summary>
 public sealed class AccountSettings
 {
     /// <summary>
@@ -417,6 +420,25 @@ public enum KeepAwakeWhen
     DeventryRuns,
 }
 
+/// <summary>Settings → Agents → Codex (DESIGN.md §18, "Codex, a second agent").</summary>
+public sealed class CodexSettings
+{
+    /// <summary>Null means find it automatically.</summary>
+    public string? CodexPath { get; set; }
+
+    /// <summary>The model a new Codex tab starts with; null for Codex's own default.</summary>
+    public string? DefaultModel { get; set; }
+
+    /// <summary>The mode a new Codex tab starts in (<c>CodexModes</c>); null for Auto.</summary>
+    public string? DefaultMode { get; set; }
+
+    /// <summary>
+    /// At a usage limit, offer to carry the work on in the other agent (DESIGN.md §18, "Continuing in the other agent").
+    /// Off by default. It's here because it's about the agents; it applies to both.
+    /// </summary>
+    public bool OfferOtherAgentAtLimit { get; set; }
+}
+
 public sealed class ClaudeCodeSettings
 {
     /// <summary>Null means find it automatically.</summary>
@@ -486,7 +508,7 @@ public sealed class ClaudeCodeSettings
     public bool AskBeforeUsingFolderSettings { get; set; } = true;
 }
 
-/// <summary>Settings → Tabs → Subagents (DESIGN.md §5, "Subagents").</summary>
+/// <summary>Settings → All agents → Subagents (DESIGN.md §5, "Subagents").</summary>
 public enum SubagentUse
 {
     /// <summary>Claude uses subagents when it judges they help, as Claude Code has it.</summary>

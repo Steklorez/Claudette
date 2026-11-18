@@ -1,0 +1,9 @@
+﻿"Claude Code isn't installed"
+"Claude Code wasn't found."
+"Deventry runs your installed Claude Code. Install it, or point Deventry at the claude executable."
+[button] Check again
+[button] Choose claude…
+[button] Install instructions
+"Codex, OpenAI's coding agent, can also run in tabs of its own."
+"Codex isn't installed."
+[button] Install Codex

@@ -23,7 +23,7 @@ internal sealed class FolderProjectToolsHost(ShellViewModel shell, TabGroupViewM
 
     public TabState State => _state;
 
-    public ClaudeSession? Session => null;
+    public IAgentSession? Session => null;
 
     public string FolderName => Formats.FolderName(group.Folder);
 
