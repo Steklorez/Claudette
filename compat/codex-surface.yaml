@@ -115,6 +115,12 @@ items:
     docs: https://learn.chatgpt.com/docs/app-server
     test: CodexSessionTests, FakeCodexTests
     fallback: "Asked before thread/resume, so a thread Codex no longer has is told from one it won't resume (a required MCP server, another model provider), whose error is shown as Codex gives it."
+  - id: thread/fork
+    kind: control
+    status: documented
+    usedIn: src/Deventry.Core/Codex/CodexSession.cs
+    docs: https://learn.chatgpt.com/docs/app-server
+    test: CodexLibraryTests
   - id: thread/turns/list
     kind: control
     status: documented
@@ -230,9 +236,9 @@ items:
   - id: "sessions/<year>/<month>/<day>/rollout-<time>-<thread id>.jsonl"
     kind: file
     status: undocumented
-    usedIn: src/Deventry.Core/History/CodexHistory.cs
-    test: CodexHistoryTests, FakeCodexTests
-    fallback: "In CODEX_HOME. Read for History alone, a line at a time: the session_meta line's id, cwd and cli_version, and response_item messages' text for the first prompt and search. A file without a session_meta line is passed over; History lists Codex's sessions without what it can't read, and a tab's own conversation comes from thread/turns/list, not the file."
+    usedIn: src/Deventry.Core/History/CodexHistory.cs, src/Deventry.App/ViewModels/TabViewModel.Codex.cs, src/Deventry.App/ViewModels/SessionOpener.cs
+    test: CodexHistoryTests, FakeCodexTests, CodexLibraryTests
+    fallback: "In CODEX_HOME. Copied whole to the session library as a Codex session's transcript, and brought into another machine's sessions folder under the same kind of name, where Codex resumes it by its id (the spike's finding: resuming by path from another home failed). Read for History, a line at a time: the session_meta line's id, cwd and cli_version, and response_item messages' text for the first prompt and search. A file without a session_meta line is passed over; History lists Codex's sessions without what it can't read, and a tab's own conversation comes from thread/turns/list, not the file."
   - id: "session_index.jsonl"
     kind: file
     status: undocumented

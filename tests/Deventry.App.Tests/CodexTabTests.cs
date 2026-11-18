@@ -257,4 +257,22 @@ public sealed class CodexTabTests
         // Claude Code has no reading yet.
         Assert.False(panel.HasOtherAgent);
     }
+
+    [Fact]
+    public async Task A_codex_tab_runs_under_codexs_own_sign_in_not_its_groups_account()
+    {
+        await using var h = new TabTestHarness();
+        h.Services.Accounts.Credentials = new FakeCredentialStore();
+        h.Services.Accounts.HelperExecutable = Path.Combine(h.Root, "Deventry.exe");
+        var work = await h.Services.Accounts.AddApiKeyAccountAsync("Work", "sk-ant-work");
+        h.Services.Accounts.SetForFolder(h.WorkFolder, work.Id);
+
+        var tab = await OpenCodexTabAsync(h);
+
+        Assert.Null(tab.Account);
+        Assert.False(tab.ShowsAccountTag);
+        Assert.False(tab.HasAccountMenu);
+        Assert.Equal("Codex's own sign-in", tab.AccountName);
+        Assert.Empty(h.CodexFactory.Launches.Single().EnvironmentOverrides);
+    }
 }

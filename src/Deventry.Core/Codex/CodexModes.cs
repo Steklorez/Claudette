@@ -73,6 +73,9 @@ public sealed record CodexStartOptions
     /// <summary>The thread to resume; null for a new one.</summary>
     public string? Resume { get; init; }
 
+    /// <summary>With <see cref="Resume"/>: a new thread with the resumed one's history (<c>thread/fork</c>), leaving it as it was.</summary>
+    public bool Fork { get; init; }
+
     /// <summary>Null: Codex's own default model.</summary>
     public string? Model { get; init; }
 

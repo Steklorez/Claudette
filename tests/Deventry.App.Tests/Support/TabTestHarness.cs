@@ -121,18 +121,18 @@ internal sealed class ScriptedTransport : IClaudeTransport
     /// <summary>The JSON-RPC methods a Codex session sent, in order.</summary>
     public IEnumerable<string> SentRpcMethods => Sent.Where(m => m["method"] is not null).Select(m => m["method"]!.GetValue<string>());
 
-    /// <summary>A complete Codex turn: its start, a reply, the tokens it spent and its end.</summary>
-    public void EmitCodexTurn(string reply = "ok")
+    /// <summary>A complete Codex turn on <paramref name="thread"/>: its start, a reply, the tokens it spent and its end.</summary>
+    public void EmitCodexTurn(string reply = "ok", string thread = CodexThread)
     {
-        Emit(new JsonObject { ["method"] = "turn/started", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "inProgress" } } });
-        Emit(new JsonObject { ["method"] = "item/agentMessage/delta", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["itemId"] = "m1", ["delta"] = reply } });
-        Emit(new JsonObject { ["method"] = "item/completed", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["turnId"] = CodexTurn, ["item"] = new JsonObject { ["type"] = "agentMessage", ["id"] = "m1", ["text"] = reply } } });
+        Emit(new JsonObject { ["method"] = "turn/started", ["params"] = new JsonObject { ["threadId"] = thread, ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "inProgress" } } });
+        Emit(new JsonObject { ["method"] = "item/agentMessage/delta", ["params"] = new JsonObject { ["threadId"] = thread, ["itemId"] = "m1", ["delta"] = reply } });
+        Emit(new JsonObject { ["method"] = "item/completed", ["params"] = new JsonObject { ["threadId"] = thread, ["turnId"] = CodexTurn, ["item"] = new JsonObject { ["type"] = "agentMessage", ["id"] = "m1", ["text"] = reply } } });
         Emit(new JsonObject
         {
             ["method"] = "thread/tokenUsage/updated",
             ["params"] = new JsonObject
             {
-                ["threadId"] = CodexThread,
+                ["threadId"] = thread,
                 ["turnId"] = CodexTurn,
                 ["tokenUsage"] = new JsonObject
                 {
@@ -142,7 +142,7 @@ internal sealed class ScriptedTransport : IClaudeTransport
                 },
             },
         });
-        Emit(new JsonObject { ["method"] = "turn/completed", ["params"] = new JsonObject { ["threadId"] = CodexThread, ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "completed" } } });
+        Emit(new JsonObject { ["method"] = "turn/completed", ["params"] = new JsonObject { ["threadId"] = thread, ["turn"] = new JsonObject { ["id"] = CodexTurn, ["status"] = "completed" } } });
     }
 
     public IReadOnlyList<JsonObject> Sent

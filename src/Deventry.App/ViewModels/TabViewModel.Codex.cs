@@ -2,6 +2,8 @@ using Deventry.App.Conversation;
 using Deventry.App.Services;
 using Deventry.Core.Agents;
 using Deventry.Core.Codex;
+using Deventry.Core.History;
+using Deventry.Core.Library;
 using Deventry.Core.Sessions;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -62,6 +64,17 @@ public partial class TabViewModel
         Status = TabStatus.Starting;
         var settings = _services.Settings;
         var resume = State.SessionId;
+        var fork = State.ForkOnNextStart && resume is not null;
+        LibraryComparison? pickedUp = null;
+        if (resume is not null && !fork && State.SyncToLibrary)
+        {
+            (var start, pickedUp) = await SyncFromLibraryAsync(resume);
+            // Only a tab that syncs takes part in leases (DESIGN.md §9, "One machine at a time").
+            if (!start || _closing.IsCancellationRequested || !await ClaimLeaseAsync())
+            {
+                return;
+            }
+        }
         try
         {
             var mode = CodexModes.Normalize(State.Overrides.PermissionMode ?? settings.Codex.DefaultMode);
@@ -74,6 +87,7 @@ public partial class TabViewModel
                 {
                     WorkingDirectory = Folder,
                     Resume = resume,
+                    Fork = fork,
                     Model = State.Overrides.Model ?? settings.Codex.DefaultModel,
                     Effort = State.Overrides.Effort,
                     Mode = mode,
@@ -94,6 +108,16 @@ public partial class TabViewModel
             _appliedState = SessionState.Starting;
             _sentSinceStart = false;
             State.SessionId = session.SessionId;
+            // Its session file is what the library copies (DESIGN.md §18, "The session library").
+            State.TranscriptPath = session.ThreadPath ?? State.TranscriptPath;
+            if (fork)
+            {
+                // A copy has its own thread from the start, and the original is left as it was.
+                RecordSessionOrigin(resume, session.SessionId!, isCopy: true);
+                State.ForkOnNextStart = false;
+                OnPropertyChanged(nameof(InfoRows));
+                OnSyncSizeChanged();
+            }
             State.SessionStartedAt ??= _services.Time.GetUtcNow();
             Tasks.Clear();
             ProcessMonitor.AttachTree(session);
@@ -113,7 +137,9 @@ public partial class TabViewModel
             {
                 // Before the session's own events, which wait for the pump.
                 _restoredTranscript = true;
-                await ReplayCodexTurnsAsync(session);
+                await ReplayCodexTurnsAsync(session, fork ? _forkNote ?? "Opened as a copy. The original session is left as it was."
+                    : pickedUp is not null ? PickedUpNote(pickedUp) : "Resumed.");
+                _forkNote = null;
             }
             Status = TabStatus.Idle;
             _pump = PumpAsync(session);
@@ -145,7 +171,8 @@ public partial class TabViewModel
     /// A resumed Codex tab's earlier conversation, which Codex keeps and reads back (DESIGN.md §18, "History"), shown as a
     /// Claude Code tab's transcript is (<see cref="RestoreTranscriptAsync"/>).
     /// </summary>
-    private async Task ReplayCodexTurnsAsync(CodexSession session)
+    /// <param name="note">What the tab says under them: resumed, picked up from another machine, or opened as a copy.</param>
+    private async Task ReplayCodexTurnsAsync(CodexSession session, string note)
     {
         IReadOnlyList<(SessionEvent Event, DateTimeOffset? Time)> turns;
         try
@@ -184,7 +211,45 @@ public partial class TabViewModel
         if (turns.Count > 0)
         {
             _titleRequested = true;
-            _conversation.AddNote("Resumed.");
+            _conversation.AddNote(note);
+        }
+    }
+
+    /// <summary>
+    /// Before a Codex tab that syncs resumes its thread (DESIGN.md §18, "The session library"): another machine's later
+    /// turns are brought from the library into the session's file in Codex's folder, as is the whole session when this
+    /// machine has none of it, and a session that went on in both places is kept apart (DESIGN.md §9, "One machine at a
+    /// time"). Returns whether the tab starts, and the comparison that brought turns here.
+    /// </summary>
+    private async Task<(bool Start, LibraryComparison? PickedUp)> SyncFromLibraryAsync(string sessionId)
+    {
+        var codexHome = _services.CodexHome;
+        var here = State.TranscriptPath is { } path && File.Exists(path) ? path
+            : codexHome is null ? null
+            : await Task.Run(() => CodexHistory.Find(codexHome, sessionId));
+        State.TranscriptPath = here ?? State.TranscriptPath;
+        var comparison = here is null ? null : await CompareWithLibraryAsync();
+        if (comparison is { Standing: LibraryStanding.Diverged })
+        {
+            await KeepApartAsync(comparison.Machine);
+            return (false, null);
+        }
+        var bring = comparison is { Standing: LibraryStanding.Ahead } || here is null && _services.Library.Library.GetTranscriptPath(sessionId) is not null;
+        if (!bring || (here ?? (codexHome is null ? null : CodexHistory.PlaceFor(codexHome, sessionId, _services.Time.GetUtcNow()))) is not { } target)
+        {
+            return (true, null);
+        }
+        try
+        {
+            State.TranscriptPath = await _services.Library.PickUpAsync(sessionId, target);
+            _services.SaveState();
+            return (true, comparison ?? new LibraryComparison(LibraryStanding.Ahead, null, null));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // It goes on from this machine's; the copy after its next turn won't write over the other machine's.
+            _conversation.AddNote($"Couldn't bring this session's later turns from the session library: {ex.Message}", NoteKind.Warning);
+            return (true, null);
         }
     }
 }

@@ -1,5 +1,6 @@
 using Deventry.App.Services;
 using Deventry.Core;
+using Deventry.Core.Agents;
 using Deventry.Core.Git;
 using Deventry.Core.History;
 using Deventry.Core.Library;
@@ -46,10 +47,17 @@ internal static class HistorySessions
             IReadOnlyList<SessionSummary> local = [.. claude, .. codex];
             // Sessions only in the library are summarized from its copies, cached as Claude Code's own are.
             var localIds = local.Select(s => s.SessionId).ToHashSet(StringComparer.Ordinal);
-            var libraryOnly = stored.Where(e => e.IsConflictCopy || !localIds.Contains(e.Record.SessionId)).Select(e => e.TranscriptPath).ToArray();
-            IReadOnlyDictionary<string, SessionSummary?> summaries = index is null
-                ? libraryOnly.ToDictionary(p => p, HistoryIndex.ReadSummary, StringComparer.Ordinal)
-                : await index.SummarizeAsync(libraryOnly).ConfigureAwait(false);
+            var libraryOnly = stored.Where(e => e.IsConflictCopy || !localIds.Contains(e.Record.SessionId)).ToArray();
+            var claudeOnly = libraryOnly.Where(e => e.Record.Agent is null).Select(e => e.TranscriptPath).ToArray();
+            IReadOnlyDictionary<string, SessionSummary?> claudeSummaries = index is null
+                ? claudeOnly.ToDictionary(p => p, HistoryIndex.ReadSummary, StringComparer.Ordinal)
+                : await index.SummarizeAsync(claudeOnly).ConfigureAwait(false);
+            // A Codex session's copy is its session file, read as Codex's own are.
+            var summaries = new Dictionary<string, SessionSummary?>(claudeSummaries, StringComparer.Ordinal);
+            foreach (var entry in libraryOnly.Where(e => e.Record.Agent == AgentKinds.Codex))
+            {
+                summaries[entry.TranscriptPath] = CodexHistory.Read(entry.TranscriptPath);
+            }
             return (IReadOnlyList<HistoryEntry>)Merge(local, stored, records, summaries, context);
         });
     }
@@ -142,7 +150,7 @@ internal static class HistorySessions
         return Entry(record.SessionId, libraryEntry.IsConflictCopy ? $"{title} ({libraryEntry.ConflictLabel})" : title,
             summary?.FirstPrompt ?? record.FirstPrompt, record.Folder, record.Machine, record.LastUsed,
             summary?.MessageCount ?? 0, record.Project?.Branch, localTranscript: null, record, libraryEntry.TranscriptPath,
-            libraryEntry.IsConflictCopy, libraryEntry.ConflictLabel, context, prompts: summary?.Prompts, librarySize: libraryEntry.Size);
+            libraryEntry.IsConflictCopy, libraryEntry.ConflictLabel, context, prompts: summary?.Prompts, librarySize: libraryEntry.Size, agent: record.Agent);
     }
 
     /// <param name="librarySize">What the session takes in the session library, for one that's there (DESIGN.md §9, "History").</param>

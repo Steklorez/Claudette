@@ -73,4 +73,10 @@ public sealed class SessionRecord
     public List<Diffs.ReviewedFile>? ReviewedFiles { get; set; }
 
     public string? ClaudeCodeVersion { get; set; }
+
+    /// <summary>
+    /// The agent that ran the session (<c>Agents.AgentKinds</c>; DESIGN.md §18, "Codex, a second agent"): null for Claude
+    /// Code's, and in records written before there was another. A Codex session's transcript is its session file.
+    /// </summary>
+    public string? Agent { get; set; }
 }

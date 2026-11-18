@@ -429,6 +429,7 @@ public sealed partial class TabViewModel
         FirstPrompt = _firstPrompt,
         ClaudeCodeVersion = (_session as ClaudeSession)?.ClaudeCodeVersion,
         ReviewedFiles = ReviewedFiles.ToRecord(State.ReviewedFiles, Folder),
+        Agent = State.Agent,
     };
 
     /// <summary>

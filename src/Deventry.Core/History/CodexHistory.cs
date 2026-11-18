@@ -105,6 +105,41 @@ public static class CodexHistory
         };
     }
 
+    /// <summary>The session file Codex keeps for <paramref name="sessionId"/> under <paramref name="codexHome"/>; null when it has none.</summary>
+    public static string? Find(string codexHome, string sessionId)
+    {
+        var sessions = Path.Combine(codexHome, "sessions");
+        if (!Directory.Exists(sessions))
+        {
+            return null;
+        }
+        try
+        {
+            return Directory.EnumerateFiles(sessions, $"rollout-*-{sessionId}.jsonl", SearchOption.AllDirectories).FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Where a session file brought from another machine goes, so Codex here finds it and resumes it by its id (DESIGN.md
+    /// §18, "The session library"): where Codex already keeps the session, else in <c>sessions</c> under the day it was
+    /// brought, named as Codex names its own.
+    /// </summary>
+    public static string PlaceFor(string codexHome, string sessionId, DateTimeOffset now)
+    {
+        if (Find(codexHome, sessionId) is { } existing)
+        {
+            return existing;
+        }
+        var local = now.ToLocalTime();
+        var day = Path.Combine(codexHome, "sessions", local.ToString("yyyy", System.Globalization.CultureInfo.InvariantCulture),
+            local.ToString("MM", System.Globalization.CultureInfo.InvariantCulture), local.ToString("dd", System.Globalization.CultureInfo.InvariantCulture));
+        return Path.Combine(day, $"rollout-{local.ToString("yyyy-MM-dd'T'HH-mm-ss", System.Globalization.CultureInfo.InvariantCulture)}-{sessionId}.jsonl");
+    }
+
     /// <summary>The names <c>thread/name/set</c> gave sessions, by id; the last one wins.</summary>
     public static IReadOnlyDictionary<string, string> ReadNames(string indexFile)
     {

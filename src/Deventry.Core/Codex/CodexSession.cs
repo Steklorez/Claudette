@@ -184,7 +184,10 @@ public sealed class CodexSession : IAgentSession
             {
                 throw new CodexThreadMissingException(resume, ex);
             }
-            started = await RequestAsync("thread/resume", thread, StartTimeout, cancellationToken).ConfigureAwait(false);
+            started = options.Fork
+                // Its settings are the thread's own, then the tab's as below.
+                ? await RequestAsync("thread/fork", new JsonObject { ["threadId"] = resume, ["excludeTurns"] = true }, StartTimeout, cancellationToken).ConfigureAwait(false)
+                : await RequestAsync("thread/resume", thread, StartTimeout, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -206,9 +209,14 @@ public sealed class CodexSession : IAgentSession
         {
             await SetEffortAsync(effort, cancellationToken).ConfigureAwait(false);
         }
-        if (_mode == CodexModes.Plan)
+        if (_mode == CodexModes.Plan || options.Fork)
         {
-            await SetPermissionModeAsync(CodexModes.Plan, cancellationToken).ConfigureAwait(false);
+            // A fork has its thread's settings: the tab's mode, as a start or a resume passes it.
+            await SetPermissionModeAsync(_mode, cancellationToken).ConfigureAwait(false);
+        }
+        if (options.Fork && options.Model is { } forkModel && forkModel != Model)
+        {
+            await SetModelAsync(forkModel, cancellationToken).ConfigureAwait(false);
         }
         Initialization = new InitializeResult(ModelsFrom(models), [], AccountFrom(account), _mode, started);
         TrySetState(SessionState.Starting, SessionState.Idle);
