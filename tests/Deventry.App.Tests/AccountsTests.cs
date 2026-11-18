@@ -359,10 +359,12 @@ public class AccountsTests
         h.Transport.Exit(1, "claude crashed");
         await TabTestHarness.Eventually(() => tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue) > 0, "the turn, recorded");
 
+        // Its record takes the estimate's place in one step: the spend a warning reads never counts it twice.
+        Assert.Equal(2.0, tracker.GetSpend(work.Id, DateTimeOffset.MinValue, null), 6);
+        Assert.Equal(0, tracker.RunningSpend(work.Id));
         Assert.Equal(2.0, tracker.Store.GetSpend(work.Id, DateTimeOffset.MinValue), 6);
         Assert.Equal(1, tab.State.Tokens.Turns);
         await TabTestHarness.Eventually(() => spend.TodayText == "$2.00", "the spend, from the record");
-        Assert.Equal(0, tracker.RunningSpend(work.Id));
     }
 
     /// <summary>An <c>assistant</c> message on Opus 5.5 with its call's usage.</summary>

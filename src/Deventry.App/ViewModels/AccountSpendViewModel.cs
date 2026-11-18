@@ -140,10 +140,11 @@ public sealed partial class AccountSpendViewModel : ViewModelBase, IDisposable
         double today, week, month;
         try
         {
-            (today, week, month) = await Task.Run(() => (
-                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfDay(now), name),
-                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfWeek(now), name),
-                _tracker.Store.GetSpend(account.Id, SpendPeriods.StartOfMonth(now), name)));
+            // In one step with the turns' records, so the turns running added to it on the UI thread never count one twice.
+            (today, week, month) = await Task.Run(() => _tracker.ReadRecorded(store => (
+                store.GetSpend(account.Id, SpendPeriods.StartOfDay(now), name),
+                store.GetSpend(account.Id, SpendPeriods.StartOfWeek(now), name),
+                store.GetSpend(account.Id, SpendPeriods.StartOfMonth(now), name))));
         }
         catch (Exception ex)
         {

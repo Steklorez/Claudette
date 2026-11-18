@@ -467,16 +467,22 @@ public sealed class UsageTracker : IAsyncDisposable
             try
             {
                 var (projectKey, projectName) = project is null ? default : ProjectOf(project);
-                Store.AddTurns(records.Select(r => r with
+                // The record takes the estimate's place in one step for whoever reads the spend (GetSpend, ReadRecorded),
+                // so the turn is never counted twice: a spend warning read in between would pass at half the spend.
+                lock (_spendLock)
                 {
-                    ProjectKey = projectKey,
-                    ProjectName = projectName,
-                    AccountName = accountName?.Trim(),
-                    Plan = plan,
-                    Turn = turnId,
-                    IdleBefore = calls.IdleBefore,
-                    Index = index,
-                }), detail);
+                    Store.AddTurns(records.Select(r => r with
+                    {
+                        ProjectKey = projectKey,
+                        ProjectName = projectName,
+                        AccountName = accountName?.Trim(),
+                        Plan = plan,
+                        Turn = turnId,
+                        IdleBefore = calls.IdleBefore,
+                        Index = index,
+                    }), detail);
+                    ClearRunning(tabId, running);
+                }
                 Store.SetTabName(tabId, tabName);
             }
             catch (Exception ex)
@@ -485,10 +491,10 @@ public sealed class UsageTracker : IAsyncDisposable
             }
             finally
             {
+                // Its record, or nothing: the estimate goes either way, and the spend is read again.
+                ClearRunning(tabId, running);
                 _services.Dispatcher.Post(() =>
                 {
-                    // Its record, or nothing: the estimate goes either way, and the spend is read again.
-                    ClearRunning(tabId, running);
                     TurnRecorded?.Invoke(tabId);
                     if (account is not null)
                     {
@@ -546,7 +552,29 @@ public sealed class UsageTracker : IAsyncDisposable
     /// <paramref name="name"/> while they share their usage, and the turns running under it here. Reads the usage history:
     /// call it off the UI thread.
     /// </summary>
-    public double GetSpend(string accountId, DateTimeOffset from, string? name) => Store.GetSpend(accountId, from, name) + RunningSpend(accountId);
+    public double GetSpend(string accountId, DateTimeOffset from, string? name)
+    {
+        lock (_spendLock)
+        {
+            return Store.GetSpend(accountId, from, name) + RunningSpend(accountId);
+        }
+    }
+
+    /// <summary>
+    /// Reads the recorded spend in one step with the records that take the place of turns' estimates: once it has seen a
+    /// turn's record, <see cref="RunningSpend"/> read after it no longer counts the turn. Reads the usage history: call it
+    /// off the UI thread.
+    /// </summary>
+    public T ReadRecorded<T>(Func<UsageStore, T> read)
+    {
+        lock (_spendLock)
+        {
+            return read(Store);
+        }
+    }
+
+    /// <summary>Held while a turn's record replaces its estimate, and while the spend is read (<see cref="GetSpend"/>).</summary>
+    private readonly Lock _spendLock = new();
 
     private int? RunningOf(string tabId)
     {
